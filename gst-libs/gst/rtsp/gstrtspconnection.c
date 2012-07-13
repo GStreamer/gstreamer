@@ -236,8 +236,6 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
  * @socket which should be used before starting to read new data.
  *
  * Returns: #GST_RTSP_OK when @conn contains a valid connection.
- *
- * Since: 0.10.25
  */
 GstRTSPResult
 gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
@@ -294,8 +292,6 @@ newconn_failed:
  * handling communication on new socket.
  *
  * Returns: #GST_RTSP_OK when @conn contains a valid connection.
- *
- * Since: 0.10.23
  */
 GstRTSPResult
 gst_rtsp_connection_accept (GSocket * socket, GstRTSPConnection ** conn,
@@ -2240,8 +2236,6 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
  * This function can be cancelled with gst_rtsp_connection_flush().
  * 
  * Returns: #GST_RTSP_OK on success.
- *
- * Since: 0.10.15
  */
 GstRTSPResult
 gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
@@ -2412,8 +2406,6 @@ gst_rtsp_connection_flush (GstRTSPConnection * conn, gboolean flush)
  * Set the proxy host and port.
  * 
  * Returns: #GST_RTSP_OK.
- *
- * Since: 0.10.23
  */
 GstRTSPResult
 gst_rtsp_connection_set_proxy (GstRTSPConnection * conn,
@@ -2518,8 +2510,6 @@ str_case_equal (gconstpointer v1, gconstpointer v2)
  * #GST_RTSP_AUTH_DIGEST, directives should be taken from the digest challenge
  * in the WWW-Authenticate response header and can include realm, domain,
  * nonce, opaque, stale, algorithm, qop as per RFC2617.
- * 
- * Since: 0.10.20
  */
 void
 gst_rtsp_connection_set_auth_param (GstRTSPConnection * conn,
@@ -2540,8 +2530,6 @@ gst_rtsp_connection_set_auth_param (GstRTSPConnection * conn,
  * @conn: a #GstRTSPConnection
  *
  * Clear the list of authentication directives stored in @conn.
- *
- * Since: 0.10.20
  */
 void
 gst_rtsp_connection_clear_auth_params (GstRTSPConnection * conn)
@@ -2622,8 +2610,6 @@ wrong_family:
  * Configure @conn to use the specified DSCP value.
  *
  * Returns: #GST_RTSP_OK on success.
- *
- * Since: 0.10.20
  */
 GstRTSPResult
 gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
@@ -2650,8 +2636,6 @@ gst_rtsp_connection_set_qos_dscp (GstRTSPConnection * conn, guint qos_dscp)
  *
  * Returns: The URL. This value remains valid until the
  * connection is freed.
- *
- * Since: 0.10.23
  */
 GstRTSPUrl *
 gst_rtsp_connection_get_url (const GstRTSPConnection * conn)
@@ -2669,8 +2653,6 @@ gst_rtsp_connection_get_url (const GstRTSPConnection * conn)
  *
  * Returns: The IP address as a string. this value remains valid until the
  * connection is closed.
- *
- * Since: 0.10.20
  */
 const gchar *
 gst_rtsp_connection_get_ip (const GstRTSPConnection * conn)
@@ -2686,8 +2668,6 @@ gst_rtsp_connection_get_ip (const GstRTSPConnection * conn)
  * @ip: an ip address
  *
  * Set the IP address of the server.
- *
- * Since: 0.10.23
  */
 void
 gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
@@ -2706,8 +2686,6 @@ gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
  *
  * Returns: the file descriptor used for reading or %NULL on error. The file
  * descriptor remains valid until the connection is closed.
- *
- * Since: 0.10.23
  */
 GSocket *
 gst_rtsp_connection_get_read_socket (const GstRTSPConnection * conn)
@@ -2726,8 +2704,6 @@ gst_rtsp_connection_get_read_socket (const GstRTSPConnection * conn)
  *
  * Returns: the file descriptor used for writing or NULL on error. The file
  * descriptor remains valid until the connection is closed.
- *
- * Since: 0.10.23
  */
 GSocket *
 gst_rtsp_connection_get_write_socket (const GstRTSPConnection * conn)
@@ -2746,8 +2722,6 @@ gst_rtsp_connection_get_write_socket (const GstRTSPConnection * conn)
  * By setting the HTTP mode to %TRUE the message parsing will support HTTP
  * messages in addition to the RTSP messages. It will also disable the
  * automatic handling of setting up an HTTP tunnel.
- *
- * Since: 0.10.25
  */
 void
 gst_rtsp_connection_set_http_mode (GstRTSPConnection * conn, gboolean enable)
@@ -2764,8 +2738,6 @@ gst_rtsp_connection_set_http_mode (GstRTSPConnection * conn, gboolean enable)
  *
  * Set the HTTP tunneling state of the connection. This must be configured before
  * the @conn is connected.
- *
- * Since: 0.10.23
  */
 void
 gst_rtsp_connection_set_tunneled (GstRTSPConnection * conn, gboolean tunneled)
@@ -2784,8 +2756,6 @@ gst_rtsp_connection_set_tunneled (GstRTSPConnection * conn, gboolean tunneled)
  * Get the tunneling state of the connection. 
  *
  * Returns: if @conn is using HTTP tunneling.
- *
- * Since: 0.10.23
  */
 gboolean
 gst_rtsp_connection_is_tunneled (const GstRTSPConnection * conn)
@@ -2802,8 +2772,6 @@ gst_rtsp_connection_is_tunneled (const GstRTSPConnection * conn)
  * Get the tunnel session id the connection. 
  *
  * Returns: returns a non-empty string if @conn is being tunneled over HTTP.
- *
- * Since: 0.10.23
  */
 const gchar *
 gst_rtsp_connection_get_tunnelid (const GstRTSPConnection * conn)
@@ -2832,8 +2800,6 @@ gst_rtsp_connection_get_tunnelid (const GstRTSPConnection * conn)
  * @conn.
  *
  * Returns: return GST_RTSP_OK on success.
- *
- * Since: 0.10.23
  */
 GstRTSPResult
 gst_rtsp_connection_do_tunnel (GstRTSPConnection * conn,
@@ -3199,8 +3165,6 @@ static GSourceFuncs gst_rtsp_source_funcs = {
  *
  * Returns: a #GstRTSPWatch that can be used for asynchronous RTSP
  * communication. Free with gst_rtsp_watch_unref () after usage.
- *
- * Since: 0.10.23
  */
 GstRTSPWatch *
 gst_rtsp_watch_new (GstRTSPConnection * conn,
@@ -3240,8 +3204,6 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
  *
  * Reset @watch, this is usually called after gst_rtsp_connection_do_tunnel()
  * when the file descriptors of the connection might have changed.
- *
- * Since: 0.10.23
  */
 void
 gst_rtsp_watch_reset (GstRTSPWatch * watch)
@@ -3273,8 +3235,6 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
  * Adds a #GstRTSPWatch to a context so that it will be executed within that context.
  *
  * Returns: the ID (greater than 0) for the watch within the GMainContext. 
- *
- * Since: 0.10.23
  */
 guint
 gst_rtsp_watch_attach (GstRTSPWatch * watch, GMainContext * context)
@@ -3290,8 +3250,6 @@ gst_rtsp_watch_attach (GstRTSPWatch * watch, GMainContext * context)
  *
  * Decreases the reference count of @watch by one. If the resulting reference
  * count is zero the watch and associated memory will be destroyed.
- *
- * Since: 0.10.23
  */
 void
 gst_rtsp_watch_unref (GstRTSPWatch * watch)
@@ -3318,8 +3276,6 @@ gst_rtsp_watch_unref (GstRTSPWatch * watch)
  * This function will take ownership of @data and g_free() it after use.
  *
  * Returns: #GST_RTSP_OK on success.
- *
- * Since: 0.10.25
  */
 GstRTSPResult
 gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
@@ -3402,8 +3358,6 @@ done:
  * callback.
  *
  * Returns: #GST_RTSP_OK on success.
- *
- * Since: 0.10.25
  */
 GstRTSPResult
 gst_rtsp_watch_send_message (GstRTSPWatch * watch, GstRTSPMessage * message,

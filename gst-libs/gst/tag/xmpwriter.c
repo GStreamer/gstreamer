@@ -159,8 +159,6 @@ gst_tag_xmp_writer_get_data (GstTagXmpWriter * xmpconfig)
  *
  * Adds all available XMP schemas to the configuration. Meaning that
  * all will be used.
- *
- * Since: 0.10.33
  */
 void
 gst_tag_xmp_writer_add_all_schemas (GstTagXmpWriter * config)
@@ -182,8 +180,6 @@ gst_tag_xmp_writer_add_all_schemas (GstTagXmpWriter * config)
  * @schema: the schema to be added
  *
  * Adds @schema to the list schemas
- *
- * Since: 0.10.33
  */
 void
 gst_tag_xmp_writer_add_schema (GstTagXmpWriter * config, const gchar * schema)
@@ -207,7 +203,6 @@ gst_tag_xmp_writer_add_schema (GstTagXmpWriter * config, const gchar * schema)
  * Checks if @schema is going to be used
  *
  * Returns: %TRUE if it is going to be used
- * Since: 0.10.33
  */
 gboolean
 gst_tag_xmp_writer_has_schema (GstTagXmpWriter * config, const gchar * schema)
@@ -239,8 +234,6 @@ gst_tag_xmp_writer_has_schema (GstTagXmpWriter * config, const gchar * schema)
  *
  * Removes a schema from the list of schemas to use. Nothing is done if
  * the schema wasn't in the list
- *
- * Since: 0.10.33
  */
 void
 gst_tag_xmp_writer_remove_schema (GstTagXmpWriter * config,
@@ -270,8 +263,6 @@ gst_tag_xmp_writer_remove_schema (GstTagXmpWriter * config,
  *
  * Removes all schemas from the list of schemas to use. Meaning that no
  * XMP will be generated.
- *
- * Since: 0.10.33
  */
 void
 gst_tag_xmp_writer_remove_all_schemas (GstTagXmpWriter * config)

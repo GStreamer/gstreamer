@@ -203,7 +203,7 @@ gst_tag_register_tags_internal (gpointer unused)
  * that the core can load+register tags automatically when needed. */
 
 /**
- * gst_tag_register_musicbrainz_tags
+ * gst_tag_register_musicbrainz_tags:
  *
  * Registers additional musicbrainz-specific tags with the GStreamer tag
  * system. Plugins and applications that use these tags should call this
@@ -307,8 +307,6 @@ gst_tag_image_type_is_valid (GstTagImageType type)
  * code in the extended comment string.
  *
  * Returns: TRUE if the string could be parsed, otherwise FALSE
- *
- * Since: 0.10.10
  */
 gboolean
 gst_tag_parse_extended_comment (const gchar * ext_comment, gchar ** key,
@@ -371,8 +369,6 @@ gst_tag_parse_extended_comment (const gchar * ext_comment, gchar ** key,
  * WINDOWS-1252/ISO-8859-1 is assumed (which will almost always succeed).
  *
  * Returns: a newly-allocated string in UTF-8 encoding, or NULL
- *
- * Since: 0.10.13
  */
 gchar *
 gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
@@ -559,8 +555,6 @@ beach:
  * data (we can't trust the declared mime type).
  *
  * Returns: a newly-allocated image sample for use in tag lists, or NULL
- *
- * Since: 0.10.20
  */
 GstSample *
 gst_tag_image_data_to_image_sample (const guint8 * image_data,

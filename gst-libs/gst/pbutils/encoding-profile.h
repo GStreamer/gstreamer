@@ -33,8 +33,6 @@ G_BEGIN_DECLS
  *
  * The opaque base class object for all encoding profiles. This contains generic
  * information like name, description, format and preset.
- *
- * Since: 0.10.32
  */
 
 #define GST_TYPE_ENCODING_PROFILE                       \
@@ -53,8 +51,6 @@ GType gst_encoding_profile_get_type (void);
  * GstEncodingContainerProfile:
  *
  * Encoding profiles for containers. Keeps track of a list of #GstEncodingProfile
- *
- * Since: 0.10.32
  */
 #define GST_TYPE_ENCODING_CONTAINER_PROFILE                     \
   (gst_encoding_container_profile_get_type ())
@@ -72,8 +68,6 @@ GType gst_encoding_container_profile_get_type (void);
  * GstEncodingVideoProfile:
  *
  * Variant of #GstEncodingProfile for video streams, allows specifying the @pass.
- *
- * Since: 0.10.32
  */
 #define GST_TYPE_ENCODING_VIDEO_PROFILE                 \
   (gst_encoding_video_profile_get_type ())
@@ -91,8 +85,6 @@ GType gst_encoding_video_profile_get_type (void);
  * GstEncodingAudioProfile:
  *
  * Variant of #GstEncodingProfile for audio streams.
- *
- * Since: 0.10.32
  */
 #define GST_TYPE_ENCODING_AUDIO_PROFILE                 \
   (gst_encoding_audio_profile_get_type ())
@@ -113,8 +105,6 @@ GType gst_encoding_audio_profile_get_type (void);
  * @profile: a #GstEncodingProfile
  *
  * Decreases the reference count of the @profile, possibly freeing the @profile.
- *
- * Since: 0.10.32
  */
 #define gst_encoding_profile_unref(profile) (g_object_unref ((GObject*) profile))
 
@@ -123,8 +113,6 @@ GType gst_encoding_audio_profile_get_type (void);
  * @profile: a #GstEncodingProfile
  *
  * Increases the reference count of the @profile.
- *
- * Since: 0.10.32
  */
 #define gst_encoding_profile_ref(profile) (g_object_ref ((GObject*) profile))
 

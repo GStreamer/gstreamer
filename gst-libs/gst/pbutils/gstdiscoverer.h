@@ -53,8 +53,6 @@ GType gst_discoverer_stream_info_get_type (void);
  * corresponding to the AVI container, which in turn will have a
  * #GstDiscovererAudioInfo sub-stream and a #GstDiscovererVideoInfo sub-stream
  * for the audio and video streams respectively.
- *
- * Since: 0.10.31
  */
 #define gst_discoverer_stream_info_ref(info) ((GstDiscovererStreamInfo*) g_object_ref((GObject*) info))
 #define gst_discoverer_stream_info_unref(info) (g_object_unref((GObject*) info))
@@ -71,8 +69,6 @@ const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDisc
  * GstDiscovererContainerInfo:
  *
  * #GstDiscovererStreamInfo specific to container streams.
- *
- * Since: 0.10.31
  */
 #define GST_TYPE_DISCOVERER_CONTAINER_INFO \
   (gst_discoverer_container_info_get_type ())
@@ -92,8 +88,6 @@ GList *gst_discoverer_container_info_get_streams(GstDiscovererContainerInfo *inf
  * GstDiscovererAudioInfo:
  *
  * #GstDiscovererStreamInfo specific to audio streams.
- *
- * Since: 0.10.31
  */
 #define GST_TYPE_DISCOVERER_AUDIO_INFO \
   (gst_discoverer_audio_info_get_type ())
@@ -117,8 +111,6 @@ const gchar * gst_discoverer_audio_info_get_language(const GstDiscovererAudioInf
  * GstDiscovererVideoInfo:
  *
  * #GstDiscovererStreamInfo specific to video streams (this includes images).
- *
- * Since: 0.10.31
  */
 #define GST_TYPE_DISCOVERER_VIDEO_INFO \
   (gst_discoverer_video_info_get_type ())
@@ -147,8 +139,6 @@ gboolean        gst_discoverer_video_info_is_image(const GstDiscovererVideoInfo*
  *
  * #GstDiscovererStreamInfo specific to subtitle streams (this includes text and
  * image based ones).
- *
- * Since: 0.10.36
  */
 #define GST_TYPE_DISCOVERER_SUBTITLE_INFO \
   (gst_discoverer_subtitle_info_get_type ())
@@ -172,8 +162,6 @@ const gchar *   gst_discoverer_subtitle_info_get_language(const GstDiscovererSub
  * @GST_DISCOVERER_MISSING_PLUGINS: Some plugins are missing for full discovery
  *
  * Result values for the discovery process.
- *
- * Since: 0.10.31
  */
 typedef enum {
   GST_DISCOVERER_OK               = 0,
@@ -189,8 +177,6 @@ typedef enum {
  * GstDiscovererInfo:
  *
  * Structure containing the information of a URI analyzed by #GstDiscoverer.
- *
- * Since: 0.10.31
  */
 typedef struct _GstDiscovererInfo GstDiscovererInfo;
 
@@ -246,8 +232,6 @@ typedef struct _GstDiscovererPrivate GstDiscovererPrivate;
  * GstDiscoverer:
  *
  * The #GstDiscoverer structure.
- *
- * Since: 0.10.31
  **/
 struct _GstDiscoverer {
   GObject parent;

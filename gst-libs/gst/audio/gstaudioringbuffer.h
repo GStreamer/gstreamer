@@ -216,9 +216,9 @@ struct _GstAudioRingBuffer {
  * @stop: stop processing of samples
  * @delay: get number of samples queued in device
  * @activate: activate the thread that starts pulling and monitoring the
- * consumed segments in the device. Since 0.10.22
+ * consumed segments in the device.
  * @commit: write samples into the ringbuffer
- * @clear_all: clear the entire ringbuffer Since 0.10.24
+ * @clear_all: clear the entire ringbuffer.
  *
  * The vmethods that subclasses can override to implement the ringbuffer.
  */

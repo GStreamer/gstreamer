@@ -121,8 +121,6 @@ gst_encoding_target_class_init (GObjectClass * klass)
  * gst_encoding_target_get_name:
  * @target: a #GstEncodingTarget
  *
- * Since: 0.10.32
- *
  * Returns: (transfer none): The name of the @target.
  */
 const gchar *
@@ -134,8 +132,6 @@ gst_encoding_target_get_name (GstEncodingTarget * target)
 /**
  * gst_encoding_target_get_category:
  * @target: a #GstEncodingTarget
- *
- * Since: 0.10.32
  *
  * Returns: (transfer none): The category of the @target. For example:
  * #GST_ENCODING_CATEGORY_DEVICE.
@@ -150,8 +146,6 @@ gst_encoding_target_get_category (GstEncodingTarget * target)
  * gst_encoding_target_get_description:
  * @target: a #GstEncodingTarget
  *
- * Since: 0.10.32
- *
  * Returns: (transfer none): The description of the @target.
  */
 const gchar *
@@ -163,8 +157,6 @@ gst_encoding_target_get_description (GstEncodingTarget * target)
 /**
  * gst_encoding_target_get_profiles:
  * @target: a #GstEncodingTarget
- *
- * Since: 0.10.32
  *
  * Returns: (transfer none) (element-type GstPbutils.EncodingProfile): A list of
  * #GstEncodingProfile(s) this @target handles.
@@ -179,8 +171,6 @@ gst_encoding_target_get_profiles (GstEncodingTarget * target)
  * gst_encoding_target_get_profile:
  * @target: a #GstEncodingTarget
  * @name: the name of the profile to retrieve
- *
- * Since: 0.10.32
  *
  * Returns: (transfer full): The matching #GstEncodingProfile, or %NULL.
  */
@@ -260,8 +250,6 @@ validate_name (const gchar * name)
  * <emphasis>can</emphasis> be a application or user specific category if
  * needed.
  *
- * Since: 0.10.32
- *
  * Returns: (transfer full): The newly created #GstEncodingTarget or %NULL if
  * there was an error.
  */
@@ -321,8 +309,6 @@ invalid_category:
  * The @target will steal a reference to the @profile. If you wish to use
  * the profile after calling this method, you should increase its reference
  * count.
- *
- * Since: 0.10.32
  *
  * Returns: %TRUE if the profile was added, else %FALSE.
  **/
@@ -769,8 +755,6 @@ empty_name:
  *
  * Opens the provided file and returns the contained #GstEncodingTarget.
  *
- * Since: 0.10.32
- *
  * Returns: (transfer full): The #GstEncodingTarget contained in the file, else
  * %NULL
  */
@@ -870,8 +854,6 @@ gst_encoding_target_subload (gchar * path, const gchar * category,
  * If the category name is specified only targets from that category will be
  * searched for.
  *
- * Since: 0.10.32
- *
  * Returns: (transfer full): The #GstEncodingTarget if available, else %NULL.
  */
 GstEncodingTarget *
@@ -930,8 +912,6 @@ invalid_category:
  * @error: If an error occured, this field will be filled in.
  *
  * Saves the @target to the provided file location.
- *
- * Since: 0.10.32
  *
  * Returns: %TRUE if the target was correctly saved, else %FALSE.
  **/
@@ -1000,8 +980,6 @@ write_failed:
  *
  * Saves the @target to a default user-local directory.
  *
- * Since: 0.10.32
- *
  * Returns: %TRUE if the target was correctly saved, else %FALSE.
  **/
 
@@ -1058,8 +1036,6 @@ get_categories (gchar * path)
  *
  * Returns: (transfer full) (element-type gchar*): A list
  * of #GstEncodingTarget categories.
- *
- * Since: 0.10.32
  */
 GList *
 gst_encoding_list_available_categories (void)
@@ -1175,8 +1151,6 @@ compare_targets (const GstEncodingTarget * ta, const GstEncodingTarget * tb)
  * if @categoryname is %NULL.
  *
  * Returns: (transfer full) (element-type GstEncodingTarget): The list of #GstEncodingTarget
- *
- * Since: 0.10.32
  */
 GList *
 gst_encoding_list_all_targets (const gchar * categoryname)

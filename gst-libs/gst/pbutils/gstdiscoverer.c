@@ -36,8 +36,6 @@
  * asks for the discovery to begin (through gst_discoverer_start()).
  *
  * All the information is returned in a #GstDiscovererInfo structure.
- *
- * Since: 0.10.31
  */
 
 #ifdef HAVE_CONFIG_H
@@ -195,7 +193,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
 
   /* properties */
   /**
-   * GstDiscoverer:timeout
+   * GstDiscoverer:timeout:
    *
    * The duration (in nanoseconds) after which the discovery of an individual
    * URI will timeout.
@@ -1534,8 +1532,6 @@ beach:
  * Allow asynchronous discovering of URIs to take place.
  * A #GMainLoop must be available for #GstDiscoverer to properly work in
  * asynchronous mode.
- *
- * Since: 0.10.31
  */
 void
 gst_discoverer_start (GstDiscoverer * discoverer)
@@ -1576,8 +1572,6 @@ gst_discoverer_start (GstDiscoverer * discoverer)
  *
  * Stop the discovery of any pending URIs and clears the list of
  * pending URIS (if any).
- *
- * Since: 0.10.31
  */
 void
 gst_discoverer_stop (GstDiscoverer * discoverer)
@@ -1640,8 +1634,6 @@ gst_discoverer_stop (GstDiscoverer * discoverer)
  *
  * Returns: %TRUE if the @uri was successfully appended to the list of pending
  * uris, else %FALSE
- *
- * Since: 0.10.31
  */
 gboolean
 gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
@@ -1678,8 +1670,6 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  *
  * Returns: (transfer full): the result of the scanning. Can be %NULL if an
  * error occurred.
- *
- * Since: 0.10.31
  */
 GstDiscovererInfo *
 gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
@@ -1735,8 +1725,6 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  * If an error occurred when creating the discoverer, @err will be set
  * accordingly and %NULL will be returned. If @err is set, the caller must
  * free it when no longer needed using g_error_free().
- *
- * Since: 0.10.31
  */
 GstDiscoverer *
 gst_discoverer_new (GstClockTime timeout, GError ** err)

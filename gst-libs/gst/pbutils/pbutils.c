@@ -23,8 +23,8 @@
  *
  * <refsect2>
  * <para>
- * libgstpbutils is a general utility library for plugins and applications,
- * available since gst-plugins-base 0.10.12. It currently provides the
+ * libgstpbutils is a general utility library for plugins and applications.
+ * It currently provides the
  * following:
  * </para>
  * <itemizedlist>
@@ -85,8 +85,6 @@
  *
  * This function may be called multiple times. It will do nothing if the
  * library has already been initialised.
- *
- * Since: 0.10.12
  */
 void
 gst_pb_utils_init (void)

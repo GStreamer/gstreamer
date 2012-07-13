@@ -427,8 +427,6 @@ gst_rtsp_find_method (const gchar * method)
  * Convert @options to a string.
  *
  * Returns: a new string of @options. g_free() after usage.
- *
- * Since: 0.10.23
  */
 gchar *
 gst_rtsp_options_as_text (GstRTSPMethod options)
@@ -474,8 +472,6 @@ gst_rtsp_options_as_text (GstRTSPMethod options)
  * Check whether @field may appear multiple times in a message.
  *
  * Returns: %TRUE if multiple headers are allowed.
- *
- * Since: 0.10.25
  */
 gboolean
 gst_rtsp_header_allow_multiple (GstRTSPHeaderField field)

@@ -59,8 +59,6 @@
  * to avoid polling.
  *
  * Last reviewed on 2008-12-17 (0.10.22)
- *
- * Since: 0.10.22
  */
 
 #ifdef HAVE_CONFIG_H
@@ -820,8 +818,6 @@ gst_app_sink_query (GstBaseSink * bsink, GstQuery * query)
  * a copy of the caps structure. After calling this method, the sink will only
  * accept caps that match @caps. If @caps is non-fixed, you must check the caps
  * on the buffers to get the actual used caps.
- *
- * Since: 0.10.22
  */
 void
 gst_app_sink_set_caps (GstAppSink * appsink, const GstCaps * caps)
@@ -853,8 +849,6 @@ gst_app_sink_set_caps (GstAppSink * appsink, const GstCaps * caps)
  * Get the configured caps on @appsink.
  *
  * Returns: the #GstCaps accepted by the sink. gst_caps_unref() after usage.
- *
- * Since: 0.10.22
  */
 GstCaps *
 gst_app_sink_get_caps (GstAppSink * appsink)
@@ -886,8 +880,6 @@ gst_app_sink_get_caps (GstAppSink * appsink)
  * PLAYING state.
  *
  * Returns: %TRUE if no more samples can be pulled and the appsink is EOS.
- *
- * Since: 0.10.22
  */
 gboolean
 gst_app_sink_is_eos (GstAppSink * appsink)
@@ -930,8 +922,6 @@ not_started:
  * Make appsink emit the "new-preroll" and "new-sample" signals. This option is
  * by default disabled because signal emission is expensive and unneeded when
  * the application prefers to operate in pull mode.
- *
- * Since: 0.10.22
  */
 void
 gst_app_sink_set_emit_signals (GstAppSink * appsink, gboolean emit)
@@ -955,8 +945,6 @@ gst_app_sink_set_emit_signals (GstAppSink * appsink, gboolean emit)
  *
  * Returns: %TRUE if @appsink is emiting the "new-preroll" and "new-sample"
  * signals.
- *
- * Since: 0.10.22
  */
 gboolean
 gst_app_sink_get_emit_signals (GstAppSink * appsink)
@@ -983,8 +971,6 @@ gst_app_sink_get_emit_signals (GstAppSink * appsink)
  * Set the maximum amount of buffers that can be queued in @appsink. After this
  * amount of buffers are queued in appsink, any more buffers will block upstream
  * elements until a sample is pulled from @appsink.
- *
- * Since: 0.10.22
  */
 void
 gst_app_sink_set_max_buffers (GstAppSink * appsink, guint max)
@@ -1011,8 +997,6 @@ gst_app_sink_set_max_buffers (GstAppSink * appsink, guint max)
  * Get the maximum amount of buffers that can be queued in @appsink.
  *
  * Returns: The maximum amount of buffers that can be queued.
- *
- * Since: 0.10.22
  */
 guint
 gst_app_sink_get_max_buffers (GstAppSink * appsink)
@@ -1038,8 +1022,6 @@ gst_app_sink_get_max_buffers (GstAppSink * appsink)
  *
  * Instruct @appsink to drop old buffers when the maximum amount of queued
  * buffers is reached.
- *
- * Since: 0.10.22
  */
 void
 gst_app_sink_set_drop (GstAppSink * appsink, gboolean drop)
@@ -1068,8 +1050,6 @@ gst_app_sink_set_drop (GstAppSink * appsink, gboolean drop)
  *
  * Returns: %TRUE if @appsink is dropping old buffers when the queue is
  * filled.
- *
- * Since: 0.10.22
  */
 gboolean
 gst_app_sink_get_drop (GstAppSink * appsink)
@@ -1110,8 +1090,6 @@ gst_app_sink_get_drop (GstAppSink * appsink)
  * element is set to the READY/NULL state.
  *
  * Returns: a #GstBuffer or NULL when the appsink is stopped or EOS.
- *
- * Since: 0.10.22
  */
 GstSample *
 gst_app_sink_pull_preroll (GstAppSink * appsink)
@@ -1180,8 +1158,6 @@ not_started:
  * %NULL. Use gst_app_sink_is_eos () to check for the EOS condition.
  *
  * Returns: a #GstBuffer or NULL when the appsink is stopped or EOS.
- *
- * Since: 0.10.22
  */
 
 GstSample *
@@ -1250,8 +1226,6 @@ not_started:
  *
  * If callbacks are installed, no signals will be emitted for performance
  * reasons.
- *
- * Since: 0.10.23
  */
 void
 gst_app_sink_set_callbacks (GstAppSink * appsink,

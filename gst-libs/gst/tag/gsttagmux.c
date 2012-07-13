@@ -49,8 +49,6 @@
  * </itemizedlist>
  * </para>
  * </refsect2>
- *
- * Since 0.10.36
  */
 #ifdef HAVE_CONFIG_H
 #include <config.h>

@@ -51,8 +51,6 @@
  *
  * If the buffer has no timestamp, it is assumed to be inside the segment and
  * is not clipped
- *
- * Since: 0.10.14
  */
 GstBuffer *
 gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,

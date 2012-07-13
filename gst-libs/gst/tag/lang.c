@@ -268,8 +268,6 @@ qsort_strcmp_func (const void *p1, const void *p2)
  *
  * Returns: (transfer full): NULL-terminated string array with two-letter
  *     language codes. Free with g_strfreev() when no longer needed.
- *
- * Since: 0.10.26
  */
 gchar **
 gst_tag_get_language_codes (void)
@@ -320,8 +318,6 @@ gst_tag_get_language_codes (void)
  *     not be mapped to a language name. The returned string must not be
  *     modified and does not need to freed; it will stay valid until the
  *     application is terminated.
- *
- * Since: 0.10.26
  */
 const gchar *
 gst_tag_get_language_name (const gchar * language_code)
@@ -354,8 +350,6 @@ gst_tag_get_language_name (const gchar * language_code)
  * Returns: two-letter ISO-639-1 language code string that maps to @lang_code,
  *     or NULL if no mapping is known. The returned string must not be
  *     modified or freed.
- *
- * Since: 0.10.26
  */
 const gchar *
 gst_tag_get_language_code_iso_639_1 (const gchar * lang_code)
@@ -436,8 +430,6 @@ gst_tag_get_language_code_iso_639_2X (const gchar * lang_code, guint8 flags)
  * Returns: three-letter ISO-639-2 language code string that maps to @lang_code,
  *     or NULL if no mapping is known. The returned string must not be
  *     modified or freed.
- *
- * Since: 0.10.26
  */
 const gchar *
 gst_tag_get_language_code_iso_639_2T (const gchar * lang_code)
@@ -472,8 +464,6 @@ gst_tag_get_language_code_iso_639_2T (const gchar * lang_code)
  * Returns: three-letter ISO-639-2 language code string that maps to @lang_code,
  *     or NULL if no mapping is known. The returned string must not be
  *     modified or freed.
- *
- * Since: 0.10.26
  */
 const gchar *
 gst_tag_get_language_code_iso_639_2B (const gchar * lang_code)
@@ -504,8 +494,6 @@ gst_tag_get_language_code_iso_639_2B (const gchar * lang_code)
  *
  * Returns: TRUE if the two- or three-letter language code in @lang_code
  *     is a valid ISO-639 language code.
- *
- * Since: 0.10.37
  */
 gboolean
 gst_tag_check_language_code (const gchar * lang_code)

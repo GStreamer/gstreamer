@@ -462,8 +462,6 @@ gst_discoverer_stream_info_list_free (GList * infos)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
- *
- * Since: 0.10.31
  */
 GList *
 gst_discoverer_info_get_streams (GstDiscovererInfo * info, GType streamtype)
@@ -489,8 +487,6 @@ gst_discoverer_info_get_streams (GstDiscovererInfo * info, GType streamtype)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
- *
- * Since: 0.10.31
  */
 GList *
 gst_discoverer_info_get_audio_streams (GstDiscovererInfo * info)
@@ -507,8 +503,6 @@ gst_discoverer_info_get_audio_streams (GstDiscovererInfo * info)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
- *
- * Since: 0.10.31
  */
 GList *
 gst_discoverer_info_get_video_streams (GstDiscovererInfo * info)
@@ -525,8 +519,6 @@ gst_discoverer_info_get_video_streams (GstDiscovererInfo * info)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
- *
- * Since: 0.10.36
  */
 GList *
 gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo * info)
@@ -544,8 +536,6 @@ gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo * info)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
- *
- * Since: 0.10.31
  */
 GList *
 gst_discoverer_info_get_container_streams (GstDiscovererInfo * info)
@@ -560,8 +550,6 @@ gst_discoverer_info_get_container_streams (GstDiscovererInfo * info)
  *
  * Returns: a human readable name for the stream type of the given @info (ex : "audio",
  * "container",...).
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
@@ -598,8 +586,6 @@ gst_discoverer_stream_info_get_stream_type_nick (GstDiscovererStreamInfo * info)
  * Returns: (transfer full): the previous #GstDiscovererStreamInfo in a chain.
  * %NULL for starting points. Unref with #gst_discoverer_stream_info_unref
  * after usage.
- *
- * Since: 0.10.31
  */
 GstDiscovererStreamInfo *
 gst_discoverer_stream_info_get_previous (GstDiscovererStreamInfo * info)
@@ -618,8 +604,6 @@ gst_discoverer_stream_info_get_previous (GstDiscovererStreamInfo * info)
  * Returns: (transfer full): the next #GstDiscovererStreamInfo in a chain. %NULL
  * for final streams.
  * Unref with #gst_discoverer_stream_info_unref after usage.
- *
- * Since: 0.10.31
  */
 GstDiscovererStreamInfo *
 gst_discoverer_stream_info_get_next (GstDiscovererStreamInfo * info)
@@ -638,8 +622,6 @@ gst_discoverer_stream_info_get_next (GstDiscovererStreamInfo * info)
  *
  * Returns: (transfer full): the #GstCaps of the stream. Unref with
  * #gst_caps_unref after usage.
- *
- * Since: 0.10.31
  */
 GstCaps *
 gst_discoverer_stream_info_get_caps (GstDiscovererStreamInfo * info)
@@ -657,8 +639,6 @@ gst_discoverer_stream_info_get_caps (GstDiscovererStreamInfo * info)
  *
  * Returns: (transfer none): the tags contained in this stream. If you wish to
  * use the tags after the life-time of @info you will need to copy them.
- *
- * Since: 0.10.31
  */
 const GstTagList *
 gst_discoverer_stream_info_get_tags (GstDiscovererStreamInfo * info)
@@ -674,8 +654,6 @@ gst_discoverer_stream_info_get_tags (GstDiscovererStreamInfo * info)
  *
  * Returns: (transfer none): the TOC contained in this stream. If you wish to
  * use the TOC after the life-time of @info you will need to copy it.
- *
- * Since: 0.11.92
  */
 const GstToc *
 gst_discoverer_stream_info_get_toc (GstDiscovererStreamInfo * info)
@@ -692,8 +670,6 @@ gst_discoverer_stream_info_get_toc (GstDiscovererStreamInfo * info)
  * Returns: (transfer none): additional information regarding the stream (for
  * example codec version, profile, etc..). If you wish to use the #GstStructure
  * after the life-time of @info you will need to copy it.
- *
- * Since: 0.10.31
  */
 const GstStructure *
 gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
@@ -712,8 +688,6 @@ gst_discoverer_stream_info_get_misc (GstDiscovererStreamInfo * info)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): the list of
  * #GstDiscovererStreamInfo this container stream offers.
  * Free with gst_discoverer_stream_info_list_free() after usage.
- *
- * Since: 0.10.31
  */
 
 GList *
@@ -743,8 +717,6 @@ gst_discoverer_container_info_get_streams (GstDiscovererContainerInfo * info)
  * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the number of channels in the stream.
- *
- * Since: 0.10.31
  */
 
 AUDIO_INFO_ACCESSOR_CODE (channels, guint, 0);
@@ -754,8 +726,6 @@ AUDIO_INFO_ACCESSOR_CODE (channels, guint, 0);
  * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the sample rate of the stream in Hertz.
- *
- * Since: 0.10.31
  */
 
 AUDIO_INFO_ACCESSOR_CODE (sample_rate, guint, 0);
@@ -765,8 +735,6 @@ AUDIO_INFO_ACCESSOR_CODE (sample_rate, guint, 0);
  * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the number of bits used per sample in each channel.
- *
- * Since: 0.10.31
  */
 
 AUDIO_INFO_ACCESSOR_CODE (depth, guint, 0);
@@ -776,8 +744,6 @@ AUDIO_INFO_ACCESSOR_CODE (depth, guint, 0);
  * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the average or nominal bitrate of the stream in bits/second.
- *
- * Since: 0.10.31
  */
 
 AUDIO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
@@ -787,8 +753,6 @@ AUDIO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
  * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the maximum bitrate of the stream in bits/second.
- *
- * Since: 0.10.31
  */
 
 AUDIO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
@@ -798,8 +762,6 @@ AUDIO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
  * @info: a #GstDiscovererAudioInfo
  *
  * Returns: the language of the stream, or NULL if unknown.
- *
- * Since: 0.10.36
  */
 
 AUDIO_INFO_ACCESSOR_CODE (language, const gchar *, NULL);
@@ -816,8 +778,6 @@ AUDIO_INFO_ACCESSOR_CODE (language, const gchar *, NULL);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the width of the video stream in pixels.
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (width, guint, 0);
@@ -827,8 +787,6 @@ VIDEO_INFO_ACCESSOR_CODE (width, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the height of the video stream in pixels.
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (height, guint, 0);
@@ -838,8 +796,6 @@ VIDEO_INFO_ACCESSOR_CODE (height, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the depth in bits of the video stream.
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (depth, guint, 0);
@@ -849,8 +805,6 @@ VIDEO_INFO_ACCESSOR_CODE (depth, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the framerate of the video stream (numerator).
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (framerate_num, guint, 0);
@@ -860,8 +814,6 @@ VIDEO_INFO_ACCESSOR_CODE (framerate_num, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the framerate of the video stream (denominator).
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (framerate_denom, guint, 0);
@@ -871,8 +823,6 @@ VIDEO_INFO_ACCESSOR_CODE (framerate_denom, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the Pixel Aspect Ratio (PAR) of the video stream (numerator).
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (par_num, guint, 0);
@@ -882,8 +832,6 @@ VIDEO_INFO_ACCESSOR_CODE (par_num, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the Pixel Aspect Ratio (PAR) of the video stream (denominator).
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (par_denom, guint, 0);
@@ -893,8 +841,6 @@ VIDEO_INFO_ACCESSOR_CODE (par_denom, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: %TRUE if the stream is interlaced, else %FALSE.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_discoverer_video_info_is_interlaced (const GstDiscovererVideoInfo * info)
@@ -909,8 +855,6 @@ gst_discoverer_video_info_is_interlaced (const GstDiscovererVideoInfo * info)
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the average or nominal bitrate of the video stream in bits/second.
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
@@ -920,8 +864,6 @@ VIDEO_INFO_ACCESSOR_CODE (bitrate, guint, 0);
  * @info: a #GstDiscovererVideoInfo
  *
  * Returns: the maximum bitrate of the video stream in bits/second.
- *
- * Since: 0.10.31
  */
 
 VIDEO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
@@ -932,8 +874,6 @@ VIDEO_INFO_ACCESSOR_CODE (max_bitrate, guint, 0);
  *
  * Returns: #TRUE if the video stream corresponds to an image (i.e. only contains
  * one frame).
- *
- * Since: 0.10.31
  */
 gboolean
 gst_discoverer_video_info_is_image (const GstDiscovererVideoInfo * info)
@@ -955,8 +895,6 @@ gst_discoverer_video_info_is_image (const GstDiscovererVideoInfo * info)
  * @info: a #GstDiscovererSubtitleInfo
  *
  * Returns: the language of the stream, or NULL if unknown.
- *
- * Since: 0.10.36
  */
 
 SUBTITLE_INFO_ACCESSOR_CODE (language, const gchar *, NULL);
@@ -974,8 +912,6 @@ SUBTITLE_INFO_ACCESSOR_CODE (language, const gchar *, NULL);
  *
  * Returns: (transfer none): the URI to which this information corresponds to.
  * Copy it if you wish to use it after the life-time of @info.
- *
- * Since: 0.10.31
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (uri, const gchar *, NULL);
@@ -985,8 +921,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (uri, const gchar *, NULL);
  * @info: a #GstDiscovererInfo
  *
  * Returns: the result of the discovery as a #GstDiscovererResult.
- *
- * Since: 0.10.31
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (result, GstDiscovererResult, GST_DISCOVERER_OK);
@@ -999,8 +933,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (result, GstDiscovererResult, GST_DISCOVERER_OK);
  * #GstDiscovererStreamInfo.
  * This structure can be traversed to see the original hierarchy. Unref with
  * gst_discoverer_stream_info_unref() after usage.
- *
- * Since: 0.10.31
  */
 
 GstDiscovererStreamInfo *
@@ -1020,8 +952,6 @@ gst_discoverer_info_get_stream_info (GstDiscovererInfo * info)
  * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): the list of
  * all streams contained in the #info. Free after usage
  * with gst_discoverer_stream_info_list_free().
- *
- * Since: 0.10.31
  */
 GList *
 gst_discoverer_info_get_stream_list (GstDiscovererInfo * info)
@@ -1043,8 +973,6 @@ gst_discoverer_info_get_stream_list (GstDiscovererInfo * info)
  * @info: a #GstDiscovererInfo
  *
  * Returns: the duration of the URI in #GstClockTime (nanoseconds).
- *
- * Since: 0.10.31
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (duration, GstClockTime, GST_CLOCK_TIME_NONE);
@@ -1054,8 +982,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (duration, GstClockTime, GST_CLOCK_TIME_NONE);
  * @info: a #GstDiscovererInfo
  *
  * Returns: the whether the URI is seekable.
- *
- * Since: 0.10.32
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
@@ -1067,8 +993,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (seekable, gboolean, FALSE);
  * Returns: (transfer none): Miscellaneous information stored as a #GstStructure
  * (for example: information about missing plugins). If you wish to use the
  * #GstStructure after the life-time of @info, you will need to copy it.
- *
- * Since: 0.10.31
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
@@ -1079,8 +1003,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (misc, const GstStructure *, NULL);
  *
  * Returns: (transfer none): all tags contained in the URI. If you wish to use
  * the tags after the life-time of @info, you will need to copy them.
- *
- * Since: 0.10.31
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (tags, const GstTagList *, NULL);
@@ -1091,8 +1013,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (tags, const GstTagList *, NULL);
  *
  * Returns: (transfer none): TOC contained in the URI. If you wish to use
  * the TOC after the life-time of @info, you will need to copy it.
- *
- * Since: 0.11.92
  */
 
 DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
@@ -1104,8 +1024,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
  * Increments the reference count of @info.
  *
  * Returns: the same #GstDiscovererInfo object
- *
- * Since: 0.10.31
  */
 
 /**
@@ -1113,8 +1031,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
  * @info: a #GstDiscovererInfo
  *
  * Decrements the reference count of @info.
- *
- * Since: 0.10.31
  */
 
 /**
@@ -1124,8 +1040,6 @@ DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
  * Increments the reference count of @info.
  *
  * Returns: the same #GstDiscovererStreamInfo object
- *
- * Since: 0.10.31
  */
 
 /**
@@ -1133,6 +1047,4 @@ DISCOVERER_INFO_ACCESSOR_CODE (toc, const GstToc *, NULL);
  * @info: a #GstDiscovererStreamInfo
  *
  * Decrements the reference count of @info.
- *
- * Since: 0.10.31
  */

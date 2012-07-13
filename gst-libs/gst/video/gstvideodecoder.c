@@ -2102,8 +2102,6 @@ gst_video_decoder_release_frame (GstVideoDecoder * dec,
  * In any case, the frame is considered finished and released.
  *
  * Returns: a #GstFlowReturn, usually GST_FLOW_OK.
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
@@ -2164,8 +2162,6 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
  * of the buffer.
  *
  * Returns: a #GstFlowReturn resulting from sending data downstream
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
@@ -2316,8 +2312,6 @@ done:
  * @n_bytes: the number of bytes to add
  *
  * Removes next @n_bytes of input data and adds it to currently parsed frame.
- *
- * Since: 0.10.36
  */
 void
 gst_video_decoder_add_to_frame (GstVideoDecoder * decoder, int n_bytes)
@@ -2372,8 +2366,6 @@ gst_video_decoder_get_frame_duration (GstVideoDecoder * decoder,
  * metadata and passes it along for further processing, i.e. @handle_frame.
  *
  * Returns: a #GstFlowReturn
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_video_decoder_have_frame (GstVideoDecoder * decoder)
@@ -2482,8 +2474,6 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
  * Get the #GstVideoCodecState currently describing the output stream.
  *
  * Returns: (transfer full): #GstVideoCodecState describing format of video data.
- *
- * Since: 0.10.36
  */
 GstVideoCodecState *
 gst_video_decoder_get_output_state (GstVideoDecoder * decoder)
@@ -2522,8 +2512,6 @@ gst_video_decoder_get_output_state (GstVideoDecoder * decoder)
  * from the next call to #gst_video_decoder_finish_frame().
  *
  * Returns: (transfer full): the newly configured output state.
- *
- * Since: 0.10.36
  */
 GstVideoCodecState *
 gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
@@ -2559,8 +2547,6 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
  * Get the oldest pending unfinished #GstVideoCodecFrame
  *
  * Returns: (transfer full): oldest pending unfinished #GstVideoCodecFrame.
- *
- * Since: 0.10.36
  */
 GstVideoCodecFrame *
 gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
@@ -2583,8 +2569,6 @@ gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
  * Get a pending unfinished #GstVideoCodecFrame
  * 
  * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
- *
- * Since: 0.10.36
  */
 GstVideoCodecFrame *
 gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
@@ -2693,8 +2677,6 @@ gst_video_decoder_propose_allocation_default (GstVideoDecoder * decoder,
  * Sets src pad caps according to currently configured #GstVideoCodecState.
  *
  * Returns: #TRUE if the caps were accepted downstream, else #FALSE.
- *
- * Since: 0.10.36
  */
 static gboolean
 gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
@@ -2800,8 +2782,6 @@ no_decide_allocation:
  * current #GstVideoCodecState.
  *
  * Returns: (transfer full): allocated buffer
- *
- * Since: 0.10.36
  */
 GstBuffer *
 gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
@@ -2836,8 +2816,6 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
  * keep references to the frame, not the buffer.
  *
  * Returns: %GST_FLOW_OK if an output buffer could be allocated
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_video_decoder_alloc_output_frame (GstVideoDecoder *
@@ -2877,8 +2855,6 @@ gst_video_decoder_alloc_output_frame (GstVideoDecoder *
  * and should therefore occur as soon/skippy as possible.
  *
  * Returns: max decoding time.
- *
- * Since: 0.10.36
  */
 GstClockTimeDiff
 gst_video_decoder_get_max_decode_time (GstVideoDecoder *
@@ -2933,8 +2909,6 @@ _gst_video_decoder_error (GstVideoDecoder * dec, gint weight,
  * Sets numbers of tolerated decoder errors, where a tolerated one is then only
  * warned about, but more than tolerated will lead to fatal error.  Default
  * is set to GST_VIDEO_DECODER_MAX_ERRORS.
- *
- * Since: 0.10.36
  */
 void
 gst_video_decoder_set_max_errors (GstVideoDecoder * dec, gint num)
@@ -2949,8 +2923,6 @@ gst_video_decoder_set_max_errors (GstVideoDecoder * dec, gint num)
  * @dec: a #GstVideoDecoder
  *
  * Returns: currently configured decoder tolerated error count.
- *
- * Since: 0.10.36
  */
 gint
 gst_video_decoder_get_max_errors (GstVideoDecoder * dec)
@@ -2967,8 +2939,6 @@ gst_video_decoder_get_max_errors (GstVideoDecoder * dec)
  *
  * Allows baseclass to consider input data as packetized or not. If the
  * input is packetized, then the @parse method will not be called.
- *
- * Since: 0.10.36
  */
 void
 gst_video_decoder_set_packetized (GstVideoDecoder * decoder,
@@ -2985,8 +2955,6 @@ gst_video_decoder_set_packetized (GstVideoDecoder * decoder,
  * base class.
  *
  * Returns: TRUE if input data is considered packetized.
- *
- * Since: 0.10.36
  */
 gboolean
 gst_video_decoder_get_packetized (GstVideoDecoder * decoder)
@@ -3000,8 +2968,6 @@ gst_video_decoder_get_packetized (GstVideoDecoder * decoder)
  * @enabled: whether to enable byte to time conversion
  *
  * Allows baseclass to perform byte to time estimated conversion.
- *
- * Since: 0.10.36
  */
 void
 gst_video_decoder_set_estimate_rate (GstVideoDecoder * dec, gboolean enabled)
@@ -3016,8 +2982,6 @@ gst_video_decoder_set_estimate_rate (GstVideoDecoder * dec, gboolean enabled)
  * @dec: a #GstVideoDecoder
  *
  * Returns: currently configured byte to time conversion setting
- *
- * Since: 0.10.36
  */
 gboolean
 gst_video_decoder_get_estimate_rate (GstVideoDecoder * dec)
@@ -3036,8 +3000,6 @@ gst_video_decoder_get_estimate_rate (GstVideoDecoder * dec)
  * Lets #GstVideoDecoder sub-classes tell the baseclass what the decoder
  * latency is. Will also post a LATENCY message on the bus so the pipeline
  * can reconfigure its global latency.
- *
- * Since: 0.10.36
  */
 void
 gst_video_decoder_set_latency (GstVideoDecoder * decoder,
@@ -3065,8 +3027,6 @@ gst_video_decoder_set_latency (GstVideoDecoder * decoder,
  *
  * Query the configured decoder latency. Results will be returned via
  * @min_latency and @max_latency.
- *
- * Since: 0.10.36
  */
 void
 gst_video_decoder_get_latency (GstVideoDecoder * decoder,

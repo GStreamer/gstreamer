@@ -40,8 +40,8 @@ GST_DEBUG_CATEGORY_EXTERN (riff_debug);
  * @tag: fourcc of the chunk (returned by this function).
  * @chunk_data: buffer (returned by this function).
  *
- * Reads a single chunk of data. Since 0.10.8 'JUNK' chunks
- * are skipped automatically.
+ * Reads a single chunk of data. 'JUNK' chunks are skipped
+ * automatically.
  *
  * Returns: flow status.
  */

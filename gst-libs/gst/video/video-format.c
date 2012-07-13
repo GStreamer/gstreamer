@@ -1633,8 +1633,6 @@ gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
  * If the FOURCC cannot be represented by #GstVideoFormat,
  * #GST_VIDEO_FORMAT_UNKNOWN is returned.
  *
- * Since: 0.10.16
- *
  * Returns: the #GstVideoFormat describing the FOURCC value
  */
 GstVideoFormat
@@ -1723,8 +1721,6 @@ gst_video_format_from_string (const gchar * format)
  * Converts a #GstVideoFormat value into the corresponding FOURCC.  Only
  * a few YUV formats have corresponding FOURCC values.  If @format has
  * no corresponding FOURCC value, 0 is returned.
- *
- * Since: 0.10.16
  *
  * Returns: the FOURCC corresponding to @format
  */

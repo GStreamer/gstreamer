@@ -42,8 +42,6 @@
  * </refsect2>
  *
  * Last reviewed on 2007-03-26 (0.10.13)
- *
- * Since: 0.10.13
  */
 
 #include <string.h>
@@ -1718,8 +1716,6 @@ no_space:
  * Get the sender SSRC field of the RTPFB or PSFB @packet.
  *
  * Returns: the sender SSRC.
- *
- * Since: 0.10.23
  */
 guint32
 gst_rtcp_packet_fb_get_sender_ssrc (GstRTCPPacket * packet)
@@ -1748,8 +1744,6 @@ gst_rtcp_packet_fb_get_sender_ssrc (GstRTCPPacket * packet)
  * @ssrc: a sender SSRC
  *
  * Set the sender SSRC field of the RTPFB or PSFB @packet.
- *
- * Since: 0.10.23
  */
 void
 gst_rtcp_packet_fb_set_sender_ssrc (GstRTCPPacket * packet, guint32 ssrc)
@@ -1776,8 +1770,6 @@ gst_rtcp_packet_fb_set_sender_ssrc (GstRTCPPacket * packet, guint32 ssrc)
  * Get the media SSRC field of the RTPFB or PSFB @packet.
  *
  * Returns: the media SSRC.
- *
- * Since: 0.10.23
  */
 guint32
 gst_rtcp_packet_fb_get_media_ssrc (GstRTCPPacket * packet)
@@ -1806,8 +1798,6 @@ gst_rtcp_packet_fb_get_media_ssrc (GstRTCPPacket * packet)
  * @ssrc: a media SSRC
  *
  * Set the media SSRC field of the RTPFB or PSFB @packet.
- *
- * Since: 0.10.23
  */
 void
 gst_rtcp_packet_fb_set_media_ssrc (GstRTCPPacket * packet, guint32 ssrc)
@@ -1834,8 +1824,6 @@ gst_rtcp_packet_fb_set_media_ssrc (GstRTCPPacket * packet, guint32 ssrc)
  * Get the feedback message type of the FB @packet.
  *
  * Returns: The feedback message type.
- *
- * Since: 0.10.23
  */
 GstRTCPFBType
 gst_rtcp_packet_fb_get_type (GstRTCPPacket * packet)
@@ -1853,8 +1841,6 @@ gst_rtcp_packet_fb_get_type (GstRTCPPacket * packet)
  * @type: the #GstRTCPFBType to set
  *
  * Set the feedback message type of the FB @packet.
- *
- * Since: 0.10.23
  */
 void
 gst_rtcp_packet_fb_set_type (GstRTCPPacket * packet, GstRTCPFBType type)
@@ -1937,8 +1923,6 @@ gst_rtcp_unix_to_ntp (guint64 unixtime)
  * key in a #GstStructure containing SDES items.
  *
  * Returns: the string equivalent of @type
- *
- * Since: 0.10.26
  */
 const gchar *
 gst_rtcp_sdes_type_to_name (GstRTCPSDESType type)
@@ -1986,8 +1970,6 @@ gst_rtcp_sdes_type_to_name (GstRTCPSDESType type)
  *
  * Returns: the #GstRTCPSDESType for @name or #GST_RTCP_SDES_PRIV when @name
  * is a private sdes item.
- *
- * Since: 0.10.26
  */
 GstRTCPSDESType
 gst_rtcp_sdes_name_to_type (const gchar * name)
@@ -2027,8 +2009,6 @@ gst_rtcp_sdes_name_to_type (const gchar * name)
  * RTPFB or PSFB @packet.
  *
  * Returns: The length of the FCI in 32-bit words.
- *
- * Since: 0.10.31
  */
 guint16
 gst_rtcp_packet_fb_get_fci_length (GstRTCPPacket * packet)
@@ -2055,8 +2035,6 @@ gst_rtcp_packet_fb_get_fci_length (GstRTCPPacket * packet)
  * RTPFB or PSFB @packet.
  *
  * Returns: %TRUE if there was enough space in the packet to add this much FCI
- *
- * Since: 0.10.31
  */
 gboolean
 gst_rtcp_packet_fb_set_fci_length (GstRTCPPacket * packet, guint16 wordlen)
@@ -2088,8 +2066,6 @@ gst_rtcp_packet_fb_set_fci_length (GstRTCPPacket * packet, guint16 wordlen)
  * Get the Feedback Control Information attached to a RTPFB or PSFB @packet.
  *
  * Returns: a pointer to the FCI
- *
- * Since: 0.10.31
  */
 guint8 *
 gst_rtcp_packet_fb_get_fci (GstRTCPPacket * packet)

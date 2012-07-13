@@ -411,8 +411,6 @@ struct _GstInstallPluginsContext
  * ##endif
  * ...
  * </programlisting>
- *
- * Since: 0.10.12
  */
 void
 gst_install_plugins_context_set_xid (GstInstallPluginsContext * ctx, guint xid)
@@ -429,8 +427,6 @@ gst_install_plugins_context_set_xid (GstInstallPluginsContext * ctx, guint xid)
  *
  * Returns: a new #GstInstallPluginsContext. Free with
  * gst_install_plugins_context_free() when no longer needed
- *
- * Since: 0.10.12
  */
 GstInstallPluginsContext *
 gst_install_plugins_context_new (void)
@@ -443,8 +439,6 @@ gst_install_plugins_context_new (void)
  * @ctx: a #GstInstallPluginsContext
  *
  * Frees a #GstInstallPluginsContext.
- *
- * Since: 0.10.12
  */
 void
 gst_install_plugins_context_free (GstInstallPluginsContext * ctx)
@@ -621,8 +615,6 @@ gst_install_plugins_installer_exited (GPid pid, gint status, gpointer data)
  * installed but no suitable video decoder and no suitable audio decoder).
  *
  * Returns: result code whether an external installer could be started
- *
- * Since: 0.10.12
  */
 
 GstInstallPluginsReturn
@@ -671,8 +663,6 @@ gst_install_plugins_async (gchar ** details, GstInstallPluginsContext * ctx,
  * gst_install_plugins_async() instead of this function.
  *
  * Returns: the result of the installation.
- *
- * Since: 0.10.12
  */
 GstInstallPluginsReturn
 gst_install_plugins_sync (gchar ** details, GstInstallPluginsContext * ctx)
@@ -705,8 +695,6 @@ gst_install_plugins_sync (gchar ** details, GstInstallPluginsContext * ctx)
  * in debugging.
  *
  * Returns: a descriptive string for the status code in @ret
- *
- * Since: 0.10.12
  */
 const gchar *
 gst_install_plugins_return_get_name (GstInstallPluginsReturn ret)
@@ -747,8 +735,6 @@ gst_install_plugins_return_get_name (GstInstallPluginsReturn ret)
  * is currently in progress.
  *
  * Returns: TRUE if plugin installation is in progress, otherwise FALSE
- *
- * Since: 0.10.12
  */
 gboolean
 gst_install_plugins_installation_in_progress (void)
@@ -765,8 +751,6 @@ gst_install_plugins_installation_in_progress (void)
  * exists.
  *
  * Returns: TRUE if plugin installation is likely to be supported.
- *
- * Since: 0.10.15
  */
 gboolean
 gst_install_plugins_supported (void)

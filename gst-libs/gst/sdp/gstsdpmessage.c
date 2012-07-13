@@ -310,8 +310,6 @@ gst_sdp_message_free (GstSDPMessage * msg)
  * Check if the given @addr is a multicast address.
  *
  * Returns: TRUE when @addr is multicast.
- *
- * Since: 0.10.32
  */
 gboolean
 gst_sdp_address_is_multicast (const gchar * nettype, const gchar * addrtype,
@@ -487,8 +485,6 @@ hex_to_int (gchar c)
  *  http://tools.ietf.org/html/draft-fujikawa-sdp-url-01
  *
  * Returns: #GST_SDP_OK on success.
- *
- * Since: 0.10.31
  */
 GstSDPResult
 gst_sdp_message_parse_uri (const gchar * uri, GstSDPMessage * msg)
@@ -589,8 +585,6 @@ static const gchar hex[16] = "0123456789ABCDEF";
  *  Where each value is url encoded.
  *
  * Returns: a uri for @msg.
- *
- * Since: 0.10.31
  */
 gchar *
 gst_sdp_message_as_uri (const gchar * scheme, const GstSDPMessage * msg)

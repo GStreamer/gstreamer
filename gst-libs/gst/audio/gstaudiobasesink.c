@@ -234,12 +234,10 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
           "Allow pull-based scheduling", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAudioBaseSink:drift-tolerance
+   * GstAudioBaseSink:drift-tolerance:
    *
    * Controls the amount of time in microseconds that clocks are allowed
    * to drift before resynchronisation happens.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_DRIFT_TOLERANCE,
       g_param_spec_int64 ("drift-tolerance", "Drift Tolerance",
@@ -247,12 +245,10 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
           G_MAXINT64, DEFAULT_DRIFT_TOLERANCE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAudioBaseSink:alignment_threshold
+   * GstAudioBaseSink:alignment_threshold:
    *
    * Controls the amount of time in nanoseconds that timestamps are allowed
    * to drift from their ideal time before choosing not to align them.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
       g_param_spec_uint64 ("alignment-threshold", "Alignment Threshold",
@@ -261,12 +257,10 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAudioBaseSink:discont-wait
+   * GstAudioBaseSink:discont-wait:
    *
    * A window of time in nanoseconds to wait before creating a discontinuity as
    * a result of breaching the drift-tolerance.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_class, PROP_DISCONT_WAIT,
       g_param_spec_uint64 ("discont-wait", "Discont Wait",
@@ -561,8 +555,6 @@ gst_audio_base_sink_get_time (GstClock * clock, GstAudioBaseSink * sink)
  * Controls whether @sink will provide a clock or not. If @provide is %TRUE,
  * gst_element_provide_clock() will return a clock that reflects the datarate
  * of @sink. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
- *
- * Since: 0.10.16
  */
 void
 gst_audio_base_sink_set_provide_clock (GstAudioBaseSink * sink,
@@ -586,8 +578,6 @@ gst_audio_base_sink_set_provide_clock (GstAudioBaseSink * sink,
  * gst_audio_base_sink_set_provide_clock.
  *
  * Returns: %TRUE if @sink will provide a clock.
- *
- * Since: 0.10.16
  */
 gboolean
 gst_audio_base_sink_get_provide_clock (GstAudioBaseSink * sink)
@@ -609,8 +599,6 @@ gst_audio_base_sink_get_provide_clock (GstAudioBaseSink * sink)
  * @method: the new slave method
  *
  * Controls how clock slaving will be performed in @sink.
- *
- * Since: 0.10.16
  */
 void
 gst_audio_base_sink_set_slave_method (GstAudioBaseSink * sink,
@@ -630,8 +618,6 @@ gst_audio_base_sink_set_slave_method (GstAudioBaseSink * sink,
  * Get the current slave method used by @sink.
  *
  * Returns: The current slave method used by @sink.
- *
- * Since: 0.10.16
  */
 GstAudioBaseSinkSlaveMethod
 gst_audio_base_sink_get_slave_method (GstAudioBaseSink * sink)
@@ -654,8 +640,6 @@ gst_audio_base_sink_get_slave_method (GstAudioBaseSink * sink)
  * @drift_tolerance: the new drift tolerance in microseconds
  *
  * Controls the sink's drift tolerance.
- *
- * Since: 0.10.31
  */
 void
 gst_audio_base_sink_set_drift_tolerance (GstAudioBaseSink * sink,
@@ -669,14 +653,12 @@ gst_audio_base_sink_set_drift_tolerance (GstAudioBaseSink * sink,
 }
 
 /**
- * gst_audio_base_sink_get_drift_tolerance
+ * gst_audio_base_sink_get_drift_tolerance:
  * @sink: a #GstAudioBaseSink
  *
  * Get the current drift tolerance, in microseconds, used by @sink.
  *
  * Returns: The current drift tolerance used by @sink.
- *
- * Since: 0.10.31
  */
 gint64
 gst_audio_base_sink_get_drift_tolerance (GstAudioBaseSink * sink)
@@ -698,8 +680,6 @@ gst_audio_base_sink_get_drift_tolerance (GstAudioBaseSink * sink)
  * @alignment_threshold: the new alignment threshold in nanoseconds
  *
  * Controls the sink's alignment threshold.
- *
- * Since: 0.10.36
  */
 void
 gst_audio_base_sink_set_alignment_threshold (GstAudioBaseSink * sink,
@@ -713,14 +693,12 @@ gst_audio_base_sink_set_alignment_threshold (GstAudioBaseSink * sink,
 }
 
 /**
- * gst_audio_base_sink_get_alignment_threshold
+ * gst_audio_base_sink_get_alignment_threshold:
  * @sink: a #GstAudioBaseSink
  *
  * Get the current alignment threshold, in nanoseconds, used by @sink.
  *
  * Returns: The current alignment threshold used by @sink.
- *
- * Since: 0.10.36
  */
 GstClockTime
 gst_audio_base_sink_get_alignment_threshold (GstAudioBaseSink * sink)
@@ -742,8 +720,6 @@ gst_audio_base_sink_get_alignment_threshold (GstAudioBaseSink * sink)
  * @discont_wait: the new discont wait in nanoseconds
  *
  * Controls how long the sink will wait before creating a discontinuity.
- *
- * Since: 0.10.36
  */
 void
 gst_audio_base_sink_set_discont_wait (GstAudioBaseSink * sink,
@@ -757,14 +733,12 @@ gst_audio_base_sink_set_discont_wait (GstAudioBaseSink * sink,
 }
 
 /**
- * gst_audio_base_sink_get_discont_wait
+ * gst_audio_base_sink_get_discont_wait:
  * @sink: a #GstAudioBaseSink
  *
  * Get the current discont wait, in nanoseconds, used by @sink.
  *
  * Returns: The current discont wait used by @sink.
- *
- * Since: 0.10.36
  */
 GstClockTime
 gst_audio_base_sink_get_discont_wait (GstAudioBaseSink * sink)
@@ -1981,7 +1955,7 @@ sync_latency_failed:
  * ::create_ringbuffer vmethod and will set @sink as the parent of the returned
  * buffer (see gst_object_set_parent()).
  *
- * Returns: The new ringbuffer of @sink.
+ * Returns: (transfer none): The new ringbuffer of @sink.
  */
 GstAudioRingBuffer *
 gst_audio_base_sink_create_ringbuffer (GstAudioBaseSink * sink)

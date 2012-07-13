@@ -370,10 +370,10 @@ invalid_channel_positions:
 /**
  * gst_audio_info_convert:
  * @info: a #GstAudioInfo
- * @src_format: #GstFormat of the @src_value
- * @src_value: value to convert
- * @dest_format: #GstFormat of the @dest_value
- * @dest_value: pointer to destination value
+ * @src_fmt: #GstFormat of the @src_val
+ * @src_val: value to convert
+ * @dest_fmt: #GstFormat of the @dest_val
+ * @dest_val: pointer to destination value
  *
  * Converts among various #GstFormat types.  This function handles
  * GST_FORMAT_BYTES, GST_FORMAT_TIME, and GST_FORMAT_DEFAULT.  For

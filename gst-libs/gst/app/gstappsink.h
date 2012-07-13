@@ -35,7 +35,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_APP_SINK))
 #define GST_IS_APP_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_APP_SINK))
-/* Since 0.10.23 */
 #define GST_APP_SINK_CAST(obj) \
   ((GstAppSink*)(obj))
 
@@ -60,8 +59,6 @@ typedef struct _GstAppSinkPrivate GstAppSinkPrivate;
  *
  * A set of callbacks that can be installed on the appsink with
  * gst_app_sink_set_callbacks().
- *
- * Since: 0.10.23
  */
 typedef struct {
   void          (*eos)              (GstAppSink *sink, gpointer user_data);

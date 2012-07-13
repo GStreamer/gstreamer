@@ -293,7 +293,6 @@ gst_audio_channel_positions_to_mask (const GstAudioChannelPosition * position,
  * @channels: The number of channels
  * @channel_mask: The input channel_mask
  * @position: The %GstAudioChannelPositions
- * @caps: a #GstCaps
  *
  * Convert the @channels present in @channel_mask to a @position array
  * (which should have at least @channels entries ensured by caller).

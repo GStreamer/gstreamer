@@ -222,8 +222,6 @@ done:
  * Convert @range into a string representation.
  *
  * Returns: The string representation of @range. g_free() after usage.
- *
- * Since: 0.10.23
  */
 gchar *
 gst_rtsp_range_to_string (const GstRTSPTimeRange * range)

@@ -42,8 +42,6 @@ typedef struct _GstTagDemuxPrivate GstTagDemuxPrivate;
  * @GST_TAG_DEMUX_RESULT_OK	   : parsed tag successfully
  *
  * Result values from the parse_tag virtual function.
- *
- * Since: 0.10.15
  */
 typedef enum {
   GST_TAG_DEMUX_RESULT_BROKEN_TAG,
@@ -59,8 +57,6 @@ GType gst_tag_demux_result_get_type (void);
  * @element: parent element
  *
  * Opaque #GstTagDemux structure.
- *
- * Since: 0.10.15
  */
 struct _GstTagDemux
 {
@@ -97,8 +93,6 @@ struct _GstTagDemux
  *
  * The #GstTagDemuxClass structure.  See documentation at beginning of section
  * for details about what subclasses need to override and do.
- *
- * Since: 0.10.15
  */
 struct _GstTagDemuxClass
 {

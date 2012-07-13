@@ -209,8 +209,6 @@ invalid:
  * Make a copy of @url.
  *
  * Returns: a copy of @url. Free with gst_rtsp_url_free () after usage.
- *
- * Since: 0.10.22
  */
 GstRTSPUrl *
 gst_rtsp_url_copy (const GstRTSPUrl * url)
@@ -384,8 +382,6 @@ unescape_path_component (gchar * comp)
  * will usually be the empty string.
  *
  * Returns: a string vector. g_strfreev() after usage.
- *
- * Since: 0.10.32
  */
 gchar **
 gst_rtsp_url_decode_path_components (const GstRTSPUrl * url)

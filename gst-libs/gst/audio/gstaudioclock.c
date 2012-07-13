@@ -131,8 +131,6 @@ gst_audio_clock_dispose (GObject * object)
  * #GST_CLOCK_TIME_NONE, the clock will return the last reported time.
  *
  * Returns: a new #GstAudioClock casted to a #GstClock.
- *
- * Since: 0.10.31
  */
 GstClock *
 gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
@@ -217,8 +215,6 @@ gst_audio_clock_get_internal_time (GstClock * clock)
  * any offsets.
  *
  * Returns: the time as reported by the time function of the audio clock
- *
- * Since: 0.10.23
  */
 GstClockTime
 gst_audio_clock_get_time (GstClock * clock)
@@ -249,8 +245,6 @@ gst_audio_clock_get_time (GstClock * clock)
  * Adjust @time with the internal offset of the audio clock.
  *
  * Returns: @time adjusted with the internal offset.
- *
- * Since: 0.10.23
  */
 GstClockTime
 gst_audio_clock_adjust (GstClock * clock, GstClockTime time)
@@ -275,8 +269,6 @@ gst_audio_clock_adjust (GstClock * clock, GstClockTime time)
  *
  * After calling this function, @clock will return the last returned time for
  * the rest of its lifetime.
- *
- * Since: 0.10.31
  */
 void
 gst_audio_clock_invalidate (GstClock * clock)

@@ -67,8 +67,6 @@ digit_to_string (guint digit)
  * rate.
  *
  * Returns: The sample rate if @sr_idx is valid, 0 otherwise.
- *
- * Since: 0.10.31
  */
 guint
 gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx)
@@ -101,8 +99,6 @@ gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx)
  *
  * Returns: The profile as a const string and %NULL if the profile could not be
  * determined.
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
@@ -165,8 +161,6 @@ gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len)
  *
  * Returns: The level as a const string and %NULL if the level could not be
  * determined.
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
@@ -339,8 +333,6 @@ gst_codec_utils_aac_get_level (const guint8 * audio_config, guint len)
  * If mpegversion is 4, the "base-profile" field is also set in @caps.
  *
  * Returns: %TRUE if the level and profile could be set, %FALSE otherwise.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
@@ -406,8 +398,6 @@ gst_codec_utils_aac_caps_set_level_and_profile (GstCaps * caps,
  * </itemizedlist>
  *
  * Returns: The profile as a const string, or %NULL if there is an error.
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
@@ -479,8 +469,6 @@ gst_codec_utils_h264_get_profile (const guint8 * sps, guint len)
  * same format as for gst_codec_utils_h264_get_profile().
  *
  * Returns: The level as a const string, or %NULL if there is an error.
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
@@ -535,8 +523,6 @@ gst_codec_utils_h264_get_level (const guint8 * sps, guint len)
  * Transform a level string from the caps into the level_idc
  *
  * Returns: the level_idc or 0 if the level is unknown
- *
- * Since: 0.10.36
  */
 guint8
 gst_codec_utils_h264_get_level_idc (const gchar * level)
@@ -591,8 +577,6 @@ gst_codec_utils_h264_get_level_idc (const gchar * level)
  * for more details on the parameters.
  *
  * Returns: %TRUE if the level and profile could be set, %FALSE otherwise.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
@@ -632,8 +616,6 @@ gst_codec_utils_h264_caps_set_level_and_profile (GstCaps * caps,
  * (profile_and_level_indication) is used.
  *
  * Returns: The profile as a const string, or NULL if there is an error.
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
@@ -706,8 +688,6 @@ gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len)
  * (profile_and_level_indication) is used.
  *
  * Returns: The level as a const string, or NULL if there is an error.
- *
- * Since: 0.10.31
  */
 const gchar *
 gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
@@ -800,8 +780,6 @@ gst_codec_utils_mpeg4video_get_level (const guint8 * vis_obj_seq, guint len)
  * parameters.
  *
  * Returns: %TRUE if the level and profile could be set, %FALSE otherwise.
- *
- * Since: 0.10.31
  */
 gboolean
 gst_codec_utils_mpeg4video_caps_set_level_and_profile (GstCaps * caps,

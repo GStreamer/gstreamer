@@ -179,8 +179,6 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
    * GstAudioBaseSrc:actual-buffer-time:
    *
    * Actual configured size of audio buffer in microseconds.
-   *
-   * Since: 0.10.20
    **/
   g_object_class_install_property (gobject_class, PROP_ACTUAL_BUFFER_TIME,
       g_param_spec_int64 ("actual-buffer-time", "Actual Buffer Time",
@@ -192,8 +190,6 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
    * GstAudioBaseSrc:actual-latency-time:
    *
    * Actual configured audio latency in microseconds.
-   *
-   * Since: 0.10.20
    **/
   g_object_class_install_property (gobject_class, PROP_ACTUAL_LATENCY_TIME,
       g_param_spec_int64 ("actual-latency-time", "Actual Latency Time",
@@ -357,8 +353,6 @@ gst_audio_base_src_get_time (GstClock * clock, GstAudioBaseSrc * src)
  * Controls whether @src will provide a clock or not. If @provide is %TRUE, 
  * gst_element_provide_clock() will return a clock that reflects the datarate
  * of @src. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
- *
- * Since: 0.10.16
  */
 void
 gst_audio_base_src_set_provide_clock (GstAudioBaseSrc * src, gboolean provide)
@@ -381,8 +375,6 @@ gst_audio_base_src_set_provide_clock (GstAudioBaseSrc * src, gboolean provide)
  * gst_audio_base_src_set_provide_clock.
  *
  * Returns: %TRUE if @src will provide a clock.
- *
- * Since: 0.10.16
  */
 gboolean
 gst_audio_base_src_get_provide_clock (GstAudioBaseSrc * src)
@@ -404,8 +396,6 @@ gst_audio_base_src_get_provide_clock (GstAudioBaseSrc * src)
  * @method: the new slave method
  *
  * Controls how clock slaving will be performed in @src.
- *
- * Since: 0.10.20
  */
 void
 gst_audio_base_src_set_slave_method (GstAudioBaseSrc * src,
@@ -425,8 +415,6 @@ gst_audio_base_src_set_slave_method (GstAudioBaseSrc * src,
  * Get the current slave method used by @src.
  *
  * Returns: The current slave method used by @src.
- *
- * Since: 0.10.20
  */
 GstAudioBaseSrcSlaveMethod
 gst_audio_base_src_get_slave_method (GstAudioBaseSrc * src)
@@ -1062,7 +1050,7 @@ stopped:
  * ::create_ringbuffer vmethod and will set @src as the parent of the returned
  * buffer (see gst_object_set_parent()).
  *
- * Returns: The new ringbuffer of @src.
+ * Returns: (transfer none): The new ringbuffer of @src.
  */
 GstAudioRingBuffer *
 gst_audio_base_src_create_ringbuffer (GstAudioBaseSrc * src)

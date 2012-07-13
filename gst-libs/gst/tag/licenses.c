@@ -203,8 +203,6 @@ static const gchar jurisdictions[] =
  *
  * Returns: (transfer full): NULL-terminated array of license strings. Free
  *     with g_strfreev() when no longer needed.
- *
- * Since: 0.10.36
  */
 gchar **
 gst_tag_get_licenses (void)
@@ -327,8 +325,6 @@ gst_tag_get_license_idx (const gchar * license_ref, const gchar ** jurisdiction)
  * a license in their most general form.
  *
  * Returns: the flags of the license, or 0 if the license is unknown
- *
- * Since: 0.10.36
  */
 GstTagLicenseFlags
 gst_tag_get_license_flags (const gchar * license_ref)
@@ -350,8 +346,6 @@ gst_tag_get_license_flags (const gchar * license_ref)
  * such as e.g. "CC BY-NC-ND 2.0 UK".
  *
  * Returns: the nick name of the license, or NULL if the license is unknown
- *
- * Since: 0.10.36
  */
 const gchar *
 gst_tag_get_license_nick (const gchar * license_ref)
@@ -398,8 +392,6 @@ gst_tag_get_license_nick (const gchar * license_ref)
  *
  * Returns: the title of the license, or NULL if the license is unknown or
  *    no title is available.
- *
- * Since: 0.10.36
  */
 const gchar *
 gst_tag_get_license_title (const gchar * license_ref)
@@ -426,8 +418,6 @@ gst_tag_get_license_title (const gchar * license_ref)
  *
  * Returns: the description of the license, or NULL if the license is unknown
  *    or a description is not available.
- *
- * Since: 0.10.36
  */
 const gchar *
 gst_tag_get_license_description (const gchar * license_ref)
@@ -459,8 +449,6 @@ gst_tag_get_license_description (const gchar * license_ref)
  *
  * Returns: the jurisdiction code of the license, or NULL if the license is
  *    unknown or is not specific to a particular jurisdiction.
- *
- * Since: 0.10.36
  */
 const gchar *
 gst_tag_get_license_jurisdiction (const gchar * license_ref)
@@ -483,8 +471,6 @@ gst_tag_get_license_jurisdiction (const gchar * license_ref)
  *
  * Returns: the version of the license, or NULL if the license is not known or
  *    has no version
- *
- * Since: 0.10.36
  */
 const gchar *
 gst_tag_get_license_version (const gchar * license_ref)

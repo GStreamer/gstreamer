@@ -29,51 +29,51 @@ G_BEGIN_DECLS
 /* Tag names */
 
 /**
- * GST_TAG_MUSICBRAINZ_TRACKID
+ * GST_TAG_MUSICBRAINZ_TRACKID:
  *
  * MusicBrainz track ID
  */
 #define GST_TAG_MUSICBRAINZ_TRACKID	"musicbrainz-trackid"
 /**
- * GST_TAG_MUSICBRAINZ_ARTISTID
+ * GST_TAG_MUSICBRAINZ_ARTISTID:
  *
  * MusicBrainz artist ID
  */
 #define GST_TAG_MUSICBRAINZ_ARTISTID	"musicbrainz-artistid"
 /**
- * GST_TAG_MUSICBRAINZ_ALBUMID
+ * GST_TAG_MUSICBRAINZ_ALBUMID:
  *
  * MusicBrainz album ID
  */
 #define GST_TAG_MUSICBRAINZ_ALBUMID	"musicbrainz-albumid"
 /**
- * GST_TAG_MUSICBRAINZ_ALBUMARTISTID
+ * GST_TAG_MUSICBRAINZ_ALBUMARTISTID:
  *
  * MusicBrainz album artist ID
  */
 #define GST_TAG_MUSICBRAINZ_ALBUMARTISTID	"musicbrainz-albumartistid"
 /**
- * GST_TAG_MUSICBRAINZ_TRMID
+ * GST_TAG_MUSICBRAINZ_TRMID:
  *
  * MusicBrainz track TRM ID
  */
 #define GST_TAG_MUSICBRAINZ_TRMID	"musicbrainz-trmid"
 
 /**
- * GST_TAG_CMML_STREAM
+ * GST_TAG_CMML_STREAM:
  *
  * Annodex CMML stream element tag
  */
 #define GST_TAG_CMML_STREAM "cmml-stream"
 /**
- * GST_TAG_CMML_HEAD
+ * GST_TAG_CMML_HEAD:
  *
  * Annodex CMML head element tag
  */
 
 #define GST_TAG_CMML_HEAD "cmml-head"
 /**
- * GST_TAG_CMML_CLIP
+ * GST_TAG_CMML_CLIP:
  *
  * Annodex CMML clip element tag
  */
@@ -113,8 +113,6 @@ G_BEGIN_DECLS
  * GST_TAG_CAPTURING_SHUTTER_SPEED:
  *
  * Shutter speed used when capturing an image, in seconds. (fraction)
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_SHUTTER_SPEED        "capturing-shutter-speed"
 
@@ -125,8 +123,6 @@ G_BEGIN_DECLS
  *
  * The value stored is the denominator of the focal ratio (f-number).
  * For example, if this tag value is 2, the focal ratio is f/2.
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_FOCAL_RATIO          "capturing-focal-ratio"
 
@@ -134,8 +130,6 @@ G_BEGIN_DECLS
  * GST_TAG_CAPTURING_FOCAL_LENGTH:
  *
  * Focal length used when capturing an image, in mm. (double)
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_FOCAL_LENGTH         "capturing-focal-length"
 
@@ -143,8 +137,6 @@ G_BEGIN_DECLS
  * GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO:
  *
  * Digital zoom ratio used when capturing an image. (double)
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO   "capturing-digital-zoom-ratio"
 
@@ -152,8 +144,6 @@ G_BEGIN_DECLS
  * GST_TAG_CAPTURING_ISO_SPEED:
  *
  * ISO speed used when capturing an image. (integer)
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_ISO_SPEED           "capturing-iso-speed"
 
@@ -172,8 +162,6 @@ G_BEGIN_DECLS
  *   "action" - biased towards fast shutter speed
  *   "portrait" - closeup, leaving background out of focus
  *   "landscape" - landscape photos, background in focus
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_EXPOSURE_PROGRAM     "capturing-exposure-program"
 
@@ -186,8 +174,6 @@ G_BEGIN_DECLS
  *   "auto-exposure"
  *   "manual-exposure"
  *   "auto-bracket"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_EXPOSURE_MODE       "capturing-exposure-mode"
 
@@ -195,8 +181,6 @@ G_BEGIN_DECLS
  * GST_TAG_CAPTURING_EXPOSURE_COMPENSATION:
  *
  * Exposure compensation using when capturing an image in EV. (double)
- *
- * Since: 0.10.33
  */
 #define GST_TAG_CAPTURING_EXPOSURE_COMPENSATION "capturing-exposure-compensation"
 
@@ -210,8 +194,6 @@ G_BEGIN_DECLS
  *   "landscape"
  *   "portrait"
  *   "night-scene"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE  "capturing-scene-capture-type"
 
@@ -226,8 +208,6 @@ G_BEGIN_DECLS
  *   "high-gain-up"
  *   "low-gain-down"
  *   "high-gain-down"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_GAIN_ADJUSTMENT     "capturing-gain-adjustment"
 
@@ -245,8 +225,6 @@ G_BEGIN_DECLS
  *   "fluorescent"
  *   "fluorescent h" (newer daylight-calibrated fluorescents)
  *   "flash"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_WHITE_BALANCE       "capturing-white-balance"
 
@@ -259,8 +237,6 @@ G_BEGIN_DECLS
  *  "normal"
  *  "soft"
  *  "hard"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_CONTRAST            "capturing-contrast"
 
@@ -273,8 +249,6 @@ G_BEGIN_DECLS
  *  "normal"
  *  "low-saturation"
  *  "high-saturation"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_SATURATION          "capturing-saturation"
 
@@ -287,8 +261,6 @@ G_BEGIN_DECLS
  *  "normal"
  *  "soft"
  *  "hard"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_SHARPNESS          "capturing-sharpness"
 
@@ -299,8 +271,6 @@ G_BEGIN_DECLS
  *
  * Note that if this tag isn't present, it should not be assumed that
  * the flash did not fire. It should be treated as unknown.
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_FLASH_FIRED         "capturing-flash-fired"
 
@@ -313,8 +283,6 @@ G_BEGIN_DECLS
  *  "auto"
  *  "always"
  *  "never"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_FLASH_MODE         "capturing-flash-mode"
 
@@ -332,8 +300,6 @@ G_BEGIN_DECLS
  *   "pattern"
  *   "partial"
  *   "other"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_METERING_MODE      "capturing-metering-mode"
 
@@ -348,8 +314,6 @@ G_BEGIN_DECLS
  *   "transparent-scanner"
  *   "reflex-scanner"
  *   "other"
- *
- * Since: 0.10.31
  */
 #define GST_TAG_CAPTURING_SOURCE             "capturing-source"
 
@@ -357,16 +321,12 @@ G_BEGIN_DECLS
  * GST_TAG_IMAGE_HORIZONTAL_PPI:
  *
  * Media (image/video) intended horizontal pixel density in ppi. (double)
- *
- * Since: 0.10.31
  */
 #define GST_TAG_IMAGE_HORIZONTAL_PPI         "image-horizontal-ppi"
 /**
  * GST_TAG_IMAGE_VERTICAL_PPI:
  *
  * Media (image/video) intended vertical pixel density in ppi. (double)
- *
- * Since: 0.10.31
  */
 #define GST_TAG_IMAGE_VERTICAL_PPI           "image-vertical-ppi"
 
@@ -377,7 +337,7 @@ G_BEGIN_DECLS
  * GstTagImageType:
  * @GST_TAG_IMAGE_TYPE_NONE                  : No image type. Can be used to
  *      tell functions such as gst_tag_image_data_to_image_sample() that no
- *      image type should be set. (Since: 0.10.20)
+ *      image type should be set.
  * @GST_TAG_IMAGE_TYPE_UNDEFINED             : Undefined/other image type
  * @GST_TAG_IMAGE_TYPE_FRONT_COVER           : Cover (front)
  * @GST_TAG_IMAGE_TYPE_BACK_COVER            : Cover (back)
@@ -400,8 +360,6 @@ G_BEGIN_DECLS
  *
  * Type of image contained in an image tag (specified as field in
  * the image buffer's caps structure)
- *
- * Since: 0.10.9
  */
 /* Note: keep in sync with register_tag_image_type_enum() */
 typedef enum {
@@ -435,8 +393,6 @@ GType   gst_tag_image_type_get_type (void);
  *
  * ID3V2 header size considered minimum input for some functions such as
  * gst_tag_list_from_id3v2_tag() and gst_tag_get_id3v2_tag_size() for example.
- *
- * Since: 0.10.36
  */
 #define GST_TAG_ID3V2_HEADER_SIZE            10
 
@@ -551,8 +507,6 @@ gboolean       gst_tag_check_language_code          (const gchar * lang_code);
  * @lang_code: ISO-639 language code (e.g. "deu" or "ger" or "de")
  *
  * Convenience macro wrapping gst_tag_get_language_code_iso_639_1().
- *
- * Since: 0.10.26
  */
 #define gst_tag_get_language_code(lang_code) \
     gst_tag_get_language_code_iso_639_1(lang_code)
@@ -596,8 +550,6 @@ gboolean       gst_tag_check_language_code          (const gchar * lang_code);
  *     created by the Free Software Foundation (FSF)
  *
  * See http://creativecommons.org/ns for more information.
- *
- * Since: 0.10.36
  */
 typedef enum {
   GST_TAG_LICENSE_PERMITS_REPRODUCTION             = (1 << 0),

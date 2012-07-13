@@ -22,7 +22,6 @@
 /**
  * SECTION:gstaudioiec61937
  * @short_description: Utility functions for IEC 61937 payloading
- * @since: 0.10.36
  *
  * This module contains some helper functions for encapsulating various
  * audio formats in IEC 61937 headers and padding.
@@ -68,8 +67,6 @@ caps_get_string_field (const GstCaps * caps, const gchar * field)
  *
  * Returns: the size or 0 if the given @type is not supported or cannot be
  * payloaded.
- *
- * Since: 0.10.36
  */
 guint
 gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
@@ -144,8 +141,6 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
  *
  * Returns: transfer-full: %TRUE if the payloading was successful, %FALSE
  * otherwise.
- *
- * Since: 0.10.36
  */
 gboolean
 gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,

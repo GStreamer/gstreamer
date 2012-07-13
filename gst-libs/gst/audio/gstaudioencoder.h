@@ -39,16 +39,12 @@ G_BEGIN_DECLS
  * GST_AUDIO_ENCODER_SINK_NAME:
  *
  * the name of the templates for the sink pad
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_ENCODER_SINK_NAME	"sink"
 /**
  * GST_AUDIO_ENCODER_SRC_NAME:
  *
  * the name of the templates for the source pad
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_ENCODER_SRC_NAME	        "src"
 
@@ -57,8 +53,6 @@ G_BEGIN_DECLS
  * @obj: audio encoder instance
  *
  * Gives the pointer to the source #GstPad object of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_ENCODER_SRC_PAD(obj)	(GST_AUDIO_ENCODER_CAST (obj)->srcpad)
 
@@ -67,8 +61,6 @@ G_BEGIN_DECLS
  * @obj: audio encoder instance
  *
  * Gives the pointer to the sink #GstPad object of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_ENCODER_SINK_PAD(obj)	(GST_AUDIO_ENCODER_CAST (obj)->sinkpad)
 
@@ -77,8 +69,6 @@ G_BEGIN_DECLS
  * @obj: base parse instance
  *
  * Gives the input segment of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_ENCODER_INPUT_SEGMENT(obj)     (GST_AUDIO_ENCODER_CAST (obj)->input_segment)
 
@@ -87,8 +77,6 @@ G_BEGIN_DECLS
  * @obj: base parse instance
  *
  * Gives the output segment of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_ENCODER_OUTPUT_SEGMENT(obj)     (GST_AUDIO_ENCODER_CAST (obj)->output_segment)
 
@@ -104,8 +92,6 @@ typedef struct _GstAudioEncoderPrivate GstAudioEncoderPrivate;
  * GstAudioEncoder:
  *
  * The opaque #GstAudioEncoder data structure.
- *
- * Since: 0.10.36
  */
 struct _GstAudioEncoder {
   GstElement     element;
@@ -167,15 +153,13 @@ struct _GstAudioEncoder {
  *                  applied to sink template caps.
  * @open:           Optional.
  *                  Called when the element changes to GST_STATE_READY.
- *                  Allows opening external resources. Since: 0.10.37.
+ *                  Allows opening external resources.
  * @close:          Optional.
  *                  Called when the element changes to GST_STATE_NULL.
- *                  Allows closing external resources. Since: 0.10.37.
+ *                  Allows closing external resources.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @set_format and @handle_frame needs to be overridden.
- *
- * Since: 0.10.36
  */
 struct _GstAudioEncoderClass {
   GstElementClass element_class;

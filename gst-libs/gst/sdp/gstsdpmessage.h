@@ -118,24 +118,18 @@ typedef struct {
  * GST_SDP_BWTYPE_RS:
  *
  * RTCP bandwidth allocated to active data senders (RFC 3556).
- *
- * Since: 0.10.15
  */
 #define GST_SDP_BWTYPE_RS               "RS"
 /**
  * GST_SDP_BWTYPE_RR:
  *
  * RTCP bandwidth allocated to data receivers (RFC 3556).
- *
- * Since: 0.10.15
  */
 #define GST_SDP_BWTYPE_RR               "RR"
 /**
  * GST_SDP_BWTYPE_TIAS:
  *
  * Transport Independent Application Specific Maximum bandwidth (RFC 3890).
- *
- * Since: 0.10.30
  */
 #define GST_SDP_BWTYPE_TIAS             "TIAS"
 

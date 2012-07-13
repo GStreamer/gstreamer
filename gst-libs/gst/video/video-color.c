@@ -75,7 +75,7 @@ gst_video_get_colorimetry (const gchar * s)
 #define IS_UNKNOWN(ci) (IS_EQUAL (&colorimetry[DEFAULT_UNKNOWN], ci))
 
 /**
- * gst_video_colorimetry_from_string
+ * gst_video_colorimetry_from_string:
  * @cinfo: a #GstVideoColorimetry
  * @color: a colorimetry string
  *
@@ -106,7 +106,7 @@ gst_video_colorimetry_from_string (GstVideoColorimetry * cinfo,
 }
 
 /**
- * gst_video_colorimetry_to_string
+ * gst_video_colorimetry_to_string:
  * @cinfo: a #GstVideoColorimetry
  *
  * Make a string representation of @cinfo.

@@ -441,8 +441,6 @@ exit:
  * @headers: (transfer full) (element-type GstBuffer): a list of #GstBuffer containing the codec header
  *
  * Set the codec headers to be sent downstream whenever requested.
- *
- * Since: 0.10.36
  */
 void
 gst_video_encoder_set_headers (GstVideoEncoder * video_encoder, GList * headers)
@@ -618,8 +616,6 @@ parse_fail:
  * elements (e.g. muxers).
  *
  * Returns: a #GstCaps owned by caller
- *
- * Since: 0.10.36
  */
 GstCaps *
 gst_video_encoder_proxy_getcaps (GstVideoEncoder * encoder, GstCaps * caps,
@@ -1333,8 +1329,6 @@ gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
  * of the buffer.
  *
  * Returns: a #GstFlowReturn resulting from sending data downstream
- *
- * Since: 0.10.36
  */
 GstFlowReturn
 gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
@@ -1545,8 +1539,6 @@ no_output_state:
  * Get the current #GstVideoCodecState
  *
  * Returns: (transfer full): #GstVideoCodecState describing format of video data.
- *
- * Since: 0.10.36
  */
 GstVideoCodecState *
 gst_video_encoder_get_output_state (GstVideoEncoder * encoder)
@@ -1586,8 +1578,6 @@ gst_video_encoder_get_output_state (GstVideoEncoder * encoder)
  * from the next call to #gst_video_encoder_finish_frame().
  *
  * Returns: (transfer full): the newly configured output state.
- *
- * Since: 0.10.36
  */
 GstVideoCodecState *
 gst_video_encoder_set_output_state (GstVideoEncoder * encoder, GstCaps * caps,
@@ -1618,8 +1608,6 @@ gst_video_encoder_set_output_state (GstVideoEncoder * encoder, GstCaps * caps,
  * @max_latency: maximum latency
  *
  * Informs baseclass of encoding latency.
- *
- * Since: 0.10.36
  */
 void
 gst_video_encoder_set_latency (GstVideoEncoder * encoder,
@@ -1647,8 +1635,6 @@ gst_video_encoder_set_latency (GstVideoEncoder * encoder,
  *
  * Query the configured encoding latency. Results will be returned via
  * @min_latency and @max_latency.
- *
- * Since: 0.10.36
  */
 void
 gst_video_encoder_get_latency (GstVideoEncoder * encoder,
@@ -1669,8 +1655,6 @@ gst_video_encoder_get_latency (GstVideoEncoder * encoder,
  * Get the oldest unfinished pending #GstVideoCodecFrame
  *
  * Returns: (transfer full): oldest unfinished pending #GstVideoCodecFrame
- *
- * Since: 0.10.36
  */
 GstVideoCodecFrame *
 gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
@@ -1693,8 +1677,6 @@ gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
  * Get a pending unfinished #GstVideoCodecFrame
  * 
  * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
- *
- * Since: 0.10.36
  */
 GstVideoCodecFrame *
 gst_video_encoder_get_frame (GstVideoEncoder * encoder, int frame_number)

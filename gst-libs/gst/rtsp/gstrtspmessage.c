@@ -506,8 +506,6 @@ gst_rtsp_message_free (GstRTSPMessage * msg)
  * ownership of @value.
  *
  * Returns: a #GstRTSPResult.
- *
- * Since: 0.10.23
  */
 GstRTSPResult
 gst_rtsp_message_take_header (GstRTSPMessage * msg, GstRTSPHeaderField field,

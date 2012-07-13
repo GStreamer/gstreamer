@@ -59,8 +59,6 @@
  * Returns: A boolean indicating success and a calculated Display Ratio in the
  * dar_n and dar_d parameters.
  * The return value is FALSE in the case of integer overflow or other error.
- *
- * Since: 0.10.7
  */
 gboolean
 gst_video_calculate_display_ratio (guint * dar_n, guint * dar_d,

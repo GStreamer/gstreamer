@@ -338,8 +338,6 @@ gst_tag_id3_genre_get (const guint id)
  * more information on image tags in GStreamer.
  *
  * Returns: %TRUE if the image was processed, otherwise %FALSE
- *
- * Since: 0.10.20
  */
 gboolean
 gst_tag_list_add_id3_image (GstTagList * tag_list, const guint8 * image_data,

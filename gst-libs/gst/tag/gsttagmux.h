@@ -46,8 +46,6 @@ typedef struct _GstTagMuxPrivate GstTagMuxPrivate;
  * @element: parent element
  *
  * Opaque #GstTagMux structure.
- *
- * Since: 0.10.36
  */
 struct _GstTagMux {
   GstElement    element;
@@ -68,8 +66,6 @@ struct _GstTagMux {
  *
  * The #GstTagMuxClass structure. Subclasses need to override at least one
  * of the two render vfuncs.
- *
- * Since: 0.10.36
  */
 struct _GstTagMuxClass {
   GstElementClass parent_class;

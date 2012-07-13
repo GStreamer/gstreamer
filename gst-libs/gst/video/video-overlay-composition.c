@@ -54,8 +54,6 @@
  * </itemizedlist>
  * </para>
  * </refsect2>
- *
- * Since: 0.11.x
  */
 
 /* TODO:
@@ -265,8 +263,6 @@ gst_video_overlay_composition_meta_get_info (void)
  * Sets an overlay composition on a buffer. The buffer will obtain its own
  * reference to the composition, meaning this function does not take ownership
  * of @comp.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayCompositionMeta *
 gst_buffer_add_video_overlay_composition_meta (GstBuffer * buf,
@@ -321,8 +317,6 @@ gst_video_overlay_composition_free (GstMiniObject * mini_obj)
  *
  * Returns: (transfer full): a new #GstVideoOverlayComposition. Unref with
  *     gst_video_overlay_composition_unref() when no longer needed.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayComposition *
 gst_video_overlay_composition_new (GstVideoOverlayRectangle * rectangle)
@@ -365,8 +359,6 @@ gst_video_overlay_composition_new (GstVideoOverlayRectangle * rectangle)
  *
  * Adds an overlay rectangle to an existing overlay composition object. This
  * must be done right after creating the overlay composition.
- *
- * Since: 0.11.x
  */
 void
 gst_video_overlay_composition_add_rectangle (GstVideoOverlayComposition * comp,
@@ -398,8 +390,6 @@ gst_video_overlay_composition_add_rectangle (GstVideoOverlayComposition * comp,
  * Returns the number of #GstVideoOverlayRectangle<!-- -->s contained in @comp.
  *
  * Returns: the number of rectangles
- *
- * Since: 0.11.x
  */
 guint
 gst_video_overlay_composition_n_rectangles (GstVideoOverlayComposition * comp)
@@ -420,8 +410,6 @@ gst_video_overlay_composition_n_rectangles (GstVideoOverlayComposition * comp)
  *     bounds. Will not return a new reference, the caller will need to
  *     obtain her own reference using gst_video_overlay_rectangle_ref()
  *     if needed.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayRectangle *
 gst_video_overlay_composition_get_rectangle (GstVideoOverlayComposition * comp,
@@ -449,8 +437,6 @@ gst_video_overlay_rectangle_needs_scaling (GstVideoOverlayRectangle * r)
  * Blends the overlay rectangles in @comp on top of the raw video data
  * contained in @video_buf. The data in @video_buf must be writable and
  * mapped appropriately.
- *
- * Since: 0.11.x
  */
 gboolean
 gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
@@ -529,8 +515,6 @@ gst_video_overlay_composition_blend (GstVideoOverlayComposition * comp,
  *
  * Returns: (transfer full): a new #GstVideoOverlayComposition equivalent
  *     to @comp.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayComposition *
 gst_video_overlay_composition_copy (GstVideoOverlayComposition * comp)
@@ -569,8 +553,6 @@ gst_video_overlay_composition_copy (GstVideoOverlayComposition * comp)
  *
  * Returns: (transfer full): a writable #GstVideoOverlayComposition
  *     equivalent to @comp.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayComposition *
 gst_video_overlay_composition_make_writable (GstVideoOverlayComposition * comp)
@@ -607,8 +589,6 @@ copy:
  * a composition).
  *
  * Returns: the sequence number of @comp
- *
- * Since: 0.11.x
  */
 guint
 gst_video_overlay_composition_get_seqnum (GstVideoOverlayComposition * comp)
@@ -688,8 +668,6 @@ gst_video_overlay_rectangle_is_same_alpha_type (GstVideoOverlayFormatFlags
  *
  * Returns: (transfer full): a new #GstVideoOverlayRectangle. Unref with
  *     gst_video_overlay_rectangle_unref() when no longer needed.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayRectangle *
 gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
@@ -761,8 +739,6 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
  * rectangle on the video.
  *
  * Returns: TRUE if valid render dimensions were retrieved.
- *
- * Since: 0.11.x
  */
 gboolean
 gst_video_overlay_rectangle_get_render_rectangle (GstVideoOverlayRectangle *
@@ -800,8 +776,6 @@ gst_video_overlay_rectangle_get_render_rectangle (GstVideoOverlayRectangle *
  * make the rectangles inside a #GstVideoOverlayComposition writable using
  * gst_video_overlay_composition_make_writable() or
  * gst_video_overlay_composition_copy().
- *
- * Since: 0.11.x
  */
 void
 gst_video_overlay_rectangle_set_render_rectangle (GstVideoOverlayRectangle *
@@ -1084,8 +1058,6 @@ done:
  *    gst_video_overlay_rectangle_get_render_rectangle(). This function does
  *    not return a reference, the caller should obtain a reference of her own
  *    with gst_buffer_ref() if needed.
- *
- * Since: 0.11.x
  */
 GstBuffer *
 gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
@@ -1118,8 +1090,6 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
  * Returns: (transfer none): a #GstBuffer holding the ARGB pixel data with
  *    row stride @stride. This function does not return a reference, the caller
  *    should obtain a reference of her own with gst_buffer_ref() if needed.
- *
- * Since: 0.11.x
  */
 GstBuffer *
 gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle *
@@ -1148,8 +1118,6 @@ gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle *
  * it is stored in, to avoid unnecessary conversion.
  *
  * Returns: the #GstVideoOverlayFormatFlags associated with the rectangle.
- *
- * Since: 0.10.37
  */
 GstVideoOverlayFormatFlags
 gst_video_overlay_rectangle_get_flags (GstVideoOverlayRectangle * rectangle)
@@ -1167,8 +1135,6 @@ gst_video_overlay_rectangle_get_flags (GstVideoOverlayRectangle * rectangle)
  * Retrieves the global-alpha value associated with a #GstVideoOverlayRectangle.
  *
  * Returns: the global-alpha value associated with the rectangle.
- *
- * Since: 0.10.37
  */
 gfloat
 gst_video_overlay_rectangle_get_global_alpha (GstVideoOverlayRectangle *
@@ -1191,8 +1157,6 @@ gst_video_overlay_rectangle_get_global_alpha (GstVideoOverlayRectangle *
  * make the rectangles inside a #GstVideoOverlayComposition writable using
  * gst_video_overlay_composition_make_writable() or
  * gst_video_overlay_composition_copy().
- *
- * Since: 0.10.37
  */
 void
 gst_video_overlay_rectangle_set_global_alpha (GstVideoOverlayRectangle *
@@ -1226,8 +1190,6 @@ gst_video_overlay_rectangle_set_global_alpha (GstVideoOverlayRectangle *
  *
  * Returns: (transfer full): a new #GstVideoOverlayRectangle equivalent
  *     to @rectangle.
- *
- * Since: 0.11.x
  */
 GstVideoOverlayRectangle *
 gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
@@ -1267,8 +1229,6 @@ gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
  * pixel-data.
  *
  * Returns: the sequence number of @rectangle
- *
- * Since: 0.11.x
  */
 guint
 gst_video_overlay_rectangle_get_seqnum (GstVideoOverlayRectangle * rectangle)

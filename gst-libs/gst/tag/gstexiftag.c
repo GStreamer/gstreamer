@@ -1776,8 +1776,6 @@ read_error:
  * the tags IFD and is followed by the data pointed by the tag entries.
  *
  * Returns: A GstBuffer containing the tag entries followed by the tag data
- *
- * Since: 0.10.30
  */
 GstBuffer *
 gst_tag_list_to_exif_buffer (const GstTagList * taglist, gint byte_order,
@@ -1794,8 +1792,6 @@ gst_tag_list_to_exif_buffer (const GstTagList * taglist, gint byte_order,
  * is put in the beginning of the buffer.
  *
  * Returns: A GstBuffer containing the data
- *
- * Since: 0.10.30
  */
 GstBuffer *
 gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist)
@@ -1861,8 +1857,6 @@ gst_tag_list_to_exif_buffer_with_tiff_header (const GstTagList * taglist)
  * start
  *
  * Returns: The parsed taglist
- *
- * Since: 0.10.30
  */
 GstTagList *
 gst_tag_list_from_exif_buffer (GstBuffer * buffer, gint byte_order,
@@ -1894,8 +1888,6 @@ read_error:
  * Parses the exif tags starting with a tiff header structure.
  *
  * Returns: The taglist
- *
- * Since: 0.10.30
  */
 GstTagList *
 gst_tag_list_from_exif_buffer_with_tiff_header (GstBuffer * buffer)

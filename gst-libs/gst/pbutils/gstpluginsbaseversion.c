@@ -39,8 +39,6 @@
  * @nano:  (out): pointer to a guint to store the nano version number, or %NULL
  *
  * Gets the version number of the GStreamer Plugins Base libraries.
- *
- * Since: 0.10.31
  */
 void
 gst_plugins_base_version (guint * major, guint * minor, guint * micro,
@@ -64,8 +62,6 @@ gst_plugins_base_version (guint * major, guint * minor, guint * micro,
  * strings, logging, about dialogs ...
  *
  * Returns: a newly allocated string describing this version of gst-plugins-base
- *
- * Since: 0.10.31
  */
 gchar *
 gst_plugins_base_version_string (void)

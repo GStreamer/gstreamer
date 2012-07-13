@@ -45,8 +45,6 @@ G_BEGIN_DECLS
  * @obj: a #GstVideoSink or derived object
  *
  * Cast @obj to a #GstVideoSink without runtime type check.
- *
- * Since: 0.10.12
  */
 #define GST_VIDEO_SINK_CAST(obj)  ((GstVideoSink *) (obj))
 
@@ -108,7 +106,7 @@ struct _GstVideoSink {
  * @show_frame: render a video frame. Maps to #GstBaseSinkClass.render() and
  *     #GstBaseSinkClass.preroll() vfuncs. Rendering during preroll will be
  *     suppressed if the #GstVideoSink:show-preroll-frame property is set to 
- *     %FALSE. Since: 0.10.25
+ *     %FALSE.
  *
  * The video sink class structure. Derived classes should override the
  * @show_frame virtual function.

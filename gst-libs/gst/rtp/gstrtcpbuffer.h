@@ -42,8 +42,8 @@ G_BEGIN_DECLS
  * @GST_RTCP_TYPE_SDES: Source description
  * @GST_RTCP_TYPE_BYE: Goodbye
  * @GST_RTCP_TYPE_APP: Application defined
- * @GST_RTCP_TYPE_RTPFB: Transport layer feedback. Since: 0.10.23
- * @GST_RTCP_TYPE_PSFB: Payload-specific feedback. Since: 0.10.23
+ * @GST_RTCP_TYPE_RTPFB: Transport layer feedback.
+ * @GST_RTCP_TYPE_PSFB: Payload-specific feedback.
  *
  * Different RTCP packet types.
  */
@@ -76,8 +76,6 @@ typedef enum
  * @GST_RTCP_PSFB_TYPE_VBCN: Video Back Channel Message
  *
  * Different types of feedback messages.
- *
- * Since: 0.10.23
  */
 typedef enum
 {

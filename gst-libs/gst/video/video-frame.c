@@ -194,7 +194,7 @@ gst_video_frame_unmap (GstVideoFrame * frame)
 }
 
 /**
- * gst_video_frame_copy:
+ * gst_video_frame_copy_plane:
  * @dest: a #GstVideoFrame
  * @src: a #GstVideoFrame
  * @plane: a plane

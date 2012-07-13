@@ -32,8 +32,6 @@ G_BEGIN_DECLS
  *
  * An opaque video overlay rectangle object. A rectangle contains a single
  * overlay rectangle which can be added to a composition.
- *
- * Since: 0.10.36
  */
 #define GST_TYPE_VIDEO_OVERLAY_RECTANGLE			\
   (gst_video_overlay_rectangle_get_type ())
@@ -59,8 +57,6 @@ typedef struct _GstVideoOverlayRectangle      GstVideoOverlayRectangle;
  * and not know that that's the case).
  *
  * Returns: (transfer full): @comp
- *
- * Since: 0.10.36
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstVideoOverlayRectangle *
@@ -79,8 +75,6 @@ gst_video_overlay_rectangle_ref (GstVideoOverlayRectangle * comp)
  *
  * Decreases the refcount of the rectangle. If the refcount reaches 0, the
  * rectangle will be freed.
- *
- * Since: 0.10.36
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC void
@@ -96,12 +90,10 @@ gst_video_overlay_rectangle_unref (GstVideoOverlayRectangle * comp)
 /**
  * GstVideoOverlayFormatFlags:
  * @GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE: no flags
- * @GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA: RGB are premultiplied by A/255. Since: 0.10.37
- * @GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA: a global-alpha value != 1 is set. Since: 0.10.37
+ * @GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA: RGB are premultiplied by A/255.
+ * @GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA: a global-alpha value != 1 is set.
  *
  * Overlay format flags.
- *
- * Since: 0.10.36
  */
 typedef enum {
   GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE = 0,
@@ -154,8 +146,6 @@ void                         gst_video_overlay_rectangle_set_global_alpha       
  *
  * An opaque video overlay composition object. A composition contains
  * multiple overlay rectangles.
- *
- * Since: 0.10.36
  */
 #define GST_TYPE_VIDEO_OVERLAY_COMPOSITION			\
   (gst_video_overlay_composition_get_type ())
@@ -179,8 +169,6 @@ typedef struct _GstVideoOverlayComposition      GstVideoOverlayComposition;
  * a composition and its rectangles can be modified.
  *
  * Returns: (transfer full): @comp
- *
- * Since: 0.10.36
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC GstVideoOverlayComposition *
@@ -199,8 +187,6 @@ gst_video_overlay_composition_ref (GstVideoOverlayComposition * comp)
  *
  * Decreases the refcount of the composition. If the refcount reaches 0, the
  * composition will be freed.
- *
- * Since: 0.10.36
  */
 #ifdef _FOOL_GTK_DOC_
 G_INLINE_FUNC void

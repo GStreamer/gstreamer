@@ -35,7 +35,6 @@
  * gst_video_event_parse_still_frame().
  *
  * Returns: The new GstEvent
- * Since: 0.10.26
  */
 GstEvent *
 gst_video_event_new_still_frame (gboolean in_still)
@@ -65,7 +64,6 @@ gst_video_event_new_still_frame (gboolean in_still)
  * Create a still frame event using gst_video_event_new_still_frame()
  *
  * Returns: %TRUE if the event is a valid still-frame event. %FALSE if not
- * Since: 0.10.26
  */
 gboolean
 gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
@@ -109,7 +107,6 @@ gst_video_event_parse_still_frame (GstEvent * event, gboolean * in_still)
  * gst_video_event_parse_downstream_force_key_unit().
  *
  * Returns: The new GstEvent
- * Since: 0.10.36
  */
 GstEvent *
 gst_video_event_new_downstream_force_key_unit (GstClockTime timestamp,
@@ -147,7 +144,6 @@ gst_video_event_new_downstream_force_key_unit (GstClockTime timestamp,
  * gst_video_event_parse_downstream_force_key_unit().
  *
  * Returns: The new GstEvent
- * Since: 0.10.36
  */
 GstEvent *
 gst_video_event_new_upstream_force_key_unit (GstClockTime running_time,
@@ -173,7 +169,6 @@ gst_video_event_new_upstream_force_key_unit (GstClockTime running_time,
  * and downstream force key unit events.
  *
  * Returns: %TRUE if the event is a valid force key unit event
- * Since: 0.10.36
  */
 gboolean
 gst_video_event_is_force_key_unit (GstEvent * event)
@@ -208,7 +203,6 @@ gst_video_event_is_force_key_unit (GstEvent * event)
  * full description of the downstream force key unit event.
  *
  * Returns: %TRUE if the event is a valid downstream force key unit event.
- * Since: 0.10.36
  */
 gboolean
 gst_video_event_parse_downstream_force_key_unit (GstEvent * event,
@@ -273,7 +267,6 @@ gst_video_event_parse_downstream_force_key_unit (GstEvent * event,
  * Create an upstream force key unit event using  gst_video_event_new_upstream_force_key_unit()
  *
  * Returns: %TRUE if the event is a valid upstream force-key-unit event. %FALSE if not
- * Since: 0.10.36
  */
 gboolean
 gst_video_event_parse_upstream_force_key_unit (GstEvent * event,

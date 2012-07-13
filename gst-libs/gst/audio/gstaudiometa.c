@@ -65,7 +65,6 @@ gst_audio_downmix_meta_transform (GstBuffer * dest, GstMeta * meta,
  * @buffer: a #GstBuffer
  * @to_position: the channel positions of the destination
  * @to_channels: The number of channels of the destination
- * @matrix: The matrix coefficients.
  *
  * Find the #GstAudioDownmixMeta on @buffer for the given destination
  * channel positions.

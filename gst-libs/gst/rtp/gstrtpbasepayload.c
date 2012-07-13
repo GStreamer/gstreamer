@@ -195,8 +195,6 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * GstRTPBaseAudioPayload:min-ptime:
    *
    * Minimum duration of the packet data in ns (can't go above MTU)
-   *
-   * Since: 0.10.13
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MIN_PTIME,
       g_param_spec_int64 ("min-ptime", "Min packet time",
@@ -220,8 +218,6 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * option is disabled, RTP timestamps are generated from the GStreamer
    * timestamps, which could result in RTP timestamps that don't increment with
    * the amount of data in the packet.
-   *
-   * Since: 0.10.25
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PERFECT_RTPTIME,
       g_param_spec_boolean ("perfect-rtptime", "Perfect RTP Time",
@@ -231,8 +227,6 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * GstRTPBaseAudioPayload:ptime-multiple:
    *
    * Force buffers to be multiples of this duration in ns (0 disables)
-   *
-   * Since: 0.10.29
    **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PTIME_MULTIPLE,
       g_param_spec_int64 ("ptime-multiple", "Packet time multiple",
@@ -882,8 +876,6 @@ no_rate:
  * This function takes ownership of @list.
  *
  * Returns: a #GstFlowReturn.
- *
- * Since: 0.10.24
  */
 GstFlowReturn
 gst_rtp_base_payload_push_list (GstRTPBasePayload * payload,

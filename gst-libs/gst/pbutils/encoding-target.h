@@ -78,8 +78,6 @@ G_BEGIN_DECLS
  *
  * When being stored/loaded, targets come from a specific category, like
  * #GST_ENCODING_CATEGORY_DEVICE.
- *
- * Since: 0.10.32
  */
 #define GST_TYPE_ENCODING_TARGET                        \
   (gst_encoding_target_get_type ())
@@ -98,8 +96,6 @@ GType gst_encoding_target_get_type (void);
  * @target: a #GstEncodingTarget
  *
  * Decreases the reference count of the @target, possibly freeing it.
- *
- * Since: 0.10.32
  */
 #define gst_encoding_target_unref(target) \
   (g_object_unref ((GObject*) target))
@@ -109,8 +105,6 @@ GType gst_encoding_target_get_type (void);
  * @target: a #GstEncodingTarget
  *
  * Increases the reference count of the @target.
- *
- * Since: 0.10.32
  */
 #define gst_encoding_target_ref(target) \
   (g_object_ref ((GObject*) target))

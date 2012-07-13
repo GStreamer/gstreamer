@@ -62,8 +62,6 @@ static const gchar *schema_list[] = {
  *
  * Returns: (transfer none): a %NULL terminated array of strings with the
  *     schema names
- *
- * Since: 0.10.33
  */
 const gchar **
 gst_tag_xmp_list_schemas (void)
@@ -1271,8 +1269,6 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
  * Parse a xmp packet into a taglist.
  *
  * Returns: new taglist or %NULL, free the list when done
- *
- * Since: 0.10.29
  */
 GstTagList *
 gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
@@ -1790,8 +1786,6 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
  * be used
  *
  * Returns: new buffer or %NULL, unref the buffer when done
- *
- * Since: 0.10.33
  */
 GstBuffer *
 gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
@@ -1887,8 +1881,6 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
  * Formats a taglist as a xmp packet.
  *
  * Returns: new buffer or %NULL, unref the buffer when done
- *
- * Since: 0.10.29
  */
 GstBuffer *
 gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)

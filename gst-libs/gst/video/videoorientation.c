@@ -34,8 +34,6 @@
  *
  * The interface allows unified access to control flipping and autocenter
  * operation of video-sources or operators.
- *
- * Since: 0.10.11
  */
 
 /* FIXME 0.11: check if we need to add API for sometimes-supportedness
@@ -91,8 +89,6 @@ gst_video_orientation_iface_init (GstVideoOrientationInterface * iface)
  * @flip: return location for the result
  *
  * Get the horizontal flipping state (%TRUE for flipped) from the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -114,8 +110,6 @@ gst_video_orientation_get_hflip (GstVideoOrientation * video_orientation,
  * @flip: return location for the result
  *
  * Get the vertical flipping state (%TRUE for flipped) from the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -137,8 +131,6 @@ gst_video_orientation_get_vflip (GstVideoOrientation * video_orientation,
  * @center: return location for the result
  *
  * Get the horizontal centering offset from the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
@@ -160,8 +152,6 @@ gst_video_orientation_get_hcenter (GstVideoOrientation * video_orientation,
  * @center: return location for the result
  *
  * Get the vertical centering offset from the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
@@ -183,8 +173,6 @@ gst_video_orientation_get_vcenter (GstVideoOrientation * video_orientation,
  * @flip: use flipping
  *
  * Set the horizontal flipping state (%TRUE for flipped) for the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -206,8 +194,6 @@ gst_video_orientation_set_hflip (GstVideoOrientation * video_orientation,
  * @flip: use flipping
  *
  * Set the vertical flipping state (%TRUE for flipped) for the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports flipping
  */
 gboolean
@@ -229,8 +215,6 @@ gst_video_orientation_set_vflip (GstVideoOrientation * video_orientation,
  * @center: centering offset
  *
  * Set the horizontal centering offset for the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean
@@ -252,8 +236,6 @@ gst_video_orientation_set_hcenter (GstVideoOrientation * video_orientation,
  * @center: centering offset
  *
  * Set the vertical centering offset for the given object.
- *
- * Since: 0.10.11
  * Returns: %TRUE in case the element supports centering
  */
 gboolean

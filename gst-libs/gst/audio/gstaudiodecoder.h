@@ -48,16 +48,12 @@ G_BEGIN_DECLS
  * GST_AUDIO_DECODER_SINK_NAME:
  *
  * The name of the templates for the sink pad.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_SINK_NAME    "sink"
 /**
  * GST_AUDIO_DECODER_SRC_NAME:
  *
  * The name of the templates for the source pad.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_SRC_NAME     "src"
 
@@ -66,8 +62,6 @@ G_BEGIN_DECLS
  * @obj: base audio codec instance
  *
  * Gives the pointer to the source #GstPad object of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_SRC_PAD(obj)         (((GstAudioDecoder *) (obj))->srcpad)
 
@@ -76,8 +70,6 @@ G_BEGIN_DECLS
  * @obj: base audio codec instance
  *
  * Gives the pointer to the sink #GstPad object of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_SINK_PAD(obj)        (((GstAudioDecoder *) (obj))->sinkpad)
 
@@ -89,8 +81,6 @@ G_BEGIN_DECLS
  * @obj: audio decoder instance
  *
  * Gives the input segment of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_INPUT_SEGMENT(obj)   (GST_AUDIO_DECODER_CAST (obj)->input_segment)
 
@@ -99,8 +89,6 @@ G_BEGIN_DECLS
  * @obj: audio decoder instance
  *
  * Gives the output segment of the element.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_OUTPUT_SEGMENT(obj)   (GST_AUDIO_DECODER_CAST (obj)->output_segment)
 
@@ -136,8 +124,6 @@ GstFlowReturn _gst_audio_decoder_error (GstAudioDecoder *dec, gint weight,
  * media processing.  Otherwise, it is considered a "glitch" and only a warning
  * is logged. In either case, @ret is set to the proper value to
  * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_ERROR(el, weight, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
@@ -154,8 +140,6 @@ G_STMT_START {                                                              \
  * GST_AUDIO_DECODER_MAX_ERRORS:
  *
  * Default maximum number of errors tolerated before signaling error.
- *
- * Since: 0.10.36
  */
 #define GST_AUDIO_DECODER_MAX_ERRORS     10
 
@@ -163,8 +147,6 @@ G_STMT_START {                                                              \
  * GstAudioDecoder:
  *
  * The opaque #GstAudioDecoder data structure.
- *
- * Since: 0.10.36
  */
 struct _GstAudioDecoder
 {
@@ -227,16 +209,14 @@ struct _GstAudioDecoder
  *                  and a not OK flow return will abort downstream pushing.
  * @open:           Optional.
  *                  Called when the element changes to GST_STATE_READY.
- *                  Allows opening external resources. Since: 0.10.37.
+ *                  Allows opening external resources.
  * @close:          Optional.
  *                  Called when the element changes to GST_STATE_NULL.
- *                  Allows closing external resources. Since: 0.10.37.
+ *                  Allows closing external resources.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame (and likely @set_format) needs to be
  * overridden.
- *
- * Since: 0.10.36
  */
 struct _GstAudioDecoderClass
 {

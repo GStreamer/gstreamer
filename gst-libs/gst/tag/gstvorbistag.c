@@ -173,7 +173,7 @@ gst_tag_to_vorbis_tag (const gchar * gst_tag)
  * given taglist @list.
  *
  * Unknown vorbiscomment tags will be added to the tag list in form
- * of a #GST_TAG_EXTENDED_COMMENT (since 0.10.10 at least).
+ * of a #GST_TAG_EXTENDED_COMMENT.
  */
 void
 gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)

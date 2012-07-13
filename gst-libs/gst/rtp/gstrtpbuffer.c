@@ -638,8 +638,6 @@ gst_rtp_buffer_set_extension (GstRTPBuffer * rtp, gboolean extension)
  * with @bits, @data and @wordlen unchanged.
  * 
  * Returns: TRUE if @buffer had the extension bit set.
- *
- * Since: 0.10.15
  */
 gboolean
 gst_rtp_buffer_get_extension_data (GstRTPBuffer * rtp, guint16 * bits,
@@ -680,8 +678,6 @@ gst_rtp_buffer_get_extension_data (GstRTPBuffer * rtp, guint16 * bits,
  * large enough.
  *
  * Returns: True if done.
- *
- * Since: 0.10.18
  */
 gboolean
 gst_rtp_buffer_set_extension_data (GstRTPBuffer * rtp, guint16 bits,
@@ -922,8 +918,6 @@ gst_rtp_buffer_set_timestamp (GstRTPBuffer * rtp, guint32 timestamp)
  * If @len is -1 the total payload starting from @offset if subbuffered.
  *
  * Returns: A new buffer with the specified data of the payload.
- *
- * Since: 0.10.10
  */
 GstBuffer *
 gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer * rtp, guint offset,
@@ -1019,8 +1013,6 @@ gst_rtp_buffer_get_payload (GstRTPBuffer * rtp)
  *
  * Returns: the default clock rate or -1 if the payload type is not static or
  * the clock-rate is undefined.
- *
- * Since: 0.10.13
  */
 guint32
 gst_rtp_buffer_default_clock_rate (guint8 payload_type)
@@ -1050,8 +1042,6 @@ gst_rtp_buffer_default_clock_rate (guint8 payload_type)
  *
  * Returns: a negative value if @seqnum1 is bigger than @seqnum2, 0 if they
  * are equal or a positive value if @seqnum1 is smaller than @segnum2.
- *
- * Since: 0.10.15
  */
 gint
 gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
@@ -1071,8 +1061,6 @@ gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
  * value even in the case where there is a timestamp wraparound.
  *
  * Returns: The extended timestamp of @timestamp.
- *
- * Since: 0.10.15
  */
 guint64
 gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
@@ -1118,8 +1106,6 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
  * return the nth extension with the requested id.
  *
  * Returns: TRUE if @buffer had the requested header extension
- *
- * Since: 0.10.31
  */
 
 gboolean
@@ -1198,8 +1184,6 @@ gst_rtp_buffer_get_extension_onebyte_header (GstRTPBuffer * rtp, guint8 id,
  * return the nth extension with the requested id.
  *
  * Returns: TRUE if @buffer had the requested header extension
- *
- * Since: 0.10.31
  */
 
 gboolean
@@ -1315,8 +1299,6 @@ get_onebyte_header_end_offset (guint8 * pdata, guint wordlen)
  * gst_rtp_buffer_add_extension_twobytes_header()
  *
  * Returns: %TRUE if header extension could be added
- *
- * Since: 0.10.31
  */
 
 gboolean
@@ -1436,8 +1418,6 @@ get_twobytes_header_end_offset (guint8 * pdata, guint wordlen)
  * gst_rtp_buffer_add_extension_onebyte_header()
  *
  * Returns: %TRUE if header extension could be added
- *
- * Since: 0.10.31
  */
 
 gboolean

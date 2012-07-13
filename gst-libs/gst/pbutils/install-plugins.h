@@ -62,8 +62,6 @@ G_BEGIN_DECLS
  *
  * These codes indicate success or failure of starting an external installer
  * program and to what extent the requested plugins could be installed.
- *
- * Since: 0.10.12
  */
 typedef enum {
   /* Return codes from the installer. Returned by gst_install_plugins_sync(),
@@ -93,8 +91,6 @@ typedef enum {
  *
  * Opaque context structure for the plugin installation. Use the provided
  * API to set details on it.
- *
- * Since: 0.10.12
  */
 
 #define GST_TYPE_INSTALL_PLUGINS_CONTEXT	(gst_install_plugins_context_get_type())
@@ -118,8 +114,6 @@ GType  gst_install_plugins_context_get_type (void);
  * The prototype of the callback function that will be called once the
  * external plugin installer program has returned. You only need to provide
  * a callback function if you are using the asynchronous interface.
- *
- * Since: 0.10.12
  */
 typedef void (*GstInstallPluginsResultFunc) (GstInstallPluginsReturn  result,
                                              gpointer                 user_data);

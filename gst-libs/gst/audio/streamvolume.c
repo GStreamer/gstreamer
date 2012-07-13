@@ -99,8 +99,6 @@ gst_stream_volume_get_type (void)
  * @format: #GstStreamVolumeFormat which should be returned
  *
  * Returns: The current stream volume as linear factor
- *
- * Since: 0.10.25
  */
 gdouble
 gst_stream_volume_get_volume (GstStreamVolume * volume,
@@ -123,8 +121,6 @@ gst_stream_volume_get_volume (GstStreamVolume * volume,
  * @volume: #GstStreamVolume that should be used
  * @format: #GstStreamVolumeFormat of @val
  * @val: Linear volume factor that should be set
- *
- * Since: 0.10.25
  */
 void
 gst_stream_volume_set_volume (GstStreamVolume * volume,
@@ -144,8 +140,6 @@ gst_stream_volume_set_volume (GstStreamVolume * volume,
  * @volume: #GstStreamVolume that should be used
  *
  * Returns: Returns %TRUE if the stream is muted
- *
- * Since: 0.10.25
  */
 gboolean
 gst_stream_volume_get_mute (GstStreamVolume * volume)
@@ -162,8 +156,6 @@ gst_stream_volume_get_mute (GstStreamVolume * volume)
  * gst_stream_volume_set_mute:
  * @volume: #GstStreamVolume that should be used
  * @mute: Mute state that should be set
- *
- * Since: 0.10.25
  */
 void
 gst_stream_volume_set_mute (GstStreamVolume * volume, gboolean mute)
@@ -180,8 +172,6 @@ gst_stream_volume_set_mute (GstStreamVolume * volume, gboolean mute)
  * @val: Volume in @from format that should be converted
  *
  * Returns: the converted volume
- *
- * Since: 0.10.25
  */
 gdouble
 gst_stream_volume_convert_volume (GstStreamVolumeFormat from,

@@ -89,8 +89,6 @@ id3v2_read_synch_uint (const guint8 * data, guint size)
  * i.e. at least #GST_TAG_ID3V2_HEADER_SIZE (10) bytes;
  *
  * Returns: Size of tag, or 0 if header is invalid or too small.
- *
- * Since: 0.10.36
  */
 guint
 gst_tag_get_id3v2_tag_size (GstBuffer * buffer)
@@ -186,8 +184,6 @@ id3v2_ununsync_data (const guint8 * unsync_data, guint32 * size)
  *
  * Returns: A new #GstTagList with all tags that could be extracted from the
  *          given vorbiscomment buffer or NULL on error.
- *
- * Since: 0.10.36
  */
 GstTagList *
 gst_tag_list_from_id3v2_tag (GstBuffer * buffer)

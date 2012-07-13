@@ -101,8 +101,6 @@ GType           gst_navigation_get_type (void);
  *    GST_NAVIGATION_COMMAND_DVD_AUDIO_MENU      = @GST_NAVIGATION_COMMAND_MENU5
  *    GST_NAVIGATION_COMMAND_DVD_ANGLE_MENU      = @GST_NAVIGATION_COMMAND_MENU6
  *    GST_NAVIGATION_COMMAND_DVD_CHAPTER_MENU    = @GST_NAVIGATION_COMMAND_MENU7
- *
- * Since: 0.10.23
  */
 typedef enum {
   GST_NAVIGATION_COMMAND_INVALID  = 0,
@@ -183,8 +181,6 @@ gboolean        gst_navigation_query_parse_angles       (GstQuery *query, guint 
  *
  * A set of notifications that may be received on the bus when navigation
  * related status changes.
- *
- * Since: 0.10.23
  */
 typedef enum {
   GST_NAVIGATION_MESSAGE_INVALID,
@@ -232,8 +228,6 @@ gboolean        gst_navigation_message_parse_angles_changed (GstMessage *message
  *
  * Enum values for the various events that an element implementing the
  * GstNavigation interface might send up the pipeline.
- *
- * Since: 0.10.23
  */
 typedef enum {
   GST_NAVIGATION_EVENT_INVALID                    = 0,

@@ -654,8 +654,6 @@ gst_installer_detail_new (gchar * description, const gchar * type,
  *
  * Returns: a newly-allocated detail string, or NULL on error. Free string
  *          with g_free() when not needed any longer.
- *
- * Since: 0.10.15
  */
 gchar *
 gst_missing_uri_source_installer_detail_new (const gchar * protocol)
@@ -684,8 +682,6 @@ gst_missing_uri_source_installer_detail_new (const gchar * protocol)
  *
  * Returns: a newly-allocated detail string, or NULL on error. Free string
  *          with g_free() when not needed any longer.
- *
- * Since: 0.10.15
  */
 gchar *
 gst_missing_uri_sink_installer_detail_new (const gchar * protocol)
@@ -714,8 +710,6 @@ gst_missing_uri_sink_installer_detail_new (const gchar * protocol)
  *
  * Returns: a newly-allocated detail string, or NULL on error. Free string
  *          with g_free() when not needed any longer.
- *
- * Since: 0.10.15
  */
 gchar *
 gst_missing_element_installer_detail_new (const gchar * factory_name)
@@ -743,8 +737,6 @@ gst_missing_element_installer_detail_new (const gchar * factory_name)
  *
  * Returns: a newly-allocated detail string, or NULL on error. Free string
  *          with g_free() when not needed any longer.
- *
- * Since: 0.10.15
  */
 gchar *
 gst_missing_decoder_installer_detail_new (const GstCaps * decode_caps)
@@ -783,8 +775,6 @@ gst_missing_decoder_installer_detail_new (const GstCaps * decode_caps)
  *
  * Returns: a newly-allocated detail string, or NULL on error. Free string
  *          with g_free() when not needed any longer.
- *
- * Since: 0.10.15
  */
 gchar *
 gst_missing_encoder_installer_detail_new (const GstCaps * encode_caps)

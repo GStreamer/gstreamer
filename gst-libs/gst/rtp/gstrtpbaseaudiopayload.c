@@ -365,8 +365,6 @@ gst_rtp_base_audio_payload_set_sample_options (GstRTPBaseAudioPayload
  * @sample_size: Size per sample in bits.
  *
  * Sets the options for sample based audio codecs.
- *
- * Since: 0.10.18
  */
 void
 gst_rtp_base_audio_payload_set_samplebits_options (GstRTPBaseAudioPayload
@@ -445,8 +443,6 @@ gst_rtp_base_audio_payload_set_meta (GstRTPBaseAudioPayload * payload,
  * the buffer downstream.
  *
  * Returns: a #GstFlowReturn
- *
- * Since: 0.10.13
  */
 GstFlowReturn
 gst_rtp_base_audio_payload_push (GstRTPBaseAudioPayload * baseaudiopayload,
@@ -560,8 +556,6 @@ gst_rtp_base_audio_payload_push_buffer (GstRTPBaseAudioPayload *
  * -1, the timestamp will be calculated automatically.
  *
  * Returns: a #GstFlowReturn
- *
- * Since: 0.10.25
  */
 GstFlowReturn
 gst_rtp_base_audio_payload_flush (GstRTPBaseAudioPayload * baseaudiopayload,
@@ -987,8 +981,6 @@ gst_rtp_base_payload_audio_sink_event (GstRTPBasePayload * basep,
  * Gets the internal adapter used by the depayloader.
  *
  * Returns: a #GstAdapter.
- *
- * Since: 0.10.13
  */
 GstAdapter *
 gst_rtp_base_audio_payload_get_adapter (GstRTPBaseAudioPayload

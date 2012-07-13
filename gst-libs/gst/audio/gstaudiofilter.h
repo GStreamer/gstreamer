@@ -51,8 +51,6 @@ typedef struct _GstAudioFilterClass GstAudioFilterClass;
  * GstAudioFilter:
  *
  * Base class for audio filters with the same format for input and output.
- *
- * Since: 0.10.12
  */
 struct _GstAudioFilter {
   GstBaseTransform basetransform;
@@ -80,8 +78,6 @@ struct _GstAudioFilter {
  * In addition to the @setup virtual function, you should also override the
  * GstBaseTransform::transform and/or GstBaseTransform::transform_ip virtual
  * function.
- *
- * Since: 0.10.12
  */
 
 struct _GstAudioFilterClass {

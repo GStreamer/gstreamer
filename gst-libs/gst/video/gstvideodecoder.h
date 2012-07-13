@@ -48,16 +48,12 @@ G_BEGIN_DECLS
  * GST_VIDEO_DECODER_SINK_NAME:
  *
  * The name of the templates for the sink pad.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_SINK_NAME    "sink"
 /**
  * GST_VIDEO_DECODER_SRC_NAME:
  *
  * The name of the templates for the source pad.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_SRC_NAME     "src"
 
@@ -66,8 +62,6 @@ G_BEGIN_DECLS
  * @obj: a #GstVideoDecoder
  *
  * Gives the pointer to the source #GstPad object of the element.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_SRC_PAD(obj)         (((GstVideoDecoder *) (obj))->srcpad)
 
@@ -76,16 +70,12 @@ G_BEGIN_DECLS
  * @obj: a #GstVideoDecoder
  *
  * Gives the pointer to the sink #GstPad object of the element.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_SINK_PAD(obj)        (((GstVideoDecoder *) (obj))->sinkpad)
 /**
  * GST_VIDEO_DECODER_FLOW_NEED_DATA:
  *
  * Returned while parsing to indicate more data is needed.
- *
- * Since: 0.10.36
  **/
 #define GST_VIDEO_DECODER_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
@@ -94,8 +84,6 @@ G_BEGIN_DECLS
  * @obj: base decoder instance
  *
  * Gives the segment of the element.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_INPUT_SEGMENT(obj)     (GST_VIDEO_DECODER_CAST (obj)->input_segment)
 
@@ -104,8 +92,6 @@ G_BEGIN_DECLS
  * @obj: base decoder instance
  *
  * Gives the segment of the element.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_OUTPUT_SEGMENT(obj)     (GST_VIDEO_DECODER_CAST (obj)->output_segment)
 
@@ -114,8 +100,6 @@ G_BEGIN_DECLS
  * @decoder: video decoder instance
  *
  * Obtain a lock to protect the decoder function from concurrent access.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_STREAM_LOCK(decoder) g_rec_mutex_lock (&GST_VIDEO_DECODER (decoder)->stream_lock)
 
@@ -124,8 +108,6 @@ G_BEGIN_DECLS
  * @decoder: video decoder instance
  *
  * Release the lock that protects the decoder function from concurrent access.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_STREAM_UNLOCK(decoder) g_rec_mutex_unlock (&GST_VIDEO_DECODER (decoder)->stream_lock)
 
@@ -161,8 +143,6 @@ GstFlowReturn _gst_video_decoder_error (GstVideoDecoder *dec, gint weight,
  * media processing.  Otherwise, it is considered a "glitch" and only a warning
  * is logged. In either case, @ret is set to the proper value to
  * return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_ERROR(el, w, domain, code, text, debug, ret) \
 G_STMT_START {                                                              \
@@ -178,8 +158,6 @@ G_STMT_START {                                                              \
  * GST_VIDEO_DECODER_MAX_ERRORS:
  *
  * Default maximum number of errors tolerated before signaling error.
- *
- * Since: 0.10.36
  */
 #define GST_VIDEO_DECODER_MAX_ERRORS     10
 
@@ -188,8 +166,6 @@ G_STMT_START {                                                              \
  * GstVideoDecoder:
  *
  * The opaque #GstVideoDecoder data structure.
- *
- * Since: 0.10.36
  */
 struct _GstVideoDecoder
 {
@@ -258,8 +234,6 @@ struct _GstVideoDecoder
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
  * and likely as well.  If non-packetized input is supported or expected,
  * @parse needs to be overridden as well.
- *
- * Since: 0.10.36
  */
 struct _GstVideoDecoderClass
 {

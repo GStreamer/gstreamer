@@ -118,8 +118,6 @@
  * ]|
  * </para>
  * </refsect2>
- *
- * Since: 0.10.32
  */
 
 #ifdef HAVE_CONFIG_H
@@ -225,8 +223,6 @@ gst_encoding_profile_class_init (GstEncodingProfileClass * klass)
  * gst_encoding_profile_get_name:
  * @profile: a #GstEncodingProfile
  *
- * Since: 0.10.32
- *
  * Returns: the name of the profile, can be %NULL.
  */
 const gchar *
@@ -239,8 +235,6 @@ gst_encoding_profile_get_name (GstEncodingProfile * profile)
  * gst_encoding_profile_get_description:
  * @profile: a #GstEncodingProfile
  *
- * Since: 0.10.32
- *
  * Returns: the description of the profile, can be %NULL.
  */
 const gchar *
@@ -252,8 +246,6 @@ gst_encoding_profile_get_description (GstEncodingProfile * profile)
 /**
  * gst_encoding_profile_get_format:
  * @profile: a #GstEncodingProfile
- *
- * Since: 0.10.32
  *
  * Returns: (transfer full): the #GstCaps corresponding to the media format used
  * in the profile. Unref after usage.
@@ -268,8 +260,6 @@ gst_encoding_profile_get_format (GstEncodingProfile * profile)
  * gst_encoding_profile_get_preset:
  * @profile: a #GstEncodingProfile
  *
- * Since: 0.10.32
- *
  * Returns: the name of the #GstPreset to be used in the profile.
  */
 const gchar *
@@ -281,8 +271,6 @@ gst_encoding_profile_get_preset (GstEncodingProfile * profile)
 /**
  * gst_encoding_profile_get_presence:
  * @profile: a #GstEncodingProfile
- *
- * Since: 0.10.32
  *
  * Returns: The number of times the profile is used in its parent
  * container profile. If 0, it is not a mandatory stream.
@@ -296,8 +284,6 @@ gst_encoding_profile_get_presence (GstEncodingProfile * profile)
 /**
  * gst_encoding_profile_get_restriction:
  * @profile: a #GstEncodingProfile
- *
- * Since: 0.10.32
  *
  * Returns: (transfer full): The restriction #GstCaps to apply before the encoder
  * that will be used in the profile. The fields present in restriction caps are
@@ -319,8 +305,6 @@ gst_encoding_profile_get_restriction (GstEncodingProfile * profile)
  *
  * Set @name as the given name for the @profile. A copy of @name will be made
  * internally.
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
@@ -337,8 +321,6 @@ gst_encoding_profile_set_name (GstEncodingProfile * profile, const gchar * name)
  *
  * Set @description as the given description for the @profile. A copy of
  * @description will be made internally.
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_description (GstEncodingProfile * profile,
@@ -355,8 +337,6 @@ gst_encoding_profile_set_description (GstEncodingProfile * profile,
  * @format: the media format to use in the profile.
  *
  * Sets the media format used in the profile.
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
@@ -372,8 +352,6 @@ gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
  * @preset: the element preset to use
  *
  * Sets the preset to use for the profile.
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
@@ -391,8 +369,6 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
  *
  * Set the number of time the profile is used in its parent
  * container profile. If 0, it is not a mandatory stream
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
@@ -408,8 +384,6 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
  * Set the restriction #GstCaps to apply before the encoder
  * that will be used in the profile. See gst_encoding_profile_set_restriction()
  * for more about restrictions. Does not apply to #GstEncodingContainerProfile.
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_profile_set_restriction (GstEncodingProfile * profile,
@@ -514,8 +488,6 @@ gst_encoding_video_profile_class_init (GstEncodingVideoProfileClass * klass)
  *
  * Returns: The pass number. Starts at 1 for multi-pass. 0 if this is
  * not a multi-pass profile
- *
- * Since: 0.10.32
  */
 guint
 gst_encoding_video_profile_get_pass (GstEncodingVideoProfile * prof)
@@ -526,8 +498,6 @@ gst_encoding_video_profile_get_pass (GstEncodingVideoProfile * prof)
 /**
  * gst_encoding_video_profile_get_variableframerate:
  * @prof: a #GstEncodingVideoProfile
- *
- * Since: 0.10.32
  *
  * Returns: Whether non-constant video framerate is allowed for encoding.
  */
@@ -546,8 +516,6 @@ gst_encoding_video_profile_get_variableframerate (GstEncodingVideoProfile *
  * Sets the pass number of this video profile. The first pass profile should have
  * this value set to 1. If this video profile isn't part of a multi-pass profile,
  * you may set it to 0 (the default value).
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_video_profile_set_pass (GstEncodingVideoProfile * prof, guint pass)
@@ -564,8 +532,6 @@ gst_encoding_video_profile_set_pass (GstEncodingVideoProfile * prof, guint pass)
  * framerate. If set to %FALSE (default value), then the incoming stream will
  * be normalized by dropping/duplicating frames in order to produce a
  * constance framerate.
- *
- * Since: 0.10.32
  */
 void
 gst_encoding_video_profile_set_variableframerate (GstEncodingVideoProfile *
@@ -665,8 +631,6 @@ _compare_encoding_profiles (const GstEncodingProfile * a,
  * Checks if @container contains a #GstEncodingProfile identical to
  * @profile.
  *
- * Since: 0.10.32
- *
  * Returns: %TRUE if @container contains a #GstEncodingProfile identical
  * to @profile, else %FALSE.
  */
@@ -690,8 +654,6 @@ gst_encoding_container_profile_contains_profile (GstEncodingContainerProfile *
  * 
  * No copy of @profile will be made, if you wish to use it elsewhere after this
  * method you should increment its reference count.
- *
- * Since: 0.10.32
  *
  * Returns: %TRUE if the @stream was properly added, else %FALSE.
  */
@@ -749,8 +711,6 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
  *
  * Creates a new #GstEncodingContainerProfile.
  *
- * Since: 0.10.32
- *
  * Returns: The newly created #GstEncodingContainerProfile.
  */
 GstEncodingContainerProfile *
@@ -784,8 +744,6 @@ gst_encoding_container_profile_new (const gchar * name,
  * If you wish to use/force a constant framerate please refer to the
  * gst_encoding_video_profile_set_variableframerate() documentation.
  *
- * Since: 0.10.32
- *
  * Returns: the newly created #GstEncodingVideoProfile.
  */
 GstEncodingVideoProfile *
@@ -811,8 +769,6 @@ gst_encoding_video_profile_new (GstCaps * format, const gchar * preset,
  * All provided allocatable arguments will be internally copied, so can be
  * safely freed/unreferenced after calling this method.
  *
- * Since: 0.10.32
- *
  * Returns: the newly created #GstEncodingAudioProfile.
  */
 GstEncodingAudioProfile *
@@ -832,8 +788,6 @@ gst_encoding_audio_profile_new (GstCaps * format, const gchar * preset,
  *
  * Checks whether the two #GstEncodingProfile are equal
  *
- * Since: 0.10.32
- *
  * Returns: %TRUE if @a and @b are equal, else %FALSE.
  */
 gboolean
@@ -848,8 +802,6 @@ gst_encoding_profile_is_equal (GstEncodingProfile * a, GstEncodingProfile * b)
  * @profile: a #GstEncodingProfile
  *
  * Computes the full output caps that this @profile will be able to consume.
- *
- * Since: 0.10.32
  *
  * Returns: (transfer full): The full caps the given @profile can consume. Call
  * gst_caps_unref() when you are done with the caps.
@@ -903,8 +855,6 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
  * gst_encoding_profile_get_type_nick:
  * @profile: a #GstEncodingProfile
  *
- * Since: 0.10.32
- *
  * Returns: the human-readable name of the type of @profile.
  */
 const gchar *
@@ -928,8 +878,6 @@ gst_encoding_profile_get_type_nick (GstEncodingProfile * profile)
  * Find the #GstEncodingProfile with the specified name and category.
  *
  * Returns: (transfer full): The matching #GstEncodingProfile or %NULL.
- *
- * Since: 0.10.32
  */
 GstEncodingProfile *
 gst_encoding_profile_find (const gchar * targetname, const gchar * profilename,
@@ -1009,8 +957,6 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
  * subtitles), are currently ignored.
  *
  * Returns: (transfer full): The new #GstEncodingProfile or %NULL.
- *
- * Since: 0.10.36
  */
 GstEncodingProfile *
 gst_encoding_profile_from_discoverer (GstDiscovererInfo * info)

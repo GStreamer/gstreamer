@@ -38,8 +38,6 @@
  * virtual functions in their class_init function.
  *
  * Last reviewed on 2007-02-03 (0.10.11.1)
- *
- * Since: 0.10.12
  */
 
 #ifdef HAVE_CONFIG_H
@@ -171,8 +169,6 @@ gst_audio_filter_get_unit_size (GstBaseTransform * btrans, GstCaps * caps,
  * @allowed_caps as the caps that can be handled.
  *
  * This function is usually used from within a GObject class_init function.
- *
- * Since: 0.10.12
  */
 void
 gst_audio_filter_class_add_pad_templates (GstAudioFilterClass * klass,

@@ -153,13 +153,10 @@ typedef struct _GstRTSPWatch GstRTSPWatch;
  *   you usually pair the tunnelid of this connection with the saved one using
  *   gst_rtsp_connection_do_tunnel().
  * @error_full: callback when an error occured with more information than
- *   the @error callback. Since 0.10.25
+ *   the @error callback.
  * @tunnel_lost: callback when the post connection of a tunnel is closed.
- *   Since 0.10.29
  *
  * Callback functions from a #GstRTSPWatch.
- *
- * Since: 0.10.23
  */
 typedef struct {
   GstRTSPResult     (*message_received) (GstRTSPWatch *watch, GstRTSPMessage *message,

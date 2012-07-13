@@ -199,8 +199,6 @@ gst_color_balance_get_value (GstColorBalance * balance,
  * Get the #GstColorBalanceType of this implementation.
  *
  * Returns: A the #GstColorBalanceType.
- *
- * Since: 0.10.24
  */
 GstColorBalanceType
 gst_color_balance_get_balance_type (GstColorBalance * balance)

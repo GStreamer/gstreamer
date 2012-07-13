@@ -603,8 +603,6 @@ gst_rtp_base_depayload_push (GstRTPBaseDepayload * filter, GstBuffer * out_buf)
  * @out_list.
  *
  * Returns: a #GstFlowReturn.
- *
- * Since: 0.10.32
  */
 GstFlowReturn
 gst_rtp_base_depayload_push_list (GstRTPBaseDepayload * filter,

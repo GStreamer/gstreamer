@@ -312,8 +312,6 @@ parse_error:
  * will be put in @dest_val.
  *
  * Returns: TRUE if the conversion succeeded.
- *
- * Since: 0.10.22.
  */
 gboolean
 gst_audio_ring_buffer_convert (GstAudioRingBuffer * buf,
@@ -714,8 +712,6 @@ gst_audio_ring_buffer_is_acquired (GstAudioRingBuffer * buf)
  *
  * Returns: TRUE if the device could be activated in the requested mode,
  * FALSE on error.
- *
- * Since: 0.10.22.
  */
 gboolean
 gst_audio_ring_buffer_activate (GstAudioRingBuffer * buf, gboolean active)
@@ -782,8 +778,6 @@ activate_failed:
  * MT safe.
  *
  * Returns: TRUE if the device is active.
- *
- * Since: 0.10.22.
  */
 gboolean
 gst_audio_ring_buffer_is_active (GstAudioRingBuffer * buf)
@@ -1578,8 +1572,6 @@ not_started:
  * Returns: The number of samples written to the ringbuffer or -1 on error. The
  * number of samples written can be less than @out_samples when @buf was interrupted
  * with a flush or stop.
- *
- * Since: 0.10.11.
  */
 guint
 gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
@@ -1857,8 +1849,6 @@ gst_audio_ring_buffer_clear (GstAudioRingBuffer * buf, gint segment)
  * the ringbuffer is filled with samples. 
  *
  * MT safe.
- *
- * Since: 0.10.6
  */
 void
 gst_audio_ring_buffer_may_start (GstAudioRingBuffer * buf, gboolean allowed)

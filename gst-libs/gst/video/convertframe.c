@@ -248,9 +248,6 @@ link_failed:
  *
  * Returns: The converted #GstSample, or %NULL if an error happened (in which case @err
  * will point to the #GError).
- *
- * Since: 0.10.31
- *
  */
 GstSample *
 gst_video_convert_sample (GstSample * sample, const GstCaps * to_caps,
@@ -606,9 +603,6 @@ done:
  *
  * @destroy_notify will be called after the callback was called and @user_data is not needed
  * anymore.
- *
- * Since: 0.10.31
- *
  */
 void
 gst_video_convert_sample_async (GstSample * sample,

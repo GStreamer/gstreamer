@@ -554,8 +554,6 @@ fill_planes (GstVideoInfo * info)
  * raw video, GST_FORMAT_DEFAULT corresponds to video frames.  This
  * function can be used to handle pad queries of the type GST_QUERY_CONVERT.
  *
- * Since: 0.10.16
- *
  * Returns: TRUE if the conversion was successful.
  */
 gboolean
