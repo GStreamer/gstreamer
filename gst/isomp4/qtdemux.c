@@ -5201,6 +5201,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     gst_pad_set_active (stream->pad, TRUE);
 
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
     gst_pad_set_caps (stream->pad, stream->caps);
 
     GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",

@@ -1329,6 +1329,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   gst_pad_use_fixed_caps (context->pad);
   gst_pad_set_active (context->pad, TRUE);
+  gst_pad_push_event (context->pad, gst_event_new_stream_start ());
   gst_pad_set_caps (context->pad, context->caps);
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
 
