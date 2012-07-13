@@ -102,13 +102,6 @@ gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
 gboolean         gst_play_sink_plugin_init    (GstPlugin * plugin);
 
-void
-gst_play_marshal_SAMPLE__BOXED (GClosure * closure,
-    GValue * return_value G_GNUC_UNUSED,
-    guint n_param_values,
-    const GValue * param_values,
-    gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data);
-
 G_END_DECLS
 
 #endif /* __GST_PLAY_SINK_H__ */
