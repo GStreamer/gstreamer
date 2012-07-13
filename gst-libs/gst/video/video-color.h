@@ -22,6 +22,8 @@
 
 #include <gst/gst.h>
 
+#include <gst/video/video-format.h>
+
 G_BEGIN_DECLS
 
 /**
@@ -146,6 +148,13 @@ typedef struct {
 gboolean     gst_video_colorimetry_matches     (GstVideoColorimetry *cinfo, const gchar *color);
 gboolean     gst_video_colorimetry_from_string (GstVideoColorimetry *cinfo, const gchar *color);
 gchar *      gst_video_colorimetry_to_string   (GstVideoColorimetry *cinfo);
+
+/* compute offset and scale */
+void         gst_video_color_range_offsets     (GstVideoColorRange range,
+                                                const GstVideoFormatInfo *info,
+                                                gint offset[GST_VIDEO_MAX_COMPONENTS],
+                                                gint scale[GST_VIDEO_MAX_COMPONENTS]);
+
 
 G_END_DECLS
 

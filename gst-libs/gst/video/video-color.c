@@ -152,6 +152,70 @@ gst_video_colorimetry_matches (GstVideoColorimetry * cinfo, const gchar * color)
   return FALSE;
 }
 
+/**
+ * gst_video_color_range_offsets:
+ * @range: a #GstVideoColorRange
+ * @info: a #GstVideoFormatInfo
+ * @offsets: (out): output offsets
+ * @scale: (out): output scale
+ *
+ * Compute the offset and scale values for each component of @info. For each
+ * component, (c[i] - offset[i]) / scale[i] will scale the component c[i] to the
+ * range [0.0 .. 1.0].
+ *
+ * The reverse operation (c[i] * scale[i]) + offset[i] can be used to convert
+ * the component values in range [0.0 .. 1.0] back to their representation in
+ * @info and @range.
+ */
+void
+gst_video_color_range_offsets (GstVideoColorRange range,
+    const GstVideoFormatInfo * info, gint offset[GST_VIDEO_MAX_COMPONENTS],
+    gint scale[GST_VIDEO_MAX_COMPONENTS])
+{
+  gboolean yuv;
+
+  yuv = GST_VIDEO_FORMAT_INFO_IS_YUV (info);
+
+  switch (range) {
+    default:
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      offset[0] = 0;
+      if (yuv) {
+        offset[1] = 1 << (info->depth[1] - 1);
+        offset[2] = 1 << (info->depth[2] - 1);
+      } else {
+        offset[1] = 0;
+        offset[2] = 0;
+      }
+      scale[0] = (1 << info->depth[0]) - 1;
+      scale[1] = (1 << info->depth[1]) - 1;
+      scale[2] = (1 << info->depth[2]) - 1;
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      offset[0] = 1 << (info->depth[0] - 4);
+      scale[0] = 219 << (info->depth[0] - 8);
+      if (yuv) {
+        offset[1] = 1 << (info->depth[1] - 1);
+        offset[2] = 1 << (info->depth[2] - 1);
+        scale[1] = 224 << (info->depth[1] - 8);
+        scale[2] = 224 << (info->depth[2] - 8);
+      } else {
+        offset[1] = 1 << (info->depth[1] - 4);
+        offset[2] = 1 << (info->depth[2] - 4);
+        scale[1] = 219 << (info->depth[1] - 8);
+        scale[2] = 219 << (info->depth[2] - 8);
+      }
+      break;
+  }
+  /* alpha channel is always full range */
+  offset[3] = 0;
+  scale[3] = (1 << info->depth[3]) - 1;
+
+  GST_DEBUG ("scale: %d %d %d %d", scale[0], scale[1], scale[2], scale[3]);
+  GST_DEBUG ("offset: %d %d %d %d", offset[0], offset[1], offset[2], offset[3]);
+}
+
+
 #if 0
 typedef struct
 {
