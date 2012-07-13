@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-overlay-composition.h>
 
 #include "dvb-sub.h"
 
@@ -54,6 +55,7 @@ struct _GstDVBSubOverlay
   GstVideoInfo info;
 
   DVBSubtitles *current_subtitle; /* The currently active set of subtitle regions, if any */
+  GstVideoOverlayComposition *current_comp;
   GQueue *pending_subtitles; /* A queue of raw subtitle region sets with
 			      * metadata that are waiting their running time */
 
