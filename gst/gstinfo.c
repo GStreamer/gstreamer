@@ -120,6 +120,8 @@
 #include "gstutils.h"
 #include "gstquark.h"
 #include "gstsegment.h"
+#include "gstvalue.h"
+
 #ifdef HAVE_VALGRIND_VALGRIND_H
 #  include <valgrind/valgrind.h>
 #endif
@@ -622,6 +624,13 @@ gst_debug_print_object (gpointer ptr)
   }
   if (*(GType *) ptr == GST_TYPE_STRUCTURE) {
     return gst_info_structure_to_string ((const GstStructure *) ptr);
+  }
+  if (*(GType *) ptr == GST_TYPE_TAG_LIST) {
+    /* FIXME: want pretty tag list with long byte dumps removed.. */
+    return gst_tag_list_to_string ((GstTagList *) ptr);
+  }
+  if (*(GType *) ptr == GST_TYPE_DATE_TIME) {
+    return __gst_date_time_serialize ((GstDateTime *) ptr, TRUE);
   }
   if (GST_IS_BUFFER (ptr)) {
     GstBuffer *buf = (GstBuffer *) ptr;
