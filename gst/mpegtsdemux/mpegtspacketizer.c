@@ -2613,9 +2613,6 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
   }
 
   while ((avail = packetizer->priv->available) >= packetizer->packet_size) {
-    GST_DEBUG ("mapped:%p, mapped_size:%d, offset:%d",
-        packetizer->priv->mapped,
-        packetizer->priv->mapped_size, packetizer->priv->offset);
     if (packetizer->priv->mapped == NULL) {
       packetizer->priv->mapped_size =
           packetizer->priv->available -
@@ -2636,7 +2633,7 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
      * the data */
     packet->data_end = packet->data_start + 188;
     packet->offset = packetizer->offset;
-    GST_DEBUG ("offset %" G_GUINT64_FORMAT, packet->offset);
+    GST_LOG ("offset %" G_GUINT64_FORMAT, packet->offset);
     packetizer->offset += packetizer->packet_size;
     GST_MEMDUMP ("data_start", packet->data_start, 16);
     packet->origts = packetizer->priv->last_in_time;
