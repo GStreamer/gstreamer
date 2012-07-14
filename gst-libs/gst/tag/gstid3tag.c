@@ -93,7 +93,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_COPYRIGHT_URI, "WCOP"},
   {GST_TAG_ENCODED_BY, "TENC"},
   {GST_TAG_GENRE, "TCON"},
-  {GST_TAG_DATE, "TDRC"},
+  {GST_TAG_DATE_TIME, "TDRC"},
   {GST_TAG_COMMENT, "COMM"},
   {GST_TAG_ALBUM_VOLUME_NUMBER, "TPOS"},
   {GST_TAG_DURATION, "TLEN"},

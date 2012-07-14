@@ -781,46 +781,44 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
     }
 
     default:{
-      gchar *tmp = NULL;
-      GValue src = { 0, };
-      GValue dest = { 0, };
+      if (tag_type == GST_TYPE_DATE_TIME) {
+        GstDateTime *dt;
 
-      /* Ensure that any date string is complete */
-      if (tag_type == G_TYPE_DATE) {
-        guint year = 1901, month = 1, day = 1;
-
-        /* Dates can be yyyy-MM-dd, yyyy-MM or yyyy, but we need
-         * the first type */
-        if (sscanf (tag_str, "%04u-%02u-%02u", &year, &month, &day) == 0)
-          break;
-
-        tmp = g_strdup_printf ("%04u-%02u-%02u", year, month, day);
-        tag_str = tmp;
-      }
-
-      /* handles anything else */
-      g_value_init (&src, G_TYPE_STRING);
-      g_value_set_string (&src, (const gchar *) tag_str);
-      g_value_init (&dest, tag_type);
-
-      if (g_value_transform (&src, &dest)) {
-        gst_tag_list_add_values (tag_list, GST_TAG_MERGE_APPEND,
-            tag_name, &dest, NULL);
-      } else if (tag_type == G_TYPE_DOUBLE) {
-        /* replaygain tags in TXXX frames ... */
-        g_value_set_double (&dest, g_strtod (tag_str, NULL));
-        gst_tag_list_add_values (tag_list, GST_TAG_MERGE_KEEP,
-            tag_name, &dest, NULL);
-        GST_LOG ("Converted string '%s' to double %f", tag_str,
-            g_value_get_double (&dest));
+        /* Dates can be yyyy-MM-dd, yyyy-MM or yyyy */
+        dt = gst_date_time_new_from_iso8601_string (tag_str);
+        if (dt != NULL) {
+          gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND, tag_name, dt, NULL);
+          gst_date_time_unref (dt);
+        } else {
+          GST_WARNING ("Could not transform '%s' into date", tag_str);
+        }
       } else {
-        GST_WARNING ("Failed to transform tag from string to type '%s'",
-            g_type_name (tag_type));
-      }
+        GValue src = { 0, };
+        GValue dest = { 0, };
 
-      g_value_unset (&src);
-      g_value_unset (&dest);
-      g_free (tmp);
+        /* handles anything else */
+        g_value_init (&src, G_TYPE_STRING);
+        g_value_set_string (&src, (const gchar *) tag_str);
+        g_value_init (&dest, tag_type);
+
+        if (g_value_transform (&src, &dest)) {
+          gst_tag_list_add_values (tag_list, GST_TAG_MERGE_APPEND,
+              tag_name, &dest, NULL);
+        } else if (tag_type == G_TYPE_DOUBLE) {
+          /* replaygain tags in TXXX frames ... */
+          g_value_set_double (&dest, g_strtod (tag_str, NULL));
+          gst_tag_list_add_values (tag_list, GST_TAG_MERGE_KEEP,
+              tag_name, &dest, NULL);
+          GST_LOG ("Converted string '%s' to double %f", tag_str,
+              g_value_get_double (&dest));
+        } else {
+          GST_WARNING ("Failed to transform tag from string '%s' to type '%s'",
+              tag_str, g_type_name (tag_type));
+        }
+
+        g_value_unset (&src);
+        g_value_unset (&dest);
+      }
       break;
     }
   }
