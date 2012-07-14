@@ -269,10 +269,10 @@ gst_tag_list_new_from_id3v1 (const guint8 * data)
   year = strtoul (ystr, NULL, 10);
   g_free (ystr);
   if (year > 0) {
-    GDate *date = g_date_new_dmy (1, 1, year);
+    GstDateTime *dt = gst_date_time_new_y (year);
 
-    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE, date, NULL);
-    g_date_free (date);
+    gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME, dt, NULL);
+    gst_date_time_unref (dt);
   }
   if (data[125] == 0 && data[126] != 0) {
     gst_tag_extract_id3v1_string (list, GST_TAG_COMMENT, (gchar *) & data[97],

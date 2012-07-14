@@ -638,8 +638,8 @@ GST_START_TEST (test_id3v1_utf8_tag)
     /* genre */
     0x11
   };
+  GstDateTime *dt;
   GstTagList *tags;
-  GDate *d;
   gchar *s;
 
   /* set this, to make sure UTF-8 strings are really interpreted properly
@@ -669,12 +669,15 @@ GST_START_TEST (test_id3v1_utf8_tag)
   fail_unless_equals_string (s, "Best of (Prostě úžasný)");
   g_free (s);
 
-  d = NULL;
-  fail_unless (gst_tag_list_get_date (tags, GST_TAG_DATE, &d));
-  fail_unless (d != NULL);
-  fail_unless_equals_int (g_date_get_year (d), 2000);
-  g_date_free (d);
-  d = NULL;
+  dt = NULL;
+  fail_unless (gst_tag_list_get_date_time (tags, GST_TAG_DATE_TIME, &dt));
+  fail_unless (dt != NULL);
+  fail_unless_equals_int (gst_date_time_get_year (dt), 2000);
+  fail_if (gst_date_time_has_month (dt));
+  fail_if (gst_date_time_has_day (dt));
+  fail_if (gst_date_time_has_time (dt));
+  gst_date_time_unref (dt);
+  dt = NULL;
 
   gst_tag_list_free (tags);
 
