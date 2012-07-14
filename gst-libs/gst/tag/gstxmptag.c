@@ -932,7 +932,7 @@ _init_xmp_tag_map (gpointer user_data)
       "dc:creator", GstXmpTagTypeSeq, NULL, NULL);
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_COPYRIGHT,
       "dc:rights", GstXmpTagTypeSimple, NULL, NULL);
-  _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_DATE, "dc:date",
+  _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_DATE_TIME, "dc:date",
       GstXmpTagTypeSeq, NULL, NULL);
   _gst_xmp_schema_add_simple_mapping (schema, GST_TAG_DESCRIPTION,
       "dc:description", GstXmpTagTypeSimple, NULL, NULL);
@@ -1124,137 +1124,22 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
     }
     default:
       if (tag_type == GST_TYPE_DATE_TIME) {
-        GstDateTime *datetime = NULL;
-        gint year = 0, month = 0, day = 0, hour = 0, minute = 0, second = 0;
-        gint usecs = 0;
-        gint gmt_offset_hour = -1, gmt_offset_min = -1, gmt_offset = -1;
-        gchar usec_str[16];
-        gint ret;
-        gint len;
+        GstDateTime *datetime;
 
-        len = strlen (v);
-        if (len == 0) {
+        if (v == NULL || *v == '\0') {
           GST_WARNING ("Empty string for datetime parsing");
           return;
         }
 
         GST_DEBUG ("Parsing %s into a datetime", v);
-
-        ret = sscanf (v, "%04d-%02d-%02dT%02d:%02d:%02d.%15s",
-            &year, &month, &day, &hour, &minute, &second, usec_str);
-        if (ret < 3) {
-          /* FIXME theoretically, xmp can express datetimes with only year
-           * or year and month, but gstdatetime doesn't support it */
-          GST_WARNING ("Invalid datetime value: %s", v);
-        }
-
-        /* parse the usecs */
-        if (ret >= 7) {
-          gint num_digits = 0;
-
-          /* find the number of digits */
-          while (isdigit ((gint) usec_str[num_digits++]) && num_digits < 6);
-
-          if (num_digits > 0) {
-            /* fill up to 6 digits with 0 */
-            while (num_digits < 6) {
-              usec_str[num_digits++] = 0;
-            }
-
-            g_assert (num_digits == 6);
-
-            usec_str[num_digits] = '\0';
-            usecs = atoi (usec_str);
-          }
-        }
-
-        /* parse the timezone info */
-        if (v[len - 1] == 'Z') {
-          GST_LOG ("UTC timezone");
-
-          /* Having a Z at the end means UTC */
-          datetime = gst_date_time_new (0, year, month, day, hour, minute,
-              second + usecs / 1000000.0);
-        } else {
-          gchar *plus_pos = NULL;
-          gchar *neg_pos = NULL;
-          gchar *pos = NULL;
-
-          GST_LOG ("Checking for timezone information");
-
-          /* check if there is timezone info */
-          plus_pos = strrchr (v, '+');
-          neg_pos = strrchr (v, '-');
-          if (plus_pos) {
-            pos = plus_pos + 1;
-          } else if (neg_pos) {
-            pos = neg_pos + 1;
-          }
-
-          if (pos) {
-            gint ret_tz = sscanf (pos, "%d:%d", &gmt_offset_hour,
-                &gmt_offset_min);
-
-            GST_DEBUG ("Parsing timezone: %s", pos);
-
-            if (ret_tz == 2) {
-              gmt_offset = gmt_offset_hour * 60 + gmt_offset_min;
-              if (neg_pos != NULL && neg_pos + 1 == pos)
-                gmt_offset *= -1;
-
-              GST_LOG ("Timezone offset: %f (%d minutes)", gmt_offset / 60.0,
-                  gmt_offset);
-
-              /* no way to know if it is DST or not */
-              datetime =
-                  gst_date_time_new (gmt_offset / 60.0,
-                  year, month, day, hour, minute,
-                  second + usecs / ((gdouble) G_USEC_PER_SEC));
-            } else {
-              GST_WARNING ("Failed to parse timezone information");
-            }
-          } else {
-            GST_WARNING ("No timezone signal found");
-          }
-        }
-
+        datetime = gst_date_time_new_from_iso8601_string (v);
         if (datetime) {
           gst_tag_list_add (list, merge_mode, tag, datetime, NULL);
           gst_date_time_unref (datetime);
         }
 
       } else if (tag_type == G_TYPE_DATE) {
-        GDate *date;
-        gint d, m, y;
-
-        /* this is ISO 8601 Date and Time Format
-         * %F     Equivalent to %Y-%m-%d (the ISO 8601 date format). (C99)
-         * %T     The time in 24-hour notation (%H:%M:%S). (SU)
-         * e.g. 2009-05-30T18:26:14+03:00 */
-
-        /* FIXME: this would be the proper way, but needs
-           #define _XOPEN_SOURCE before #include <time.h>
-
-           date = g_date_new ();
-           struct tm tm={0,};
-           strptime (dts, "%FT%TZ", &tm);
-           g_date_set_time_t (date, mktime(&tm));
-         */
-        /* FIXME: this cannot parse the date
-           date = g_date_new ();
-           g_date_set_parse (date, v);
-           if (g_date_valid (date)) {
-           gst_tag_list_add (list, merge_mode, tag,
-           date, NULL);
-           } else {
-           GST_WARNING ("unparsable date: '%s'", v);
-           }
-         */
-        /* poor mans straw */
-        sscanf (v, "%04d-%02d-%02dT", &y, &m, &d);
-        date = g_date_new_dmy (d, m, y);
-        gst_tag_list_add (list, merge_mode, tag, date, NULL);
-        g_date_free (date);
+        GST_ERROR ("Use GST_TYPE_DATE_TIME in tags instead of G_TYPE_DATE");
       } else {
         GST_WARNING ("unhandled type for %s from xmp", tag);
       }
@@ -1641,6 +1526,11 @@ gst_value_serialize_xmp (const GValue * value)
     gint gmt_offset_hour, gmt_offset_min;
     GstDateTime *datetime = (GstDateTime *) g_value_get_boxed (value);
 
+    if (!gst_date_time_has_time (datetime))
+      return gst_date_time_to_iso8601_string (datetime);
+
+    /* can't just use gst_date_time_to_iso8601_string() here because we need
+     * the timezone info with a colon, i.e. as +03:00 instead of +0300 */
     year = gst_date_time_get_year (datetime);
     month = gst_date_time_get_month (datetime);
     day = gst_date_time_get_day (datetime);

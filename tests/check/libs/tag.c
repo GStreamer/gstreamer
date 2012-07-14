@@ -1099,7 +1099,6 @@ do_simple_xmp_tag_serialization_deserialization (const gchar * gsttag,
 GST_START_TEST (test_xmp_tags_serialization_deserialization)
 {
   GValue value = { 0 };
-  GDate *date;
   GstDateTime *datetime;
 
   gst_tag_register_musicbrainz_tags ();
@@ -1226,11 +1225,10 @@ GST_START_TEST (test_xmp_tags_serialization_deserialization)
       (GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, &value);
   g_value_unset (&value);
 
-  g_value_init (&value, G_TYPE_DATE);
-  date = g_date_new_dmy (22, 3, 2010);
-  g_value_set_boxed (&value, date);
-  g_date_free (date);
-  do_simple_xmp_tag_serialization_deserialization (GST_TAG_DATE, &value);
+  g_value_init (&value, GST_TYPE_DATE_TIME);
+  datetime = gst_date_time_new_ymd (2010, 3, 22);
+  g_value_take_boxed (&value, datetime);
+  do_simple_xmp_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
   g_value_unset (&value);
 
   g_value_init (&value, G_TYPE_UINT);
