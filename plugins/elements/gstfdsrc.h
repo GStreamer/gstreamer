@@ -80,7 +80,7 @@ struct _GstFdSrcClass {
   void (*timeout) (GstElement *element);
 };
 
-GType gst_fd_src_get_type(void);
+G_GNUC_INTERNAL GType gst_fd_src_get_type(void);
 
 G_END_DECLS
 

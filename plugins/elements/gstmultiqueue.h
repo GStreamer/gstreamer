@@ -84,7 +84,7 @@ struct _GstMultiQueueClass {
   void (*overrun)	(GstMultiQueue *queue);
 };
 
-GType gst_multi_queue_get_type (void);
+G_GNUC_INTERNAL GType gst_multi_queue_get_type (void);
 
 G_END_DECLS
 

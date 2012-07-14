@@ -156,7 +156,7 @@ struct _GstQueue2Class
   GstElementClass parent_class;
 };
 
-GType gst_queue2_get_type (void);
+G_GNUC_INTERNAL GType gst_queue2_get_type (void);
 
 G_END_DECLS
 

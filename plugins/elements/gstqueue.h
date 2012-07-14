@@ -148,7 +148,7 @@ struct _GstQueueClass {
   void (*pushing)       (GstQueue *queue);
 };
 
-GType gst_queue_get_type (void);
+G_GNUC_INTERNAL GType gst_queue_get_type (void);
 
 G_END_DECLS
 

@@ -69,7 +69,7 @@ struct _GstFileSrcClass {
   GstBaseSrcClass parent_class;
 };
 
-GType gst_file_src_get_type (void);
+G_GNUC_INTERNAL GType gst_file_src_get_type (void);
 
 G_END_DECLS
 

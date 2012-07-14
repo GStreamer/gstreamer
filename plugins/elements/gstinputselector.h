@@ -84,7 +84,7 @@ struct _GstInputSelectorClass {
   gint64 (*block)	(GstInputSelector *self);
 };
 
-GType gst_input_selector_get_type (void);
+G_GNUC_INTERNAL GType gst_input_selector_get_type (void);
 
 G_END_DECLS
 

@@ -35,17 +35,27 @@ struct _GstQueueArray
   guint length;
 };
 
-void gst_queue_array_init (GstQueueArray * array, guint initial_size);
-void gst_queue_array_clear (GstQueueArray * array);
+G_GNUC_INTERNAL void            gst_queue_array_init  (GstQueueArray * array,
+                                                       guint           initial_size);
 
-GstQueueArray *gst_queue_array_new (guint initial_size);
-gpointer gst_queue_array_pop_head (GstQueueArray * array);
-void gst_queue_array_push_tail (GstQueueArray * array, gpointer data);
-gboolean gst_queue_array_is_empty (GstQueueArray * array);
-void gst_queue_array_free (GstQueueArray * array);
+G_GNUC_INTERNAL void            gst_queue_array_clear (GstQueueArray * array);
 
-void gst_queue_array_drop_element (GstQueueArray * array, guint idx);
-guint gst_queue_array_find (GstQueueArray * array, GCompareFunc func,
-    gpointer data);
+G_GNUC_INTERNAL GstQueueArray * gst_queue_array_new       (guint initial_size);
+
+G_GNUC_INTERNAL gpointer        gst_queue_array_pop_head  (GstQueueArray * array);
+
+G_GNUC_INTERNAL void            gst_queue_array_push_tail (GstQueueArray * array,
+                                                           gpointer        data);
+
+G_GNUC_INTERNAL gboolean        gst_queue_array_is_empty  (GstQueueArray * array);
+
+G_GNUC_INTERNAL void            gst_queue_array_free      (GstQueueArray * array);
+
+G_GNUC_INTERNAL void            gst_queue_array_drop_element (GstQueueArray * array,
+                                                              guint           idx);
+
+G_GNUC_INTERNAL guint           gst_queue_array_find (GstQueueArray * array,
+                                                      GCompareFunc    func,
+                                                      gpointer        data);
 
 #endif

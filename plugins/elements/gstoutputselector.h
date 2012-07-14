@@ -61,7 +61,7 @@ struct _GstOutputSelectorClass {
   GstElementClass parent_class;
 };
 
-GType gst_output_selector_get_type (void);
+G_GNUC_INTERNAL GType gst_output_selector_get_type (void);
 
 G_END_DECLS
 

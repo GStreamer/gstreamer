@@ -62,7 +62,7 @@ struct _GstFunnelClass {
   GstElementClass parent_class;
 };
 
-GType   gst_funnel_get_type        (void);
+G_GNUC_INTERNAL GType   gst_funnel_get_type        (void);
 
 G_END_DECLS
 

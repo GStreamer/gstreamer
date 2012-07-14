@@ -86,7 +86,7 @@ struct _GstTeeClass {
   GstElementClass parent_class;
 };
 
-GType	gst_tee_get_type	(void);
+G_GNUC_INTERNAL GType	gst_tee_get_type	(void);
 
 G_END_DECLS
 

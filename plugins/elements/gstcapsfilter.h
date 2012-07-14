@@ -59,7 +59,7 @@ struct _GstCapsFilterClass {
   GstBaseTransformClass trans_class;
 };
 
-GType gst_capsfilter_get_type (void);
+G_GNUC_INTERNAL GType gst_capsfilter_get_type (void);
 
 G_END_DECLS
 
