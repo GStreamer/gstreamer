@@ -35,6 +35,9 @@ struct _GstQueueArray
   guint length;
 };
 
+void gst_queue_array_init (GstQueueArray * array, guint initial_size);
+void gst_queue_array_clear (GstQueueArray * array);
+
 GstQueueArray *gst_queue_array_new (guint initial_size);
 gpointer gst_queue_array_pop_head (GstQueueArray * array);
 void gst_queue_array_push_tail (GstQueueArray * array, gpointer data);

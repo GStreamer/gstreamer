@@ -23,17 +23,24 @@
 #include <gst/gst.h>
 #include "gstqueuearray.h"
 
-GstQueueArray *
-gst_queue_array_new (guint initial_size)
+void
+gst_queue_array_init (GstQueueArray * array, guint initial_size)
 {
-  GstQueueArray *array = g_malloc (sizeof (GstQueueArray));
-
   array->size = initial_size;
   array->array = g_new0 (gpointer, initial_size);
   array->head = 0;
   array->tail = 0;
   array->length = 0;
 
+}
+
+GstQueueArray *
+gst_queue_array_new (guint initial_size)
+{
+  GstQueueArray *array;
+
+  array = g_new (GstQueueArray, 1);
+  gst_queue_array_init (array, initial_size);
   return array;
 }
 
@@ -102,9 +109,15 @@ gst_queue_array_is_empty (GstQueueArray * array)
 }
 
 void
-gst_queue_array_free (GstQueueArray * array)
+gst_queue_array_clear (GstQueueArray * array)
 {
   g_free (array->array);
+}
+
+void
+gst_queue_array_free (GstQueueArray * array)
+{
+  gst_queue_array_clear (array);
   g_free (array);
 }
 
