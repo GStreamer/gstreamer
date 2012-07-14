@@ -964,6 +964,14 @@ gst_tag_list_add_value_internal (GstTagList * tag_list, GstTagMergeMode mode,
     }
   }
 
+  if (G_UNLIKELY (!G_VALUE_HOLDS (value, info->type) &&
+          !GST_VALUE_HOLDS_LIST (value))) {
+    g_warning ("tag '%s' should hold value of type '%s', but value of "
+        "type '%s' passed", info->nick, g_type_name (info->type),
+        g_type_name (G_VALUE_TYPE (value)));
+    return;
+  }
+
   tag_quark = info->name_quark;
 
   if (info->merge_func
