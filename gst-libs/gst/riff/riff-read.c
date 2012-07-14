@@ -697,7 +697,7 @@ gst_riff_parse_info (GstElement * element,
         type = GST_TAG_COPYRIGHT;
         break;
       case GST_RIFF_INFO_ICRD:
-        type = GST_TAG_DATE;
+        type = GST_TAG_DATE_TIME;
         break;
       case GST_RIFF_INFO_ICRP:
         type = NULL;            /*"Cropped"; */
