@@ -114,7 +114,7 @@ struct _GstDataQueue
 
   /*< private >*/
   /* the array of data we're keeping our grubby hands on */
-  GstQueueArray *queue;
+  GstQueueArray queue;
 
   GstDataQueueSize cur_level;   /* size of the queue */
   GstDataQueueCheckFullFunction checkfull;      /* Callback to check if the queue is full */
