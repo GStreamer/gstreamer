@@ -26,7 +26,8 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-#include <gst/base/gstqueuearray.h>
+#include "../../../plugins/elements/gstqueuearray.h"
+#include "../../../plugins/elements/gstqueuearray.c"
 
 /* Simplest test
  * Initial size : 10

@@ -24,7 +24,7 @@
 #define __GST_DATA_QUEUE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstqueuearray.h>
+#include "gstqueuearray.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_DATA_QUEUE \

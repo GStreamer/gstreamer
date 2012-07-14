@@ -25,7 +25,7 @@
 #define __GST_QUEUE_H__
 
 #include <gst/gst.h>
-#include <gst/base/gstqueuearray.h>
+#include "gstqueuearray.h"
 
 G_BEGIN_DECLS
 
