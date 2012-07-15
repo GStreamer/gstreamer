@@ -157,7 +157,6 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
 
   png_structp png_ptr;
   png_infop info_ptr;
-  guint sig_read = 0;
   png_uint_32 width = 0;
   png_uint_32 height = 0;
   gint bit_depth = 0;
@@ -209,7 +208,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
 
   png_init_io (png_ptr, fp);
 
-  png_set_sig_bytes (png_ptr, sig_read);
+  png_set_sig_bytes (png_ptr, sizeof (magic));
 
   png_read_info (png_ptr, info_ptr);
 
