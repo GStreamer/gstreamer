@@ -62,7 +62,7 @@ static void gst_gl_filter_filtersobel_reset (GstGLFilter * filter);
 
 static gboolean gst_gl_filtersobel_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filtersobel_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 
 static void gst_gl_filtersobel_length (gint width, gint height, guint texture,
     gpointer stuff);
@@ -212,12 +212,20 @@ gst_gl_filtersobel_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filtersobel_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filtersobel_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
+  GstGLMeta *in_meta, *out_meta;
 
-  gst_gl_filter_render_to_target_with_shader (filter, inbuf->texture,
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+  if (!in_meta || !out_meta) {
+    GST_WARNING ("A buffer does not contain required GstGLMeta");
+    return FALSE;
+  }
+
+  gst_gl_filter_render_to_target_with_shader (filter, in_meta->memory->tex_id,
       filtersobel->midtexture[0], filtersobel->desat);
   gst_gl_filter_render_to_target_with_shader (filter,
       filtersobel->midtexture[0], filtersobel->midtexture[1],
@@ -226,7 +234,8 @@ gst_gl_filtersobel_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
       filtersobel->midtexture[1], filtersobel->midtexture[0],
       filtersobel->vconv);
   gst_gl_filter_render_to_target (filter, filtersobel->midtexture[0],
-      outbuf->texture, gst_gl_filtersobel_length, filtersobel);
+      out_meta->memory->tex_id, gst_gl_filtersobel_length, filtersobel);
+
   return TRUE;
 }
 
