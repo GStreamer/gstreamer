@@ -751,12 +751,15 @@ gst_date_time_new_from_iso8601_string (const gchar * string)
   guint64 usecs;
   gint len, ret;
 
+  g_return_val_if_fail (string != NULL, NULL);
+
+  GST_DEBUG ("Parsing '%s' into a datetime", string);
+
   len = strlen (string);
 
-  g_return_val_if_fail (len >= 4, NULL);
-  g_return_val_if_fail (g_ascii_isdigit (*string), NULL);
-
-  GST_DEBUG ("Parsing %s into a datetime", string);
+  if (len < 4 || !g_ascii_isdigit (string[0]) || !g_ascii_isdigit (string[1])
+      || !g_ascii_isdigit (string[2]) || !g_ascii_isdigit (string[3]))
+    return NULL;
 
   ret = sscanf (string, "%04d-%02d-%02d", &year, &month, &day);
 
