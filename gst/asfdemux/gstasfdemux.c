@@ -2545,7 +2545,7 @@ gst_asf_demux_get_gst_tag_from_tag_name (const gchar * name_utf8)
     "WM/Picture", GST_TAG_IMAGE}, {
     "WM/Track", GST_TAG_TRACK_NUMBER}, {
     "WM/TrackNumber", GST_TAG_TRACK_NUMBER}, {
-    "WM/Year", GST_TAG_DATE}
+    "WM/Year", GST_TAG_DATE_TIME}
     /* { "WM/Composer", GST_TAG_COMPOSER } */
   };
   gsize out;
@@ -2724,13 +2724,12 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
             value_utf8[out] = '\0';
 
             if (gst_tag_name != NULL) {
-              if (strcmp (gst_tag_name, GST_TAG_DATE) == 0) {
+              if (strcmp (gst_tag_name, GST_TAG_DATE_TIME) == 0) {
                 guint year = atoi (value_utf8);
 
                 if (year > 0) {
-                  /* FIXME: really want a GDateTime with just the year field */
-                  g_value_init (&tag_value, G_TYPE_DATE);
-                  g_value_take_boxed (&tag_value, g_date_new_dmy (1, 1, year));
+                  g_value_init (&tag_value, GST_TYPE_DATE_TIME);
+                  g_value_take_boxed (&tag_value, gst_date_time_new_y (year));
                 }
               } else if (strcmp (gst_tag_name, GST_TAG_GENRE) == 0) {
                 guint id3v1_genre_id;
