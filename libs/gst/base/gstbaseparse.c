@@ -1838,12 +1838,6 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
 
   g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
 
-  /* some one-time start-up */
-  if (G_UNLIKELY (!parse->priv->framecount)) {
-    gst_base_parse_check_seekability (parse);
-    gst_base_parse_check_upstream (parse);
-  }
-
   buffer = frame->buffer;
   offset = frame->offset;
 
@@ -2147,6 +2141,12 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
   GST_LOG_OBJECT (parse, "finished frame at offset %" G_GUINT64_FORMAT ", "
       "flushing size %d", frame->offset, size);
+
+  /* some one-time start-up */
+  if (G_UNLIKELY (parse->priv->framecount == 0)) {
+    gst_base_parse_check_seekability (parse);
+    gst_base_parse_check_upstream (parse);
+  }
 
   if (parse->priv->scanning && frame->buffer) {
     if (!parse->priv->scanned_frame) {
