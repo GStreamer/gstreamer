@@ -319,7 +319,7 @@ gst_template_match_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if ((!filter) || (!buf) || filter->template == NULL) {
     return GST_FLOW_OK;
   }
-  GST_DEBUG_OBJECT (filter, "Buffer size %u ", gst_buffer_get_size (buf));
+  GST_LOG_OBJECT (filter, "Buffer size %u", (guint) gst_buffer_get_size (buf));
 
   buf = gst_buffer_make_writable (buf);
   gst_buffer_map (buf, &info, GST_MAP_READWRITE);

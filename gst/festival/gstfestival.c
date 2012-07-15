@@ -261,7 +261,7 @@ gst_festival_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   festival = GST_FESTIVAL (parent);
 
-  GST_LOG_OBJECT (festival, "Got text buffer, %u bytes",
+  GST_LOG_OBJECT (festival, "Got text buffer, %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (buf));
 
   f = dup (festival->info->server_fd);

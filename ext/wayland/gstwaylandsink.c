@@ -481,7 +481,7 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstBuffer *to_render;
   GstWlMeta *meta;
 
-  GST_LOG_OBJECT (sink, "render buffer %p" GST_TIME_FORMAT, buffer);
+  GST_LOG_OBJECT (sink, "render buffer %p", buffer);
 
   if (!sink->window)
     create_window (sink, sink->display, sink->video_width, sink->video_height);

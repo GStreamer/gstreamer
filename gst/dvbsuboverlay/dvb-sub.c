@@ -1195,7 +1195,7 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
   guint32 *clut_table;
   int i;
 
-  GST_DEBUG ("DISPLAY SET END: page_id = %u, length = %d", page_id);
+  GST_DEBUG ("DISPLAY SET END: page_id = %u", page_id);
 
   sub = g_slice_new0 (DVBSubtitles);
 

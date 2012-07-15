@@ -614,8 +614,8 @@ gst_celt_enc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     enc->header_sent = TRUE;
   }
 
-  GST_DEBUG_OBJECT (enc, "received buffer %p of %u bytes", buf,
-      buf ? gst_buffer_get_size (buf) : 0);
+  GST_DEBUG_OBJECT (enc, "received buffer %p of %" G_GSIZE_FORMAT " bytes",
+      buf, buf ? gst_buffer_get_size (buf) : 0);
 
   ret = gst_celt_enc_encode (enc, buf);
 
