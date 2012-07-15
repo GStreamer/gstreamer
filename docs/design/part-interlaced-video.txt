@@ -25,13 +25,16 @@ telecine states is that in the telecine state, buffers containing two fields may
 be progressive.
 
 Tools for identification:
-- Caps
-  - interlace-mode - string - "progressive"/"interleaved"/"mixed"
-- Flags - GST_VIDEO_FLAG_...
+- GstVideoInfo
+  - GstVideoInterlaceMode - enum - GST_VIDEO_INTERLACE_MODE_...
+    - PROGRESSIVE
+    - INTERLEAVED
+    - MIXED
+- Buffers flags - GST_VIDEO_BUFFER_FLAG_...
   - TFF
   - RFF
   - ONEFIELD
-  - PROGRESSIVE
+  - INTERLACED
 
 
 Identification of Buffer States
@@ -44,41 +47,38 @@ different states nor are they necessarily required nor make sense in all cases.
 Progressive
 ...........
 
-If the caps have no interlace-mode field on a source pad, or have
-interlace-mode="progressive", then the buffer is progressive. The lack of the
-interlace-mode field on a sink pad means that the element is not concerned
-about the mode and can handle all. Note the possibility for progressive buffers
-in telecine streams as well.
+If the interlace mode in the video info corresponding to a buffer is
+"progressive", then the buffer is progressive.
 
 
 Plain Interlaced
 ................
 
-If the caps have interlace-mode="interleaved" or "fields", then the buffer is
-plain interlaced.
+If the video info interlace mode is "interleaved", then the buffer is plain
+interlaced.
 
-GST_VIDEO_FLAG_TFF indicates whether the top or bottom field is to be
+GST_VIDEO_BUFFER_FLAG_TFF indicates whether the top or bottom field is to be
 displayed first. The timestamp on the buffer corresponds to the first field.
 
-GST_VIDEO_FLAG_RFF indicates that the first field (indicated by the TFF flag)
+GST_VIDEO_BUFFER_FLAG_RFF indicates that the first field (indicated by the TFF flag)
 should be repeated. This is generally only used for telecine purposes but as the
 telecine state was added long after the interlaced state was added and defined,
 this flag remains valid for plain interlaced buffers.
 
-GST_VIDEO_FLAG_ONEFIELD means that only the field indicated through the TFF
+GST_VIDEO_BUFFER_FLAG_ONEFIELD means that only the field indicated through the TFF
 flag is to be used. The other field should be ignored.
 
 
 Telecine
 ........
 
-If the caps have interlace-mode=mixed then the buffers are in some form of
+If video info interlace mode is "mixed" then the buffers are in some form of
 telecine state.
 
 The TFF and ONEFIELD flags have the same semantics as for the plain interlaced
 state.
 
-GST_VIDEO_FLAG_RFF in the telecine state indicates that the buffer contains
+GST_VIDEO_BUFFER_FLAG_RFF in the telecine state indicates that the buffer contains
 only repeated fields that are present in other buffers and are as such
 unneeded. For example, in a sequence of three telecined frames, we might have:
 
@@ -87,11 +87,21 @@ AtAb AtBb BtBb
 In this situation, we only need the first and third buffers as the second
 buffer contains fields present in the first and third.
 
+Note that the following state can have its second buffer identified using the
+ONEFIELD flag (and TFF not set):
+
+AtAb AtBb BtCb
+
 The telecine state requires one additional flag to be able to identify
 progressive buffers.
 
-The presence of the GST_VIDEO_FLAG_INTERLACED means that the buffer is an
+The presence of the GST_VIDEO_BUFFER_FLAG_INTERLACED means that the buffer is an
 'interlaced' or 'mixed' buffer that contains two fields that, when combined
 with fields from adjacent buffers, allow reconstruction of progressive frames.
 The absence of the flag implies the buffer containing two fields is a
 progressive frame.
+
+For example in the following sequence, the third buffer would be mixed (yes, it
+is a strange pattern, but it can happen):
+
+AtAb AtBb BtCb CtDb DtDb
