@@ -1,7 +1,7 @@
 /*
  *  gstjpegparser.h - JPEG parser
  *
- *  Copyright (C) 2011 Intel Corporation
+ *  Copyright (C) 2011-2012 Intel Corporation
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
@@ -60,25 +60,7 @@ typedef struct _GstJpegScanComponent    GstJpegScanComponent;
 typedef struct _GstJpegScanHdr          GstJpegScanHdr;
 typedef struct _GstJpegFrameComponent   GstJpegFrameComponent;
 typedef struct _GstJpegFrameHdr         GstJpegFrameHdr;
-typedef struct _GstJpegTypeOffsetSize   GstJpegTypeOffsetSize;
-typedef struct _GstJpegScanOffsetSize   GstJpegScanOffsetSize;
-
-/**
- * GstJpegParserResult:
- * @GST_JPEG_PARSER_OK: The parsing succeeded
- * @GST_JPEG_PARSER_BROKEN_DATA: The data to parse is broken
- * @GST_JPEG_PARSER_NO_SCAN_FOUND: No scan found during the parsing
- * @GST_JPEG_PARSER_ERROR: An error occured while parsing
- *
- * The result of parsing JPEG data.
- */
-typedef enum
-{
-  GST_JPEG_PARSER_OK,
-  GST_JPEG_PARSER_BROKEN_DATA,
-  GST_JPEG_PARSER_NO_SCAN_FOUND,
-  GST_JPEG_PARSER_ERROR,
-} GstJpegParserResult;
+typedef struct _GstJpegMarkerSegment    GstJpegMarkerSegment;
 
 /**
  * GstJpegMarkerCode:
@@ -124,7 +106,6 @@ typedef enum {
  * @GST_JPEG_PROFILE_EXTENDED: Extended sequential DCT
  * @GST_JPEG_PROFILE_PROGRESSIVE: Progressive DCT
  * @GST_JPEG_PROFILE_LOSSLESS: Lossless (sequential)
- * @GST_JPEG_PROFILE_ARITHMETIC: Flag for arithmetic coding
  *
  * JPEG encoding processes.
  */
@@ -133,8 +114,19 @@ typedef enum {
   GST_JPEG_PROFILE_EXTENDED     = 0x01,
   GST_JPEG_PROFILE_PROGRESSIVE  = 0x02,
   GST_JPEG_PROFILE_LOSSLESS     = 0x03,
-  GST_JPEG_PROFILE_ARITHMETIC   = 0x80
 } GstJpegProfile;
+
+/**
+ * GstJpegEntropyCodingMode:
+ * @GST_JPEG_ENTROPY_CODING_HUFFMAN: Huffman coding
+ * @GST_JPEG_ENTROPY_CODING_ARITHMETIC: arithmetic coding
+ *
+ * JPEG entropy coding mode.
+ */
+typedef enum {
+  GST_JPEG_ENTROPY_CODING_HUFFMAN       = 0x00,
+  GST_JPEG_ENTROPY_CODING_ARITHMETIC    = 0x08
+} GstJpegEntropyCodingMode;
 
 /**
  * GstJpegQuantTable:
@@ -241,7 +233,6 @@ struct _GstJpegFrameComponent
 
 /**
  * GstJpegFrameHdr:
- * @profile: JPEG encoding process (see #GstJpegProfile)
  * @sample_precision: Sample precision (P)
  * @height: Number of lines (Y)
  * @width: Number of samples per line (X)
@@ -253,7 +244,6 @@ struct _GstJpegFrameComponent
  */
 struct _GstJpegFrameHdr
 {
-  guint8 profile;
   guint8 sample_precision;              /* 2 .. 16      */
   guint16 width;                        /* 1 .. 65535   */
   guint16 height;                       /* 0 .. 65535   */
@@ -262,38 +252,37 @@ struct _GstJpegFrameHdr
 };
 
 /**
- * GstJpegTypeOffsetSize:
+ * GstJpegMarkerSegment:
  * @type: The type of the segment that starts at @offset
- * @offset: The offset to the segment start in bytes
- * @size: The size in bytes of the segment, or -1 if the end was not found
+ * @offset: The offset to the segment start in bytes. This is the
+ *   exact start of the segment, no marker code included
+ * @size: The size in bytes of the segment, or -1 if the end was not
+ *   found. It is the exact size of the segment, no marker code included
  *
  * A structure that contains the type of a segment, its offset and its size.
  */
-struct _GstJpegTypeOffsetSize
+struct _GstJpegMarkerSegment
 {
-  guint8 type;
+  guint8 marker;
   guint offset;
   gint size;
 };
 
 /**
- * GstJpegScanOffsetSize:
- * @header: The header info associated to the scan
- * @data_offset: The offset to the first entropy-coded segment in bytes
- * @data_size: The size in bytes of the scan data, including all ECS
- *   and RST segments, or -1 if the end was not found
+ * gst_jpeg_scan_for_marker_code:
+ * @data: The data to parse
+ * @size: The size of @data
+ * @offset: The offset from which to start parsing
  *
- * A structure that contains information on a scan. A scan comprises of the
- * scan @header, and all entropy-coded segment (ECS) and restart marker (RST)
- * associated to it. The header type MUST be set to @GST_JPEG_MARKER_SOS.
+ * Scans the JPEG bitstream contained in @data for the next marker
+ * code. If found, the function returns an offset to the marker code,
+ * including the 0xff prefix code but excluding any extra fill bytes.
+ *
+ * Returns: offset to the marker code if found, or -1 if not found.
  */
-struct _GstJpegScanOffsetSize
-{
-  GstJpegTypeOffsetSize header;
-  guint data_offset;
-  gint data_size;
-};
-
+gint            gst_jpeg_scan_for_marker_code   (const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_parse:
@@ -301,15 +290,15 @@ struct _GstJpegScanOffsetSize
  * @size: The size of @data
  * @offset: The offset from which to start parsing
  *
- * Parses the JPEG bitstream contained in @data, and returns the detected
- * segments as a newly-allocated list of #GstJpegTypeOffsetSize elements.
- * The caller is responsible for destroying the list when no longer needed.
+ * Parses the JPEG bitstream contained in @data, and returns the
+ * detected segment as a #GstJpegMarkerSegment.
  *
- * Returns: a #GList of #GstJpegTypeOffsetSize.
+ * Returns: TRUE if a packet start code was found.
  */
-GList                  *gst_jpeg_parse                  (const guint8 * data,
-                                                         gsize size,
-                                                         guint offset);
+gboolean        gst_jpeg_parse                  (GstJpegMarkerSegment * seg,
+                                                 const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_parse_frame_hdr:
@@ -320,12 +309,12 @@ GList                  *gst_jpeg_parse                  (const guint8 * data,
  *
  * Parses the @hdr JPEG frame header structure members from @data.
  *
- * Returns: a #GstJpegParserResult
+ * Returns: TRUE if the frame header was correctly parsed.
  */
-GstJpegParserResult     gst_jpeg_parse_frame_hdr        (GstJpegFrameHdr * hdr,
-                                                         const guint8 * data,
-                                                         gsize size,
-                                                         guint offset);
+gboolean        gst_jpeg_parse_frame_hdr        (GstJpegFrameHdr * hdr,
+                                                 const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_parse_scan_hdr:
@@ -336,12 +325,12 @@ GstJpegParserResult     gst_jpeg_parse_frame_hdr        (GstJpegFrameHdr * hdr,
  *
  * Parses the @hdr JPEG scan header structure members from @data.
  *
- * Returns: a #GstJpegParserResult
+ * Returns: TRUE if the scan header was correctly parsed
  */
-GstJpegParserResult     gst_jpeg_parse_scan_hdr         (GstJpegScanHdr * hdr,
-                                                         const guint8 * data,
-                                                         gsize size,
-                                                         guint offset);
+gboolean        gst_jpeg_parse_scan_hdr         (GstJpegScanHdr * hdr,
+                                                 const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_parse_quantization_table:
@@ -359,12 +348,12 @@ GstJpegParserResult     gst_jpeg_parse_scan_hdr         (GstJpegScanHdr * hdr,
  * (Tq). While doing so, the @valid flag of the specified quantization
  * table will also be set to %TRUE.
  *
- * Returns: a #GstJpegParserResult
+ * Returns: TRUE if the quantization table was correctly parsed.
  */
-GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTables *quant_tables,
-                                                         const guint8 * data,
-                                                         gsize size,
-                                                         guint offset);
+gboolean        gst_jpeg_parse_quant_table      (GstJpegQuantTables *quant_tables,
+                                                 const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_parse_huffman_table:
@@ -381,12 +370,12 @@ GstJpegParserResult     gst_jpeg_parse_quant_table      (GstJpegQuantTables *qua
  * the @valid flag of the specified Huffman table will also be set to
  * %TRUE;
  *
- * Returns: a #GstJpegParserResult
+ * Returns: TRUE if the Huffman table was correctly parsed.
  */
-GstJpegParserResult     gst_jpeg_parse_huffman_table    (GstJpegHuffmanTables *huf_tables,
-                                                         const guint8 * data,
-                                                         gsize size,
-                                                         guint offset);
+gboolean        gst_jpeg_parse_huffman_table    (GstJpegHuffmanTables *huf_tables,
+                                                 const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_parse_restart_interval:
@@ -395,12 +384,12 @@ GstJpegParserResult     gst_jpeg_parse_huffman_table    (GstJpegHuffmanTables *h
  * @size: The size of @data
  * @offset: The offset in bytes from which to start parsing @data
  *
- * Returns: a #GstJpegParserResult
+ * Returns: TRUE if the restart interval value was correctly parsed.
  */
-GstJpegParserResult     gst_jpeg_parse_restart_interval (guint * interval,
-                                                         const guint8 * data,
-                                                         gsize size,
-                                                         guint offset);
+gboolean        gst_jpeg_parse_restart_interval (guint * interval,
+                                                 const guint8 * data,
+                                                 gsize size,
+                                                 guint offset);
 
 /**
  * gst_jpeg_get_default_huffman_tables:
@@ -409,8 +398,7 @@ GstJpegParserResult     gst_jpeg_parse_restart_interval (guint * interval,
  * Fills in @huf_tables with the default AC/DC Huffman tables, as
  * specified by the JPEG standard.
  */
-void                    gst_jpeg_get_default_huffman_tables (
-                                                   GstJpegHuffmanTables *huf_tables);
+void gst_jpeg_get_default_huffman_tables (GstJpegHuffmanTables *huf_tables);
 
 /**
  * gst_jpeg_get_default_quantization_table:
@@ -419,7 +407,7 @@ void                    gst_jpeg_get_default_huffman_tables (
  * Fills in @quant_tables with the default quantization tables, as
  * specified by the JPEG standard.
  */
-void                    gst_jpeg_get_default_quantization_tables (GstJpegQuantTables *quant_tables);
+void gst_jpeg_get_default_quantization_tables (GstJpegQuantTables *quant_tables);
 
 G_END_DECLS
 
