@@ -659,7 +659,7 @@ gst_gl_overlay_load_jpeg (GstGLFilter * filter)
     overlay->format = GL_RGB;
   overlay->pixbuf = (GLubyte *) malloc (sizeof (GLubyte) * overlay->width
       * overlay->height * overlay->internalFormat);
-  for (i = 0; i < overlay->width; ++i) {
+  for (i = 0; i < overlay->height; ++i) {
     j = (overlay->pixbuf +
         (((int) overlay->height - (i +
                     1)) * (int) overlay->width * overlay->internalFormat));
