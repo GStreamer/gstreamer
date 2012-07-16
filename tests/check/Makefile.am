@@ -337,6 +337,9 @@ elements_encodebin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_C
 elements_subparse_LDADD =  $(LDADD)
 elements_subparse_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 
+elements_adder_LDADD = $(GST_BASE_LIBS) $(LDADD)
+elements_adder_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+
 elements_audioresample_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \

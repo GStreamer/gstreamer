@@ -32,6 +32,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
+#include <gst/base/gstbasesrc.h>
 
 static GMainLoop *main_loop;
 
@@ -866,6 +867,119 @@ GST_START_TEST (test_clip)
 
 GST_END_TEST;
 
+GST_START_TEST (test_duration_is_max)
+{
+  GstElement *bin, *src[3], *adder, *sink;
+  GstStateChangeReturn state_res;
+  GstFormat format = GST_FORMAT_TIME;
+  gboolean res;
+  gint64 duration;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+
+  /* 3 sources, an adder and a fakesink */
+  src[0] = gst_element_factory_make ("audiotestsrc", NULL);
+  src[1] = gst_element_factory_make ("audiotestsrc", NULL);
+  src[2] = gst_element_factory_make ("audiotestsrc", NULL);
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], adder, sink, NULL);
+
+  gst_element_link (src[0], adder);
+  gst_element_link (src[1], adder);
+  gst_element_link (src[2], adder);
+  gst_element_link (adder, sink);
+
+  /* irks, duration is reset on basesrc */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* set durations on src */
+  GST_BASE_SRC (src[0])->segment.duration = 1000;
+  GST_BASE_SRC (src[1])->segment.duration = 3000;
+  GST_BASE_SRC (src[2])->segment.duration = 2000;
+
+  /* set to playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* wait for completion */
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  res = gst_element_query_duration (GST_ELEMENT (bin), format, &duration);
+  fail_unless (res, NULL);
+
+  ck_assert_int_eq (duration, 3000);
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_duration_unknown_overrides)
+{
+  GstElement *bin, *src[3], *adder, *sink;
+  GstStateChangeReturn state_res;
+  GstFormat format = GST_FORMAT_TIME;
+  gboolean res;
+  gint64 duration;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+
+  /* 3 sources, an adder and a fakesink */
+  src[0] = gst_element_factory_make ("audiotestsrc", NULL);
+  src[1] = gst_element_factory_make ("audiotestsrc", NULL);
+  src[2] = gst_element_factory_make ("audiotestsrc", NULL);
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], adder, sink, NULL);
+
+  gst_element_link (src[0], adder);
+  gst_element_link (src[1], adder);
+  gst_element_link (src[2], adder);
+  gst_element_link (adder, sink);
+
+  /* irks, duration is reset on basesrc */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* set durations on src */
+  GST_BASE_SRC (src[0])->segment.duration = GST_CLOCK_TIME_NONE;
+  GST_BASE_SRC (src[1])->segment.duration = 3000;
+  GST_BASE_SRC (src[2])->segment.duration = 2000;
+
+  /* set to playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* wait for completion */
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  res = gst_element_query_duration (GST_ELEMENT (bin), format, &duration);
+  fail_unless (res, NULL);
+
+  ck_assert_int_eq (duration, GST_CLOCK_TIME_NONE);
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 adder_suite (void)
 {
@@ -880,6 +994,8 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_add_pad);
   tcase_add_test (tc_chain, test_remove_pad);
   tcase_add_test (tc_chain, test_clip);
+  tcase_add_test (tc_chain, test_duration_is_max);
+  tcase_add_test (tc_chain, test_duration_unknown_overrides);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
