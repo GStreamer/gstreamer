@@ -187,24 +187,10 @@ on_sink_handoff (GstElement * element, GstBuffer * buffer, GstPad * pad,
 }
 
 static gboolean
-caps_is_supported (const GstCaps * caps)
+videoconvert_supports_caps (const GstCaps * caps)
 {
-  GstVideoFormat fmt;
-  GstStructure *s;
-  const gchar *format;
-
   GST_DEBUG ("have caps %" GST_PTR_FORMAT, caps);
-
-  s = gst_caps_get_structure (caps, 0);
-  format = gst_structure_get_string (s, "format");
-  fail_if (format == NULL);
-
-  fmt = gst_video_format_from_string (format);
-  fail_if (fmt == GST_VIDEO_FORMAT_UNKNOWN);
-
-  return (fmt == GST_VIDEO_FORMAT_ARGB64 || fmt == GST_VIDEO_FORMAT_AYUV64
-      || fmt == GST_VIDEO_FORMAT_GRAY8 || fmt == GST_VIDEO_FORMAT_GRAY16_BE
-      || fmt == GST_VIDEO_FORMAT_GRAY16_LE);
+  return TRUE;
 }
 
 static void
@@ -222,7 +208,7 @@ run_test (const GstCaps * caps, gint src_width, gint src_height,
   guint n_buffers = 0;
 
   /* skip formats that videoconvert can't handle */
-  if (caps_is_supported (caps))
+  if (!videoconvert_supports_caps (caps))
     return;
 
   pipeline = gst_element_factory_make ("pipeline", "pipeline");
@@ -341,9 +327,8 @@ test_passthrough (int method)
     GstCaps *caps = *p;
 
     /* skip formats that videoconvert can't handle */
-    if (caps_is_supported (caps)) {
+    if (!videoconvert_supports_caps (caps))
       goto next;
-    }
 
     GST_DEBUG ("Running test for caps '%" GST_PTR_FORMAT "'"
         " from %dx%u to %dx%d with method %d", caps, src_width, src_height,
