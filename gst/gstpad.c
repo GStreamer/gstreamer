@@ -4059,7 +4059,7 @@ handle_pad_block (GstPad * pad)
   gst_object_ref (pad);
 
   while (GST_PAD_IS_BLOCKED (pad)) {
-    do {
+    while (!pad->abidata.ABI.block_callback_called) {
       /* we either have a callback installed to notify the block or
        * some other thread is doing a GCond wait. */
       callback = pad->block_callback;
@@ -4076,13 +4076,15 @@ handle_pad_block (GstPad * pad)
         /* we released the lock, recheck flushing */
         if (GST_PAD_IS_FLUSHING (pad))
           goto flushing;
+        /* .. and blocking state */
+        if (!GST_PAD_IS_BLOCKED (pad))
+          break;
       } else {
         /* no callback, signal the thread that is doing a GCond wait
          * if any. */
         GST_PAD_BLOCK_BROADCAST (pad);
       }
-    } while (pad->abidata.ABI.block_callback_called == FALSE
-        && GST_PAD_IS_BLOCKED (pad));
+    }
 
     /* OBJECT_LOCK could have been released when we did the callback, which
      * then could have made the pad unblock so we need to check the blocking
@@ -4107,18 +4109,21 @@ handle_pad_block (GstPad * pad)
 
   GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "got unblocked");
 
-  /* when we get here, the pad is unblocked again and we perform
-   * the needed unblock code. */
-  callback = pad->block_callback;
-  if (callback) {
-    /* we need to call the callback */
-    user_data = pad->block_data;
-    GST_OBJECT_UNLOCK (pad);
-    callback (pad, FALSE, user_data);
-    GST_OBJECT_LOCK (pad);
-  } else {
-    /* we need to signal the thread waiting on the GCond */
-    GST_PAD_BLOCK_BROADCAST (pad);
+  if (!pad->abidata.ABI.block_callback_called) {
+    /* when we get here, the pad is unblocked again and we perform
+     * the needed unblock code. */
+    callback = pad->block_callback;
+    pad->abidata.ABI.block_callback_called = TRUE;
+    if (callback) {
+      /* we need to call the callback */
+      user_data = pad->block_data;
+      GST_OBJECT_UNLOCK (pad);
+      callback (pad, FALSE, user_data);
+      GST_OBJECT_LOCK (pad);
+    } else {
+      /* we need to signal the thread waiting on the GCond */
+      GST_PAD_BLOCK_BROADCAST (pad);
+    }
   }
 
   gst_object_unref (pad);
