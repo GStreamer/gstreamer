@@ -161,8 +161,8 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   int j;
   int x;
   int dest_size;
-  guint dest_stride = dest_width * 4;
-  guint src_stride = src->width * 4;
+  guint dest_stride;
+  guint src_stride;
   guint8 *dest_pixels;
   guint8 *tmpbuf = g_malloc (dest_width * 8 * 4);
   GstVideoFrame src_frame, dest_frame;
@@ -188,7 +188,8 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   else
     x_increment = ((src->width - 1) << 16) / (dest_width - 1) - 1;
 
-  dest_size = dest_width * 4;
+  dest_size = dest_stride = dest_width * 4;
+  src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&src_frame, 0);
 
 #define LINE(x) ((tmpbuf) + (dest_size)*((x)&1))
 
