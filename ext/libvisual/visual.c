@@ -61,8 +61,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_visual_init (GstVisual * visual);
 static void gst_visual_finalize (GObject * object);
 
-static gboolean gst_visual_setup (GstAudioBaseVisualizer * bscope);
-static gboolean gst_visual_render (GstAudioBaseVisualizer * bscope,
+static gboolean gst_visual_setup (GstAudioVisualizer * bscope);
+static gboolean gst_visual_render (GstAudioVisualizer * bscope,
     GstBuffer * audio, GstBuffer * video);
 
 static GstElementClass *parent_class = NULL;
@@ -86,7 +86,7 @@ gst_visual_get_type (void)
     };
 
     type =
-        g_type_register_static (GST_TYPE_AUDIO_BASE_VISUALIZER, "GstVisual",
+        g_type_register_static (GST_TYPE_AUDIO_VISUALIZER, "GstVisual",
         &info, 0);
   }
   return type;
@@ -97,8 +97,7 @@ gst_visual_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstElementClass *element_class = (GstElementClass *) g_class;
-  GstAudioBaseVisualizerClass *scope_class =
-      (GstAudioBaseVisualizerClass *) g_class;
+  GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *) g_class;
   GstVisualClass *klass = (GstVisualClass *) g_class;
 
   klass->plugin = class_data;
@@ -162,7 +161,7 @@ gst_visual_finalize (GObject * object)
 }
 
 static gboolean
-gst_visual_setup (GstAudioBaseVisualizer * bscope)
+gst_visual_setup (GstAudioVisualizer * bscope)
 {
   GstVisual *visual = GST_VISUAL (bscope);
   gint pitch, depth;
@@ -216,7 +215,7 @@ no_realize:
 }
 
 static gboolean
-gst_visual_render (GstAudioBaseVisualizer * bscope, GstBuffer * audio,
+gst_visual_render (GstAudioVisualizer * bscope, GstBuffer * audio,
     GstBuffer * video)
 {
   GstVisual *visual = GST_VISUAL (bscope);

@@ -28,7 +28,7 @@
 #include <gst/audio/audio.h>
 #include <libvisual/libvisual.h>
 
-#include "gstaudiobasevisualizer.h"
+#include "gstaudiovisualizer.h"
 
 G_BEGIN_DECLS
 
@@ -44,7 +44,7 @@ typedef struct _GstVisualClass GstVisualClass;
 
 struct _GstVisual
 {
-  GstAudioBaseVisualizer element;
+  GstAudioVisualizer element;
 
   /* libvisual stuff */
   VisAudio *audio;
@@ -54,7 +54,7 @@ struct _GstVisual
 
 struct _GstVisualClass
 {
-  GstAudioBaseVisualizerClass parent_class;
+  GstAudioVisualizerClass parent_class;
 
   VisPluginRef *plugin;
 };
