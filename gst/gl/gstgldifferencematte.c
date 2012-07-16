@@ -64,7 +64,7 @@ static void gst_gl_differencematte_init_resources (GstGLFilter * filter);
 static void gst_gl_differencematte_reset_resources (GstGLFilter * filter);
 
 static gboolean gst_gl_differencematte_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 
 static gboolean gst_gl_differencematte_loader (GstGLFilter * filter);
 
@@ -454,12 +454,21 @@ gst_gl_differencematte_identity (gint width, gint height, guint texture,
 }
 
 static gboolean
-gst_gl_differencematte_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_differencematte_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
+  GstGLMeta *in_meta, *out_meta;
 
-  differencematte->intexture = inbuf->texture;
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+
+  if (!in_meta || !out_meta) {
+    GST_ERROR ("A Buffer does not contain required GstGLMeta");
+    return FALSE;
+  }
+
+  differencematte->intexture = in_meta->memory->tex_id;
 
   if (differencematte->bg_has_changed && (differencematte->location != NULL)) {
 
@@ -472,7 +481,7 @@ gst_gl_differencematte_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
 
     /* save current frame, needed to calculate difference between
      * this frame and next ones */
-    gst_gl_filter_render_to_target (filter, inbuf->texture,
+    gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
         differencematte->savedbgtexture,
         gst_gl_differencematte_save_texture, differencematte);
 
@@ -486,7 +495,7 @@ gst_gl_differencematte_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
 
   if (differencematte->savedbgtexture != 0) {
     gst_gl_filter_render_to_target (filter,
-        inbuf->texture,
+        in_meta->memory->tex_id,
         differencematte->midtexture[0],
         gst_gl_differencematte_diff, differencematte);
     gst_gl_filter_render_to_target (filter,
@@ -498,12 +507,14 @@ gst_gl_differencematte_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
         differencematte->midtexture[2],
         gst_gl_differencematte_vblur, differencematte);
     gst_gl_filter_render_to_target (filter,
-        inbuf->texture,
-        outbuf->texture, gst_gl_differencematte_interp, differencematte);
+        in_meta->memory->tex_id,
+        out_meta->memory->tex_id, gst_gl_differencematte_interp,
+        differencematte);
   } else {
     gst_gl_filter_render_to_target (filter,
-        inbuf->texture,
-        outbuf->texture, gst_gl_differencematte_identity, differencematte);
+        in_meta->memory->tex_id,
+        out_meta->memory->tex_id, gst_gl_differencematte_identity,
+        differencematte);
   }
 
   return TRUE;
