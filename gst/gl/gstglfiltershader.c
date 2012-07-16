@@ -45,7 +45,6 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/controller/gstcontroller.h>
 #include "gstglfiltershader.h"
 #include <gstglshadervariables.h>
 
@@ -80,7 +79,7 @@ static void gst_gl_filtershader_load_shader (char *filename, char **storage);
 static void gst_gl_filtershader_load_variables (char *filename, char **storage);
 static gboolean gst_gl_filtershader_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 static void gst_gl_filtershader_hcallback (gint width, gint height,
     guint texture, gpointer stuff);
 
@@ -134,9 +133,6 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
   gst_element_class_set_details_simple (element_class,
       "OpenGL fragment shader filter", "Filter/Effect",
       "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
-
-  /* initialize library */
-  gst_controller_init (NULL, NULL);
 
   GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtershader_filter;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
@@ -322,17 +318,26 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filtershader_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_filtershader_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
+  GstGLMeta *in_meta, *out_meta;
+
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+
+  if (!in_meta || !out_meta) {
+    GST_ERROR ("A buffer does not contain required GstGLMeta");
+    return FALSE;
+  }
 
   if (!filtershader->compiled) {
     gst_gl_filtershader_init_shader (filter);
   }
 
-  gst_gl_filter_render_to_target (filter, inbuf->texture,       ///
-      outbuf->texture, gst_gl_filtershader_hcallback, filtershader);    ///
+  gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
+      out_meta->memory->tex_id, gst_gl_filtershader_hcallback, filtershader);
 
   return TRUE;
 }
