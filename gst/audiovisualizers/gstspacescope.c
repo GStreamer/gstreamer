@@ -104,28 +104,27 @@ static void gst_space_scope_set_property (GObject * object, guint prop_id,
 static void gst_space_scope_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void render_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+static void render_dots (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+static void render_lines (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+static void render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+static void render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
 
-static gboolean gst_space_scope_render (GstBaseAudioVisualizer * scope,
+static gboolean gst_space_scope_render (GstAudioVisualizer * scope,
     GstBuffer * audio, GstBuffer * video);
 
 
-G_DEFINE_TYPE (GstSpaceScope, gst_space_scope, GST_TYPE_BASE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstSpaceScope, gst_space_scope, GST_TYPE_AUDIO_VISUALIZER);
 
 static void
 gst_space_scope_class_init (GstSpaceScopeClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstElementClass *element_class = (GstElementClass *) g_class;
-  GstBaseAudioVisualizerClass *scope_class =
-      (GstBaseAudioVisualizerClass *) g_class;
+  GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *) g_class;
 
   gst_element_class_set_details_simple (element_class, "Stereo visualizer",
       "Visualization",
@@ -203,7 +202,7 @@ gst_space_scope_get_property (GObject * object, guint prop_id,
 #include "gstdrawhelpers.h"
 
 static void
-render_dots (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
+render_dots (GstAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   guint i, s, x, y, ox, oy;
@@ -225,7 +224,7 @@ render_dots (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
 }
 
 static void
-render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
+render_lines (GstAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   guint i, s, x, y, ox, oy;
@@ -274,7 +273,7 @@ render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
 } G_STMT_END
 
 static void
-render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
 {
   GstSpaceScope *scope = (GstSpaceScope *) base;
@@ -335,7 +334,7 @@ render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
 }
 
 static void
-render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
 {
   GstSpaceScope *scope = (GstSpaceScope *) base;
@@ -425,7 +424,7 @@ render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
 }
 
 static gboolean
-gst_space_scope_render (GstBaseAudioVisualizer * base, GstBuffer * audio,
+gst_space_scope_render (GstAudioVisualizer * base, GstBuffer * audio,
     GstBuffer * video)
 {
   GstSpaceScope *scope = GST_SPACE_SCOPE (base);

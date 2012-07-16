@@ -22,7 +22,7 @@
 #ifndef __GST_SPACE_SCOPE_H__
 #define __GST_SPACE_SCOPE_H__
 
-#include "gstbaseaudiovisualizer.h"
+#include "gstaudiovisualizer.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_SPACE_SCOPE            (gst_space_scope_get_type())
@@ -33,11 +33,11 @@ G_BEGIN_DECLS
 typedef struct _GstSpaceScope GstSpaceScope;
 typedef struct _GstSpaceScopeClass GstSpaceScopeClass;
 
-typedef void (*GstSpaceScopeProcessFunc) (GstBaseAudioVisualizer *, guint32 *, gint16 *, guint);
+typedef void (*GstSpaceScopeProcessFunc) (GstAudioVisualizer *, guint32 *, gint16 *, guint);
 
 struct _GstSpaceScope
 {
-  GstBaseAudioVisualizer parent;
+  GstAudioVisualizer parent;
 
   /* < private > */
   GstSpaceScopeProcessFunc process;
@@ -52,7 +52,7 @@ struct _GstSpaceScope
 
 struct _GstSpaceScopeClass
 {
-  GstBaseAudioVisualizerClass parent_class;
+  GstAudioVisualizerClass parent_class;
 };
 
 GType gst_space_scope_get_type (void);

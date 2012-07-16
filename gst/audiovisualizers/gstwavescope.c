@@ -105,29 +105,28 @@ static void gst_wave_scope_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_wave_scope_finalize (GObject * object);
 
-static void render_dots (GstBaseAudioVisualizer * scope, guint32 * vdata,
+static void render_dots (GstAudioVisualizer * scope, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_lines (GstBaseAudioVisualizer * scope, guint32 * vdata,
+static void render_lines (GstAudioVisualizer * scope, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+static void render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
-static void render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+static void render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples);
 
-static gboolean gst_wave_scope_setup (GstBaseAudioVisualizer * scope);
-static gboolean gst_wave_scope_render (GstBaseAudioVisualizer * base,
+static gboolean gst_wave_scope_setup (GstAudioVisualizer * scope);
+static gboolean gst_wave_scope_render (GstAudioVisualizer * base,
     GstBuffer * audio, GstBuffer * video);
 
 #define gst_wave_scope_parent_class parent_class
-G_DEFINE_TYPE (GstWaveScope, gst_wave_scope, GST_TYPE_BASE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstWaveScope, gst_wave_scope, GST_TYPE_AUDIO_VISUALIZER);
 
 static void
 gst_wave_scope_class_init (GstWaveScopeClass * g_class)
 {
   GObjectClass *gobject_class = (GObjectClass *) g_class;
   GstElementClass *gstelement_class = (GstElementClass *) g_class;
-  GstBaseAudioVisualizerClass *scope_class =
-      (GstBaseAudioVisualizerClass *) g_class;
+  GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *) g_class;
 
   gobject_class->set_property = gst_wave_scope_set_property;
   gobject_class->get_property = gst_wave_scope_get_property;
@@ -174,7 +173,7 @@ gst_wave_scope_finalize (GObject * object)
 }
 
 static gboolean
-gst_wave_scope_setup (GstBaseAudioVisualizer * bscope)
+gst_wave_scope_setup (GstAudioVisualizer * bscope)
 {
   GstWaveScope *scope = GST_WAVE_SCOPE (bscope);
 
@@ -235,7 +234,7 @@ gst_wave_scope_get_property (GObject * object, guint prop_id,
 #include "gstdrawhelpers.h"
 
 static void
-render_dots (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
+render_dots (GstAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
@@ -260,7 +259,7 @@ render_dots (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
 }
 
 static void
-render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
+render_lines (GstAudioVisualizer * base, guint32 * vdata, gint16 * adata,
     guint num_samples)
 {
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
@@ -304,7 +303,7 @@ render_lines (GstBaseAudioVisualizer * base, guint32 * vdata, gint16 * adata,
 } G_STMT_END
 
 static void
-render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
+render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
 {
   GstWaveScope *scope = (GstWaveScope *) base;
@@ -344,7 +343,7 @@ render_color_dots (GstBaseAudioVisualizer * base, guint32 * vdata,
 }
 
 static void
-render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
+render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
     gint16 * adata, guint num_samples)
 {
   GstWaveScope *scope = (GstWaveScope *) base;
@@ -403,7 +402,7 @@ render_color_lines (GstBaseAudioVisualizer * base, guint32 * vdata,
 }
 
 static gboolean
-gst_wave_scope_render (GstBaseAudioVisualizer * base, GstBuffer * audio,
+gst_wave_scope_render (GstAudioVisualizer * base, GstBuffer * audio,
     GstBuffer * video)
 {
   GstWaveScope *scope = GST_WAVE_SCOPE (base);

@@ -1,7 +1,7 @@
 plugin_LTLIBRARIES = libgstaudiovisualizers.la
 
 libgstaudiovisualizers_la_SOURCES = plugin.c \
-    gstbaseaudiovisualizer.c gstbaseaudiovisualizer.h \
+    gstaudiovisualizer.c gstaudiovisualizer.h \
     gstspacescope.c gstspacescope.h \
     gstspectrascope.c gstspectrascope.h \
     gstsynaescope.c gstsynaescope.h \
@@ -17,7 +17,7 @@ libgstaudiovisualizers_la_LIBADD = \
 libgstaudiovisualizers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudiovisualizers_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstbaseaudiovisualizer.h gstdrawhelpers.h \
+noinst_HEADERS = gstaudiovisualizer.h gstdrawhelpers.h \
 	gstspacescope.h gstspectrascope.h gstsynaescope.h gstwavescope.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
