@@ -132,6 +132,12 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
 {
   GST_DEBUG_OBJECT (demux, "Got payload for stream %d ts:%" GST_TIME_FORMAT,
       stream->id, GST_TIME_ARGS (payload->ts));
+
+  /* Before preroll ts might be invalid and set to 0 */
+  if (G_UNLIKELY (payload->ts == 0 && demux->preroll)) {
+    payload->ts = GST_CLOCK_TIME_NONE;
+  }
+
   /* remember the first timestamp in the stream */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (demux->first_ts) &&
           GST_CLOCK_TIME_IS_VALID (payload->ts))) {
