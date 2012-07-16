@@ -193,55 +193,6 @@ matrix_identity (VideoConvert * convert)
   /* do nothing */
 }
 
-static void
-get_offset_scale (const GstVideoFormatInfo * finfo, GstVideoColorRange range,
-    gint depth, gint offset[4], gint scale[4])
-{
-  gint minL, minC, baseL, baseC, maxL, maxC;
-
-  if (depth < 8)
-    depth = 8;
-
-  switch (range) {
-    default:
-    case GST_VIDEO_COLOR_RANGE_0_255:
-      minL = minC = 0;
-      baseL = 0;
-      baseC = 128 << (depth - 8);
-      maxL = (1 << depth) - 1;
-      maxC = (1 << depth) - 1;
-      break;
-    case GST_VIDEO_COLOR_RANGE_16_235:
-      minL = 16 << (depth - 8);
-      minC = 16 << (depth - 8);
-      baseL = minL;
-      baseC = 128 << (depth - 8);
-      maxL = 235 << (depth - 8);
-      maxC = 240 << (depth - 8);
-      break;
-  }
-
-  if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo) ||
-      GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
-    offset[0] = 0;
-    offset[1] = baseL;
-    offset[2] = offset[3] = baseC;
-    scale[0] = 0;
-    scale[1] = maxL - minL;
-    scale[2] = scale[3] = maxC - minC;
-  } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
-    offset[0] = 0;
-    offset[1] = offset[2] = offset[3] = baseL;
-    scale[0] = 0;
-    scale[1] = scale[2] = scale[3] = maxL - minL;
-  } else {
-    offset[0] = offset[1] = offset[2] = offset[3] = 0;
-    scale[0] = scale[1] = scale[2] = scale[3] = (maxL - minL);
-  }
-  GST_DEBUG ("scale: %d %d %d %d", scale[0], scale[1], scale[2], scale[3]);
-  GST_DEBUG ("offset: %d %d %d %d", offset[0], offset[1], offset[2], offset[3]);
-}
-
 static gboolean
 get_Kr_Kb (GstVideoColorMatrix matrix, gdouble * Kr, gdouble * Kb)
 {
@@ -282,7 +233,7 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   ColorMatrix dst;
   gint i, j;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
-  gint depth;
+  const GstVideoFormatInfo *suinfo, *duinfo;
   gint offset[4], scale[4];
   gdouble Kr = 0, Kb = 0;
 
@@ -298,12 +249,13 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   if (dfinfo->pack_func == NULL)
     goto no_pack_func;
 
-  convert->in_bits =
-      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
-      (sfinfo->unpack_format), 0);
-  convert->out_bits =
-      GST_VIDEO_FORMAT_INFO_DEPTH (gst_video_format_get_info
-      (dfinfo->unpack_format), 0);
+  suinfo = gst_video_format_get_info (sfinfo->unpack_format);
+  duinfo = gst_video_format_get_info (dfinfo->unpack_format);
+
+  convert->in_bits = GST_VIDEO_FORMAT_INFO_DEPTH (suinfo, 0);
+  convert->out_bits = GST_VIDEO_FORMAT_INFO_DEPTH (duinfo, 0);
+
+  GST_DEBUG ("in bits %d, out bits %d", convert->in_bits, convert->out_bits);
 
   if (in_info->colorimetry.range == out_info->colorimetry.range &&
       in_info->colorimetry.matrix == out_info->colorimetry.matrix) {
@@ -313,21 +265,29 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
     return TRUE;
   }
 
-  if (convert->in_bits == 16 || convert->out_bits == 16)
-    depth = 16;
-  else
-    depth = 8;
+  /* calculate intermediate format for the matrix. When unpacking, we expand
+   * input to 16 when one of the inputs is 16 bits */
+  if (convert->in_bits == 16 || convert->out_bits == 16) {
+    if (GST_VIDEO_FORMAT_INFO_IS_RGB (suinfo))
+      suinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_ARGB64);
+    else
+      suinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_AYUV64);
 
-  GST_DEBUG ("depth: %d", depth);
+    if (GST_VIDEO_FORMAT_INFO_IS_RGB (duinfo))
+      duinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_ARGB64);
+    else
+      duinfo = gst_video_format_get_info (GST_VIDEO_FORMAT_AYUV64);
+  }
 
   color_matrix_set_identity (&dst);
 
   /* 1, bring color components to [0..1.0] range */
-  get_offset_scale (sfinfo, in_info->colorimetry.range, depth, offset, scale);
-  color_matrix_offset_components (&dst, -offset[1], -offset[2], -offset[3]);
+  gst_video_color_range_offsets (in_info->colorimetry.range, suinfo, offset,
+      scale);
+  color_matrix_offset_components (&dst, -offset[0], -offset[1], -offset[2]);
 
-  color_matrix_scale_components (&dst, 1 / ((float) scale[1]),
-      1 / ((float) scale[2]), 1 / ((float) scale[3]));
+  color_matrix_scale_components (&dst, 1 / ((float) scale[0]),
+      1 / ((float) scale[1]), 1 / ((float) scale[2]));
 
   /* 2. bring components to R'G'B' space */
   if (get_Kr_Kb (in_info->colorimetry.matrix, &Kr, &Kb))
@@ -346,11 +306,12 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
     color_matrix_RGB_to_YCbCr (&dst, Kr, Kb);
 
   /* 8, bring color components to nominal range */
-  get_offset_scale (dfinfo, out_info->colorimetry.range, depth, offset, scale);
-  color_matrix_scale_components (&dst, (float) scale[1], (float) scale[2],
-      (float) scale[3]);
+  gst_video_color_range_offsets (out_info->colorimetry.range, duinfo, offset,
+      scale);
+  color_matrix_scale_components (&dst, (float) scale[0], (float) scale[1],
+      (float) scale[2]);
 
-  color_matrix_offset_components (&dst, offset[1], offset[2], offset[3]);
+  color_matrix_offset_components (&dst, offset[0], offset[1], offset[2]);
 
   /* because we're doing 8-bit matrix coefficients */
   color_matrix_scale_components (&dst, 256.0, 256.0, 256.0);
