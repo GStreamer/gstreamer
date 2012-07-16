@@ -678,7 +678,6 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
 
   png_structp png_ptr;
   png_infop info_ptr;
-  guint sig_read = 0;
   png_uint_32 width = 0;
   png_uint_32 height = 0;
   gint bit_depth = 0;
@@ -689,21 +688,26 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
   guchar **rows = NULL;
   gint filler;
   png_byte magic[8];
-  size_t read;
+  gint n_read;
 
   if (!filter->display)
     return 1;
-  if ((fp = fopen (overlay->location, "rb")) == NULL)
-    LOAD_ERROR ("file not found");
-  read = fread (magic, 1, sizeof (magic), fp);
-  if (read == 0 || !png_check_sig (magic, sizeof (magic))) {
-    fclose (fp);
-    return 0;
-  }
-  fclose (fp);
 
   if ((fp = fopen (overlay->location, "rb")) == NULL)
     LOAD_ERROR ("file not found");
+
+  /* Read magic number */
+  n_read = fread (magic, 1, sizeof (magic), fp);
+  if (n_read != sizeof (magic)) {
+    fclose (fp);
+    LOAD_ERROR ("can't read PNG magic number");
+  }
+
+  /* Check for valid magic number */
+  if (png_sig_cmp (magic, 0, sizeof (magic))) {
+    fclose (fp);
+    LOAD_ERROR ("not a valid PNG image");
+  }
 
   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
@@ -723,7 +727,7 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
 
   png_init_io (png_ptr, fp);
 
-  png_set_sig_bytes (png_ptr, sig_read);
+  png_set_sig_bytes (png_ptr, sizeof (magic));
 
   png_read_info (png_ptr, info_ptr);
 
