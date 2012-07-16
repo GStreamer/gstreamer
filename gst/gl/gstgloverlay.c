@@ -69,7 +69,7 @@ static void gst_gl_overlay_init_resources (GstGLFilter * filter);
 static void gst_gl_overlay_reset_resources (GstGLFilter * filter);
 
 static gboolean gst_gl_overlay_filter (GstGLFilter * filter,
-    GstGLBuffer * inbuf, GstGLBuffer * outbuf);
+    GstBuffer * inbuf, GstBuffer * outbuf);
 
 static gint gst_gl_overlay_load_png (GstGLFilter * filter);
 static gint gst_gl_overlay_load_jpeg (GstGLFilter * filter);
@@ -588,10 +588,19 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
 }
 
 static gboolean
-gst_gl_overlay_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
-    GstGLBuffer * outbuf)
+gst_gl_overlay_filter (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
+  GstGLMeta *in_meta, *out_meta;
+
+  in_meta = gst_buffer_get_gl_meta (inbuf);
+  out_meta = gst_buffer_get_gl_meta (outbuf);
+
+  if (!in_meta || !out_meta) {
+    GST_ERROR ("A Buffer does not contain required GstGLMeta");
+    return FALSE;
+  }
 
   if (overlay->pbuf_has_changed && (overlay->location != NULL)) {
     if ((overlay->type_file = gst_gl_overlay_load_png (filter)) == 0)
@@ -607,8 +616,8 @@ gst_gl_overlay_filter (GstGLFilter * filter, GstGLBuffer * inbuf,
     overlay->pbuf_has_changed = FALSE;
   }
 
-  gst_gl_filter_render_to_target (filter, inbuf->texture, outbuf->texture,
-      gst_gl_overlay_callback, overlay);
+  gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
+      out_meta->memory->tex_id, gst_gl_overlay_callback, overlay);
 
   return TRUE;
 }
