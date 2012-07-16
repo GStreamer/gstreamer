@@ -21,6 +21,7 @@
  */
 
 #include <gst/check/gstcheck.h>
+#include <gst/base/gstbasesrc.h>
 
 static void
 pop_async_done (GstBus * bus)
@@ -1412,6 +1413,122 @@ GST_START_TEST (test_state_change_skip)
 
 GST_END_TEST;
 
+GST_START_TEST (test_duration_is_max)
+{
+  GstElement *bin, *src[3], *sink[3];
+  GstStateChangeReturn state_res;
+  GstFormat format = GST_FORMAT_BYTES;
+  gboolean res;
+  gint64 duration;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+
+  /* 3 sources, an adder and a fakesink */
+  src[0] = gst_element_factory_make ("fakesrc", NULL);
+  src[1] = gst_element_factory_make ("fakesrc", NULL);
+  src[2] = gst_element_factory_make ("fakesrc", NULL);
+  sink[0] = gst_element_factory_make ("fakesink", NULL);
+  sink[1] = gst_element_factory_make ("fakesink", NULL);
+  sink[2] = gst_element_factory_make ("fakesink", NULL);
+  gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], sink[0], sink[1],
+      sink[2], NULL);
+
+  gst_element_link (src[0], sink[0]);
+  gst_element_link (src[1], sink[1]);
+  gst_element_link (src[2], sink[2]);
+
+  /* irks, duration is reset on basesrc */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* set durations on src */
+  GST_BASE_SRC (src[0])->segment.duration = 1000;
+  GST_BASE_SRC (src[1])->segment.duration = 3000;
+  GST_BASE_SRC (src[2])->segment.duration = 2000;
+
+  /* set to playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* wait for completion */
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  res = gst_element_query_duration (GST_ELEMENT (bin), format, &duration);
+  fail_unless (res, NULL);
+
+  ck_assert_int_eq (duration, 3000);
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_duration_unknown_overrides)
+{
+  GstElement *bin, *src[3], *sink[3];
+  GstStateChangeReturn state_res;
+  GstFormat format = GST_FORMAT_BYTES;
+  gboolean res;
+  gint64 duration;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+
+  /* 3 sources, an adder and a fakesink */
+  src[0] = gst_element_factory_make ("fakesrc", NULL);
+  src[1] = gst_element_factory_make ("fakesrc", NULL);
+  src[2] = gst_element_factory_make ("fakesrc", NULL);
+  sink[0] = gst_element_factory_make ("fakesink", NULL);
+  sink[1] = gst_element_factory_make ("fakesink", NULL);
+  sink[2] = gst_element_factory_make ("fakesink", NULL);
+  gst_bin_add_many (GST_BIN (bin), src[0], src[1], src[2], sink[0], sink[1],
+      sink[2], NULL);
+
+  gst_element_link (src[0], sink[0]);
+  gst_element_link (src[1], sink[1]);
+  gst_element_link (src[2], sink[2]);
+
+  /* irks, duration is reset on basesrc */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* set durations on src */
+  GST_BASE_SRC (src[0])->segment.duration = GST_CLOCK_TIME_NONE;
+  GST_BASE_SRC (src[1])->segment.duration = 3000;
+  GST_BASE_SRC (src[2])->segment.duration = 2000;
+
+  /* set to playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  /* wait for completion */
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
+  fail_unless (state_res != GST_STATE_CHANGE_FAILURE, NULL);
+
+  res = gst_element_query_duration (GST_ELEMENT (bin), format, &duration);
+  fail_unless (res, NULL);
+
+  ck_assert_int_eq (duration, GST_CLOCK_TIME_NONE);
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
+
+
 static Suite *
 gst_bin_suite (void)
 {
@@ -1439,6 +1556,8 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_state_failure_remove);
   tcase_add_test (tc_chain, test_state_failure_unref);
   tcase_add_test (tc_chain, test_state_change_skip);
+  tcase_add_test (tc_chain, test_duration_is_max);
+  tcase_add_test (tc_chain, test_duration_unknown_overrides);
 
   /* fails on OSX build bot for some reason, and is a bit silly anyway */
   if (0)

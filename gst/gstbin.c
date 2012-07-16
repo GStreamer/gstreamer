@@ -3610,6 +3610,12 @@ bin_query_duration_fold (const GValue * vitem, GValue * ret, QueryFold * fold)
 
     GST_DEBUG_OBJECT (item, "got duration %" G_GINT64_FORMAT, duration);
 
+    if (duration == -1) {
+      /* duration query succeeded, but duration is unknown */
+      fold->max = -1;
+      return FALSE;
+    }
+
     if (duration > fold->max)
       fold->max = duration;
   }
