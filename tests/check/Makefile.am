@@ -130,6 +130,7 @@ check_PROGRAMS = \
 	elements/playbin-compressed \
 	$(check_pango)              \
 	$(check_subparse)           \
+	elements/videoconvert       \
 	elements/videorate          \
 	elements/videoscale         \
 	elements/videotestsrc       \
@@ -387,6 +388,14 @@ elements_vorbistag_CFLAGS = \
 	$(AM_CFLAGS) \
 	$(VORBIS_CFLAGS) \
 	$(CFLAGS)
+
+elements_videoconvert_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+elements_videoconvert_LDADD = \
+	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
+	$(GST_BASE_LIBS) $(LDADD)
 
 elements_videoscale_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
