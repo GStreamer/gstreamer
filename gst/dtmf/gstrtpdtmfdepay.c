@@ -407,9 +407,6 @@ gst_rtp_dtmf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   rtpdtmfdepay = GST_RTP_DTMF_DEPAY (depayload);
 
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
-
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtpbuffer);
 
   payload_len = gst_rtp_buffer_get_payload_len (&rtpbuffer);
@@ -422,7 +419,6 @@ gst_rtp_dtmf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   if (dtmf_payload.event > MAX_EVENT)
     goto bad_packet;
-
 
   marker = gst_rtp_buffer_get_marker (&rtpbuffer);
 
