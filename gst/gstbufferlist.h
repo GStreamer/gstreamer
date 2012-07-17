@@ -155,7 +155,7 @@ GstBuffer *              gst_buffer_list_get                   (GstBufferList *l
 void                     gst_buffer_list_insert                (GstBufferList *list, guint idx, GstBuffer *buffer);
 void                     gst_buffer_list_remove                (GstBufferList *list, guint idx, guint length);
 
-void                     gst_buffer_list_foreach               (GstBufferList *list,
+gboolean                 gst_buffer_list_foreach               (GstBufferList *list,
                                                                 GstBufferListFunc func,
 								gpointer user_data);
 

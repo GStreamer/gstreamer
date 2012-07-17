@@ -181,20 +181,23 @@ gst_buffer_list_length (GstBufferList * list)
  * @func can modify the passed buffer pointer or its contents. The return value
  * of @func define if this function returns or if the remaining buffers in
  * the list should be skipped.
+ *
+ * Returns: %TRUE when @func returned %TRUE for each buffer in @list or when
+ * @list is empty.
  */
-void
+gboolean
 gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
     gpointer user_data)
 {
   guint i, len;
+  gboolean ret = TRUE;
 
-  g_return_if_fail (GST_IS_BUFFER_LIST (list));
-  g_return_if_fail (func != NULL);
+  g_return_val_if_fail (GST_IS_BUFFER_LIST (list), FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
 
   len = list->array->len;
   for (i = 0; i < len;) {
     GstBuffer *buf, *buf_ret;
-    gboolean ret;
 
     buf = buf_ret = g_array_index (list->array, GstBuffer *, i);
     ret = func (&buf_ret, i, user_data);
@@ -216,6 +219,7 @@ gst_buffer_list_foreach (GstBufferList * list, GstBufferListFunc func,
     if (buf_ret != NULL)
       i++;
   }
+  return ret;
 }
 
 /**
