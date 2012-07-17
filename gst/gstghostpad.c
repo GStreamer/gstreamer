@@ -191,38 +191,36 @@ gst_proxy_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
 
-
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_ACCEPT_CAPS:
-    {
-      target = gst_proxy_pad_get_target (pad);
-      if (target) {
-        res = gst_pad_query (target, query);
-        gst_object_unref (target);
-      } else {
-        GST_DEBUG_OBJECT (pad, "no target");
-        /* We don't have a target, we return TRUE and we assume that any future
-         * target will be able to deal with any configured caps. */
-        gst_query_set_accept_caps_result (query, TRUE);
-        res = TRUE;
-      }
-      break;
-    }
     case GST_QUERY_CAPS:
     {
-      res = gst_proxy_pad_query_caps (pad, query);
+      if (GST_IS_GHOST_PAD (pad))
+        res = gst_proxy_pad_query_caps (pad, query);
+      else
+        res = gst_pad_peer_query (GST_PROXY_PAD_INTERNAL (pad), query);
       break;
+    }
+    case GST_QUERY_ACCEPT_CAPS:
+    {
+      if (GST_IS_GHOST_PAD (pad)) {
+        target = gst_proxy_pad_get_target (pad);
+        if (target) {
+          res = gst_pad_query (target, query);
+          gst_object_unref (target);
+        } else {
+          GST_DEBUG_OBJECT (pad, "no target");
+          /* We don't have a target, we return TRUE and we assume that any future
+           * target will be able to deal with any configured caps. */
+          gst_query_set_accept_caps_result (query, TRUE);
+          res = TRUE;
+        }
+        break;
+      }
+      /* passthrough */
     }
     default:
     {
-      target = gst_proxy_pad_get_target (pad);
-      if (target) {
-        res = gst_pad_query (target, query);
-        gst_object_unref (target);
-      } else {
-        GST_DEBUG_OBJECT (pad, "no target pad");
-        res = FALSE;
-      }
+      res = gst_pad_peer_query (GST_PROXY_PAD_INTERNAL (pad), query);
       break;
     }
   }
