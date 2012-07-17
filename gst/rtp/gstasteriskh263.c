@@ -127,9 +127,6 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   asteriskh263 = GST_ASTERISK_H263 (parent);
 
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
-
   {
     gint payload_len;
     guint8 *payload;
@@ -140,7 +137,8 @@ gst_asteriskh263_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     GstRTPBuffer rtp = { NULL };
     GstMapInfo map;
 
-    gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
+    if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp))
+      goto bad_packet;
 
     payload_len = gst_rtp_buffer_get_payload_len (&rtp);
     payload = gst_rtp_buffer_get_payload (&rtp);

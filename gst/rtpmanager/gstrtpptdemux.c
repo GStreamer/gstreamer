@@ -354,10 +354,9 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   rtpdemux = GST_RTP_PT_DEMUX (parent);
 
-  if (!gst_rtp_buffer_validate (buf))
+  if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp))
     goto invalid_buffer;
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
   pt = gst_rtp_buffer_get_payload_type (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 

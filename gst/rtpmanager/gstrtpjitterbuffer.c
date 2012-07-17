@@ -1255,12 +1255,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
-  if (G_UNLIKELY (!gst_rtp_buffer_validate (buffer)))
-    goto invalid_buffer;
-
   priv = jitterbuffer->priv;
 
-  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  if (G_UNLIKELY (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp)))
+    goto invalid_buffer;
+
   pt = gst_rtp_buffer_get_payload_type (&rtp);
   seqnum = gst_rtp_buffer_get_seq (&rtp);
   gst_rtp_buffer_unmap (&rtp);
@@ -1529,7 +1528,7 @@ compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
   guint64 ext_time, elapsed;
   guint32 rtp_time;
   GstRtpJitterBufferPrivate *priv;
-  GstRTPBuffer rtp = { NULL, };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   priv = jitterbuffer->priv;
   gst_rtp_buffer_map (outbuf, GST_MAP_READ, &rtp);

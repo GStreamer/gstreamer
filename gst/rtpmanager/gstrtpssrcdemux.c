@@ -580,10 +580,9 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   demux = GST_RTP_SSRC_DEMUX (parent);
 
-  if (!gst_rtp_buffer_validate (buf))
+  if (!gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp))
     goto invalid_payload;
 
-  gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 

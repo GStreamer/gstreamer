@@ -257,9 +257,6 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp);
 
-  if (!gst_rtp_buffer_validate (buf))
-    goto bad_packet;
-
   if (GST_BUFFER_IS_DISCONT (buf)) {
     /* discont, clear adapter and try to find a new packet start */
     gst_adapter_clear (rtpxqtdepay->adapter);
@@ -624,12 +621,6 @@ done:
   gst_rtp_buffer_unmap (&rtp);
   return outbuf;
 
-bad_packet:
-  {
-    GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
-        ("Packet did not validate."), (NULL));
-    goto done;
-  }
 need_resync:
   {
     GST_DEBUG_OBJECT (rtpxqtdepay, "waiting for marker");

@@ -1711,26 +1711,23 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  if (!gst_rtp_buffer_validate (buffer))
+  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
     goto invalid_packet;
 
   RTP_SESSION_LOCK (sess);
-  /* update arrival stats */
-  update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
-      running_time, -1);
-
   /* ignore more RTP packets when we left the session */
   if (sess->source->received_bye)
     goto ignore;
 
+  /* update arrival stats */
+  update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
+      running_time, -1);
+
   /* get SSRC and look up in session database */
-  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   source = obtain_source (sess, ssrc, &created, &arrival, TRUE);
-  if (!source) {
-    gst_rtp_buffer_unmap (&rtp);
+  if (!source)
     goto collision;
-  }
 
   /* copy available csrc for later */
   count = gst_rtp_buffer_get_csrc_count (&rtp);
@@ -1811,14 +1808,15 @@ invalid_packet:
 ignore:
   {
     RTP_SESSION_UNLOCK (sess);
+    gst_rtp_buffer_unmap (&rtp);
     gst_buffer_unref (buffer);
-    clean_arrival_stats (&arrival);
     GST_DEBUG ("ignoring RTP packet because we are leaving");
     return GST_FLOW_OK;
   }
 collision:
   {
     RTP_SESSION_UNLOCK (sess);
+    gst_rtp_buffer_unmap (&rtp);
     gst_buffer_unref (buffer);
     clean_arrival_stats (&arrival);
     GST_DEBUG ("ignoring packet because its collisioning");
@@ -2454,25 +2452,10 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   GstFlowReturn result;
   RTPSource *source;
   gboolean prevsender;
-  gboolean valid_packet;
   guint64 oldrate;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
-
-  if (is_list) {
-    GstBufferList *blist = GST_BUFFER_LIST_CAST (data);
-    gint i, len = gst_buffer_list_length (blist);
-
-    valid_packet = TRUE;
-    for (i = 0; i < len; i++)
-      valid_packet &= gst_rtp_buffer_validate (gst_buffer_list_get (blist, i));
-  } else {
-    valid_packet = gst_rtp_buffer_validate (GST_BUFFER_CAST (data));
-  }
-
-  if (!valid_packet)
-    goto invalid_packet;
 
   GST_LOG ("received RTP %s for sending", is_list ? "list" : "packet");
 
@@ -2495,14 +2478,6 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   RTP_SESSION_UNLOCK (sess);
 
   return result;
-
-  /* ERRORS */
-invalid_packet:
-  {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    GST_DEBUG ("invalid RTP packet received");
-    return GST_FLOW_OK;
-  }
 }
 
 static void

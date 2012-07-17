@@ -469,11 +469,9 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_DEBUG_OBJECT (rtpdec, "got rtp packet");
 
-  if (!gst_rtp_buffer_validate (buffer))
+  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
     goto bad_packet;
 
-
-  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   pt = gst_rtp_buffer_get_payload_type (&rtp);
   gst_rtp_buffer_unmap (&rtp);
