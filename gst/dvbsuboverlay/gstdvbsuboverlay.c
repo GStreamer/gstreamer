@@ -41,6 +41,8 @@
 #include <gst/glib-compat-private.h>
 #include "gstdvbsuboverlay.h"
 
+#include <gst/video/gstvideometa.h>
+
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_dvbsub_overlay_debug);
@@ -761,8 +763,9 @@ gst_dvbsub_overlay_subs_to_comp (GstDVBSubOverlay * overlay,
     GST_LOG_OBJECT (overlay, "rectangle %d rendered: %dx%d @ (%d, %d)", i,
         rw, rh, rx, ry);
 
-    rect = gst_video_overlay_rectangle_new_argb (buf, w, h, 4 * w,
-        rx, ry, rw, rh, 0);
+    gst_buffer_add_video_meta (buf, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, w, h);
+    rect = gst_video_overlay_rectangle_new_argb (buf, rx, ry, rw, rh, 0);
     g_assert (rect);
     if (comp) {
       gst_video_overlay_composition_add_rectangle (comp, rect);
