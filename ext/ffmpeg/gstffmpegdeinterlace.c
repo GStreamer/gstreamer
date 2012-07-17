@@ -226,8 +226,8 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
       deinterlace->height);
 
   src_caps = gst_caps_copy (caps);
-  gst_caps_set_simple (src_caps, "interlaced", G_TYPE_BOOLEAN,
-      deinterlace->interlaced, NULL);
+  gst_caps_set_simple (src_caps, "interlace-mode", G_TYPE_STRING,
+      deinterlace->interlaced ? "progressive" : imode, NULL);
   ret = gst_pad_set_caps (deinterlace->srcpad, src_caps);
   gst_caps_unref (src_caps);
 
