@@ -113,6 +113,7 @@ gst_video_format_flags_get_type (void)
           "palette"},
       {GST_VIDEO_FORMAT_FLAG_COMPLEX, "GST_VIDEO_FORMAT_FLAG_COMPLEX",
           "complex"},
+      {GST_VIDEO_FORMAT_FLAG_UNPACK, "GST_VIDEO_FORMAT_FLAG_UNPACK", "unpack"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -129,6 +130,8 @@ gst_video_pack_flags_get_type (void)
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_VIDEO_PACK_FLAG_NONE, "GST_VIDEO_PACK_FLAG_NONE", "none"},
+      {GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE, "GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE",
+          "truncate-range"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =

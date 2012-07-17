@@ -4,9 +4,12 @@
 #include "audio-enumtypes.h"
 
 #include "audio.h"
+#include "audio-format.h"
+#include "audio-channels.h"
+#include "audio-info.h"
 #include "gstaudioringbuffer.h"
 
-/* enumerations from "audio.h" */
+/* enumerations from "audio-format.h" */
 GType
 gst_audio_format_get_type (void)
 {
@@ -14,6 +17,7 @@ gst_audio_format_get_type (void)
   if (g_once_init_enter (&g_define_type_id__volatile)) {
     static const GEnumValue values[] = {
       {GST_AUDIO_FORMAT_UNKNOWN, "GST_AUDIO_FORMAT_UNKNOWN", "unknown"},
+      {GST_AUDIO_FORMAT_ENCODED, "GST_AUDIO_FORMAT_ENCODED", "encoded"},
       {GST_AUDIO_FORMAT_S8, "GST_AUDIO_FORMAT_S8", "s8"},
       {GST_AUDIO_FORMAT_U8, "GST_AUDIO_FORMAT_U8", "u8"},
       {GST_AUDIO_FORMAT_S16LE, "GST_AUDIO_FORMAT_S16LE", "s16le"},
@@ -78,6 +82,7 @@ gst_audio_format_flags_get_type (void)
       {GST_AUDIO_FORMAT_FLAG_SIGNED, "GST_AUDIO_FORMAT_FLAG_SIGNED", "signed"},
       {GST_AUDIO_FORMAT_FLAG_COMPLEX, "GST_AUDIO_FORMAT_FLAG_COMPLEX",
           "complex"},
+      {GST_AUDIO_FORMAT_FLAG_UNPACK, "GST_AUDIO_FORMAT_FLAG_UNPACK", "unpack"},
       {0, NULL, NULL}
     };
     GType g_define_type_id =
@@ -103,6 +108,7 @@ gst_audio_pack_flags_get_type (void)
   return g_define_type_id__volatile;
 }
 
+/* enumerations from "audio-channels.h" */
 GType
 gst_audio_channel_position_get_type (void)
 {
@@ -185,6 +191,7 @@ gst_audio_channel_position_get_type (void)
   return g_define_type_id__volatile;
 }
 
+/* enumerations from "audio-info.h" */
 GType
 gst_audio_flags_get_type (void)
 {

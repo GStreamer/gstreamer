@@ -81,13 +81,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Base Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Base Plug-ins git"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-06-07"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-06-14T08:18Z"
 
 /* Define to enable ALSA (used by alsa). */
 #undef HAVE_ALSA
@@ -313,7 +313,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.92"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.11.92.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -322,7 +322,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.11.92"
+#define PACKAGE_VERSION "0.11.92.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -356,7 +356,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "0.11.92"
+#define VERSION "0.11.92.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
@@ -372,11 +372,6 @@
 
 /* Define to 1 if the X Window System is missing or not being used. */
 #undef X_DISPLAY_MISSING
-
-/* Enable large inode numbers on Mac OS X 10.5.  */
-#ifndef _DARWIN_USE_64_BIT_INODE
-# define _DARWIN_USE_64_BIT_INODE 1
-#endif
 
 /* Number of bits in a file offset, on hosts where this is settable. */
 #undef _FILE_OFFSET_BITS

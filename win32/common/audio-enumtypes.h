@@ -8,15 +8,19 @@
 
 G_BEGIN_DECLS
 
-/* enumerations from "audio.h" */
+/* enumerations from "audio-format.h" */
 GType gst_audio_format_get_type (void);
 #define GST_TYPE_AUDIO_FORMAT (gst_audio_format_get_type())
 GType gst_audio_format_flags_get_type (void);
 #define GST_TYPE_AUDIO_FORMAT_FLAGS (gst_audio_format_flags_get_type())
 GType gst_audio_pack_flags_get_type (void);
 #define GST_TYPE_AUDIO_PACK_FLAGS (gst_audio_pack_flags_get_type())
+
+/* enumerations from "audio-channels.h" */
 GType gst_audio_channel_position_get_type (void);
 #define GST_TYPE_AUDIO_CHANNEL_POSITION (gst_audio_channel_position_get_type())
+
+/* enumerations from "audio-info.h" */
 GType gst_audio_flags_get_type (void);
 #define GST_TYPE_AUDIO_FLAGS (gst_audio_flags_get_type())
 GType gst_audio_layout_get_type (void);
