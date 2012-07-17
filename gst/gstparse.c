@@ -181,7 +181,7 @@ _gst_parse_escape (const gchar * str)
   gstr = g_string_sized_new (strlen (str));
 
   while (*str) {
-    if (*str == ' ' || *str == '\\')
+    if (*str == ' ')
       g_string_append_c (gstr, '\\');
     g_string_append_c (gstr, *str);
     str++;
