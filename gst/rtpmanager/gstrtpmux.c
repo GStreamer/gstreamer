@@ -469,12 +469,6 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   rtp_mux = GST_RTP_MUX (GST_OBJECT_PARENT (pad));
 
-  if (!gst_rtp_buffer_validate (buffer)) {
-    gst_buffer_unref (buffer);
-    GST_ERROR_OBJECT (rtp_mux, "Invalid RTP buffer");
-    return GST_FLOW_ERROR;
-  }
-
   GST_OBJECT_LOCK (rtp_mux);
   padpriv = gst_pad_get_element_private (pad);
 
@@ -486,7 +480,12 @@ gst_rtp_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   buffer = gst_buffer_make_writable (buffer);
 
-  gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtpbuffer);
+  if (!gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtpbuffer)) {
+    GST_OBJECT_UNLOCK (rtp_mux);
+    gst_buffer_unref (buffer);
+    GST_ERROR_OBJECT (rtp_mux, "Invalid RTP buffer");
+    return GST_FLOW_ERROR;
+  }
 
   drop = !process_buffer_locked (rtp_mux, padpriv, &rtpbuffer);
 
