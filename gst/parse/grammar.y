@@ -397,7 +397,7 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   if (element == NULL)
     goto out;
 
-  /* parse the string, so the property name is null-terminated an pos points
+  /* parse the string, so the property name is null-terminated and pos points
      to the beginning of the value */
   while (!g_ascii_isspace (*pos) && (*pos != '=')) pos++;
   if (*pos == '=') {

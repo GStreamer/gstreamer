@@ -76,6 +76,8 @@ gst_parse_unescape (gchar *str)
   walk = str;
   in_quotes = FALSE;
 
+  GST_DEBUG ("unescaping %s", str);
+
   while (*walk) {
     if (*walk == '\\' && !in_quotes) {
       walk++;

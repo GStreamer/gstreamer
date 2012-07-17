@@ -251,7 +251,7 @@ gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
   argvp = argv;
   while (*argvp) {
     arg = *argvp;
-    GST_DEBUG ("eascaping argument %s", arg);
+    GST_DEBUG ("escaping argument %s", arg);
     tmp = _gst_parse_escape (arg);
     g_string_append (str, tmp);
     g_free (tmp);
