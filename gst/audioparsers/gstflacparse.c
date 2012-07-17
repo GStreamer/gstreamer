@@ -1017,9 +1017,15 @@ gst_flac_parse_handle_cuesheet (GstFlacParse * flacparse, GstBuffer * buffer)
       goto error;
     if (!gst_byte_reader_get_uint8 (&reader, &track_num))
       goto error;
-    if (!gst_byte_reader_skip (&reader, 12))
+
+    if (gst_byte_reader_get_remaining (&reader) < 12)
       goto error;
     memcpy (isrc, map.data + gst_byte_reader_get_pos (&reader), 12);
+    /* \0-terminate the string */
+    isrc[12] = '\0';
+    if (!gst_byte_reader_skip (&reader, 12))
+      goto error;
+
     /* skip 14 bytes from CUESHEET_TRACK */
     if (!gst_byte_reader_skip (&reader, 14))
       goto error;
