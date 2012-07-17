@@ -1550,35 +1550,39 @@ static gboolean
 gst_dvd_read_src_src_query (GstBaseSrc * basesrc, GstQuery * query)
 {
   GstDvdReadSrc *src = GST_DVD_READ_SRC (basesrc);
-  gboolean started;
   gboolean res = TRUE;
 
-  GST_LOG_OBJECT (src, "handling %s query",
-      gst_query_type_get_name (GST_QUERY_TYPE (query)));
-
-  GST_OBJECT_LOCK (src);
-  started = (GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED));
-  GST_OBJECT_UNLOCK (src);
-
-  if (!started) {
-    GST_DEBUG_OBJECT (src, "query failed: not started");
-    return FALSE;
-  }
+  GST_LOG_OBJECT (src, "handling %s query", GST_QUERY_TYPE_NAME (query));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
       GST_OBJECT_LOCK (src);
-      res = gst_dvd_read_src_do_duration_query (src, query);
+      if (GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED)) {
+        res = gst_dvd_read_src_do_duration_query (src, query);
+      } else {
+        GST_DEBUG_OBJECT (src, "query failed: not started");
+        res = FALSE;
+      }
       GST_OBJECT_UNLOCK (src);
       break;
     case GST_QUERY_POSITION:
       GST_OBJECT_LOCK (src);
-      res = gst_dvd_read_src_do_position_query (src, query);
+      if (GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED)) {
+        res = gst_dvd_read_src_do_position_query (src, query);
+      } else {
+        GST_DEBUG_OBJECT (src, "query failed: not started");
+        res = FALSE;
+      }
       GST_OBJECT_UNLOCK (src);
       break;
     case GST_QUERY_CONVERT:
       GST_OBJECT_LOCK (src);
-      res = gst_dvd_read_src_do_convert_query (src, query);
+      if (GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_FLAG_STARTED)) {
+        res = gst_dvd_read_src_do_convert_query (src, query);
+      } else {
+        GST_DEBUG_OBJECT (src, "query failed: not started");
+        res = FALSE;
+      }
       GST_OBJECT_UNLOCK (src);
       break;
     default:
