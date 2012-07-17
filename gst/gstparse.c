@@ -175,14 +175,21 @@ static gchar *
 _gst_parse_escape (const gchar * str)
 {
   GString *gstr = NULL;
+  gboolean in_quotes;
 
   g_return_val_if_fail (str != NULL, NULL);
 
   gstr = g_string_sized_new (strlen (str));
 
+  in_quotes = FALSE;
+
   while (*str) {
-    if (*str == ' ')
+    if (*str == '"' && (!in_quotes || (in_quotes && *(str - 1) != '\\')))
+      in_quotes = !in_quotes;
+
+    if (*str == ' ' && !in_quotes)
       g_string_append_c (gstr, '\\');
+
     g_string_append_c (gstr, *str);
     str++;
   }
@@ -244,6 +251,7 @@ gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
   argvp = argv;
   while (*argvp) {
     arg = *argvp;
+    GST_DEBUG ("eascaping argument %s", arg);
     tmp = _gst_parse_escape (arg);
     g_string_append (str, tmp);
     g_free (tmp);
