@@ -153,7 +153,8 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
   /* we copy everything but the read-only flags */
   flags_mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_DISCONT |
       GST_BUFFER_FLAG_IN_CAPS | GST_BUFFER_FLAG_GAP |
-      GST_BUFFER_FLAG_DELTA_UNIT;
+      GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_MEDIA1 |
+      GST_BUFFER_FLAG_MEDIA2 | GST_BUFFER_FLAG_MEDIA3 | GST_BUFFER_FLAG_MEDIA4;
 
   GST_WRITE_UINT16_BE (h + 42, GST_BUFFER_FLAGS (buffer) & flags_mask);
 
