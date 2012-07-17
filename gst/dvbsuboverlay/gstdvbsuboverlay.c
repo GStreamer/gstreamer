@@ -907,7 +907,6 @@ gst_dvbsub_overlay_chain_video (GstPad * pad, GstObject * parent,
   if (g_atomic_int_get (&overlay->enable) && overlay->current_subtitle) {
     GstVideoFrame frame;
 
-    buffer = gst_buffer_make_writable (buffer);
     g_assert (overlay->current_comp);
     if (overlay->attach_compo_to_buffer) {
       GST_DEBUG_OBJECT (overlay, "Attaching overlay image to video buffer");
