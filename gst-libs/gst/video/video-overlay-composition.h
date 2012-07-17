@@ -101,11 +101,21 @@ typedef enum {
   GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA = 2
 } GstVideoOverlayFormatFlags;
 
+/**
+  * GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB:
+  *
+  * Supported RGB overlay video format.
+  */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB      GST_VIDEO_FORMAT_BGRA
+#else
+#define GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB      GST_VIDEO_FORMAT_ARGB
+#endif
+
 GType                        gst_video_overlay_rectangle_get_type (void);
 
 GstVideoOverlayRectangle *   gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
-                                                                   guint width, guint height, guint stride,
-                                                                   gint  render_x, gint render_y,
+                                                                   gint render_x, gint render_y,
                                                                    guint render_width, guint render_height,
                                                                    GstVideoOverlayFormatFlags flags);
 
@@ -126,13 +136,9 @@ gboolean                     gst_video_overlay_rectangle_get_render_rectangle   
                                                                                    guint                     * render_height);
 
 GstBuffer *                  gst_video_overlay_rectangle_get_pixels_argb          (GstVideoOverlayRectangle  * rectangle,
-                                                                                   guint                     * stride,
                                                                                    GstVideoOverlayFormatFlags  flags);
 
 GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle  * rectangle,
-                                                                                   guint                     * width,
-                                                                                   guint                     * height,
-                                                                                   guint                     * stride,
                                                                                    GstVideoOverlayFormatFlags  flags);
 
 GstVideoOverlayFormatFlags   gst_video_overlay_rectangle_get_flags                (GstVideoOverlayRectangle  * rectangle);
