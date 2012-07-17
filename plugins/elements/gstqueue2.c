@@ -1923,6 +1923,19 @@ gst_queue2_locked_enqueue (GstQueue2 * queue, gpointer item,
           item = NULL;
         }
         break;
+      case GST_EVENT_CAPS:{
+        GstCaps *caps;
+
+        gst_event_parse_caps (event, &caps);
+        GST_INFO ("got caps: %" GST_PTR_FORMAT, caps);
+
+        if (!QUEUE_IS_USING_QUEUE (queue)) {
+          GST_LOG ("Dropping caps event, not using queue");
+          gst_event_unref (event);
+          item = NULL;
+        }
+        break;
+      }
       default:
         if (!QUEUE_IS_USING_QUEUE (queue))
           goto unexpected_event;
