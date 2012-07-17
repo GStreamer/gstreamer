@@ -157,10 +157,11 @@ GST_START_TEST (test_rtp_buffer_validate_corrupt)
     0xaf, 0xd6, 0x1b, 0x29, 0x40, 0xe0, 0xa5, 0x83, 0x01, 0x4b, 0x04, 0x02,
     0xb0, 0x97, 0x63, 0x08, 0x10, 0x4b, 0x43, 0x85, 0x37, 0x2c
   };
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   buf = gst_buffer_new_and_alloc (sizeof (corrupt_rtp_packet));
   gst_buffer_fill (buf, 0, corrupt_rtp_packet, sizeof (corrupt_rtp_packet));
-  fail_if (gst_rtp_buffer_validate (buf));
+  fail_if (gst_rtp_buffer_map (buf, GST_MAP_READ, &rtp));
   gst_buffer_unref (buf);
 }
 

@@ -1190,9 +1190,6 @@ gst_rtp_buffer_calc_header_len
 gst_rtp_buffer_calc_packet_len
 gst_rtp_buffer_calc_payload_len
 
-gst_rtp_buffer_validate
-gst_rtp_buffer_validate_data
-
 gst_rtp_buffer_set_packet_len
 gst_rtp_buffer_get_packet_len
 

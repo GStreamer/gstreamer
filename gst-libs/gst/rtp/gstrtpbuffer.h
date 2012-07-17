@@ -54,11 +54,13 @@ struct _GstRTPBuffer
   GstBuffer   *buffer;
   guint        state;
   guint        n_map;
+  gpointer     data[4];
+  gsize        size[4];
   GstMapInfo   map[4];
 };
 
-#define GST_RTP_BUFFER_INIT { NULL, 0, 0, { GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, \
-                                            GST_MAP_INFO_INIT, GST_MAP_INFO_INIT} }
+#define GST_RTP_BUFFER_INIT { NULL, 0, 0, { NULL, NULL, NULL, NULL}, { 0, 0, 0, 0 }, \
+  { GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, GST_MAP_INFO_INIT} }
 
 /* creating buffers */
 void            gst_rtp_buffer_allocate_data         (GstBuffer *buffer, guint payload_len,
@@ -73,12 +75,8 @@ guint           gst_rtp_buffer_calc_header_len       (guint8 csrc_count);
 guint           gst_rtp_buffer_calc_packet_len       (guint payload_len, guint8 pad_len, guint8 csrc_count);
 guint           gst_rtp_buffer_calc_payload_len      (guint packet_len, guint8 pad_len, guint8 csrc_count);
 
-gboolean        gst_rtp_buffer_validate_data         (guint8 *data, gsize len);
-gboolean        gst_rtp_buffer_validate              (GstBuffer *buffer);
-
-
 gboolean        gst_rtp_buffer_map                   (GstBuffer *buffer, GstMapFlags flags, GstRTPBuffer *rtp);
-gboolean        gst_rtp_buffer_unmap                 (GstRTPBuffer *rtp);
+void            gst_rtp_buffer_unmap                 (GstRTPBuffer *rtp);
 
 void            gst_rtp_buffer_set_packet_len        (GstRTPBuffer *rtp, guint len);
 guint           gst_rtp_buffer_get_packet_len        (GstRTPBuffer *rtp);

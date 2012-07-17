@@ -747,7 +747,9 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
   HeaderData *data = user_data;
   GstRTPBuffer rtp = { NULL, };
 
-  gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
+  if (!gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp))
+    goto map_failed;
+
   gst_rtp_buffer_set_ssrc (&rtp, data->ssrc);
   gst_rtp_buffer_set_payload_type (&rtp, data->pt);
   gst_rtp_buffer_set_seq (&rtp, data->seqnum);
@@ -758,6 +760,12 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
   data->seqnum++;
 
   return TRUE;
+  /* ERRORS */
+map_failed:
+  {
+    GST_ERROR ("failed to map buffer %p", *buffer);
+    return FALSE;
+  }
 }
 
 /* Updates the SSRC, payload type, seqnum and timestamp of the RTP buffer

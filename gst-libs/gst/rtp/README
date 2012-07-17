@@ -21,9 +21,7 @@ The RTP libraries
   duplicate GstBuffer with the same data as the previous one). The
   function will create a new RTP buffer with the given data as the whole RTP
   packet. Alternatively, gst_rtp_buffer_new_copy_data() can be used if the user
-  wishes to make a copy of the data before using it in the new RTP buffer. An
-  important function is gst_rtp_buffer_validate() that is used to verify that
-  the buffer a well formed RTP buffer.
+  wishes to make a copy of the data before using it in the new RTP buffer.
  
   It is now possible to use all the gst_rtp_buffer_get_*() or
   gst_rtp_buffer_set_*() functions to read or write the different parts of the

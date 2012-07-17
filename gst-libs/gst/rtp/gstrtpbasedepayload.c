@@ -257,9 +257,7 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   if (G_UNLIKELY (!priv->negotiated))
     goto not_negotiated;
 
-  /* we must validate, it's possible that this element is plugged right after a
-   * network receiver and we don't want to operate on invalid data */
-  if (G_UNLIKELY (!gst_rtp_buffer_validate (in)))
+  if (G_UNLIKELY (!gst_rtp_buffer_map (in, GST_MAP_READ, &rtp)))
     goto invalid_buffer;
 
   if (!priv->discont)
@@ -275,7 +273,6 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   priv->dts = dts;
   priv->duration = GST_BUFFER_DURATION (in);
 
-  gst_rtp_buffer_map (in, GST_MAP_READ, &rtp);
   seqnum = gst_rtp_buffer_get_seq (&rtp);
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
