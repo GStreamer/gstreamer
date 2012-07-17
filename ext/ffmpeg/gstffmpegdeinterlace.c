@@ -189,17 +189,22 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstFFMpegDeinterlace *deinterlace =
       GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
+  const gchar *imode;
   AVCodecContext *ctx;
   GstCaps *src_caps;
   gboolean ret;
 
+  /* FIXME: use GstVideoInfo etc. */
   if (!gst_structure_get_int (structure, "width", &deinterlace->width))
     return FALSE;
   if (!gst_structure_get_int (structure, "height", &deinterlace->height))
     return FALSE;
 
   deinterlace->interlaced = FALSE;
-  gst_structure_get_boolean (structure, "interlaced", &deinterlace->interlaced);
+  imode = gst_structure_get_string (structure, "interlace-mode");
+  if (imode && (!strcmp (imode, "interleaved") || !strcmp (imode, "mixed"))) {
+    deinterlace->interlaced = TRUE;
+  }
   gst_ffmpegdeinterlace_update_passthrough (deinterlace);
 
   ctx = avcodec_alloc_context ();
