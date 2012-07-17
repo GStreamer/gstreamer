@@ -26,6 +26,7 @@
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include "test-jpeg.h"
 #include "test-mpeg2.h"
 #include "test-h264.h"
 #include "test-vc1.h"
@@ -35,6 +36,7 @@
 #endif
 #if USE_CODEC_PARSERS
 # include <gst/vaapi/gstvaapidecoder_h264.h>
+# include <gst/vaapi/gstvaapidecoder_jpeg.h>
 # include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 # include <gst/vaapi/gstvaapidecoder_vc1.h>
 #endif
@@ -52,6 +54,7 @@ struct _CodecDefs {
 
 static const CodecDefs g_codec_defs[] = {
 #define INIT_FUNCS(CODEC) { #CODEC, CODEC##_get_video_info }
+    INIT_FUNCS(jpeg),
     INIT_FUNCS(mpeg2),
     INIT_FUNCS(h264),
     INIT_FUNCS(vc1),
@@ -168,6 +171,9 @@ main(int argc, char *argv[])
         switch (gst_vaapi_profile_get_codec(info.profile)) {
         case GST_VAAPI_CODEC_H264:
             decoder = gst_vaapi_decoder_h264_new(display, decoder_caps);
+            break;
+        case GST_VAAPI_CODEC_JPEG:
+            decoder = gst_vaapi_decoder_jpeg_new(display, decoder_caps);
             break;
         case GST_VAAPI_CODEC_MPEG2:
             decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);

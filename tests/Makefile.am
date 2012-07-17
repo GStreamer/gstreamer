@@ -41,7 +41,7 @@ if USE_GLX
 TEST_MIX_LIBS		+= $(TEST_GLX_LIBS)
 endif
 
-test_codecs_source_c	= test-mpeg2.c test-h264.c test-vc1.c
+test_codecs_source_c	= test-mpeg2.c test-h264.c test-vc1.c test-jpeg.c
 test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h)
 
 test_decode_SOURCES	= test-decode.c $(test_codecs_source_c)
