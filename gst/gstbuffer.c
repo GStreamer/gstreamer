@@ -1873,21 +1873,23 @@ gst_buffer_iterate_meta (GstBuffer * buffer, gpointer * state)
  * @func can modify the passed meta pointer or its contents. The return value
  * of @func define if this function returns or if the remaining metadata items
  * in the buffer should be skipped.
+ *
+ * Returns: %FALSE when @func returned %FALSE for one of the metadata.
  */
-void
+gboolean
 gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
     gpointer user_data)
 {
   GstMetaItem *walk, *prev, *next;
+  gboolean res = TRUE;
 
-  g_return_if_fail (buffer != NULL);
-  g_return_if_fail (func != NULL);
+  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_val_if_fail (func != NULL, FALSE);
 
   /* find the metadata and delete */
   prev = GST_BUFFER_META (buffer);
   for (walk = prev; walk; walk = next) {
     GstMeta *m, *new;
-    gboolean res;
 
     m = new = &walk->meta;
     next = walk->next;
@@ -1900,8 +1902,9 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
       GST_CAT_DEBUG (GST_CAT_BUFFER, "remove metadata %p (%s)", m,
           g_type_name (info->type));
 
-      g_return_if_fail (gst_buffer_is_writable (buffer));
-      g_return_if_fail (!GST_META_FLAG_IS_SET (m, GST_META_FLAG_LOCKED));
+      g_return_val_if_fail (gst_buffer_is_writable (buffer), FALSE);
+      g_return_val_if_fail (!GST_META_FLAG_IS_SET (m, GST_META_FLAG_LOCKED),
+          FALSE);
 
       /* remove from list */
       if (GST_BUFFER_META (buffer) == walk)
@@ -1919,4 +1922,5 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
     if (!res)
       break;
   }
+  return res;
 }

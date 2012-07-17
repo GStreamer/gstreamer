@@ -507,7 +507,7 @@ gboolean        gst_buffer_remove_meta          (GstBuffer *buffer, GstMeta *met
 
 GstMeta *       gst_buffer_iterate_meta         (GstBuffer *buffer, gpointer *state);
 
-void            gst_buffer_foreach_meta         (GstBuffer *buffer,
+gboolean        gst_buffer_foreach_meta         (GstBuffer *buffer,
                                                  GstBufferForeachMetaFunc func,
                                                  gpointer user_data);
 
