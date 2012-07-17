@@ -930,6 +930,8 @@ gst_buffer_replace_memory_range (GstBuffer * buffer, guint idx, gint length,
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "idx %u, length %d, %p", idx, length, mem);
+
   len = GST_BUFFER_MEM_LEN (buffer);
   g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
       (length == -1 && idx < len) || (length > 0 && length + idx <= len));
@@ -970,6 +972,8 @@ gst_buffer_remove_memory_range (GstBuffer * buffer, guint idx, gint length)
 
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (gst_buffer_is_writable (buffer));
+
+  GST_CAT_DEBUG (GST_CAT_BUFFER, "idx %u, length %d", idx, length);
 
   len = GST_BUFFER_MEM_LEN (buffer);
   g_return_if_fail ((len == 0 && idx == 0 && length == -1) ||
