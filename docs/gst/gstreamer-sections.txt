@@ -2742,16 +2742,19 @@ gst_toc_new
 gst_toc_ref
 gst_toc_unref
 gst_toc_copy
+gst_toc_make_writable
 gst_toc_get_entries
 gst_toc_append_entry
 gst_toc_get_tags
 gst_toc_merge_tags
 gst_toc_set_tags
+gst_toc_dump
 gst_toc_entry_new
 gst_toc_entry_new_with_pad
 gst_toc_entry_ref
 gst_toc_entry_unref
 gst_toc_entry_copy
+gst_toc_entry_make_writable
 gst_toc_find_entry
 gst_toc_entry_get_toc
 gst_toc_entry_get_uid
@@ -2981,6 +2984,7 @@ gst_date_time_get_year
 gst_date_time_new
 gst_date_time_new_from_unix_epoch_local_time
 gst_date_time_new_from_unix_epoch_utc
+gst_date_time_new_ymd
 gst_date_time_new_local_time
 gst_date_time_new_now_local_time
 gst_date_time_new_now_utc
