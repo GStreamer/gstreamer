@@ -772,6 +772,8 @@ gst_dvbsub_overlay_subs_to_comp (GstDVBSubOverlay * overlay,
     } else {
       comp = gst_video_overlay_composition_new (rect);
     }
+    gst_video_overlay_rectangle_unref (rect);
+    gst_buffer_unref (buf);
   }
 
   return comp;
