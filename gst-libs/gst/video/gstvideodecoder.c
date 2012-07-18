@@ -419,7 +419,6 @@ static void gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full);
 
 static GstFlowReturn gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
-static gboolean gst_video_decoder_set_src_caps (GstVideoDecoder * decoder);
 
 static void gst_video_decoder_release_frame (GstVideoDecoder * dec,
     GstVideoCodecFrame * frame);
@@ -2175,7 +2174,7 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
               && gst_pad_check_reconfigure (decoder->srcpad))))
-    gst_video_decoder_set_src_caps (decoder);
+    gst_video_decoder_negotiate (decoder);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
@@ -2671,15 +2670,15 @@ gst_video_decoder_propose_allocation_default (GstVideoDecoder * decoder,
 }
 
 /**
- * gst_video_decoder_set_src_caps:
+ * gst_video_decoder_negotiate:
  * @decoder: a #GstVideoDecoder
  *
- * Sets src pad caps according to currently configured #GstVideoCodecState.
+ * Negotiate with downstreame elements to currently configured #GstVideoCodecState.
  *
- * Returns: #TRUE if the caps were accepted downstream, else #FALSE.
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
  */
-static gboolean
-gst_video_decoder_set_src_caps (GstVideoDecoder * decoder)
+gboolean
+gst_video_decoder_negotiate (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *state = decoder->priv->output_state;
   GstVideoDecoderClass *klass;
@@ -2794,7 +2793,7 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
   if (G_UNLIKELY (decoder->priv->output_state_changed
           || (decoder->priv->output_state
               && gst_pad_check_reconfigure (decoder->srcpad))))
-    gst_video_decoder_set_src_caps (decoder);
+    gst_video_decoder_negotiate (decoder);
 
   gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
 
@@ -2831,7 +2830,7 @@ gst_video_decoder_alloc_output_frame (GstVideoDecoder *
   if (G_UNLIKELY (decoder->priv->output_state_changed
           || (decoder->priv->output_state
               && gst_pad_check_reconfigure (decoder->srcpad))))
-    gst_video_decoder_set_src_caps (decoder);
+    gst_video_decoder_negotiate (decoder);
 
   GST_LOG_OBJECT (decoder, "alloc buffer size %d", num_bytes);
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);

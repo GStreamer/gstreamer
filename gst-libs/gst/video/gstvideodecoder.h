@@ -329,6 +329,8 @@ GstVideoCodecState *gst_video_decoder_set_output_state (GstVideoDecoder *decoder
 
 GstVideoCodecState *gst_video_decoder_get_output_state (GstVideoDecoder *decoder);
 
+gboolean         gst_video_decoder_negotiate           (GstVideoDecoder * decoder);
+
 GstClockTimeDiff gst_video_decoder_get_max_decode_time (GstVideoDecoder *decoder,
 							GstVideoCodecFrame *frame);
 
