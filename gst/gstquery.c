@@ -1547,12 +1547,14 @@ gst_query_get_n_allocation_pools (GstQuery * query)
  * gst_query_parse_nth_allocation_pool:
  * @query: A valid #GstQuery of type GST_QUERY_ALLOCATION.
  * @index: index to parse
- * @pool: (out) (allow-none) (transfer none): the #GstBufferPool
+ * @pool: (out) (allow-none) (transfer full): the #GstBufferPool
  * @size: (out) (allow-none): the size
  * @min_buffers: (out) (allow-none): the min buffers
  * @max_buffers: (out) (allow-none): the max buffers
  *
  * Get the pool parameters in @query.
+ *
+ * Unref @pool with gst_object_unref() when it's not needed any more.
  */
 void
 gst_query_parse_nth_allocation_pool (GstQuery * query, guint index,
