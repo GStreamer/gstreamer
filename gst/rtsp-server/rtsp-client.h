@@ -34,6 +34,7 @@ typedef struct _GstRTSPClientState GstRTSPClientState;
 #include "rtsp-media-mapping.h"
 #include "rtsp-session-pool.h"
 #include "rtsp-auth.h"
+#include "rtsp-sdp.h"
 
 #define GST_TYPE_RTSP_CLIENT              (gst_rtsp_client_get_type ())
 #define GST_IS_RTSP_CLIENT(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_CLIENT))
@@ -107,6 +108,8 @@ struct _GstRTSPClient {
 
 struct _GstRTSPClientClass {
   GObjectClass  parent_class;
+
+  GstSDPMessage * (*create_sdp) (GstRTSPClient *client, GstRTSPMedia *media);
 
   /* signals */
   void     (*closed)        (GstRTSPClient *client);

@@ -64,6 +64,7 @@ static void gst_rtsp_client_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_client_finalize (GObject * obj);
 
+static GstSDPMessage * create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
 static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_streams (GstRTSPClient * client,
@@ -81,6 +82,8 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gobject_class->get_property = gst_rtsp_client_get_property;
   gobject_class->set_property = gst_rtsp_client_set_property;
   gobject_class->finalize = gst_rtsp_client_finalize;
+
+  klass->create_sdp = create_sdp;
 
   g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
       g_param_spec_object ("session-pool", "Session Pool",
@@ -1143,6 +1146,9 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
   guint i, str_len;
   gchar *str, *content_base;
   GstRTSPMedia *media;
+  GstRTSPClientClass *klass;
+
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
 
   /* check what kind of format is accepted, we don't really do anything with it
    * and always return SDP for now. */
@@ -1163,8 +1169,9 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!(media = find_media (client, state)))
     goto no_media;
 
+
   /* create an SDP for the media object on this client */
-  if (!(sdp = create_sdp (client, media)))
+  if (!(sdp = klass->create_sdp (client, media)))
     goto no_sdp;
 
   g_object_unref (media);
