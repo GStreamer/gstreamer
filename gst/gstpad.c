@@ -2850,7 +2850,7 @@ static gboolean
 query_forward_func (GstPad * pad, QueryData * data)
 {
   GST_LOG_OBJECT (pad, "query peer %p (%s) of %s:%s",
-      data->query, GST_EVENT_TYPE_NAME (data->query), GST_DEBUG_PAD_NAME (pad));
+      data->query, GST_QUERY_TYPE_NAME (data->query), GST_DEBUG_PAD_NAME (pad));
 
   data->result |= gst_pad_peer_query (pad, data->query);
 
