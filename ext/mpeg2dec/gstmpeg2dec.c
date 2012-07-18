@@ -714,6 +714,9 @@ handle_sequence (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (mpeg2dec), latency,
       latency);
 
+  if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (mpeg2dec)))
+    goto negotiation_fail;
+
   gst_video_codec_state_unref (state);
 
   mpeg2_custom_fbuf (mpeg2dec->decoder, 1);
@@ -738,6 +741,12 @@ invalid_size:
   {
     GST_ERROR_OBJECT (mpeg2dec, "Invalid frame dimensions: %d x %d",
         sequence->width, sequence->height);
+    return GST_FLOW_ERROR;
+  }
+
+negotiation_fail:
+  {
+    GST_WARNING_OBJECT (mpeg2dec, "Failed to negotiate with downstream");
     return GST_FLOW_ERROR;
   }
 }
