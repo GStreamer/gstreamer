@@ -114,7 +114,7 @@ gst_push_file_src_ghostpad_query (GstPad * pad, GstObject * parent,
       res = TRUE;
       break;
     default:
-      res = gst_proxy_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
