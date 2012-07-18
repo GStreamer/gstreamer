@@ -830,7 +830,7 @@ AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
     HAVE_SOUP="yes"
     AC_DEFINE(HAVE_LIBSOUP_GNOME, 1, [soup gnome integration])
   ],[
-    PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.26, HAVE_SOUP="yes", [
+    PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.26.1, HAVE_SOUP="yes", [
       HAVE_SOUP="no"
     ])
   ])
