@@ -1051,6 +1051,8 @@ gst_jpeg_dec_negotiate (GstJpegDec * dec, gint width, gint height, gint clrspc)
 
   gst_video_codec_state_unref (outstate);
 
+  gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
+
   GST_DEBUG_OBJECT (dec, "max_v_samp_factor=%d", dec->cinfo.max_v_samp_factor);
   GST_DEBUG_OBJECT (dec, "max_h_samp_factor=%d", dec->cinfo.max_h_samp_factor);
 }

@@ -330,6 +330,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   pngdec->output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (pngdec), format,
       width, height, pngdec->input_state);
+  gst_video_decoder_negotiate (GST_VIDEO_DECODER (pngdec));
   GST_DEBUG ("Final %d %d", GST_VIDEO_INFO_WIDTH (&pngdec->output_state->info),
       GST_VIDEO_INFO_HEIGHT (&pngdec->output_state->info));
 
