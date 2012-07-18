@@ -601,6 +601,9 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  * @GST_PAD_FLAG_PROXY_ALLOCATION: the default query handler will forward
  *                      allocation queries to the internally linked pads
  *                      instead of discarding them.
+ * @GST_PAD_FLAG_PROXY_SCHEDULING: the default query handler will forward
+ *                      scheduling queries to the internally linked pads
+ *                      instead of discarding them.
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -616,6 +619,7 @@ typedef enum {
   GST_PAD_FLAG_FIXED_CAPS       = (GST_OBJECT_FLAG_LAST << 7),
   GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 8),
   GST_PAD_FLAG_PROXY_ALLOCATION = (GST_OBJECT_FLAG_LAST << 9),
+  GST_PAD_FLAG_PROXY_SCHEDULING = (GST_OBJECT_FLAG_LAST << 10),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -764,6 +768,10 @@ struct _GstPadClass {
 #define GST_PAD_IS_PROXY_ALLOCATION(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
 #define GST_PAD_SET_PROXY_ALLOCATION(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
 #define GST_PAD_UNSET_PROXY_ALLOCATION(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_ALLOCATION))
+
+#define GST_PAD_IS_PROXY_SCHEDULING(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
+#define GST_PAD_SET_PROXY_SCHEDULING(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
+#define GST_PAD_UNSET_PROXY_SCHEDULING(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
 
 /**
  * GST_PAD_GET_STREAM_LOCK:

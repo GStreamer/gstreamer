@@ -2881,7 +2881,7 @@ gst_pad_query_default (GstPad * pad, GstObject * parent, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SCHEDULING:
-      forward = FALSE;
+      forward = GST_PAD_IS_PROXY_SCHEDULING (pad);
       break;
     case GST_QUERY_ALLOCATION:
       forward = GST_PAD_IS_PROXY_ALLOCATION (pad);
