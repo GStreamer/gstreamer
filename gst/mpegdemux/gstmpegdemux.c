@@ -2904,8 +2904,6 @@ gst_flups_demux_sink_activate_push (GstPad * sinkpad, GstObject * parent,
 
   demux->random_access = FALSE;
 
-  gst_object_unref (demux);
-
   return TRUE;
 }
 
