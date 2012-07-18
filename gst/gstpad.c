@@ -2775,17 +2775,17 @@ gst_pad_query_caps_default (GstPad * pad, GstQuery * query)
   GstPadTemplate *templ;
   gboolean fixed_caps;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
-
-  gst_query_parse_caps (query, &filter);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "query caps %" GST_PTR_FORMAT,
+      query);
 
   /* first try to proxy if we must */
   if (GST_PAD_IS_PROXY_CAPS (pad)) {
     if ((gst_pad_proxy_query_caps (pad, query))) {
-      gst_query_parse_caps_result (query, &result);
-      goto filter_done;
+      goto done;
     }
   }
+
+  gst_query_parse_caps (query, &filter);
 
   /* no proxy or it failed, do default handling */
   fixed_caps = GST_PAD_IS_FIXED_CAPS (pad);
@@ -2819,7 +2819,6 @@ gst_pad_query_caps_default (GstPad * pad, GstQuery * query)
 filter_done_unlock:
   GST_OBJECT_UNLOCK (pad);
 
-filter_done:
   /* run the filter on the result */
   if (filter) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
@@ -2833,10 +2832,10 @@ filter_done:
         "using caps %p %" GST_PTR_FORMAT, result, result);
     result = gst_caps_ref (result);
   }
-
   gst_query_set_caps_result (query, result);
   gst_caps_unref (result);
 
+done:
   return TRUE;
 }
 
