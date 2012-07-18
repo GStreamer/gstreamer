@@ -504,6 +504,8 @@ theora_handle_type_packet (GstTheoraDec * dec)
       break;
   }
 
+  gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
+
   dec->have_header = TRUE;
 
   /* FIXME : Put this on the next outgoing frame */
