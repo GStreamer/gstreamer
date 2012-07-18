@@ -3228,8 +3228,8 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
                 case GST_RIFF_TAG_JUNQ:
                 case GST_RIFF_TAG_JUNK:
                   goto next;
-                  break;
               }
+              break;
             case GST_RIFF_IDIT:
               gst_avi_demux_parse_idit (avi, sub);
               goto next;
