@@ -1975,7 +1975,7 @@ gst_play_sink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event,
   }
 
   GST_DEBUG_OBJECT (pad, "Forwarding event %" GST_PTR_FORMAT, event);
-  ret = gst_proxy_pad_event_default (pad, parent, gst_event_ref (event));
+  ret = gst_pad_event_default (pad, parent, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     const GstSegment *segment;
@@ -2214,7 +2214,7 @@ gst_play_sink_text_src_event (GstPad * pad, GstObject * parent,
     goto out;
   }
 
-  ret = gst_proxy_pad_event_default (pad, parent, gst_event_ref (event));
+  ret = gst_pad_event_default (pad, parent, gst_event_ref (event));
 
 out:
   gst_event_unref (event);

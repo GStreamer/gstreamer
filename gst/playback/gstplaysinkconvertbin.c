@@ -272,7 +272,7 @@ gst_play_sink_convert_bin_sink_event (GstPad * pad, GstObject * parent,
       break;
   }
 
-  ret = gst_proxy_pad_event_default (pad, parent, gst_event_ref (event));
+  ret = gst_pad_event_default (pad, parent, gst_event_ref (event));
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GstSegment seg;
@@ -464,7 +464,7 @@ gst_play_sink_convert_bin_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_proxy_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
   }
   return res;
