@@ -1479,7 +1479,6 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     gst_pad_use_fixed_caps (stream->pad);
 
-    gst_pad_set_caps (stream->pad, stream_caps);
     gst_pad_set_event_function (stream->pad,
         GST_DEBUG_FUNCPTR (gst_rmdemux_src_event));
     gst_pad_set_query_function (stream->pad,
@@ -1488,6 +1487,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     GST_DEBUG_OBJECT (rmdemux, "adding pad %s with caps %" GST_PTR_FORMAT
         ", stream_id=%d", GST_PAD_NAME (stream->pad), stream_caps, stream->id);
     gst_pad_set_active (stream->pad, TRUE);
+    gst_pad_set_caps (stream->pad, stream_caps);
     gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
     gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
 
