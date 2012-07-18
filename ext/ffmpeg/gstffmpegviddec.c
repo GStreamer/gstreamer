@@ -847,6 +847,8 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec, gboolean force)
   /* calculate and update par now */
   gst_ffmpegviddec_update_par (ffmpegdec, in_info, out_info);
 
+  gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec));
+
   return TRUE;
 
   /* ERRORS */
