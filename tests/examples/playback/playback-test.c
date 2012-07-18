@@ -1469,7 +1469,7 @@ do_shuttle (PlaybackApp * app)
   if (app->shuttling)
     duration = 40 * GST_MSECOND;
   else
-    duration = -1;
+    duration = 0;
 
   gst_element_send_event (app->pipeline,
       gst_event_new_step (GST_FORMAT_TIME, duration, app->shuttle_rate, FALSE,

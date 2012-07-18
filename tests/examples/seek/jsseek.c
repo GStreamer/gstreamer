@@ -2140,7 +2140,7 @@ do_shuttle (GstElement * element)
   if (shuttling)
     duration = 40 * GST_MSECOND;
   else
-    duration = -1;
+    duration = 0;
 
   gst_element_send_event (element,
       gst_event_new_step (GST_FORMAT_TIME, duration, shuttle_rate, FALSE,
