@@ -755,7 +755,7 @@ gst_poll_add_fd_unlocked (GstPoll * set, GstPollFD * fd)
 #endif
     MARK_REBUILD (set);
   } else {
-    GST_WARNING ("%p: couldn't find fd !", set);
+    GST_WARNING ("%p: fd already added !", set);
   }
 
   return TRUE;
