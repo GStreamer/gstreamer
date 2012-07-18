@@ -515,7 +515,9 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
       transport->ssrc = strtoul (split[i] + 5, NULL, 16);
     } else {
       /* unknown field... */
-      g_warning ("unknown transport field \"%s\"", split[i]);
+      if (strlen (split[i]) > 0) {
+        g_warning ("unknown transport field \"%s\"", split[i]);
+      }
     }
     i++;
   }
