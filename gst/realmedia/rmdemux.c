@@ -2629,7 +2629,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, GstBuffer * in, guint16 version)
 
   if (stream->pending_tags != NULL) {
     GST_LOG_OBJECT (stream->pad, "tags %" GST_PTR_FORMAT, stream->pending_tags);
-    gst_pad_push_event (stream->pad, gst_event_new_tag ("GstDemuxer",
+    gst_pad_push_event (stream->pad, gst_event_new_tag ("stream",
             stream->pending_tags));
     stream->pending_tags = NULL;
   }
