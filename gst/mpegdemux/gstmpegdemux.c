@@ -2886,6 +2886,8 @@ gst_flups_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     } else {
       res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
     }
+  } else {
+    res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
   }
 
   gst_query_unref (query);
