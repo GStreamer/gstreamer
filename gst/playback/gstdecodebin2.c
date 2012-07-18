@@ -3866,6 +3866,7 @@ source_pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstDecodeBin *dbin;
 
   if ((GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) &&
+      (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) != GST_EVENT_CAPS) &&
       (GST_EVENT_IS_STICKY (GST_PAD_PROBE_INFO_EVENT (info))
           || !GST_EVENT_IS_SERIALIZED (GST_PAD_PROBE_INFO_EVENT (info)))) {
     /* do not block on sticky or out of band events otherwise the allocation query
