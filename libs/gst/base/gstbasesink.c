@@ -1496,16 +1496,30 @@ start_stepping (GstBaseSink * sink, GstSegment * segment,
     current->start_start = segment->start;
 
   if (current->format == GST_FORMAT_TIME) {
-    end = current->start + current->amount;
+    /* calculate the running-time when the step operation should stop */
+    if (current->amount != -1)
+      end = current->start + current->amount;
+    else
+      end = -1;
+
     if (!current->flush) {
+      gint64 position;
+
       /* update the segment clipping regions for non-flushing seeks */
       if (segment->rate > 0.0) {
-        segment->stop = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
-        segment->position = segment->stop;
-      } else {
-        gint64 position;
+        if (end != -1)
+          position = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+        else
+          position = segment->stop;
 
-        position = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+        segment->stop = position;
+        segment->position = position;
+      } else {
+        if (end != -1)
+          position = gst_segment_to_position (segment, GST_FORMAT_TIME, end);
+        else
+          position = segment->start;
+
         segment->time = position;
         segment->start = position;
         segment->position = position;
@@ -1590,8 +1604,9 @@ handle_stepping (GstBaseSink * sink, GstSegment * segment,
 {
   gboolean step_end = FALSE;
 
+  /* stepping never stops */
   if (current->amount == -1)
-    return TRUE;
+    return FALSE;
 
   /* see if we need to skip this buffer because of stepping */
   switch (current->format) {

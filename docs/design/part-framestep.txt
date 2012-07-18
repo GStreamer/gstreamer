@@ -101,8 +101,10 @@ The step event is created with the following fields in the structure:
      The format of the step units
 
   "amount", G_TYPE_UINT64
-     The amount of units to step. -1 resumes normal non-stepping behaviour to
-     the end of the segment.
+     The amount of units to step. A 0 amount immediately completes and can be
+     used to cancel the current step and resume normal non-stepping behaviour
+     to the end of the segment.
+     A -1 amount steps until the end of the segment.
 
   "rate", G_TYPE_DOUBLE
      The rate at which the frames should be stepped in PLAYING mode. 1.0 is

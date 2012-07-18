@@ -440,8 +440,7 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
  * @position: the position in the segment
  *
  * Translate @position to the total running time using the currently configured
- * and previously accumulated segments. Position is a value between @segment
- * start and stop time.
+ * segment. Position is a value between @segment start and stop time.
  *
  * This function is typically used by elements that need to synchronize to the
  * global clock in a pipeline. The runnning time is a constantly increasing value
