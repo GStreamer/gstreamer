@@ -436,16 +436,16 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
 
   GST_INFO_OBJECT (demux, "Adding source pad, caps %" GST_PTR_FORMAT, caps);
   demux->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_use_fixed_caps (demux->srcpad);
-  gst_pad_push_event (demux->srcpad, gst_event_new_stream_start ());
-  gst_pad_set_caps (demux->srcpad, caps);
-  codec_name = gst_pb_utils_get_codec_description (caps);
-  gst_caps_unref (caps);
   gst_pad_set_event_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_real_audio_demux_src_event));
   gst_pad_set_query_function (demux->srcpad,
       GST_DEBUG_FUNCPTR (gst_real_audio_demux_src_query));
   gst_pad_set_active (demux->srcpad, TRUE);
+  gst_pad_use_fixed_caps (demux->srcpad);
+  gst_pad_push_event (demux->srcpad, gst_event_new_stream_start ());
+  gst_pad_set_caps (demux->srcpad, caps);
+  codec_name = gst_pb_utils_get_codec_description (caps);
+  gst_caps_unref (caps);
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   if (demux->byterate_num > 0 && demux->byterate_denom > 0) {
