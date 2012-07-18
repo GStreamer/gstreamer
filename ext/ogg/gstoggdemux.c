@@ -2648,8 +2648,6 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       pad->map.taglist = NULL;
     }
 
-    gst_pad_push_event (GST_PAD (pad), gst_event_new_stream_start ());
-
     /* Set headers on caps */
     pad->map.caps =
         gst_ogg_demux_set_header_on_caps (ogg, pad->map.caps, pad->map.headers);
