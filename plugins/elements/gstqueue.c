@@ -1216,10 +1216,21 @@ gst_queue_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstQueue *queue = GST_QUEUE (parent);
   gboolean res;
 
-  res = gst_pad_query_default (pad, parent, query);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_SCHEDULING:{
+      gst_query_add_scheduling_mode (query, GST_PAD_MODE_PUSH);
+      res = TRUE;
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
   if (!res)
     return FALSE;
 
+  /* Adjust peer response for data contained in queue */
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
