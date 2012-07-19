@@ -69,7 +69,9 @@ G_LOCK_DEFINE_STATIC (qdata_mutex);
 static GQuark weak_ref_quark;
 
 #define SHARE_ONE (1 << 16)
+#define SHARE_TWO (2 << 16)
 #define SHARE_MASK (~(SHARE_ONE - 1))
+#define IS_SHARED(state) (state >= SHARE_TWO)
 #define LOCK_ONE (GST_LOCK_FLAG_LAST)
 #define FLAG_MASK (GST_LOCK_FLAG_LAST - 1)
 #define LOCK_MASK ((SHARE_ONE - 1) - FLAG_MASK)
@@ -191,7 +193,7 @@ gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
 
     if (access_mode) {
       /* shared counter > 1 and write access is not allowed */
-      if (state > SHARE_ONE && access_mode & GST_LOCK_FLAG_WRITE)
+      if (access_mode & GST_LOCK_FLAG_WRITE && IS_SHARED (state))
         goto lock_failed;
 
       if ((state & LOCK_FLAG_MASK) == 0) {
