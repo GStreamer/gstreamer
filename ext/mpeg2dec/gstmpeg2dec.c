@@ -331,17 +331,12 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
 
   ret =
       gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (dec), in_frame);
-  if (ret != GST_FLOW_OK) {
-    gst_video_codec_state_unref (state);
-    return ret;
-  }
+  if (ret != GST_FLOW_OK)
+    goto beach;
 
   if (!gst_video_frame_map (&output_frame, info, in_frame->output_buffer,
-          GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (dec, "Failed to map output frame");
-    gst_video_codec_state_unref (state);
-    return GST_FLOW_ERROR;
-  }
+          GST_MAP_WRITE))
+    goto map_fail;
 
   n_planes = GST_VIDEO_FRAME_N_PLANES (&output_frame);
   for (c = 0; c < n_planes; c++) {
@@ -369,9 +364,17 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
 
   gst_video_frame_unmap (&output_frame);
 
+beach:
   gst_video_codec_state_unref (state);
 
-  return GST_FLOW_OK;
+  return ret;
+
+map_fail:
+  {
+    GST_ERROR_OBJECT (dec, "Failed to map output frame");
+    gst_video_codec_state_unref (state);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -799,7 +802,7 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
       break;
     default:
       gst_video_codec_frame_ref (frame);
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
+      ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
       GST_VIDEO_DECODER_ERROR (mpeg2dec, 1, STREAM, DECODE,
           ("decoding error"), ("Invalid picture type"), ret);
       return ret;
@@ -875,16 +878,16 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 
   if (picture->flags & PIC_FLAG_SKIP) {
     GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer because of skip flag");
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
+    ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
     mpeg2_skip (mpeg2dec->decoder, 1);
-    return GST_FLOW_OK;
+    return ret;
   }
 
   if (mpeg2dec->discont_state != MPEG2DEC_DISC_NONE) {
     GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer, discont state %d",
         mpeg2dec->discont_state);
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
-    return GST_FLOW_OK;
+    ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
+    return ret;
   }
 
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (mpeg2dec));
@@ -896,9 +899,8 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     if (gst_video_decoder_get_max_decode_time (GST_VIDEO_DECODER (mpeg2dec),
             frame) < 0) {
       GST_DEBUG_OBJECT (mpeg2dec, "dropping buffer crop, too late");
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
-      gst_video_codec_state_unref (state);
-      return GST_FLOW_OK;
+      ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
+      goto beach;
     }
 
     GST_DEBUG_OBJECT (mpeg2dec, "cropping buffer");
@@ -907,9 +909,10 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
     ret = gst_mpeg2dec_crop_buffer (mpeg2dec, frame, vframe);
   }
 
-  gst_video_codec_state_unref (state);
-  gst_video_decoder_finish_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
+  ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (mpeg2dec), frame);
 
+beach:
+  gst_video_codec_state_unref (state);
   return ret;
 }
 
