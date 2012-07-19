@@ -603,7 +603,7 @@ GST_END_TEST;
 GST_START_TEST (test_map)
 {
   GstBuffer *buf;
-  GstMapInfo map;
+  GstMapInfo map, map2;
   gsize maxalloc;
   gsize size, offset;
 
@@ -638,6 +638,20 @@ GST_START_TEST (test_map)
   gst_buffer_unmap (buf, &map);
 
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  gst_buffer_unmap (buf, &map);
+
+  /* mapping same kind should be ok using same memory */
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  fail_unless (gst_buffer_map (buf, &map2, GST_MAP_WRITE));
+  fail_unless (map.memory == map2.memory);
+  gst_buffer_unmap (buf, &map2);
+  gst_buffer_unmap (buf, &map);
+
+  /* ... but different kind should give temporary memory */
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  fail_unless (gst_buffer_map (buf, &map2, GST_MAP_READ));
+  fail_if (map.memory == map2.memory);
+  gst_buffer_unmap (buf, &map2);
   gst_buffer_unmap (buf, &map);
 
   gst_buffer_unref (buf);
