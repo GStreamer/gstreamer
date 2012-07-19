@@ -809,8 +809,6 @@ update_buffering (GstQueue2 * queue)
   }
   if (post) {
     GstMessage *message;
-    GstBufferingMode mode;
-    gint64 buffering_left;
 
     /* scale to high percent so that it becomes the 100% mark */
     percent = percent * 100 / queue->high_percent;
@@ -818,9 +816,13 @@ update_buffering (GstQueue2 * queue)
     if (percent > 100)
       percent = 100;
 
-    buffering_left = (percent == 100 ? 0 : -1);
 
     if (percent != queue->buffering_percent) {
+      GstBufferingMode mode;
+      gint64 buffering_left;
+
+      buffering_left = (percent == 100 ? 0 : -1);
+
       queue->buffering_percent = percent;
 
       if (!QUEUE_IS_USING_QUEUE (queue)) {
@@ -837,6 +839,7 @@ update_buffering (GstQueue2 * queue)
 
         max = queue->max_level.rate_time;
         cur = queue->cur_level.rate_time;
+
         if (percent != 100 && max > cur)
           buffering_left = (max - cur) / 1000000;
       }
@@ -2662,7 +2665,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         gint64 start, stop, range_start, range_stop;
         guint64 writing_pos;
         gint percent;
-        gint64 estimated_total, buffering_left;
+        gint64 estimated_total = -1, buffering_left = -1;
         gint64 duration;
         gboolean peer_res, is_buffering, is_eos;
         gdouble byte_in_rate, byte_out_rate;
@@ -2690,13 +2693,20 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         }
 
         /* calculate remaining and total download time */
-        if (peer_res && byte_in_rate > 0.0) {
-          estimated_total = (duration * 1000) / byte_in_rate;
-          buffering_left = ((duration - writing_pos) * 1000) / byte_in_rate;
-        } else {
-          estimated_total = -1;
-          buffering_left = -1;
+        if (peer_res && byte_in_rate > 0.0)
+          estimated_total = ((duration - writing_pos) * 1000) / byte_in_rate;
+
+        /* calculate estimated remaining buffer time */
+        if (queue->use_rate_estimate) {
+          guint64 max, cur;
+
+          max = queue->max_level.rate_time;
+          cur = queue->cur_level.rate_time;
+
+          if (percent != 100 && max > cur)
+            buffering_left = (max - cur) / 1000000;
         }
+
         GST_DEBUG_OBJECT (queue, "estimated %" G_GINT64_FORMAT ", left %"
             G_GINT64_FORMAT, estimated_total, buffering_left);
 
@@ -2766,10 +2776,10 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         }
 
         gst_query_set_buffering_percent (query, is_buffering, percent);
-        gst_query_set_buffering_range (query, format, start, stop,
-            estimated_total);
         gst_query_set_buffering_stats (query, GST_BUFFERING_DOWNLOAD,
             byte_in_rate, byte_out_rate, buffering_left);
+        gst_query_set_buffering_range (query, format, start, stop,
+            estimated_total);
       }
       break;
     }
