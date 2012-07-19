@@ -1958,6 +1958,43 @@ gst_value_deserialize_structure (GValue * dest, const gchar * s)
   return FALSE;
 }
 
+/**************
+ * GstTagList *
+ **************/
+
+static gboolean
+gst_value_deserialize_tag_list (GValue * dest, const gchar * s)
+{
+  GstTagList *taglist;
+
+  if (*s != '"') {
+    taglist = gst_tag_list_new_from_string (s);
+  } else {
+    gchar *str = gst_string_unwrap (s);
+
+    if (G_UNLIKELY (!str))
+      return FALSE;
+
+    taglist = gst_tag_list_new_from_string (str);
+    g_free (str);
+  }
+
+  if (G_LIKELY (taglist != NULL)) {
+    g_value_take_boxed (dest, taglist);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gchar *
+gst_value_serialize_tag_list (const GValue * value)
+{
+  GstTagList *taglist = g_value_get_boxed (value);
+
+  return gst_string_take_and_wrap (gst_tag_list_to_string (taglist));
+}
+
+
 /*************
  * GstBuffer *
  *************/
@@ -5804,6 +5841,17 @@ _priv_gst_value_initialize (void)
     };
 
     gst_value.type = GST_TYPE_STRUCTURE;
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      NULL,
+      gst_value_serialize_tag_list,
+      gst_value_deserialize_tag_list,
+    };
+
+    gst_value.type = GST_TYPE_TAG_LIST;
     gst_value_register (&gst_value);
   }
   {
