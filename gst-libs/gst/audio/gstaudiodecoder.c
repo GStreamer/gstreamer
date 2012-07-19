@@ -834,9 +834,6 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   gsize size;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  /* subclass should know what it is producing by now */
-  g_return_val_if_fail (buf == NULL || gst_pad_has_current_caps (dec->srcpad),
-      GST_FLOW_ERROR);
   /* subclass should not hand us no data */
   g_return_val_if_fail (buf == NULL || gst_buffer_get_size (buf) > 0,
       GST_FLOW_ERROR);
