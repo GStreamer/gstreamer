@@ -53,7 +53,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-static const gboolean passthrough = TRUE;
+static const gboolean passthrough = FALSE;
 
 #define gst_stream_synchronizer_parent_class parent_class
 G_DEFINE_TYPE (GstStreamSynchronizer, gst_stream_synchronizer,
@@ -288,14 +288,17 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
 
             ostream->wait = FALSE;
 
-            stop_running_time =
-                gst_segment_to_running_time (&ostream->segment,
-                GST_FORMAT_TIME, ostream->segment.stop);
-            position_running_time =
-                gst_segment_to_running_time (&ostream->segment,
-                GST_FORMAT_TIME, ostream->segment.position);
-            position =
-                MAX (position, MAX (stop_running_time, position_running_time));
+            if (ostream->segment.format == GST_FORMAT_TIME) {
+              stop_running_time =
+                  gst_segment_to_running_time (&ostream->segment,
+                  GST_FORMAT_TIME, ostream->segment.stop);
+              position_running_time =
+                  gst_segment_to_running_time (&ostream->segment,
+                  GST_FORMAT_TIME, ostream->segment.position);
+              position =
+                  MAX (position, MAX (stop_running_time,
+                      position_running_time));
+            }
           }
           position = MAX (0, position);
           self->group_start_time = MAX (self->group_start_time, position);
@@ -369,15 +372,8 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
           stream->new_stream = FALSE;
           stream->drop_discont = TRUE;
 
-          if (stop_running_time < self->group_start_time) {
-            gint64 diff = self->group_start_time - stop_running_time;
 
-            GST_DEBUG_OBJECT (pad,
-                "Advancing running time for other streams by: %"
-                GST_TIME_FORMAT, GST_TIME_ARGS (diff));
-
-            segment.base += diff;
-          }
+          segment.base = stop_running_time;
         }
 
         GST_DEBUG_OBJECT (pad, "Segment was: %" GST_SEGMENT_FORMAT,
@@ -389,6 +385,14 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (pad, "Stream start running time: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (stream->segment.base));
         stream->running_time_diff = stream->segment.base;
+        {
+          GstEvent *tmpev;
+
+          tmpev = gst_event_new_segment (&stream->segment);
+          gst_event_unref (event);
+          event = tmpev;
+        }
+
       } else if (stream) {
         GST_WARNING_OBJECT (pad, "Non-TIME segment: %s",
             gst_format_get_name (segment.format));
