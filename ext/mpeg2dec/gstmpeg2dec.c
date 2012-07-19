@@ -374,9 +374,17 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
   return GST_FLOW_OK;
 }
 
+static void
+frame_user_data_destroy_notify (GstBuffer * buf)
+{
+  GST_DEBUG ("Releasing buffer %p", buf);
+  if (buf)
+    gst_buffer_unref (buf);
+}
+
 static GstFlowReturn
 gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
-    GstVideoCodecFrame * frame)
+    GstVideoCodecFrame * frame, GstBuffer ** buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoCodecState *state;
@@ -387,14 +395,13 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
     ret =
         gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (mpeg2dec),
         frame);
-    if (ret != GST_FLOW_OK) {
-      gst_video_codec_state_unref (state);
-      return ret;
-    }
+    *buffer = frame->output_buffer;
   } else {
     GstAllocationParams params = { 0, 15, 0, 0 };
 
-    frame->output_buffer = gst_buffer_new_allocate (NULL, size, &params);
+    *buffer = gst_buffer_new_allocate (NULL, size, &params);
+    gst_video_codec_frame_set_user_data (frame, *buffer,
+        (GDestroyNotify) frame_user_data_destroy_notify);
   }
 
   gst_video_codec_state_unref (state);
@@ -473,12 +480,18 @@ gst_mpeg2dec_get_buffer (GstMpeg2dec * mpeg2dec, gint id)
 }
 
 static GstFlowReturn
-gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame)
+gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame,
+    GstBuffer ** buffer)
 {
+  GstFlowReturn ret;
   GstVideoFrame vframe;
   guint8 *buf[3];
 
-  gst_mpeg2dec_alloc_sized_buf (mpeg2dec, mpeg2dec->decoded_info.size, frame);
+  ret =
+      gst_mpeg2dec_alloc_sized_buf (mpeg2dec, mpeg2dec->decoded_info.size,
+      frame, buffer);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto beach;
 
   if (mpeg2dec->need_cropping && mpeg2dec->has_cropping) {
     GstVideoCropMeta *crop;
@@ -499,11 +512,9 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame)
     gst_video_codec_state_unref (state);
   }
 
-  if (!gst_video_frame_map (&vframe, &mpeg2dec->decoded_info,
-          frame->output_buffer, GST_MAP_READ | GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (mpeg2dec, "Failed to map frame");
-    return GST_FLOW_ERROR;
-  }
+  if (!gst_video_frame_map (&vframe, &mpeg2dec->decoded_info, *buffer,
+          GST_MAP_READ | GST_MAP_WRITE))
+    goto map_fail;
 
   buf[0] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
   buf[1] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
@@ -516,7 +527,14 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame)
       GINT_TO_POINTER (frame->system_frame_number));
   gst_mpeg2dec_save_buffer (mpeg2dec, frame->system_frame_number, &vframe);
 
-  return GST_FLOW_OK;
+beach:
+  return ret;
+
+map_fail:
+  {
+    GST_ERROR_OBJECT (mpeg2dec, "Failed to map frame");
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -755,13 +773,14 @@ static GstFlowReturn
 handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
     GstVideoCodecFrame * frame)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
   gint type;
   const gchar *type_str = NULL;
   gboolean key_frame = FALSE;
   const mpeg2_picture_t *picture = info->current_picture;
+  GstBuffer *buffer;
 
-  ret = gst_mpeg2dec_alloc_buffer (mpeg2dec, frame);
+  ret = gst_mpeg2dec_alloc_buffer (mpeg2dec, frame, &buffer);
   if (ret != GST_FLOW_OK)
     return ret;
 
@@ -791,12 +810,12 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
       key_frame ? ", kf," : "    ", frame->system_frame_number);
 
   if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST) {
-    GST_BUFFER_FLAG_SET (frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+    GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
   }
 #if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
   /* repeat field introduced in 0.5.0 */
   if (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD) {
-    GST_BUFFER_FLAG_SET (frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
+    GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   }
 #endif
 
@@ -818,7 +837,7 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
       (picture->flags & PIC_FLAG_COMPOSITE_DISPLAY ? "composite" : "         "),
       picture->nb_fields, GST_TIME_ARGS (frame->pts));
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstFlowReturn
