@@ -75,6 +75,9 @@ static GstStaticPadTemplate gst_vaapipostproc_src_factory =
         GST_STATIC_CAPS(gst_vaapipostproc_src_caps_str));
 
 static void
+gst_vaapipostproc_implements_iface_init(GstImplementsInterfaceClass *iface);
+
+static void
 gst_video_context_interface_init(GstVideoContextInterface *iface);
 
 #define GstVideoContextClass GstVideoContextInterface
@@ -82,6 +85,8 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiPostproc,
     gst_vaapipostproc,
     GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
+                          gst_vaapipostproc_implements_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init));
 
@@ -156,6 +161,23 @@ get_vaapipostproc_from_pad(GstPad *pad)
     return GST_VAAPIPOSTPROC(gst_pad_get_parent_element(pad));
 }
 
+/* GstImplementsInterface interface */
+
+static gboolean
+gst_vaapipostproc_implements_interface_supported(
+    GstImplementsInterface *iface,
+    GType                   type
+)
+{
+    return (type == GST_TYPE_VIDEO_CONTEXT);
+}
+
+static void
+gst_vaapipostproc_implements_iface_init(GstImplementsInterfaceClass *iface)
+{
+    iface->supported = gst_vaapipostproc_implements_interface_supported;
+}
+
 /* GstVideoContext interface */
 
 static void
@@ -168,12 +190,6 @@ gst_vaapipostproc_set_video_context(
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(context);
 
     gst_vaapi_set_display(type, value, &postproc->display);
-}
-
-static gboolean
-gst_video_context_supported(GstVaapiPostproc *postproc, GType iface_type)
-{
-    return (iface_type == GST_TYPE_VIDEO_CONTEXT);
 }
 
 static void

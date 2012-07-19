@@ -109,6 +109,9 @@ struct _GstVaapiDownloadClass {
 };
 
 static void
+gst_vaapidownload_implements_iface_init(GstImplementsInterfaceClass *iface);
+
+static void
 gst_video_context_interface_init(GstVideoContextInterface *iface);
 
 #define GstVideoContextClass GstVideoContextInterface
@@ -116,6 +119,8 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDownload,
     gst_vaapidownload,
     GST_TYPE_BASE_TRANSFORM,
+    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
+                          gst_vaapidownload_implements_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init));
 
@@ -165,6 +170,23 @@ gst_vaapidownload_query(
     GstQuery *query
 );
 
+/* GstImplementsInterface interface */
+
+static gboolean
+gst_vaapidownload_implements_interface_supported(
+    GstImplementsInterface *iface,
+    GType                   type
+)
+{
+    return (type == GST_TYPE_VIDEO_CONTEXT);
+}
+
+static void
+gst_vaapidownload_implements_iface_init(GstImplementsInterfaceClass *iface)
+{
+    iface->supported = gst_vaapidownload_implements_interface_supported;
+}
+
 /* GstVideoContext interface */
 
 static void
@@ -173,12 +195,6 @@ gst_vaapidownload_set_video_context(GstVideoContext *context, const gchar *type,
 {
   GstVaapiDownload *download = GST_VAAPIDOWNLOAD (context);
   gst_vaapi_set_display (type, value, &download->display);
-}
-
-static gboolean
-gst_video_context_supported (GstVaapiDownload *download, GType iface_type)
-{
-  return (iface_type == GST_TYPE_VIDEO_CONTEXT);
 }
 
 static void

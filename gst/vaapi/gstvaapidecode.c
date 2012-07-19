@@ -105,6 +105,9 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 
 static void
+gst_vaapidecode_implements_iface_init(GstImplementsInterfaceClass *iface);
+
+static void
 gst_video_context_interface_init(GstVideoContextInterface *iface);
 
 #define GstVideoContextClass GstVideoContextInterface
@@ -112,6 +115,8 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDecode,
     gst_vaapidecode,
     GST_TYPE_ELEMENT,
+    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
+                          gst_vaapidecode_implements_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init));
 
@@ -404,6 +409,23 @@ gst_vaapidecode_reset(GstVaapiDecode *decode, GstCaps *caps)
     return gst_vaapidecode_create(decode, caps);
 }
 
+/* GstImplementsInterface interface */
+
+static gboolean
+gst_vaapidecode_implements_interface_supported(
+    GstImplementsInterface *iface,
+    GType                   type
+)
+{
+    return (type == GST_TYPE_VIDEO_CONTEXT);
+}
+
+static void
+gst_vaapidecode_implements_iface_init(GstImplementsInterfaceClass *iface)
+{
+    iface->supported = gst_vaapidecode_implements_interface_supported;
+}
+
 /* GstVideoContext interface */
 
 static void
@@ -412,12 +434,6 @@ gst_vaapidecode_set_video_context(GstVideoContext *context, const gchar *type,
 {
     GstVaapiDecode *decode = GST_VAAPIDECODE (context);
     gst_vaapi_set_display (type, value, &decode->display);
-}
-
-static gboolean
-gst_video_context_supported (GstVaapiDecode *decode, GType iface_type)
-{
-  return (iface_type == GST_TYPE_VIDEO_CONTEXT);
 }
 
 static void
