@@ -3,6 +3,10 @@ lib_LTLIBRARIES = 				\
 	libgstvaapi-x11-@GST_MAJORMINOR@.la	\
 	$(NULL)
 
+if USE_WAYLAND
+lib_LTLIBRARIES += libgstvaapi-wayland-@GST_MAJORMINOR@.la
+endif
+
 if USE_GLX
 lib_LTLIBRARIES += libgstvaapi-glx-@GST_MAJORMINOR@.la
 endif
@@ -124,6 +128,23 @@ libgstvaapi_x11_source_priv_h =			\
 	gstvaapiutils_x11.h			\
 	$(NULL)
 
+libgstvaapi_wayland_source_c =			\
+	gstvaapidisplay_wayland.c		\
+	gstvaapiutils.c				\
+	gstvaapiwindow_wayland.c		\
+	$(NULL)
+
+libgstvaapi_wayland_source_h =			\
+	gstvaapidisplay_wayland.h		\
+	gstvaapiwindow_wayland.h		\
+	$(NULL)
+
+libgstvaapi_wayland_source_priv_h =		\
+	gstvaapicompat.h			\
+	gstvaapidisplay_wayland_priv.h		\
+	gstvaapiutils.h				\
+	$(NULL)
+
 libgstvaapi_glx_source_c =			\
 	gstvaapidisplay_glx.c			\
 	gstvaapitexture.c			\
@@ -214,6 +235,38 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(NULL)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_LDFLAGS =	\
+	$(GST_ALL_LDFLAGS)			\
+	$(NULL)
+
+libgstvaapi_wayland_@GST_MAJORMINOR@_la_SOURCES = \
+	$(libgstvaapi_wayland_source_c)		\
+	$(libgstvaapi_wayland_source_priv_h)	\
+	$(NULL)
+
+libgstvaapi_wayland_@GST_MAJORMINOR@include_HEADERS = \
+	$(libgstvaapi_wayland_source_h)		\
+	$(NULL)
+
+libgstvaapi_wayland_@GST_MAJORMINOR@includedir = \
+	$(libgstvaapi_includedir)
+
+libgstvaapi_wayland_@GST_MAJORMINOR@_la_CFLAGS = \
+	-DGST_USE_UNSTABLE_API			\
+	-I$(top_srcdir)/gst-libs		\
+	$(GLIB_CFLAGS)				\
+	$(GST_BASE_CFLAGS)			\
+	$(WAYLAND_CFLAGS)			\
+	$(LIBVA_WAYLAND_CFLAGS)			\
+	$(NULL)
+
+libgstvaapi_wayland_@GST_MAJORMINOR@_la_LIBADD = \
+	$(GLIB_LIBS)				\
+	$(WAYLAND_LIBS)				\
+	$(LIBVA_WAYLAND_LIBS)			\
+	libgstvaapi-@GST_MAJORMINOR@.la		\
+	$(NULL)
+
+libgstvaapi_wayland_@GST_MAJORMINOR@_la_LDFLAGS = \
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 

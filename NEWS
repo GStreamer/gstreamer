@@ -4,6 +4,7 @@ Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
 Version 0.4.0 - DD.Aug.2012
+* Add support for Wayland
 * Drop FFmpeg-based decoders
 
 Version 0.3.7 - 26.Jun.2012

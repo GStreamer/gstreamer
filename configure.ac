@@ -45,10 +45,12 @@ m4_define([gst_plugins_bad_version],
 m4_define([va_api_version],     [0.30.4])
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_glx_version], [0.32.0])
+m4_define([va_api_wld_version], [0.34.0])
 
 # libva package version number
 m4_define([libva_x11_package_version], [1.0.3])
 m4_define([libva_glx_package_version], [1.0.9])
+m4_define([libva_wld_package_version], [1.2.0])
 
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
@@ -109,6 +111,11 @@ AC_ARG_ENABLE(glx,
     AS_HELP_STRING([--enable-glx],
                    [enable OpenGL/X11 output @<:@default=yes@:>@]),
     [], [enable_glx="yes"])
+
+AC_ARG_ENABLE(wayland,
+    AC_HELP_STRING([--enable-wayland],
+                   [enable Wayland output @<:@default=yes@:>@]),
+    [], [enable_wayland="yes"])
 
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
@@ -319,6 +326,20 @@ if test "$enable_glx" = "yes" -a $HAVE_GL -eq 1 -a $USE_X11 -eq 1; then
     LIBS="$saved_LIBS"
 fi
 
+dnl Check for Wayland
+USE_WAYLAND=0
+if test "$enable_wayland" = "yes"; then
+    PKG_CHECK_MODULES(WAYLAND, [wayland-client],
+        [USE_WAYLAND=1], [USE_WAYLAND=0])
+
+    if test $USE_WAYLAND -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
+        AC_CHECK_HEADERS([wayland-client.h], [:], [USE_WAYLAND=0])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
+fi
+
 dnl ---------------------------------------------------------------------------
 dnl -- VA-API                                                                --
 dnl ---------------------------------------------------------------------------
@@ -382,11 +403,17 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$saved_LIBS"
 ])
 
+dnl VA/Wayland API
+if test "$enable_wayland" = "yes"; then
+    PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
+        [:], [USE_WAYLAND=0])
+fi
+
 dnl ---------------------------------------------------------------------------
 dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
 
-case ":$USE_X11:$USE_GLX:" in
+case ":$USE_X11:$USE_GLX:$USE_WAYLAND:" in
 *:1:*)
     ;;
 *)
@@ -405,6 +432,10 @@ AM_CONDITIONAL(USE_X11, test $USE_X11 -eq 1)
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_WAYLAND, $USE_WAYLAND,
+    [Defined to 1 if WAYLAND is enabled])
+AM_CONDITIONAL(USE_WAYLAND, test $USE_WAYLAND -eq 1)
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
@@ -456,6 +487,7 @@ yesno() {
 VIDEO_OUTPUTS=""
 AS_IF([test $USE_X11 -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS x11"])
 AS_IF([test $USE_GLX -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS glx"])
+AS_IF([test $USE_WAYLAND -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS wayland"])
 
 echo
 echo $PACKAGE configuration summary:
