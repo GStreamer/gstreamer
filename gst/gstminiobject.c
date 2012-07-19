@@ -190,10 +190,11 @@ gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
     }
 
     if (access_mode) {
+      /* shared counter > 1 and write access is not allowed */
+      if (state > SHARE_ONE && access_mode & GST_LOCK_FLAG_WRITE)
+        goto lock_failed;
+
       if ((state & LOCK_FLAG_MASK) == 0) {
-        /* shared counter > 1 and write access */
-        if (state > SHARE_ONE && access_mode & GST_LOCK_FLAG_WRITE)
-          goto lock_failed;
         /* nothing mapped, set access_mode */
         newstate |= access_mode;
       } else {
