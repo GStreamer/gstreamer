@@ -426,6 +426,7 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
   dec->output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec),
       GST_VIDEO_FORMAT_I420, stream_info.w, stream_info.h, state);
+  gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
   gst_vp8_dec_send_tags (dec);
 
   cfg.w = stream_info.w;
