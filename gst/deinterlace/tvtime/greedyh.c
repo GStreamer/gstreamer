@@ -719,7 +719,7 @@ greedyh_scanline_C_planar_uv (GstDeinterlaceMethodGreedyH * self,
 static void
 deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     const GstDeinterlaceField * history, guint history_count,
-    GstBuffer * outbuf, int cur_field_idx)
+    GstVideoFrame * outframe, int cur_field_idx)
 {
   GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (method);
   GstDeinterlaceMethodGreedyHClass *klass =
@@ -727,13 +727,13 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
   gint InfoIsOdd = 0;
   gint Line;
   gint RowStride = method->row_stride[0];
-  gint FieldHeight = method->frame_height / 2;
+  gint FieldHeight = GST_VIDEO_INFO_HEIGHT (method->vinfo) / 2;
   gint Pitch = method->row_stride[0] * 2;
   const guint8 *L1;             // ptr to Line1, of 3
   const guint8 *L2;             // ptr to Line2, the weave line
   const guint8 *L3;             // ptr to Line3
   const guint8 *L2P;            // ptr to prev Line2
-  guint8 *Dest = GST_BUFFER_DATA (outbuf);
+  guint8 *Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, 0);
   ScanlineFunction scanline;
 
   if (cur_field_idx + 2 > history_count || cur_field_idx < 1) {
@@ -742,10 +742,9 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     backup_method = g_object_new (gst_deinterlace_method_linear_get_type (),
         NULL);
 
-    gst_deinterlace_method_setup (backup_method, method->format,
-        method->frame_width, method->frame_height);
+    gst_deinterlace_method_setup (backup_method, method->vinfo);
     gst_deinterlace_method_deinterlace_frame (backup_method,
-        history, history_count, outbuf, cur_field_idx);
+        history, history_count, outframe, cur_field_idx);
 
     g_object_unref (backup_method);
     return;
@@ -753,7 +752,7 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
 
   cur_field_idx += 2;
 
-  switch (method->format) {
+  switch (GST_VIDEO_INFO_FORMAT (method->vinfo)) {
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_YVYU:
       scanline = klass->scanline_yuy2;
@@ -775,16 +774,16 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
   if (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM) {
     InfoIsOdd = 1;
 
-    L1 = GST_BUFFER_DATA (history[cur_field_idx - 2].buf);
+    L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, 0);
     if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
       L1 += RowStride;
 
-    L2 = GST_BUFFER_DATA (history[cur_field_idx - 1].buf);
+    L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, 0);
     if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
       L2 += RowStride;
 
     L3 = L1 + Pitch;
-    L2P = GST_BUFFER_DATA (history[cur_field_idx - 3].buf);
+    L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, 0);
     if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
       L2P += RowStride;
 
@@ -793,16 +792,19 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
     Dest += RowStride;
   } else {
     InfoIsOdd = 0;
-    L1 = GST_BUFFER_DATA (history[cur_field_idx - 2].buf);
+    L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, 0);
     if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
       L1 += RowStride;
 
-    L2 = GST_BUFFER_DATA (history[cur_field_idx - 1].buf) + Pitch;
+    L2 = (guint8 *) GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx -
+            1].frame, 0) + Pitch;
     if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
       L2 += RowStride;
 
     L3 = L1 + Pitch;
-    L2P = GST_BUFFER_DATA (history[cur_field_idx - 3].buf) + Pitch;
+    L2P =
+        (guint8 *) GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame,
+        0) + Pitch;
     if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
       L2P += RowStride;
 
@@ -875,7 +877,7 @@ deinterlace_frame_di_greedyh_planar_plane (GstDeinterlaceMethodGreedyH * self,
 static void
 deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
     const GstDeinterlaceField * history, guint history_count,
-    GstBuffer * outbuf, int cur_field_idx)
+    GstVideoFrame * outframe, int cur_field_idx)
 {
   GstDeinterlaceMethodGreedyH *self = GST_DEINTERLACE_METHOD_GREEDY_H (method);
   GstDeinterlaceMethodGreedyHClass *klass =
@@ -890,7 +892,6 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
   const guint8 *L2P;            // ptr to prev Line2
   guint8 *Dest;
   gint i;
-  gint Offset;
   ScanlineFunction scanline;
 
   if (cur_field_idx + 2 > history_count || cur_field_idx < 1) {
@@ -899,10 +900,9 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
     backup_method = g_object_new (gst_deinterlace_method_linear_get_type (),
         NULL);
 
-    gst_deinterlace_method_setup (backup_method, method->format,
-        method->frame_width, method->frame_height);
+    gst_deinterlace_method_setup (backup_method, method->vinfo);
     gst_deinterlace_method_deinterlace_frame (backup_method,
-        history, history_count, outbuf, cur_field_idx);
+        history, history_count, outframe, cur_field_idx);
 
     g_object_unref (backup_method);
     return;
@@ -911,8 +911,6 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
   cur_field_idx += 2;
 
   for (i = 0; i < 3; i++) {
-    Offset = method->offset[i];
-
     InfoIsOdd = (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM);
     RowStride = method->row_stride[i];
     FieldHeight = method->height[i] / 2;
@@ -923,18 +921,18 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
     else
       scanline = klass->scanline_planar_uv;
 
-    Dest = GST_BUFFER_DATA (outbuf) + Offset;
+    Dest = GST_VIDEO_FRAME_PLANE_DATA (outframe, i);
 
-    L1 = GST_BUFFER_DATA (history[cur_field_idx - 2].buf) + Offset;
+    L1 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 2].frame, i);
     if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
       L1 += RowStride;
 
-    L2 = GST_BUFFER_DATA (history[cur_field_idx - 1].buf) + Offset;
+    L2 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 1].frame, i);
     if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
       L2 += RowStride;
 
     L3 = L1 + Pitch;
-    L2P = GST_BUFFER_DATA (history[cur_field_idx - 3].buf) + Offset;
+    L2P = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 3].frame, i);
     if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
       L2P += RowStride;
 

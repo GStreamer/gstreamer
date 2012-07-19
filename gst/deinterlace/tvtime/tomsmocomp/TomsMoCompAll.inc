@@ -63,7 +63,7 @@
 
 static void FUNCT_NAME(GstDeinterlaceMethod *d_method,
 	const GstDeinterlaceField* history, guint history_count,
-	GstBuffer *outbuf, int cur_field_idx)
+	GstVideoFrame *outframe, int cur_field_idx)
 {
   GstDeinterlaceMethodTomsMoComp *self = GST_DEINTERLACE_METHOD_TOMSMOCOMP (d_method);
   glong SearchEffort = self->search_effort;
@@ -86,10 +86,9 @@ static void FUNCT_NAME(GstDeinterlaceMethod *d_method,
     backup_method = g_object_new (gst_deinterlace_method_linear_get_type(),
         NULL);
 
-    gst_deinterlace_method_setup (backup_method, d_method->format,
-        d_method->frame_width, d_method->frame_height);
+    gst_deinterlace_method_setup (backup_method, d_method->vinfo);
     gst_deinterlace_method_deinterlace_frame (backup_method,
-        history, history_count, outbuf, cur_field_idx);
+        history, history_count, outframe, cur_field_idx);
 
     g_object_unref (backup_method);
     return;
@@ -99,18 +98,18 @@ static void FUNCT_NAME(GstDeinterlaceMethod *d_method,
   src_pitch = self->parent.row_stride[0]*2;
   dst_pitch = self->parent.row_stride[0];
   rowsize   = self->parent.row_stride[0];
-  FldHeight = self->parent.frame_height / 2;
+  FldHeight = GST_VIDEO_INFO_HEIGHT (self->parent.vinfo) / 2;
 
-  pCopySrc   = GST_BUFFER_DATA(history[history_count-1].buf);
+  pCopySrc   = GST_VIDEO_FRAME_PLANE_DATA (history[history_count-1].frame, 0);
   if (history[history_count - 1].flags & PICTURE_INTERLACED_BOTTOM)
     pCopySrc += rowsize;
-  pCopySrcP  = GST_BUFFER_DATA(history[history_count-3].buf);
+  pCopySrcP  = GST_VIDEO_FRAME_PLANE_DATA (history[history_count-3].frame, 0);
   if (history[history_count - 3].flags & PICTURE_INTERLACED_BOTTOM)
     pCopySrcP += rowsize;
-  pWeaveSrc  = GST_BUFFER_DATA(history[history_count-2].buf);  
+  pWeaveSrc  = GST_VIDEO_FRAME_PLANE_DATA (history[history_count-2].frame, 0);
   if (history[history_count - 2].flags & PICTURE_INTERLACED_BOTTOM)
     pWeaveSrc += rowsize;
-  pWeaveSrcP = GST_BUFFER_DATA(history[history_count-4].buf);
+  pWeaveSrcP = GST_VIDEO_FRAME_PLANE_DATA (history[history_count-4].frame, 0);
   if (history[history_count - 4].flags & PICTURE_INTERLACED_BOTTOM)
     pWeaveSrcP += rowsize;
 
@@ -119,7 +118,7 @@ static void FUNCT_NAME(GstDeinterlaceMethod *d_method,
     IsOdd      = 1;
 
     // if we have an odd field we copy an even field and weave an odd field
-    pCopyDest = GST_BUFFER_DATA(outbuf);
+    pCopyDest = GST_VIDEO_FRAME_PLANE_DATA (outframe, 0);
     pWeaveDest = pCopyDest + dst_pitch;
   }
   /* do it vice verca */
@@ -127,8 +126,8 @@ static void FUNCT_NAME(GstDeinterlaceMethod *d_method,
 
     IsOdd      = 0;
     // if we have an even field we copy an odd field and weave an even field
-    pCopyDest = GST_BUFFER_DATA(outbuf) + dst_pitch;
-    pWeaveDest = GST_BUFFER_DATA(outbuf);
+    pCopyDest = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (outframe, 0) + dst_pitch;
+    pWeaveDest = GST_VIDEO_FRAME_PLANE_DATA (outframe, 0);
   }
 
   

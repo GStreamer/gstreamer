@@ -51,8 +51,7 @@ typedef struct _GstDeinterlaceMethodClass GstDeinterlaceMethodClass;
 
 typedef struct
 {
-  /* pointer to the start of data for this field */
-  GstBuffer *buf;
+  GstVideoFrame *frame;
   /* see PICTURE_ flags in *.c */
   guint flags;
 } GstDeinterlaceField;
@@ -63,13 +62,13 @@ typedef struct
 
 typedef void (*GstDeinterlaceMethodDeinterlaceFunction) (
     GstDeinterlaceMethod *self, const GstDeinterlaceField *history,
-    guint history_count, GstBuffer *outbuf, int cur_field_idx);
+    guint history_count, GstVideoFrame *outframe, int cur_field_idx);
 
 struct _GstDeinterlaceMethod {
   GstObject parent;
 
-  GstVideoFormat format;
-  gint frame_width, frame_height;
+  GstVideoInfo *vinfo;
+  // FIXME - the stuff below can use vinfo and macros
   gint width[4];
   gint height[4];
   gint offset[4];
@@ -86,7 +85,7 @@ struct _GstDeinterlaceMethodClass {
 
   gboolean (*supported) (GstDeinterlaceMethodClass *klass, GstVideoFormat format, gint width, gint height);
 
-  void (*setup) (GstDeinterlaceMethod *self, GstVideoFormat format, gint width, gint height);
+  void (*setup) (GstDeinterlaceMethod *self, GstVideoInfo * vinfo);
 
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yuy2;
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame_yvyu;
@@ -113,8 +112,8 @@ struct _GstDeinterlaceMethodClass {
 GType gst_deinterlace_method_get_type (void);
 
 gboolean gst_deinterlace_method_supported (GType type, GstVideoFormat format, gint width, gint height);
-void gst_deinterlace_method_setup (GstDeinterlaceMethod * self, GstVideoFormat format, gint width, gint height);
-void gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self, const GstDeinterlaceField * history, guint history_count, GstBuffer * outbuf,
+void gst_deinterlace_method_setup (GstDeinterlaceMethod * self, GstVideoInfo * vinfo);
+void gst_deinterlace_method_deinterlace_frame (GstDeinterlaceMethod * self, const GstDeinterlaceField * history, guint history_count, GstVideoFrame * outframe,
     int cur_field_idx);
 gint gst_deinterlace_method_get_fields_required (GstDeinterlaceMethod * self);
 gint gst_deinterlace_method_get_latency (GstDeinterlaceMethod * self);
