@@ -473,6 +473,22 @@ GST_VAAPI_DECODER_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>gstvaapidecoder_jpeg</FILE>
+<TITLE>GstVaapiDecoderJpeg</TITLE>
+GstVaapiDecoderJpeg
+GstVaapiDecoderJpegClass
+gst_vaapi_decoder_jpeg_new
+<SUBSECTION Standard>
+GST_VAAPI_DECODER_JPEG
+GST_VAAPI_IS_DECODER_JPEG
+GST_VAAPI_TYPE_DECODER_JPEG
+gst_vaapi_decoder_jpeg_get_type
+GST_VAAPI_DECODER_JPEG_CLASS
+GST_VAAPI_IS_DECODER_JPEG_CLASS
+GST_VAAPI_DECODER_JPEG_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>gstvaapidecoder_mpeg2</FILE>
 <TITLE>GstVaapiDecoderMpeg2</TITLE>
 GstVaapiDecoderMpeg2
