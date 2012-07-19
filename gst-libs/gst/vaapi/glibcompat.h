@@ -24,7 +24,7 @@
 
 #include <glib.h>
 
-#ifndef HAVE_G_LIST_FREE_FULL
+#if !GLIB_CHECK_VERSION(2,27,2)
 static inline void
 g_list_free_full(GList *list, GDestroyNotify free_func)
 {
