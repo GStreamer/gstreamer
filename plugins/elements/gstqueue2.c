@@ -2665,7 +2665,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         gint64 start, stop, range_start, range_stop;
         guint64 writing_pos;
         gint percent;
-        gint64 estimated_total = -1, buffering_left = -1;
+        gint64 estimated_total, buffering_left;
         gint64 duration;
         gboolean peer_res, is_buffering, is_eos;
         gdouble byte_in_rate, byte_out_rate;
@@ -2692,11 +2692,18 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
               GST_FORMAT_BYTES, &duration);
         }
 
+        GST_DEBUG_OBJECT (queue, "percent %d, duration %" G_GINT64_FORMAT
+            ", writing %" G_GINT64_FORMAT, percent, duration, writing_pos);
+
         /* calculate remaining and total download time */
         if (peer_res && byte_in_rate > 0.0)
           estimated_total = ((duration - writing_pos) * 1000) / byte_in_rate;
+        else
+          estimated_total = -1;
 
         /* calculate estimated remaining buffer time */
+        buffering_left = (percent == 100 ? 0 : -1);
+
         if (queue->use_rate_estimate) {
           guint64 max, cur;
 
@@ -2707,8 +2714,9 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             buffering_left = (max - cur) / 1000000;
         }
 
-        GST_DEBUG_OBJECT (queue, "estimated %" G_GINT64_FORMAT ", left %"
-            G_GINT64_FORMAT, estimated_total, buffering_left);
+        GST_DEBUG_OBJECT (queue, "estimated-total %" G_GINT64_FORMAT
+            ", buffering-left %" G_GINT64_FORMAT, estimated_total,
+            buffering_left);
 
         gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
@@ -2717,10 +2725,6 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             /* we need duration */
             if (!peer_res)
               goto peer_failed;
-
-            GST_DEBUG_OBJECT (queue,
-                "duration %" G_GINT64_FORMAT ", writing %" G_GINT64_FORMAT,
-                duration, writing_pos);
 
             start = 0;
             /* get our available data relative to the duration */
