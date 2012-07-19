@@ -22,12 +22,9 @@ libgstvaapi_codecparsers_source_h =		\
 	gstjpegparser.h				\
 	$(NULL)
 
-libgstvaapi_codecparsers_source_priv_h =	\
-	$(NULL)
-
 libgstvaapi_codecparsers_la_SOURCES =		\
 	$(libgstvaapi_codecparsers_source_c)	\
-	$(libgstvaapi_codecparsers_source_priv_h) \
+	$(libgstvaapi_codecparsers_source_h)	\
 	$(NULL)
 
 libgstvaapi_codecparsers_la_CFLAGS =		\
