@@ -29,9 +29,6 @@
 #include "test-mpeg2.h"
 #include "test-subpicture-data.h"
 
-#if USE_FFMPEG
-# include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
-#endif
 #if USE_CODEC_PARSERS
 # include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #endif
@@ -154,10 +151,6 @@ main(int argc, char *argv[])
 
 #if USE_CODEC_PARSERS
     decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
-#endif
-#if USE_FFMPEG
-    if (!decoder)
-        decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
 #endif
     if (!decoder)
         g_error("could not create video decoder");

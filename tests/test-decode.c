@@ -31,9 +31,6 @@
 #include "test-h264.h"
 #include "test-vc1.h"
 
-#if USE_FFMPEG
-# include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
-#endif
 #if USE_CODEC_PARSERS
 # include <gst/vaapi/gstvaapidecoder_h264.h>
 # include <gst/vaapi/gstvaapidecoder_jpeg.h>
@@ -79,21 +76,12 @@ static inline void pause(void)
 }
 
 static gchar *g_codec_str;
-static gboolean g_use_ffmpeg = FALSE;
 
 static GOptionEntry g_options[] = {
     { "codec", 'c',
       0,
       G_OPTION_ARG_STRING, &g_codec_str,
       "codec to test", NULL },
-    { "ffmpeg", 0,
-      0,
-      G_OPTION_ARG_NONE, &g_use_ffmpeg,
-      "use ffmpeg", NULL },
-    { "codecparsers", 0,
-      G_OPTION_FLAG_REVERSE,
-      G_OPTION_ARG_NONE, &g_use_ffmpeg,
-      "use codec parsers", NULL },
     { NULL, }
 };
 
@@ -159,14 +147,6 @@ main(int argc, char *argv[])
             NULL
         );
 
-    if (g_use_ffmpeg) {
-#if USE_FFMPEG
-        decoder = gst_vaapi_decoder_ffmpeg_new(display, decoder_caps);
-#else
-        g_error("FFmpeg-based decoders are not supported");
-#endif
-    }
-    else {
 #if USE_CODEC_PARSERS
         switch (gst_vaapi_profile_get_codec(info.profile)) {
         case GST_VAAPI_CODEC_H264:
@@ -187,10 +167,7 @@ main(int argc, char *argv[])
             decoder = NULL;
             break;
         }
-#else
-        g_error("codecparsers-based decoders are not supported");
 #endif
-    }
     if (!decoder)
         g_error("could not create decoder");
     gst_caps_unref(decoder_caps);

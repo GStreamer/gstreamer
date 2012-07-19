@@ -1,6 +1,5 @@
 gst_vaapi_context_get_type
 gst_vaapi_decoder_get_type
-gst_vaapi_decoder_ffmpeg_get_type
 gst_vaapi_display_get_type
 gst_vaapi_image_get_type
 gst_vaapi_image_pool_get_type

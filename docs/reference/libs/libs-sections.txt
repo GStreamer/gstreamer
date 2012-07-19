@@ -473,22 +473,6 @@ GST_VAAPI_DECODER_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstvaapidecoder_ffmpeg</FILE>
-<TITLE>GstVaapiDecoderFfmpeg</TITLE>
-GstVaapiDecoderFfmpeg
-GstVaapiDecoderFfmpegClass
-gst_vaapi_decoder_ffmpeg_new
-<SUBSECTION Standard>
-GST_VAAPI_DECODER_FFMPEG
-GST_VAAPI_IS_DECODER_FFMPEG
-GST_VAAPI_TYPE_DECODER_FFMPEG
-gst_vaapi_decoder_ffmpeg_get_type
-GST_VAAPI_DECODER_FFMPEG_CLASS
-GST_VAAPI_IS_DECODER_FFMPEG_CLASS
-GST_VAAPI_DECODER_FFMPEG_GET_CLASS
-</SECTION>
-
-<SECTION>
 <FILE>gstvaapidecoder_mpeg2</FILE>
 <TITLE>GstVaapiDecoderMpeg2</TITLE>
 GstVaapiDecoderMpeg2

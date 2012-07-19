@@ -89,7 +89,6 @@ libgstvaapi_source_priv_h =			\
 	gstvaapivideobuffer_priv.h		\
 	gstvaapiworkarounds.h			\
 	sysdeps.h				\
-	$(libgst_vaapi_ffmpeg_source_priv_h)	\
 	$(NULL)
 
 libgstvaapi_x11_source_c =			\
@@ -137,13 +136,6 @@ libgstvaapi_glx_source_priv_h =			\
 	gstvaapiutils_glx.h			\
 	gstvaapiutils_x11.h			\
 	$(NULL)
-
-if USE_FFMPEG
-libgstvaapi_source_c	+= gstvaapidecoder_ffmpeg.c
-libgstvaapi_source_h	+= gstvaapidecoder_ffmpeg.h
-libgstvaapi_cflags	+= $(LIBAVCODEC_CFLAGS)
-libgstvaapi_libs	+= $(LIBAVCODEC_LIBS)
-endif
 
 if USE_CODEC_PARSERS
 libgstvaapi_source_c	+= \

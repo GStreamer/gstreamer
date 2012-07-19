@@ -72,7 +72,6 @@ struct _GstVaapiDecode {
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
     GstEvent           *delayed_new_seg;
-    unsigned int        use_ffmpeg      : 1;
     unsigned int        is_ready        : 1;
 };
 

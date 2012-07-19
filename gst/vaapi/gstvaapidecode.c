@@ -44,9 +44,6 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 
-#if USE_FFMPEG
-# include <gst/vaapi/gstvaapidecoder_ffmpeg.h>
-#endif
 #if USE_CODEC_PARSERS
 # include <gst/vaapi/gstvaapidecoder_h264.h>
 # include <gst/vaapi/gstvaapidecoder_jpeg.h>
@@ -54,10 +51,6 @@
 # include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 # include <gst/vaapi/gstvaapidecoder_vc1.h>
 #endif
-
-/* Favor codecparsers-based decoders for 0.3.x series */
-#define USE_FFMPEG_DEFAULT \
-    (USE_FFMPEG && !USE_CODEC_PARSERS)
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -119,12 +112,6 @@ G_DEFINE_TYPE_WITH_CODE(
                           gst_vaapidecode_implements_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init));
-
-enum {
-    PROP_0,
-
-    PROP_USE_FFMPEG,
-};
 
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps);
@@ -325,12 +312,6 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         return FALSE;
 
     dpy = decode->display;
-    if (decode->use_ffmpeg) {
-#if USE_FFMPEG
-        decode->decoder = gst_vaapi_decoder_ffmpeg_new(dpy, caps);
-#endif
-    }
-    else {
 #if USE_CODEC_PARSERS
         structure = gst_caps_get_structure(caps, 0);
         if (!structure)
@@ -356,7 +337,6 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
             decode->decoder = gst_vaapi_decoder_jpeg_new(dpy, caps);
 #endif
 #endif
-    }
     if (!decode->decoder)
         return FALSE;
 
@@ -474,46 +454,6 @@ gst_vaapidecode_finalize(GObject *object)
     G_OBJECT_CLASS(gst_vaapidecode_parent_class)->finalize(object);
 }
 
-static void
-gst_vaapidecode_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiDecode * const decode = GST_VAAPIDECODE(object);
-
-    switch (prop_id) {
-    case PROP_USE_FFMPEG:
-        decode->use_ffmpeg = g_value_get_boolean(value);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapidecode_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiDecode * const decode = GST_VAAPIDECODE(object);
-
-    switch (prop_id) {
-    case PROP_USE_FFMPEG:
-        g_value_set_boolean(value, decode->use_ffmpeg);
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
 static GstStateChangeReturn
 gst_vaapidecode_change_state(GstElement *element, GstStateChange transition)
 {
@@ -563,8 +503,6 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
     object_class->finalize      = gst_vaapidecode_finalize;
-    object_class->set_property  = gst_vaapidecode_set_property;
-    object_class->get_property  = gst_vaapidecode_get_property;
 
     element_class->change_state = gst_vaapidecode_change_state;
 
@@ -585,17 +523,6 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     pad_template = gst_static_pad_template_get(&gst_vaapidecode_src_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
     gst_object_unref(pad_template);
-
-#if USE_FFMPEG
-    g_object_class_install_property
-        (object_class,
-         PROP_USE_FFMPEG,
-         g_param_spec_boolean("use-ffmpeg",
-                              "Use FFmpeg/VAAPI for decoding",
-                              "Uses FFmpeg/VAAPI for decoding",
-                              USE_FFMPEG_DEFAULT,
-                              G_PARAM_READWRITE));
-#endif
 }
 
 static gboolean
@@ -781,7 +708,6 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
     decode->delayed_new_seg     = NULL;
-    decode->use_ffmpeg          = USE_FFMPEG_DEFAULT;
     decode->is_ready            = FALSE;
 
     /* Pad through which data comes in to the element */
