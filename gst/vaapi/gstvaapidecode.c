@@ -44,13 +44,11 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 
-#if USE_CODEC_PARSERS
-# include <gst/vaapi/gstvaapidecoder_h264.h>
-# include <gst/vaapi/gstvaapidecoder_jpeg.h>
-# include <gst/vaapi/gstvaapidecoder_mpeg2.h>
-# include <gst/vaapi/gstvaapidecoder_mpeg4.h>
-# include <gst/vaapi/gstvaapidecoder_vc1.h>
-#endif
+#include <gst/vaapi/gstvaapidecoder_h264.h>
+#include <gst/vaapi/gstvaapidecoder_jpeg.h>
+#include <gst/vaapi/gstvaapidecoder_mpeg2.h>
+#include <gst/vaapi/gstvaapidecoder_mpeg4.h>
+#include <gst/vaapi/gstvaapidecoder_vc1.h>
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -302,6 +300,7 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 
     if (!gst_vaapi_ensure_display(decode, &decode->display))
         return FALSE;
+    dpy = decode->display;
 
     decode->decoder_mutex = g_mutex_new();
     if (!decode->decoder_mutex)
@@ -311,31 +310,29 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     if (!decode->decoder_ready)
         return FALSE;
 
-    dpy = decode->display;
-#if USE_CODEC_PARSERS
-        structure = gst_caps_get_structure(caps, 0);
-        if (!structure)
+    structure = gst_caps_get_structure(caps, 0);
+    if (!structure)
+        return FALSE;
+
+    if (gst_structure_has_name(structure, "video/x-h264"))
+        decode->decoder = gst_vaapi_decoder_h264_new(dpy, caps);
+    else if (gst_structure_has_name(structure, "video/mpeg")) {
+        if (!gst_structure_get_int(structure, "mpegversion", &version))
             return FALSE;
-        if (gst_structure_has_name(structure, "video/x-h264"))
-            decode->decoder = gst_vaapi_decoder_h264_new(dpy, caps);
-        else if (gst_structure_has_name(structure, "video/mpeg")) {
-            if (!gst_structure_get_int(structure, "mpegversion", &version))
-                return FALSE;
-            if (version == 2)
-                decode->decoder = gst_vaapi_decoder_mpeg2_new(dpy, caps);
-            else if (version == 4)
-                decode->decoder = gst_vaapi_decoder_mpeg4_new(dpy, caps);
-        }
-        else if (gst_structure_has_name(structure, "video/x-wmv"))
-            decode->decoder = gst_vaapi_decoder_vc1_new(dpy, caps);
-        else if (gst_structure_has_name(structure, "video/x-h263") ||
-                 gst_structure_has_name(structure, "video/x-divx") ||
-                 gst_structure_has_name(structure, "video/x-xvid"))
+        if (version == 2)
+            decode->decoder = gst_vaapi_decoder_mpeg2_new(dpy, caps);
+        else if (version == 4)
             decode->decoder = gst_vaapi_decoder_mpeg4_new(dpy, caps);
+    }
+    else if (gst_structure_has_name(structure, "video/x-wmv"))
+        decode->decoder = gst_vaapi_decoder_vc1_new(dpy, caps);
+    else if (gst_structure_has_name(structure, "video/x-h263") ||
+             gst_structure_has_name(structure, "video/x-divx") ||
+             gst_structure_has_name(structure, "video/x-xvid"))
+        decode->decoder = gst_vaapi_decoder_mpeg4_new(dpy, caps);
 #if USE_JPEG_DECODER
-        else if (gst_structure_has_name(structure, "image/jpeg"))
-            decode->decoder = gst_vaapi_decoder_jpeg_new(dpy, caps);
-#endif
+    else if (gst_structure_has_name(structure, "image/jpeg"))
+        decode->decoder = gst_vaapi_decoder_jpeg_new(dpy, caps);
 #endif
     if (!decode->decoder)
         return FALSE;

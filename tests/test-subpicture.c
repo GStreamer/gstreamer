@@ -25,13 +25,10 @@
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
+#include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include "test-mpeg2.h"
 #include "test-subpicture-data.h"
-
-#if USE_CODEC_PARSERS
-# include <gst/vaapi/gstvaapidecoder_mpeg2.h>
-#endif
 
 typedef void (*GetVideoInfoFunc)(VideoDecodeInfo *info);
 
@@ -149,9 +146,7 @@ main(int argc, char *argv[])
             NULL
         );
 
-#if USE_CODEC_PARSERS
     decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
-#endif
     if (!decoder)
         g_error("could not create video decoder");
     gst_caps_unref(decoder_caps);

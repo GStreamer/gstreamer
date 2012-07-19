@@ -34,16 +34,16 @@ m4_define([gst_plugins_base_micro_version], [31])
 m4_define([gst_plugins_base_version],
           [gst_plugins_base_major_version.gst_plugins_base_minor_version.gst_plugins_base_micro_version])
 
-# VA-API minimum version number
-m4_define([va_api_x11_version], [0.31.0])
-m4_define([va_api_glx_version], [0.32.0])
-
 # gst plugins-bad version number
 m4_define([gst_plugins_bad_major_version], [0])
 m4_define([gst_plugins_bad_minor_version], [10])
 m4_define([gst_plugins_bad_micro_version], [22])
 m4_define([gst_plugins_bad_version],
           [gst_plugins_bad_major_version.gst_plugins_bad_minor_version.gst_plugins_bad_micro_version])
+
+# VA-API minimum version number
+m4_define([va_api_x11_version], [0.31.0])
+m4_define([va_api_glx_version], [0.32.0])
 
 # libva package version number
 m4_define([libva_x11_package_version], [1.0.3])
@@ -112,11 +112,6 @@ AC_ARG_ENABLE(vaapisink-glx,
     AS_HELP_STRING([--enable-vaapisink-glx],
                    [enable OpenGL/X11 to vaapisink @<:@default=yes@:>@]),
     [], [enable_vaapisink_glx="no"])
-
-AC_ARG_ENABLE(codecparsers,
-    AS_HELP_STRING([--enable-codecparsers],
-                   [enable adhoc bitstream parsers from GStreamer @<:@default=yes@:>@]),
-    [], [enable_codecparsers="yes"])
 
 dnl Check for __attribute__((visibility()))
 AC_CACHE_CHECK([whether __attribute__((visibility())) is supported],
@@ -233,21 +228,13 @@ PKG_CHECK_MODULES([GST_BASEVIDEO],
 )
 
 dnl Check for GStreamer codec parsers
-USE_CODEC_PARSERS=0
-if test "$enable_codecparsers" = "yes"; then
-PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-    [gstreamer-codecparsers-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED],
-    [enable_codecparsers="yes" USE_CODEC_PARSERS=1],
-    [enable_codecparsers="no"  USE_CODEC_PARSERS=0]
-)
-fi
-
-AC_DEFINE_UNQUOTED(USE_CODEC_PARSERS, $USE_CODEC_PARSERS,
-    [Defined to 1 if GStreamer codec parsers are used])
-AM_CONDITIONAL(USE_CODEC_PARSERS, test $USE_CODEC_PARSERS -eq 1)
-
+USE_CODEC_PARSERS=1
 USE_LOCAL_CODEC_PARSERS=0
-if test "$enable_codecparsers" = "yes"; then
+
+PKG_CHECK_MODULES([GST_CODEC_PARSERS],
+    [gstreamer-codecparsers-$GST_MAJORMINOR >= $GST_PLUGINS_BAD_VERSION_REQUIRED]
+)
+
 AC_CACHE_CHECK([for GstH264SliceHdr::n_emulation_prevention_bytes],
     ac_cv_have_gst_h264_slice_hdr_epb_count, [
     saved_CFLAGS="$CFLAGS"
@@ -266,6 +253,11 @@ AC_CACHE_CHECK([for GstH264SliceHdr::n_emulation_prevention_bytes],
     LIBS="$saved_LIBS"
 ])
 
+if test "$ac_cv_have_gst_h264_slice_hdr_epb_count" = "yes"; then
+    AC_DEFINE_UNQUOTED(HAVE_GST_H264_SLICE_HDR_EPB_COUNT, 1,
+        [Defined to 1 if GstH264SliceHdr::n_emulation_prevention_bytes exists.])
+fi
+
 AC_CACHE_CHECK([for JPEG parser],
     ac_cv_have_gst_jpeg_parser, [
     saved_CFLAGS="$CFLAGS"
@@ -282,12 +274,6 @@ AC_CACHE_CHECK([for JPEG parser],
     CFLAGS="$saved_CFLAGS"
     LIBS="$saved_LIBS"
 ])
-fi
-
-if test "$ac_cv_have_gst_h264_slice_hdr_epb_count" = "yes"; then
-    AC_DEFINE_UNQUOTED(HAVE_GST_H264_SLICE_HDR_EPB_COUNT, 1,
-        [Defined to 1 if GstH264SliceHdr::n_emulation_prevention_bytes exists.])
-fi
 
 if test "$ac_cv_have_gst_jpeg_parser" = "yes"; then
     AC_DEFINE_UNQUOTED(HAVE_GST_JPEG_PARSER, 1,
@@ -407,7 +393,6 @@ AC_SUBST(LIBVA_EXTRA_LIBS)
 
 dnl Check for JPEG decoding API (0.33+)
 USE_JPEG_DECODER=0
-if test "$enable_codecparsers" = "yes"; then
 AC_CACHE_CHECK([for JPEG decoding API],
     ac_cv_have_jpeg_decoding_api, [
     saved_CFLAGS="$CFLAGS"
@@ -428,7 +413,6 @@ AC_CACHE_CHECK([for JPEG decoding API],
     CFLAGS="$saved_CFLAGS"
     LIBS="$saved_LIBS"
 ])
-fi
 
 AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
     [Defined to 1 if JPEG decoder is used])
@@ -439,10 +423,6 @@ if test "$enable_vaapisink_glx:$USE_GLX" = "yes:1"; then
     USE_VAAPISINK_GLX=1
 else
     USE_VAAPISINK_GLX=0
-fi
-
-if test "$enable_codecparsers" = "no"; then
-    AC_MSG_ERROR([Found no suitable GStreamer bitstream parsers])
 fi
 
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
@@ -518,5 +498,4 @@ echo VA-API version ................... : $VA_VERSION_STR
 echo GLX support ...................... : $(yesno $USE_GLX)
 echo VA/GLX support ................... : $(yesno $USE_VAAPI_GLX)
 echo VaapiSink/GL ..................... : $(yesno $USE_VAAPISINK_GLX)
-echo GStreamer bitstream parsers ...... : $(yesno $USE_CODEC_PARSERS)
 echo

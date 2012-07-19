@@ -17,6 +17,7 @@ libgstvaapi_cflags =				\
 	$(GST_BASEVIDEO_CFLAGS)			\
 	$(GST_VIDEO_CFLAGS)			\
 	$(GST_CFLAGS)				\
+	$(GST_CODEC_PARSERS_CFLAGS)		\
 	$(LIBVA_CFLAGS)				\
 	$(NULL)
 
@@ -25,12 +26,20 @@ libgstvaapi_libs =				\
 	$(GST_BASEVIDEO_LIBS)			\
 	$(GST_LIBS)				\
 	$(GST_VIDEO_LIBS)			\
+	$(GST_CODEC_PARSERS_LIBS)		\
 	$(LIBVA_LIBS)				\
 	$(NULL)
 
 libgstvaapi_source_c =				\
+	gstvaapicodec_objects.c			\
 	gstvaapicontext.c			\
 	gstvaapidecoder.c			\
+	gstvaapidecoder_dpb.c			\
+	gstvaapidecoder_h264.c			\
+	gstvaapidecoder_mpeg2.c			\
+	gstvaapidecoder_mpeg4.c			\
+	gstvaapidecoder_objects.c		\
+	gstvaapidecoder_vc1.c			\
 	gstvaapidisplay.c			\
 	gstvaapidisplaycache.c			\
 	gstvaapiimage.c				\
@@ -55,6 +64,10 @@ libgstvaapi_source_c =				\
 libgstvaapi_source_h =				\
 	gstvaapicontext.h			\
 	gstvaapidecoder.h			\
+	gstvaapidecoder_h264.h			\
+	gstvaapidecoder_mpeg2.h			\
+	gstvaapidecoder_mpeg4.h			\
+	gstvaapidecoder_vc1.h			\
 	gstvaapidisplay.h			\
 	gstvaapidisplaycache.h			\
 	gstvaapiimage.h				\
@@ -78,8 +91,11 @@ libgstvaapi_source_h =				\
 libgstvaapi_source_priv_h =			\
 	glibcompat.h				\
 	gstvaapi_priv.h				\
+	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
 	gstvaapidebug.h				\
+	gstvaapidecoder_dpb.h			\
+	gstvaapidecoder_objects.h		\
 	gstvaapidecoder_priv.h			\
 	gstvaapidisplay_priv.h			\
 	gstvaapiobject_priv.h			\
@@ -137,34 +153,9 @@ libgstvaapi_glx_source_priv_h =			\
 	gstvaapiutils_x11.h			\
 	$(NULL)
 
-if USE_CODEC_PARSERS
-libgstvaapi_source_c	+= \
-	gstvaapicodec_objects.c			\
-	gstvaapidecoder_dpb.c			\
-	gstvaapidecoder_h264.c			\
-	gstvaapidecoder_mpeg2.c			\
-	gstvaapidecoder_mpeg4.c			\
-	gstvaapidecoder_objects.c		\
-	gstvaapidecoder_vc1.c			\
-	$(NULL)
-libgstvaapi_source_h	+= \
-	gstvaapidecoder_h264.h			\
-	gstvaapidecoder_mpeg2.h			\
-	gstvaapidecoder_mpeg4.h			\
-	gstvaapidecoder_vc1.h			\
-	$(NULL)
-libgstvaapi_source_priv_h += \
-	gstvaapicodec_objects.h			\
-	gstvaapidecoder_dpb.h			\
-	gstvaapidecoder_objects.h		\
-	$(NULL)
-libgstvaapi_cflags	+= $(GST_CODEC_PARSERS_CFLAGS)
-libgstvaapi_libs	+= $(GST_CODEC_PARSERS_LIBS)
-
 if USE_JPEG_DECODER
 libgstvaapi_source_c	+= gstvaapidecoder_jpeg.c
 libgstvaapi_source_h	+= gstvaapidecoder_jpeg.h
-endif
 endif
 
 if USE_LOCAL_CODEC_PARSERS

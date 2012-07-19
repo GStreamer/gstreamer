@@ -26,17 +26,14 @@
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include <gst/vaapi/gstvaapidecoder_h264.h>
+#include <gst/vaapi/gstvaapidecoder_jpeg.h>
+#include <gst/vaapi/gstvaapidecoder_mpeg2.h>
+#include <gst/vaapi/gstvaapidecoder_vc1.h>
 #include "test-jpeg.h"
 #include "test-mpeg2.h"
 #include "test-h264.h"
 #include "test-vc1.h"
-
-#if USE_CODEC_PARSERS
-# include <gst/vaapi/gstvaapidecoder_h264.h>
-# include <gst/vaapi/gstvaapidecoder_jpeg.h>
-# include <gst/vaapi/gstvaapidecoder_mpeg2.h>
-# include <gst/vaapi/gstvaapidecoder_vc1.h>
-#endif
 
 /* Set to 1 to check display cache works (shared VA display) */
 #define CHECK_DISPLAY_CACHE 1
@@ -147,27 +144,25 @@ main(int argc, char *argv[])
             NULL
         );
 
-#if USE_CODEC_PARSERS
-        switch (gst_vaapi_profile_get_codec(info.profile)) {
-        case GST_VAAPI_CODEC_H264:
-            decoder = gst_vaapi_decoder_h264_new(display, decoder_caps);
-            break;
+    switch (gst_vaapi_profile_get_codec(info.profile)) {
+    case GST_VAAPI_CODEC_H264:
+        decoder = gst_vaapi_decoder_h264_new(display, decoder_caps);
+        break;
 #if USE_JPEG_DECODER
-        case GST_VAAPI_CODEC_JPEG:
-            decoder = gst_vaapi_decoder_jpeg_new(display, decoder_caps);
-            break;
+    case GST_VAAPI_CODEC_JPEG:
+        decoder = gst_vaapi_decoder_jpeg_new(display, decoder_caps);
+        break;
 #endif
-        case GST_VAAPI_CODEC_MPEG2:
-            decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
-            break;
-        case GST_VAAPI_CODEC_VC1:
-            decoder = gst_vaapi_decoder_vc1_new(display, decoder_caps);
-            break;
-        default:
-            decoder = NULL;
-            break;
-        }
-#endif
+    case GST_VAAPI_CODEC_MPEG2:
+        decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
+        break;
+    case GST_VAAPI_CODEC_VC1:
+        decoder = gst_vaapi_decoder_vc1_new(display, decoder_caps);
+        break;
+    default:
+        decoder = NULL;
+        break;
+    }
     if (!decoder)
         g_error("could not create decoder");
     gst_caps_unref(decoder_caps);
