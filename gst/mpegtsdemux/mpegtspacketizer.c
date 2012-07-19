@@ -193,7 +193,9 @@ typedef struct _MpegTSPCR
   gint64 window_min;
   gint64 skew;
   gint64 prev_send_diff;
-  gint wrap_count;
+
+  /* Offset to apply to PCR to handle wraparounds */
+  guint64 pcroffset;
 
   /* Used for bitrate calculation */
   /* FIXME : Replace this later on with a balanced tree or sequence */
@@ -281,7 +283,7 @@ get_pcr_table (MpegTSPacketizer2 * packetizer, guint16 pid)
     res->skew = 0;
     res->prev_send_diff = GST_CLOCK_TIME_NONE;
     res->prev_out_time = GST_CLOCK_TIME_NONE;
-    res->wrap_count = 0;
+    res->pcroffset = 0;
   }
 
   return res;
@@ -3352,8 +3354,7 @@ calculate_skew (MpegTSPCR * pcr, guint64 pcrtime, GstClockTime time)
   GstClockTime gstpcrtime, out_time;
   guint64 slope;
 
-  gstpcrtime =
-      PCRTIME_TO_GSTTIME (pcrtime) + pcr->wrap_count * PCR_GST_MAX_VALUE;
+  gstpcrtime = PCRTIME_TO_GSTTIME (pcrtime) + pcr->pcroffset;
 
   /* first time, lock on to time and gstpcrtime */
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pcr->base_time))) {
@@ -3369,22 +3370,51 @@ calculate_skew (MpegTSPCR * pcr, guint64 pcrtime, GstClockTime time)
         GST_TIME_ARGS (gstpcrtime));
   }
 
-  if (G_LIKELY (gstpcrtime >= pcr->base_pcrtime))
+  /* Handle PCR wraparound and resets */
+  if (GST_CLOCK_TIME_IS_VALID (pcr->last_pcrtime) &&
+      gstpcrtime < pcr->last_pcrtime) {
+    if (pcr->last_pcrtime - gstpcrtime > PCR_GST_MAX_VALUE / 2) {
+      /* PCR wraparound */
+      GST_DEBUG ("PCR wrap");
+      pcr->pcroffset += PCR_GST_MAX_VALUE;
+      gstpcrtime = PCRTIME_TO_GSTTIME (pcrtime) + pcr->pcroffset;
+      send_diff = gstpcrtime - pcr->base_pcrtime;
+    } else if (GST_CLOCK_TIME_IS_VALID (time)
+        && pcr->last_pcrtime - gstpcrtime > 15 * GST_SECOND) {
+      /* Assume a reset */
+      GST_DEBUG ("PCR reset");
+      /* Calculate PCR we would have expected for the given input time,
+       * essentially applying the reverse correction process
+       *
+       * We want to find the PCR offset to apply
+       *   pcroffset = (corrected) gstpcrtime - (received) gstpcrtime
+       *
+       * send_diff = (corrected) gstpcrtime - pcr->base_pcrtime
+       * recv_diff = time - pcr->base_time
+       * out_time = pcr->base_time + send_diff
+       *
+       * We are assuming that send_diff == recv_diff
+       *   (corrected) gstpcrtime - pcr->base_pcrtime = time - pcr->base_time
+       * Giving us:
+       *   (corrected) gstpcrtime = time - pcr->base_time + pcr->base_pcrtime
+       *
+       * And therefore:
+       *   pcroffset = time - pcr->base_time + pcr->base_pcrtime - (received) gstpcrtime
+       **/
+      pcr->pcroffset += time - pcr->base_time + pcr->base_pcrtime - gstpcrtime;
+      gstpcrtime = PCRTIME_TO_GSTTIME (pcrtime) + pcr->pcroffset;
+      send_diff = gstpcrtime - pcr->base_pcrtime;
+      GST_DEBUG ("Introduced offset is now %" GST_TIME_FORMAT
+          " corrected pcr time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (pcr->pcroffset), GST_TIME_ARGS (gstpcrtime));
+    } else {
+      GST_WARNING ("backward timestamps at server but no timestamps");
+      send_diff = 0;
+      /* at least try to get a new timestamp.. */
+      pcr->base_time = GST_CLOCK_TIME_NONE;
+    }
+  } else
     send_diff = gstpcrtime - pcr->base_pcrtime;
-  else if (GST_CLOCK_TIME_IS_VALID (time)
-      && (pcr->last_pcrtime - gstpcrtime > PCR_GST_MAX_VALUE / 2)) {
-    /* Detect wraparounds */
-    GST_DEBUG ("PCR wrap");
-    pcr->wrap_count++;
-    gstpcrtime =
-        PCRTIME_TO_GSTTIME (pcrtime) + pcr->wrap_count * PCR_GST_MAX_VALUE;
-    send_diff = gstpcrtime - pcr->base_pcrtime;
-  } else {
-    GST_WARNING ("backward timestamps at server but no timestamps");
-    send_diff = 0;
-    /* at least try to get a new timestamp.. */
-    pcr->base_time = GST_CLOCK_TIME_NONE;
-  }
 
   GST_DEBUG ("gstpcr %" GST_TIME_FORMAT ", buftime %" GST_TIME_FORMAT ", base %"
       GST_TIME_FORMAT ", send_diff %" GST_TIME_FORMAT,
@@ -3626,7 +3656,9 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer, GstClockTime pts,
     GST_DEBUG ("pts %" G_GUINT64_FORMAT " base_pcrtime:%" G_GUINT64_FORMAT
         " base_time:%" GST_TIME_FORMAT, pts, pcrtable->base_pcrtime,
         GST_TIME_ARGS (pcrtable->base_time));
-    res = pts - pcrtable->base_pcrtime + pcrtable->base_time + pcrtable->skew;
+    res =
+        pts + pcrtable->pcroffset - pcrtable->base_pcrtime +
+        pcrtable->base_time + pcrtable->skew;
   } else
     /* If not, use pcr observations */
   if (packetizer->calculate_offset && pcrtable->first_pcr != -1) {
