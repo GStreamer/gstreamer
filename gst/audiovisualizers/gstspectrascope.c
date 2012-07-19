@@ -209,7 +209,7 @@ gst_spectra_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
      * or even better do a log mapping? */
     fr = (gfloat) fdata[1 + x].r / 512.0;
     fi = (gfloat) fdata[1 + x].i / 512.0;
-    y = (guint) (h * fabs (fr * fr + fi * fi));
+    y = (guint) (h * sqrt (fr * fr + fi * fi));
     if (y > h)
       y = h;
     y = h - y;
