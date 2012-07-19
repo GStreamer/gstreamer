@@ -264,6 +264,8 @@ parse_sequence_header (GstSchroDec * schro_dec, guint8 * data, int size)
   GST_DEBUG ("Pixel aspect ratio is %d/%d", state->info.par_n,
       state->info.par_d);
 
+  gst_video_decoder_negotiate (GST_VIDEO_DECODER (schro_dec));
+
 beach:
   if (state)
     gst_video_codec_state_unref (state);
