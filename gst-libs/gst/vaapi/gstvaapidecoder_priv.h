@@ -128,31 +128,35 @@ struct _GstVaapiDecoderPrivate {
     guint               is_interlaced   : 1;
 };
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_set_picture_size(
     GstVaapiDecoder    *decoder,
     guint               width,
     guint               height
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_set_framerate(
     GstVaapiDecoder    *decoder,
     guint               fps_n,
     guint               fps_d
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_set_pixel_aspect_ratio(
     GstVaapiDecoder    *decoder,
     guint               par_n,
     guint               par_d
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced)
-    attribute_hidden;
+gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_decoder_ensure_context(
     GstVaapiDecoder    *decoder,
@@ -160,25 +164,27 @@ gst_vaapi_decoder_ensure_context(
     GstVaapiEntrypoint  entrypoint,
     guint               width,
     guint               height
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_decoder_push_buffer_sub(
     GstVaapiDecoder *decoder,
     GstBuffer       *buffer,
     guint            offset,
     guint            size
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_push_surface_proxy(
     GstVaapiDecoder      *decoder,
     GstVaapiSurfaceProxy *proxy
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 GstVaapiDecoderStatus
-gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder)
-    attribute_hidden;
+gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder);
 
 G_END_DECLS
 

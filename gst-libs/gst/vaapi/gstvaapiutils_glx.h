@@ -45,33 +45,33 @@ typedef void (*PFNGLXDESTROYPIXMAPPROC)(Display *, GLXPixmap);
 #define GL_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING_EXT
 #endif
 
+G_GNUC_INTERNAL
 const char *
-gl_get_error_string(GLenum error)
-    attribute_hidden;
+gl_get_error_string(GLenum error);
 
+G_GNUC_INTERNAL
 void
-gl_purge_errors(void)
-    attribute_hidden;
+gl_purge_errors(void);
 
+G_GNUC_INTERNAL
 gboolean
-gl_check_error(void)
-    attribute_hidden;
+gl_check_error(void);
 
+G_GNUC_INTERNAL
 gboolean
-gl_get_param(GLenum param, guint *pval)
-    attribute_hidden;
+gl_get_param(GLenum param, guint *pval);
 
+G_GNUC_INTERNAL
 gboolean
-gl_get_texture_param(GLenum target, GLenum param, guint *pval)
-    attribute_hidden;
+gl_get_texture_param(GLenum target, GLenum param, guint *pval);
 
+G_GNUC_INTERNAL
 void
-gl_set_bgcolor(guint32 color)
-    attribute_hidden;
+gl_set_bgcolor(guint32 color);
 
+G_GNUC_INTERNAL
 void
-gl_resize(guint width, guint height)
-    attribute_hidden;
+gl_resize(guint width, guint height);
 
 typedef struct _GLContextState GLContextState;
 struct _GLContextState {
@@ -82,25 +82,25 @@ struct _GLContextState {
     guint        swapped_buffers : 1;
 };
 
+G_GNUC_INTERNAL
 GLContextState *
-gl_create_context(Display *dpy, int screen, GLContextState *parent)
-    attribute_hidden;
+gl_create_context(Display *dpy, int screen, GLContextState *parent);
 
+G_GNUC_INTERNAL
 void
-gl_destroy_context(GLContextState *cs)
-    attribute_hidden;
+gl_destroy_context(GLContextState *cs);
 
+G_GNUC_INTERNAL
 void
-gl_get_current_context(GLContextState *cs)
-    attribute_hidden;
+gl_get_current_context(GLContextState *cs);
 
+G_GNUC_INTERNAL
 gboolean
-gl_set_current_context(GLContextState *new_cs, GLContextState *old_cs)
-    attribute_hidden;
+gl_set_current_context(GLContextState *new_cs, GLContextState *old_cs);
 
+G_GNUC_INTERNAL
 void
-gl_swap_buffers(GLContextState *cs)
-    attribute_hidden;
+gl_swap_buffers(GLContextState *cs);
 
 typedef struct _GLTextureState GLTextureState;
 struct _GLTextureState {
@@ -110,17 +110,17 @@ struct _GLTextureState {
     guint       was_bound       : 1;
 };
 
+G_GNUC_INTERNAL
 gboolean
-gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture)
-    attribute_hidden;
+gl_bind_texture(GLTextureState *ts, GLenum target, GLuint texture);
 
+G_GNUC_INTERNAL
 void
-gl_unbind_texture(GLTextureState *ts)
-    attribute_hidden;
+gl_unbind_texture(GLTextureState *ts);
 
+G_GNUC_INTERNAL
 GLuint
-gl_create_texture(GLenum target, GLenum format, guint width, guint height)
-    attribute_hidden;
+gl_create_texture(GLenum target, GLenum format, guint width, guint height);
 
 typedef struct _GLVTable GLVTable;
 struct _GLVTable {
@@ -152,9 +152,9 @@ struct _GLVTable {
     guint                               has_multitexture        : 1;
 };
 
+G_GNUC_INTERNAL
 GLVTable *
-gl_get_vtable(void)
-    attribute_hidden;
+gl_get_vtable(void);
 
 typedef struct _GLPixmapObject GLPixmapObject;
 struct _GLPixmapObject {
@@ -169,21 +169,21 @@ struct _GLPixmapObject {
     guint           is_bound    : 1;
 };
 
+G_GNUC_INTERNAL
 GLPixmapObject *
-gl_create_pixmap_object(Display *dpy, guint width, guint height)
-    attribute_hidden;
+gl_create_pixmap_object(Display *dpy, guint width, guint height);
 
+G_GNUC_INTERNAL
 void
-gl_destroy_pixmap_object(GLPixmapObject *pixo)
-    attribute_hidden;
+gl_destroy_pixmap_object(GLPixmapObject *pixo);
 
+G_GNUC_INTERNAL
 gboolean
-gl_bind_pixmap_object(GLPixmapObject *pixo)
-    attribute_hidden;
+gl_bind_pixmap_object(GLPixmapObject *pixo);
 
+G_GNUC_INTERNAL
 gboolean
-gl_unbind_pixmap_object(GLPixmapObject *pixo)
-    attribute_hidden;
+gl_unbind_pixmap_object(GLPixmapObject *pixo);
 
 typedef struct _GLFramebufferObject GLFramebufferObject;
 struct _GLFramebufferObject {
@@ -194,24 +194,25 @@ struct _GLFramebufferObject {
     guint           is_bound    : 1;
 };
 
+G_GNUC_INTERNAL
 GLFramebufferObject *
 gl_create_framebuffer_object(
     GLenum target,
     GLuint texture,
     guint  width,
     guint  height
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 void
-gl_destroy_framebuffer_object(GLFramebufferObject *fbo)
-    attribute_hidden;
+gl_destroy_framebuffer_object(GLFramebufferObject *fbo);
 
+G_GNUC_INTERNAL
 gboolean
-gl_bind_framebuffer_object(GLFramebufferObject *fbo)
-    attribute_hidden;
+gl_bind_framebuffer_object(GLFramebufferObject *fbo);
 
+G_GNUC_INTERNAL
 gboolean
-gl_unbind_framebuffer_object(GLFramebufferObject *fbo)
-    attribute_hidden;
+gl_unbind_framebuffer_object(GLFramebufferObject *fbo);
 
 #endif /* GST_VAAPI_UTILS_GLX_H */

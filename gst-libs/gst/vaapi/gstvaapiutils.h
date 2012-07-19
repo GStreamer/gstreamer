@@ -33,21 +33,22 @@
 #endif
 
 /** Check VA status for success or print out an error */
+G_GNUC_INTERNAL
 gboolean
-vaapi_check_status(VAStatus status, const char *msg)
-    attribute_hidden;
+vaapi_check_status(VAStatus status, const char *msg);
 
 /** Maps VA buffer */
+G_GNUC_INTERNAL
 void *
-vaapi_map_buffer(VADisplay dpy, VABufferID buf_id)
-    attribute_hidden;
+vaapi_map_buffer(VADisplay dpy, VABufferID buf_id);
 
 /** Unmaps VA buffer */
+G_GNUC_INTERNAL
 void
-vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf)
-    attribute_hidden;
+vaapi_unmap_buffer(VADisplay dpy, VABufferID buf_id, void **pbuf);
 
 /** Creates and maps VA buffer */
+G_GNUC_INTERNAL
 gboolean
 vaapi_create_buffer(
     VADisplay     dpy,
@@ -57,27 +58,27 @@ vaapi_create_buffer(
     gconstpointer data,
     VABufferID   *buf_id,
     gpointer     *mapped_data
-) attribute_hidden;
+);
 
 /** Destroy VA buffer */
+G_GNUC_INTERNAL
 void
-vaapi_destroy_buffer(VADisplay dpy, VABufferID *buf_id)
-    attribute_hidden;
+vaapi_destroy_buffer(VADisplay dpy, VABufferID *buf_id);
 
 /** Return a string representation of a VAProfile */
-const char *string_of_VAProfile(VAProfile profile)
-    attribute_hidden;
+G_GNUC_INTERNAL
+const char *string_of_VAProfile(VAProfile profile);
 
 /** Return a string representation of a VAEntrypoint */
-const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
-    attribute_hidden;
+G_GNUC_INTERNAL
+const char *string_of_VAEntrypoint(VAEntrypoint entrypoint);
 
+G_GNUC_INTERNAL
 guint
-from_GstVaapiSurfaceRenderFlags(guint flags)
-    attribute_hidden;
+from_GstVaapiSurfaceRenderFlags(guint flags);
 
+G_GNUC_INTERNAL
 guint
-to_GstVaapiSurfaceStatus(guint va_flags)
-    attribute_hidden;
+to_GstVaapiSurfaceStatus(guint va_flags);
 
 #endif /* GST_VAAPI_UTILS_H */

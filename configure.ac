@@ -113,32 +113,6 @@ AC_ARG_ENABLE(vaapisink-glx,
                    [enable OpenGL/X11 to vaapisink @<:@default=yes@:>@]),
     [], [enable_vaapisink_glx="no"])
 
-dnl Check for __attribute__((visibility()))
-AC_CACHE_CHECK([whether __attribute__((visibility())) is supported],
-  vaapi_cv_visibility_attribute,
-  [cat > conftest.c <<EOF
-int foo __attribute__ ((visibility ("hidden"))) = 1;
-int bar __attribute__ ((visibility ("protected"))) = 1;
-EOF
-  vaapi_cv_visibility_attribute=no
-  if ${CC-cc} -Werror -S conftest.c -o conftest.s >/dev/null 2>&1; then
-    if grep '\.hidden.*foo' conftest.s >/dev/null; then
-      if grep '\.protected.*bar' conftest.s >/dev/null; then
-	vaapi_cv_visibility_attribute=yes
-      fi
-    fi
-  fi
-  rm -f conftest.[cs]
-])
-if test $vaapi_cv_visibility_attribute = yes; then
-  vaapi_cv_visibility_attribute_hidden="__attribute__((visibility(\"hidden\")))"
-else
-  vaapi_cv_visibility_attribute_hidden=""
-fi
-AC_DEFINE_UNQUOTED([attribute_hidden],
-                   [$vaapi_cv_visibility_attribute_hidden],
-                   [Define the "hidden" visibility attribute])
-
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
 

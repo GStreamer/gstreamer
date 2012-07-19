@@ -163,32 +163,33 @@ struct _GstVaapiPictureClass {
     GstVaapiCodecObjectClass    parent_class;
 };
 
+G_GNUC_INTERNAL
 GType
-gst_vaapi_picture_get_type(void) G_GNUC_CONST
-    attribute_hidden;
+gst_vaapi_picture_get_type(void) G_GNUC_CONST;
 
+G_GNUC_INTERNAL
 GstVaapiPicture *
 gst_vaapi_picture_new(
     GstVaapiDecoder *decoder,
     gconstpointer    param,
     guint            param_size
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 GstVaapiPicture *
-gst_vaapi_picture_new_field(GstVaapiPicture *picture)
-    attribute_hidden;
+gst_vaapi_picture_new_field(GstVaapiPicture *picture);
 
+G_GNUC_INTERNAL
 void
-gst_vaapi_picture_add_slice(GstVaapiPicture *picture, GstVaapiSlice *slice)
-    attribute_hidden;
+gst_vaapi_picture_add_slice(GstVaapiPicture *picture, GstVaapiSlice *slice);
 
+G_GNUC_INTERNAL
 gboolean
-gst_vaapi_picture_decode(GstVaapiPicture *picture)
-    attribute_hidden;
+gst_vaapi_picture_decode(GstVaapiPicture *picture);
 
+G_GNUC_INTERNAL
 gboolean
-gst_vaapi_picture_output(GstVaapiPicture *picture)
-    attribute_hidden;
+gst_vaapi_picture_output(GstVaapiPicture *picture);
 
 static inline gpointer
 gst_vaapi_picture_ref(gpointer ptr)
@@ -262,10 +263,11 @@ struct _GstVaapiSliceClass {
     GstVaapiCodecObjectClass    parent_class;
 };
 
+G_GNUC_INTERNAL
 GType
-gst_vaapi_slice_get_type(void) G_GNUC_CONST
-    attribute_hidden;
+gst_vaapi_slice_get_type(void) G_GNUC_CONST;
 
+G_GNUC_INTERNAL
 GstVaapiSlice *
 gst_vaapi_slice_new(
     GstVaapiDecoder *decoder,
@@ -273,7 +275,7 @@ gst_vaapi_slice_new(
     guint            param_size,
     const guchar    *data,
     guint            data_size
-) attribute_hidden;
+);
 
 /* ------------------------------------------------------------------------- */
 /* --- Helpers to create codec-dependent objects                         --- */

@@ -25,14 +25,15 @@
 #include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_surface_set_parent_context(
     GstVaapiSurface *surface,
     GstVaapiContext *context
-) attribute_hidden;
+);
 
+G_GNUC_INTERNAL
 GstVaapiContext *
-gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface)
-    attribute_hidden;
+gst_vaapi_surface_get_parent_context(GstVaapiSurface *surface);
 
 #endif /* GST_VAAPI_SURFACE_PRIV_H */

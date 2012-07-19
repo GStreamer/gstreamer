@@ -91,21 +91,21 @@ struct _GstVaapiDpbClass {
     gboolean          (*add)    (GstVaapiDpb *dpb, GstVaapiPicture *picture);
 };
 
+G_GNUC_INTERNAL
 GType
-gst_vaapi_dpb_get_type(void) G_GNUC_CONST
-    attribute_hidden;
+gst_vaapi_dpb_get_type(void) G_GNUC_CONST;
 
+G_GNUC_INTERNAL
 void
-gst_vaapi_dpb_flush(GstVaapiDpb *dpb)
-    attribute_hidden;
+gst_vaapi_dpb_flush(GstVaapiDpb *dpb);
 
+G_GNUC_INTERNAL
 gboolean
-gst_vaapi_dpb_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
-    attribute_hidden;
+gst_vaapi_dpb_add(GstVaapiDpb *dpb, GstVaapiPicture *picture);
 
+G_GNUC_INTERNAL
 guint
-gst_vaapi_dpb_size(GstVaapiDpb *dpb)
-    attribute_hidden;
+gst_vaapi_dpb_size(GstVaapiDpb *dpb);
 
 static inline gpointer
 gst_vaapi_dpb_ref(gpointer ptr)
@@ -170,21 +170,22 @@ struct _GstVaapiDpbMpeg2Class {
     GstVaapiDpbClass    parent_class;
 };
 
+G_GNUC_INTERNAL
 GType
-gst_vaapi_dpb_mpeg2_get_type(void) G_GNUC_CONST
-    attribute_hidden;
+gst_vaapi_dpb_mpeg2_get_type(void) G_GNUC_CONST;
 
+G_GNUC_INTERNAL
 GstVaapiDpb *
-gst_vaapi_dpb_mpeg2_new(void)
-    attribute_hidden;
+gst_vaapi_dpb_mpeg2_new(void);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_dpb_mpeg2_get_references(
     GstVaapiDpb        *dpb,
     GstVaapiPicture    *picture,
     GstVaapiPicture   **prev_picture_ptr,
     GstVaapiPicture   **next_picture_ptr
-) attribute_hidden;
+);
 
 G_END_DECLS
 

@@ -26,16 +26,19 @@
 #include <X11/Xlib.h>
 #include <glib.h>
 
-void x11_trap_errors(void)
-    attribute_hidden;
+G_GNUC_INTERNAL
+void
+x11_trap_errors(void);
 
-int x11_untrap_errors(void)
-    attribute_hidden;
+G_GNUC_INTERNAL
+int
+x11_untrap_errors(void);
 
+G_GNUC_INTERNAL
 Window
-x11_create_window(Display *dpy, guint w, guint h, Visual *vis, Colormap cmap)
-    attribute_hidden;
+x11_create_window(Display *dpy, guint w, guint h, Visual *vis, Colormap cmap);
 
+G_GNUC_INTERNAL
 gboolean
 x11_get_geometry(
     Display    *dpy,
@@ -44,6 +47,6 @@ x11_get_geometry(
     gint       *py,
     guint      *pwidth,
     guint      *pheight
-) attribute_hidden;
+);
 
 #endif /* GST_VAAPI_UTILS_X11_H */
