@@ -499,7 +499,7 @@ gst_message_new_tag (GstObject * src, GstTagList * tag_list)
  * The application must be prepared to receive BUFFERING messages in the
  * PREROLLING state and may only set the pipeline to PLAYING after receiving a
  * message with @percent set to 100, which can happen after the pipeline
- * completed prerolling. 
+ * completed prerolling.
  *
  * MT safe.
  *
@@ -510,16 +510,18 @@ gst_message_new_buffering (GstObject * src, gint percent)
 {
   GstMessage *message;
   GstStructure *structure;
+  gint64 buffering_left;
 
   g_return_val_if_fail (percent >= 0 && percent <= 100, NULL);
+
+  buffering_left = (percent == 100 ? 0 : -1);
 
   structure = gst_structure_new_id (GST_QUARK (MESSAGE_BUFFERING),
       GST_QUARK (BUFFER_PERCENT), G_TYPE_INT, percent,
       GST_QUARK (BUFFERING_MODE), GST_TYPE_BUFFERING_MODE, GST_BUFFERING_STREAM,
       GST_QUARK (AVG_IN_RATE), G_TYPE_INT, -1,
       GST_QUARK (AVG_OUT_RATE), G_TYPE_INT, -1,
-      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, G_GINT64_CONSTANT (-1),
-      GST_QUARK (ESTIMATED_TOTAL), G_TYPE_INT64, G_GINT64_CONSTANT (-1), NULL);
+      GST_QUARK (BUFFERING_LEFT), G_TYPE_INT64, buffering_left, NULL);
   message = gst_message_new_custom (GST_MESSAGE_BUFFERING, src, structure);
 
   return message;
