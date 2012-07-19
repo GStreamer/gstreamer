@@ -172,9 +172,11 @@ main(int argc, char *argv[])
         case GST_VAAPI_CODEC_H264:
             decoder = gst_vaapi_decoder_h264_new(display, decoder_caps);
             break;
+#if USE_JPEG_DECODER
         case GST_VAAPI_CODEC_JPEG:
             decoder = gst_vaapi_decoder_jpeg_new(display, decoder_caps);
             break;
+#endif
         case GST_VAAPI_CODEC_MPEG2:
             decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
             break;
