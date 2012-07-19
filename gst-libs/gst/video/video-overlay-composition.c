@@ -327,7 +327,7 @@ gst_video_overlay_composition_new (GstVideoOverlayRectangle * rectangle)
    * an empty new + _add() in a loop is easier? */
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), NULL);
 
-  comp = (GstVideoOverlayComposition *) g_slice_new0 (GstVideoOverlayRectangle);
+  comp = g_slice_new0 (GstVideoOverlayComposition);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (comp), 0,
       GST_TYPE_VIDEO_OVERLAY_COMPOSITION,
@@ -694,7 +694,7 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
   g_return_val_if_fail (gst_buffer_get_size (pixels) >= height * width, NULL);
   g_return_val_if_fail (height > 0 && width > 0, NULL);
 
-  rect = (GstVideoOverlayRectangle *) g_slice_new0 (GstVideoOverlayRectangle);
+  rect = g_slice_new0 (GstVideoOverlayRectangle);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (rect), 0,
       GST_TYPE_VIDEO_OVERLAY_RECTANGLE,
