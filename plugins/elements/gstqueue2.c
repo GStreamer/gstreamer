@@ -779,7 +779,6 @@ update_buffering (GstQueue2 * queue)
     GST_LOG_OBJECT (queue, "we are EOS");
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
-
     if (!QUEUE_IS_USING_RING_BUFFER (queue)) {
       percent = GET_PERCENT (bytes, 0);
     } else {
@@ -811,7 +810,7 @@ update_buffering (GstQueue2 * queue)
   if (post) {
     GstMessage *message;
     GstBufferingMode mode;
-    gint64 buffering_left = -1;
+    gint64 buffering_left;
 
     /* scale to high percent so that it becomes the 100% mark */
     percent = percent * 100 / queue->high_percent;
@@ -819,29 +818,27 @@ update_buffering (GstQueue2 * queue)
     if (percent > 100)
       percent = 100;
 
+    buffering_left = (percent == 100 ? 0 : -1);
+
     if (percent != queue->buffering_percent) {
       queue->buffering_percent = percent;
 
       if (!QUEUE_IS_USING_QUEUE (queue)) {
-        gint64 duration;
-
         if (QUEUE_IS_USING_RING_BUFFER (queue))
           mode = GST_BUFFERING_TIMESHIFT;
         else
           mode = GST_BUFFERING_DOWNLOAD;
-
-        if (queue->byte_in_rate > 0) {
-          if (gst_pad_peer_query_duration (queue->sinkpad, GST_FORMAT_BYTES,
-                  &duration)) {
-            buffering_left =
-                (gdouble) ((duration -
-                    queue->current->writing_pos) * 1000) / queue->byte_in_rate;
-          }
-        } else {
-          buffering_left = G_MAXINT64;
-        }
       } else {
         mode = GST_BUFFERING_STREAM;
+      }
+
+      if (queue->use_rate_estimate) {
+        guint64 max, cur;
+
+        max = queue->max_level.rate_time;
+        cur = queue->cur_level.rate_time;
+        if (percent != 100 && max > cur)
+          buffering_left = (max - cur) / 1000000;
       }
 
       GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
