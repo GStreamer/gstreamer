@@ -644,8 +644,9 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
       return FALSE;
     }
     /* we can (re)construct the start later on, but not the end */
-    if (stop_type != GST_SEEK_TYPE_NONE) {
-      GST_LOG_OBJECT (demux, "streaming; end type must be NONE");
+    if (stop_type != GST_SEEK_TYPE_NONE &&
+        (stop_type != GST_SEEK_TYPE_SET || GST_CLOCK_TIME_IS_VALID (stop))) {
+      GST_LOG_OBJECT (demux, "streaming; end position must be NONE");
       return FALSE;
     }
     gst_event_ref (event);
