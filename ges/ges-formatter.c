@@ -276,6 +276,10 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
 gboolean
 ges_formatter_can_save_uri (const gchar * uri, GError ** error)
 {
+  GFile *file = NULL;
+  GFile *dir = NULL;
+  GFileInfo *info = NULL;
+
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("%s invalid uri!", uri);
     return FALSE;
@@ -287,6 +291,39 @@ ges_formatter_can_save_uri (const gchar * uri, GError ** error)
     g_free (proto);
     return FALSE;
   }
+
+  /* Check if URI or parent directory is writeable */
+  file = g_file_new_for_uri (uri);
+
+  if (g_file_query_file_type (file, G_FILE_QUERY_INFO_NONE, NULL)
+      == G_FILE_TYPE_DIRECTORY) {
+    dir = file;
+  } else {
+    dir = g_file_get_parent (file);
+
+    if (dir == NULL)
+      return FALSE;
+  }
+
+  info = g_file_query_info (dir, G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE,
+      G_FILE_QUERY_INFO_NONE, NULL, error);
+
+  if (error && *error != NULL) {
+    GST_ERROR ("Unable to write to directory: %s", (*error)->message);
+
+    return FALSE;
+  } else {
+    gboolean writeable = g_file_info_get_attribute_boolean (info,
+        G_FILE_ATTRIBUTE_ACCESS_CAN_WRITE);
+    if (!writeable) {
+      GST_ERROR ("Unable to write to directory");
+      return FALSE;
+    }
+  }
+
+  g_object_unref (file);
+  g_object_unref (dir);
+  g_object_unref (info);
 
   /* TODO: implement file format registry */
   /* TODO: search through the registry and chose a GESFormatter class that can
