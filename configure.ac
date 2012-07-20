@@ -277,21 +277,43 @@ dnl ---------------------------------------------------------------------------
 dnl Check for X11
 PKG_CHECK_MODULES(X11, [x11])
 
-dnl Check for OpenGL
-USE_GLX=1
-if test "$enable_glx" != "yes"; then
-    USE_GLX=0
+dnl OpenGL
+enable_opengl="no"
+if test "$enable_glx" = "yes"; then
+    enable_opengl="yes"
 fi
-GLX_CFLAGS=""
-GLX_LIBS=""
-AC_CHECK_HEADERS([GL/gl.h GL/glext.h GL/glx.h], [], [USE_GLX=0], [
+
+HAVE_GL=0
+if test "$enable_opengl" = "yes"; then
+    HAVE_GL=1
+    PKG_CHECK_MODULES([GL], [gl], [:], [HAVE_GL=0])
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
+    AC_CHECK_HEADERS([GL/gl.h GL/glext.h], [:], [HAVE_GL=0], [
 #ifdef HAVE_GL_GL_H
 # include <GL/gl.h>
 #endif
-])
-AC_CHECK_LIB(GL, glXCreateContext, [GLX_LIBS="-lGL"], [USE_GLX=0])
-AC_SUBST(GLX_CFLAGS)
-AC_SUBST(GLX_LIBS)
+    ])
+    CPPFLAGS="$saved_CPPFLAGS"
+fi
+
+dnl ... GLX
+USE_GLX=0
+if test "$enable_glx" = "yes" -a $HAVE_GL -eq 1; then
+    USE_GLX=1
+    saved_CPPFLAGS="$CPPFLAGS"
+    saved_LIBS="$LIBS"
+    CPPFLAGS="$CPPFLAGS $GL_CFLAGS"
+    LIBS="$LIBS $GL_LIBS"
+    AC_CHECK_HEADERS([GL/glx.h], [:], [USE_GLX=0], [
+#ifdef HAVE_GL_GL_H
+# include <GL/gl.h>
+#endif
+    ])
+    AC_CHECK_LIB([GL], [glXCreateContext], [:], [USE_GLX=0])
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+fi
 
 dnl ---------------------------------------------------------------------------
 dnl -- VA-API                                                                --
