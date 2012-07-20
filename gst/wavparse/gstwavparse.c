@@ -846,11 +846,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     if (!event || wav->state != GST_WAVPARSE_DATA) {
       if (wav->start_segment)
         gst_event_unref (wav->start_segment);
-      // TODO
-/*      wav->start_segment =
-          gst_event_new_new_segment (FALSE, wav->segment.rate,
-          wav->segment.format, wav->segment.last_stop, wav->segment.duration,
-          wav->segment.last_stop);*/
+      wav->start_segment = gst_event_new_segment (&wav->segment);
       res = TRUE;
     } else {
       /* convert seek positions to byte positions in data sections */
@@ -2537,7 +2533,8 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       segment.stop = stop;
 
       /* accept upstream's notion of segment and distribute along */
-      segment.time = segment.start = segment.position;
+      segment.format = wav->segment.format;
+      segment.time = segment.position = segment.start;
       segment.duration = wav->segment.duration;
       segment.base = gst_segment_to_running_time (&wav->segment,
           GST_FORMAT_TIME, wav->segment.position);
