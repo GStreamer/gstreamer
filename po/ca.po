@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -945,9 +945,6 @@ msgstr "capacitats detectades al flux"
 
 msgid "minimum"
 msgstr "mínim"
-
-msgid "maximum"
-msgstr "màxim"
 
 msgid "force caps"
 msgstr "força les capacitats"

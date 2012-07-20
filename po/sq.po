@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -956,9 +956,6 @@ msgstr "u zbuluan mundësi në fluks"
 
 msgid "minimum"
 msgstr "minimum"
-
-msgid "maximum"
-msgstr "maksimum"
 
 msgid "force caps"
 msgstr ""

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2011-04-26 20:25+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -941,9 +941,6 @@ msgstr "обнаруженные возможности потока"
 
 msgid "minimum"
 msgstr "минимум"
-
-msgid "maximum"
-msgstr "максимум"
 
 msgid "force caps"
 msgstr "форсировать возможности"

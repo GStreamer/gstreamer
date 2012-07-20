@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -1118,11 +1118,6 @@ msgstr "in"
 #, fuzzy
 msgid "minimum"
 msgstr "Gito"
-
-# officecfg/registry\schema\org\openoffice\Office\Calc.xcs:....Layout.Other.StatusbarFunction..4.text
-#, fuzzy
-msgid "maximum"
-msgstr "Kinini"
 
 msgid "force caps"
 msgstr ""

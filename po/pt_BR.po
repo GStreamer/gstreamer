@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2011-01-08 01:36-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -957,9 +957,6 @@ msgstr "capacidades detectadas no fluxo"
 
 msgid "minimum"
 msgstr "mínimo"
-
-msgid "maximum"
-msgstr "máximo"
 
 msgid "force caps"
 msgstr "forçar Caps"

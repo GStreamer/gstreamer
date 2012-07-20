@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2011-12-01 08:17+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -937,9 +937,6 @@ msgstr "detekované schopnosti v proudu"
 
 msgid "minimum"
 msgstr "minimum"
-
-msgid "maximum"
-msgstr "maximum"
 
 msgid "force caps"
 msgstr "vynutit schopnosti"

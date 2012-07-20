@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 15:42+0200\n"
+"POT-Creation-Date: 2012-07-20 09:34+0200\n"
 "PO-Revision-Date: 2012-01-28 11:44+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -939,9 +939,6 @@ msgstr "mendeteksi kemampuan dalam arus"
 
 msgid "minimum"
 msgstr "minimum"
-
-msgid "maximum"
-msgstr "maksimum"
 
 msgid "force caps"
 msgstr "paksa huruf"
