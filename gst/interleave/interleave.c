@@ -831,11 +831,13 @@ gst_interleave_sink_event (GstCollectPads * pads, GstCollectData * data,
       gst_event_replace (&self->pending_segment, NULL);
       GST_OBJECT_UNLOCK (self);
       break;
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
+    {
       GST_OBJECT_LOCK (self);
       gst_event_replace (&self->pending_segment, event);
       GST_OBJECT_UNLOCK (self);
       break;
+    }
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
@@ -1243,11 +1245,48 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
   GST_OBJECT_LOCK (self);
   if (self->pending_segment) {
     GstEvent *event;
+    GstSegment segment;
 
     event = self->pending_segment;
     self->pending_segment = NULL;
     GST_OBJECT_UNLOCK (self);
 
+    /* convert the input segment to time now */
+    gst_event_copy_segment (event, &segment);
+
+    if (segment.format != GST_FORMAT_TIME) {
+      gst_event_unref (event);
+
+      /* not time, convert */
+      switch (segment.format) {
+        case GST_FORMAT_BYTES:
+          segment.start *= width;
+          if (segment.stop != -1)
+            segment.stop *= width;
+          if (segment.position != -1)
+            segment.position *= width;
+          /* fallthrough for the samples case */
+        case GST_FORMAT_DEFAULT:
+          segment.start =
+              gst_util_uint64_scale_int (segment.start, GST_SECOND, self->rate);
+          if (segment.stop != -1)
+            segment.stop =
+                gst_util_uint64_scale_int (segment.stop, GST_SECOND,
+                self->rate);
+          if (segment.position != -1)
+            segment.position =
+                gst_util_uint64_scale_int (segment.position, GST_SECOND,
+                self->rate);
+          break;
+        default:
+          GST_WARNING ("can't convert segment values");
+          segment.start = 0;
+          segment.stop = -1;
+          segment.position = 0;
+          break;
+      }
+      event = gst_event_new_segment (&segment);
+    }
     gst_pad_push_event (self->src, event);
 
     GST_OBJECT_LOCK (self);
