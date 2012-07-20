@@ -19,11 +19,12 @@
  *  Boston, MA 02110-1301 USA
 */
 
+#include "config.h"
 #include <gst/video/video.h>
-#ifdef USE_X11
+#if USE_X11
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
-#ifdef USE_GLX
+#if USE_GLX
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
 
@@ -155,7 +156,7 @@ main(int argc, char *argv[])
 
     gst_init(&argc, &argv);
 
-#ifdef USE_X11
+#if USE_X11
     g_print("#\n");
     g_print("# Create display with gst_vaapi_display_x11_new()\n");
     g_print("#\n");
@@ -216,7 +217,7 @@ main(int argc, char *argv[])
     g_print("\n");
 #endif
 
-#ifdef USE_GLX
+#if USE_GLX
     g_print("#\n");
     g_print("# Create display with gst_vaapi_display_glx_new()\n");
     g_print("#\n");
