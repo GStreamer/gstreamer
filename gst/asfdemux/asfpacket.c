@@ -147,7 +147,8 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
   }
 
   /* make timestamps start from 0 */
-  if (G_LIKELY (demux->first_ts < payload->ts))
+  if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (demux->first_ts) &&
+          demux->first_ts < payload->ts))
     payload->ts -= demux->first_ts;
   else
     payload->ts = 0;
