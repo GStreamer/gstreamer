@@ -86,6 +86,7 @@ GST_PLUGINS_BAD_VERSION_REQUIRED=gst_plugins_bad_version
 AC_SUBST(GST_MAJORMINOR)
 AC_SUBST(GST_VERSION_REQUIRED)
 AC_SUBST(GST_PLUGINS_BASE_VERSION_REQUIRED)
+AC_SUBST(GST_PLUGINS_BAD_VERSION_REQUIRED)
 
 dnl Use pretty build output with automake >= 1.11
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])], [
@@ -129,16 +130,19 @@ GLIB_VERSION_REQUIRED=glib_version
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= $GLIB_VERSION_REQUIRED])
 AC_SUBST(GLIB_VERSION_REQUIRED)
 
-dnl Check for GStreamer
-PKG_CHECK_MODULES([GST],
-    [gstreamer-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
-)
+dnl ---------------------------------------------------------------------------
+dnl -- GStreamer                                                             --
+dnl ---------------------------------------------------------------------------
+
+dnl GStreamer Core
+PKG_CHECK_MODULES([GST],      [gstreamer-$GST_MAJORMINOR >= gst_version])
+PKG_CHECK_MODULES([GST_BASE], [gstreamer-base-$GST_MAJORMINOR >= gst_version])
 
 AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
     saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $GST_CFLAGS"
+    CFLAGS="$CFLAGS $GST_BASE_CFLAGS"
     saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS"
+    LIBS="$LIBS $GST_BASE_LIBS"
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
             [[#include <gst/base/gstbasesink.h>]],
@@ -153,11 +157,13 @@ if test "$ac_cv_have_gst_base_sink_query" != "yes"; then
     AC_MSG_ERROR([GstBaseSink does not contain the 'query' vfunc])
 fi
 
-dnl Check for GStreamer plugins-base
+dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
-    [gstreamer-plugins-base-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
-)
+    [gstreamer-plugins-base-$GST_MAJORMINOR >= gst_plugins_base_version])
+PKG_CHECK_MODULES([GST_INTERFACES],
+    [gstreamer-interfaces-$GST_MAJORMINOR >= gst_plugins_base_version])
 
+dnl ... GST_PLUGINS_BASE_CHECK_VERSION() implementation
 V=`$PKG_CONFIG --modversion gstreamer-plugins-base-$GST_MAJORMINOR`
 GST_PLUGINS_BASE_MAJOR_VERSION=`echo "$V" | cut -d'.' -f1`
 GST_PLUGINS_BASE_MINOR_VERSION=`echo "$V" | cut -d'.' -f2`
@@ -166,15 +172,9 @@ AC_SUBST(GST_PLUGINS_BASE_MAJOR_VERSION)
 AC_SUBST(GST_PLUGINS_BASE_MINOR_VERSION)
 AC_SUBST(GST_PLUGINS_BASE_MICRO_VERSION)
 
-dnl Check for GStreamer base
-PKG_CHECK_MODULES([GST_BASE],
-    [gstreamer-base-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
-)
-
-dnl Check for GStreamer video
+dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
-    [gstreamer-video-$GST_MAJORMINOR >= $GST_VERSION_REQUIRED]
-)
+    [gstreamer-video-$GST_MAJORMINOR >= gst_plugins_base_version])
 
 AC_CACHE_CHECK([for GstVideoOverlayComposition],
     ac_cv_have_gst_video_overlay_composition, [
@@ -196,19 +196,18 @@ if test "$ac_cv_have_gst_video_overlay_composition" != "yes"; then
     AC_MSG_ERROR([GstVideoOverlayComposition is not available])
 fi
 
-dnl Check for GStreamer basevideo
+dnl GStreamer -bad plugins
 PKG_CHECK_MODULES([GST_BASEVIDEO],
-    [gstreamer-basevideo-$GST_MAJORMINOR >= $GST_PLUGINS_BAD_VERSION_REQUIRED]
-)
+    [gstreamer-basevideo-$GST_MAJORMINOR >= gst_plugins_bad_version])
 
-dnl Check for GStreamer codec parsers
+dnl ... bitstream parsers
 USE_CODEC_PARSERS=1
 USE_LOCAL_CODEC_PARSERS=0
 
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-    [gstreamer-codecparsers-$GST_MAJORMINOR >= $GST_PLUGINS_BAD_VERSION_REQUIRED]
-)
+    [gstreamer-codecparsers-$GST_MAJORMINOR >= gst_plugins_bad_version])
 
+dnl ... 0.10.23 addition, could be implemented otherwise
 AC_CACHE_CHECK([for GstH264SliceHdr::n_emulation_prevention_bytes],
     ac_cv_have_gst_h264_slice_hdr_epb_count, [
     saved_CFLAGS="$CFLAGS"
@@ -232,6 +231,7 @@ if test "$ac_cv_have_gst_h264_slice_hdr_epb_count" = "yes"; then
         [Defined to 1 if GstH264SliceHdr::n_emulation_prevention_bytes exists.])
 fi
 
+dnl ... JPEG parser, not upstream yet
 AC_CACHE_CHECK([for JPEG parser],
     ac_cv_have_gst_jpeg_parser, [
     saved_CFLAGS="$CFLAGS"
@@ -254,11 +254,6 @@ if test "$ac_cv_have_gst_jpeg_parser" = "yes"; then
         [Defined to 1 if JPEG parser exists.])
 fi
 AM_CONDITIONAL(USE_LOCAL_CODEC_PARSERS, test $USE_LOCAL_CODEC_PARSERS -eq 1)
-
-dnl Check for GStreamer interfaces
-PKG_CHECK_MODULES([GST_INTERFACES],
-    [gstreamer-interfaces-$GST_MAJORMINOR >= $GST_PLUGINS_BASE_VERSION_REQUIRED]
-)
 
 dnl GST_ALL_LDFLAGS:
 dnl LDFLAGS really should only contain flags, not libs - they get added before
@@ -283,6 +278,10 @@ AC_MSG_RESULT([$GST_PLUGINS_DIR])
 plugindir="$GST_PLUGINS_DIR"
 AC_SUBST(plugindir)
 
+dnl ---------------------------------------------------------------------------
+dnl -- Renderers                                                             --
+dnl ---------------------------------------------------------------------------
+
 dnl Check for X11
 PKG_CHECK_MODULES(X11, [x11])
 
@@ -301,6 +300,10 @@ AC_CHECK_HEADERS([GL/gl.h GL/glext.h GL/glx.h], [], [USE_GLX=0], [
 AC_CHECK_LIB(GL, glXCreateContext, [GLX_LIBS="-lGL"], [USE_GLX=0])
 AC_SUBST(GLX_CFLAGS)
 AC_SUBST(GLX_LIBS)
+
+dnl ---------------------------------------------------------------------------
+dnl -- VA-API                                                                --
+dnl ---------------------------------------------------------------------------
 
 dnl Check for VA-API
 LIBVA_PKGNAME="libva"
@@ -388,16 +391,20 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$saved_LIBS"
 ])
 
-AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
-    [Defined to 1 if JPEG decoder is used])
-AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
-
 dnl Check for OpenGL support to vaapisink
 if test "$enable_vaapisink_glx:$USE_GLX" = "yes:1"; then
     USE_VAAPISINK_GLX=1
 else
     USE_VAAPISINK_GLX=0
 fi
+
+dnl ---------------------------------------------------------------------------
+dnl -- Generate files and summary                                            --
+dnl ---------------------------------------------------------------------------
+
+AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
+    [Defined to 1 if JPEG decoder is used])
+AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
@@ -425,17 +432,17 @@ AC_CONFIG_FILES([
     debian.upstream/Makefile
     debian.upstream/changelog
     debian.upstream/control
-    debian.upstream/gstreamer$GST_MAJORMINOR-vaapi.install:\
-debian.upstream/gstreamer-vaapi.install.in
     debian.upstream/gstreamer$GST_MAJORMINOR-vaapi-doc.install:\
 debian.upstream/gstreamer-vaapi-doc.install.in
+    debian.upstream/gstreamer$GST_MAJORMINOR-vaapi.install:\
+debian.upstream/gstreamer-vaapi.install.in
     debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi.install.in
     debian.upstream/libgstvaapi-dev.install
-    debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
-debian.upstream/libgstvaapi-x11.install.in
     debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-glx.install.in
+    debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
+debian.upstream/libgstvaapi-x11.install.in
     docs/Makefile
     docs/reference/Makefile
     docs/reference/libs/Makefile
@@ -444,9 +451,11 @@ debian.upstream/libgstvaapi-glx.install.in
     docs/reference/plugins/plugins-docs.xml
     gst-libs/Makefile
     gst-libs/gst/Makefile
-    gst-libs/gst/gstutils_version.h
     gst-libs/gst/codecparsers/Makefile
+    gst-libs/gst/gstutils_version.h
     gst-libs/gst/vaapi/Makefile
+    gst/Makefile
+    gst/vaapi/Makefile
     pkgconfig/Makefile
     pkgconfig/gstreamer-vaapi-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi.pc.in
@@ -454,8 +463,6 @@ pkgconfig/gstreamer-vaapi.pc.in
 pkgconfig/gstreamer-vaapi-glx.pc.in
     pkgconfig/gstreamer-vaapi-x11-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi-x11.pc.in
-    gst/Makefile
-    gst/vaapi/Makefile
     tests/Makefile
 ])
 AC_OUTPUT
