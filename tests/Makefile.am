@@ -14,7 +14,7 @@ endif
 
 TEST_CFLAGS		= $(LIBVA_CFLAGS) -I$(top_srcdir)/gst-libs $(GST_CFLAGS) -DGST_USE_UNSTABLE_API
 TEST_X11_CFLAGS		= -DUSE_X11 $(X11_CFLAGS)
-TEST_GLX_CFLAGS		= -DUSE_GLX $(GLX_CFLAGS)
+TEST_GLX_CFLAGS		= -DUSE_GLX $(X11_CFLAGS) $(GL_CFLAGS)
 TEST_MIX_CFLAGS		= $(TEST_X11_CFLAGS)
 if USE_GLX
 TEST_MIX_CFLAGS		+= $(TEST_GLX_CFLAGS)
@@ -31,7 +31,8 @@ TEST_X11_LIBS = \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-@GST_MAJORMINOR@.la
 
 TEST_GLX_LIBS = \
-	$(GLX_LIBS) \
+	$(X11_LIBS) \
+	$(GL_LIBS) \
 	$(GST_LIBS) \
 	$(LIBVA_GLX_LIBS) \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-@GST_MAJORMINOR@.la
