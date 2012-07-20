@@ -436,6 +436,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->last_stop_end = GST_CLOCK_TIME_NONE;
   demux->seek_block = 0;
   demux->stream_start_time = GST_CLOCK_TIME_NONE;
+  demux->to_time = GST_CLOCK_TIME_NONE;
 
   demux->common.offset = 0;
   demux->cluster_time = GST_CLOCK_TIME_NONE;
@@ -2096,8 +2097,13 @@ exit:
   GST_OBJECT_LOCK (demux);
   if (demux->new_segment)
     gst_event_unref (demux->new_segment);
+
   /* On port from 0.10, discarded !update (for segment.update) here, FIXME? */
   demux->new_segment = gst_event_new_segment (&demux->common.segment);
+  if (demux->common.segment.rate < 0 && demux->common.segment.stop == -1)
+    demux->to_time = demux->common.segment.position;
+  else
+    demux->to_time = GST_CLOCK_TIME_NONE;
   GST_OBJECT_UNLOCK (demux);
 
   /* restart our task since it might have been stopped when we did the
@@ -3546,7 +3552,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           gst_buffer_unref (sub);
           goto eos;
         }
-        if (offset >= stream->to_offset) {
+        if (offset >= stream->to_offset
+            || (GST_CLOCK_TIME_IS_VALID (demux->to_time)
+                && lace_time > demux->to_time)) {
           GST_DEBUG_OBJECT (demux, "Stream %d after playback section",
               stream->index);
           gst_buffer_unref (sub);
@@ -3694,6 +3702,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       sub = gst_matroska_demux_align_buffer (demux, sub, stream->alignment);
 
       ret = gst_pad_push (stream->pad, sub);
+
       if (demux->common.segment.rate < 0) {
         if (lace_time > demux->common.segment.stop && ret == GST_FLOW_EOS) {
           /* In reverse playback we can get a GST_FLOW_EOS when
