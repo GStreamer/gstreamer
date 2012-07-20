@@ -1661,7 +1661,8 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       }
 
       /* accept upstream's notion of segment and distribute along */
-      segment.time = segment.start;
+      segment.format = GST_FORMAT_TIME;
+      segment.position = segment.time = segment.start;
       segment.duration = demux->segment.duration;
       segment.base = gst_segment_to_running_time (&demux->segment,
           GST_FORMAT_TIME, demux->segment.position);
