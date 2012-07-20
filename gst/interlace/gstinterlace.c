@@ -157,7 +157,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
         ("{AYUV,YUY2,UYVY,I420,YV12,Y42B,Y444,NV12,NV21}")
-        ",interlace-mode=mixed")
+        ",interlace-mode={interleaved,mixed}")
     );
 
 static GstStaticPadTemplate gst_interlace_sink_template =
@@ -304,7 +304,7 @@ static const PulldownFormat formats[] = {
 
 static void
 gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
-    int n_fields)
+    int n_fields, gboolean interlaced)
 {
   /* field duration = src_fps_d / (2 * src_fps_n) */
   if (interlace->src_fps_n == 0) {
@@ -330,6 +330,10 @@ gst_interlace_decorate_buffer (GstInterlace * interlace, GstBuffer * buf,
   if (n_fields == 1) {
     GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
   }
+  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2 && n_fields == 2
+      && interlaced) {
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  }
 }
 
 static gboolean
@@ -351,8 +355,13 @@ gst_interlace_setcaps (GstInterlace * interlace, GstCaps * caps)
   interlace->src_fps_n = info.fps_n * pdformat->ratio_n;
   interlace->src_fps_d = info.fps_d * pdformat->ratio_d;
 
-  gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING, "mixed",
-      NULL);
+  if (interlace->pattern > GST_INTERLACE_PATTERN_2_2) {
+    gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING, "mixed",
+        NULL);
+  } else {
+    gst_caps_set_simple (othercaps, "interlace-mode", G_TYPE_STRING,
+        "interleaved", NULL);
+  }
   gst_caps_set_simple (othercaps, "framerate", GST_TYPE_FRACTION,
       interlace->src_fps_n, interlace->src_fps_d, NULL);
 
@@ -410,7 +419,7 @@ gst_interlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         num_fields -= 2;
 
         gst_interlace_decorate_buffer (interlace, interlace->stored_frame,
-            n_fields);
+            n_fields, FALSE);
 
         /* ref output_buffer/stored frame because we want to keep it for now
          * and pushing gives away a ref */
@@ -669,6 +678,7 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   while (num_fields >= 2) {
     GstBuffer *output_buffer;
     int n_output_fields;
+    gboolean interlaced = FALSE;
 
     GST_DEBUG ("have %d fields, %d current, %d stored",
         num_fields, current_fields, interlace->stored_fields);
@@ -685,6 +695,7 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       copy_field (interlace, output_buffer, buffer, interlace->field_index ^ 1);
       current_fields--;
       n_output_fields = 2;
+      interlaced = TRUE;
     } else {
       output_buffer = gst_buffer_make_writable (gst_buffer_ref (buffer));
       if (num_fields >= 3 && interlace->allow_rff) {
@@ -701,7 +712,8 @@ gst_interlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     }
     num_fields -= n_output_fields;
 
-    gst_interlace_decorate_buffer (interlace, output_buffer, n_output_fields);
+    gst_interlace_decorate_buffer (interlace, output_buffer, n_output_fields,
+        interlaced);
     interlace->fields_since_timebase += n_output_fields;
     interlace->field_index ^= (n_output_fields & 1);
 
