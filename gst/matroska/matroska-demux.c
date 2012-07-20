@@ -556,6 +556,8 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       GST_MATROSKA_TRACK_ENABLED | GST_MATROSKA_TRACK_DEFAULT |
       GST_MATROSKA_TRACK_LACING;
   context->last_flow = GST_FLOW_OK;
+  context->from_time = GST_CLOCK_TIME_NONE;
+  context->from_offset = -1;
   context->to_offset = G_MAXINT64;
   context->alignment = 1;
   demux->common.num_streams++;
