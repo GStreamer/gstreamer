@@ -1946,13 +1946,20 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
     GST_DEBUG_OBJECT (demux, "configuring seek");
     gst_segment_do_seek (&seeksegment, rate, format, flags,
         cur_type, cur, stop_type, stop, &update);
-    /* compensate for clip start time */
+    /* compensate for clip start time, but only for SET seeks,
+     * otherwise it is already part of the segments */
     if (GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
-      seeksegment.position += demux->stream_start_time;
-      seeksegment.start += demux->stream_start_time;
-      if (GST_CLOCK_TIME_IS_VALID (seeksegment.stop))
+      if (cur_type == GST_SEEK_TYPE_SET) {
+        if (rate > 0.0)
+          seeksegment.position += demux->stream_start_time;
+        seeksegment.start += demux->stream_start_time;
+      }
+      if (stop_type == GST_SEEK_TYPE_SET
+          && GST_CLOCK_TIME_IS_VALID (seeksegment.stop)) {
+        if (rate < 0.0)
+          seeksegment.position += demux->stream_start_time;
         seeksegment.stop += demux->stream_start_time;
-      /* note that time should stay at indicated position */
+      }
     }
   }
 
