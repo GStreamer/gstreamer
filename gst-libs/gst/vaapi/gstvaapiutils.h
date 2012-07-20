@@ -25,12 +25,7 @@
 
 #include "config.h"
 #include <glib.h>
-
-#ifdef GST_VAAPI_USE_OLD_VAAPI_0_29
-# include <va.h>
-#else
-# include <va/va.h>
-#endif
+#include <va/va.h>
 
 /** Check VA status for success or print out an error */
 G_GNUC_INTERNAL

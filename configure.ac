@@ -42,6 +42,7 @@ m4_define([gst_plugins_bad_version],
           [gst_plugins_bad_major_version.gst_plugins_bad_minor_version.gst_plugins_bad_micro_version])
 
 # VA-API minimum version number
+m4_define([va_api_version],     [0.30.4])
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_glx_version], [0.32.0])
 
@@ -296,68 +297,34 @@ dnl ---------------------------------------------------------------------------
 dnl -- VA-API                                                                --
 dnl ---------------------------------------------------------------------------
 
-dnl Check for VA-API
+dnl Core API
 LIBVA_PKGNAME="libva"
-PKG_CHECK_MODULES(LIBVA, [$LIBVA_PKGNAME])
+PKG_CHECK_MODULES(LIBVA, [$LIBVA_PKGNAME >= va_api_version])
 AC_SUBST(LIBVA_PKGNAME)
 
-dnl ... original VA-API 0.29
-AC_CACHE_CHECK([for old VA-API 0.29],
-    ac_cv_have_vaapi_old, [
-    saved_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $LIBVA_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $LIBVA_LIBS"
-    AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <va_x11.h>]],
-            [[vaGetDisplay(NULL)]])],
-        [ac_cv_have_vaapi_old="yes"],
-        [ac_cv_have_vaapi_old="no"]
-    )
-    CFLAGS="$saved_CFLAGS"
-    LIBS="$saved_LIBS"
-])
-if test "$ac_cv_have_vaapi_old" = "yes"; then
-    LIBVA_EXTRA_CFLAGS="$LIBVA_CFLAGS -DGST_VAAPI_USE_OLD_VAAPI_0_29"
-fi
+VA_VERSION=`$PKG_CONFIG --modversion libva`
+VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
+VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
+VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
+VA_VERSION_STR="$VA_VERSION"
 
-dnl ... VA-API >= 0.31 or -sds
+dnl VA/X11 API
 LIBVA_X11_PKGNAME="libva-x11"
-PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME],
-    [ac_cv_have_vaapi_x11="yes"],
-    [ac_cv_have_vaapi_x11="no"]
-)
-if test "$ac_cv_have_vaapi_x11" = "no"; then
-    if test "$ac_cv_have_vaapi_old" = "yes"; then
-        LIBVA_X11_PKGNAME="libva"
-        CFLAGS="$CFLAGS $LIBVA_EXTRA_CFLAGS"
-        LIBS="$LIBS $LIBVA_EXTRA_LIBS"
-    else
-        AC_MSG_ERROR([could not find VA-API])
-    fi
-fi
+PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME >= va_api_x11_version])
 AC_SUBST(LIBVA_X11_PKGNAME)
 
-dnl ... VA-API >= 0.31 or -sds (VA/GLX extensions)
-USE_VAAPI_GLX=0
+dnl VA/GLX API
+HAVE_VA_GLX=0
+LIBVA_GLX_PKGNAME="libva-glx"
 if test $USE_GLX -eq 1; then
-    if test "$enable_vaapi_glx" = "yes"; then
-        LIBVA_GLX_PKGNAME="libva-glx"
-        PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME],
-            [ac_cv_have_vaapi_glx="yes" USE_VAAPI_GLX=1],
-            [ac_cv_have_vaapi_glx="no"]
-        )
-    fi
-    if test $USE_VAAPI_GLX -eq 0; then
+    PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME >= va_api_glx_version],
+        [HAVE_VA_GLX=1])
+    if test "$enable_vaapi_glx" = "yes" -a $HAVE_VA_GLX -eq 0; then
         AC_MSG_WARN([VA/GLX not found or disabled. Fallbacking to TFP+FBO])
         LIBVA_GLX_PKGNAME="$LIBVA_X11_PKGNAME"
     fi
 fi
 AC_SUBST(LIBVA_GLX_PKGNAME)
-
-AC_SUBST(LIBVA_EXTRA_CFLAGS)
-AC_SUBST(LIBVA_EXTRA_LIBS)
 
 dnl Check for JPEG decoding API (0.33+)
 USE_JPEG_DECODER=0
@@ -401,19 +368,13 @@ AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
 
-AC_DEFINE_UNQUOTED(USE_VAAPI_GLX, $USE_VAAPI_GLX,
+AC_DEFINE_UNQUOTED([USE_VAAPI_GLX], [$HAVE_VA_GLX],
     [Defined to 1 if VA/GLX is enabled])
-AM_CONDITIONAL(USE_VAAPI_GLX, test $USE_VAAPI_GLX -eq 1)
+AM_CONDITIONAL([USE_VAAPI_GLX], [test $HAVE_VA_GLX -eq 1])
 
 AC_DEFINE_UNQUOTED(USE_VAAPISINK_GLX, $USE_VAAPISINK_GLX,
     [Defined to 1 to enable GLX support to vaapisink])
 AM_CONDITIONAL(USE_VAAPISINK_GLX, test $USE_VAAPISINK_GLX -eq 1)
-
-VA_VERSION=`$PKG_CONFIG --modversion libva`
-VA_MAJOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f1`
-VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
-VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
-VA_VERSION_STR="$VA_VERSION"
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
@@ -467,6 +428,6 @@ echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
 echo GLX support ...................... : $(yesno $USE_GLX)
-echo VA/GLX support ................... : $(yesno $USE_VAAPI_GLX)
+echo VA/GLX support ................... : $(yesno $HAVE_VA_GLX)
 echo VaapiSink/GL ..................... : $(yesno $USE_VAAPISINK_GLX)
 echo
