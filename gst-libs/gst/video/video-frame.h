@@ -32,6 +32,9 @@ typedef struct _GstVideoFrame GstVideoFrame;
 /**
  * GstVideoFrameFlags:
  * @GST_VIDEO_FRAME_FLAG_NONE: no flags
+ * @GST_VIDEO_FRAME_FLAG_INTERLACED: The video frame is interlaced. In mixed
+ *           interlace-mode, this flags specifies if the frame is interlace or
+ *           progressive.
  * @GST_VIDEO_FRAME_FLAG_TFF: The video frame has the top field first
  * @GST_VIDEO_FRAME_FLAG_RFF: The video frame has the repeat flag
  * @GST_VIDEO_FRAME_FLAG_ONEFIELD: The video frame has one field
@@ -40,9 +43,10 @@ typedef struct _GstVideoFrame GstVideoFrame;
  */
 typedef enum {
   GST_VIDEO_FRAME_FLAG_NONE         = 0,
-  GST_VIDEO_FRAME_FLAG_TFF          = (1 << 0),
-  GST_VIDEO_FRAME_FLAG_RFF          = (1 << 1),
-  GST_VIDEO_FRAME_FLAG_ONEFIELD     = (1 << 2)
+  GST_VIDEO_FRAME_FLAG_INTERLACED   = (1 << 0),
+  GST_VIDEO_FRAME_FLAG_TFF          = (1 << 1),
+  GST_VIDEO_FRAME_FLAG_RFF          = (1 << 2),
+  GST_VIDEO_FRAME_FLAG_ONEFIELD     = (1 << 3)
 } GstVideoFrameFlags;
 
 /**
@@ -107,6 +111,9 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
 
 /**
  * GstVideoBufferFlags:
+ * @GST_VIDEO_BUFFER_FLAG_INTERLACED:  If the #GstBuffer is interlaced. In mixed
+ *                                     interlace-mode, this flags specifies if the frame is
+ *                                     interlaced or progressive.
  * @GST_VIDEO_BUFFER_FLAG_TFF:         If the #GstBuffer is interlaced, then the first field
  *                                     in the video frame is the top field.  If unset, the
  *                                     bottom field is first.
@@ -120,9 +127,10 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
  * Additional video buffer flags.
  */
 typedef enum {
-  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 0),
-  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 1),
-  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 2),
+  GST_VIDEO_BUFFER_FLAG_INTERLACED  = (GST_BUFFER_FLAG_LAST << 0),
+  GST_VIDEO_BUFFER_FLAG_TFF         = (GST_BUFFER_FLAG_LAST << 1),
+  GST_VIDEO_BUFFER_FLAG_RFF         = (GST_BUFFER_FLAG_LAST << 2),
+  GST_VIDEO_BUFFER_FLAG_ONEFIELD    = (GST_BUFFER_FLAG_LAST << 3),
 
   GST_VIDEO_BUFFER_FLAG_LAST        = (GST_BUFFER_FLAG_LAST << 8)
 } GstVideoBufferFlags;
