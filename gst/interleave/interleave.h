@@ -65,10 +65,7 @@ struct _GstInterleave
   GstClockTime timestamp;
   guint64 offset;
 
-  gboolean segment_pending;
-  guint64 segment_position;
-  gdouble segment_rate;
-  GstSegment segment;
+  GstEvent *pending_segment;
 
   GstPadEventFunction collect_event;
 

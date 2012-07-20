@@ -601,10 +601,7 @@ gst_interleave_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->timestamp = 0;
       self->offset = 0;
-      self->segment_pending = TRUE;
-      self->segment_position = 0;
-      self->segment_rate = 1.0;
-      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
+      gst_event_replace (&self->pending_segment, NULL);
       gst_collect_pads_start (self->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -627,6 +624,7 @@ gst_interleave_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_caps_replace (&self->sinkcaps, NULL);
+      gst_event_replace (&self->pending_segment, NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
@@ -829,13 +827,14 @@ gst_interleave_sink_event (GstCollectPads * pads, GstCollectData * data,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      /* mark a pending new segment. This event is synchronized
-       * with the streaming thread so we can safely update the
-       * variable without races. It's somewhat weird because we
-       * assume the collectpads forwarded the FLUSH_STOP past us
-       * and downstream (using our source pad, the bastard!).
-       */
-      self->segment_pending = TRUE;
+      GST_OBJECT_LOCK (self);
+      gst_event_replace (&self->pending_segment, NULL);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      GST_OBJECT_LOCK (self);
+      gst_event_replace (&self->pending_segment, event);
+      GST_OBJECT_UNLOCK (self);
       break;
     case GST_EVENT_CAPS:
     {
@@ -1134,12 +1133,8 @@ gst_interleave_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEEK:
     {
       GstSeekFlags flags;
-      GstSeekType curtype;
-      gint64 cur;
 
-      /* parse the seek parameters */
-      gst_event_parse_seek (event, &self->segment_rate, NULL, &flags, &curtype,
-          &cur, NULL, NULL);
+      gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
 
       /* check if we are flushing */
       if (flags & GST_SEEK_FLAG_FLUSH) {
@@ -1150,17 +1145,6 @@ gst_interleave_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
          * when all pads received a FLUSH_STOP. */
         gst_pad_push_event (self->src, gst_event_new_flush_start ());
       }
-
-      /* now wait for the collected to be finished and mark a new
-       * segment */
-      GST_OBJECT_LOCK (self->collect);
-      if (curtype == GST_SEEK_TYPE_SET)
-        self->segment_position = cur;
-      else
-        self->segment_position = 0;
-      self->segment_pending = TRUE;
-      GST_OBJECT_UNLOCK (self->collect);
-
       result = forward_event (self, event);
       break;
     }
@@ -1189,6 +1173,7 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
   gboolean empty = TRUE;
   gint width = self->width / 8;
   GstMapInfo write_info;
+  GstClockTime timestamp = -1;
 
   size = gst_collect_pads_available (pads);
   if (size == 0)
@@ -1232,6 +1217,9 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
     ncollected++;
     gst_buffer_map (inbuf, &input_info, GST_MAP_READ);
 
+    if (timestamp == -1)
+      timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+
     if (GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP))
       goto next;
 
@@ -1252,15 +1240,24 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
     goto eos;
   }
 
-  if (self->segment_pending) {
+  GST_OBJECT_LOCK (self);
+  if (self->pending_segment) {
     GstEvent *event;
 
-    self->segment.format = GST_FORMAT_TIME;
-    event = gst_event_new_segment (&self->segment);
+    event = self->pending_segment;
+    self->pending_segment = NULL;
+    GST_OBJECT_UNLOCK (self);
 
     gst_pad_push_event (self->src, event);
-    self->segment_pending = FALSE;
-    self->segment_position = 0;
+
+    GST_OBJECT_LOCK (self);
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  if (timestamp != -1) {
+    self->offset = gst_util_uint64_scale_int (timestamp, self->rate,
+        GST_SECOND);
+    self->timestamp = timestamp;
   }
 
   GST_BUFFER_TIMESTAMP (outbuf) = self->timestamp;
@@ -1270,8 +1267,8 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
   self->timestamp = gst_util_uint64_scale_int (self->offset,
       GST_SECOND, self->rate);
 
-  GST_BUFFER_DURATION (outbuf) = self->timestamp -
-      GST_BUFFER_TIMESTAMP (outbuf);
+  GST_BUFFER_DURATION (outbuf) =
+      self->timestamp - GST_BUFFER_TIMESTAMP (outbuf);
 
   if (empty)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
