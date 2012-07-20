@@ -200,7 +200,8 @@ AC_CACHE_CHECK([for GstVideoOverlayComposition],
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
             [[#include <gst/video/video-overlay-composition.h>]],
-            [[GstVideoOverlayComposition *c = gst_video_overlay_composition_new(0);]])],
+            [[GstVideoOverlayComposition *c;
+              c = gst_video_overlay_composition_new(0);]])],
         [ac_cv_have_gst_video_overlay_composition="yes"],
         [ac_cv_have_gst_video_overlay_composition="no"]
     )
@@ -209,6 +210,34 @@ AC_CACHE_CHECK([for GstVideoOverlayComposition],
 ])
 if test "$ac_cv_have_gst_video_overlay_composition" != "yes"; then
     AC_MSG_ERROR([GstVideoOverlayComposition is not available])
+fi
+
+AC_CACHE_CHECK([... with advanced format flags],
+    ac_cv_have_gst_video_overlay_hwcaps, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_VIDEO_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_VIDEO_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <gst/video/video-overlay-composition.h>]],
+            [[GstVideoOverlayRectangle *rect;
+              const guint w = 64, h = 64;
+              guint flags = (
+                  GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA|
+                  GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA);
+              rect = gst_video_overlay_rectangle_new_argb(NULL, w, h, w * 4,
+                  0, 0, w, h, flags);
+              gst_video_overlay_rectangle_set_global_alpha(rect, 0.5f);]])],
+        [ac_cv_have_gst_video_overlay_hwcaps="yes"],
+        [ac_cv_have_gst_video_overlay_hwcaps="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+if test "$ac_cv_have_gst_video_overlay_hwcaps" = "yes"; then
+    AC_DEFINE_UNQUOTED([HAVE_GST_VIDEO_OVERLAY_HWCAPS], 1,
+        [Defined to 1 if GstVideoOverlayComposition API supports HW hints.])
 fi
 
 dnl ... GstVideoDecoder (gstreamer-video)

@@ -260,10 +260,12 @@ from_GstVideoOverlayFormatFlags(guint ovl_flags)
 {
     guint flags = 0;
 
+#ifdef HAVE_GST_VIDEO_OVERLAY_HWCAPS
     if (ovl_flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)
         flags |= GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA;
     if (ovl_flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
         flags |= GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA;
+#endif
     return flags;
 }
 
@@ -280,10 +282,12 @@ to_GstVideoOverlayFormatFlags(guint flags)
 {
     guint ovl_flags = 0;
 
+#ifdef HAVE_GST_VIDEO_OVERLAY_HWCAPS
     if (flags & GST_VAAPI_SUBPICTURE_FLAG_PREMULTIPLIED_ALPHA)
         ovl_flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
     if (flags & GST_VAAPI_SUBPICTURE_FLAG_GLOBAL_ALPHA)
         ovl_flags |= GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA;
+#endif
     return ovl_flags;
 }
 

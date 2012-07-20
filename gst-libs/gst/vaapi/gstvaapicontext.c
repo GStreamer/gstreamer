@@ -295,9 +295,11 @@ static inline gboolean
 overlay_rectangle_update_global_alpha(GstVaapiOverlayRectangle *overlay,
     GstVideoOverlayRectangle *rect)
 {
+#ifdef HAVE_GST_VIDEO_OVERLAY_HWCAPS
     const guint flags = gst_video_overlay_rectangle_get_flags(rect);
     if (!(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA))
         return TRUE;
+#endif
     return gst_vaapi_subpicture_set_global_alpha(overlay->subpicture,
         gst_video_overlay_rectangle_get_global_alpha(rect));
 }

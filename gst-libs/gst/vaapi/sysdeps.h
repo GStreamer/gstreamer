@@ -28,4 +28,10 @@
 
 #include "glibcompat.h"
 
+/* <gst/video/video-overlay-composition.h> compatibility glue */
+#ifndef HAVE_GST_VIDEO_OVERLAY_HWCAPS
+# define gst_video_overlay_rectangle_get_flags(rect) (0)
+# define gst_video_overlay_rectangle_get_global_alpha(rect) (1.0f)
+#endif
+
 #endif /* SYSDEPS_H */
