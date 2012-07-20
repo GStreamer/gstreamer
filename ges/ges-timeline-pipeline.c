@@ -683,7 +683,7 @@ ges_timeline_pipeline_add_timeline (GESTimelinePipeline * pipeline,
  */
 gboolean
 ges_timeline_pipeline_set_render_settings (GESTimelinePipeline * pipeline,
-    gchar * output_uri, GstEncodingProfile * profile)
+    const gchar * output_uri, GstEncodingProfile * profile)
 {
   GError *err = NULL;
 
