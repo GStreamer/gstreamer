@@ -163,15 +163,6 @@ PKG_CHECK_MODULES([GST_PLUGINS_BASE],
 PKG_CHECK_MODULES([GST_INTERFACES],
     [gstreamer-interfaces-$GST_MAJORMINOR >= gst_plugins_base_version])
 
-dnl ... GST_PLUGINS_BASE_CHECK_VERSION() implementation
-V=`$PKG_CONFIG --modversion gstreamer-plugins-base-$GST_MAJORMINOR`
-GST_PLUGINS_BASE_MAJOR_VERSION=`echo "$V" | cut -d'.' -f1`
-GST_PLUGINS_BASE_MINOR_VERSION=`echo "$V" | cut -d'.' -f2`
-GST_PLUGINS_BASE_MICRO_VERSION=`echo "$V" | cut -d'.' -f3`
-AC_SUBST(GST_PLUGINS_BASE_MAJOR_VERSION)
-AC_SUBST(GST_PLUGINS_BASE_MINOR_VERSION)
-AC_SUBST(GST_PLUGINS_BASE_MICRO_VERSION)
-
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
     [gstreamer-video-$GST_MAJORMINOR >= gst_plugins_base_version])
@@ -452,7 +443,6 @@ debian.upstream/libgstvaapi-x11.install.in
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/codecparsers/Makefile
-    gst-libs/gst/gstutils_version.h
     gst-libs/gst/vaapi/Makefile
     gst/Makefile
     gst/vaapi/Makefile

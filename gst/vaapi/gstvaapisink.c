@@ -31,7 +31,6 @@
 
 #include "config.h"
 #include <gst/gst.h>
-#include <gst/gstutils_version.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
@@ -48,12 +47,6 @@
 
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
-
-#define HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE \
-    GST_PLUGINS_BASE_CHECK_VERSION(0,10,31)
-
-#define HAVE_GST_XOVERLAY_SET_RENDER_RECTANGLE \
-    GST_PLUGINS_BASE_CHECK_VERSION(0,10,29)
 
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"
@@ -148,8 +141,8 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id);
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
-static inline void
-_gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, guintptr window_id)
+static void
+gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
@@ -158,24 +151,9 @@ _gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, guintptr window_id)
     sink->use_glx = FALSE;
 
     sink->foreign_window = TRUE;
-    gst_vaapisink_ensure_window_xid(sink, window_id);
+    gst_vaapisink_ensure_window_xid(sink, window);
 }
 
-#if HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE
-static void
-gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window_id)
-{
-    _gst_vaapisink_xoverlay_set_xid(overlay, window_id);
-}
-#else
-static void
-gst_vaapisink_xoverlay_set_xid(GstXOverlay *overlay, XID xid)
-{
-    _gst_vaapisink_xoverlay_set_xid(overlay, xid);
-}
-#endif
-
-#if HAVE_GST_XOVERLAY_SET_RENDER_RECTANGLE
 static void
 gst_vaapisink_xoverlay_set_render_rectangle(
     GstXOverlay *overlay,
@@ -197,7 +175,6 @@ gst_vaapisink_xoverlay_set_render_rectangle(
               display_rect->x, display_rect->y,
               display_rect->width, display_rect->height);
 }
-#endif
 
 static void
 gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
@@ -215,14 +192,8 @@ gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
 static void
 gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
 {
-#if HAVE_GST_XOVERLAY_SET_WINDOW_HANDLE
     iface->set_window_handle    = gst_vaapisink_xoverlay_set_window_handle;
-#else
-    iface->set_xwindow_id       = gst_vaapisink_xoverlay_set_xid;
-#endif
-#if HAVE_GST_XOVERLAY_SET_RENDER_RECTANGLE
     iface->set_render_rectangle = gst_vaapisink_xoverlay_set_render_rectangle;
-#endif
     iface->expose               = gst_vaapisink_xoverlay_expose;
 }
 
