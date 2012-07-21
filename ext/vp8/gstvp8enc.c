@@ -1119,7 +1119,7 @@ gst_vp8_enc_handle_frame (GstVideoEncoder * video_encoder,
     gst_video_codec_frame_set_user_data (frame, NULL, NULL);
     return FALSE;
   }
-
+  gst_video_codec_frame_unref (frame);
   return gst_vp8_enc_process (encoder);
 }
 
