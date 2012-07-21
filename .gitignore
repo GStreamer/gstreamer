@@ -1,4 +1,8 @@
 *.o
+*.bak
+*.orig
+*.diff
+*.patch
 *.so
 *.a
 *.la
@@ -42,5 +46,9 @@ log
 /bindings/python/ges.c
 
 /m4
+/tests/check/ges/timelineedition
+/tests/check/ges/timelinegroup
+/tests/check/ges/material
+/tests/examples/materials
 
 /tools/ges-launch-1.0
