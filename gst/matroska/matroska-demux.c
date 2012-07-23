@@ -3436,9 +3436,6 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       GstSegment *segment = &demux->common.segment;
       guint64 segment_duration = 0;
 
-      GST_DEBUG_OBJECT (demux,
-          "generating segment starting at %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (lace_time));
       if (!GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
         demux->stream_start_time = lace_time;
         GST_DEBUG_OBJECT (demux,
@@ -3456,7 +3453,11 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         segment->base += segment_duration / fabs (segment->rate);
         segment->start = MAX (lace_time, demux->stream_start_time);
         segment->stop = GST_CLOCK_TIME_NONE;
+        segment->time = segment->start - demux->stream_start_time;
         segment->position = segment->start - demux->stream_start_time;
+        GST_DEBUG_OBJECT (demux,
+            "generated segment starting at %" GST_TIME_FORMAT ": %"
+            GST_SEGMENT_FORMAT, GST_TIME_ARGS (lace_time), segment);
       }
       /* now convey our segment notion downstream */
       gst_matroska_demux_send_event (demux, gst_event_new_segment (segment));
