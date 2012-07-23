@@ -100,6 +100,11 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
+AC_ARG_ENABLE(x11,
+    AS_HELP_STRING([--enable-x11],
+                   [enable X11 output @<:@default=yes@:>@]),
+    [], [enable_x11="yes"])
+
 AC_ARG_ENABLE(glx,
     AS_HELP_STRING([--enable-glx],
                    [enable OpenGL/X11 @<:@default=yes@:>@]),
@@ -275,7 +280,16 @@ dnl -- Renderers                                                             --
 dnl ---------------------------------------------------------------------------
 
 dnl Check for X11
-PKG_CHECK_MODULES(X11, [x11])
+USE_X11=0
+if test "$enable_x11" = "yes"; then
+    PKG_CHECK_MODULES(X11, [x11], [USE_X11=1], [USE_X11=0])
+    if test $USE_X11 -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
+        AC_CHECK_HEADERS([X11/Xlib.h X11/Xutil.h X11/Xatom.h], [:], [USE_X11=0])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
+fi
 
 dnl OpenGL
 enable_opengl="no"
@@ -299,7 +313,7 @@ fi
 
 dnl ... GLX
 USE_GLX=0
-if test "$enable_glx" = "yes" -a $HAVE_GL -eq 1; then
+if test "$enable_glx" = "yes" -a $HAVE_GL -eq 1 -a $USE_X11 -eq 1; then
     USE_GLX=1
     saved_CPPFLAGS="$CPPFLAGS"
     saved_LIBS="$LIBS"
@@ -331,8 +345,12 @@ VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
 VA_VERSION_STR="$VA_VERSION"
 
 dnl VA/X11 API
+HAVE_VA_X11=0
 LIBVA_X11_PKGNAME="libva-x11"
-PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME >= va_api_x11_version])
+if test $USE_X11 -eq 1; then
+    PKG_CHECK_MODULES(LIBVA_X11, [$LIBVA_X11_PKGNAME >= va_api_x11_version],
+        [HAVE_VA_X11=1], [USE_X11=0])
+fi
 AC_SUBST(LIBVA_X11_PKGNAME)
 
 dnl VA/GLX API
@@ -382,9 +400,21 @@ dnl ---------------------------------------------------------------------------
 dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
 
+case ":$USE_X11:$USE_GLX:" in
+*:1:*)
+    ;;
+*)
+    AC_MSG_ERROR([No renderer is enabled])
+    ;;
+esac
+
 AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
     [Defined to 1 if JPEG decoder is used])
 AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_X11, $USE_X11,
+    [Defined to 1 if X11 is enabled])
+AM_CONDITIONAL(USE_X11, test $USE_X11 -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
@@ -450,6 +480,7 @@ echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
 echo GLX support ...................... : $(yesno $USE_GLX)
+echo VA/X11 support ................... : $(yesno $USE_X11)
 echo VA/GLX support ................... : $(yesno $HAVE_VA_GLX)
 echo VaapiSink/GL ..................... : $(yesno $USE_VAAPISINK_GLX)
 echo
