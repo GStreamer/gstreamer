@@ -1,5 +1,5 @@
 # variables used for enum generation
-ORC_SOURCE=videoblendorc
+ORC_SOURCE=video-orc
 include $(top_srcdir)/common/orc.mak
 
 glib_enum_headers = video.h video-format.h video-color.h video-info.h \

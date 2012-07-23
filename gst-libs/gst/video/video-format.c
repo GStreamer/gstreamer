@@ -40,7 +40,7 @@
  * </refsect2>
  */
 
-#include "videoblendorc.h"
+#include "video-orc.h"
 
 /* Line conversion to AYUV */
 

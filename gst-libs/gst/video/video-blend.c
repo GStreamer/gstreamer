@@ -28,7 +28,7 @@
 #endif
 
 #include "video-blend.h"
-#include "videoblendorc.h"
+#include "video-orc.h"
 
 #include <string.h>
 
