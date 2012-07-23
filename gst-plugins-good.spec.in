@@ -12,7 +12,7 @@ Group: 		Applications/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.freedesktop.org/
 Vendor:         GStreamer Backpackers Team <package@gstreamer.freedesktop.org>
-Source:         http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-%{version}.tar.gz
+Source:         http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-%{version}.tar.xz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires: 	  %{gstreamer} >= %{gst_minver}
@@ -92,7 +92,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
 %{_libdir}/gstreamer-%{majorminor}/libgstudp.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstvideobox.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideobox.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavenc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstwavparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstauparse.so
@@ -100,7 +100,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstnavigationtest.so
 %{_libdir}/gstreamer-%{majorminor}/libgstalphacolor.so
 @USE_CAIRO_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstcairo.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
+%{_libdir}/gstreamer-%{majorminor}/libgstflxdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmatroska.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideomixer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcutter.so
@@ -108,7 +108,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstid3demux.so
 @USE_GDK_PIXBUF_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstgdkpixbuf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
-%{_libdir}/gstreamer-%{majorminor}/libgstannodex.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstannodex.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
 %{_libdir}/gstreamer-%{majorminor}/libgsticydemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttaglib.so
@@ -123,7 +123,7 @@ rm -rf $RPM_BUILD_ROOT
 # %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstflv.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
+%{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
 %{_libdir}/gstreamer-%{majorminor}/libgstimagefreeze.so
 %{_libdir}/gstreamer-%{majorminor}/libgstshapewipe.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideofilter.so
