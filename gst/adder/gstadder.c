@@ -141,7 +141,7 @@ static void name (type *out, type *in, gint samples) {          \
 }
 
 /* *INDENT-OFF* */
-MAKE_FUNC_NC (add_float64, gdouble)
+MAKE_FUNC_NC (adder_orc_add_float64, gdouble)
 /* *INDENT-ON* */
 
 /* we can only accept caps that we and downstream can handle.
@@ -308,28 +308,28 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
 
   switch (GST_AUDIO_INFO_FORMAT (&adder->info)) {
     case GST_AUDIO_FORMAT_S8:
-      adder->func = (GstAdderFunction) add_int8;
+      adder->func = (GstAdderFunction) adder_orc_add_int8;
       break;
     case GST_AUDIO_FORMAT_U8:
-      adder->func = (GstAdderFunction) add_uint8;
+      adder->func = (GstAdderFunction) adder_orc_add_uint8;
       break;
     case GST_AUDIO_FORMAT_S16:
-      adder->func = (GstAdderFunction) add_int16;
+      adder->func = (GstAdderFunction) adder_orc_add_int16;
       break;
     case GST_AUDIO_FORMAT_U16:
-      adder->func = (GstAdderFunction) add_uint16;
+      adder->func = (GstAdderFunction) adder_orc_add_uint16;
       break;
     case GST_AUDIO_FORMAT_S32:
-      adder->func = (GstAdderFunction) add_int32;
+      adder->func = (GstAdderFunction) adder_orc_add_int32;
       break;
     case GST_AUDIO_FORMAT_U32:
-      adder->func = (GstAdderFunction) add_uint32;
+      adder->func = (GstAdderFunction) adder_orc_add_uint32;
       break;
     case GST_AUDIO_FORMAT_F32:
-      adder->func = (GstAdderFunction) add_float32;
+      adder->func = (GstAdderFunction) adder_orc_add_float32;
       break;
     case GST_AUDIO_FORMAT_F64:
-      adder->func = (GstAdderFunction) add_float64;
+      adder->func = (GstAdderFunction) adder_orc_add_float64;
       break;
     default:
       goto invalid_format;

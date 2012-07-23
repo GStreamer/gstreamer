@@ -67,13 +67,13 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #define ORC_RESTRICT
 #endif
 #endif
-void add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n);
-void add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n);
-void add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n);
-void add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n);
-void add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
-void add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
-void add_float32 (float * ORC_RESTRICT d1, const float * ORC_RESTRICT s1, int n);
+void adder_orc_add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n);
+void adder_orc_add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n);
+void adder_orc_add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n);
+void adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n);
+void adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n);
+void adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n);
+void adder_orc_add_float32 (float * ORC_RESTRICT d1, const float * ORC_RESTRICT s1, int n);
 
 #ifdef __cplusplus
 }

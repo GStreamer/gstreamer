@@ -82,18 +82,20 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+void adder_orc_add_int32 (gint32 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void adder_orc_add_int16 (gint16 * ORC_RESTRICT d1,
+    const gint16 * ORC_RESTRICT s1, int n);
+void adder_orc_add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1,
     int n);
-void add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1,
-    int n);
-void add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n);
-void add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
-    int n);
-void add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1,
-    int n);
-void add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n);
+void adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int n);
+void adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, int n);
+void adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void adder_orc_add_float32 (float *ORC_RESTRICT d1,
+    const float *ORC_RESTRICT s1, int n);
 
 
 /* begin Orc C target preamble */
@@ -140,10 +142,11 @@ void add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n);
 
 
 
-/* add_int32 */
+/* adder_orc_add_int32 */
 #ifdef DISABLE_ORC
 void
-add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+adder_orc_add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -171,7 +174,7 @@ add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_int32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_int32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -199,7 +202,8 @@ _backup_add_int32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+adder_orc_add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -211,8 +215,8 @@ add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_int32");
-      orc_program_set_backup_function (p, _backup_add_int32);
+      orc_program_set_name (p, "adder_orc_add_int32");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_int32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -236,10 +240,11 @@ add_int32 (gint32 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* add_int16 */
+/* adder_orc_add_int16 */
 #ifdef DISABLE_ORC
 void
-add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
+adder_orc_add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -267,7 +272,7 @@ add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_int16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_int16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -295,7 +300,8 @@ _backup_add_int16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
+adder_orc_add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -307,8 +313,8 @@ add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_int16");
-      orc_program_set_backup_function (p, _backup_add_int16);
+      orc_program_set_name (p, "adder_orc_add_int16");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_int16);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 2, "s1");
 
@@ -332,10 +338,11 @@ add_int16 (gint16 * ORC_RESTRICT d1, const gint16 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* add_int8 */
+/* adder_orc_add_int8 */
 #ifdef DISABLE_ORC
 void
-add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
+adder_orc_add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -363,7 +370,7 @@ add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_int8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_int8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -391,7 +398,8 @@ _backup_add_int8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
+adder_orc_add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -403,8 +411,8 @@ add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_int8");
-      orc_program_set_backup_function (p, _backup_add_int8);
+      orc_program_set_name (p, "adder_orc_add_int8");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_int8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
 
@@ -428,10 +436,11 @@ add_int8 (gint8 * ORC_RESTRICT d1, const gint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* add_uint32 */
+/* adder_orc_add_uint32 */
 #ifdef DISABLE_ORC
 void
-add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
+adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -461,7 +470,7 @@ add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_uint32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_uint32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -491,7 +500,8 @@ _backup_add_uint32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
+adder_orc_add_uint32 (guint32 * ORC_RESTRICT d1,
+    const guint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -503,8 +513,8 @@ add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_uint32");
-      orc_program_set_backup_function (p, _backup_add_uint32);
+      orc_program_set_name (p, "adder_orc_add_uint32");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_uint32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -528,10 +538,11 @@ add_uint32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* add_uint16 */
+/* adder_orc_add_uint16 */
 #ifdef DISABLE_ORC
 void
-add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
+adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -559,7 +570,7 @@ add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_uint16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_uint16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -587,7 +598,8 @@ _backup_add_uint16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
+adder_orc_add_uint16 (guint16 * ORC_RESTRICT d1,
+    const guint16 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -599,8 +611,8 @@ add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_uint16");
-      orc_program_set_backup_function (p, _backup_add_uint16);
+      orc_program_set_name (p, "adder_orc_add_uint16");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_uint16);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 2, "s1");
 
@@ -624,10 +636,11 @@ add_uint16 (guint16 * ORC_RESTRICT d1, const guint16 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* add_uint8 */
+/* adder_orc_add_uint8 */
 #ifdef DISABLE_ORC
 void
-add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -655,7 +668,7 @@ add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_uint8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_uint8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -683,7 +696,8 @@ _backup_add_uint8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+adder_orc_add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -695,8 +709,8 @@ add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_uint8");
-      orc_program_set_backup_function (p, _backup_add_uint8);
+      orc_program_set_name (p, "adder_orc_add_uint8");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_uint8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
 
@@ -720,10 +734,11 @@ add_uint8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* add_float32 */
+/* adder_orc_add_float32 */
 #ifdef DISABLE_ORC
 void
-add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n)
+adder_orc_add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -759,7 +774,7 @@ add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_add_float32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_adder_orc_add_float32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -795,7 +810,8 @@ _backup_add_float32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n)
+adder_orc_add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -807,8 +823,8 @@ add_float32 (float *ORC_RESTRICT d1, const float *ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "add_float32");
-      orc_program_set_backup_function (p, _backup_add_float32);
+      orc_program_set_name (p, "adder_orc_add_float32");
+      orc_program_set_backup_function (p, _backup_adder_orc_add_float32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
