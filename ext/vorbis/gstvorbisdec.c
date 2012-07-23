@@ -478,7 +478,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet,
       sample_count, size);
 
   /* alloc buffer for it */
-  out = gst_buffer_new_allocate (NULL, size, NULL);
+  out = gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (vd), size);
 
   gst_buffer_map (out, &map, GST_MAP_WRITE);
   /* get samples ready for reading now, should be sample_count */

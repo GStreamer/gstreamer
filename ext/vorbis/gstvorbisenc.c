@@ -561,7 +561,9 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
 {
   GstBuffer *outbuf;
 
-  outbuf = gst_buffer_new_and_alloc (packet->bytes);
+  outbuf =
+      gst_audio_encoder_allocate_output_buffer (GST_AUDIO_ENCODER (vorbisenc),
+      packet->bytes);
   gst_buffer_fill (outbuf, 0, packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
   GST_BUFFER_OFFSET_END (outbuf) = 0;
@@ -798,7 +800,9 @@ gst_vorbis_enc_output_buffers (GstVorbisEnc * vorbisenc)
       GstBuffer *buf;
 
       GST_LOG_OBJECT (vorbisenc, "pushing out a data packet");
-      buf = gst_buffer_new_and_alloc (op.bytes);
+      buf =
+          gst_audio_encoder_allocate_output_buffer (GST_AUDIO_ENCODER
+          (vorbisenc), op.bytes);
       gst_buffer_fill (buf, 0, op.packet, op.bytes);
       /* tracking granulepos should tell us samples accounted for */
       ret =
