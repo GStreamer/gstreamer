@@ -1507,8 +1507,10 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
-  if (G_UNLIKELY (priv->output_state_changed))
+  if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
+              && gst_pad_check_reconfigure (encoder->srcpad))))
     gst_video_encoder_set_src_caps (encoder);
+
 
   if (G_UNLIKELY (priv->output_state == NULL))
     goto no_output_state;

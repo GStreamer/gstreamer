@@ -2172,11 +2172,11 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   GST_LOG_OBJECT (decoder, "finish frame %p", frame);
 
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
               && gst_pad_check_reconfigure (decoder->srcpad))))
     gst_video_decoder_negotiate (decoder);
-
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   gst_video_decoder_prepare_finish_frame (decoder, frame, FALSE);
   priv->processed++;
@@ -2827,13 +2827,13 @@ gst_video_decoder_allocate_output_frame (GstVideoDecoder *
   g_return_val_if_fail (num_bytes != 0, GST_FLOW_ERROR);
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
 
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   if (G_UNLIKELY (decoder->priv->output_state_changed
           || (decoder->priv->output_state
               && gst_pad_check_reconfigure (decoder->srcpad))))
     gst_video_decoder_negotiate (decoder);
 
   GST_LOG_OBJECT (decoder, "alloc buffer size %d", num_bytes);
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   flow_ret = gst_buffer_pool_acquire_buffer (decoder->priv->pool,
       &frame->output_buffer, NULL);
