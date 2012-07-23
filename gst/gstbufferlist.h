@@ -152,7 +152,7 @@ GstBufferList *          gst_buffer_list_new_sized             (guint size) G_GN
 guint                    gst_buffer_list_length                (GstBufferList *list);
 
 GstBuffer *              gst_buffer_list_get                   (GstBufferList *list, guint idx);
-void                     gst_buffer_list_insert                (GstBufferList *list, guint idx, GstBuffer *buffer);
+void                     gst_buffer_list_insert                (GstBufferList *list, gint idx, GstBuffer *buffer);
 void                     gst_buffer_list_remove                (GstBufferList *list, guint idx, guint length);
 
 gboolean                 gst_buffer_list_foreach               (GstBufferList *list,

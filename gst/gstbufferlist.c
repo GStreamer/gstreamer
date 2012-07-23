@@ -256,7 +256,7 @@ gst_buffer_list_get (GstBufferList * list, guint idx)
  * gst_buffer_list_insert:
  * @list: a #GstBufferList
  * @idx: the index
- * @buffer: a #GstBuffer
+ * @buffer: (transfer full): a #GstBuffer
  *
  * Insert @buffer at @idx in @list. Other buffers are moved to make room for
  * this new buffer.
@@ -264,7 +264,7 @@ gst_buffer_list_get (GstBufferList * list, guint idx)
  * A -1 value for @idx will append the buffer at the end.
  */
 void
-gst_buffer_list_insert (GstBufferList * list, guint idx, GstBuffer * buffer)
+gst_buffer_list_insert (GstBufferList * list, gint idx, GstBuffer * buffer)
 {
   g_return_if_fail (GST_IS_BUFFER_LIST (list));
   g_return_if_fail (buffer != NULL);
