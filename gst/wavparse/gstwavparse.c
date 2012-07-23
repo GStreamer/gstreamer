@@ -1172,8 +1172,8 @@ gst_wavparse_cue_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
 
   ncues = GST_READ_UINT32_LE (data);
 
-  if (size != 4 + ncues * 24) {
-    GST_WARNING_OBJECT (wav, "broken file");
+  if (size < 4 + ncues * 24) {
+    GST_WARNING_OBJECT (wav, "broken file %d %d", size, ncues);
     return FALSE;
   }
 
