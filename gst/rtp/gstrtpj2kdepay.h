@@ -58,7 +58,6 @@ struct _GstRtpJ2KDepay
   guint next_frag;
   gboolean have_sync;
 
-  gboolean buffer_list;
   gint width, height;
 };
 

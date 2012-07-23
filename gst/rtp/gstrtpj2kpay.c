@@ -78,12 +78,9 @@ typedef enum
   J2K_MARKER_EOC = 0xD9
 } RtpJ2KMarker;
 
-#define DEFAULT_BUFFER_LIST             TRUE
-
 enum
 {
   PROP_0,
-  PROP_BUFFER_LIST,
   PROP_LAST
 };
 
@@ -128,11 +125,6 @@ gst_rtp_j2k_pay_class_init (GstRtpJ2KPayClass * klass)
   gobject_class->set_property = gst_rtp_j2k_pay_set_property;
   gobject_class->get_property = gst_rtp_j2k_pay_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_LIST,
-      g_param_spec_boolean ("buffer-list", "Buffer List",
-          "Use Buffer Lists",
-          DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_j2k_pay_src_template));
   gst_element_class_add_pad_template (gstelement_class,
@@ -153,7 +145,6 @@ gst_rtp_j2k_pay_class_init (GstRtpJ2KPayClass * klass)
 static void
 gst_rtp_j2k_pay_init (GstRtpJ2KPay * pay)
 {
-  pay->buffer_list = DEFAULT_BUFFER_LIST;
 }
 
 static gboolean
@@ -332,9 +323,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GstClockTime timestamp;
   GstFlowReturn ret = GST_FLOW_ERROR;
   RtpJ2KState state;
-#if 0
   GstBufferList *list = NULL;
-#endif
   GstMapInfo map;
   guint mtu, max_size;
   guint offset;
@@ -364,12 +353,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
   state.next_sot = 0;
   state.force_packet = FALSE;
 
-#if 0
-  if (pay->buffer_list) {
-    list = gst_buffer_list_new ();
-    it = gst_buffer_list_iterate (list);
-  }
-#endif
+  list = gst_buffer_list_new ();
 
   /* get max packet length */
   max_size = gst_rtp_buffer_calc_payload_len (mtu - HEADER_SIZE, 0, 0);
@@ -421,6 +405,7 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     while (pu_size > 0) {
       guint packet_size, data_size;
+      GstBuffer *paybuf;
 
       /* calculate the packet size */
       packet_size =
@@ -439,16 +424,9 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       payload_size = gst_rtp_buffer_calc_payload_len (packet_size, 0, 0);
       data_size = payload_size - HEADER_SIZE;
 
-#if 0
-      if (pay->buffer_list) {
-        /* make buffer for header */
-        outbuf = gst_rtp_buffer_new_allocate (HEADER_SIZE, 0, 0);
-      } else
-#endif
-      {
-        /* make buffer for header and data */
-        outbuf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
-      }
+      /* make buffer for header */
+      outbuf = gst_rtp_buffer_new_allocate (HEADER_SIZE, 0, 0);
+
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
       gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
@@ -500,30 +478,15 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
       header[6] = (state.header.offset >> 8) & 0xff;
       header[7] = state.header.offset & 0xff;
 
-#if 0
-      if (pay->buffer_list) {
-        GstBuffer *paybuf;
+      gst_rtp_buffer_unmap (&rtp);
 
-        /* make subbuffer of j2k data */
-        paybuf = gst_buffer_create_sub (buffer, offset, data_size);
+      /* make subbuffer of j2k data */
+      paybuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_MEMORY,
+          offset, data_size);
 
-        /* create a new group to hold the header and the payload */
-        gst_buffer_list_iterator_add_group (it);
+      outbuf = gst_buffer_append (outbuf, paybuf);
 
-        /* add both buffers to the buffer list */
-        gst_buffer_list_iterator_add (it, outbuf);
-        gst_buffer_list_iterator_add (it, paybuf);
-      } else
-#endif
-      {
-        /* copy payload */
-        memcpy (header + HEADER_SIZE, &map.data[offset], data_size);
-        gst_rtp_buffer_unmap (&rtp);
-
-        ret = gst_rtp_base_payload_push (basepayload, outbuf);
-        if (ret != GST_FLOW_OK)
-          goto done;
-      }
+      gst_buffer_list_add (list, outbuf);
 
       /* reset header for next round */
       state.header.MHF = 0;
@@ -535,16 +498,10 @@ gst_rtp_j2k_pay_handle_buffer (GstRTPBasePayload * basepayload,
     offset = pos;
   } while (offset < map.size);
 
-done:
   gst_buffer_unref (buffer);
 
-#if 0
-  if (pay->buffer_list) {
-    /* free iterator and push the whole buffer list at once */
-    gst_buffer_list_iterator_free (it);
-    ret = gst_rtp_base_payload_push_list (basepayload, list);
-  }
-#endif
+  /* push the whole buffer list at once */
+  ret = gst_rtp_base_payload_push_list (basepayload, list);
 
   return ret;
 }
@@ -553,14 +510,7 @@ static void
 gst_rtp_j2k_pay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpJ2KPay *rtpj2kpay;
-
-  rtpj2kpay = GST_RTP_J2K_PAY (object);
-
   switch (prop_id) {
-    case PROP_BUFFER_LIST:
-      rtpj2kpay->buffer_list = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -571,14 +521,7 @@ static void
 gst_rtp_j2k_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstRtpJ2KPay *rtpj2kpay;
-
-  rtpj2kpay = GST_RTP_J2K_PAY (object);
-
   switch (prop_id) {
-    case PROP_BUFFER_LIST:
-      g_value_set_boolean (value, rtpj2kpay->buffer_list);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

@@ -56,12 +56,9 @@ typedef enum
   J2K_MARKER_EOC = 0xD9
 } RtpJ2KMarker;
 
-#define DEFAULT_BUFFER_LIST             TRUE
-
 enum
 {
   PROP_0,
-  PROP_BUFFER_LIST,
   PROP_LAST
 };
 
@@ -100,11 +97,6 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
   gobject_class->set_property = gst_rtp_j2k_depay_set_property;
   gobject_class->get_property = gst_rtp_j2k_depay_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFFER_LIST,
-      g_param_spec_boolean ("buffer-list", "Buffer List",
-          "Use Buffer Lists",
-          DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_j2k_depay_src_template));
   gst_element_class_add_pad_template (gstelement_class,
@@ -127,8 +119,6 @@ gst_rtp_j2k_depay_class_init (GstRtpJ2KDepayClass * klass)
 static void
 gst_rtp_j2k_depay_init (GstRtpJ2KDepay * rtpj2kdepay)
 {
-  rtpj2kdepay->buffer_list = DEFAULT_BUFFER_LIST;
-
   rtpj2kdepay->pu_adapter = gst_adapter_new ();
   rtpj2kdepay->t_adapter = gst_adapter_new ();
   rtpj2kdepay->f_adapter = gst_adapter_new ();
@@ -383,13 +373,16 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
     goto done;
 
   if (avail > 2) {
-    GstBuffer *outbuf;
+    GList *list, *walk;
+    GstBufferList *buflist;
 
     /* take the last bytes of the JPEG 2000 data to see if there is an EOC
      * marker */
     gst_adapter_copy (rtpj2kdepay->f_adapter, end, avail - 2, 2);
 
     if (end[0] != 0xff && end[1] != 0xd9) {
+      GstBuffer *outbuf;
+
       end[0] = 0xff;
       end[1] = 0xd9;
 
@@ -402,29 +395,18 @@ gst_rtp_j2k_depay_flush_frame (GstRTPBaseDepayload * depayload)
       gst_adapter_push (rtpj2kdepay->f_adapter, outbuf);
       avail += 2;
     }
-#if 0
-    if (rtpj2kdepay->buffer_list) {
-      GList *list;
-      GstBufferList *buflist;
-      GstBufferListIterator *it;
 
-      GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer list of %u bytes", avail);
-      list = gst_adapter_take_list (rtpj2kdepay->f_adapter, avail);
+    GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer list of %u bytes", avail);
+    list = gst_adapter_take_list (rtpj2kdepay->f_adapter, avail);
 
-      buflist = gst_buffer_list_new ();
-      it = gst_buffer_list_iterate (buflist);
-      gst_buffer_list_iterator_add_group (it);
-      gst_buffer_list_iterator_add_list (it, list);
-      gst_buffer_list_iterator_free (it);
+    buflist = gst_buffer_list_new ();
 
-      ret = gst_rtp_base_depayload_push_list (depayload, buflist);
-    } else
-#endif
-    {
-      GST_DEBUG_OBJECT (rtpj2kdepay, "pushing buffer of %u bytes", avail);
-      outbuf = gst_adapter_take_buffer (rtpj2kdepay->f_adapter, avail);
-      ret = gst_rtp_base_depayload_push (depayload, outbuf);
-    }
+    for (walk = list; walk; walk = g_list_next (walk))
+      gst_buffer_list_add (buflist, GST_BUFFER_CAST (walk->data));
+
+    g_list_free (list);
+
+    ret = gst_rtp_base_depayload_push_list (depayload, buflist);
   } else {
     GST_WARNING_OBJECT (rtpj2kdepay, "empty packet");
     gst_adapter_clear (rtpj2kdepay->f_adapter);
@@ -607,14 +589,7 @@ static void
 gst_rtp_j2k_depay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRtpJ2KDepay *rtpj2kdepay;
-
-  rtpj2kdepay = GST_RTP_J2K_DEPAY (object);
-
   switch (prop_id) {
-    case PROP_BUFFER_LIST:
-      rtpj2kdepay->buffer_list = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -625,14 +600,7 @@ static void
 gst_rtp_j2k_depay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstRtpJ2KDepay *rtpj2kdepay;
-
-  rtpj2kdepay = GST_RTP_J2K_DEPAY (object);
-
   switch (prop_id) {
-    case PROP_BUFFER_LIST:
-      g_value_set_boolean (value, rtpj2kdepay->buffer_list);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
