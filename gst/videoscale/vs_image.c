@@ -68,7 +68,7 @@ vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
       memcpy (dest->pixels + i * dest->stride,
           dest->pixels + (i - 1) * dest->stride, dest->width * 4);
     } else {
-      gst_video_scale_orc_resample_nearest_u32 (dest->pixels + i * dest->stride,
+      video_scale_orc_resample_nearest_u32 (dest->pixels + i * dest->stride,
           src->pixels + j * src->stride, 0, x_increment, dest->width);
     }
 
@@ -105,7 +105,7 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
 #define LINE(x) ((tmpbuf) + (dest_size)*((x)&1))
 
   acc = 0;
-  gst_video_scale_orc_resample_bilinear_u32 (LINE (0), src->pixels,
+  video_scale_orc_resample_bilinear_u32 (LINE (0), src->pixels,
       0, x_increment, dest->width);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
@@ -116,16 +116,16 @@ vs_image_scale_linear_RGBA (const VSImage * dest, const VSImage * src,
       memcpy (dest->pixels + i * dest->stride, LINE (j), dest_size);
     } else {
       if (j > y1) {
-        gst_video_scale_orc_resample_bilinear_u32 (LINE (j),
+        video_scale_orc_resample_bilinear_u32 (LINE (j),
             src->pixels + j * src->stride, 0, x_increment, dest->width);
         y1++;
       }
       if (j >= y1) {
-        gst_video_scale_orc_resample_bilinear_u32 (LINE (j + 1),
+        video_scale_orc_resample_bilinear_u32 (LINE (j + 1),
             src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
         y1++;
       }
-      gst_video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
+      video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
           LINE (j), LINE (j + 1), (x >> 8), dest->width * 4);
     }
 
@@ -678,7 +678,7 @@ vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
   for (i = 0; i < dest->height; i++) {
     j = acc >> 16;
 
-    gst_video_scale_orc_resample_nearest_u8 (dest->pixels + i * dest->stride,
+    video_scale_orc_resample_nearest_u8 (dest->pixels + i * dest->stride,
         src->pixels + j * src->stride, 0, x_increment, dest->width);
     acc += y_increment;
   }
@@ -717,7 +717,7 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   y2 = -1;
-  gst_video_scale_orc_resample_bilinear_u8 (tmp1, src->pixels,
+  video_scale_orc_resample_bilinear_u8 (tmp1, src->pixels,
       0, x_increment, dest->width);
   y1 = 0;
   for (i = 0; i < dest->height; i++) {
@@ -730,7 +730,7 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
       } else if (j == y2) {
         memcpy (dest->pixels + i * dest->stride, tmp2, dest_size);
       } else {
-        gst_video_scale_orc_resample_bilinear_u8 (tmp1,
+        video_scale_orc_resample_bilinear_u8 (tmp1,
             src->pixels + j * src->stride, 0, x_increment, dest->width);
         y1 = j;
         memcpy (dest->pixels + i * dest->stride, tmp1, dest_size);
@@ -738,39 +738,39 @@ vs_image_scale_linear_Y (const VSImage * dest, const VSImage * src,
     } else {
       if (j == y1) {
         if (j + 1 != y2) {
-          gst_video_scale_orc_resample_bilinear_u8 (tmp2,
+          video_scale_orc_resample_bilinear_u8 (tmp2,
               src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
           y2 = j + 1;
         }
         if ((x >> 8) == 0) {
           memcpy (dest->pixels + i * dest->stride, tmp1, dest->width);
         } else {
-          gst_video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
+          video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
               tmp1, tmp2, (x >> 8), dest->width);
         }
       } else if (j == y2) {
         if (j + 1 != y1) {
-          gst_video_scale_orc_resample_bilinear_u8 (tmp1,
+          video_scale_orc_resample_bilinear_u8 (tmp1,
               src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
           y1 = j + 1;
         }
         if ((x >> 8) == 0) {
           memcpy (dest->pixels + i * dest->stride, tmp2, dest->width);
         } else {
-          gst_video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
+          video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
               tmp2, tmp1, (x >> 8), dest->width);
         }
       } else {
-        gst_video_scale_orc_resample_bilinear_u8 (tmp1,
+        video_scale_orc_resample_bilinear_u8 (tmp1,
             src->pixels + j * src->stride, 0, x_increment, dest->width);
         y1 = j;
-        gst_video_scale_orc_resample_bilinear_u8 (tmp2,
+        video_scale_orc_resample_bilinear_u8 (tmp2,
             src->pixels + (j + 1) * src->stride, 0, x_increment, dest->width);
         y2 = (j + 1);
         if ((x >> 8) == 0) {
           memcpy (dest->pixels + i * dest->stride, tmp1, dest->width);
         } else {
-          gst_video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
+          video_scale_orc_merge_linear_u8 (dest->pixels + i * dest->stride,
               tmp1, tmp2, (x >> 8), dest->width);
         }
       }
@@ -1240,7 +1240,7 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
 #define LINE(x) ((guint16 *)((tmpbuf) + (dest_size)*((x)&1)))
 
   acc = 0;
-  //gst_video_scale_orc_resample_bilinear_u64 (LINE (0), src->pixels,
+  //video_scale_orc_resample_bilinear_u64 (LINE (0), src->pixels,
   //    0, x_increment, dest->width);
   xacc = 0;
   vs_scanline_resample_linear_AYUV64 ((guint8 *) LINE (0),
@@ -1258,7 +1258,7 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
         vs_scanline_resample_linear_AYUV64 ((guint8 *) LINE (j),
             src->pixels + j * src->stride, src->width, dest->width, &xacc,
             x_increment);
-        //gst_video_scale_orc_resample_bilinear_u64 (LINE (j),
+        //video_scale_orc_resample_bilinear_u64 (LINE (j),
         //    src->pixels + j * src->stride, 0, x_increment, dest->width);
         y1++;
       }
@@ -1267,16 +1267,16 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
         vs_scanline_resample_linear_AYUV64 ((guint8 *) LINE (j + 1),
             src->pixels + (j + 1) * src->stride, src->width, dest->width, &xacc,
             x_increment);
-        gst_video_scale_orc_merge_linear_u16 ((guint16 *) (dest->pixels +
+        video_scale_orc_merge_linear_u16 ((guint16 *) (dest->pixels +
                 i * dest->stride), LINE (j), LINE (j + 1), 65536 - x, x,
             dest->width * 4);
-        //gst_video_scale_orc_resample_merge_bilinear_u64 (dest->pixels +
+        //video_scale_orc_resample_merge_bilinear_u64 (dest->pixels +
         //    i * dest->stride, LINE (j + 1), LINE (j),
         //    src->pixels + (j + 1) * src->stride, (x >> 8), 0, x_increment,
         //    dest->width);
         y1++;
       } else {
-        gst_video_scale_orc_merge_linear_u16 ((guint16 *) (dest->pixels +
+        video_scale_orc_merge_linear_u16 ((guint16 *) (dest->pixels +
                 i * dest->stride), LINE (j), LINE (j + 1), 65536 - x, x,
             dest->width * 4);
       }
