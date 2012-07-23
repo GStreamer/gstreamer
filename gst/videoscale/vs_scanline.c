@@ -37,14 +37,14 @@
 void
 vs_scanline_downsample_Y (uint8_t * dest, uint8_t * src, int n)
 {
-  orc_downsample_u8 (dest, src, n);
+  gst_video_scale_orc_downsample_u8 (dest, src, n);
 }
 
 void
 vs_scanline_resample_nearest_Y (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  gst_videoscale_orc_resample_nearest_u8 (dest, src,
+  gst_video_scale_orc_resample_nearest_u8 (dest, src,
       *accumulator, increment, n);
 
   *accumulator += n * increment;
@@ -55,7 +55,7 @@ void
 vs_scanline_resample_linear_Y (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  gst_videoscale_orc_resample_bilinear_u8 (dest, src,
+  gst_video_scale_orc_resample_bilinear_u8 (dest, src,
       *accumulator, increment, n);
 
   *accumulator += n * increment;
@@ -70,14 +70,14 @@ vs_scanline_merge_linear_Y (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, n);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, value, n);
+    gst_video_scale_orc_merge_linear_u8 (dest, src1, src2, value, n);
   }
 }
 
 void
 vs_scanline_downsample_Y16 (uint8_t * dest, uint8_t * src, int n)
 {
-  orc_downsample_u16 ((uint16_t *) dest, (uint16_t *) src, n);
+  gst_video_scale_orc_downsample_u16 ((uint16_t *) dest, (uint16_t *) src, n);
 }
 
 void
@@ -137,7 +137,7 @@ vs_scanline_merge_linear_Y16 (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (x == 0) {
     memcpy (d, s1, n * 2);
   } else {
-    orc_merge_linear_u16 (d, s1, s2, 65536 - x, x, n);
+    gst_video_scale_orc_merge_linear_u16 (d, s1, s2, 65536 - x, x, n);
   }
 }
 
@@ -146,14 +146,14 @@ vs_scanline_merge_linear_Y16 (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 void
 vs_scanline_downsample_RGBA (uint8_t * dest, uint8_t * src, int n)
 {
-  gst_videoscale_orc_downsample_u32 (dest, src, n);
+  gst_video_scale_orc_downsample_u32 (dest, src, n);
 }
 
 void
 vs_scanline_resample_nearest_RGBA (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  gst_videoscale_orc_resample_nearest_u32 (dest, src,
+  gst_video_scale_orc_resample_nearest_u32 (dest, src,
       *accumulator, increment, n);
 
   *accumulator += n * increment;
@@ -163,7 +163,7 @@ void
 vs_scanline_resample_linear_RGBA (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
-  gst_videoscale_orc_resample_bilinear_u32 (dest, src,
+  gst_video_scale_orc_resample_bilinear_u32 (dest, src,
       *accumulator, increment, n);
 
   *accumulator += n * increment;
@@ -178,7 +178,7 @@ vs_scanline_merge_linear_RGBA (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, n * 4);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, value, n * 4);
+    gst_video_scale_orc_merge_linear_u8 (dest, src1, src2, value, n * 4);
   }
 }
 
@@ -263,7 +263,7 @@ vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, n * 3);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, value, n * 3);
+    gst_video_scale_orc_merge_linear_u8 (dest, src1, src2, value, n * 3);
   }
 }
 
@@ -276,7 +276,7 @@ vs_scanline_merge_linear_RGB (uint8_t * dest, uint8_t * src1, uint8_t * src2,
 void
 vs_scanline_downsample_YUYV (uint8_t * dest, uint8_t * src, int n)
 {
-  gst_videoscale_orc_downsample_yuyv (dest, src, n);
+  gst_video_scale_orc_downsample_yuyv (dest, src, n);
 }
 
 void
@@ -385,7 +385,7 @@ vs_scanline_merge_linear_YUYV (uint8_t * dest, uint8_t * src1, uint8_t * src2,
   if (value == 0) {
     memcpy (dest, src1, quads * 4);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, value, quads * 4);
+    gst_video_scale_orc_merge_linear_u8 (dest, src1, src2, value, quads * 4);
   }
 }
 
@@ -514,7 +514,7 @@ vs_scanline_merge_linear_UYVY (uint8_t * dest, uint8_t * src1,
   if (value == 0) {
     memcpy (dest, src1, quads * 4);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, value, quads * 4);
+    gst_video_scale_orc_merge_linear_u8 (dest, src1, src2, value, quads * 4);
   }
 }
 
@@ -596,7 +596,7 @@ vs_scanline_merge_linear_NV12 (uint8_t * dest, uint8_t * src1,
   if (value == 0) {
     memcpy (dest, src1, n * 2);
   } else {
-    orc_merge_linear_u8 (dest, src1, src2, value, n * 2);
+    gst_video_scale_orc_merge_linear_u8 (dest, src1, src2, value, n * 2);
   }
 }
 

@@ -59,7 +59,7 @@ vs_fill_borders_RGBA (const VSImage * dest, const uint8_t * val)
 
   data = dest->real_pixels;
   for (i = 0; i < top; i++) {
-    orc_splat_u32 ((uint32_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u32 ((uint32_t *) data, v, real_width);
     data += stride;
   }
 
@@ -67,8 +67,8 @@ vs_fill_borders_RGBA (const VSImage * dest, const uint8_t * val)
     tmp = height;
     tmp2 = (left + width) * 4;
     for (i = 0; i < tmp; i++) {
-      orc_splat_u32 ((uint32_t *) data, v, left);
-      orc_splat_u32 ((uint32_t *) (data + tmp2), v, right);
+      gst_video_scale_orc_splat_u32 ((uint32_t *) data, v, left);
+      gst_video_scale_orc_splat_u32 ((uint32_t *) (data + tmp2), v, right);
       data += stride;
     }
   } else {
@@ -76,7 +76,7 @@ vs_fill_borders_RGBA (const VSImage * dest, const uint8_t * val)
   }
 
   for (i = 0; i < bottom; i++) {
-    orc_splat_u32 ((uint32_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u32 ((uint32_t *) data, v, real_width);
     data += stride;
   }
 }
@@ -282,7 +282,7 @@ vs_fill_borders_Y16 (const VSImage * dest, const uint16_t val)
 
   data = dest->real_pixels;
   for (i = 0; i < top; i++) {
-    orc_splat_u16 ((uint16_t *) data, val, real_width);
+    gst_video_scale_orc_splat_u16 ((uint16_t *) data, val, real_width);
     data += stride;
   }
 
@@ -290,8 +290,8 @@ vs_fill_borders_Y16 (const VSImage * dest, const uint16_t val)
     tmp = height;
     tmp2 = (left + width) * 2;
     for (i = 0; i < tmp; i++) {
-      orc_splat_u16 ((uint16_t *) data, val, left);
-      orc_splat_u16 ((uint16_t *) (data + tmp2), val, right);
+      gst_video_scale_orc_splat_u16 ((uint16_t *) data, val, left);
+      gst_video_scale_orc_splat_u16 ((uint16_t *) (data + tmp2), val, right);
       data += stride;
     }
   } else {
@@ -299,7 +299,7 @@ vs_fill_borders_Y16 (const VSImage * dest, const uint16_t val)
   }
 
   for (i = 0; i < bottom; i++) {
-    orc_splat_u16 ((uint16_t *) data, val, real_width);
+    gst_video_scale_orc_splat_u16 ((uint16_t *) data, val, real_width);
     data += stride;
   }
 }
@@ -320,7 +320,7 @@ vs_fill_borders_RGB565 (const VSImage * dest, const uint8_t * val)
 
   data = dest->real_pixels;
   for (i = 0; i < top; i++) {
-    orc_splat_u16 ((uint16_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u16 ((uint16_t *) data, v, real_width);
     data += stride;
   }
 
@@ -328,8 +328,8 @@ vs_fill_borders_RGB565 (const VSImage * dest, const uint8_t * val)
     tmp = height;
     tmp2 = (left + width) * 2;
     for (i = 0; i < tmp; i++) {
-      orc_splat_u16 ((uint16_t *) data, v, left);
-      orc_splat_u16 ((uint16_t *) (data + tmp2), v, right);
+      gst_video_scale_orc_splat_u16 ((uint16_t *) data, v, left);
+      gst_video_scale_orc_splat_u16 ((uint16_t *) (data + tmp2), v, right);
       data += stride;
     }
   } else {
@@ -337,7 +337,7 @@ vs_fill_borders_RGB565 (const VSImage * dest, const uint8_t * val)
   }
 
   for (i = 0; i < bottom; i++) {
-    orc_splat_u16 ((uint16_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u16 ((uint16_t *) data, v, real_width);
     data += stride;
   }
 }
@@ -358,7 +358,7 @@ vs_fill_borders_RGB555 (const VSImage * dest, const uint8_t * val)
 
   data = dest->real_pixels;
   for (i = 0; i < top; i++) {
-    orc_splat_u16 ((uint16_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u16 ((uint16_t *) data, v, real_width);
     data += stride;
   }
 
@@ -366,8 +366,8 @@ vs_fill_borders_RGB555 (const VSImage * dest, const uint8_t * val)
     tmp = height;
     tmp2 = (left + width) * 2;
     for (i = 0; i < tmp; i++) {
-      orc_splat_u16 ((uint16_t *) data, v, left);
-      orc_splat_u16 ((uint16_t *) (data + tmp2), v, right);
+      gst_video_scale_orc_splat_u16 ((uint16_t *) data, v, left);
+      gst_video_scale_orc_splat_u16 ((uint16_t *) (data + tmp2), v, right);
       data += stride;
     }
   } else {
@@ -375,7 +375,7 @@ vs_fill_borders_RGB555 (const VSImage * dest, const uint8_t * val)
   }
 
   for (i = 0; i < bottom; i++) {
-    orc_splat_u16 ((uint16_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u16 ((uint16_t *) data, v, real_width);
     data += stride;
   }
 }
@@ -399,7 +399,7 @@ vs_fill_borders_AYUV64 (const VSImage * dest, const uint8_t * val)
 
   data = dest->real_pixels;
   for (i = 0; i < top; i++) {
-    orc_splat_u64 ((uint64_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u64 ((uint64_t *) data, v, real_width);
     data += stride;
   }
 
@@ -407,8 +407,8 @@ vs_fill_borders_AYUV64 (const VSImage * dest, const uint8_t * val)
     tmp = height;
     tmp2 = (left + width) * 8;
     for (i = 0; i < tmp; i++) {
-      orc_splat_u64 ((uint64_t *) data, v, left);
-      orc_splat_u64 ((uint64_t *) (data + tmp2), v, right);
+      gst_video_scale_orc_splat_u64 ((uint64_t *) data, v, left);
+      gst_video_scale_orc_splat_u64 ((uint64_t *) (data + tmp2), v, right);
       data += stride;
     }
   } else {
@@ -416,7 +416,7 @@ vs_fill_borders_AYUV64 (const VSImage * dest, const uint8_t * val)
   }
 
   for (i = 0; i < bottom; i++) {
-    orc_splat_u64 ((uint64_t *) data, v, real_width);
+    gst_video_scale_orc_splat_u64 ((uint64_t *) data, v, real_width);
     data += stride;
   }
 }
