@@ -485,7 +485,7 @@ convert_I420_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
   gint height = convert->height;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    cogorc_convert_I420_YUY2 (FRAME_GET_LINE (dest, i),
+    video_convert_orc_convert_I420_YUY2 (FRAME_GET_LINE (dest, i),
         FRAME_GET_LINE (dest, i + 1),
         FRAME_GET_Y_LINE (src, i),
         FRAME_GET_Y_LINE (src, i + 1),
@@ -509,7 +509,7 @@ convert_I420_UYVY (VideoConvert * convert, GstVideoFrame * dest,
   gint height = convert->height;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    cogorc_convert_I420_UYVY (FRAME_GET_LINE (dest, i),
+    video_convert_orc_convert_I420_UYVY (FRAME_GET_LINE (dest, i),
         FRAME_GET_LINE (dest, i + 1),
         FRAME_GET_Y_LINE (src, i),
         FRAME_GET_Y_LINE (src, i + 1),
@@ -533,7 +533,7 @@ convert_I420_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   gint height = convert->height;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    cogorc_convert_I420_AYUV (FRAME_GET_LINE (dest, i),
+    video_convert_orc_convert_I420_AYUV (FRAME_GET_LINE (dest, i),
         FRAME_GET_LINE (dest, i + 1),
         FRAME_GET_Y_LINE (src, i),
         FRAME_GET_Y_LINE (src, i + 1),
@@ -554,15 +554,16 @@ convert_I420_Y42B (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0), FRAME_GET_Y_STRIDE (dest),
-      FRAME_GET_Y_LINE (src, 0), FRAME_GET_Y_STRIDE (src), width, height);
+  video_convert_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
+      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+      FRAME_GET_Y_STRIDE (src), width, height);
 
-  cogorc_planar_chroma_420_422 (FRAME_GET_U_LINE (dest, 0),
+  video_convert_orc_planar_chroma_420_422 (FRAME_GET_U_LINE (dest, 0),
       2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (dest, 1),
       2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
 
-  cogorc_planar_chroma_420_422 (FRAME_GET_V_LINE (dest, 0),
+  video_convert_orc_planar_chroma_420_422 (FRAME_GET_V_LINE (dest, 0),
       2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (dest, 1),
       2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
@@ -575,15 +576,16 @@ convert_I420_Y444 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0), FRAME_GET_Y_STRIDE (dest),
-      FRAME_GET_Y_LINE (src, 0), FRAME_GET_Y_STRIDE (src), width, height);
+  video_convert_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
+      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+      FRAME_GET_Y_STRIDE (src), width, height);
 
-  cogorc_planar_chroma_420_444 (FRAME_GET_U_LINE (dest, 0),
+  video_convert_orc_planar_chroma_420_444 (FRAME_GET_U_LINE (dest, 0),
       2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (dest, 1),
       2 * FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
 
-  cogorc_planar_chroma_420_444 (FRAME_GET_V_LINE (dest, 0),
+  video_convert_orc_planar_chroma_420_444 (FRAME_GET_V_LINE (dest, 0),
       2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (dest, 1),
       2 * FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
@@ -608,7 +610,7 @@ convert_YUY2_I420 (VideoConvert * convert, GstVideoFrame * dest,
     h--;
 
   for (i = 0; i < h; i += 2) {
-    cogorc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, i),
+    video_convert_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, i),
         FRAME_GET_Y_LINE (dest, i + 1),
         FRAME_GET_U_LINE (dest, i >> 1),
         FRAME_GET_V_LINE (dest, i >> 1),
@@ -629,7 +631,7 @@ convert_YUY2_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), (width + 1) / 2,
       height & 1 ? height - 1 : height);
@@ -648,7 +650,7 @@ convert_YUY2_Y42B (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_YUY2_Y42B (FRAME_GET_Y_LINE (dest, 0),
+  video_convert_orc_convert_YUY2_Y42B (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -662,7 +664,7 @@ convert_YUY2_Y444 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_YUY2_Y444 (FRAME_GET_COMP_LINE (dest, 0, 0),
+  video_convert_orc_convert_YUY2_Y444 (FRAME_GET_COMP_LINE (dest, 0, 0),
       FRAME_GET_COMP_STRIDE (dest, 0), FRAME_GET_COMP_LINE (dest, 1, 0),
       FRAME_GET_COMP_STRIDE (dest, 1), FRAME_GET_COMP_LINE (dest, 2, 0),
       FRAME_GET_COMP_STRIDE (dest, 2), FRAME_GET_LINE (src, 0),
@@ -679,7 +681,7 @@ convert_UYVY_I420 (VideoConvert * convert, GstVideoFrame * dest,
   gint height = convert->height;
 
   for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
-    cogorc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (dest, 0, i),
+    video_convert_orc_convert_UYVY_I420 (FRAME_GET_COMP_LINE (dest, 0, i),
         FRAME_GET_COMP_LINE (dest, 0, i + 1),
         FRAME_GET_COMP_LINE (dest, 1, i >> 1),
         FRAME_GET_COMP_LINE (dest, 2, i >> 1),
@@ -700,7 +702,7 @@ convert_UYVY_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), (width + 1) / 2,
       height & 1 ? height - 1 : height);
@@ -719,7 +721,7 @@ convert_UYVY_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_UYVY_YUY2 (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_UYVY_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), (width + 1) / 2, height);
 }
@@ -731,7 +733,7 @@ convert_UYVY_Y42B (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_UYVY_Y42B (FRAME_GET_Y_LINE (dest, 0),
+  video_convert_orc_convert_UYVY_Y42B (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -745,7 +747,7 @@ convert_UYVY_Y444 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_UYVY_Y444 (FRAME_GET_Y_LINE (dest, 0),
+  video_convert_orc_convert_UYVY_Y444 (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -759,7 +761,7 @@ convert_AYUV_I420 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_I420 (FRAME_GET_Y_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_I420 (FRAME_GET_Y_LINE (dest, 0),
       2 * FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (dest, 1),
       2 * FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
@@ -775,7 +777,7 @@ convert_AYUV_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_YUY2 (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width / 2, height);
 }
@@ -787,7 +789,7 @@ convert_AYUV_UYVY (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_UYVY (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_UYVY (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width / 2, height);
 }
@@ -799,7 +801,7 @@ convert_AYUV_Y42B (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_Y42B (FRAME_GET_Y_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_Y42B (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -820,7 +822,7 @@ convert_AYUV_Y444 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_Y444 (FRAME_GET_Y_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_Y444 (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
@@ -834,15 +836,16 @@ convert_Y42B_I420 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0), FRAME_GET_Y_STRIDE (dest),
-      FRAME_GET_Y_LINE (src, 0), FRAME_GET_Y_STRIDE (src), width, height);
+  video_convert_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
+      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+      FRAME_GET_Y_STRIDE (src), width, height);
 
-  cogorc_planar_chroma_422_420 (FRAME_GET_U_LINE (dest, 0),
+  video_convert_orc_planar_chroma_422_420 (FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       2 * FRAME_GET_U_STRIDE (src), FRAME_GET_U_LINE (src, 1),
       2 * FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
 
-  cogorc_planar_chroma_422_420 (FRAME_GET_V_LINE (dest, 0),
+  video_convert_orc_planar_chroma_422_420 (FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       2 * FRAME_GET_V_STRIDE (src), FRAME_GET_V_LINE (src, 1),
       2 * FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
@@ -861,14 +864,15 @@ convert_Y42B_Y444 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0), FRAME_GET_Y_STRIDE (dest),
-      FRAME_GET_Y_LINE (src, 0), FRAME_GET_Y_STRIDE (src), width, height);
+  video_convert_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
+      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+      FRAME_GET_Y_STRIDE (src), width, height);
 
-  cogorc_planar_chroma_422_444 (FRAME_GET_U_LINE (dest, 0),
+  video_convert_orc_planar_chroma_422_444 (FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), (width + 1) / 2, height);
 
-  cogorc_planar_chroma_422_444 (FRAME_GET_V_LINE (dest, 0),
+  video_convert_orc_planar_chroma_422_444 (FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
 }
@@ -880,7 +884,7 @@ convert_Y42B_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_Y42B_YUY2 (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_Y42B_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
@@ -894,7 +898,7 @@ convert_Y42B_UYVY (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_Y42B_UYVY (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_Y42B_UYVY (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
@@ -908,7 +912,7 @@ convert_Y42B_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_Y42B_AYUV (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_Y42B_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
@@ -922,15 +926,16 @@ convert_Y444_I420 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0), FRAME_GET_Y_STRIDE (dest),
-      FRAME_GET_Y_LINE (src, 0), FRAME_GET_Y_STRIDE (src), width, height);
+  video_convert_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
+      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+      FRAME_GET_Y_STRIDE (src), width, height);
 
-  cogorc_planar_chroma_444_420 (FRAME_GET_U_LINE (dest, 0),
+  video_convert_orc_planar_chroma_444_420 (FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       2 * FRAME_GET_U_STRIDE (src), FRAME_GET_U_LINE (src, 1),
       2 * FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
 
-  cogorc_planar_chroma_444_420 (FRAME_GET_V_LINE (dest, 0),
+  video_convert_orc_planar_chroma_444_420 (FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       2 * FRAME_GET_V_STRIDE (src), FRAME_GET_V_LINE (src, 1),
       2 * FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
@@ -949,14 +954,15 @@ convert_Y444_Y42B (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0), FRAME_GET_Y_STRIDE (dest),
-      FRAME_GET_Y_LINE (src, 0), FRAME_GET_Y_STRIDE (src), width, height);
+  video_convert_orc_memcpy_2d (FRAME_GET_Y_LINE (dest, 0),
+      FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
+      FRAME_GET_Y_STRIDE (src), width, height);
 
-  cogorc_planar_chroma_444_422 (FRAME_GET_U_LINE (dest, 0),
+  video_convert_orc_planar_chroma_444_422 (FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), (width + 1) / 2, height);
 
-  cogorc_planar_chroma_444_422 (FRAME_GET_V_LINE (dest, 0),
+  video_convert_orc_planar_chroma_444_422 (FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
 }
@@ -968,7 +974,7 @@ convert_Y444_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_Y444_YUY2 (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_Y444_YUY2 (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
@@ -982,7 +988,7 @@ convert_Y444_UYVY (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_Y444_UYVY (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_Y444_UYVY (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
@@ -996,7 +1002,7 @@ convert_Y444_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_Y444_AYUV (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_Y444_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
@@ -1011,7 +1017,7 @@ convert_AYUV_ARGB (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_ARGB (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_ARGB (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width, height);
 }
@@ -1023,7 +1029,7 @@ convert_AYUV_BGRA (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_BGRA (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_BGRA (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width, height);
 }
@@ -1035,7 +1041,7 @@ convert_AYUV_ABGR (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_ABGR (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_ABGR (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width, height);
 }
@@ -1047,7 +1053,7 @@ convert_AYUV_RGBA (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
-  cogorc_convert_AYUV_RGBA (FRAME_GET_LINE (dest, 0),
+  video_convert_orc_convert_AYUV_RGBA (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
       FRAME_GET_STRIDE (src), width, height);
 }
@@ -1064,14 +1070,14 @@ convert_I420_BGRA (VideoConvert * convert, GstVideoFrame * dest,
   if (quality > 3) {
     for (i = 0; i < height; i++) {
       if (i & 1) {
-        cogorc_convert_I420_BGRA_avg (FRAME_GET_LINE (dest, i),
+        video_convert_orc_convert_I420_BGRA_avg (FRAME_GET_LINE (dest, i),
             FRAME_GET_Y_LINE (src, i),
             FRAME_GET_U_LINE (src, i >> 1),
             FRAME_GET_U_LINE (src, (i >> 1) + 1),
             FRAME_GET_V_LINE (src, i >> 1),
             FRAME_GET_V_LINE (src, (i >> 1) + 1), width);
       } else {
-        cogorc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
+        video_convert_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
             FRAME_GET_Y_LINE (src, i),
             FRAME_GET_U_LINE (src, i >> 1),
             FRAME_GET_V_LINE (src, i >> 1), width);
@@ -1079,7 +1085,7 @@ convert_I420_BGRA (VideoConvert * convert, GstVideoFrame * dest,
     }
   } else {
     for (i = 0; i < height; i++) {
-      cogorc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
+      video_convert_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
           FRAME_GET_Y_LINE (src, i),
           FRAME_GET_U_LINE (src, i >> 1),
           FRAME_GET_V_LINE (src, i >> 1), width);
