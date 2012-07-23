@@ -365,6 +365,9 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
 
   gst_video_frame_unmap (&output_frame);
 
+  GST_BUFFER_FLAGS (in_frame->output_buffer) =
+      GST_BUFFER_FLAGS (input_vframe->buffer);
+
 beach:
   gst_video_codec_state_unref (state);
 
