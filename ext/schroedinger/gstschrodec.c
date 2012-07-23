@@ -455,7 +455,7 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
         state =
             gst_video_decoder_get_output_state (GST_VIDEO_DECODER (schro_dec));
         outbuf =
-            gst_video_decoder_alloc_output_buffer (GST_VIDEO_DECODER
+            gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER
             (schro_dec));
         schro_frame =
             gst_schro_buffer_wrap (outbuf, GST_VIDEO_INFO_FORMAT (&state->info),

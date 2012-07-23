@@ -487,7 +487,7 @@ gst_vp8_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
           (double) -deadline / GST_SECOND);
       gst_video_decoder_drop_frame (decoder, frame);
     } else {
-      ret = gst_video_decoder_alloc_output_frame (decoder, frame);
+      ret = gst_video_decoder_allocate_output_frame (decoder, frame);
 
       if (ret == GST_FLOW_OK) {
         gst_vp8_dec_image_to_buffer (dec, img, frame->output_buffer);
