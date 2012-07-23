@@ -648,7 +648,7 @@ gst_encoding_container_profile_contains_profile (GstEncodingContainerProfile *
 /**
  * gst_encoding_container_profile_add_profile:
  * @container: the #GstEncodingContainerProfile to use
- * @profile: the #GstEncodingProfile to add.
+ * @profile: (transfer full): the #GstEncodingProfile to add.
  *
  * Add a #GstEncodingProfile to the list of profiles handled by @container.
  * 
