@@ -42,10 +42,10 @@ TEST_LIBS	+= \
 endif
 
 test_codecs_source_c	= test-mpeg2.c test-h264.c test-vc1.c test-jpeg.c
-test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h)
+test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h) test-decode.h
 
-test_utils_source_c	= image.c
-test_utils_source_h	= image.h
+test_utils_source_c	= image.c $(test_codecs_source_c)
+test_utils_source_h	= image.h $(test_codecs_source_h)
 
 noinst_LTLIBRARIES	= libutils.la
 libutils_la_SOURCES	= $(test_utils_source_c)
@@ -63,7 +63,7 @@ test_surfaces_SOURCES	= test-surfaces.c
 test_surfaces_CFLAGS	= $(TEST_CFLAGS)
 test_surfaces_LDADD	= libutils.la $(TEST_LIBS)
 
-test_subpicture_SOURCES = test-subpicture.c test-mpeg2.c test-subpicture-data.c
+test_subpicture_SOURCES = test-subpicture.c test-subpicture-data.c
 test_subpicture_CFLAGS  = $(TEST_CFLAGS)
 test_subpicture_LDADD   = libutils.la $(TEST_LIBS)
 
@@ -76,11 +76,8 @@ test_textures_CFLAGS	= $(TEST_CFLAGS)
 test_textures_LDADD	= libutils.la $(TEST_LIBS)
 
 EXTRA_DIST = \
-	test-decode.h 		\
 	test-subpicture-data.h	\
 	$(test_utils_source_h)	\
-	$(test_codecs_source_c)	\
-	$(test_codecs_source_h)	\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
