@@ -578,7 +578,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   gint pic_width, pic_height;
   gint offset_x, offset_y;
 
-  result = gst_video_decoder_alloc_output_frame (decoder, frame);
+  result = gst_video_decoder_allocate_output_frame (decoder, frame);
 
   if (G_UNLIKELY (result != GST_FLOW_OK)) {
     GST_DEBUG_OBJECT (dec, "could not get buffer, reason: %s",
