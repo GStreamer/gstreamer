@@ -453,11 +453,13 @@ yesno() {
     test $1 -eq 1 && echo yes || echo no
 }
 
+VIDEO_OUTPUTS=""
+AS_IF([test $USE_X11 -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS x11"])
+AS_IF([test $USE_GLX -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS glx"])
+
 echo
 echo $PACKAGE configuration summary:
 echo
 echo VA-API version ................... : $VA_VERSION_STR
-echo GLX support ...................... : $(yesno $USE_GLX)
-echo VA/X11 support ................... : $(yesno $USE_X11)
-echo VA/GLX support ................... : $(yesno $HAVE_VA_GLX)
+echo Video outputs .................... : $VIDEO_OUTPUTS
 echo
