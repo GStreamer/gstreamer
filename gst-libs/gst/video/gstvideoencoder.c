@@ -1455,13 +1455,13 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (G_UNLIKELY (encoder->priv->output_state_changed
           || (encoder->priv->output_state
               && gst_pad_check_reconfigure (encoder->srcpad))))
     gst_video_encoder_set_src_caps (encoder);
 
   GST_LOG_OBJECT (encoder, "alloc buffer size %d", size);
-  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   frame->output_buffer =
       gst_buffer_new_allocate (encoder->priv->allocator, size,
