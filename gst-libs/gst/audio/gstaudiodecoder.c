@@ -577,8 +577,6 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
 
   GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
 
-  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
-
   res = gst_pad_set_caps (dec->srcpad, caps);
   gst_caps_unref (caps);
   if (!res)
@@ -613,6 +611,8 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   dec->priv->ctx.params = params;
 
 done:
+  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
   if (query)
     gst_query_unref (query);
 
@@ -912,6 +912,13 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
       buf ? size / ctx->info.bpf : -1, frames);
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
+
+  if (G_UNLIKELY (gst_pad_check_reconfigure (dec->srcpad))) {
+    if (!gst_audio_decoder_set_output_format (dec, &ctx->info)) {
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto exit;
+    }
+  }
 
   if (buf && priv->pending_events) {
     GList *pending_events, *l;
@@ -2798,7 +2805,7 @@ gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
 GstBuffer *
 gst_audio_decoder_allocate_output_buffer (GstAudioDecoder * dec, gsize size)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   g_return_val_if_fail (size > 0, NULL);
 
@@ -2806,10 +2813,17 @@ gst_audio_decoder_allocate_output_buffer (GstAudioDecoder * dec, gsize size)
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
+  if (G_UNLIKELY (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)
+          && gst_pad_check_reconfigure (dec->srcpad))) {
+    if (!gst_audio_decoder_set_output_format (dec, &dec->priv->ctx.info))
+      goto done;
+  }
+
   buffer =
       gst_buffer_new_allocate (dec->priv->ctx.allocator, size,
       &dec->priv->ctx.params);
 
+done:
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   return buffer;

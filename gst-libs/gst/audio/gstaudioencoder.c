@@ -609,6 +609,15 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       "accepting %" G_GSIZE_FORMAT " bytes encoded data as %d samples",
       buf ? gst_buffer_get_size (buf) : -1, samples);
 
+  if (G_UNLIKELY (gst_pad_check_reconfigure (enc->srcpad))) {
+    GstCaps *caps = gst_pad_get_current_caps (enc->srcpad);
+    if (!gst_audio_encoder_set_output_format (enc, caps)) {
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto exit;
+    }
+    gst_caps_unref (caps);
+  }
+
   /* mark subclass still alive and providing */
   if (G_LIKELY (buf))
     priv->got_data = TRUE;
@@ -2573,7 +2582,7 @@ no_decide_allocation:
 GstBuffer *
 gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer = NULL;
 
   g_return_val_if_fail (size > 0, NULL);
 
@@ -2581,10 +2590,21 @@ gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
+  if (G_UNLIKELY (gst_pad_has_current_caps (enc->srcpad)
+          && gst_pad_check_reconfigure (enc->srcpad))) {
+    GstCaps *caps = gst_pad_get_current_caps (enc->srcpad);
+    if (!gst_audio_encoder_set_output_format (enc, caps)) {
+      gst_caps_unref (caps);
+      goto done;
+    }
+    gst_caps_unref (caps);
+  }
+
   buffer =
       gst_buffer_new_allocate (enc->priv->ctx.allocator, size,
       &enc->priv->ctx.params);
 
+done:
   GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
   return buffer;
