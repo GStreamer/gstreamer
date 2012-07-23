@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 #include <gst/video/gstvideodecoder.h>
 #include <string.h>
 #include <schroedinger/schro.h>
@@ -89,6 +91,8 @@ static GstFlowReturn gst_schro_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_schro_dec_finish (GstVideoDecoder * base_video_decoder);
 static void gst_schrodec_send_tags (GstSchroDec * schro_dec);
+static gboolean gst_schro_dec_decide_allocation (GstVideoDecoder * decoder,
+    GstQuery * query);
 
 static GstStaticPadTemplate gst_schro_dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -136,6 +140,8 @@ gst_schro_dec_class_init (GstSchroDecClass * klass)
   base_video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_schro_dec_handle_frame);
   base_video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_schro_dec_finish);
+  base_video_decoder_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_schro_dec_decide_allocation);
 }
 
 static void
@@ -457,10 +463,7 @@ gst_schro_dec_process (GstSchroDec * schro_dec, gboolean eos)
         outbuf =
             gst_video_decoder_allocate_output_buffer (GST_VIDEO_DECODER
             (schro_dec));
-        schro_frame =
-            gst_schro_buffer_wrap (outbuf, TRUE,
-            GST_VIDEO_INFO_FORMAT (&state->info), state->info.width,
-            state->info.height);
+        schro_frame = gst_schro_buffer_wrap (outbuf, TRUE, &state->info);
         schro_decoder_add_output_picture (schro_dec->decoder, schro_frame);
         gst_video_codec_state_unref (state);
         break;
@@ -551,4 +554,27 @@ gst_schro_dec_finish (GstVideoDecoder * base_video_decoder)
   schro_decoder_autoparse_push_end_of_sequence (schro_dec->decoder);
 
   return gst_schro_dec_process (schro_dec, TRUE);
+}
+
+static gboolean
+gst_schro_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+          query))
+    return FALSE;
+
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+
+  gst_object_unref (pool);
+
+  return TRUE;
 }

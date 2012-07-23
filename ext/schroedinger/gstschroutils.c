@@ -38,8 +38,7 @@ GST_DEBUG_CATEGORY_EXTERN (schro_debug);
 
 typedef struct
 {
-  GstBuffer *buf;
-  GstMapInfo info;
+  GstVideoFrame frame;
 } FrameData;
 
 
@@ -48,8 +47,7 @@ gst_schro_frame_free (SchroFrame * frame, void *priv)
 {
   FrameData *data = priv;
 
-  gst_buffer_unmap (data->buf, &data->info);
-  gst_buffer_unref (data->buf);
+  gst_video_frame_unmap (&data->frame);
 
   g_slice_free (FrameData, data);
 }
@@ -58,58 +56,62 @@ GstBuffer *
 gst_schro_frame_get_buffer (SchroFrame * frame)
 {
   if (frame->priv)
-    return gst_buffer_ref (((FrameData *) frame->priv)->buf);
+    return gst_buffer_ref (((FrameData *) frame->priv)->frame.buffer);
 
   return NULL;
 }
 
 SchroFrame *
-gst_schro_buffer_wrap (GstBuffer * buf, gboolean write, GstVideoFormat format,
-    int width, int height)
+gst_schro_buffer_wrap (GstBuffer * buf, gboolean write, GstVideoInfo * vinfo)
 {
   SchroFrame *frame;
-  GstMapInfo info;
+  GstVideoFrame vframe;
   FrameData *data;
+  gint i;
 
-  if (!gst_buffer_map (buf, &info, (write ? GST_MAP_READWRITE : GST_MAP_READ)))
+  if (!gst_video_frame_map (&vframe, vinfo, buf,
+          (write ? GST_MAP_READWRITE : GST_MAP_READ)))
     return NULL;
 
-  switch (format) {
+  frame = schro_frame_new ();
+
+  frame->width = GST_VIDEO_FRAME_WIDTH (&vframe);
+  frame->height = GST_VIDEO_FRAME_HEIGHT (&vframe);
+
+  switch (GST_VIDEO_FRAME_FORMAT (&vframe)) {
     case GST_VIDEO_FORMAT_I420:
-      frame = schro_frame_new_from_data_I420 (info.data, width, height);
-      break;
     case GST_VIDEO_FORMAT_YV12:
-      frame = schro_frame_new_from_data_YV12 (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_U8_420;
       break;
     case GST_VIDEO_FORMAT_YUY2:
-      frame = schro_frame_new_from_data_YUY2 (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_YUYV;
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      frame = schro_frame_new_from_data_UYVY (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_UYVY;
       break;
     case GST_VIDEO_FORMAT_AYUV:
-      frame = schro_frame_new_from_data_AYUV (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_AYUV;
       break;
 #if SCHRO_CHECK_VERSION(1,0,12)
     case GST_VIDEO_FORMAT_ARGB:
-      frame = schro_frame_new_from_data_ARGB (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_ARGB;
       break;
 #endif
 #if SCHRO_CHECK_VERSION(1,0,11)
     case GST_VIDEO_FORMAT_Y42B:
-      frame = schro_frame_new_from_data_Y42B (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_U8_422;
       break;
     case GST_VIDEO_FORMAT_Y444:
-      frame = schro_frame_new_from_data_Y444 (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_U8_444;
       break;
     case GST_VIDEO_FORMAT_v210:
-      frame = schro_frame_new_from_data_v210 (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_v210;
       break;
     case GST_VIDEO_FORMAT_v216:
-      frame = schro_frame_new_from_data_v216 (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_v216;
       break;
     case GST_VIDEO_FORMAT_AYUV64:
-      frame = schro_frame_new_from_data_AY64 (info.data, width, height);
+      frame->format = SCHRO_FRAME_FORMAT_AY64;
       break;
 #endif
     default:
@@ -117,9 +119,38 @@ gst_schro_buffer_wrap (GstBuffer * buf, gboolean write, GstVideoFormat format,
       return NULL;
   }
 
+  if (SCHRO_FRAME_IS_PACKED (frame->format)) {
+    frame->components[0].format = frame->format;
+    frame->components[0].width = frame->width;
+    frame->components[0].height = frame->height;
+    frame->components[0].stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);
+    frame->components[0].length = frame->components[0].stride * frame->height;
+    frame->components[0].data = vframe.data[0];
+    frame->components[0].v_shift = 0;
+    frame->components[0].h_shift = 0;
+  } else {
+    for (i = 0; i < GST_VIDEO_FRAME_N_COMPONENTS (&vframe); i++) {
+      frame->components[i].format = frame->format;
+      frame->components[i].width = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, i);
+      frame->components[i].height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
+      frame->components[i].stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
+      frame->components[i].length =
+          frame->components[i].stride * frame->components[i].height;
+      frame->components[i].data = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
+      if (i == 0) {
+        frame->components[i].v_shift = 0;
+        frame->components[i].h_shift = 0;
+      } else {
+        frame->components[i].v_shift =
+            SCHRO_FRAME_FORMAT_H_SHIFT (frame->format);
+        frame->components[i].h_shift =
+            SCHRO_FRAME_FORMAT_H_SHIFT (frame->format);
+      }
+    }
+  }
+
   data = g_slice_new0 (FrameData);
-  data->buf = buf;
-  data->info = info;
+  data->frame = vframe;
   schro_frame_set_free_callback (frame, gst_schro_frame_free, data);
 
   return frame;

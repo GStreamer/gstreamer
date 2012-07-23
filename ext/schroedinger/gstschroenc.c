@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideoencoder.h>
 #include <gst/video/gstvideoutils.h>
 #include <string.h>
@@ -104,6 +105,8 @@ static GstFlowReturn gst_schro_enc_handle_frame (GstVideoEncoder *
 static GstFlowReturn gst_schro_enc_pre_push (GstVideoEncoder *
     base_video_encoder, GstVideoCodecFrame * frame);
 static void gst_schro_enc_finalize (GObject * object);
+static gboolean gst_schro_enc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query);
 
 static GstStaticPadTemplate gst_schro_enc_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -214,6 +217,8 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
   basevideocoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_schro_enc_handle_frame);
   basevideocoder_class->pre_push = GST_DEBUG_FUNCPTR (gst_schro_enc_pre_push);
+  basevideocoder_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_schro_enc_propose_allocation);
 }
 
 static void
@@ -525,9 +530,7 @@ gst_schro_enc_handle_frame (GstVideoEncoder * base_video_encoder,
 
   /* FIXME : We could make that method just take GstVideoInfo ... */
   schro_frame = gst_schro_buffer_wrap (gst_buffer_ref (frame->input_buffer),
-      FALSE,
-      GST_VIDEO_INFO_FORMAT (info),
-      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+      FALSE, info);
 
   GST_DEBUG ("pushing frame %p", frame);
   schro_encoder_push_frame_full (schro_enc->encoder, schro_frame, frame);
@@ -579,6 +582,16 @@ gst_schro_enc_pre_push (GstVideoEncoder * base_video_encoder,
 
   return GST_FLOW_OK;
 }
+
+static gboolean
+gst_schro_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
+      query);
+}
+
 
 static GstFlowReturn
 gst_schro_enc_process (GstSchroEnc * schro_enc)
