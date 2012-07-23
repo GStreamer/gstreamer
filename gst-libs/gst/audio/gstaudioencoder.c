@@ -197,6 +197,9 @@ typedef struct _GstAudioEncoderContext
 
   GList *headers;
   gboolean new_headers;
+
+  GstAllocator *allocator;
+  GstAllocationParams params;
 } GstAudioEncoderContext;
 
 struct _GstAudioEncoderPrivate
@@ -324,6 +327,11 @@ static gboolean gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
 static GstStateChangeReturn gst_audio_encoder_change_state (GstElement *
     element, GstStateChange transition);
 
+static gboolean gst_audio_encoder_decide_allocation_default (GstAudioEncoder *
+    enc, GstQuery * query);
+static gboolean gst_audio_encoder_propose_allocation_default (GstAudioEncoder *
+    enc, GstQuery * query);
+
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
 {
@@ -369,6 +377,8 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
   klass->getcaps = gst_audio_encoder_getcaps_default;
   klass->sink_event = gst_audio_encoder_sink_event_default;
   klass->src_event = gst_audio_encoder_src_event_default;
+  klass->propose_allocation = gst_audio_encoder_propose_allocation_default;
+  klass->decide_allocation = gst_audio_encoder_decide_allocation_default;
 }
 
 static void
@@ -454,6 +464,10 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
     g_list_free (enc->priv->pending_events);
     enc->priv->pending_events = NULL;
+
+    if (enc->priv->ctx.allocator)
+      gst_object_unref (enc->priv->ctx.allocator);
+    enc->priv->ctx.allocator = NULL;
   }
 
   gst_segment_init (&enc->input_segment, GST_FORMAT_TIME);
@@ -1569,6 +1583,14 @@ gst_audio_encoder_sink_query (GstPad * pad, GstObject * parent,
       }
       break;
     }
+    case GST_QUERY_ALLOCATION:
+    {
+      GstAudioEncoderClass *klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+
+      if (klass->propose_allocation)
+        res = klass->propose_allocation (enc, query);
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
@@ -1612,6 +1634,43 @@ gst_audio_encoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   return ret;
+}
+
+static gboolean
+gst_audio_encoder_decide_allocation_default (GstAudioEncoder * enc,
+    GstQuery * query)
+{
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
+  gboolean update_allocator;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+  if (allocator)
+    gst_object_unref (allocator);
+
+  return TRUE;
+}
+
+static gboolean
+gst_audio_encoder_propose_allocation_default (GstAudioEncoder * enc,
+    GstQuery * query)
+{
+  return TRUE;
 }
 
 /*
@@ -2428,8 +2487,12 @@ gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
 gboolean
 gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
 {
+  GstAudioEncoderClass *klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
   gboolean res = FALSE;
   GstCaps *templ_caps;
+  GstQuery *query = NULL;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
 
@@ -2445,8 +2508,41 @@ gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
   gst_caps_unref (templ_caps);
 
   res = gst_pad_set_caps (enc->srcpad, caps);
+  if (!res)
+    goto done;
+
+  query = gst_query_new_allocation (caps, TRUE);
+  if (!gst_pad_peer_query (enc->srcpad, query)) {
+    GST_DEBUG_OBJECT (enc, "didn't get downstream ALLOCATION hints");
+  }
+
+  g_assert (klass->decide_allocation != NULL);
+  res = klass->decide_allocation (enc, query);
+
+  GST_DEBUG_OBJECT (enc, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, res,
+      query);
+
+  if (!res)
+    goto no_decide_allocation;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (enc->priv->ctx.allocator)
+    gst_object_unref (enc->priv->ctx.allocator);
+  enc->priv->ctx.allocator = allocator;
+  enc->priv->ctx.params = params;
 
 done:
+  if (query)
+    gst_query_unref (query);
+
   return res;
 
   /* ERRORS */
@@ -2456,4 +2552,40 @@ refuse_caps:
     res = FALSE;
     goto done;
   }
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (enc, "Subclass failed to decide allocation");
+    goto done;
+  }
+}
+
+/**
+ * gst_audio_encoder_allocate_output_buffer:
+ * @enc: a #GstAudioEncoder
+ * @size: size of the buffer
+ *
+ * Helper function that allocates a buffer to hold an encoded audio frame
+ * for @enc's current output format.
+ *
+ * Returns: (transfer full): allocated buffer
+ */
+GstBuffer *
+gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
+{
+  GstBuffer *buffer;
+
+  g_return_val_if_fail (size > 0, NULL);
+
+  GST_DEBUG ("alloc src buffer");
+
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+
+  buffer =
+      gst_buffer_new_allocate (enc->priv->ctx.allocator, size,
+      &enc->priv->ctx.params);
+
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+  return buffer;
 }

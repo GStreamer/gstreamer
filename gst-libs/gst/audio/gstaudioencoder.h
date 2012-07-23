@@ -157,6 +157,12 @@ struct _GstAudioEncoder {
  * @close:          Optional.
  *                  Called when the element changes to GST_STATE_NULL.
  *                  Allows closing external resources.
+ * @decide_allocation: Optional.
+ *                     Setup the allocation parameters for allocating output
+ *                     buffers. The passed in query contains the result of the
+ *                     downstream allocation query.
+ * @propose_allocation: Optional.
+ *                      Propose buffer allocation parameters for upstream elements.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @set_format and @handle_frame needs to be overridden.
@@ -194,6 +200,11 @@ struct _GstAudioEncoderClass {
 
   gboolean      (*close)              (GstAudioEncoder *enc);
 
+  gboolean      (*decide_allocation)  (GstAudioEncoder *enc, GstQuery *query);
+
+  gboolean      (*propose_allocation) (GstAudioEncoder * enc,
+                                       GstQuery * query);
+
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING_LARGE-2];
 };
@@ -210,6 +221,9 @@ GstCaps *       gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc,
 gboolean        gst_audio_encoder_set_output_format  (GstAudioEncoder    * enc,
                                                       GstCaps            * caps);
 
+
+GstBuffer *     gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * encoder,
+                                                          gsize             size);
 
 /* context parameters */
 GstAudioInfo  * gst_audio_encoder_get_audio_info (GstAudioEncoder * enc);
