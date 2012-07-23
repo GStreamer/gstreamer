@@ -89,6 +89,14 @@ gboolean    gst_video_frame_copy_plane    (GstVideoFrame *dest, const GstVideoFr
 #define GST_VIDEO_FRAME_HEIGHT(f)         (GST_VIDEO_INFO_HEIGHT(&(f)->info))
 #define GST_VIDEO_FRAME_SIZE(f)           (GST_VIDEO_INFO_SIZE(&(f)->info))
 
+/* flags */
+#define GST_VIDEO_FRAME_FLAGS(f)          ((f)->flags)
+#define GST_VIDEO_FRAME_FLAG_IS_SET(f,fl) ((GST_VIDEO_FRAME_FLAGS(f) & (fl)) == (fl))
+#define GST_VIDEO_FRAME_IS_INTERLACED(f)  (GST_VIDEO_FRAME_FLAG_IS_SET(f, GST_VIDEO_FRAME_FLAG_INTERLACED)
+#define GST_VIDEO_FRAME_IS_TFF(f)         (GST_VIDEO_FRAME_FLAG_IS_SET(f, GST_VIDEO_FRAME_FLAG_TFF)
+#define GST_VIDEO_FRAME_IS_RFF(f)         (GST_VIDEO_FRAME_FLAG_IS_SET(f, GST_VIDEO_FRAME_FLAG_RFF)
+#define GST_VIDEO_FRAME_IS_ONEFIELD(f)    (GST_VIDEO_FRAME_FLAG_IS_SET(f, GST_VIDEO_FRAME_FLAG_ONEFIELD)
+
 /* dealing with planes */
 #define GST_VIDEO_FRAME_N_PLANES(f)       (GST_VIDEO_INFO_N_PLANES(&(f)->info))
 #define GST_VIDEO_FRAME_PLANE_DATA(f,p)   ((f)->data[p])
