@@ -64,6 +64,7 @@ EXPORTS
 	gst_video_color_matrix_get_type
 	gst_video_color_primaries_get_type
 	gst_video_color_range_get_type
+	gst_video_color_range_offsets
 	gst_video_colorimetry_from_string
 	gst_video_colorimetry_matches
 	gst_video_colorimetry_to_string
@@ -86,11 +87,14 @@ EXPORTS
 	gst_video_decoder_get_packetized
 	gst_video_decoder_get_type
 	gst_video_decoder_have_frame
+	gst_video_decoder_negotiate
 	gst_video_decoder_set_estimate_rate
 	gst_video_decoder_set_latency
 	gst_video_decoder_set_max_errors
 	gst_video_decoder_set_output_state
 	gst_video_decoder_set_packetized
+	gst_video_encoder_alloc_output_buffer
+	gst_video_encoder_alloc_output_frame
 	gst_video_encoder_finish_frame
 	gst_video_encoder_get_frame
 	gst_video_encoder_get_latency

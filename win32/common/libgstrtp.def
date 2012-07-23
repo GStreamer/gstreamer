@@ -117,7 +117,5 @@ EXPORTS
 	gst_rtp_buffer_set_timestamp
 	gst_rtp_buffer_set_version
 	gst_rtp_buffer_unmap
-	gst_rtp_buffer_validate
-	gst_rtp_buffer_validate_data
 	gst_rtp_payload_info_for_name
 	gst_rtp_payload_info_for_pt
