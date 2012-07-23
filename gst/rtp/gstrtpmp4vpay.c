@@ -55,13 +55,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     )
     );
 
-#define DEFAULT_BUFFER_LIST     FALSE
 #define DEFAULT_CONFIG_INTERVAL 0
 
 enum
 {
   ARG_0,
-  ARG_BUFFER_LIST,
   ARG_CONFIG_INTERVAL
 };
 
@@ -106,11 +104,6 @@ G_DEFINE_TYPE (GstRtpMP4VPay, gst_rtp_mp4v_pay, GST_TYPE_RTP_BASE_PAYLOAD)
       "Payload MPEG-4 video as RTP packets (RFC 3016)",
       "Wim Taymans <wim.taymans@gmail.com>");
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFFER_LIST,
-      g_param_spec_boolean ("buffer-list", "Buffer Array",
-          "Use Buffer Arrays",
-          DEFAULT_BUFFER_LIST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_CONFIG_INTERVAL,
       g_param_spec_uint ("config-interval", "Config Send Interval",
           "Send Config Insertion Interval in seconds (configuration headers "
@@ -135,7 +128,6 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
   rtpmp4vpay->adapter = gst_adapter_new ();
   rtpmp4vpay->rate = 90000;
   rtpmp4vpay->profile = 1;
-  rtpmp4vpay->buffer_list = DEFAULT_BUFFER_LIST;
   rtpmp4vpay->need_config = TRUE;
   rtpmp4vpay->config_interval = DEFAULT_CONFIG_INTERVAL;
   rtpmp4vpay->last_config = -1;
@@ -259,12 +251,10 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
   ret = GST_FLOW_OK;
 
-  if (rtpmp4vpay->buffer_list) {
-    /* Use buffer lists. Each frame will be put into a list
-     * of buffers and the whole list will be pushed downstream
-     * at once */
-    list = gst_buffer_list_new ();
-  }
+  /* Use buffer lists. Each frame will be put into a list
+   * of buffers and the whole list will be pushed downstream
+   * at once */
+  list = gst_buffer_list_new ();
 
   while (avail > 0) {
     guint towrite;
@@ -298,21 +288,13 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_timestamp;
 
-    if (rtpmp4vpay->buffer_list) {
-      /* add to list */
-      gst_buffer_list_insert (list, -1, outbuf);
-    } else {
-      ret =
-          gst_rtp_base_payload_push (GST_RTP_BASE_PAYLOAD (rtpmp4vpay), outbuf);
-    }
+    /* add to list */
+    gst_buffer_list_insert (list, -1, outbuf);
   }
 
-  if (rtpmp4vpay->buffer_list) {
-    /* push the whole buffer list at once */
-    ret =
-        gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpmp4vpay),
-        list);
-  }
+  /* push the whole buffer list at once */
+  ret =
+      gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpmp4vpay), list);
 
   return ret;
 }
@@ -600,9 +582,6 @@ gst_rtp_mp4v_pay_set_property (GObject * object, guint prop_id,
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
-    case ARG_BUFFER_LIST:
-      rtpmp4vpay->buffer_list = g_value_get_boolean (value);
-      break;
     case ARG_CONFIG_INTERVAL:
       rtpmp4vpay->config_interval = g_value_get_uint (value);
       break;
@@ -620,9 +599,6 @@ gst_rtp_mp4v_pay_get_property (GObject * object, guint prop_id,
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   switch (prop_id) {
-    case ARG_BUFFER_LIST:
-      g_value_set_boolean (value, rtpmp4vpay->buffer_list);
-      break;
     case ARG_CONFIG_INTERVAL:
       g_value_set_uint (value, rtpmp4vpay->config_interval);
       break;

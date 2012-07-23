@@ -54,8 +54,6 @@ struct _GstRtpMP4VPay
   gboolean      send_config;
   gboolean      need_config;
 
-  gboolean      buffer_list;
-
   /* naming might be confusing with send_config; but naming matches h264
    * payloader */
   guint         config_interval;
