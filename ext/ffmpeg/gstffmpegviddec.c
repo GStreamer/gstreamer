@@ -577,7 +577,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
     goto no_dr;
 
   ret =
-      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (ffmpegdec),
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (ffmpegdec),
       frame);
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
@@ -934,7 +934,7 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
   GST_LOG_OBJECT (ffmpegdec, "get output buffer");
 
   ret =
-      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (ffmpegdec),
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (ffmpegdec),
       frame);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
