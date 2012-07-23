@@ -298,7 +298,7 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     GstStructure *structure;
     int version;
 
-    if (!gst_vaapi_ensure_display(decode, &decode->display))
+    if (!gst_vaapi_ensure_display(decode, &decode->display, NULL))
         return FALSE;
     dpy = decode->display;
 
@@ -531,7 +531,7 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     if (decode->allowed_caps)
         return TRUE;
 
-    if (!gst_vaapi_ensure_display(decode, &decode->display))
+    if (!gst_vaapi_ensure_display(decode, &decode->display, NULL))
         goto error_no_display;
 
     decode_caps = gst_vaapi_display_get_decode_caps(decode->display);

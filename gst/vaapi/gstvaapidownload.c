@@ -302,7 +302,7 @@ gst_vaapidownload_start(GstBaseTransform *trans)
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
 
-    if (!gst_vaapi_ensure_display(download, &download->display))
+    if (!gst_vaapi_ensure_display(download, &download->display, NULL))
         return FALSE;
     return TRUE;
 }
@@ -455,7 +455,7 @@ gst_vaapidownload_transform_caps(
     if (direction == GST_PAD_SINK) {
         if (!gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
             return NULL;
-        if (!gst_vaapi_ensure_display(download, &download->display))
+        if (!gst_vaapi_ensure_display(download, &download->display, NULL))
             return NULL;
         out_caps = gst_caps_from_string(gst_vaapidownload_yuv_caps_str);
 

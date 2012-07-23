@@ -99,7 +99,7 @@ enum {
     PROP_USE_REFLECTION
 };
 
-#define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_X11
+#define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_AUTO
 
 /* GstImplementsInterface interface */
 
@@ -263,7 +263,7 @@ configure_notify_event_pending(
 static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
-    return gst_vaapi_ensure_display(sink, &sink->display);
+    return gst_vaapi_ensure_display(sink, &sink->display, &sink->display_type);
 }
 
 static gboolean

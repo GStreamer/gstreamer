@@ -201,7 +201,7 @@ gst_video_context_interface_init(GstVideoContextInterface *iface)
 static gboolean
 gst_vaapipostproc_create(GstVaapiPostproc *postproc, GstCaps *caps)
 {
-    if (!gst_vaapi_ensure_display(postproc, &postproc->display))
+    if (!gst_vaapi_ensure_display(postproc, &postproc->display, NULL))
         return FALSE;
 
     gst_caps_replace(&postproc->postproc_caps, caps);
@@ -230,7 +230,7 @@ gst_vaapipostproc_reset(GstVaapiPostproc *postproc, GstCaps *caps)
 static gboolean
 gst_vaapipostproc_start(GstVaapiPostproc *postproc)
 {
-    if (!gst_vaapi_ensure_display(postproc, &postproc->display))
+    if (!gst_vaapi_ensure_display(postproc, &postproc->display, NULL))
         return FALSE;
     return TRUE;
 }

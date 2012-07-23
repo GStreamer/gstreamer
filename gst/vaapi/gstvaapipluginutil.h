@@ -46,7 +46,11 @@ GType
 gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
 
 gboolean
-gst_vaapi_ensure_display(gpointer element, GstVaapiDisplay **display);
+gst_vaapi_ensure_display(
+    gpointer             element,
+    GstVaapiDisplay    **display,
+    GstVaapiDisplayType *display_type_ptr
+);
 
 void
 gst_vaapi_set_display(

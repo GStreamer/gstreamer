@@ -372,7 +372,7 @@ gst_vaapiupload_start(GstBaseTransform *trans)
 {
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
 
-    if (!gst_vaapi_ensure_display(upload, &upload->display))
+    if (!gst_vaapi_ensure_display(upload, &upload->display, NULL))
         return FALSE;
 
     return TRUE;

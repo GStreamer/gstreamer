@@ -43,35 +43,76 @@ static const char *display_types[] = {
     NULL
 };
 
+typedef struct {
+    const gchar        *type_str;
+    GstVaapiDisplayType type;
+    GstVaapiDisplay * (*create_display)(const gchar *);
+} DisplayMap;
+
+static const DisplayMap g_display_map[] = {
+#if USE_GLX
+    { "glx",
+      GST_VAAPI_DISPLAY_TYPE_GLX,
+      gst_vaapi_display_glx_new },
+#endif
+#if USE_X11
+    { "x11",
+      GST_VAAPI_DISPLAY_TYPE_X11,
+      gst_vaapi_display_x11_new },
+#endif
+    { NULL, }
+};
+
 gboolean
-gst_vaapi_ensure_display(gpointer element, GstVaapiDisplay **display)
+gst_vaapi_ensure_display(
+    gpointer             element,
+    GstVaapiDisplay    **display_ptr,
+    GstVaapiDisplayType *display_type_ptr
+)
 {
+    GstVaapiDisplayType display_type =
+        display_type_ptr ? *display_type_ptr : GST_VAAPI_DISPLAY_TYPE_AUTO;
+    GstVaapiDisplay *display;
     GstVideoContext *context;
+    const DisplayMap *m;
 
     g_return_val_if_fail(GST_IS_VIDEO_CONTEXT(element), FALSE);
-    g_return_val_if_fail(display != NULL, FALSE);
+    g_return_val_if_fail(display_ptr != NULL, FALSE);
 
     /* Already exist ? */
-    if (*display)
+    display = *display_ptr;
+    if (display)
         return TRUE;
 
     context = GST_VIDEO_CONTEXT(element);
     gst_video_context_prepare(context, display_types);
 
     /* If no neighboor, or application not interested, use system default */
-#if USE_GLX
-    if (!*display)
-        *display = gst_vaapi_display_glx_new(NULL);
-#endif
-    if (!*display)
-        *display = gst_vaapi_display_x11_new(NULL);
+    for (m = g_display_map; m->type_str != NULL; m++) {
+        if (display_type != GST_VAAPI_DISPLAY_TYPE_AUTO &&
+            display_type != m->type)
+            continue;
 
-    /* FIXME allocator should return NULL in case of failure */
-    if (*display && !gst_vaapi_display_get_display(*display)) {
-        g_object_unref(*display);
-        *display = NULL;
+        display = m->create_display(NULL);
+        if (display) {
+            /* FIXME: allocator should return NULL if an error occurred */
+            if (gst_vaapi_display_get_display(display)) {
+                display_type = m->type;
+                break;
+            }
+            g_object_unref(display);
+            display = NULL;
+        }
+
+        if (display_type != GST_VAAPI_DISPLAY_TYPE_AUTO)
+            break;
     }
-    return (*display != NULL);
+
+    if (display_ptr)
+        *display_ptr = display;
+    if (display_type_ptr)
+        *display_type_ptr = display_type;
+    return display != NULL;
 }
 
 void
