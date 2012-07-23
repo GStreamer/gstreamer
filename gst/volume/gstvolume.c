@@ -352,7 +352,7 @@ volume_process_double (GstVolume * self, gpointer bytes, guint n_bytes)
   gdouble *data = (gdouble *) bytes;
   guint num_samples = n_bytes / sizeof (gdouble);
 
-  orc_scalarmultiply_f64_ns (data, self->current_volume, num_samples);
+  volume_orc_scalarmultiply_f64_ns (data, self->current_volume, num_samples);
 }
 
 static void
@@ -365,7 +365,7 @@ volume_process_controlled_double (GstVolume * self, gpointer bytes,
   gdouble vol;
 
   if (channels == 1) {
-    orc_process_controlled_f64_1ch (data, volume, num_samples);
+    volume_orc_process_controlled_f64_1ch (data, volume, num_samples);
   } else {
     for (i = 0; i < num_samples; i++) {
       vol = *volume++;
@@ -382,7 +382,7 @@ volume_process_float (GstVolume * self, gpointer bytes, guint n_bytes)
   gfloat *data = (gfloat *) bytes;
   guint num_samples = n_bytes / sizeof (gfloat);
 
-  orc_scalarmultiply_f32_ns (data, self->current_volume, num_samples);
+  volume_orc_scalarmultiply_f32_ns (data, self->current_volume, num_samples);
 }
 
 static void
@@ -395,9 +395,9 @@ volume_process_controlled_float (GstVolume * self, gpointer bytes,
   gdouble vol;
 
   if (channels == 1) {
-    orc_process_controlled_f32_1ch (data, volume, num_samples);
+    volume_orc_process_controlled_f32_1ch (data, volume, num_samples);
   } else if (channels == 2) {
-    orc_process_controlled_f32_2ch (data, volume, num_samples);
+    volume_orc_process_controlled_f32_2ch (data, volume, num_samples);
   } else {
     for (i = 0; i < num_samples; i++) {
       vol = *volume++;
@@ -416,7 +416,7 @@ volume_process_int32 (GstVolume * self, gpointer bytes, guint n_bytes)
 
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT32_BIT_SHIFT == 27);
-  orc_process_int32 (data, self->current_vol_i32, num_samples);
+  volume_orc_process_int32 (data, self->current_vol_i32, num_samples);
 }
 
 static void
@@ -428,7 +428,7 @@ volume_process_int32_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT32_BIT_SHIFT == 27);
 
-  orc_process_int32_clamp (data, self->current_vol_i32, num_samples);
+  volume_orc_process_int32_clamp (data, self->current_vol_i32, num_samples);
 }
 
 static void
@@ -441,7 +441,7 @@ volume_process_controlled_int32_clamp (GstVolume * self, gpointer bytes,
   gdouble vol, val;
 
   if (channels == 1) {
-    orc_process_controlled_int32_1ch (data, volume, num_samples);
+    volume_orc_process_controlled_int32_1ch (data, volume, num_samples);
   } else {
     for (i = 0; i < num_samples; i++) {
       vol = *volume++;
@@ -547,7 +547,7 @@ volume_process_int16 (GstVolume * self, gpointer bytes, guint n_bytes)
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 11);
 
-  orc_process_int16 (data, self->current_vol_i16, num_samples);
+  volume_orc_process_int16 (data, self->current_vol_i16, num_samples);
 }
 
 static void
@@ -559,7 +559,7 @@ volume_process_int16_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT16_BIT_SHIFT == 11);
 
-  orc_process_int16_clamp (data, self->current_vol_i16, num_samples);
+  volume_orc_process_int16_clamp (data, self->current_vol_i16, num_samples);
 }
 
 static void
@@ -572,9 +572,9 @@ volume_process_controlled_int16_clamp (GstVolume * self, gpointer bytes,
   gdouble vol, val;
 
   if (channels == 1) {
-    orc_process_controlled_int16_1ch (data, volume, num_samples);
+    volume_orc_process_controlled_int16_1ch (data, volume, num_samples);
   } else if (channels == 2) {
-    orc_process_controlled_int16_2ch (data, volume, num_samples);
+    volume_orc_process_controlled_int16_2ch (data, volume, num_samples);
   } else {
     for (i = 0; i < num_samples; i++) {
       vol = *volume++;
@@ -595,7 +595,7 @@ volume_process_int8 (GstVolume * self, gpointer bytes, guint n_bytes)
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 3);
 
-  orc_process_int8 (data, self->current_vol_i8, num_samples);
+  volume_orc_process_int8 (data, self->current_vol_i8, num_samples);
 }
 
 static void
@@ -607,7 +607,7 @@ volume_process_int8_clamp (GstVolume * self, gpointer bytes, guint n_bytes)
   /* hard coded in volume.orc */
   g_assert (VOLUME_UNITY_INT8_BIT_SHIFT == 3);
 
-  orc_process_int8_clamp (data, self->current_vol_i8, num_samples);
+  volume_orc_process_int8_clamp (data, self->current_vol_i8, num_samples);
 }
 
 static void
@@ -620,9 +620,9 @@ volume_process_controlled_int8_clamp (GstVolume * self, gpointer bytes,
   gdouble val, vol;
 
   if (channels == 1) {
-    orc_process_controlled_int8_1ch (data, volume, num_samples);
+    volume_orc_process_controlled_int8_1ch (data, volume, num_samples);
   } else if (channels == 2) {
-    orc_process_controlled_int8_2ch (data, volume, num_samples);
+    volume_orc_process_controlled_int8_2ch (data, volume, num_samples);
   } else {
     for (i = 0; i < num_samples; i++) {
       vol = *volume++;
@@ -773,11 +773,11 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
       gst_object_replace ((GstObject **) & volume_cb, NULL);
     } else {
-      orc_memset_f64 (self->volumes, self->current_volume, nsamples);
+      volume_orc_memset_f64 (self->volumes, self->current_volume, nsamples);
     }
 
     if (use_mutes) {
-      orc_prepare_volumes (self->volumes, self->mutes, nsamples);
+      volume_orc_prepare_volumes (self->volumes, self->mutes, nsamples);
     }
 
     self->process_controlled (self, map.data, self->volumes, channels,
