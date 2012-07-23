@@ -28,83 +28,83 @@
 #include "gstaudiopack.h"
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define orc_unpack_s16le orc_unpack_s16
-# define orc_unpack_s16be orc_unpack_s16_swap
-# define orc_unpack_u16le orc_unpack_u16
-# define orc_unpack_u16be orc_unpack_u16_swap
-# define orc_unpack_s24_32le orc_unpack_s24_32
-# define orc_unpack_s24_32be orc_unpack_s24_32_swap
-# define orc_unpack_u24_32le orc_unpack_u24_32
-# define orc_unpack_u24_32be orc_unpack_u24_32_swap
-# define orc_unpack_s32le orc_unpack_s32
-# define orc_unpack_s32be orc_unpack_s32_swap
-# define orc_unpack_u32le orc_unpack_u32
-# define orc_unpack_u32be orc_unpack_u32_swap
-# define orc_unpack_f32le orc_unpack_f32
-# define orc_unpack_f32be orc_unpack_f32_swap
-# define orc_unpack_f64le orc_unpack_f64
-# define orc_unpack_f64be orc_unpack_f64_swap
-# define orc_pack_s16le orc_pack_s16
-# define orc_pack_s16be orc_pack_s16_swap
-# define orc_pack_u16le orc_pack_u16
-# define orc_pack_u16be orc_pack_u16_swap
-# define orc_pack_s24_32le orc_pack_s24_32
-# define orc_pack_s24_32be orc_pack_s24_32_swap
-# define orc_pack_u24_32le orc_pack_u24_32
-# define orc_pack_u24_32be orc_pack_u24_32_swap
-# define orc_pack_s32le orc_pack_s32
-# define orc_pack_s32be orc_pack_s32_swap
-# define orc_pack_u32le orc_pack_u32
-# define orc_pack_u32be orc_pack_u32_swap
-# define orc_pack_f32le orc_pack_f32
-# define orc_pack_f32be orc_pack_f32_swap
-# define orc_pack_f64le orc_pack_f64
-# define orc_pack_f64be orc_pack_f64_swap
+# define audio_orc_unpack_s16le audio_orc_unpack_s16
+# define audio_orc_unpack_s16be audio_orc_unpack_s16_swap
+# define audio_orc_unpack_u16le audio_orc_unpack_u16
+# define audio_orc_unpack_u16be audio_orc_unpack_u16_swap
+# define audio_orc_unpack_s24_32le audio_orc_unpack_s24_32
+# define audio_orc_unpack_s24_32be audio_orc_unpack_s24_32_swap
+# define audio_orc_unpack_u24_32le audio_orc_unpack_u24_32
+# define audio_orc_unpack_u24_32be audio_orc_unpack_u24_32_swap
+# define audio_orc_unpack_s32le audio_orc_unpack_s32
+# define audio_orc_unpack_s32be audio_orc_unpack_s32_swap
+# define audio_orc_unpack_u32le audio_orc_unpack_u32
+# define audio_orc_unpack_u32be audio_orc_unpack_u32_swap
+# define audio_orc_unpack_f32le audio_orc_unpack_f32
+# define audio_orc_unpack_f32be audio_orc_unpack_f32_swap
+# define audio_orc_unpack_f64le audio_orc_unpack_f64
+# define audio_orc_unpack_f64be audio_orc_unpack_f64_swap
+# define audio_orc_pack_s16le audio_orc_pack_s16
+# define audio_orc_pack_s16be audio_orc_pack_s16_swap
+# define audio_orc_pack_u16le audio_orc_pack_u16
+# define audio_orc_pack_u16be audio_orc_pack_u16_swap
+# define audio_orc_pack_s24_32le audio_orc_pack_s24_32
+# define audio_orc_pack_s24_32be audio_orc_pack_s24_32_swap
+# define audio_orc_pack_u24_32le audio_orc_pack_u24_32
+# define audio_orc_pack_u24_32be audio_orc_pack_u24_32_swap
+# define audio_orc_pack_s32le audio_orc_pack_s32
+# define audio_orc_pack_s32be audio_orc_pack_s32_swap
+# define audio_orc_pack_u32le audio_orc_pack_u32
+# define audio_orc_pack_u32be audio_orc_pack_u32_swap
+# define audio_orc_pack_f32le audio_orc_pack_f32
+# define audio_orc_pack_f32be audio_orc_pack_f32_swap
+# define audio_orc_pack_f64le audio_orc_pack_f64
+# define audio_orc_pack_f64be audio_orc_pack_f64_swap
 #else
-# define orc_unpack_s16le orc_unpack_s16_swap
-# define orc_unpack_s16be orc_unpack_s16
-# define orc_unpack_u16le orc_unpack_u16_swap
-# define orc_unpack_u16be orc_unpack_u16
-# define orc_unpack_s24_32le orc_unpack_s24_32_swap
-# define orc_unpack_s24_32be orc_unpack_s24_32
-# define orc_unpack_u24_32le orc_unpack_u24_32_swap
-# define orc_unpack_u24_32be orc_unpack_u24_32
-# define orc_unpack_s32le orc_unpack_s32_swap
-# define orc_unpack_s32be orc_unpack_s32
-# define orc_unpack_u32le orc_unpack_u32_swap
-# define orc_unpack_u32be orc_unpack_u32
-# define orc_unpack_f32le orc_unpack_f32_swap
-# define orc_unpack_f32be orc_unpack_f32
-# define orc_unpack_f64le orc_unpack_f64_swap
-# define orc_unpack_f64be orc_unpack_f64
-# define orc_pack_s16le orc_pack_s16_swap
-# define orc_pack_s16be orc_pack_s16
-# define orc_pack_u16le orc_pack_u16_swap
-# define orc_pack_u16be orc_pack_u16
-# define orc_pack_s24_32le orc_pack_s24_32_swap
-# define orc_pack_s24_32be orc_pack_s24_32
-# define orc_pack_u24_32le orc_pack_u24_32_swap
-# define orc_pack_u24_32be orc_pack_u24_32
-# define orc_pack_s32le orc_pack_s32_swap
-# define orc_pack_s32be orc_pack_s32
-# define orc_pack_u32le orc_pack_u32_swap
-# define orc_pack_u32be orc_pack_u32
-# define orc_pack_f32le orc_pack_f32_swap
-# define orc_pack_f32be orc_pack_f32
-# define orc_pack_f64le orc_pack_f64_swap
-# define orc_pack_f64be orc_pack_f64
+# define audio_orc_unpack_s16le audio_orc_unpack_s16_swap
+# define audio_orc_unpack_s16be audio_orc_unpack_s16
+# define audio_orc_unpack_u16le audio_orc_unpack_u16_swap
+# define audio_orc_unpack_u16be audio_orc_unpack_u16
+# define audio_orc_unpack_s24_32le audio_orc_unpack_s24_32_swap
+# define audio_orc_unpack_s24_32be audio_orc_unpack_s24_32
+# define audio_orc_unpack_u24_32le audio_orc_unpack_u24_32_swap
+# define audio_orc_unpack_u24_32be audio_orc_unpack_u24_32
+# define audio_orc_unpack_s32le audio_orc_unpack_s32_swap
+# define audio_orc_unpack_s32be audio_orc_unpack_s32
+# define audio_orc_unpack_u32le audio_orc_unpack_u32_swap
+# define audio_orc_unpack_u32be audio_orc_unpack_u32
+# define audio_orc_unpack_f32le audio_orc_unpack_f32_swap
+# define audio_orc_unpack_f32be audio_orc_unpack_f32
+# define audio_orc_unpack_f64le audio_orc_unpack_f64_swap
+# define audio_orc_unpack_f64be audio_orc_unpack_f64
+# define audio_orc_pack_s16le audio_orc_pack_s16_swap
+# define audio_orc_pack_s16be audio_orc_pack_s16
+# define audio_orc_pack_u16le audio_orc_pack_u16_swap
+# define audio_orc_pack_u16be audio_orc_pack_u16
+# define audio_orc_pack_s24_32le audio_orc_pack_s24_32_swap
+# define audio_orc_pack_s24_32be audio_orc_pack_s24_32
+# define audio_orc_pack_u24_32le audio_orc_pack_u24_32_swap
+# define audio_orc_pack_u24_32be audio_orc_pack_u24_32
+# define audio_orc_pack_s32le audio_orc_pack_s32_swap
+# define audio_orc_pack_s32be audio_orc_pack_s32
+# define audio_orc_pack_u32le audio_orc_pack_u32_swap
+# define audio_orc_pack_u32be audio_orc_pack_u32
+# define audio_orc_pack_f32le audio_orc_pack_f32_swap
+# define audio_orc_pack_f32be audio_orc_pack_f32
+# define audio_orc_pack_f64le audio_orc_pack_f64_swap
+# define audio_orc_pack_f64be audio_orc_pack_f64
 #endif
 
 #define MAKE_ORC_PACK_UNPACK(fmt) \
 static void unpack_ ##fmt (const GstAudioFormatInfo *info, \
     GstAudioPackFlags flags, gpointer dest,                \
     const gpointer data, gint length) {                    \
-  orc_unpack_ ##fmt (dest, data, length);                  \
+  audio_orc_unpack_ ##fmt (dest, data, length);                  \
 }                                                          \
 static void pack_ ##fmt (const GstAudioFormatInfo *info,   \
     GstAudioPackFlags flags, const gpointer src,           \
     gpointer data, gint length) {                          \
-  orc_pack_ ##fmt (data, src, length);                     \
+  audio_orc_pack_ ##fmt (data, src, length);                     \
 }
 
 #define PACK_S8 GST_AUDIO_FORMAT_S32, unpack_s8, pack_s8

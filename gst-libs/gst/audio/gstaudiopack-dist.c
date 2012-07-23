@@ -82,77 +82,77 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1,
+void audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1,
+void audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_u32 (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_s32 (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_f32 (gdouble * ORC_RESTRICT d1,
     const gfloat * ORC_RESTRICT s1, int n);
-void orc_unpack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n);
-void orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1,
+void audio_orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1,
+    const gfloat * ORC_RESTRICT s1, int n);
+void audio_orc_unpack_f64 (gdouble * ORC_RESTRICT d1,
     const gdouble * ORC_RESTRICT s1, int n);
-void orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
-void orc_pack_s16_swap (guint8 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
-void orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
-void orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
-void orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n);
-void orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
-void orc_pack_s32_swap (guint8 * ORC_RESTRICT d1,
-    const gint32 * ORC_RESTRICT s1, int n);
-void orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n);
-void orc_pack_f32_swap (gfloat * ORC_RESTRICT d1,
+void audio_orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1,
     const gdouble * ORC_RESTRICT s1, int n);
-void orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n);
-void orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
+void audio_orc_pack_u8 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s8 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_u16 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s16 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s16_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_u24_32 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s24_32 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_u32 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s32 (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_s32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n);
+void audio_orc_pack_f32 (gfloat * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n);
+void audio_orc_pack_f32_swap (gfloat * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n);
+void audio_orc_pack_f64 (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n);
+void audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
     const gdouble * ORC_RESTRICT s1, int n);
 
 
@@ -200,10 +200,11 @@ void orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
 
 
 
-/* orc_unpack_u8 */
+/* audio_orc_unpack_u8 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -240,7 +241,7 @@ orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_unpack_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -277,7 +278,8 @@ _backup_orc_unpack_u8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -289,8 +291,8 @@ orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u8");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u8);
+      orc_program_set_name (p, "audio_orc_unpack_u8");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u8);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -324,10 +326,11 @@ orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_unpack_s8 */
+/* audio_orc_unpack_s8 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -358,7 +361,7 @@ orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_unpack_s8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -389,7 +392,8 @@ _backup_orc_unpack_s8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -401,8 +405,8 @@ orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s8");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s8);
+      orc_program_set_name (p, "audio_orc_unpack_s8");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s8);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_constant (p, 4, 0x00000018, "c1");
@@ -433,10 +437,11 @@ orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_unpack_u16 */
+/* audio_orc_unpack_u16 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -470,7 +475,7 @@ orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_unpack_u16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -504,7 +509,8 @@ _backup_orc_unpack_u16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -516,8 +522,8 @@ orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u16");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u16);
+      orc_program_set_name (p, "audio_orc_unpack_u16");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u16);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -548,10 +554,11 @@ orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_unpack_s16 */
+/* audio_orc_unpack_s16 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -579,7 +586,7 @@ orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_unpack_s16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -607,7 +614,8 @@ _backup_orc_unpack_s16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -619,8 +627,8 @@ orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s16");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s16);
+      orc_program_set_name (p, "audio_orc_unpack_s16");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s16);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -648,11 +656,11 @@ orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_unpack_u16_swap */
+/* audio_orc_unpack_u16_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -689,7 +697,7 @@ orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -726,8 +734,8 @@ _backup_orc_unpack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -739,8 +747,8 @@ orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u16_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u16_swap);
+      orc_program_set_name (p, "audio_orc_unpack_u16_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u16_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -774,11 +782,11 @@ orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_s16_swap */
+/* audio_orc_unpack_s16_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -809,7 +817,7 @@ orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -840,8 +848,8 @@ _backup_orc_unpack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -853,8 +861,8 @@ orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s16_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s16_swap);
+      orc_program_set_name (p, "audio_orc_unpack_s16_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s16_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -885,11 +893,11 @@ orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_u24_32 */
+/* audio_orc_unpack_u24_32 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -920,7 +928,7 @@ orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -951,8 +959,8 @@ _backup_orc_unpack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -964,8 +972,8 @@ orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u24_32");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u24_32);
+      orc_program_set_name (p, "audio_orc_unpack_u24_32");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u24_32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
@@ -994,11 +1002,11 @@ orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_s24_32 */
+/* audio_orc_unpack_s24_32 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1023,7 +1031,7 @@ orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1048,8 +1056,8 @@ _backup_orc_unpack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1061,8 +1069,8 @@ orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s24_32");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s24_32);
+      orc_program_set_name (p, "audio_orc_unpack_s24_32");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s24_32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
@@ -1087,10 +1095,10 @@ orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_u24_32_swap */
+/* audio_orc_unpack_u24_32_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
+audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -1125,7 +1133,7 @@ orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_orc_unpack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1159,7 +1167,7 @@ _backup_orc_unpack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
+audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -1172,8 +1180,8 @@ orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u24_32_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u24_32_swap);
+      orc_program_set_name (p, "audio_orc_unpack_u24_32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u24_32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
@@ -1204,10 +1212,10 @@ orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
 #endif
 
 
-/* orc_unpack_s24_32_swap */
+/* audio_orc_unpack_s24_32_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
+audio_orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -1236,7 +1244,7 @@ orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_orc_unpack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1264,7 +1272,7 @@ _backup_orc_unpack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
+audio_orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -1277,8 +1285,8 @@ orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s24_32_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s24_32_swap);
+      orc_program_set_name (p, "audio_orc_unpack_s24_32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s24_32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
@@ -1306,10 +1314,11 @@ orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
 #endif
 
 
-/* orc_unpack_u32 */
+/* audio_orc_unpack_u32 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1337,7 +1346,7 @@ orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_unpack_u32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1365,7 +1374,8 @@ _backup_orc_unpack_u32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1377,8 +1387,8 @@ orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u32");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u32);
+      orc_program_set_name (p, "audio_orc_unpack_u32");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -1403,11 +1413,11 @@ orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_unpack_u32_swap */
+/* audio_orc_unpack_u32_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1438,7 +1448,7 @@ orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1469,8 +1479,8 @@ _backup_orc_unpack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1482,8 +1492,8 @@ orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_u32_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_u32_swap);
+      orc_program_set_name (p, "audio_orc_unpack_u32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_u32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -1511,10 +1521,11 @@ orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_s32 */
+/* audio_orc_unpack_s32 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1539,7 +1550,7 @@ orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_unpack_s32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1564,7 +1575,8 @@ _backup_orc_unpack_s32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
+audio_orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1576,8 +1588,8 @@ orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s32");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s32);
+      orc_program_set_name (p, "audio_orc_unpack_s32");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -1601,11 +1613,11 @@ orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_unpack_s32_swap */
+/* audio_orc_unpack_s32_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1630,7 +1642,7 @@ orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1655,8 +1667,8 @@ _backup_orc_unpack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1,
+    const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1668,8 +1680,8 @@ orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_s32_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_s32_swap);
+      orc_program_set_name (p, "audio_orc_unpack_s32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_s32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -1693,10 +1705,10 @@ orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_f32 */
+/* audio_orc_unpack_f32 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
+audio_orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -1726,7 +1738,7 @@ orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_f32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_f32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1755,7 +1767,7 @@ _backup_orc_unpack_f32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
+audio_orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -1768,8 +1780,8 @@ orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_f32");
-      orc_program_set_backup_function (p, _backup_orc_unpack_f32);
+      orc_program_set_name (p, "audio_orc_unpack_f32");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_f32);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -1793,11 +1805,11 @@ orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_f32_swap */
+/* audio_orc_unpack_f32_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1,
+    const gfloat * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -1829,7 +1841,7 @@ orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_f32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_f32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1861,8 +1873,8 @@ _backup_orc_unpack_f32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1,
+    const gfloat * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1874,8 +1886,8 @@ orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_f32_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_f32_swap);
+      orc_program_set_name (p, "audio_orc_unpack_f32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_f32_swap);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 4, "t1");
@@ -1902,11 +1914,11 @@ orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_f64 */
+/* audio_orc_unpack_f64 */
 #ifdef DISABLE_ORC
 void
-orc_unpack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_f64 (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -1931,7 +1943,7 @@ orc_unpack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_f64 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_f64 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1956,8 +1968,8 @@ _backup_orc_unpack_f64 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_f64 (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1969,8 +1981,8 @@ orc_unpack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_f64");
-      orc_program_set_backup_function (p, _backup_orc_unpack_f64);
+      orc_program_set_name (p, "audio_orc_unpack_f64");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_f64);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 8, "s1");
 
@@ -1994,11 +2006,11 @@ orc_unpack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_unpack_f64_swap */
+/* audio_orc_unpack_f64_swap */
 #ifdef DISABLE_ORC
 void
-orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -2023,7 +2035,7 @@ orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_unpack_f64_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_unpack_f64_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2048,8 +2060,8 @@ _backup_orc_unpack_f64_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2061,8 +2073,8 @@ orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_unpack_f64_swap");
-      orc_program_set_backup_function (p, _backup_orc_unpack_f64_swap);
+      orc_program_set_name (p, "audio_orc_unpack_f64_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_unpack_f64_swap);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 8, "s1");
 
@@ -2086,10 +2098,11 @@ orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_u8 */
+/* audio_orc_pack_u8 */
 #ifdef DISABLE_ORC
 void
-orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -2126,7 +2139,7 @@ orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2163,7 +2176,8 @@ _backup_orc_pack_u8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2175,8 +2189,8 @@ orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u8");
-      orc_program_set_backup_function (p, _backup_orc_pack_u8);
+      orc_program_set_name (p, "audio_orc_pack_u8");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000018, "c1");
@@ -2210,10 +2224,11 @@ orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_s8 */
+/* audio_orc_pack_s8 */
 #ifdef DISABLE_ORC
 void
-orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -2244,7 +2259,7 @@ orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_s8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2275,7 +2290,8 @@ _backup_orc_pack_s8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2287,8 +2303,8 @@ orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s8");
-      orc_program_set_backup_function (p, _backup_orc_pack_s8);
+      orc_program_set_name (p, "audio_orc_pack_s8");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000018, "c1");
@@ -2319,10 +2335,11 @@ orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_u16 */
+/* audio_orc_pack_u16 */
 #ifdef DISABLE_ORC
 void
-orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -2356,7 +2373,7 @@ orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_u16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2390,7 +2407,8 @@ _backup_orc_pack_u16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2402,8 +2420,8 @@ orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u16");
-      orc_program_set_backup_function (p, _backup_orc_pack_u16);
+      orc_program_set_name (p, "audio_orc_pack_u16");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u16);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -2434,10 +2452,11 @@ orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_s16 */
+/* audio_orc_pack_s16 */
 #ifdef DISABLE_ORC
 void
-orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -2465,7 +2484,7 @@ orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_s16 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s16 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2493,7 +2512,8 @@ _backup_orc_pack_s16 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2505,8 +2525,8 @@ orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s16");
-      orc_program_set_backup_function (p, _backup_orc_pack_s16);
+      orc_program_set_name (p, "audio_orc_pack_s16");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s16);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -2534,11 +2554,11 @@ orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_u16_swap */
+/* audio_orc_pack_u16_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_u16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -2575,7 +2595,7 @@ orc_pack_u16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2612,8 +2632,8 @@ _backup_orc_pack_u16_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2625,8 +2645,8 @@ orc_pack_u16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u16_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_u16_swap);
+      orc_program_set_name (p, "audio_orc_pack_u16_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u16_swap);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -2660,11 +2680,11 @@ orc_pack_u16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_s16_swap */
+/* audio_orc_pack_s16_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_s16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_s16_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union16 *ORC_RESTRICT ptr0;
@@ -2695,7 +2715,7 @@ orc_pack_s16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2726,8 +2746,8 @@ _backup_orc_pack_s16_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_s16_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2739,8 +2759,8 @@ orc_pack_s16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s16_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_s16_swap);
+      orc_program_set_name (p, "audio_orc_pack_s16_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s16_swap);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000010, "c1");
@@ -2771,10 +2791,10 @@ orc_pack_s16_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_u24_32 */
+/* audio_orc_pack_u24_32 */
 #ifdef DISABLE_ORC
 void
-orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+audio_orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -2806,7 +2826,7 @@ orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2837,7 +2857,7 @@ _backup_orc_pack_u24_32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+audio_orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2850,8 +2870,8 @@ orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u24_32");
-      orc_program_set_backup_function (p, _backup_orc_pack_u24_32);
+      orc_program_set_name (p, "audio_orc_pack_u24_32");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u24_32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -2880,10 +2900,10 @@ orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_s24_32 */
+/* audio_orc_pack_s24_32 */
 #ifdef DISABLE_ORC
 void
-orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+audio_orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     int n)
 {
   int i;
@@ -2909,7 +2929,7 @@ orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2934,7 +2954,7 @@ _backup_orc_pack_s24_32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+audio_orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -2947,8 +2967,8 @@ orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s24_32");
-      orc_program_set_backup_function (p, _backup_orc_pack_s24_32);
+      orc_program_set_name (p, "audio_orc_pack_s24_32");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s24_32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
@@ -2973,11 +2993,11 @@ orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_u24_32_swap */
+/* audio_orc_pack_u24_32_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3011,7 +3031,7 @@ orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3045,8 +3065,8 @@ _backup_orc_pack_u24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3058,8 +3078,8 @@ orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u24_32_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_u24_32_swap);
+      orc_program_set_name (p, "audio_orc_pack_u24_32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u24_32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -3090,11 +3110,11 @@ orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_s24_32_swap */
+/* audio_orc_pack_s24_32_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3122,7 +3142,7 @@ orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3150,8 +3170,8 @@ _backup_orc_pack_s24_32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3163,8 +3183,8 @@ orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s24_32_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_s24_32_swap);
+      orc_program_set_name (p, "audio_orc_pack_s24_32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s24_32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x00000008, "c1");
@@ -3192,10 +3212,11 @@ orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_u32 */
+/* audio_orc_pack_u32 */
 #ifdef DISABLE_ORC
 void
-orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3223,7 +3244,7 @@ orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_u32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3251,7 +3272,8 @@ _backup_orc_pack_u32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3263,8 +3285,8 @@ orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u32");
-      orc_program_set_backup_function (p, _backup_orc_pack_u32);
+      orc_program_set_name (p, "audio_orc_pack_u32");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -3289,10 +3311,11 @@ orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_s32 */
+/* audio_orc_pack_s32 */
 #ifdef DISABLE_ORC
 void
-orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3317,7 +3340,7 @@ orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_s32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3342,7 +3365,8 @@ _backup_orc_pack_s32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
+audio_orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3354,8 +3378,8 @@ orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s32");
-      orc_program_set_backup_function (p, _backup_orc_pack_s32);
+      orc_program_set_name (p, "audio_orc_pack_s32");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -3379,11 +3403,11 @@ orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_u32_swap */
+/* audio_orc_pack_u32_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_u32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3411,7 +3435,7 @@ orc_pack_u32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3439,8 +3463,8 @@ _backup_orc_pack_u32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_u32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3452,8 +3476,8 @@ orc_pack_u32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_u32_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_u32_swap);
+      orc_program_set_name (p, "audio_orc_pack_u32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_u32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x80000000, "c1");
@@ -3478,11 +3502,11 @@ orc_pack_u32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_s32_swap */
+/* audio_orc_pack_s32_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_s32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_s32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3507,7 +3531,7 @@ orc_pack_s32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3532,8 +3556,8 @@ _backup_orc_pack_s32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_s32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_s32_swap (guint8 * ORC_RESTRICT d1,
+    const gint32 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3545,8 +3569,8 @@ orc_pack_s32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_s32_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_s32_swap);
+      orc_program_set_name (p, "audio_orc_pack_s32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_s32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -3570,10 +3594,11 @@ orc_pack_s32_swap (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_f32 */
+/* audio_orc_pack_f32 */
 #ifdef DISABLE_ORC
 void
-orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
+audio_orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3604,7 +3629,7 @@ orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_f32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_f32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3635,7 +3660,8 @@ _backup_orc_pack_f32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
+audio_orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3647,8 +3673,8 @@ orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_f32");
-      orc_program_set_backup_function (p, _backup_orc_pack_f32);
+      orc_program_set_name (p, "audio_orc_pack_f32");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_f32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
 
@@ -3672,11 +3698,11 @@ orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_f32_swap */
+/* audio_orc_pack_f32_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_f32_swap (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_f32_swap (gfloat * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3710,7 +3736,7 @@ orc_pack_f32_swap (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_f32_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_f32_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3744,8 +3770,8 @@ _backup_orc_pack_f32_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_f32_swap (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_f32_swap (gfloat * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3757,8 +3783,8 @@ orc_pack_f32_swap (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_f32_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_f32_swap);
+      orc_program_set_name (p, "audio_orc_pack_f32_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_f32_swap);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 4, "t1");
@@ -3785,10 +3811,11 @@ orc_pack_f32_swap (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 #endif
 
 
-/* orc_pack_f64 */
+/* audio_orc_pack_f64 */
 #ifdef DISABLE_ORC
 void
-orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
+audio_orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -3813,7 +3840,7 @@ orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
 
 #else
 static void
-_backup_orc_pack_f64 (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_f64 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3838,7 +3865,8 @@ _backup_orc_pack_f64 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
+audio_orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3850,8 +3878,8 @@ orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_f64");
-      orc_program_set_backup_function (p, _backup_orc_pack_f64);
+      orc_program_set_name (p, "audio_orc_pack_f64");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_f64);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 8, "s1");
 
@@ -3875,11 +3903,11 @@ orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n)
 #endif
 
 
-/* orc_pack_f64_swap */
+/* audio_orc_pack_f64_swap */
 #ifdef DISABLE_ORC
 void
-orc_pack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -3904,7 +3932,7 @@ orc_pack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_pack_f64_swap (OrcExecutor * ORC_RESTRICT ex)
+_backup_audio_orc_pack_f64_swap (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3929,8 +3957,8 @@ _backup_orc_pack_f64_swap (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_pack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
-    int n)
+audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
+    const gdouble * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3942,8 +3970,8 @@ orc_pack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_pack_f64_swap");
-      orc_program_set_backup_function (p, _backup_orc_pack_f64_swap);
+      orc_program_set_name (p, "audio_orc_pack_f64_swap");
+      orc_program_set_backup_function (p, _backup_audio_orc_pack_f64_swap);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 8, "s1");
 
