@@ -197,7 +197,7 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   src_pixels = GST_VIDEO_FRAME_PLANE_DATA (&src_frame, 0);
 
   acc = 0;
-  gst_video_orc_resample_bilinear_u32 (LINE (0), src_pixels, 0, x_increment,
+  video_orc_resample_bilinear_u32 (LINE (0), src_pixels, 0, x_increment,
       dest_width);
   y1 = 0;
   for (i = 0; i < dest_height; i++) {
@@ -208,16 +208,16 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
       memcpy (dest_pixels + i * dest_stride, LINE (j), dest_size);
     } else {
       if (j > y1) {
-        gst_video_orc_resample_bilinear_u32 (LINE (j),
+        video_orc_resample_bilinear_u32 (LINE (j),
             src_pixels + j * src_stride, 0, x_increment, dest_width);
         y1++;
       }
       if (j >= y1) {
-        gst_video_orc_resample_bilinear_u32 (LINE (j + 1),
+        video_orc_resample_bilinear_u32 (LINE (j + 1),
             src_pixels + (j + 1) * src_stride, 0, x_increment, dest_width);
         y1++;
       }
-      gst_video_orc_merge_linear_u8 (dest_pixels + i * dest_stride,
+      video_orc_merge_linear_u8 (dest_pixels + i * dest_stride,
           LINE (j), LINE (j + 1), (x >> 8), dest_width * 4);
     }
 
@@ -373,9 +373,9 @@ gst_video_blend (GstVideoFrame * dest,
 
     /* FIXME
      * #if G_BYTE_ORDER == LITTLE_ENDIAN
-     * gst_video_orc_blend_little (tmpdestline, tmpsrcline, dest->width);
+     * video_orc_blend_little (tmpdestline, tmpsrcline, dest->width);
      * #else
-     * gst_video_orc_blend_big (tmpdestline, tmpsrcline, src->width);
+     * video_orc_blend_big (tmpdestline, tmpsrcline, src->width);
      * #endif
      */
 

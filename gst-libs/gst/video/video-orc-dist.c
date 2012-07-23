@@ -82,76 +82,73 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void gst_video_orc_blend_little (guint8 * ORC_RESTRICT d1,
+void video_orc_blend_little (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_blend_big (guint8 * ORC_RESTRICT d1,
+void video_orc_blend_big (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, int n);
-void gst_video_orc_pack_I420 (guint8 * ORC_RESTRICT d1,
-    guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3,
+void video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+    guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, int n);
-void gst_video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, int n);
-void gst_video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1,
-    guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3,
-    const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+    guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, int n);
-void gst_video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1,
-    guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3,
+void video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+    guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
+void video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void gst_video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1,
-    guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+    const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n);
-void gst_video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1,
-    guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+    const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n);
-void gst_video_orc_pack_A420 (guint8 * ORC_RESTRICT d1,
-    guint8 * ORC_RESTRICT d2, guint8 * ORC_RESTRICT d3,
-    guint8 * ORC_RESTRICT d4, const guint8 * ORC_RESTRICT s1, int n);
-void gst_video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
+void video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+    guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4,
+    const guint8 * ORC_RESTRICT s1, int n);
+void video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int p1, int p2, int n);
-void gst_video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
+void video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     int p1, int n);
 
@@ -200,10 +197,10 @@ void gst_video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
 
 
 
-/* gst_video_orc_blend_little */
+/* video_orc_blend_little */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_blend_little (guint8 * ORC_RESTRICT d1,
+video_orc_blend_little (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -308,7 +305,7 @@ gst_video_orc_blend_little (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_blend_little (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_blend_little (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -412,7 +409,7 @@ _backup_gst_video_orc_blend_little (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_blend_little (guint8 * ORC_RESTRICT d1,
+video_orc_blend_little (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -425,8 +422,8 @@ gst_video_orc_blend_little (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_blend_little");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_blend_little);
+      orc_program_set_name (p, "video_orc_blend_little");
+      orc_program_set_backup_function (p, _backup_video_orc_blend_little);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0x000000ff, "c1");
@@ -489,11 +486,11 @@ gst_video_orc_blend_little (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_blend_big */
+/* video_orc_blend_big */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_blend_big (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -600,7 +597,7 @@ gst_video_orc_blend_big (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_blend_big (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_blend_big (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -707,8 +704,8 @@ _backup_gst_video_orc_blend_big (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_blend_big (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_blend_big (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -720,8 +717,8 @@ gst_video_orc_blend_big (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_blend_big");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_blend_big);
+      orc_program_set_name (p, "video_orc_blend_big");
+      orc_program_set_backup_function (p, _backup_video_orc_blend_big);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 4, 0xff000000, "c1");
@@ -788,12 +785,11 @@ gst_video_orc_blend_big (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_I420 */
+/* video_orc_unpack_I420 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -852,7 +848,7 @@ gst_video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_I420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -911,9 +907,8 @@ _backup_gst_video_orc_unpack_I420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -925,8 +920,8 @@ gst_video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_I420");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_I420);
+      orc_program_set_name (p, "video_orc_unpack_I420");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_I420);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -967,10 +962,10 @@ gst_video_orc_unpack_I420 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_I420 */
+/* video_orc_pack_I420 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -1067,7 +1062,7 @@ gst_video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_video_orc_pack_I420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_I420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1163,7 +1158,7 @@ _backup_gst_video_orc_pack_I420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -1176,8 +1171,8 @@ gst_video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_I420");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_I420);
+      orc_program_set_name (p, "video_orc_pack_I420");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_I420);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -1223,11 +1218,11 @@ gst_video_orc_pack_I420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_video_orc_unpack_YUY2 */
+/* video_orc_unpack_YUY2 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -1304,7 +1299,7 @@ gst_video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1381,8 +1376,8 @@ _backup_gst_video_orc_unpack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1394,8 +1389,8 @@ gst_video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_YUY2");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_YUY2);
+      orc_program_set_name (p, "video_orc_unpack_YUY2");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_YUY2);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
@@ -1430,11 +1425,11 @@ gst_video_orc_unpack_YUY2 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_YUY2 */
+/* video_orc_pack_YUY2 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1510,7 +1505,7 @@ gst_video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1586,8 +1581,8 @@ _backup_gst_video_orc_pack_YUY2 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1599,8 +1594,8 @@ gst_video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_YUY2");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_YUY2);
+      orc_program_set_name (p, "video_orc_pack_YUY2");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_YUY2);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -1637,11 +1632,11 @@ gst_video_orc_pack_YUY2 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_UYVY */
+/* video_orc_pack_UYVY */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -1717,7 +1712,7 @@ gst_video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_UYVY (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1793,8 +1788,8 @@ _backup_gst_video_orc_pack_UYVY (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -1806,8 +1801,8 @@ gst_video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_UYVY");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_UYVY);
+      orc_program_set_name (p, "video_orc_pack_UYVY");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_UYVY);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -1844,11 +1839,11 @@ gst_video_orc_pack_UYVY (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_UYVY */
+/* video_orc_unpack_UYVY */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -1925,7 +1920,7 @@ gst_video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_UYVY (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_UYVY (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2002,8 +1997,8 @@ _backup_gst_video_orc_unpack_UYVY (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2015,8 +2010,8 @@ gst_video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_UYVY");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_UYVY);
+      orc_program_set_name (p, "video_orc_unpack_UYVY");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_UYVY);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
@@ -2051,11 +2046,11 @@ gst_video_orc_unpack_UYVY (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_YVYU */
+/* video_orc_unpack_YVYU */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -2135,7 +2130,7 @@ gst_video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_YVYU (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_YVYU (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2215,8 +2210,8 @@ _backup_gst_video_orc_unpack_YVYU (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2228,8 +2223,8 @@ gst_video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_YVYU");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_YVYU);
+      orc_program_set_name (p, "video_orc_unpack_YVYU");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_YVYU);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 2, 0x000000ff, "c1");
@@ -2266,11 +2261,11 @@ gst_video_orc_unpack_YVYU (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_YVYU */
+/* video_orc_pack_YVYU */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -2349,7 +2344,7 @@ gst_video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_YVYU (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_YVYU (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2428,8 +2423,8 @@ _backup_gst_video_orc_pack_YVYU (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2441,8 +2436,8 @@ gst_video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_YVYU");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_YVYU);
+      orc_program_set_name (p, "video_orc_pack_YVYU");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_YVYU);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 8, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -2481,12 +2476,11 @@ gst_video_orc_pack_YVYU (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_YUV9 */
+/* video_orc_unpack_YUV9 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -2566,7 +2560,7 @@ gst_video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_YUV9 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_YUV9 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2646,9 +2640,8 @@ _backup_gst_video_orc_unpack_YUV9 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2660,8 +2653,8 @@ gst_video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_YUV9");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_YUV9);
+      orc_program_set_name (p, "video_orc_unpack_YUV9");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_YUV9);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -2705,12 +2698,11 @@ gst_video_orc_unpack_YUV9 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_Y42B */
+/* video_orc_unpack_Y42B */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -2790,7 +2782,7 @@ gst_video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_Y42B (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2870,9 +2862,8 @@ _backup_gst_video_orc_unpack_Y42B (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -2884,8 +2875,8 @@ gst_video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_Y42B");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_Y42B);
+      orc_program_set_name (p, "video_orc_unpack_Y42B");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_Y42B);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -2924,10 +2915,10 @@ gst_video_orc_unpack_Y42B (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_Y42B */
+/* video_orc_pack_Y42B */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -3007,7 +2998,7 @@ gst_video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_video_orc_pack_Y42B (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_Y42B (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3086,7 +3077,7 @@ _backup_gst_video_orc_pack_Y42B (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3099,8 +3090,8 @@ gst_video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_Y42B");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_Y42B);
+      orc_program_set_name (p, "video_orc_pack_Y42B");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_Y42B);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -3140,12 +3131,11 @@ gst_video_orc_pack_Y42B (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_video_orc_unpack_Y444 */
+/* video_orc_unpack_Y444 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3204,7 +3194,7 @@ gst_video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_Y444 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3263,9 +3253,8 @@ _backup_gst_video_orc_unpack_Y444 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, int n)
+video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3277,8 +3266,8 @@ gst_video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_Y444");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_Y444);
+      orc_program_set_name (p, "video_orc_unpack_Y444");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_Y444);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -3313,10 +3302,10 @@ gst_video_orc_unpack_Y444 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_Y444 */
+/* video_orc_pack_Y444 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -3372,7 +3361,7 @@ gst_video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_video_orc_pack_Y444 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_Y444 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3427,7 +3416,7 @@ _backup_gst_video_orc_pack_Y444 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3440,8 +3429,8 @@ gst_video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_Y444");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_Y444);
+      orc_program_set_name (p, "video_orc_pack_Y444");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_Y444);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -3475,10 +3464,10 @@ gst_video_orc_pack_Y444 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_video_orc_unpack_GRAY8 */
+/* video_orc_unpack_GRAY8 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
+video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -3523,7 +3512,7 @@ gst_video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3567,7 +3556,7 @@ _backup_gst_video_orc_unpack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
+video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -3580,8 +3569,8 @@ gst_video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_GRAY8");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_GRAY8);
+      orc_program_set_name (p, "video_orc_unpack_GRAY8");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_GRAY8);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_constant (p, 1, 0x000000ff, "c1");
@@ -3610,11 +3599,11 @@ gst_video_orc_unpack_GRAY8 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_GRAY8 */
+/* video_orc_pack_GRAY8 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_int8 *ORC_RESTRICT ptr0;
@@ -3650,7 +3639,7 @@ gst_video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3686,8 +3675,8 @@ _backup_gst_video_orc_pack_GRAY8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3699,8 +3688,8 @@ gst_video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_GRAY8");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_GRAY8);
+      orc_program_set_name (p, "video_orc_pack_GRAY8");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_GRAY8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 2, "t1");
@@ -3727,11 +3716,11 @@ gst_video_orc_pack_GRAY8 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_BGRA */
+/* video_orc_unpack_BGRA */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3756,7 +3745,7 @@ gst_video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_BGRA (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_BGRA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3781,8 +3770,8 @@ _backup_gst_video_orc_unpack_BGRA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3794,8 +3783,8 @@ gst_video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_BGRA");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_BGRA);
+      orc_program_set_name (p, "video_orc_unpack_BGRA");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_BGRA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -3819,11 +3808,11 @@ gst_video_orc_unpack_BGRA (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_BGRA */
+/* video_orc_pack_BGRA */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3848,7 +3837,7 @@ gst_video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_BGRA (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_BGRA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3873,8 +3862,8 @@ _backup_gst_video_orc_pack_BGRA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -3886,8 +3875,8 @@ gst_video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_BGRA");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_BGRA);
+      orc_program_set_name (p, "video_orc_pack_BGRA");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_BGRA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
 
@@ -3911,11 +3900,11 @@ gst_video_orc_pack_BGRA (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_RGBA */
+/* video_orc_pack_RGBA */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -3988,7 +3977,7 @@ gst_video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_RGBA (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_RGBA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4061,8 +4050,8 @@ _backup_gst_video_orc_pack_RGBA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4074,8 +4063,8 @@ gst_video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_RGBA");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_RGBA);
+      orc_program_set_name (p, "video_orc_pack_RGBA");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_RGBA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4117,11 +4106,11 @@ gst_video_orc_pack_RGBA (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_RGBA */
+/* video_orc_unpack_RGBA */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -4194,7 +4183,7 @@ gst_video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_RGBA (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_RGBA (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4267,8 +4256,8 @@ _backup_gst_video_orc_unpack_RGBA (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4280,8 +4269,8 @@ gst_video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_RGBA");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_RGBA);
+      orc_program_set_name (p, "video_orc_unpack_RGBA");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_RGBA);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4323,11 +4312,11 @@ gst_video_orc_unpack_RGBA (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_ABGR */
+/* video_orc_unpack_ABGR */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -4400,7 +4389,7 @@ gst_video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_ABGR (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_ABGR (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4473,8 +4462,8 @@ _backup_gst_video_orc_unpack_ABGR (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4486,8 +4475,8 @@ gst_video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_ABGR");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_ABGR);
+      orc_program_set_name (p, "video_orc_unpack_ABGR");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_ABGR);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4529,11 +4518,11 @@ gst_video_orc_unpack_ABGR (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_ABGR */
+/* video_orc_pack_ABGR */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -4606,7 +4595,7 @@ gst_video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_pack_ABGR (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_ABGR (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4679,8 +4668,8 @@ _backup_gst_video_orc_pack_ABGR (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, int n)
+video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4692,8 +4681,8 @@ gst_video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_ABGR");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_ABGR);
+      orc_program_set_name (p, "video_orc_pack_ABGR");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_ABGR);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_temporary (p, 1, "t1");
@@ -4735,11 +4724,11 @@ gst_video_orc_pack_ABGR (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_unpack_NV12 */
+/* video_orc_unpack_NV12 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
+video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -4809,7 +4798,7 @@ gst_video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_NV12 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_NV12 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -4879,8 +4868,8 @@ _backup_gst_video_orc_unpack_NV12 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
+video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -4892,8 +4881,8 @@ gst_video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_NV12");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_NV12);
+      orc_program_set_name (p, "video_orc_unpack_NV12");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_NV12);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -4926,10 +4915,10 @@ gst_video_orc_unpack_NV12 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_NV12 */
+/* video_orc_pack_NV12 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -4996,7 +4985,7 @@ gst_video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_video_orc_pack_NV12 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_NV12 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5062,7 +5051,7 @@ _backup_gst_video_orc_pack_NV12 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -5075,8 +5064,8 @@ gst_video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_NV12");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_NV12);
+      orc_program_set_name (p, "video_orc_pack_NV12");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_NV12);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 8, "s1");
@@ -5112,11 +5101,11 @@ gst_video_orc_pack_NV12 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_video_orc_unpack_NV21 */
+/* video_orc_unpack_NV21 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
+video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, int n)
 {
   int i;
   orc_union64 *ORC_RESTRICT ptr0;
@@ -5186,7 +5175,7 @@ gst_video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_NV21 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_NV21 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5256,8 +5245,8 @@ _backup_gst_video_orc_unpack_NV21 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2, int n)
+video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -5269,8 +5258,8 @@ gst_video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_NV21");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_NV21);
+      orc_program_set_name (p, "video_orc_unpack_NV21");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_NV21);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -5306,10 +5295,10 @@ gst_video_orc_unpack_NV21 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_NV21 */
+/* video_orc_pack_NV21 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -5379,7 +5368,7 @@ gst_video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_video_orc_pack_NV21 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_NV21 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5448,7 +5437,7 @@ _backup_gst_video_orc_pack_NV21 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -5461,8 +5450,8 @@ gst_video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_NV21");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_NV21);
+      orc_program_set_name (p, "video_orc_pack_NV21");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_NV21);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 8, "s1");
@@ -5501,12 +5490,12 @@ gst_video_orc_pack_NV21 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_video_orc_unpack_A420 */
+/* video_orc_unpack_A420 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
+video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
+    const guint8 * ORC_RESTRICT s4, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -5567,7 +5556,7 @@ gst_video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_unpack_A420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_unpack_A420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5628,9 +5617,9 @@ _backup_gst_video_orc_unpack_A420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
-    const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
-    const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4, int n)
+video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
+    const guint8 * ORC_RESTRICT s2, const guint8 * ORC_RESTRICT s3,
+    const guint8 * ORC_RESTRICT s4, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -5642,8 +5631,8 @@ gst_video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_unpack_A420");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_unpack_A420);
+      orc_program_set_name (p, "video_orc_unpack_A420");
+      orc_program_set_backup_function (p, _backup_video_orc_unpack_A420);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");
@@ -5685,10 +5674,10 @@ gst_video_orc_unpack_A420 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_pack_A420 */
+/* video_orc_pack_A420 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4,
     const guint8 * ORC_RESTRICT s1, int n)
 {
@@ -5802,7 +5791,7 @@ gst_video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_video_orc_pack_A420 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_pack_A420 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -5914,7 +5903,7 @@ _backup_gst_video_orc_pack_A420 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     guint8 * ORC_RESTRICT d3, guint8 * ORC_RESTRICT d4,
     const guint8 * ORC_RESTRICT s1, int n)
 {
@@ -5928,8 +5917,8 @@ gst_video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_pack_A420");
-      orc_program_set_backup_function (p, _backup_gst_video_orc_pack_A420);
+      orc_program_set_name (p, "video_orc_pack_A420");
+      orc_program_set_backup_function (p, _backup_video_orc_pack_A420);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 1, "d2");
       orc_program_add_destination (p, 1, "d3");
@@ -5979,10 +5968,10 @@ gst_video_orc_pack_A420 (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_video_orc_resample_bilinear_u32 */
+/* video_orc_resample_bilinear_u32 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
+video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int p1, int p2, int n)
 {
   int i;
@@ -6021,7 +6010,7 @@ gst_video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_resample_bilinear_u32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_resample_bilinear_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -6059,7 +6048,7 @@ _backup_gst_video_orc_resample_bilinear_u32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
+video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, int p1, int p2, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -6072,9 +6061,9 @@ gst_video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_resample_bilinear_u32");
+      orc_program_set_name (p, "video_orc_resample_bilinear_u32");
       orc_program_set_backup_function (p,
-          _backup_gst_video_orc_resample_bilinear_u32);
+          _backup_video_orc_resample_bilinear_u32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_parameter (p, 4, "p1");
@@ -6102,10 +6091,10 @@ gst_video_orc_resample_bilinear_u32 (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_video_orc_merge_linear_u8 */
+/* video_orc_merge_linear_u8 */
 #ifdef DISABLE_ORC
 void
-gst_video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
+video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     int p1, int n)
 {
@@ -6164,7 +6153,7 @@ gst_video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_video_orc_merge_linear_u8 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_orc_merge_linear_u8 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -6221,7 +6210,7 @@ _backup_gst_video_orc_merge_linear_u8 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
+video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
     const orc_uint8 * ORC_RESTRICT s1, const orc_uint8 * ORC_RESTRICT s2,
     int p1, int n)
 {
@@ -6235,9 +6224,8 @@ gst_video_orc_merge_linear_u8 (orc_uint8 * ORC_RESTRICT d1,
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_video_orc_merge_linear_u8");
-      orc_program_set_backup_function (p,
-          _backup_gst_video_orc_merge_linear_u8);
+      orc_program_set_name (p, "video_orc_merge_linear_u8");
+      orc_program_set_backup_function (p, _backup_video_orc_merge_linear_u8);
       orc_program_add_destination (p, 1, "d1");
       orc_program_add_source (p, 1, "s1");
       orc_program_add_source (p, 1, "s2");

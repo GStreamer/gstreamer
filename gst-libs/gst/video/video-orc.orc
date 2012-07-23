@@ -1,4 +1,4 @@
-.function gst_video_orc_blend_little
+.function video_orc_blend_little
 .flags 1d
 .dest 4 d guint8
 .source 4 s guint8
@@ -28,7 +28,7 @@ x4 convwb t, d_wide
 orl t, t, a_alpha
 storel d, t
 
-.function gst_video_orc_blend_big
+.function video_orc_blend_big
 .flags 1d
 .dest 4 d guint8
 .source 4 s guint8
@@ -60,7 +60,7 @@ x4 convwb t, d_wide
 orl t, t, a_alpha
 storel d, t
 
-.function gst_video_orc_unpack_I420
+.function video_orc_unpack_I420
 .dest 4 d guint8
 .source 1 y guint8
 .source 1 u guint8
@@ -78,7 +78,7 @@ mergebw ay, c255, y
 mergewl d, ay, uv
 
 
-.function gst_video_orc_pack_I420
+.function video_orc_pack_I420
 .dest 2 y guint8
 .dest 1 u guint8
 .dest 1 v guint8
@@ -98,7 +98,7 @@ avgub u, t1, t2
 splitwb t1, t2, vv
 avgub v, t1, t2
 
-.function gst_video_orc_unpack_YUY2
+.function video_orc_unpack_YUY2
 .dest 8 ayuv guint8
 .source 4 yuy2 guint8
 .const 2 c255 0xff
@@ -113,7 +113,7 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
-.function gst_video_orc_pack_YUY2
+.function video_orc_pack_YUY2
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
 .temp 2 yy
@@ -129,7 +129,7 @@ x2 select1wb yy, ayay
 x2 mergebw yuy2, yy, uv1
 
 
-.function gst_video_orc_pack_UYVY
+.function video_orc_pack_UYVY
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
 .temp 2 yy
@@ -145,7 +145,7 @@ x2 select1wb yy, ayay
 x2 mergebw yuy2, uv1, yy
 
 
-.function gst_video_orc_unpack_UYVY
+.function video_orc_unpack_UYVY
 .dest 8 ayuv guint8
 .source 4 uyvy guint8
 .const 2 c255 0xff
@@ -160,7 +160,7 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
-.function gst_video_orc_unpack_YVYU
+.function video_orc_unpack_YVYU
 .dest 8 ayuv guint8
 .source 4 uyvy guint8
 .const 2 c255 0xff
@@ -176,7 +176,7 @@ mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
 
-.function gst_video_orc_pack_YVYU
+.function video_orc_pack_YVYU
 .dest 4 yuy2 guint8
 .source 8 ayuv guint8
 .temp 2 yy
@@ -193,7 +193,7 @@ swapw uv1, uv1
 x2 mergebw yuy2, yy, uv1
 
 
-.function gst_video_orc_unpack_YUV9
+.function video_orc_unpack_YUV9
 .dest 8 d guint8
 .source 2 y guint8
 .source 1 u guint8
@@ -213,7 +213,7 @@ x2 mergebw ay, c255, y
 x2 mergewl d, ay, uv
 
 
-.function gst_video_orc_unpack_Y42B
+.function video_orc_unpack_Y42B
 .dest 8 ayuv guint8
 .source 2 yy guint8
 .source 1 u guint8
@@ -229,7 +229,7 @@ x2 mergebw ayay, c255, yy
 mergewl uvuv, uv, uv
 x2 mergewl ayuv, ayay, uvuv
 
-.function gst_video_orc_pack_Y42B
+.function video_orc_pack_Y42B
 .dest 2 y guint8
 .dest 1 u guint8
 .dest 1 v guint8
@@ -246,7 +246,7 @@ splitwb v, u, uv1
 x2 select1wb y, ayay
 
 
-.function gst_video_orc_unpack_Y444
+.function video_orc_unpack_Y444
 .dest 4 ayuv guint8
 .source 1 y guint8
 .source 1 u guint8
@@ -260,7 +260,7 @@ mergebw ay, c255, y
 mergewl ayuv, ay, uv
 
 
-.function gst_video_orc_pack_Y444
+.function video_orc_pack_Y444
 .dest 1 y guint8
 .dest 1 u guint8
 .dest 1 v guint8
@@ -272,7 +272,7 @@ splitlw uv, ay, ayuv
 splitwb v, u, uv
 select1wb y, ay
 
-.function gst_video_orc_unpack_GRAY8
+.function video_orc_unpack_GRAY8
 .dest 4 ayuv guint8
 .source 1 y guint8
 .const 1 c255 255
@@ -283,7 +283,7 @@ mergebw ay, c255, y
 mergewl ayuv, ay, c0x8080
 
 
-.function gst_video_orc_pack_GRAY8
+.function video_orc_pack_GRAY8
 .dest 1 y guint8
 .source 4 ayuv guint8
 .temp 2 ay
@@ -292,19 +292,19 @@ select0lw ay, ayuv
 select1wb y, ay
 
 
-.function gst_video_orc_unpack_BGRA
+.function video_orc_unpack_BGRA
 .dest 4 argb guint8
 .source 4 bgra guint8
 
 swapl argb, bgra
 
-.function gst_video_orc_pack_BGRA
+.function video_orc_pack_BGRA
 .dest 4 bgra guint8
 .source 4 argb guint8
 
 swapl bgra, argb
 
-.function gst_video_orc_pack_RGBA
+.function video_orc_pack_RGBA
 .dest 4 rgba guint8
 .source 4 argb guint8
 .temp 1 a
@@ -323,7 +323,7 @@ mergebw ba, b, a
 mergebw rg, r, g
 mergewl rgba, rg, ba
 
-.function gst_video_orc_unpack_RGBA
+.function video_orc_unpack_RGBA
 .dest 4 argb guint8
 .source 4 rgba guint8
 .temp 1 a
@@ -343,7 +343,7 @@ mergebw gb, g, b
 mergewl argb, ar, gb
 
 
-.function gst_video_orc_unpack_ABGR
+.function video_orc_unpack_ABGR
 .dest 4 argb guint8
 .source 4 abgr guint8
 .temp 1 a
@@ -363,7 +363,7 @@ mergebw gb, g, b
 mergewl argb, ar, gb
 
 
-.function gst_video_orc_pack_ABGR
+.function video_orc_pack_ABGR
 .dest 4 abgr guint8
 .source 4 argb guint8
 .temp 1 a
@@ -382,7 +382,7 @@ mergebw ab, a, b
 mergebw gr, g, r
 mergewl abgr, ab, gr
 
-.function gst_video_orc_unpack_NV12
+.function video_orc_unpack_NV12
 .dest 8 d guint8
 .source 2 y guint8
 .source 2 uv guint8
@@ -394,7 +394,7 @@ mergewl uvuv, uv, uv
 x2 mergebw ay, c255, y
 x2 mergewl d, ay, uvuv
 
-.function gst_video_orc_pack_NV12
+.function video_orc_pack_NV12
 .dest 2 y guint8
 .dest 2 uv guint8
 .source 8 ayuv guint8
@@ -408,7 +408,7 @@ x2 select1wb y, ay
 splitlw uv1, uv2, uvuv
 x2 avgub uv, uv1, uv2
 
-.function gst_video_orc_unpack_NV21
+.function video_orc_unpack_NV21
 .dest 8 d guint8
 .source 2 y guint8
 .source 2 vu guint8
@@ -423,7 +423,7 @@ x2 mergebw ay, c255, y
 x2 mergewl d, ay, uvuv
 
 
-.function gst_video_orc_pack_NV21
+.function video_orc_pack_NV21
 .dest 2 y guint8
 .dest 2 vu guint8
 .source 8 ayuv guint8
@@ -440,7 +440,7 @@ x2 avgub uv, uv1, uv2
 swapw vu, uv
 
 
-.function gst_video_orc_unpack_A420
+.function video_orc_unpack_A420
 .dest 4 d guint8
 .source 1 y guint8
 .source 1 u guint8
@@ -457,7 +457,7 @@ mergebw uv, tu, tv
 mergebw ay, a, y
 mergewl d, ay, uv
 
-.function gst_video_orc_pack_A420
+.function video_orc_pack_A420
 .dest 2 y guint8
 .dest 1 u guint8
 .dest 1 v guint8
@@ -479,7 +479,7 @@ avgub u, t1, t2
 splitwb t1, t2, vv
 avgub v, t1, t2
 
-.function gst_video_orc_resample_bilinear_u32
+.function video_orc_resample_bilinear_u32
 .dest 4 d1 guint8
 .source 4 s1 guint8
 .param 4 p1
@@ -487,7 +487,7 @@ avgub v, t1, t2
 
 ldreslinl d1, s1, p1, p2
 
-.function gst_video_orc_merge_linear_u8
+.function video_orc_merge_linear_u8
 .dest 1 d1
 .source 1 s1
 .source 1 s2
