@@ -134,7 +134,7 @@ user_info_callback (png_structp png_ptr, png_infop info)
 
   /* Allocate output buffer */
   ret =
-      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (pngdec),
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (pngdec),
       pngdec->current_frame);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     GST_DEBUG_OBJECT (pngdec, "failed to acquire buffer");

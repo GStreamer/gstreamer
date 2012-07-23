@@ -1169,7 +1169,7 @@ gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec, GstVideoCodecFrame * frame)
   gst_jpeg_dec_negotiate (dec, width, height, dec->cinfo.jpeg_color_space);
 
   state = gst_video_decoder_get_output_state (bdec);
-  ret = gst_video_decoder_alloc_output_frame (bdec, frame);
+  ret = gst_video_decoder_allocate_output_frame (bdec, frame);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto alloc_failed;
 
