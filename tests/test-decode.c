@@ -22,8 +22,6 @@
 
 #include "config.h"
 #include <string.h>
-#include <gst/vaapi/gstvaapidisplay_x11.h>
-#include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapidecoder_h264.h>
@@ -34,6 +32,7 @@
 #include "test-mpeg2.h"
 #include "test-h264.h"
 #include "test-vc1.h"
+#include "output.h"
 
 /* Set to 1 to check display cache works (shared VA display) */
 #define CHECK_DISPLAY_CACHE 1
@@ -85,7 +84,6 @@ static GOptionEntry g_options[] = {
 int
 main(int argc, char *argv[])
 {
-    GOptionContext       *options;
     GstVaapiDisplay      *display, *display2;
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder;
@@ -100,12 +98,8 @@ main(int argc, char *argv[])
     static const guint win_width  = 640;
     static const guint win_height = 480;
 
-    gst_init(&argc, &argv);
-
-    options = g_option_context_new(" - test-decode options");
-    g_option_context_add_main_entries(options, g_options, NULL);
-    g_option_context_parse(options, &argc, &argv, NULL);
-    g_option_context_free(options);
+    if (!video_output_init(&argc, argv, g_options))
+        g_error("failed to initialize video output subsystem");
 
     if (!g_codec_str)
         g_codec_str = g_strdup("h264");
@@ -115,18 +109,18 @@ main(int argc, char *argv[])
     if (!codec)
         g_error("no %s codec data found", g_codec_str);
 
-    display = gst_vaapi_display_x11_new(NULL);
+    display = video_output_create_display(NULL);
     if (!display)
         g_error("could not create VA display");
 
     if (CHECK_DISPLAY_CACHE)
-        display2 = gst_vaapi_display_x11_new(NULL);
+        display2 = video_output_create_display(NULL);
     else
         display2 = g_object_ref(display);
     if (!display2)
         g_error("could not create second VA display");
 
-    window = gst_vaapi_window_x11_new(display, win_width, win_height);
+    window = video_output_create_window(display, win_width, win_height);
     if (!window)
         g_error("could not create window");
 
@@ -200,6 +194,6 @@ main(int argc, char *argv[])
     g_object_unref(display);
     g_object_unref(display2);
     g_free(g_codec_str);
-    gst_deinit();
+    video_output_exit();
     return 0;
 }

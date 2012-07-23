@@ -21,7 +21,7 @@
 
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
-#include <gst/vaapi/gstvaapidisplay_x11.h>
+#include "output.h"
 
 #define MAX_SURFACES 4
 
@@ -46,9 +46,10 @@ main(int argc, char *argv[])
     static const guint              width       = 320;
     static const guint              height      = 240;
 
-    gst_init(&argc, &argv);
+    if (!video_output_init(&argc, argv, NULL))
+        g_error("failed to initialize video output subsystem");
 
-    display = gst_vaapi_display_x11_new(NULL);
+    display = video_output_create_display(NULL);
     if (!display)
         g_error("could not create Gst/VA display");
 
@@ -126,6 +127,6 @@ main(int argc, char *argv[])
     g_object_unref(pool);
     g_print("unref surface\n");
     g_object_unref(surface);
-    gst_deinit();
+    video_output_exit();
     return 0;
 }

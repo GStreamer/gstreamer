@@ -22,11 +22,10 @@
 
 #include "config.h"
 #include <string.h>
-#include <gst/vaapi/gstvaapidisplay_x11.h>
-#include <gst/vaapi/gstvaapiwindow_x11.h>
 #include <gst/vaapi/gstvaapidecoder.h>
 #include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include "output.h"
 #include "test-mpeg2.h"
 #include "test-subpicture-data.h"
 
@@ -87,7 +86,6 @@ upload_image (guint8 *dst, const guint32 *src, guint size)
 int
 main(int argc, char *argv[])
 {
-    GOptionContext       *options;
     GstVaapiDisplay      *display;
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder = NULL;
@@ -109,12 +107,8 @@ main(int argc, char *argv[])
     static const guint win_width  = 640;
     static const guint win_height = 480;
 
-    gst_init(&argc, &argv);
-
-    options = g_option_context_new(" - test-decode options");
-    g_option_context_add_main_entries(options, g_options, NULL);
-    g_option_context_parse(options, &argc, &argv, NULL);
-    g_option_context_free(options);
+    if (!video_output_init(&argc, argv, g_options))
+        g_error("failed to initialize video output subsystem");
 
     if (!g_codec_str)
         g_codec_str = g_strdup("mpeg2");
@@ -124,11 +118,11 @@ main(int argc, char *argv[])
     if (!codec)
         g_error("no %s codec data found", g_codec_str);
 
-    display = gst_vaapi_display_x11_new(NULL);
+    display = video_output_create_display(NULL);
     if (!display)
         g_error("could not create VA display");
 
-    window = gst_vaapi_window_x11_new(display, win_width, win_height);
+    window = video_output_create_window(display, win_width, win_height);
     if (!window)
         g_error("could not create window");
 
@@ -230,6 +224,6 @@ main(int argc, char *argv[])
     g_object_unref(window);
     g_object_unref(display);
     g_free(g_codec_str);
-    gst_deinit();
+    video_output_exit();
     return 0;
 }

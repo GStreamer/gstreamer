@@ -44,8 +44,8 @@ endif
 test_codecs_source_c	= test-mpeg2.c test-h264.c test-vc1.c test-jpeg.c
 test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h) test-decode.h
 
-test_utils_source_c	= image.c $(test_codecs_source_c)
-test_utils_source_h	= image.h $(test_codecs_source_h)
+test_utils_source_c	= image.c output.c $(test_codecs_source_c)
+test_utils_source_h	= image.h output.h $(test_codecs_source_h)
 
 noinst_LTLIBRARIES	= libutils.la
 libutils_la_SOURCES	= $(test_utils_source_c)
