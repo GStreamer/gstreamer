@@ -619,23 +619,21 @@ static GstFlowReturn
 theora_push_packet (GstTheoraEnc * enc, ogg_packet * packet)
 {
   GstVideoEncoder *benc;
-  GstBuffer *buf;
   GstFlowReturn ret;
   GstVideoCodecFrame *frame;
 
   benc = GST_VIDEO_ENCODER (enc);
 
-  buf = gst_buffer_new_allocate (NULL, packet->bytes, NULL);
-  if (!buf) {
+  frame = gst_video_encoder_get_oldest_frame (benc);
+  if (gst_video_encoder_alloc_output_frame (benc, frame,
+          packet->bytes) != GST_FLOW_OK) {
     GST_WARNING_OBJECT (enc, "Could not allocate buffer");
+    gst_video_codec_frame_unref (frame);
     ret = GST_FLOW_ERROR;
     goto done;
   }
 
-  gst_buffer_fill (buf, 0, packet->packet, packet->bytes);
-
-  frame = gst_video_encoder_get_oldest_frame (benc);
-  frame->output_buffer = buf;
+  gst_buffer_fill (frame->output_buffer, 0, packet->packet, packet->bytes);
 
   /* the second most significant bit of the first data byte is cleared
    * for keyframes */
@@ -838,7 +836,9 @@ theora_enc_buffer_from_header_packet (GstTheoraEnc * enc, ogg_packet * packet)
 {
   GstBuffer *outbuf;
 
-  outbuf = gst_buffer_new_allocate (NULL, packet->bytes, NULL);
+  outbuf =
+      gst_video_encoder_alloc_output_buffer (GST_VIDEO_ENCODER (enc),
+      packet->bytes);
   gst_buffer_fill (outbuf, 0, packet->packet, packet->bytes);
   GST_BUFFER_OFFSET (outbuf) = 0;
   GST_BUFFER_OFFSET_END (outbuf) = 0;
