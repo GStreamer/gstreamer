@@ -161,6 +161,9 @@ struct _GstVideoEncoderPrivate
 
   gint64 bytes;
   gint64 time;
+
+  GstAllocator *allocator;
+  GstAllocationParams params;
 };
 
 typedef struct _ForcedKeyUnitEvent ForcedKeyUnitEvent;
@@ -222,6 +225,8 @@ static gboolean gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
 static gboolean gst_video_encoder_src_event_default (GstVideoEncoder * encoder,
     GstEvent * event);
+static gboolean gst_video_encoder_decide_allocation_default (GstVideoEncoder *
+    encoder, GstQuery * query);
 static gboolean gst_video_encoder_propose_allocation_default (GstVideoEncoder *
     encoder, GstQuery * query);
 
@@ -284,6 +289,7 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   klass->sink_event = gst_video_encoder_sink_event_default;
   klass->src_event = gst_video_encoder_src_event_default;
   klass->propose_allocation = gst_video_encoder_propose_allocation_default;
+  klass->decide_allocation = gst_video_encoder_decide_allocation_default;
 }
 
 static void
@@ -705,6 +711,36 @@ gst_video_encoder_sink_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 }
 
 static gboolean
+gst_video_encoder_decide_allocation_default (GstVideoEncoder * encoder,
+    GstQuery * query)
+{
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params;
+  gboolean update_allocator;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    /* try the allocator */
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    update_allocator = TRUE;
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+    update_allocator = FALSE;
+  }
+
+  if (update_allocator)
+    gst_query_set_nth_allocation_param (query, 0, allocator, &params);
+  else
+    gst_query_add_allocation_param (query, allocator, &params);
+  if (allocator)
+    gst_object_unref (allocator);
+
+  return TRUE;
+}
+
+static gboolean
 gst_video_encoder_propose_allocation_default (GstVideoEncoder * encoder,
     GstQuery * query)
 {
@@ -760,6 +796,11 @@ gst_video_encoder_finalize (GObject * object)
     g_list_free (encoder->priv->headers);
   }
   g_rec_mutex_clear (&encoder->stream_lock);
+
+  if (encoder->priv->allocator) {
+    gst_object_unref (encoder->priv->allocator);
+    encoder->priv->allocator = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1279,9 +1320,13 @@ close_failed:
 static gboolean
 gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
 {
+  GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+  GstAllocator *allocator;
+  GstAllocationParams params;
   gboolean ret;
   GstVideoCodecState *state = encoder->priv->output_state;
   GstVideoInfo *info = &state->info;
+  GstQuery *query;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -1309,8 +1354,122 @@ gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
   }
 
   ret = gst_pad_set_caps (encoder->srcpad, state->caps);
+  if (!ret)
+    return ret;
+
+  query = gst_query_new_allocation (state->caps, TRUE);
+  if (!gst_pad_peer_query (encoder->srcpad, query)) {
+    GST_DEBUG_OBJECT (encoder, "didn't get downstream ALLOCATION hints");
+  }
+
+  g_assert (klass->decide_allocation != NULL);
+  ret = klass->decide_allocation (encoder, query);
+
+  GST_DEBUG_OBJECT (encoder, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, ret,
+      query);
+
+  if (!ret)
+    goto no_decide_allocation;
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (encoder->priv->allocator)
+    gst_object_unref (encoder->priv->allocator);
+  encoder->priv->allocator = allocator;
+  encoder->priv->params = params;
+
+done:
+  if (query)
+    gst_query_unref (query);
 
   return ret;
+
+  /* Errors */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (encoder, "Subclass failed to decide allocation");
+    goto done;
+  }
+}
+
+/**
+ * gst_video_encoder_alloc_output_buffer:
+ * @encoder: a #GstVideoEncoder
+ * @size: size of the buffer
+ *
+ * Helper function that allocates a buffer to hold an encoded video frame
+ * for @encoder's current #GstVideoCodecState.
+ *
+ * Returns: (transfer full): allocated buffer
+ */
+GstBuffer *
+gst_video_encoder_alloc_output_buffer (GstVideoEncoder * encoder, gsize size)
+{
+  GstBuffer *buffer;
+
+  g_return_val_if_fail (size > 0, NULL);
+
+  GST_DEBUG ("alloc src buffer");
+
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  if (G_UNLIKELY (encoder->priv->output_state_changed
+          || (encoder->priv->output_state
+              && gst_pad_check_reconfigure (encoder->srcpad))))
+    gst_video_encoder_set_src_caps (encoder);
+
+  buffer =
+      gst_buffer_new_allocate (encoder->priv->allocator, size,
+      &encoder->priv->params);
+
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+  return buffer;
+}
+
+/**
+ * gst_video_encoder_alloc_output_frame:
+ * @encoder: a #GstVideoEncoder
+ * @frame: a #GstVideoCodecFrame
+ * @size: size of the buffer
+ *
+ * Helper function that allocates a buffer to hold an encoded video frame for @encoder's
+ * current #GstVideoCodecState.  Subclass should already have configured video
+ * state and set src pad caps.
+ *
+ * The buffer allocated here is owned by the frame and you should only
+ * keep references to the frame, not the buffer.
+ *
+ * Returns: %GST_FLOW_OK if an output buffer could be allocated
+ */
+GstFlowReturn
+gst_video_encoder_alloc_output_frame (GstVideoEncoder *
+    encoder, GstVideoCodecFrame * frame, gsize size)
+{
+  g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
+
+  if (G_UNLIKELY (encoder->priv->output_state_changed
+          || (encoder->priv->output_state
+              && gst_pad_check_reconfigure (encoder->srcpad))))
+    gst_video_encoder_set_src_caps (encoder);
+
+  GST_LOG_OBJECT (encoder, "alloc buffer size %d", size);
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+
+  frame->output_buffer =
+      gst_buffer_new_allocate (encoder->priv->allocator, size,
+      &encoder->priv->params);
+
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+  return frame->output_buffer ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
 /**

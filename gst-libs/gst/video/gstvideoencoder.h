@@ -191,6 +191,10 @@ struct _GstVideoEncoder
  *                  Event handler on the source pad. This function should return
  *                  TRUE if the event was handled and should be discarded
  *                  (i.e. not unref'ed).
+ * @decide_allocation: Optional.
+ *                     Setup the allocation parameters for allocating output
+ *                     buffers. The passed in query contains the result of the
+ *                     downstream allocation query.
  * @propose_allocation: Optional.
  *                      Propose buffer allocation parameters for upstream elements.
  *
@@ -236,6 +240,8 @@ struct _GstVideoEncoderClass
   gboolean      (*src_event)    (GstVideoEncoder *encoder,
 				 GstEvent *event);
 
+  gboolean      (*decide_allocation)  (GstVideoEncoder *encoder, GstQuery *query);
+
   gboolean      (*propose_allocation) (GstVideoEncoder * encoder,
                                        GstQuery * query);
 
@@ -255,6 +261,13 @@ GstVideoCodecState*  gst_video_encoder_set_output_state (GstVideoEncoder * encod
 GstVideoCodecFrame*  gst_video_encoder_get_frame        (GstVideoEncoder *encoder,
 						         int frame_number);
 GstVideoCodecFrame*  gst_video_encoder_get_oldest_frame (GstVideoEncoder *encoder);
+
+GstBuffer *          gst_video_encoder_alloc_output_buffer (GstVideoEncoder * decoder,
+                                                            gsize size);
+
+GstFlowReturn        gst_video_encoder_alloc_output_frame  (GstVideoEncoder *decoder,
+						            GstVideoCodecFrame *frame,
+                                                            gsize size);
 
 GstFlowReturn        gst_video_encoder_finish_frame (GstVideoEncoder *encoder,
 						     GstVideoCodecFrame *frame);
