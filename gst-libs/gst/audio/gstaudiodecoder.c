@@ -2005,6 +2005,14 @@ gst_audio_decoder_sink_query (GstPad * pad, GstObject * parent,
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
+    case GST_QUERY_ALLOCATION:
+    {
+      GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+
+      if (klass->propose_allocation)
+        res = klass->propose_allocation (dec, query);
+      break;
+    }
     case GST_QUERY_SEEKING:
     {
       GstFormat format;
