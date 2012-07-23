@@ -525,6 +525,7 @@ gst_schro_enc_handle_frame (GstVideoEncoder * base_video_encoder,
 
   /* FIXME : We could make that method just take GstVideoInfo ... */
   schro_frame = gst_schro_buffer_wrap (gst_buffer_ref (frame->input_buffer),
+      FALSE,
       GST_VIDEO_INFO_FORMAT (info),
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
 

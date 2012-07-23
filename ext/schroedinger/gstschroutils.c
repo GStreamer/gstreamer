@@ -64,14 +64,14 @@ gst_schro_frame_get_buffer (SchroFrame * frame)
 }
 
 SchroFrame *
-gst_schro_buffer_wrap (GstBuffer * buf, GstVideoFormat format, int width,
-    int height)
+gst_schro_buffer_wrap (GstBuffer * buf, gboolean write, GstVideoFormat format,
+    int width, int height)
 {
   SchroFrame *frame;
   GstMapInfo info;
   FrameData *data;
 
-  if (!gst_buffer_map (buf, &info, GST_MAP_READ))
+  if (!gst_buffer_map (buf, &info, (write ? GST_MAP_READWRITE : GST_MAP_READ)))
     return NULL;
 
   switch (format) {

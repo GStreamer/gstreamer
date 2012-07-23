@@ -35,7 +35,7 @@
 #endif
 
 SchroFrame *
-gst_schro_buffer_wrap (GstBuffer *buf, GstVideoFormat format, int width,
+gst_schro_buffer_wrap (GstBuffer *buf, gboolean write, GstVideoFormat format, int width,
     int height);
 GstBuffer * gst_schro_frame_get_buffer (SchroFrame * frame);
 
