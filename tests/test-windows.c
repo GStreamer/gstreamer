@@ -19,28 +19,34 @@
  *  Boston, MA 02110-1301 USA
 */
 
-#include <gst/vaapi/gstvaapidisplay_x11.h>
-#include <gst/vaapi/gstvaapiwindow_x11.h>
+#include "config.h"
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimage.h>
+#if USE_X11
+# include <gst/vaapi/gstvaapidisplay_x11.h>
+# include <gst/vaapi/gstvaapiwindow_x11.h>
+#endif
+#if USE_WAYLAND
+# include <gst/vaapi/gstvaapidisplay_wayland.h>
+# include <gst/vaapi/gstvaapiwindow_wayland.h>
+#endif
 #include "image.h"
 
-static inline void pause(void)
+static inline void
+pause(void)
 {
     g_print("Press any key to continue...\n");
     getchar();
 }
 
-int
-main(int argc, char *argv[])
+static GstVaapiSurface *
+create_test_surface(GstVaapiDisplay *display, guint width, guint height)
 {
-    GstVaapiDisplay    *display;
-    GstVaapiWindow     *window;
-    GstVaapiSurface    *surface;
-    GstVaapiImage      *image   = NULL;
-    guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+    GstVaapiImage *image = NULL;
+    GstVaapiSurface *surface;
     guint i;
 
+    static const GstVaapiChromaType  chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
     static const GstVaapiImageFormat image_formats[] = {
         GST_VAAPI_IMAGE_NV12,
         GST_VAAPI_IMAGE_YV12,
@@ -53,18 +59,6 @@ main(int argc, char *argv[])
         0
     };
 
-    static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-    static const guint              width       = 320;
-    static const guint              height      = 240;
-    static const guint              win_width   = 640;
-    static const guint              win_height  = 480;
-
-    gst_init(&argc, &argv);
-
-    display = gst_vaapi_display_x11_new(NULL);
-    if (!display)
-        g_error("could not create Gst/VA display");
-
     surface = gst_vaapi_surface_new(display, chroma_type, width, height);
     if (!surface)
         g_error("could not create Gst/VA surface");
@@ -73,17 +67,44 @@ main(int argc, char *argv[])
         const GstVaapiImageFormat format = image_formats[i];
 
         image = image_generate(display, format, width, height);
-        if (image) {
-            if (image_upload(image, surface))
-                break;
-            g_object_unref(image);
-        }
+        if (!image)
+            break;
+        if (image_upload(image, surface))
+            break;
     }
     if (!image)
         g_error("could not create Gst/VA image");
 
     if (!gst_vaapi_surface_sync(surface))
         g_error("could not complete image upload");
+
+    g_object_unref(image);
+    return surface;
+}
+
+int
+main(int argc, char *argv[])
+{
+    GstVaapiDisplay *display;
+    GstVaapiWindow *window;
+    GstVaapiSurface *surface;
+    guint flags = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+
+    static const guint width       = 320;
+    static const guint height      = 240;
+    static const guint win_width   = 640;
+    static const guint win_height  = 480;
+
+    gst_init(&argc, &argv);
+
+#if USE_X11
+    display = gst_vaapi_display_x11_new(NULL);
+    if (!display)
+        g_error("could not create Gst/VA display");
+
+    surface = create_test_surface(display, width, height);
+    if (!surface)
+        g_error("could not create Gst/VA surface");
 
     g_print("#\n");
     g_print("# Create window with gst_vaapi_window_x11_new()\n");
@@ -141,9 +162,40 @@ main(int argc, char *argv[])
         XDestroyWindow(dpy, win);
     }
 
-    g_object_unref(image);
     g_object_unref(surface);
     g_object_unref(display);
+#endif
+
+#if USE_WAYLAND
+    display = gst_vaapi_display_wayland_new(NULL);
+    if (!display)
+        g_error("could not create Gst/VA (Wayland) display");
+
+    surface = create_test_surface(display, width, height);
+    if (!surface)
+        g_error("could not create Gst/VA surface");
+
+    g_print("#\n");
+    g_print("# Create window with gst_vaapi_window_wayland_new()\n");
+    g_print("#\n");
+    {
+        window = gst_vaapi_window_wayland_new(display, win_width, win_height);
+        if (!window)
+            g_error("could not create window");
+
+        gst_vaapi_window_show(window);
+
+        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
+            g_error("could not render surface");
+
+        pause();
+        g_object_unref(window);
+    }
+
+    g_object_unref(surface);
+    g_object_unref(display);
+#endif
+
     gst_deinit();
     return 0;
 }

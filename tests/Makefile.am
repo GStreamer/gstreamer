@@ -41,6 +41,14 @@ TEST_LIBS	+= \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-@GST_MAJORMINOR@.la
 endif
 
+if USE_WAYLAND
+TEST_CFLAGS	+= $(WAYLAND_CFLAGS)
+TEST_LIBS	+= \
+	$(LIBVA_WAYLAND_LIBS)		\
+	$(WAYLAND_LIBS)			\
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-@GST_MAJORMINOR@.la
+endif
+
 test_codecs_source_c	= test-mpeg2.c test-h264.c test-vc1.c test-jpeg.c
 test_codecs_source_h	= $(test_codecs_source_c:%.c=%.h) test-decode.h
 

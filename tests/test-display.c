@@ -22,10 +22,13 @@
 #include "config.h"
 #include <gst/video/video.h>
 #if USE_X11
-#include <gst/vaapi/gstvaapidisplay_x11.h>
+# include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
 #if USE_GLX
-#include <gst/vaapi/gstvaapidisplay_glx.h>
+# include <gst/vaapi/gstvaapidisplay_glx.h>
+#endif
+#if USE_WAYLAND
+# include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
 
 #ifdef HAVE_VA_VA_GLX_H
@@ -147,8 +150,6 @@ dump_caps(GstVaapiDisplay *display)
 int
 main(int argc, char *argv[])
 {
-    Display *x11_display;
-    VADisplay va_display;
     GstVaapiDisplay *display;
     guint width, height, par_n, par_d;
 
@@ -178,6 +179,8 @@ main(int argc, char *argv[])
     g_print("# Create display with gst_vaapi_display_x11_new_with_display()\n");
     g_print("#\n");
     {
+        Display *x11_display;
+
         x11_display = XOpenDisplay(NULL);
         if (!x11_display)
             g_error("could not create X11 display");
@@ -196,6 +199,9 @@ main(int argc, char *argv[])
     g_print("# Create display with gst_vaapi_display_new_with_display() [vaGetDisplay()]\n");
     g_print("#\n");
     {
+        Display *x11_display;
+        VADisplay va_display;
+
         x11_display = XOpenDisplay(NULL);
         if (!x11_display)
             g_error("could not create X11 display");
@@ -239,6 +245,8 @@ main(int argc, char *argv[])
     g_print("# Create display with gst_vaapi_display_glx_new_with_display()\n");
     g_print("#\n");
     {
+        Display *x11_display;
+
         x11_display = XOpenDisplay(NULL);
         if (!x11_display)
             g_error("could not create X11 display");
@@ -258,6 +266,9 @@ main(int argc, char *argv[])
     g_print("# Create display with gst_vaapi_display_new_with_display() [vaGetDisplayGLX()]\n");
     g_print("#\n");
     {
+        Display *x11_display;
+        VADisplay va_display;
+
         x11_display = XOpenDisplay(NULL);
         if (!x11_display)
             g_error("could not create X11 display");
@@ -276,6 +287,27 @@ main(int argc, char *argv[])
     }
     g_print("\n");
 #endif
+#endif
+
+#if USE_WAYLAND
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_wayland_new()\n");
+    g_print("#\n");
+    {
+        display = gst_vaapi_display_wayland_new(NULL);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        gst_vaapi_display_get_size(display, &width, &height);
+        g_print("Display size: %ux%u\n", width, height);
+
+        gst_vaapi_display_get_pixel_aspect_ratio(display, &par_n, &par_d);
+        g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
+
+        dump_caps(display);
+        g_object_unref(display);
+    }
+    g_print("\n");
 #endif
 
     gst_deinit();

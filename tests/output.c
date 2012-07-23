@@ -30,11 +30,21 @@
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 # include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
+#if USE_WAYLAND
+# include <gst/vaapi/gstvaapidisplay_wayland.h>
+# include <gst/vaapi/gstvaapiwindow_wayland.h>
+#endif
 #include "output.h"
 
 static const VideoOutputInfo *g_video_output;
 static const VideoOutputInfo g_video_outputs[] = {
     /* Video outputs are sorted in test order for automatic characterisation */
+#if USE_WAYLAND
+    { "wayland",
+      gst_vaapi_display_wayland_new,
+      gst_vaapi_window_wayland_new
+    },
+#endif
 #if USE_X11
     { "x11",
       gst_vaapi_display_x11_new,
