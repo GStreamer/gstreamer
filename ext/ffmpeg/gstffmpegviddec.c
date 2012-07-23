@@ -564,6 +564,9 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (G_UNLIKELY (frame == NULL))
     goto no_frame;
 
+  if (G_UNLIKELY (frame->output_buffer != NULL))
+    goto duplicate_frame;
+
   /* GstFFMpegVidDecVideoFrame receives the frame ref */
   picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
 
@@ -640,6 +643,11 @@ invalid_frame:
 fallback:
   {
     return avcodec_default_get_buffer (context, picture);
+  }
+duplicate_frame:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "already alloc'ed output buffer for frame");
+    return -1;
   }
 no_frame:
   GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
