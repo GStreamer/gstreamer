@@ -24,8 +24,6 @@
 #ifndef GST_VAAPI_PLUGIN_UTIL_H
 #define GST_VAAPI_PLUGIN_UTIL_H
 
-#include <gst/gst.h>
-#include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
 /**
@@ -47,9 +45,18 @@ enum _GstVaapiDisplayType {
 GType
 gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
 
-gboolean gst_vaapi_ensure_display (gpointer element, GstVaapiDisplay **display);
-void gst_vaapi_set_display (const gchar *type, const GValue *value, GstVaapiDisplay **display);
-gboolean gst_vaapi_reply_to_query (GstQuery *query, GstVaapiDisplay *display);
+gboolean
+gst_vaapi_ensure_display(gpointer element, GstVaapiDisplay **display);
+
+void
+gst_vaapi_set_display(
+    const gchar      *type,
+    const GValue     *value,
+    GstVaapiDisplay **display
+);
+
+gboolean
+gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display);
 
 gboolean
 gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps);
