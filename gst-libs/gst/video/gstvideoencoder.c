@@ -1326,7 +1326,7 @@ gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
   gboolean ret;
   GstVideoCodecState *state = encoder->priv->output_state;
   GstVideoInfo *info = &state->info;
-  GstQuery *query;
+  GstQuery *query = NULL;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -1355,7 +1355,7 @@ gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
 
   ret = gst_pad_set_caps (encoder->srcpad, state->caps);
   if (!ret)
-    return ret;
+    goto done;
 
   query = gst_query_new_allocation (state->caps, TRUE);
   if (!gst_pad_peer_query (encoder->srcpad, query)) {
