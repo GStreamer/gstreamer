@@ -1029,18 +1029,16 @@ gst_deinterlace_get_buffer_state (GstDeinterlace * self, GstVideoFrame * frame,
 
   if (state) {
     if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED) {
-      if (GST_VIDEO_INFO_FLAG_IS_SET (frame, GST_VIDEO_BUFFER_FLAG_RFF)) {
+      if (GST_VIDEO_FRAME_IS_RFF (frame)) {
         *state = GST_DEINTERLACE_BUFFER_STATE_DROP;
-      } else if (GST_VIDEO_INFO_FLAG_IS_SET (frame,
-              GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
+      } else if (GST_VIDEO_FRAME_IS_ONEFIELD (frame)) {
         /* tc top if tff, tc bottom otherwise */
-        if (GST_VIDEO_INFO_FLAG_IS_SET (frame, GST_VIDEO_BUFFER_FLAG_TFF)) {
+        if (GST_VIDEO_FRAME_IS_TFF (frame)) {
           *state = GST_DEINTERLACE_BUFFER_STATE_TC_T;
         } else {
           *state = GST_DEINTERLACE_BUFFER_STATE_TC_B;
         }
-      } else if (GST_VIDEO_INFO_FLAG_IS_SET (frame,
-              GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
+      } else if (GST_VIDEO_FRAME_IS_INTERLACED (frame)) {
         *state = GST_DEINTERLACE_BUFFER_STATE_TC_M;
       } else {
         *state = GST_DEINTERLACE_BUFFER_STATE_TC_P;
@@ -1064,20 +1062,15 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   int i = 1;
   GstClockTime timestamp;
   GstDeinterlaceFieldLayout field_layout = self->field_layout;
-  gboolean repeated =
-      GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF);
-  gboolean tff = GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
-  gboolean onefield =
-      GST_BUFFER_FLAG_IS_SET (buffer, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
+  gboolean repeated;
+  gboolean tff;
+  gboolean onefield;
   GstVideoFrame *frame = NULL;
   GstVideoFrame *field1, *field2 = NULL;
-  guint fields_to_push = (onefield) ? 1 : (!repeated) ? 2 : 3;
+  guint fields_to_push;
   gint field1_flags, field2_flags;
   GstVideoInterlaceMode interlacing_mode;
   guint8 buf_state;
-
-  g_return_if_fail (self->history_count <
-      GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push);
 
   /* we will only read from this buffer and write into fresh output buffers
    * if this is not the case, change the map flags as appropriate
@@ -1085,6 +1078,14 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   frame = gst_video_frame_new_and_map (&self->vinfo, buffer, GST_MAP_READ);
   /* we can manage the buffer ref count using the maps from here on */
   gst_buffer_unref (buffer);
+
+  repeated = GST_VIDEO_FRAME_IS_RFF (frame);
+  tff = GST_VIDEO_FRAME_IS_TFF (frame);
+  onefield = GST_VIDEO_FRAME_IS_ONEFIELD (frame);
+  fields_to_push = (onefield) ? 1 : (!repeated) ? 2 : 3;
+
+  g_return_if_fail (self->history_count <
+      GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push);
 
   gst_deinterlace_get_buffer_state (self, frame, &buf_state, &interlacing_mode);
 
