@@ -110,11 +110,6 @@ AC_ARG_ENABLE(glx,
                    [enable OpenGL/X11 output @<:@default=yes@:>@]),
     [], [enable_glx="yes"])
 
-AC_ARG_ENABLE(vaapisink-glx,
-    AS_HELP_STRING([--enable-vaapisink-glx],
-                   [enable OpenGL/X11 to vaapisink @<:@default=yes@:>@]),
-    [], [enable_vaapisink_glx="no"])
-
 dnl Check for basic libraries
 AC_CHECK_LIB(m, tan)
 
@@ -387,13 +382,6 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$saved_LIBS"
 ])
 
-dnl Check for OpenGL support to vaapisink
-if test "$enable_vaapisink_glx:$USE_GLX" = "yes:1"; then
-    USE_VAAPISINK_GLX=1
-else
-    USE_VAAPISINK_GLX=0
-fi
-
 dnl ---------------------------------------------------------------------------
 dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
@@ -417,10 +405,6 @@ AM_CONDITIONAL(USE_X11, test $USE_X11 -eq 1)
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
-
-AC_DEFINE_UNQUOTED(USE_VAAPISINK_GLX, $USE_VAAPISINK_GLX,
-    [Defined to 1 to enable GLX support to vaapisink])
-AM_CONDITIONAL(USE_VAAPISINK_GLX, test $USE_VAAPISINK_GLX -eq 1)
 
 pkgconfigdir=${libdir}/pkgconfig
 AC_SUBST(pkgconfigdir)
@@ -476,5 +460,4 @@ echo VA-API version ................... : $VA_VERSION_STR
 echo GLX support ...................... : $(yesno $USE_GLX)
 echo VA/X11 support ................... : $(yesno $USE_X11)
 echo VA/GLX support ................... : $(yesno $HAVE_VA_GLX)
-echo VaapiSink/GL ..................... : $(yesno $USE_VAAPISINK_GLX)
 echo

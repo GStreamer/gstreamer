@@ -189,3 +189,25 @@ gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps)
   }
   return TRUE;
 }
+
+GType
+gst_vaapi_display_type_get_type(void)
+{
+    static GType g_type = 0;
+
+    static const GEnumValue display_types[] = {
+        { GST_VAAPI_DISPLAY_TYPE_AUTO,
+          "Auto detection", "auto" },
+        { GST_VAAPI_DISPLAY_TYPE_X11,
+          "VA/X11 display", "x11" },
+#if USE_GLX
+        { GST_VAAPI_DISPLAY_TYPE_GLX,
+          "VA/GLX display", "glx" },
+#endif
+        { 0, NULL, NULL },
+    };
+
+    if (!g_type)
+        g_type = g_enum_register_static("GstVaapiDisplayType", display_types);
+    return g_type;
+}

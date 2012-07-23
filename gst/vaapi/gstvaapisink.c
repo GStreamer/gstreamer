@@ -37,9 +37,9 @@
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
-#if USE_VAAPISINK_GLX
-#include <gst/vaapi/gstvaapidisplay_glx.h>
-#include <gst/vaapi/gstvaapiwindow_glx.h>
+#if USE_GLX
+# include <gst/vaapi/gstvaapidisplay_glx.h>
+# include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
 
 /* Supported interfaces */
@@ -93,11 +93,13 @@ G_DEFINE_TYPE_WITH_CODE(
 enum {
     PROP_0,
 
-    PROP_USE_GLX,
+    PROP_DISPLAY_TYPE,
     PROP_FULLSCREEN,
     PROP_SYNCHRONOUS,
     PROP_USE_REFLECTION
 };
+
+#define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_X11
 
 /* GstImplementsInterface interface */
 
@@ -148,7 +150,8 @@ gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window)
 
     /* Disable GLX rendering when vaapisink is using a foreign X
        window. It's pretty much useless */
-    sink->use_glx = FALSE;
+    if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_GLX)
+        sink->display_type = GST_VAAPI_DISPLAY_TYPE_X11;
 
     sink->foreign_window = TRUE;
     gst_vaapisink_ensure_window_xid(sink, window);
@@ -257,6 +260,12 @@ configure_notify_event_pending(
     return args.match;
 }
 
+static inline gboolean
+gst_vaapisink_ensure_display(GstVaapiSink *sink)
+{
+    return gst_vaapi_ensure_display(sink, &sink->display);
+}
+
 static gboolean
 gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
 {
@@ -319,12 +328,19 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
     GstVaapiDisplay * const display = sink->display;
 
     if (!sink->window) {
-#if USE_VAAPISINK_GLX
-        if (sink->use_glx)
+        switch (sink->display_type) {
+#if USE_GLX
+        case GST_VAAPI_DISPLAY_TYPE_GLX:
             sink->window = gst_vaapi_window_glx_new(display, width, height);
-        else
+            break;
 #endif
+        case GST_VAAPI_DISPLAY_TYPE_X11:
             sink->window = gst_vaapi_window_x11_new(display, width, height);
+            break;
+        default:
+            GST_ERROR("unsupported display type %d", sink->display_type);
+            return FALSE;
+        }
         if (sink->window)
             gst_x_overlay_got_window_handle(
                 GST_X_OVERLAY(sink),
@@ -342,7 +358,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
     int x, y;
     XID xid = window_id;
 
-    if (!gst_vaapi_ensure_display(sink, &sink->display))
+    if (!gst_vaapisink_ensure_display(sink))
         return FALSE;
 
     gst_vaapi_display_lock(sink->display);
@@ -368,12 +384,19 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
 
     g_clear_object(&sink->window);
 
-#if USE_VAAPISINK_GLX
-    if (sink->use_glx)
+    switch (sink->display_type) {
+#if USE_GLX
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
         sink->window = gst_vaapi_window_glx_new_with_xid(sink->display, xid);
-    else
+        break;
 #endif
+    case GST_VAAPI_DISPLAY_TYPE_X11:
         sink->window = gst_vaapi_window_x11_new_with_xid(sink->display, xid);
+        break;
+    default:
+        GST_ERROR("unsupported display type %d", sink->display_type);
+        return FALSE;
+    }
     return sink->window != NULL;
 }
 
@@ -382,7 +405,7 @@ gst_vaapisink_start(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
-    return gst_vaapi_ensure_display(sink, &sink->display);
+    return gst_vaapisink_ensure_display(sink);
 }
 
 static gboolean
@@ -420,7 +443,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 
     gst_caps_replace(&sink->caps, caps);
 
-    if (!gst_vaapi_ensure_display(sink, &sink->display))
+    if (!gst_vaapisink_ensure_display(sink))
         return FALSE;
 
     gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
@@ -461,7 +484,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     return gst_vaapisink_ensure_render_rect(sink, win_width, win_height);
 }
 
-#if USE_VAAPISINK_GLX
+#if USE_GLX
 static void
 render_background(GstVaapiSink *sink)
 {
@@ -663,12 +686,20 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
              composition, TRUE))
         GST_WARNING("could not update subtitles");
 
-#if USE_VAAPISINK_GLX
-    if (sink->use_glx)
+    switch (sink->display_type) {
+#if USE_GLX
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
         success = gst_vaapisink_show_frame_glx(sink, surface, flags);
-    else
+        break;
 #endif
+    case GST_VAAPI_DISPLAY_TYPE_X11:
         success = gst_vaapisink_show_frame_x11(sink, surface, flags);
+        break;
+    default:
+        GST_ERROR("unsupported display type %d", sink->display_type);
+        success = FALSE;
+        break;
+    }
     return success ? GST_FLOW_OK : GST_FLOW_UNEXPECTED;
 }
 
@@ -699,8 +730,8 @@ gst_vaapisink_set_property(
     GstVaapiSink * const sink = GST_VAAPISINK(object);
 
     switch (prop_id) {
-    case PROP_USE_GLX:
-        sink->use_glx = g_value_get_boolean(value);
+    case PROP_DISPLAY_TYPE:
+        sink->display_type = g_value_get_enum(value);
         break;
     case PROP_FULLSCREEN:
         sink->fullscreen = g_value_get_boolean(value);
@@ -728,8 +759,8 @@ gst_vaapisink_get_property(
     GstVaapiSink * const sink = GST_VAAPISINK(object);
 
     switch (prop_id) {
-    case PROP_USE_GLX:
-        g_value_set_boolean(value, sink->use_glx);
+    case PROP_DISPLAY_TYPE:
+        g_value_set_enum(value, sink->display_type);
         break;
     case PROP_FULLSCREEN:
         g_value_set_boolean(value, sink->fullscreen);
@@ -780,16 +811,17 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     gst_element_class_add_pad_template(element_class, pad_template);
     gst_object_unref(pad_template);
 
-#if USE_VAAPISINK_GLX
     g_object_class_install_property
         (object_class,
-         PROP_USE_GLX,
-         g_param_spec_boolean("use-glx",
-                              "GLX rendering",
-                              "Enables GLX rendering",
-                              TRUE,
-                              G_PARAM_READWRITE));
+         PROP_DISPLAY_TYPE,
+         g_param_spec_enum("display",
+                           "display type",
+                           "display type to use",
+                           GST_VAAPI_TYPE_DISPLAY_TYPE,
+                           GST_VAAPI_DISPLAY_TYPE_AUTO,
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+#if USE_GLX
     g_object_class_install_property
         (object_class,
          PROP_USE_REFLECTION,
@@ -841,6 +873,6 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->foreign_window = FALSE;
     sink->fullscreen     = FALSE;
     sink->synchronous    = FALSE;
-    sink->use_glx        = USE_VAAPISINK_GLX;
+    sink->display_type   = DEFAULT_DISPLAY_TYPE;
     sink->use_reflection = FALSE;
 }
