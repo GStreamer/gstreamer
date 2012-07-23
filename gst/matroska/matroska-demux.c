@@ -1550,6 +1550,7 @@ gst_matroska_demux_move_to_entry (GstMatroskaDemux * demux,
     /* seek (relative to matroska segment) */
     /* position might be invalid; will error when streaming resumes ... */
     demux->common.offset = entry->pos + demux->common.ebml_segment_start;
+    demux->next_cluster_offset = 0;
 
     GST_DEBUG_OBJECT (demux,
         "Seeked to offset %" G_GUINT64_FORMAT ", block %d, " "time %"
