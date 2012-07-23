@@ -134,13 +134,9 @@ typedef struct
 typedef struct
 {
   /* Offset Size    Description     Value
-   * 0x00   4       Chunk ID        "labl" (0x6C61626C)
-   * 0x04   4       Chunk Data Size depends on contained text
    * 0x08   4       Cue Point ID    0 - 0xFFFFFFFF
    * 0x0c           Text
    */
-  guint32 chunk_id;
-  guint32 chunk_data_size;
   guint32 cue_point_id;
   gchar *text;
 } GstWavParseLabl;
@@ -1169,9 +1165,7 @@ gst_wavparse_cue_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
   GList *cues = NULL;
   GstWavParseCue *cue;
 
-  GST_OBJECT_LOCK (wav);
   if (wav->cues) {
-    GST_OBJECT_UNLOCK (wav);
     GST_WARNING_OBJECT (wav, "found another cue's");
     return TRUE;
   }
@@ -1198,7 +1192,6 @@ gst_wavparse_cue_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
   }
 
   wav->cues = cues;
-  GST_OBJECT_UNLOCK (wav);
 
   return TRUE;
 }
@@ -1218,18 +1211,18 @@ gst_wavparse_labl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
 {
   GstWavParseLabl *labl;
 
+  if (size < 5)
+    return FALSE;
+
   labl = g_new0 (GstWavParseLabl, 1);
 
   /* parse data */
-  labl->chunk_id = GST_READ_UINT32_LE (data);
-  labl->chunk_data_size = GST_READ_UINT32_LE (data + 4);
-  labl->cue_point_id = GST_READ_UINT32_LE (data + 8);
-  labl->text = (gchar *) g_new (gchar *, labl->chunk_data_size + 1);
-  memcpy (labl->text, data + 12, labl->chunk_data_size);
+  data += 8;
+  labl->cue_point_id = GST_READ_UINT32_LE (data);
+  labl->text = (gchar *) g_new0 (gchar *, size - 4 + 1);
+  memcpy (labl->text, data + 4, size - 4);
 
-  GST_OBJECT_LOCK (wav);
   wav->labls = g_list_append (wav->labls, labl);
-  GST_OBJECT_UNLOCK (wav);
 
   return TRUE;
 }
