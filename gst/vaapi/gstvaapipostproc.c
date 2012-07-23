@@ -401,7 +401,7 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps)
         gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
 
     gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
-    gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX, NULL);
+    gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_GLX, NULL);
 
     if (!postproc->deinterlace)
         gst_structure_remove_field(structure, "interlaced");

@@ -28,10 +28,8 @@
 #include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
 
-#if USE_VAAPI_GLX
+#ifdef HAVE_VA_VA_GLX_H
 # include <va/va_glx.h>
-#else
-# define vaGetDisplayGLX(dpy) vaGetDisplay(dpy)
 #endif
 
 static void
@@ -255,6 +253,7 @@ main(int argc, char *argv[])
     }
     g_print("\n");
 
+#ifdef HAVE_VA_VA_GLX_H
     g_print("#\n");
     g_print("# Create display with gst_vaapi_display_new_with_display() [vaGetDisplayGLX()]\n");
     g_print("#\n");
@@ -276,6 +275,7 @@ main(int argc, char *argv[])
         XCloseDisplay(x11_display);
     }
     g_print("\n");
+#endif
 #endif
 
     gst_deinit();

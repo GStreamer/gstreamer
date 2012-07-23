@@ -7,12 +7,16 @@ libgstvaapi_CFLAGS = \
 	-I$(top_builddir)/gst-libs	\
 	$(NULL)
 
-if USE_VAAPI_GLX
-libgstvaapi_LIBS = \
-	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
-else
-libgstvaapi_LIBS = \
+libgstvaapi_LIBS =
+
+if USE_X11
+libgstvaapi_LIBS += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-x11-$(GST_MAJORMINOR).la
+endif
+
+if USE_GLX
+libgstvaapi_LIBS += \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
 endif
 
 libgstvaapi_la_SOURCES =	\

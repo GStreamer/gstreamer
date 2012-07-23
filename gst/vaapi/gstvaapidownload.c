@@ -35,7 +35,7 @@
 #include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 
-#if USE_VAAPI_GLX
+#if USE_GLX
 #include <gst/vaapi/gstvaapivideobuffer_glx.h>
 #define gst_vaapi_video_buffer_new_from_pool(pool) \
     gst_vaapi_video_buffer_glx_new_from_pool(pool)
@@ -493,7 +493,7 @@ gst_vaapidownload_transform_caps(
         gst_structure_set(
             structure,
             "type", G_TYPE_STRING, "vaapi",
-            "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX,
+            "opengl", G_TYPE_BOOLEAN, USE_GLX,
             NULL
         );
     }

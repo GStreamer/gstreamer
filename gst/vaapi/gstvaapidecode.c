@@ -35,7 +35,7 @@
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/video/videocontext.h>
 
-#if USE_VAAPI_GLX
+#if USE_GLX
 #include <gst/vaapi/gstvaapivideobuffer_glx.h>
 #define gst_vaapi_video_buffer_new(display) \
     gst_vaapi_video_buffer_glx_new(GST_VAAPI_DISPLAY_GLX(display))
@@ -169,7 +169,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
         gst_structure_set_value(structure, "interlaced", v_interlaced);
 
     gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
-    gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_VAAPI_GLX, NULL);
+    gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_GLX, NULL);
 
     other_caps = gst_caps_copy(decode->srcpad_caps);
     success = gst_pad_set_caps(decode->srcpad, other_caps);

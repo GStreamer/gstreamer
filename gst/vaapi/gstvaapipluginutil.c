@@ -22,18 +22,19 @@
  */
 
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+# include "config.h"
+#endif
+#include <string.h>
+#if USE_X11
+# include <gst/vaapi/gstvaapidisplay_x11.h>
+#endif
+#if USE_GLX
+# include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
 
 #include "gstvaapipluginutil.h"
 
 #include <string.h>
-
-#if USE_VAAPI_GLX
-#include <gst/vaapi/gstvaapidisplay_glx.h>
-#else
-#include <gst/vaapi/gstvaapidisplay_x11.h>
-#endif
 
 /* Preferred first */
 static const char *display_types[] = {
@@ -60,12 +61,12 @@ gst_vaapi_ensure_display (gpointer element, GstVaapiDisplay **display)
   gst_video_context_prepare (context, display_types);
 
   /* If no neighboor, or application not interested, use system default */
+#if USE_GLX
   if (!*display)
-#if USE_VAAPI_GLX
     *display = gst_vaapi_display_glx_new (NULL);
-#else
-    *display = gst_vaapi_display_x11_new (NULL);
 #endif
+  if (!*display)
+    *display = gst_vaapi_display_x11_new (NULL);
 
   /* FIXME allocator should return NULL in case of failure */
   if (*display && !gst_vaapi_display_get_display(*display)) {
@@ -85,18 +86,18 @@ gst_vaapi_set_display (const gchar *type,
 
   if (!strcmp (type, "x11-display-name")) {
     g_return_if_fail (G_VALUE_HOLDS_STRING (value));
-#if USE_VAAPI_GLX
+#if USE_GLX
     dpy = gst_vaapi_display_glx_new (g_value_get_string (value));
-#else
-    dpy = gst_vaapi_display_x11_new (g_value_get_string (value));
 #endif
+    if (!dpy)
+      dpy = gst_vaapi_display_x11_new (g_value_get_string (value));
   } else if (!strcmp (type, "x11-display")) {
     g_return_if_fail (G_VALUE_HOLDS_POINTER (value));
-#if USE_VAAPI_GLX
+#if USE_GLX
     dpy = gst_vaapi_display_glx_new_with_display (g_value_get_pointer (value));
-#else
-    dpy = gst_vaapi_display_x11_new_with_display (g_value_get_pointer (value));
 #endif
+    if (!dpy)
+      dpy = gst_vaapi_display_x11_new_with_display (g_value_get_pointer (value));
   } else if (!strcmp (type, "vaapi-display")) {
     g_return_if_fail (G_VALUE_HOLDS_POINTER (value));
     dpy = gst_vaapi_display_new_with_display (g_value_get_pointer (value));

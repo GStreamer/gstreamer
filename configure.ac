@@ -107,13 +107,8 @@ AC_ARG_ENABLE(x11,
 
 AC_ARG_ENABLE(glx,
     AS_HELP_STRING([--enable-glx],
-                   [enable OpenGL/X11 @<:@default=yes@:>@]),
+                   [enable OpenGL/X11 output @<:@default=yes@:>@]),
     [], [enable_glx="yes"])
-
-AC_ARG_ENABLE(vaapi-glx,
-    AS_HELP_STRING([--enable-vaapi-glx],
-                   [enable VA/GLX extensions @<:@default=yes@:>@]),
-    [], [enable_vaapi_glx="yes"])
 
 AC_ARG_ENABLE(vaapisink-glx,
     AS_HELP_STRING([--enable-vaapisink-glx],
@@ -358,10 +353,13 @@ HAVE_VA_GLX=0
 LIBVA_GLX_PKGNAME="libva-glx"
 if test $USE_GLX -eq 1; then
     PKG_CHECK_MODULES(LIBVA_GLX, [$LIBVA_GLX_PKGNAME >= va_api_glx_version],
-        [HAVE_VA_GLX=1])
-    if test "$enable_vaapi_glx" = "yes" -a $HAVE_VA_GLX -eq 0; then
-        AC_MSG_WARN([VA/GLX not found or disabled. Fallbacking to TFP+FBO])
-        LIBVA_GLX_PKGNAME="$LIBVA_X11_PKGNAME"
+        [HAVE_VA_GLX=1], [LIBVA_GLX_PKGNAME="$LIBVA_X11_PKGNAME"])
+
+    if test $HAVE_VA_GLX -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$LIBVA_GLX_CPPFLAGS"
+        AC_CHECK_HEADERS([va/va_glx.h], [:], [HAVE_VA_GLX=0])
+        CPPFLAGS="$saved_CPPFLAGS"
     fi
 fi
 AC_SUBST(LIBVA_GLX_PKGNAME)
@@ -419,10 +417,6 @@ AM_CONDITIONAL(USE_X11, test $USE_X11 -eq 1)
 AC_DEFINE_UNQUOTED(USE_GLX, $USE_GLX,
     [Defined to 1 if GLX is enabled])
 AM_CONDITIONAL(USE_GLX, test $USE_GLX -eq 1)
-
-AC_DEFINE_UNQUOTED([USE_VAAPI_GLX], [$HAVE_VA_GLX],
-    [Defined to 1 if VA/GLX is enabled])
-AM_CONDITIONAL([USE_VAAPI_GLX], [test $HAVE_VA_GLX -eq 1])
 
 AC_DEFINE_UNQUOTED(USE_VAAPISINK_GLX, $USE_VAAPISINK_GLX,
     [Defined to 1 to enable GLX support to vaapisink])
