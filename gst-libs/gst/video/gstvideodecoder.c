@@ -2774,7 +2774,7 @@ no_decide_allocation:
 }
 
 /**
- * gst_video_decoder_alloc_output_buffer:
+ * gst_video_decoder_allocate_output_buffer:
  * @decoder: a #GstVideoDecoder
  *
  * Helper function that allocates a buffer to hold a video frame for @decoder's
@@ -2783,7 +2783,7 @@ no_decide_allocation:
  * Returns: (transfer full): allocated buffer
  */
 GstBuffer *
-gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
+gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
 {
   GstBuffer *buffer;
 
@@ -2803,7 +2803,7 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
 }
 
 /**
- * gst_video_decoder_alloc_output_frame:
+ * gst_video_decoder_allocate_output_frame:
  * @decoder: a #GstVideoDecoder
  * @frame: a #GstVideoCodecFrame
  *
@@ -2817,7 +2817,7 @@ gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder)
  * Returns: %GST_FLOW_OK if an output buffer could be allocated
  */
 GstFlowReturn
-gst_video_decoder_alloc_output_frame (GstVideoDecoder *
+gst_video_decoder_allocate_output_frame (GstVideoDecoder *
     decoder, GstVideoCodecFrame * frame)
 {
   GstFlowReturn flow_ret;

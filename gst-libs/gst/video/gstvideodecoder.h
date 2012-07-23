@@ -318,10 +318,10 @@ void           gst_video_decoder_add_to_frame     (GstVideoDecoder *decoder,
 						   int n_bytes);
 GstFlowReturn  gst_video_decoder_have_frame       (GstVideoDecoder *decoder);
 
-GstBuffer     *gst_video_decoder_alloc_output_buffer (GstVideoDecoder * decoder);
+GstBuffer     *gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder);
 
-GstFlowReturn  gst_video_decoder_alloc_output_frame  (GstVideoDecoder *decoder,
-						      GstVideoCodecFrame *frame);
+GstFlowReturn  gst_video_decoder_allocate_output_frame  (GstVideoDecoder *decoder,
+						         GstVideoCodecFrame *frame);
 
 GstVideoCodecState *gst_video_decoder_set_output_state (GstVideoDecoder *decoder,
 							GstVideoFormat fmt, guint width, guint height,

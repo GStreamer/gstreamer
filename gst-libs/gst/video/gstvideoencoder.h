@@ -262,12 +262,12 @@ GstVideoCodecFrame*  gst_video_encoder_get_frame        (GstVideoEncoder *encode
 						         int frame_number);
 GstVideoCodecFrame*  gst_video_encoder_get_oldest_frame (GstVideoEncoder *encoder);
 
-GstBuffer *          gst_video_encoder_alloc_output_buffer (GstVideoEncoder * encoder,
-                                                            gsize size);
+GstBuffer *          gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder,
+                                                               gsize size);
 
-GstFlowReturn        gst_video_encoder_alloc_output_frame  (GstVideoEncoder *encoder,
-						            GstVideoCodecFrame *frame,
-                                                            gsize size);
+GstFlowReturn        gst_video_encoder_allocate_output_frame  (GstVideoEncoder *encoder,
+						               GstVideoCodecFrame *frame,
+                                                               gsize size);
 
 GstFlowReturn        gst_video_encoder_finish_frame (GstVideoEncoder *encoder,
 						     GstVideoCodecFrame *frame);

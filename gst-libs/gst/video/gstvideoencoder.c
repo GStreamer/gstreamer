@@ -1400,7 +1400,7 @@ no_decide_allocation:
 }
 
 /**
- * gst_video_encoder_alloc_output_buffer:
+ * gst_video_encoder_allocate_output_buffer:
  * @encoder: a #GstVideoEncoder
  * @size: size of the buffer
  *
@@ -1410,7 +1410,7 @@ no_decide_allocation:
  * Returns: (transfer full): allocated buffer
  */
 GstBuffer *
-gst_video_encoder_alloc_output_buffer (GstVideoEncoder * encoder, gsize size)
+gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder, gsize size)
 {
   GstBuffer *buffer;
 
@@ -1434,7 +1434,7 @@ gst_video_encoder_alloc_output_buffer (GstVideoEncoder * encoder, gsize size)
 }
 
 /**
- * gst_video_encoder_alloc_output_frame:
+ * gst_video_encoder_allocate_output_frame:
  * @encoder: a #GstVideoEncoder
  * @frame: a #GstVideoCodecFrame
  * @size: size of the buffer
@@ -1449,7 +1449,7 @@ gst_video_encoder_alloc_output_buffer (GstVideoEncoder * encoder, gsize size)
  * Returns: %GST_FLOW_OK if an output buffer could be allocated
  */
 GstFlowReturn
-gst_video_encoder_alloc_output_frame (GstVideoEncoder *
+gst_video_encoder_allocate_output_frame (GstVideoEncoder *
     encoder, GstVideoCodecFrame * frame, gsize size)
 {
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
