@@ -2742,13 +2742,13 @@ gst_wavparse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GST_INFO_OBJECT (wav, "pos query at %" G_GINT64_FORMAT, curb);
 
       switch (format) {
-        case GST_FORMAT_TIME:
-          res = gst_wavparse_pad_convert (pad, GST_FORMAT_BYTES, curb,
-              &format, &cur);
-          break;
-        default:
+        case GST_FORMAT_BYTES:
           format = GST_FORMAT_BYTES;
           cur = curb;
+          break;
+        default:
+          res = gst_wavparse_pad_convert (pad, GST_FORMAT_BYTES, curb,
+              &format, &cur);
           break;
       }
       if (res)
@@ -2768,18 +2768,22 @@ gst_wavparse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_duration (query, &format, NULL);
 
       switch (format) {
-        case GST_FORMAT_TIME:{
+        case GST_FORMAT_BYTES:{
+          format = GST_FORMAT_BYTES;
+          duration = wav->datasize;
+          break;
+        }
+        case GST_FORMAT_TIME:
           if ((res = gst_wavparse_calculate_duration (wav))) {
             duration = wav->duration;
           }
           break;
-        }
         default:
-          format = GST_FORMAT_BYTES;
-          duration = wav->datasize;
+          res = FALSE;
           break;
       }
-      gst_query_set_duration (query, format, duration);
+      if (res)
+        gst_query_set_duration (query, format, duration);
       break;
     }
     case GST_QUERY_CONVERT:
