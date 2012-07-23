@@ -2986,6 +2986,10 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         demux->video_need_segment = TRUE;
         ret = TRUE;
         gst_event_unref (event);
+        if (demux->new_seg_event) {
+          gst_event_unref (demux->new_seg_event);
+          demux->new_seg_event = NULL;
+        }
       }
       break;
     }
