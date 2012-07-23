@@ -716,7 +716,13 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   frame = gst_video_encoder_get_oldest_frame (encoder);
 
   /* Allocate output buffer */
-  frame->output_buffer = outbuf = gst_buffer_new_and_alloc (ret_size);
+  if (gst_video_encoder_allocate_output_frame (encoder, frame,
+          ret_size) != GST_FLOW_OK) {
+    gst_video_codec_frame_unref (frame);
+    goto alloc_fail;
+  }
+
+  outbuf = frame->output_buffer;
   gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
 
   /* buggy codec may not set coded_frame */
@@ -742,6 +748,16 @@ encode_fail:
         "avenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
     return GST_FLOW_OK;
+  }
+alloc_fail:
+  {
+#ifndef GST_DISABLE_GST_DEBUG
+    GstFFMpegVidEncClass *oclass =
+        (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
+    GST_ERROR_OBJECT (ffmpegenc,
+        "avenc_%s: failed to allocate buffer", oclass->in_plugin->name);
+#endif /* GST_DISABLE_GST_DEBUG */
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -773,6 +789,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
       GST_WARNING_OBJECT (ffmpegenc,
           "avenc_%s: failed to flush buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
+      gst_video_codec_frame_unref (frame);
       break;
     }
 
@@ -783,7 +800,18 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
             (("Could not write to file \"%s\"."), ffmpegenc->filename),
             GST_ERROR_SYSTEM);
 
-    frame->output_buffer = outbuf = gst_buffer_new_and_alloc (ret_size);
+    if (gst_video_encoder_allocate_output_frame (GST_VIDEO_ENCODER (ffmpegenc),
+            frame, ret_size) != GST_FLOW_OK) {
+#ifndef GST_DISABLE_GST_DEBUG
+      GstFFMpegVidEncClass *oclass =
+          (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
+      GST_WARNING_OBJECT (ffmpegenc,
+          "avenc_%s: failed to allocate buffer", oclass->in_plugin->name);
+#endif /* GST_DISABLE_GST_DEBUG */
+      gst_video_codec_frame_unref (frame);
+      break;
+    }
+    outbuf = frame->output_buffer;
     gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
 
     if (ffmpegenc->context->coded_frame->key_frame)
