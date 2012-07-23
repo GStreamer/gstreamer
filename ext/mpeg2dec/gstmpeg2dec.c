@@ -813,8 +813,8 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
   GST_DEBUG_OBJECT (mpeg2dec, "picture %s, frame %i",
       key_frame ? ", kf," : "    ", frame->system_frame_number);
 
-  if (GST_VIDEO_INFO_IS_INTERLACED (&frame->info)) {
-    // This implies SEQ_FLAG_PROGRESSIVE_SEQUENCE is not set
+  if (GST_VIDEO_INFO_IS_INTERLACED (&mpeg2dec->decoded_info)) {
+    /* This implies SEQ_FLAG_PROGRESSIVE_SEQUENCE is not set */
     if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST) {
       GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
     }
