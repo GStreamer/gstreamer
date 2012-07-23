@@ -261,10 +261,15 @@ gst_ffmpegaudenc_setcaps (GstFFMpegAudEnc * ffmpegaudenc, GstCaps * caps)
   ffmpegaudenc->context->strict_std_compliance = -1;
 
   /* user defined properties */
-  ffmpegaudenc->context->bit_rate = ffmpegaudenc->bitrate;
-  ffmpegaudenc->context->bit_rate_tolerance = ffmpegaudenc->bitrate;
-  GST_DEBUG_OBJECT (ffmpegaudenc, "Setting avcontext to bitrate %d",
-      ffmpegaudenc->bitrate);
+  if (ffmpegaudenc->bitrate > 0) {
+    GST_INFO_OBJECT (ffmpegaudenc, "Setting avcontext to bitrate %d",
+        ffmpegaudenc->bitrate);
+    ffmpegaudenc->context->bit_rate = ffmpegaudenc->bitrate;
+    ffmpegaudenc->context->bit_rate_tolerance = ffmpegaudenc->bitrate;
+  } else {
+    GST_INFO_OBJECT (ffmpegaudenc, "Using avcontext default bitrate %d",
+        ffmpegaudenc->context->bit_rate);
+  }
 
   /* RTP payload used for GOB production (for Asterisk) */
   if (ffmpegaudenc->rtp_payload_size) {
