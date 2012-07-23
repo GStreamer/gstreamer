@@ -813,15 +813,21 @@ handle_picture (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info,
   GST_DEBUG_OBJECT (mpeg2dec, "picture %s, frame %i",
       key_frame ? ", kf," : "    ", frame->system_frame_number);
 
-  if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST) {
-    GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
-  }
+  if (GST_VIDEO_INFO_IS_INTERLACED (&frame->info)) {
+    // This implies SEQ_FLAG_PROGRESSIVE_SEQUENCE is not set
+    if (picture->flags & PIC_FLAG_TOP_FIELD_FIRST) {
+      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+    }
+    if (!(picture->flags & PIC_FLAG_PROGRESSIVE_FRAME)) {
+      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+    }
 #if MPEG2_RELEASE >= MPEG2_VERSION(0,5,0)
-  /* repeat field introduced in 0.5.0 */
-  if (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD) {
-    GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF);
-  }
+    /* repeat field introduced in 0.5.0 */
+    if (picture->flags & PIC_FLAG_REPEAT_FIRST_FIELD) {
+      GST_BUFFER_FLAG_SET (buffer, GST_VIDEO_BUFFER_FLAG_RFF);
+    }
 #endif
+  }
 
   if (mpeg2dec->discont_state == MPEG2DEC_DISC_NEW_PICTURE && key_frame) {
     mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_KEYFRAME;
