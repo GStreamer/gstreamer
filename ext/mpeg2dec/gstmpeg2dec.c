@@ -330,7 +330,8 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
       dinfo->size, info->width, info->height, info->size);
 
   ret =
-      gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (dec), in_frame);
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (dec),
+      in_frame);
   if (ret != GST_FLOW_OK)
     goto beach;
 
@@ -396,7 +397,7 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
 
   if (!mpeg2dec->need_cropping || mpeg2dec->has_cropping) {
     ret =
-        gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER (mpeg2dec),
+        gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (mpeg2dec),
         frame);
     *buffer = frame->output_buffer;
   } else {
