@@ -25,6 +25,8 @@ DEBIANFILES = \
 	libgstvaapi-x11-$(GST_VAAPI_MAJOR_VERSION).install	\
 	libgstvaapi-glx.install.in				\
 	libgstvaapi-glx-$(GST_VAAPI_MAJOR_VERSION).install	\
+	libgstvaapi-wayland.install.in				\
+	libgstvaapi-wayland-$(GST_VAAPI_MAJOR_VERSION).install	\
 	rules							\
 	$(NULL)
 
@@ -37,6 +39,7 @@ DEBIANGENFILES = \
 	libgstvaapi-dev.install					\
 	libgstvaapi-x11-$(GST_VAAPI_MAJOR_VERSION).install	\
 	libgstvaapi-glx-$(GST_VAAPI_MAJOR_VERSION).install	\
+	libgstvaapi-wayland-$(GST_VAAPI_MAJOR_VERSION).install	\
 	$(NULL)
 
 EXTRA_DIST = \

@@ -454,6 +454,8 @@ debian.upstream/libgstvaapi.install.in
     debian.upstream/libgstvaapi-dev.install
     debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-glx.install.in
+    debian.upstream/libgstvaapi-wayland-$GST_VAAPI_MAJOR_VERSION.install:\
+debian.upstream/libgstvaapi-wayland.install.in
     debian.upstream/libgstvaapi-x11-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-x11.install.in
     docs/Makefile
@@ -473,6 +475,8 @@ debian.upstream/libgstvaapi-x11.install.in
 pkgconfig/gstreamer-vaapi.pc.in
     pkgconfig/gstreamer-vaapi-glx-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi-glx.pc.in
+    pkgconfig/gstreamer-vaapi-wayland-$GST_MAJORMINOR.pc:\
+pkgconfig/gstreamer-vaapi-wayland.pc.in
     pkgconfig/gstreamer-vaapi-x11-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi-x11.pc.in
     tests/Makefile
