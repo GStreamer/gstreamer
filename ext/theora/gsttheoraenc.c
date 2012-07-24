@@ -942,6 +942,8 @@ theora_enc_handle_frame (GstVideoEncoder * benc, GstVideoCodecFrame * frame)
 
     gst_video_codec_state_unref (state);
 
+    gst_video_encoder_negotiate (GST_VIDEO_ENCODER (enc));
+
     gst_video_encoder_set_headers (benc, buffers);
 
     theora_enc_reset_ts (enc, running_time, frame->presentation_frame_number);
