@@ -96,6 +96,10 @@ gst_vaapi_display_type_get_type(void)
         { GST_VAAPI_DISPLAY_TYPE_GLX,
           "VA/GLX display", "glx" },
 #endif
+#if USE_WAYLAND
+        { GST_VAAPI_DISPLAY_TYPE_WAYLAND,
+          "VA/Wayland display", "wayland" },
+#endif
         { 0, NULL, NULL },
     };
 

@@ -41,6 +41,10 @@
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 # include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
+#if USE_WAYLAND
+# include <gst/vaapi/gstvaapidisplay_wayland.h>
+# include <gst/vaapi/gstvaapiwindow_wayland.h>
+#endif
 
 /* Supported interfaces */
 #include <gst/interfaces/xoverlay.h>
@@ -354,20 +358,27 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 #if USE_GLX
         case GST_VAAPI_DISPLAY_TYPE_GLX:
             sink->window = gst_vaapi_window_glx_new(display, width, height);
-            break;
+            goto notify_xoverlay_interface;
 #endif
         case GST_VAAPI_DISPLAY_TYPE_X11:
             sink->window = gst_vaapi_window_x11_new(display, width, height);
-            break;
-        default:
-            GST_ERROR("unsupported display type %d", sink->display_type);
-            return FALSE;
-        }
-        if (sink->window)
+        notify_xoverlay_interface:
+            if (!sink->window)
+                break;
             gst_x_overlay_got_window_handle(
                 GST_X_OVERLAY(sink),
                 gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window))
             );
+            break;
+#if USE_WAYLAND
+        case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
+            sink->window = gst_vaapi_window_wayland_new(display, width, height);
+            break;
+#endif
+        default:
+            GST_ERROR("unsupported display type %d", sink->display_type);
+            return FALSE;
+        }
     }
     return sink->window != NULL;
 }
@@ -457,6 +468,16 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         return FALSE;
     sink->video_width  = video_width;
     sink->video_height = video_height;
+
+#if USE_WAYLAND
+    /* XXX: fix GstVaapiDisplayWayland::get_size() */
+    if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_WAYLAND) {
+        sink->window_width  = video_width;
+        sink->window_height = video_height;
+        return gst_vaapisink_ensure_window(sink,
+            sink->window_width, sink->window_height);
+    }
+#endif
 
     gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
     sink->video_par_n  = video_par_n;
@@ -662,7 +683,7 @@ error_transfer_surface:
 #endif
 
 static inline gboolean
-gst_vaapisink_show_frame_x11(
+gst_vaapisink_put_surface(
     GstVaapiSink    *sink,
     GstVaapiSurface *surface,
     guint            flags
@@ -715,8 +736,13 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         break;
 #endif
     case GST_VAAPI_DISPLAY_TYPE_X11:
-        success = gst_vaapisink_show_frame_x11(sink, surface, flags);
+        success = gst_vaapisink_put_surface(sink, surface, flags);
         break;
+#if USE_WAYLAND
+    case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
+        success = gst_vaapisink_put_surface(sink, surface, flags);
+        break;
+#endif
     default:
         GST_ERROR("unsupported display type %d", sink->display_type);
         success = FALSE;

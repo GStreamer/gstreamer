@@ -19,6 +19,11 @@ libgstvaapi_LIBS += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-glx-$(GST_MAJORMINOR).la
 endif
 
+if USE_WAYLAND
+libgstvaapi_LIBS += \
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_MAJORMINOR).la
+endif
+
 libgstvaapi_la_SOURCES =	\
 	gstvaapi.c		\
 	gstvaapidecode.c	\

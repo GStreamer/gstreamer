@@ -32,12 +32,19 @@
 #if USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
+#if USE_WAYLAND
+# include <gst/vaapi/gstvaapidisplay_wayland.h>
+#endif
 #include "gstvaapipluginutil.h"
 
 /* Preferred first */
 static const char *display_types[] = {
     "gst-vaapi-display",
     "vaapi-display",
+#if USE_WAYLAND
+    "wl-display",
+    "wl-display-name",
+#endif
     "x11-display",
     "x11-display-name",
     NULL
@@ -50,6 +57,11 @@ typedef struct {
 } DisplayMap;
 
 static const DisplayMap g_display_map[] = {
+#if USE_WAYLAND
+    { "wayland",
+      GST_VAAPI_DISPLAY_TYPE_WAYLAND,
+      gst_vaapi_display_wayland_new },
+#endif
 #if USE_GLX
     { "glx",
       GST_VAAPI_DISPLAY_TYPE_GLX,
@@ -126,7 +138,15 @@ gst_vaapi_set_display(
 {
     GstVaapiDisplay *dpy = NULL;
 
-    if (!strcmp(type, "x11-display-name")) {
+    if (!strcmp(type, "vaapi-display")) {
+        g_return_if_fail(G_VALUE_HOLDS_POINTER(value));
+        dpy = gst_vaapi_display_new_with_display(g_value_get_pointer(value));
+    }
+    else if (!strcmp(type, "gst-vaapi-display")) {
+        g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
+        dpy = g_value_dup_object(value);
+    }
+    else if (!strcmp(type, "x11-display-name")) {
         g_return_if_fail(G_VALUE_HOLDS_STRING(value));
 #if USE_GLX
         dpy = gst_vaapi_display_glx_new(g_value_get_string(value));
@@ -142,14 +162,20 @@ gst_vaapi_set_display(
         if (!dpy)
             dpy = gst_vaapi_display_x11_new_with_display(g_value_get_pointer(value));
     }
-    else if (!strcmp(type, "vaapi-display")) {
+#if USE_WAYLAND
+    else if (!strcmp(type, "wl-display")) {
+        struct wl_display *wl_display;
         g_return_if_fail(G_VALUE_HOLDS_POINTER(value));
-        dpy = gst_vaapi_display_new_with_display(g_value_get_pointer(value));
+        wl_display = g_value_get_pointer(value);
+        dpy = gst_vaapi_display_wayland_new_with_display(wl_display);
     }
-    else if (!strcmp(type, "gst-vaapi-display")) {
-        g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
-        dpy = g_value_dup_object(value);
+    else if (!strcmp(type, "wl-display-name")) {
+        const gchar *display_name;
+        g_return_if_fail(G_VALUE_HOLDS_STRING(value));
+        display_name = g_value_get_string(value);
+        dpy = gst_vaapi_display_wayland_new(display_name);
     }
+#endif
 
     if (dpy) {
         if (*display)
@@ -206,6 +232,19 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
                     res = FALSE;
                 break;
             }
+#if USE_WAYLAND
+            case GST_VAAPI_DISPLAY_TYPE_WAYLAND: {
+                GstVaapiDisplayWayland * const wlvadpy =
+                    GST_VAAPI_DISPLAY_WAYLAND(display);
+                struct wl_display * const wldpy =
+                    gst_vaapi_display_wayland_get_display(wlvadpy);
+                if (!strcmp(type, "wl-display"))
+                    gst_video_context_query_set_pointer(query, type, wldpy);
+                else
+                    res = FALSE;
+                break;
+            }
+#endif
             default:
                 res = FALSE;
                 break;
