@@ -67,7 +67,7 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #define ORC_RESTRICT
 #endif
 #endif
-void orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int p1, int n);
+void gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int p1, int n);
 
 #ifdef __cplusplus
 }

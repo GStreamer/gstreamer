@@ -256,7 +256,7 @@ gst_burn_transform_frame (GstVideoFilter * vfilter,
   GST_OBJECT_UNLOCK (filter);
 
   /*** Now the image processing work.... ***/
-  orc_gaudi_burn (dest, src, adjustment, video_size);
+  gaudi_orc_burn (dest, src, adjustment, video_size);
 
   return GST_FLOW_OK;
 }

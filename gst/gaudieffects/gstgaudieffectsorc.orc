@@ -1,5 +1,5 @@
 
-.function orc_gaudi_burn
+.function gaudi_orc_burn
 .dest 4 dest guint32
 .source 4 src guint32
 .param 4 adj gint

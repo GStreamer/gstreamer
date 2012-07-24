@@ -82,7 +82,7 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
+void gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
     int p1, int n);
 
 
@@ -130,10 +130,10 @@ void orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
 
 
 
-/* orc_gaudi_burn */
+/* gaudi_orc_burn */
 #ifdef DISABLE_ORC
 void
-orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
+gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
     int p1, int n)
 {
   int i;
@@ -246,7 +246,7 @@ orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
 
 #else
 static void
-_backup_orc_gaudi_burn (OrcExecutor * ORC_RESTRICT ex)
+_backup_gaudi_orc_burn (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -358,7 +358,7 @@ _backup_orc_gaudi_burn (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
+gaudi_orc_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
     int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -372,8 +372,8 @@ orc_gaudi_burn (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_gaudi_burn");
-      orc_program_set_backup_function (p, _backup_orc_gaudi_burn);
+      orc_program_set_name (p, "gaudi_orc_burn");
+      orc_program_set_backup_function (p, _backup_gaudi_orc_burn);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_source (p, 4, "s1");
       orc_program_add_constant (p, 1, 0x000000ff, "c1");
