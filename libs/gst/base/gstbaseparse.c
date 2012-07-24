@@ -2749,8 +2749,7 @@ exit:
  * pull and scan for next frame starting from current offset
  * ajusts sync, drain and offset going along */
 static GstFlowReturn
-gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass,
-    gboolean full)
+gst_base_parse_scan_frame (GstBaseParse * parse, GstBaseParseClass * klass)
 {
   GstBuffer *buffer;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -2869,7 +2868,7 @@ gst_base_parse_loop (GstPad * pad)
     }
   }
 
-  ret = gst_base_parse_scan_frame (parse, klass, TRUE);
+  ret = gst_base_parse_scan_frame (parse, klass);
   if (ret != GST_FLOW_OK)
     goto done;
 
@@ -3501,7 +3500,7 @@ gst_base_parse_find_frame (GstBaseParse * parse, gint64 * pos,
   parse->priv->offset = *pos;
   /* mark as scanning so frames don't get processed all the way */
   parse->priv->scanning = TRUE;
-  ret = gst_base_parse_scan_frame (parse, klass, FALSE);
+  ret = gst_base_parse_scan_frame (parse, klass);
   parse->priv->scanning = FALSE;
   /* retrieve frame found during scan */
   sframe = parse->priv->scanned_frame;
