@@ -2794,7 +2794,7 @@ gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
 
 /**
  * gst_audio_decoder_allocate_output_buffer:
- * @enc: a #GstAudioDecoder
+ * @dec: a #GstAudioDecoder
  * @size: size of the buffer
  *
  * Helper function that allocates a buffer to hold an audio frame
