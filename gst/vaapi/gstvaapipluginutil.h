@@ -45,6 +45,7 @@ enum _GstVaapiDisplayType {
 GType
 gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_ensure_display(
     gpointer             element,
@@ -52,6 +53,7 @@ gst_vaapi_ensure_display(
     GstVaapiDisplayType *display_type_ptr
 );
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_set_display(
     const gchar      *type,
@@ -59,9 +61,11 @@ gst_vaapi_set_display(
     GstVaapiDisplay **display
 );
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps);
 
