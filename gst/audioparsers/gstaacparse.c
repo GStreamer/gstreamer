@@ -271,6 +271,9 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
     gst_structure_get_int (structure, "rate", &aacparse->sample_rate);
     gst_structure_get_int (structure, "channels", &aacparse->channels);
   } else {
+    aacparse->sample_rate = 0;
+    aacparse->channels = 0;
+    aacparse->header_type = DSPAAC_HEADER_NOT_PARSED;
     gst_base_parse_set_passthrough (parse, FALSE);
   }
 
