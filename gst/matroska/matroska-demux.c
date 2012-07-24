@@ -2963,6 +2963,8 @@ gst_matroska_demux_subtitle_chunk_has_tag (GstElement * element,
 {
   gchar *tag;
 
+  g_return_val_if_fail (text != NULL, FALSE);
+
   /* yes, this might all lead to false positives ... */
   tag = (gchar *) text;
   while ((tag = strchr (tag, '<'))) {
@@ -3001,7 +3003,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
 
   sub_stream = (GstMatroskaTrackSubtitleContext *) stream;
 
-  if (!gst_buffer_map (*buf, &map, GST_MAP_READ))
+  if (!gst_buffer_get_size (*buf) || !gst_buffer_map (*buf, &map, GST_MAP_READ))
     return GST_FLOW_OK;
 
   if (!sub_stream->invalid_utf8) {
