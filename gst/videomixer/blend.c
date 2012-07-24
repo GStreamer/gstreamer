@@ -97,7 +97,7 @@ _##method##_loop_##name (guint8 * dest, const guint8 * src, gint src_height, \
     gint src_width, gint src_stride, gint dest_stride, guint s_alpha) \
 { \
   s_alpha = MIN (255, s_alpha); \
-  orc_##method##_##name (dest, dest_stride, src, src_stride, \
+  video_mixer_orc_##method##_##name (dest, dest_stride, src, src_stride, \
       s_alpha, src_width, src_height); \
 }
 
@@ -188,7 +188,7 @@ fill_color_##name (GstVideoFrame * frame, gint Y, gint U, gint V) \
   } \
   val = GUINT32_FROM_BE ((0xff << A) | (c1 << C1) | (c2 << C2) | (c3 << C3)); \
   \
-  orc_splat_u32 ((guint32 *) dest, val, height * width); \
+  video_mixer_orc_splat_u32 ((guint32 *) dest, val, height * width); \
 }
 
 A32_COLOR (argb, TRUE, 24, 16, 8, 0);
@@ -425,20 +425,20 @@ fill_color_##format_name (GstVideoFrame * frame, \
 #define GST_ROUND_UP_1(x) (x)
 
 PLANAR_YUV_BLEND (i420, GST_VIDEO_FORMAT_I420, GST_ROUND_UP_2,
-    GST_ROUND_UP_2, memcpy, orc_blend_u8);
+    GST_ROUND_UP_2, memcpy, video_mixer_orc_blend_u8);
 PLANAR_YUV_FILL_CHECKER (i420, GST_VIDEO_FORMAT_I420, memset);
 PLANAR_YUV_FILL_COLOR (i420, GST_VIDEO_FORMAT_I420, memset);
 PLANAR_YUV_FILL_COLOR (yv12, GST_VIDEO_FORMAT_YV12, memset);
 PLANAR_YUV_BLEND (y444, GST_VIDEO_FORMAT_Y444, GST_ROUND_UP_1,
-    GST_ROUND_UP_1, memcpy, orc_blend_u8);
+    GST_ROUND_UP_1, memcpy, video_mixer_orc_blend_u8);
 PLANAR_YUV_FILL_CHECKER (y444, GST_VIDEO_FORMAT_Y444, memset);
 PLANAR_YUV_FILL_COLOR (y444, GST_VIDEO_FORMAT_Y444, memset);
 PLANAR_YUV_BLEND (y42b, GST_VIDEO_FORMAT_Y42B, GST_ROUND_UP_2,
-    GST_ROUND_UP_1, memcpy, orc_blend_u8);
+    GST_ROUND_UP_1, memcpy, video_mixer_orc_blend_u8);
 PLANAR_YUV_FILL_CHECKER (y42b, GST_VIDEO_FORMAT_Y42B, memset);
 PLANAR_YUV_FILL_COLOR (y42b, GST_VIDEO_FORMAT_Y42B, memset);
 PLANAR_YUV_BLEND (y41b, GST_VIDEO_FORMAT_Y41B, GST_ROUND_UP_4,
-    GST_ROUND_UP_1, memcpy, orc_blend_u8);
+    GST_ROUND_UP_1, memcpy, video_mixer_orc_blend_u8);
 PLANAR_YUV_FILL_CHECKER (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 PLANAR_YUV_FILL_COLOR (y41b, GST_VIDEO_FORMAT_Y41B, memset);
 
@@ -581,12 +581,12 @@ _memset_##name (guint8* dest, gint red, gint green, gint blue, gint width) { \
   guint32 val; \
   \
   val = GUINT32_FROM_BE ((red << r) | (green << g) | (blue << b)); \
-  orc_splat_u32 ((guint32 *) dest, val, width); \
+  video_mixer_orc_splat_u32 ((guint32 *) dest, val, width); \
 }
 
-#define _orc_memcpy_u32(dest,src,len) orc_memcpy_u32((guint32 *) dest, (const guint32 *) src, len/4)
+#define _orc_memcpy_u32(dest,src,len) video_mixer_orc_memcpy_u32((guint32 *) dest, (const guint32 *) src, len/4)
 
-RGB_BLEND (rgb, 3, memcpy, orc_blend_u8);
+RGB_BLEND (rgb, 3, memcpy, video_mixer_orc_blend_u8);
 RGB_FILL_CHECKER_C (rgb, 3, 0, 1, 2);
 MEMSET_RGB_C (rgb, 0, 1, 2);
 RGB_FILL_COLOR (rgb_c, 3, _memset_rgb_c);
@@ -594,7 +594,7 @@ RGB_FILL_COLOR (rgb_c, 3, _memset_rgb_c);
 MEMSET_RGB_C (bgr, 2, 1, 0);
 RGB_FILL_COLOR (bgr_c, 3, _memset_bgr_c);
 
-RGB_BLEND (xrgb, 4, _orc_memcpy_u32, orc_blend_u8);
+RGB_BLEND (xrgb, 4, _orc_memcpy_u32, video_mixer_orc_blend_u8);
 RGB_FILL_CHECKER_C (xrgb, 4, 1, 2, 3);
 MEMSET_XRGB (xrgb, 24, 16, 0);
 RGB_FILL_COLOR (xrgb, 4, _memset_xrgb);
@@ -729,12 +729,12 @@ fill_color_##name (GstVideoFrame * frame, \
   val = GUINT32_FROM_BE ((colY << Y1) | (colY << Y2) | (colU << U) | (colV << V)); \
   \
   for (i = 0; i < height; i++) { \
-    orc_splat_u32 ((guint32 *) dest, val, width); \
+    video_mixer_orc_splat_u32 ((guint32 *) dest, val, width); \
     dest += dest_stride; \
   } \
 }
 
-PACKED_422_BLEND (yuy2, memcpy, orc_blend_u8);
+PACKED_422_BLEND (yuy2, memcpy, video_mixer_orc_blend_u8);
 PACKED_422_FILL_CHECKER_C (yuy2, 0, 1, 2, 3);
 PACKED_422_FILL_CHECKER_C (uyvy, 1, 0, 3, 2);
 PACKED_422_FILL_COLOR (yuy2, 24, 16, 8, 0);

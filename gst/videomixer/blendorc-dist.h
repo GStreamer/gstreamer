@@ -67,13 +67,13 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #define ORC_RESTRICT
 #endif
 #endif
-void orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
-void orc_memcpy_u32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n);
-void orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
-void orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
-void orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
-void orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
-void orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void video_mixer_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
+void video_mixer_orc_memcpy_u32 (guint32 * ORC_RESTRICT d1, const guint32 * ORC_RESTRICT s1, int n);
+void video_mixer_orc_blend_u8 (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void video_mixer_orc_blend_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void video_mixer_orc_blend_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void video_mixer_orc_overlay_argb (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
+void video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, const guint8 * ORC_RESTRICT s1, int s1_stride, int p1, int n, int m);
 
 #ifdef __cplusplus
 }

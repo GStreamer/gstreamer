@@ -1,16 +1,16 @@
-.function orc_splat_u32
+.function video_mixer_orc_splat_u32
 .dest 4 d1 guint32
 .param 4 p1 guint32
 
 copyl d1, p1
 
-.function orc_memcpy_u32
+.function video_mixer_orc_memcpy_u32
 .dest 4 d1 guint32
 .source 4 s1 guint32
 
 copyl d1, s1
 
-.function orc_blend_u8
+.function video_mixer_orc_blend_u8
 .flags 2d
 .dest 1 d1 guint8
 .source 1 s1 guint8
@@ -29,7 +29,7 @@ shruw t2, t2, c1
 convsuswb d1, t2
 
 
-.function orc_blend_argb
+.function video_mixer_orc_blend_argb
 .flags 2d
 .dest 4 d guint8
 .source 4 s guint8
@@ -61,7 +61,7 @@ x4 convwb t, d_wide
 orl t, t, a_alpha
 storel d, t
 
-.function orc_blend_bgra
+.function video_mixer_orc_blend_bgra
 .flags 2d
 .dest 4 d guint8
 .source 4 s guint8
@@ -96,7 +96,7 @@ orl t, t, a_alpha
 storel d, t
 
 
-.function orc_overlay_argb
+.function video_mixer_orc_overlay_argb
 .flags 2d
 .dest 4 d guint8
 .source 4 s guint8
@@ -156,7 +156,7 @@ andl a, a, a_alpha
 orl  t, t, a
 storel d, t
 
-.function orc_overlay_bgra
+.function video_mixer_orc_overlay_bgra
 .flags 2d
 .dest 4 d guint8
 .source 4 s guint8
