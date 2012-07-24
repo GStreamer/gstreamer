@@ -954,7 +954,7 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
 
       if (!g_socket_leave_multicast_group (src->used_socket,
               g_inet_socket_address_get_address (src->addr), FALSE,
-              src->multi_iface, NULL)) {
+              src->multi_iface, &err)) {
         GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
             err->message);
         g_clear_error (&err);
