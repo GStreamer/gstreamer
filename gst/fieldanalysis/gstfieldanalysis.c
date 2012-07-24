@@ -846,8 +846,8 @@ same_parity_sad (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
   sum = 0.0f;
   for (j = 0; j < (filter->height >> 1); j++) {
     guint32 tempsum = 0;
-    orc_same_parity_sad_planar_yuv (&tempsum, f1j, f2j, noise_floor,
-        filter->width);
+    fieldanalysis_orc_same_parity_sad_planar_yuv (&tempsum, f1j, f2j,
+        noise_floor, filter->width);
     sum += tempsum;
     f1j += stridex2;
     f2j += stridex2;
@@ -875,8 +875,8 @@ same_parity_ssd (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
   sum = 0.0f;
   for (j = 0; j < (filter->height >> 1); j++) {
     guint32 tempsum = 0;
-    orc_same_parity_ssd_planar_yuv (&tempsum, f1j, f2j, noise_floor,
-        filter->width);
+    fieldanalysis_orc_same_parity_ssd_planar_yuv (&tempsum, f1j, f2j,
+        noise_floor, filter->width);
     sum += tempsum;
     f1j += stridex2;
     f2j += stridex2;
@@ -915,7 +915,7 @@ same_parity_3_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
     if (diff > noise_floor)
       sum += diff;
 
-    orc_same_parity_3_tap_planar_yuv (&tempsum, f1j, &f1j[incr],
+    fieldanalysis_orc_same_parity_3_tap_planar_yuv (&tempsum, f1j, &f1j[incr],
         &f1j[incr << 1], f2j, &f2j[incr], &f2j[incr << 1], noise_floor,
         filter->width - 1);
     sum += tempsum;
@@ -972,8 +972,8 @@ opposite_parity_5_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
   fjp2 = fj + stridex2;
 
   tempsum = 0;
-  orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjp2, fjp1, fj, fjp1, fjp2,
-      noise_floor, filter->width);
+  fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjp2, fjp1, fj,
+      fjp1, fjp2, noise_floor, filter->width);
   sum += tempsum;
 
   for (j = 1; j < (filter->height >> 1) - 1; j++) {
@@ -985,8 +985,8 @@ opposite_parity_5_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
     fjp2 += stridex2;
 
     tempsum = 0;
-    orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjm2, fjm1, fj, fjp1, fjp2,
-        noise_floor, filter->width);
+    fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjm2, fjm1,
+        fj, fjp1, fjp2, noise_floor, filter->width);
     sum += tempsum;
   }
 
@@ -997,8 +997,8 @@ opposite_parity_5_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
   fj = fjp2;
 
   tempsum = 0;
-  orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjm2, fjm1, fj, fjm1, fjm2,
-      noise_floor, filter->width);
+  fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjm2, fjm1, fj,
+      fjm1, fjm2, noise_floor, filter->width);
   sum += tempsum;
 
   return sum / ((6.0f / 2.0f) * filter->width * filter->height);        /* 1 + 4 + 1 == 3 + 3 == 6; field is half height */

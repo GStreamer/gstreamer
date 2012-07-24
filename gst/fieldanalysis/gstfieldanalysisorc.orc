@@ -1,5 +1,5 @@
 
-.function orc_same_parity_sad_planar_yuv
+.function fieldanalysis_orc_same_parity_sad_planar_yuv
 .accumulator 4 a1 guint32
 .source 1 s1
 .source 1 s2
@@ -20,7 +20,7 @@ andl t3, t3, t4
 accl a1, t3
 
 
-.function orc_same_parity_ssd_planar_yuv
+.function fieldanalysis_orc_same_parity_ssd_planar_yuv
 .accumulator 4 a1 guint32
 .source 1 s1
 .source 1 s2
@@ -40,7 +40,7 @@ andl t3, t3, t4
 accl a1, t3
 
 
-.function orc_same_parity_3_tap_planar_yuv
+.function fieldanalysis_orc_same_parity_3_tap_planar_yuv
 .accumulator 4 a1 guint32
 .source 1 s1
 .source 1 s2
@@ -79,7 +79,7 @@ andl t7, t7, t8
 accl a1, t7
 
 
-.function orc_opposite_parity_5_tap_planar_yuv
+.function fieldanalysis_orc_opposite_parity_5_tap_planar_yuv
 .accumulator 4 a1 guint32
 .source 1 s1
 .source 1 s2
