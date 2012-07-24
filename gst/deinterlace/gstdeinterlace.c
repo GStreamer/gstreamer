@@ -1581,15 +1581,78 @@ restart:
   if ((flushing && self->history_count == 1) || (flush_one
           && !self->drop_orphans) || (hl_no_lock && (self->history_count == 1
               || !same_buffer))) {
+    /* This case is for flushing a single field:
+     * - flushing and 1 field in the history
+     * - flush one (due to orphans in the pattern) and do not drop orphans
+     * - high-latency pattern locking with no possible lock given the current
+     *   state and either only one field in the history or the tip two fields
+     *   are in separate buffers */
     GST_DEBUG_OBJECT (self, "Flushing one field using linear method");
     gst_deinterlace_set_method (self, GST_DEINTERLACE_LINEAR);
     fields_required = gst_deinterlace_method_get_fields_required (self->method);
+  } else if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE ||
+      (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED &&
+          !GST_VIDEO_FRAME_IS_INTERLACED (field1->frame))) {
+    /* This case is for processing progressive buffers, telecine or plain
+     * progressive */
+    GstVideoFrame *field1_frame;
+    GstBuffer *field1_buffer;
+
+    /* progressive */
+    fields_required = 2;
+
+    /* Not enough fields in the history */
+    if (!flushing && self->history_count < fields_required) {
+      GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
+          self->history_count, self->cur_field_idx + fields_required);
+      goto need_more;
+    }
+
+    field2 = &self->field_history[self->history_count - 2];
+    if (GST_VIDEO_FRAME_PLANE_DATA (field1->frame,
+            0) != GST_VIDEO_FRAME_PLANE_DATA (field2->frame, 0)) {
+      /* ERROR - next two fields in field history are not one progressive buffer - weave? */
+      GST_ERROR_OBJECT (self,
+          "Progressive buffer but two fields at tip aren't in the same buffer!");
+    }
+
+    if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED && self->pattern > 1 /* locked onto a telecine pattern */
+        && !gst_deinterlace_fix_timestamps (self, field1->frame, field2->frame)
+        && !flushing)
+      goto need_more;
+
+    GST_DEBUG_OBJECT (self,
+        "Frame type: Progressive; pushing buffer as a frame");
+    /* pop and push */
+    self->cur_field_idx--;
+    field1_frame = gst_deinterlace_pop_history (self);
+    field1_buffer = field1_frame->buffer;
+    gst_buffer_ref (field1_buffer);
+    gst_video_frame_unmap_and_free (field1_frame);
+    /* field2 is the same buffer as field1, but we need to remove it from the
+     * history anyway */
+    self->cur_field_idx--;
+    gst_video_frame_unmap_and_free (gst_deinterlace_pop_history (self));
+    GST_DEBUG_OBJECT (self,
+        "[OUT] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
+        GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (field1_buffer)),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer) +
+            GST_BUFFER_DURATION (field1_buffer)));
+    return gst_pad_push (self->srcpad, field1_buffer);
   } else if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED
-      && (self->low_latency > 0 || self->pattern != -1 || (hl_no_lock
-              && same_buffer
-              && !GST_BUFFER_FLAG_IS_SET (field1->frame->buffer,
-                  GST_VIDEO_BUFFER_FLAG_INTERLACED)))) {
-    /* telecined - we reconstruct frames by weaving pairs of fields */
+      && GST_VIDEO_FRAME_IS_INTERLACED (field1->frame)
+      && !same_buffer && self->pattern > 1) {
+    /* This case needs to identify telecine mixed buffers that require weaving
+     * of two fields in different buffers.
+     * - interlacing mode is mixed
+     * - frame is interlaced
+     * - locked on to a telecine pattern
+     * - fields are in separate buffers
+     * If we don't yet have a pattern lock, we will have to deinterlace as we
+     * don't explicitly know we have a telecine sequence and so we drop through
+     * to the plain deinterlace case */
     fields_required = 2;
     if (!flushing && self->history_count < fields_required) {
       GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
@@ -1602,50 +1665,21 @@ restart:
         && !flushing)
       goto need_more;
 
-    if (same_buffer) {
-      /* telecine progressive */
-      GstVideoFrame *field1_frame;
-      GstBuffer *field1_buffer;
-
-      GST_DEBUG_OBJECT (self,
-          "Frame type: Telecine Progressive; pushing buffer as a frame");
-      /* pop and push */
-      self->cur_field_idx--;
-      field1_frame = gst_deinterlace_pop_history (self);
-      field1_buffer = field1_frame->buffer;
-      gst_buffer_ref (field1_buffer);
-      gst_video_frame_unmap_and_free (field1_frame);
-      /* field2 is the same buffer as field1, but we need to remove it from
-       * the history anyway */
-      self->cur_field_idx--;
-      gst_video_frame_unmap_and_free (gst_deinterlace_pop_history (self));
-      GST_DEBUG_OBJECT (self,
-          "[OUT] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
-          GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer)),
-          GST_TIME_ARGS (GST_BUFFER_DURATION (field1_buffer)),
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer) +
-              GST_BUFFER_DURATION (field1_buffer)));
-      return gst_pad_push (self->srcpad, field1_buffer);
-    } else {
-      /* telecine fields in separate buffers */
-
-      /* check field1 and field2 buffer caps and flags are corresponding */
-      if (field1->flags == field2->flags) {
-        /* ERROR - fields are of same parity - what should be done here?
-         * perhaps deinterlace the tip field and start again? */
-        GST_ERROR_OBJECT (self, "Telecine mixed with fields of same parity!");
-      }
-      GST_DEBUG_OBJECT (self,
-          "Frame type: Telecine Mixed; weaving tip two fields into a frame");
-      /* set method to WEAVE */
-      gst_deinterlace_set_method (self, GST_DEINTERLACE_WEAVE);
+    /* check field1 and field2 buffer caps and flags are corresponding */
+    if (field1->flags == field2->flags) {
+      /* ERROR - fields are of same parity - what should be done here?
+       * perhaps deinterlace the tip field and start again? */
+      GST_ERROR_OBJECT (self, "Telecine mixed with fields of same parity!");
     }
-  } else if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED
-      || (hl_no_lock && interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED
-          && same_buffer
-          && GST_BUFFER_FLAG_IS_SET (field1->frame,
-              GST_VIDEO_BUFFER_FLAG_INTERLACED))) {
+    GST_DEBUG_OBJECT (self,
+        "Frame type: Telecine Mixed; weaving tip two fields into a frame");
+    /* set method to WEAVE */
+    gst_deinterlace_set_method (self, GST_DEINTERLACE_WEAVE);
+  } else {
+    /* This is the final catch-all case that applies the selected deinterlacing
+     * method. At this point the fields to be processed are either definitely
+     * interlaced or we do not yet know that we have a telecine pattern lock
+     * and so the best we can do is to deinterlace the fields. */
     gst_deinterlace_set_method (self, self->user_set_method_id);
     fields_required = gst_deinterlace_method_get_fields_required (self->method);
     if (flushing && self->history_count < fields_required) {
@@ -1668,48 +1702,6 @@ restart:
     GST_DEBUG_OBJECT (self,
         "Frame type: Interlaced; deinterlacing using %s method",
         methods_types[self->method_id].value_nick);
-  } else {
-    GstVideoFrame *field1_frame;
-    GstBuffer *field1_buffer;
-
-    /* progressive */
-    fields_required = 2;
-
-    /* Not enough fields in the history */
-    if (!flushing && self->history_count < fields_required) {
-      GST_DEBUG_OBJECT (self, "Need more fields (have %d, need %d)",
-          self->history_count, self->cur_field_idx + fields_required);
-      goto need_more;
-    }
-
-    field2 = &self->field_history[self->history_count - 2];
-    if (GST_VIDEO_FRAME_PLANE_DATA (field1->frame,
-            0) != GST_VIDEO_FRAME_PLANE_DATA (field2->frame, 0)) {
-      /* ERROR - next two fields in field history are not one progressive buffer - weave? */
-      GST_ERROR_OBJECT (self,
-          "Progressive buffer but two fields at tip aren't in the same buffer!");
-    }
-
-    GST_DEBUG_OBJECT (self,
-        "Frame type: Progressive; pushing buffer as a frame");
-    /* pop and push */
-    self->cur_field_idx--;
-    field1_frame = gst_deinterlace_pop_history (self);
-    field1_buffer = field1_frame->buffer;
-    gst_buffer_ref (field1_buffer);
-    gst_video_frame_unmap_and_free (field1_frame);
-    /* field2 is the same buffer as field1, but we need to remove it from the
-     * history anyway */
-    self->cur_field_idx--;
-    gst_video_frame_unmap_and_free (gst_deinterlace_pop_history (self));
-    GST_DEBUG_OBJECT (self,
-        "[OUT] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
-        GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer)),
-        GST_TIME_ARGS (GST_BUFFER_DURATION (field1_buffer)),
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer) +
-            GST_BUFFER_DURATION (field1_buffer)));
-    return gst_pad_push (self->srcpad, field1_buffer);
   }
 
   if (!flushing && self->cur_field_idx < 1) {
