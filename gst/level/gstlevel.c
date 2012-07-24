@@ -346,7 +346,6 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
                                                                               \
   normalizer = (gdouble) (G_GINT64_CONSTANT(1) << (RESOLUTION * 2));          \
                                                                               \
-  /* oil_squaresum_shifted_s16(&squaresum,in,num); */                         \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
     square = ((gdouble) in[j]) * in[j];                                       \
