@@ -90,8 +90,10 @@ gst_vaapi_display_type_get_type(void)
     static const GEnumValue display_types[] = {
         { GST_VAAPI_DISPLAY_TYPE_ANY,
           "Auto detection", "any" },
+#if USE_X11
         { GST_VAAPI_DISPLAY_TYPE_X11,
           "VA/X11 display", "x11" },
+#endif
 #if USE_GLX
         { GST_VAAPI_DISPLAY_TYPE_GLX,
           "VA/GLX display", "glx" },

@@ -45,8 +45,10 @@ static const char *display_types[] = {
     "wl-display",
     "wl-display-name",
 #endif
+#if USE_X11
     "x11-display",
     "x11-display-name",
+#endif
     NULL
 };
 
@@ -146,6 +148,7 @@ gst_vaapi_set_display(
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
         dpy = g_value_dup_object(value);
     }
+#if USE_X11
     else if (!strcmp(type, "x11-display-name")) {
         g_return_if_fail(G_VALUE_HOLDS_STRING(value));
 #if USE_GLX
@@ -162,6 +165,7 @@ gst_vaapi_set_display(
         if (!dpy)
             dpy = gst_vaapi_display_x11_new_with_display(g_value_get_pointer(value));
     }
+#endif
 #if USE_WAYLAND
     else if (!strcmp(type, "wl-display")) {
         struct wl_display *wl_display;
@@ -215,6 +219,7 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
         }
         else {
             switch (display_type) {
+#if USE_X11
 #if USE_GLX
             case GST_VAAPI_DISPLAY_TYPE_GLX:
 #endif
@@ -232,6 +237,7 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
                     res = FALSE;
                 break;
             }
+#endif
 #if USE_WAYLAND
             case GST_VAAPI_DISPLAY_TYPE_WAYLAND: {
                 GstVaapiDisplayWayland * const wlvadpy =

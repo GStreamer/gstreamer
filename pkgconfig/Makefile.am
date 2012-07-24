@@ -1,5 +1,7 @@
 pcfiles_in  = gstreamer-vaapi.pc.in
+if USE_X11
 pcfiles_in += gstreamer-vaapi-x11.pc.in
+endif
 if USE_GLX
 pcfiles_in += gstreamer-vaapi-glx.pc.in
 endif

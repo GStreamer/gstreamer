@@ -35,8 +35,10 @@
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapivideosink.h>
-#include <gst/vaapi/gstvaapidisplay_x11.h>
-#include <gst/vaapi/gstvaapiwindow_x11.h>
+#if USE_X11
+# include <gst/vaapi/gstvaapidisplay_x11.h>
+# include <gst/vaapi/gstvaapiwindow_x11.h>
+#endif
 #if USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 # include <gst/vaapi/gstvaapiwindow_glx.h>
@@ -141,8 +143,10 @@ gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
 
 /* GstXOverlay interface */
 
+#if USE_X11
 static gboolean
 gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id);
+#endif
 
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
@@ -158,7 +162,16 @@ gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window)
         sink->display_type = GST_VAAPI_DISPLAY_TYPE_X11;
 
     sink->foreign_window = TRUE;
-    gst_vaapisink_ensure_window_xid(sink, window);
+
+    switch (sink->display_type) {
+#if USE_X11
+    case GST_VAAPI_DISPLAY_TYPE_X11:
+        gst_vaapisink_ensure_window_xid(sink, window);
+        break;
+#endif
+    default:
+        break;
+    }
 }
 
 static void
@@ -213,6 +226,7 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     gst_caps_replace(&sink->caps, NULL);
 }
 
+#if USE_X11
 /* Checks whether a ConfigureNotify event is in the queue */
 typedef struct _ConfigureNotifyEventPendingArgs ConfigureNotifyEventPendingArgs;
 struct _ConfigureNotifyEventPendingArgs {
@@ -263,6 +277,7 @@ configure_notify_event_pending(
     );
     return args.match;
 }
+#endif
 
 static const gchar *
 get_display_type_name(GstVaapiDisplayType display_type)
@@ -360,6 +375,7 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
             sink->window = gst_vaapi_window_glx_new(display, width, height);
             goto notify_xoverlay_interface;
 #endif
+#if USE_X11
         case GST_VAAPI_DISPLAY_TYPE_X11:
             sink->window = gst_vaapi_window_x11_new(display, width, height);
         notify_xoverlay_interface:
@@ -370,6 +386,7 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
                 gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window))
             );
             break;
+#endif
 #if USE_WAYLAND
         case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
             sink->window = gst_vaapi_window_wayland_new(display, width, height);
@@ -383,6 +400,7 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
     return sink->window != NULL;
 }
 
+#if USE_X11
 static gboolean
 gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
 {
@@ -432,6 +450,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
     }
     return sink->window != NULL;
 }
+#endif
 
 static gboolean
 gst_vaapisink_start(GstBaseSink *base_sink)
@@ -735,9 +754,11 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         success = gst_vaapisink_show_frame_glx(sink, surface, flags);
         break;
 #endif
+#if USE_X11
     case GST_VAAPI_DISPLAY_TYPE_X11:
         success = gst_vaapisink_put_surface(sink, surface, flags);
         break;
+#endif
 #if USE_WAYLAND
     case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
         success = gst_vaapisink_put_surface(sink, surface, flags);
