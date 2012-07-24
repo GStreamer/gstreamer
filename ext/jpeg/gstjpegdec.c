@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v filesrc location=mjpeg.avi ! avidemux !  queue ! jpegdec ! ffmpegcolorspace ! xvimagesink
+ * gst-launch -v filesrc location=mjpeg.avi ! avidemux !  queue ! jpegdec ! videoconvert ! videoscale ! autovideosink
  * ]| The above pipeline decode the mjpeg stream and renders it to the screen.
  * </refsect2>
  */
