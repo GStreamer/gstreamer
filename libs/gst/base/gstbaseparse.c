@@ -2148,14 +2148,14 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     gst_base_parse_check_upstream (parse);
   }
 
+  parse->priv->flushed += size;
+
   if (parse->priv->scanning && frame->buffer) {
     if (!parse->priv->scanned_frame) {
       parse->priv->scanned_frame = gst_base_parse_frame_copy (frame);
     }
     goto exit;
   }
-
-  parse->priv->flushed += size;
 
   /* either PUSH or PULL mode arranges for adapter data */
   /* ensure output buffer */
