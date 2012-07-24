@@ -864,7 +864,7 @@ gst_type_find_element_chain_do_typefinding (GstTypeFindElement * typefind,
     have_min = avail >= TYPE_FIND_MIN_SIZE;
     have_max = avail >= TYPE_FIND_MAX_SIZE;
   } else {
-    have_min = TRUE;
+    have_min = avail > 0;
     have_max = TRUE;
   }
 
