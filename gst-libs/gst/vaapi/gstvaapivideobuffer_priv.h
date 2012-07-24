@@ -28,16 +28,30 @@
 
 G_BEGIN_DECLS
 
-void
-gst_vaapi_video_buffer_set_display(
-    GstVaapiVideoBuffer *buffer,
-    GstVaapiDisplay     *display
+/* Private API for gstreamer-vaapi plugin elements only */
+
+GstBuffer *
+gst_vaapi_video_buffer_typed_new(GType type, GstVaapiDisplay *display);
+
+GstBuffer *
+gst_vaapi_video_buffer_typed_new_from_pool(GType type, GstVaapiVideoPool *pool);
+
+GstBuffer *
+gst_vaapi_video_buffer_typed_new_from_buffer(GType type, GstBuffer *buffer);
+
+GstBuffer *
+gst_vaapi_video_buffer_typed_new_with_image(GType type, GstVaapiImage *image);
+
+GstBuffer *
+gst_vaapi_video_buffer_typed_new_with_surface(
+    GType            type,
+    GstVaapiSurface *surface
 );
 
-void
-gst_vaapi_video_buffer_set_buffer(
-    GstVaapiVideoBuffer *buffer,
-    GstBuffer           *other_buffer
+GstBuffer *
+gst_vaapi_video_buffer_typed_new_with_surface_proxy(
+    GType                 type,
+    GstVaapiSurfaceProxy *proxy
 );
 
 G_END_DECLS

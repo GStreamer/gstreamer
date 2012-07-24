@@ -28,34 +28,30 @@
 
 #include "sysdeps.h"
 #include "gstvaapivideobuffer_glx.h"
-#include "gstvaapivideobuffer_priv.h"
 #include "gstvaapivideoconverter_glx.h"
-#include "gstvaapiobject_priv.h"
-#include "gstvaapiimagepool.h"
-#include "gstvaapisurfacepool.h"
+#include "gstvaapivideopool.h"
+#include "gstvaapivideobuffer_priv.h"
+#include "gstvaapidisplay_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE (GstVaapiVideoBufferGLX, gst_vaapi_video_buffer_glx,
-               GST_VAAPI_TYPE_VIDEO_BUFFER);
+G_DEFINE_TYPE(GstVaapiVideoBufferGLX,
+              gst_vaapi_video_buffer_glx,
+              GST_VAAPI_TYPE_VIDEO_BUFFER);
 
 static void
-gst_vaapi_video_buffer_glx_class_init(GstVaapiVideoBufferGLXClass * klass)
+gst_vaapi_video_buffer_glx_class_init(GstVaapiVideoBufferGLXClass *klass)
 {
-  GstSurfaceBufferClass * const surface_class = GST_SURFACE_BUFFER_CLASS (klass);
-  surface_class->create_converter = gst_vaapi_video_converter_glx_new;
+    GstSurfaceBufferClass * const surface_class =
+        GST_SURFACE_BUFFER_CLASS(klass);
+
+    surface_class->create_converter = gst_vaapi_video_converter_glx_new;
 }
 
 static void
-gst_vaapi_video_buffer_glx_init (GstVaapiVideoBufferGLX * buffer)
+gst_vaapi_video_buffer_glx_init(GstVaapiVideoBufferGLX *buffer)
 {
-}
-
-static inline gpointer
-_gst_vaapi_video_buffer_glx_new (void)
-{
-  return gst_mini_object_new (GST_VAAPI_TYPE_VIDEO_BUFFER_GLX);
 }
 
 /**
@@ -69,19 +65,12 @@ _gst_vaapi_video_buffer_glx_new (void)
  * Return value: the newly allocated #GstBuffer, or %NULL or error
  */
 GstBuffer *
-gst_vaapi_video_buffer_glx_new(GstVaapiDisplayGLX * display)
+gst_vaapi_video_buffer_glx_new(GstVaapiDisplayGLX *display)
 {
-  GstBuffer *buffer;
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_GLX(display), NULL);
 
-  g_return_val_if_fail (GST_VAAPI_IS_DISPLAY_GLX (display), NULL);
-
-  buffer = _gst_vaapi_video_buffer_glx_new ();
-  if (!buffer)
-    return NULL;
-
-  gst_vaapi_video_buffer_set_display (GST_VAAPI_VIDEO_BUFFER (buffer),
-      GST_VAAPI_DISPLAY (display));
-  return buffer;
+    return gst_vaapi_video_buffer_typed_new(
+        GST_VAAPI_TYPE_VIDEO_BUFFER_GLX, GST_VAAPI_DISPLAY_CAST(display));
 }
 
 /**
@@ -97,32 +86,10 @@ gst_vaapi_video_buffer_glx_new(GstVaapiDisplayGLX * display)
  * Return value: the newly allocated #GstBuffer, or %NULL on error
  */
 GstBuffer *
-gst_vaapi_video_buffer_glx_new_from_pool (GstVaapiVideoPool * pool)
+gst_vaapi_video_buffer_glx_new_from_pool(GstVaapiVideoPool *pool)
 {
-  GstVaapiVideoBuffer *buffer;
-  gboolean is_image_pool, is_surface_pool;
-
-  g_return_val_if_fail (GST_VAAPI_IS_VIDEO_POOL (pool), NULL);
-
-  is_image_pool   = GST_VAAPI_IS_IMAGE_POOL (pool);
-  is_surface_pool = GST_VAAPI_IS_SURFACE_POOL (pool);
-
-  if (!is_image_pool && !is_surface_pool)
-    return NULL;
-
-  buffer = _gst_vaapi_video_buffer_glx_new ();
-  if (buffer &&
-      ((is_image_pool &&
-        gst_vaapi_video_buffer_set_image_from_pool (buffer, pool)) ||
-       (is_surface_pool &&
-        gst_vaapi_video_buffer_set_surface_from_pool (buffer, pool)))) {
-    gst_vaapi_video_buffer_set_display (buffer,
-        gst_vaapi_video_pool_get_display (pool));
-    return GST_BUFFER (buffer);
-  }
-
-  gst_mini_object_unref (GST_MINI_OBJECT(buffer));
-  return NULL;
+    return gst_vaapi_video_buffer_typed_new_from_pool(
+        GST_VAAPI_TYPE_VIDEO_BUFFER_GLX, pool);
 }
 
 /**
@@ -135,36 +102,8 @@ gst_vaapi_video_buffer_glx_new_from_pool (GstVaapiVideoPool * pool)
  * Return value: the newly allocated #GstBuffer, or %NULL on error
  */
 GstBuffer *
-gst_vaapi_video_buffer_glx_new_from_buffer (GstBuffer * buffer)
+gst_vaapi_video_buffer_glx_new_from_buffer(GstBuffer *buffer)
 {
-  GstVaapiVideoBuffer *inbuf, *outbuf;
-  GstVaapiImage *image;
-  GstVaapiSurface *surface;
-  GstVaapiSurfaceProxy *proxy;
-
-  if (!GST_VAAPI_IS_VIDEO_BUFFER_GLX (buffer)) {
-    if (!buffer->parent || !GST_VAAPI_IS_VIDEO_BUFFER_GLX (buffer->parent))
-      return NULL;
-    buffer = buffer->parent;
-  }
-  inbuf = GST_VAAPI_VIDEO_BUFFER (buffer);
-
-  outbuf = _gst_vaapi_video_buffer_glx_new ();
-  if (!outbuf)
-    return NULL;
-
-  image = gst_vaapi_video_buffer_get_image (inbuf);
-  surface = gst_vaapi_video_buffer_get_surface (inbuf);
-  proxy =
-    gst_vaapi_video_buffer_get_surface_proxy (inbuf);
-
-  if (image)
-    gst_vaapi_video_buffer_set_image (outbuf, image);
-  if (surface)
-    gst_vaapi_video_buffer_set_surface (outbuf, surface);
-  if (proxy)
-    gst_vaapi_video_buffer_set_surface_proxy (outbuf, proxy);
-
-  gst_vaapi_video_buffer_set_buffer (outbuf, buffer);
-  return GST_BUFFER (outbuf);
+    return gst_vaapi_video_buffer_typed_new_from_buffer(
+        GST_VAAPI_TYPE_VIDEO_BUFFER_GLX, buffer);
 }
