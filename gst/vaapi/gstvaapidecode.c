@@ -35,14 +35,9 @@
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/video/videocontext.h>
 
-#if USE_GLX
-#include <gst/vaapi/gstvaapivideobuffer_glx.h>
-#define gst_vaapi_video_buffer_new(display) \
-    gst_vaapi_video_buffer_glx_new(GST_VAAPI_DISPLAY_GLX(display))
-#endif
-
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapipluginbuffer.h"
 
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>

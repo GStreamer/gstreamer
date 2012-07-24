@@ -23,6 +23,7 @@ libgstvaapi_la_SOURCES =	\
 	gstvaapi.c		\
 	gstvaapidecode.c	\
 	gstvaapidownload.c	\
+	gstvaapipluginbuffer.c	\
 	gstvaapipluginutil.c	\
 	gstvaapipostproc.c	\
 	gstvaapisink.c		\
@@ -32,6 +33,7 @@ libgstvaapi_la_SOURCES =	\
 noinst_HEADERS =		\
 	gstvaapidecode.h	\
 	gstvaapidownload.h	\
+	gstvaapipluginbuffer.h	\
 	gstvaapipluginutil.h	\
 	gstvaapipostproc.h	\
 	gstvaapisink.h		\
