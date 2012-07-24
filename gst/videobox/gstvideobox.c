@@ -161,10 +161,10 @@ fill_ayuv (GstVideoBoxFill fill_type, guint b_alpha,
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
   if (G_LIKELY (stride == 4 * width))
-    orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
+    video_box_orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
   else if (height) {
     for (; height; --height) {
-      orc_splat_u32 ((guint32 *) dest, empty_pixel, width);
+      video_box_orc_splat_u32 ((guint32 *) dest, empty_pixel, width);
       dest += stride;
     }
   }
@@ -1786,10 +1786,10 @@ fill_rgb32 (GstVideoBoxFill fill_type, guint b_alpha,
       (rgb_colors_B[fill_type] << (p[3] * 8)));
 
   if (stride == width * 4) {
-    orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
+    video_box_orc_splat_u32 ((guint32 *) dest, empty_pixel, width * height);
   } else if (height) {
     for (; height; --height) {
-      orc_splat_u32 ((guint32 *) dest, empty_pixel, width);
+      video_box_orc_splat_u32 ((guint32 *) dest, empty_pixel, width);
       dest += stride;
     }
   }

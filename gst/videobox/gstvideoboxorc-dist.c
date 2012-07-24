@@ -82,7 +82,7 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
+void video_box_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
@@ -129,10 +129,10 @@ void orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
 
 
 
-/* orc_splat_u32 */
+/* video_box_orc_splat_u32 */
 #ifdef DISABLE_ORC
 void
-orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
+video_box_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -155,7 +155,7 @@ orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
 
 #else
 static void
-_backup_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_box_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -178,7 +178,7 @@ _backup_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
+video_box_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -190,8 +190,8 @@ orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "orc_splat_u32");
-      orc_program_set_backup_function (p, _backup_orc_splat_u32);
+      orc_program_set_name (p, "video_box_orc_splat_u32");
+      orc_program_set_backup_function (p, _backup_video_box_orc_splat_u32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_parameter (p, 4, "p1");
 
