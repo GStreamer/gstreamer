@@ -352,10 +352,10 @@ gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
   dest1[1] = src[1];
 
 #if defined(__i386__) || defined(__amd64__)
-  gst_bayer_horiz_upsample_unaligned (dest0 + 2, dest1 + 2, src + 1,
+  bayer_orc_horiz_upsample_unaligned (dest0 + 2, dest1 + 2, src + 1,
       (n - 4) >> 1);
 #else
-  gst_bayer_horiz_upsample (dest0 + 2, dest1 + 2, src + 2, (n - 4) >> 1);
+  bayer_orc_horiz_upsample (dest0 + 2, dest1 + 2, src + 2, (n - 4) >> 1);
 #endif
 
   for (i = n - 2; i < n; i++) {
@@ -396,17 +396,17 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
   }
 
   if (r_off == 2 && g_off == 1 && b_off == 0) {
-    merge[0] = gst_bayer_merge_bg_bgra;
-    merge[1] = gst_bayer_merge_gr_bgra;
+    merge[0] = bayer_orc_merge_bg_bgra;
+    merge[1] = bayer_orc_merge_gr_bgra;
   } else if (r_off == 3 && g_off == 2 && b_off == 1) {
-    merge[0] = gst_bayer_merge_bg_abgr;
-    merge[1] = gst_bayer_merge_gr_abgr;
+    merge[0] = bayer_orc_merge_bg_abgr;
+    merge[1] = bayer_orc_merge_gr_abgr;
   } else if (r_off == 1 && g_off == 2 && b_off == 3) {
-    merge[0] = gst_bayer_merge_bg_argb;
-    merge[1] = gst_bayer_merge_gr_argb;
+    merge[0] = bayer_orc_merge_bg_argb;
+    merge[1] = bayer_orc_merge_gr_argb;
   } else if (r_off == 0 && g_off == 1 && b_off == 2) {
-    merge[0] = gst_bayer_merge_bg_rgba;
-    merge[1] = gst_bayer_merge_gr_rgba;
+    merge[0] = bayer_orc_merge_bg_rgba;
+    merge[1] = bayer_orc_merge_gr_rgba;
   }
   if (bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GRBG ||
       bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GBRG) {

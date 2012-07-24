@@ -1,6 +1,6 @@
 
 
-.function gst_bayer_horiz_upsample_unaligned
+.function bayer_orc_horiz_upsample_unaligned
 .dest 2 d0 guint8
 .dest 2 d1 guint8
 .source 2 s guint8
@@ -19,7 +19,7 @@ avgub b, b, d
 mergebw d1, b, d
 
 
-.function gst_bayer_horiz_upsample
+.function bayer_orc_horiz_upsample
 .dest 2 d0 guint8
 .dest 2 d1 guint8
 .source 2 s guint8
@@ -42,7 +42,7 @@ avgub b, b, d
 mergebw d1, b, d
 
 
-.function gst_bayer_merge_bg_bgra
+.function bayer_orc_merge_bg_bgra
 .dest 8 d guint8
 .source 2 g0 guint8
 .source 2 r0 guint8
@@ -68,7 +68,7 @@ x2 mergebw ra, r, 255
 x2 mergewl d, bg, ra
 
 
-.function gst_bayer_merge_gr_bgra
+.function bayer_orc_merge_gr_bgra
 .dest 8 d guint8
 .source 2 b0 guint8
 .source 2 g0 guint8
@@ -94,7 +94,7 @@ x2 mergebw ra, r1, 255
 x2 mergewl d, bg, ra
 
 
-.function gst_bayer_merge_bg_abgr
+.function bayer_orc_merge_bg_abgr
 .dest 8 d guint8
 .source 2 g0 guint8
 .source 2 r0 guint8
@@ -120,7 +120,7 @@ x2 mergebw gr, g, r
 x2 mergewl d, ab, gr
 
 
-.function gst_bayer_merge_gr_abgr
+.function bayer_orc_merge_gr_abgr
 .dest 8 d guint8
 .source 2 b0 guint8
 .source 2 g0 guint8
@@ -146,7 +146,7 @@ x2 mergebw gr, g, r1
 x2 mergewl d, ab, gr
 
 
-.function gst_bayer_merge_bg_rgba
+.function bayer_orc_merge_bg_rgba
 .dest 8 d guint8
 .source 2 g0 guint8
 .source 2 r0 guint8
@@ -172,7 +172,7 @@ x2 mergebw ba, b1, 255
 x2 mergewl d, rg, ba
 
 
-.function gst_bayer_merge_gr_rgba
+.function bayer_orc_merge_gr_rgba
 .dest 8 d guint8
 .source 2 b0 guint8
 .source 2 g0 guint8
@@ -198,7 +198,7 @@ x2 mergebw ba, b, 255
 x2 mergewl d, rg, ba
 
 
-.function gst_bayer_merge_bg_argb
+.function bayer_orc_merge_bg_argb
 .dest 8 d guint8
 .source 2 g0 guint8
 .source 2 r0 guint8
@@ -224,7 +224,7 @@ x2 mergebw gb, g, b1
 x2 mergewl d, ar, gb
 
 
-.function gst_bayer_merge_gr_argb
+.function bayer_orc_merge_gr_argb
 .dest 8 d guint8
 .source 2 b0 guint8
 .source 2 g0 guint8

@@ -130,7 +130,7 @@ check_vp8=
 endif
 
 if HAVE_ORC
-check_orc = orc/cog
+check_orc = orc/cog orc/bayer
 else
 check_orc =
 endif
@@ -335,10 +335,16 @@ elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION
 
 EXTRA_DIST = gst-plugins-bad.supp
 
+orc_bayer_CFLAGS = $(ORC_CFLAGS)
+orc_bayer_LDADD = $(ORC_LIBS) -lorc-test-0.4
 orc_cog_CFLAGS = $(ORC_CFLAGS)
 orc_cog_LDADD = $(ORC_LIBS) -lorc-test-0.4
 
 orc/cog.c: $(top_srcdir)/ext/cog/gstcogorc.orc
+	$(MKDIR_P) orc
+	$(ORCC) --test -o $@ $<
+
+orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
 

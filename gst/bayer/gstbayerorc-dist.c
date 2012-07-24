@@ -82,39 +82,39 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
+void bayer_orc_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n);
-void gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1,
+void bayer_orc_horiz_upsample (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n);
-void gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_bg_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
-void gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
+void bayer_orc_merge_gr_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n);
@@ -164,10 +164,10 @@ void gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
 
 
 
-/* gst_bayer_horiz_upsample_unaligned */
+/* bayer_orc_horiz_upsample_unaligned */
 #ifdef DISABLE_ORC
 void
-gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
+bayer_orc_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -237,7 +237,7 @@ gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_horiz_upsample_unaligned (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_horiz_upsample_unaligned (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -306,7 +306,7 @@ _backup_gst_bayer_horiz_upsample_unaligned (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
+bayer_orc_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
     guint8 * ORC_RESTRICT d2, const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -320,9 +320,9 @@ gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_horiz_upsample_unaligned");
+      orc_program_set_name (p, "bayer_orc_horiz_upsample_unaligned");
       orc_program_set_backup_function (p,
-          _backup_gst_bayer_horiz_upsample_unaligned);
+          _backup_bayer_orc_horiz_upsample_unaligned);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 2, "s1");
@@ -369,10 +369,10 @@ gst_bayer_horiz_upsample_unaligned (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_horiz_upsample */
+/* bayer_orc_horiz_upsample */
 #ifdef DISABLE_ORC
 void
-gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+bayer_orc_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   int i;
@@ -454,7 +454,7 @@ gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 
 #else
 static void
-_backup_gst_bayer_horiz_upsample (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_horiz_upsample (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -535,7 +535,7 @@ _backup_gst_bayer_horiz_upsample (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
+bayer_orc_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
     const guint8 * ORC_RESTRICT s1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
@@ -549,8 +549,8 @@ gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_horiz_upsample");
-      orc_program_set_backup_function (p, _backup_gst_bayer_horiz_upsample);
+      orc_program_set_name (p, "bayer_orc_horiz_upsample");
+      orc_program_set_backup_function (p, _backup_bayer_orc_horiz_upsample);
       orc_program_add_destination (p, 2, "d1");
       orc_program_add_destination (p, 2, "d2");
       orc_program_add_source (p, 2, "s1");
@@ -604,10 +604,10 @@ gst_bayer_horiz_upsample (guint8 * ORC_RESTRICT d1, guint8 * ORC_RESTRICT d2,
 #endif
 
 
-/* gst_bayer_merge_bg_bgra */
+/* bayer_orc_merge_bg_bgra */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -733,7 +733,7 @@ gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_bg_bgra (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_bg_bgra (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -856,7 +856,7 @@ _backup_gst_bayer_merge_bg_bgra (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -872,8 +872,8 @@ gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_bg_bgra");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_bg_bgra);
+      orc_program_set_name (p, "bayer_orc_merge_bg_bgra");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_bg_bgra);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -935,10 +935,10 @@ gst_bayer_merge_bg_bgra (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_gr_bgra */
+/* bayer_orc_merge_gr_bgra */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -1064,7 +1064,7 @@ gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_gr_bgra (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_gr_bgra (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1187,7 +1187,7 @@ _backup_gst_bayer_merge_gr_bgra (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -1203,8 +1203,8 @@ gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_gr_bgra");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_gr_bgra);
+      orc_program_set_name (p, "bayer_orc_merge_gr_bgra");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_gr_bgra);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -1266,10 +1266,10 @@ gst_bayer_merge_gr_bgra (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_bg_abgr */
+/* bayer_orc_merge_bg_abgr */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -1395,7 +1395,7 @@ gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_bg_abgr (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_bg_abgr (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1518,7 +1518,7 @@ _backup_gst_bayer_merge_bg_abgr (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -1534,8 +1534,8 @@ gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_bg_abgr");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_bg_abgr);
+      orc_program_set_name (p, "bayer_orc_merge_bg_abgr");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_bg_abgr);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -1597,10 +1597,10 @@ gst_bayer_merge_bg_abgr (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_gr_abgr */
+/* bayer_orc_merge_gr_abgr */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -1726,7 +1726,7 @@ gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_gr_abgr (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_gr_abgr (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -1849,7 +1849,7 @@ _backup_gst_bayer_merge_gr_abgr (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -1865,8 +1865,8 @@ gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_gr_abgr");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_gr_abgr);
+      orc_program_set_name (p, "bayer_orc_merge_gr_abgr");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_gr_abgr);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -1928,10 +1928,10 @@ gst_bayer_merge_gr_abgr (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_bg_rgba */
+/* bayer_orc_merge_bg_rgba */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -2057,7 +2057,7 @@ gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_bg_rgba (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_bg_rgba (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2180,7 +2180,7 @@ _backup_gst_bayer_merge_bg_rgba (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -2196,8 +2196,8 @@ gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_bg_rgba");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_bg_rgba);
+      orc_program_set_name (p, "bayer_orc_merge_bg_rgba");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_bg_rgba);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -2259,10 +2259,10 @@ gst_bayer_merge_bg_rgba (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_gr_rgba */
+/* bayer_orc_merge_gr_rgba */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -2388,7 +2388,7 @@ gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_gr_rgba (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_gr_rgba (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2511,7 +2511,7 @@ _backup_gst_bayer_merge_gr_rgba (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -2527,8 +2527,8 @@ gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_gr_rgba");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_gr_rgba);
+      orc_program_set_name (p, "bayer_orc_merge_gr_rgba");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_gr_rgba);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -2590,10 +2590,10 @@ gst_bayer_merge_gr_rgba (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_bg_argb */
+/* bayer_orc_merge_bg_argb */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -2719,7 +2719,7 @@ gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_bg_argb (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_bg_argb (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -2842,7 +2842,7 @@ _backup_gst_bayer_merge_bg_argb (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_bg_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -2858,8 +2858,8 @@ gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_bg_argb");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_bg_argb);
+      orc_program_set_name (p, "bayer_orc_merge_bg_argb");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_bg_argb);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
@@ -2921,10 +2921,10 @@ gst_bayer_merge_bg_argb (guint8 * ORC_RESTRICT d1,
 #endif
 
 
-/* gst_bayer_merge_gr_argb */
+/* bayer_orc_merge_gr_argb */
 #ifdef DISABLE_ORC
 void
-gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -3050,7 +3050,7 @@ gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
 
 #else
 static void
-_backup_gst_bayer_merge_gr_argb (OrcExecutor * ORC_RESTRICT ex)
+_backup_bayer_orc_merge_gr_argb (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -3173,7 +3173,7 @@ _backup_gst_bayer_merge_gr_argb (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
+bayer_orc_merge_gr_argb (guint8 * ORC_RESTRICT d1,
     const guint8 * ORC_RESTRICT s1, const guint8 * ORC_RESTRICT s2,
     const guint8 * ORC_RESTRICT s3, const guint8 * ORC_RESTRICT s4,
     const guint8 * ORC_RESTRICT s5, const guint8 * ORC_RESTRICT s6, int n)
@@ -3189,8 +3189,8 @@ gst_bayer_merge_gr_argb (guint8 * ORC_RESTRICT d1,
       OrcProgram *p;
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_bayer_merge_gr_argb");
-      orc_program_set_backup_function (p, _backup_gst_bayer_merge_gr_argb);
+      orc_program_set_name (p, "bayer_orc_merge_gr_argb");
+      orc_program_set_backup_function (p, _backup_bayer_orc_merge_gr_argb);
       orc_program_add_destination (p, 8, "d1");
       orc_program_add_source (p, 2, "s1");
       orc_program_add_source (p, 2, "s2");
