@@ -4444,10 +4444,9 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 
 
 #define gst_avi_demux_is_uncompressed(fourcc)		\
-  (fourcc &&						\
-    (fourcc == GST_RIFF_DIB ||				\
-     fourcc == GST_RIFF_rgb ||				\
-     fourcc == GST_RIFF_RGB || fourcc == GST_RIFF_RAW))
+  (fourcc == GST_RIFF_DIB ||				\
+   fourcc == GST_RIFF_rgb ||				\
+   fourcc == GST_RIFF_RGB || fourcc == GST_RIFF_RAW)
 
 /*
  * Invert DIB buffers... Takes existing buffer and
