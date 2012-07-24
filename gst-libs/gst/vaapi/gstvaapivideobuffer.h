@@ -85,23 +85,34 @@ struct _GstVaapiVideoBufferClass {
 GType
 gst_vaapi_video_buffer_get_type(void) G_GNUC_CONST;
 
+/* Deprecated API. Client applications shall not use the following functions */
+#ifndef GST_VAAPI_DISABLE_DEPRECATED
+
+G_GNUC_DEPRECATED
 GstBuffer *
 gst_vaapi_video_buffer_new(GstVaapiDisplay *display);
 
+G_GNUC_DEPRECATED
 GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
 
+G_GNUC_DEPRECATED
 GstBuffer *
 gst_vaapi_video_buffer_new_from_buffer(GstBuffer *buffer);
 
+G_GNUC_DEPRECATED
 GstBuffer *
 gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image);
 
+G_GNUC_DEPRECATED
 GstBuffer *
 gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface);
 
+G_GNUC_DEPRECATED
 GstBuffer *
 gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
+
+#endif /* GST_VAAPI_DISABLE_DEPRECATED */
 
 GstVaapiDisplay *
 gst_vaapi_video_buffer_get_display(GstVaapiVideoBuffer *buffer);
