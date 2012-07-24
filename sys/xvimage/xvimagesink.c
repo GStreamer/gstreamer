@@ -2775,7 +2775,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->synchronous = FALSE;
   xvimagesink->double_buffer = TRUE;
   xvimagesink->running = FALSE;
-  xvimagesink->keep_aspect = FALSE;
+  xvimagesink->keep_aspect = TRUE;
   xvimagesink->handle_events = TRUE;
   xvimagesink->par = NULL;
   xvimagesink->handle_expose = TRUE;

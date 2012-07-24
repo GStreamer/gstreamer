@@ -1890,7 +1890,7 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->pool = NULL;
 
   ximagesink->synchronous = FALSE;
-  ximagesink->keep_aspect = FALSE;
+  ximagesink->keep_aspect = TRUE;
   ximagesink->handle_events = TRUE;
   ximagesink->handle_expose = TRUE;
 }
