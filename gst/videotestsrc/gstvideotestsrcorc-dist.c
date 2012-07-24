@@ -82,10 +82,7 @@ typedef union
 #ifndef DISABLE_ORC
 #include <orc/orc.h>
 #endif
-void gst_orc_splat_u8 (guint8 * ORC_RESTRICT d1, int p1, int n);
-void gst_orc_splat_s16 (gint8 * ORC_RESTRICT d1, int p1, int n);
-void gst_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n);
-void gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
+void video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
 
 
 /* begin Orc C target preamble */
@@ -132,268 +129,10 @@ void gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
 
 
 
-/* gst_orc_splat_u8 */
+/* video_test_src_orc_splat_u32 */
 #ifdef DISABLE_ORC
 void
-gst_orc_splat_u8 (guint8 * ORC_RESTRICT d1, int p1, int n)
-{
-  int i;
-  orc_int8 *ORC_RESTRICT ptr0;
-  orc_int8 var32;
-  orc_int8 var33;
-
-  ptr0 = (orc_int8 *) d1;
-
-  /* 0: loadpb */
-  var32 = p1;
-
-  for (i = 0; i < n; i++) {
-    /* 1: copyb */
-    var33 = var32;
-    /* 2: storeb */
-    ptr0[i] = var33;
-  }
-
-}
-
-#else
-static void
-_backup_gst_orc_splat_u8 (OrcExecutor * ORC_RESTRICT ex)
-{
-  int i;
-  int n = ex->n;
-  orc_int8 *ORC_RESTRICT ptr0;
-  orc_int8 var32;
-  orc_int8 var33;
-
-  ptr0 = (orc_int8 *) ex->arrays[0];
-
-  /* 0: loadpb */
-  var32 = ex->params[24];
-
-  for (i = 0; i < n; i++) {
-    /* 1: copyb */
-    var33 = var32;
-    /* 2: storeb */
-    ptr0[i] = var33;
-  }
-
-}
-
-void
-gst_orc_splat_u8 (guint8 * ORC_RESTRICT d1, int p1, int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "gst_orc_splat_u8");
-      orc_program_set_backup_function (p, _backup_gst_orc_splat_u8);
-      orc_program_add_destination (p, 1, "d1");
-      orc_program_add_parameter (p, 1, "p1");
-
-      orc_program_append_2 (p, "copyb", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-          ORC_VAR_D1);
-
-      orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->params[ORC_VAR_P1] = p1;
-
-  func = p->code_exec;
-  func (ex);
-}
-#endif
-
-
-/* gst_orc_splat_s16 */
-#ifdef DISABLE_ORC
-void
-gst_orc_splat_s16 (gint8 * ORC_RESTRICT d1, int p1, int n)
-{
-  int i;
-  orc_union16 *ORC_RESTRICT ptr0;
-  orc_union16 var32;
-  orc_union16 var33;
-
-  ptr0 = (orc_union16 *) d1;
-
-  /* 0: loadpw */
-  var32.i = p1;
-
-  for (i = 0; i < n; i++) {
-    /* 1: copyw */
-    var33.i = var32.i;
-    /* 2: storew */
-    ptr0[i] = var33;
-  }
-
-}
-
-#else
-static void
-_backup_gst_orc_splat_s16 (OrcExecutor * ORC_RESTRICT ex)
-{
-  int i;
-  int n = ex->n;
-  orc_union16 *ORC_RESTRICT ptr0;
-  orc_union16 var32;
-  orc_union16 var33;
-
-  ptr0 = (orc_union16 *) ex->arrays[0];
-
-  /* 0: loadpw */
-  var32.i = ex->params[24];
-
-  for (i = 0; i < n; i++) {
-    /* 1: copyw */
-    var33.i = var32.i;
-    /* 2: storew */
-    ptr0[i] = var33;
-  }
-
-}
-
-void
-gst_orc_splat_s16 (gint8 * ORC_RESTRICT d1, int p1, int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "gst_orc_splat_s16");
-      orc_program_set_backup_function (p, _backup_gst_orc_splat_s16);
-      orc_program_add_destination (p, 2, "d1");
-      orc_program_add_parameter (p, 2, "p1");
-
-      orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-          ORC_VAR_D1);
-
-      orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->params[ORC_VAR_P1] = p1;
-
-  func = p->code_exec;
-  func (ex);
-}
-#endif
-
-
-/* gst_orc_splat_u16 */
-#ifdef DISABLE_ORC
-void
-gst_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n)
-{
-  int i;
-  orc_union16 *ORC_RESTRICT ptr0;
-  orc_union16 var32;
-  orc_union16 var33;
-
-  ptr0 = (orc_union16 *) d1;
-
-  /* 0: loadpw */
-  var32.i = p1;
-
-  for (i = 0; i < n; i++) {
-    /* 1: copyw */
-    var33.i = var32.i;
-    /* 2: storew */
-    ptr0[i] = var33;
-  }
-
-}
-
-#else
-static void
-_backup_gst_orc_splat_u16 (OrcExecutor * ORC_RESTRICT ex)
-{
-  int i;
-  int n = ex->n;
-  orc_union16 *ORC_RESTRICT ptr0;
-  orc_union16 var32;
-  orc_union16 var33;
-
-  ptr0 = (orc_union16 *) ex->arrays[0];
-
-  /* 0: loadpw */
-  var32.i = ex->params[24];
-
-  for (i = 0; i < n; i++) {
-    /* 1: copyw */
-    var33.i = var32.i;
-    /* 2: storew */
-    ptr0[i] = var33;
-  }
-
-}
-
-void
-gst_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n)
-{
-  OrcExecutor _ex, *ex = &_ex;
-  static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
-  void (*func) (OrcExecutor *);
-
-  if (!p_inited) {
-    orc_once_mutex_lock ();
-    if (!p_inited) {
-
-      p = orc_program_new ();
-      orc_program_set_name (p, "gst_orc_splat_u16");
-      orc_program_set_backup_function (p, _backup_gst_orc_splat_u16);
-      orc_program_add_destination (p, 2, "d1");
-      orc_program_add_parameter (p, 2, "p1");
-
-      orc_program_append_2 (p, "copyw", 0, ORC_VAR_D1, ORC_VAR_P1, ORC_VAR_D1,
-          ORC_VAR_D1);
-
-      orc_program_compile (p);
-    }
-    p_inited = TRUE;
-    orc_once_mutex_unlock ();
-  }
-  ex->program = p;
-
-  ex->n = n;
-  ex->arrays[ORC_VAR_D1] = d1;
-  ex->params[ORC_VAR_P1] = p1;
-
-  func = p->code_exec;
-  func (ex);
-}
-#endif
-
-
-/* gst_orc_splat_u32 */
-#ifdef DISABLE_ORC
-void
-gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
+video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   int i;
   orc_union32 *ORC_RESTRICT ptr0;
@@ -416,7 +155,7 @@ gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 
 #else
 static void
-_backup_gst_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
+_backup_video_test_src_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
 {
   int i;
   int n = ex->n;
@@ -439,7 +178,7 @@ _backup_gst_orc_splat_u32 (OrcExecutor * ORC_RESTRICT ex)
 }
 
 void
-gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
+video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
@@ -451,8 +190,8 @@ gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
     if (!p_inited) {
 
       p = orc_program_new ();
-      orc_program_set_name (p, "gst_orc_splat_u32");
-      orc_program_set_backup_function (p, _backup_gst_orc_splat_u32);
+      orc_program_set_name (p, "video_test_src_orc_splat_u32");
+      orc_program_set_backup_function (p, _backup_video_test_src_orc_splat_u32);
       orc_program_add_destination (p, 4, "d1");
       orc_program_add_parameter (p, 4, "p1");
 

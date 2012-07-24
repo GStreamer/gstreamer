@@ -1109,7 +1109,7 @@ paint_tmpline_ARGB (paintinfo * p, int x, int w)
 #endif
 
   offset = (x * 4);
-  gst_orc_splat_u32 (p->tmpline + offset, value, w);
+  video_test_src_orc_splat_u32 (p->tmpline + offset, value, w);
 }
 
 static void
@@ -1127,7 +1127,7 @@ paint_tmpline_AYUV (paintinfo * p, int x, int w)
 #endif
 
   offset = (x * 4);
-  gst_orc_splat_u32 (p->tmpline + offset, value, w);
+  video_test_src_orc_splat_u32 (p->tmpline + offset, value, w);
 }
 
 static void

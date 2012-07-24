@@ -67,10 +67,7 @@ typedef union { orc_int64 i; double f; orc_int32 x2[2]; float x2f[2]; orc_int16 
 #define ORC_RESTRICT
 #endif
 #endif
-void gst_orc_splat_u8 (guint8 * ORC_RESTRICT d1, int p1, int n);
-void gst_orc_splat_s16 (gint8 * ORC_RESTRICT d1, int p1, int n);
-void gst_orc_splat_u16 (guint8 * ORC_RESTRICT d1, int p1, int n);
-void gst_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
+void video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n);
 
 #ifdef __cplusplus
 }
