@@ -309,8 +309,15 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
     if (!cs)
         goto error;
 
-    cs->display         = dpy;
-    cs->window          = parent ? parent->window : None;
+    if (parent) {
+        cs->display     = parent->display;
+        cs->window      = parent->window;
+        screen          = DefaultScreen(parent->display);
+    }
+    else {
+        cs->display     = dpy;
+        cs->window      = None;
+    }
     cs->visual          = NULL;
     cs->context         = NULL;
     cs->swapped_buffers = FALSE;
@@ -327,14 +334,14 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
         if (fbconfig_id == GLX_DONT_CARE)
             goto choose_fbconfig;
 
-        fbconfigs = glXGetFBConfigs(dpy, screen, &n_fbconfigs);
+        fbconfigs = glXGetFBConfigs(parent->display, screen, &n_fbconfigs);
         if (!fbconfigs)
             goto error;
 
         /* Find out a GLXFBConfig compatible with the parent context */
         for (n = 0; n < n_fbconfigs; n++) {
             status = glXGetFBConfigAttrib(
-                dpy,
+                parent->display,
                 fbconfigs[n],
                 GLX_FBCONFIG_ID, &val
             );
@@ -347,7 +354,7 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
     else {
     choose_fbconfig:
         fbconfigs = glXChooseFBConfig(
-            dpy,
+            cs->display,
             screen,
             fbconfig_attrs, &n_fbconfigs
         );
@@ -358,9 +365,9 @@ gl_create_context(Display *dpy, int screen, GLContextState *parent)
         n = 0;
     }
 
-    cs->visual  = glXGetVisualFromFBConfig(dpy, fbconfigs[n]);
+    cs->visual  = glXGetVisualFromFBConfig(cs->display, fbconfigs[n]);
     cs->context = glXCreateNewContext(
-        dpy,
+        cs->display,
         fbconfigs[n],
         GLX_RGBA_TYPE,
         parent ? parent->context : NULL,
