@@ -333,10 +333,17 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink, GstBuffer * xvimage)
   }
 
   if (xvimagesink->keep_aspect) {
+    GstVideoRectangle s;
+
+    /* We take the size of the source material as it was negotiated and
+     * corrected for DAR. This size can be different from the cropped size in
+     * which case the image will be scaled to fit the negotiated size. */
+    s.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
+    s.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
     dst.w = xvimagesink->render_rect.w;
     dst.h = xvimagesink->render_rect.h;
 
-    gst_video_sink_center_rect (src, dst, &result, TRUE);
+    gst_video_sink_center_rect (s, dst, &result, TRUE);
     result.x += xvimagesink->render_rect.x;
     result.y += xvimagesink->render_rect.y;
   } else {
