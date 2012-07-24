@@ -258,6 +258,8 @@ GstVideoCodecState*  gst_video_encoder_set_output_state (GstVideoEncoder * encod
 							 GstCaps * caps,
 							 GstVideoCodecState * reference);
 
+gboolean             gst_video_encoder_negotiate        (GstVideoEncoder * encoder);
+
 GstVideoCodecFrame*  gst_video_encoder_get_frame        (GstVideoEncoder *encoder,
 						         int frame_number);
 GstVideoCodecFrame*  gst_video_encoder_get_oldest_frame (GstVideoEncoder *encoder);

@@ -1317,8 +1317,16 @@ close_failed:
   }
 }
 
-static gboolean
-gst_video_encoder_set_src_caps (GstVideoEncoder * encoder)
+/**
+ * gst_video_encoder_negotiate:
+ * @encoder: a #GstVideoEncoder
+ *
+ * Negotiate with downstream elements to currently configured #GstVideoCodecState.
+ *
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
+gboolean
+gst_video_encoder_negotiate (GstVideoEncoder * encoder)
 {
   GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
   GstAllocator *allocator;
@@ -1422,7 +1430,7 @@ gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder, gsize size)
   if (G_UNLIKELY (encoder->priv->output_state_changed
           || (encoder->priv->output_state
               && gst_pad_check_reconfigure (encoder->srcpad))))
-    gst_video_encoder_set_src_caps (encoder);
+    gst_video_encoder_negotiate (encoder);
 
   buffer =
       gst_buffer_new_allocate (encoder->priv->allocator, size,
@@ -1459,7 +1467,7 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
   if (G_UNLIKELY (encoder->priv->output_state_changed
           || (encoder->priv->output_state
               && gst_pad_check_reconfigure (encoder->srcpad))))
-    gst_video_encoder_set_src_caps (encoder);
+    gst_video_encoder_negotiate (encoder);
 
   GST_LOG_OBJECT (encoder, "alloc buffer size %d", size);
 
@@ -1509,7 +1517,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
               && gst_pad_check_reconfigure (encoder->srcpad))))
-    gst_video_encoder_set_src_caps (encoder);
+    gst_video_encoder_negotiate (encoder);
 
 
   if (G_UNLIKELY (priv->output_state == NULL))
