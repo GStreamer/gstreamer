@@ -85,7 +85,7 @@ enum
 #define GST_DEINTERLACE_BUFFER_STATE_TC_T (1<<3)
 #define GST_DEINTERLACE_BUFFER_STATE_TC_P (1<<4)
 #define GST_DEINTERLACE_BUFFER_STATE_TC_M (1<<5)
-#define GST_DEINTERLACE_BUFFER_STATE_DROP (1<<6)
+#define GST_DEINTERLACE_BUFFER_STATE_RFF  (1<<6)
 
 #define GST_ONE \
   (GST_DEINTERLACE_BUFFER_STATE_TC_T | GST_DEINTERLACE_BUFFER_STATE_TC_B)
@@ -93,7 +93,7 @@ enum
   (GST_DEINTERLACE_BUFFER_STATE_P | GST_DEINTERLACE_BUFFER_STATE_TC_P)
 #define GST_INT \
   (GST_DEINTERLACE_BUFFER_STATE_I | GST_DEINTERLACE_BUFFER_STATE_TC_M)
-#define GST_DRP (GST_DEINTERLACE_BUFFER_STATE_DROP)
+#define GST_RFF (GST_DEINTERLACE_BUFFER_STATE_RFF)
 
 #define GST_DEINTERLACE_OBSCURE_THRESHOLD 5
 
@@ -103,9 +103,14 @@ static const TelecinePattern telecine_patterns[] = {
   /* 60i -> 30p or 50i -> 25p */
   {"2:2", 1, 1, 1, {GST_INT,}},
   /* 60i telecine -> 24p */
+  {"2:3-RFF", 4, 4, 5, {GST_PRG, GST_RFF, GST_PRG, GST_RFF,}},
   {"2:3", 5, 4, 5, {GST_PRG, GST_PRG, GST_ONE, GST_ONE, GST_PRG,}},
+  {"3:2:2:3-RFF", 4, 4, 5, {GST_RFF, GST_PRG, GST_PRG, GST_RFF,}},
   {"3:2:2:3", 5, 4, 5, {GST_PRG, GST_ONE, GST_INT, GST_ONE, GST_PRG,}},
-  {"2:3:3:2", 5, 4, 5, {GST_PRG, GST_PRG, GST_DRP, GST_PRG, GST_PRG,}},
+  /* fieldanalysis should indicate this using RFF on the second and fourth
+   * buffers and not send the third buffer at all. it will be identified as
+   * 3:2:2:3-RFF */
+  /* {"2:3:3:2", 5, 4, 5, {GST_PRG, GST_PRG, GST_DRP, GST_PRG, GST_PRG,}}, */
 
   /* The following patterns are obscure and are ignored if ignore-obscure is
    * set to true. If any patterns are added above this line, check and edit
@@ -117,6 +122,7 @@ static const TelecinePattern telecine_patterns[] = {
               GST_PRG, GST_PRG, GST_ONE, GST_INT, GST_INT,
               GST_INT, GST_INT, GST_INT, GST_INT, GST_INT,
           GST_INT, GST_INT, GST_INT, GST_ONE, GST_PRG,}},
+#if 0
   /* 60i (NTSC 30000/1001) -> 16p (16000/1001) */
   {"3:4-3", 15, 8, 15, {GST_PRG, GST_DRP, GST_PRG, GST_DRP, GST_PRG,
               GST_DRP, GST_PRG, GST_DRP, GST_PRG, GST_DRP,
@@ -131,6 +137,7 @@ static const TelecinePattern telecine_patterns[] = {
   {"3:3:4", 5, 3, 5, {GST_PRG, GST_DRP, GST_PRG, GST_DRP, GST_PRG,}},
   /* NTSC 60i -> 20p */
   {"3:3", 3, 2, 3, {GST_PRG, GST_DRP, GST_PRG,}},
+#endif
   /* NTSC 60i -> 27.5 */
   {"3:2-4", 11, 10, 11, {GST_PRG, GST_PRG, GST_PRG, GST_PRG, GST_PRG,
               GST_PRG, GST_ONE, GST_INT, GST_INT, GST_INT,
@@ -967,10 +974,17 @@ gst_deinterlace_update_pattern_timestamps (GstDeinterlace * self)
   }
 
   self->pattern_base_ts = self->buf_states[state_idx].timestamp;
-  self->pattern_buf_dur =
-      (self->buf_states[state_idx].duration *
-      telecine_patterns[self->pattern].ratio_d) /
-      telecine_patterns[self->pattern].ratio_n;
+  if (self->buf_states[state_idx].state != GST_RFF) {
+    self->pattern_buf_dur =
+        (self->buf_states[state_idx].duration *
+        telecine_patterns[self->pattern].ratio_d) /
+        telecine_patterns[self->pattern].ratio_n;
+  } else {
+    self->pattern_buf_dur =
+        (self->buf_states[state_idx].duration *
+        telecine_patterns[self->pattern].ratio_d * 2) /
+        (telecine_patterns[self->pattern].ratio_n * 3);
+  }
   GST_DEBUG_OBJECT (self,
       "Starting a new pattern repeat with base ts %" GST_TIME_FORMAT
       " and dur %" GST_TIME_FORMAT, GST_TIME_ARGS (self->pattern_base_ts),
@@ -1030,7 +1044,7 @@ gst_deinterlace_get_buffer_state (GstDeinterlace * self, GstVideoFrame * frame,
   if (state) {
     if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED) {
       if (GST_VIDEO_FRAME_IS_RFF (frame)) {
-        *state = GST_DEINTERLACE_BUFFER_STATE_DROP;
+        *state = GST_DEINTERLACE_BUFFER_STATE_RFF;
       } else if (GST_VIDEO_FRAME_IS_ONEFIELD (frame)) {
         /* tc top if tff, tc bottom otherwise */
         if (GST_VIDEO_FRAME_IS_TFF (frame)) {
@@ -1062,7 +1076,6 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   int i = 1;
   GstClockTime timestamp;
   GstDeinterlaceFieldLayout field_layout = self->field_layout;
-  gboolean repeated;
   gboolean tff;
   gboolean onefield;
   GstVideoFrame *frame = NULL;
@@ -1079,10 +1092,9 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   /* we can manage the buffer ref count using the maps from here on */
   gst_buffer_unref (buffer);
 
-  repeated = GST_VIDEO_FRAME_IS_RFF (frame);
   tff = GST_VIDEO_FRAME_IS_TFF (frame);
   onefield = GST_VIDEO_FRAME_IS_ONEFIELD (frame);
-  fields_to_push = (onefield) ? 1 : (!repeated) ? 2 : 3;
+  fields_to_push = (onefield) ? 1 : 2;
 
   g_return_if_fail (self->history_count <
       GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push);
@@ -1110,21 +1122,6 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   self->buf_states[0].duration = GST_BUFFER_DURATION (buffer);
   if (self->state_count < GST_DEINTERLACE_MAX_BUFFER_STATE_HISTORY)
     self->state_count++;
-
-  if (buf_state == GST_DEINTERLACE_BUFFER_STATE_DROP) {
-    GST_DEBUG_OBJECT (self,
-        "Buffer contains only unneeded repeated fields, dropping and not"
-        "adding to field history");
-    gst_video_frame_unmap_and_free (frame);
-    return;
-  }
-
-  /* telecine does not make use of repeated fields */
-  if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED && repeated) {
-    repeated = FALSE;
-    if (!onefield)
-      fields_to_push = 2;
-  }
 
   for (i = GST_DEINTERLACE_MAX_FIELD_HISTORY - 1; i >= fields_to_push; i--) {
     self->field_history[i].frame =
@@ -1156,30 +1153,16 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
     field2_flags = PICTURE_INTERLACED_TOP;
   }
 
-  if (interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED) {
+  if (interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED || self->pattern <= 1) {
     /* Timestamps are assigned to the field buffers under the assumption that
        the timestamp of the buffer equals the first fields timestamp */
 
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_TIMESTAMP (field1) = timestamp;
     GST_BUFFER_TIMESTAMP (field2) = timestamp + self->field_duration;
-    if (repeated)
-      GST_BUFFER_TIMESTAMP (field2) += self->field_duration;
   }
 
-  if (repeated) {
-    GST_DEBUG_OBJECT (self, "Repeated field");
-    self->field_history[2].frame = field1;
-    self->field_history[2].flags = field1_flags;
-
-    self->field_history[1].frame = field2;
-    self->field_history[1].flags = field2_flags;
-
-    gst_video_frame_copy (self->field_history[0].frame, field1);
-    GST_BUFFER_TIMESTAMP (self->field_history[0].frame->buffer) +=
-        2 * self->field_duration;
-    self->field_history[0].flags = field1_flags;
-  } else if (!onefield) {
+  if (!onefield) {
     GST_DEBUG_OBJECT (self, "Two fields");
     self->field_history[1].frame = field1;
     self->field_history[1].flags = field1_flags;
@@ -1465,7 +1448,10 @@ gst_deinterlace_get_pattern_lock (GstDeinterlace * self, gboolean * flush_one)
     do {
       if (state & GST_ONE) {
         field_count++;
+#if 0
       } else if (!(state & GST_DRP)) {
+#endif
+      } else {
         field_count += 2;
       }
       i++;
@@ -1538,6 +1524,13 @@ restart:
 
     if (self->pattern == -1 || self->pattern_refresh
         || !(buf_state & pattern.states[(phase + count) % pattern.length])) {
+      if (self->pattern == -1) {
+        GST_DEBUG_OBJECT (self, "No pattern lock - refresh lock");
+      } else if (self->pattern_refresh) {
+        GST_DEBUG_OBJECT (self, "Pattern refresh - refresh lock");
+      } else {
+        GST_DEBUG_OBJECT (self, "Unexpected buffer state - refresh lock");
+      }
       /* no pattern, pattern refresh set or unexpected buffer state */
       self->pattern_lock = FALSE;
       self->pattern_refresh = TRUE;
