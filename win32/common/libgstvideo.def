@@ -73,8 +73,8 @@ EXPORTS
 	gst_video_crop_meta_api_get_type
 	gst_video_crop_meta_get_info
 	gst_video_decoder_add_to_frame
-	gst_video_decoder_alloc_output_buffer
-	gst_video_decoder_alloc_output_frame
+	gst_video_decoder_allocate_output_buffer
+	gst_video_decoder_allocate_output_frame
 	gst_video_decoder_drop_frame
 	gst_video_decoder_finish_frame
 	gst_video_decoder_get_estimate_rate
@@ -93,14 +93,15 @@ EXPORTS
 	gst_video_decoder_set_max_errors
 	gst_video_decoder_set_output_state
 	gst_video_decoder_set_packetized
-	gst_video_encoder_alloc_output_buffer
-	gst_video_encoder_alloc_output_frame
+	gst_video_encoder_allocate_output_buffer
+	gst_video_encoder_allocate_output_frame
 	gst_video_encoder_finish_frame
 	gst_video_encoder_get_frame
 	gst_video_encoder_get_latency
 	gst_video_encoder_get_oldest_frame
 	gst_video_encoder_get_output_state
 	gst_video_encoder_get_type
+	gst_video_encoder_negotiate
 	gst_video_encoder_proxy_getcaps
 	gst_video_encoder_set_headers
 	gst_video_encoder_set_latency

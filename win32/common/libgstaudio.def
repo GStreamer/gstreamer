@@ -36,6 +36,7 @@ EXPORTS
 	gst_audio_clock_invalidate
 	gst_audio_clock_new
 	gst_audio_clock_reset
+	gst_audio_decoder_allocate_output_buffer
 	gst_audio_decoder_finish_frame
 	gst_audio_decoder_get_audio_info
 	gst_audio_decoder_get_delay
@@ -63,6 +64,7 @@ EXPORTS
 	gst_audio_decoder_set_tolerance
 	gst_audio_downmix_meta_api_get_type
 	gst_audio_downmix_meta_get_info
+	gst_audio_encoder_allocate_output_buffer
 	gst_audio_encoder_finish_frame
 	gst_audio_encoder_get_audio_info
 	gst_audio_encoder_get_drainable
