@@ -640,9 +640,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   if (delta_unit)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  /* copy packet in buffer */
-  gst_buffer_fill (buf, 0, packet->packet + offset,
-      packet->bytes - offset - trim);
+  if (packet->packet != NULL) {
+    /* copy packet in buffer */
+    gst_buffer_fill (buf, 0, packet->packet + offset,
+        packet->bytes - offset - trim);
+  }
 
   GST_BUFFER_TIMESTAMP (buf) = out_timestamp;
   GST_BUFFER_DURATION (buf) = out_duration;
