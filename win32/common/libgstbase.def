@@ -213,12 +213,9 @@ EXPORTS
 	gst_collect_pads_add_pad_full
 	gst_collect_pads_available
 	gst_collect_pads_clip_running_time
-	gst_collect_pads_collect
-	gst_collect_pads_collect_range
 	gst_collect_pads_event_default
 	gst_collect_pads_flush
 	gst_collect_pads_get_type
-	gst_collect_pads_is_active
 	gst_collect_pads_new
 	gst_collect_pads_peek
 	gst_collect_pads_pop

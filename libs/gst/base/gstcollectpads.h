@@ -318,12 +318,8 @@ GstCollectData* gst_collect_pads_add_pad_full (GstCollectPads *pads, GstPad *pad
                                                  GstCollectDataDestroyNotify destroy_notify,
                                                  gboolean lock);
 gboolean        gst_collect_pads_remove_pad    (GstCollectPads *pads, GstPad *pad);
-gboolean        gst_collect_pads_is_active     (GstCollectPads *pads, GstPad *pad);
 
 /* start/stop collection */
-GstFlowReturn   gst_collect_pads_collect       (GstCollectPads *pads);
-GstFlowReturn   gst_collect_pads_collect_range (GstCollectPads *pads, guint64 offset, guint length);
-
 void            gst_collect_pads_start         (GstCollectPads *pads);
 void            gst_collect_pads_stop          (GstCollectPads *pads);
 void            gst_collect_pads_set_flushing  (GstCollectPads *pads, gboolean flushing);

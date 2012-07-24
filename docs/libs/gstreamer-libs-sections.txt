@@ -648,10 +648,6 @@ gst_collect_pads_start
 gst_collect_pads_stop
 
 gst_collect_pads_available
-gst_collect_pads_is_active
-
-gst_collect_pads_collect
-gst_collect_pads_collect_range
 
 gst_collect_pads_flush
 gst_collect_pads_peek
