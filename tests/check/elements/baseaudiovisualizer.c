@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <string.h>
 
-#include "gstbaseaudiovisualizer.h"
+#include "gstaudiovisualizer.h"
 
 /* dummy subclass for testing */
 
@@ -36,12 +36,12 @@ typedef struct _GstTestScopeClass GstTestScopeClass;
 
 struct _GstTestScope
 {
-  GstBaseAudioVisualizer parent;
+  GstAudioVisualizer parent;
 };
 
 struct _GstTestScopeClass
 {
-  GstBaseAudioVisualizerClass parent_class;
+  GstAudioVisualizerClass parent_class;
 };
 
 static GstStaticPadTemplate gst_test_scope_src_template =
@@ -64,7 +64,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 static GType gst_test_scope_get_type (void);
 
-G_DEFINE_TYPE (GstTestScope, gst_test_scope, GST_TYPE_BASE_AUDIO_VISUALIZER);
+G_DEFINE_TYPE (GstTestScope, gst_test_scope, GST_TYPE_AUDIO_VISUALIZER);
 
 static void
 gst_test_scope_class_init (GstTestScopeClass * g_class)
