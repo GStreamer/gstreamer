@@ -4463,11 +4463,14 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
   guint8 *tmp = NULL;
   GstMapInfo map;
   GstCaps *caps;
+  guint32 fourcc;
 
   if (stream->strh->type != GST_RIFF_FCC_vids)
     return buf;
 
-  if (!gst_avi_demux_is_uncompressed (stream->strh->fcc_handler)) {
+  fourcc = (stream->strf.vids->compression) ?
+      stream->strf.vids->compression : stream->strh->fcc_handler;
+  if (!gst_avi_demux_is_uncompressed (fourcc)) {
     return buf;                 /* Ignore non DIB buffers */
   }
 
