@@ -616,7 +616,7 @@ gst_toc_entry_append_sub_entry (GstTocEntry * entry, GstTocEntry * subentry)
 }
 
 /**
- * gst_toc_entry_get_uid:
+ * gst_toc_entry_get_sub_entries:
  * @entry: A #GstTocEntry instance
  *
  * Gets the sub-entries of @entry.
