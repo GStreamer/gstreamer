@@ -2459,6 +2459,8 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
 void
 mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
 {
+  GST_DEBUG ("Flushing");
+
   if (packetizer->streams) {
     int i;
     for (i = 0; i < 8192; i++) {
@@ -2606,6 +2608,7 @@ MpegTSPacketizerPacketReturn
 mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
   guint avail;
   int i;
 
@@ -2614,17 +2617,15 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
       return PACKET_NEED_MORE;
   }
 
-  while ((avail = packetizer->priv->available) >= packetizer->packet_size) {
-    if (packetizer->priv->mapped == NULL) {
-      packetizer->priv->mapped_size =
-          packetizer->priv->available -
-          (packetizer->priv->available % packetizer->packet_size);
-      packetizer->priv->mapped =
-          (guint8 *) gst_adapter_map (packetizer->adapter,
-          packetizer->priv->mapped_size);
-      packetizer->priv->offset = 0;
+  while ((avail = priv->available) >= packetizer->packet_size) {
+    if (priv->mapped == NULL) {
+      priv->mapped_size =
+          priv->available - (priv->available % packetizer->packet_size);
+      priv->mapped =
+          (guint8 *) gst_adapter_map (packetizer->adapter, priv->mapped_size);
+      priv->offset = 0;
     }
-    packet->data_start = packetizer->priv->mapped + packetizer->priv->offset;
+    packet->data_start = priv->mapped + priv->offset;
 
     /* M2TS packets don't start with the sync byte, all other variants do */
     if (packetizer->packet_size == MPEGTS_M2TS_PACKETSIZE)
@@ -2638,7 +2639,7 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
     GST_LOG ("offset %" G_GUINT64_FORMAT, packet->offset);
     packetizer->offset += packetizer->packet_size;
     GST_MEMDUMP ("data_start", packet->data_start, 16);
-    packet->origts = packetizer->priv->last_in_time;
+    packet->origts = priv->last_in_time;
 
     /* Check sync byte */
     if (G_LIKELY (packet->data_start[0] == 0x47))
@@ -2658,13 +2659,15 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
         i += 188;
     }
 
-    gst_adapter_flush (packetizer->adapter, i);
+    GST_DEBUG ("Flushing %d bytes out", i);
+    /* gst_adapter_flush (packetizer->adapter, i); */
     /* Pop out the remaining data... */
-    packetizer->priv->offset += i;
-    packetizer->priv->available -= i;
-    if (G_UNLIKELY (packetizer->priv->available < packetizer->packet_size)) {
-      gst_adapter_flush (packetizer->adapter, packetizer->priv->offset);
-      packetizer->priv->mapped = NULL;
+    priv->offset += i;
+    priv->available -= i;
+    if (G_UNLIKELY (priv->available < packetizer->packet_size)) {
+      GST_DEBUG ("Flushing %d bytes out", priv->offset);
+      gst_adapter_flush (packetizer->adapter, priv->offset);
+      priv->mapped = NULL;
     }
     continue;
   }
@@ -2697,11 +2700,14 @@ void
 mpegts_packetizer_clear_packet (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
-  packetizer->priv->offset += packetizer->packet_size;
-  packetizer->priv->available -= packetizer->packet_size;
-  if (G_UNLIKELY (packetizer->priv->available < packetizer->packet_size)) {
-    gst_adapter_flush (packetizer->adapter, packetizer->priv->offset);
-    packetizer->priv->mapped = NULL;
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+
+  priv->offset += packetizer->packet_size;
+  priv->available -= packetizer->packet_size;
+
+  if (G_UNLIKELY (priv->mapped && priv->available < packetizer->packet_size)) {
+    gst_adapter_flush (packetizer->adapter, priv->offset);
+    priv->mapped = NULL;
   }
 }
 
