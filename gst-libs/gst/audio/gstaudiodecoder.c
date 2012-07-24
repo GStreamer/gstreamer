@@ -913,7 +913,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  if (G_UNLIKELY (gst_pad_check_reconfigure (dec->srcpad))) {
+  if (G_UNLIKELY (buf && gst_pad_check_reconfigure (dec->srcpad))) {
     if (!gst_audio_decoder_set_output_format (dec, &ctx->info)) {
       ret = GST_FLOW_NOT_NEGOTIATED;
       goto exit;
