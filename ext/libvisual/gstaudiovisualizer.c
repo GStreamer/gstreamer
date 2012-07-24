@@ -703,6 +703,8 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
   gst_structure_fixate_field_nearest_fraction (structure, "framerate",
       scope->fps_n, scope->fps_d);
 
+  target = gst_caps_fixate (target);
+
   GST_DEBUG_OBJECT (scope, "final caps are %" GST_PTR_FORMAT, target);
 
   gst_audio_visualizer_src_setcaps (scope, target);
