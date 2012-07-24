@@ -44,6 +44,15 @@ enum {
     PROP_WL_DISPLAY
 };
 
+#define NAME_PREFIX "WLD:"
+#define NAME_PREFIX_LENGTH 4
+
+static inline gboolean
+is_display_name(const gchar *display_name)
+{
+    return strncmp(display_name, NAME_PREFIX, NAME_PREFIX_LENGTH) == 0;
+}
+
 static inline const gchar *
 get_default_display_name(void)
 {
@@ -54,28 +63,39 @@ get_default_display_name(void)
     return g_display_name;
 }
 
+static inline guint
+get_display_name_length(const gchar *display_name)
+{
+    const gchar *str;
+
+    str = strchr(display_name, '-');
+    if (str)
+        return str - display_name;
+    return strlen(display_name);
+}
+
 static gboolean
 compare_display_name(gconstpointer a, gconstpointer b, gpointer user_data)
 {
-    const gchar *display_name;
+    const gchar *cached_name = a;
+    const gchar *tested_name = b;
+    guint cached_name_length, tested_name_length;
 
-    /* XXX: handle screen number? */
-    if (a && b)
-        return strcmp(a, b) == 0;
+    if (!cached_name || !is_display_name(cached_name))
+        return FALSE;
+    cached_name += NAME_PREFIX_LENGTH;
+    cached_name_length = get_display_name_length(cached_name);
 
-    /* Match "" or default display name */
-    if (a)
-        display_name = a;
-    else if (b)
-        display_name = b;
-    else
-        return TRUE;
+    g_return_val_if_fail(tested_name && is_display_name(tested_name), FALSE);
+    tested_name += NAME_PREFIX_LENGTH;
+    tested_name_length = get_display_name_length(tested_name);
 
-    if (*display_name == '\0')
-        return TRUE;
-    if (strcmp(display_name, get_default_display_name()) == 0)
-        return TRUE;
-    return FALSE;
+    /* XXX: handle screen number and default WAYLAND_DISPLAY name */
+    if (cached_name_length != tested_name_length)
+        return FALSE;
+    if (strncmp(cached_name, tested_name, cached_name_length) != 0)
+        return FALSE;
+    return TRUE;
 }
 
 static void
@@ -84,6 +104,29 @@ gst_vaapi_display_wayland_finalize(GObject *object)
     G_OBJECT_CLASS(gst_vaapi_display_wayland_parent_class)->finalize(object);
 }
 
+/* Reconstruct a display name without our prefix */
+static const gchar *
+get_display_name(gpointer ptr)
+{
+    GstVaapiDisplayWayland * const display = GST_VAAPI_DISPLAY_WAYLAND(ptr);
+    const gchar *display_name = display->priv->display_name;
+
+    if (!display_name)
+        return NULL;
+
+    if (is_display_name(display_name)) {
+        display_name += NAME_PREFIX_LENGTH;
+        if (*display_name == '\0')
+            return NULL;
+        return display_name;
+    }
+
+    /* XXX: this should not happen */
+    g_assert(0 && "display name without prefix");
+    return display_name;
+}
+
+/* Mangle display name with our prefix */
 static void
 set_display_name(GstVaapiDisplayWayland *display, const gchar *display_name)
 {
@@ -91,10 +134,12 @@ set_display_name(GstVaapiDisplayWayland *display, const gchar *display_name)
 
     g_free(priv->display_name);
 
-    if (display_name)
-        priv->display_name = g_strdup(display_name);
-    else
-        priv->display_name = NULL;
+    if (!display_name) {
+        display_name = get_default_display_name();
+        if (!display_name)
+            display_name = "";
+    }
+    priv->display_name = g_strdup_printf("%s%s", NAME_PREFIX, display_name);
 }
 
 static void
@@ -131,7 +176,7 @@ gst_vaapi_display_wayland_get_property(
 
     switch (prop_id) {
     case PROP_DISPLAY_NAME:
-        g_value_set_string(value, display->priv->display_name);
+        g_value_set_string(value, get_display_name(display));
         break;
     case PROP_WL_DISPLAY:
         g_value_set_pointer(value, gst_vaapi_display_wayland_get_display(display));
@@ -150,7 +195,6 @@ gst_vaapi_display_wayland_constructed(GObject *object)
     GstVaapiDisplayCache * const cache = gst_vaapi_display_get_cache();
     const GstVaapiDisplayInfo *info;
     GObjectClass *parent_class;
-    const gchar *display_name;
 
     priv->create_display = priv->wl_display == NULL;
 
@@ -169,10 +213,9 @@ gst_vaapi_display_wayland_constructed(GObject *object)
 
     /* Reset display-name if the user provided his own Wayland display */
     if (!priv->create_display) {
-        /* XXX: get socket name */
+        /* XXX: how to get socket/display name? */
         GST_WARNING("wayland: get display name");
-        display_name = NULL;
-        set_display_name(display, display_name);
+        set_display_name(display, NULL);
     }
 
     parent_class = G_OBJECT_CLASS(gst_vaapi_display_wayland_parent_class);
@@ -215,7 +258,7 @@ gst_vaapi_display_wayland_open_display(GstVaapiDisplay * display)
     if (!priv->create_display)
         return priv->wl_display != NULL;
 
-    priv->wl_display = wl_display_connect(priv->display_name);
+    priv->wl_display = wl_display_connect(get_display_name(display));
     if (!priv->wl_display)
         return FALSE;
 
