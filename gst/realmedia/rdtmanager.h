@@ -81,6 +81,7 @@ struct _GstRDTManagerClass {
   void     (*on_bye_ssrc)       (GstRDTManager *rtpdec, guint session, guint32 ssrc);
   void     (*on_bye_timeout)    (GstRDTManager *rtpdec, guint session, guint32 ssrc);
   void     (*on_timeout)        (GstRDTManager *rtpdec, guint session, guint32 ssrc);
+  void     (*on_npt_stop)       (GstRDTManager *rtpdec, guint session, guint32 ssrc);
 };
 
 GType gst_rdt_manager_get_type(void);

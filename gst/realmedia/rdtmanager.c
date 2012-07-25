@@ -77,6 +77,7 @@ enum
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
+  SIGNAL_ON_NPT_STOP,
   LAST_SIGNAL
 };
 
@@ -479,6 +480,21 @@ gst_rdt_manager_class_init (GstRDTManagerClass * g_class)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRDTManagerClass, on_timeout),
       NULL, NULL, gst_rdt_manager_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
+   * GstRDTManager::on-npt-stop:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC
+   *
+   * Notify that SSRC sender has sent data up to the configured NPT stop time.
+   */
+  gst_rdt_manager_signals[SIGNAL_ON_NPT_STOP] =
+      g_signal_new ("on-npt-stop", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRDTManagerClass, on_npt_stop),
+      NULL, NULL, gst_rdt_manager_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rdt_manager_provide_clock);
