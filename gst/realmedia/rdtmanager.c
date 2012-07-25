@@ -298,15 +298,16 @@ activate_session (GstRDTManager * rdtmanager, GstRDTManagerSession * session,
   session->recv_rtp_src = gst_pad_new_from_template (templ, name);
   g_free (name);
 
-  gst_pad_set_caps (session->recv_rtp_src, caps);
-  gst_caps_unref (caps);
-
   gst_pad_set_element_private (session->recv_rtp_src, session);
   gst_pad_set_query_function (session->recv_rtp_src, gst_rdt_manager_query_src);
   gst_pad_set_activatemode_function (session->recv_rtp_src,
       gst_rdt_manager_src_activate_mode);
 
   gst_pad_set_active (session->recv_rtp_src, TRUE);
+
+  gst_pad_set_caps (session->recv_rtp_src, caps);
+  gst_caps_unref (caps);
+
   gst_element_add_pad (GST_ELEMENT_CAST (rdtmanager), session->recv_rtp_src);
 
   return TRUE;
