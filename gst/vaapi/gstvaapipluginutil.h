@@ -26,25 +26,6 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 
-/**
- * GstVaapiDisplayType:
- * @GST_VAAPI_DISPLAY_TYPE_AUTO: Automatic detection of the display type.
- * @GST_VAAPI_DISPLAY_TYPE_X11: VA/X11 display.
- * @GST_VAAPI_DISPLAY_TYPE_GLX: VA/GLX display.
- */
-typedef enum _GstVaapiDisplayType GstVaapiDisplayType;
-enum _GstVaapiDisplayType {
-    GST_VAAPI_DISPLAY_TYPE_AUTO = 0,
-    GST_VAAPI_DISPLAY_TYPE_X11,
-    GST_VAAPI_DISPLAY_TYPE_GLX,
-};
-
-#define GST_VAAPI_TYPE_DISPLAY_TYPE \
-    gst_vaapi_display_type_get_type()
-
-GType
-gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
-
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_ensure_display(

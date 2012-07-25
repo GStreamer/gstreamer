@@ -99,7 +99,7 @@ enum {
     PROP_USE_REFLECTION
 };
 
-#define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_AUTO
+#define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 
 /* GstImplementsInterface interface */
 
@@ -818,7 +818,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                            "display type",
                            "display type to use",
                            GST_VAAPI_TYPE_DISPLAY_TYPE,
-                           GST_VAAPI_DISPLAY_TYPE_AUTO,
+                           GST_VAAPI_DISPLAY_TYPE_ANY,
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 #if USE_GLX

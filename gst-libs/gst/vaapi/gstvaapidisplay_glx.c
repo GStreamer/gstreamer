@@ -59,6 +59,7 @@ gst_vaapi_display_glx_get_display_info(
     info->va_display = vaGetDisplayGLX(GST_VAAPI_DISPLAY_XDISPLAY(display));
     if (!info->va_display)
         return FALSE;
+    info->display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
     return dpy_class->get_display(display, info);
 }
 

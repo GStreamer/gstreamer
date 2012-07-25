@@ -54,10 +54,29 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY,  \
                                GstVaapiDisplayClass))
 
+typedef enum   _GstVaapiDisplayType             GstVaapiDisplayType;
 typedef struct _GstVaapiDisplayInfo             GstVaapiDisplayInfo;
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
+
+/**
+ * GstVaapiDisplayType:
+ * @GST_VAAPI_DISPLAY_TYPE_ANY: Automatic detection of the display type.
+ * @GST_VAAPI_DISPLAY_TYPE_X11: VA/X11 display.
+ * @GST_VAAPI_DISPLAY_TYPE_GLX: VA/GLX display.
+ */
+enum _GstVaapiDisplayType {
+    GST_VAAPI_DISPLAY_TYPE_ANY = 0,
+    GST_VAAPI_DISPLAY_TYPE_X11,
+    GST_VAAPI_DISPLAY_TYPE_GLX,
+};
+
+#define GST_VAAPI_TYPE_DISPLAY_TYPE \
+    (gst_vaapi_display_type_get_type())
+
+GType
+gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
 
 /**
  * GstVaapiDisplayInfo:
@@ -66,6 +85,7 @@ typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
  */
 struct _GstVaapiDisplayInfo {
     GstVaapiDisplay    *display;
+    GstVaapiDisplayType display_type;
     gchar              *display_name;
     VADisplay           va_display;
     gpointer            native_display;
@@ -133,6 +153,9 @@ gst_vaapi_display_sync(GstVaapiDisplay *display);
 
 void
 gst_vaapi_display_flush(GstVaapiDisplay *display);
+
+GstVaapiDisplayType
+gst_vaapi_display_get_display_type(GstVaapiDisplay *display);
 
 VADisplay
 gst_vaapi_display_get_display(GstVaapiDisplay *display);

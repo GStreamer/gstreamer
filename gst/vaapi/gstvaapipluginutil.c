@@ -71,7 +71,7 @@ gst_vaapi_ensure_display(
 )
 {
     GstVaapiDisplayType display_type =
-        display_type_ptr ? *display_type_ptr : GST_VAAPI_DISPLAY_TYPE_AUTO;
+        display_type_ptr ? *display_type_ptr : GST_VAAPI_DISPLAY_TYPE_ANY;
     GstVaapiDisplay *display;
     GstVideoContext *context;
     const DisplayMap *m;
@@ -89,7 +89,7 @@ gst_vaapi_ensure_display(
 
     /* If no neighboor, or application not interested, use system default */
     for (m = g_display_map; m->type_str != NULL; m++) {
-        if (display_type != GST_VAAPI_DISPLAY_TYPE_AUTO &&
+        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY &&
             display_type != m->type)
             continue;
 
@@ -104,7 +104,7 @@ gst_vaapi_ensure_display(
             display = NULL;
         }
 
-        if (display_type != GST_VAAPI_DISPLAY_TYPE_AUTO)
+        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
             break;
     }
 
@@ -231,26 +231,4 @@ gst_vaapi_append_surface_caps(GstCaps *out_caps, GstCaps *in_caps)
             gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
     }
     return TRUE;
-}
-
-GType
-gst_vaapi_display_type_get_type(void)
-{
-    static GType g_type = 0;
-
-    static const GEnumValue display_types[] = {
-        { GST_VAAPI_DISPLAY_TYPE_AUTO,
-          "Auto detection", "auto" },
-        { GST_VAAPI_DISPLAY_TYPE_X11,
-          "VA/X11 display", "x11" },
-#if USE_GLX
-        { GST_VAAPI_DISPLAY_TYPE_GLX,
-          "VA/GLX display", "glx" },
-#endif
-        { 0, NULL, NULL },
-    };
-
-    if (!g_type)
-        g_type = g_enum_register_static("GstVaapiDisplayType", display_types);
-    return g_type;
 }

@@ -68,6 +68,7 @@ cache_entry_new(const GstVaapiDisplayInfo *di)
     info->display        = di->display;
     info->va_display     = di->va_display;
     info->native_display = di->native_display;
+    info->display_type   = di->display_type;
     info->display_name   = NULL;
 
     if (di->display_name) {

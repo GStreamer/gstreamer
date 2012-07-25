@@ -341,6 +341,7 @@ gst_vaapi_display_x11_get_display_info(
         info->va_display = vaGetDisplay(priv->x11_display);
         if (!info->va_display)
             return FALSE;
+        info->display_type = GST_VAAPI_DISPLAY_TYPE_X11;
     }
     return TRUE;
 }
