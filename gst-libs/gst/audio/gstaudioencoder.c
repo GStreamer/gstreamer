@@ -1311,6 +1311,7 @@ refuse_caps:
  * gst_audio_encoder_proxy_getcaps:
  * @enc: a #GstAudioEncoder
  * @caps: initial caps
+ * @filter: filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to channel/rate combinations supported by downstream elements
@@ -1319,7 +1320,8 @@ refuse_caps:
  * Returns: a #GstCaps owned by caller
  */
 GstCaps *
-gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
+gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps,
+    GstCaps * filter)
 {
   GstCaps *templ_caps = NULL;
   GstCaps *allowed = NULL;
@@ -1371,6 +1373,14 @@ gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc, GstCaps * caps)
   gst_caps_unref (filter_caps);
   gst_caps_unref (templ_caps);
 
+  if (filter) {
+    GST_LOG_OBJECT (enc, "intersecting with %" GST_PTR_FORMAT, filter);
+    filter_caps = gst_caps_intersect_full (filter, fcaps,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (fcaps);
+    fcaps = filter_caps;
+  }
+
 done:
   gst_caps_replace (&allowed, NULL);
 
@@ -1384,7 +1394,7 @@ gst_audio_encoder_getcaps_default (GstAudioEncoder * enc, GstCaps * filter)
 {
   GstCaps *caps;
 
-  caps = gst_audio_encoder_proxy_getcaps (enc, NULL);
+  caps = gst_audio_encoder_proxy_getcaps (enc, NULL, filter);
   GST_LOG_OBJECT (enc, "returning caps %" GST_PTR_FORMAT, caps);
 
   return caps;

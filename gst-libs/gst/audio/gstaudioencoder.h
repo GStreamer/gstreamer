@@ -216,7 +216,8 @@ GstFlowReturn   gst_audio_encoder_finish_frame (GstAudioEncoder * enc,
                                                 gint              samples);
 
 GstCaps *       gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc,
-                                                 GstCaps         * caps);
+                                                 GstCaps         * caps,
+                                                 GstCaps         * filter);
 
 gboolean        gst_audio_encoder_set_output_format  (GstAudioEncoder    * enc,
                                                       GstCaps            * caps);
