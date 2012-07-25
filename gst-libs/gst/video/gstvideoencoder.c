@@ -616,6 +616,7 @@ parse_fail:
  * gst_video_encoder_proxy_getcaps:
  * @enc: a #GstVideoEncoder
  * @caps: initial caps
+ * @filter: filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to resolution/format/... combinations supported by downstream
