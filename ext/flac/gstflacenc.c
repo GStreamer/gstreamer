@@ -732,7 +732,7 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       GST_AUDIO_ENCODER_SINK_PAD (enc));
 
   FLAC__stream_encoder_set_bits_per_sample (flacenc->encoder,
-      GST_AUDIO_INFO_WIDTH (info));
+      GST_AUDIO_INFO_DEPTH (info));
   FLAC__stream_encoder_set_sample_rate (flacenc->encoder,
       GST_AUDIO_INFO_RATE (info));
   FLAC__stream_encoder_set_channels (flacenc->encoder,
@@ -1232,7 +1232,7 @@ gst_flac_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   gst_buffer_unmap (buffer, &map);
 
   res = FLAC__stream_encoder_process_interleaved (flacenc->encoder,
-      (const FLAC__int32 *) data, samples / channels);
+      (const FLAC__int32 *) data, samples);
 
   g_free (data);
 
