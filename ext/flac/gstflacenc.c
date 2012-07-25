@@ -706,7 +706,6 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   GstFlacEnc *flacenc;
   guint64 total_samples = GST_CLOCK_TIME_NONE;
   FLAC__StreamEncoderInitStatus init_status;
-  GstCaps *caps;
 
   flacenc = GST_FLAC_ENC (enc);
 
@@ -715,14 +714,7 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       FLAC__STREAM_ENCODER_UNINITIALIZED)
     goto encoder_already_initialized;
 
-  caps = gst_caps_new_simple ("audio/x-flac",
-      "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
-      "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info), NULL);
-
-  if (!gst_audio_encoder_set_output_format (enc, caps))
-    goto setting_src_caps_failed;
-
-  gst_caps_unref (caps);
+  /* delay setting output caps/format until we have all headers */
 
   gst_audio_get_channel_reorder_map (GST_AUDIO_INFO_CHANNELS (info),
       channel_positions[GST_AUDIO_INFO_CHANNELS (info) - 1], info->position,
@@ -761,13 +753,6 @@ gst_flac_enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 encoder_already_initialized:
   {
     g_warning ("flac already initialized -- fixme allow this");
-    return FALSE;
-  }
-setting_src_caps_failed:
-  {
-    GST_DEBUG_OBJECT (flacenc,
-        "Couldn't set caps on source pad: %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (caps);
     return FALSE;
   }
 failed_to_initialize:
