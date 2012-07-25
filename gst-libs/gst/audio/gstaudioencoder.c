@@ -1205,8 +1205,8 @@ audio_info_is_equal (GstAudioInfo * from, GstAudioInfo * to)
     return FALSE;
   if (GST_AUDIO_INFO_CHANNELS (from) > 64)
     return TRUE;
-  return memcmp (from->position, to->position,
-      GST_AUDIO_INFO_CHANNELS (from) * sizeof (to->position[0]));
+  return (memcmp (from->position, to->position,
+          GST_AUDIO_INFO_CHANNELS (from) * sizeof (to->position[0])) == 0);
 }
 
 static gboolean
