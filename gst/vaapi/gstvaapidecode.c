@@ -286,6 +286,13 @@ error_commit_buffer:
     }
 }
 
+static inline gboolean
+gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
+{
+    return gst_vaapi_ensure_display(decode, GST_VAAPI_DISPLAY_TYPE_ANY,
+        &decode->display);
+}
+
 static gboolean
 gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 {
@@ -293,7 +300,7 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
     GstStructure *structure;
     int version;
 
-    if (!gst_vaapi_ensure_display(decode, &decode->display, NULL))
+    if (!gst_vaapidecode_ensure_display(decode))
         return FALSE;
     dpy = decode->display;
 
@@ -526,7 +533,7 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     if (decode->allowed_caps)
         return TRUE;
 
-    if (!gst_vaapi_ensure_display(decode, &decode->display, NULL))
+    if (!gst_vaapidecode_ensure_display(decode))
         goto error_no_display;
 
     decode_caps = gst_vaapi_display_get_decode_caps(decode->display);

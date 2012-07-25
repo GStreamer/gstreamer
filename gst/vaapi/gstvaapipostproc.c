@@ -199,10 +199,17 @@ gst_video_context_interface_init(GstVideoContextInterface *iface)
     iface->set_context = gst_vaapipostproc_set_video_context;
 }
 
+static inline gboolean
+gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
+{
+    return gst_vaapi_ensure_display(postproc, GST_VAAPI_DISPLAY_TYPE_ANY,
+        &postproc->display);
+}
+
 static gboolean
 gst_vaapipostproc_create(GstVaapiPostproc *postproc, GstCaps *caps)
 {
-    if (!gst_vaapi_ensure_display(postproc, &postproc->display, NULL))
+    if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
 
     gst_caps_replace(&postproc->postproc_caps, caps);
@@ -231,7 +238,7 @@ gst_vaapipostproc_reset(GstVaapiPostproc *postproc, GstCaps *caps)
 static gboolean
 gst_vaapipostproc_start(GstVaapiPostproc *postproc)
 {
-    if (!gst_vaapi_ensure_display(postproc, &postproc->display, NULL))
+    if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
     return TRUE;
 }

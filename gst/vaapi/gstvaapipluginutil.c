@@ -66,12 +66,10 @@ static const DisplayMap g_display_map[] = {
 gboolean
 gst_vaapi_ensure_display(
     gpointer             element,
-    GstVaapiDisplay    **display_ptr,
-    GstVaapiDisplayType *display_type_ptr
+    GstVaapiDisplayType  display_type,
+    GstVaapiDisplay    **display_ptr
 )
 {
-    GstVaapiDisplayType display_type =
-        display_type_ptr ? *display_type_ptr : GST_VAAPI_DISPLAY_TYPE_ANY;
     GstVaapiDisplay *display;
     GstVideoContext *context;
     const DisplayMap *m;
@@ -85,7 +83,13 @@ gst_vaapi_ensure_display(
         return TRUE;
 
     context = GST_VIDEO_CONTEXT(element);
+    g_return_val_if_fail(context != NULL, FALSE);
+
     gst_video_context_prepare(context, display_types);
+
+    /* Neighbour found and it updated the display */
+    if (*display_ptr)
+        return TRUE;
 
     /* If no neighboor, or application not interested, use system default */
     for (m = g_display_map; m->type_str != NULL; m++) {
@@ -110,8 +114,6 @@ gst_vaapi_ensure_display(
 
     if (display_ptr)
         *display_ptr = display;
-    if (display_type_ptr)
-        *display_type_ptr = display_type;
     return display != NULL;
 }
 

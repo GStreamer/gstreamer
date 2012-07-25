@@ -360,14 +360,20 @@ gst_vaapiupload_init(GstVaapiUpload *upload)
     g_object_unref(srcpad);
 }
 
+static inline gboolean
+gst_vaapiupload_ensure_display(GstVaapiUpload *upload)
+{
+    return gst_vaapi_ensure_display(upload, GST_VAAPI_DISPLAY_TYPE_ANY,
+        &upload->display);
+}
+
 static gboolean
 gst_vaapiupload_start(GstBaseTransform *trans)
 {
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
 
-    if (!gst_vaapi_ensure_display(upload, &upload->display, NULL))
+    if (!gst_vaapiupload_ensure_display(upload))
         return FALSE;
-
     return TRUE;
 }
 

@@ -30,8 +30,8 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_ensure_display(
     gpointer             element,
-    GstVaapiDisplay    **display,
-    GstVaapiDisplayType *display_type_ptr
+    GstVaapiDisplayType  display_type,
+    GstVaapiDisplay    **display
 );
 
 G_GNUC_INTERNAL

@@ -260,10 +260,32 @@ configure_notify_event_pending(
     return args.match;
 }
 
+static const gchar *
+get_display_type_name(GstVaapiDisplayType display_type)
+{
+    gpointer const klass = g_type_class_peek(GST_VAAPI_TYPE_DISPLAY_TYPE);
+    GEnumValue * const e = g_enum_get_value(klass, display_type);
+
+    if (e)
+        return e->value_name;
+    return "<unknown-type>";
+}
+
 static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
-    return gst_vaapi_ensure_display(sink, &sink->display, &sink->display_type);
+    GstVaapiDisplayType display_type;
+
+    if (!gst_vaapi_ensure_display(sink, sink->display_type, &sink->display))
+        return FALSE;
+
+    display_type = gst_vaapi_display_get_display_type(sink->display);
+    if (display_type != sink->display_type) {
+        GST_INFO("created %s %p", get_display_type_name(display_type),
+            sink->display);
+        sink->display_type = display_type;
+    }
+    return TRUE;
 }
 
 static gboolean
