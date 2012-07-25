@@ -696,7 +696,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
                   "all-headers", G_TYPE_BOOLEAN, TRUE, NULL)));
       gst_buffer_unmap (nal, &map);
       gst_buffer_unref (nal);
-      return FALSE;
+      return NULL;
     }
 
     if (rtph264depay->new_codec_data &&
@@ -807,17 +807,14 @@ gst_rtp_h264_push_fragmentation_unit (GstRtpH264Depay * rtph264depay,
 
   rtph264depay->current_fu_type = 0;
 
-  if (send) {
-    outbuf = gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
-        rtph264depay->fu_timestamp, rtph264depay->fu_marker);
-    if (outbuf)
-      gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtph264depay),
-          outbuf);
-    return NULL;
-  } else {
-    return gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
-        rtph264depay->fu_timestamp, rtph264depay->fu_marker);
+  outbuf = gst_rtp_h264_depay_handle_nal (rtph264depay, outbuf,
+      rtph264depay->fu_timestamp, rtph264depay->fu_marker);
+
+  if (send && outbuf) {
+    gst_rtp_base_depayload_push (GST_RTP_BASE_DEPAYLOAD (rtph264depay), outbuf);
+    outbuf = NULL;
   }
+  return outbuf;
 }
 
 static GstBuffer *
