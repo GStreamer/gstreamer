@@ -382,7 +382,6 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
         gst_vaapi_display_cache_remove(get_display_cache(), display);
         free_display_cache();
     }
-    g_static_rec_mutex_free(&priv->mutex);
 }
 
 static gboolean
@@ -576,6 +575,8 @@ gst_vaapi_display_finalize(GObject *object)
     GstVaapiDisplay * const display = GST_VAAPI_DISPLAY(object);
 
     gst_vaapi_display_destroy(display);
+
+    g_static_rec_mutex_free(&display->priv->mutex);
 
     G_OBJECT_CLASS(gst_vaapi_display_parent_class)->finalize(object);
 }
