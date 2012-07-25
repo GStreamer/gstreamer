@@ -578,7 +578,6 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
 
   res = gst_pad_set_caps (dec->srcpad, caps);
-  gst_caps_unref (caps);
   if (!res)
     goto done;
 
@@ -615,6 +614,7 @@ done:
 
   if (query)
     gst_query_unref (query);
+  gst_caps_unref (caps);
 
   return res;
 
