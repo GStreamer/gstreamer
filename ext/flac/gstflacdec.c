@@ -115,9 +115,9 @@ static GstFlowReturn gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec,
 G_DEFINE_TYPE (GstFlacDec, gst_flac_dec, GST_TYPE_AUDIO_DECODER);
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-#define FORMATS "{ S8LE, S16LE, S32LE } "
+#define FORMATS "{ S8LE, S16LE, S24_32LE, S32LE } "
 #else
-#define FORMATS "{ S8BE, S16BE, S32BE } "
+#define FORMATS "{ S8BE, S16BE, S24_32BE, S32BE } "
 #endif
 
 #define GST_FLAC_DEC_SRC_CAPS                             \
@@ -446,7 +446,7 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
   switch (metadata->type) {
     case FLAC__METADATA_TYPE_STREAMINFO:{
       gint64 samples;
-      guint depth, width;
+      guint depth, width, gdepth;
 
       samples = metadata->data.stream_info.total_samples;
 
@@ -454,15 +454,19 @@ gst_flac_dec_metadata_cb (const FLAC__StreamDecoder * decoder,
       flacdec->max_blocksize = metadata->data.stream_info.max_blocksize;
       flacdec->depth = depth = metadata->data.stream_info.bits_per_sample;
 
-      if (depth < 9)
-        width = 8;
-      else if (depth < 17)
-        width = 16;
-      else
+      if (depth < 9) {
+        gdepth = width = 8;
+      } else if (depth < 17) {
+        gdepth = width = 16;
+      } else if (depth < 25) {
+        gdepth = 24;
         width = 32;
+      } else {
+        gdepth = width = 32;
+      }
 
       gst_audio_info_set_format (&flacdec->info,
-          gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, width),
+          gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, gdepth),
           metadata->data.stream_info.sample_rate,
           metadata->data.stream_info.channels, NULL);
 
@@ -551,7 +555,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf;
   guint depth = frame->header.bits_per_sample;
-  guint width;
+  guint width, gdepth;
   guint sample_rate = frame->header.sample_rate;
   guint channels = frame->header.channels;
   guint samples = frame->header.blocksize;
@@ -574,16 +578,19 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
 
   switch (depth) {
     case 8:
-      width = 8;
+      gdepth = width = 8;
       break;
     case 12:
     case 16:
-      width = 16;
+      gdepth = width = 16;
       break;
     case 20:
     case 24:
-    case 32:
+      gdepth = 24;
       width = 32;
+      break;
+    case 32:
+      gdepth = width = 32;
       break;
     default:
       GST_ERROR_OBJECT (flacdec, "unsupported depth %d", depth);
@@ -601,9 +608,10 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     }
   }
 
-  caps_changed = (sample_rate != flacdec->info.rate)
-      || (width != flacdec->info.finfo->width)
-      || (channels != flacdec->info.channels);
+  caps_changed = (sample_rate != GST_AUDIO_INFO_RATE (&flacdec->info))
+      || (width != GST_AUDIO_INFO_WIDTH (&flacdec->info))
+      || (gdepth != GST_AUDIO_INFO_DEPTH (&flacdec->info))
+      || (channels != GST_AUDIO_INFO_CHANNELS (&flacdec->info));
 
   if (caps_changed
       || !gst_pad_has_current_caps (GST_AUDIO_DECODER_SRC_PAD (flacdec))) {
@@ -611,7 +619,7 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
         channels);
 
     gst_audio_info_set_format (&flacdec->info,
-        gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, width),
+        gst_audio_format_build_integer (TRUE, G_BYTE_ORDER, width, gdepth),
         sample_rate, channels, NULL);
 
     memcpy (flacdec->info.position,
@@ -638,10 +646,11 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     gint8 *outbuffer = (gint8 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
-    if (width != depth) {
+    if (gdepth != depth) {
       for (i = 0; i < samples; i++) {
         for (j = 0; j < channels; j++) {
-          *outbuffer++ = (gint8) (buffer[reorder_map[j]][i] << (width - depth));
+          *outbuffer++ =
+              (gint8) (buffer[reorder_map[j]][i] << (gdepth - depth));
         }
       }
     } else {
@@ -655,11 +664,11 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     gint16 *outbuffer = (gint16 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
-    if (width != depth) {
+    if (gdepth != depth) {
       for (i = 0; i < samples; i++) {
         for (j = 0; j < channels; j++) {
           *outbuffer++ =
-              (gint16) (buffer[reorder_map[j]][i] << (width - depth));
+              (gint16) (buffer[reorder_map[j]][i] << (gdepth - depth));
         }
       }
     } else {
@@ -673,11 +682,11 @@ gst_flac_dec_write (GstFlacDec * flacdec, const FLAC__Frame * frame,
     gint32 *outbuffer = (gint32 *) map.data;
     gint *reorder_map = flacdec->channel_reorder_map;
 
-    if (width != depth) {
+    if (gdepth != depth) {
       for (i = 0; i < samples; i++) {
         for (j = 0; j < channels; j++) {
           *outbuffer++ =
-              (gint32) (buffer[reorder_map[j]][i] << (width - depth));
+              (gint32) (buffer[reorder_map[j]][i] << (gdepth - depth));
         }
       }
     } else {
