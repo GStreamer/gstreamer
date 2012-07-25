@@ -120,10 +120,15 @@ GstBuffer *
 gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
 {
     GstVaapiDisplay *display;
+    GstVaapiSurface *surface;
 
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
 
-    display = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(proxy));
+    surface = gst_vaapi_surface_proxy_get_surface(proxy);
+    if (!surface)
+        return NULL;
+
+    display = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));
     if (!display)
         return NULL;
 
