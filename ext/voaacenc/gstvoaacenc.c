@@ -306,7 +306,8 @@ gst_voaacenc_get_sink_caps (void)
 static GstCaps *
 gst_voaacenc_getcaps (GstAudioEncoder * benc, GstCaps * filter)
 {
-  return gst_audio_encoder_proxy_getcaps (benc, gst_voaacenc_get_sink_caps ());
+  return gst_audio_encoder_proxy_getcaps (benc, gst_voaacenc_get_sink_caps (),
+      filter);
 }
 
 /* check downstream caps to configure format */

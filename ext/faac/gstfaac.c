@@ -359,7 +359,7 @@ gst_faac_getcaps (GstAudioEncoder * enc, GstCaps * filter)
     g_once_init_leave (&sinkcaps, (gsize) tmp);
   }
 
-  return gst_audio_encoder_proxy_getcaps (enc, (GstCaps *) sinkcaps);
+  return gst_audio_encoder_proxy_getcaps (enc, (GstCaps *) sinkcaps, filter);
 }
 
 static gboolean
