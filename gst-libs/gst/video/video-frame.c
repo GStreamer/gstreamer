@@ -126,10 +126,8 @@ no_metadata:
 frame_map_failed:
   {
     GST_ERROR ("failed to map video frame plane %d", i);
-    do {
-      i--;
+    while (--i >= 0)
       gst_video_meta_unmap (meta, i, &frame->map[i]);
-    } while (i > 0);
     return FALSE;
   }
 map_failed:
