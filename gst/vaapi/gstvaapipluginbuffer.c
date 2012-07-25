@@ -30,14 +30,22 @@
 #endif
 #include "gstvaapipluginbuffer.h"
 
-static inline GType
+static GType
 get_type(GstVaapiDisplay *display)
 {
+    GType type;
+
+    switch (gst_vaapi_display_get_display_type(display)) {
 #if USE_GLX
-    if (GST_VAAPI_IS_DISPLAY_GLX(display))
-        return GST_VAAPI_TYPE_VIDEO_BUFFER_GLX;
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
+        type = GST_VAAPI_TYPE_VIDEO_BUFFER_GLX;
+        break;
 #endif
-    return GST_VAAPI_TYPE_VIDEO_BUFFER;
+    default:
+        type = GST_VAAPI_TYPE_VIDEO_BUFFER;
+        break;
+    }
+    return type;
 }
 
 GstBuffer *

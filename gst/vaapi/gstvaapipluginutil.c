@@ -161,6 +161,7 @@ gst_vaapi_set_display(
 gboolean
 gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
 {
+    GstVaapiDisplayType display_type;
     const gchar **types;
     const gchar *type;
     gint i;
@@ -174,9 +175,11 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
     if (!types)
         return FALSE;
 
-    for (i = 0; types[i]; i++) {
+    display_type = gst_vaapi_display_get_display_type(display);
+    for (i = 0; types[i] && !res; i++) {
         type = types[i];
 
+        res = TRUE;
         if (!strcmp(type, "gst-vaapi-display")) {
             gst_video_context_query_set_object(query, type, G_OBJECT(display));
         }
@@ -184,25 +187,30 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
             VADisplay vadpy = gst_vaapi_display_get_display(display);
             gst_video_context_query_set_pointer(query, type, vadpy);
         }
-        else if (!strcmp(type, "x11-display") &&
-                 GST_VAAPI_IS_DISPLAY_X11(display)) {
-            GstVaapiDisplayX11 *xvadpy = GST_VAAPI_DISPLAY_X11(display);
-            Display *x11dpy = gst_vaapi_display_x11_get_display(xvadpy);
-            gst_video_context_query_set_pointer(query, type, x11dpy);
-            
-        }
-        else if (!strcmp(type, "x11-display-name") &&
-                 GST_VAAPI_IS_DISPLAY_X11(display)) {
-            GstVaapiDisplayX11 *xvadpy = GST_VAAPI_DISPLAY_X11(display);
-            Display *x11dpy = gst_vaapi_display_x11_get_display(xvadpy);
-            gst_video_context_query_set_string(query, type, DisplayString(x11dpy));
-        }
         else {
-            continue;
+            switch (display_type) {
+#if USE_GLX
+            case GST_VAAPI_DISPLAY_TYPE_GLX:
+#endif
+            case GST_VAAPI_DISPLAY_TYPE_X11: {
+                GstVaapiDisplayX11 * const xvadpy =
+                    GST_VAAPI_DISPLAY_X11(display);
+                Display * const x11dpy =
+                    gst_vaapi_display_x11_get_display(xvadpy);
+                if (!strcmp(type, "x11-display"))
+                    gst_video_context_query_set_pointer(query, type, x11dpy);
+                else if (!strcmp(type, "x11-display-name"))
+                    gst_video_context_query_set_string(query, type,
+                        DisplayString(x11dpy));
+                else
+                    res = FALSE;
+                break;
+            }
+            default:
+                res = FALSE;
+                break;
+            }
         }
-
-        res = TRUE;
-        break;
     }
     return res;
 }
