@@ -3091,15 +3091,15 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
       g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", (guint64) 0, NULL);
     }
     if (stream->srcpad) {
+      GST_DEBUG_OBJECT (src, "activating stream pad %p", stream);
+      gst_pad_set_active (stream->srcpad, TRUE);
+
       /* if we don't have a session manager, set the caps now. If we have a
        * session, we will get a notification of the pad and the caps. */
       if (!src->manager) {
         GST_DEBUG_OBJECT (src, "setting pad caps for stream %p", stream);
         gst_pad_set_caps (stream->srcpad, stream->caps);
       }
-
-      GST_DEBUG_OBJECT (src, "activating stream pad %p", stream);
-      gst_pad_set_active (stream->srcpad, TRUE);
       /* add the pad */
       if (!stream->added) {
         GST_DEBUG_OBJECT (src, "adding stream pad %p", stream);
