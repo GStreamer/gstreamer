@@ -292,7 +292,8 @@ gst_vaapi_display_wayland_close_display(GstVaapiDisplay * display)
     }
 
     if (priv->wl_display) {
-        wl_display_disconnect(priv->wl_display);
+        if (priv->create_display)
+            wl_display_disconnect(priv->wl_display);
         priv->wl_display = NULL;
     }
 
