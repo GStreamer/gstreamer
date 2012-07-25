@@ -301,10 +301,10 @@ gst_vorbis_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
   if (filter) {
     GstCaps *int_caps = gst_caps_intersect_full (filter, vorbisenc->sinkcaps,
         GST_CAPS_INTERSECT_FIRST);
-    caps = gst_audio_encoder_proxy_getcaps (enc, int_caps);
+    caps = gst_audio_encoder_proxy_getcaps (enc, int_caps, filter);
     gst_caps_unref (int_caps);
   } else {
-    caps = gst_audio_encoder_proxy_getcaps (enc, vorbisenc->sinkcaps);
+    caps = gst_audio_encoder_proxy_getcaps (enc, vorbisenc->sinkcaps, filter);
   }
 
   return caps;
