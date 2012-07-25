@@ -602,6 +602,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         gst_buffer_fill (outbuf, 0, payload, payload_len);
 
         gst_adapter_push (rtpxqtdepay->adapter, outbuf);
+        outbuf = NULL;
 
         if (!m)
           goto done;
