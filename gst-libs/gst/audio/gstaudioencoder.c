@@ -2551,7 +2551,6 @@ gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
 done:
   if (query)
     gst_query_unref (query);
-  gst_caps_unref (caps);
 
   return res;
 
