@@ -2530,6 +2530,9 @@ gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
   if (!res)
     goto done;
 
+  /* clear reconfigure so we don't set caps twice */
+  gst_pad_check_reconfigure (enc->srcpad);
+
   query = gst_query_new_allocation (caps, TRUE);
   if (!gst_pad_peer_query (enc->srcpad, query)) {
     GST_DEBUG_OBJECT (enc, "didn't get downstream ALLOCATION hints");
