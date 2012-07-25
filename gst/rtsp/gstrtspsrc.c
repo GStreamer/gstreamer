@@ -6452,7 +6452,10 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
 
   GST_OBJECT_LOCK (src);
   cmd = src->pending_cmd;
-  src->pending_cmd = CMD_WAIT;
+  if (cmd == CMD_PLAY || cmd == CMD_LOOP)
+    src->pending_cmd = CMD_LOOP;
+  else
+    src->pending_cmd = CMD_WAIT;
   GST_DEBUG_OBJECT (src, "got command %d", cmd);
 
   /* we got the message command, so ensure communication is possible again */
