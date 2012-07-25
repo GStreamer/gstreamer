@@ -16,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+#include <string.h>
 
 #include "gstrdtbuffer.h"
 
@@ -205,6 +206,7 @@ gst_rdt_buffer_get_first_packet (GstBuffer * buffer, GstRDTPacket * packet)
   packet->buffer = buffer;
   packet->offset = 0;
   packet->type = GST_RDT_TYPE_INVALID;
+  memset (&packet->map, 0, sizeof (GstMapInfo));
 
   if (!read_packet_header (packet))
     return FALSE;
