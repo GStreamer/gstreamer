@@ -267,7 +267,7 @@ parse_error:
 
 /* copies the given caps */
 static GstCaps *
-gst_audio_convert_caps_remove_format_info (GstCaps * caps)
+gst_audio_convert_caps_remove_format_info (GstCaps * caps, gboolean channels)
 {
   GstStructure *st;
   gint i, n;
@@ -278,6 +278,8 @@ gst_audio_convert_caps_remove_format_info (GstCaps * caps)
 
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
+    gboolean remove_channels = FALSE;
+
     st = gst_caps_get_structure (caps, i);
 
     /* If this is already expressed by the existing caps
@@ -292,10 +294,13 @@ gst_audio_convert_caps_remove_format_info (GstCaps * caps)
     if (gst_structure_get (st, "channel-mask", GST_TYPE_BITMASK, &channel_mask,
             NULL)) {
       if (channel_mask != 0)
-        gst_structure_remove_fields (st, "channel-mask", "channels", NULL);
+        remove_channels = TRUE;
     } else {
-      gst_structure_remove_fields (st, "channel-mask", "channels", NULL);
+      remove_channels = TRUE;
     }
+
+    if (remove_channels && channels)
+      gst_structure_remove_fields (st, "channel-mask", "channels", NULL);
 
     gst_caps_append_structure (res, st);
   }
@@ -314,7 +319,7 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
   GstCaps *result;
 
   /* Get all possible caps that we can transform to */
-  tmp = gst_audio_convert_caps_remove_format_info (caps);
+  tmp = gst_audio_convert_caps_remove_format_info (caps, TRUE);
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -593,12 +598,24 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
 
   result = gst_caps_intersect (othercaps, caps);
   if (gst_caps_is_empty (result)) {
+    GstCaps *removed;
+
     if (result)
       gst_caps_unref (result);
-    result = othercaps;
+    /* try to preserve channels */
+    removed = gst_audio_convert_caps_remove_format_info (caps, FALSE);
+    result = gst_caps_intersect (othercaps, removed);
+    gst_caps_unref (removed);
+    if (gst_caps_is_empty (result)) {
+      if (result)
+        gst_caps_unref (result);
+      result = othercaps;
+    }
   } else {
     gst_caps_unref (othercaps);
   }
+
+  GST_DEBUG_OBJECT (base, "now fixating %" GST_PTR_FORMAT, result);
 
   /* fixate remaining fields */
   result = gst_caps_make_writable (result);
