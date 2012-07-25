@@ -241,14 +241,13 @@ field_size (guint8 field)
   }
 }
 
-/* 
- * Set the padding field to te correct value as the spec
+/* Set the padding field to te correct value as the spec
  * says it should be se to 0 in the rtp packets
  */
-static void
-gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
-    GstBuffer * buf, guint32 padding)
+static GstBuffer *
+gst_rtp_asf_depay_update_padding (GstRtpAsfDepay * depayload, GstBuffer * buf)
 {
+  GstBuffer *result;
   GstMapInfo map;
   guint8 *data;
   gint offset = 0;
@@ -256,9 +255,26 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
   guint8 seq_type;
   guint8 pad_type;
   guint8 pkt_type;
+  gsize plen, padding;
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
+  plen = gst_buffer_get_size (buf);
+  if (plen == depayload->packet_size)
+    return buf;
+
+  padding = depayload->packet_size - plen;
+
+  GST_LOG_OBJECT (depayload,
+      "padding buffer size %" G_GSIZE_FORMAT " to packet size %d", plen,
+      depayload->packet_size);
+
+  result = gst_buffer_new_and_alloc (depayload->packet_size);
+
+  gst_buffer_map (result, &map, GST_MAP_READ);
   data = map.data;
+  memset (data + plen, 0, padding);
+
+  gst_buffer_extract (buf, 0, data, plen);
+  gst_buffer_unref (buf);
 
   aux = data[offset++];
   if (aux & 0x80) {
@@ -267,8 +283,8 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
       GST_WARNING_OBJECT (depayload, "Error correction length type should be "
           "set to 0");
       /* this packet doesn't follow the spec */
-      gst_buffer_unmap (buf, &map);
-      return;
+      gst_buffer_unmap (result, &map);
+      return result;
     }
     err_len = aux & 0x0F;
     offset += err_len;
@@ -305,7 +321,9 @@ gst_rtp_asf_depay_set_padding (GstRtpAsfDepay * depayload,
     default:
       break;
   }
-  gst_buffer_unmap (buf, &map);
+  gst_buffer_unmap (result, &map);
+
+  return result;
 }
 
 /* Docs: 'RTSP Protocol PDF' document from http://sdp.ppona.com/ (page 8) */
@@ -342,7 +360,6 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   do {
     guint packet_len;
-    gsize plen;
 
     /* packet header is at least 4 bytes */
     if (payload_len < 4)
@@ -459,23 +476,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     if (!outbuf)
       return NULL;
 
-    /* we need to pad with zeroes to packet_size if it's smaller */
-    plen = gst_buffer_get_size (outbuf);
-    if (plen < depay->packet_size) {
-      GstBuffer *tmp;
-
-      GST_LOG_OBJECT (depay,
-          "padding buffer size %" G_GSIZE_FORMAT " to packet size %d", plen,
-          depay->packet_size);
-
-      tmp = gst_buffer_new_and_alloc (depay->packet_size);
-      gst_buffer_copy_into (tmp, outbuf, GST_BUFFER_COPY_ALL, 0, plen);
-      gst_buffer_unref (outbuf);
-      outbuf = tmp;
-
-      gst_buffer_memset (outbuf, plen, 0, depay->packet_size - plen);
-      gst_rtp_asf_depay_set_padding (depay, outbuf, depay->packet_size - plen);
-    }
+    outbuf = gst_rtp_asf_depay_update_padding (depay, outbuf);
 
     if (!S)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
