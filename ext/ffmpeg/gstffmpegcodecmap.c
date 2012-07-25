@@ -918,7 +918,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_H264:
       caps =
-          gst_ff_vid_caps_new (context, codec_id, encode, "video/x-h264", NULL);
+          gst_ff_vid_caps_new (context, codec_id, encode, "video/x-h264",
+          "alignment", G_TYPE_STRING, "au", NULL);
       break;
 
     case CODEC_ID_INDEO5:
