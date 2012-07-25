@@ -661,7 +661,7 @@ gst_flac_enc_getcaps (GstAudioEncoder * enc, GstCaps * filter)
 
   GST_DEBUG_OBJECT (pad, "Return caps %" GST_PTR_FORMAT, ret);
 
-  caps = gst_audio_encoder_proxy_getcaps (enc, ret);
+  caps = gst_audio_encoder_proxy_getcaps (enc, ret, filter);
   gst_caps_unref (ret);
 
   return caps;
