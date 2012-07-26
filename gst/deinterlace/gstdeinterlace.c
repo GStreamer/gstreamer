@@ -1087,7 +1087,6 @@ static void
 gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
 {
   int i = 1;
-  GstClockTime timestamp;
   GstDeinterlaceFieldLayout field_layout = self->field_layout;
   gboolean tff;
   gboolean onefield;
@@ -1161,15 +1160,6 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
     GST_DEBUG_OBJECT (self, "Bottom field first");
     field1_flags = PICTURE_INTERLACED_BOTTOM;
     field2_flags = PICTURE_INTERLACED_TOP;
-  }
-
-  if (interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED || self->pattern <= 1) {
-    /* Timestamps are assigned to the field buffers under the assumption that
-       the timestamp of the buffer equals the first fields timestamp */
-
-    timestamp = GST_BUFFER_TIMESTAMP (buffer);
-    GST_BUFFER_TIMESTAMP (field1) = timestamp;
-    GST_BUFFER_TIMESTAMP (field2) = timestamp + self->field_duration;
   }
 
   if (!onefield) {
@@ -1757,6 +1747,12 @@ restart:
         GST_BUFFER_DURATION (outbuf) = self->field_duration;
       else
         GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
+      GST_DEBUG_OBJECT (self,
+          "[ADJUST] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf) +
+              GST_BUFFER_DURATION (outbuf)));
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
@@ -1902,11 +1898,19 @@ restart:
     if (!IS_TELECINE (interlacing_mode)) {
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-      if (self->fields == GST_DEINTERLACE_ALL)
+      if (self->fields == GST_DEINTERLACE_ALL) {
+        GST_BUFFER_TIMESTAMP (outbuf) = timestamp + self->field_duration;
         GST_BUFFER_DURATION (outbuf) = self->field_duration;
-      else
+      } else {
+        GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
         GST_BUFFER_DURATION (outbuf) = 2 * self->field_duration;
+      }
+      GST_DEBUG_OBJECT (self,
+          "[ADJUST] ts %" GST_TIME_FORMAT ", dur %" GST_TIME_FORMAT ", end %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf) +
+              GST_BUFFER_DURATION (outbuf)));
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
@@ -2331,26 +2335,28 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
           "Multiplying the framerate by the telecine pattern ratio overflowed!");
     gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
         fps_d, NULL);
-  } else if (self->low_latency > 0) {
-    if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED) {
-      /* for initial buffers of a telecine pattern, until there is a lock we
-       * we output naïvely adjusted timestamps */
-      srccaps = gst_caps_copy (caps);
-      gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
-    } else if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
-      if (!gst_fraction_double (&fps_n, &fps_d, FALSE))
-        goto invalid_caps;
-
-      srccaps = gst_caps_copy (caps);
-
-      gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
-          fps_d, NULL);
-    } else {
-      srccaps = gst_caps_ref (caps);
-    }
-  } else {
+  } else if (self->locking == GST_DEINTERLACE_LOCKING_ACTIVE
+      || self->low_latency == 0) {
     /* in high latency pattern locking mode if we don't have a pattern lock,
      * the sink pad caps are the best we know */
+    srccaps = gst_caps_ref (caps);
+  } else if (self->low_latency > 0
+      && interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED
+      && self->pattern == -1) {
+    /* for initial buffers of a telecine pattern, until there is a lock we
+     * we output naïvely adjusted timestamps in low-latency pattern locking
+     * mode */
+    srccaps = gst_caps_copy (caps);
+    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+  } else if (!self->passthrough && self->fields == GST_DEINTERLACE_ALL) {
+    if (!gst_fraction_double (&fps_n, &fps_d, FALSE))
+      goto invalid_caps;
+
+    srccaps = gst_caps_copy (caps);
+
+    gst_caps_set_simple (srccaps, "framerate", GST_TYPE_FRACTION, fps_n,
+        fps_d, NULL);
+  } else {
     srccaps = gst_caps_ref (caps);
   }
 
