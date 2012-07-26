@@ -1893,67 +1893,71 @@ gst_tag_list_get_date_time_index (const GstTagList * list,
 }
 
 /**
- * gst_tag_list_get_buffer:
+ * gst_tag_list_get_sample:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
- * @value: (out callee-allocates) (transfer full): address of a GstBuffer
+ * @sample: (out callee-allocates) (transfer full): address of a GstSample
  *     pointer variable to store the result into
  *
- * Copies the first buffer for the given tag in the taglist into the variable
- * pointed to by @value. Free the buffer with gst_buffer_unref() when it is
- * no longer needed.
+ * Copies the first sample for the given tag in the taglist into the variable
+ * pointed to by @sample. Free the sample with gst_sample_unref() when it is
+ * no longer needed. You can retrieve the buffer from the sample using
+ * gst_sample_get_buffer() and the associated caps (if any) with
+ * gst_sample_get_caps().
  *
- * Free-function: gst_buffer_unref
+ * Free-function: gst_sample_unref
  *
- * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
- *              given list or if it was #NULL.
+ * Returns: TRUE, if a sample was returned, FALSE if the tag didn't exist in
+ *              the given list or if it was #NULL.
  */
 gboolean
-gst_tag_list_get_buffer (const GstTagList * list, const gchar * tag,
-    GstBuffer ** value)
+gst_tag_list_get_sample (const GstTagList * list, const gchar * tag,
+    GstSample ** sample)
 {
   GValue v = { 0, };
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
   g_return_val_if_fail (tag != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (sample != NULL, FALSE);
 
   if (!gst_tag_list_copy_value (&v, list, tag))
     return FALSE;
-  *value = g_value_dup_boxed (&v);
+  *sample = g_value_dup_boxed (&v);
   g_value_unset (&v);
-  return (*value != NULL);
+  return (*sample != NULL);
 }
 
 /**
- * gst_tag_list_get_buffer_index:
+ * gst_tag_list_get_sample_index:
  * @list: a #GstTagList to get the tag from
  * @tag: tag to read out
  * @index: number of entry to read out
- * @value: (out callee-allocates) (transfer full): address of a GstBuffer
+ * @sample: (out callee-allocates) (transfer full): address of a GstSample
  *     pointer variable to store the result into
  *
- * Gets the buffer that is at the given index for the given tag in the given
- * list and copies it into the variable pointed to by @value. Free the buffer
- * with gst_buffer_unref() when it is no longer needed.
+ * Gets the sample that is at the given index for the given tag in the given
+ * list and copies it into the variable pointed to by @smple. Free the sample
+ * with gst_sample_unref() when it is no longer needed. You can retrieve the
+ * buffer from the sample using gst_sample_get_buffer() and the associated
+ * caps (if any) with gst_sample_get_caps().
  *
- * Free-function: gst_buffer_unref
+ * Free-function: gst_sample_unref
  *
- * Returns: TRUE, if a buffer was copied, FALSE if the tag didn't exist in the
+ * Returns: TRUE, if a sample was copied, FALSE if the tag didn't exist in the
  *              given list or if it was #NULL.
  */
 gboolean
-gst_tag_list_get_buffer_index (const GstTagList * list,
-    const gchar * tag, guint index, GstBuffer ** value)
+gst_tag_list_get_sample_index (const GstTagList * list,
+    const gchar * tag, guint index, GstSample ** sample)
 {
   const GValue *v;
 
   g_return_val_if_fail (GST_IS_TAG_LIST (list), FALSE);
   g_return_val_if_fail (tag != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (sample != NULL, FALSE);
 
   if ((v = gst_tag_list_get_value_index (list, tag, index)) == NULL)
     return FALSE;
-  *value = g_value_dup_boxed (v);
-  return (*value != NULL);
+  *sample = g_value_dup_boxed (v);
+  return (*sample != NULL);
 }

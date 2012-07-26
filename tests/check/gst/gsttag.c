@@ -345,36 +345,48 @@ GST_START_TEST (test_buffer_tags)
 {
   GstTagList *tags;
   GstBuffer *buf1, *buf2;
+  GstSample *s1, *s2;
 
   tags = gst_tag_list_new_empty ();
+
   buf1 = gst_buffer_new_and_alloc (222);
+  s1 = gst_sample_new (buf1, NULL, NULL, NULL);
+  gst_buffer_unref (buf1);
+
   buf2 = gst_buffer_new_and_alloc (100);
-  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, buf1,
-      GST_TAG_PREVIEW_IMAGE, buf2, NULL);
-  gst_buffer_unref (buf1);
+  s2 = gst_sample_new (buf2, NULL, NULL, NULL);
   gst_buffer_unref (buf2);
 
-  buf1 = buf2 = NULL;
-  fail_if (!gst_tag_list_get_buffer (tags, GST_TAG_IMAGE, &buf1));
-  gst_buffer_unref (buf1);
-  fail_if (!gst_tag_list_get_buffer (tags, GST_TAG_PREVIEW_IMAGE, &buf2));
-  gst_buffer_unref (buf2);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_IMAGE, s1,
+      GST_TAG_PREVIEW_IMAGE, s2, NULL);
 
-  fail_if (gst_tag_list_get_buffer_index (tags, GST_TAG_IMAGE, 1, &buf1));
-  fail_if (gst_tag_list_get_buffer_index (tags, GST_TAG_IMAGE, 2, &buf1));
-  fail_if (gst_tag_list_get_buffer_index (tags, GST_TAG_PREVIEW_IMAGE, 1,
-          &buf1));
-  fail_if (gst_tag_list_get_buffer_index (tags, GST_TAG_PREVIEW_IMAGE, 2,
-          &buf1));
+  gst_sample_unref (s1);
+  gst_sample_unref (s2);
+  s1 = s2 = NULL;
 
-  fail_if (!gst_tag_list_get_buffer_index (tags, GST_TAG_IMAGE, 0, &buf1));
-  fail_if (!gst_tag_list_get_buffer_index (tags, GST_TAG_PREVIEW_IMAGE, 0,
-          &buf2));
+  fail_if (!gst_tag_list_get_sample (tags, GST_TAG_IMAGE, &s1));
+  fail_unless (gst_sample_get_buffer (s1) == buf1);
+  gst_sample_unref (s1);
+
+  fail_if (!gst_tag_list_get_sample (tags, GST_TAG_PREVIEW_IMAGE, &s2));
+  fail_unless (gst_sample_get_buffer (s2) == buf2);
+  gst_sample_unref (s2);
+
+  fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_IMAGE, 1, &s1));
+  fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_IMAGE, 2, &s1));
+  fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_PREVIEW_IMAGE, 1, &s1));
+  fail_if (gst_tag_list_get_sample_index (tags, GST_TAG_PREVIEW_IMAGE, 2, &s1));
+
+  fail_if (!gst_tag_list_get_sample_index (tags, GST_TAG_IMAGE, 0, &s1));
+  fail_if (!gst_tag_list_get_sample_index (tags, GST_TAG_PREVIEW_IMAGE, 0,
+          &s2));
+  buf1 = gst_sample_get_buffer (s1);
   fail_unless_equals_int (gst_buffer_get_size (buf1), 222);
+  buf2 = gst_sample_get_buffer (s2);
   fail_unless_equals_int (gst_buffer_get_size (buf2), 100);
 
-  gst_buffer_unref (buf1);
-  gst_buffer_unref (buf2);
+  gst_sample_unref (s1);
+  gst_sample_unref (s2);
 
   gst_tag_list_unref (tags);
 }
