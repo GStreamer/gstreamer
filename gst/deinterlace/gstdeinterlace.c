@@ -123,6 +123,7 @@ static const TelecinePattern telecine_patterns[] = {
               GST_INT, GST_INT, GST_INT, GST_INT, GST_INT,
           GST_INT, GST_INT, GST_INT, GST_ONE, GST_PRG,}},
 #if 0
+  /* haven't figured out how fieldanalysis should handle these yet */
   /* 60i (NTSC 30000/1001) -> 16p (16000/1001) */
   {"3:4-3", 15, 8, 15, {GST_PRG, GST_DRP, GST_PRG, GST_DRP, GST_PRG,
               GST_DRP, GST_PRG, GST_DRP, GST_PRG, GST_DRP,
@@ -1069,6 +1070,17 @@ gst_deinterlace_get_buffer_state (GstDeinterlace * self, GstVideoFrame * frame,
     *i_mode = interlacing_mode;
 }
 
+#define STATE_TO_STRING(s) ((s) == GST_DEINTERLACE_BUFFER_STATE_P ? "P" : \
+  (s) == GST_DEINTERLACE_BUFFER_STATE_I ? "I" : \
+  (s) == GST_DEINTERLACE_BUFFER_STATE_TC_B ? "B" : \
+  (s) == GST_DEINTERLACE_BUFFER_STATE_TC_T ? "T" : \
+  (s) == GST_DEINTERLACE_BUFFER_STATE_TC_P ? "TCP" : \
+  (s) == GST_DEINTERLACE_BUFFER_STATE_TC_M ? "TCM" : "RFF")
+
+#define MODE_TO_STRING(m) ((m) == GST_VIDEO_INTERLACE_MODE_MIXED ? "MIXED" : \
+  (m) == GST_VIDEO_INTERLACE_MODE_INTERLEAVED ? "I" : \
+  (m) == GST_VIDEO_INTERLACE_MODE_FIELDS ? "FIELDS" : "P")
+
 static void
 gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
 {
@@ -1103,14 +1115,11 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   GST_DEBUG_OBJECT (self,
       "Pushing new frame as %d fields to the history (count before %d): ptr %p at %"
       GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT
-      ", size %u, state %u, interlacing mode %s", fields_to_push,
+      ", size %u, state %s, interlacing mode %s", fields_to_push,
       self->history_count, frame, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
-      gst_buffer_get_size (buffer), buf_state,
-      interlacing_mode ==
-      GST_VIDEO_INTERLACE_MODE_MIXED ? "TC" : interlacing_mode ==
-      GST_VIDEO_INTERLACE_MODE_INTERLEAVED ? "I" : interlacing_mode ==
-      GST_VIDEO_INTERLACE_MODE_FIELDS ? "FIELDS" : "P");
+      gst_buffer_get_size (buffer),
+      STATE_TO_STRING (buf_state), MODE_TO_STRING (interlacing_mode));
 
   /* move up for new state */
   memmove (&self->buf_states[1], &self->buf_states[0],
