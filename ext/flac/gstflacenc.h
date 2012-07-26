@@ -57,6 +57,7 @@ struct _GstFlacEnc {
   FLAC__StreamMetadata **meta;
 
   GstTagList *     tags;
+  GstToc *         toc;
 
   gboolean         eos;
   /* queue headers until we have them all so we can add streamheaders to caps */
