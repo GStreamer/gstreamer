@@ -123,7 +123,7 @@ gst_vaapi_window_wayland_create(
     wl_shell_surface_set_toplevel(priv->shell_surface);
     wl_shell_surface_set_fullscreen(
         priv->shell_surface,
-        WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
+        WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE,
         0,
         NULL
     );
