@@ -232,6 +232,8 @@ struct _GstAudioDecoderPrivate
   gboolean drained;
   /* subclass currently being forcibly drained */
   gboolean force;
+  /* need to handle changed input caps */
+  gboolean do_caps;
 
   /* input bps estimatation */
   /* global in bytes seen */
@@ -1499,6 +1501,18 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   dec = GST_AUDIO_DECODER (parent);
 
+  if (G_UNLIKELY (dec->priv->do_caps)) {
+    GstCaps *caps = gst_pad_get_current_caps (dec->sinkpad);
+    if (caps) {
+      if (!gst_audio_decoder_sink_setcaps (dec, caps)) {
+        gst_caps_unref (caps);
+        goto not_negotiated;
+      }
+      gst_caps_unref (caps);
+    }
+    dec->priv->do_caps = FALSE;
+  }
+
   if (G_UNLIKELY (!gst_pad_has_current_caps (pad) && dec->priv->needs_format))
     goto not_negotiated;
 
@@ -1684,7 +1698,8 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_audio_decoder_sink_setcaps (dec, caps);
+      ret = TRUE;
+      dec->priv->do_caps = TRUE;
       gst_event_unref (event);
       break;
     }
