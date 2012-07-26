@@ -444,9 +444,11 @@ gst_rtp_mpa_robust_depay_deinterleave (GstRtpMPARobustDepay * rtpmpadepay,
       }
     }
     /* rewrite buffer sync header */
-    val = GST_READ_UINT16_BE (buf);
+    gst_buffer_map (buf, &map, GST_MAP_READWRITE);
+    val = GST_READ_UINT16_BE (map.data);
     val = (0x7ff << 5) | val;
-    GST_WRITE_UINT16_BE (buf, val);
+    GST_WRITE_UINT16_BE (map.data, val);
+    gst_buffer_unmap (buf, &map);
     /* store and keep track of last indices */
     rtpmpadepay->last_icc = icc;
     rtpmpadepay->last_ii = iindex;
