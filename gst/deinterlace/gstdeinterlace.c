@@ -322,6 +322,8 @@ static void gst_deinterlace_reset_qos (GstDeinterlace * self);
 static void gst_deinterlace_read_qos (GstDeinterlace * self,
     gdouble * proportion, GstClockTime * time);
 
+#define IS_TELECINE(m) ((m) == GST_VIDEO_INTERLACE_MODE_MIXED && self->pattern > 1)
+
 /* FIXME: what's the point of the childproxy interface here? What can you
  * actually do with it? The method objects seem to have no properties */
 #if 0
@@ -1338,7 +1340,7 @@ gst_deinterlace_fix_timestamps (GstDeinterlace * self,
 
     field3 = self->field_history[self->history_count - 3].frame;
     interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&field3->info);
-    if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED) {
+    if (IS_TELECINE (interlacing_mode)) {
       if (self->history_count < 4) {
         GST_DEBUG_OBJECT (self, "Need more fields (have %d, need 4)",
             self->history_count);
@@ -1612,7 +1614,7 @@ restart:
           "Progressive buffer but two fields at tip aren't in the same buffer!");
     }
 
-    if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED && self->pattern > 1 /* locked onto a telecine pattern */
+    if (IS_TELECINE (interlacing_mode)
         && !gst_deinterlace_fix_timestamps (self, field1->frame, field2->frame)
         && !flushing)
       goto need_more;
@@ -1637,14 +1639,13 @@ restart:
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (field1_buffer) +
             GST_BUFFER_DURATION (field1_buffer)));
     return gst_pad_push (self->srcpad, field1_buffer);
-  } else if (interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED
-      && GST_VIDEO_FRAME_IS_INTERLACED (field1->frame)
-      && !same_buffer && self->pattern > 1) {
+  } else if (IS_TELECINE (interlacing_mode)
+      && GST_VIDEO_FRAME_IS_INTERLACED (field1->frame) && !same_buffer) {
     /* This case needs to identify telecine mixed buffers that require weaving
      * of two fields in different buffers.
      * - interlacing mode is mixed
-     * - frame is interlaced
      * - locked on to a telecine pattern
+     * - frame is interlaced
      * - fields are in separate buffers
      * If we don't yet have a pattern lock, we will have to deinterlace as we
      * don't explicitly know we have a telecine sequence and so we drop through
@@ -1704,8 +1705,7 @@ restart:
     goto need_more;
   }
 
-  if (self->fields == GST_DEINTERLACE_ALL
-      || interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED)
+  if (self->fields == GST_DEINTERLACE_ALL || IS_TELECINE (interlacing_mode))
     GST_DEBUG_OBJECT (self, "All fields");
   else if (self->fields == GST_DEINTERLACE_TF)
     GST_DEBUG_OBJECT (self, "Top fields");
@@ -1714,7 +1714,7 @@ restart:
 
   if ((self->field_history[self->cur_field_idx].flags == PICTURE_INTERLACED_TOP
           && (self->fields == GST_DEINTERLACE_TF
-              || interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED))
+              || IS_TELECINE (interlacing_mode)))
       || self->fields == GST_DEINTERLACE_ALL) {
     GST_DEBUG_OBJECT (self, "deinterlacing top field");
 
@@ -1749,7 +1749,7 @@ restart:
         self->field_history[self->history_count - 1 -
         gst_deinterlace_method_get_latency (self->method)].frame->buffer;
 
-    if (interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED) {
+    if (!IS_TELECINE (interlacing_mode)) {
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
@@ -1839,7 +1839,7 @@ restart:
   /* no calculation done: remove excess field */
   else if (self->field_history[self->cur_field_idx].flags ==
       PICTURE_INTERLACED_TOP && (self->fields == GST_DEINTERLACE_BF
-          && interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED)) {
+          && !IS_TELECINE (interlacing_mode))) {
     GST_DEBUG_OBJECT (self, "Removing unused top field");
     self->cur_field_idx--;
     gst_video_frame_unmap_and_free (gst_deinterlace_pop_history (self));
@@ -1863,7 +1863,7 @@ restart:
   /* deinterlace bottom_field */
   if ((self->field_history[self->cur_field_idx].flags ==
           PICTURE_INTERLACED_BOTTOM && (self->fields == GST_DEINTERLACE_BF
-              || interlacing_mode == GST_VIDEO_INTERLACE_MODE_MIXED))
+              || IS_TELECINE (interlacing_mode)))
       || self->fields == GST_DEINTERLACE_ALL) {
     GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
 
@@ -1899,7 +1899,7 @@ restart:
     buf =
         self->field_history[self->history_count - 1 -
         gst_deinterlace_method_get_latency (self->method)].frame->buffer;
-    if (interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED) {
+    if (!IS_TELECINE (interlacing_mode)) {
       timestamp = GST_BUFFER_TIMESTAMP (buf);
 
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
@@ -1975,7 +1975,7 @@ restart:
   /* no calculation done: remove excess field */
   else if (self->field_history[self->cur_field_idx].flags ==
       PICTURE_INTERLACED_BOTTOM && (self->fields == GST_DEINTERLACE_TF
-          && interlacing_mode != GST_VIDEO_INTERLACE_MODE_MIXED)) {
+          && !IS_TELECINE (interlacing_mode))) {
     GST_DEBUG_OBJECT (self, "Removing unused bottom field");
     self->cur_field_idx--;
     gst_video_frame_unmap_and_free (gst_deinterlace_pop_history (self));
