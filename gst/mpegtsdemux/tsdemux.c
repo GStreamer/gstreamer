@@ -637,6 +637,12 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
 
   desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
       DESC_ISO_639_LANGUAGE);
+
+  if (!desc) {
+    desc = mpegts_get_descriptor_from_stream ((MpegTSBaseStream *) stream,
+        DESC_DVB_SUBTITLING);
+  }
+
   if (desc) {
     if (!stream->taglist)
       stream->taglist = gst_tag_list_new_empty ();

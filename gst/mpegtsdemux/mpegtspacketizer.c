@@ -1002,6 +1002,9 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer2 * packetizer,
 
         /* ISO 639 LANGUAGE */
         desc_data = gst_mpeg_descriptor_find (&desc, DESC_ISO_639_LANGUAGE);
+        if (!desc_data) {
+          desc_data = gst_mpeg_descriptor_find (&desc, DESC_DVB_SUBTITLING);
+        }
         if (desc_data && DESC_ISO_639_LANGUAGE_codes_n (desc_data)) {
           gchar *lang_code;
           gchar *language_n = (gchar *)
