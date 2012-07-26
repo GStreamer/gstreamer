@@ -141,6 +141,7 @@ struct _GstVideoEncoderPrivate
   /* FIXME : (and introduce a context ?) */
   gboolean drained;
   gboolean at_eos;
+  gboolean do_caps;
 
   gint64 min_latency;
   gint64 max_latency;
@@ -852,7 +853,8 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_video_encoder_setcaps (encoder, caps);
+      ret = TRUE;
+      encoder->priv->do_caps = TRUE;
       gst_event_unref (event);
       event = NULL;
       break;
@@ -1150,6 +1152,17 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   g_return_val_if_fail (klass->handle_frame != NULL, GST_FLOW_ERROR);
 
+  if (G_UNLIKELY (encoder->priv->do_caps)) {
+    GstCaps *caps = gst_pad_get_current_caps (encoder->sinkpad);
+    if (!caps)
+      goto not_negotiated;
+    if (!gst_video_encoder_setcaps (encoder, caps)) {
+      gst_caps_unref (caps);
+      goto not_negotiated;
+    }
+    encoder->priv->do_caps = FALSE;
+  }
+
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   pts = GST_BUFFER_PTS (buf);
@@ -1241,6 +1254,15 @@ done:
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (encoder, CORE, NEGOTIATION, (NULL),
+        ("encoder not initialized"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstStateChangeReturn

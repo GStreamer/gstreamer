@@ -332,6 +332,8 @@ struct _GstVideoDecoderPrivate
   gint max_errors;
   gint error_count;
 
+  gboolean do_caps;
+
   /* ... being tracked here;
    * only available during parsing */
   GstVideoCodecFrame *current_frame;
@@ -933,7 +935,8 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_video_decoder_setcaps (decoder, caps);
+      ret = TRUE;
+      decoder->priv->do_caps = TRUE;
       gst_event_unref (event);
       event = NULL;
       break;
@@ -1826,6 +1829,18 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   decoder = GST_VIDEO_DECODER (parent);
 
+  if (G_UNLIKELY (decoder->priv->do_caps)) {
+    GstCaps *caps = gst_pad_get_current_caps (decoder->sinkpad);
+    if (caps) {
+      if (!gst_video_decoder_setcaps (decoder, caps)) {
+        gst_caps_unref (caps);
+        goto not_negotiated;
+      }
+      gst_caps_unref (caps);
+    }
+    decoder->priv->do_caps = FALSE;
+  }
+
   GST_LOG_OBJECT (decoder,
       "chain PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT " duration %"
       GST_TIME_FORMAT " size %" G_GSIZE_FORMAT,
@@ -1862,6 +1877,15 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
   return ret;
+
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION, (NULL),
+        ("encoder not initialized"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstStateChangeReturn
