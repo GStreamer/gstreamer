@@ -792,6 +792,8 @@ gst_rtp_mpa_robust_change_state (GstElement * element,
       g_queue_foreach (rtpmpadepay->adu_frames,
           (GFunc) gst_rtp_mpa_robust_depay_free_frame, NULL);
       g_queue_clear (rtpmpadepay->adu_frames);
+      if (rtpmpadepay->mp3_frame)
+        gst_byte_writer_free (rtpmpadepay->mp3_frame);
       break;
     }
     default:
