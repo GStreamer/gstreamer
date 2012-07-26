@@ -372,8 +372,8 @@ struct _GstVideoDecoderPrivate
   int reorder_depth;
   int distance_from_sync;
 
-  guint64 system_frame_number;
-  guint64 decode_frame_number;
+  guint32 system_frame_number;
+  guint32 decode_frame_number;
 
   GList *frames;                /* Protected with OBJECT_LOCK */
   GstVideoCodecState *input_state;

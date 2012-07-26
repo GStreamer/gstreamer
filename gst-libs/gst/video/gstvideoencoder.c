@@ -153,7 +153,7 @@ struct _GstVideoEncoderPrivate
 
   GList *force_key_unit;        /* List of pending forced keyunits */
 
-  guint64 system_frame_number;
+  guint32 system_frame_number;
 
   GList *frames;                /* Protected with OBJECT_LOCK */
   GstVideoCodecState *input_state;

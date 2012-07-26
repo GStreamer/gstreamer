@@ -222,9 +222,9 @@ struct _GstVideoCodecFrame
   guint32 flags;
 
   /*< public >*/
-  gint system_frame_number;	/* ED */
-  gint decode_frame_number;	/* ED */
-  gint presentation_frame_number; /* ED */
+  guint32 system_frame_number;	/* ED */
+  guint32 decode_frame_number;	/* ED */
+  guint32 presentation_frame_number; /* ED */
 
   GstClockTime dts;       /* ED */
   GstClockTime pts;       /* ED */
