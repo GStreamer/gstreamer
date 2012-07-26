@@ -862,9 +862,10 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   gboolean key_frame = FALSE;
   GstVideoCodecState *state;
 
-  GST_DEBUG_OBJECT (mpeg2dec, "picture slice/end %p %p %p %p",
+  GST_DEBUG_OBJECT (mpeg2dec,
+      "fbuf:%p display_picture:%p current_picture:%p fbuf->id:%d",
       info->display_fbuf, info->display_picture, info->current_picture,
-      info->display_fbuf->id);
+      GPOINTER_TO_INT (info->display_fbuf->id));
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (mpeg2dec),
       GPOINTER_TO_INT (info->display_fbuf->id));
@@ -938,8 +939,9 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
   gboolean done = FALSE;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_LOG_OBJECT (mpeg2dec, "received buffer, timestamp %"
+  GST_LOG_OBJECT (mpeg2dec, "received frame %d, timestamp %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      frame->system_frame_number,
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
 
   if (!gst_buffer_map (buf, &minfo, GST_MAP_READ)) {
@@ -1001,12 +1003,12 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
       case STATE_END:
         GST_DEBUG_OBJECT (mpeg2dec, "end");
       case STATE_SLICE:
-        if (info->display_fbuf && info->display_fbuf->id) {
+        if (info->display_fbuf) {
           ret = handle_slice (mpeg2dec, info);
         } else {
           GST_DEBUG_OBJECT (mpeg2dec, "no picture to display");
         }
-        if (info->discard_fbuf && info->discard_fbuf->id)
+        if (info->discard_fbuf)
           gst_mpeg2dec_discard_buffer (mpeg2dec,
               GPOINTER_TO_INT (info->discard_fbuf->id));
         if (state != STATE_SLICE) {
