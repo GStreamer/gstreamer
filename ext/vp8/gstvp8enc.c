@@ -920,6 +920,8 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
       gst_video_encoder_set_output_state (video_encoder, caps, state);
   gst_video_codec_state_unref (output_state);
 
+  gst_video_encoder_negotiate (GST_VIDEO_ENCODER (encoder));
+
   return ret;
 }
 
