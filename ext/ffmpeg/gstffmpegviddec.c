@@ -1234,6 +1234,7 @@ beach:
 no_codec:
   {
     GST_ERROR_OBJECT (ffmpegdec, "no codec context");
+    *ret = GST_FLOW_NOT_NEGOTIATED;
     return -1;
   }
 }
