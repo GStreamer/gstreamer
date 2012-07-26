@@ -385,19 +385,28 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
       if (!gst_tag_list_get_string_index (list, tag, i, &str))
         g_assert_not_reached ();
-    } else if (gst_tag_get_type (tag) == GST_TYPE_BUFFER) {
-      GstBuffer *img;
+    } else if (gst_tag_get_type (tag) == GST_TYPE_SAMPLE) {
+      GstSample *sample = NULL;
 
-      img = gst_value_get_buffer (gst_tag_list_get_value_index (list, tag, i));
-      if (img) {
-        gchar *caps_str;
+      if (gst_tag_list_get_sample_index (list, tag, i, &sample)) {
+        GstBuffer *img = gst_sample_get_buffer (sample);
+        GstCaps *caps = gst_sample_get_caps (sample);
 
-        caps_str = g_strdup ("unknown");
-        str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, type: %s",
-            gst_buffer_get_size (img), caps_str);
-        g_free (caps_str);
-      } else {
-        str = g_strdup ("NULL buffer");
+        if (img) {
+          if (caps) {
+            gchar *caps_str;
+
+            caps_str = gst_caps_to_string (caps);
+            str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes, "
+                "type: %s", gst_buffer_get_size (img), caps_str);
+            g_free (caps_str);
+          } else {
+            str = g_strdup_printf ("buffer of %" G_GSIZE_FORMAT " bytes",
+                gst_buffer_get_size (img));
+          }
+        } else {
+          str = g_strdup ("NULL buffer");
+        }
       }
     } else if (gst_tag_get_type (tag) == GST_TYPE_DATE_TIME) {
       GstDateTime *dt = NULL;
