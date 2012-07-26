@@ -996,10 +996,10 @@ gst_tag_list_copy (const GstTagList * taglist)
 /**
  * GST_TAG_APPLICATION_DATA:
  *
- * Arbitrary application data (buffer)
+ * Arbitrary application data (sample)
  *
- * Some formats allow application's to add their own arbitrary data
- * into files. This data is application's dependent.
+ * Some formats allow applications to add their own arbitrary data
+ * into files. This data is application dependent.
  */
 #define GST_TAG_APPLICATION_DATA          "application-data"
 /**

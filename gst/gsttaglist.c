@@ -380,7 +380,7 @@ _priv_gst_tag_initialize (void)
       G_TYPE_STRING, _("application name"),
       _("Application used to create the media"), NULL);
   gst_tag_register_static (GST_TAG_APPLICATION_DATA, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, _("application data"),
+      GST_TYPE_SAMPLE, _("application data"),
       _("Arbitrary application data to be serialized into the media"), NULL);
   gst_tag_register_static (GST_TAG_IMAGE_ORIENTATION, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("image orientation"),
