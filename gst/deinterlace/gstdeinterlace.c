@@ -1016,7 +1016,6 @@ gst_deinterlace_pop_history (GstDeinterlace * self)
           && self->pattern_count >= telecine_patterns[self->pattern].length) {
         self->pattern_count = 0;
         self->output_count = 0;
-        gst_deinterlace_update_pattern_timestamps (self);
       }
     }
   }
@@ -1401,7 +1400,8 @@ gst_deinterlace_get_pattern_lock (GstDeinterlace * self, gboolean * flush_one)
     /* loop over all phases */
     for (j = 0; j < length; j++) {
       /* low-latency mode looks at past buffers, high latency at future buffers */
-      const gint state_idx = (self->low_latency ? length : state_count) - 1;
+      const gint state_idx =
+          self->low_latency ? (self->history_count - 1) >> 1 : state_count - 1;
       /* loop over history, breaking on differing buffer states */
       for (k = 0; k < length && k < state_count; k++) {
         const guint8 hist = self->buf_states[state_idx - k].state;
@@ -1420,12 +1420,6 @@ gst_deinterlace_get_pattern_lock (GstDeinterlace * self, gboolean * flush_one)
         score = k;
         pattern = i;
         phase = j;
-        if (self->low_latency) {
-          /* state_idx + 1 is the number of buffers yet to be pushed out
-           * so length - state_idx - 1 is the number of old buffers in the
-           * pattern */
-          phase = (phase + length - state_idx - 1) % length;
-        }
       }
     }
   }
