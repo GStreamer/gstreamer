@@ -125,7 +125,7 @@ struct _GstAllocatorClass {
   GstObjectClass object_class;
 
   GstMemory *  (*alloc)      (GstAllocator *allocator, gsize size,
-                              GstAllocationParams *params, gpointer user_data);
+                              GstAllocationParams *params);
   void         (*free)       (GstAllocator *allocator, GstMemory *memory);
 
   /*< private >*/

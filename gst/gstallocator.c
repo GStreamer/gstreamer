@@ -303,7 +303,7 @@ gst_allocator_alloc (GstAllocator * allocator, gsize size,
 
   aclass = GST_ALLOCATOR_GET_CLASS (allocator);
   if (aclass->alloc)
-    mem = aclass->alloc (allocator, size, params, NULL);
+    mem = aclass->alloc (allocator, size, params);
   else
     mem = NULL;
 
@@ -505,7 +505,7 @@ _default_mem_is_span (GstMemoryDefault * mem1, GstMemoryDefault * mem2,
 
 static GstMemory *
 default_alloc (GstAllocator * allocator, gsize size,
-    GstAllocationParams * params, gpointer user_data)
+    GstAllocationParams * params)
 {
   gsize maxsize = size + params->prefix + params->padding;
 
