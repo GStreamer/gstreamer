@@ -151,7 +151,7 @@ gst_chromaprint_create_fingerprint (GstChromaprint * chromaprint)
       chromaprint->fingerprint, NULL);
 
   gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (chromaprint),
-      gst_event_new_tag ("chromaprint", tags));
+      gst_event_new_tag (tags));
 }
 
 static void

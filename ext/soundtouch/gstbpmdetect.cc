@@ -243,7 +243,7 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE_ALL, GST_TAG_BEATS_PER_MINUTE,
         bpm, (void *) NULL);
-    gst_pad_push_event (trans->srcpad, gst_event_new_tag ("bpmdetect", tags));
+    gst_pad_push_event (trans->srcpad, gst_event_new_tag (tags));
 
     GST_INFO_OBJECT (bpm_detect, "Detected BPM: %lf\n", bpm);
     bpm_detect->bpm = bpm;

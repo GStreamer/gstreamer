@@ -1479,8 +1479,7 @@ push_new_segment:
   if (stream->taglist) {
     GST_DEBUG_OBJECT (stream->pad, "Sending tags %" GST_PTR_FORMAT,
         stream->taglist);
-    gst_pad_push_event (stream->pad, gst_event_new_tag ("GstDemuxer",
-            stream->taglist));
+    gst_pad_push_event (stream->pad, gst_event_new_tag (stream->taglist));
     stream->taglist = NULL;
   }
 

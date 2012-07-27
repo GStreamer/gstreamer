@@ -427,7 +427,7 @@ gst_schrodec_send_tags (GstSchroDec * schro_dec)
       GST_TAG_VIDEO_CODEC, "Dirac", NULL);
 
   gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (schro_dec),
-      gst_event_new_tag ("GstDecoder", list));
+      gst_event_new_tag (list));
 }
 
 static GstFlowReturn

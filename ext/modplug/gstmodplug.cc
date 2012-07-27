@@ -98,7 +98,7 @@ enum
 #define FORMATS "{ "GST_AUDIO_NE (S32)", "GST_AUDIO_NE (S16)", U8 }"
 
 static GstStaticPadTemplate modplug_src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw,"
@@ -451,7 +451,7 @@ gst_modplug_load_song (GstModPlug * modplug)
   GstCaps *newcaps;
   GstStructure *structure;
   GstMapInfo map;
-  const gchar * format;
+  const gchar *format;
 
   GST_DEBUG_OBJECT (modplug, "Setting caps");
 
@@ -461,22 +461,24 @@ gst_modplug_load_song (GstModPlug * modplug)
   }
   newcaps = gst_caps_make_writable (newcaps);
 
-  GST_DEBUG_OBJECT (modplug, "allowed caps %"GST_PTR_FORMAT, newcaps);
+  GST_DEBUG_OBJECT (modplug, "allowed caps %" GST_PTR_FORMAT, newcaps);
 
   structure = gst_caps_get_structure (newcaps, 0);
 
-  if (!gst_structure_fixate_field_string (structure, "format", GST_AUDIO_NE (S16)))
+  if (!gst_structure_fixate_field_string (structure, "format",
+          GST_AUDIO_NE (S16)))
     GST_WARNING_OBJECT (modplug, "Failed to fixate format to S16NE");
   if (!gst_structure_fixate_field_nearest_int (structure, "rate", 44100))
     GST_WARNING_OBJECT (modplug, "Failed to fixate rate to 44100");
   if (!gst_structure_fixate_field_nearest_int (structure, "channels", 2))
-    GST_WARNING_OBJECT (modplug, "Failed to fixate number of channels to stereo");
+    GST_WARNING_OBJECT (modplug,
+        "Failed to fixate number of channels to stereo");
 
-  GST_DEBUG_OBJECT (modplug, "normalized caps %"GST_PTR_FORMAT, newcaps);
+  GST_DEBUG_OBJECT (modplug, "normalized caps %" GST_PTR_FORMAT, newcaps);
 
   newcaps = gst_caps_fixate (newcaps);
 
-  GST_DEBUG_OBJECT (modplug, "fixated caps %"GST_PTR_FORMAT, newcaps);
+  GST_DEBUG_OBJECT (modplug, "fixated caps %" GST_PTR_FORMAT, newcaps);
 
   /* set up modplug to output the negotiated format */
   structure = gst_caps_get_structure (newcaps, 0);
@@ -491,8 +493,8 @@ gst_modplug_load_song (GstModPlug * modplug)
 
   gst_structure_get_int (structure, "channels", &modplug->channel);
   gst_structure_get_int (structure, "rate", &modplug->frequency);
-  
-  GST_DEBUG_OBJECT (modplug, 
+
+  GST_DEBUG_OBJECT (modplug,
       "Audio settings: %d bits, %d channel(s), %d Hz sampling rate",
       modplug->bits, modplug->channel, modplug->frequency);
 
@@ -676,7 +678,7 @@ gst_modplug_loop (GstModPlug * modplug)
     if (modplug->offset == modplug->song_size) {
       GstTagList *tags;
       gboolean ok;
-      #define COMMENT_SIZE 16384
+#define COMMENT_SIZE 16384
       gchar comment[COMMENT_SIZE];
       GstSegment seg;
 
@@ -701,12 +703,12 @@ gst_modplug_loop (GstModPlug * modplug)
           (gdouble) modplug->mSoundFile->GetMusicTempo (), NULL);
 
       if (modplug->mSoundFile->GetSongComments ((gchar *) & comment,
-          COMMENT_SIZE, 32)) {
+              COMMENT_SIZE, 32)) {
         comment[COMMENT_SIZE - 1] = '\0';
         gst_tag_list_add (tags, GST_TAG_MERGE_APPEND,
             GST_TAG_COMMENT, comment, NULL);
       }
-      gst_pad_push_event (modplug->srcpad, gst_event_new_tag ("GstDecoder", tags));
+      gst_pad_push_event (modplug->srcpad, gst_event_new_tag (tags));
     } else {
       /* not fully loaded yet */
       return;
@@ -729,7 +731,7 @@ gst_modplug_loop (GstModPlug * modplug)
   }
 
   /* read and output a buffer */
-  GST_LOG_OBJECT (modplug, "Read %d bytes", (gint)modplug->read_bytes);
+  GST_LOG_OBJECT (modplug, "Read %d bytes", (gint) modplug->read_bytes);
   /* libmodplug 0.8.7 trashes memory */
   out = gst_buffer_new_allocate (NULL, modplug->read_bytes * 2, NULL);
 

@@ -446,7 +446,7 @@ gme_setup (GstGmeDec * gme)
   gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
       GST_TAG_DURATION, total_duration, NULL);
 
-  gst_pad_push_event (gme->srcpad, gst_event_new_tag ("GstDecoder", taglist));
+  gst_pad_push_event (gme->srcpad, gst_event_new_tag (taglist));
 
   g_free (info);
 
