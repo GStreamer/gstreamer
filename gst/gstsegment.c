@@ -383,25 +383,19 @@ gst_segment_to_stream_time (const GstSegment * segment, GstFormat format,
   g_return_val_if_fail (segment != NULL, -1);
   g_return_val_if_fail (segment->format == format, -1);
 
-  /* if we have the position for the same format as the segment, we can compare
-   * the start and stop values, otherwise we assume 0 and -1 */
-  if (G_LIKELY (segment->format == format)) {
-    start = segment->start;
-    stop = segment->stop;
-    time = segment->time;
-  } else {
-    start = 0;
-    stop = -1;
-    time = 0;
-  }
+  stop = segment->stop;
 
   /* outside of the segment boundary stop */
   if (G_UNLIKELY (stop != -1 && position > stop))
     return -1;
 
+  start = segment->start;
+
   /* before the segment boundary */
   if (G_UNLIKELY (position < start))
     return -1;
+
+  time = segment->time;
 
   /* time must be known */
   if (G_UNLIKELY (time == -1))
@@ -457,7 +451,7 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
     guint64 position)
 {
   guint64 result;
-  guint64 start, stop, base;
+  guint64 start, stop;
   gdouble abs_rate;
 
   if (G_UNLIKELY (position == -1))
@@ -466,21 +460,13 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
   g_return_val_if_fail (segment != NULL, -1);
   g_return_val_if_fail (segment->format == format, -1);
 
-  /* if we have the position for the same format as the segment, we can compare
-   * the start and stop values, otherwise we assume 0 and -1 */
-  if (G_LIKELY (segment->format == format)) {
-    start = segment->start;
-    stop = segment->stop;
-    base = segment->base;
-  } else {
-    start = 0;
-    stop = -1;
-    base = 0;
-  }
+  start = segment->start;
 
   /* before the segment boundary */
   if (G_UNLIKELY (position < start))
     return -1;
+
+  stop = segment->stop;
 
   if (G_LIKELY (segment->rate > 0.0)) {
     /* outside of the segment boundary stop */
@@ -506,7 +492,7 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
     result /= abs_rate;
 
   /* correct for base of the segment */
-  result += base;
+  result += segment->base;
 
   return result;
 }
@@ -603,17 +589,7 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
   g_return_val_if_fail (segment != NULL, -1);
   g_return_val_if_fail (segment->format == format, FALSE);
 
-  /* if we have the position for the same format as the segment, we can compare
-   * the start and stop values, otherwise we assume 0 and -1 */
-  if (G_LIKELY (segment->format == format)) {
-    start = segment->start;
-    stop = segment->stop;
-    base = segment->base;
-  } else {
-    start = 0;
-    stop = -1;
-    base = 0;
-  }
+  base = segment->base;
 
   /* this running_time was for a previous segment */
   if (running_time < base)
@@ -626,6 +602,9 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
   abs_rate = ABS (segment->rate);
   if (G_UNLIKELY (abs_rate != 1.0))
     result = ceil (result * abs_rate);
+
+  start = segment->start;
+  stop = segment->stop;
 
   if (G_LIKELY (segment->rate > 0.0)) {
     /* bring to corrected position in segment */
