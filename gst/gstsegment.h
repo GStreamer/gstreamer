@@ -144,7 +144,8 @@ typedef enum {
  * @rate: the rate of the segment
  * @applied_rate: the already applied rate to the segment
  * @format: the format of the segment values
- * @base: the base time of the segment
+ * @base: the base of the segment
+ * @offset: the offset to apply to @start or @stop
  * @start: the start of the segment
  * @stop: the stop of the segment
  * @time: the stream time of the segment
@@ -163,6 +164,7 @@ struct _GstSegment {
 
   GstFormat       format;
   guint64         base;
+  guint64         offset;
   guint64         start;
   guint64         stop;
   guint64         time;

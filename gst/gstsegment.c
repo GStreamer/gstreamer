@@ -174,6 +174,7 @@ gst_segment_init (GstSegment * segment, GstFormat format)
   segment->applied_rate = 1.0;
   segment->format = format;
   segment->base = 0;
+  segment->offset = 0;
   segment->start = 0;
   segment->stop = -1;
   segment->time = 0;
@@ -308,6 +309,7 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
     /* flush resets the running_time */
     base = 0;
   } else {
+    /* remember the elapsed time */
     base = gst_segment_to_running_time (segment, format, position);
   }
 
@@ -324,14 +326,12 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
         position = 0;
     }
   }
+
   /* set update arg to reflect update of position */
   if (update)
     *update = position != segment->position;
 
   /* update new values */
-  segment->rate = rate;
-  segment->applied_rate = 1.0;
-  segment->base = base;
   /* be explicit about our GstSeekFlag -> GstSegmentFlag conversion */
   segment->flags = GST_SEGMENT_FLAG_NONE;
   if ((flags & GST_SEEK_FLAG_FLUSH) != 0)
@@ -340,6 +340,22 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
     segment->flags |= GST_SEGMENT_FLAG_SKIP;
   if ((flags & GST_SEEK_FLAG_SEGMENT) != 0)
     segment->flags |= GST_SEGMENT_FLAG_SEGMENT;
+
+  segment->rate = rate;
+  segment->applied_rate = 1.0;
+
+  segment->base = base;
+  if (rate > 0.0)
+    segment->offset = position - start;
+  else {
+    if (stop != -1)
+      segment->offset = stop - position;
+    else if (segment->duration != -1)
+      segment->offset = segment->duration - position;
+    else
+      segment->offset = 0;
+  }
+
   segment->start = start;
   segment->stop = stop;
   segment->time = start;
@@ -461,6 +477,9 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
 
   start = segment->start;
 
+  if (segment->rate > 0.0)
+    start += segment->offset;
+
   /* before the segment boundary */
   if (G_UNLIKELY (position < start))
     return -1;
@@ -477,7 +496,11 @@ gst_segment_to_running_time (const GstSegment * segment, GstFormat format,
   } else {
     /* cannot continue if no stop position set or outside of
      * the segment. */
-    if (G_UNLIKELY (stop == -1 || position > stop))
+    if (G_UNLIKELY (stop == -1))
+      return -1;
+
+    stop -= segment->offset;
+    if (G_UNLIKELY (position > stop))
       return -1;
 
     /* bring to uncorrected position in segment */

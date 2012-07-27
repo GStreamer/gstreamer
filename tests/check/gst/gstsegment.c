@@ -31,8 +31,8 @@ check_times (GstSegment * segment, guint64 position, guint64 stream_time,
   st = gst_segment_to_stream_time (segment, segment->format, position);
   rt = gst_segment_to_running_time (segment, segment->format, position);
 
-  fail_unless (st == stream_time);
-  fail_unless (rt == running_time);
+  fail_unless_equals_int64 (st, stream_time);
+  fail_unless_equals_int64 (rt, running_time);
 }
 
 /* mess with the segment structure in the bytes format */
@@ -138,8 +138,10 @@ GST_START_TEST (segment_seek_nosize)
   fail_unless (segment.start == 200);
   fail_unless (segment.position == 200);
   fail_unless (segment.stop == 300);
+  fail_unless (segment.base == 50);
   fail_unless (update == TRUE);
   check_times (&segment, 200, 200, 50);
+  check_times (&segment, 250, 250, 100);
 
   update = FALSE;
   /* add 100 to start (to 300), set stop to 200, this is not allowed.
@@ -152,8 +154,10 @@ GST_START_TEST (segment_seek_nosize)
   fail_unless (segment.start == 200);
   fail_unless (segment.position == 200);
   fail_unless (segment.stop == 300);
+  fail_unless (segment.base == 50);
   /* update didn't change */
   fail_unless (update == FALSE);
+  check_times (&segment, 200, 200, 50);
   check_times (&segment, 250, 250, 100);
 
   update = TRUE;
@@ -166,6 +170,7 @@ GST_START_TEST (segment_seek_nosize)
   fail_unless (segment.start == 200);
   fail_unless (segment.position == 200);
   fail_unless (segment.stop == 300);
+  fail_unless (segment.base == 50);
   fail_unless (update == FALSE);
   check_times (&segment, 250, 250, 100);
 
@@ -477,9 +482,11 @@ GST_START_TEST (segment_seek_rate)
       GST_SEEK_TYPE_NONE, -1, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.format == GST_FORMAT_BYTES);
   fail_unless (segment.start == 0);
+  fail_unless (segment.position == 0);
   fail_unless (segment.stop == -1);
   fail_unless (segment.rate == 2.0);
   fail_unless (update == FALSE);
+  check_times (&segment, 50, 50, 25);
 
   /* set a real stop position, this must happen in bytes */
   gst_segment_do_seek (&segment, 3.0,
@@ -493,6 +500,7 @@ GST_START_TEST (segment_seek_rate)
   /* no seek should happen, we just updated the stop position in forward
    * playback mode.*/
   fail_unless (update == FALSE);
+  check_times (&segment, 60, 60, 20);
 
   /* set some duration, stop -1 END seeks will now work with the
    * duration, if the formats match */
@@ -549,6 +557,63 @@ GST_START_TEST (segment_copy)
 
 GST_END_TEST;
 
+/* mess with the segment structure in the bytes format */
+GST_START_TEST (segment_seek_noupdate)
+{
+  GstSegment segment;
+  gboolean update;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  segment.start = 0;
+  segment.position = 50;
+  segment.stop = 200;
+  segment.time = 0;
+
+  /* doesn't change anything */
+  gst_segment_do_seek (&segment, 1.0,
+      GST_FORMAT_TIME,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0, &update);
+  fail_unless (update == FALSE);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 50);
+  fail_unless (segment.offset == 50);
+
+  gst_segment_do_seek (&segment, 2.0,
+      GST_FORMAT_TIME,
+      GST_SEEK_FLAG_NONE,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0, &update);
+  fail_unless (update == FALSE);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 50);
+  fail_unless_equals_int (segment.offset, 50);
+
+  gst_segment_do_seek (&segment, 1.0,
+      GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH,
+      GST_SEEK_TYPE_NONE, 0, GST_SEEK_TYPE_NONE, 0, &update);
+  fail_unless (update == FALSE);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.position == 50);
+  fail_unless (segment.base == 0);
+  fail_unless (segment.offset == 50);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 gst_segment_suite (void)
 {
@@ -563,6 +628,7 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_seek_reverse);
   tcase_add_test (tc_chain, segment_seek_rate);
   tcase_add_test (tc_chain, segment_copy);
+  tcase_add_test (tc_chain, segment_seek_noupdate);
 
   return s;
 }
