@@ -440,6 +440,8 @@ gst_mpeg2dec_save_buffer (GstMpeg2dec * mpeg2dec, gint id,
 {
   GstMpeg2DecBuffer *mbuf;
 
+  GST_LOG_OBJECT (mpeg2dec, "Saving local info for frame %d", id);
+
   mbuf = g_slice_new0 (GstMpeg2DecBuffer);
   mbuf->id = id;
   mbuf->frame = *frame;
@@ -466,6 +468,7 @@ gst_mpeg2dec_discard_buffer (GstMpeg2dec * mpeg2dec, gint id)
     gst_video_frame_unmap (&mbuf->frame);
     g_slice_free (GstMpeg2DecBuffer, mbuf);
     mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
+    GST_LOG_OBJECT (mpeg2dec, "Discarded local info for frame %d", id);
   } else {
     GST_WARNING ("Could not find buffer %d, will be leaked until next reset",
         id);
@@ -530,8 +533,11 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame,
   GST_DEBUG_OBJECT (mpeg2dec, "set_buf: %p %p %p, frame %i",
       buf[0], buf[1], buf[2], frame->system_frame_number);
 
+  /* Note: We use a non-null 'id' value to make the distinction 
+   * between the dummy buffers (which have an id of NULL) and the
+   * ones we did */
   mpeg2_set_buf (mpeg2dec->decoder, buf,
-      GINT_TO_POINTER (frame->system_frame_number));
+      GINT_TO_POINTER (frame->system_frame_number + 1));
   gst_mpeg2dec_save_buffer (mpeg2dec, frame->system_frame_number, &vframe);
 
 beach:
@@ -865,17 +871,16 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
   GST_DEBUG_OBJECT (mpeg2dec,
       "fbuf:%p display_picture:%p current_picture:%p fbuf->id:%d",
       info->display_fbuf, info->display_picture, info->current_picture,
-      GPOINTER_TO_INT (info->display_fbuf->id));
+      GPOINTER_TO_INT (info->display_fbuf->id) - 1);
 
+  /* Note, the fbuf-id is shifted by 1 to make the difference between
+   * NULL values (used by dummy buffers) and 'real' values */
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (mpeg2dec),
-      GPOINTER_TO_INT (info->display_fbuf->id));
+      GPOINTER_TO_INT (info->display_fbuf->id) - 1);
+  if (!frame)
+    goto no_frame;
   picture = info->display_picture;
   key_frame = (picture->flags & PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I;
-
-  if (G_UNLIKELY (!frame)) {
-    GST_WARNING ("display buffer does not have a valid frame");
-    return GST_FLOW_ERROR;
-  }
 
   GST_DEBUG_OBJECT (mpeg2dec, "picture flags: %d, type: %d, keyframe: %d",
       picture->flags, picture->flags & PIC_MASK_CODING_TYPE, key_frame);
@@ -925,6 +930,13 @@ handle_slice (GstMpeg2dec * mpeg2dec, const mpeg2_info_t * info)
 beach:
   gst_video_codec_state_unref (state);
   return ret;
+
+no_frame:
+  {
+    GST_WARNING ("display buffer does not have a valid frame");
+    return GST_FLOW_ERROR;
+  }
+
 }
 
 static GstFlowReturn
@@ -1003,14 +1015,16 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
       case STATE_END:
         GST_DEBUG_OBJECT (mpeg2dec, "end");
       case STATE_SLICE:
-        if (info->display_fbuf) {
+        GST_DEBUG_OBJECT (mpeg2dec, "display_fbuf:%p, discard_fbuf:%p",
+            info->display_fbuf, info->discard_fbuf);
+        if (info->display_fbuf && info->display_fbuf->id) {
           ret = handle_slice (mpeg2dec, info);
         } else {
           GST_DEBUG_OBJECT (mpeg2dec, "no picture to display");
         }
-        if (info->discard_fbuf)
+        if (info->discard_fbuf && info->discard_fbuf->id)
           gst_mpeg2dec_discard_buffer (mpeg2dec,
-              GPOINTER_TO_INT (info->discard_fbuf->id));
+              GPOINTER_TO_INT (info->discard_fbuf->id) - 1);
         if (state != STATE_SLICE) {
           gst_mpeg2dec_clear_buffers (mpeg2dec);
         }
