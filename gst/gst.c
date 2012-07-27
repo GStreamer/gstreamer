@@ -731,7 +731,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_scheduling_flags_get_type ());
   g_type_class_ref (gst_meta_flags_get_type ());
   g_type_class_ref (gst_toc_entry_type_get_type ());
-
+  g_type_class_ref (gst_toc_scope_get_type ());
   g_type_class_ref (gst_control_binding_get_type ());
   g_type_class_ref (gst_control_source_get_type ());
   g_type_class_ref (gst_lock_flags_get_type ());
@@ -1084,6 +1084,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_tag_flag_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_task_state_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_toc_entry_type_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_toc_scope_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_type_find_probability_get_type
           ()));
   g_type_class_unref (g_type_class_peek (gst_uri_type_get_type ()));

@@ -137,7 +137,7 @@ create_toc (void)
   GstTocEntry *ed, *ch, *subch;
   GstTagList *tags;
 
-  toc = gst_toc_new ();
+  toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, TOC_TAG, NULL);
   gst_toc_set_tags (toc, tags);

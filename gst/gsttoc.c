@@ -90,6 +90,7 @@ struct _GstToc
 {
   GstMiniObject mini_object;
 
+  GstTocScope scope;
   GList *entries;
   GstTagList *tags;
 };
@@ -106,6 +107,7 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstTocEntry, gst_toc_entry);
 
 /**
  * gst_toc_new:
+ * @scope: scope of this TOC
  *
  * Create a new #GstToc structure.
  *
@@ -113,9 +115,12 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstTocEntry, gst_toc_entry);
  *     with gst_toc_unref().
  */
 GstToc *
-gst_toc_new (void)
+gst_toc_new (GstTocScope scope)
 {
   GstToc *toc;
+
+  g_return_val_if_fail (scope == GST_TOC_SCOPE_GLOBAL ||
+      scope == GST_TOC_SCOPE_CURRENT, NULL);
 
   toc = g_slice_new0 (GstToc);
 
@@ -123,9 +128,24 @@ gst_toc_new (void)
       (GstMiniObjectCopyFunction) gst_toc_copy, NULL,
       (GstMiniObjectFreeFunction) gst_toc_free);
 
+  toc->scope = scope;
   toc->tags = gst_tag_list_new_empty ();
 
   return toc;
+}
+
+/**
+ * gst_toc_get_scope:
+ * @toc: a #GstToc instance
+ *
+ * Returns: scope of @toc
+ */
+GstTocScope
+gst_toc_get_scope (const GstToc * toc)
+{
+  g_return_val_if_fail (toc != NULL, GST_TOC_SCOPE_GLOBAL);
+
+  return toc->scope;
 }
 
 /**
@@ -413,7 +433,7 @@ gst_toc_copy (const GstToc * toc)
 
   g_return_val_if_fail (toc != NULL, NULL);
 
-  ret = gst_toc_new ();
+  ret = gst_toc_new (toc->scope);
 
   if (GST_IS_TAG_LIST (toc->tags)) {
     list = gst_tag_list_copy (toc->tags);
@@ -431,7 +451,6 @@ gst_toc_copy (const GstToc * toc)
     cur = cur->next;
   }
   ret->entries = g_list_reverse (ret->entries);
-
   return ret;
 }
 
@@ -730,7 +749,8 @@ void
 gst_toc_dump (GstToc * toc)
 {
 #ifndef GST_DISABLE_GST_DEBUG
-  GST_TRACE ("        Toc %p, tags: %" GST_PTR_FORMAT, toc, toc->tags);
+  GST_TRACE ("        Toc %p, scope: %s, tags: %" GST_PTR_FORMAT, toc,
+      (toc->scope == GST_TOC_SCOPE_GLOBAL) ? "global" : "current", toc->tags);
   gst_toc_dump_entries (toc->entries, 2);
 #endif
 }

@@ -137,7 +137,8 @@ GST_START_TEST (test_serializing)
   gchar *uid;
   gint64 start = -1, stop = -1;
 
-  toc = gst_toc_new ();
+  toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
+  fail_unless_equals_int (gst_toc_get_scope (toc), GST_TOC_SCOPE_GLOBAL);
   fail_if (toc == NULL);
   tags = gst_tag_list_new (GST_TAG_TITLE, TOC_TAG, NULL);
   gst_toc_set_tags (toc, tags);

@@ -1151,10 +1151,12 @@ EXPORTS
 	gst_toc_entry_type_get_type
 	gst_toc_find_entry
 	gst_toc_get_entries
+	gst_toc_get_scope
 	gst_toc_get_tags
 	gst_toc_get_type
 	gst_toc_merge_tags
 	gst_toc_new
+	gst_toc_scope_get_type
 	gst_toc_set_tags
 	gst_toc_setter_get_toc
 	gst_toc_setter_get_type

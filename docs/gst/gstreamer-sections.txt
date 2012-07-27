@@ -2736,6 +2736,7 @@ gst_task_state_get_type
 <FILE>gsttoc</FILE>
 <TITLE>GstToc</TITLE>
 GstToc
+GstTocScope
 GstTocEntry
 GstTocEntryType
 gst_toc_new
@@ -2743,6 +2744,7 @@ gst_toc_ref
 gst_toc_unref
 gst_toc_copy
 gst_toc_make_writable
+gst_toc_get_scope
 gst_toc_get_entries
 gst_toc_append_entry
 gst_toc_get_tags

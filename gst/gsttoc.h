@@ -37,6 +37,24 @@ typedef struct _GstTocEntry GstTocEntry;
 typedef struct _GstToc GstToc;
 
 /**
+ * GstTocScope:
+ * @GST_TOC_SCOPE_GLOBAL: global TOC representing all selectable options
+ *     (this is what applications are usually interested in)
+ * @GST_TOC_SCOPE_CURRENT: TOC for the currently active/selected stream
+ *     (this is a TOC representing the current stream from start to EOS,
+ *     and is what a TOC writer / muxer is usually interested in; it will
+ *     usually be a subset of the global TOC, e.g. just the chapters of
+ *     the current title, or the chapters selected for playback from the
+ *     current title)
+ *
+ * The scope of a TOC.
+ */
+typedef enum {
+  GST_TOC_SCOPE_GLOBAL = 1,
+  GST_TOC_SCOPE_CURRENT = 2
+} GstTocScope;
+
+/**
  * GstTocEntryType:
  * @GST_TOC_ENTRY_TYPE_ANGLE: entry is an angle (i.e. an alternative)
  * @GST_TOC_ENTRY_TYPE_VERSION: entry is a version (i.e. alternative)
@@ -68,7 +86,9 @@ GType           gst_toc_get_type                (void);
 GType           gst_toc_entry_get_type          (void);
 
 /* functions to create, ref and unref/free TOCs */
-GstToc *           gst_toc_new                     (void);
+GstToc *           gst_toc_new                     (GstTocScope scope);
+
+GstTocScope        gst_toc_get_scope               (const GstToc *toc);
 
 void               gst_toc_set_tags                (GstToc *toc, GstTagList * tags);
 void               gst_toc_merge_tags              (GstToc *toc, GstTagList *tags, GstTagMergeMode mode);
