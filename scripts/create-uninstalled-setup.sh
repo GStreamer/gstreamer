@@ -52,6 +52,41 @@ mkdir -p $UNINSTALLED_ROOT/$BRANCH
 mkdir -p $UNINSTALLED_ROOT/$BRANCH/prefix
 
 
+echo ""
+echo "Checking basic build tools and dependencies are installed..."
+echo ""
+
+if ! pkg-config --version 2>/dev/null >/dev/null; then
+  DEPS_OK="no"
+elif ! pkg-config --exists glib-2.0 orc-0.4 2>/dev/null >/dev/null; then
+  DEPS_OK="no"
+elif ! bison --version 2>/dev/null >/dev/null; then
+  DEPS_OK="no"
+elif ! flex --version 2>/dev/null >/dev/null; then
+  DEPS_OK="no"
+else
+  DEPS_OK="yes"
+fi
+
+if test "$DEPS_OK" != "yes"; then
+echo "==========================================================================================="
+echo ""
+echo "  Some very basic build tools or dependencies are missing."
+echo ""
+echo "  Please visit"
+echo ""
+echo "      http://gstreamer.freedesktop.org/wiki/BuildDependenciesDebianUbuntu"
+echo ""
+echo "         or"
+echo ""
+echo "      http://gstreamer.freedesktop.org/wiki/Fedora"
+echo ""
+echo "  for instructions how to install them."
+echo ""
+echo "==========================================================================================="
+fi
+
+
 cd $UNINSTALLED_ROOT/$BRANCH
 
 for m in $MODULES
