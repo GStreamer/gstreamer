@@ -3050,8 +3050,8 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
   GstFormat format;
   gdouble rate;
   GstSeekFlags flags;
-  GstSeekType cur_type, stop_type;
-  gint64 cur, stop;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
   gboolean update;
   guint32 seqnum;
   GstEvent *tevent;
@@ -3060,7 +3060,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
     GST_DEBUG_OBJECT (ogg, "seek with event");
 
     gst_event_parse_seek (event, &rate, &format, &flags,
-        &cur_type, &cur, &stop_type, &stop);
+        &start_type, &start, &stop_type, &stop);
 
     /* we can only seek on time */
     if (format != GST_FORMAT_TIME) {
@@ -3121,7 +3121,7 @@ gst_ogg_demux_perform_seek_pull (GstOggDemux * ogg, GstEvent * event)
 
   if (event) {
     gst_segment_do_seek (&ogg->segment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
+        start_type, start, stop_type, stop, &update);
   }
 
   GST_DEBUG_OBJECT (ogg, "segment positions set to %" GST_TIME_FORMAT "-%"

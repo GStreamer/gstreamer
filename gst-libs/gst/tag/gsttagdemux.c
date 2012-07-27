@@ -766,30 +766,30 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
     {
       gdouble rate;
       GstFormat format;
-      GstSeekType cur_type, stop_type;
+      GstSeekType start_type, stop_type;
       GstSeekFlags flags;
-      gint64 cur, stop;
+      gint64 start, stop;
 
       gst_event_parse_seek (event, &rate, &format, &flags,
-          &cur_type, &cur, &stop_type, &stop);
+          &start_type, &start, &stop_type, &stop);
 
       if (format == GST_FORMAT_BYTES &&
           tagdemux->priv->state == GST_TAG_DEMUX_STREAMING &&
           gst_pad_is_linked (tagdemux->priv->sinkpad)) {
         GstEvent *upstream;
 
-        switch (cur_type) {
+        switch (start_type) {
           case GST_SEEK_TYPE_SET:
-            if (cur == -1)
-              cur = 0;
-            cur += tagdemux->priv->strip_start;
+            if (start == -1)
+              start = 0;
+            start += tagdemux->priv->strip_start;
             break;
           case GST_SEEK_TYPE_END:
             /* Adjust the seek to be relative to the start of any end tag
              * (note: 10 bytes before end is represented by stop=-10) */
-            if (cur > 0)
-              cur = 0;
-            cur -= tagdemux->priv->strip_end;
+            if (start > 0)
+              start = 0;
+            start -= tagdemux->priv->strip_end;
             break;
           case GST_SEEK_TYPE_NONE:
           default:
@@ -814,7 +814,7 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstObject * parent, GstEvent * event)
             break;
         }
         upstream = gst_event_new_seek (rate, format, flags,
-            cur_type, cur, stop_type, stop);
+            start_type, start, stop_type, stop);
         res = gst_pad_push_event (tagdemux->priv->sinkpad, upstream);
       }
       break;

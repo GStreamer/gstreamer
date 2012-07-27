@@ -1153,12 +1153,12 @@ gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
       GstFormat format;
       gdouble rate;
       GstSeekFlags flags;
-      GstSeekType cur_type, stop_type;
-      gint64 cur, stop;
-      gint64 tcur, tstop;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      gint64 tstart, tstop;
       guint32 seqnum;
 
-      gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+      gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
       seqnum = gst_event_get_seqnum (event);
 
@@ -1176,8 +1176,8 @@ gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
       /* ... though a non-time seek can be aided as well */
       /* First bring the requested format to time */
       if (!(res =
-              gst_pad_query_convert (decoder->srcpad, format, cur,
-                  GST_FORMAT_TIME, &tcur)))
+              gst_pad_query_convert (decoder->srcpad, format, start,
+                  GST_FORMAT_TIME, &tstart)))
         goto convert_error;
       if (!(res =
               gst_pad_query_convert (decoder->srcpad, format, stop,
@@ -1186,7 +1186,7 @@ gst_video_decoder_src_event_default (GstVideoDecoder * decoder,
 
       /* then seek with time on the peer */
       event = gst_event_new_seek (rate, GST_FORMAT_TIME,
-          flags, cur_type, tcur, stop_type, tstop);
+          flags, start_type, tstart, stop_type, tstop);
       gst_event_set_seqnum (event, seqnum);
 
       res = gst_pad_push_event (decoder->sinkpad, event);
