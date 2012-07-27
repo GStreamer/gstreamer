@@ -22,6 +22,19 @@
 
 #include <gst/check/gstcheck.h>
 
+static void
+check_times (GstSegment * segment, guint64 position, guint64 stream_time,
+    guint64 running_time)
+{
+  guint64 st, rt;
+
+  st = gst_segment_to_stream_time (segment, segment->format, position);
+  rt = gst_segment_to_running_time (segment, segment->format, position);
+
+  fail_unless (st == stream_time);
+  fail_unless (rt == running_time);
+}
+
 /* mess with the segment structure in the bytes format */
 GST_START_TEST (segment_seek_nosize)
 {
@@ -38,8 +51,11 @@ GST_START_TEST (segment_seek_nosize)
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.start == 100);
+  fail_unless (segment.position == 100);
   fail_unless (segment.stop == -1);
   fail_unless (update == TRUE);
+  /* appended after current position 0 */
+  check_times (&segment, 100, 100, 0);
 
   /* do some clipping on the open range */
   /* completely outside */
@@ -110,14 +126,20 @@ GST_START_TEST (segment_seek_nosize)
   fail_unless (cstart == 150);
   fail_unless (cstop == -1);
 
+  /* move to 150, this is a running_time of 50 */
+  segment.position = 150;
+  check_times (&segment, 150, 150, 50);
+
   /* add 100 to start, set stop to 300 */
   gst_segment_do_seek (&segment, 1.0,
       GST_FORMAT_BYTES,
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_SET, 100 + 100, GST_SEEK_TYPE_SET, 300, &update);
   fail_unless (segment.start == 200);
+  fail_unless (segment.position == 200);
   fail_unless (segment.stop == 300);
   fail_unless (update == TRUE);
+  check_times (&segment, 200, 200, 50);
 
   update = FALSE;
   /* add 100 to start (to 300), set stop to 200, this is not allowed.
@@ -128,9 +150,11 @@ GST_START_TEST (segment_seek_nosize)
           GST_SEEK_FLAG_NONE,
           GST_SEEK_TYPE_SET, 200 + 100, GST_SEEK_TYPE_SET, 200, &update));
   fail_unless (segment.start == 200);
+  fail_unless (segment.position == 200);
   fail_unless (segment.stop == 300);
   /* update didn't change */
   fail_unless (update == FALSE);
+  check_times (&segment, 250, 250, 100);
 
   update = TRUE;
   /* seek relative to end, should not do anything since size is
@@ -140,8 +164,10 @@ GST_START_TEST (segment_seek_nosize)
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_END, -300, GST_SEEK_TYPE_END, -100, &update);
   fail_unless (segment.start == 200);
+  fail_unless (segment.position == 200);
   fail_unless (segment.stop == 300);
   fail_unless (update == FALSE);
+  check_times (&segment, 250, 250, 100);
 
   /* completely outside */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 0, 50, &cstart, &cstop);
@@ -228,8 +254,10 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_SET, 100, GST_SEEK_TYPE_NONE, -1, &update);
   fail_unless (segment.start == 100);
+  fail_unless (segment.position == 100);
   fail_unless (segment.stop == -1);
   fail_unless (update == TRUE);
+  check_times (&segment, 100, 100, 0);
 
   /* do some clipping on the open range */
   /* completely outside */
@@ -288,7 +316,9 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_SET, 100 + 100, GST_SEEK_TYPE_SET, 300, &update);
   fail_unless (segment.start == 200);
+  fail_unless (segment.position == 200);
   fail_unless (segment.stop == 200);
+  check_times (&segment, 200, 200, 0);
 
   /* add 100 to start (to 300), set stop to 200, this clips start
    * to duration */
@@ -297,8 +327,10 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_SET, 200 + 100, GST_SEEK_TYPE_SET, 200, &update);
   fail_unless (segment.start == 200);
+  fail_unless (segment.position == 200);
   fail_unless (segment.stop == 200);
   fail_unless (update == FALSE);
+  check_times (&segment, 200, 200, 0);
 
   /* seek relative to end */
   gst_segment_do_seek (&segment, 1.0,
@@ -306,8 +338,10 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_FLAG_NONE,
       GST_SEEK_TYPE_END, -100, GST_SEEK_TYPE_END, -20, &update);
   fail_unless (segment.start == 100);
+  fail_unless (segment.position == 100);
   fail_unless (segment.stop == 180);
   fail_unless (update == TRUE);
+  check_times (&segment, 150, 150, 50);
 
   /* completely outside */
   res = gst_segment_clip (&segment, GST_FORMAT_BYTES, 0, 50, &cstart, &cstop);
@@ -395,6 +429,9 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.time == 0);
   fail_unless (segment.position == 100);
   fail_unless (update == TRUE);
+  check_times (&segment, 100, 100, 0);
+  check_times (&segment, 50, 50, 50);
+  check_times (&segment, 0, 0, 100);
 
   /* update */
   gst_segment_do_seek (&segment, -1.0,
@@ -406,6 +443,9 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.time == 10);
   fail_unless (segment.position == 80);
   fail_unless (update == TRUE);
+  check_times (&segment, 80, 80, 0);
+  check_times (&segment, 40, 40, 40);
+  check_times (&segment, 10, 10, 70);
 
   gst_segment_do_seek (&segment, -1.0,
       GST_FORMAT_BYTES,
@@ -416,6 +456,8 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.time == 20);
   fail_unless (segment.position == 80);
   fail_unless (update == FALSE);
+  check_times (&segment, 80, 80, 0);
+  check_times (&segment, 20, 20, 60);
 }
 
 GST_END_TEST;
