@@ -240,13 +240,6 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
 
   position = segment->position;
 
-  if (flags & GST_SEEK_FLAG_FLUSH) {
-    /* flush resets the running_time */
-    base = 0;
-  } else {
-    base = gst_segment_to_running_time (segment, format, position);
-  }
-
   /* segment->start is never invalid */
   switch (start_type) {
     case GST_SEEK_TYPE_NONE:
@@ -311,20 +304,12 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
     }
   }
 
-  segment->rate = rate;
-  segment->applied_rate = 1.0;
-  segment->base = base;
-  /* be explicit about our GstSeekFlag -> GstSegmentFlag conversion */
-  segment->flags = GST_SEGMENT_FLAG_NONE;
-  if ((flags & GST_SEEK_FLAG_FLUSH) != 0)
-    segment->flags |= GST_SEGMENT_FLAG_RESET;
-  if ((flags & GST_SEEK_FLAG_SKIP) != 0)
-    segment->flags |= GST_SEGMENT_FLAG_SKIP;
-  if ((flags & GST_SEEK_FLAG_SEGMENT) != 0)
-    segment->flags |= GST_SEGMENT_FLAG_SEGMENT;
-  segment->start = start;
-  segment->stop = stop;
-  segment->time = start;
+  if (flags & GST_SEEK_FLAG_FLUSH) {
+    /* flush resets the running_time */
+    base = 0;
+  } else {
+    base = gst_segment_to_running_time (segment, format, position);
+  }
 
   if (update_start && rate > 0.0) {
     position = start;
@@ -343,7 +328,21 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   if (update)
     *update = position != segment->position;
 
-  /* update new position */
+  /* update new values */
+  segment->rate = rate;
+  segment->applied_rate = 1.0;
+  segment->base = base;
+  /* be explicit about our GstSeekFlag -> GstSegmentFlag conversion */
+  segment->flags = GST_SEGMENT_FLAG_NONE;
+  if ((flags & GST_SEEK_FLAG_FLUSH) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_RESET;
+  if ((flags & GST_SEEK_FLAG_SKIP) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_SKIP;
+  if ((flags & GST_SEEK_FLAG_SEGMENT) != 0)
+    segment->flags |= GST_SEGMENT_FLAG_SEGMENT;
+  segment->start = start;
+  segment->stop = stop;
+  segment->time = start;
   segment->position = position;
 
   return TRUE;
