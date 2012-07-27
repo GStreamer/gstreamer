@@ -1302,7 +1302,6 @@ beach:
 static void
 gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 {
-#if 0
   static const gchar *mimetypes[] = {
     "application/x-font-ttf",
     "application/x-font-otf",
@@ -1312,7 +1311,6 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
     ".otf",
     ".ttf"
   };
-#endif
   guint tag_size;
 
   if (!taglist)
@@ -1320,28 +1318,25 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 
   tag_size = gst_tag_list_get_tag_size (taglist, GST_TAG_ATTACHMENT);
   if (tag_size > 0 && render->embeddedfonts) {
-#if 0
-    const GValue *value;
+    GstSample *sample;
     GstBuffer *buf;
-    GstCaps *caps;
-    GstStructure *structure;
+    const GstStructure *structure;
     gboolean valid_mimetype, valid_extension;
     guint j;
     const gchar *filename;
-#endif
     guint index;
+    GstMapInfo map;
 
     GST_DEBUG_OBJECT (render, "TAG event has attachments");
 
     for (index = 0; index < tag_size; index++) {
-#if 0
-      value = gst_tag_list_get_value_index (taglist, GST_TAG_ATTACHMENT, index);
-      buf = gst_value_get_buffer (value);
-      if (!buf || !GST_BUFFER_CAPS (buf))
+      if (!gst_tag_list_get_sample_index (taglist, GST_TAG_ATTACHMENT, index,
+              &sample))
         continue;
-
-      caps = GST_BUFFER_CAPS (buf);
-      structure = gst_caps_get_structure (caps, 0);
+      buf = gst_sample_get_buffer (sample);
+      structure = gst_sample_get_info (sample);
+      if (!buf || !structure)
+        continue;
 
       valid_mimetype = FALSE;
       valid_extension = FALSE;
@@ -1369,12 +1364,13 @@ gst_ass_render_handle_tags (GstAssRender * render, GstTagList * taglist)
 
       if (valid_mimetype || valid_extension) {
         g_mutex_lock (&render->ass_mutex);
+        gst_buffer_map (buf, &map, GST_MAP_READ);
         ass_add_font (render->ass_library, (gchar *) filename,
-            (gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
+            (gchar *) map.data, map.size);
+        gst_buffer_unmap (buf, &map);
         GST_DEBUG_OBJECT (render, "registered new font %s", filename);
         g_mutex_unlock (&render->ass_mutex);
       }
-#endif
     }
   }
 }
