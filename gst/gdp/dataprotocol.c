@@ -530,8 +530,8 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
       gdouble rate;
       GstFormat format;
       GstSeekFlags flags;
-      GstSeekType cur_type, stop_type;
-      gint64 cur, stop;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
 
       g_return_val_if_fail (payload != NULL, NULL);
 
@@ -539,12 +539,12 @@ gst_dp_event_from_packet_0_2 (guint header_length, const guint8 * header,
       rate = 1.0;
       format = (GstFormat) GST_READ_UINT32_BE (payload);
       flags = (GstSeekFlags) GST_READ_UINT32_BE (payload + 4);
-      cur_type = (GstSeekType) GST_READ_UINT32_BE (payload + 8);
-      cur = (gint64) GST_READ_UINT64_BE (payload + 12);
+      start_type = (GstSeekType) GST_READ_UINT32_BE (payload + 8);
+      start = (gint64) GST_READ_UINT64_BE (payload + 12);
       stop_type = (GstSeekType) GST_READ_UINT32_BE (payload + 20);
       stop = (gint64) GST_READ_UINT64_BE (payload + 24);
 
-      event = gst_event_new_seek (rate, format, flags, cur_type, cur,
+      event = gst_event_new_seek (rate, format, flags, start_type, start,
           stop_type, stop);
       GST_EVENT_TIMESTAMP (event) = GST_DP_HEADER_TIMESTAMP (header);
       break;
