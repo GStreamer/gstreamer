@@ -2617,8 +2617,8 @@ gst_tag_list_get_date
 gst_tag_list_get_date_index
 gst_tag_list_get_date_time
 gst_tag_list_get_date_time_index
-gst_tag_list_get_buffer
-gst_tag_list_get_buffer_index
+gst_tag_list_get_sample
+gst_tag_list_get_sample_index
 <SUBSECTION Standard>
 GST_TAG_LIST
 GST_IS_TAG_LIST

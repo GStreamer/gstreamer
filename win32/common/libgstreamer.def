@@ -1055,8 +1055,6 @@ EXPORTS
 	gst_tag_list_foreach
 	gst_tag_list_get_boolean
 	gst_tag_list_get_boolean_index
-	gst_tag_list_get_buffer
-	gst_tag_list_get_buffer_index
 	gst_tag_list_get_date
 	gst_tag_list_get_date_index
 	gst_tag_list_get_date_time
@@ -1071,6 +1069,8 @@ EXPORTS
 	gst_tag_list_get_int_index
 	gst_tag_list_get_pointer
 	gst_tag_list_get_pointer_index
+	gst_tag_list_get_sample
+	gst_tag_list_get_sample_index
 	gst_tag_list_get_string
 	gst_tag_list_get_string_index
 	gst_tag_list_get_tag_size
