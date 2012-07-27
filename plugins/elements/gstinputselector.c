@@ -1586,12 +1586,24 @@ gst_input_selector_activate_sinkpad (GstInputSelector * sel, GstPad * pad)
 
   selpad->active = TRUE;
   active_sinkpad = sel->active_sinkpad;
-  if (active_sinkpad == NULL) {
-    /* first pad we get activity on becomes the activated pad by default */
-    if (sel->active_sinkpad)
-      gst_object_unref (sel->active_sinkpad);
-    active_sinkpad = sel->active_sinkpad = gst_object_ref (pad);
-    GST_DEBUG_OBJECT (sel, "Activating pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+  if (sel->active_sinkpad == NULL) {
+    GValue item = G_VALUE_INIT;
+    GstIterator *iter = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (sel));
+    GstIteratorResult ires;
+
+    while ((ires = gst_iterator_next (iter, &item)) == GST_ITERATOR_RESYNC)
+      gst_iterator_resync (iter);
+    if (ires == GST_ITERATOR_OK) {
+      /* If no pad is currently selected, we return the first usable pad to
+       * guarantee consistency */
+
+      active_sinkpad = sel->active_sinkpad = g_value_dup_object (&item);
+      g_value_reset (&item);
+      GST_DEBUG_OBJECT (sel, "Activating pad %s:%s",
+          GST_DEBUG_PAD_NAME (active_sinkpad));
+    } else
+      GST_WARNING_OBJECT (sel, "Couldn't find a default sink pad");
+    gst_iterator_free (iter);
   }
 
   return active_sinkpad;
