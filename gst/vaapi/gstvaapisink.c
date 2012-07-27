@@ -488,16 +488,6 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     sink->video_width  = video_width;
     sink->video_height = video_height;
 
-#if USE_WAYLAND
-    /* XXX: fix GstVaapiDisplayWayland::get_size() */
-    if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_WAYLAND) {
-        sink->window_width  = video_width;
-        sink->window_height = video_height;
-        return gst_vaapisink_ensure_window(sink,
-            sink->window_width, sink->window_height);
-    }
-#endif
-
     gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
     sink->video_par_n  = video_par_n;
     sink->video_par_d  = video_par_d;

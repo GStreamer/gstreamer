@@ -224,6 +224,35 @@ gst_vaapi_display_wayland_constructed(GObject *object)
 }
 
 static void
+output_handle_geometry(void *data, struct wl_output *output,
+                       int x, int y, int physical_width, int physical_height,
+                       int subpixel, const char *make, const char *model,
+                       int transform)
+{
+    GstVaapiDisplayWaylandPrivate * const priv = data;
+
+    priv->phys_width  = physical_width;
+    priv->phys_height = physical_height;
+}
+
+static void
+output_handle_mode(void *data, struct wl_output *wl_output,
+                   uint32_t flags, int width, int height, int refresh)
+{
+    GstVaapiDisplayWaylandPrivate * const priv = data;
+
+    if (flags & WL_OUTPUT_MODE_CURRENT) {
+        priv->width  = width;
+        priv->height = height;
+    }
+}
+
+static const struct wl_output_listener output_listener = {
+    output_handle_geometry,
+    output_handle_mode,
+};
+
+static void
 display_handle_global(
     struct wl_display *display,
     uint32_t           id,
@@ -238,6 +267,10 @@ display_handle_global(
         priv->compositor = wl_display_bind(display, id, &wl_compositor_interface);
     else if (strcmp(interface, "wl_shell") == 0)
         priv->shell = wl_display_bind(display, id, &wl_shell_interface);
+    else if (strcmp(interface, "wl_output") == 0) {
+        priv->output = wl_display_bind(display, id, &wl_output_interface);
+        wl_output_add_listener(priv->output, &output_listener, priv);
+    }
 }
 
 static int
@@ -338,6 +371,46 @@ gst_vaapi_display_wayland_get_display_info(
 }
 
 static void
+gst_vaapi_display_wayland_get_size(
+    GstVaapiDisplay *display,
+    guint           *pwidth,
+    guint           *pheight
+)
+{
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
+
+    if (!priv->output)
+        return;
+
+    if (pwidth)
+        *pwidth = priv->width;
+
+    if (pheight)
+        *pheight = priv->height;
+}
+
+static void
+gst_vaapi_display_wayland_get_size_mm(
+    GstVaapiDisplay *display,
+    guint           *pwidth,
+    guint           *pheight
+)
+{
+    GstVaapiDisplayWaylandPrivate * const priv =
+        GST_VAAPI_DISPLAY_WAYLAND(display)->priv;
+
+    if (!priv->output)
+        return;
+
+    if (pwidth)
+        *pwidth = priv->phys_width;
+
+    if (pheight)
+        *pheight = priv->phys_height;
+}
+
+static void
 gst_vaapi_display_wayland_class_init(GstVaapiDisplayWaylandClass * klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
@@ -353,6 +426,8 @@ gst_vaapi_display_wayland_class_init(GstVaapiDisplayWaylandClass * klass)
     dpy_class->open_display     = gst_vaapi_display_wayland_open_display;
     dpy_class->close_display    = gst_vaapi_display_wayland_close_display;
     dpy_class->get_display      = gst_vaapi_display_wayland_get_display_info;
+    dpy_class->get_size         = gst_vaapi_display_wayland_get_size;
+    dpy_class->get_size_mm      = gst_vaapi_display_wayland_get_size_mm;
 
     /**
      * GstVaapiDisplayWayland:wayland-display:
@@ -387,7 +462,7 @@ gst_vaapi_display_wayland_class_init(GstVaapiDisplayWaylandClass * klass)
 static void
 gst_vaapi_display_wayland_init(GstVaapiDisplayWayland *display)
 {
-    GstVaapiDisplayWaylandPrivate *priv =
+    GstVaapiDisplayWaylandPrivate * const priv =
         GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display);
 
     display->priv        = priv;
@@ -396,6 +471,11 @@ gst_vaapi_display_wayland_init(GstVaapiDisplayWayland *display)
     priv->wl_display     = NULL;
     priv->compositor     = NULL;
     priv->shell          = NULL;
+    priv->output         = NULL;
+    priv->width          = 0;
+    priv->height         = 0;
+    priv->phys_width     = 0;
+    priv->phys_height    = 0;
     priv->event_fd       = -1;
     priv->event_mask     = 0;
 }
