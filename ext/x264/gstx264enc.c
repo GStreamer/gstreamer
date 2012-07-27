@@ -1560,14 +1560,11 @@ gst_x264_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
       GstTagList *tags = NULL;
-      const GstStructure *s;
 
       gst_event_parse_tag (event, &tags);
       tags = gst_tag_list_copy (tags);
-      s = gst_event_get_structure (event);
 
-      gst_event_take (&event, gst_event_new_tag (gst_structure_get_name (s),
-              tags));
+      gst_event_take (&event, gst_event_new_tag (tags));
 
       /* drop codec/video-codec and replace encoder/encoder-version */
       gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);

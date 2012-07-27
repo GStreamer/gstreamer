@@ -128,13 +128,17 @@ gst_sid_memory_get_type (void)
 
 static void gst_siddec_finalize (GObject * object);
 
-static GstFlowReturn gst_siddec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer);
-static gboolean gst_siddec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
+static GstFlowReturn gst_siddec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_siddec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 static gboolean gst_siddec_src_convert (GstPad * pad, GstFormat src_format,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value);
-static gboolean gst_siddec_src_event (GstPad * pad, GstObject * parent, GstEvent * event);
-static gboolean gst_siddec_src_query (GstPad * pad, GstObject * parent, GstQuery * query);
+static gboolean gst_siddec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_siddec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 static void gst_siddec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -160,37 +164,37 @@ gst_siddec_class_init (GstSidDecClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TUNE,
       g_param_spec_int ("tune", "tune", "tune",
           0, 100, DEFAULT_TUNE,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLOCK,
       g_param_spec_enum ("clock", "clock", "clock",
           GST_TYPE_SID_CLOCK, DEFAULT_CLOCK,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MEMORY,
       g_param_spec_enum ("memory", "memory", "memory", GST_TYPE_SID_MEMORY,
           DEFAULT_MEMORY,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTER,
       g_param_spec_boolean ("filter", "filter", "filter", DEFAULT_FILTER,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MEASURED_VOLUME,
       g_param_spec_boolean ("measured-volume", "measured_volume",
           "measured_volume", DEFAULT_MEASURED_VOLUME,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MOS8580,
       g_param_spec_boolean ("mos8580", "mos8580", "mos8580", DEFAULT_MOS8580,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FORCE_SPEED,
       g_param_spec_boolean ("force-speed", "force_speed", "force_speed",
           DEFAULT_FORCE_SPEED,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BLOCKSIZE,
       g_param_spec_uint ("blocksize", "Block size",
           "Size in bytes to output per buffer", 1, G_MAXUINT,
           DEFAULT_BLOCKSIZE,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (gobject_class, PROP_METADATA,
       g_param_spec_boxed ("metadata", "Metadata", "Metadata", GST_TYPE_CAPS,
-          (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (gstelement_class, "Sid decoder",
       "Codec/Decoder/Audio", "Use libsidplay to decode SID audio tunes",
@@ -272,7 +276,7 @@ update_tags (GstSidDec * siddec)
       gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
           GST_TAG_COPYRIGHT, info.copyrightString, (void *) NULL);
     }
-    gst_pad_push_event (siddec->srcpad, gst_event_new_tag ("GstDecoder", list));
+    gst_pad_push_event (siddec->srcpad, gst_event_new_tag (list));
   }
 }
 
@@ -418,7 +422,7 @@ pause:
     if (ret == GST_FLOW_EOS) {
       /* perform EOS logic, FIXME, segment seek? */
       gst_pad_push_event (pad, gst_event_new_eos ());
-    } else  if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
+    } else if (ret < GST_FLOW_EOS || ret == GST_FLOW_NOT_LINKED) {
       /* for fatal errors we post an error message */
       GST_ELEMENT_ERROR (siddec, STREAM, FAILED,
           (NULL), ("streaming task paused, reason %s", reason));
@@ -450,8 +454,7 @@ start_play_tune (GstSidDec * siddec)
     goto could_not_init;
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
-  gst_pad_push_event (siddec->srcpad,
-      gst_event_new_segment (&segment));
+  gst_pad_push_event (siddec->srcpad, gst_event_new_segment (&segment));
 
   res = gst_pad_start_task (siddec->srcpad,
       (GstTaskFunction) play_loop, siddec->srcpad, NULL);

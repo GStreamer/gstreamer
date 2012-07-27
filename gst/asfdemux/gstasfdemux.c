@@ -1432,15 +1432,17 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           gst_event_new_segment (&demux->segment));
 
       /* now post any global tags we may have found */
-      if (demux->taglist == NULL)
+      if (demux->taglist == NULL) {
         demux->taglist = gst_tag_list_new_empty ();
+        gst_tag_list_set_scope (demux->taglist, GST_TAG_SCOPE_GLOBAL);
+      }
 
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
           GST_TAG_CONTAINER_FORMAT, "ASF", NULL);
 
       GST_DEBUG_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->taglist);
       gst_asf_demux_send_event_unlocked (demux,
-          gst_event_new_tag ("GstDemuxer", demux->taglist));
+          gst_event_new_tag (demux->taglist));
       demux->taglist = NULL;
 
       demux->need_newsegment = FALSE;
@@ -1451,7 +1453,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
     if (G_UNLIKELY (stream->pending_tags)) {
       GST_LOG_OBJECT (stream->pad, "%" GST_PTR_FORMAT, stream->pending_tags);
       gst_pad_push_event (stream->pad,
-          gst_event_new_tag ("GstDemuxer", stream->pending_tags));
+          gst_event_new_tag (stream->pending_tags));
       stream->pending_tags = NULL;
     }
 
@@ -2586,6 +2588,7 @@ gst_asf_demux_add_global_tags (GstASFDemux * demux, GstTagList * taglist)
   }
 
   t = gst_tag_list_merge (demux->taglist, taglist, GST_TAG_MERGE_APPEND);
+  gst_tag_list_set_scope (t, GST_TAG_SCOPE_GLOBAL);
   if (demux->taglist)
     gst_tag_list_free (demux->taglist);
   gst_tag_list_free (taglist);

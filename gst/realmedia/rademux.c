@@ -364,6 +364,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
       demux->fourcc = GST_READ_UINT32_LE (data + 56);
       demux->pending_tags = gst_rm_utils_read_tags (data + 63,
           demux->data_offset - 63, gst_rm_utils_read_string8);
+      gst_tag_list_set_scope (demux->pending_tags, GST_TAG_SCOPE_GLOBAL);
       break;
     default:
       g_assert_not_reached ();
@@ -470,8 +471,10 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
   demux->need_newsegment = TRUE;
 
   if (codec_name) {
-    if (demux->pending_tags == NULL)
+    if (demux->pending_tags == NULL) {
       demux->pending_tags = gst_tag_list_new_empty ();
+      gst_tag_list_set_scope (demux->pending_tags, GST_TAG_SCOPE_GLOBAL);
+    }
 
     gst_tag_list_add (demux->pending_tags, GST_TAG_MERGE_REPLACE,
         GST_TAG_AUDIO_CODEC, codec_name, NULL);
@@ -533,7 +536,7 @@ gst_real_audio_demux_parse_data (GstRealAudioDemux * demux)
 
     if (demux->pending_tags) {
       gst_pad_push_event (demux->srcpad,
-          gst_event_new_tag ("GstDemuxer", demux->pending_tags));
+          gst_event_new_tag (demux->pending_tags));
       demux->pending_tags = NULL;
     }
 
