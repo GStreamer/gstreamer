@@ -8570,7 +8570,8 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
   GstBuffer *buf;
   gchar *media_type;
   const gchar *style;
-  GstCaps *caps;
+  GstSample *sample;
+  GstStructure *s;
   guint i;
   guint8 ndata[4];
 
@@ -8602,17 +8603,16 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
       ndata[0], ndata[1], ndata[2], ndata[3]);
   GST_DEBUG_OBJECT (demux, "media type %s", media_type);
 
-  caps = gst_caps_new_simple (media_type, "style", G_TYPE_STRING, style, NULL);
-  // TODO conver to metadata or ???
-//   gst_buffer_set_caps (buf, caps);
-  gst_caps_unref (caps);
+  s = gst_structure_new (media_type, "style", G_TYPE_STRING, style, NULL);
+  sample = gst_sample_new (buf, NULL, NULL, s);
+  gst_buffer_unref (buf);
   g_free (media_type);
 
-  GST_DEBUG_OBJECT (demux, "adding private tag; size %d, caps %" GST_PTR_FORMAT,
-      len, caps);
+  GST_DEBUG_OBJECT (demux, "adding private tag; size %d, info %" GST_PTR_FORMAT,
+      len, s);
 
   gst_tag_list_add (demux->tag_list, GST_TAG_MERGE_APPEND,
-      GST_QT_DEMUX_PRIVATE_TAG, buf, NULL);
+      GST_QT_DEMUX_PRIVATE_TAG, sample, NULL);
   gst_buffer_unref (buf);
 }
 

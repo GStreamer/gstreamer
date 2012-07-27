@@ -44,7 +44,7 @@ plugin_init (GstPlugin * plugin)
 
   /* ensure private tag is registered */
   gst_tag_register (GST_QT_DEMUX_PRIVATE_TAG, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, "QT atom", "unparsed QT tag atom",
+      GST_TYPE_SAMPLE, "QT atom", "unparsed QT tag atom",
       gst_tag_merge_use_first);
 
   gst_tag_register (GST_QT_DEMUX_CLASSIFICATION_TAG, GST_TAG_FLAG_META,

@@ -1112,24 +1112,23 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
 
     num_tags = gst_tag_list_get_tag_size (list, GST_QT_DEMUX_PRIVATE_TAG);
     for (i = 0; i < num_tags; ++i) {
-      const GValue *val;
+      GstSample *sample = NULL;
       GstBuffer *buf;
-      GstCaps *caps = NULL;
+      const GstStructure *s;
 
-      val = gst_tag_list_get_value_index (list, GST_QT_DEMUX_PRIVATE_TAG, i);
-      buf = (GstBuffer *) gst_value_get_buffer (val);
+      if (!gst_tag_list_get_sample_index (list, GST_QT_DEMUX_PRIVATE_TAG, i,
+              &sample))
+        continue;
+      buf = gst_sample_get_buffer (sample);
 
-      /* FIXME-0.11 */
-      if (buf && (caps = NULL /*gst_buffer_get_caps (buf) */ )) {
-        GstStructure *s;
+      if (buf && (s = gst_sample_get_info (sample))) {
         const gchar *style = NULL;
         GstMapInfo map;
 
         gst_buffer_map (buf, &map, GST_MAP_READ);
         GST_DEBUG_OBJECT (qtmux,
-            "Found private tag %d/%d; size %" G_GSIZE_FORMAT ", caps %"
-            GST_PTR_FORMAT, i, num_tags, map.size, caps);
-        s = gst_caps_get_structure (caps, 0);
+            "Found private tag %d/%d; size %" G_GSIZE_FORMAT ", info %"
+            GST_PTR_FORMAT, i, num_tags, map.size, s);
         if (s && (style = gst_structure_get_string (s, "style"))) {
           /* try to prevent some style tag ending up into another variant
            * (todo: make into a list if more cases) */
@@ -1142,7 +1141,6 @@ gst_qt_mux_add_metadata_tags (GstQTMux * qtmux, const GstTagList * list)
           }
         }
         gst_buffer_unmap (buf, &map);
-        gst_caps_unref (caps);
       }
     }
   }
