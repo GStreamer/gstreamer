@@ -609,12 +609,7 @@ gst_video_crop_transform_caps (GstBaseTransform * trans,
     gst_caps_append_structure (other_caps, new_structure);
   }
 
-  if (gst_caps_is_empty (other_caps)) {
-    gst_caps_unref (other_caps);
-    other_caps = NULL;
-  }
-
-  if (other_caps && filter_caps) {
+  if (!gst_caps_is_empty (other_caps) && filter_caps) {
     GstCaps *tmp = gst_caps_intersect_full (filter_caps, other_caps,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_replace (&other_caps, tmp);
