@@ -511,11 +511,8 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
   if (n_images + n_preview_images > 0) {
     GstSample *sample;
     GstBuffer *buffer;
-#if 0
-    GstCaps *caps;
-    GstStructure *structure;
+    const GstStructure *structure;
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
-#endif
     gint i;
     GstMapInfo map;
 
@@ -532,9 +529,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
       flacenc->meta[entries] =
           FLAC__metadata_object_new (FLAC__METADATA_TYPE_PICTURE);
 
-#if 0
-      caps = gst_buffer_get_caps (buffer);
-      structure = gst_caps_get_structure (caps, 0);
+      structure = gst_sample_get_info (sample);
 
       gst_structure_get (structure, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
           &image_type, NULL);
@@ -543,7 +538,6 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
         image_type = (i < n_images) ? 0x00 : 0x01;
       else
         image_type = image_type + 2;
-#endif
 
       buffer = gst_sample_get_buffer (sample);
       gst_buffer_map (buffer, &map, GST_MAP_READ);
@@ -551,13 +545,10 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
           map.data, map.size, TRUE);
       gst_buffer_unmap (buffer, &map);
 
-#if 0
       /* FIXME: There's no way to set the picture type in libFLAC */
       flacenc->meta[entries]->data.picture.type = image_type;
       FLAC__metadata_object_picture_set_mime_type (flacenc->meta[entries],
           (char *) gst_structure_get_name (structure), TRUE);
-      gst_caps_unref (caps);
-#endif
 
       gst_sample_unref (sample);
       entries++;
