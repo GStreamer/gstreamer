@@ -559,7 +559,6 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
       gst_caps_unref (caps);
 #endif
 
-      gst_buffer_unref (buffer);
       gst_sample_unref (sample);
       entries++;
     }
