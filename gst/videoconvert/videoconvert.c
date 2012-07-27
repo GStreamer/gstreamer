@@ -33,13 +33,16 @@
 
 static void videoconvert_convert_generic (VideoConvert * convert,
     GstVideoFrame * dest, const GstVideoFrame * src);
-static void videoconvert_convert_matrix (VideoConvert * convert);
-static void videoconvert_convert_matrix16 (VideoConvert * convert);
+static void videoconvert_convert_matrix (VideoConvert * convert,
+    guint8 * pixels);
+static void videoconvert_convert_matrix16 (VideoConvert * convert,
+    guint16 * pixels);
 static gboolean videoconvert_convert_lookup_fastpath (VideoConvert * convert);
 static gboolean videoconvert_convert_compute_matrix (VideoConvert * convert);
-static void videoconvert_dither_none (VideoConvert * convert, int j);
-static void videoconvert_dither_verterr (VideoConvert * convert, int j);
-static void videoconvert_dither_halftone (VideoConvert * convert, int j);
+static void videoconvert_dither_verterr (VideoConvert * convert,
+    guint16 * pixels, int j);
+static void videoconvert_dither_halftone (VideoConvert * convert,
+    guint16 * pixels, int j);
 
 
 VideoConvert *
@@ -52,7 +55,7 @@ videoconvert_convert_new (GstVideoInfo * in_info, GstVideoInfo * out_info)
 
   convert->in_info = *in_info;
   convert->out_info = *out_info;
-  convert->dither16 = videoconvert_dither_none;
+  convert->dither16 = NULL;
 
   if (!videoconvert_convert_lookup_fastpath (convert)) {
     convert->convert = videoconvert_convert_generic;
@@ -117,7 +120,7 @@ videoconvert_convert_set_dither (VideoConvert * convert, int type)
   switch (type) {
     case 0:
     default:
-      convert->dither16 = videoconvert_dither_none;
+      convert->dither16 = NULL;
       break;
     case 1:
       convert->dither16 = videoconvert_dither_verterr;
@@ -135,18 +138,17 @@ videoconvert_convert_convert (VideoConvert * convert,
   convert->convert (convert, dest, src);
 }
 
-void
-videoconvert_convert_matrix (VideoConvert * convert)
+static void
+videoconvert_convert_matrix (VideoConvert * convert, guint8 * pixels)
 {
   int i;
   int r, g, b;
   int y, u, v;
-  guint8 *tmpline = convert->tmpline;
 
   for (i = 0; i < convert->width; i++) {
-    r = tmpline[i * 4 + 1];
-    g = tmpline[i * 4 + 2];
-    b = tmpline[i * 4 + 3];
+    r = pixels[i * 4 + 1];
+    g = pixels[i * 4 + 2];
+    b = pixels[i * 4 + 3];
 
     y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
         convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
@@ -155,42 +157,35 @@ videoconvert_convert_matrix (VideoConvert * convert)
     v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
         convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
 
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 255);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 255);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 255);
-  }
-}
-
-void
-videoconvert_convert_matrix16 (VideoConvert * convert)
-{
-  int i;
-  int r, g, b;
-  int y, u, v;
-  guint16 *tmpline = convert->tmpline16;
-
-  for (i = 0; i < convert->width; i++) {
-    r = tmpline[i * 4 + 1];
-    g = tmpline[i * 4 + 2];
-    b = tmpline[i * 4 + 3];
-
-    y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
-        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
-    u = (convert->cmatrix[1][0] * r + convert->cmatrix[1][1] * g +
-        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> 8;
-    v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
-        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
-
-    tmpline[i * 4 + 1] = CLAMP (y, 0, 65535);
-    tmpline[i * 4 + 2] = CLAMP (u, 0, 65535);
-    tmpline[i * 4 + 3] = CLAMP (v, 0, 65535);
+    pixels[i * 4 + 1] = CLAMP (y, 0, 255);
+    pixels[i * 4 + 2] = CLAMP (u, 0, 255);
+    pixels[i * 4 + 3] = CLAMP (v, 0, 255);
   }
 }
 
 static void
-matrix_identity (VideoConvert * convert)
+videoconvert_convert_matrix16 (VideoConvert * convert, guint16 * pixels)
 {
-  /* do nothing */
+  int i;
+  int r, g, b;
+  int y, u, v;
+
+  for (i = 0; i < convert->width; i++) {
+    r = pixels[i * 4 + 1];
+    g = pixels[i * 4 + 2];
+    b = pixels[i * 4 + 3];
+
+    y = (convert->cmatrix[0][0] * r + convert->cmatrix[0][1] * g +
+        convert->cmatrix[0][2] * b + convert->cmatrix[0][3]) >> 8;
+    u = (convert->cmatrix[1][0] * r + convert->cmatrix[1][1] * g +
+        convert->cmatrix[1][2] * b + convert->cmatrix[1][3]) >> 8;
+    v = (convert->cmatrix[2][0] * r + convert->cmatrix[2][1] * g +
+        convert->cmatrix[2][2] * b + convert->cmatrix[2][3]) >> 8;
+
+    pixels[i * 4 + 1] = CLAMP (y, 0, 65535);
+    pixels[i * 4 + 2] = CLAMP (u, 0, 65535);
+    pixels[i * 4 + 3] = CLAMP (v, 0, 65535);
+  }
 }
 
 static gboolean
@@ -260,8 +255,8 @@ videoconvert_convert_compute_matrix (VideoConvert * convert)
   if (in_info->colorimetry.range == out_info->colorimetry.range &&
       in_info->colorimetry.matrix == out_info->colorimetry.matrix) {
     GST_DEBUG ("using identity color transform");
-    convert->matrix = matrix_identity;
-    convert->matrix16 = matrix_identity;
+    convert->matrix = NULL;
+    convert->matrix16 = NULL;
     return TRUE;
   }
 
@@ -350,12 +345,7 @@ no_pack_func:
 }
 
 static void
-videoconvert_dither_none (VideoConvert * convert, int j)
-{
-}
-
-static void
-videoconvert_dither_verterr (VideoConvert * convert, int j)
+videoconvert_dither_verterr (VideoConvert * convert, guint16 * pixels, int j)
 {
   int i;
   guint16 *tmpline = convert->tmpline16;
@@ -372,7 +362,7 @@ videoconvert_dither_verterr (VideoConvert * convert, int j)
 }
 
 static void
-videoconvert_dither_halftone (VideoConvert * convert, int j)
+videoconvert_dither_halftone (VideoConvert * convert, guint16 * pixels, int j)
 {
   int i;
   guint16 *tmpline = convert->tmpline16;
@@ -431,10 +421,13 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
     }
 
     if (out_bits == 16 || in_bits == 16) {
-      convert->matrix16 (convert);
-      convert->dither16 (convert, j);
+      if (convert->matrix16)
+        convert->matrix16 (convert, convert->tmpline16);
+      if (convert->dither16)
+        convert->dither16 (convert, convert->tmpline16, j);
     } else {
-      convert->matrix (convert);
+      if (convert->matrix)
+        convert->matrix (convert, convert->tmpline);
     }
 
     if (out_bits == 16) {
