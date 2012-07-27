@@ -1519,13 +1519,8 @@ gst_tag_demux_send_tag_event (GstTagDemux * demux)
   GstTagList *merged = gst_tag_list_merge (demux->priv->event_tags,
       demux->priv->parsed_tags, GST_TAG_MERGE_KEEP);
 
-  if (demux->priv->parsed_tags)
-    gst_element_post_message (GST_ELEMENT (demux),
-        gst_message_new_tag (GST_OBJECT (demux),
-            gst_tag_list_copy (demux->priv->parsed_tags)));
-
   if (merged) {
-    GstEvent *event = gst_event_new_tag ("GstTagDemuxer", merged);
+    GstEvent *event = gst_event_new_tag (merged);
 
     GST_EVENT_TIMESTAMP (event) = 0;
     GST_DEBUG_OBJECT (demux, "Sending tag event on src pad");

@@ -1131,7 +1131,7 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
     eclass = GST_ELEMENT_CLASS (parent_class);
     if (eclass->send_event)
       eclass->send_event (GST_ELEMENT_CAST (basesrc),
-          gst_event_new_tag ("GstSrc", taglist));
+          gst_event_new_tag (taglist));
     else
       gst_tag_list_free (taglist);
     src->tags_pushed = TRUE;

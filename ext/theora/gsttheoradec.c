@@ -512,7 +512,7 @@ theora_handle_type_packet (GstTheoraDec * dec)
   /* FIXME :  */
   if (dec->tags) {
     gst_pad_push_event (GST_VIDEO_DECODER (dec)->srcpad,
-        gst_event_new_tag ("GstDecoder", dec->tags));
+        gst_event_new_tag (dec->tags));
     dec->tags = NULL;
   }
 

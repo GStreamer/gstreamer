@@ -654,7 +654,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
         caps);
 #endif
     GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
-    gst_audio_encoder_push_event (enc, gst_event_new_tag ("GstEncoder", tags));
+    gst_audio_encoder_push_event (enc, gst_event_new_tag (tags));
   }
 
   /* remove corresponding samples from input */
@@ -1506,7 +1506,7 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       gst_tag_list_remove_tag (tags, GST_TAG_MINIMUM_BITRATE);
       gst_tag_list_remove_tag (tags, GST_TAG_ENCODER);
       gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
-      event = gst_event_new_tag ("GstEncoder", tags);
+      event = gst_event_new_tag (tags);
 
       GST_AUDIO_ENCODER_STREAM_LOCK (enc);
       enc->priv->pending_events =

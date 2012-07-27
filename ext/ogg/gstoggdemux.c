@@ -2630,7 +2630,8 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     gst_ogg_demux_send_event (ogg, event);
 
     tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL);
-    gst_ogg_demux_send_event (ogg, gst_event_new_tag ("GstDemuxer", tags));
+    gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+    gst_ogg_demux_send_event (ogg, gst_event_new_tag (tags));
   }
 
   GST_DEBUG_OBJECT (ogg, "starting chain");
@@ -2646,7 +2647,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     if (pad->map.taglist) {
       GST_DEBUG_OBJECT (ogg, "pushing tags");
       gst_pad_push_event (GST_PAD_CAST (pad),
-          gst_event_new_tag ("GstDemuxer", pad->map.taglist));
+          gst_event_new_tag (pad->map.taglist));
       pad->map.taglist = NULL;
     }
 

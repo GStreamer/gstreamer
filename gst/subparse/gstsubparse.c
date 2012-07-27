@@ -1468,7 +1468,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
       tags = gst_tag_list_new (GST_TAG_SUBTITLE_CODEC, self->subtitle_codec,
           NULL);
-      gst_pad_push_event (self->srcpad, gst_event_new_tag ("GstParser", tags));
+      gst_pad_push_event (self->srcpad, gst_event_new_tag (tags));
     }
   }
 

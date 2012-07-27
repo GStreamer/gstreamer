@@ -264,7 +264,7 @@ gst_tag_mux_render_start_tag (GstTagMux * mux)
 
   /* Send an event about the new tags to downstream elements */
   /* gst_event_new_tag takes ownership of the list, so use a copy */
-  event = gst_event_new_tag ("GstTagMuxer", gst_tag_list_copy (taglist));
+  event = gst_event_new_tag (gst_tag_list_ref (taglist));
   gst_pad_push_event (mux->priv->srcpad, event);
 
   GST_BUFFER_OFFSET (buffer) = 0;

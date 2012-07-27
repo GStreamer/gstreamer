@@ -1015,8 +1015,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
     if (gst_tag_list_is_empty (priv->taglist)) {
       gst_tag_list_free (priv->taglist);
     } else {
-      gst_audio_decoder_push_event (dec, gst_event_new_tag ("GstDecoder",
-              priv->taglist));
+      gst_audio_decoder_push_event (dec, gst_event_new_tag (priv->taglist));
     }
     priv->taglist = NULL;
   }

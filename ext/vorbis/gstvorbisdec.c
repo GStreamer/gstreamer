@@ -257,14 +257,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   gst_audio_decoder_merge_tags (GST_AUDIO_DECODER_CAST (vd), list,
       GST_TAG_MERGE_REPLACE);
-  if (vd->initialized) {
-    gst_tag_list_free (list);
-  } else {
-    /* Only post them as messages for the time being. *
-     * They will be pushed on the pad once the decoder is initialized */
-    gst_element_post_message (GST_ELEMENT_CAST (vd),
-        gst_message_new_tag (GST_OBJECT (vd), list));
-  }
+  gst_tag_list_free (list);
 
   return GST_FLOW_OK;
 }
