@@ -668,17 +668,17 @@ gst_element_add_pad (GstElement * element, GstPad * pad)
   /* add it to the list */
   switch (gst_pad_get_direction (pad)) {
     case GST_PAD_SRC:
-      element->srcpads = g_list_prepend (element->srcpads, pad);
+      element->srcpads = g_list_append (element->srcpads, pad);
       element->numsrcpads++;
       break;
     case GST_PAD_SINK:
-      element->sinkpads = g_list_prepend (element->sinkpads, pad);
+      element->sinkpads = g_list_append (element->sinkpads, pad);
       element->numsinkpads++;
       break;
     default:
       goto no_direction;
   }
-  element->pads = g_list_prepend (element->pads, pad);
+  element->pads = g_list_append (element->pads, pad);
   element->numpads++;
   element->pads_cookie++;
   GST_OBJECT_UNLOCK (element);
@@ -1114,6 +1114,9 @@ gst_element_iterate_pad_list (GstElement * element, GList ** padlist)
  * be freed after usage. Also more specialized iterators exists such as
  * gst_element_iterate_src_pads() or gst_element_iterate_sink_pads().
  *
+ * The order of pads returned by the iterator will be the order in which
+ * the pads were added to the element.
+ *
  * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
  *     after use.
  *
@@ -1133,6 +1136,9 @@ gst_element_iterate_pads (GstElement * element)
  *
  * Retrieves an iterator of @element's source pads.
  *
+ * The order of pads returned by the iterator will be the order in which
+ * the pads were added to the element.
+ *
  * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
  *     after use.
  *
@@ -1151,6 +1157,9 @@ gst_element_iterate_src_pads (GstElement * element)
  * @element: a #GstElement.
  *
  * Retrieves an iterator of @element's sink pads.
+ *
+ * The order of pads returned by the iterator will be the order in which
+ * the pads were added to the element.
  *
  * Returns: (transfer full): the #GstIterator of #GstPad. Unref each pad
  *     after use.
