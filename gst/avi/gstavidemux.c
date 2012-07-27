@@ -5122,7 +5122,7 @@ push_tag_lists (GstAviDemux * avi)
     if (pad && tags) {
       GST_DEBUG_OBJECT (pad, "Tags: %" GST_PTR_FORMAT, tags);
 
-      gst_pad_push_event (pad, gst_event_new_tag ("GstDemuxer", tags));
+      gst_pad_push_event (pad, gst_event_new_tag (tags));
       stream->taglist = NULL;
     }
   }
@@ -5134,7 +5134,8 @@ push_tag_lists (GstAviDemux * avi)
       GST_TAG_CONTAINER_FORMAT, "AVI", NULL);
 
   GST_DEBUG_OBJECT (avi, "Global tags: %" GST_PTR_FORMAT, tags);
-  gst_avi_demux_push_event (avi, gst_event_new_tag ("GstDemuxer", tags));
+  gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+  gst_avi_demux_push_event (avi, gst_event_new_tag (tags));
   avi->globaltags = NULL;
   avi->got_tags = FALSE;
 }

@@ -1350,7 +1350,7 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
           GST_TAG_NOMINAL_BITRATE, mp3parse->hdr_bitrate, NULL);
     }
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mp3parse),
-        gst_event_new_tag ("GstParser", taglist));
+        gst_event_new_tag (taglist));
     g_free (codec);
 
     /* also signals the end of first-frame processing */
@@ -1389,7 +1389,7 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
   /* if the taglist exists, we need to send it */
   if (taglist) {
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mp3parse),
-        gst_event_new_tag ("GstParser", taglist));
+        gst_event_new_tag (taglist));
   }
 
   /* usual clipping applies */

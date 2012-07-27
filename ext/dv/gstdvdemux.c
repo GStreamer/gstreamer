@@ -301,9 +301,11 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template)
   gst_pad_push_event (pad, gst_event_new_segment (&dvdemux->time_segment));
 
   if (no_more_pads) {
-    gst_pad_push_event (pad,
-        gst_event_new_tag ("GstDemuxer",
-            gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL)));
+    GstTagList *tags;
+
+    tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL);
+    gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+    gst_pad_push_event (pad, gst_event_new_tag (tags));
   }
 
   return pad;

@@ -439,7 +439,7 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
     gst_tag_list_insert (common->global_tags, taglist, GST_TAG_MERGE_APPEND);
     gst_tag_list_free (taglist);
   } else {
-    GstEvent *tag_event = gst_event_new_tag ("GstDemuxer", taglist);
+    GstEvent *tag_event = gst_event_new_tag (taglist);
     gint i;
 
     /* hm, already sent, no need to cache and wait anymore */
@@ -688,6 +688,7 @@ gst_matroska_read_common_parse_attachments (GstMatroskaReadCommon * common,
   }
 
   taglist = gst_tag_list_new_empty ();
+  gst_tag_list_set_scope (taglist, GST_TAG_SCOPE_GLOBAL);
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
@@ -1701,6 +1702,7 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
 
         GST_DEBUG_OBJECT (common, "Title: %s", GST_STR_NULL (text));
         taglist = gst_tag_list_new (GST_TAG_TITLE, text, NULL);
+        gst_tag_list_set_scope (taglist, GST_TAG_SCOPE_GLOBAL);
         gst_matroska_read_common_found_global_tag (common, el, taglist);
         g_free (text);
         break;
@@ -1971,6 +1973,7 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
   }
 
   taglist = gst_tag_list_new_empty ();
+  gst_tag_list_set_scope (taglist, GST_TAG_SCOPE_GLOBAL);
   common->toc_updated = FALSE;
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {

@@ -386,7 +386,7 @@ GST_START_TEST (test_events)
       GST_TAG_TRACK_GAIN, +4.95, GST_TAG_TRACK_PEAK, 0.59463,
       GST_TAG_ALBUM_GAIN, -1.54, GST_TAG_ALBUM_PEAK, 0.693415,
       GST_TAG_ARTIST, "Foobar", NULL);
-  event = gst_event_new_tag ("test", tag_list);
+  event = gst_event_new_tag (tag_list);
   new_event = send_tag_event (element, event);
   gst_event_parse_tag (new_event, &tag_list);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
@@ -401,7 +401,7 @@ GST_START_TEST (test_events)
       GST_TAG_TRACK_GAIN, +4.95, GST_TAG_TRACK_PEAK, 0.59463,
       GST_TAG_ALBUM_GAIN, -1.54, GST_TAG_ALBUM_PEAK, 0.693415,
       GST_TAG_ARTIST, "Foobar", NULL);
-  event = gst_event_new_tag ("test", tag_list);
+  event = gst_event_new_tag (tag_list);
   new_event = send_tag_event (element, event);
   gst_event_parse_tag (new_event, &tag_list);
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_ARTIST, &artist));
@@ -429,8 +429,7 @@ GST_START_TEST (test_simple)
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, -3.45, GST_TAG_TRACK_PEAK, 1.0,
       GST_TAG_ALBUM_GAIN, +2.09, GST_TAG_ALBUM_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_gain (element, -9.45);    /* pre-amp + track gain */
   send_eos_event (element);
 
@@ -443,8 +442,7 @@ GST_START_TEST (test_simple)
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, -3.45, GST_TAG_TRACK_PEAK, 1.0,
       GST_TAG_ALBUM_GAIN, +2.09, GST_TAG_ALBUM_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_gain (element, -3.91);    /* pre-amp + album gain */
 
   /* Switching back to track mode in the middle of a stream: */
@@ -476,8 +474,7 @@ GST_START_TEST (test_fallback_gain)
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, +3.5, GST_TAG_TRACK_PEAK, 1.0,
       GST_TAG_ALBUM_GAIN, -0.5, GST_TAG_ALBUM_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_gain (element, -2.50);    /* pre-amp + track gain */
   send_eos_event (element);
 
@@ -525,8 +522,7 @@ GST_START_TEST (test_fallback_track)
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, +2.11, GST_TAG_TRACK_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_gain (element, -3.89);    /* pre-amp + track gain */
 
   send_eos_event (element);
@@ -553,8 +549,7 @@ GST_START_TEST (test_fallback_album)
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_ALBUM_GAIN, +3.73, GST_TAG_ALBUM_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_gain (element, -2.27);    /* pre-amp + album gain */
 
   send_eos_event (element);
@@ -578,8 +573,7 @@ GST_START_TEST (test_headroom)
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, +3.50, GST_TAG_TRACK_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_target_gain (element, +3.50);     /* pre-amp + track gain */
   fail_unless_result_gain (element, +0.00);
   send_eos_event (element);
@@ -591,8 +585,7 @@ GST_START_TEST (test_headroom)
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, +9.18, GST_TAG_TRACK_PEAK, 0.687149, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_target_gain (element, +9.18);     /* pre-amp + track gain */
   /* Result is 20. * log10 (1. / peak) + headroom. */
   fail_unless_result_gain (element, 5.2589816238303335);
@@ -605,8 +598,7 @@ GST_START_TEST (test_headroom)
   tag_list = gst_tag_list_new_empty ();
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_ALBUM_GAIN, +5.50, GST_TAG_ALBUM_PEAK, 1.0, NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_target_gain (element, +5.50);     /* pre-amp + album gain */
   fail_unless_result_gain (element, +2.00);     /* headroom */
   send_eos_event (element);
@@ -632,8 +624,7 @@ GST_START_TEST (test_reference_level)
   gst_tag_list_add (tag_list, GST_TAG_MERGE_REPLACE,
       GST_TAG_TRACK_GAIN, 0.00, GST_TAG_TRACK_PEAK, 0.2,
       GST_TAG_REFERENCE_LEVEL, 83., NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   /* Because our authorative reference is 89 dB, we bump it up by +6 dB. */
   fail_unless_gain (element, +6.00);    /* pre-amp + track gain */
   send_eos_event (element);
@@ -649,8 +640,7 @@ GST_START_TEST (test_reference_level)
       GST_TAG_TRACK_GAIN, 1.23, GST_TAG_TRACK_PEAK, 0.1,
       GST_TAG_ALBUM_GAIN, 0.00, GST_TAG_ALBUM_PEAK, 0.2,
       GST_TAG_REFERENCE_LEVEL, 83., NULL);
-  fail_unless (send_tag_event (element, gst_event_new_tag ("test",
-              tag_list)) == NULL);
+  fail_unless (send_tag_event (element, gst_event_new_tag (tag_list)) == NULL);
   fail_unless_gain (element, +6.00);    /* pre-amp + album gain */
 
   cleanup_rgvolume (element);

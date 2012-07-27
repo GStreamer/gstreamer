@@ -177,8 +177,7 @@ static void
 gst_avi_subtitle_title_tag (GstAviSubtitle * sub, gchar * title)
 {
   gst_pad_push_event (sub->src,
-      gst_event_new_tag ("GstParser", gst_tag_list_new (GST_TAG_TITLE, title,
-              NULL)));
+      gst_event_new_tag (gst_tag_list_new (GST_TAG_TITLE, title, NULL)));
 }
 
 static GstFlowReturn

@@ -797,8 +797,8 @@ gst_flv_demux_push_tags (GstFlvDemux * demux)
   if (demux->taglist) {
     GST_DEBUG_OBJECT (demux, "pushing tags out %" GST_PTR_FORMAT,
         demux->taglist);
-    gst_flv_demux_push_src_event (demux, gst_event_new_tag ("GstDemuxer",
-            demux->taglist));
+    gst_tag_list_set_scope (demux->taglist, GST_TAG_SCOPE_GLOBAL);
+    gst_flv_demux_push_src_event (demux, gst_event_new_tag (demux->taglist));
     demux->taglist = gst_tag_list_new_empty ();
     demux->push_tags = FALSE;
   }
