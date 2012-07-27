@@ -63,7 +63,7 @@
  * For elements that perform seeks, the current segment should be updated with the
  * gst_segment_do_seek() and the values from the seek event. This method will update
  * all the segment fields. The position field will contain the new playback position.
- * If the cur_type was different from GST_SEEK_TYPE_NONE, playback continues from
+ * If the start_type was different from GST_SEEK_TYPE_NONE, playback continues from
  * the position position, possibly with updated flags or rate.
  *
  * For elements that want to use #GstSegment to track the playback region,

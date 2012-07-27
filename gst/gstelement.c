@@ -1550,8 +1550,8 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  * @rate: The new playback rate
  * @format: The format of the seek values
  * @flags: The optional seek flags.
- * @cur_type: The type and flags for the new current position
- * @cur: The value of the new current position
+ * @start_type: The type and flags for the new start position
+ * @start: The value of the new start position
  * @stop_type: The type and flags for the new stop position
  * @stop: The value of the new stop position
  *
@@ -1566,7 +1566,7 @@ gst_element_send_event (GstElement * element, GstEvent * event)
  */
 gboolean
 gst_element_seek (GstElement * element, gdouble rate, GstFormat format,
-    GstSeekFlags flags, GstSeekType cur_type, gint64 cur,
+    GstSeekFlags flags, GstSeekType start_type, gint64 start,
     GstSeekType stop_type, gint64 stop)
 {
   GstEvent *event;
@@ -1575,7 +1575,8 @@ gst_element_seek (GstElement * element, gdouble rate, GstFormat format,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   event =
-      gst_event_new_seek (rate, format, flags, cur_type, cur, stop_type, stop);
+      gst_event_new_seek (rate, format, flags, start_type, start, stop_type,
+      stop);
   result = gst_element_send_event (element, event);
 
   return result;

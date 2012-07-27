@@ -752,7 +752,7 @@ GstIterator *           gst_element_iterate_sink_pads   (GstElement * element);
 gboolean                gst_element_send_event          (GstElement *element, GstEvent *event);
 gboolean                gst_element_seek                (GstElement *element, gdouble rate,
                                                          GstFormat format, GstSeekFlags flags,
-                                                         GstSeekType cur_type, gint64 cur,
+                                                         GstSeekType start_type, gint64 start,
                                                          GstSeekType stop_type, gint64 stop);
 gboolean                gst_element_query               (GstElement *element, GstQuery *query);
 

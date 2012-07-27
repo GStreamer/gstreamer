@@ -423,14 +423,14 @@ static gboolean
 gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
 {
   GstSeekFlags flags;
-  GstSeekType cur_type, stop_type;
+  GstSeekType start_type, stop_type;
   GstFormat format;
   gboolean flush;
   gdouble rate;
-  gint64 cur, stop;
+  gint64 start, stop;
   GstSegment seeksegment = { 0, };
 
-  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+  gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
 
   /* we can only seek on bytes */
@@ -445,7 +445,7 @@ gst_type_find_element_seek (GstTypeFindElement * typefind, GstEvent * event)
 
   GST_DEBUG_OBJECT (typefind, "configuring seek");
   gst_segment_do_seek (&seeksegment, rate, format, flags,
-      cur_type, cur, stop_type, stop, NULL);
+      start_type, start, stop_type, stop, NULL);
 
   flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
 

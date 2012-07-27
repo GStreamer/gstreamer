@@ -1965,8 +1965,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
-              priv->cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
+              cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -3391,8 +3391,8 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
    *     seek format, adjust by the relative seek offset and then convert back to
    *     the processing format
    */
-  GstSeekType cur_type, stop_type;
-  gint64 cur, stop;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
   GstSeekFlags flags;
   GstFormat seek_format;
   gdouble rate;
@@ -3400,24 +3400,24 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
   gboolean res = TRUE;
 
   gst_event_parse_seek (event, &rate, &seek_format, &flags,
-      &cur_type, &cur, &stop_type, &stop);
+      &start_type, &start, &stop_type, &stop);
 
   if (seek_format == segment->format) {
     gst_segment_do_seek (segment, rate, seek_format, flags,
-        cur_type, cur, stop_type, stop, &update);
+        start_type, start, stop_type, stop, &update);
     return TRUE;
   }
 
-  if (cur_type != GST_SEEK_TYPE_NONE) {
-    /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
+  if (start_type != GST_SEEK_TYPE_NONE) {
+    /* FIXME: Handle seek_end by converting the input segment vals */
     res =
-        gst_pad_query_convert (sink->sinkpad, seek_format, cur, segment->format,
-        &cur);
-    cur_type = GST_SEEK_TYPE_SET;
+        gst_pad_query_convert (sink->sinkpad, seek_format, start,
+        segment->format, &start);
+    start_type = GST_SEEK_TYPE_SET;
   }
 
   if (res && stop_type != GST_SEEK_TYPE_NONE) {
-    /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
+    /* FIXME: Handle seek_end by converting the input segment vals */
     res =
         gst_pad_query_convert (sink->sinkpad, seek_format, stop,
         segment->format, &stop);
@@ -3425,7 +3425,7 @@ gst_base_sink_default_prepare_seek_segment (GstBaseSink * sink,
   }
 
   /* And finally, configure our output segment in the desired format */
-  gst_segment_do_seek (segment, rate, segment->format, flags, cur_type, cur,
+  gst_segment_do_seek (segment, rate, segment->format, flags, start_type, start,
       stop_type, stop, &update);
 
   if (!res)
@@ -3448,9 +3448,9 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   gdouble rate;
   GstFormat seek_format, dest_format;
   GstSeekFlags flags;
-  GstSeekType cur_type, stop_type;
+  GstSeekType start_type, stop_type;
   gboolean seekseg_configured = FALSE;
-  gint64 cur, stop;
+  gint64 start, stop;
   gboolean update, res = TRUE;
   GstSegment seeksegment;
 
@@ -3459,7 +3459,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
   if (event) {
     GST_DEBUG_OBJECT (sink, "performing seek with event %p", event);
     gst_event_parse_seek (event, &rate, &seek_format, &flags,
-        &cur_type, &cur, &stop_type, &stop);
+        &start_type, &start, &stop_type, &stop);
 
     flush = flags & GST_SEEK_FLAG_FLUSH;
   } else {
@@ -3499,7 +3499,7 @@ gst_base_sink_perform_seek (GstBaseSink * sink, GstPad * pad, GstEvent * event)
         /* The seek format matches our processing format, no need to ask the
          * the subclass to configure the segment. */
         gst_segment_do_seek (&seeksegment, rate, seek_format, flags,
-            cur_type, cur, stop_type, stop, &update);
+            start_type, start, stop_type, stop, &update);
       }
     }
     /* Else, no seek event passed, so we're just (re)starting the

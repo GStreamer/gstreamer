@@ -243,8 +243,8 @@ GST_START_TEST (create_events)
     gdouble rate;
     GstFormat format;
     GstSeekFlags flags;
-    GstSeekType cur_type, stop_type;
-    gint64 cur, stop;
+    GstSeekType start_type, stop_type;
+    gint64 start, stop;
 
     event = gst_event_new_seek (0.5, GST_FORMAT_BYTES,
         GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
@@ -256,13 +256,13 @@ GST_START_TEST (create_events)
     fail_if (GST_EVENT_IS_DOWNSTREAM (event));
     fail_if (GST_EVENT_IS_SERIALIZED (event));
 
-    gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+    gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
         &stop_type, &stop);
     fail_unless (rate == 0.5);
     fail_unless (format == GST_FORMAT_BYTES);
     fail_unless (flags == (GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE));
-    fail_unless (cur_type == GST_SEEK_TYPE_SET);
-    fail_unless (cur == 1);
+    fail_unless (start_type == GST_SEEK_TYPE_SET);
+    fail_unless (start == 1);
     fail_unless (stop_type == GST_SEEK_TYPE_NONE);
     fail_unless (stop == 0xdeadbeef);
 

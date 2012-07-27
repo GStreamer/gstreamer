@@ -3735,19 +3735,19 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
-  GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
+  GstSeekType start_type = GST_SEEK_TYPE_NONE, stop_type;
   gboolean flush, update, res = TRUE, accurate;
-  gint64 cur, stop, seekpos, seekstop;
+  gint64 start, stop, seekpos, seekstop;
   GstSegment seeksegment = { 0, };
   GstClockTime start_ts;
 
   gst_event_parse_seek (event, &rate, &format, &flags,
-      &cur_type, &cur, &stop_type, &stop);
+      &start_type, &start, &stop_type, &stop);
 
   GST_DEBUG_OBJECT (parse, "seek to format %s, rate %f, "
       "start type %d at %" GST_TIME_FORMAT ", end type %d at %"
       GST_TIME_FORMAT, gst_format_get_name (format), rate,
-      cur_type, GST_TIME_ARGS (cur), stop_type, GST_TIME_ARGS (stop));
+      start_type, GST_TIME_ARGS (start), stop_type, GST_TIME_ARGS (stop));
 
   /* no negative rates in push mode */
   if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PUSH)
@@ -3760,7 +3760,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   if (format != GST_FORMAT_TIME || res)
     goto done;
 
-  if (cur_type != GST_SEEK_TYPE_SET ||
+  if (start_type != GST_SEEK_TYPE_SET ||
       (stop_type != GST_SEEK_TYPE_SET && stop_type != GST_SEEK_TYPE_NONE))
     goto wrong_type;
 
@@ -3773,7 +3773,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
 
   GST_DEBUG_OBJECT (parse, "configuring seek");
   gst_segment_do_seek (&seeksegment, rate, format, flags,
-      cur_type, cur, stop_type, stop, &update);
+      start_type, start, stop_type, stop, &update);
 
   /* accurate seeking implies seek tables are used to obtain position,
    * and the requested segment is maintained exactly, not adjusted any way */
