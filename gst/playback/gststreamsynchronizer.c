@@ -74,6 +74,8 @@ typedef struct
   gboolean seen_data;
 
   gint64 running_time_diff;
+
+  GCond *stream_finish_cond;
 } GstStream;
 
 /* Must be called with lock! */
@@ -306,7 +308,10 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
           GST_DEBUG_OBJECT (self, "New group start time: %" GST_TIME_FORMAT,
               GST_TIME_ARGS (self->group_start_time));
 
-          g_cond_broadcast (self->stream_finish_cond);
+          for (l = self->streams; l; l = l->next) {
+            GstStream *ostream = l->data;
+            g_cond_broadcast (ostream->stream_finish_cond);
+          }
         }
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
@@ -323,7 +328,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       if (stream) {
         if (stream->wait) {
           GST_DEBUG_OBJECT (pad, "Stream %d is waiting", stream->stream_number);
-          g_cond_wait (self->stream_finish_cond, self->lock);
+          g_cond_wait (stream->stream_finish_cond, self->lock);
           stream = gst_pad_get_element_private (pad);
           if (stream)
             stream->wait = FALSE;
@@ -397,6 +402,18 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         GST_WARNING_OBJECT (pad, "Non-TIME segment: %s",
             gst_format_get_name (segment.format));
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+      }
+      GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+      break;
+    }
+    case GST_EVENT_FLUSH_START:{
+      GstStream *stream;
+
+      GST_STREAM_SYNCHRONIZER_LOCK (self);
+      stream = gst_pad_get_element_private (pad);
+      if (stream) {
+        GST_DEBUG_OBJECT (pad, "Flushing streams");
+        g_cond_broadcast (stream->stream_finish_cond);
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
@@ -640,6 +657,7 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   stream = g_slice_new0 (GstStream);
   stream->transform = self;
   stream->stream_number = self->current_stream_number;
+  stream->stream_finish_cond = g_cond_new ();
 
   tmp = g_strdup_printf ("sink_%u", self->current_stream_number);
   stream->sinkpad = gst_pad_new_from_static_template (&sinktemplate, tmp);
@@ -732,6 +750,7 @@ gst_stream_synchronizer_release_stream (GstStreamSynchronizer * self,
     self->group_start_time = MAX (self->group_start_time, stop_running_time);
   }
 
+  g_cond_free (stream->stream_finish_cond);
   g_slice_free (GstStream, stream);
 
   /* NOTE: In theory we have to check here if all streams
@@ -783,13 +802,19 @@ gst_stream_synchronizer_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (self, "State change PAUSED->PLAYING");
       break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:{
+      GList *l;
+
       GST_DEBUG_OBJECT (self, "State change READY->NULL");
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
-      g_cond_broadcast (self->stream_finish_cond);
+      for (l = self->streams; l; l = l->next) {
+        GstStream *ostream = l->data;
+        g_cond_broadcast (ostream->stream_finish_cond);
+      }
       self->shutdown = TRUE;
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
+    }
     default:
       break;
   }
@@ -854,11 +879,6 @@ gst_stream_synchronizer_finalize (GObject * object)
     self->lock = NULL;
   }
 
-  if (self->stream_finish_cond) {
-    g_cond_free (self->stream_finish_cond);
-    self->stream_finish_cond = NULL;
-  }
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -867,7 +887,6 @@ static void
 gst_stream_synchronizer_init (GstStreamSynchronizer * self)
 {
   self->lock = g_mutex_new ();
-  self->stream_finish_cond = g_cond_new ();
 }
 
 static void
