@@ -509,6 +509,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
   gst_tag_list_foreach (copy, add_one_tag, flacenc);
 
   if (n_images + n_preview_images > 0) {
+    GstSample *sample;
     GstBuffer *buffer;
 #if 0
     GstCaps *caps;
@@ -520,11 +521,11 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
 
     for (i = 0; i < n_images + n_preview_images; i++) {
       if (i < n_images) {
-        if (!gst_tag_list_get_buffer_index (copy, GST_TAG_IMAGE, i, &buffer))
+        if (!gst_tag_list_get_sample_index (copy, GST_TAG_IMAGE, i, &sample))
           continue;
       } else {
-        if (!gst_tag_list_get_buffer_index (copy, GST_TAG_PREVIEW_IMAGE,
-                i - n_images, &buffer))
+        if (!gst_tag_list_get_sample_index (copy, GST_TAG_PREVIEW_IMAGE,
+                i - n_images, &sample))
           continue;
       }
 
@@ -544,6 +545,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
         image_type = image_type + 2;
 #endif
 
+      buffer = gst_sample_get_buffer (sample);
       gst_buffer_map (buffer, &map, GST_MAP_READ);
       FLAC__metadata_object_picture_set_data (flacenc->meta[entries],
           map.data, map.size, TRUE);
@@ -558,6 +560,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
 #endif
 
       gst_buffer_unref (buffer);
+      gst_sample_unref (sample);
       entries++;
     }
   }
