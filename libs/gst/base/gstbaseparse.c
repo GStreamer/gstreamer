@@ -1404,8 +1404,7 @@ gst_base_parse_post_bitrates (GstBaseParse * parse, gboolean post_min,
       parse->priv->max_bitrate);
 
   if (taglist != NULL) {
-    gst_pad_push_event (parse->srcpad, gst_event_new_tag ("GstParser",
-            taglist));
+    gst_pad_push_event (parse->srcpad, gst_event_new_tag (taglist));
   }
 }
 
@@ -3982,6 +3981,10 @@ gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event)
   guint tmp;
 
   gst_event_parse_tag (event, &taglist);
+
+  /* We only care about stream tags here */
+  if (gst_tag_list_get_scope (taglist) != GST_TAG_SCOPE_STREAM)
+    return;
 
   if (gst_tag_list_get_uint (taglist, GST_TAG_MINIMUM_BITRATE, &tmp)) {
     GST_DEBUG_OBJECT (parse, "upstream min bitrate %d", tmp);

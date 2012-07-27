@@ -57,9 +57,11 @@ typedef struct _GstTagListImpl
   GstTagList taglist;
 
   GstStructure *structure;
+  GstTagScope scope;
 } GstTagListImpl;
 
 #define GST_TAG_LIST_STRUCTURE(taglist)  ((GstTagListImpl*)(taglist))->structure
+#define GST_TAG_LIST_SCOPE(taglist)  ((GstTagListImpl*)(taglist))->scope
 
 typedef struct
 {
@@ -670,6 +672,7 @@ gst_tag_list_new_internal (GstStructure * s)
       (GstMiniObjectFreeFunction) __gst_tag_list_free);
 
   GST_TAG_LIST_STRUCTURE (tag_list) = s;
+  GST_TAG_LIST_SCOPE (tag_list) = GST_TAG_SCOPE_STREAM;
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_TRACE (GST_CAT_TAGS, "created taglist %p", tag_list);
@@ -781,6 +784,40 @@ gst_tag_list_new_valist (va_list var_args)
   gst_tag_list_add_valist (list, GST_TAG_MERGE_APPEND, tag, var_args);
 
   return list;
+}
+
+/**
+ * gst_tag_list_set_scope:
+ * @list: a #GstTagList
+ * @scope: new scope for @list
+ *
+ * Sets the scope of @list to @scope. By default the scope
+ * of a taglist is #GST_TAG_SCOPE_STREAM.
+ *
+ */
+void
+gst_tag_list_set_scope (GstTagList * list, GstTagScope scope)
+{
+  g_return_if_fail (GST_IS_TAG_LIST (list));
+  g_return_if_fail (gst_tag_list_is_writable (list));
+
+  GST_TAG_LIST_SCOPE (list) = scope;
+}
+
+/**
+ * gst_tag_list_get_scope:
+ * @list: a #GstTagList
+ *
+ * Gets the scope of @list.
+ *
+ * Returns: The scope of @list
+ */
+GstTagScope
+gst_tag_list_get_scope (const GstTagList * list)
+{
+  g_return_val_if_fail (GST_IS_TAG_LIST (list), GST_TAG_SCOPE_STREAM);
+
+  return GST_TAG_LIST_SCOPE (list);
 }
 
 /**

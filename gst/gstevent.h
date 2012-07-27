@@ -518,7 +518,7 @@ void            gst_event_parse_segment         (GstEvent *event, const GstSegme
 void            gst_event_copy_segment          (GstEvent *event, GstSegment *segment);
 
 /* tag event */
-GstEvent*       gst_event_new_tag               (const gchar *name, GstTagList *taglist) G_GNUC_MALLOC;
+GstEvent*       gst_event_new_tag               (GstTagList *taglist) G_GNUC_MALLOC;
 void            gst_event_parse_tag             (GstEvent *event, GstTagList **taglist);
 
 /* TOC event */

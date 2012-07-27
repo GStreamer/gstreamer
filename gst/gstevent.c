@@ -984,26 +984,29 @@ gst_event_copy_segment (GstEvent * event, GstSegment * segment)
 
 /**
  * gst_event_new_tag:
- * @name: (transfer none): the name of the event
  * @taglist: (transfer full): metadata list. The event will take ownership
  *     of the taglist.
  *
  * Generates a metadata tag event from the given @taglist.
  *
- * Since the TAG event has the %GST_EVENT_TYPE_STICKY_MULTI flag set, the
- * @name will be used to keep track of multiple tag events.
+ * The scope of the taglist specifies if the taglist applies to the
+ * complete medium or only to this specific stream. As the tag event
+ * is a sticky event, elements should merge tags received from
+ * upstream with a given scope with their own tags with the same
+ * scope and create a new tag event from it.
  *
  * Returns: (transfer full): a new #GstEvent
  */
 GstEvent *
-gst_event_new_tag (const gchar * name, GstTagList * taglist)
+gst_event_new_tag (GstTagList * taglist)
 {
   GstStructure *s;
   GValue val = G_VALUE_INIT;
+  const gchar *names[] = { "GstTagList-stream", "GstTagList-global" };
 
   g_return_val_if_fail (taglist != NULL, NULL);
 
-  s = gst_structure_new_empty (name);
+  s = gst_structure_new_empty (names[gst_tag_list_get_scope (taglist)]);
   g_value_init (&val, GST_TYPE_TAG_LIST);
   g_value_take_boxed (&val, taglist);
   gst_structure_id_take_value (s, GST_QUARK (TAGLIST), &val);

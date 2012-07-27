@@ -211,9 +211,26 @@ GstTagFlag             gst_tag_get_flag        (const gchar * tag);
 gboolean               gst_tag_is_fixed        (const gchar * tag);
 
 /* tag lists */
+
+/**
+ * GstTagEventScope:
+ * @GST_TAG_SCOPE_STREAM: tags specific to this single stream
+ * @GST_TAG_SCOPE_GLOBAL: global tags for the complete medium
+ *
+ * GstTagScope specifies if a taglist applies to the complete
+ * medium or only to one single stream.
+ */
+typedef enum {
+  GST_TAG_SCOPE_STREAM,
+  GST_TAG_SCOPE_GLOBAL
+} GstTagScope;
+
 GstTagList * gst_tag_list_new_empty         (void) G_GNUC_MALLOC;
 GstTagList * gst_tag_list_new               (const gchar * tag, ...) G_GNUC_MALLOC;
 GstTagList * gst_tag_list_new_valist        (va_list var_args) G_GNUC_MALLOC;
+
+void         gst_tag_list_set_scope         (GstTagList * list, GstTagScope scope);
+GstTagScope  gst_tag_list_get_scope         (const GstTagList * list);
 
 gchar      * gst_tag_list_to_string         (const GstTagList * list) G_GNUC_MALLOC;
 GstTagList * gst_tag_list_new_from_string   (const gchar      * str) G_GNUC_MALLOC;

@@ -185,7 +185,7 @@ GST_START_TEST (create_events)
     GstTagList *taglist = gst_tag_list_new_empty ();
     GstTagList *tl2 = NULL;
 
-    event = gst_event_new_tag ("test", taglist);
+    event = gst_event_new_tag (taglist);
     fail_if (taglist == NULL);
     fail_if (event == NULL);
     fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_TAG);
