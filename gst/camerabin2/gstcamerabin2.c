@@ -456,7 +456,7 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
     active_pad = gst_element_get_static_pad (camerabin->src,
         GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME);
     gst_pad_push_event (active_pad,
-        gst_event_new_tag (gst_tag_list_copy (taglist)));
+        gst_event_new_tag ("Application", gst_tag_list_copy (taglist)));
 
     gst_object_unref (active_pad);
   }
@@ -1364,7 +1364,7 @@ gst_camera_bin_image_src_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
         GST_PTR_FORMAT, tags);
     if (tags) {
       peer = gst_pad_get_peer (pad);
-      gst_pad_send_event (peer, gst_event_new_tag (tags));
+      gst_pad_send_event (peer, gst_event_new_tag ("Application", tags));
       gst_object_unref (peer);
     }
   } else {
