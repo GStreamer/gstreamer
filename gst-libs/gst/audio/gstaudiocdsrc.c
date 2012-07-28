@@ -1390,13 +1390,13 @@ gst_audio_cd_src_add_tags (GstAudioCdSrc * src)
   GST_DEBUG ("src->tags = %" GST_PTR_FORMAT, src->tags);
 }
 
-static void
-gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
+static GstToc *
+gst_audio_cd_src_make_toc (GstAudioCdSrc * src, GstTocScope scope)
 {
   GstToc *toc;
   gint i;
 
-  toc = gst_toc_new ();
+  toc = gst_toc_new (scope);
 
   for (i = 0; i < src->priv->num_tracks; ++i) {
     GstAudioCdSrcTrack *track;
@@ -1423,6 +1423,19 @@ gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
     gst_toc_append_entry (toc, entry);
     g_free (uid);
   }
+
+  return toc;
+}
+
+static void
+gst_audio_cd_src_add_toc (GstAudioCdSrc * src)
+{
+  GstToc *toc;
+
+  /* FIXME: send two TOC events if needed, one global, one current */
+  toc = gst_audio_cd_src_make_toc (src, GST_TOC_SCOPE_GLOBAL);
+
+  src->priv->toc_event = gst_event_new_toc (toc, FALSE);
 
   /* If we're in continuous mode (stream = whole disc), send a TOC event
    * downstream, so matroskamux etc. can write a TOC to indicate where the
