@@ -1627,12 +1627,20 @@ GstEvent *
 gst_event_new_toc (GstToc * toc, gboolean updated)
 {
   GstStructure *toc_struct;
+  GQuark id;
 
   g_return_val_if_fail (toc != NULL, NULL);
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating toc event");
 
-  toc_struct = gst_structure_new_id (GST_QUARK (EVENT_TOC),
+  /* need different structure names so sticky_multi event stuff on pads
+   * works, i.e. both TOC events are kept around */
+  if (gst_toc_get_scope (toc) == GST_TOC_SCOPE_GLOBAL)
+    id = GST_QUARK (EVENT_TOC_GLOBAL);
+  else
+    id = GST_QUARK (EVENT_TOC_CURRENT);
+
+  toc_struct = gst_structure_new_id (id,
       GST_QUARK (TOC), GST_TYPE_TOC, toc,
       GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
 
