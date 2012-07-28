@@ -1283,7 +1283,8 @@ gst_wavparse_create_toc (GstWavParse * wav)
     return FALSE;
   }
 
-  toc = gst_toc_new ();
+  /* FIXME: send CURRENT scope toc too */
+  toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
 
   /* add cue edition */
   entry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, "cue");
