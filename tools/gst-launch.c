@@ -681,6 +681,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         break;
       case GST_MESSAGE_TOC:
         if (toc) {
+          GstTocScope toc_scope;
           GstToc *toc;
           GList *entries;
           gboolean updated;
@@ -696,6 +697,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           }
 
           gst_message_parse_toc (message, &toc, &updated);
+
+          toc_scope = gst_toc_get_scope (toc);
+          PRINT (_("  TOC scope: %s\n"),
+              (toc_scope == GST_TOC_SCOPE_GLOBAL) ? _("global") : _("current"));
+
           /* recursively loop over toc entries */
           entries = gst_toc_get_entries (toc);
           g_list_foreach (entries, print_toc_entry, GUINT_TO_POINTER (0));
