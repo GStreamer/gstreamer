@@ -232,7 +232,7 @@ static void __testname (int _i CK_ATTRIBUTE_UNUSED)\
         "Failure '"#expr"' occured" , ## __VA_ARGS__, NULL)
 
 /* Always fail */
-#define fail(...) _fail_unless(0, __FILE__, __LINE__, "Failed"  __VA_ARGS__, NULL)
+#define fail(...) _fail_unless(0, __FILE__, __LINE__, "Failed", __VA_ARGS__, NULL)
 
 /* Non macro version of #fail_unless, with more complicated interface */
 void CK_EXPORT _fail_unless (int result, const char *file,
