@@ -1593,6 +1593,7 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
 
 /**
  * gst_event_new_stream_start:
+ * @stream_id: Identifier for this stream
  *
  * Create a new STREAM_START event. The stream start event can only
  * travel downstream synchronized with the buffer flow. It is expected
@@ -1605,12 +1606,48 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
  * combining multiple streams must ensure that this event is only forwarded
  * downstream once and not for every single input stream.
  *
+ * The @stream_id should be a unique string that consists of the upstream
+ * stream-id, / as separator and a unique stream-id for this specific
+ * stream. A new stream-id should only be created for a stream if the upstream
+ * stream is split into (potentially) multiple new streams, e.g. in a demuxer,
+ * but not for every single element in the pipeline.
+ * gst_util_create_stream_id() can be used to create a stream-id.
+ *
  * Returns: (transfer full): the new STREAM_START event.
  */
 GstEvent *
-gst_event_new_stream_start (void)
+gst_event_new_stream_start (const gchar * stream_id)
 {
-  return gst_event_new_custom (GST_EVENT_STREAM_START, NULL);
+  GstStructure *s;
+
+  g_return_val_if_fail (stream_id != NULL, NULL);
+
+  s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_START),
+      GST_QUARK (STREAM_ID), G_TYPE_STRING, stream_id, NULL);
+
+  return gst_event_new_custom (GST_EVENT_STREAM_START, s);
+}
+
+/**
+ * gst_event_parse_stream_start:
+ * @event: a stream-start event.
+ * @stream_id: (out): pointer to store the stream-id
+ *
+ * Parse a stream-id @event and store the result in the given @stream_id location.
+ */
+void
+gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
+{
+  const GstStructure *structure;
+
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+
+  structure = gst_event_get_structure (event);
+
+  if (stream_id)
+    gst_structure_id_get (structure,
+        GST_QUARK (STREAM_ID), G_TYPE_STRING, stream_id, NULL);
 }
 
 /**

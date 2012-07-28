@@ -472,7 +472,8 @@ guint32         gst_event_get_seqnum            (GstEvent *event);
 void            gst_event_set_seqnum            (GstEvent *event, guint32 seqnum);
 
 /* Stream start event */
-GstEvent *      gst_event_new_stream_start      (void) G_GNUC_MALLOC;
+GstEvent *      gst_event_new_stream_start      (const gchar *stream_id) G_GNUC_MALLOC;
+void            gst_event_parse_stream_start    (GstEvent *event, const gchar **stream_id);
 
 /* flush events */
 GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
