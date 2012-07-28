@@ -1638,8 +1638,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
       srcpad = gst_element_get_static_pad (camera->image_encodebin, "src");
 
       gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-          gst_camera_bin_image_sink_event_probe, gst_object_ref (camera),
-          gst_object_unref);
+          gst_camera_bin_image_sink_event_probe, camera, NULL);
 
       gst_object_unref (srcpad);
     }
@@ -1768,8 +1767,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     }
 
     gst_pad_add_probe (imgsrc, GST_PAD_PROBE_TYPE_BUFFER,
-        gst_camera_bin_image_src_buffer_probe, gst_object_ref (camera),
-        gst_object_unref);
+        gst_camera_bin_image_src_buffer_probe, camera, NULL);
     gst_object_unref (imgsrc);
   }
 
@@ -1834,8 +1832,7 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
     /* drop EOS for audiosrc elements that push them on state_changes
      * (basesrc does this) */
     gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
-        gst_camera_bin_audio_src_data_probe, gst_object_ref (camera),
-        gst_object_unref);
+        gst_camera_bin_audio_src_data_probe, camera, NULL);
 
     gst_object_unref (srcpad);
   }
