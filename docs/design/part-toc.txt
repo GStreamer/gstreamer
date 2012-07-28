@@ -58,15 +58,63 @@ timestamps for each item using gst_toc_entry_set_start_stop().
 The best way to process already created GstToc is to recursively go through
 the 'entries' and 'subentries' fields.
 
-2. Working with GstMessage
+
+2. TOC scope: global and current
+
+There are two main consumers for TOC information: applications and elements
+in the pipeline that are TOC writers (such as e.g. matroskamux).
+
+Applications typically want to know the entire table of contents (TOC) with
+all entries that can possibly be selected.
+
+TOC writers in the pipeline, however, would not want to write a TOC for all
+possible/available streams, but only for the current stream.
+
+When transcoding a title from a DVD, for example, the application would still
+want to know the entire TOC, with all titles, the chapters for each title,
+and the available angles. When transcoding to a file, we only want the TOC
+information that is relevant to the transcoded stream to be written into
+the file structure, e.g. the chapters of the title being transcoded (or
+possibly only chapters 5-7 if only those have been selected for playback/
+transcoding).
+
+This is why we may need to create two different TOCs for those two types
+of consumers.
+
+Elements that extract TOC information should send TOC events downstream.
+
+Like with tags, sinks will post a TOC message on the bus for the application
+with the global TOC, once a global TOC event reaches the sink.
+
+
+3. Working with GstMessage
+
+If a table of contents is available, applications will receive a TOC message
+on the pipeline's GstBus.
+
+A TOC message will be posted on the bus by sinks when the receive a TOC event
+containing a TOC with global scope. Elements extracting TOCs should not post
+a TOC message themselves, but send a TOC event downstream.
+
+The reason for this is that there may be cascades of TOCs (e.g. a zip archive
+containing multiple matroska files, each with a TOC).
 
 GstMessage with GstToc can be created using gst_message_new_toc() and parsed
 with gst_message_parse_toc(). The 'updated' parameter in these methods indicates
 whether the TOC was just discovered (set to false) or TOC was already found and
-have been updated (set to true). The common usage for such message is to post it
+have been updated (set to true). This message will typically be posted by sinks
 to pipeline in case you have discovered TOC data within your element.
 
-3. Working with GstEvent
+
+4. Working with GstEvent
+
+There are two types of TOC-related events:
+
+ - downstream TOC events that contain TOC information and
+   travel downstream
+
+ - toc-select events that travel upstream and can be used to select
+   a certain TOC entry for playback (similar to seek events)
 
 GstToc supports select event through GstEvent infrastructure. The idea is the
 following: when you receive TOC select event, parse it with
