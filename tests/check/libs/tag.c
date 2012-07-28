@@ -1734,14 +1734,14 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   do_simple_exif_tag_serialization_deserialization (GST_TAG_DATE_TIME, &value);
   g_value_unset (&value);
 
-  g_value_init (&value, GST_TYPE_BUFFER);
+  g_value_init (&value, GST_TYPE_SAMPLE);
   buf = gst_buffer_new_and_alloc (1024);
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
   for (i = 0; i < 1024; i++)
     data[i] = i % 255;
   gst_buffer_unmap (buf, &map);
-  gst_value_set_buffer (&value, buf);
+  gst_value_take_sample (&value, gst_sample_new (buf, NULL, NULL, NULL));
   gst_buffer_unref (buf);
   do_simple_exif_tag_serialization_deserialization (GST_TAG_APPLICATION_DATA,
       &value);

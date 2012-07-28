@@ -900,6 +900,7 @@ write_exif_undefined_tag_from_taglist (GstExifWriter * writer,
   guint8 *data = NULL;
   gsize size = 0;
   gint tag_size = gst_tag_list_get_tag_size (taglist, exiftag->gst_tag);
+  GstSample *sample = NULL;
   GstBuffer *buf = NULL;
 
   if (tag_size != 1) {
@@ -916,8 +917,9 @@ write_exif_undefined_tag_from_taglist (GstExifWriter * writer,
       size = strlen ((gchar *) data);   /* no need to +1, undefined doesn't require it */
       break;
     default:
-      if (G_VALUE_TYPE (value) == GST_TYPE_BUFFER) {
-        buf = gst_value_get_buffer (value);
+      if (G_VALUE_TYPE (value) == GST_TYPE_SAMPLE) {
+        sample = gst_value_get_sample (value);
+        buf = gst_sample_get_buffer (sample);
         gst_buffer_map (buf, &info, GST_MAP_READ);
         data = info.data;
         size = info.size;
@@ -1349,15 +1351,17 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
   }
 
   tagtype = gst_tag_get_type (tag->gst_tag);
-  if (tagtype == GST_TYPE_BUFFER) {
+  if (tagtype == GST_TYPE_SAMPLE) {
+    GstSample *sample;
     GstBuffer *buf;
 
     buf = gst_buffer_new_wrapped (data, count);
     data = NULL;
 
+    sample = gst_sample_new (buf, NULL, NULL, NULL);
     gst_tag_list_add (reader->taglist, GST_TAG_MERGE_APPEND, tag->gst_tag,
-        buf, NULL);
-
+        sample, NULL);
+    gst_sample_unref (sample);
     gst_buffer_unref (buf);
   } else if (tagtype == G_TYPE_STRING) {
     gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
