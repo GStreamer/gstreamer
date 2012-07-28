@@ -1095,7 +1095,8 @@ gst_matroska_read_common_parse_chapters (GstMatroskaReadCommon * common,
     return ret;
   }
 
-  toc = gst_toc_new ();
+  /* FIXME: create CURRENT toc as well */
+  toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     if ((ret = gst_ebml_peek_id (ebml, &id)) != GST_FLOW_OK)
