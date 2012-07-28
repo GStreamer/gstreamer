@@ -679,7 +679,10 @@ setup_pipeline (void)
 
   GST_INFO_OBJECT (camerabin, "camerabin created");
 
-  gst_util_set_object_arg (G_OBJECT (camerabin), "flags", camerabin_flags);
+  if (camerabin_flags)
+    gst_util_set_object_arg (G_OBJECT (camerabin), "flags", camerabin_flags);
+  else
+    gst_util_set_object_arg (G_OBJECT (camerabin), "flags", "");
 
   if (videosrc_name) {
     GstElement *wrapper;
