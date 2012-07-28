@@ -995,7 +995,7 @@ gst_flac_parse_handle_cuesheet (GstFlacParse * flacparse, GstBuffer * buffer)
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
 
-  toc = gst_toc_new ();
+  toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
 
   /* skip 4 bytes METADATA_BLOCK_HEADER */
   /* http://flac.sourceforge.net/format.html#metadata_block_header */
