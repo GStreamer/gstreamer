@@ -192,6 +192,8 @@ GQuark			gst_flow_to_quark	(GstFlowReturn ret);
  *   would be unsafe e.g. if one pad has %GST_CAPS_ANY.
  * @GST_PAD_LINK_CHECK_CAPS: Check if the pads are compatible by comparing the
  *   caps returned by gst_pad_query_caps().
+ * @GST_PAD_LINK_CHECK_DEFAULT: The default checks done when linking
+ *   pads (i.e. the ones used by gst_pad_link()).
  *
  * The amount of checking to be done when linking pads. @GST_PAD_LINK_CHECK_CAPS
  * and @GST_PAD_LINK_CHECK_TEMPLATE_CAPS are mutually exclusive. If both are
@@ -209,16 +211,10 @@ typedef enum {
   GST_PAD_LINK_CHECK_NOTHING       = 0,
   GST_PAD_LINK_CHECK_HIERARCHY     = 1 << 0,
   GST_PAD_LINK_CHECK_TEMPLATE_CAPS = 1 << 1,
-  GST_PAD_LINK_CHECK_CAPS          = 1 << 2
-} GstPadLinkCheck;
+  GST_PAD_LINK_CHECK_CAPS          = 1 << 2,
 
-/**
- * GST_PAD_LINK_CHECK_DEFAULT:
- *
- * The default checks done when linking pads (i.e. the ones used by
- * gst_pad_link()).
- */
-#define GST_PAD_LINK_CHECK_DEFAULT ((GstPadLinkCheck) (GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS))
+  GST_PAD_LINK_CHECK_DEFAULT       = GST_PAD_LINK_CHECK_HIERARCHY | GST_PAD_LINK_CHECK_CAPS
+} GstPadLinkCheck;
 
 /* pad states */
 /**
