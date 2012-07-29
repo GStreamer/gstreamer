@@ -209,7 +209,7 @@ guint32 test_id = 0;
 static gchar *image_filename;
 static gchar *video_filename;
 
-static GstBuffer *preview_buffer;
+static GstSample *preview_sample;
 static gchar *preview_filename;
 static GstCaps *preview_caps;
 static GstTagList *tags_found;
@@ -315,16 +315,16 @@ capture_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
         GST_INFO ("image captured");
       } else if (st && gst_structure_has_name (st,
               GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME)) {
-        GstBuffer *buf;
+        GstSample *sample;
         const GValue *value;
 
-        value = gst_structure_get_value (st, "buffer");
+        value = gst_structure_get_value (st, "sample");
         fail_unless (value != NULL);
-        buf = gst_value_get_buffer (value);
+        sample = gst_value_get_sample (value);
 
-        if (preview_buffer)
-          gst_buffer_unref (preview_buffer);
-        preview_buffer = gst_buffer_ref (buf);
+        if (preview_sample)
+          gst_sample_unref (preview_sample);
+        preview_sample = gst_sample_ref (sample);
         g_free (preview_filename);
         preview_filename = g_strdup (gst_structure_get_string (st, "location"));
       }
@@ -338,13 +338,13 @@ check_preview_image (GstElement * camera, const gchar * filename, gint index)
 {
   gchar *prev_filename = NULL;
 
-  if (!preview_buffer && camera) {
+  if (!preview_sample && camera) {
     GstMessage *msg = wait_for_element_message (camera,
         GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME, GST_CLOCK_TIME_NONE);
     fail_unless (msg != NULL);
     gst_message_unref (msg);
   }
-  fail_unless (preview_buffer != NULL);
+  fail_unless (preview_sample != NULL);
   if (filename) {
     if (index >= 0) {
       prev_filename = g_strdup_printf (filename, index);
@@ -355,11 +355,9 @@ check_preview_image (GstElement * camera, const gchar * filename, gint index)
     fail_unless (strcmp (preview_filename, prev_filename) == 0);
   }
   if (preview_caps) {
-    /* TODO porting
-       fail_unless (GST_BUFFER_CAPS (preview_buffer) != NULL);
-       fail_unless (gst_caps_can_intersect (GST_BUFFER_CAPS (preview_buffer),
-       preview_caps));
-     */
+    fail_unless (gst_sample_get_caps (preview_sample) != NULL);
+    fail_unless (gst_caps_can_intersect (gst_sample_get_caps (preview_sample),
+            preview_caps));
   }
   g_free (prev_filename);
 }
@@ -464,9 +462,9 @@ teardown (void)
     gst_caps_unref (preview_caps);
   preview_caps = NULL;
 
-  if (preview_buffer)
-    gst_buffer_unref (preview_buffer);
-  preview_buffer = NULL;
+  if (preview_sample)
+    gst_sample_unref (preview_sample);
+  preview_sample = NULL;
 
   g_free (preview_filename);
   preview_filename = NULL;
@@ -648,16 +646,16 @@ wait_for_element_message (GstElement * camera, const gchar * name,
         const GstStructure *st = gst_message_get_structure (msg);
         if (gst_structure_has_name (st,
                 GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME)) {
-          GstBuffer *buf;
+          GstSample *sample;
           const GValue *value;
 
-          value = gst_structure_get_value (st, "buffer");
+          value = gst_structure_get_value (st, "sample");
           fail_unless (value != NULL);
-          buf = gst_value_get_buffer (value);
+          sample = gst_value_get_sample (value);
 
-          if (preview_buffer)
-            gst_buffer_unref (preview_buffer);
-          preview_buffer = gst_buffer_ref (buf);
+          if (preview_sample)
+            gst_sample_unref (preview_sample);
+          preview_sample = gst_sample_ref (sample);
           g_free (preview_filename);
           preview_filename =
               g_strdup (gst_structure_get_string (st, "location"));
@@ -1023,9 +1021,9 @@ GST_START_TEST (test_image_capture_previews)
     check_preview_image (camera, image_filename, i);
     remove_file (image_filename, i);
 
-    if (preview_buffer)
-      gst_buffer_unref (preview_buffer);
-    preview_buffer = NULL;
+    if (preview_sample)
+      gst_sample_unref (preview_sample);
+    preview_sample = NULL;
     gst_caps_replace (&preview_caps, NULL);
   }
 
