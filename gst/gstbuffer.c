@@ -1061,8 +1061,8 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
 /**
  * gst_buffer_get_sizes:
  * @b: a #GstBuffer.
- * @of: a pointer to the offset
- * @ms: a pointer to the maxsize
+ * @of: (out): a pointer to the offset
+ * @ms: (out): a pointer to the maxsize
  *
  * Get the total size of the memory blocks in @b.
  *
@@ -1087,8 +1087,8 @@ gst_buffer_find_memory (GstBuffer * buffer, gsize offset, gsize size,
  * @buffer: a #GstBuffer.
  * @idx: an index
  * @length: a length
- * @offset: a pointer to the offset
- * @maxsize: a pointer to the maxsize
+ * @offset: (out): a pointer to the offset
+ * @maxsize: (out): a pointer to the maxsize
  *
  * Get the total size of @length memory blocks stating from @idx in @buffer.
  *
