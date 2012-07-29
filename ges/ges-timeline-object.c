@@ -1404,8 +1404,7 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
  * The function modifies @object, and creates another #GESTimelineObject so
  * we have two clips at the end, splitted at the time specified by @position.
  *
- * Returns: (transfer full): The newly created #GESTimelineObject resulting from
- * the splitting
+ * Returns: The newly created #GESTimelineObject resulting from the splitting
  *
  * Since: 0.10.XX
  */

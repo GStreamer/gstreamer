@@ -203,7 +203,7 @@ ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
  *
  * Creates a new #GESTimelineParseLaunchEffect from the description of the bin.
  *
- * Returns: (transfer full): a newly created #GESTimelineParseLaunchEffect, or
+ * Returns: a newly created #GESTimelineParseLaunchEffect, or
  * %NULL if something went wrong.
  *
  * Since: 0.10.2

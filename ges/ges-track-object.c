@@ -1554,7 +1554,7 @@ ges_track_object_set_max_duration (GESTrackObject * object, guint64 maxduration)
  *
  * Copies @object
  *
- * Returns: (transfer full): The newly create #GESTrackObject, copied from @object
+ * Returns: The newly create #GESTrackObject, copied from @object
  *
  * Since: 0.10.XX
  */

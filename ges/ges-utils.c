@@ -35,7 +35,7 @@
  * Creates a new #GESTimeline containing a raw audio and a
  * raw video track.
  *
- * Returns: (transfer full): The newly created #GESTimeline.
+ * Returns: The newly created #GESTimeline.
  */
 
 GESTimeline *
