@@ -49,7 +49,7 @@ typedef struct
 
 GstCameraBinPreviewPipelineData *gst_camerabin_create_preview_pipeline (GstElement * element, GstElement * filter);
 void gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData * preview);
-gboolean gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview, GstBuffer * buffer);
+gboolean gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview, GstSample * sample);
 void gst_camerabin_preview_set_caps (GstCameraBinPreviewPipelineData * preview, GstCaps * caps);
 gboolean gst_camerabin_preview_set_filter (GstCameraBinPreviewPipelineData * preview, GstElement * filter);
 

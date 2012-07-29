@@ -205,6 +205,8 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
 
   g_mutex_lock (&camerasrc->capturing_mutex);
   if (self->image_capture_count > 0) {
+    GstSample *sample;
+    GstCaps *caps;
     ret = GST_PAD_PROBE_OK;
     self->image_capture_count--;
 
@@ -212,7 +214,11 @@ gst_wrapper_camera_bin_src_imgsrc_probe (GstPad * pad, GstPadProbeInfo * info,
     /* TODO This can likely be optimized if the viewfinder caps is the same as
      * the preview caps, avoiding another scaling of the same buffer. */
     GST_DEBUG_OBJECT (self, "Posting preview for image");
-    gst_base_camera_src_post_preview (camerasrc, buffer);
+    caps = gst_pad_get_current_caps (pad);
+    sample = gst_sample_new (buffer, caps, NULL, NULL);
+    gst_base_camera_src_post_preview (camerasrc, sample);
+    gst_caps_unref (caps);
+    gst_sample_unref (sample);
 
     if (self->image_capture_count == 0) {
       gst_base_camera_src_finish_capture (camerasrc);
@@ -251,6 +257,8 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_STARTING) {
     GstClockTime ts;
     GstSegment segment;
+    GstCaps *caps;
+    GstSample *sample;
 
     GST_DEBUG_OBJECT (self, "Starting video recording");
     self->video_rec_status = GST_VIDEO_RECORDING_STATUS_RUNNING;
@@ -264,7 +272,11 @@ gst_wrapper_camera_bin_src_vidsrc_probe (GstPad * pad, GstPadProbeInfo * info,
 
     /* post preview */
     GST_DEBUG_OBJECT (self, "Posting preview for video");
-    gst_base_camera_src_post_preview (camerasrc, buffer);
+    caps = gst_pad_get_current_caps (pad);
+    sample = gst_sample_new (buffer, caps, NULL, NULL);
+    gst_base_camera_src_post_preview (camerasrc, sample);
+    gst_caps_unref (caps);
+    gst_sample_unref (sample);
 
     ret = GST_PAD_PROBE_OK;
   } else if (self->video_rec_status == GST_VIDEO_RECORDING_STATUS_FINISHING) {

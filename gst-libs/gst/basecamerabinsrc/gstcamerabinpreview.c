@@ -249,20 +249,20 @@ gst_camerabin_destroy_preview_pipeline (GstCameraBinPreviewPipelineData *
 /**
  * gst_camerabin_preview_pipeline_post:
  * @preview: the #GstCameraBinPreviewPipelineData
- * @buffer: the buffer to be posted as a preview
+ * @sample: the sample to be posted as a preview
  *
- * Converts the @buffer to the desired format and posts the preview
+ * Converts the @sample to the desired format and posts the preview
  * message to the bus.
  *
  * Returns: %TRUE on success
  */
 gboolean
 gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview,
-    GstBuffer * buffer)
+    GstSample * sample)
 {
   g_return_val_if_fail (preview != NULL, FALSE);
   g_return_val_if_fail (preview->pipeline != NULL, FALSE);
-  g_return_val_if_fail (buffer, FALSE);
+  g_return_val_if_fail (sample, FALSE);
 
   g_mutex_lock (&preview->processing_lock);
   g_return_val_if_fail (preview->pipeline != NULL, FALSE);
@@ -277,8 +277,9 @@ gst_camerabin_preview_pipeline_post (GstCameraBinPreviewPipelineData * preview,
 
   preview->processing++;
 
+  g_object_set (preview->appsrc, "caps", gst_sample_get_caps (sample), NULL);
   gst_app_src_push_buffer ((GstAppSrc *) preview->appsrc,
-      gst_buffer_ref (buffer));
+      gst_buffer_ref (gst_sample_get_buffer (sample)));
 
   g_mutex_unlock (&preview->processing_lock);
 

@@ -556,10 +556,10 @@ gst_base_camera_src_init (GstBaseCameraSrc * self)
 }
 
 void
-gst_base_camera_src_post_preview (GstBaseCameraSrc * self, GstBuffer * buf)
+gst_base_camera_src_post_preview (GstBaseCameraSrc * self, GstSample * sample)
 {
   if (self->post_preview) {
-    gst_camerabin_preview_pipeline_post (self->preview_pipeline, buf);
+    gst_camerabin_preview_pipeline_post (self->preview_pipeline, sample);
   } else {
     GST_DEBUG_OBJECT (self, "Previews not enabled, not posting");
   }
