@@ -691,7 +691,7 @@ no_memory:
 /**
  * gst_buffer_new_wrapped_full:
  * @flags: #GstMemoryFlags
- * @data: data to wrap
+ * @data: (array length=size) (element-type guint8): data to wrap
  * @maxsize: allocated size of @data
  * @offset: offset in @data
  * @size: size of valid data
@@ -726,7 +726,7 @@ gst_buffer_new_wrapped_full (GstMemoryFlags flags, gpointer data,
 
 /**
  * gst_buffer_new_wrapped:
- * @data: data to wrap
+ * @data: (array length=size) (element-type guint8): data to wrap
  * @size: allocated size of @data
  *
  * Creates a new buffer that wraps the given @data. The memory will be freed
