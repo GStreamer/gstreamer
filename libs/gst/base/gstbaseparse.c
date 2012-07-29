@@ -2850,9 +2850,16 @@ gst_base_parse_loop (GstPad * pad)
   GST_DEBUG_OBJECT (parse, "hello");
 
   if (G_UNLIKELY (parse->priv->push_stream_start)) {
+    gchar *stream_id;
+
+    stream_id =
+        gst_pad_create_stream_id (parse->srcpad, GST_ELEMENT_CAST (parse),
+        NULL);
+
     GST_DEBUG_OBJECT (parse, "Pushing STREAM_START");
-    gst_pad_push_event (parse->srcpad, gst_event_new_stream_start ());
+    gst_pad_push_event (parse->srcpad, gst_event_new_stream_start (stream_id));
     parse->priv->push_stream_start = FALSE;
+    g_free (stream_id);
   }
 
   /* reverse playback:

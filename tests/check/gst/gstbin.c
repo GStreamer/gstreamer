@@ -75,7 +75,7 @@ static gpointer
 push_one_stream_start (GstPad * pad)
 {
   GST_DEBUG_OBJECT (pad, "Pushing STREAM_START event");
-  gst_pad_push_event (pad, gst_event_new_stream_start ());
+  gst_pad_push_event (pad, gst_event_new_stream_start ("test"));
 
   return NULL;
 }

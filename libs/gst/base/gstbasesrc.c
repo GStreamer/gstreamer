@@ -823,8 +823,17 @@ gst_base_src_send_stream_start (GstBaseSrc * src)
   gboolean ret = TRUE;
 
   if (src->priv->stream_start_pending) {
-    ret = gst_pad_push_event (src->srcpad, gst_event_new_stream_start ());
+    gchar *stream_id;
+
+    stream_id =
+        gst_pad_create_stream_id (src->srcpad, GST_ELEMENT_CAST (src), NULL);
+
+    GST_DEBUG_OBJECT (src, "Pushing STREAM_START");
+    ret =
+        gst_pad_push_event (src->srcpad,
+        gst_event_new_stream_start (stream_id));
     src->priv->stream_start_pending = FALSE;
+    g_free (stream_id);
   }
 
   return ret;
@@ -3519,12 +3528,16 @@ gst_base_src_activate_mode (GstPad * pad, GstObject * parent,
     GstPadMode mode, gboolean active)
 {
   gboolean res;
+  GstBaseSrc *src = GST_BASE_SRC (parent);
+
+  src->priv->stream_start_pending = FALSE;
 
   switch (mode) {
     case GST_PAD_MODE_PULL:
       res = gst_base_src_activate_pull (pad, parent, active);
       break;
     case GST_PAD_MODE_PUSH:
+      src->priv->stream_start_pending = active;
       res = gst_base_src_activate_push (pad, parent, active);
       break;
     default:
@@ -3549,7 +3562,6 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      basesrc->priv->stream_start_pending = TRUE;
       no_preroll = gst_base_src_is_live (basesrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -3583,7 +3595,6 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
        * already did this */
       g_atomic_int_set (&basesrc->priv->pending_eos, FALSE);
       gst_event_replace (&basesrc->pending_seek, NULL);
-      basesrc->priv->stream_start_pending = FALSE;
       break;
     }
     case GST_STATE_CHANGE_READY_TO_NULL:

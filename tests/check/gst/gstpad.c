@@ -1438,7 +1438,7 @@ GST_START_TEST (test_sticky_events)
   gst_pad_set_active (srcpad, TRUE);
 
   /* push an event, it should be sticky on the srcpad */
-  gst_pad_push_event (srcpad, gst_event_new_stream_start ());
+  gst_pad_push_event (srcpad, gst_event_new_stream_start ("test"));
 
   /* make a caps event */
   caps = gst_caps_new_empty_simple ("foo/bar");

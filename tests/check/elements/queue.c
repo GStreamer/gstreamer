@@ -246,7 +246,7 @@ GST_START_TEST (test_non_leaky_overrun)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
-  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
 
   fail_unless (underrun_count == 1);
   fail_unless (overrun_count == 0);
@@ -338,7 +338,7 @@ GST_START_TEST (test_leaky_upstream)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
-  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
 
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 1);
@@ -424,7 +424,7 @@ GST_START_TEST (test_leaky_downstream)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
-  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
 
   fail_unless (overrun_count == 0);
   fail_unless (underrun_count == 1);
@@ -507,7 +507,7 @@ GST_START_TEST (test_time_level)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
-  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
 
   /* push buffer without duration */
   buffer = gst_buffer_new_and_alloc (4);
@@ -606,7 +606,7 @@ GST_START_TEST (test_time_level_task_not_started)
   UNDERRUN_WAIT ();
   UNDERRUN_UNLOCK ();
 
-  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ());
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   segment.start = 1 * GST_SECOND;
