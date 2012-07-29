@@ -974,7 +974,7 @@ gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
  * gst_element_get_compatible_pad:
  * @element: (transfer none): a #GstElement in which the pad should be found.
  * @pad: (transfer none): the #GstPad to find a compatible one for.
- * @caps: the #GstCaps to use as a filter.
+ * @caps: (allow-none): the #GstCaps to use as a filter.
  *
  * Looks for an unlinked pad to which the given pad can link. It is not
  * guaranteed that linking the pads will work, though it should work in most
