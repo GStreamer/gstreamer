@@ -397,9 +397,9 @@ gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
  *
  * Free-function: g_free
  *
- * Returns: (transfer full) (array zero-terminated=1): the location for this
- *     URI. Returns NULL if the URI isn't valid. If the URI does not contain
- *     a location, an empty string is returned.
+ * Returns: (transfer full): the location for this URI. Returns NULL if the
+ *     URI isn't valid. If the URI does not contain a location, an empty
+ *     string is returned.
  */
 gchar *
 gst_uri_get_location (const gchar * uri)
@@ -438,15 +438,14 @@ gst_uri_get_location (const gchar * uri)
 /**
  * gst_uri_construct:
  * @protocol: Protocol for URI
- * @location: (array zero-terminated=1) (transfer none): Location for URI
+ * @location: (transfer none): Location for URI
  *
  * Constructs a URI for a given valid protocol and location.
  *
  * Free-function: g_free
  *
- * Returns: (transfer full) (array zero-terminated=1): a new string for this
- *     URI. Returns NULL if the given URI protocol is not valid, or the given
- *     location is NULL.
+ * Returns: (transfer full): a new string for this URI. Returns NULL if the
+ *     given URI protocol is not valid, or the given location is NULL.
  */
 gchar *
 gst_uri_construct (const gchar * protocol, const gchar * location)
@@ -667,9 +666,9 @@ gst_uri_handler_get_uri_type (GstURIHandler * handler)
  * Gets the list of protocols supported by @handler. This list may not be
  * modified.
  *
- * Returns: (transfer none) (array zero-terminated=1) (element-type utf8): the
- *     supported protocols. Returns NULL if the @handler isn't implemented
- *     properly, or the @handler doesn't support any protocols.
+ * Returns: (transfer none) (element-type utf8): the supported protocols.
+ *     Returns NULL if the @handler isn't implemented properly, or the @handler
+ *     doesn't support any protocols.
  */
 const gchar *const *
 gst_uri_handler_get_protocols (GstURIHandler * handler)
