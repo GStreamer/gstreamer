@@ -1178,6 +1178,7 @@ discoverer_collect (GstDiscoverer * dc)
         dc->priv->current_info, dc->priv->current_error);
     /* Clients get a copy of current_info since it is a boxed type */
     gst_discoverer_info_unref (dc->priv->current_info);
+    dc->priv->current_info = NULL;
   }
 }
 
