@@ -1283,6 +1283,11 @@ gst_wavparse_create_toc (GstWavParse * wav)
     return FALSE;
   }
 
+  if (!wav->cues) {
+    GST_OBJECT_UNLOCK (wav);
+    return TRUE;
+  }
+
   /* FIXME: send CURRENT scope toc too */
   toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
 
@@ -1293,7 +1298,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
 
   /* add chapters in cue edition */
   list = g_list_first (wav->cues);
-  while (list != NULL) {
+  while (list) {
     cue = list->data;
     prev_subentry = cur_subentry;
     /* previous chapter stop time = current chapter start time */
@@ -1314,7 +1319,7 @@ gst_wavparse_create_toc (GstWavParse * wav)
 
   /* add tags in chapters */
   list = g_list_first (wav->labls);
-  while (list != NULL) {
+  while (list) {
     labl = list->data;
     id = g_strdup_printf ("%08x", labl->cue_point_id);
     cur_subentry = gst_toc_find_entry (toc, id);
