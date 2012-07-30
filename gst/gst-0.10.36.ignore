@@ -1,5 +1,0 @@
-%%
-ignore
-  gst_preset_set_app_dir
-  gst_preset_get_app_dir
-%%

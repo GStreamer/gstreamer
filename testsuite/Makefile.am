@@ -1,23 +1,4 @@
-INCLUDES = \
-	$(PYTHON_INCLUDES) \
-	$(PYGOBJET_CFLAGS) \
-	$(PYGST_CFLAGS) \
-	$(GST_CFLAGS)
-
-noinst_LTLIBRARIES = testhelper.la
-linked_LIBS = testhelper.la
-
-testhelper_la_LDFLAGS = -module -avoid-version
-testhelper_la_LIBADD = $(GLIB_LIBS)
-testhelper_la_CFLAGS = $(PYGOBJECT_CFLAGS)
-testhelper_la_SOURCES = \
-	testhelpermodule.c \
-	test-object.c
-
 # This is a hack to make sure a shared library is built
-testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
-	$(AM_V_CCLD)$(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
-
 tests =  \
 	test_adapter.py \
 	test_audio.py \
@@ -39,16 +20,6 @@ tests =  \
 	test_pbutils.py	\
 	test_gst.py
 
-check-local: testhelper.la
-	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
-	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
-	@rm -fr *.pyc
-
-check-verbose: testhelper.la
-	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
-	@VERBOSE=yes PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py
-	@rm -fr *.pyc
-
 EXTRA_DIST = $(tests) common.py cleanup.py runtests.py test-object.h python.supp gstpython.supp
 
 if HAVE_VALGRIND
@@ -63,7 +34,7 @@ endif
 GSTSUPP = $(top_srcdir)/common/gst.supp
 PYTHONSUPP = $(top_srcdir)/testsuite/python.supp
 GSTPYTHONSUPP = $(top_srcdir)/testsuite/gstpython.supp
-TESTS_ENVIRONMENT = PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) LC_ALL=C
+TESTS_ENVIRONMENT = LC_ALL=C
 
 # gdb any given test_x.py by running make test_x.py.gdb
 %.gdb: %
@@ -110,14 +81,13 @@ TESTS_ENVIRONMENT = PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$
 	@rm valgrind.log
 
 %.check: %
-	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
-	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/runtests.py $*
+	$(PYTHON) $(srcdir)/cleanup.py
+	$(PYTHON) $(srcdir)/runtests.py $*
 	@rm -fr *.pyc
 
 %.forever: %
-	@PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) $(PYTHON) $(srcdir)/cleanup.py
+	$(srcdir)/cleanup.py
 	@while true; do \
-	PYTHONPATH=$(top_builddir):$(top_builddir)/gst/.libs:`pwd`:$(top_srcdir):$(PYTHONPATH) \
 	$(PYTHON) $(srcdir)/runtests.py $* || break; done
 	@rm -fr *.pyc
 

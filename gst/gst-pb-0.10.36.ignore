@@ -1,8 +1,0 @@
-%%
-ignore
-  gst_video_event_new_downstream_force_key_unit
-  gst_video_event_parse_downstream_force_key_unit
-  gst_video_event_new_upstream_force_key_unit
-  gst_video_event_parse_upstream_force_key_unit
-  gst_video_event_is_force_key_unit
-%%
