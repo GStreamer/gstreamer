@@ -168,6 +168,7 @@ gst_visual_setup (GstAudioVisualizer * bscope)
 
   gst_visual_clear_actors (visual);
 
+  /* FIXME: we need to know how many bits we actually have in memory */
   depth = bscope->vinfo.finfo->pixel_stride[0];
   if (bscope->vinfo.finfo->bits >= 8) {
     depth *= 8;
