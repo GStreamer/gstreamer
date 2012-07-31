@@ -380,7 +380,7 @@ if test $USE_GLX -eq 1; then
 fi
 AC_SUBST(LIBVA_GLX_PKGNAME)
 
-dnl Check for JPEG decoding API (0.33+)
+dnl Check for JPEG decoding API (0.32.1+)
 USE_JPEG_DECODER=0
 AC_CACHE_CHECK([for JPEG decoding API],
     ac_cv_have_jpeg_decoding_api, [
@@ -390,12 +390,11 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$CFLAGS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
-            [[#include <va/va.h>
-              #include <va/va_dec_jpeg.h>]],
-            [[VAPictureParameterBufferJPEG pic_param;
-              VASliceParameterBufferJPEG slice_param;
-              VAHuffmanTableBufferJPEG huffman_table;
-              VAIQMatrixBufferJPEG iq_matrix;]])],
+            [[#include <va/va.h>]],
+            [[VAPictureParameterBufferJPEGBaseline pic_param;
+              VASliceParameterBufferJPEGBaseline slice_param;
+              VAHuffmanTableBufferJPEGBaseline huffman_table;
+              VAIQMatrixBufferJPEGBaseline iq_matrix;]])],
         [ac_cv_have_jpeg_decoding_api="yes" USE_JPEG_DECODER=1],
         [ac_cv_have_jpeg_decoding_api="no"]
     )

@@ -390,9 +390,9 @@ prefix##_class_init(type##Class *klass)                                 \
 
 #define GST_VAAPI_BITPLANE_NEW(decoder, size) \
     gst_vaapi_bitplane_new(GST_VAAPI_DECODER_CAST(decoder), NULL, size)
-    
-#define GST_VAAPI_HUFFMAN_TABLE_NEW(codec, decoder)              \
-      gst_vaapi_huffman_table_new(GST_VAAPI_DECODER_CAST(decoder),    \
+
+#define GST_VAAPI_HUFFMAN_TABLE_NEW(codec, decoder)                     \
+      gst_vaapi_huffman_table_new(GST_VAAPI_DECODER_CAST(decoder),      \
                             NULL, sizeof(VAHuffmanTableBuffer##codec))
 
 G_END_DECLS
