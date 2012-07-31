@@ -400,6 +400,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     GstVaapiDisplayPrivate * const priv = display->priv;
     GstVaapiDisplayCache *cache;
     gboolean            has_errors      = TRUE;
+    VADisplayAttribute *display_attrs   = NULL;
     VAProfile          *profiles        = NULL;
     VAEntrypoint       *entrypoints     = NULL;
     VAImageFormat      *formats         = NULL;
@@ -505,6 +506,21 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     }
     append_h263_config(priv->decoders);
 
+    /* VA display attributes */
+    display_attrs =
+        g_new(VADisplayAttribute, vaMaxNumDisplayAttributes(priv->display));
+    if (!display_attrs)
+        goto end;
+
+    n = 0; /* XXX: workaround old GMA500 bug */
+    status = vaQueryDisplayAttributes(priv->display, display_attrs, &n);
+    if (!vaapi_check_status(status, "vaQueryDisplayAttributes()"))
+        goto end;
+
+    GST_DEBUG("%d display attributes", n);
+    for (i = 0; i < n; i++)
+        GST_DEBUG("  %s", string_of_VADisplayAttributeType(display_attrs[i].type));
+
     /* VA image formats */
     formats = g_new(VAImageFormat, vaMaxNumImageFormats(priv->display));
     if (!formats)
@@ -552,6 +568,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
 
     has_errors = FALSE;
 end:
+    g_free(display_attrs);
     g_free(profiles);
     g_free(entrypoints);
     g_free(formats);
