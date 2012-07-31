@@ -282,7 +282,7 @@ if test "$enable_x11" = "yes"; then
     PKG_CHECK_MODULES(X11, [x11], [USE_X11=1], [USE_X11=0])
     if test $USE_X11 -eq 1; then
         saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$CPPFLAGS $WAYLAND_CFLAGS"
+        CPPFLAGS="$CPPFLAGS $X11_CFLAGS"
         AC_CHECK_HEADERS([X11/Xlib.h X11/Xutil.h X11/Xatom.h], [:], [USE_X11=0])
         CPPFLAGS="$saved_CPPFLAGS"
     fi
