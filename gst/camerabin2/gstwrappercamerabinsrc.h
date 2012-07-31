@@ -88,8 +88,6 @@ struct _GstWrapperCameraBinSrc
   GstPad *outsel_imgpad;
   GstPad *outsel_vidpad;
 
-  GstPadEventFunction srcpad_event_func;
-
   /* For changing caps without losing timestamps */
   gboolean drop_newseg;
 
