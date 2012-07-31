@@ -166,6 +166,42 @@ const char *string_of_VAEntrypoint(VAEntrypoint entrypoint)
     return "<unknown>";
 }
 
+/* Return a string representation of a VADisplayAttributeType */
+const char *
+string_of_VADisplayAttributeType(VADisplayAttribType attribute_type)
+{
+    switch (attribute_type) {
+#define MAP(attribute_type) \
+        STRCASEP(VADisplayAttrib, attribute_type)
+        MAP(Brightness);
+        MAP(Contrast);
+        MAP(Hue);
+        MAP(Saturation);
+        MAP(BackgroundColor);
+#if !VA_CHECK_VERSION(0,34,0)
+        MAP(DirectSurface);
+#endif
+        MAP(Rotation);
+        MAP(OutofLoopDeblock);
+#if VA_CHECK_VERSION(0,31,1) && !VA_CHECK_VERSION(0,34,0)
+        MAP(BLEBlackMode);
+        MAP(BLEWhiteMode);
+        MAP(BlueStretch);
+        MAP(SkinColorCorrection);
+#endif
+        MAP(CSCMatrix);
+        MAP(BlendColor);
+        MAP(OverlayAutoPaintColorKey);
+        MAP(OverlayColorKey);
+        MAP(RenderMode);
+        MAP(RenderDevice);
+        MAP(RenderRect);
+#undef MAP
+    default: break;
+    }
+    return "<unknown>";
+}
+
 /**
  * from_GstVaapiSurfaceRenderFlags:
  * @flags: the #GstVaapiSurfaceRenderFlags

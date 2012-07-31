@@ -68,6 +68,11 @@ const char *string_of_VAProfile(VAProfile profile);
 G_GNUC_INTERNAL
 const char *string_of_VAEntrypoint(VAEntrypoint entrypoint);
 
+/* Return a string representation of a VADisplayAttributeType */
+G_GNUC_INTERNAL
+const char *
+string_of_VADisplayAttributeType(VADisplayAttribType attribute_type);
+
 G_GNUC_INTERNAL
 guint
 from_GstVaapiSurfaceRenderFlags(guint flags);
