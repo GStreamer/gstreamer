@@ -149,7 +149,6 @@ static gboolean gst_file_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_file_src_get_size (GstBaseSrc * src, guint64 * size);
 static GstFlowReturn gst_file_src_fill (GstBaseSrc * src, guint64 offset,
     guint length, GstBuffer * buf);
-static gboolean gst_file_src_query (GstBaseSrc * src, GstQuery * query);
 
 static void gst_file_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -195,7 +194,6 @@ gst_file_src_class_init (GstFileSrcClass * klass)
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_file_src_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_file_src_get_size);
   gstbasesrc_class->fill = GST_DEBUG_FUNCPTR (gst_file_src_fill);
-  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_file_src_query);
 
   if (sizeof (off_t) < 8) {
     GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT "!",
@@ -401,28 +399,6 @@ eos:
     gst_buffer_resize (buf, 0, 0);
     return GST_FLOW_EOS;
   }
-}
-
-static gboolean
-gst_file_src_query (GstBaseSrc * basesrc, GstQuery * query)
-{
-  gboolean ret = FALSE;
-  GstFileSrc *src = GST_FILE_SRC (basesrc);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_URI:
-      gst_query_set_uri (query, src->uri);
-      ret = TRUE;
-      break;
-    default:
-      ret = FALSE;
-      break;
-  }
-
-  if (!ret)
-    ret = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
-
-  return ret;
 }
 
 static gboolean
