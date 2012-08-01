@@ -22,6 +22,10 @@
 #include "config.h"
 #include <string.h>
 #include <gst/gst.h>
+#if USE_DRM
+# include <gst/vaapi/gstvaapidisplay_drm.h>
+# include <gst/vaapi/gstvaapiwindow_drm.h>
+#endif
 #if USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
@@ -55,6 +59,12 @@ static const VideoOutputInfo g_video_outputs[] = {
     { "glx",
       gst_vaapi_display_glx_new,
       gst_vaapi_window_glx_new
+    },
+#endif
+#if USE_DRM
+    { "drm",
+      gst_vaapi_display_drm_new,
+      gst_vaapi_window_drm_new
     },
 #endif
     { NULL, }

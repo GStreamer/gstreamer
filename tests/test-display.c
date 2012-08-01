@@ -21,6 +21,15 @@
 
 #include "config.h"
 #include <gst/video/video.h>
+#if USE_DRM
+# include <gst/vaapi/gstvaapidisplay_drm.h>
+# include <va/va_drm.h>
+# include <fcntl.h>
+# include <unistd.h>
+# ifndef DRM_DEVICE_PATH
+# define DRM_DEVICE_PATH "/dev/dri/card0"
+# endif
+#endif
 #if USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
@@ -154,6 +163,66 @@ main(int argc, char *argv[])
     guint width, height, par_n, par_d;
 
     gst_init(&argc, &argv);
+
+#if USE_DRM
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_drm_new()\n");
+    g_print("#\n");
+    {
+        display = gst_vaapi_display_drm_new(NULL);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+    }
+    g_print("\n");
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_drm_new_with_device()\n");
+    g_print("#\n");
+    {
+        int drm_device;
+
+        drm_device = open(DRM_DEVICE_PATH, O_RDWR|O_CLOEXEC);
+        if (drm_device < 0)
+            g_error("could not open DRM device");
+
+        display = gst_vaapi_display_drm_new_with_device(drm_device);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+        close(drm_device);
+    }
+    g_print("\n");
+
+    g_print("#\n");
+    g_print("# Create display with gst_vaapi_display_new_with_display() [vaGetDisplayDRM()]\n");
+    g_print("#\n");
+    {
+        int drm_device;
+        VADisplay va_display;
+
+        drm_device = open(DRM_DEVICE_PATH, O_RDWR|O_CLOEXEC);
+        if (drm_device < 0)
+            g_error("could not open DRM device");
+
+        va_display = vaGetDisplayDRM(drm_device);
+        if (!va_display)
+            g_error("could not create VA display");
+
+        display = gst_vaapi_display_new_with_display(va_display);
+        if (!display)
+            g_error("could not create Gst/VA display");
+
+        dump_caps(display);
+        g_object_unref(display);
+        close(drm_device);
+    }
+    g_print("\n");
+#endif
 
 #if USE_X11
     g_print("#\n");

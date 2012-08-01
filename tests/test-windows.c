@@ -22,6 +22,10 @@
 #include "config.h"
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimage.h>
+#if USE_DRM
+# include <gst/vaapi/gstvaapidisplay_drm.h>
+# include <gst/vaapi/gstvaapiwindow_drm.h>
+#endif
 #if USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
@@ -96,6 +100,36 @@ main(int argc, char *argv[])
     static const guint win_height  = 480;
 
     gst_init(&argc, &argv);
+
+#if USE_DRM
+    display = gst_vaapi_display_drm_new(NULL);
+    if (!display)
+        g_error("could not create Gst/VA (DRM) display");
+
+    surface = create_test_surface(display, width, height);
+    if (!surface)
+        g_error("could not create Gst/VA surface");
+
+    g_print("#\n");
+    g_print("# Create window with gst_vaapi_window_drm_new()\n");
+    g_print("#\n");
+    {
+        window = gst_vaapi_window_drm_new(display, win_width, win_height);
+        if (!window)
+            g_error("could not create dummy window");
+
+        gst_vaapi_window_show(window);
+
+        if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL, flags))
+            g_error("could not render surface");
+
+        pause();
+        g_object_unref(window);
+    }
+
+    g_object_unref(surface);
+    g_object_unref(display);
+#endif
 
 #if USE_X11
     display = gst_vaapi_display_x11_new(NULL);

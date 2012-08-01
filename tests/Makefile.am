@@ -24,6 +24,13 @@ TEST_LIBS = \
 	$(GST_LIBS)			\
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-@GST_MAJORMINOR@.la
 
+if USE_DRM
+TEST_CFLAGS	+= $(LIBVA_DRM_CFLAGS)
+TEST_LIBS	+= \
+	$(LIBVA_DRM_LIBS)		\
+	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-drm-@GST_MAJORMINOR@.la
+endif
+
 if USE_X11
 TEST_CFLAGS	+= $(X11_CFLAGS)
 TEST_LIBS	+= \
