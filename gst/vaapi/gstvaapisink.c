@@ -35,6 +35,9 @@
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/vaapi/gstvaapivideosink.h>
+#if USE_DRM
+# include <gst/vaapi/gstvaapidisplay_drm.h>
+#endif
 #if USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
@@ -479,6 +482,11 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     guint win_width, win_height, display_width, display_height;
     gint video_width, video_height, video_par_n = 1, video_par_d = 1;
 
+#if USE_DRM
+    if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_DRM)
+        return TRUE;
+#endif
+
     if (!structure)
         return FALSE;
     if (!gst_structure_get_int(structure, "width",  &video_width))
@@ -742,6 +750,11 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 #if USE_GLX
     case GST_VAAPI_DISPLAY_TYPE_GLX:
         success = gst_vaapisink_show_frame_glx(sink, surface, flags);
+        break;
+#endif
+#if USE_DRM
+    case GST_VAAPI_DISPLAY_TYPE_DRM:
+        success = TRUE;
         break;
 #endif
 #if USE_X11
