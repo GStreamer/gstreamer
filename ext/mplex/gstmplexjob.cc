@@ -41,6 +41,7 @@ enum
       /* FILL ME */
 };
 
+#define DEFAULT_FORMAT MPEG_FORMAT_DVD
 /*
  * Property enumeration types.
  */
@@ -100,7 +101,7 @@ GstMplexJob::initProperties (GObjectClass * klass)
   /* encoding profile */
   g_object_class_install_property (klass, ARG_FORMAT,
       g_param_spec_enum ("format", "Format", "Encoding profile format",
-          GST_TYPE_MPLEX_FORMAT, 0,
+          GST_TYPE_MPLEX_FORMAT, DEFAULT_FORMAT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /* total stream datarate. Normally, this shouldn't be needed, but
