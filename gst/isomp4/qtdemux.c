@@ -8585,7 +8585,6 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
 
   gst_tag_list_add (demux->tag_list, GST_TAG_MERGE_APPEND,
       GST_QT_DEMUX_PRIVATE_TAG, sample, NULL);
-  gst_buffer_unref (buf);
 }
 
 static void
