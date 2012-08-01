@@ -1102,6 +1102,8 @@ pause:
         gst_element_post_message (GST_ELEMENT (typefind),
             gst_message_new_segment_done (GST_OBJECT (typefind),
                 GST_FORMAT_BYTES, stop));
+        gst_pad_push_event (typefind->src,
+            gst_event_new_segment_done (GST_FORMAT_BYTES, stop));
       } else {
         push_eos = TRUE;
       }
