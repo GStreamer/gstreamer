@@ -1071,6 +1071,7 @@ EXPORTS
 	gst_tag_list_get_pointer_index
 	gst_tag_list_get_sample
 	gst_tag_list_get_sample_index
+	gst_tag_list_get_scope
 	gst_tag_list_get_string
 	gst_tag_list_get_string_index
 	gst_tag_list_get_tag_size
@@ -1092,12 +1093,14 @@ EXPORTS
 	gst_tag_list_nth_tag_name
 	gst_tag_list_peek_string_index
 	gst_tag_list_remove_tag
+	gst_tag_list_set_scope
 	gst_tag_list_to_string
 	gst_tag_merge_mode_get_type
 	gst_tag_merge_strings_with_comma
 	gst_tag_merge_use_first
 	gst_tag_register
 	gst_tag_register_static
+	gst_tag_scope_get_type
 	gst_tag_setter_add_tag_valist
 	gst_tag_setter_add_tag_valist_values
 	gst_tag_setter_add_tag_value
