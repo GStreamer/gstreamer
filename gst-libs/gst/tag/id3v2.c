@@ -607,7 +607,7 @@ id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
 
       /* GstDateTime is immutable, so create new one and replace old one */
       dt2 = gst_date_time_new_ymd (gst_date_time_get_year (dt),
-          work->pending_day, work->pending_month);
+          work->pending_month, work->pending_day);
       gst_tag_list_add (work->tags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE_TIME,
           dt2, NULL);
       gst_date_time_unref (dt2);
