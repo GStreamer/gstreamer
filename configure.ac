@@ -43,11 +43,13 @@ m4_define([gst_plugins_bad_version],
 
 # VA-API minimum version number
 m4_define([va_api_version],     [0.30.4])
+m4_define([va_api_drm_version], [0.34.0])
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_glx_version], [0.32.0])
 m4_define([va_api_wld_version], [0.34.0])
 
 # libva package version number
+m4_define([libva_drm_package_version], [1.2.0])
 m4_define([libva_x11_package_version], [1.0.3])
 m4_define([libva_glx_package_version], [1.0.9])
 m4_define([libva_wld_package_version], [1.2.0])
@@ -101,6 +103,11 @@ dnl Check for tools
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_LIBTOOL
+
+AC_ARG_ENABLE(drm,
+    AS_HELP_STRING([--enable-drm],
+                   [enable DRM backend @<:@default=yes@:>@]),
+    [], [enable_drm="yes"])
 
 AC_ARG_ENABLE(x11,
     AS_HELP_STRING([--enable-x11],
@@ -276,6 +283,20 @@ dnl ---------------------------------------------------------------------------
 dnl -- Renderers                                                             --
 dnl ---------------------------------------------------------------------------
 
+dnl Check for DRM/libudev
+USE_DRM=0
+if test "$enable_drm" = "yes"; then
+    PKG_CHECK_MODULES(DRM, [libdrm], [USE_DRM=1], [USE_DRM=0])
+    PKG_CHECK_MODULES(UDEV, [libudev], [:], [USE_DRM=0])
+
+    if test $USE_DRM -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $DRM_CFLAGS"
+        AC_CHECK_HEADERS([drm_fourcc.h], [:], [USE_DRM=0])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
+fi
+
 dnl Check for X11
 USE_X11=0
 if test "$enable_x11" = "yes"; then
@@ -355,6 +376,12 @@ VA_MINOR_VERSION=`echo "$VA_VERSION" | cut -d'.' -f2`
 VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
 VA_VERSION_STR="$VA_VERSION"
 
+dnl VA/DRM API
+if test "$enable_drm" = "yes"; then
+    PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= va_api_drm_version],
+        [:], [USE_DRM=0])
+fi
+
 dnl VA/X11 API
 HAVE_VA_X11=0
 LIBVA_X11_PKGNAME="libva-x11"
@@ -412,7 +439,7 @@ dnl ---------------------------------------------------------------------------
 dnl -- Generate files and summary                                            --
 dnl ---------------------------------------------------------------------------
 
-case ":$USE_X11:$USE_GLX:$USE_WAYLAND:" in
+case ":$USE_X11:$USE_GLX:$USE_WAYLAND:$USE_DRM:" in
 *:1:*)
     ;;
 *)
@@ -423,6 +450,10 @@ esac
 AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
     [Defined to 1 if JPEG decoder is used])
 AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_DRM, $USE_DRM,
+    [Defined to 1 if DRM is enabled])
+AM_CONDITIONAL(USE_DRM, test $USE_DRM -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_X11, $USE_X11,
     [Defined to 1 if X11 is enabled])
@@ -451,6 +482,8 @@ debian.upstream/gstreamer-vaapi.install.in
     debian.upstream/libgstvaapi$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi.install.in
     debian.upstream/libgstvaapi-dev.install
+    debian.upstream/libgstvaapi-drm-$GST_VAAPI_MAJOR_VERSION.install:\
+debian.upstream/libgstvaapi-drm.install.in
     debian.upstream/libgstvaapi-glx-$GST_VAAPI_MAJOR_VERSION.install:\
 debian.upstream/libgstvaapi-glx.install.in
     debian.upstream/libgstvaapi-wayland-$GST_VAAPI_MAJOR_VERSION.install:\
@@ -472,6 +505,8 @@ debian.upstream/libgstvaapi-x11.install.in
     pkgconfig/Makefile
     pkgconfig/gstreamer-vaapi-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi.pc.in
+    pkgconfig/gstreamer-vaapi-drm-$GST_MAJORMINOR.pc:\
+pkgconfig/gstreamer-vaapi-drm.pc.in
     pkgconfig/gstreamer-vaapi-glx-$GST_MAJORMINOR.pc:\
 pkgconfig/gstreamer-vaapi-glx.pc.in
     pkgconfig/gstreamer-vaapi-wayland-$GST_MAJORMINOR.pc:\
@@ -488,6 +523,7 @@ yesno() {
 }
 
 VIDEO_OUTPUTS=""
+AS_IF([test $USE_DRM -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS drm"])
 AS_IF([test $USE_X11 -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS x11"])
 AS_IF([test $USE_GLX -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS glx"])
 AS_IF([test $USE_WAYLAND -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS wayland"])

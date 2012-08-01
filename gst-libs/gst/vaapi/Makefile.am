@@ -1,5 +1,9 @@
 lib_LTLIBRARIES = libgstvaapi-@GST_MAJORMINOR@.la
 
+if USE_DRM
+lib_LTLIBRARIES += libgstvaapi-drm-@GST_MAJORMINOR@.la
+endif
+
 if USE_X11
 lib_LTLIBRARIES += libgstvaapi-x11-@GST_MAJORMINOR@.la
 endif
@@ -115,6 +119,23 @@ libgstvaapi_source_c += gstvaapidecoder_jpeg.c
 libgstvaapi_source_h += gstvaapidecoder_jpeg.h
 endif
 
+libgstvaapi_drm_source_c =			\
+	gstvaapidisplay_drm.c			\
+	gstvaapiwindow_drm.c			\
+	gstvaapiutils.c				\
+	$(NULL)
+
+libgstvaapi_drm_source_h =			\
+	gstvaapidisplay_drm.h			\
+	gstvaapiwindow_drm.h			\
+	$(NULL)
+
+libgstvaapi_drm_source_priv_h =			\
+	gstvaapicompat.h			\
+	gstvaapidisplay_drm_priv.h		\
+	gstvaapiutils.h				\
+	$(NULL)
+
 libgstvaapi_x11_source_c =			\
 	gstvaapidisplay_x11.c			\
 	gstvaapiutils.c				\
@@ -204,6 +225,40 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(NULL)
 
 libgstvaapi_@GST_MAJORMINOR@_la_LDFLAGS =	\
+	$(GST_ALL_LDFLAGS)			\
+	$(NULL)
+
+libgstvaapi_drm_@GST_MAJORMINOR@_la_SOURCES =	\
+	$(libgstvaapi_drm_source_c)		\
+	$(libgstvaapi_drm_source_priv_h)	\
+	$(NULL)
+
+libgstvaapi_drm_@GST_MAJORMINOR@include_HEADERS = \
+	$(libgstvaapi_drm_source_h)		\
+	$(NULL)
+
+libgstvaapi_drm_@GST_MAJORMINOR@includedir =	\
+	$(libgstvaapi_includedir)
+
+libgstvaapi_drm_@GST_MAJORMINOR@_la_CFLAGS =	\
+	-DGST_USE_UNSTABLE_API			\
+	-I$(top_srcdir)/gst-libs		\
+	$(GLIB_CFLAGS)				\
+	$(GST_BASE_CFLAGS)			\
+	$(UDEV_CFLAGS)				\
+	$(DRM_CFLAGS)				\
+	$(LIBVA_DRM_CFLAGS)			\
+	$(NULL)
+
+libgstvaapi_drm_@GST_MAJORMINOR@_la_LIBADD =	\
+	$(GLIB_LIBS)				\
+	$(UDEV_LIBS)				\
+	$(DRM_LIBS)				\
+	$(LIBVA_DRM_LIBS)			\
+	libgstvaapi-@GST_MAJORMINOR@.la		\
+	$(NULL)
+
+libgstvaapi_drm_@GST_MAJORMINOR@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
 	$(NULL)
 

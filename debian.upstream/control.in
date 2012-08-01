@@ -49,6 +49,15 @@ Description: GStreamer libraries from the "vaapi" set
  .
  This package contains common libraries for the "vaapi" set.
 
+Package: libgstvaapi-drm-@GST_VAAPI_MAJOR_VERSION@
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: GStreamer libraries from the "vaapi" set
+ VA-API support libraries for GStreamer.
+ .
+ This package contains headless libraries for the "vaapi" set.
+
 Package: libgstvaapi-x11-@GST_VAAPI_MAJOR_VERSION@
 Section: libs
 Architecture: any

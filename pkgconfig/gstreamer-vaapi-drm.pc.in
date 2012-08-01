@@ -1,0 +1,12 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@/gstreamer-@GST_MAJORMINOR@
+pluginsdir=@libdir@/gstreamer-@GST_MAJORMINOR@
+
+Name: GStreamer VA-API (DRM) Plugins Libraries
+Description: Streaming media framework, VA-API (DRM) plugins libraries
+Requires: gstreamer-vaapi-@GST_MAJORMINOR@ libva-drm
+Version: @VERSION@
+Libs: -L${libdir} -lgstvaapi-drm-@GST_MAJORMINOR@
+Cflags: -I${includedir}

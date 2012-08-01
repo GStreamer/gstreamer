@@ -102,6 +102,10 @@ gst_vaapi_display_type_get_type(void)
         { GST_VAAPI_DISPLAY_TYPE_WAYLAND,
           "VA/Wayland display", "wayland" },
 #endif
+#if USE_DRM
+        { GST_VAAPI_DISPLAY_TYPE_DRM,
+          "VA/DRM display", "drm" },
+#endif
         { 0, NULL, NULL },
     };
 

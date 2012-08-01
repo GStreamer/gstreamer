@@ -66,12 +66,14 @@ typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
  * @GST_VAAPI_DISPLAY_TYPE_X11: VA/X11 display.
  * @GST_VAAPI_DISPLAY_TYPE_GLX: VA/GLX display.
  * @GST_VAAPI_DISPLAY_TYPE_WAYLAND: VA/Wayland display.
+ * @GST_VAAPI_DISPLAY_TYPE_DRM: VA/DRM display.
  */
 enum _GstVaapiDisplayType {
     GST_VAAPI_DISPLAY_TYPE_ANY = 0,
     GST_VAAPI_DISPLAY_TYPE_X11,
     GST_VAAPI_DISPLAY_TYPE_GLX,
     GST_VAAPI_DISPLAY_TYPE_WAYLAND,
+    GST_VAAPI_DISPLAY_TYPE_DRM,
 };
 
 #define GST_VAAPI_TYPE_DISPLAY_TYPE \
