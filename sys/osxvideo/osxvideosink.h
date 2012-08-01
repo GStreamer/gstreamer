@@ -90,6 +90,10 @@ struct _GstOSXVideoSink {
 #else
   guint cocoa_timeout;
 #endif
+  GMutex *mrl_check_lock;
+  GCond *mrl_check_cond;
+  gboolean mrl_check_done;
+  gboolean main_run_loop_running;
   gboolean app_started;
   gboolean keep_par;
   gboolean embed;
@@ -145,6 +149,7 @@ GType gst_osx_video_sink_get_type(void);
 #ifdef RUN_NS_APP_THREAD
 + (BOOL) isMainThread;
 -(void) nsAppThread;
+-(void) checkMainRunLoop;
 #endif
 @end
 
