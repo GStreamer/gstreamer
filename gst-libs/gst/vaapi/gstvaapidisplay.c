@@ -465,8 +465,14 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         goto end;
 
     GST_DEBUG("%d profiles", n);
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
+#if VA_CHECK_VERSION(0,34,0)
+        /* Introduced in VA/VPP API */
+        if (profiles[i] == VAProfileNone)
+            continue;
+#endif
         GST_DEBUG("  %s", string_of_VAProfile(profiles[i]));
+    }
 
     priv->decoders = g_array_new(FALSE, FALSE, sizeof(GstVaapiConfig));
     if (!priv->decoders)
