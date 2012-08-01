@@ -26,6 +26,9 @@
 #endif
 #include <string.h>
 #include <gst/video/videocontext.h>
+#if USE_DRM
+# include <gst/vaapi/gstvaapidisplay_drm.h>
+#endif
 #if USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
@@ -48,6 +51,10 @@ static const char *display_types[] = {
 #if USE_X11
     "x11-display",
     "x11-display-name",
+#endif
+#if USE_DRM
+    "drm-device",
+    "drm-device-path",
 #endif
     NULL
 };
@@ -73,6 +80,11 @@ static const DisplayMap g_display_map[] = {
     { "glx",
       GST_VAAPI_DISPLAY_TYPE_GLX,
       gst_vaapi_display_glx_new },
+#endif
+#if USE_DRM
+    { "drm",
+      GST_VAAPI_DISPLAY_TYPE_DRM,
+      gst_vaapi_display_drm_new },
 #endif
     { NULL, }
 };
@@ -148,6 +160,20 @@ gst_vaapi_set_display(
         g_return_if_fail(G_VALUE_HOLDS_OBJECT(value));
         dpy = g_value_dup_object(value);
     }
+#if USE_DRM
+    else if (!strcmp(type, "drm-device")) {
+        gint device;
+        g_return_if_fail(G_VALUE_HOLDS_INT(value));
+        device = g_value_get_int(value);
+        dpy = gst_vaapi_display_drm_new_with_device(device);
+    }
+    else if (!strcmp(type, "drm-device-path")) {
+        const gchar *device_path;
+        g_return_if_fail(G_VALUE_HOLDS_STRING(value));
+        device_path = g_value_get_string(value);
+        dpy = gst_vaapi_display_drm_new(device_path);
+    }
+#endif
 #if USE_X11
     else if (!strcmp(type, "x11-display-name")) {
         g_return_if_fail(G_VALUE_HOLDS_STRING(value));
@@ -219,6 +245,24 @@ gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
         }
         else {
             switch (display_type) {
+#if USE_DRM
+            case GST_VAAPI_DISPLAY_TYPE_DRM: {
+                GstVaapiDisplayDRM * const drm_dpy =
+                    GST_VAAPI_DISPLAY_DRM(display);
+                if (!strcmp(type, "drm-device-path"))
+                    gst_video_context_query_set_string(query, type,
+                        gst_vaapi_display_drm_get_device_path(drm_dpy));
+#if 0
+                /* XXX: gst_video_context_query_set_int() does not exist yet */
+                else if (!strcmp(type, "drm-device"))
+                    gst_video_context_query_set_int(query, type,
+                        gst_vaapi_display_drm_get_device(drm_dpy));
+#endif
+                else
+                    res = FALSE;
+                break;
+            }
+#endif
 #if USE_X11
 #if USE_GLX
             case GST_VAAPI_DISPLAY_TYPE_GLX:
