@@ -786,6 +786,11 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, package, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, origin, filename);
 
+    if (plugin->orig_desc->name != NULL && plugin->orig_desc->name[0] == '"') {
+      g_warning ("Invalid plugin name '%s' - fix your GST_PLUGIN_DEFINE "
+          "(remove quotes around plugin name)", plugin->orig_desc->name);
+    }
+
     if (plugin->orig_desc->release_datetime != NULL &&
         !check_release_datetime (plugin->orig_desc->release_datetime)) {
       GST_ERROR ("GstPluginDesc for '%s' has invalid datetime '%s'",
