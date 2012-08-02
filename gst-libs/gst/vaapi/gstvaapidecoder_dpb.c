@@ -247,21 +247,21 @@ gst_vaapi_dpb_size(GstVaapiDpb *dpb)
 }
 
 /* ------------------------------------------------------------------------- */
-/* --- MPEG-2 Decoded Picture Buffer                                     --- */
+/* --- Decoded Picture Buffer (optimized for 2 reference pictures)       --- */
 /* ------------------------------------------------------------------------- */
 
-/* At most two reference pictures for MPEG-2 */
-#define MAX_MPEG2_REFERENCES 2
+/* At most two reference pictures for DPB2*/
+#define MAX_DPB2_REFERENCES 2
 
-G_DEFINE_TYPE(GstVaapiDpbMpeg2, gst_vaapi_dpb_mpeg2, GST_VAAPI_TYPE_DPB)
+G_DEFINE_TYPE(GstVaapiDpb2, gst_vaapi_dpb2, GST_VAAPI_TYPE_DPB)
 
 static gboolean
-gst_vaapi_dpb_mpeg2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
+gst_vaapi_dpb2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
 {
     GstVaapiPicture *ref_picture;
     gint index = -1;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DPB_MPEG2(dpb), FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_DPB2(dpb), FALSE);
 
     /*
      * Purpose: only store reference decoded pictures into the DPB
@@ -271,7 +271,7 @@ gst_vaapi_dpb_mpeg2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
      * - ... thus causing older reference pictures to be output, if not already
      * - the oldest reference picture is replaced with the new reference picture
      */
-    if (G_LIKELY(dpb->num_pictures == MAX_MPEG2_REFERENCES)) {
+    if (G_LIKELY(dpb->num_pictures == MAX_DPB2_REFERENCES)) {
         index = (dpb->pictures[0]->poc > dpb->pictures[1]->poc);
         ref_picture = dpb->pictures[index];
         if (!GST_VAAPI_PICTURE_IS_OUTPUT(ref_picture)) {
@@ -290,37 +290,37 @@ gst_vaapi_dpb_mpeg2_add(GstVaapiDpb *dpb, GstVaapiPicture *picture)
 }
 
 static void
-gst_vaapi_dpb_mpeg2_init(GstVaapiDpbMpeg2 *dpb)
+gst_vaapi_dpb2_init(GstVaapiDpb2 *dpb)
 {
 }
 
 static void
-gst_vaapi_dpb_mpeg2_class_init(GstVaapiDpbMpeg2Class *klass)
+gst_vaapi_dpb2_class_init(GstVaapiDpb2Class *klass)
 {
     GstVaapiDpbClass * const dpb_class = GST_VAAPI_DPB_CLASS(klass);
 
-    dpb_class->add = gst_vaapi_dpb_mpeg2_add;
+    dpb_class->add = gst_vaapi_dpb2_add;
 }
 
 GstVaapiDpb *
-gst_vaapi_dpb_mpeg2_new(void)
+gst_vaapi_dpb2_new(void)
 {
-    return dpb_new(GST_VAAPI_TYPE_DPB_MPEG2, MAX_MPEG2_REFERENCES);
+    return dpb_new(GST_VAAPI_TYPE_DPB2, MAX_DPB2_REFERENCES);
 }
 
 void
-gst_vaapi_dpb_mpeg2_get_references(
+gst_vaapi_dpb2_get_references(
     GstVaapiDpb        *dpb,
     GstVaapiPicture    *picture,
     GstVaapiPicture   **prev_picture_ptr,
     GstVaapiPicture   **next_picture_ptr
 )
 {
-    GstVaapiPicture *ref_picture, *ref_pictures[MAX_MPEG2_REFERENCES];
+    GstVaapiPicture *ref_picture, *ref_pictures[MAX_DPB2_REFERENCES];
     GstVaapiPicture **picture_ptr;
     guint i, index;
 
-    g_return_if_fail(GST_VAAPI_IS_DPB_MPEG2(dpb));
+    g_return_if_fail(GST_VAAPI_IS_DPB2(dpb));
     g_return_if_fail(GST_VAAPI_IS_PICTURE(picture));
 
     ref_pictures[0] = NULL;

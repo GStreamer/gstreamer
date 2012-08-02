@@ -28,8 +28,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiDpb             GstVaapiDpb;
 typedef struct _GstVaapiDpbClass        GstVaapiDpbClass;
-typedef struct _GstVaapiDpbMpeg2        GstVaapiDpbMpeg2;
-typedef struct _GstVaapiDpbMpeg2Class   GstVaapiDpbMpeg2Class;
+typedef struct _GstVaapiDpb2            GstVaapiDpb2;
+typedef struct _GstVaapiDpb2Class       GstVaapiDpb2Class;
 
 /* ------------------------------------------------------------------------- */
 /* --- Base Decoded Picture Buffer                                       --- */
@@ -120,67 +120,67 @@ gst_vaapi_dpb_unref(gpointer ptr)
 }
 
 /* ------------------------------------------------------------------------- */
-/* --- MPEG-2 Decoded Picture Buffer                                     --- */
+/* --- Decoded Picture Buffer (optimized for 2 reference pictures)       --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_TYPE_DPB_MPEG2 \
-    (gst_vaapi_dpb_mpeg2_get_type())
+#define GST_VAAPI_TYPE_DPB2 \
+    (gst_vaapi_dpb2_get_type())
 
-#define GST_VAAPI_DPB_MPEG2_CAST(obj) \
-    ((GstVaapiDpbMpeg2 *)(obj))
+#define GST_VAAPI_DPB2_CAST(obj) \
+    ((GstVaapiDpb2 *)(obj))
 
-#define GST_VAAPI_DPB_MPEG2(obj)                                \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_DPB_MPEG2,       \
-                                GstVaapiDpbMpeg2))
+#define GST_VAAPI_DPB2(obj)                             \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),                  \
+                                GST_VAAPI_TYPE_DPB2,    \
+                                GstVaapiDpb2))
 
-#define GST_VAAPI_DPB_MPEG2_CLASS(klass)                        \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_DPB_MPEG2,          \
-                             GstVaapiDpbMpeg2Class))
+#define GST_VAAPI_DPB2_CLASS(klass)                     \
+    (G_TYPE_CHECK_CLASS_CAST((klass),                   \
+                             GST_VAAPI_TYPE_DPB2,       \
+                             GstVaapiDpb2Class))
 
-#define GST_VAAPI_IS_DPB_MPEG2(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DPB_MPEG2))
+#define GST_VAAPI_IS_DPB2(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_DPB2))
 
-#define GST_VAAPI_IS_DPB_MPEG2_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DPB_MPEG2))
+#define GST_VAAPI_IS_DPB2_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_DPB2))
 
-#define GST_VAAPI_DPB_MPEG2_GET_CLASS(obj)                      \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_DPB_MPEG2,        \
-                               GstVaapiDpbMpeg2Class))
+#define GST_VAAPI_DPB2_GET_CLASS(obj)                   \
+    (G_TYPE_INSTANCE_GET_CLASS((obj),                   \
+                               GST_VAAPI_TYPE_DPB2,     \
+                               GstVaapiDpb2Class))
 
 /**
- * GstVaapiDpbMpeg2:
+ * GstVaapiDpb2:
  *
- * A decoded picture buffer (DPB_MPEG2) object.
+ * A decoded picture buffer (DPB2) object.
  */
-struct _GstVaapiDpbMpeg2 {
+struct _GstVaapiDpb2 {
     /*< private >*/
     GstVaapiDpb         parent_instance;
 };
 
 /**
- * GstVaapiDpbMpeg2Class:
+ * GstVaapiDpb2Class:
  *
- * The #GstVaapiDpbMpeg2 base class.
+ * The #GstVaapiDpb2 base class.
  */
-struct _GstVaapiDpbMpeg2Class {
+struct _GstVaapiDpb2Class {
     /*< private >*/
     GstVaapiDpbClass    parent_class;
 };
 
 G_GNUC_INTERNAL
 GType
-gst_vaapi_dpb_mpeg2_get_type(void) G_GNUC_CONST;
+gst_vaapi_dpb2_get_type(void) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstVaapiDpb *
-gst_vaapi_dpb_mpeg2_new(void);
+gst_vaapi_dpb2_new(void);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_dpb_mpeg2_get_references(
+gst_vaapi_dpb2_get_references(
     GstVaapiDpb        *dpb,
     GstVaapiPicture    *picture,
     GstVaapiPicture   **prev_picture_ptr,

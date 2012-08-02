@@ -386,7 +386,7 @@ gst_vaapi_decoder_mpeg2_open(GstVaapiDecoderMpeg2 *decoder)
 
     gst_vaapi_decoder_mpeg2_close(decoder);
 
-    priv->dpb = gst_vaapi_dpb_mpeg2_new();
+    priv->dpb = gst_vaapi_dpb2_new();
     if (!priv->dpb)
         return FALSE;
 
@@ -1044,7 +1044,7 @@ fill_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
     COPY_FIELD(picture_coding_extension, bits, repeat_first_field);
     COPY_FIELD(picture_coding_extension, bits, progressive_frame);
 
-    gst_vaapi_dpb_mpeg2_get_references(priv->dpb, picture,
+    gst_vaapi_dpb2_get_references(priv->dpb, picture,
         &prev_picture, &next_picture);
 
     switch (pic_hdr->pic_type) {
