@@ -83,40 +83,45 @@ ensure_debug_category (void)
   } G_STMT_END
 
 
-/* CCITT T.81, Annex K.1 Quantization tables for luminance and chrominance components */
-/* only for 8-bit per sample image */
+/* Table used to address an 8x8 matrix in zig-zag order */
 /* *INDENT-OFF* */
-static const GstJpegQuantTables default_quant_tables_zigzag = {
-  .quant_tables = {
-    /* luma */
-    {0, {0x10, 0x0b, 0x0c, 0x0e, 0x0c, 0x0a, 0x10, 0x0e,
-         0x0d, 0x0e, 0x12, 0x11, 0x10, 0x13, 0x18, 0x27,
-         0x1a, 0x18, 0x16, 0x16, 0x18, 0x31, 0x23, 0x25,
-         0x1d, 0x28, 0x3a, 0x33, 0x3d, 0x3c, 0x39, 0x33,
-         0x38, 0x37, 0x40, 0x48, 0x5c, 0x4e, 0x40, 0xa8,
-         0x57, 0x45, 0x37, 0x38, 0x50, 0x6d, 0xb5, 0x57,
-         0x5f, 0x62, 0x67, 0x68, 0x67, 0x3e, 0x4d, 0x71,
-         0x79, 0x70, 0x64, 0x78, 0x5c, 0x65, 0x67, 0x63}, TRUE},
-    /* chroma */
-    {0, {0x11, 0x12, 0x12, 0x18, 0x15, 0x18, 0x2f, 0x1a,
-         0x1a, 0x2f, 0x63, 0x42, 0x38, 0x42, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63}, TRUE},
-    /* chroma */
-    {0, {0x11, 0x12, 0x12, 0x18, 0x15, 0x18, 0x2f, 0x1a,
-         0x1a, 0x2f, 0x63, 0x42, 0x38, 0x42, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63,
-         0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63, 0x63}, TRUE},
-    {0,}
-  }
+static const guint8 zigzag_index[64] = {
+  0,   1,  8, 16,  9,  2,  3, 10,
+  17, 24, 32, 25, 18, 11,  4,  5,
+  12, 19, 26, 33, 40, 48, 41, 34,
+  27, 20, 13,  6,  7, 14, 21, 28,
+  35, 42, 49, 56, 57, 50, 43, 36,
+  29, 22, 15, 23, 30, 37, 44, 51,
+  58, 59, 52, 45, 38, 31, 39, 46,
+  53, 60, 61, 54, 47, 55, 62, 63
+};
+/* *INDENT-ON* */
+
+/* Table K.1 - Luminance quantization table */
+/* *INDENT-OFF* */
+static const guint8 default_luminance_quant_table[64] = {
+  16,  11,  10,  16,  24,  40,  51,  61,
+  12,  12,  14,  19,  26,  58,  60,  55,
+  14,  13,  16,  24,  40,  57,  69,  56,
+  14,  17,  22,  29,  51,  87,  80,  62,
+  18,  22,  37,  56,  68, 109, 103,  77,
+  24,  35,  55,  64,  81, 104, 113,  92,
+  49,  64,  78,  87, 103, 121, 120, 101,
+  72,  92,  95,  98, 112, 100, 103,  99
+};
+/* *INDENT-ON* */
+
+/* Table K.2 - Chrominance quantization table */
+/* *INDENT-OFF* */
+static const guint8 default_chrominance_quant_table[64] = {
+  17,  18,  24,  47,  99,  99,  99,  99,
+  18,  21,  26,  66,  99,  99,  99,  99,
+  24,  26,  56,  99,  99,  99,  99,  99,
+  47,  66,  99,  99,  99,  99,  99,  99,
+  99,  99,  99,  99,  99,  99,  99,  99,
+  99,  99,  99,  99,  99,  99,  99,  99,
+  99,  99,  99,  99,  99,  99,  99,  99,
+  99,  99,  99,  99,  99,  99,  99,  99
 };
 /* *INDENT-ON* */
 
@@ -505,12 +510,28 @@ gst_jpeg_get_default_huffman_tables (GstJpegHuffmanTables * huf_tables)
       sizeof (huf_tables->ac_tables[2]));
 }
 
+static void
+build_quant_table (GstJpegQuantTable * quant_table, const guint8 values[64])
+{
+  guint i;
+
+  for (i = 0; i < 64; i++)
+    quant_table->quant_table[i] = values[zigzag_index[i]];
+  quant_table->quant_precision = 0;     /* Pq = 0 (8-bit precision) */
+  quant_table->valid = TRUE;
+}
+
 void
 gst_jpeg_get_default_quantization_tables (GstJpegQuantTables * quant_tables)
 {
   g_assert (quant_tables);
 
-  memcpy (quant_tables, &default_quant_tables_zigzag, sizeof (*quant_tables));
+  build_quant_table (&quant_tables->quant_tables[0],
+      default_luminance_quant_table);
+  build_quant_table (&quant_tables->quant_tables[1],
+      default_chrominance_quant_table);
+  build_quant_table (&quant_tables->quant_tables[2],
+      default_chrominance_quant_table);
 }
 
 gboolean
