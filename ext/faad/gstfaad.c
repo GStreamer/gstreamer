@@ -749,6 +749,9 @@ init:
 
     out = faacDecDecode (faad->handle, &info, input_data, input_size);
 
+    gst_buffer_unmap (buffer, &map);
+    buffer = NULL;
+
     if (info.error > 0) {
       /* give up on frame and bail out */
       gst_audio_decoder_finish_frame (dec, NULL, 1);
@@ -792,8 +795,6 @@ init:
         memcpy (omap.data, out, omap.size);
       }
       gst_buffer_unmap (outbuf, &omap);
-      gst_buffer_unmap (buffer, &map);
-      buffer = NULL;
 
       ret = gst_audio_decoder_finish_frame (dec, outbuf, 1);
     }
