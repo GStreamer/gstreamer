@@ -4,6 +4,12 @@ The 0.11 porting guide
 * All deprecated methods were removed. Recompile against 0.10 with
   DISABLE_DEPRECATED and fix issues before attempting to port to 0.11.
 
+* API changes are usually easy to spot, because the compiler will
+  generate a warning, at least if number of arguments or types differ
+
+* Other changes are a bit more subtle. See checklist at the bottom
+  for some "soft" changes which the compiler will not warn about.
+
 * GST_BOILERPLATE is gone, use G_DEFINE_TYPE instead.
 
 * various methods take a gsize instead of a guint when talking about memory
@@ -555,8 +561,45 @@ The 0.11 porting guide
     GstGError -> GError
     GST_TYPE_G_ERROR / gst_g_error_get_type() -> G_TYPE_ERROR
 
-* "codec-data" and "streamheader" field in GstCaps
+* "codec-data" and "streamheader" field in GstCaps (not implemented yet!)
 
     codec-data and stream headers are no longer in GstCaps, but sent as
     part of a STREAM CONFIG event (which should be sent after the initial
     CAPS event if needed).
+
+=============================================================================
+  Porting checklist - "soft" API changes
+=============================================================================
+
+ * the "ffmpegcolorspace" element has been replaced by "videoconvert"
+
+ * "playbin2" has been renamed to "playbin", with similar API
+
+ * "decodebin2" has been renamed to "decodebin", with similar API. Note
+   that there is no longer a "new-decoded-pad" signal, just use GstElement's
+   "pad-added" signal instead (but don't forget to remove the 'gboolean last'
+   argument from your old signal callback functino signature).
+
+ * the names of some "formatted" pad templates has been changed from e.g.
+   "src%d" to "src%u" or "src_%u" or similar, since we don't want to see
+   negative numbers in pad names. This mostly affects applications that
+   create request pads from elements.
+
+ * some elements that used to have a single dynamic source pad have a
+   static source pad now. Example: wavparse, id3demux, apedemux. (This
+   does not affect applications using decodebin or playbin)
+
+ * the name of the GstXOverlay "prepare-xwindow-id" message has changed
+   to "prepare-window-handle" (and GstXOverlay has been renamed to
+   GstVideoOverlay). Code that checks for the string directly should be
+   changed to use gst_is_video_overlay_prepare_window_handle_message(message)
+   instead.
+
+ * playbin now proxies the GstVideoOverlay (former GstXOverlay) interface,
+   so most applications can just remove the sync bus handler where they
+   would set the window ID, and instead just set the window ID on playbin
+   from the application thread before starting playback.
+
+ * playbin also proxies the GstColorBalance and GstNavigation interfaces,
+   so applications that use this don't need to go fishing for elements
+   that may implement those any more, but can just use them unconditionally.
