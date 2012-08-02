@@ -86,8 +86,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-raw, "
         "format = (string) { I420, YV12, YUY2, UYVY, BGRx, BGRA, NV12 }, "
         "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], "
-        "height = (int) [ 1, MAX ]")
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
 
 static void gst_d3dvideosink_navigation_init (GstNavigationInterface * iface);
@@ -121,7 +120,8 @@ static GstStateChangeReturn gst_d3dvideosink_change_state (GstElement * element,
 static gboolean gst_d3dvideosink_start (GstBaseSink * bsink);
 static gboolean gst_d3dvideosink_stop (GstBaseSink * bsink);
 static gboolean gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps);
-static GstCaps *gst_d3dvideosink_get_caps (GstBaseSink * bsink, GstCaps * filter);
+static GstCaps *gst_d3dvideosink_get_caps (GstBaseSink * bsink,
+    GstCaps * filter);
 static GstFlowReturn gst_d3dvideosink_show_frame (GstVideoSink * sink,
     GstBuffer * buffer);
 
@@ -157,7 +157,7 @@ static void gst_d3dvideosink_stretch (GstD3DVideoSink * sink,
     LPDIRECT3DSURFACE9 backBuffer);
 
 /* Misc methods */
-BOOL WINAPI DllMain (HINSTANCE hinstDll, DWORD fdwReason, PVOID fImpLoad);
+BOOL WINAPI D3dDllMain (HINSTANCE hinstDll, DWORD fdwReason, PVOID fImpLoad);
 static void gst_d3dvideosink_remove_window_for_renderer (GstD3DVideoSink *
     sink);
 static gboolean gst_d3dvideosink_initialize_direct3d (GstD3DVideoSink * sink);
@@ -198,7 +198,7 @@ static DirectXInitParams directx_init_params = {
  */
 
 BOOL WINAPI
-DllMain (HINSTANCE hinstDll, DWORD fdwReason, PVOID fImpLoad)
+D3dDllMain (HINSTANCE hinstDll, DWORD fdwReason, PVOID fImpLoad)
 {
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
@@ -281,8 +281,8 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_static_metadata (gstelement_class, "Direct3D video sink",
-      "Sink/Video",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Direct3D video sink", "Sink/Video",
       "Display data using a Direct3D video renderer",
       "David Hoyt <dhoyt@hoytsoft.org>");
 
@@ -401,7 +401,7 @@ gst_d3dvideosink_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_d3dvideosink_get_device_caps (GstBaseSink *basesink, D3DDISPLAYMODE d3ddm)
+gst_d3dvideosink_get_device_caps (GstBaseSink * basesink, D3DDISPLAYMODE d3ddm)
 {
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (basesink);
   gint i;
@@ -409,20 +409,19 @@ gst_d3dvideosink_get_device_caps (GstBaseSink *basesink, D3DDISPLAYMODE d3ddm)
   GstCaps *c;
 
   caps = gst_caps_new_empty ();
-  c = gst_caps_normalize (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink)));
+  c = gst_caps_normalize (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
+          (sink)));
 
   for (i = 0; i < gst_caps_get_size (c); i++) {
     GstStructure *stru;
     stru = gst_caps_get_structure (c, i);
-    if (gst_structure_has_name (stru, "video/x-raw"))
-    {
+    if (gst_structure_has_name (stru, "video/x-raw")) {
       GstVideoFormat format;
       const gchar *s;
       D3DFORMAT d3dfourcc = 0;
       s = gst_structure_get_string (stru, "format");
       format = gst_video_format_from_string (s);
-      switch (format)
-      {
+      switch (format) {
         case GST_VIDEO_FORMAT_YV12:
         case GST_VIDEO_FORMAT_I420:
           d3dfourcc = (D3DFORMAT) MAKEFOURCC ('Y', 'V', '1', '2');
@@ -460,9 +459,8 @@ gst_d3dvideosink_get_device_caps (GstBaseSink *basesink, D3DDISPLAYMODE d3ddm)
       if (d3dfourcc == 0)
         continue;
       if (SUCCEEDED (IDirect3D9_CheckDeviceFormat (shared.d3d,
-          D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3ddm.Format, 0, D3DRTYPE_SURFACE,
-          d3dfourcc)))
-      {
+                  D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3ddm.Format, 0,
+                  D3DRTYPE_SURFACE, d3dfourcc))) {
         /* hw supports this format */
         gst_caps_append (caps, gst_caps_copy_nth (c, i));
       }
@@ -491,8 +489,7 @@ gst_d3dvideosink_get_caps (GstBaseSink * basesink, GstCaps * filter)
     }
   } else {
     caps = gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD (sink));
-    if (filter)
-    {
+    if (filter) {
       GstCaps *intersection;
 
       intersection =
@@ -645,7 +642,7 @@ SharedHiddenWndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       shared.device_lost_sink = NULL;
       GST_DEBUG ("Initializing Direct3D");
       if (!gst_d3dvideosink_initialize_d3d_device (sink))
-        gst_d3dvideosink_notify_device_lost(sink);
+        gst_d3dvideosink_notify_device_lost (sink);
       else
         GST_DEBUG ("Direct3D initialization complete");
       break;
@@ -791,7 +788,8 @@ WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     SetWindowLongPtr (hWnd, GWLP_USERDATA, (LONG_PTR) sink);
 
     /* signal application we created a window */
-    gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (sink), (guintptr) hWnd);
+    gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (sink),
+        (guintptr) hWnd);
   }
 
 
@@ -1065,7 +1063,8 @@ failed:
 }
 
 static void
-gst_d3dvideosink_set_window_handle (GstVideoOverlay * overlay, guintptr window_id)
+gst_d3dvideosink_set_window_handle (GstVideoOverlay * overlay,
+    guintptr window_id)
 {
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (overlay);
   HWND hWnd = (HWND) window_id;
@@ -1362,17 +1361,17 @@ gst_d3dvideosink_prepare_window (GstD3DVideoSink * sink)
    * and create (and use) our own window, if we didn't create
    * one before */
   if (sink->window_handle && sink->is_new_window) {
-    GST_D3DVIDEOSINK_D3D_DEVICE_LOCK(sink);
-    gst_d3dvideosink_release_d3d_device(sink);
-    GST_D3DVIDEOSINK_D3D_DEVICE_UNLOCK(sink);
+    GST_D3DVIDEOSINK_D3D_DEVICE_LOCK (sink);
+    gst_d3dvideosink_release_d3d_device (sink);
+    GST_D3DVIDEOSINK_D3D_DEVICE_UNLOCK (sink);
   } else if (sink->window_handle) {
-      gst_d3dvideosink_set_window_for_renderer (sink);
+    gst_d3dvideosink_set_window_for_renderer (sink);
   } else {
     gst_d3dvideosink_create_default_window (sink);
   }
-  GST_D3DVIDEOSINK_D3D_DEVICE_LOCK(sink);
+  GST_D3DVIDEOSINK_D3D_DEVICE_LOCK (sink);
   gst_d3dvideosink_notify_device_init (sink);
-  GST_D3DVIDEOSINK_D3D_DEVICE_UNLOCK(sink);
+  GST_D3DVIDEOSINK_D3D_DEVICE_UNLOCK (sink);
 }
 
 static GstStateChangeReturn
@@ -1438,7 +1437,7 @@ static gboolean
 gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstD3DVideoSink *sink;
-  /*GstStructure *structure;*/
+  /*GstStructure *structure; */
   GstCaps *sink_caps;
   GstVideoInfo info;
   gint video_width, video_height;
@@ -1459,7 +1458,7 @@ gst_d3dvideosink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     goto invalid_format;
 
-  /*structure = gst_caps_get_structure (caps, 0);*/
+  /*structure = gst_caps_get_structure (caps, 0); */
 
   video_width = info.width;
   video_height = info.height;
@@ -1654,7 +1653,8 @@ gst_d3dvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
             case GST_VIDEO_FORMAT_YUY2:
             case GST_VIDEO_FORMAT_UYVY:
               dststride = lr.Pitch;
-              srcstride = gst_buffer_get_size (buffer) / GST_VIDEO_SINK_HEIGHT (sink);
+              srcstride =
+                  gst_buffer_get_size (buffer) / GST_VIDEO_SINK_HEIGHT (sink);
               for (i = 0; i < GST_VIDEO_SINK_HEIGHT (sink); ++i)
                 memcpy (dest + dststride * i, source + srcstride * i,
                     srcstride);
@@ -1713,9 +1713,11 @@ gst_d3dvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
               int component;
               dststride = lr.Pitch;
               for (component = 0; component < 2; component++) {
-                const int compHeight = GST_VIDEO_INFO_COMP_HEIGHT (&sink->info, component);
-                guint8 *src = source + GST_VIDEO_INFO_COMP_OFFSET(&sink->info, component);
-                srcstride = GST_VIDEO_INFO_COMP_STRIDE(&sink->info, component);
+                const int compHeight =
+                    GST_VIDEO_INFO_COMP_HEIGHT (&sink->info, component);
+                guint8 *src = source + GST_VIDEO_INFO_COMP_OFFSET (&sink->info,
+                    component);
+                srcstride = GST_VIDEO_INFO_COMP_STRIDE (&sink->info, component);
                 for (i = 0; i < compHeight; i++) {
                   memcpy (dst + dststride * i, src + srcstride * i, srcstride);
                 }
@@ -1728,7 +1730,8 @@ gst_d3dvideosink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
           }
         } else if (GST_VIDEO_INFO_IS_RGB (&sink->info)) {
           dststride = lr.Pitch;
-          srcstride = gst_buffer_get_size (buffer) / GST_VIDEO_SINK_HEIGHT (sink);
+          srcstride =
+              gst_buffer_get_size (buffer) / GST_VIDEO_SINK_HEIGHT (sink);
           for (i = 0; i < GST_VIDEO_SINK_HEIGHT (sink); ++i)
             memcpy (dest + dststride * i, source + srcstride * i, srcstride);
         }
@@ -2122,14 +2125,17 @@ gst_d3dvideosink_initialize_d3d_device (GstD3DVideoSink * sink)
 
   sink->d3ddev = NULL;
 
-  hr = IDirect3D9_CreateDevice (shared.d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, hwnd, d3dcreate, &sink->d3dpp, &sink->d3ddev);
-  if (FAILED (hr))
-  {
-    GST_WARNING ("Unable to create Direct3D device. Result: %ld (0x%lx)", hr, hr);
+  hr = IDirect3D9_CreateDevice (shared.d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+      hwnd, d3dcreate, &sink->d3dpp, &sink->d3ddev);
+  if (FAILED (hr)) {
+    GST_WARNING ("Unable to create Direct3D device. Result: %ld (0x%lx)", hr,
+        hr);
     goto error;
   }
 
-  hr = IDirect3DDevice9_CreateOffscreenPlainSurface (sink->d3ddev, GST_VIDEO_SINK_WIDTH (sink), GST_VIDEO_SINK_HEIGHT (sink), d3dfourcc, D3DPOOL_DEFAULT, &sink->d3d_offscreen_surface, NULL);
+  hr = IDirect3DDevice9_CreateOffscreenPlainSurface (sink->d3ddev,
+      GST_VIDEO_SINK_WIDTH (sink), GST_VIDEO_SINK_HEIGHT (sink), d3dfourcc,
+      D3DPOOL_DEFAULT, &sink->d3d_offscreen_surface, NULL);
   if (FAILED (hr)) {
     goto error;
   }
