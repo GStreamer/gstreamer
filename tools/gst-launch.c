@@ -412,9 +412,8 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
       GstDateTime *dt = NULL;
 
       gst_tag_list_get_date_time_index (list, tag, i, &dt);
-      if (gst_date_time_get_hour (dt) < 0) {
-        str = g_strdup_printf ("%02u-%02u-%04u", gst_date_time_get_day (dt),
-            gst_date_time_get_month (dt), gst_date_time_get_year (dt));
+      if (!gst_date_time_has_time (dt)) {
+        str = gst_date_time_to_iso8601_string (dt);
       } else {
         gdouble tz_offset = gst_date_time_get_time_zone_offset (dt);
         gchar tz_str[32];
