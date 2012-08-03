@@ -79,7 +79,6 @@ gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
   GObjectClass *object_class;
   GstAudioDecoderClass *base_class;
   GstElementClass *element_class;
-  GstCaps *src_caps;
   GstPadTemplate *src_template;
   int error;
 
@@ -102,57 +101,66 @@ gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
      created depending on whatever mpg123 supports
    */
   {
-    gchar *format_string;
-    gchar *caps_string;
+    const int *format_list;
+    const long *rates_list;
+    size_t num, i;
+    GString *s;
 
-    static gchar const *src_caps_begin = "audio/x-raw, " "format = { ";
-    static gchar const *src_caps_end =
-        " }, "
-        "rate = (int) { 8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000 }, "
-        "channels = (int) [ 1, 2 ], " "layout = (string) interleaved; ";
+    s = g_string_new ("audio/x-raw, ");
 
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-#define ENDIAN_POSTFIX "LE"
-#else
-#define ENDIAN_POSTFIX "BE"
-#endif
+    mpg123_encodings (&format_list, &num);
+    g_string_append (s, "format = { ");
+    for (i = 0; i < num; ++i) {
+      switch (format_list[i]) {
+        case MPG123_ENC_SIGNED_16:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (S16));
+          break;
+        case MPG123_ENC_UNSIGNED_16:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (U16));
+          break;
+        case MPG123_ENC_SIGNED_24:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (S24));
+          break;
+        case MPG123_ENC_UNSIGNED_24:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (U24));
+          break;
+        case MPG123_ENC_SIGNED_32:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (S32));
+          break;
+        case MPG123_ENC_UNSIGNED_32:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (U32));
+          break;
+        case MPG123_ENC_FLOAT_32:
+          g_string_append (s, (i > 0) ? ", " : "");
+          g_string_append (s, GST_AUDIO_NE (F32));
+          break;
+        default:
+          GST_DEBUG ("Ignoring mpg123 format %d", format_list[i]);
+          break;
+      }
+    }
+    g_string_append (s, " }, ");
 
-    static gchar *supported_formats[] = {
-#ifdef MPG123_ENC_SIGNED_16
-      "S16" ENDIAN_POSTFIX,
-#endif
-#ifdef MPG123_ENC_UNSIGNED_16
-      "U16" ENDIAN_POSTFIX,
-#endif
-#ifdef MPG123_ENC_SIGNED_24
-      "S24" ENDIAN_POSTFIX,
-#endif
-#ifdef MPG123_ENC_UNSIGNED_24
-      "U24" ENDIAN_POSTFIX,
-#endif
-#ifdef MPG123_ENC_SIGNED_32
-      "S32" ENDIAN_POSTFIX,
-#endif
-#ifdef MPG123_ENC_UNSIGNED_32
-      "U32" ENDIAN_POSTFIX,
-#endif
-#ifdef MPG123_ENC_FLOAT_32
-      "F32" ENDIAN_POSTFIX,
-#endif
-      NULL
-    };
+    mpg123_rates (&rates_list, &num);
+    g_string_append (s, "rate = (int) { ");
+    for (i = 0; i < num; ++i) {
+      g_string_append_printf (s, "%s%lu", (i > 0) ? ", " : "", rates_list[i]);
+    }
+    g_string_append (s, "}, ");
 
-    format_string = g_strjoinv (", ", supported_formats);
-    caps_string =
-        g_strjoin (NULL, src_caps_begin, format_string, src_caps_end, NULL);
+    g_string_append (s, "channels = (int) [ 1, 2 ], ");
+    g_string_append (s, "layout = (string) interleaved");
 
-    src_caps = gst_caps_from_string (caps_string);
-    src_template =
-        gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-        gst_caps_ref (src_caps));
+    src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+        gst_caps_from_string (s->str));
 
-    g_free (format_string);
-    g_free (caps_string);
+    g_string_free (s, TRUE);
   }
 
   gst_element_class_add_pad_template (element_class,
@@ -504,44 +512,30 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * incoming_caps)
     }
 
     switch (format) {
-#ifdef MPG123_ENC_SIGNED_16
       case GST_AUDIO_FORMAT_S16:
         encoding = MPG123_ENC_SIGNED_16;
         break;
-#endif
-#ifdef MPG123_ENC_SIGNED_24
       case GST_AUDIO_FORMAT_S24:
         encoding = MPG123_ENC_SIGNED_24;
         break;
-#endif
-#ifdef MPG123_ENC_SIGNED_32
       case GST_AUDIO_FORMAT_S32:
         encoding = MPG123_ENC_SIGNED_32;
         break;
-#endif
-#ifdef MPG123_ENC_UNSIGNED_16
       case GST_AUDIO_FORMAT_U16:
         encoding = MPG123_ENC_UNSIGNED_16;
         break;
-#endif
-#ifdef MPG123_ENC_UNSIGNED_24
       case GST_AUDIO_FORMAT_U24:
         encoding = MPG123_ENC_UNSIGNED_24;
         break;
-#endif
-#ifdef MPG123_ENC_UNSIGNED_32
       case GST_AUDIO_FORMAT_U32:
         encoding = MPG123_ENC_UNSIGNED_32;
         break;
-#endif
-#ifdef MPG123_ENC_FLOAT_32
       case GST_AUDIO_FORMAT_F32:
         encoding = MPG123_ENC_FLOAT_32;
         break;
-#endif
       default:
         GST_DEBUG_OBJECT (dec,
-            "Format %s in srccaps is not supported by mpg123", format_str);
+            "Format %s in srccaps is not supported", format_str);
         continue;
     }
 
