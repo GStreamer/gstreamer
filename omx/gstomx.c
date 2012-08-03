@@ -2306,7 +2306,7 @@ done:
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "openmax",
+    openmax,
     "GStreamer OpenMAX Plug-ins",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
