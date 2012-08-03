@@ -322,7 +322,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  videomeasure videosignal vmnc \
  decklink fbdev linsys vcd \
  apexsink cdaudio cog dc1394 dirac directfb resindvd \
- gsettings jasper ladspa mimic \
+ gsettings jasper ladspa \
  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile spandsp spc timidity \
  directsound directdraw direct3d9 acm wininet \
  wildmidi xvid lv2 teletextdec dvb sndio"
@@ -1138,8 +1138,8 @@ AG_GST_CHECK_FEATURE(MODPLUG, modplug, modplug, [
 dnl *** mimic ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MIMIC, true)
 AG_GST_CHECK_FEATURE(MIMIC, [libmimic library], mimic, [
-  MIMDEC_REQUIRED=1.0
-  PKG_CHECK_MODULES(MIMIC, libmimic >= $MIMDEC_REQUIRED,
+  MIMIC_REQUIRED=1.0
+  PKG_CHECK_MODULES(MIMIC, libmimic >= $MIMIC_REQUIRED,
       HAVE_MIMIC=yes, HAVE_MIMIC=no)
   AC_SUBST(MIMIC_CFLAGS)
   AC_SUBST(MIMIC_LIBS)

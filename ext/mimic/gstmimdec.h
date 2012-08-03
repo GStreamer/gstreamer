@@ -51,7 +51,7 @@ struct _GstMimDec
   GstAdapter *adapter;
   MimCtx *dec;
   gint buffer_size;
-  gboolean need_newsegment;
+  gboolean need_segment;
 };
 
 struct _GstMimDecClass
