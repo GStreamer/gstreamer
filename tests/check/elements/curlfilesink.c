@@ -384,6 +384,7 @@ GST_START_TEST (test_create_dirs)
   g_free (sub_sub_dir);
   g_free (sub_dir);
   g_free (tmp_dir);
+  g_free (location);
 }
 
 GST_END_TEST;
@@ -413,6 +414,7 @@ GST_START_TEST (test_missing_path)
 
   g_free (res_location);
   g_free (res_file_name);
+  g_free (file_name);
 
   /* start playing */
   ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);

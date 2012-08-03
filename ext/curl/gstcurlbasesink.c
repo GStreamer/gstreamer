@@ -377,7 +377,8 @@ gst_curl_base_sink_event (GstBaseSink * bsink, GstEvent * event)
     default:
       break;
   }
-  return TRUE;
+
+  return GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
 }
 
 static gboolean
