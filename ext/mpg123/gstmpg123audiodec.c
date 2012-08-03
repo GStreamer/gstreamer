@@ -335,7 +335,7 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
     if (memory == NULL)
       return GST_FLOW_ERROR;
 
-    if (!gst_memory_map (memory, &info, GST_MAP_WRITE)) {
+    if (!gst_memory_map (memory, &info, GST_MAP_READ)) {
       gst_memory_unref (memory);
       return GST_FLOW_ERROR;
     }
