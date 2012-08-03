@@ -377,6 +377,38 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
   else if (sr == 0x0D || sr == 0x0E)
     sr_from_end = 16;
 
+  val = data[4];
+  /* This is slightly faster than a loop */
+  if (!(val & 0x80)) {
+    val = 0;
+  } else if ((val & 0xc0) && !(val & 0x20)) {
+    val = 1;
+  } else if ((val & 0xe0) && !(val & 0x10)) {
+    val = 2;
+  } else if ((val & 0xf0) && !(val & 0x08)) {
+    val = 3;
+  } else if ((val & 0xf8) && !(val & 0x04)) {
+    val = 4;
+  } else if ((val & 0xfc) && !(val & 0x02)) {
+    val = 5;
+  } else if ((val & 0xfe) && !(val & 0x01)) {
+    val = 6;
+  } else {
+    GST_LOG_OBJECT (flacdec, "failed to read sample/frame");
+    return FALSE;
+  }
+
+  val++;
+  headerlen = 4 + val + (bs_from_end / 8) + (sr_from_end / 8);
+
+  if (gst_flac_calculate_crc8 (data, headerlen) != data[headerlen]) {
+    GST_LOG_OBJECT (flacdec, "invalid checksum");
+    return FALSE;
+  }
+
+  if (!last_sample_num)
+    return TRUE;
+
   /* FIXME: This is can be 36 bit if variable block size is used,
    * fortunately not encoder supports this yet and we check for that
    * above.
@@ -385,14 +417,6 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, guint8 * data, guint size,
 
   if (val == (guint32) - 1 || val == (guint32) - 2) {
     GST_LOG_OBJECT (flacdec, "failed to read sample/frame");
-    return FALSE;
-  }
-
-  headerlen = 4 + g_unichar_to_utf8 ((gunichar) val, NULL) +
-      (bs_from_end / 8) + (sr_from_end / 8);
-
-  if (gst_flac_calculate_crc8 (data, headerlen) != data[headerlen]) {
-    GST_LOG_OBJECT (flacdec, "invalid checksum");
     return FALSE;
   }
 
@@ -768,13 +792,12 @@ gst_flac_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
   /* drop any in-stream headers, we've processed those in set_format already */
   if (G_UNLIKELY (!dec->got_headers)) {
     gboolean got_audio_frame;
-    gint64 unused;
     GstMapInfo map;
 
     /* check if this is a flac audio frame (rather than a header or junk) */
     gst_buffer_map (buf, &map, GST_MAP_READ);
     got_audio_frame =
-        gst_flac_dec_scan_got_frame (dec, map.data, map.size, &unused);
+        gst_flac_dec_scan_got_frame (dec, map.data, map.size, NULL);
     gst_buffer_unmap (buf, &map);
 
     if (!got_audio_frame) {
