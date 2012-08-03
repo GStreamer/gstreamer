@@ -3332,6 +3332,7 @@ static GstRTSPResult
 gst_rtsp_conninfo_close (GstRTSPSrc * src, GstRTSPConnInfo * info,
     gboolean free)
 {
+  GST_RTSP_STATE_LOCK (src);
   if (info->connected) {
     GST_DEBUG_OBJECT (src, "closing connection...");
     gst_rtsp_connection_close (info->connection);
@@ -3343,6 +3344,7 @@ gst_rtsp_conninfo_close (GstRTSPSrc * src, GstRTSPConnInfo * info,
     gst_rtsp_connection_free (info->connection);
     info->connection = NULL;
   }
+  GST_RTSP_STATE_UNLOCK (src);
   return GST_RTSP_OK;
 }
 
@@ -3365,6 +3367,7 @@ gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush)
   GList *walk;
 
   GST_DEBUG_OBJECT (src, "set flushing %d", flush);
+  GST_RTSP_STATE_LOCK (src);
   if (src->conninfo.connection) {
     GST_DEBUG_OBJECT (src, "connection flush");
     gst_rtsp_connection_flush (src->conninfo.connection, flush);
@@ -3375,6 +3378,7 @@ gst_rtspsrc_connection_flush (GstRTSPSrc * src, gboolean flush)
     if (stream->conninfo.connection)
       gst_rtsp_connection_flush (stream->conninfo.connection, flush);
   }
+  GST_RTSP_STATE_UNLOCK (src);
 }
 
 /* FIXME, handle server request, reply with OK, for now */
