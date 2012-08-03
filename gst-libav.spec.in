@@ -1,25 +1,22 @@
 %define majorminor  @GST_API_VERSION@
-%define gstreamer   gstreamer
-%define gst_minver  0.10.0
-%define gst_majorminor  0.10
+%define gstreamer   gstreamer011
+%define gst_minver  0.11.0
+%define gst_majorminor  1.0
 
-
-Name: 		%{gstreamer}-ffmpeg
+Name: 		%{gstreamer}-libav
 Version: 	@VERSION@
 Release:	@PACKAGE_VERSION_RELEASE@	
-Summary: 	GStreamer Streaming-media framework plug-in using FFmpeg.
-
+Summary: 	GStreamer Streaming-media framework plug-in using libav (FFmpeg).
 Group: 		Libraries/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.net/
 Vendor:		GStreamer Backpackers Team <package@gstreamer.net>
-Source:		http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg/gst-ffmpeg-%{version}.tar.gz
+Source:		http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg/gst-libav-%{version}.tar.xz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires:  	%{gstreamer} >= 0.9.7
 BuildRequires: 	%{gstreamer}-devel >= 0.9.7
 BuildRequires: 	%{gstreamer}-plugins-base-devel >= 0.9.7
-BuildRequires: 	liboil-devel >= 0.3.6
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -29,11 +26,11 @@ else media-related. Its plugin-based architecture means that new data
 types or processing capabilities can be added simply by installing new
 plug-ins.
 
-This plugin contains the FFmpeg codecs, containing codecs for most popular
+This plugin contains the libav (formerly FFmpeg) codecs, containing codecs for most popular
 multimedia formats.
 
 %prep
-%setup -q -n gst-ffmpeg-%{version}
+%setup -q -n gst-libav-%{version}
 
 %build
 %configure
@@ -52,10 +49,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-, root, root, -)
-%doc AUTHORS COPYING README gst-ffmpeg.doap
-%{_libdir}/gstreamer-%{gst_majorminor}/libgstffmpeg.so
+%doc AUTHORS COPYING README gst-libav.doap
+%{_libdir}/gstreamer-%{gst_majorminor}/libgstlibav.so
 %{_libdir}/gstreamer-%{gst_majorminor}/libgstpostproc.so
-%{_libdir}/gstreamer-%{gst_majorminor}/libgstffmpegscale.so
+%{_libdir}/gstreamer-%{gst_majorminor}/libgstavscale.so
+
 
 %changelog
 * Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>

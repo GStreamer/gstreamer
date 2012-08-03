@@ -2,7 +2,7 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=gst-ffmpeg
+package=gst-libav
 srcfile=configure.ac
 
 # make sure we have common
