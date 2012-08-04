@@ -517,11 +517,19 @@ static void
 default_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstMemoryDefault *dmem = (GstMemoryDefault *) mem;
+  gsize slice_size;
 
   if (dmem->notify)
     dmem->notify (dmem->user_data);
 
-  g_slice_free1 (dmem->slice_size, mem);
+  slice_size = dmem->slice_size;
+
+#ifdef USE_POISONING
+  /* just poison the structs, not all the data */
+  memset (mem, 0xff, sizeof (GstMemoryDefault));
+#endif
+
+  g_slice_free1 (slice_size, mem);
 }
 
 static void

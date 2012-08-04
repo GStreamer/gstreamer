@@ -532,10 +532,14 @@ _gst_buffer_free (GstBuffer * buffer)
   }
 
   /* we set msize to 0 when the buffer is part of the memory block */
-  if (msize)
+  if (msize) {
+#ifdef USE_POISONING
+    memset (buffer, 0xff, msize);
+#endif
     g_slice_free1 (msize, buffer);
-  else
+  } else {
     gst_memory_unref (GST_BUFFER_BUFMEM (buffer));
+  }
 }
 
 static void
