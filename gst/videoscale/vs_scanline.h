@@ -29,55 +29,56 @@
 #define __VS_SCANLINE_H__
 
 #include <_stdint.h>
+#include <glib.h>
 
-void vs_scanline_downsample_Y (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_Y (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
-void vs_scanline_resample_linear_Y (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
-void vs_scanline_merge_linear_Y (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_Y (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_Y (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_Y (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_Y (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGBA (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_RGBA (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGBA (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGBA (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_RGBA (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_RGBA (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_RGBA (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_RGBA (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGB (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_RGB (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGB (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGB (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_RGB (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_RGB (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_RGB (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_RGB (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_YUYV (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_YUYV (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_YUYV (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_YUYV (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_YUYV (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_YUYV (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_YUYV (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_YUYV (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_UYVY (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_UYVY (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_UYVY (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_UYVY (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_UYVY (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_UYVY (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_UYVY (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_UYVY (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_NV12 (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_NV12 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_NV12 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_NV12 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_NV12 (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_NV12 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_NV12 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_NV12 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGB565 (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_RGB565 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGB565 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGB565 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_RGB565 (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_RGB565 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_RGB565 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_RGB565 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_RGB555 (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_RGB555 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_RGB555 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
-void vs_scanline_merge_linear_RGB555 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_RGB555 (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_RGB555 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_RGB555 (uint8_t *dest, uint8_t *src, int src_width, int n, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_RGB555 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_downsample_Y16 (uint8_t *dest, uint8_t *src, int n);
-void vs_scanline_resample_nearest_Y16 (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
-void vs_scanline_resample_linear_Y16 (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
-void vs_scanline_merge_linear_Y16 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
+G_GNUC_INTERNAL void vs_scanline_downsample_Y16 (uint8_t *dest, uint8_t *src, int n);
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_Y16 (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_resample_linear_Y16 (uint8_t *dest, uint8_t *src, int n, int src_width, int *accumulator, int increment);
+G_GNUC_INTERNAL void vs_scanline_merge_linear_Y16 (uint8_t *dest, uint8_t *src1, uint8_t *src2, int n, int x);
 
-void vs_scanline_resample_nearest_AYUV64 (uint8_t * dest, uint8_t * src,
+G_GNUC_INTERNAL void vs_scanline_resample_nearest_AYUV64 (uint8_t * dest, uint8_t * src,
     int src_width, int n, int *accumulator, int increment);
-void vs_scanline_resample_linear_AYUV64 (uint8_t * dest, uint8_t * src,
+G_GNUC_INTERNAL void vs_scanline_resample_linear_AYUV64 (uint8_t * dest, uint8_t * src,
     int src_width, int n, int *accumulator, int increment);
 
 #endif

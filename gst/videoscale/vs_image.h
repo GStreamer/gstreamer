@@ -45,69 +45,130 @@ struct _VSImage {
   int stride;
 };
 
-void vs_image_scale_nearest_RGBA (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_RGBA (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_lanczos_AYUV (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
-    double a, double sharpen);
-void vs_image_scale_lanczos_AYUV64 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf, double sharpness, gboolean dither, int submethod,
-    double a, double sharpen);
+G_GNUC_INTERNAL void vs_image_scale_nearest_RGBA   (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_linear_RGBA    (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
 
-void vs_image_scale_nearest_RGB (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_RGB (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
 
-void vs_image_scale_nearest_YUYV (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_YUYV (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_lanczos_AYUV   (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf,
+                                                    double          sharpness,
+                                                    gboolean        dither,
+                                                    int             submethod,
+                                                    double          a,
+                                                    double          sharpen);
 
-void vs_image_scale_nearest_UYVY (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_UYVY (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_lanczos_AYUV64 (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf,
+                                                    double          sharpness,
+                                                    gboolean        dither,
+                                                    int             submethod,
+                                                    double          a,
+                                                    double          sharpen);
 
-void vs_image_scale_nearest_NV12 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_NV12 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
 
-void vs_image_scale_nearest_Y (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_Y (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_lanczos_Y (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf, double sharpness, gboolean dither, int submethod,
-    double a, double sharpen);
+G_GNUC_INTERNAL void vs_image_scale_nearest_RGB    (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
 
-void vs_image_scale_nearest_RGB565 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_RGB565 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_linear_RGB     (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
 
-void vs_image_scale_nearest_RGB555 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_RGB555 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
 
-void vs_image_scale_nearest_Y16 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_Y16 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_nearest_YUYV   (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
 
-void vs_image_scale_nearest_AYUV16 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
-void vs_image_scale_linear_AYUV16 (const VSImage *dest, const VSImage *src,
-    uint8_t *tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_linear_YUYV    (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
 
-void vs_image_scale_nearest_AYUV64 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf8);
-void vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf8);
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_UYVY   (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_UYVY    (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_NV12   (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_NV12    (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_Y      (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_Y       (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_lanczos_Y      (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf,
+                                                    double          sharpness,
+                                                    gboolean        dither,
+                                                    int             submethod,
+                                                    double          a,
+                                                    double          sharpen);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_RGB565 (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_RGB565  (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_RGB555 (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_RGB555  (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_Y16    (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_Y16     (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_AYUV16 (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_AYUV16  (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf);
+
+
+G_GNUC_INTERNAL void vs_image_scale_nearest_AYUV64 (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf8);
+
+G_GNUC_INTERNAL void vs_image_scale_linear_AYUV64  (const VSImage * dest,
+                                                    const VSImage * src,
+                                                    uint8_t       * tmpbuf8);
 
 #endif
 

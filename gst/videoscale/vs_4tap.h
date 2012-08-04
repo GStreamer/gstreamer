@@ -30,34 +30,43 @@
 
 #include "vs_image.h"
 
-void vs_4tap_init (void);
+G_GNUC_INTERNAL void vs_4tap_init (void);
 
-void vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_Y      (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_RGBA (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_RGBA   (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_RGB (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_RGB    (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_YUYV (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_YUYV   (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_UYVY (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_UYVY   (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_RGB565 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_RGB565 (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_RGB555 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_RGB555 (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_Y16 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_Y16    (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
-void vs_image_scale_4tap_AYUV64 (const VSImage * dest, const VSImage * src,
-    uint8_t * tmpbuf);
+G_GNUC_INTERNAL void vs_image_scale_4tap_AYUV64 (const VSImage * dest,
+                                                 const VSImage * src,
+                                                 uint8_t       * tmpbuf);
 
 #endif
 

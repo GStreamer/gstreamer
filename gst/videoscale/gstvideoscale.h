@@ -91,7 +91,7 @@ struct _GstVideoScaleClass {
   GstVideoFilterClass parent_class;
 };
 
-GType gst_video_scale_get_type(void);
+G_GNUC_INTERNAL GType gst_video_scale_get_type (void);
 
 G_END_DECLS
 
