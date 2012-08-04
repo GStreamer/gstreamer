@@ -1439,7 +1439,12 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, (GstObject *) demux, query);
+      if (pad)
+        res = gst_pad_query_default (pad, (GstObject *) demux, query);
+      else
+        res =
+            GST_ELEMENT_CLASS (parent_class)->query (GST_ELEMENT_CAST (demux),
+            query);
       break;
   }
 
