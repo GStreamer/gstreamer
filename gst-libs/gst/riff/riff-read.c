@@ -490,7 +490,7 @@ gst_riff_parse_strf_auds (GstElement * element,
   strf->rate = GUINT32_FROM_LE (strf->rate);
   strf->av_bps = GUINT32_FROM_LE (strf->av_bps);
   strf->blockalign = GUINT16_FROM_LE (strf->blockalign);
-  strf->size = GUINT16_FROM_LE (strf->size);
+  strf->bits_per_sample = GUINT16_FROM_LE (strf->bits_per_sample);
 #endif
 
   /* size checking */
