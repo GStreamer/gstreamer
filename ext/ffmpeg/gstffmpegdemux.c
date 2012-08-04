@@ -331,7 +331,7 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
       if (stream->pad)
         gst_element_remove_pad (GST_ELEMENT (demux), stream->pad);
       if (stream->tags)
-        gst_tag_list_free (stream->tags);
+        gst_tag_list_unref (stream->tags);
       g_free (stream);
     }
     demux->streams[n] = NULL;
@@ -1105,7 +1105,7 @@ gst_ffmpegdemux_read_tags (GstFFMpegDemux * demux)
   }
 
   if (!hastag) {
-    gst_tag_list_free (tlist);
+    gst_tag_list_unref (tlist);
     tlist = NULL;
   }
   return tlist;

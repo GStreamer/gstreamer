@@ -150,7 +150,7 @@ run_check_for_file (const gchar * filename, CheckTagsFunc * check_func)
   tags = read_tags_from_file (filename, FALSE);
   fail_unless (tags != NULL, "Failed to extract tags from '%s'", filename);
   check_func (tags, filename);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 }
 
 #define tag_list_has_tag(taglist,tag) \
