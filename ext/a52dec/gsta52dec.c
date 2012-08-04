@@ -460,7 +460,7 @@ gst_a52dec_update_streaminfo (GstA52Dec * a52dec)
 
   gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (a52dec), taglist,
       GST_TAG_MERGE_REPLACE);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 static GstFlowReturn

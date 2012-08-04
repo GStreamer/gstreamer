@@ -127,7 +127,7 @@ gst_real_audio_demux_reset (GstRealAudioDemux * demux)
   }
 
   if (demux->pending_tags) {
-    gst_tag_list_free (demux->pending_tags);
+    gst_tag_list_unref (demux->pending_tags);
     demux->pending_tags = NULL;
   }
 

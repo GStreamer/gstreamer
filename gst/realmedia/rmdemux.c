@@ -669,7 +669,7 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
     gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
     gst_element_remove_pad (GST_ELEMENT (rmdemux), stream->pad);
     if (stream->pending_tags)
-      gst_tag_list_free (stream->pending_tags);
+      gst_tag_list_unref (stream->pending_tags);
     if (stream->subpackets)
       g_ptr_array_free (stream->subpackets, TRUE);
     g_free (stream->index);
@@ -681,7 +681,7 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
   rmdemux->n_video_streams = 0;
 
   if (rmdemux->pending_tags != NULL) {
-    gst_tag_list_free (rmdemux->pending_tags);
+    gst_tag_list_unref (rmdemux->pending_tags);
     rmdemux->pending_tags = NULL;
   }
 

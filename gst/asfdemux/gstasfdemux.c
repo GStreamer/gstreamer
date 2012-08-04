@@ -143,7 +143,7 @@ gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
 {
   gst_caps_replace (&stream->caps, NULL);
   if (stream->pending_tags) {
-    gst_tag_list_free (stream->pending_tags);
+    gst_tag_list_unref (stream->pending_tags);
     stream->pending_tags = NULL;
   }
   if (stream->pad) {
@@ -186,7 +186,7 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     demux->adapter = NULL;
   }
   if (demux->taglist) {
-    gst_tag_list_free (demux->taglist);
+    gst_tag_list_unref (demux->taglist);
     demux->taglist = NULL;
   }
   if (demux->metadata) {
@@ -2583,15 +2583,15 @@ gst_asf_demux_add_global_tags (GstASFDemux * demux, GstTagList * taglist)
     return;
 
   if (gst_tag_list_is_empty (taglist)) {
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
     return;
   }
 
   t = gst_tag_list_merge (demux->taglist, taglist, GST_TAG_MERGE_APPEND);
   gst_tag_list_set_scope (t, GST_TAG_SCOPE_GLOBAL);
   if (demux->taglist)
-    gst_tag_list_free (demux->taglist);
-  gst_tag_list_free (taglist);
+    gst_tag_list_unref (demux->taglist);
+  gst_tag_list_unref (taglist);
   demux->taglist = t;
   GST_LOG_OBJECT (demux, "global tags now: %" GST_PTR_FORMAT, demux->taglist);
 }
@@ -2849,7 +2849,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
 not_enough_data:
   {
     GST_WARNING ("Unexpected end of data parsing ext content desc object");
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
     return GST_FLOW_OK;         /* not really fatal */
   }
 }

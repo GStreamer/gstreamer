@@ -375,7 +375,7 @@ gst_lamemp3enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 
   if (tags) {
     gst_audio_encoder_merge_tags (enc, tags, GST_TAG_MERGE_REPLACE);
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
   }
 
   return TRUE;
@@ -383,7 +383,7 @@ gst_lamemp3enc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
 zero_output_rate:
   {
     if (tags)
-      gst_tag_list_free (tags);
+      gst_tag_list_unref (tags);
     GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS, (NULL),
         ("LAME mp3 audio decided on a zero sample rate"));
     return FALSE;
@@ -819,7 +819,7 @@ gst_lamemp3enc_setup (GstLameMP3Enc * lame, GstTagList ** tags)
   if ((command) < 0) { \
     GST_ERROR_OBJECT (lame, "setup failed: " G_STRINGIFY (command)); \
     if (*tags) { \
-      gst_tag_list_free (*tags); \
+      gst_tag_list_unref (*tags); \
       *tags = NULL; \
     } \
     return FALSE; \

@@ -118,7 +118,7 @@ gst_rm_utils_read_tags (const guint8 * data, guint datalen,
   if (gst_tag_list_n_tags (tags) > 0)
     return tags;
 
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
   return NULL;
 }
 
