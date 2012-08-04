@@ -186,7 +186,7 @@ GST_START_TEST (test_demux)
 
   fail_unless_equals_string (TEST_METADATA, (char *) tag);
 
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
   gst_message_unref (message);
   gst_caps_unref (caps);
 

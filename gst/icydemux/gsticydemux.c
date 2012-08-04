@@ -131,7 +131,7 @@ gst_icydemux_reset (GstICYDemux * icydemux)
   gst_icydemux_remove_srcpad (icydemux);
 
   if (icydemux->cached_tags) {
-    gst_tag_list_free (icydemux->cached_tags);
+    gst_tag_list_unref (icydemux->cached_tags);
     icydemux->cached_tags = NULL;
   }
 
@@ -287,7 +287,7 @@ gst_icydemux_tag_found (GstICYDemux * icydemux, GstTagList * tags)
   } else {
     gst_tag_list_insert (icydemux->cached_tags, tags,
         GST_TAG_MERGE_REPLACE_ALL);
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
   }
 
   return TRUE;
@@ -341,7 +341,7 @@ gst_icydemux_parse_and_send_tags (GstICYDemux * icydemux)
   if (!gst_tag_list_is_empty (tags))
     gst_icydemux_tag_found (icydemux, tags);
   else
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
 }
 
 static gboolean

@@ -354,7 +354,7 @@ gst_avi_mux_reset (GstAviMux * avimux)
   avimux->codec_data_size = 0;
 
   if (avimux->tags_snap) {
-    gst_tag_list_free (avimux->tags_snap);
+    gst_tag_list_unref (avimux->tags_snap);
     avimux->tags_snap = NULL;
   }
 

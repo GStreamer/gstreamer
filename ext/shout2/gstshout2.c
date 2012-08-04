@@ -259,7 +259,7 @@ gst_shout2send_finalize (GstShout2send * shout2send)
   g_free (shout2send->mount);
   g_free (shout2send->url);
 
-  gst_tag_list_free (shout2send->tags);
+  gst_tag_list_unref (shout2send->tags);
 
   gst_poll_free (shout2send->timer);
 
@@ -348,7 +348,7 @@ gst_shout2send_set_metadata (GstShout2send * shout2send)
     shout_metadata_free (pmetadata);
   }
 
-  gst_tag_list_free (copy);
+  gst_tag_list_unref (copy);
 }
 #endif
 

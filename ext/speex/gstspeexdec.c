@@ -312,7 +312,7 @@ gst_speex_dec_parse_comments (GstSpeexDec * dec, GstBuffer * buf)
 
   gst_audio_decoder_merge_tags (GST_AUDIO_DECODER (dec), list,
       GST_TAG_MERGE_REPLACE);
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
 
   g_free (encoder);
   g_free (ver);

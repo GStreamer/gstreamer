@@ -269,7 +269,7 @@ gst_speex_enc_stop (GstAudioEncoder * benc)
     enc->state = NULL;
   }
   speex_bits_destroy (&enc->bits);
-  gst_tag_list_free (enc->tags);
+  gst_tag_list_unref (enc->tags);
   enc->tags = NULL;
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
@@ -350,7 +350,7 @@ gst_speex_enc_create_metadata_buffer (GstSpeexEnc * enc)
   GST_DEBUG_OBJECT (enc, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
   comments = gst_tag_list_to_vorbiscomment_buffer (merged_tags, NULL,
       0, "Encoded with GStreamer Speexenc");
-  gst_tag_list_free (merged_tags);
+  gst_tag_list_unref (merged_tags);
 
   GST_BUFFER_OFFSET (comments) = 0;
   GST_BUFFER_OFFSET_END (comments) = 0;

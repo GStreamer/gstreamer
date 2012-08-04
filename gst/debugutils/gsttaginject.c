@@ -82,7 +82,7 @@ gst_tag_inject_finalize (GObject * object)
   GstTagInject *self = GST_TAG_INJECT (object);
 
   if (self->tags) {
-    gst_tag_list_free (self->tags);
+    gst_tag_list_unref (self->tags);
     self->tags = NULL;
   }
 

@@ -328,7 +328,7 @@ test_taglib_apev2mux_with_tags (GstTagList * tags, guint32 mask)
 
   GST_LOG ("Got tags: %" GST_PTR_FORMAT, tags_read);
   test_taglib_apev2mux_check_tags (tags_read, mask);
-  gst_tag_list_free (tags_read);
+  gst_tag_list_unref (tags_read);
 
   GST_LOG ("Waiting for EOS ...");
   msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
@@ -367,7 +367,7 @@ GST_START_TEST (test_apev2mux)
   /* internal consistency check */
   tags = test_taglib_apev2mux_create_tags (0xFFFFFFFF);
   test_taglib_apev2mux_check_tags (tags, 0xFFFFFFFF);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 
   /* now the real tests */
   for (i = 0; i < 50; ++i) {
@@ -390,7 +390,7 @@ GST_START_TEST (test_apev2mux)
     test_taglib_apev2mux_with_tags (tags, mask);
 
     /* free tags */
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
   }
 }
 

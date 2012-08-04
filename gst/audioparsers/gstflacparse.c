@@ -292,7 +292,7 @@ gst_flac_parse_finalize (GObject * object)
   GstFlacParse *flacparse = GST_FLAC_PARSE (object);
 
   if (flacparse->tags) {
-    gst_tag_list_free (flacparse->tags);
+    gst_tag_list_unref (flacparse->tags);
     flacparse->tags = NULL;
   }
   if (flacparse->toc) {
@@ -347,7 +347,7 @@ gst_flac_parse_stop (GstBaseParse * parse)
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
 
   if (flacparse->tags) {
-    gst_tag_list_free (flacparse->tags);
+    gst_tag_list_unref (flacparse->tags);
     flacparse->tags = NULL;
   }
   if (flacparse->toc) {
@@ -970,7 +970,7 @@ gst_flac_parse_handle_vorbiscomment (GstFlacParse * flacparse,
   if (flacparse->tags == NULL) {
     GST_ERROR_OBJECT (flacparse, "Invalid vorbiscomment block");
   } else if (gst_tag_list_is_empty (flacparse->tags)) {
-    gst_tag_list_free (flacparse->tags);
+    gst_tag_list_unref (flacparse->tags);
     flacparse->tags = NULL;
   }
 
@@ -1125,7 +1125,7 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
       map.data + gst_byte_reader_get_pos (&reader), img_len, img_type);
 
   if (gst_tag_list_is_empty (flacparse->tags)) {
-    gst_tag_list_free (flacparse->tags);
+    gst_tag_list_unref (flacparse->tags);
     flacparse->tags = NULL;
   }
 
@@ -1422,7 +1422,7 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
     vorbiscomment =
         gst_tag_list_to_vorbiscomment_buffer (taglist, header,
         sizeof (header), NULL);
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
 
     gst_buffer_map (vorbiscomment, &map, GST_MAP_WRITE);
 

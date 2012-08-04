@@ -425,7 +425,7 @@ gst_flac_enc_stop (GstAudioEncoder * enc)
   GstFlacEnc *flacenc = GST_FLAC_ENC (enc);
 
   GST_DEBUG_OBJECT (enc, "stop");
-  gst_tag_list_free (flacenc->tags);
+  gst_tag_list_unref (flacenc->tags);
   flacenc->tags = NULL;
   if (FLAC__stream_encoder_get_state (flacenc->encoder) !=
       FLAC__STREAM_ENCODER_UNINITIALIZED) {
@@ -594,7 +594,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, guint64 total_samples)
           flacenc->meta, entries) != true)
     g_warning ("Dude, i'm already initialized!");
 
-  gst_tag_list_free (copy);
+  gst_tag_list_unref (copy);
 }
 
 static GstCaps *

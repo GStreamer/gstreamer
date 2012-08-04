@@ -1808,7 +1808,7 @@ gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
     gst_caps_unref (stream->caps);
   g_free (stream->segments);
   if (stream->pending_tags)
-    gst_tag_list_free (stream->pending_tags);
+    gst_tag_list_unref (stream->pending_tags);
   g_free (stream->redirect_uri);
   /* free stbl sub-atoms */
   gst_qtdemux_stbl_free (stream);
@@ -1851,7 +1851,7 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
         gst_buffer_unref (qtdemux->comp_brands);
       qtdemux->comp_brands = NULL;
       if (qtdemux->tag_list)
-        gst_tag_list_free (qtdemux->tag_list);
+        gst_tag_list_unref (qtdemux->tag_list);
       qtdemux->tag_list = NULL;
 #if 0
       if (qtdemux->element_index)
@@ -1912,7 +1912,7 @@ qtdemux_handle_xmp_taglist (GstQTDemux * qtdemux, GstTagList * taglist)
     if (qtdemux->tag_list) {
       /* prioritize native tags using _KEEP mode */
       gst_tag_list_insert (qtdemux->tag_list, taglist, GST_TAG_MERGE_KEEP);
-      gst_tag_list_free (taglist);
+      gst_tag_list_unref (taglist);
     } else
       qtdemux->tag_list = taglist;
   }
@@ -5184,7 +5184,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     gst_element_add_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
 
     if (stream->pending_tags)
-      gst_tag_list_free (stream->pending_tags);
+      gst_tag_list_unref (stream->pending_tags);
     stream->pending_tags = list;
     /* global tags go on each pad anyway */
     stream->send_global_tags = TRUE;
@@ -8455,7 +8455,7 @@ qtdemux_tag_add_id32 (GstQTDemux * demux, const char *tag,
   }
 
   if (taglist)
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
 
   gst_buffer_unref (buf);
 }

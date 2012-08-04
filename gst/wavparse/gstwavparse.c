@@ -224,7 +224,7 @@ gst_wavparse_reset (GstWavParse * wav)
     wav->adapter = NULL;
   }
   if (wav->tags)
-    gst_tag_list_free (wav->tags);
+    gst_tag_list_unref (wav->tags);
   wav->tags = NULL;
   if (wav->toc)
     gst_toc_unref (wav->toc);
@@ -1727,8 +1727,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
                 wav->tags =
                     gst_tag_list_merge (old, new, GST_TAG_MERGE_REPLACE);
                 if (old)
-                  gst_tag_list_free (old);
-                gst_tag_list_free (new);
+                  gst_tag_list_unref (old);
+                gst_tag_list_unref (new);
               }
               gst_buffer_unref (buf);
               wav->offset += GST_ROUND_UP_2 (data_size);

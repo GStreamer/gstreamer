@@ -194,7 +194,7 @@ gst_matroska_demux_finalize (GObject * object)
   }
 
   if (demux->common.global_tags) {
-    gst_tag_list_free (demux->common.global_tags);
+    gst_tag_list_unref (demux->common.global_tags);
     demux->common.global_tags = NULL;
   }
 
@@ -309,7 +309,7 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   }
 
   if (track->pending_tags)
-    gst_tag_list_free (track->pending_tags);
+    gst_tag_list_unref (track->pending_tags);
 
   if (track->index_table)
     g_array_free (track->index_table, TRUE);
@@ -469,7 +469,7 @@ gst_matroska_demux_reset (GstElement * element)
 #endif
 
   if (demux->common.global_tags) {
-    gst_tag_list_free (demux->common.global_tags);
+    gst_tag_list_unref (demux->common.global_tags);
   }
   demux->common.global_tags = gst_tag_list_new_empty ();
   gst_tag_list_set_scope (demux->common.global_tags, GST_TAG_SCOPE_GLOBAL);

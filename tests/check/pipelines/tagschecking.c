@@ -55,10 +55,10 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
           ntl = gst_tag_list_merge (received_tags, tl, GST_TAG_MERGE_PREPEND);
           if (ntl) {
             GST_LOG ("taglists merged: %" GST_PTR_FORMAT, ntl);
-            gst_tag_list_free (received_tags);
+            gst_tag_list_unref (received_tags);
             received_tags = ntl;
           }
-          gst_tag_list_free (tl);
+          gst_tag_list_unref (tl);
         }
       }
       break;
@@ -115,7 +115,7 @@ test_mux_tags (const gchar * tag_str, const gchar * caps,
   sent_tags = gst_tag_list_new_from_string (tag_str);
   fail_unless (sent_tags != NULL);
   gst_tag_setter_merge_tags (setter, sent_tags, GST_TAG_MERGE_REPLACE);
-  gst_tag_list_free (sent_tags);
+  gst_tag_list_unref (sent_tags);
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   g_main_loop_run (loop);
@@ -155,7 +155,7 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
   GST_DEBUG ("testing tags : %s", tag_str);
 
   if (received_tags) {
-    gst_tag_list_free (received_tags);
+    gst_tag_list_unref (received_tags);
     received_tags = NULL;
   }
 
@@ -232,9 +232,9 @@ test_demux_tags (const gchar * tag_str, const gchar * demuxer,
     fail_unless (found, "tag item %s is lost", name_sent);
   }
 
-  gst_tag_list_free (received_tags);
+  gst_tag_list_unref (received_tags);
   received_tags = NULL;
-  gst_tag_list_free (sent_tags);
+  gst_tag_list_unref (sent_tags);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
 

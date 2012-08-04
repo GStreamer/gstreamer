@@ -3240,7 +3240,7 @@ gst_flv_demux_dispose (GObject * object)
   }
 
   if (demux->taglist) {
-    gst_tag_list_free (demux->taglist);
+    gst_tag_list_unref (demux->taglist);
     demux->taglist = NULL;
   }
 

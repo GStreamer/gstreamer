@@ -768,7 +768,7 @@ extract_tags (const gchar * location, GstTagList ** taglist)
 
       gst_message_parse_tag (msg, &tags);
       gst_tag_list_insert (*taglist, tags, GST_TAG_MERGE_REPLACE);
-      gst_tag_list_free (tags);
+      gst_tag_list_unref (tags);
     }
     gst_message_unref (msg);
   }
@@ -858,7 +858,7 @@ test_average_bitrate_custom (const gchar * elementname,
         (guint) gst_util_uint64_scale_round ((guint64) total_bytes,
         (guint64) 8 * GST_SECOND, (guint64) total_duration);
     fail_unless (bitrate == expected);
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
   }
 
   /* delete file */

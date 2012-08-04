@@ -760,7 +760,7 @@ GST_START_TEST (test_no_buffer_album_2)
   fail_unless_track_gain (tag_list, -6.20);
   /* Album is not finished yet: */
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   /* No buffer for the last track. */
@@ -774,7 +774,7 @@ GST_START_TEST (test_no_buffer_album_2)
   fail_unless_album_gain (tag_list, -6.20);
   /* No track tags should be posted, as there was no data for it: */
   fail_if_track_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 0);
 
   cleanup_rganalysis (element);
@@ -854,7 +854,7 @@ GST_START_TEST (test_peak_float)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.369);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Swapped channels. */
   send_flush_events (element);
@@ -863,7 +863,7 @@ GST_START_TEST (test_peak_float)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.369);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Mono. */
   send_flush_events (element);
@@ -872,7 +872,7 @@ GST_START_TEST (test_peak_float)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.369);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -892,7 +892,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Swapped channels. */
   send_flush_events (element);
@@ -901,7 +901,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Mono. */
   send_flush_events (element);
@@ -910,7 +910,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Half amplitude, negative variant. */
   send_flush_events (element);
@@ -919,7 +919,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Swapped channels. */
   send_flush_events (element);
@@ -928,7 +928,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Mono. */
   send_flush_events (element);
@@ -937,7 +937,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
 
   /* Now check for correct normalization of the peak value: Sample
@@ -951,7 +951,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 32767. / 32768.);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Swapped channels. */
   send_flush_events (element);
@@ -960,7 +960,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 32767. / 32768.);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Mono. */
   send_flush_events (element);
@@ -969,7 +969,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 32767. / 32768.);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
 
   /* Negative variant, reaching 1.0. */
@@ -979,7 +979,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Swapped channels. */
   send_flush_events (element);
@@ -988,7 +988,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   /* Mono. */
   send_flush_events (element);
@@ -997,7 +997,7 @@ GST_START_TEST (test_peak_int16_16)
   send_eos_event (element);
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1018,7 +1018,7 @@ GST_START_TEST (test_peak_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.0);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   send_flush_events (element);
@@ -1028,7 +1028,7 @@ GST_START_TEST (test_peak_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_unless_album_peak (tag_list, 1.0);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 0);
 
   /* Try a second album: */
@@ -1041,7 +1041,7 @@ GST_START_TEST (test_peak_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.4);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 2);
 
   send_flush_events (element);
@@ -1051,7 +1051,7 @@ GST_START_TEST (test_peak_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.45);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   send_flush_events (element);
@@ -1061,7 +1061,7 @@ GST_START_TEST (test_peak_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.2);
   fail_unless_album_peak (tag_list, 0.45);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 0);
 
   /* And now a single track, not in album mode (num-tracks is 0
@@ -1073,7 +1073,7 @@ GST_START_TEST (test_peak_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.1);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1095,7 +1095,7 @@ GST_START_TEST (test_peak_track_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.0);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   g_object_set (element, "num-tracks", 1, NULL);
   send_flush_events (element);
@@ -1105,7 +1105,7 @@ GST_START_TEST (test_peak_track_album)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_unless_album_peak (tag_list, 0.5);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 0);
 
   cleanup_rganalysis (element);
@@ -1132,7 +1132,7 @@ GST_START_TEST (test_peak_album_abort_to_track)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 1.0);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   g_object_set (element, "num-tracks", 0, NULL);
@@ -1144,7 +1144,7 @@ GST_START_TEST (test_peak_album_abort_to_track)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1173,7 +1173,7 @@ GST_START_TEST (test_gain_album)
   fail_unless_track_peak (tag_list, 0.75);
   fail_unless_track_gain (tag_list, -15.70);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   send_flush_events (element);
   send_segment_event (element);
@@ -1186,7 +1186,7 @@ GST_START_TEST (test_gain_album)
   fail_unless_track_peak (tag_list, 0.5);
   fail_unless_track_gain (tag_list, -12.22);
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   send_flush_events (element);
   send_segment_event (element);
@@ -1203,7 +1203,7 @@ GST_START_TEST (test_gain_album)
   /* Strangely, wavegain reports -12.17 for the album, but the fixed
    * metaflac agrees to us.  Could be a 32767 vs. 32768 issue. */
   fail_unless_album_gain (tag_list, -12.18);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1246,7 +1246,7 @@ GST_START_TEST (test_forced)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1295,7 +1295,7 @@ GST_START_TEST (test_forced_separate)
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1340,7 +1340,7 @@ GST_START_TEST (test_forced_after_data)
   tag_list = poll_tags (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1389,7 +1389,7 @@ GST_START_TEST (test_forced_album)
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   send_flush_events (element);
@@ -1404,7 +1404,7 @@ GST_START_TEST (test_forced_album)
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_unless_album_peak (tag_list, 0.25);
   fail_unless_album_gain (tag_list, get_expected_gain (44100));
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 0);
 
   cleanup_rganalysis (element);
@@ -1459,7 +1459,7 @@ GST_START_TEST (test_forced_album_skip)
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1485,7 +1485,7 @@ GST_START_TEST (test_forced_album_no_skip)
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   /* The second track has indeed full tags, but although being not forced, this
@@ -1510,7 +1510,7 @@ GST_START_TEST (test_forced_album_no_skip)
   /* Statistical processing leads to the second track being
    * ignored for the gain (because it is so short): */
   fail_unless_album_gain (tag_list, get_expected_gain (8000));
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 0);
 
   cleanup_rganalysis (element);
@@ -1537,7 +1537,7 @@ GST_START_TEST (test_forced_abort_album_no_skip)
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   fail_if_album_tags (tag_list);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   fail_unless_num_tracks (element, 1);
 
   /* Disabling album processing before end of album: */
@@ -1585,7 +1585,7 @@ GST_START_TEST (test_reference_level)
   fail_unless (gst_tag_list_get_double (tag_list, GST_TAG_REFERENCE_LEVEL,
           &ref_level) && MATCH_GAIN (ref_level, 89.),
       "Incorrect reference level tag");
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   g_object_set (element, "reference-level", 83., "num-tracks", 2, NULL);
 
@@ -1602,7 +1602,7 @@ GST_START_TEST (test_reference_level)
   fail_unless (gst_tag_list_get_double (tag_list, GST_TAG_REFERENCE_LEVEL,
           &ref_level) && MATCH_GAIN (ref_level, 83.),
       "Incorrect reference level tag");
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   send_flush_events (element);
   send_segment_event (element);
@@ -1621,7 +1621,7 @@ GST_START_TEST (test_reference_level)
   fail_unless (gst_tag_list_get_double (tag_list, GST_TAG_REFERENCE_LEVEL,
           &ref_level) && MATCH_GAIN (ref_level, 83.),
       "Incorrect reference level tag");
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
 
   cleanup_rganalysis (element);
 }
@@ -1656,7 +1656,7 @@ GST_START_TEST (test_all_formats)
     tag_list = poll_tags (element);
     fail_unless_track_peak (tag_list, 0.25);
     fail_unless_track_gain (tag_list, supported_rates[i].gain);
-    gst_tag_list_free (tag_list);
+    gst_tag_list_unref (tag_list);
   }
 
   cleanup_rganalysis (element);
@@ -1687,7 +1687,7 @@ GST_END_TEST;
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
-  gst_tag_list_free (tag_list);                                       \
+  gst_tag_list_unref (tag_list);                                       \
                                                                       \
   cleanup_rganalysis (element);                                       \
 }                                                                     \
@@ -1712,7 +1712,7 @@ GST_END_TEST;
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
-  gst_tag_list_free (tag_list);                                       \
+  gst_tag_list_unref (tag_list);                                       \
                                                                       \
   cleanup_rganalysis (element);                                       \
 }                                                                     \
@@ -1738,7 +1738,7 @@ GST_END_TEST;
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
-  gst_tag_list_free (tag_list);                                       \
+  gst_tag_list_unref (tag_list);                                       \
                                                                       \
   cleanup_rganalysis (element);                                       \
 }                                                                     \
@@ -1764,7 +1764,7 @@ GST_END_TEST;
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
-  gst_tag_list_free (tag_list);                                       \
+  gst_tag_list_unref (tag_list);                                       \
                                                                       \
   cleanup_rganalysis (element);                                       \
 }                                                                     \

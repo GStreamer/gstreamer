@@ -231,7 +231,7 @@ gst_avi_demux_reset_stream (GstAviDemux * avi, GstAviStream * stream)
       gst_object_unref (stream->pad);
   }
   if (stream->taglist) {
-    gst_tag_list_free (stream->taglist);
+    gst_tag_list_unref (stream->taglist);
     stream->taglist = NULL;
   }
   memset (stream, 0, sizeof (GstAviStream));
@@ -278,7 +278,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   }
 
   if (avi->globaltags)
-    gst_tag_list_free (avi->globaltags);
+    gst_tag_list_unref (avi->globaltags);
   avi->globaltags = NULL;
 
   avi->got_tags = TRUE;         /* we always want to push global tags */

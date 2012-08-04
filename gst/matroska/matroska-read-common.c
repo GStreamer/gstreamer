@@ -437,7 +437,7 @@ gst_matroska_read_common_found_global_tag (GstMatroskaReadCommon * common,
   if (common->global_tags) {
     /* nothing sent yet, add to cache */
     gst_tag_list_insert (common->global_tags, taglist, GST_TAG_MERGE_APPEND);
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
   } else {
     GstEvent *tag_event = gst_event_new_tag (taglist);
     gint i;
@@ -713,7 +713,7 @@ gst_matroska_read_common_parse_attachments (GstMatroskaReadCommon * common,
     gst_matroska_read_common_found_global_tag (common, el, taglist);
   } else {
     GST_DEBUG_OBJECT (common, "No valid attachments found");
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
   }
 
   common->attachments_parsed = TRUE;
@@ -1931,7 +1931,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   } else
     gst_tag_list_insert (*p_taglist, taglist, GST_TAG_MERGE_APPEND);
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
   g_array_unref (chapter_targets);
   g_array_unref (edition_targets);
 
@@ -1999,7 +1999,7 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
   if (G_LIKELY (!gst_tag_list_is_empty (taglist)))
     gst_matroska_read_common_found_global_tag (common, el, taglist);
   else
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
 
   return ret;
 }

@@ -1174,7 +1174,7 @@ gst_qt_mux_setup_metadata (GstQTMux * qtmux)
     GST_DEBUG_OBJECT (qtmux, "Formatting tags");
     gst_qt_mux_add_metadata_tags (qtmux, copy);
     gst_qt_mux_add_xmp_tags (qtmux, copy);
-    gst_tag_list_free (copy);
+    gst_tag_list_unref (copy);
   } else {
     GST_DEBUG_OBJECT (qtmux, "No tags received");
   }
