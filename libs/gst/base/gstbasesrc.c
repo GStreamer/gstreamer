@@ -2692,6 +2692,9 @@ gst_base_src_loop (GstPad * pad)
 
   ret = gst_pad_push (pad, buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+    if (ret == GST_FLOW_NOT_NEGOTIATED) {
+      goto not_negotiated;
+    }
     GST_INFO_OBJECT (src, "pausing after gst_pad_push() = %s",
         gst_flow_get_name (ret));
     goto pause;
@@ -2709,6 +2712,10 @@ done:
   /* special cases */
 not_negotiated:
   {
+    if (gst_pad_needs_reconfigure (pad)) {
+      GST_DEBUG_OBJECT (src, "Retrying to renegotiate");
+      return;
+    }
     GST_DEBUG_OBJECT (src, "Failed to renegotiate");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto pause;
