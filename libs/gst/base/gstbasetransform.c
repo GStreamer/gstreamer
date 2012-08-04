@@ -2064,7 +2064,7 @@ not_negotiated:
   {
     gst_buffer_unref (inbuf);
     *outbuf = NULL;
-    GST_ELEMENT_ERROR (trans, STREAM, FORMAT,
+    GST_ELEMENT_WARNING (trans, STREAM, FORMAT,
         ("not negotiated"), ("not negotiated"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
