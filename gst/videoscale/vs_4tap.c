@@ -37,6 +37,52 @@
 
 static int16_t vs_4tap_taps[256][4];
 
+
+static void vs_scanline_resample_4tap_Y (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_Y (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_RGBA (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_RGBA (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_RGB (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_RGB (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_YUYV (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_YUYV (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_UYVY (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_UYVY (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_RGB565 (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_RGB565 (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_RGB555 (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_RGB555 (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_Y16 (uint8_t * dest, uint8_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_Y16 (uint8_t * dest, uint8_t * src1,
+    uint8_t * src2, uint8_t * src3, uint8_t * src4, int n, int acc);
+
+static void vs_scanline_resample_4tap_AYUV64 (uint16_t * dest, uint16_t * src,
+    int n, int src_width, int *xacc, int increment);
+static void vs_scanline_merge_4tap_AYUV64 (uint16_t * dest, uint16_t * src1,
+    uint16_t * src2, uint16_t * src3, uint16_t * src4, int n, int acc);
+
 static double
 vs_4tap_func (double x)
 {
