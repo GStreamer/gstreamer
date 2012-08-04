@@ -32,8 +32,7 @@ libgstpbutils_@GST_API_VERSION@_la_SOURCES = \
 	gstdiscoverer-types.c
 
 nodist_libgstpbutils_@GST_API_VERSION@_la_SOURCES = \
-	pbutils-enumtypes.c	\
-	pbutils-marshal.c
+	pbutils-enumtypes.c
 
 libgstpbutils_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/pbutils
 libgstpbutils_@GST_API_VERSION@include_HEADERS = \
@@ -43,7 +42,6 @@ nodist_libgstpbutils_@GST_API_VERSION@include_HEADERS = \
 	pbutils-enumtypes.h
 noinst_HEADERS = \
 	pbutils-private.h
-EXTRA_DIST = pbutils-marshal.list
 
 libgstpbutils_@GST_API_VERSION@_la_LIBADD = \
   $(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
@@ -54,9 +52,7 @@ libgstpbutils_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAG
 
 BUILT_SOURCES = \
 	pbutils-enumtypes.c \
-	pbutils-enumtypes.h \
-	pbutils-marshal.c   \
-	pbutils-marshal.h
+	pbutils-enumtypes.h
 
 CLEANFILES = $(BUILT_SOURCES)
 

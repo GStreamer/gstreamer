@@ -45,7 +45,6 @@
 #include <gst/video/video.h>
 
 #include "pbutils.h"
-#include "pbutils-marshal.h"
 #include "pbutils-private.h"
 
 #include "gst/glib-compat-private.h"
@@ -241,7 +240,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
   gst_discoverer_signals[SIGNAL_DISCOVERED] =
       g_signal_new ("discovered", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDiscovererClass, discovered),
-      NULL, NULL, pbutils_marshal_VOID__POINTER_BOXED,
+      NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_DISCOVERER_INFO,
       G_TYPE_ERROR | G_SIGNAL_TYPE_STATIC_SCOPE);
 }
@@ -1167,8 +1166,8 @@ discoverer_collect (GstDiscoverer * dc)
           gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->stream_info)->
-            is_image = TRUE;
+        ((GstDiscovererVideoInfo *) dc->priv->current_info->
+            stream_info)->is_image = TRUE;
     }
   }
 
