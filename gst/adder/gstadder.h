@@ -71,7 +71,10 @@ struct _GstAdder {
   /* src event handling */
   volatile gboolean flush_stop_pending;
 
-  /* target caps */
+  /* current caps */
+  GstCaps *current_caps;
+
+  /* target caps (set via property) */
   GstCaps *filter_caps;
 
   /* Pending inline events */

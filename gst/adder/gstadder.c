@@ -252,8 +252,12 @@ setcapsfunc (const GValue * item, IterData * data)
 {
   GstPad *otherpad = g_value_get_object (item);
 
-  if (otherpad != data->pad)
+  if (otherpad != data->pad) {
+    GST_LOG_OBJECT (data->pad, "calling set_caps with %" GST_PTR_FORMAT,
+        data->caps);
     gst_pad_set_caps (data->pad, data->caps);
+    gst_pad_use_fixed_caps (data->pad);
+  }
 }
 
 /* the first caps we receive on any of the sinkpads will define the caps for all
@@ -267,13 +271,32 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   IterData idata;
   gboolean done;
 
-  /* this get called recursively due to gst_iterator_foreach  calling
+  /* this gets called recursively due to gst_iterator_foreach calling
    * gst_pad_set_caps() */
   if (adder->in_setcaps)
     return TRUE;
 
-  GST_LOG_OBJECT (adder, "setting caps pad %p,%s to %" GST_PTR_FORMAT, pad,
-      GST_PAD_NAME (pad), caps);
+  /* don't allow reconfiguration for now; there's still a race between the
+   * different upstream threads doing query_caps + accept_caps + sending
+   * (possibly different) CAPS events, but there's not much we can do about
+   * that, upstream needs to deal with it. */
+  if (adder->current_caps != NULL) {
+    /* FIXME: not quite right for optional fields such as channel-mask, which
+     * may or may not be present for mono/stereo */
+    if (gst_caps_is_equal (caps, adder->current_caps)) {
+      return TRUE;
+    } else {
+      GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
+          "current caps are %" GST_PTR_FORMAT, caps, adder->current_caps);
+      gst_pad_push_event (pad, gst_event_new_reconfigure ());
+      return FALSE;
+    }
+  }
+
+  GST_INFO_OBJECT (pad, "setting caps to %" GST_PTR_FORMAT, caps);
+
+  adder->current_caps = gst_caps_ref (caps);
+  gst_pad_push_event (adder->srcpad, gst_event_new_caps (adder->current_caps));
 
   it = gst_element_iterate_pads (GST_ELEMENT_CAST (adder));
 
@@ -300,8 +323,7 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   adder->in_setcaps = FALSE;
   gst_iterator_free (it);
 
-  GST_LOG_OBJECT (adder, "handle caps changes on pad %p,%s to %" GST_PTR_FORMAT,
-      pad, GST_PAD_NAME (pad), caps);
+  GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
 
   if (!gst_audio_info_from_caps (&adder->info, caps))
     goto invalid_format;
@@ -339,7 +361,7 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   /* ERRORS */
 invalid_format:
   {
-    GST_DEBUG_OBJECT (adder, "invalid format set as caps");
+    GST_WARNING_OBJECT (adder, "invalid format set as caps");
     return FALSE;
   }
 }
@@ -889,6 +911,7 @@ gst_adder_init (GstAdder * adder)
   GST_PAD_SET_PROXY_CAPS (adder->srcpad);
   gst_element_add_pad (GST_ELEMENT (adder), adder->srcpad);
 
+  adder->current_caps = NULL;
   gst_audio_info_init (&adder->info);
   adder->padcount = 0;
   adder->func = NULL;
@@ -915,6 +938,8 @@ gst_adder_dispose (GObject * object)
     adder->collect = NULL;
   }
   gst_caps_replace (&adder->filter_caps, NULL);
+  gst_caps_replace (&adder->current_caps, NULL);
+
   if (adder->pending_events) {
     g_list_foreach (adder->pending_events, (GFunc) gst_event_unref, NULL);
     g_list_free (adder->pending_events);
@@ -1313,6 +1338,7 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       adder->flush_stop_pending = FALSE;
       adder->new_segment_pending = TRUE;
       adder->wait_for_new_segment = FALSE;
+      gst_caps_replace (&adder->current_caps, NULL);
       gst_segment_init (&adder->segment, GST_FORMAT_TIME);
       gst_collect_pads_start (adder->collect);
       break;
