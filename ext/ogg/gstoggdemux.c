@@ -823,10 +823,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         ogg->total_time = MAX (ogg->total_time, pad->map.total_time);
       }
     }
-    if (pad->map.caps) {
-      gst_pad_push_event (GST_PAD (pad), gst_event_new_stream_start ());
-      gst_pad_set_caps (GST_PAD (pad), pad->map.caps);
-    } else {
+    if (!pad->map.caps) {
       GST_WARNING_OBJECT (ogg, "stream parser didn't create src pad caps");
     }
   }
@@ -2587,6 +2584,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad;
+    gchar *stream_id;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
 
@@ -2600,13 +2598,24 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     pad->last_ret = GST_FLOW_OK;
 
     if (pad->map.is_skeleton || pad->map.is_cmml || pad->added
-        || !gst_pad_has_current_caps (GST_PAD_CAST (pad)))
+        || !pad->map.caps)
       continue;
 
     GST_DEBUG_OBJECT (ogg, "adding pad %" GST_PTR_FORMAT, pad);
 
     /* activate first */
     gst_pad_set_active (GST_PAD_CAST (pad), TRUE);
+
+    stream_id =
+        gst_pad_create_stream_id_printf (GST_PAD (pad), GST_ELEMENT_CAST (ogg),
+        "%08x", pad->map.serialno);
+    gst_pad_push_event (GST_PAD (pad), gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
+
+    /* Set headers on caps */
+    pad->map.caps =
+        gst_ogg_demux_set_header_on_caps (ogg, pad->map.caps, pad->map.headers);
+    gst_pad_set_caps (GST_PAD_CAST (pad), pad->map.caps);
 
     gst_element_add_pad (GST_ELEMENT (ogg), GST_PAD_CAST (pad));
     pad->added = TRUE;
@@ -2623,25 +2632,23 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   /* we are finished now */
   gst_element_no_more_pads (GST_ELEMENT (ogg));
 
-  /* FIXME, must be sent from the streaming thread */
-  if (event) {
-    GstTagList *tags;
-
-    gst_ogg_demux_send_event (ogg, event);
-
-    tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL);
-    gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
-    gst_ogg_demux_send_event (ogg, gst_event_new_tag (tags));
-  }
-
   GST_DEBUG_OBJECT (ogg, "starting chain");
 
   /* then send out any headers and queued packets */
   for (i = 0; i < chain->streams->len; i++) {
     GList *walk;
     GstOggPad *pad;
+    GstTagList *tags;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
+
+    /* Skip pads that were not added, e.g. Skeleton streams */
+    if (!pad->added)
+      continue;
+
+    /* FIXME, must be sent from the streaming thread */
+    if (event)
+      gst_pad_push_event (GST_PAD_CAST (pad), gst_event_ref (event));
 
     /* FIXME also streaming thread */
     if (pad->map.taglist) {
@@ -2651,10 +2658,9 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
       pad->map.taglist = NULL;
     }
 
-    /* Set headers on caps */
-    pad->map.caps =
-        gst_ogg_demux_set_header_on_caps (ogg, pad->map.caps, pad->map.headers);
-    gst_pad_set_caps (GST_PAD_CAST (pad), pad->map.caps);
+    tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Ogg", NULL);
+    gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
+    gst_pad_push_event (GST_PAD (pad), gst_event_new_tag (tags));
 
     GST_DEBUG_OBJECT (ogg, "pushing headers");
     /* push headers */
@@ -2667,6 +2673,10 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     GST_DEBUG_OBJECT (ogg, "pushing queued buffers");
     gst_ogg_demux_push_queued_buffers (ogg, pad);
   }
+
+  if (event)
+    gst_event_unref (event);
+
   return TRUE;
 }
 
