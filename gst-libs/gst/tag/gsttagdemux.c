@@ -344,13 +344,17 @@ gst_tag_demux_set_src_caps (GstTagDemux * tagdemux, GstCaps * new_caps)
   GstCaps *old_caps = tagdemux->priv->src_caps;
 
   if (old_caps == NULL || !gst_caps_is_equal (new_caps, old_caps)) {
+    gchar *stream_id = gst_pad_create_stream_id (tagdemux->priv->srcpad,
+        GST_ELEMENT_CAST (tagdemux), NULL);
 
     gst_caps_replace (&tagdemux->priv->src_caps, new_caps);
 
     GST_DEBUG_OBJECT (tagdemux, "Changing src pad caps to %" GST_PTR_FORMAT,
         tagdemux->priv->src_caps);
 
-    gst_pad_push_event (tagdemux->priv->srcpad, gst_event_new_stream_start ());
+    gst_pad_push_event (tagdemux->priv->srcpad,
+        gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
     gst_pad_set_caps (tagdemux->priv->srcpad, tagdemux->priv->src_caps);
   } else {
     /* Caps never changed */
