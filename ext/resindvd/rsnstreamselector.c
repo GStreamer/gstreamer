@@ -179,7 +179,7 @@ gst_selector_pad_finalize (GObject * object)
   pad = GST_SELECTOR_PAD_CAST (object);
 
   if (pad->tags)
-    gst_tag_list_free (pad->tags);
+    gst_tag_list_unref (pad->tags);
 
   G_OBJECT_CLASS (selector_pad_parent_class)->finalize (object);
 }
@@ -268,7 +268,7 @@ gst_selector_pad_event (GstPad * pad, GstEvent * event)
 
       GST_OBJECT_LOCK (selpad);
       if (selpad->tags)
-        gst_tag_list_free (selpad->tags);
+        gst_tag_list_unref (selpad->tags);
       gst_event_parse_tag (event, &tags);
       if (tags)
         tags = gst_tag_list_copy (tags);

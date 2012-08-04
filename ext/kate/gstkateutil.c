@@ -129,7 +129,7 @@ gst_kate_util_decode_base_reset (GstKateDecoderBase * decoder)
   g_free (decoder->category);
   decoder->category = NULL;
   if (decoder->tags) {
-    gst_tag_list_free (decoder->tags);
+    gst_tag_list_unref (decoder->tags);
     decoder->tags = NULL;
   }
   decoder->original_canvas_width = 0;
@@ -325,9 +325,9 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
             /* TODO: category - where should it go ? */
             decoder->tags =
                 gst_tag_list_merge (decoder->tags, tags, GST_TAG_MERGE_REPLACE);
-            gst_tag_list_free (tags);
+            gst_tag_list_unref (tags);
             if (old)
-              gst_tag_list_free (old);
+              gst_tag_list_unref (old);
           }
         }
 
@@ -356,7 +356,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           if (list) {
             decoder->tags =
                 gst_tag_list_merge (decoder->tags, list, GST_TAG_MERGE_REPLACE);
-            gst_tag_list_free (list);
+            gst_tag_list_unref (list);
           }
 
           if (!decoder->tags) {
@@ -375,7 +375,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
               NULL);
 
           if (old)
-            gst_tag_list_free (old);
+            gst_tag_list_unref (old);
 
           if (decoder->initialized) {
             gst_element_found_tags_for_pad (element, tagpad, decoder->tags);
@@ -422,7 +422,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
         }
       }
       if (gst_tag_list_is_empty (evtags))
-        gst_tag_list_free (evtags);
+        gst_tag_list_unref (evtags);
       else
         gst_element_found_tags_for_pad (element, tagpad, evtags);
     }

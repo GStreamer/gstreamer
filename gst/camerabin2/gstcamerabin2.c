@@ -1868,10 +1868,10 @@ fail:
 }
 
 static void
-_gst_tag_list_free_maybe (GstTagList * taglist)
+_gst_tag_list_unref_maybe (GstTagList * taglist)
 {
   if (taglist)
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
 }
 
 static GstStateChangeReturn
@@ -1923,7 +1923,7 @@ gst_camera_bin_change_state (GstElement * element, GstStateChange trans)
       camera->image_location_list = NULL;
 
       g_slist_foreach (camera->image_tags_list,
-          (GFunc) _gst_tag_list_free_maybe, NULL);
+          (GFunc) _gst_tag_list_unref_maybe, NULL);
       g_slist_free (camera->image_tags_list);
       camera->image_tags_list = NULL;
       g_mutex_unlock (&camera->image_capture_mutex);

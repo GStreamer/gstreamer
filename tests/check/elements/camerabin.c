@@ -470,7 +470,7 @@ teardown (void)
   preview_filename = NULL;
 
   if (tags_found)
-    gst_tag_list_free (tags_found);
+    gst_tag_list_unref (tags_found);
   tags_found = NULL;
 
   g_free (video_filename);
@@ -511,7 +511,7 @@ validity_bus_cb (GstBus * bus, GstMessage * message, gpointer data)
       gst_message_parse_tag (message, &taglist);
       if (tags_found) {
         gst_tag_list_insert (tags_found, taglist, GST_TAG_MERGE_REPLACE);
-        gst_tag_list_free (taglist);
+        gst_tag_list_unref (taglist);
       } else {
         tags_found = taglist;
       }
@@ -1098,7 +1098,7 @@ GST_START_TEST (test_image_capture_with_tags)
 
   for (i = 0; i < 3; i++) {
     check_file_validity (image_filename, i, taglists[i], 0, 0, NO_AUDIO);
-    gst_tag_list_free (taglists[i]);
+    gst_tag_list_unref (taglists[i]);
     remove_file (image_filename, i);
   }
 }
@@ -1176,7 +1176,7 @@ GST_START_TEST (test_video_capture_with_tags)
 
   for (i = 0; i < 3; i++) {
     check_file_validity (video_filename, i, taglists[i], 0, 0, NO_AUDIO);
-    gst_tag_list_free (taglists[i]);
+    gst_tag_list_unref (taglists[i]);
     remove_file (video_filename, i);
   }
 }

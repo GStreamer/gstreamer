@@ -171,7 +171,7 @@ gst_aiff_parse_reset (GstAiffParse * aiff)
   }
 
   if (aiff->tags != NULL) {
-    gst_tag_list_free (aiff->tags);
+    gst_tag_list_unref (aiff->tags);
     aiff->tags = NULL;
   }
 }
@@ -931,7 +931,7 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
           aiff->tags = tags;
         } else {
           gst_tag_list_insert (aiff->tags, tags, GST_TAG_MERGE_APPEND);
-          gst_tag_list_free (tags);
+          gst_tag_list_unref (tags);
         }
         break;
       }

@@ -344,7 +344,7 @@ gst_opus_enc_stop (GstAudioEncoder * benc)
     opus_multistream_encoder_destroy (enc->state);
     enc->state = NULL;
   }
-  gst_tag_list_free (enc->tags);
+  gst_tag_list_unref (enc->tags);
   enc->tags = NULL;
   g_slist_foreach (enc->headers, (GFunc) gst_buffer_unref, NULL);
   g_slist_free (enc->headers);

@@ -87,7 +87,7 @@ gst_mxf_demux_pad_finalize (GObject * object)
   GstMXFDemuxPad *pad = GST_MXF_DEMUX_PAD (object);
 
   if (pad->tags) {
-    gst_tag_list_free (pad->tags);
+    gst_tag_list_unref (pad->tags);
     pad->tags = NULL;
   }
 
@@ -171,7 +171,7 @@ gst_mxf_demux_reset_mxf_state (GstMXFDemux * demux)
     g_free (t->mapping_data);
 
     if (t->tags)
-      gst_tag_list_free (t->tags);
+      gst_tag_list_unref (t->tags);
 
     if (t->caps)
       gst_caps_unref (t->caps);
@@ -763,7 +763,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       etrack->handler = NULL;
       etrack->handle_func = NULL;
       if (etrack->tags)
-        gst_tag_list_free (etrack->tags);
+        gst_tag_list_unref (etrack->tags);
       etrack->tags = NULL;
 
       etrack->handler = mxf_essence_element_handler_find (track);
@@ -828,7 +828,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
         g_free (etrack->mapping_data);
         etrack->mapping_data = NULL;
         if (etrack->tags)
-          gst_tag_list_free (etrack->tags);
+          gst_tag_list_unref (etrack->tags);
         goto next;
       } else if (!caps) {
         GST_WARNING_OBJECT (demux, "Couldn't create updated caps for stream");
@@ -849,7 +849,7 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       if (new) {
         g_free (etrack->mapping_data);
         if (etrack->tags)
-          gst_tag_list_free (etrack->tags);
+          gst_tag_list_unref (etrack->tags);
         if (etrack->caps)
           gst_caps_unref (etrack->caps);
 

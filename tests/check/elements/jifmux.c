@@ -976,7 +976,7 @@ generate_jif_file_with_tags (const gchar * tags, const gchar * filepath)
   taglist = gst_tag_list_new_from_string (tags);
   generate_jif_file_with_tags_from_taglist (taglist, filepath);
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 static void
@@ -1010,7 +1010,7 @@ libexif_check_tags (const gchar * tags, const gchar * filepath)
 
   libexif_check_tags_from_taglist (taglist, filepath);
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_START_TEST (test_jifmux_tags)
@@ -1069,7 +1069,7 @@ GST_START_TEST (test_jifmux_tags)
   gst_buffer_unref (buffer);
   generate_jif_file_with_tags_from_taglist (taglist, tmpfile);
   libexif_check_tags_from_taglist (taglist, tmpfile);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 
 #define IMAGE_ORIENTATION_TAG(t) "taglist," GST_TAG_IMAGE_ORIENTATION "=" t
   generate_jif_file_with_tags (IMAGE_ORIENTATION_TAG ("rotate-0"), tmpfile);

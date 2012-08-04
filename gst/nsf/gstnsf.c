@@ -211,7 +211,7 @@ gst_nsfdec_finalize (GObject * object)
     gst_buffer_unref (nsfdec->tune_buffer);
 
   if (nsfdec->taglist)
-    gst_tag_list_free (nsfdec->taglist);
+    gst_tag_list_unref (nsfdec->taglist);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

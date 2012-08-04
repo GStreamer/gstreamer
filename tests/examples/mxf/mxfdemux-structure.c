@@ -154,7 +154,7 @@ on_message (GstBus * bus, GstMessage * message, gpointer data)
         g_value_unset (&v);
       }
 
-      gst_tag_list_free (tags);
+      gst_tag_list_unref (tags);
       break;
     }
     default:

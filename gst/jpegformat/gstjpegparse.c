@@ -585,7 +585,7 @@ extract_and_queue_tags (GstJpegParse * parse, guint size, guint8 * data,
     GstTagList *taglist = parse->priv->tags;
     if (taglist) {
       gst_tag_list_insert (taglist, tags, GST_TAG_MERGE_REPLACE);
-      gst_tag_list_free (tags);
+      gst_tag_list_unref (tags);
     } else {
       parse->priv->tags = tags;
     }
@@ -1060,7 +1060,7 @@ gst_jpeg_parse_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_adapter_clear (parse->priv->adapter);
       if (parse->priv->tags) {
-        gst_tag_list_free (parse->priv->tags);
+        gst_tag_list_unref (parse->priv->tags);
         parse->priv->tags = NULL;
       }
       break;

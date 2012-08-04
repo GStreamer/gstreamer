@@ -475,7 +475,7 @@ gst_asf_mux_get_content_description_tags (GstAsfMux * asfmux,
   tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (asfmux));
   if (tags && !gst_tag_list_is_empty (tags)) {
     if (asftags->tags != NULL) {
-      gst_tag_list_free (asftags->tags);
+      gst_tag_list_unref (asftags->tags);
     }
     asftags->tags = gst_tag_list_new_empty ();
     asftags->cont_desc_size = 0;
@@ -1323,7 +1323,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
 
   if (asftags) {
     if (asftags->tags)
-      gst_tag_list_free (asftags->tags);
+      gst_tag_list_unref (asftags->tags);
     g_free (asftags);
   }
 
@@ -2017,7 +2017,7 @@ gst_asf_mux_pad_reset (GstAsfPad * pad)
     gst_buffer_unref (pad->codec_data);
   pad->codec_data = NULL;
   if (pad->taglist)
-    gst_tag_list_free (pad->taglist);
+    gst_tag_list_unref (pad->taglist);
   pad->taglist = NULL;
 
   pad->first_ts = GST_CLOCK_TIME_NONE;

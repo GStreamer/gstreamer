@@ -63,7 +63,7 @@ bus_handler (GstBus * bus, GstMessage * message, gpointer data)
       }
 
       g_free (fpr);
-      gst_tag_list_free (tag_list);
+      gst_tag_list_unref (tag_list);
 
       found_fingerprint = TRUE;
 

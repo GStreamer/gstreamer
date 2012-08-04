@@ -316,14 +316,14 @@ gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
     /* build new tag list */
     new_tags = gst_tag_list_merge (user_tags, old_tags,
         gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (kt)));
-    gst_tag_list_free (old_tags);
+    gst_tag_list_unref (old_tags);
 
     new_buf =
         gst_tag_list_to_vorbiscomment_buffer (new_tags,
         (const guint8 *) "\201kate\0\0\0\0", 9, encoder);
     gst_buffer_copy_into (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
-    gst_tag_list_free (new_tags);
+    gst_tag_list_unref (new_tags);
     g_free (encoder);
     gst_buffer_unref (buffer);
 

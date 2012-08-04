@@ -486,7 +486,7 @@ on_buttonSaveFile_clicked (GtkButton * button, gpointer user_data)
 
     /* view new file */
     if (tag_list) {
-      gst_tag_list_free (tag_list);
+      gst_tag_list_unref (tag_list);
       tag_list = NULL;
     }
 
@@ -899,10 +899,10 @@ me_gst_bus_callback_view (GstBus * bus, GstMessage * message, gpointer data)
         if (tl) {
           ntl = gst_tag_list_merge (tag_list, tl, GST_TAG_MERGE_PREPEND);
           if (ntl) {
-            gst_tag_list_free (tag_list);
+            gst_tag_list_unref (tag_list);
             tag_list = ntl;
           }
-          gst_tag_list_free (tl);
+          gst_tag_list_unref (tl);
         }
       }
       /* remove whole chunk tags */
@@ -1314,7 +1314,7 @@ process_file(void)
   me_gst_cleanup_elements ();
 
   if (tag_list) {
-    gst_tag_list_free (tag_list);
+    gst_tag_list_unref (tag_list);
     tag_list = NULL;
   }
 
@@ -1357,7 +1357,7 @@ done:
   me_gst_cleanup_elements ();
 
   if (tag_list) {
-    gst_tag_list_free (tag_list);
+    gst_tag_list_unref (tag_list);
     tag_list = NULL;
   }
 

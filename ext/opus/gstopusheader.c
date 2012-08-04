@@ -88,7 +88,7 @@ gst_opus_enc_create_metadata_buffer (const GstTagList * tags)
   GST_BUFFER_OFFSET_END (comments) = 0;
 
   if (empty_tags)
-    gst_tag_list_free (empty_tags);
+    gst_tag_list_unref (empty_tags);
 
   return comments;
 }

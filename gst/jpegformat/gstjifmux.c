@@ -638,7 +638,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
   }
 
   if (tags && cleanup_tags)
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
   return modified;
 }
 

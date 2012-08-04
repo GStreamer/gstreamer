@@ -497,7 +497,7 @@ gst_kate_enc_set_metadata (GstKateEnc * ke)
   if (merged_tags) {
     GST_DEBUG_OBJECT (ke, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
     gst_tag_list_foreach (merged_tags, gst_kate_enc_metadata_set1, ke);
-    gst_tag_list_free (merged_tags);
+    gst_tag_list_unref (merged_tags);
   }
 }
 
@@ -1081,7 +1081,7 @@ gst_kate_enc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_tag_list_free (ke->tags);
+      gst_tag_list_unref (ke->tags);
       ke->tags = NULL;
       break;
     default:

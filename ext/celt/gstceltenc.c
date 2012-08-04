@@ -424,7 +424,7 @@ gst_celt_enc_create_metadata_buffer (GstCeltEnc * enc)
   GST_BUFFER_OFFSET_END (comments) = 0;
 
   if (empty_tags)
-    gst_tag_list_free (empty_tags);
+    gst_tag_list_unref (empty_tags);
 
   return comments;
 }

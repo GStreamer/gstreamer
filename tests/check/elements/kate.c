@@ -362,7 +362,7 @@ GST_START_TEST (test_kate_identification_header)
   fail_unless (gst_tag_list_get_string (tag_list, GST_TAG_TITLE, &title));
   fail_unless_equals_string (title, "Tiger");
   g_free (title);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   gst_message_unref (message);
 
   /* cleanup */

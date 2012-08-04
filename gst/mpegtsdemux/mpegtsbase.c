@@ -498,7 +498,7 @@ mpegts_base_free_program (MpegTSBaseProgram * program)
   g_free (program->streams);
 
   if (program->tags)
-    gst_tag_list_free (program->tags);
+    gst_tag_list_unref (program->tags);
 
   g_free (program);
 }

@@ -450,7 +450,7 @@ test_taglib_id3mux_with_tags (GstTagList * tags, guint32 mask, int v2version)
 
   GST_LOG ("Got tags: %" GST_PTR_FORMAT, tags_read);
   test_taglib_id3mux_check_tags (tags_read, mask, v2version);
-  gst_tag_list_free (tags_read);
+  gst_tag_list_unref (tags_read);
 
   fail_unless (tagbuf != NULL);
   test_taglib_id3mux_check_tag_buffer (tagbuf, mask, v2version);
@@ -494,7 +494,7 @@ run_id3mux_test (int v2version)
   /* internal consistency check */
   tags = test_taglib_id3mux_create_tags (0xFFFFFFFF);
   test_taglib_id3mux_check_tags (tags, 0xFFFFFFFF, v2version);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 
   /* now the real tests */
   for (i = 0; i < 50; ++i) {
@@ -517,7 +517,7 @@ run_id3mux_test (int v2version)
     test_taglib_id3mux_with_tags (tags, mask, v2version);
 
     /* free tags */
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
   }
 }
 
