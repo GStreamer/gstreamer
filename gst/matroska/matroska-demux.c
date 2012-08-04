@@ -535,6 +535,7 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   guint16 riff_audio_fmt = 0;
   GstTagList *list = NULL;
   gchar *codec = NULL;
+  gchar *stream_id;
 
   DEBUG_ELEMENT_START (demux, ebml, "TrackEntry");
 
@@ -1335,8 +1336,14 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
 
   gst_pad_use_fixed_caps (context->pad);
   gst_pad_set_active (context->pad, TRUE);
-  gst_pad_push_event (context->pad, gst_event_new_stream_start ());
+
+  stream_id =
+      gst_pad_create_stream_id_printf (context->pad, GST_ELEMENT_CAST (demux),
+      "%u", context->uid);
+  gst_pad_push_event (context->pad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
   gst_pad_set_caps (context->pad, context->caps);
+
   gst_element_add_pad (GST_ELEMENT (demux), context->pad);
 
   g_free (padname);

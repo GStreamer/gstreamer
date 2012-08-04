@@ -5168,6 +5168,8 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
   }
 
   if (stream->pad) {
+    gchar *stream_id;
+
     GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
 
     gst_pad_use_fixed_caps (stream->pad);
@@ -5176,7 +5178,11 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
     gst_pad_set_active (stream->pad, TRUE);
 
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
+    stream_id =
+        gst_pad_create_stream_id_printf (stream->pad,
+        GST_ELEMENT_CAST (qtdemux), "%u", stream->track_id);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
     gst_pad_set_caps (stream->pad, stream->caps);
 
     GST_DEBUG_OBJECT (qtdemux, "adding pad %s %p to qtdemux %p",

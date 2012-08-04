@@ -1924,6 +1924,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   GstElement *element;
   gboolean got_strh = FALSE, got_strf = FALSE, got_vprp = FALSE;
   gst_riff_vprp *vprp = NULL;
+  gchar *stream_id;
 
   element = GST_ELEMENT_CAST (avi);
 
@@ -2299,7 +2300,11 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   avi->num_streams++;
 
   gst_pad_set_active (pad, TRUE);
-  gst_pad_push_event (pad, gst_event_new_stream_start ());
+  stream_id =
+      gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (avi), "%u",
+      avi->num_streams);
+  gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
   gst_pad_set_caps (pad, caps);
   gst_caps_unref (caps);
 
