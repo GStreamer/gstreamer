@@ -532,7 +532,7 @@ gst_video_scale_set_info (GstVideoFilter * filter, GstCaps * in,
 
   if (videoscale->tmp_buf)
     g_free (videoscale->tmp_buf);
-  videoscale->tmp_buf = g_malloc (out_info->width * 8 * 4);
+  videoscale->tmp_buf = g_malloc (out_info->width * sizeof (guint64) * 4);
 
   if (in_info->width == out_info->width && in_info->height == out_info->height) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);

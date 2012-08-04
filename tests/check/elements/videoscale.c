@@ -1035,7 +1035,6 @@ videoscale_suite (void)
 #endif
   tcase_add_test (tc_chain, test_basetransform_negotiation);
 
-  GST_ERROR ("FIXME: test 64-bpp formats as well");
   return s;
 }
 
