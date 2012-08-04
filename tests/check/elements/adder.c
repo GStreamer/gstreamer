@@ -36,6 +36,46 @@
 
 static GMainLoop *main_loop;
 
+/* make sure downstream gets a CAPS event before buffers are sent */
+GST_START_TEST (test_caps)
+{
+  GstElement *pipeline, *src, *adder, *sink;
+  GstStateChangeReturn state_res;
+  GstCaps *caps;
+  GstPad *pad;
+
+  /* build pipeline */
+  pipeline = gst_pipeline_new ("pipeline");
+
+  src = gst_element_factory_make ("audiotestsrc", "src1");
+  g_object_set (src, "wave", 4, NULL);  /* silence */
+  adder = gst_element_factory_make ("adder", "adder");
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (pipeline), src, adder, sink, NULL);
+
+  fail_unless (gst_element_link_many (src, adder, sink, NULL));
+
+  /* prepare playing */
+  state_res = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless_equals_int (state_res, GST_STATE_CHANGE_ASYNC);
+
+  /* wait for preroll */
+  state_res = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (state_res, GST_STATE_CHANGE_SUCCESS);
+
+  /* check caps on fakesink */
+  pad = gst_element_get_static_pad (sink, "sink");
+  caps = gst_pad_get_current_caps (pad);
+  fail_unless (caps != NULL);
+  gst_caps_unref (caps);
+  gst_object_unref (pad);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 {
@@ -987,6 +1027,7 @@ adder_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
   tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);
