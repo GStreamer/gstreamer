@@ -23,7 +23,6 @@
 
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
-#include "gstencode-marshal.h"
 
 #define GST_TYPE_ENCODE_BIN               (gst_encode_bin_get_type())
 #define GST_ENCODE_BIN(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ENCODE_BIN,GstEncodeBin))
