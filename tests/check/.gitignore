@@ -1,5 +1,5 @@
 test-registry.*
-elements/ffdec_adpcm
-elements/ffdemux_ape
+elements/avdec_adpcm
+elements/avdemux_ape
 elements/postproc
 .dirstamp
