@@ -852,6 +852,7 @@ gboolean		gst_pad_is_blocked			(GstPad *pad);
 gboolean		gst_pad_is_blocking			(GstPad *pad);
 
 void                    gst_pad_mark_reconfigure                (GstPad *pad);
+gboolean		gst_pad_needs_reconfigure               (GstPad *pad);
 gboolean		gst_pad_check_reconfigure               (GstPad *pad);
 
 void			gst_pad_set_element_private		(GstPad *pad, gpointer priv);

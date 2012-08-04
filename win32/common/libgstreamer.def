@@ -686,6 +686,7 @@ EXPORTS
 	gst_pad_link_return_get_type
 	gst_pad_mark_reconfigure
 	gst_pad_mode_get_type
+	gst_pad_needs_reconfigure
 	gst_pad_new
 	gst_pad_new_from_static_template
 	gst_pad_new_from_template
