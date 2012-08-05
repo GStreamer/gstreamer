@@ -1111,38 +1111,6 @@ static gboolean gst_input_selector_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gint64 gst_input_selector_block (GstInputSelector * self);
 
-/* FIXME: create these marshallers using glib-genmarshal */
-static void
-gst_input_selector_marshal_INT64__VOID (GClosure * closure,
-    GValue * return_value G_GNUC_UNUSED,
-    guint n_param_values,
-    const GValue * param_values,
-    gpointer invocation_hint G_GNUC_UNUSED, gpointer marshal_data)
-{
-  typedef gint64 (*GMarshalFunc_INT64__VOID) (gpointer data1, gpointer data2);
-  register GMarshalFunc_INT64__VOID callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-  gint64 v_return;
-
-  g_return_if_fail (return_value != NULL);
-  g_return_if_fail (n_param_values == 1);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_INT64__VOID) (marshal_data ? marshal_data : cc->callback);
-
-  v_return = callback (data1, data2);
-
-  g_value_set_int64 (return_value, v_return);
-}
-
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (input_selector_debug, \
         "input-selector", 0, "An input stream selector element");
@@ -1238,7 +1206,7 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
       g_signal_new ("block", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstInputSelectorClass, block), NULL, NULL,
-      gst_input_selector_marshal_INT64__VOID, G_TYPE_INT64, 0);
+      g_cclosure_marshal_generic, G_TYPE_INT64, 0);
 
   gst_element_class_set_static_metadata (gstelement_class, "Input selector",
       "Generic", "N-to-1 input stream selector",
