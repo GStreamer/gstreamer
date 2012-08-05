@@ -926,6 +926,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   const gchar *codec;
   AVCodecContext *ctx;
   GstFFStream *stream;
+  gchar *stream_id, *tmp;
 
   ctx = avstream->codec;
 
@@ -976,8 +977,6 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   gst_pad_use_fixed_caps (pad);
   gst_pad_set_active (pad, TRUE);
-  gst_pad_set_caps (pad, caps);
-  gst_caps_unref (caps);
 
   gst_pad_set_query_function (pad, gst_ffmpegdemux_src_query);
   gst_pad_set_event_function (pad, gst_ffmpegdemux_src_event);
@@ -1002,10 +1001,18 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
 
   demux->streams[avstream->index] = stream;
 
+
+  stream_id =
+      gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (demux), "%u",
+      avstream->index);
+  gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
+
+  gst_pad_set_caps (pad, caps);
+  gst_caps_unref (caps);
+
   /* activate and add */
   gst_element_add_pad (GST_ELEMENT (demux), pad);
-
-  gst_pad_push_event (pad, gst_event_new_stream_start ());
 
   /* metadata */
   if ((codec = gst_ffmpeg_get_codecid_longname (ctx->codec_id))) {
