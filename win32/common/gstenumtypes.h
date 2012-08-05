@@ -12,6 +12,10 @@ G_BEGIN_DECLS
 GType gst_object_flags_get_type (void);
 #define GST_TYPE_OBJECT_FLAGS (gst_object_flags_get_type())
 
+/* enumerations from "gstallocator.h" */
+GType gst_allocator_flags_get_type (void);
+#define GST_TYPE_ALLOCATOR_FLAGS (gst_allocator_flags_get_type())
+
 /* enumerations from "gstbin.h" */
 GType gst_bin_flags_get_type (void);
 #define GST_TYPE_BIN_FLAGS (gst_bin_flags_get_type())
@@ -119,6 +123,8 @@ GType gst_map_flags_get_type (void);
 /* enumerations from "gstminiobject.h" */
 GType gst_mini_object_flags_get_type (void);
 #define GST_TYPE_MINI_OBJECT_FLAGS (gst_mini_object_flags_get_type())
+GType gst_lock_flags_get_type (void);
+#define GST_TYPE_LOCK_FLAGS (gst_lock_flags_get_type())
 
 /* enumerations from "gstpad.h" */
 GType gst_pad_direction_get_type (void);
@@ -187,12 +193,16 @@ GType gst_tag_merge_mode_get_type (void);
 #define GST_TYPE_TAG_MERGE_MODE (gst_tag_merge_mode_get_type())
 GType gst_tag_flag_get_type (void);
 #define GST_TYPE_TAG_FLAG (gst_tag_flag_get_type())
+GType gst_tag_scope_get_type (void);
+#define GST_TYPE_TAG_SCOPE (gst_tag_scope_get_type())
 
 /* enumerations from "gsttask.h" */
 GType gst_task_state_get_type (void);
 #define GST_TYPE_TASK_STATE (gst_task_state_get_type())
 
 /* enumerations from "gsttoc.h" */
+GType gst_toc_scope_get_type (void);
+#define GST_TYPE_TOC_SCOPE (gst_toc_scope_get_type())
 GType gst_toc_entry_type_get_type (void);
 #define GST_TYPE_TOC_ENTRY_TYPE (gst_toc_entry_type_get_type())
 

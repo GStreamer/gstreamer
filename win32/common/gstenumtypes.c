@@ -25,6 +25,26 @@ gst_object_flags_get_type (void)
   return (GType) id;
 }
 
+/* enumerations from "gstallocator.h" */
+GType
+gst_allocator_flags_get_type (void)
+{
+  static gsize id = 0;
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_ALLOCATOR_FLAG_CUSTOM_ALLOC),
+        "GST_ALLOCATOR_FLAG_CUSTOM_ALLOC", "custom-alloc"},
+    {C_FLAGS (GST_ALLOCATOR_FLAG_LAST), "GST_ALLOCATOR_FLAG_LAST", "last"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_flags_register_static ("GstAllocatorFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gstbin.h" */
 GType
 gst_bin_flags_get_type (void)
@@ -374,8 +394,6 @@ gst_element_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_ELEMENT_FLAG_UNPARENTING), "GST_ELEMENT_FLAG_UNPARENTING",
-        "unparenting"},
     {C_FLAGS (GST_ELEMENT_FLAG_LOCKED_STATE), "GST_ELEMENT_FLAG_LOCKED_STATE",
         "locked-state"},
     {C_FLAGS (GST_ELEMENT_FLAG_SINK), "GST_ELEMENT_FLAG_SINK", "sink"},
@@ -817,6 +835,9 @@ gst_message_type_get_type (void)
     {C_FLAGS (GST_MESSAGE_QOS), "GST_MESSAGE_QOS", "qos"},
     {C_FLAGS (GST_MESSAGE_PROGRESS), "GST_MESSAGE_PROGRESS", "progress"},
     {C_FLAGS (GST_MESSAGE_TOC), "GST_MESSAGE_TOC", "toc"},
+    {C_FLAGS (GST_MESSAGE_RESET_TIME), "GST_MESSAGE_RESET_TIME", "reset-time"},
+    {C_FLAGS (GST_MESSAGE_STREAM_START), "GST_MESSAGE_STREAM_START",
+        "stream-start"},
     {C_FLAGS (GST_MESSAGE_ANY), "GST_MESSAGE_ANY", "any"},
     {0, NULL, NULL}
   };
@@ -976,12 +997,36 @@ gst_mini_object_flags_get_type (void)
 {
   static gsize id = 0;
   static const GFlagsValue values[] = {
+    {C_FLAGS (GST_MINI_OBJECT_FLAG_LOCKABLE), "GST_MINI_OBJECT_FLAG_LOCKABLE",
+        "lockable"},
+    {C_FLAGS (GST_MINI_OBJECT_FLAG_LOCK_READONLY),
+        "GST_MINI_OBJECT_FLAG_LOCK_READONLY", "lock-readonly"},
     {C_FLAGS (GST_MINI_OBJECT_FLAG_LAST), "GST_MINI_OBJECT_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_flags_register_static ("GstMiniObjectFlags", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
+gst_lock_flags_get_type (void)
+{
+  static gsize id = 0;
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_LOCK_FLAG_READ), "GST_LOCK_FLAG_READ", "read"},
+    {C_FLAGS (GST_LOCK_FLAG_WRITE), "GST_LOCK_FLAG_WRITE", "write"},
+    {C_FLAGS (GST_LOCK_FLAG_EXCLUSIVE), "GST_LOCK_FLAG_EXCLUSIVE", "exclusive"},
+    {C_FLAGS (GST_LOCK_FLAG_LAST), "GST_LOCK_FLAG_LAST", "last"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_flags_register_static ("GstLockFlags", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -1188,6 +1233,8 @@ gst_pad_flags_get_type (void)
         "proxy-caps"},
     {C_FLAGS (GST_PAD_FLAG_PROXY_ALLOCATION), "GST_PAD_FLAG_PROXY_ALLOCATION",
         "proxy-allocation"},
+    {C_FLAGS (GST_PAD_FLAG_PROXY_SCHEDULING), "GST_PAD_FLAG_PROXY_SCHEDULING",
+        "proxy-scheduling"},
     {C_FLAGS (GST_PAD_FLAG_LAST), "GST_PAD_FLAG_LAST", "last"},
     {0, NULL, NULL}
   };
@@ -1391,7 +1438,6 @@ gst_query_type_get_type (void)
     {C_ENUM (GST_QUERY_ACCEPT_CAPS), "GST_QUERY_ACCEPT_CAPS", "accept-caps"},
     {C_ENUM (GST_QUERY_CAPS), "GST_QUERY_CAPS", "caps"},
     {C_ENUM (GST_QUERY_DRAIN), "GST_QUERY_DRAIN", "drain"},
-    {C_ENUM (GST_QUERY_TOC), "GST_QUERY_TOC", "toc"},
     {0, NULL, NULL}
   };
 
@@ -1499,6 +1545,7 @@ gst_segment_flags_get_type (void)
     {C_ENUM (GST_SEGMENT_FLAG_NONE), "GST_SEGMENT_FLAG_NONE", "none"},
     {C_ENUM (GST_SEGMENT_FLAG_RESET), "GST_SEGMENT_FLAG_RESET", "reset"},
     {C_ENUM (GST_SEGMENT_FLAG_SKIP), "GST_SEGMENT_FLAG_SKIP", "skip"},
+    {C_ENUM (GST_SEGMENT_FLAG_SEGMENT), "GST_SEGMENT_FLAG_SEGMENT", "segment"},
     {0, NULL, NULL}
   };
 
@@ -1577,6 +1624,24 @@ gst_tag_flag_get_type (void)
   return (GType) id;
 }
 
+GType
+gst_tag_scope_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_TAG_SCOPE_STREAM), "GST_TAG_SCOPE_STREAM", "stream"},
+    {C_ENUM (GST_TAG_SCOPE_GLOBAL), "GST_TAG_SCOPE_GLOBAL", "global"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstTagScope", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gsttask.h" */
 GType
 gst_task_state_get_type (void)
@@ -1599,14 +1664,39 @@ gst_task_state_get_type (void)
 
 /* enumerations from "gsttoc.h" */
 GType
+gst_toc_scope_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_TOC_SCOPE_GLOBAL), "GST_TOC_SCOPE_GLOBAL", "global"},
+    {C_ENUM (GST_TOC_SCOPE_CURRENT), "GST_TOC_SCOPE_CURRENT", "current"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstTocScope", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
+GType
 gst_toc_entry_type_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
-    {C_ENUM (GST_TOC_ENTRY_TYPE_CHAPTER), "GST_TOC_ENTRY_TYPE_CHAPTER",
-        "chapter"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_ANGLE), "GST_TOC_ENTRY_TYPE_ANGLE", "angle"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_VERSION), "GST_TOC_ENTRY_TYPE_VERSION",
+        "version"},
     {C_ENUM (GST_TOC_ENTRY_TYPE_EDITION), "GST_TOC_ENTRY_TYPE_EDITION",
         "edition"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_INVALID), "GST_TOC_ENTRY_TYPE_INVALID",
+        "invalid"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_TITLE), "GST_TOC_ENTRY_TYPE_TITLE", "title"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_TRACK), "GST_TOC_ENTRY_TYPE_TRACK", "track"},
+    {C_ENUM (GST_TOC_ENTRY_TYPE_CHAPTER), "GST_TOC_ENTRY_TYPE_CHAPTER",
+        "chapter"},
     {0, NULL, NULL}
   };
 
@@ -1648,12 +1738,12 @@ gst_uri_error_get_type (void)
 {
   static gsize id = 0;
   static const GEnumValue values[] = {
-    {C_ENUM (GST_URI_ERROR_BAD_PROTOCOL), "GST_URI_ERROR_BAD_PROTOCOL",
-        "protocol"},
-    {C_ENUM (GST_URI_ERROR_BAD_URI), "GST_URI_ERROR_BAD_URI", "uri"},
-    {C_ENUM (GST_URI_ERROR_BAD_STATE), "GST_URI_ERROR_BAD_STATE", "state"},
+    {C_ENUM (GST_URI_ERROR_UNSUPPORTED_PROTOCOL),
+        "GST_URI_ERROR_UNSUPPORTED_PROTOCOL", "unsupported-protocol"},
+    {C_ENUM (GST_URI_ERROR_BAD_URI), "GST_URI_ERROR_BAD_URI", "bad-uri"},
+    {C_ENUM (GST_URI_ERROR_BAD_STATE), "GST_URI_ERROR_BAD_STATE", "bad-state"},
     {C_ENUM (GST_URI_ERROR_BAD_REFERENCE), "GST_URI_ERROR_BAD_REFERENCE",
-        "reference"},
+        "bad-reference"},
     {0, NULL, NULL}
   };
 
