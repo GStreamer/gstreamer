@@ -112,6 +112,17 @@ enum
 #undef GST_VIDEO_SIZE_RANGE
 #define GST_VIDEO_SIZE_RANGE "(int) [ 1, 32767]"
 
+/* FIXME: add v210 support
+ * FIXME: add v216 support
+ * FIXME: add NV21 support
+ * FIXME: add UYVP support
+ * FIXME: add A420 support
+ * FIXME: add YUV9 support
+ * FIXME: add YVU9 support
+ * FIXME: add IYU1 support
+ * FIXME: add r210 support
+ */
+
 /* FIXME: if we can do NV12, NV21 shouldn't be so hard */
 #define GST_VIDEO_FORMATS "{ I420, YV12, YUY2, UYVY, AYUV, RGBx, " \
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, " \

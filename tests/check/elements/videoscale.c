@@ -99,7 +99,7 @@ check_pad_template (GstPadTemplate * tmpl)
           static gboolean shown_fixme[100] = { FALSE, };
 
           if (!shown_fixme[i]) {
-            GST_ERROR ("FIXME: add %s support to videoscale", fmt_str);
+            GST_FIXME ("FIXME: add %s support to videoscale", fmt_str);
             shown_fixme[i] = TRUE;
           }
           break;
