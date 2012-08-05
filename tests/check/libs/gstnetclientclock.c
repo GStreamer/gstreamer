@@ -73,7 +73,7 @@ GST_START_TEST (test_functioning)
   g_object_get (client, "port", &port, NULL);
 
   /* let the clocks synchronize */
-  g_usleep (G_USEC_PER_SEC / 2);
+  g_usleep (G_USEC_PER_SEC);
 
   servtime = gst_clock_get_time (server);
   clienttime = gst_clock_get_time (client);
