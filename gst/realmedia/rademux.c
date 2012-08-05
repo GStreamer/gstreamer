@@ -319,6 +319,7 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
   const guint8 *data;
   gchar *codec_name = NULL;
   GstCaps *caps = NULL;
+  gchar *stream_id;
   guint avail;
 
   g_assert (demux->ra_version == 4 || demux->ra_version == 3);
@@ -443,10 +444,16 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
       GST_DEBUG_FUNCPTR (gst_real_audio_demux_src_query));
   gst_pad_set_active (demux->srcpad, TRUE);
   gst_pad_use_fixed_caps (demux->srcpad);
-  gst_pad_push_event (demux->srcpad, gst_event_new_stream_start ());
+
+  stream_id =
+      gst_pad_create_stream_id (demux->srcpad, GST_ELEMENT_CAST (demux), NULL);
+  gst_pad_push_event (demux->srcpad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
+
   gst_pad_set_caps (demux->srcpad, caps);
   codec_name = gst_pb_utils_get_codec_description (caps);
   gst_caps_unref (caps);
+
   gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad);
 
   if (demux->byterate_num > 0 && demux->byterate_denom > 0) {

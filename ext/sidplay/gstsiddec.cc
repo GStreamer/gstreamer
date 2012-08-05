@@ -290,6 +290,7 @@ siddec_negotiate (GstSidDec * siddec)
   GstCaps *caps;
   const gchar *str;
   GstAudioFormat format;
+  gchar *stream_id;
 
   allowed = gst_pad_get_allowed_caps (siddec->srcpad);
   if (!allowed)
@@ -332,12 +333,15 @@ siddec_negotiate (GstSidDec * siddec)
   gst_structure_get_int (structure, "channels", &channels);
   siddec->config->channels = channels;
 
+  stream_id = gst_pad_create_stream_id (siddec->srcpad, GST_ELEMENT_CAST (siddec), NULL);
+  gst_pad_push_event (siddec->srcpad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
+
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, gst_audio_format_to_string (format),
       "layout", G_TYPE_STRING, "interleaved",
       "rate", G_TYPE_INT, siddec->config->frequency,
       "channels", G_TYPE_INT, siddec->config->channels, NULL);
-  gst_pad_push_event (siddec->srcpad, gst_event_new_stream_start ());
   gst_pad_set_caps (siddec->srcpad, caps);
   gst_caps_unref (caps);
 

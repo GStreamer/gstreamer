@@ -2367,12 +2367,20 @@ static void
 gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
 {
   if (!stream->active) {
+    gchar *stream_id;
+
     GST_INFO_OBJECT (demux, "Activating stream %2u, pad %s, caps %"
         GST_PTR_FORMAT, stream->id, GST_PAD_NAME (stream->pad), stream->caps);
     gst_pad_set_active (stream->pad, TRUE);
+
+    stream_id =
+        gst_pad_create_stream_id_printf (stream->pad, GST_ELEMENT_CAST (demux),
+        "%u", stream->id);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
     gst_pad_set_caps (stream->pad, stream->caps);
+
     gst_element_add_pad (GST_ELEMENT_CAST (demux), stream->pad);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
     stream->active = TRUE;
   }
 }

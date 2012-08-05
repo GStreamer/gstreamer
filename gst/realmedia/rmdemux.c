@@ -1281,6 +1281,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   GstCaps *stream_caps = NULL;
   const gchar *codec_tag = NULL;
   gchar *codec_name = NULL;
+  gchar *stream_id;
   int version = 0;
 
   if (stream->subtype == GST_RMDEMUX_STREAM_VIDEO) {
@@ -1487,9 +1488,14 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     GST_DEBUG_OBJECT (rmdemux, "adding pad %s with caps %" GST_PTR_FORMAT
         ", stream_id=%d", GST_PAD_NAME (stream->pad), stream_caps, stream->id);
     gst_pad_set_active (stream->pad, TRUE);
+
+    stream_id =
+        gst_pad_create_stream_id_printf (stream->pad,
+        GST_ELEMENT_CAST (rmdemux), "%u", stream->id);
+    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
+
     gst_pad_set_caps (stream->pad, stream_caps);
-    gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start ());
 
     codec_name = gst_pb_utils_get_codec_description (stream_caps);
 
@@ -1501,6 +1507,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
           codec_tag, codec_name, NULL);
       g_free (codec_name);
     }
+    gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
   }
 
 beach:
