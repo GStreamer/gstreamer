@@ -961,13 +961,6 @@ GST_START_TEST (test_basetransform_negotiation)
 
 GST_END_TEST;
 
-#ifndef tcase_skip_broken_test
-#define tcase_skip_broken_test(chain,test_func) \
-  if (0) { tcase_add_test(chain,test_func); } else { \
-    GST_ERROR ("FIXME: skipping test %s because it's broken.", G_STRINGIFY (test_func)); \
-  }
-#endif
-
 static Suite *
 videoscale_suite (void)
 {
