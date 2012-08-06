@@ -254,6 +254,7 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   MpegTSParseProgram *parseprogram;
   GstPad *pad;
   gint program_num = -1;
+  gchar *stream_id;
 
   g_return_val_if_fail (template != NULL, NULL);
   g_return_val_if_fail (GST_IS_MPEGTS_PARSE (element), NULL);
@@ -281,7 +282,11 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   parse->srcpads = g_list_append (parse->srcpads, pad);
 
   gst_pad_set_active (pad, TRUE);
-  gst_pad_push_event (pad, gst_event_new_stream_start ());
+
+  stream_id = gst_pad_create_stream_id (pad, element, padname + 8);
+  gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
+
   gst_element_add_pad (element, pad);
 
   return pad;

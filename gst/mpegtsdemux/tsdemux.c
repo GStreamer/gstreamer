@@ -959,12 +959,18 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       break;
   }
   if (template && name && caps) {
+    gchar *stream_id;
+
     GST_LOG ("stream:%p creating pad with name %s and caps %s", stream, name,
         gst_caps_to_string (caps));
     pad = gst_pad_new_from_template (template, name);
     gst_pad_set_active (pad, TRUE);
     gst_pad_use_fixed_caps (pad);
-    gst_pad_push_event (pad, gst_event_new_stream_start ());
+    stream_id =
+        gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (base), "%08x",
+        bstream->pid);
+    gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+    g_free (stream_id);
     gst_pad_set_caps (pad, caps);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
     gst_pad_set_event_function (pad, gst_ts_demux_srcpad_event);
