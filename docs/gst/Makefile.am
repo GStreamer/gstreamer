@@ -67,7 +67,12 @@ extra_files = gst-universe.dot
 # CFLAGS and LDFLAGS for compiling scan program. Only needed if your app/lib
 # contains GtkObjects/GObjects and you want to document signals and properties.
 GTKDOC_CFLAGS = $(GST_OBJ_CFLAGS)
-GTKDOC_LIBS = $(GST_OBJ_LIBS)
+GTKDOC_LIBS = $(GST_OBJ_LIBS) \
+	$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/net/libgstnet-@GST_API_VERSION@.la
+
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
