@@ -309,6 +309,10 @@ void     gst_video_decoder_get_latency (GstVideoDecoder *decoder,
 					GstClockTime *min_latency,
 					GstClockTime *max_latency);
 
+void     gst_video_decoder_get_allocator (GstVideoDecoder *decoder,
+                                          GstAllocator **allocator,
+                                          GstAllocationParams *params);
+GstBufferPool *gst_video_decoder_get_buffer_pool (GstVideoDecoder *decoder);
 
 /* Object methods */
 

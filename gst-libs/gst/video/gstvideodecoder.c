@@ -3141,3 +3141,48 @@ gst_video_decoder_merge_tags (GstVideoDecoder * decoder,
   decoder->priv->tags_changed = TRUE;
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
+
+/**
+ * gst_video_decoder_get_buffer_pool:
+ * @decoder: a #GstVideoDecoder
+ *
+ * Returns: (transfer full): the instance of the #GstBufferPool used
+ * by the decoder; free it after use it
+ */
+GstBufferPool *
+gst_video_decoder_get_buffer_pool (GstVideoDecoder * decoder)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), NULL);
+
+  if (decoder->priv->pool)
+    return gst_object_ref (decoder->priv->pool);
+
+  return NULL;
+}
+
+/**
+ * gst_video_decoder_get_allocator:
+ * @decoder: a #GstVideoDecoder
+ * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * used
+ * @params: (out) (allow-none) (transfer full): the
+ * #GstAllocatorParams of @allocator
+ *
+ * Lets #GstVideoDecoder sub-classes to know the memory @allocator
+ * used by the base class and its @params.
+ *
+ * Unref the @allocator after use it.
+ */
+void
+gst_video_decoder_get_allocator (GstVideoDecoder * decoder,
+    GstAllocator ** allocator, GstAllocationParams * params)
+{
+  g_return_if_fail (GST_IS_VIDEO_DECODER (decoder));
+
+  if (allocator)
+    *allocator = decoder->priv->allocator ?
+        gst_object_ref (decoder->priv->allocator) : NULL;
+
+  if (params)
+    *params = decoder->priv->params;
+}
