@@ -195,7 +195,7 @@ gst_vaapi_window_wayland_render(
     struct wl_display * const wl_display = GST_VAAPI_OBJECT_WL_DISPLAY(window);
     struct wl_buffer *buffer;
     struct wl_callback *callback;
-    guint width, height;
+    guint width, height, va_flags;
     VASurfaceID surface_id;
     VAStatus status;
 
@@ -224,11 +224,23 @@ gst_vaapi_window_wayland_render(
     if (priv->redraw_pending) 
 	wl_display_iterate(wl_display, WL_DISPLAY_READABLE);
 
+    /* XXX: use VA/VPP for other filters */
+    va_flags = from_GstVaapiSurfaceRenderFlags(flags);
     status = vaGetSurfaceBufferWl(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
         surface_id,
+        va_flags & (VA_TOP_FIELD|VA_BOTTOM_FIELD),
         &buffer
     );
+    if (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED) {
+        /* XXX: de-interlacing flags not supported, try with VPP? */
+        status = vaGetSurfaceBufferWl(
+            GST_VAAPI_DISPLAY_VADISPLAY(display),
+            surface_id,
+            VA_FRAME_PICTURE,
+            &buffer
+        );
+    }
     if (!vaapi_check_status(status, "vaGetSurfaceBufferWl()"))
         return FALSE;
 
