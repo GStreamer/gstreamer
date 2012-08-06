@@ -1206,9 +1206,13 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       if (GST_IS_URI_HANDLER (src)) {
         gchar *uri = gst_uri_handler_get_uri (GST_URI_HANDLER (src));
 
-        gst_query_set_uri (query, uri);
-        g_free (uri);
-        res = TRUE;
+        if (uri != NULL) {
+          gst_query_set_uri (query, uri);
+          g_free (uri);
+          res = TRUE;
+        } else {
+          res = FALSE;
+        }
       } else {
         res = FALSE;
       }
