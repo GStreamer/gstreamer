@@ -251,6 +251,8 @@ struct _GstDiscovererClass {
   void        (*discovered)      (GstDiscoverer *discoverer,
                                   GstDiscovererInfo *info,
 				  const GError *err);
+  void        (*source_setup)    (GstDiscoverer *discoverer,
+                                  GstElement *source);
 
   gpointer _reserved[GST_PADDING];
 };

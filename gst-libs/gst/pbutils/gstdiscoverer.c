@@ -120,6 +120,7 @@ struct _GstDiscovererPrivate
   /* Handler ids for various callbacks */
   gulong pad_added_id;
   gulong pad_remove_id;
+  gulong source_chg_id;
   gulong element_added_id;
   gulong bus_cb_id;
 };
@@ -148,6 +149,7 @@ enum
   SIGNAL_FINISHED,
   SIGNAL_STARTING,
   SIGNAL_DISCOVERED,
+  SIGNAL_SOURCE_SETUP,
   LAST_SIGNAL
 };
 
@@ -171,6 +173,8 @@ static void uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     GstDiscoverer * dc);
 static void uridecodebin_pad_removed_cb (GstElement * uridecodebin,
     GstPad * pad, GstDiscoverer * dc);
+static void uridecodebin_source_changed_cb (GstElement * uridecodebin,
+    GParamSpec * pspec, GstDiscoverer * dc);
 
 static void gst_discoverer_dispose (GObject * dc);
 static void gst_discoverer_set_property (GObject * object, guint prop_id,
@@ -243,6 +247,25 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
       NULL, NULL, g_cclosure_marshal_generic,
       G_TYPE_NONE, 2, GST_TYPE_DISCOVERER_INFO,
       G_TYPE_ERROR | G_SIGNAL_TYPE_STATIC_SCOPE);
+
+  /**
+   * GstDiscoverer::source-setup:
+   * @discoverer: the #GstDiscoverer
+   * @source: source element
+   *
+   * This signal is emitted after the source element has been created for, so
+   * the URI being discovered, so it can be configured by setting additional
+   * properties (e.g. set a proxy server for an http source, or set the device
+   * and read speed for an audio cd source).
+   *
+   * This signal is usually emitted from the context of a GStreamer streaming
+   * thread.
+   */
+  gst_discoverer_signals[SIGNAL_SOURCE_SETUP] =
+      g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDiscovererClass, source_setup),
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
+      GST_TYPE_ELEMENT);
 }
 
 static void
@@ -292,6 +315,9 @@ gst_discoverer_init (GstDiscoverer * dc)
   dc->priv->pad_remove_id =
       g_signal_connect_object (dc->priv->uridecodebin, "pad-removed",
       G_CALLBACK (uridecodebin_pad_removed_cb), dc, 0);
+  dc->priv->source_chg_id =
+      g_signal_connect_object (dc->priv->uridecodebin, "notify::source",
+      G_CALLBACK (uridecodebin_source_changed_cb), dc, 0);
 
   GST_LOG_OBJECT (dc, "Getting pipeline bus");
   dc->priv->bus = gst_pipeline_get_bus ((GstPipeline *) dc->priv->pipeline);
@@ -350,6 +376,7 @@ gst_discoverer_dispose (GObject * obj)
     /* Workaround for bug #118536 */
     DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->pad_added_id);
     DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->pad_remove_id);
+    DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->source_chg_id);
     DISCONNECT_SIGNAL (dc->priv->uridecodebin, dc->priv->element_added_id);
     DISCONNECT_SIGNAL (dc->priv->bus, dc->priv->bus_cb_id);
 
@@ -506,6 +533,20 @@ got_subtitle_data (GstPad * pad, GstPadProbeInfo * info, GstDiscoverer * dc)
 
   return GST_PAD_PROBE_REMOVE;
 
+}
+
+static void
+uridecodebin_source_changed_cb (GstElement * uridecodebin,
+    GParamSpec * pspec, GstDiscoverer * dc)
+{
+  GstElement *src;
+  /* get a handle to the source */
+  g_object_get (uridecodebin, pspec->name, &src, NULL);
+
+  GST_DEBUG_OBJECT (dc, "got a new source %p", src);
+
+  g_signal_emit (dc, gst_discoverer_signals[SIGNAL_SOURCE_SETUP], 0, src);
+  gst_object_unref (src);
 }
 
 static void
