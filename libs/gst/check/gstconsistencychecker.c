@@ -123,7 +123,8 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
     if (GST_EVENT_IS_SERIALIZED (event)) {
       fail_if (!consist->saw_stream_start
           && GST_EVENT_TYPE (event) != GST_EVENT_STREAM_START,
-          "Got a serialized event before a STREAM_START");
+          "Got a serialized event (%s) before a STREAM_START",
+          GST_EVENT_TYPE_NAME (event));
       consist->saw_serialized_event = TRUE;
     }
   }
