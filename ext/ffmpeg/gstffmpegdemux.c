@@ -926,7 +926,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   const gchar *codec;
   AVCodecContext *ctx;
   GstFFStream *stream;
-  gchar *stream_id, *tmp;
+  gchar *stream_id;
 
   ctx = avstream->codec;
 
