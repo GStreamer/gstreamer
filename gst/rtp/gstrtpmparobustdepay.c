@@ -505,13 +505,13 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
 
     if (rtpmpadepay->offset == gst_buffer_get_size (frame->buffer)) {
       if (g_list_next (rtpmpadepay->cur_adu_frame)) {
-        GST_LOG_OBJECT (rtpmpadepay,
-            "moving to next ADU frame, size %d, side_info %d",
-            frame->size, frame->side_info);
         rtpmpadepay->size += frame->data_size;
         rtpmpadepay->cur_adu_frame = g_list_next (rtpmpadepay->cur_adu_frame);
         frame = (GstADUFrame *) rtpmpadepay->cur_adu_frame->data;
         rtpmpadepay->offset = 0;
+        GST_LOG_OBJECT (rtpmpadepay,
+            "moving to next ADU frame, size %d, side_info %d, backpointer %d",
+            frame->size, frame->side_info, frame->backpointer);
         /* layer I and II packets have no bitreservoir and must be sent as-is;
          * so flush any pending frame */
         if (G_UNLIKELY (frame->layer != 3 && rtpmpadepay->mp3_frame))
