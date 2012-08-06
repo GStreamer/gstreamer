@@ -282,7 +282,7 @@ gst_rtp_mpa_robust_depay_generate_dummy_frame (GstRtpMPARobustDepay *
   dummy->size =
       mp3_type_frame_length_from_header (GST_ELEMENT_CAST (rtpmpadepay),
       dummy->header, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-  dummy->data_size = dummy->size - dummy->side_info;
+  dummy->data_size = dummy->size - 4 - dummy->side_info;
   dummy->backpointer = 0;
 
   dummy->buffer = gst_buffer_new_and_alloc (dummy->side_info + 4);
