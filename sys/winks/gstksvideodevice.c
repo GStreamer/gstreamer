@@ -228,13 +228,13 @@ gst_ks_video_device_parse_win32_error (const gchar * func_name,
         FORMAT_MESSAGE_IGNORE_INSERTS, NULL, error_code, 0, buf, sizeof (buf),
         NULL);
     if (result != 0) {
-      g_string_append_printf (message, "0x%08x: %s", error_code,
+      g_string_append_printf (message, "0x%08x: %s", (guint) error_code,
           g_strchomp (buf));
     } else {
       DWORD format_error_code = GetLastError ();
 
       g_string_append_printf (message,
-          "<0x%08x (FormatMessage error code: %s)>", error_code,
+          "<0x%08x (FormatMessage error code: %s)>", (guint) error_code,
           (format_error_code == ERROR_MR_MID_NOT_FOUND)
           ? "no system error message found"
           : "failed to retrieve system error message");
@@ -340,7 +340,7 @@ gst_ks_video_device_dump_supported_property_sets (GstKsVideoDevice * self,
 {
   guint i;
 
-  GST_DEBUG ("%s supports %d property set%s", obj_name, propsets_len,
+  GST_DEBUG ("%s supports %lu property set%s", obj_name, propsets_len,
       (propsets_len != 1) ? "s" : "");
 
   for (i = 0; i < propsets_len; i++) {
@@ -589,7 +589,7 @@ gst_ks_video_device_create_pin (GstKsVideoDevice * self,
     }
   }
 
-  GST_DEBUG ("num_outstanding: %d alignment: 0x%08x", *num_outstanding,
+  GST_DEBUG ("num_outstanding: %lu alignment: 0x%08x", *num_outstanding,
       alignment);
 
   if (*num_outstanding == 0 || *num_outstanding > MAX_OUTSTANDING_FRAMES) {
@@ -1080,7 +1080,7 @@ gst_ks_video_device_read_frame (GstKsVideoDevice * self, GstBuffer ** buf,
 
           GST_DEBUG ("PictureNumber=%" G_GUINT64_FORMAT ", DropCount=%"
               G_GUINT64_FORMAT ", PresentationTime=%" GST_TIME_FORMAT
-              ", Duration=%" GST_TIME_FORMAT ", OptionsFlags=%s: %d bytes",
+              ", Duration=%" GST_TIME_FORMAT ", OptionsFlags=%s: %lu bytes",
               frame_info->PictureNumber, frame_info->DropCount,
               GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration),
               options_flags_str, hdr->DataUsed);
