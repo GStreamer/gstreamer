@@ -293,6 +293,10 @@ void            gst_audio_encoder_set_drainable (GstAudioEncoder * enc,
 
 gboolean        gst_audio_encoder_get_drainable (GstAudioEncoder * enc);
 
+void            gst_audio_encoder_get_allocator (GstAudioEncoder * enc,
+                                                 GstAllocator ** allocator,
+                                                 GstAllocationParams * params);
+
 void            gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
                                               const GstTagList * tags, GstTagMergeMode mode);
 

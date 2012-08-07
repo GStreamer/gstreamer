@@ -2693,3 +2693,30 @@ done:
 
   return buffer;
 }
+
+/**
+ * gst_audio_encoder_get_allocator:
+ * @enc: a #GstAudioEncoder
+ * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * used
+ * @params: (out) (allow-none) (transfer full): the
+ * #GstAllocatorParams of @allocator
+ *
+ * Lets #GstAudioEncoder sub-classes to know the memory @allocator
+ * used by the base class and its @params.
+ *
+ * Unref the @allocator after use it.
+ */
+void
+gst_audio_encoder_get_allocator (GstAudioEncoder * enc,
+    GstAllocator ** allocator, GstAllocationParams * params)
+{
+  g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
+
+  if (allocator)
+    *allocator = enc->priv->ctx.allocator ?
+        gst_object_ref (enc->priv->ctx.allocator) : NULL;
+
+  if (params)
+    *params = enc->priv->ctx.params;
+}
