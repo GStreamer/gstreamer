@@ -259,6 +259,12 @@ gboolean        gst_base_src_new_seamless_segment (GstBaseSrc *src, gint64 start
 
 gboolean        gst_base_src_set_caps         (GstBaseSrc *src, GstCaps *caps);
 
+GstBufferPool * gst_base_src_get_buffer_pool  (GstBaseSrc *src);
+void            gst_base_src_get_allocator    (GstBaseSrc *src,
+                                               GstAllocator **allocator,
+                                               GstAllocationParams *params);
+
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SRC_H__ */
