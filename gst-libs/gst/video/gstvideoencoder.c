@@ -2039,3 +2039,30 @@ gst_video_encoder_merge_tags (GstVideoEncoder * encoder,
   encoder->priv->tags_changed = TRUE;
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 }
+
+/**
+ * gst_video_encoder_get_allocator:
+ * @encoder: a #GstVideoEncoder
+ * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * used
+ * @params: (out) (allow-none) (transfer full): the
+ * #GstAllocatorParams of @allocator
+ *
+ * Lets #GstVideoEncoder sub-classes to know the memory @allocator
+ * used by the base class and its @params.
+ *
+ * Unref the @allocator after use it.
+ */
+void
+gst_video_encoder_get_allocator (GstVideoEncoder * encoder,
+    GstAllocator ** allocator, GstAllocationParams * params)
+{
+  g_return_if_fail (GST_IS_VIDEO_ENCODER (encoder));
+
+  if (allocator)
+    *allocator = encoder->priv->allocator ?
+        gst_object_ref (encoder->priv->allocator) : NULL;
+
+  if (params)
+    *params = encoder->priv->params;
+}

@@ -298,6 +298,10 @@ void                 gst_video_encoder_merge_tags  (GstVideoEncoder *encoder,
                                                     const GstTagList *tags,
                                                     GstTagMergeMode mode);
 
+void                 gst_video_encoder_get_allocator (GstVideoEncoder *encoder,
+                                                      GstAllocator **allocator,
+                                                      GstAllocationParams *params);
+
 G_END_DECLS
 
 #endif
