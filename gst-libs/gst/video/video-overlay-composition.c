@@ -691,7 +691,8 @@ gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
   height = vmeta->height;
 
   /* technically ((height-1)*stride)+width might be okay too */
-  g_return_val_if_fail (gst_buffer_get_size (pixels) >= height * width, NULL);
+  g_return_val_if_fail (gst_buffer_get_size (pixels) >= height * width * 4,
+      NULL);
   g_return_val_if_fail (height > 0 && width > 0, NULL);
 
   rect = g_slice_new0 (GstVideoOverlayRectangle);
