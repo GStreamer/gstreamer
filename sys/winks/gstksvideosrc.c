@@ -721,6 +721,8 @@ gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
       if (!gst_ks_video_src_start_worker (self))
         goto open_failed;
       break;
+    default:
+      break;
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
@@ -728,6 +730,8 @@ gst_ks_video_src_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ks_video_src_stop_worker (self);
+      break;
+    default:
       break;
   }
 
