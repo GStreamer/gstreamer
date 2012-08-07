@@ -184,6 +184,9 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-flac")
     );
 
+static GstBuffer *gst_flac_parse_generate_vorbiscomment (GstFlacParse *
+    flacparse);
+
 static void gst_flac_parse_finalize (GObject * object);
 static void gst_flac_parse_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -1251,6 +1254,16 @@ gst_flac_parse_handle_headers (GstFlacParse * flacparse)
     gst_buffer_unmap (header, &map);
   }
 
+  /* at least this one we can generate easily
+   * to provide full headers downstream */
+  if (vorbiscomment == NULL && streaminfo != NULL) {
+    GST_DEBUG_OBJECT (flacparse,
+        "missing vorbiscomment header; generating dummy");
+    vorbiscomment = gst_flac_parse_generate_vorbiscomment (flacparse);
+    flacparse->headers = g_list_insert (flacparse->headers, vorbiscomment,
+        g_list_index (flacparse->headers, streaminfo) + 1);
+  }
+
   if (marker == NULL || streaminfo == NULL || vorbiscomment == NULL) {
     GST_WARNING_OBJECT (flacparse,
         "missing header %p %p %p, muxing into container "
@@ -1339,10 +1352,56 @@ push_headers:
   return res;
 }
 
+/* empty vorbiscomment */
+static GstBuffer *
+gst_flac_parse_generate_vorbiscomment (GstFlacParse * flacparse)
+{
+  GstTagList *taglist = gst_tag_list_new_empty ();
+  guchar header[4];
+  guint size;
+  GstBuffer *vorbiscomment;
+  GstMapInfo map;
+
+  header[0] = 0x84;             /* is_last = 1; type = 4; */
+
+  vorbiscomment =
+      gst_tag_list_to_vorbiscomment_buffer (taglist, header,
+      sizeof (header), NULL);
+  gst_tag_list_unref (taglist);
+
+  gst_buffer_map (vorbiscomment, &map, GST_MAP_WRITE);
+
+  /* Get rid of framing bit */
+  if (map.data[map.size - 1] == 1) {
+    GstBuffer *sub;
+
+    sub =
+        gst_buffer_copy_region (vorbiscomment, GST_BUFFER_COPY_ALL, 0,
+        map.size - 1);
+    gst_buffer_unmap (vorbiscomment, &map);
+    gst_buffer_unref (vorbiscomment);
+    vorbiscomment = sub;
+    gst_buffer_map (vorbiscomment, &map, GST_MAP_WRITE);
+  }
+
+  size = map.size - 4;
+  map.data[1] = ((size & 0xFF0000) >> 16);
+  map.data[2] = ((size & 0x00FF00) >> 8);
+  map.data[3] = (size & 0x0000FF);
+  gst_buffer_unmap (vorbiscomment, &map);
+
+  GST_BUFFER_TIMESTAMP (vorbiscomment) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (vorbiscomment) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (vorbiscomment) = 0;
+  GST_BUFFER_OFFSET_END (vorbiscomment) = 0;
+
+  return vorbiscomment;
+}
+
 static gboolean
 gst_flac_parse_generate_headers (GstFlacParse * flacparse)
 {
-  GstBuffer *marker, *streaminfo, *vorbiscomment;
+  GstBuffer *marker, *streaminfo;
   GstMapInfo map;
 
   marker = gst_buffer_new_and_alloc (4);
@@ -1411,46 +1470,8 @@ gst_flac_parse_generate_headers (GstFlacParse * flacparse)
   GST_BUFFER_OFFSET_END (streaminfo) = 0;
   flacparse->headers = g_list_append (flacparse->headers, streaminfo);
 
-  /* empty vorbiscomment */
-  {
-    GstTagList *taglist = gst_tag_list_new_empty ();
-    guchar header[4];
-    guint size;
-
-    header[0] = 0x84;           /* is_last = 1; type = 4; */
-
-    vorbiscomment =
-        gst_tag_list_to_vorbiscomment_buffer (taglist, header,
-        sizeof (header), NULL);
-    gst_tag_list_unref (taglist);
-
-    gst_buffer_map (vorbiscomment, &map, GST_MAP_WRITE);
-
-    /* Get rid of framing bit */
-    if (map.data[map.size - 1] == 1) {
-      GstBuffer *sub;
-
-      sub =
-          gst_buffer_copy_region (vorbiscomment, GST_BUFFER_COPY_ALL, 0,
-          map.size - 1);
-      gst_buffer_unmap (vorbiscomment, &map);
-      gst_buffer_unref (vorbiscomment);
-      vorbiscomment = sub;
-      gst_buffer_map (vorbiscomment, &map, GST_MAP_WRITE);
-    }
-
-    size = map.size - 4;
-    map.data[1] = ((size & 0xFF0000) >> 16);
-    map.data[2] = ((size & 0x00FF00) >> 8);
-    map.data[3] = (size & 0x0000FF);
-    gst_buffer_unmap (vorbiscomment, &map);
-
-    GST_BUFFER_TIMESTAMP (vorbiscomment) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (vorbiscomment) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (vorbiscomment) = 0;
-    GST_BUFFER_OFFSET_END (vorbiscomment) = 0;
-    flacparse->headers = g_list_append (flacparse->headers, vorbiscomment);
-  }
+  flacparse->headers = g_list_append (flacparse->headers,
+      gst_flac_parse_generate_vorbiscomment (flacparse));
 
   return TRUE;
 }
