@@ -713,7 +713,7 @@ gst_ks_video_device_set_caps (GstKsVideoDevice * self, GstCaps * caps)
 
   /* State to be committed on success */
   KsVideoMediaType *media_type = NULL;
-  guint width, height, fps_n, fps_d;
+  gint width, height, fps_n, fps_d;
   HANDLE pin_handle = INVALID_HANDLE_VALUE;
 
   /* Reset? */
