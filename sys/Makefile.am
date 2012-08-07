@@ -40,6 +40,12 @@ else
 DIRECTDRAW_DIR=
 endif
 
+if USE_DIRECTSHOW
+DIRECTSHOW_DIR=winks
+else
+DIRECTSHOW_DIR=
+endif
+
 if USE_DIRECTSOUND
 DIRECTSOUND_DIR=directsound
 else
@@ -124,7 +130,7 @@ else
 WINSCREENCAP_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(APPLE_MEDIA_DIR) $(AVC_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DVB_DIR) $(FBDEV_DIR) $(LINSYS_DIR) $(OSX_VIDEO_DIR) $(PVR_DIR) $(QT_DIR) $(SHM_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR)
+SUBDIRS = $(ACM_DIR) $(APPLE_MEDIA_DIR) $(AVC_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DIRECTSHOW_DIR) $(DVB_DIR) $(FBDEV_DIR) $(LINSYS_DIR) $(OSX_VIDEO_DIR) $(PVR_DIR) $(QT_DIR) $(SHM_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR)
 
 DIST_SUBDIRS = acmenc acmmp3dec applemedia avc d3dvideosink decklink directdraw directsound dvb linsys fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
 		osxvideo pvr2d qtwrapper shm vcd vdpau wasapi wininet winks winscreencap

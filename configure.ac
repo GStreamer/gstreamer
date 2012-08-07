@@ -556,6 +556,48 @@ AG_GST_CHECK_FEATURE(DIRECT3D9, [Direct3D9], winscreencap, [
   AC_SUBST(HAVE_DIRECT3D9)
 ])
 
+dnl DirectShow
+translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSHOW, true)
+AG_GST_CHECK_FEATURE(DIRECTSHOW, [DirectShow plug-in], winks, [
+  HAVE_DIRECTSHOW="no"
+  save_CFLAGS="$CFLAGS"
+  save_LDFLAGS="$LDFLAGS"
+  save_LIBS="$LIBS"
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
+  LIBS="$LIBS -lole32 -luuid -lstrmiids"
+  AC_MSG_CHECKING(for DirectShow LDFLAGS)
+  AC_LINK_IFELSE([
+#include <windows.h>
+#include <strmif.h>
+#include <uuids.h>
+
+int main () {
+  IGraphBuilder *pGraph = NULL;
+  HRESULT hr = CoInitialize(NULL);
+  hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, 
+                        &IID_IGraphBuilder, (void **)&pGraph);
+
+  return 0;
+}
+],
+    [HAVE_DIRECTSHOW="yes"],
+    [HAVE_DIRECTSHOW="no"])
+  AC_MSG_RESULT($HAVE_DIRECTSHOW)
+  CFLAGS=$save_CFLAGS
+  LDFLAGS=$save_LDFLAGS
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_DIRECTSHOW" = "xyes";  then
+    dnl this is much more than we want
+    DIRECTSHOW_LIBS="-ldxguid -lole32 -luuid -lstrmiids -lksuser -lsetupapi"
+    AC_SUBST(DIRECTX_CFLAGS)
+    AC_SUBST(DIRECTX_LDFLAGS)
+    AC_SUBST(DIRECTSHOW_LIBS)
+  fi
+  AC_SUBST(HAVE_DIRECTSHOW)
+])
+
 dnl *** AppleMedia (OS X and iOS) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_APPLE_MEDIA, true)
 HAVE_APPLE_MEDIA="no"
