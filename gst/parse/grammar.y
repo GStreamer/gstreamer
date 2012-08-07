@@ -287,7 +287,7 @@ gst_parse_free_delayed_set (DelayedSet *set)
 }
 
 static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
-                                gpointer data);
+    const gchar * name, gpointer data);
 
 static void
 gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
@@ -326,8 +326,9 @@ gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
   }
 }
 
-static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
-                                gpointer data)
+static void
+gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
+    const gchar * name, gpointer data)
 {
   DelayedSet *set = (DelayedSet *) data;
   GParamSpec *pspec;
@@ -336,7 +337,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   GType value_type;
 
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "new child %s, checking property %s",
-      GST_OBJECT_NAME(object), set->name);
+      name, set->name);
 
   if (gst_child_proxy_lookup (G_OBJECT (child_proxy), set->name, &target, &pspec)) {
     gboolean got_value = FALSE;
