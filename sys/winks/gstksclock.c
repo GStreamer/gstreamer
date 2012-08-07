@@ -99,10 +99,7 @@ gst_ks_clock_init (GstKsClock * self, GstKsClockClass * gclass)
 static void
 gst_ks_clock_dispose (GObject * object)
 {
-  GstKsClock *self = GST_KS_CLOCK (object);
-  GstKsClockPrivate *priv = GST_KS_CLOCK_GET_PRIVATE (self);
-
-  g_assert (!priv->open);
+  g_assert (!GST_KS_CLOCK_GET_PRIVATE (GST_KS_CLOCK (object))->open);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -126,7 +123,6 @@ gboolean
 gst_ks_clock_open (GstKsClock * self)
 {
   GstKsClockPrivate *priv = GST_KS_CLOCK_GET_PRIVATE (self);
-  gboolean ret = FALSE;
   GList *devices;
   KsDeviceEntry *device;
   KSSTATE state;

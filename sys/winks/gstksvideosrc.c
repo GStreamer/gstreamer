@@ -365,7 +365,6 @@ gst_ks_video_src_reset (GstKsVideoSrc * self)
 static void
 gst_ks_video_src_apply_driver_quirks (GstKsVideoSrc * self)
 {
-  GstKsVideoSrcPrivate *priv = GST_KS_VIDEO_SRC_GET_PRIVATE (self);
   HMODULE mod;
 
   /*
