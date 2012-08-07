@@ -2921,3 +2921,30 @@ done:
 
   return buffer;
 }
+
+/**
+ * gst_audio_decoder_get_allocator:
+ * @dec: a #GstAudioDecoder
+ * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * used
+ * @params: (out) (allow-none) (transfer full): the
+ * #GstAllocatorParams of @allocator
+ *
+ * Lets #GstAudioDecoder sub-classes to know the memory @allocator
+ * used by the base class and its @params.
+ *
+ * Unref the @allocator after use it.
+ */
+void
+gst_audio_decoder_get_allocator (GstAudioDecoder * dec,
+    GstAllocator ** allocator, GstAllocationParams * params)
+{
+  g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
+
+  if (allocator)
+    *allocator = dec->priv->ctx.allocator ?
+        gst_object_ref (dec->priv->ctx.allocator) : NULL;
+
+  if (params)
+    *params = dec->priv->ctx.params;
+}

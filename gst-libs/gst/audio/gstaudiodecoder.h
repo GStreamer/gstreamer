@@ -344,6 +344,10 @@ void              gst_audio_decoder_set_needs_format (GstAudioDecoder * dec,
 
 gboolean          gst_audio_decoder_get_needs_format (GstAudioDecoder * dec);
 
+void              gst_audio_decoder_get_allocator (GstAudioDecoder * dec,
+                                                   GstAllocator ** allocator,
+                                                   GstAllocationParams * params);
+
 void              gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
                                                 const GstTagList * tags, GstTagMergeMode mode);
 
