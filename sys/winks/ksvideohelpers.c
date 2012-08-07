@@ -33,11 +33,6 @@ static const GUID MEDIASUBTYPE_FOURCC =
     0x38, 0x9B, 0x71}
 };
 
-extern const GUID MEDIASUBTYPE_I420 =
-    { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
-    0x71}
-};
-
 typedef struct _KsVideoDeviceEntry KsVideoDeviceEntry;
 
 struct _KsVideoDeviceEntry
@@ -472,7 +467,7 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
           KSPROPERTY_PIN_CTYPES, &pin_count, sizeof (pin_count), NULL))
     goto beach;
 
-  GST_DEBUG ("pin_count = %d", pin_count);
+  GST_DEBUG ("pin_count = %lu", pin_count);
 
   for (pin_id = 0; pin_id < pin_count; pin_id++) {
     KSPIN_COMMUNICATION pin_comm;
