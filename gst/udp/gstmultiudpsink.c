@@ -537,10 +537,16 @@ no_data:
   }
 send_error:
   {
+    GstFlowReturn res = GST_FLOW_ERROR;
+
     g_mutex_unlock (&sink->client_lock);
     GST_DEBUG ("got send error %s", err->message);
+
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+      res = GST_FLOW_FLUSHING;
+
     g_clear_error (&err);
-    return GST_FLOW_ERROR;
+    return res;
   }
 }
 
