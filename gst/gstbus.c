@@ -664,7 +664,7 @@ gst_bus_peek (GstBus * bus)
 /**
  * gst_bus_set_sync_handler:
  * @bus: a #GstBus to install the handler on
- * @func: The handler function to install
+ * @func: (allow-none): The handler function to install
  * @user_data: User data that will be sent to the handler function.
  * @notify: called when @user_data becomes unused
  *
