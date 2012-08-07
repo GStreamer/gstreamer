@@ -435,12 +435,12 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
 
   /* other video format */
   if (!video_caps) {
-    if (g_strcasecmp (name, "video/x-dv, systemstream=FALSE") == 0) {
+    if (g_ascii_strncasecmp (name, "video/x-dv, systemstream=FALSE", 31) == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
           "systemstream", G_TYPE_BOOLEAN, FALSE,
           "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('d', 'v', 's', 'd'),
           NULL);
-    } else if (g_strcasecmp (name, "video/x-dv, systemstream=TRUE") == 0) {
+    } else if (g_ascii_strncasecmp (name, "video/x-dv, systemstream=TRUE", 31) == 0) {
       video_caps = gst_caps_new_simple ("video/x-dv",
           "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
       return video_caps;

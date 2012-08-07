@@ -25,6 +25,12 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_ks_debug);
 #define GST_CAT_DEFAULT gst_ks_debug
 
+#ifndef STATIC_KSPROPSETID_Wave_Queued
+#define STATIC_KSPROPSETID_Wave_Queued \
+    0x16a15b10L,0x16f0,0x11d0,0xa1,0x95,0x00,0x20,0xaf,0xd1,0x56,0xe4
+DEFINE_GUIDSTRUCT("16a15b10-16f0-11d0-a195-0020afd156e4", KSPROPSETID_Wave_Queued);
+#endif
+
 gboolean
 ks_is_valid_handle (HANDLE h)
 {
