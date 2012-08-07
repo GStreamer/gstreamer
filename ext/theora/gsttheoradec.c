@@ -789,6 +789,7 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf,
   if (packet.bytes && packet.packet[0] & 0x80) {
     if (dec->have_header) {
       GST_WARNING_OBJECT (GST_OBJECT (dec), "Ignoring header");
+      result = GST_CUSTOM_FLOW_DROP;
       goto done;
     }
     result = theora_handle_header_packet (dec, &packet);
