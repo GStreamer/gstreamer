@@ -225,6 +225,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   GstCaps *caps;
   struct ForwardEventData fdata;
   GstPad *retpad;
+  gulong rtp_block, rtcp_block;
 
   GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
 
@@ -313,13 +314,23 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
   }
 
   gst_object_ref (rtp_pad);
+  gst_object_ref (rtcp_pad);
+
+  rtp_block = gst_pad_add_probe (rtp_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      NULL, NULL, NULL);
+  rtcp_block = gst_pad_add_probe (rtcp_pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      NULL, NULL, NULL);
 
   GST_PAD_UNLOCK (demux);
 
   g_signal_emit (G_OBJECT (demux),
       gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD], 0, ssrc, rtp_pad);
 
+  gst_pad_remove_probe (rtp_pad, rtp_block);
+  gst_pad_remove_probe (rtcp_pad, rtcp_block);
+
   gst_object_unref (rtp_pad);
+  gst_object_unref (rtcp_pad);
 
   return retpad;
 }
