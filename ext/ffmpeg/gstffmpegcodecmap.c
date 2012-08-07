@@ -1709,12 +1709,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
       switch (codec->type) {
         case AVMEDIA_TYPE_VIDEO:
-          mime = g_strdup_printf ("video/x-gst_ff-%s", codec->name);
+          mime = g_strdup_printf ("video/x-gst-av-%s", codec->name);
           caps = gst_ff_vid_caps_new (context, codec_id, encode, mime, NULL);
           g_free (mime);
           break;
         case AVMEDIA_TYPE_AUDIO:
-          mime = g_strdup_printf ("audio/x-gst_ff-%s", codec->name);
+          mime = g_strdup_printf ("audio/x-gst-av-%s", codec->name);
           caps = gst_ff_aud_caps_new (context, codec_id, encode, mime, NULL);
           if (context)
             gst_caps_set_simple (caps,
@@ -2771,7 +2771,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     gchar *name;
 
     GST_LOG ("Could not create stream format caps for %s", format_name);
-    name = g_strdup_printf ("application/x-gst_ff-%s", format_name);
+    name = g_strdup_printf ("application/x-gst-av-%s", format_name);
     caps = gst_caps_new_empty_simple (name);
     g_free (name);
   }
@@ -3468,24 +3468,24 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "audio/x-nellymoser")) {
     id = CODEC_ID_NELLYMOSER;
     audio = TRUE;
-  } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15)) {
+  } else if (!strncmp (mimetype, "audio/x-gst-av-", 15)) {
     gchar ext[16];
     AVCodec *codec;
 
     if (strlen (mimetype) <= 30 &&
-        sscanf (mimetype, "audio/x-gst_ff-%s", ext) == 1) {
+        sscanf (mimetype, "audio/x-gst-av-%s", ext) == 1) {
       if ((codec = avcodec_find_decoder_by_name (ext)) ||
           (codec = avcodec_find_encoder_by_name (ext))) {
         id = codec->id;
         audio = TRUE;
       }
     }
-  } else if (!strncmp (mimetype, "video/x-gst_ff-", 15)) {
+  } else if (!strncmp (mimetype, "video/x-gst-av-", 15)) {
     gchar ext[16];
     AVCodec *codec;
 
     if (strlen (mimetype) <= 30 &&
-        sscanf (mimetype, "video/x-gst_ff-%s", ext) == 1) {
+        sscanf (mimetype, "video/x-gst-av-%s", ext) == 1) {
       if ((codec = avcodec_find_decoder_by_name (ext)) ||
           (codec = avcodec_find_encoder_by_name (ext))) {
         id = codec->id;
