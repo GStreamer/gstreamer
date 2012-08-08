@@ -1611,7 +1611,7 @@ colorbalance_value_changed (GtkRange * range, PlaybackApp * app)
   else if (range == GTK_RANGE (app->saturation_scale))
     label = "SATURATION";
   else
-    g_assert_not_reached ();
+    g_return_if_reached ();
 
   val = gtk_range_get_value (range);
 

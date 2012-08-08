@@ -271,6 +271,7 @@ caps_add_channel_configuration (GstCaps * caps,
           channel_mask = CHANNEL_MASK_7_1;
           break;
         default:
+          channel_mask = 0;
           g_assert_not_reached ();
           break;
       }
