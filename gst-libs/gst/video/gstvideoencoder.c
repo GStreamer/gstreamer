@@ -123,6 +123,7 @@
 #include "gstvideoutils.h"
 
 #include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 
 #include <string.h>
 
@@ -746,7 +747,57 @@ static gboolean
 gst_video_encoder_propose_allocation_default (GstVideoEncoder * encoder,
     GstQuery * query)
 {
+  GstCaps *caps;
+  GstVideoInfo info;
+  GstBufferPool *pool;
+  guint size;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (caps == NULL)
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&info, caps))
+    return FALSE;
+
+  size = GST_VIDEO_INFO_SIZE (&info);
+
+  if (gst_query_get_n_allocation_pools (query) == 0) {
+    GstStructure *structure;
+    GstAllocator *allocator = NULL;
+    GstAllocationParams params = { 0, 0, 0, 15, };
+
+    if (gst_query_get_n_allocation_params (query) > 0)
+      gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    else
+      gst_query_add_allocation_param (query, allocator, &params);
+
+    pool = gst_video_buffer_pool_new ();
+
+    structure = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (structure, caps, size, 0, 0);
+    gst_buffer_pool_config_set_allocator (structure, allocator, &params);
+
+    if (allocator)
+      gst_object_unref (allocator);
+
+    if (!gst_buffer_pool_set_config (pool, structure))
+      goto config_failed;
+
+    gst_query_add_allocation_pool (query, pool, size, 0, 0);
+    gst_object_unref (pool);
+    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  }
+
   return TRUE;
+
+  /* ERRORS */
+config_failed:
+  {
+    GST_ERROR_OBJECT (encoder, "failed to set config");
+    gst_object_unref (pool);
+    return FALSE;
+  }
 }
 
 static gboolean
