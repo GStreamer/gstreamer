@@ -9,6 +9,7 @@ camerabin2
 curlfilesink
 curlftpsink
 curlhttpsink
+curlsmtpsink
 deinterleave
 dataurisrc
 faac
