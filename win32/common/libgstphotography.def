@@ -1,14 +1,14 @@
 EXPORTS
-	gst_colour_tone_mode_get_type
-	gst_flash_mode_get_type
-	gst_flicker_reduction_mode_get_type
-	gst_focus_mode_get_type
-	gst_focus_status_get_type
-	gst_photo_caps_get_type
-	gst_photo_shake_risk_get_type
+	gst_photography_caps_get_type
+	gst_photography_color_tone_mode_get_type
+	gst_photography_exposure_mode_get_type
+	gst_photography_flash_mode_get_type
+	gst_photography_flicker_reduction_mode_get_type
+	gst_photography_focus_mode_get_type
+	gst_photography_focus_status_get_type
 	gst_photography_get_aperture
 	gst_photography_get_capabilities
-	gst_photography_get_colour_tone_mode
+	gst_photography_get_color_tone_mode
 	gst_photography_get_config
 	gst_photography_get_ev_compensation
 	gst_photography_get_exposure
@@ -23,9 +23,10 @@ EXPORTS
 	gst_photography_get_zoom
 	gst_photography_noise_reduction_get_type
 	gst_photography_prepare_for_capture
+	gst_photography_scene_mode_get_type
 	gst_photography_set_aperture
 	gst_photography_set_autofocus
-	gst_photography_set_colour_tone_mode
+	gst_photography_set_color_tone_mode
 	gst_photography_set_config
 	gst_photography_set_ev_compensation
 	gst_photography_set_exposure
@@ -37,5 +38,5 @@ EXPORTS
 	gst_photography_set_scene_mode
 	gst_photography_set_white_balance_mode
 	gst_photography_set_zoom
-	gst_scene_mode_get_type
-	gst_white_balance_mode_get_type
+	gst_photography_shake_risk_get_type
+	gst_photography_white_balance_mode_get_type
