@@ -35,6 +35,16 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>0.11.93</revision>
+   <branch>0.11</branch>
+   <name>Rag Doll Physics</name>
+   <created>2012-08-08</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.93.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.92</revision>
    <branch>0.11</branch>
    <name>Hey You</name>

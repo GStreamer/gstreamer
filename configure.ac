@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, cvs and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for cvs/prerelease
-AC_INIT(GStreamer Ugly Plug-ins, 0.11.92.1,
+AC_INIT(GStreamer Ugly Plug-ins, 0.11.93,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-ugly)
 
@@ -47,8 +47,8 @@ AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
 AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.11.91
-GSTPB_REQ=0.11.91
+GST_REQ=0.11.93
+GSTPB_REQ=0.11.93
 
 dnl *** autotools stuff ****
 
@@ -149,10 +149,10 @@ AG_GST_CHECK_FUNCTION
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-GLIB_REQ=2.31.14
+GLIB_REQ=2.32.0
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
-ORC_CHECK([0.4.6])
+ORC_CHECK([0.4.16])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
