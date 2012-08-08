@@ -76,36 +76,16 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
   return mem;
 }
 
-GstMemory *
-_gl_allocator_alloc_func (GstAllocator * allocator, gsize size,
-    GstAllocationParams * params, gpointer user_data)
-{
-  g_warning ("use gst_gl_memory_alloc () to allocate from this "
-      "GstGLMemory allocator");
-
-  return NULL;
-}
-
 gpointer
-_gl_mem_map_func (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
+_gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 {
   /* should we perform a {up,down}load? */
   return NULL;
 }
 
 void
-_gl_mem_unmap_func (GstGLMemory * gl_mem)
+_gl_mem_unmap (GstGLMemory * gl_mem)
 {
-}
-
-void
-_gl_mem_free_func (GstGLMemory * gl_mem)
-{
-  gst_gl_display_del_texture (gl_mem->display, &gl_mem->tex_id);
-
-  g_object_unref (gl_mem->display);
-
-  g_slice_free (GstGLMemory, gl_mem);
 }
 
 void
@@ -128,7 +108,6 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   gl_format = src->gl_format;
 
   if (!GLEW_EXT_framebuffer_object) {
-    //turn off the pipeline because Frame buffer object is a not present
     gst_gl_display_set_error (display,
         "Context, EXT_framebuffer_object not supported");
     return;
@@ -197,7 +176,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
         break;
 
       default:
-        GST_ERROR ("General FBO error");
+        GST_ERROR ("Unknown FBO error");
     }
     goto fbo_error;
   }
@@ -215,6 +194,9 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
 
   copy_params->tex_id = tex_id;
 
+  return;
+
+/* ERRORS */
 fbo_error:
   {
     glDeleteRenderbuffers (1, &rboId);
@@ -225,7 +207,7 @@ fbo_error:
 }
 
 GstMemory *
-_gl_mem_copy_func (GstGLMemory * src, gssize offset, gssize size)
+_gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
 {
   GstGLMemory *dest;
   GstGLMemoryCopyParams copy_params;
@@ -250,27 +232,41 @@ _gl_mem_copy_func (GstGLMemory * src, gssize offset, gssize size)
 GstGLMemory *
 gst_gl_memory_copy (GstGLMemory * src)
 {
-  return (GstGLMemory *) _gl_mem_copy_func (src, 0, 0);
+  return (GstGLMemory *) _gl_mem_copy (src, 0, 0);
 }
 
 GstMemory *
-_gl_mem_share_func (GstGLMemory * mem, gssize offset, gssize size)
+_gl_mem_share (GstGLMemory * mem, gssize offset, gssize size)
 {
   return NULL;
 }
 
 gboolean
-_gl_mem_is_span_func (GstGLMemory * mem1, GstGLMemory * mem2, gsize * offset)
+_gl_mem_is_span (GstGLMemory * mem1, GstGLMemory * mem2, gsize * offset)
 {
   return FALSE;
 }
 
-static void
-_gl_mem_destroy_free (GstMiniObject * allocator)
+GstMemory *
+_gl_mem_alloc (GstAllocator * allocator, gsize size,
+    GstAllocationParams * params)
 {
-  GST_LOG ("GLTexture memory allocator freed");
+  g_warning ("use gst_gl_memory_alloc () to allocate from this "
+      "GstGLMemory allocator");
 
-  g_slice_free (GstAllocator, (GstAllocator *) allocator);
+  return NULL;
+}
+
+void
+_gl_mem_free (GstAllocator * allocator, GstMemory * mem)
+{
+  GstGLMemory *gl_mem = (GstGLMemory *) mem;
+
+  gst_gl_display_del_texture (gl_mem->display, &gl_mem->tex_id);
+
+  g_object_unref (gl_mem->display);
+
+  g_slice_free (GstGLMemory, gl_mem);
 }
 
 /**
@@ -291,35 +287,54 @@ gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
       height);
 }
 
+G_DEFINE_TYPE (GstGLAllocator, gst_gl_allocator, GST_TYPE_ALLOCATOR);
+
+static void
+gst_gl_allocator_class_init (GstGLAllocatorClass * klass)
+{
+  GstAllocatorClass *allocator_class;
+
+  allocator_class = (GstAllocatorClass *) klass;
+
+  allocator_class->alloc = _gl_mem_alloc;
+  allocator_class->free = _gl_mem_free;
+}
+
+static void
+gst_gl_allocator_init (GstGLAllocator * allocator)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+
+  alloc->mem_type = GST_GL_MEMORY_ALLOCATOR;
+  alloc->mem_map = (GstMemoryMapFunction) _gl_mem_map;
+  alloc->mem_unmap = (GstMemoryUnmapFunction) _gl_mem_unmap;
+  alloc->mem_copy = (GstMemoryCopyFunction) _gl_mem_copy;
+  alloc->mem_share = (GstMemoryShareFunction) _gl_mem_share;
+  alloc->mem_is_span = (GstMemoryIsSpanFunction) _gl_mem_is_span;
+}
+
 /**
  * gst_gl_memory_init:
  *
- * Initializes the GL Memory allocator. It is safe to call this function multiple times
- *
- * Returns: a #GstAllocator
+ * Initializes the GL Memory allocator. It is safe to call this function
+ * multiple times.  This must be called before any other GstGLMemory operation.
  */
 void
 gst_gl_memory_init (void)
 {
   static volatile gsize _init = 0;
-  static const GstMemoryInfo mem_info = {
-    GST_GL_MEMORY_ALLOCATOR,
-    (GstAllocatorAllocFunction) _gl_allocator_alloc_func,
-    (GstMemoryMapFunction) _gl_mem_map_func,
-    (GstMemoryUnmapFunction) _gl_mem_unmap_func,
-    (GstMemoryFreeFunction) _gl_mem_free_func,
-    (GstMemoryCopyFunction) _gl_mem_copy_func,
-    (GstMemoryShareFunction) _gl_mem_share_func,
-    (GstMemoryIsSpanFunction) _gl_mem_is_span_func,
-  };
 
   if (g_once_init_enter (&_init)) {
-    _gl_allocator = g_slice_new (GstAllocator);
-    gst_allocator_init (_gl_allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC,
-        &mem_info, _gl_mem_destroy_free);
-    gst_allocator_register (GST_GL_MEMORY_ALLOCATOR,
-        gst_allocator_ref (_gl_allocator));
+    _gl_allocator = g_object_new (gst_gl_allocator_get_type (), NULL);
 
+    gst_allocator_register (GST_GL_MEMORY_ALLOCATOR,
+        gst_object_ref (_gl_allocator));
     g_once_init_leave (&_init, 1);
   }
+}
+
+gboolean
+gst_is_gl_memory (GstMemory * mem)
+{
+  return mem->allocator == _gl_allocator;
 }
