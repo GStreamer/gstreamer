@@ -562,7 +562,7 @@ gst_dtmf_src_generate_tone (GstDTMFSrcEvent * event, DTMF_KEY key,
   double i = 0;
   double amplitude, f1, f2;
   double volume_factor;
-  static GstAllocationParams params = { 0, 0, 0, 1, };
+  static GstAllocationParams params = { 0, 1, 0, 0, };
 
   /* Create a buffer for the tone */
   tone_size = ((duration / 1000) * sample_rate * SAMPLE_SIZE * CHANNELS) / 8;
