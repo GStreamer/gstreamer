@@ -42,7 +42,11 @@ enum {
 
     PROP_DISPLAY,
     PROP_CAPS,
+
+    N_PROPERTIES
 };
+
+static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
 static void
 destroy_buffer(GstBuffer *buffer)
@@ -311,22 +315,20 @@ gst_vaapi_decoder_class_init(GstVaapiDecoderClass *klass)
      *
      * The #GstVaapiDisplay this decoder is bound to.
      */
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
+    g_properties[PROP_DISPLAY] =
          g_param_spec_object("display",
                              "Display",
                              "The GstVaapiDisplay this decoder is bound to",
                              GST_VAAPI_TYPE_DISPLAY,
-                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY);
 
-    g_object_class_install_property
-        (object_class,
-         PROP_CAPS,
+    g_properties[PROP_CAPS] =
          g_param_spec_pointer("caps",
                               "Decoder caps",
                               "The decoder caps",
-                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY);
+
+    g_object_class_install_properties(object_class, N_PROPERTIES, g_properties);
 }
 
 static void
@@ -455,7 +457,7 @@ gst_vaapi_decoder_set_picture_size(
     }
 
     if (size_changed)
-        g_object_notify(G_OBJECT(decoder), "caps");
+        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
 }
 
 void
@@ -479,7 +481,7 @@ gst_vaapi_decoder_set_framerate(
             "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
             NULL
         );
-        g_object_notify(G_OBJECT(decoder), "caps");
+        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
     }
 }
 
@@ -504,7 +506,7 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
             "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
             NULL
         );
-        g_object_notify(G_OBJECT(decoder), "caps");
+        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
     }
 }
 
@@ -521,7 +523,7 @@ gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced)
             "interlaced", G_TYPE_BOOLEAN, interlaced,
             NULL
         );
-        g_object_notify(G_OBJECT(decoder), "caps");
+        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
     }
 }
 
