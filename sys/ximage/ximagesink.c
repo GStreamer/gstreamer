@@ -1079,7 +1079,7 @@ gst_ximagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstBufferPool *newpool, *oldpool;
   const GValue *par;
   gint size;
-  static GstAllocationParams params = { 0, 0, 0, 15, };
+  static GstAllocationParams params = { 0, 15, 0, 0, };
 
   ximagesink = GST_XIMAGESINK (bsink);
 

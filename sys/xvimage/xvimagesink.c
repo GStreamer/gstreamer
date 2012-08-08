@@ -1555,7 +1555,7 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;    /* display's PAR */
   guint num, den;
   gint size;
-  static GstAllocationParams params = { 0, 0, 0, 15, };
+  static GstAllocationParams params = { 0, 15, 0, 0, };
 
   xvimagesink = GST_XVIMAGESINK (bsink);
 

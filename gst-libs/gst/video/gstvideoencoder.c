@@ -765,7 +765,7 @@ gst_video_encoder_propose_allocation_default (GstVideoEncoder * encoder,
   if (gst_query_get_n_allocation_pools (query) == 0) {
     GstStructure *structure;
     GstAllocator *allocator = NULL;
-    GstAllocationParams params = { 0, 0, 0, 15, };
+    GstAllocationParams params = { 0, 15, 0, 0 };
 
     if (gst_query_get_n_allocation_params (query) > 0)
       gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
