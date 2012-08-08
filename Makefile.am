@@ -1,4 +1,4 @@
-SUBDIRS = common examples testsuite
+SUBDIRS = common examples testsuite gi
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak

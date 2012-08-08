@@ -7,6 +7,8 @@ AC_INIT(GStreamer GObject Introspectin tests for Python , 0.11.92,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-python)
 
+AG_GST_INIT
+
 dnl initialize automake
 AM_INIT_AUTOMAKE([-Wno-portability 1.10])
 
@@ -36,10 +38,9 @@ AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 dnl required versions of other packages
 dnl Note that they are runtime requirements
 AC_SUBST(GST_REQ,   0.11.92)
-AC_SUBST(GSTPB_REQ, 0.11.92)
 
 dnl check for python
-dnl AM_PATH_PYTHON(2.2)
+dnl AM_PATH_PYTHON(2.5)
 AM_PATH_PYTHON
 AC_MSG_CHECKING(for python >= 2.5)
 prog="
@@ -55,10 +56,37 @@ then
 else
   AC_MSG_ERROR(too old)
 fi
+AS_AC_EXPAND(PYTHONDIR, $pythondir)
+AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
+
+AC_ARG_WITH([pygi_overrides_dir],
+            AC_HELP_STRING([--with-pygi-overrides-dir], [Path to pygobject overrides directory]))
+
+AC_MSG_CHECKING(for pygobject overrides directory)
+if test "x$with_pygi_overrides_dir" = "x" ; then
+        overrides_dir="`$PYTHON -c 'import gi; print(gi._overridesdir)' 2>/dev/null`"
+    # fallback if the previous failed
+    if test "x$overrides_dir" = "x" ; then
+        overrides_dir="${pyexecdir}/gi/overrides"
+    fi
+else
+        overrides_dir="$with_pygi_overrides_dir"
+fi
+
+PYGI_OVERRIDES_DIR="$overrides_dir"
+AC_SUBST(PYGI_OVERRIDES_DIR)
+AC_MSG_RESULT($PYGI_OVERRIDES_DIR)
+
+dnl and set the override directory
+AC_ARG_WITH([pygi_overrides_dir],
+            AC_HELP_STRING([--with-pygi-overrides-dir], [Path to pygobject overrides directory]))
 
 AG_GST_VALGRIND_CHECK
 
 dnl set release date/time
+#AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
+  #["${srcdir}/gst-python.doap"],
+  #[$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
 AC_OUTPUT([
   Makefile
@@ -66,4 +94,6 @@ AC_OUTPUT([
   common/m4/Makefile
   examples/Makefile
   testsuite/Makefile
+  gi/Makefile
+  gi/overrides/Makefile
 ])
