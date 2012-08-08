@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstwaylandsink.la
 
-libgstwaylandsink_la_SOURCES =  gstwaylandsink.c
+libgstwaylandsink_la_SOURCES =  gstwaylandsink.c waylandpool.c
 libgstwaylandsink_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
                                $(WAYLAND_CFLAGS)
 libgstwaylandsink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
@@ -9,4 +9,4 @@ libgstwaylandsink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstwaylandsink_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstwaylandsink.h
+noinst_HEADERS = gstwaylandsink.h waylandpool.h
