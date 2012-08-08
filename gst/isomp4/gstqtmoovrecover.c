@@ -362,7 +362,8 @@ gst_qt_moov_recover_change_state (GstElement * element,
       gst_task_join (qtmr->task);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      g_assert (gst_task_get_state (qtmr->task) == GST_TASK_STOPPED);
+      if (gst_task_get_state (qtmr->task) != GST_TASK_STOPPED)
+        GST_ERROR ("task %p should be stopped by now", qtmr->task);
       gst_object_unref (qtmr->task);
       qtmr->task = NULL;
       g_rec_mutex_clear (&qtmr->task_mutex);
