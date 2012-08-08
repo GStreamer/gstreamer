@@ -102,7 +102,7 @@ GST_START_TEST (test_basic)
     gst_memory_unref (mem);
     gst_memory_unref (mem2);
 
-    gst_allocator_unref (gl_allocator);
+    gst_object_unref (gl_allocator);
   }
 }
 

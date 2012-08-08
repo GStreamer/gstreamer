@@ -23,16 +23,26 @@
 
 #include <gst/gst.h>
 #include <gst/gstmemory.h>
+#include <gst/gstallocator.h>
 
 #include "gstgldisplay.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GL_MEMORY (gst_gl_memory_get_type())
-GType gst_gl_memory_get_type(void);
+#define GST_TYPE_GL_ALLOCATOR (gst_gl_allocator_get_type())
+GType gst_gl_allocator_get_type(void);
+
+#define GST_IS_GL_ALLOCATOR(obj)              (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_GL_ALLOCATOR))
+#define GST_IS_GL_ALLOCATOR_CLASS(klass)      (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GL_ALLOCATOR))
+#define GST_GL_ALLOCATOR_GET_CLASS(obj)       (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_GL_ALLOCATOR, GstGLAllocatorClass))
+#define GST_GL_ALLOCATOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GL_ALLOCATOR, GstGLAllocator))
+#define GST_GL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_ALLOCATOR, GstGLAllocatorClass))
+#define GST_GL_ALLOCATOR_CAST(obj)            ((GstGLAllocator *)(obj))
 
 typedef struct _GstGLMemoryInitParams GstGLMemoryInitParams;
 typedef struct _GstGLMemory GstGLMemory;
+typedef struct _GstGLAllocator GstGLAllocator;
+typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
 
 /**
  * GstGLMemory:
@@ -63,6 +73,18 @@ void gst_gl_memory_init (void);
 
 GstMemory * gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
                                 gsize width, gsize height);
+
+gboolean gst_is_gl_memory (GstMemory * mem);
+
+struct _GstGLAllocator
+{
+  GstAllocator parent;
+};
+
+struct _GstGLAllocatorClass
+{
+  GstAllocatorClass parent_class;
+};
 
 G_END_DECLS
 
