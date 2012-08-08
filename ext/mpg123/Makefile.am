@@ -9,7 +9,7 @@ libgstmpg123_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 libgstmpg123_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstmpg123_la_LIBTOOLFLAGS = --tag=disable-static
 
-noinst_HEADERS = gstmpg123audiodec.c
+noinst_HEADERS = gstmpg123audiodec.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
