@@ -2139,6 +2139,7 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
       ret = gst_rmdemux_descramble_sipr_audio (rmdemux, stream);
       break;
     default:
+      ret = GST_FLOW_ERROR;
       g_assert_not_reached ();
   }
 

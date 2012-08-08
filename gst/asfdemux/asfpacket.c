@@ -60,6 +60,7 @@ asf_packet_read_varlen_int (guint lentype_flags, guint lentype_bit_offset,
       val = GST_READ_UINT32_LE (*p_data);
       break;
     default:
+      val = 0;
       g_assert_not_reached ();
   }
 
