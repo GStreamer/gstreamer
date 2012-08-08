@@ -2,6 +2,12 @@ win32/MANIFEST
 win32/common/config.h
 win32/common/gstudp-enumtypes.c
 win32/common/gstudp-enumtypes.h
+win32/common/gstrtpbin-marshal.c
+win32/common/gstrtpbin-marshal.h
+win32/common/tuner-enumtypes.c
+win32/common/tuner-enumtypes.h
+win32/common/tuner-marshal.c
+win32/common/tuner-marshal.h
 win32/vs6/gst_plugins_good.dsw
 win32/vs6/autogen.dsp
 win32/vs6/libgstalaw.dsp
