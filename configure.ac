@@ -5,7 +5,7 @@ dnl please read gstreamer/docs/random/autotools before changing this file
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/pre
-AC_INIT(GStreamer Good Plug-ins, 0.11.92.1,
+AC_INIT(GStreamer Good Plug-ins, 0.11.93,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-good)
 
@@ -48,8 +48,8 @@ AG_GST_LIBTOOL_PREPARE
 AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.11.91
-GSTPB_REQ=0.11.91
+GST_REQ=0.11.93
+GSTPB_REQ=0.11.93
 
 dnl *** autotools stuff ****
 
@@ -198,11 +198,11 @@ dnl *** checks for dependency libraries ***
 
 
 dnl GLib
-GLIB_REQ=2.31.14
+GLIB_REQ=2.32.0
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
 dnl Orc
-ORC_CHECK([0.4.11])
+ORC_CHECK([0.4.16])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
@@ -234,7 +234,7 @@ AC_SUBST(GSTPB_PREFIX)
 
 dnl GTK is optional and used in examples
 HAVE_GTK=no
-GTK_REQ=3.0.0
+GT_REQ=3.0.0
 if test "x$BUILD_EXAMPLES" = "xyes"; then
   PKG_CHECK_MODULES(GTK, gtk+-$with_gtk >= $GTK_REQ, HAVE_GTK=yes, HAVE_GTK=no)
   dnl some examples need gtk+-x11

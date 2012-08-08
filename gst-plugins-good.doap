@@ -34,6 +34,16 @@ the plug-in code, LGPL or LGPL-compatible for the supporting library).
 
  <release>
   <Version>
+   <revision>0.11.93</revision>
+   <branch>0.11</branch>
+   <name>Poetic Pitbull Revolutions</name>
+   <created>2012-08-08</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-good/gst-plugins-good-0.11.93.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.92</revision>
    <branch>0.11</branch>
    <name>Money</name>
