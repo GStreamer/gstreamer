@@ -36,6 +36,16 @@ A wide range of video and audio decoders, encoders, and filters are included.
 
  <release>
   <Version>
+   <revision>0.11.93</revision>
+   <branch>0.11</branch>
+   <name>Heroines</name>
+   <created>2012-08-08</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.11.93.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.92</revision>
    <branch>0.11</branch>
    <name>Comfortably Numb</name>
