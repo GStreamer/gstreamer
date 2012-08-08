@@ -686,7 +686,7 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   GstVideoFrame frame;
   guint8 *data;
   gint x, y;
-  static GstAllocationParams params = { 0, 0, 0, 3, };
+  static GstAllocationParams params = { 0, 3, 0, 0, };
 
   g_assert (dec->have_title);
   g_assert (dec->next_ts <= end_ts);
