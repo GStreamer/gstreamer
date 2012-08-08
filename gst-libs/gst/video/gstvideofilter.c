@@ -59,7 +59,6 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
   GstVideoInfo info;
   GstBufferPool *pool;
   GstCaps *caps;
-  gboolean need_pool;
   guint size;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
@@ -70,7 +69,7 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
   if (decide_query == NULL)
     return TRUE;
 
-  gst_query_parse_allocation (query, &caps, &need_pool);
+  gst_query_parse_allocation (query, &caps, NULL);
 
   if (caps == NULL)
     return FALSE;
@@ -80,7 +79,7 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
-  if (need_pool) {
+  if (gst_query_get_n_allocation_pools (query) < 0) {
     GstStructure *structure;
     static GstAllocationParams params = { 0, 0, 0, 15, };
 
@@ -92,13 +91,11 @@ gst_video_filter_propose_allocation (GstBaseTransform * trans,
 
     if (!gst_buffer_pool_set_config (pool, structure))
       goto config_failed;
-  } else
-    pool = NULL;
 
-  gst_query_add_allocation_pool (query, pool, size, 0, 0);
-  gst_object_unref (pool);
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_pool (query, pool, size, 0, 0);
+    gst_object_unref (pool);
+    gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  }
 
   return TRUE;
 
