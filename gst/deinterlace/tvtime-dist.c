@@ -326,12 +326,13 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_vfir");
@@ -380,11 +381,14 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -394,7 +398,7 @@ deinterlace_line_vfir (guint8 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
   ex->arrays[ORC_VAR_S4] = (void *) s4;
   ex->arrays[ORC_VAR_S5] = (void *) s5;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -469,12 +473,13 @@ deinterlace_line_linear (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_linear");
@@ -487,18 +492,21 @@ deinterlace_line_linear (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -639,12 +647,13 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_linear_blend");
@@ -679,11 +688,14 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -691,7 +703,7 @@ deinterlace_line_linear_blend (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -922,12 +934,13 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "deinterlace_line_greedy");
@@ -1000,11 +1013,14 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -1014,7 +1030,7 @@ deinterlace_line_greedy (orc_uint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S4] = (void *) s4;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
