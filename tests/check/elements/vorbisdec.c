@@ -101,10 +101,9 @@ GST_START_TEST (test_identification_header)
   GstBuffer *inbuffer;
   GstBus *bus;
   GstMessage *message;
-  GstTagList *tag_list;
-  gchar *artist;
 
   vorbisdec = setup_vorbisdec ();
+
   fail_unless (gst_element_set_state (vorbisdec,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
@@ -135,6 +134,8 @@ GST_START_TEST (test_identification_header)
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   gst_buffer_unref (inbuffer);
   fail_unless (g_list_length (buffers) == 0);
+
+#if 0
   /* there's a tag message waiting */
   fail_if ((message = gst_bus_pop (bus)) == NULL);
   gst_message_parse_tag (message, &tag_list);
@@ -146,6 +147,11 @@ GST_START_TEST (test_identification_header)
   fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, "album"), 0);
   gst_tag_list_free (tag_list);
   gst_message_unref (message);
+#endif
+
+  /* make sure there's no error on the bus */
+  message = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR);
+  fail_if (message != NULL);
 
   /* cleanup */
   gst_bus_set_flushing (bus, TRUE);
