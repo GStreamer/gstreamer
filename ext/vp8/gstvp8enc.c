@@ -1050,6 +1050,10 @@ gst_vp8_enc_buffer_to_image (GstVP8Enc * enc, GstVideoFrame * frame)
   image->planes[VPX_PLANE_U] = GST_VIDEO_FRAME_COMP_DATA (frame, 1);
   image->planes[VPX_PLANE_V] = GST_VIDEO_FRAME_COMP_DATA (frame, 2);
 
+  image->stride[VPX_PLANE_Y] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0);
+  image->stride[VPX_PLANE_U] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 1);
+  image->stride[VPX_PLANE_V] = GST_VIDEO_FRAME_COMP_STRIDE (frame, 2);
+
   return image;
 }
 
