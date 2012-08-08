@@ -342,7 +342,7 @@ gst_dtmf_src_generate_tone (GstRtpDTMFDepay * rtpdtmfdepay,
   guint32 clock_rate = 8000 /* default */ ;
   GstRTPBaseDepayload *depayload = GST_RTP_BASE_DEPAYLOAD (rtpdtmfdepay);
   gint volume;
-  static GstAllocationParams params = { 0, 0, 0, 1, };
+  static GstAllocationParams params = { 0, 1, 0, 0, };
 
   clock_rate = depayload->clock_rate;
 
