@@ -818,7 +818,7 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
   guint outsize;
   BlendFunction composite;
   GstVideoFrame outframe;
-  static GstAllocationParams params = { 0, 0, 0, 15, };
+  static GstAllocationParams params = { 0, 15, 0, 0, };
 
   outsize = GST_VIDEO_INFO_SIZE (&mix->info);
 

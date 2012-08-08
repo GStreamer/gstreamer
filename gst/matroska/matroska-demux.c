@@ -3147,7 +3147,7 @@ gst_matroska_demux_align_buffer (GstMatroskaDemux * demux,
 
   if (((guintptr) map.data) & (alignment - 1)) {
     GstBuffer *new_buffer;
-    GstAllocationParams params = { 0, 0, 0, alignment - 1, };
+    GstAllocationParams params = { 0, alignment - 1, 0, 0, };
 
     new_buffer = gst_buffer_new_allocate (NULL,
         gst_buffer_get_size (buffer), &params);

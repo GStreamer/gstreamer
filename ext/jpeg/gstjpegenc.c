@@ -179,7 +179,7 @@ ensure_memory (GstJpegEnc * jpegenc)
   GstMapInfo map;
   gsize old_size, desired_size, new_size;
   guint8 *new_data;
-  static GstAllocationParams params = { 0, 0, 0, 3, };
+  static GstAllocationParams params = { 0, 3, 0, 0, };
 
   old_size = jpegenc->output_map.size;
   if (old_size == 0)
