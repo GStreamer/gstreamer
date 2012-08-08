@@ -1301,6 +1301,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           break;
 #endif
         default:
+          format = GST_VIDEO_FORMAT_UNKNOWN;
           g_assert_not_reached ();
           break;
       }
@@ -1589,12 +1590,12 @@ gst_v4l2_object_probe_caps_for_format_and_size (GstV4l2Object * v4l2object,
   gint int_width = width;
   gint int_height = height;
 
-  if (!strcmp((char *)v4l2object->vcap.driver, "uvcvideo")) {
+  if (!strcmp ((char *) v4l2object->vcap.driver, "uvcvideo")) {
     /*
      * UVC devices are never interlaced, and doing VIDIOC_TRY_FMT on them
      * causes expensive and slow USB IO, so don't probe them for interlaced
      */
-     interlaced = FALSE;
+    interlaced = FALSE;
   } else {
     /* Interlaced detection using VIDIOC_TRY/S_FMT */
     if (!gst_v4l2_object_get_nearest_size (v4l2object, pixelformat,

@@ -218,8 +218,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
     }
     case GST_V4L2_IO_USERPTR:
     default:
+      newbuf = NULL;
       g_assert_not_reached ();
-      break;
   }
 
   pool->num_allocated++;
@@ -766,6 +766,7 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
         case GST_V4L2_IO_USERPTR:
         default:
+          ret = GST_FLOW_ERROR;
           g_assert_not_reached ();
           break;
       }
@@ -788,12 +789,14 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
         case GST_V4L2_IO_USERPTR:
         default:
+          ret = GST_FLOW_ERROR;
           g_assert_not_reached ();
           break;
       }
       break;
 
     default:
+      ret = GST_FLOW_ERROR;
       g_assert_not_reached ();
       break;
   }

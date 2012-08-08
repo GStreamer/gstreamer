@@ -241,6 +241,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
         retpad = gst_object_ref (demuxpad->rtcp_pad);
         break;
       default:
+        retpad = NULL;
         g_assert_not_reached ();
     }
     GST_PAD_UNLOCK (demux);
@@ -310,6 +311,7 @@ find_or_create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
       retpad = gst_object_ref (demuxpad->rtcp_pad);
       break;
     default:
+      retpad = NULL;
       g_assert_not_reached ();
   }
 

@@ -282,7 +282,7 @@ gst_oss4_audio_set_ringbuffer_channel_layout (GstObject * obj, gint fd,
   } else if (GST_IS_OSS4_SOURCE (obj)) {
     rb = GST_AUDIO_BASE_SRC (obj)->ringbuffer;
   } else
-    g_assert_not_reached ();
+    g_return_if_reached ();
 
   /* -1 = get info for currently open device (fd). This will fail with
    * OSS build <= 1013 because of a bug in OSS */

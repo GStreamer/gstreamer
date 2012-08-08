@@ -209,6 +209,7 @@ gst_wavpack_dec_negotiate (GstWavpackDec * dec)
       dec->width = 32;
       break;
     default:
+      fmt = GST_AUDIO_FORMAT_UNKNOWN;
       g_assert_not_reached ();
       break;
   }
