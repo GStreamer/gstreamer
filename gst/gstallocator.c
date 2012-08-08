@@ -94,7 +94,7 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
 {
   GstMemory *copy;
   GstMapInfo sinfo, dinfo;
-  GstAllocationParams params = { 0, 0, 0, mem->align, };
+  GstAllocationParams params = { 0, mem->align, 0, 0, };
 
   if (!gst_memory_map (mem, &sinfo, GST_MAP_READ))
     return NULL;
