@@ -123,8 +123,9 @@ main (int argc, char *argv[])
 
   /* step two frames, flush so that new preroll is queued */
   g_message ("stepping three frames");
-  g_assert (gst_element_send_event (bin,
-          gst_event_new_step (GST_FORMAT_BUFFERS, 2, 1.0, TRUE, FALSE)));
+  if (!gst_element_send_event (bin,
+          gst_event_new_step (GST_FORMAT_BUFFERS, 2, 1.0, TRUE, FALSE)))
+    g_warning ("Filed to send STEP event!");
 
   /* blocks and returns when we received the step done message */
   event_loop (bin);
@@ -138,9 +139,10 @@ main (int argc, char *argv[])
 
   /* step 3 frames, flush so that new preroll is queued */
   g_message ("stepping 120 milliseconds ");
-  g_assert (gst_element_send_event (bin,
+  if (!gst_element_send_event (bin,
           gst_event_new_step (GST_FORMAT_TIME, 120 * GST_MSECOND, 1.0, TRUE,
-              FALSE)));
+              FALSE)))
+    g_warning ("Filed to send STEP event!");
 
   /* blocks and returns when we received the step done message */
   event_loop (bin);
