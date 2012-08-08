@@ -1543,7 +1543,7 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
               && gst_pad_check_reconfigure (encoder->srcpad))))
     gst_video_encoder_negotiate (encoder);
 
-  GST_LOG_OBJECT (encoder, "alloc buffer size %d", size);
+  GST_LOG_OBJECT (encoder, "alloc buffer size %" G_GSIZE_FORMAT, size);
 
   frame->output_buffer =
       gst_buffer_new_allocate (encoder->priv->allocator, size,
