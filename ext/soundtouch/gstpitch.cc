@@ -180,7 +180,7 @@ gst_pitch_init (GstPitch * pitch)
   pitch->out_seg_rate = 1.0;
   pitch->seg_arate = 1.0;
   pitch->pitch = 1.0;
-  pitch->next_buffer_time = 0;
+  pitch->next_buffer_time = GST_CLOCK_TIME_NONE;
   pitch->next_buffer_offset = 0;
 
   pitch->priv->st->setRate (pitch->rate);
@@ -665,8 +665,6 @@ gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static gboolean
 gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
 {
-  GstFormat conv_format;
-  gint64 next_offset = 0, next_time = 0;
   gdouble out_seg_rate, our_arate;
   gfloat stream_time_ratio;
   GstSegment seg;
@@ -715,27 +713,9 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   GST_OBJECT_UNLOCK (pitch);
 
   seg.start = (gint64) (seg.start / stream_time_ratio);
-  if (seg.stop != (guint64) -1)
+  if (seg.stop != (guint64) - 1)
     seg.stop = (gint64) (seg.stop / stream_time_ratio);
   seg.time = (gint64) (seg.time / stream_time_ratio);
-
-  conv_format = GST_FORMAT_TIME;
-  if (!gst_pitch_convert (pitch, seg.format, seg.start, &conv_format, &next_time)) {
-    GST_LOG_OBJECT (pitch->sinkpad,
-        "could not convert segment start value to time");
-    return FALSE;
-  }
-
-  conv_format = GST_FORMAT_DEFAULT;
-  if (!gst_pitch_convert (pitch, seg.format, seg.start, &conv_format,
-          &next_offset)) {
-    GST_LOG_OBJECT (pitch->sinkpad,
-        "could not convert segment start value to offset");
-    return FALSE;
-  }
-
-  pitch->next_buffer_time = next_time;
-  pitch->next_buffer_offset = next_offset;
 
   gst_event_unref (*event);
   *event = gst_event_new_segment (&seg);
@@ -758,7 +738,7 @@ gst_pitch_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_pitch_flush_buffer (pitch, FALSE);
       pitch->priv->st->clear ();
       pitch->next_buffer_offset = 0;
-      pitch->next_buffer_time = 0;
+      pitch->next_buffer_time = GST_CLOCK_TIME_NONE;
       pitch->min_latency = pitch->max_latency = 0;
       break;
     case GST_EVENT_EOS:
@@ -837,13 +817,22 @@ gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   pitch = GST_PITCH (parent);
   priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  gst_object_sync_values (GST_OBJECT (pitch), pitch->next_buffer_time);
-
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
+  // Remember the first time and corresponding offset
+  if (!GST_CLOCK_TIME_IS_VALID (pitch->next_buffer_time)) {
+    GstFormat out_format = GST_FORMAT_DEFAULT;
+    pitch->next_buffer_time = timestamp;
+    gst_pitch_convert (pitch, GST_FORMAT_TIME, timestamp, &out_format,
+        &pitch->next_buffer_offset);
+  }
+
+  gst_object_sync_values (GST_OBJECT (pitch), pitch->next_buffer_time);
+
   /* push the received samples on the soundtouch buffer */
-  GST_LOG_OBJECT (pitch, "incoming buffer (%d samples)",
-      (gint) (gst_buffer_get_size (buffer) / pitch->sample_size));
+  GST_LOG_OBJECT (pitch, "incoming buffer (%d samples) %" GST_TIME_FORMAT,
+      (gint) (gst_buffer_get_size (buffer) / pitch->sample_size),
+      GST_TIME_ARGS (timestamp));
 
   if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment) {
     GstEvent *event =
