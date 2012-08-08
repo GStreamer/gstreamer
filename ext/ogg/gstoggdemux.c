@@ -565,7 +565,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       if (granule < 0) {
         GST_ERROR_OBJECT (ogg,
             "granulepos %" G_GINT64_FORMAT " yielded granule %" G_GINT64_FORMAT,
-            packet->granulepos, granule);
+            (gint64) packet->granulepos, (gint64) granule);
         return GST_FLOW_ERROR;
       }
       pad->current_granule = granule;
@@ -880,7 +880,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
   } else if (granule != -1) {
     GST_ERROR_OBJECT (ogg,
         "granulepos %" G_GINT64_FORMAT " yielded granule %" G_GINT64_FORMAT,
-        packet->granulepos, granule);
+        (gint64) packet->granulepos, (gint64) granule);
     return GST_FLOW_ERROR;
   }
 
@@ -922,7 +922,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
         if (granule < 0) {
           GST_ERROR_OBJECT (ogg,
               "granulepos %" G_GINT64_FORMAT " yielded granule %"
-              G_GINT64_FORMAT, packet->granulepos, granule);
+              G_GINT64_FORMAT, (gint64) packet->granulepos, (gint64) granule);
           return GST_FLOW_ERROR;
         }
 
