@@ -1426,7 +1426,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   guint size, min, max;
   GstStructure *config;
   gboolean have_videometa, have_alignment;
-  GstAllocationParams params = { 0, 0, 0, 15, };
+  GstAllocator *allocator = NULL;
+  GstAllocationParams params = { 0, 15, 0, 0, };
 
   if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
           query))
@@ -1434,13 +1435,20 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   state = gst_video_decoder_get_output_state (decoder);
 
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+    params.align = MAX (params.align, 15);
+  } else {
+    gst_query_add_allocation_param (query, allocator, &params);
+  }
+
   gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, state->caps, size, min, max);
   /* we are happy with the default allocator but we would like to have 16 bytes
-   * aligned memory */
-  gst_buffer_pool_config_set_allocator (config, NULL, &params);
+   * aligned and padded memory */
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
 
   have_videometa =
       gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
@@ -1520,6 +1528,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_buffer_pool_set_config (pool, config);
 
   gst_object_unref (pool);
+  if (allocator)
+    gst_object_unref (allocator);
   gst_video_codec_state_unref (state);
 
   return TRUE;
@@ -1533,6 +1543,7 @@ gst_ffmpegviddec_propose_allocation (GstVideoDecoder * decoder,
 
   gst_allocation_params_init (&params);
   params.flags = GST_MEMORY_FLAG_ZERO_PADDED;
+  params.align = 15;
   params.padding = FF_INPUT_BUFFER_PADDING_SIZE;
   /* we would like to have some padding so that we don't have to
    * memcpy. We don't suggest an allocator. */
