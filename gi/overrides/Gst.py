@@ -161,7 +161,6 @@ __all__.append('Fraction')
 
 initialized, argv = Gst.init_check(sys.argv)
 import _gi_gst
-print _gi_gst
 
 sys.argv = list(argv)
 if not initialized:

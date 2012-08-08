@@ -38,6 +38,19 @@ AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I common/m4")
 dnl required versions of other packages
 dnl Note that they are runtime requirements
 AC_SUBST(GST_REQ,   0.11.92)
+AC_SUBST(PYGOBJECT_REQ, 3.0)
+
+AC_DISABLE_STATIC
+
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL
+
+dnl find a compiler
+AC_PROG_CC
+AC_PROG_CC_STDC
+
+dnl check if the compiler supports '-c' and '-o' options
+AM_PROG_CC_C_O
 
 dnl check for python
 dnl AM_PATH_PYTHON(2.5)
@@ -50,12 +63,14 @@ if sys.version_info < minver:
   sys.exit(1)
 sys.exit(0)"
 
+
 if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
 then
   AC_MSG_RESULT(okay)
 else
   AC_MSG_ERROR(too old)
 fi
+AM_CHECK_PYTHON_HEADERS(,[AC_MSG_ERROR(could not find Python headers)])
 AS_AC_EXPAND(PYTHONDIR, $pythondir)
 AS_AC_EXPAND(PYEXECDIR, $pyexecdir)
 
@@ -76,6 +91,23 @@ fi
 PYGI_OVERRIDES_DIR="$overrides_dir"
 AC_SUBST(PYGI_OVERRIDES_DIR)
 AC_MSG_RESULT($PYGI_OVERRIDES_DIR)
+
+dnl check for GStreamer
+GST_API_VERSION=1.0
+AC_SUBST(GST_API_VERSION)
+PKG_CHECK_MODULES(GST, gstreamer-$GST_API_VERSION >= $GST_REQ)
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION", [Gst API version])
+GST_CFLAGS="$GST_CFLAGS $GLIB_EXTRA_CFLAGS"
+AC_SUBST(GST_CFLAGS)
+AC_SUBST(GST_LIBS)
+
+dnl check for pygobject
+PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
+  [
+    HAVE_PYGOBJECT="yes"
+  ], HAVE_PYGOBJECT="no")
+
+AC_SUBST(PYGOBJECT_CFLAGS)
 
 dnl and set the override directory
 AC_ARG_WITH([pygi_overrides_dir],

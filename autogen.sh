@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-python
-srcfile=gst/gstmodule.c
+srcfile=gi/overrides/gstmodule.c
 
 # Make sure we have common
 if test ! -f common/gst-autogen.sh; 
