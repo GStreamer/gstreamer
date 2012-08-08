@@ -411,8 +411,8 @@ wrong_version:
   }
 wrong_padding:
   {
-    GST_DEBUG ("padding check failed (%d - %d < %d)", bufsize, header_len,
-        padding);
+    GST_DEBUG ("padding check failed (%" G_GSIZE_FORMAT " - %d < %d)", bufsize,
+        header_len, padding);
     goto dump_packet;
   }
 dump_packet:
