@@ -513,7 +513,9 @@ gst_tag_list_from_vorbiscomment_buffer (GstBuffer * buffer,
   GstTagList *res;
   GstMapInfo info;
 
-  g_assert (gst_buffer_map (buffer, &info, GST_MAP_READ));
+  if (!gst_buffer_map (buffer, &info, GST_MAP_READ))
+    g_return_val_if_reached (NULL);
+
   res =
       gst_tag_list_from_vorbiscomment (info.data, info.size, id_data,
       id_data_length, vendor_string);

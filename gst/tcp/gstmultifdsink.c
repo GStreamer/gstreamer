@@ -662,7 +662,9 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
       /* pick first buffer from list */
       head = GST_BUFFER (mhclient->sending->data);
 
-      g_assert (gst_buffer_map (head, &info, GST_MAP_READ));
+      if (!gst_buffer_map (head, &info, GST_MAP_READ))
+        g_return_val_if_reached (FALSE);
+
       data = info.data;
       maxsize = info.size - mhclient->bufoffset;
 

@@ -119,7 +119,7 @@ run_capsfilter_renegotiation (const gchar * launch_line)
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-  g_assert (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
+  fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
       GST_STATE_CHANGE_FAILURE);
 
   msg = gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,

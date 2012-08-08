@@ -1209,7 +1209,8 @@ gst_ogg_mux_make_fishead (GstOggMux * mux, ogg_stream_state * os)
 static void
 gst_ogg_mux_byte_writer_put_string_utf8 (GstByteWriter * bw, const char *s)
 {
-  g_assert (gst_byte_writer_put_data (bw, (const guint8 *) s, strlen (s)));
+  if (!gst_byte_writer_put_data (bw, (const guint8 *) s, strlen (s)))
+    GST_ERROR ("put_data failed");
 }
 
 static void

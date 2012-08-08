@@ -62,8 +62,10 @@ message_handler (GstBus * bus, GstMessage * message, gpointer user_data)
                   ("prerolled, starting synchronized playback and recording\n");
               /* returns ASYNC because the sink linked to the live source is not
                * prerolled */
-              g_assert (gst_element_set_state (pipeline,
-                      GST_STATE_PLAYING) == GST_STATE_CHANGE_ASYNC);
+              if (gst_element_set_state (pipeline,
+                      GST_STATE_PLAYING) != GST_STATE_CHANGE_ASYNC) {
+                g_warning ("State change failed");
+              }
             }
             break;
           default:
@@ -139,19 +141,25 @@ main (int argc, char *argv[])
 
   g_print ("going to PAUSED\n");
   /* returns NO_PREROLL because we have a live element */
-  g_assert (gst_element_set_state (pipeline,
-          GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PAUSED) != GST_STATE_CHANGE_NO_PREROLL) {
+    g_warning ("Expected state change NO_PREROLL result");
+  }
 
   g_print ("waiting for playback preroll\n");
 #ifndef ASYNC_VERSION
   /* sync wait for preroll on the playback bin and then go to PLAYING */
-  g_assert (gst_element_get_state (play_bin, NULL, NULL,
-          GST_CLOCK_TIME_NONE) == GST_STATE_CHANGE_SUCCESS);
+  if (gst_element_get_state (play_bin, NULL, NULL,
+          GST_CLOCK_TIME_NONE) != GST_STATE_CHANGE_SUCCESS) {
+    g_warning ("Error while waiting for state change");
+  }
   g_print ("prerolled, starting synchronized playback and recording\n");
   /* returns ASYNC because the sink linked to the live source is not
    * prerolled */
-  g_assert (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_ASYNC);
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) != GST_STATE_CHANGE_ASYNC) {
+    g_warning ("Expected state change NO_PREROLL result");
+  }
 #endif
 
   g_main_loop_run (loop);
