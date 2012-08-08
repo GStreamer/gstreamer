@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! video/x-raw,format=\(fourcc\)YUY2 ! videoconvert ! ximagesink
+ * gst-launch -v videotestsrc ! video/x-raw,format=\(string\)YUY2 ! videoconvert ! ximagesink
  * ]|
  * </refsect2>
  */
