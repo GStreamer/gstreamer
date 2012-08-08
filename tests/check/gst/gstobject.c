@@ -72,19 +72,6 @@ gst_fake_object_get_type (void)
   return fake_object_type;
 }
 
-#ifndef HAVE_OSX
-/* g_object_new on abstract GstObject should fail */
-GST_START_TEST (test_fail_abstract_new)
-{
-  GstObject *object;
-
-  ASSERT_CRITICAL (object = g_object_new (gst_object_get_type (), NULL));
-  fail_unless (object == NULL, "Created an instance of abstract GstObject");
-}
-
-GST_END_TEST;
-#endif
-
 /* g_object_new on GstFakeObject should succeed */
 GST_START_TEST (test_fake_object_new)
 {
@@ -528,18 +515,6 @@ gst_object_suite (void)
 
   tcase_add_test (tc_chain, test_fake_object_has_ancestor);
   //tcase_add_checked_fixture (tc_chain, setup, teardown);
-
-  /* FIXME: GLib shouldn't crash here, but issue a warning and return a NULL
-   * object, or at least g_error() and then abort properly ... (tpm) */
-#ifndef HAVE_OSX
-  /* Disabled for OS/X because a) it's a pretty silly test anyway and
-   * b) different OS/X versions raise different signals and it isn't worth
-   * the effort to try and detect which one should be producing which
-   */
-  /* SEGV tests go last so we can debug the others */
-  if (g_getenv ("CK_FORK") == NULL || strcmp (g_getenv ("CK_FORK"), "no") != 0)
-    tcase_add_test_raise_signal (tc_chain, test_fail_abstract_new, SIGSEGV);
-#endif
 
   return s;
 }
