@@ -455,6 +455,7 @@ EXPORTS
 	gst_event_parse_step
 	gst_event_parse_stream_config
 	gst_event_parse_stream_config_setup_data
+	gst_event_parse_stream_start
 	gst_event_parse_tag
 	gst_event_parse_toc
 	gst_event_parse_toc_select
@@ -653,6 +654,9 @@ EXPORTS
 	gst_pad_chain
 	gst_pad_chain_list
 	gst_pad_check_reconfigure
+	gst_pad_create_stream_id
+	gst_pad_create_stream_id_printf
+	gst_pad_create_stream_id_printf_valist
 	gst_pad_direction_get_type
 	gst_pad_event_default
 	gst_pad_flags_get_type
