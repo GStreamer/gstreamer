@@ -188,6 +188,8 @@ typedef struct _GstAudioEncoderContext
   GstAudioInfo info;
 
   /* output */
+  GstCaps *caps;
+  gboolean output_caps_changed;
   gint frame_samples_min, frame_samples_max;
   gint frame_max;
   gint lookahead;
@@ -458,6 +460,7 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
 
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
     gst_audio_info_init (&enc->priv->ctx.info);
+    gst_caps_replace (&enc->priv->ctx.caps, NULL);
 
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
@@ -602,7 +605,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       GST_FLOW_ERROR);
 
   /* subclass should know what it is producing by now */
-  if (!gst_pad_has_current_caps (enc->srcpad))
+  if (!ctx->caps)
     goto no_caps;
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
@@ -611,13 +614,12 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       "accepting %" G_GSIZE_FORMAT " bytes encoded data as %d samples",
       buf ? gst_buffer_get_size (buf) : -1, samples);
 
-  if (G_UNLIKELY (gst_pad_check_reconfigure (enc->srcpad))) {
-    GstCaps *caps = gst_pad_get_current_caps (enc->srcpad);
-    if (!gst_audio_encoder_set_output_format (enc, caps)) {
+  if (G_UNLIKELY (ctx->output_caps_changed
+          || gst_pad_check_reconfigure (enc->srcpad))) {
+    if (!gst_audio_encoder_negotiate (enc)) {
       ret = GST_FLOW_NOT_NEGOTIATED;
       goto exit;
     }
-    gst_caps_unref (caps);
   }
 
   /* mark subclass still alive and providing */
@@ -2508,44 +2510,39 @@ gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
   GST_OBJECT_UNLOCK (enc);
 }
 
-/*
- * gst_audio_encoder_set_output_format:
- * @enc: a #GstAudioEncoder
- * @caps: #GstCaps
+/**
+ * gst_audio_encoder_negotiate:
+ * @dec: a #GstAudioEncoder
  *
- * Configure output caps on the srcpad of @enc.
+ * Negotiate with downstreame elements to currently configured #GstCaps.
  *
- * Returns: %TRUE on success.
- **/
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
 gboolean
-gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
+gst_audio_encoder_negotiate (GstAudioEncoder * enc)
 {
-  GstAudioEncoderClass *klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+  GstAudioEncoderClass *klass;
   gboolean res = FALSE;
-  GstCaps *templ_caps;
   GstQuery *query = NULL;
   GstAllocator *allocator;
   GstAllocationParams params;
+  GstCaps *caps;
+
+  g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), FALSE);
+  g_return_val_if_fail (GST_IS_CAPS (enc->priv->ctx.caps), FALSE);
+
+  klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+
+  caps = enc->priv->ctx.caps;
 
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
-
-  if (!gst_caps_is_fixed (caps))
-    goto refuse_caps;
-
-  /* Only allow caps that are a subset of the template caps */
-  templ_caps = gst_pad_get_pad_template_caps (enc->srcpad);
-  if (!gst_caps_is_subset (caps, templ_caps)) {
-    gst_caps_unref (templ_caps);
-    goto refuse_caps;
-  }
-  gst_caps_unref (templ_caps);
 
   res = gst_pad_set_caps (enc->srcpad, caps);
   if (!res)
     goto done;
-
-  /* clear reconfigure so we don't set caps twice */
-  gst_pad_check_reconfigure (enc->srcpad);
+  enc->priv->ctx.output_caps_changed = FALSE;
 
   query = gst_query_new_allocation (caps, TRUE);
   if (!gst_pad_peer_query (enc->srcpad, query)) {
@@ -2579,6 +2576,53 @@ done:
   if (query)
     gst_query_unref (query);
 
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+  return res;
+
+  /* ERRORS */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (enc, "Subclass failed to decide allocation");
+    goto done;
+  }
+}
+
+/*
+ * gst_audio_encoder_set_output_format:
+ * @enc: a #GstAudioEncoder
+ * @caps: #GstCaps
+ *
+ * Configure output caps on the srcpad of @enc.
+ *
+ * Returns: %TRUE on success.
+ **/
+gboolean
+gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
+{
+  gboolean res = FALSE;
+  GstCaps *templ_caps;
+
+  GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
+
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+  if (!gst_caps_is_fixed (caps))
+    goto refuse_caps;
+
+  /* Only allow caps that are a subset of the template caps */
+  templ_caps = gst_pad_get_pad_template_caps (enc->srcpad);
+  if (!gst_caps_is_subset (caps, templ_caps)) {
+    gst_caps_unref (templ_caps);
+    goto refuse_caps;
+  }
+  gst_caps_unref (templ_caps);
+
+  gst_caps_replace (&enc->priv->ctx.caps, caps);
+  enc->priv->ctx.output_caps_changed = TRUE;
+
+done:
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
   return res;
 
   /* ERRORS */
@@ -2586,12 +2630,6 @@ refuse_caps:
   {
     GST_WARNING_OBJECT (enc, "refused caps %" GST_PTR_FORMAT, caps);
     res = FALSE;
-    goto done;
-  }
-  /* Errors */
-no_decide_allocation:
-  {
-    GST_WARNING_OBJECT (enc, "Subclass failed to decide allocation");
     goto done;
   }
 }
@@ -2617,14 +2655,10 @@ gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
-  if (G_UNLIKELY (gst_pad_has_current_caps (enc->srcpad)
-          && gst_pad_check_reconfigure (enc->srcpad))) {
-    GstCaps *caps = gst_pad_get_current_caps (enc->srcpad);
-    if (!gst_audio_encoder_set_output_format (enc, caps)) {
-      gst_caps_unref (caps);
+  if (G_UNLIKELY (enc->priv->ctx.output_caps_changed || (enc->priv->ctx.caps
+              && gst_pad_check_reconfigure (enc->srcpad)))) {
+    if (!gst_audio_encoder_negotiate (enc))
       goto done;
-    }
-    gst_caps_unref (caps);
   }
 
   buffer =

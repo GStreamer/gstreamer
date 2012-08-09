@@ -222,6 +222,7 @@ GstCaps *       gst_audio_encoder_proxy_getcaps (GstAudioEncoder * enc,
 gboolean        gst_audio_encoder_set_output_format  (GstAudioEncoder    * enc,
                                                       GstCaps            * caps);
 
+gboolean        gst_audio_encoder_negotiate          (GstAudioEncoder * enc);
 
 GstBuffer *     gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * encoder,
                                                           gsize             size);
