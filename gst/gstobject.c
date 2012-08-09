@@ -507,7 +507,10 @@ gst_object_default_deep_notify (GObject * object, GstObject * orig,
     g_value_init (&value, pspec->value_type);
     g_object_get_property (G_OBJECT (orig), pspec->name, &value);
 
-    str = gst_value_serialize (&value);
+    if (G_VALUE_HOLDS_STRING (&value))
+      str = g_value_dup_string (&value);
+    else
+      str = gst_value_serialize (&value);
     name = gst_object_get_path_string (orig);
     g_print ("%s: %s = %s\n", name, pspec->name, str);
     g_free (name);
