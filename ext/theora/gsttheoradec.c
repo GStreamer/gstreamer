@@ -244,10 +244,6 @@ theora_dec_stop (GstVideoDecoder * decoder)
   th_decode_free (dec->decoder);
   dec->decoder = NULL;
   gst_theora_dec_reset (dec);
-  if (dec->tags) {
-    gst_tag_list_free (dec->tags);
-    dec->tags = NULL;
-  }
   if (dec->input_state)
     gst_video_codec_state_unref (dec->input_state);
   if (dec->output_state)
@@ -380,9 +376,10 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
         GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
   }
 
-  if (dec->tags)
-    gst_tag_list_free (dec->tags);
-  dec->tags = list;
+  gst_video_decoder_merge_tags (GST_VIDEO_DECODER (dec),
+      list, GST_TAG_MERGE_REPLACE);
+
+  gst_tag_list_unref (list);
 
   return GST_FLOW_OK;
 }
@@ -507,14 +504,6 @@ theora_handle_type_packet (GstTheoraDec * dec)
   gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
 
   dec->have_header = TRUE;
-
-  /* FIXME : Put this on the next outgoing frame */
-  /* FIXME :  */
-  if (dec->tags) {
-    gst_pad_push_event (GST_VIDEO_DECODER (dec)->srcpad,
-        gst_event_new_tag (dec->tags));
-    dec->tags = NULL;
-  }
 
   return ret;
 

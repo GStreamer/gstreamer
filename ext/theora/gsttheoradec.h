@@ -76,8 +76,6 @@ struct _GstTheoraDec
   gint telemetry_qi;
   gint telemetry_bits;
 
-  GstTagList *tags;
-  
   gboolean can_crop;
 };
 
