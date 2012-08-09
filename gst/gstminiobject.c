@@ -287,7 +287,7 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
   g_return_val_if_fail (mini_object != NULL, FALSE);
 
   if (GST_MINI_OBJECT_IS_LOCKABLE (mini_object)) {
-    result = (g_atomic_int_get (&mini_object->lockstate) & SHARE_MASK) < 2;
+    result = !IS_SHARED (g_atomic_int_get (&mini_object->lockstate));
   } else {
     result = (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) == 1);
   }
