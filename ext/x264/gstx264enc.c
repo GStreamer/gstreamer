@@ -417,8 +417,6 @@ static gboolean gst_x264_enc_init_encoder (GstX264Enc * encoder);
 static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
 
 static GstFlowReturn gst_x264_enc_finish (GstVideoEncoder * encoder);
-static gboolean gst_x264_enc_sink_event (GstVideoEncoder * encoder,
-    GstEvent * event);
 static GstFlowReturn gst_x264_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static void gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send);
@@ -488,7 +486,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
       GST_DEBUG_FUNCPTR (gst_x264_enc_handle_frame);
   gstencoder_class->reset = GST_DEBUG_FUNCPTR (gst_x264_enc_reset);
   gstencoder_class->finish = GST_DEBUG_FUNCPTR (gst_x264_enc_finish);
-  gstencoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_x264_enc_sink_event);
   gstencoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_x264_enc_propose_allocation);
 
@@ -1332,6 +1329,7 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
   GstCaps *outcaps;
   GstStructure *structure;
   GstVideoCodecState *state;
+  GstTagList *tags;
 
   outcaps = gst_caps_new_empty_simple ("video/x-h264");
   structure = gst_caps_get_structure (outcaps, 0);
@@ -1365,6 +1363,13 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstCaps * caps)
       outcaps, encoder->input_state);
   GST_DEBUG ("here are the caps: %" GST_PTR_FORMAT, state->caps);
   gst_video_codec_state_unref (state);
+
+  tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x264",
+      GST_TAG_ENCODER_VERSION, X264_BUILD, NULL);
+  gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (encoder), tags,
+      GST_TAG_MERGE_REPLACE);
+  gst_tag_list_unref (tags);
 
   return TRUE;
 }
@@ -1552,32 +1557,6 @@ gst_x264_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
       query);
-}
-
-static gboolean
-gst_x264_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
-{
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_TAG:{
-      GstTagList *tags = NULL;
-
-      gst_event_parse_tag (event, &tags);
-      tags = gst_tag_list_copy (tags);
-
-      gst_event_take (&event, gst_event_new_tag (tags));
-
-      /* drop codec/video-codec and replace encoder/encoder-version */
-      gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
-      gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
-      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, "x264",
-          GST_TAG_ENCODER_VERSION, X264_BUILD, NULL);
-      break;
-    }
-    default:
-      break;
-  }
-
-  return GST_VIDEO_ENCODER_CLASS (parent_class)->sink_event (encoder, event);
 }
 
 /* chain function
