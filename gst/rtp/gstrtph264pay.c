@@ -432,7 +432,7 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
   if (stream_format) {
     if (g_str_equal (stream_format, "avc"))
       rtph264pay->stream_format = GST_H264_STREAM_FORMAT_AVC;
-    if (g_str_equal (stream_format, "bytestream"))
+    if (g_str_equal (stream_format, "byte-stream"))
       rtph264pay->stream_format = GST_H264_STREAM_FORMAT_BYTESTREAM;
   }
 
@@ -920,8 +920,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
     /* insert payload memory block */
     gst_buffer_append_memory (outbuf,
-        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (guint8*) data,
-          size, 0, size, NULL, NULL));
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (guint8 *) data,
+            size, 0, size, NULL, NULL));
 
     list = gst_buffer_list_new ();
 
@@ -988,8 +988,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
       /* insert payload memory block */
       gst_buffer_append_memory (outbuf,
-          gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, (guint8 *) data + pos,
-            limitedSize, 0, limitedSize, NULL, NULL));
+          gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+              (guint8 *) data + pos, limitedSize, 0, limitedSize, NULL, NULL));
 
       /* add the buffer to the buffer list */
       gst_buffer_list_add (list, outbuf);
@@ -1026,9 +1026,12 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* the input buffer contains one or more NAL units */
 
-  avc = rtph264pay->stream_format = GST_H264_STREAM_FORMAT_AVC;
+  avc = rtph264pay->stream_format == GST_H264_STREAM_FORMAT_AVC;
 
   if (avc) {
+    /* In AVC mode, there is no adapter, so nothign to flush */
+    if (buffer == NULL)
+      return GST_FLOW_OK;
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;
@@ -1038,17 +1041,20 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
   } else {
     dts = gst_adapter_prev_dts (rtph264pay->adapter, NULL);
     pts = gst_adapter_prev_pts (rtph264pay->adapter, NULL);
-    gst_adapter_push (rtph264pay->adapter, buffer);
+    if (buffer)
+      gst_adapter_push (rtph264pay->adapter, buffer);
     size = gst_adapter_available (rtph264pay->adapter);
     data = gst_adapter_map (rtph264pay->adapter, size);
     GST_DEBUG_OBJECT (basepayload,
         "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
         gst_buffer_get_size (buffer));
 
-    if (!GST_CLOCK_TIME_IS_VALID (dts))
-      dts = GST_BUFFER_DTS (buffer);
-    if (!GST_CLOCK_TIME_IS_VALID (pts))
-      pts = GST_BUFFER_PTS (buffer);
+    if (buffer) {
+      if (!GST_CLOCK_TIME_IS_VALID (dts))
+        dts = GST_BUFFER_DTS (buffer);
+      if (!GST_CLOCK_TIME_IS_VALID (pts))
+        pts = GST_BUFFER_PTS (buffer);
+    }
   }
 
   ret = GST_FLOW_OK;
@@ -1135,8 +1141,9 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
        */
       next = next_start_code (data, size);
 
-      if (next == size) {
-        /* Didn't find the start of next NAL, handle it next time */
+      if (next == size && buffer != NULL) {
+        /* Didn't find the start of next NAL and it's not EOS,
+         * handle it next time */
         break;
       }
 
@@ -1194,12 +1201,12 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
       /* skip start code */
       data += 3;
 
-      /* Trim the end unless we're the last NAL in the buffer.
+      /* Trim the end unless we're the last NAL in the stream.
        * In case we're not at the end of the buffer we know the next block
        * starts with 0x000001 so all the 0x00 bytes at the end of this one are
        * trailing 0x0 that can be discarded */
       size = nal_len;
-      if (i + 1 != nal_queue->len)
+      if (i + 1 != nal_queue->len || buffer != NULL)
         for (; size > 1 && data[size - 1] == 0x0; size--)
           /* skip */ ;
 
@@ -1210,9 +1217,10 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
        * actually payload the NAL so we can know if the current NAL is
        * the last one of an access unit or not if we are in bytestream mode
        */
-      if (rtph264pay->alignment == GST_H264_ALIGNMENT_AU &&
+      if ((rtph264pay->alignment == GST_H264_ALIGNMENT_AU || buffer == NULL) &&
           i == nal_queue->len - 1)
         end_of_au = TRUE;
+
 
       /* put the data in one or more RTP packets */
       ret =
@@ -1224,7 +1232,6 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       /* move to next NAL packet */
       data += nal_len;
-      size -= nal_len;
       pushed += nal_len + 3;
     }
     g_array_set_size (nal_queue, 0);
@@ -1271,6 +1278,14 @@ gst_rtp_h264_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
           rtph264pay->send_spspps = TRUE;
       }
       break;
+    case GST_EVENT_EOS:
+    {
+      /* call handle_buffer with NULL to flush last NAL from adapter
+       * in byte-stream mode
+       */
+      gst_rtp_h264_pay_handle_buffer (payload, NULL);
+      break;
+    }
     default:
       break;
   }
