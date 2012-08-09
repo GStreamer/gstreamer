@@ -231,6 +231,7 @@ static gboolean gst_video_encoder_decide_allocation_default (GstVideoEncoder *
     encoder, GstQuery * query);
 static gboolean gst_video_encoder_propose_allocation_default (GstVideoEncoder *
     encoder, GstQuery * query);
+static gboolean gst_video_encoder_negotiate_default (GstVideoEncoder * encoder);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -292,6 +293,7 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   klass->src_event = gst_video_encoder_src_event_default;
   klass->propose_allocation = gst_video_encoder_propose_allocation_default;
   klass->decide_allocation = gst_video_encoder_decide_allocation_default;
+  klass->negotiate = gst_video_encoder_negotiate_default;
 }
 
 static void
@@ -1391,16 +1393,8 @@ close_failed:
   }
 }
 
-/**
- * gst_video_encoder_negotiate:
- * @encoder: a #GstVideoEncoder
- *
- * Negotiate with downstream elements to currently configured #GstVideoCodecState.
- *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
- */
-gboolean
-gst_video_encoder_negotiate (GstVideoEncoder * encoder)
+static gboolean
+gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
 {
   GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
   GstAllocator *allocator;
@@ -1479,6 +1473,32 @@ no_decide_allocation:
     GST_WARNING_OBJECT (encoder, "Subclass failed to decide allocation");
     goto done;
   }
+}
+
+/**
+ * gst_video_encoder_negotiate:
+ * @encoder: a #GstVideoEncoder
+ *
+ * Negotiate with downstream elements to currently configured #GstVideoCodecState.
+ *
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
+gboolean
+gst_video_encoder_negotiate (GstVideoEncoder * encoder)
+{
+  GstVideoEncoderClass *klass;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_VIDEO_ENCODER (encoder), FALSE);
+
+  klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  if (klass->negotiate)
+    ret = klass->negotiate (encoder);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+  return ret;
 }
 
 /**
