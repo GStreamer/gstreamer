@@ -335,6 +335,7 @@ static gboolean gst_audio_encoder_decide_allocation_default (GstAudioEncoder *
     enc, GstQuery * query);
 static gboolean gst_audio_encoder_propose_allocation_default (GstAudioEncoder *
     enc, GstQuery * query);
+static gboolean gst_audio_encoder_negotiate_default (GstAudioEncoder * enc);
 
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
@@ -383,6 +384,7 @@ gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
   klass->src_event = gst_audio_encoder_src_event_default;
   klass->propose_allocation = gst_audio_encoder_propose_allocation_default;
   klass->decide_allocation = gst_audio_encoder_decide_allocation_default;
+  klass->negotiate = gst_audio_encoder_negotiate_default;
 }
 
 static void
@@ -2510,16 +2512,8 @@ gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
   GST_OBJECT_UNLOCK (enc);
 }
 
-/**
- * gst_audio_encoder_negotiate:
- * @dec: a #GstAudioEncoder
- *
- * Negotiate with downstreame elements to currently configured #GstCaps.
- *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
- */
-gboolean
-gst_audio_encoder_negotiate (GstAudioEncoder * enc)
+static gboolean
+gst_audio_encoder_negotiate_default (GstAudioEncoder * enc)
 {
   GstAudioEncoderClass *klass;
   gboolean res = FALSE;
@@ -2532,8 +2526,6 @@ gst_audio_encoder_negotiate (GstAudioEncoder * enc)
   g_return_val_if_fail (GST_IS_CAPS (enc->priv->ctx.caps), FALSE);
 
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
-
-  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
   caps = enc->priv->ctx.caps;
 
@@ -2576,8 +2568,6 @@ done:
   if (query)
     gst_query_unref (query);
 
-  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
-
   return res;
 
   /* ERRORS */
@@ -2586,6 +2576,32 @@ no_decide_allocation:
     GST_WARNING_OBJECT (enc, "Subclass failed to decide allocation");
     goto done;
   }
+}
+
+/**
+ * gst_audio_encoder_negotiate:
+ * @dec: a #GstAudioEncoder
+ *
+ * Negotiate with downstreame elements to currently configured #GstCaps.
+ *
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
+gboolean
+gst_audio_encoder_negotiate (GstAudioEncoder * enc)
+{
+  GstAudioEncoderClass *klass;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), FALSE);
+
+  klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
+  if (klass->negotiate)
+    ret = klass->negotiate (enc);
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
+
+  return ret;
 }
 
 /*

@@ -157,6 +157,8 @@ struct _GstAudioEncoder {
  * @close:          Optional.
  *                  Called when the element changes to GST_STATE_NULL.
  *                  Allows closing external resources.
+ * @negotiate:      Optional.
+ *                  Negotiate with downstream and configure buffer pools, etc.
  * @decide_allocation: Optional.
  *                     Setup the allocation parameters for allocating output
  *                     buffers. The passed in query contains the result of the
@@ -199,6 +201,8 @@ struct _GstAudioEncoderClass {
   gboolean      (*open)               (GstAudioEncoder *enc);
 
   gboolean      (*close)              (GstAudioEncoder *enc);
+
+  gboolean      (*negotiate)          (GstAudioEncoder *enc);
 
   gboolean      (*decide_allocation)  (GstAudioEncoder *enc, GstQuery *query);
 
