@@ -179,6 +179,8 @@ GST_AUDIO_DECODER_SINK_PAD
 GST_AUDIO_DECODER_SRC_NAME
 GST_AUDIO_DECODER_SRC_PAD
 gst_audio_decoder_finish_frame
+gst_audio_decoder_set_output_format
+gst_audio_decoder_negotiate
 gst_audio_decoder_allocate_output_buffer
 gst_audio_decoder_get_audio_info
 gst_audio_decoder_get_estimate_rate
@@ -201,6 +203,7 @@ gst_audio_decoder_set_needs_format
 gst_audio_decoder_set_plc
 gst_audio_decoder_set_plc_aware
 gst_audio_decoder_set_tolerance
+gst_audio_decoder_merge_tags
 <SUBSECTION Standard>
 GST_AUDIO_DECODER
 GST_IS_AUDIO_DECODER
@@ -224,6 +227,8 @@ GST_AUDIO_ENCODER_SRC_NAME
 GST_AUDIO_ENCODER_SRC_PAD
 gst_audio_encoder_finish_frame
 gst_audio_encoder_allocate_output_buffer
+gst_audio_encoder_set_output_format
+gst_audio_encoder_negotiate
 gst_audio_encoder_get_audio_info
 gst_audio_encoder_get_drainable
 gst_audio_encoder_get_frame_max
@@ -249,6 +254,7 @@ gst_audio_encoder_set_lookahead
 gst_audio_encoder_set_mark_granule
 gst_audio_encoder_set_perfect_timestamp
 gst_audio_encoder_set_tolerance
+gst_audio_encoder_merge_tags
 <SUBSECTION Standard>
 GST_AUDIO_ENCODER
 GST_AUDIO_ENCODER_CAST

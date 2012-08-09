@@ -52,6 +52,7 @@ EXPORTS
 	gst_audio_decoder_get_tolerance
 	gst_audio_decoder_get_type
 	gst_audio_decoder_merge_tags
+	gst_audio_decoder_negotiate
 	gst_audio_decoder_set_drainable
 	gst_audio_decoder_set_estimate_rate
 	gst_audio_decoder_set_latency
@@ -80,6 +81,7 @@ EXPORTS
 	gst_audio_encoder_get_tolerance
 	gst_audio_encoder_get_type
 	gst_audio_encoder_merge_tags
+	gst_audio_encoder_negotiate
 	gst_audio_encoder_proxy_getcaps
 	gst_audio_encoder_set_drainable
 	gst_audio_encoder_set_frame_max
