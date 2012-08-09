@@ -1499,28 +1499,28 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       GstTagList *tags;
 
       gst_event_parse_tag (event, &tags);
-      tags = gst_tag_list_copy (tags);
-      gst_event_unref (event);
 
-      /* FIXME: make generic based on GST_TAG_FLAG_ENCODED */
-      gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
-      gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
-      gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
-      gst_tag_list_remove_tag (tags, GST_TAG_SUBTITLE_CODEC);
-      gst_tag_list_remove_tag (tags, GST_TAG_CONTAINER_FORMAT);
-      gst_tag_list_remove_tag (tags, GST_TAG_BITRATE);
-      gst_tag_list_remove_tag (tags, GST_TAG_NOMINAL_BITRATE);
-      gst_tag_list_remove_tag (tags, GST_TAG_MAXIMUM_BITRATE);
-      gst_tag_list_remove_tag (tags, GST_TAG_MINIMUM_BITRATE);
-      gst_tag_list_remove_tag (tags, GST_TAG_ENCODER);
-      gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
-      event = gst_event_new_tag (tags);
+      if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
+        tags = gst_tag_list_copy (tags);
 
-      GST_AUDIO_ENCODER_STREAM_LOCK (enc);
-      enc->priv->pending_events =
-          g_list_append (enc->priv->pending_events, event);
-      GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
-      res = TRUE;
+        /* FIXME: make generic based on GST_TAG_FLAG_ENCODED */
+        gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_SUBTITLE_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_CONTAINER_FORMAT);
+        gst_tag_list_remove_tag (tags, GST_TAG_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_NOMINAL_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_MAXIMUM_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_MINIMUM_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_ENCODER);
+        gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
+
+        gst_audio_encoder_merge_tags (enc, tags, GST_TAG_MERGE_REPLACE);
+        gst_event_unref (event);
+        event = NULL;
+        res = TRUE;
+      }
       break;
     }
 

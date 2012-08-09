@@ -1763,6 +1763,20 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       gst_event_unref (event);
       break;
     }
+    case GST_EVENT_TAG:
+    {
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+
+      if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
+        gst_audio_decoder_merge_tags (dec, tags, GST_TAG_MERGE_REPLACE);
+        gst_event_unref (event);
+        event = NULL;
+        ret = TRUE;
+      }
+      break;
+    }
     default:
       if (!GST_EVENT_IS_SERIALIZED (event)) {
         ret =
