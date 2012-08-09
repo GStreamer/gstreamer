@@ -1494,6 +1494,17 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       res = gst_audio_encoder_push_event (enc, event);
       break;
 
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      enc->priv->do_caps = TRUE;
+      res = TRUE;
+      gst_event_unref (event);
+      break;
+    }
+
     case GST_EVENT_TAG:
     {
       GstTagList *tags;
@@ -1520,19 +1531,9 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
         gst_event_unref (event);
         event = NULL;
         res = TRUE;
+        break;
       }
-      break;
-    }
-
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      enc->priv->do_caps = TRUE;
-      res = TRUE;
-      gst_event_unref (event);
-      break;
+      /* fall through */
     }
 
     default:
