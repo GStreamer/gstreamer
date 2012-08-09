@@ -501,7 +501,7 @@ add_cuesheet (const GstToc * toc, guint sample_rate,
   const gchar *is_legal;
   GList *list;
   GstTagList *tags;
-  GstTocEntry *entry;
+  GstTocEntry *entry, *subentry = NULL;
   FLAC__StreamMetadata_CueSheet *cs;
   FLAC__StreamMetadata_CueSheet_Track *track;
 
@@ -511,15 +511,28 @@ add_cuesheet (const GstToc * toc, guint sample_rate,
 
   /* check if the TOC entries is valid */
   list = gst_toc_get_entries (toc);
-  while (list) {
-    entry = list->data;
-    if (!gst_toc_entry_is_sequence (entry))
-      return FALSE;
-    list = g_list_next (list);
+  entry = list->data;
+  if (gst_toc_entry_is_alternative (entry)) {
+    list = gst_toc_entry_get_sub_entries (entry);
+    while (list) {
+      subentry = list->data;
+      if (!gst_toc_entry_is_sequence (subentry))
+        return FALSE;
+      list = g_list_next (list);
+    }
+    list = gst_toc_entry_get_sub_entries (entry);
+  }
+  if (gst_toc_entry_is_sequence (entry)) {
+    while (list) {
+      entry = list->data;
+      if (!gst_toc_entry_is_sequence (entry))
+        return FALSE;
+      list = g_list_next (list);
+    }
+    list = gst_toc_get_entries (toc);
   }
 
   /* add tracks in cuesheet */
-  list = gst_toc_get_entries (toc);
   while (list) {
     entry = list->data;
     gst_toc_entry_get_start_stop_times (entry, &start, &stop);
