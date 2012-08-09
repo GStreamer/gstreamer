@@ -308,6 +308,7 @@ static gboolean gst_audio_decoder_decide_allocation_default (GstAudioDecoder *
     dec, GstQuery * query);
 static gboolean gst_audio_decoder_propose_allocation_default (GstAudioDecoder *
     dec, GstQuery * query);
+static gboolean gst_audio_decoder_negotiate_default (GstAudioDecoder * dec);
 
 static GstElementClass *parent_class = NULL;
 
@@ -393,6 +394,8 @@ gst_audio_decoder_class_init (GstAudioDecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_decoder_propose_allocation_default);
   audiodecoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_audio_decoder_decide_allocation_default);
+  audiodecoder_class->negotiate =
+      GST_DEBUG_FUNCPTR (gst_audio_decoder_negotiate_default);
 }
 
 static void
@@ -524,16 +527,8 @@ gst_audio_decoder_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/**
- * gst_audio_decoder_negotiate:
- * @dec: a #GstAudioDecoder
- *
- * Negotiate with downstreame elements to currently configured #GstAudioInfo.
- *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
- */
-gboolean
-gst_audio_decoder_negotiate (GstAudioDecoder * dec)
+static gboolean
+gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 {
   GstAudioDecoderClass *klass;
   gboolean res = TRUE;
@@ -546,8 +541,6 @@ gst_audio_decoder_negotiate (GstAudioDecoder * dec)
   g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info), FALSE);
 
   klass = GST_AUDIO_DECODER_GET_CLASS (dec);
-
-  GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
   GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
 
@@ -587,7 +580,6 @@ gst_audio_decoder_negotiate (GstAudioDecoder * dec)
   dec->priv->ctx.params = params;
 
 done:
-  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
   if (query)
     gst_query_unref (query);
@@ -601,6 +593,32 @@ no_decide_allocation:
     GST_WARNING_OBJECT (dec, "Subclass failed to decide allocation");
     goto done;
   }
+}
+
+/**
+ * gst_audio_decoder_negotiate:
+ * @dec: a #GstAudioDecoder
+ *
+ * Negotiate with downstreame elements to currently configured #GstAudioInfo.
+ *
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
+gboolean
+gst_audio_decoder_negotiate (GstAudioDecoder * dec)
+{
+  GstAudioDecoderClass *klass;
+  gboolean res = TRUE;
+
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
+
+  klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+
+  GST_AUDIO_DECODER_STREAM_LOCK (dec);
+  if (klass->negotiate)
+    res = klass->negotiate (dec);
+  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+  return res;
 }
 
 /**
@@ -660,7 +678,8 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
 done:
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
-  gst_caps_unref (caps);
+  if (caps)
+    gst_caps_unref (caps);
 
   return res;
 

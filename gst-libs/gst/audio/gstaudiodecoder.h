@@ -213,6 +213,8 @@ struct _GstAudioDecoder
  * @close:          Optional.
  *                  Called when the element changes to GST_STATE_NULL.
  *                  Allows closing external resources.
+ * @negotiate:      Optional.
+ *                  Negotiate with downstream and configure buffer pools, etc.
  * @decide_allocation: Optional.
  *                     Setup the allocation parameters for allocating output
  *                     buffers. The passed in query contains the result of the
@@ -258,6 +260,8 @@ struct _GstAudioDecoderClass
   gboolean      (*open)               (GstAudioDecoder *dec);
   
   gboolean      (*close)              (GstAudioDecoder *dec);
+
+  gboolean      (*negotiate)          (GstAudioDecoder *dec);
 
   gboolean      (*decide_allocation)  (GstAudioDecoder *dec, GstQuery *query);
 
