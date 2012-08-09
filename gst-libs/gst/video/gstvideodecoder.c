@@ -394,6 +394,9 @@ struct _GstVideoDecoderPrivate
 
   gint64 min_latency;
   gint64 max_latency;
+
+  GstTagList *tags;
+  gboolean tags_changed;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -1548,6 +1551,11 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
     priv->output_state = NULL;
     priv->min_latency = 0;
     priv->max_latency = 0;
+
+    if (priv->tags)
+      gst_tag_list_unref (priv->tags);
+    priv->tags = NULL;
+    priv->tags_changed = FALSE;
   }
 
   priv->discont = TRUE;
@@ -2206,6 +2214,12 @@ gst_video_decoder_finish_frame (GstVideoDecoder * decoder,
 
   gst_video_decoder_prepare_finish_frame (decoder, frame, FALSE);
   priv->processed++;
+
+  if (priv->tags && priv->tags_changed) {
+    gst_video_decoder_push_event (decoder,
+        gst_event_new_tag (gst_tag_list_ref (priv->tags)));
+    priv->tags_changed = FALSE;
+  }
 
   /* no buffer data means this frame is skipped */
   if (!frame->output_buffer || GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (frame)) {
@@ -3077,4 +3091,38 @@ gst_video_decoder_get_latency (GstVideoDecoder * decoder,
   if (max_latency)
     *max_latency = decoder->priv->max_latency;
   GST_OBJECT_UNLOCK (decoder);
+}
+
+/**
+ * gst_video_decoder_merge_tags:
+ * @decoder: a #GstVideoDecoder
+ * @tags: a #GstTagList to merge
+ * @mode: the #GstTagMergeMode to use
+ *
+ * Adds tags to so-called pending tags, which will be processed
+ * before pushing out data downstream.
+ *
+ * Note that this is provided for convenience, and the subclass is
+ * not required to use this and can still do tag handling on its own.
+ *
+ * MT safe.
+ */
+void
+gst_video_decoder_merge_tags (GstVideoDecoder * decoder,
+    const GstTagList * tags, GstTagMergeMode mode)
+{
+  GstTagList *otags;
+
+  g_return_if_fail (GST_IS_VIDEO_DECODER (decoder));
+  g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  if (tags)
+    GST_DEBUG_OBJECT (decoder, "merging tags %" GST_PTR_FORMAT, tags);
+  otags = decoder->priv->tags;
+  decoder->priv->tags = gst_tag_list_merge (decoder->priv->tags, tags, mode);
+  if (otags)
+    gst_tag_list_unref (otags);
+  decoder->priv->tags_changed = TRUE;
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
