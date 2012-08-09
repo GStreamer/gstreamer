@@ -616,7 +616,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "mpg123audiodec",
-      GST_RANK_NONE, gst_mpg123_audio_dec_get_type ());
+      GST_RANK_MARGINAL, gst_mpg123_audio_dec_get_type ());
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
