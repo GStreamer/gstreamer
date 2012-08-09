@@ -1761,19 +1761,17 @@ AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
 dnl *** vp8 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VP8, vp8)
 AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
-  VPX_LIBS=""
-  AG_GST_CHECK_LIBHEADER(VPX, vpx,
-                        vpx_codec_version, ,
-                        vpx/vpx_codec.h, [
+  PKG_CHECK_MODULES(VPX, vpx, [HAVE_VPX="yes"], [HAVE_VPX="no"])
+
+  if test $HAVE_VPX = "yes"; then
     HAVE_VP8_ENCODER=no
     HAVE_VP8_DECODER=no
 
     OLD_LIBS="$LIBS"
-    LIBS="$LIBS $LIBM -lpthread"
+    LIBS="$LIBS $VPX_LIBS"
     AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
-      VPX_LIBS="-lvpx"
 
       AC_MSG_CHECKING([for VP8E_SET_TUNING presence])
       AC_TRY_COMPILE([
@@ -1792,11 +1790,11 @@ return 0;
     AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
-      VPX_LIBS="-lvpx"
     ])
     LIBS="$OLD_LIBS"
-  ])
+  fi
   AC_SUBST(VPX_LIBS)
+  AC_SUBST(VPX_CFLAGS)
 ])
 
 dnl *** rtmp ***

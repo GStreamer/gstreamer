@@ -11,6 +11,7 @@ libgstvp8_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
+	$(VPX_CFLAGS) \
 	-DGST_USE_UNSTABLE_API
 libgstvp8_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_API_VERSION@ -lgstvideo-@GST_API_VERSION@ \
