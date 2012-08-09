@@ -184,6 +184,7 @@ typedef struct _GstAudioDecoderContext
   /* input */
   /* (output) audio format */
   GstAudioInfo info;
+  gboolean output_format_changed;
 
   /* parsing state */
   gboolean eos;
@@ -524,64 +525,38 @@ gst_audio_decoder_finalize (GObject * object)
 }
 
 /**
- * gst_audio_decoder_set_output_format:
+ * gst_audio_decoder_negotiate:
  * @dec: a #GstAudioDecoder
- * @info: #GstAudioInfo
  *
- * Configure output info on the srcpad of @dec.
+ * Negotiate with downstreame elements to currently configured #GstAudioInfo.
  *
- * Returns: %TRUE on success.
- **/
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
 gboolean
-gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
-    const GstAudioInfo * info)
+gst_audio_decoder_negotiate (GstAudioDecoder * dec)
 {
-  GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+  GstAudioDecoderClass *klass;
   gboolean res = TRUE;
-  guint old_rate;
   GstCaps *caps = NULL;
-  GstCaps *templ_caps;
   GstQuery *query = NULL;
   GstAllocator *allocator;
   GstAllocationParams params;
 
-  GST_DEBUG_OBJECT (dec, "Setting output format");
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
+  g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info), FALSE);
+
+  klass = GST_AUDIO_DECODER_GET_CLASS (dec);
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  /* If the audio info can't be converted to caps,
-   * it was invalid */
-  caps = gst_audio_info_to_caps (info);
-  if (!caps)
-    goto refuse_caps;
-
-  /* Only allow caps that are a subset of the template caps */
-  templ_caps = gst_pad_get_pad_template_caps (dec->srcpad);
-  if (!gst_caps_is_subset (caps, templ_caps)) {
-    GST_WARNING_OBJECT (dec, "Requested output format %" GST_PTR_FORMAT
-        " do not match template %" GST_PTR_FORMAT, caps, templ_caps);
-    gst_caps_unref (caps);
-    gst_caps_unref (templ_caps);
-    goto refuse_caps;
-  }
-  gst_caps_unref (templ_caps);
-
-  /* adjust ts tracking to new sample rate */
-  old_rate = GST_AUDIO_INFO_RATE (&dec->priv->ctx.info);
-  if (GST_CLOCK_TIME_IS_VALID (dec->priv->base_ts) && old_rate) {
-    dec->priv->base_ts +=
-        GST_FRAMES_TO_CLOCK_TIME (dec->priv->samples, old_rate);
-    dec->priv->samples = 0;
-  }
-
-  /* copy the GstAudioInfo */
-  dec->priv->ctx.info = *info;
-
   GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
+
+  caps = gst_audio_info_to_caps (&dec->priv->ctx.info);
 
   res = gst_pad_set_caps (dec->srcpad, caps);
   if (!res)
     goto done;
+  dec->priv->ctx.output_format_changed = FALSE;
 
   query = gst_query_new_allocation (caps, TRUE);
   if (!gst_pad_peer_query (dec->srcpad, query)) {
@@ -621,15 +596,79 @@ done:
   return res;
 
   /* ERRORS */
+no_decide_allocation:
+  {
+    GST_WARNING_OBJECT (dec, "Subclass failed to decide allocation");
+    goto done;
+  }
+}
+
+/**
+ * gst_audio_decoder_set_output_format:
+ * @dec: a #GstAudioDecoder
+ * @info: #GstAudioInfo
+ *
+ * Configure output info on the srcpad of @dec.
+ *
+ * Returns: %TRUE on success.
+ **/
+gboolean
+gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
+    const GstAudioInfo * info)
+{
+  gboolean res = TRUE;
+  guint old_rate;
+  GstCaps *caps = NULL;
+  GstCaps *templ_caps;
+
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
+  g_return_val_if_fail (GST_AUDIO_INFO_IS_VALID (info), FALSE);
+
+  GST_DEBUG_OBJECT (dec, "Setting output format");
+
+  GST_AUDIO_DECODER_STREAM_LOCK (dec);
+
+  /* If the audio info can't be converted to caps,
+   * it was invalid */
+  caps = gst_audio_info_to_caps (info);
+  if (!caps)
+    goto refuse_caps;
+
+  /* Only allow caps that are a subset of the template caps */
+  templ_caps = gst_pad_get_pad_template_caps (dec->srcpad);
+  if (!gst_caps_is_subset (caps, templ_caps)) {
+    GST_WARNING_OBJECT (dec, "Requested output format %" GST_PTR_FORMAT
+        " do not match template %" GST_PTR_FORMAT, caps, templ_caps);
+    gst_caps_unref (caps);
+    gst_caps_unref (templ_caps);
+    goto refuse_caps;
+  }
+  gst_caps_unref (templ_caps);
+
+  /* adjust ts tracking to new sample rate */
+  old_rate = GST_AUDIO_INFO_RATE (&dec->priv->ctx.info);
+  if (GST_CLOCK_TIME_IS_VALID (dec->priv->base_ts) && old_rate) {
+    dec->priv->base_ts +=
+        GST_FRAMES_TO_CLOCK_TIME (dec->priv->samples, old_rate);
+    dec->priv->samples = 0;
+  }
+
+  /* copy the GstAudioInfo */
+  dec->priv->ctx.info = *info;
+  dec->priv->ctx.output_format_changed = TRUE;
+
+done:
+  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+  gst_caps_unref (caps);
+
+  return res;
+
+  /* ERRORS */
 refuse_caps:
   {
     GST_WARNING_OBJECT (dec, "invalid output format");
     res = FALSE;
-    goto done;
-  }
-no_decide_allocation:
-  {
-    GST_WARNING_OBJECT (dec, "Subclass failed to decide allocation");
     goto done;
   }
 }
@@ -915,8 +954,10 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  if (G_UNLIKELY (buf && gst_pad_check_reconfigure (dec->srcpad))) {
-    if (!gst_audio_decoder_set_output_format (dec, &ctx->info)) {
+  if (buf && G_UNLIKELY (ctx->output_format_changed ||
+          (GST_AUDIO_INFO_IS_VALID (&ctx->info)
+              && gst_pad_check_reconfigure (dec->srcpad)))) {
+    if (!gst_audio_decoder_negotiate (dec)) {
       ret = GST_FLOW_NOT_NEGOTIATED;
       goto exit;
     }
@@ -2827,9 +2868,10 @@ gst_audio_decoder_allocate_output_buffer (GstAudioDecoder * dec, gsize size)
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
-  if (G_UNLIKELY (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)
-          && gst_pad_check_reconfigure (dec->srcpad))) {
-    if (!gst_audio_decoder_set_output_format (dec, &dec->priv->ctx.info))
+  if (G_UNLIKELY (dec->priv->ctx.output_format_changed ||
+          (GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)
+              && gst_pad_check_reconfigure (dec->srcpad)))) {
+    if (!gst_audio_decoder_negotiate (dec))
       goto done;
   }
 

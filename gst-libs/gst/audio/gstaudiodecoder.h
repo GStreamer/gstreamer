@@ -273,6 +273,8 @@ GType             gst_audio_decoder_get_type (void);
 gboolean          gst_audio_decoder_set_output_format  (GstAudioDecoder    * dec,
                                                         const GstAudioInfo * info);
 
+gboolean          gst_audio_decoder_negotiate (GstAudioDecoder * dec);
+
 GstFlowReturn     gst_audio_decoder_finish_frame (GstAudioDecoder * dec,
                                                   GstBuffer * buf, gint frames);
 
