@@ -1774,8 +1774,10 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         gst_event_unref (event);
         event = NULL;
         ret = TRUE;
+        break;
       }
-      break;
+
+      /* fall through */
     }
     default:
       if (!GST_EVENT_IS_SERIALIZED (event)) {
