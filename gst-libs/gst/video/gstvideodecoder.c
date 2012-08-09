@@ -1012,6 +1012,20 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       gst_video_decoder_flush (decoder, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     }
+    case GST_EVENT_TAG:
+    {
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+
+      if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
+        gst_video_decoder_merge_tags (decoder, tags, GST_TAG_MERGE_REPLACE);
+        gst_event_unref (event);
+        event = NULL;
+        ret = TRUE;
+      }
+      break;
+    }
     default:
       break;
   }

@@ -988,6 +988,35 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       }
       break;
     }
+    case GST_EVENT_TAG:
+    {
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+
+      if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
+        tags = gst_tag_list_copy (tags);
+
+        /* FIXME: make generic based on GST_TAG_FLAG_ENCODED */
+        gst_tag_list_remove_tag (tags, GST_TAG_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_AUDIO_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_VIDEO_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_SUBTITLE_CODEC);
+        gst_tag_list_remove_tag (tags, GST_TAG_CONTAINER_FORMAT);
+        gst_tag_list_remove_tag (tags, GST_TAG_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_NOMINAL_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_MAXIMUM_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_MINIMUM_BITRATE);
+        gst_tag_list_remove_tag (tags, GST_TAG_ENCODER);
+        gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
+
+        gst_video_encoder_merge_tags (encoder, tags, GST_TAG_MERGE_REPLACE);
+        gst_event_unref (event);
+        event = NULL;
+        ret = TRUE;
+      }
+      break;
+    }
     default:
       break;
   }
