@@ -166,6 +166,9 @@ struct _GstVideoEncoderPrivate
 
   GstAllocator *allocator;
   GstAllocationParams params;
+
+  GstTagList *tags;
+  gboolean tags_changed;
 };
 
 typedef struct _ForcedKeyUnitEvent ForcedKeyUnitEvent;
@@ -340,6 +343,11 @@ gst_video_encoder_reset (GstVideoEncoder * encoder)
   if (priv->output_state)
     gst_video_codec_state_unref (priv->output_state);
   priv->output_state = NULL;
+
+  if (priv->tags)
+    gst_tag_list_unref (priv->tags);
+  priv->tags = NULL;
+  priv->tags_changed = FALSE;
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 }
@@ -1634,6 +1642,12 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
       break;
   }
 
+  if (priv->tags && priv->tags_changed) {
+    gst_video_encoder_push_event (encoder,
+        gst_event_new_tag (gst_tag_list_ref (priv->tags)));
+    priv->tags_changed = FALSE;
+  }
+
   /* no buffer data means this frame is skipped/dropped */
   if (!frame->output_buffer) {
     GST_DEBUG_OBJECT (encoder, "skipping frame %" GST_TIME_FORMAT,
@@ -1961,4 +1975,38 @@ gst_video_encoder_get_frame (GstVideoEncoder * encoder, int frame_number)
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return frame;
+}
+
+/**
+ * gst_video_encoder_merge_tags:
+ * @encoder: a #GstVideoEncoder
+ * @tags: a #GstTagList to merge
+ * @mode: the #GstTagMergeMode to use
+ *
+ * Adds tags to so-called pending tags, which will be processed
+ * before pushing out data downstream.
+ *
+ * Note that this is provided for convenience, and the subclass is
+ * not required to use this and can still do tag handling on its own.
+ *
+ * MT safe.
+ */
+void
+gst_video_encoder_merge_tags (GstVideoEncoder * encoder,
+    const GstTagList * tags, GstTagMergeMode mode)
+{
+  GstTagList *otags;
+
+  g_return_if_fail (GST_IS_VIDEO_ENCODER (encoder));
+  g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
+
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  if (tags)
+    GST_DEBUG_OBJECT (encoder, "merging tags %" GST_PTR_FORMAT, tags);
+  otags = encoder->priv->tags;
+  encoder->priv->tags = gst_tag_list_merge (encoder->priv->tags, tags, mode);
+  if (otags)
+    gst_tag_list_unref (otags);
+  encoder->priv->tags_changed = TRUE;
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 }
