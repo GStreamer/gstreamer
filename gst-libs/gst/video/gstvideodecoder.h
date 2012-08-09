@@ -223,6 +223,8 @@ struct _GstVideoDecoder
  *                  Event handler on the source pad. This function should return
  *                  TRUE if the event was handled and should be discarded
  *                  (i.e. not unref'ed).
+ * @negotiate:      Optional.
+ *                  Negotiate with downstream and configure buffer pools, etc.
  * @decide_allocation: Optional.
  *                     Setup the allocation parameters for allocating output
  *                     buffers. The passed in query contains the result of the
@@ -270,6 +272,8 @@ struct _GstVideoDecoderClass
 
   gboolean      (*src_event)      (GstVideoDecoder *decoder,
 				   GstEvent *event);
+
+  gboolean      (*negotiate)      (GstVideoDecoder *decoder);
 
   gboolean      (*decide_allocation)  (GstVideoDecoder *decoder, GstQuery *query);
 

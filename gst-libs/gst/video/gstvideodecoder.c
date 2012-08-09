@@ -443,6 +443,7 @@ static gboolean gst_video_decoder_decide_allocation_default (GstVideoDecoder *
     decoder, GstQuery * query);
 static gboolean gst_video_decoder_propose_allocation_default (GstVideoDecoder *
     decoder, GstQuery * query);
+static gboolean gst_video_decoder_negotiate_default (GstVideoDecoder * decoder);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -496,6 +497,7 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
   klass->src_event = gst_video_decoder_src_event_default;
   klass->decide_allocation = gst_video_decoder_decide_allocation_default;
   klass->propose_allocation = gst_video_decoder_propose_allocation_default;
+  klass->negotiate = gst_video_decoder_negotiate_default;
 }
 
 static void
@@ -2693,16 +2695,8 @@ gst_video_decoder_propose_allocation_default (GstVideoDecoder * decoder,
   return TRUE;
 }
 
-/**
- * gst_video_decoder_negotiate:
- * @decoder: a #GstVideoDecoder
- *
- * Negotiate with downstreame elements to currently configured #GstVideoCodecState.
- *
- * Returns: #TRUE if the negotiation succeeded, else #FALSE.
- */
-gboolean
-gst_video_decoder_negotiate (GstVideoDecoder * decoder)
+static gboolean
+gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *state = decoder->priv->output_state;
   GstVideoDecoderClass *klass;
@@ -2714,8 +2708,6 @@ gst_video_decoder_negotiate (GstVideoDecoder * decoder)
 
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
-
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
   klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
@@ -2785,8 +2777,6 @@ done:
   if (query)
     gst_query_unref (query);
 
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
   return ret;
 
   /* Errors */
@@ -2795,6 +2785,32 @@ no_decide_allocation:
     GST_WARNING_OBJECT (decoder, "Subclass failed to decide allocation");
     goto done;
   }
+}
+
+/**
+ * gst_video_decoder_negotiate:
+ * @decoder: a #GstVideoDecoder
+ *
+ * Negotiate with downstreame elements to currently configured #GstVideoCodecState.
+ *
+ * Returns: #TRUE if the negotiation succeeded, else #FALSE.
+ */
+gboolean
+gst_video_decoder_negotiate (GstVideoDecoder * decoder)
+{
+  GstVideoDecoderClass *klass;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+
+  klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  if (klass->negotiate)
+    ret = klass->negotiate (decoder);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  return ret;
 }
 
 /**
