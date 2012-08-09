@@ -25,7 +25,6 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 #include <ges/ges.h>
-#include <regex.h>
 
 /* Application Data ********************************************************/
 
@@ -501,16 +500,16 @@ bus_message_cb (GstBus * bus, GstMessage * message, App * app)
 static gboolean
 check_time (const gchar * time)
 {
-  static regex_t re;
-  static gboolean compiled = FALSE;
+  static GRegex *re = NULL;
 
-  if (!compiled) {
-    compiled = TRUE;
-    regcomp (&re, "^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](\\.[0-9]+)?$",
-        REG_EXTENDED | REG_NOSUB);
+  if (!re) {
+    if (NULL == (re =
+            g_regex_new ("^[0-9][0-9]:[0-5][0-9]:[0-5][0-9](\\.[0-9]+)?$",
+                G_REGEX_EXTENDED, 0, NULL)))
+      return FALSE;
   }
 
-  if (!regexec (&re, time, (size_t) 0, NULL, 0))
+  if (g_regex_match (re, time, 0, NULL))
     return TRUE;
   return FALSE;
 }

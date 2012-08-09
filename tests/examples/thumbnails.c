@@ -28,7 +28,6 @@
 #include <glib/gstdio.h>
 #include <ges/ges.h>
 #include <gst/pbutils/encoding-profile.h>
-#include <regex.h>
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
