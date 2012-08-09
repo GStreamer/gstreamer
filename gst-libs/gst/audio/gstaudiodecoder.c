@@ -247,6 +247,7 @@ struct _GstAudioDecoderPrivate
   gint error_count;
   /* codec id tag */
   GstTagList *taglist;
+  gboolean taglist_changed;
 
   /* whether circumstances allow output aggregation */
   gint agg;
@@ -477,6 +478,7 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
       gst_tag_list_free (dec->priv->taglist);
       dec->priv->taglist = NULL;
     }
+    dec->priv->taglist_changed = FALSE;
 
     gst_segment_init (&dec->input_segment, GST_FORMAT_TIME);
     gst_segment_init (&dec->output_segment, GST_FORMAT_TIME);
@@ -706,11 +708,12 @@ gst_audio_decoder_sink_setcaps (GstAudioDecoder * dec, GstCaps * caps)
   /* NOTE pbutils only needed here */
   /* TODO maybe (only) upstream demuxer/parser etc should handle this ? */
 #if 0
-  if (dec->priv->taglist)
-    gst_tag_list_free (dec->priv->taglist);
-  dec->priv->taglist = gst_tag_list_new ();
+  if (!dec->priv->taglist)
+    dec->priv->taglist = gst_tag_list_new ();
+  dec->priv->taglist = gst_tag_list_make_writable (dec->priv->taglist);
   gst_pb_utils_add_codec_description_to_tag_list (dec->priv->taglist,
       GST_TAG_AUDIO_CODEC, caps);
+  dec->priv->taglist_changed = TRUE;
 #endif
 
   if (klass->set_format)
@@ -1070,14 +1073,12 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   }
 
   /* delayed one-shot stuff until confirmed data */
-  if (priv->taglist) {
+  if (priv->taglist && priv->taglist_changed) {
     GST_DEBUG_OBJECT (dec, "codec tag %" GST_PTR_FORMAT, priv->taglist);
-    if (gst_tag_list_is_empty (priv->taglist)) {
-      gst_tag_list_free (priv->taglist);
-    } else {
-      gst_audio_decoder_push_event (dec, gst_event_new_tag (priv->taglist));
-    }
-    priv->taglist = NULL;
+    if (!gst_tag_list_is_empty (priv->taglist))
+      gst_audio_decoder_push_event (dec,
+          gst_event_new_tag (gst_tag_list_ref (priv->taglist)));
+    priv->taglist_changed = FALSE;
   }
 
   buf = gst_buffer_make_writable (buf);
@@ -2862,7 +2863,8 @@ gst_audio_decoder_merge_tags (GstAudioDecoder * dec,
   otags = dec->priv->taglist;
   dec->priv->taglist = gst_tag_list_merge (dec->priv->taglist, tags, mode);
   if (otags)
-    gst_tag_list_free (otags);
+    gst_tag_list_unref (otags);
+  dec->priv->taglist_changed = TRUE;
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 }
 

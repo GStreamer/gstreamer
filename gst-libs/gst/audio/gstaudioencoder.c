@@ -255,6 +255,7 @@ struct _GstAudioEncoderPrivate
 
   /* pending tags */
   GstTagList *tags;
+  gboolean tags_changed;
   /* pending serialized sink events, will be sent from finish_frame() */
   GList *pending_events;
 };
@@ -467,6 +468,7 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
     enc->priv->tags = NULL;
+    enc->priv->tags_changed = FALSE;
 
     g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
     g_list_free (enc->priv->pending_events);
@@ -641,24 +643,26 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   }
 
   /* send after pending events, which likely includes newsegment event */
-  if (G_UNLIKELY (enc->priv->tags)) {
-    GstTagList *tags;
+  if (G_UNLIKELY (enc->priv->tags && enc->priv->tags_changed)) {
 #if 0
     GstCaps *caps;
 #endif
 
     /* add codec info to pending tags */
-    tags = enc->priv->tags;
-    /* no more pending */
-    enc->priv->tags = NULL;
 #if 0
+    if (!enc->priv->tags)
+      enc->priv->tags = gst_tag_list_new ();
+    enc->priv->tags = gst_tag_list_make_writable (enc->priv->tags);
     caps = gst_pad_get_current_caps (enc->srcpad);
-    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_CODEC, caps);
-    gst_pb_utils_add_codec_description_to_tag_list (tags, GST_TAG_AUDIO_CODEC,
-        caps);
+    gst_pb_utils_add_codec_description_to_tag_list (enc->priv->tags,
+        GST_TAG_CODEC, caps);
+    gst_pb_utils_add_codec_description_to_tag_list (enc->priv->tags,
+        GST_TAG_AUDIO_CODEC, caps);
 #endif
-    GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, tags);
-    gst_audio_encoder_push_event (enc, gst_event_new_tag (tags));
+    GST_DEBUG_OBJECT (enc, "sending tags %" GST_PTR_FORMAT, enc->priv->tags);
+    gst_audio_encoder_push_event (enc,
+        gst_event_new_tag (gst_tag_list_ref (enc->priv->tags)));
+    enc->priv->tags_changed = FALSE;
   }
 
   /* remove corresponding samples from input */
@@ -1962,6 +1966,7 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
     enc->priv->tags = gst_tag_list_new_empty ();
+    enc->priv->tags_changed = FALSE;
 
     if (!enc->priv->active && klass->start)
       result = klass->start (enc);
@@ -2502,14 +2507,15 @@ gst_audio_encoder_merge_tags (GstAudioEncoder * enc,
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
   g_return_if_fail (tags == NULL || GST_IS_TAG_LIST (tags));
 
-  GST_OBJECT_LOCK (enc);
+  GST_AUDIO_ENCODER_STREAM_LOCK (enc);
   if (tags)
     GST_DEBUG_OBJECT (enc, "merging tags %" GST_PTR_FORMAT, tags);
   otags = enc->priv->tags;
   enc->priv->tags = gst_tag_list_merge (enc->priv->tags, tags, mode);
   if (otags)
-    gst_tag_list_free (otags);
-  GST_OBJECT_UNLOCK (enc);
+    gst_tag_list_unref (otags);
+  enc->priv->tags_changed = TRUE;
+  GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 }
 
 static gboolean
