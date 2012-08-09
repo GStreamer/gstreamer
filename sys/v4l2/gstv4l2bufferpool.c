@@ -175,7 +175,6 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       if (meta->vbuffer.memory == V4L2_MEMORY_MMAP)
         GST_LOG_OBJECT (pool, "  MMAP offset:  %u", meta->vbuffer.m.offset);
       GST_LOG_OBJECT (pool, "  length:    %u", meta->vbuffer.length);
-      GST_LOG_OBJECT (pool, "  input:     %u", meta->vbuffer.input);
 
       meta->mem = v4l2_mmap (0, meta->vbuffer.length,
           PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
