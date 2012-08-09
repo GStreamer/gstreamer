@@ -2254,6 +2254,7 @@ gst_video_decoder_set_estimate_rate
 gst_video_decoder_set_output_state
 gst_video_decoder_set_max_errors
 gst_video_decoder_set_packetized
+gst_video_decoder_merge_tags
 <SUBSECTION Standard>
 GST_IS_VIDEO_DECODER
 GST_IS_VIDEO_DECODER_CLASS
@@ -2295,6 +2296,7 @@ gst_video_encoder_set_discont
 gst_video_encoder_set_output_state
 gst_video_encoder_get_output_state
 gst_video_encoder_proxy_getcaps
+gst_video_encoder_merge_tags
 <SUBSECTION Standard>
 GST_IS_VIDEO_ENCODER
 GST_IS_VIDEO_ENCODER_CLASS
