@@ -595,16 +595,14 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
     if (c < GST_VIDEO_INFO_N_PLANES (info)) {
       picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&dframe->vframe, c);
-      picture->linesize[c] = GST_VIDEO_FRAME_COMP_STRIDE (&dframe->vframe, c);
+      picture->linesize[c] = GST_VIDEO_FRAME_PLANE_STRIDE (&dframe->vframe, c);
     } else {
       picture->data[c] = NULL;
       picture->linesize[c] = 0;
     }
+    GST_LOG_OBJECT (ffmpegdec, "linesize %d, data %p", picture->linesize[c],
+        picture->data[c]);
   }
-  GST_DEBUG_OBJECT (ffmpegdec, "from GstVideoInfo data %p %p %p",
-      picture->data[0], picture->data[1], picture->data[2]);
-  GST_DEBUG_OBJECT (ffmpegdec, "from GstVideoInfo linesize %d %d %d",
-      picture->linesize[0], picture->linesize[1], picture->linesize[2]);
 
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
@@ -956,22 +954,18 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
     goto alloc_failed;
 
   for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
-    if (c < GST_VIDEO_INFO_N_COMPONENTS (info)) {
+    if (c < GST_VIDEO_INFO_N_PLANES (info)) {
       pic.data[c] = GST_VIDEO_FRAME_PLANE_DATA (&vframe, c);
-      pic.linesize[c] = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, c);
+      pic.linesize[c] = GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, c);
     } else {
       pic.data[c] = NULL;
       pic.linesize[c] = 0;
     }
+    GST_LOG_OBJECT (ffmpegdec, "linesize %d, data %p", pic.linesize[c],
+        pic.data[c]);
   }
 
   outpic = (AVPicture *) ffmpegdec->picture;
-
-  GST_LOG_OBJECT (ffmpegdec, "linsize %d %d %d", outpic->linesize[0],
-      outpic->linesize[1], outpic->linesize[2]);
-  GST_LOG_OBJECT (ffmpegdec, "data %u %u %u", 0,
-      (guint) (outpic->data[1] - outpic->data[0]),
-      (guint) (outpic->data[2] - outpic->data[0]));
 
   av_picture_copy (&pic, outpic, ffmpegdec->context->pix_fmt,
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
