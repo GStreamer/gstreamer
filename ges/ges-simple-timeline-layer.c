@@ -131,7 +131,7 @@ ges_simple_timeline_layer_class_init (GESSimpleTimelineLayerClass * klass)
           "Layer is in a valid configuration", FALSE, G_PARAM_READABLE));
 
   /**
-   * GESSimpleTimelineLayer::object-moved
+   * GESSimpleTimelineLayer::object-moved:
    * @layer: the #GESSimpleTimelineLayer
    * @object: the #GESTimelineObject that was added
    * @old: the previous position of the object
@@ -211,9 +211,9 @@ gstl_recalculate (GESSimpleTimelineLayer * self)
       if (pos < 0)
         pos = 0;
 
-      GST_LOG ("%p obj: height: %d: trans_priority %d Position: %" G_GINT64_FORMAT
-          ", duration %" G_GINT64_FORMAT, obj, height, transition_priority, pos,
-          dur);
+      GST_LOG ("%p obj: height: %d: trans_priority %d Position: %"
+          G_GINT64_FORMAT ", duration %" G_GINT64_FORMAT, obj, height,
+          transition_priority, pos, dur);
 
       g_assert (transition_priority != -1);
 

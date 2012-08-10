@@ -108,7 +108,7 @@ ges_track_filesource_class_init (GESTrackFileSourceClass * klass)
   object_class->dispose = ges_track_filesource_dispose;
 
   /**
-   * GESTrackFileSource:uri
+   * GESTrackFileSource:uri:
    *
    * The location of the file/resource to use.
    */

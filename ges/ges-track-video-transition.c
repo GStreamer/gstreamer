@@ -121,7 +121,7 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
   object_class->finalize = ges_track_video_transition_finalize;
 
   /**
-   * GESTrackVideoTransition:border
+   * GESTrackVideoTransition:border:
    *
    * This value represents the border width of the transition.
    *
@@ -133,7 +133,7 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
       properties[PROP_BORDER]);
 
   /**
-   * GESTrackVideoTransition:type
+   * GESTrackVideoTransition:type:
    *
    * The #GESVideoStandardTransitionType currently applied on the object
    *
@@ -146,7 +146,7 @@ ges_track_video_transition_class_init (GESTrackVideoTransitionClass * klass)
       properties[PROP_TRANSITION_TYPE]);
 
   /**
-   * GESTrackVideoTransition:invert
+   * GESTrackVideoTransition:invert:
    *
    * This value represents the direction of the transition.
    *
@@ -789,7 +789,7 @@ ges_track_video_transition_get_border (GESTrackVideoTransition * self)
 /**
  * ges_track_video_transition_set_inverted:
  * @self: The #GESTrackVideoTransition to set invert on
- * @value: The value of the  to set on @object
+ * @inverted: %TRUE if the transition should be inverted %FALSE otherwise
  *
  * Set the invert property of @self, this value represents
  * the direction of the transition. In case this value does

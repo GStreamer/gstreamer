@@ -130,7 +130,7 @@ ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
           GES_VIDEO_TEST_PATTERN_BLACK, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTestSource:freq
+   * GESTimelineTestSource:freq:
    *
    * The frequency to generate for audio track objects.
    */
@@ -140,7 +140,7 @@ ges_timeline_test_source_class_init (GESTimelineTestSourceClass * klass)
           0, 20000, 440, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTestSource:volume
+   * GESTimelineTestSource:volume:
    *
    * The volume for the audio track objects.
    */

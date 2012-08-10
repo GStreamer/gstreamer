@@ -242,7 +242,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   klass->track_object_released = NULL;
 
   /**
-   * GESTimelineObject:start
+   * GESTimelineObject:start:
    *
    * The position of the object in the #GESTimelineLayer (in nanoseconds).
    */
@@ -252,7 +252,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       properties[PROP_START]);
 
   /**
-   * GESTimelineObject:in-point
+   * GESTimelineObject:in-point:
    *
    * The in-point at which this #GESTimelineObject will start outputting data
    * from its contents (in nanoseconds).
@@ -267,7 +267,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       properties[PROP_INPOINT]);
 
   /**
-   * GESTimelineObject:duration
+   * GESTimelineObject:duration:
    *
    * The duration (in nanoseconds) which will be used in the container #GESTrack
    * starting from 'in-point'.
@@ -279,7 +279,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       properties[PROP_DURATION]);
 
   /**
-   * GESTimelineObject:priority
+   * GESTimelineObject:priority:
    *
    * The layer priority of the timeline object.
    */
@@ -289,7 +289,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       properties[PROP_PRIORITY]);
 
   /**
-   * GESTimelineObject:height
+   * GESTimelineObject:height:
    *
    * The span of layer priorities which this object occupies.
    */
@@ -315,7 +315,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       properties[PROP_SUPPORTED_FORMATS]);
 
   /**
-   * GESTimelineObject:layer
+   * GESTimelineObject:layer:
    *
    * The GESTimelineLayer where this object is being used.
    */
@@ -326,7 +326,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       properties[PROP_LAYER]);
 
   /**
-   * GESTimelineObject::effect-added
+   * GESTimelineObject::effect-added:
    * @object: the #GESTimelineObject
    * @effect: the #GESTrackEffect that was added.
    *
@@ -340,7 +340,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
   /**
-   * GESTimelineObject::effect-removed
+   * GESTimelineObject::effect-removed:
    * @object: the #GESTimelineObject
    * @effect: the #GESTrackEffect that was added.
    *
@@ -354,7 +354,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       G_TYPE_NONE, 1, GES_TYPE_TRACK_EFFECT);
 
   /**
-   * GESTimelineObject::track-object-added
+   * GESTimelineObject::track-object-added:
    * @object: the #GESTimelineObject
    * @tckobj: the #GESTrackObject that was added.
    *
@@ -368,7 +368,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
   /**
-   * GESTimelineObject::track-object-removed
+   * GESTimelineObject::track-object-removed:
    * @object: the #GESTimelineObject
    * @tckobj: the #GESTrackObject that was removed.
    *
@@ -1404,9 +1404,7 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
  * The function modifies @object, and creates another #GESTimelineObject so
  * we have two clips at the end, splitted at the time specified by @position.
  *
- * Returns: The newly created #GESTimelineObject resulting from the splitting
- *
- * Since: 0.10.XX
+ * Returns: (transfer floating): The newly created #GESTimelineObject resulting from the splitting
  */
 GESTimelineObject *
 ges_timeline_object_split (GESTimelineObject * object, guint64 position)

@@ -121,7 +121,7 @@ typedef gboolean (*GESFormatterSourceMovedMethod)        (GESFormatter *formatte
 					   GESTimelineFileSource *tfs, gchar *new_uri);
 
 /**
- * GESFormatterLoadedMethod
+ * GESFormatterLoadedMethod:
  * @formatter: The #GESFormatter that is done loading
  * @timeline: The #GESTimeline that has finnished to load
  *

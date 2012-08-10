@@ -301,7 +301,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
   object_class->finalize = ges_timeline_finalize;
 
   /**
-   * GESTimeline:duration
+   * GESTimeline:duration:
    *
    * Current duration (in nanoseconds) of the #GESTimeline
    */
@@ -313,7 +313,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       properties[PROP_DURATION]);
 
   /**
-   * GESTimeline:snapping-distance
+   * GESTimeline:snapping-distance:
    *
    * Distance (in nanoseconds) from which a moving object will snap
    * with it neighboors. 0 means no snapping.
@@ -347,7 +347,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       properties[PROP_UPDATE]);
 
   /**
-   * GESTimeline::track-added
+   * GESTimeline::track-added:
    * @timeline: the #GESTimeline
    * @track: the #GESTrack that was added to the timeline
    *
@@ -359,7 +359,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
   /**
-   * GESTimeline::track-removed
+   * GESTimeline::track-removed:
    * @timeline: the #GESTimeline
    * @track: the #GESTrack that was removed from the timeline
    *
@@ -371,7 +371,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GES_TYPE_TRACK);
 
   /**
-   * GESTimeline::layer-added
+   * GESTimeline::layer-added:
    * @timeline: the #GESTimeline
    * @layer: the #GESTimelineLayer that was added to the timeline
    *
@@ -384,7 +384,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       GES_TYPE_TIMELINE_LAYER);
 
   /**
-   * GESTimeline::layer-removed
+   * GESTimeline::layer-removed:
    * @timeline: the #GESTimeline
    * @layer: the #GESTimelineLayer that was removed from the timeline
    *
@@ -2465,7 +2465,7 @@ ges_timeline_enable_update (GESTimeline * timeline, gboolean enabled)
 }
 
 /**
- * ges_timeline_get_duration
+ * ges_timeline_get_duration:
  * @timeline: a #GESTimeline
  *
  * Get the current duration of @timeline

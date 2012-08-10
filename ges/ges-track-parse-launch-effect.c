@@ -21,8 +21,6 @@
  * SECTION:ges-track-parse-launch-effect
  * @short_description: adds an effect build from a parse-launch style 
  * bin description to a stream in a #GESTimelineSource or a #GESTimelineLayer
- *
- * @Since: 0.10.2
  */
 
 #include "ges-internal.h"

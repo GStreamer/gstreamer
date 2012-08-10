@@ -161,7 +161,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
   object_class->dispose = ges_timeline_text_overlay_dispose;
 
   /**
-   * GESTimelineTextOverlay:text
+   * GESTimelineTextOverlay:text:
    *
    * The text to diplay
    */
@@ -171,7 +171,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           DEFAULT_PROP_TEXT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTextOverlay:font-desc
+   * GESTimelineTextOverlay:font-desc:
    *
    * Pango font description string
    */
@@ -184,7 +184,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GESTimelineTextOverlay:valignment
+   * GESTimelineTextOverlay:valignment:
    *
    * Vertical alignent of the text
    */
@@ -194,7 +194,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           DEFAULT_PROP_VALIGNMENT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
           G_PARAM_STATIC_STRINGS));
   /**
-   * GESTimelineTextOverlay:halignment
+   * GESTimelineTextOverlay:halignment:
    *
    * Horizontal alignment of the text
    */
@@ -209,7 +209,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
   timobj_class->need_fill_track = FALSE;
 
   /**
-   * GESTimelineTextOverlay:color
+   * GESTimelineTextOverlay:color:
    *
    * The color of the text
    */
@@ -219,7 +219,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTextOverlay:xpos
+   * GESTimelineTextOverlay:xpos:
    *
    * The horizontal position of the text
    */
@@ -229,7 +229,7 @@ ges_timeline_text_overlay_class_init (GESTimelineTextOverlayClass * klass)
           0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTextOverlay:ypos
+   * GESTimelineTextOverlay:ypos:
    *
    * The vertical position of the text
    */

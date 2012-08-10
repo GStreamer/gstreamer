@@ -242,7 +242,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
   object_class->finalize = ges_track_object_finalize;
 
   /**
-   * GESTrackObject:start
+   * GESTrackObject:start:
    *
    * The position of the object in the container #GESTrack (in nanoseconds).
    */
@@ -252,7 +252,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       properties[PROP_START]);
 
   /**
-   * GESTrackObject:in-point
+   * GESTrackObject:in-point:
    *
    * The in-point at which this #GESTrackObject will start outputting data
    * from its contents (in nanoseconds).
@@ -267,7 +267,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       properties[PROP_INPOINT]);
 
   /**
-   * GESTrackObject:duration
+   * GESTrackObject:duration:
    *
    * The duration (in nanoseconds) which will be used in the container #GESTrack
    * starting from 'in-point'.
@@ -280,7 +280,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       properties[PROP_DURATION]);
 
   /**
-   * GESTrackObject:priority
+   * GESTrackObject:priority:
    *
    * The priority of the object within the containing #GESTrack.
    * If two objects intersect over the same region of time, the @priority
@@ -296,7 +296,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       properties[PROP_PRIORITY]);
 
   /**
-   * GESTrackObject:active
+   * GESTrackObject:active:
    *
    * Whether the object should be taken into account in the #GESTrack output.
    * If #FALSE, then its contents will not be used in the resulting track.
@@ -308,7 +308,7 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
       properties[PROP_ACTIVE]);
 
   /**
-   * GESTrackObject:locked
+   * GESTrackObject:locked:
    *
    * If %TRUE, then moves in sync with its controlling #GESTimelineObject
    */
@@ -1554,7 +1554,7 @@ ges_track_object_set_max_duration (GESTrackObject * object, guint64 maxduration)
  *
  * Copies @object
  *
- * Returns: The newly create #GESTrackObject, copied from @object
+ * Returns: (transfer floating): The newly create #GESTrackObject, copied from @object
  *
  * Since: 0.10.XX
  */

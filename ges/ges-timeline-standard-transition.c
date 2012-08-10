@@ -124,7 +124,7 @@ ges_timeline_standard_transition_class_init (GESTimelineStandardTransitionClass
   object_class->set_property = ges_timeline_standard_transition_set_property;
 
   /**
-   * GESTimelineStandardTransition:vtype
+   * GESTimelineStandardTransition:vtype:
    *
    * a #GESVideoStandardTransitionType representing the wipe to use
    */

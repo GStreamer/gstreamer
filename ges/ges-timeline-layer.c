@@ -135,7 +135,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
   object_class->dispose = ges_timeline_layer_dispose;
 
   /**
-   * GESTimelineLayer:priority
+   * GESTimelineLayer:priority:
    *
    * The priority of the layer in the #GESTimeline. 0 is the highest
    * priority. Conceptually, a #GESTimeline is a stack of GESTimelineLayers,
@@ -147,7 +147,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
           "The priority of the layer", 0, G_MAXUINT, 0, G_PARAM_READWRITE));
 
   /**
-   * GESTimelineLayer:auto-transition
+   * GESTimelineLayer:auto-transition:
    *
    * Sets whether transitions are added automagically when timeline objects overlap.
    */
@@ -156,7 +156,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
           "whether the transitions are added", FALSE, G_PARAM_READWRITE));
 
   /**
-   * GESTimelineLayer::object-added
+   * GESTimelineLayer::object-added:
    * @layer: the #GESTimelineLayer
    * @object: the #GESTimelineObject that was added.
    *
@@ -169,7 +169,7 @@ ges_timeline_layer_class_init (GESTimelineLayerClass * klass)
       GES_TYPE_TIMELINE_OBJECT);
 
   /**
-   * GESTimelineLayer::object-removed
+   * GESTimelineLayer::object-removed:
    * @layer: the #GESTimelineLayer
    * @object: the #GESTimelineObject that was removed
    *

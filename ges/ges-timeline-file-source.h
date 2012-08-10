@@ -47,11 +47,6 @@ G_BEGIN_DECLS
 
 typedef struct _GESTimelineFileSourcePrivate GESTimelineFileSourcePrivate;
 
-/**
- * GESTimelineSource:
- * 
- */
-
 struct _GESTimelineFileSource {
   GESTimelineSource parent;
 

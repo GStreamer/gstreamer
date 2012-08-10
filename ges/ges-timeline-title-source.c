@@ -238,7 +238,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
       ges_timeline_title_source_track_object_released;
 
   /**
-   * GESTimelineTitleSource:color
+   * GESTimelineTitleSource:color:
    *
    * The color of the text
    */
@@ -248,7 +248,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:xpos
+   * GESTimelineTitleSource:xpos:
    *
    * The horizontal position of the text
    */
@@ -258,7 +258,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           0, 1, 0.5, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:ypos
+   * GESTimelineTitleSource:ypos:
    *
    * The vertical position of the text
    */

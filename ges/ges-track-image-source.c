@@ -160,7 +160,7 @@ ges_track_image_source_class_init (GESTrackImageSourceClass * klass)
   object_class->dispose = ges_track_image_source_dispose;
 
   /**
-   * GESTrackImageSource:uri
+   * GESTrackImageSource:uri:
    *
    * The location of the file/resource to use.
    */

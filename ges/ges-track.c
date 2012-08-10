@@ -536,7 +536,7 @@ ges_track_class_init (GESTrackClass * klass)
   object_class->finalize = ges_track_finalize;
 
   /**
-   * GESTrack:caps
+   * GESTrack:caps:
    *
    * Caps used to filter/choose the output stream. This is generally set to
    * a generic set of caps like 'video/x-raw' for raw video.
@@ -550,7 +550,7 @@ ges_track_class_init (GESTrackClass * klass)
       properties[ARG_CAPS]);
 
   /**
-   * GESTrack:duration
+   * GESTrack:duration:
    *
    * Current duration of the track
    *
@@ -563,7 +563,7 @@ ges_track_class_init (GESTrackClass * klass)
       properties[ARG_DURATION]);
 
   /**
-   * GESTrack:track-type
+   * GESTrack:track-type:
    *
    * Type of stream the track outputs. This is used when creating the #GESTrack
    * to specify in generic terms what type of content will be outputted.
@@ -580,7 +580,7 @@ ges_track_class_init (GESTrackClass * klass)
       properties[ARG_TYPE]);
 
   /**
-   * GESTrack::track-object-added
+   * GESTrack::track-object-added:
    * @object: the #GESTrack
    * @effect: the #GESTrackObject that was added.
    *
@@ -594,7 +594,7 @@ ges_track_class_init (GESTrackClass * klass)
       G_TYPE_NONE, 1, GES_TYPE_TRACK_OBJECT);
 
   /**
-   * GESTrack::track-object-removed
+   * GESTrack::track-object-removed:
    * @object: the #GESTrack
    * @effect: the #GESTrackObject that was removed.
    *
