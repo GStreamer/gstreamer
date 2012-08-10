@@ -133,8 +133,8 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
    * The location of the file/resource to use.
    */
   g_object_class_install_property (object_class, PROP_URI,
-      g_param_spec_string ("uri", "URI", "uri of the resource",
-          NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      g_param_spec_string ("uri", "URI", "uri of the resource", NULL,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * GESTimelineFileSource:mute:
