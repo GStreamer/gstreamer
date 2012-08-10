@@ -1831,6 +1831,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     res = GST_FLOW_OK;
   } else {
     GstVideoFrame src, dest;
+    GstBufferPoolAcquireParams params = { 0, };
 
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -1843,8 +1844,11 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
     if (!gst_buffer_pool_set_active (xvimagesink->pool, TRUE))
       goto activate_failed;
 
-    /* take a buffer from our pool */
-    res = gst_buffer_pool_acquire_buffer (xvimagesink->pool, &to_put, NULL);
+    /* take a buffer from our pool, if there is no buffer in the pool something
+     * is seriously wrong, waiting for the pool here might deadlock when we try
+     * to go to PAUSED because we never flush the pool then. */
+    params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
+    res = gst_buffer_pool_acquire_buffer (xvimagesink->pool, &to_put, &params);
     if (res != GST_FLOW_OK)
       goto no_buffer;
 
@@ -1886,12 +1890,12 @@ no_buffer:
   {
     /* No image available. That's very bad ! */
     GST_WARNING_OBJECT (xvimagesink, "could not create image");
-    return res;
+    return GST_FLOW_OK;
   }
 invalid_buffer:
   {
     /* No Window available to put our image into */
-    GST_WARNING_OBJECT (xvimagesink, "could map image");
+    GST_WARNING_OBJECT (xvimagesink, "could not map image");
     res = GST_FLOW_OK;
     goto done;
   }
