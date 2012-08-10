@@ -237,9 +237,15 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    * @discoverer: the #GstDiscoverer
    * @info: the results #GstDiscovererInfo
    * @error: (type GLib.Error): #GError, which will be non-NULL if an error
-   *                            occurred during discovery
+   *                            occurred during discovery. You must not
+   *                            free this #GError, it will be freed by
+   *                            the discoverer.
    *
-   * Will be emitted when all information on a URI could be discovered.
+   * Will be emitted when all information on a URI could be discovered, or
+   * an error ocurred.
+   *
+   * When an error occurs, @info might still contain some partial information,
+   * depending on the circumstances of the error.
    */
   gst_discoverer_signals[SIGNAL_DISCOVERED] =
       g_signal_new ("discovered", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -264,8 +270,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
   gst_discoverer_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDiscovererClass, source_setup),
-      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1,
-      GST_TYPE_ELEMENT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 }
 
 static void
