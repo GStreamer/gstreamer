@@ -273,7 +273,7 @@ gst_net_client_clock_thread (gpointer data)
       socket_timeout = (expiration_time - now) / GST_USECOND;
     }
 
-    GST_TRACE_OBJECT (self, "time out in %d microsecs please", socket_timeout);
+    GST_TRACE_OBJECT (self, "timeout: %" G_GINT64_FORMAT "us", socket_timeout);
 
     if (!g_socket_condition_timed_wait (socket, G_IO_IN, socket_timeout,
             self->priv->cancel, &err)) {
