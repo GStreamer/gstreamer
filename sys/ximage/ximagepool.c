@@ -100,7 +100,7 @@ gst_buffer_add_ximage_meta (GstBuffer * buffer, GstXImageBufferPool * xpool)
   gboolean success = FALSE;
   GstXContext *xcontext;
   GstXImageMeta *meta;
-  gint width, height;
+  gint width, height, align = 15, offset;
   GstXImageBufferPoolPrivate *priv;
 
   priv = xpool->priv;
@@ -165,7 +165,8 @@ gst_buffer_add_ximage_meta (GstBuffer * buffer, GstXImageBufferPool * xpool)
         meta->size, width, meta->ximage->bytes_per_line);
 
     /* get shared memory */
-    meta->SHMInfo.shmid = shmget (IPC_PRIVATE, meta->size, IPC_CREAT | 0777);
+    meta->SHMInfo.shmid =
+        shmget (IPC_PRIVATE, meta->size + align, IPC_CREAT | 0777);
     if (meta->SHMInfo.shmid == -1)
       goto shmget_failed;
 
@@ -218,7 +219,7 @@ gst_buffer_add_ximage_meta (GstBuffer * buffer, GstXImageBufferPool * xpool)
     allocsize =
         GST_ROUND_UP_4 (meta->ximage->bytes_per_line) * meta->ximage->height;
 
-    meta->ximage->data = g_malloc (allocsize);
+    meta->ximage->data = g_malloc (allocsize + align);
     GST_LOG_OBJECT (ximagesink,
         "non-XShm image size is %" G_GSIZE_FORMAT " (alloced: %u), width %d, "
         "stride %d", meta->size, allocsize, width,
@@ -227,13 +228,19 @@ gst_buffer_add_ximage_meta (GstBuffer * buffer, GstXImageBufferPool * xpool)
     XSync (xcontext->disp, FALSE);
   }
 
+  if ((offset = ((guintptr) meta->ximage->data & align)))
+    offset = (align + 1) - offset;
+
+  GST_DEBUG_OBJECT (ximagesink, "memory %p, align %d, offset %d",
+      meta->ximage->data, align, offset);
+
   /* Reset error handler */
   error_caught = FALSE;
   XSetErrorHandler (handler);
 
   gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->ximage->data,
-          meta->size, 0, meta->size, NULL, NULL));
+          meta->size + align, offset, meta->size, NULL, NULL));
 
   g_mutex_unlock (ximagesink->x_lock);
 

@@ -103,7 +103,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   gboolean success = FALSE;
   GstXContext *xcontext;
   GstXvImageMeta *meta;
-  gint width, height, im_format;
+  gint width, height, im_format, align = 15, offset;
   GstXvImageBufferPoolPrivate *priv;
 
   priv = xvpool->priv;
@@ -220,7 +220,8 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
     }
 
     /* get shared memory */
-    meta->SHMInfo.shmid = shmget (IPC_PRIVATE, meta->size, IPC_CREAT | 0777);
+    meta->SHMInfo.shmid =
+        shmget (IPC_PRIVATE, meta->size + align, IPC_CREAT | 0777);
     if (meta->SHMInfo.shmid == -1)
       goto shmget_failed;
 
@@ -256,10 +257,16 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
 
     /* we have to use the returned data_size for our image size */
     meta->size = meta->xvimage->data_size;
-    meta->xvimage->data = g_malloc (meta->size);
+    meta->xvimage->data = g_malloc (meta->size + align);
 
     XSync (xcontext->disp, FALSE);
   }
+
+  if ((offset = ((guintptr) meta->xvimage->data & align)))
+    offset = (align + 1) - offset;
+
+  GST_DEBUG_OBJECT (xvimagesink, "memory %p, align %d, offset %d",
+      meta->xvimage->data, align, offset);
 
   /* Reset error handler */
   error_caught = FALSE;
@@ -267,7 +274,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
 
   gst_buffer_append_memory (buffer,
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->xvimage->data,
-          meta->size, 0, meta->size, NULL, NULL));
+          meta->size + align, offset, meta->size, NULL, NULL));
 
   g_mutex_unlock (xvimagesink->x_lock);
 
