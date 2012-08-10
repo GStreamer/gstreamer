@@ -991,6 +991,11 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux, gboolean * popped)
                 gst_collect_pads_set_waiting (ogg_mux->collect,
                     (GstCollectData *) pad, FALSE);
               }
+
+              if (pad->map.is_video && ogg_mux->delta_pad == NULL) {
+                ogg_mux->delta_pad = pad;
+                GST_INFO_OBJECT (pad, "selected delta pad");
+              }
             }
             if (caps)
               gst_caps_unref (caps);
