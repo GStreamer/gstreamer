@@ -3747,6 +3747,13 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   GstSegment seeksegment = { 0, };
   GstClockTime start_ts;
 
+  /* try upstream first, unless we're driving the streaming thread ourselves */
+  if (parse->priv->pad_mode != GST_PAD_MODE_PULL) {
+    res = gst_pad_push_event (parse->sinkpad, gst_event_ref (event));
+    if (res)
+      goto done;
+  }
+
   gst_event_parse_seek (event, &rate, &format, &flags,
       &start_type, &start, &stop_type, &stop);
 
@@ -3755,16 +3762,17 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       GST_TIME_FORMAT, gst_format_get_name (format), rate,
       start_type, GST_TIME_ARGS (start), stop_type, GST_TIME_ARGS (stop));
 
-  /* no negative rates in push mode */
+  /* we can only handle TIME */
+  if (format != GST_FORMAT_TIME)
+    goto done;
+
+  /* no negative rates in push mode (unless upstream takes care of that, but
+   * we've already tried upstream and it didn't handle the seek request) */
   if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PUSH)
     goto negative_rate;
 
-  /* For any format other than TIME, see if upstream handles
-   * it directly or fail. For TIME, try upstream, but do it ourselves if
-   * it fails upstream */
-  res = gst_pad_push_event (parse->sinkpad, event);
-  if (format != GST_FORMAT_TIME || res)
-    goto done;
+  if (rate < 0.0 && parse->priv->pad_mode == GST_PAD_MODE_PULL)
+    goto negative_rate_pull_mode;
 
   if (start_type != GST_SEEK_TYPE_SET ||
       (stop_type != GST_SEEK_TYPE_SET && stop_type != GST_SEEK_TYPE_NONE))
@@ -3955,9 +3963,16 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
   }
 
 done:
+  gst_event_unref (event);
   return res;
 
   /* ERRORS */
+negative_rate_pull_mode:
+  {
+    GST_FIXME_OBJECT (parse, "negative playback in pull mode needs fixing");
+    res = FALSE;
+    goto done;
+  }
 negative_rate:
   {
     GST_DEBUG_OBJECT (parse, "negative playback rates delegated upstream.");
