@@ -96,7 +96,7 @@ static void gst_glimage_sink_set_property (GObject * object, guint prop_id,
 static void gst_glimage_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * param_spec);
 
-static gboolean gst_glimage_sink_query (GstElement * element, GstQuery * query);
+static gboolean gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query);
 
 static GstStateChangeReturn
 gst_glimage_sink_change_state (GstElement * element, GstStateChange transition);
@@ -197,8 +197,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gobject_class->finalize = gst_glimage_sink_finalize;
 
   gstelement_class->change_state = gst_glimage_sink_change_state;
-  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_glimage_sink_query);
 
+  gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_glimage_sink_query);
   gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->preroll = gst_glimage_sink_render;
@@ -327,22 +327,25 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_glimage_sink_query (GstElement * element, GstQuery * query)
+gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
-  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (element);
+  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_writable_structure (query);
-      gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-          glimage_sink->display, NULL);
-      res = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+      if (gst_structure_has_name (structure, "gstgldisplay")) {
+        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+            glimage_sink->display, NULL);
+        res = TRUE;
+      } else
+        res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
     }
     default:
-      res = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+      res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
   }
 

@@ -87,9 +87,9 @@ enum
   PROP_0
 };
 
+#define gst_gl_download_parent_class parent_class
 #define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_gl_download_debug, "gldownload", 0, "gldownload element");
-
 G_DEFINE_TYPE_WITH_CODE (GstGLDownload, gst_gl_download,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
 
@@ -98,8 +98,8 @@ static void gst_gl_download_set_property (GObject * object, guint prop_id,
 static void gst_gl_download_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_download_src_query (GstPad * pad, GstObject * object,
-    GstQuery * query);
+static gboolean gst_gl_download_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query);
 
 static void gst_gl_download_reset (GstGLDownload * download);
 static gboolean gst_gl_download_set_caps (GstBaseTransform * bt,
@@ -139,6 +139,7 @@ gst_gl_download_class_init (GstGLDownloadClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_download_sink_pad_template));
 
+  GST_BASE_TRANSFORM_CLASS (klass)->query = gst_gl_download_query;
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       gst_gl_download_transform_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_download_transform;
@@ -157,11 +158,6 @@ gst_gl_download_class_init (GstGLDownloadClass * klass)
 static void
 gst_gl_download_init (GstGLDownload * download)
 {
-  GstBaseTransform *base_trans = GST_BASE_TRANSFORM (download);
-
-  gst_pad_set_query_function (base_trans->srcpad,
-      GST_DEBUG_FUNCPTR (gst_gl_download_src_query));
-
   gst_gl_download_reset (download);
 }
 
@@ -194,24 +190,33 @@ gst_gl_download_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gl_download_src_query (GstPad * pad, GstObject * object, GstQuery * query)
+gst_gl_download_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
 {
   GstGLDownload *download;
   gboolean res;
 
-  download = GST_GL_DOWNLOAD (object);
+  download = GST_GL_DOWNLOAD (trans);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_writable_structure (query);
-      gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-          download->display, NULL);
-      res = gst_pad_query_default (pad, object, query);
+      if (direction == GST_PAD_SINK &&
+          gst_structure_has_name (structure, "gstgldisplay")) {
+        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+            download->display, NULL);
+        res = TRUE;
+      } else
+        res =
+            GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+            query);
       break;
     }
     default:
-      res = gst_pad_query_default (pad, object, query);
+      res =
+          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
       break;
   }
 

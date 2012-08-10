@@ -273,15 +273,11 @@ beach:
 }
 
 static GstCaps *
-gst_gl_mixer_pad_sink_getcaps (GstPad * pad, GstObject * parent,
-    GstCaps * filter)
+gst_gl_mixer_pad_sink_getcaps (GstPad * pad, GstGLMixer * mix, GstCaps * filter)
 {
-  GstGLMixer *mix;
   GstCaps *srccaps;
   GstStructure *s;
   gint i, n;
-
-  mix = GST_GL_MIXER (parent);
 
   srccaps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
   if (srccaps == NULL)
@@ -306,16 +302,14 @@ gst_gl_mixer_pad_sink_getcaps (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstObject * parent,
+gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
     GstCaps * caps)
 {
   gboolean ret;
-  GstGLMixer *mix;
   GstCaps *accepted_caps;
   gint i, n;
   GstStructure *s;
 
-  mix = GST_GL_MIXER (parent);
   GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, caps);
 
   accepted_caps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
@@ -346,11 +340,14 @@ gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_gl_mixer_pad_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
+    GstQuery * query, GstGLMixer * mix)
 {
+  GstPad *pad = data->pad;
+  GstGLMixerPad *mixpad = GST_GL_MIXER_PAD (data->pad);
   gboolean ret = FALSE;
 
-  GST_TRACE ("QUERY %d", GST_QUERY_TYPE (query));
+  GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -358,7 +355,7 @@ gst_gl_mixer_pad_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_gl_mixer_pad_sink_getcaps (pad, parent, filter);
+      caps = gst_gl_mixer_pad_sink_getcaps (pad, mix, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
@@ -369,13 +366,46 @@ gst_gl_mixer_pad_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *caps;
 
       gst_query_parse_accept_caps (query, &caps);
-      ret = gst_gl_mixer_pad_sink_acceptcaps (pad, parent, caps);
+      ret = gst_gl_mixer_pad_sink_acceptcaps (pad, mix, caps);
       gst_query_set_accept_caps_result (query, ret);
       ret = TRUE;
       break;
     }
+    case GST_QUERY_CUSTOM:
+    {
+      /* mix is a sink in terms of gl chain, so we are sharing the gldisplay that
+       * comes from src pad with every display of the sink pads */
+      GstStructure *structure = gst_query_writable_structure (query);
+
+      if (gst_structure_has_name (structure, "gstgldisplay")) {
+        gulong foreign_gl_context = 0;
+
+        foreign_gl_context =
+            gst_gl_display_get_internal_gl_context (mix->display);
+
+        g_return_val_if_fail (mixpad->display != NULL, FALSE);
+
+        gst_gl_display_activate_gl_context (mix->display, FALSE);
+
+        ret = gst_gl_display_create_context (mixpad->display,
+            foreign_gl_context);
+
+        gst_gl_display_activate_gl_context (mix->display, TRUE);
+
+        if (ret) {
+          gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+              mix->display, NULL);
+        } else {
+          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+              GST_GL_DISPLAY_ERR_MSG (mixpad->display), (NULL));
+        }
+      } else {
+        ret = gst_collect_pads_query_default (pads, data, query, FALSE);
+      }
+      break;
+    }
     default:
-      ret = gst_pad_query_default (pad, parent, query);
+      ret = gst_collect_pads_query_default (pads, data, query, FALSE);
       break;
   }
 
@@ -385,8 +415,6 @@ gst_gl_mixer_pad_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static void
 gst_gl_mixer_pad_init (GstGLMixerPad * mixerpad)
 {
-  gst_pad_set_query_function (GST_PAD (mixerpad), gst_gl_mixer_pad_sink_query);
-
   mixerpad->display = NULL;
 }
 
@@ -418,6 +446,9 @@ static void gst_gl_mixer_finalize (GObject * object);
 
 static gboolean gst_gl_mixer_src_query (GstPad * pad, GstObject * object,
     GstQuery * query);
+static gboolean gst_gl_mixer_src_activate_mode (GstPad * pad,
+    GstObject * parent, GstPadMode mode, gboolean active);
+static gboolean gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate);
 static GstFlowReturn gst_gl_mixer_sink_clip (GstCollectPads * pads,
     GstCollectData * data, GstBuffer * buf, GstBuffer ** outbuf,
     GstGLMixer * mix);
@@ -588,6 +619,8 @@ gst_gl_mixer_init (GstGLMixer * mix)
       GST_DEBUG_FUNCPTR (gst_gl_mixer_src_query));
   gst_pad_set_event_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_gl_mixer_src_event));
+  gst_pad_set_activatemode_function (GST_PAD (mix->srcpad),
+      GST_DEBUG_FUNCPTR (gst_gl_mixer_src_activate_mode));
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
   mix->collect = gst_collect_pads_new ();
@@ -596,6 +629,8 @@ gst_gl_mixer_init (GstGLMixer * mix)
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_gl_mixer_collected), mix);
   gst_collect_pads_set_event_function (mix->collect,
       (GstCollectPadsEventFunction) gst_gl_mixer_sink_event, mix);
+  gst_collect_pads_set_query_function (mix->collect,
+      (GstCollectPadsQueryFunction) gst_gl_mixer_sink_query, mix);
   gst_collect_pads_set_clip_function (mix->collect,
       (GstCollectPadsClipFunction) gst_gl_mixer_sink_clip, mix);
 
@@ -888,68 +923,6 @@ gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_CAPS:
       res = gst_gl_mixer_query_caps (pad, parent, query);
       break;
-    case GST_QUERY_CUSTOM:
-    {
-      /* mix is a sink in terms of gl chain, so we are sharing the gldisplay that
-       * comes from src pad with every display of the sink pads */
-      GSList *walk = mix->sinkpads;
-      GstStructure *structure = gst_query_writable_structure (query);
-      gchar *name = gst_element_get_name (mix);
-
-      res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
-      g_free (name);
-
-      if (!res) {
-        GstGLDisplay *foreign_display = NULL;
-        gulong foreign_gl_context = 0;
-
-        if (mix->display) {
-          /* this gl filter is a sink in terms of the gl chain */
-          foreign_display = mix->display;
-        } else {
-          /* at least one gl element is after in our gl chain */
-          /* id_value is set by upstream element of itself when going
-           * to paused state */
-          const GValue *id_value =
-              gst_structure_get_value (structure, "gstgldisplay");
-          foreign_display = GST_GL_DISPLAY (g_value_get_pointer (id_value));
-        }
-
-        foreign_gl_context =
-            gst_gl_display_get_internal_gl_context (foreign_display);
-
-        /* iterate on each sink pad until reaching the gl element
-         * that requested the query */
-        while (!res && walk) {
-          GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
-          GstPad *peer = gst_pad_get_peer (GST_PAD_CAST (sink_pad));
-          walk = g_slist_next (walk);
-
-          g_return_val_if_fail (sink_pad->display != NULL, FALSE);
-
-          gst_gl_display_activate_gl_context (foreign_display, FALSE);
-
-          res =
-              gst_gl_display_create_context (sink_pad->display,
-              foreign_gl_context);
-
-          gst_gl_display_activate_gl_context (foreign_display, TRUE);
-
-          if (res)
-            gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-                sink_pad->display, NULL);
-          else
-            GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-                GST_GL_DISPLAY_ERR_MSG (sink_pad->display), (NULL));
-
-          /* does not work:
-           * res = gst_pad_query_default (GST_PAD_CAST (sink_pad), query);*/
-          res = gst_pad_query (peer, query);
-          gst_object_unref (peer);
-        }
-      }
-      break;
-    }
     default:
       /* FIXME, needs a custom query handler because we have multiple
        * sinkpads, send to the master pad until then */
@@ -962,6 +935,59 @@ gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
+gst_gl_mixer_src_activate_mode (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  gboolean result = FALSE;
+  GstGLMixer *mix;
+
+  mix = GST_GL_MIXER (parent);
+
+  switch (mode) {
+    case GST_PAD_MODE_PULL:
+    case GST_PAD_MODE_PUSH:
+    {
+      result = gst_gl_mixer_activate (mix, active);
+      break;
+    }
+    default:
+      result = TRUE;
+      break;
+  }
+
+  return result;
+}
+
+static gboolean
+gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
+{
+  if (activate) {
+    GstStructure *structure;
+    GstQuery *display_query;
+    const GValue *id_value;
+
+    structure = gst_structure_new_empty ("gstgldisplay");
+    display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+    if (!gst_pad_peer_query (mix->srcpad, display_query)) {
+      GST_WARNING ("Could not query GstGLDisplay from downstream");
+      return FALSE;
+    }
+
+    id_value = gst_structure_get_value (structure, "gstgldisplay");
+    if (G_VALUE_HOLDS_POINTER (id_value))
+      mix->display =
+          g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+    else {
+      GST_WARNING ("Incorrect GstGLDisplay from downstream");
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
 {
   GstBufferPool *pool = NULL;
@@ -969,6 +995,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
+  guint idx;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -991,8 +1018,15 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
+
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, &idx)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+  if (gst_query_find_allocation_meta (query, GST_GL_META_API_TYPE, &idx)) {
+    gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
+  }
+
   gst_buffer_pool_set_config (pool, config);
 
   if (update_pool)
@@ -1039,7 +1073,7 @@ gst_gl_mixer_set_allocation (GstGLMixer * mix,
     gst_object_unref (oldpool);
   }
   if (oldalloc) {
-    gst_allocator_unref (oldalloc);
+    gst_object_unref (oldalloc);
   }
   if (oldquery) {
     gst_query_unref (oldquery);
@@ -1131,12 +1165,8 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
   GST_GL_MIXER_UNLOCK (mix);
 
   if (!gst_gl_display_gen_fbo (mix->display, GST_VIDEO_INFO_WIDTH (&mix->info),
-          GST_VIDEO_INFO_HEIGHT (&mix->info), &mix->fbo, &mix->depthbuffer)) {
-    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (mix->display), (NULL));
-    ret = FALSE;
-    goto done;
-  }
+          GST_VIDEO_INFO_HEIGHT (&mix->info), &mix->fbo, &mix->depthbuffer))
+    goto display_error;
 
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);
@@ -1149,6 +1179,14 @@ done:
   priv->negotiated = ret;
 
   return ret;
+
+/* ERRORS */
+display_error:
+  {
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+        GST_GL_DISPLAY_ERR_MSG (mix->display), (NULL));
+    return FALSE;
+  }
 }
 
 static GstPad *
@@ -1595,10 +1633,6 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
     ret = gst_buffer_pool_acquire_buffer (mix->priv->pool, &outbuf, NULL);
 
-    gst_buffer_add_video_meta (outbuf, 0, GST_VIDEO_INFO_FORMAT (&mix->info),
-        GST_VIDEO_INFO_WIDTH (&mix->info), GST_VIDEO_INFO_HEIGHT (&mix->info));
-    gst_buffer_add_gl_meta (outbuf, mix->display);
-
     gst_gl_mixer_process_buffers (mix, outbuf);
     mix->qos_processed++;
   } else {
@@ -1645,8 +1679,9 @@ error:
 }
 
 static gboolean
-forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
+forward_event_func (GValue * item, GValue * ret, GstEvent * event)
 {
+  GstPad *pad = g_value_get_object (item);
   gst_event_ref (event);
   GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
   if (!gst_pad_push_event (pad, event)) {
@@ -1657,7 +1692,6 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
     GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
         event, GST_EVENT_TYPE_NAME (event));
   }
-  gst_object_unref (pad);
   return TRUE;
 }
 
@@ -1967,43 +2001,6 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
     {
       GSList *walk = mix->sinkpads;
       gint i = 0;
-      gchar *name;
-
-      GstElement *parent = GST_ELEMENT (gst_element_get_parent (mix));
-      GstStructure *structure = NULL;
-      GstQuery *query = NULL;
-      gboolean isPerformed = FALSE;
-
-      if (!parent) {
-        GST_ELEMENT_ERROR (mix, CORE, STATE_CHANGE, (NULL),
-            ("A parent bin is required"));
-        return FALSE;
-      }
-
-      name = gst_element_get_name (mix);
-      structure = gst_structure_new_empty (name);
-      g_free (name);
-      query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-
-      /* retrieve the gldisplay that is owned by gl elements after the gl mixer */
-      isPerformed = gst_element_query (parent, query);
-
-      if (isPerformed) {
-        const GValue *id_value =
-            gst_structure_get_value (structure, "gstgldisplay");
-        if (G_VALUE_HOLDS_POINTER (id_value))
-          /* at least one gl element is after in our gl chain */
-          mix->display =
-              g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-        else {
-          /* this gl filter is a sink in terms of the gl chain */
-          mix->display = gst_gl_display_new ();
-          gst_gl_display_create_context (mix->display, 0);
-        }
-      }
-
-      gst_query_unref (query);
-      gst_object_unref (GST_OBJECT (parent));
 
       /* instanciate a gldisplay for each sink pad */
       while (walk) {

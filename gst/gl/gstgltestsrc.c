@@ -71,9 +71,6 @@ static void gst_gl_test_src_set_property (GObject * object, guint prop_id,
 static void gst_gl_test_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_test_src_src_query (GstPad * pad, GstObject * object,
-    GstQuery * query);
-
 static gboolean gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
 static GstCaps *gst_gl_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
@@ -180,8 +177,6 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
 static void
 gst_gl_test_src_init (GstGLTestSrc * src)
 {
-  GstPad *pad = GST_BASE_SRC_PAD (src);
-
   gst_gl_test_src_set_pattern (src, GST_GL_TEST_SRC_SMPTE);
 
   src->timestamp_offset = 0;
@@ -189,9 +184,6 @@ gst_gl_test_src_init (GstGLTestSrc * src)
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
-
-  gst_pad_set_query_function (pad,
-      GST_DEBUG_FUNCPTR (gst_gl_test_src_src_query));
 }
 
 static GstCaps *
@@ -310,31 +302,8 @@ gst_gl_test_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gl_test_src_src_query (GstPad * pad, GstObject * object, GstQuery * query)
-{
-  gboolean res;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CUSTOM:
-    {
-      const GstStructure *structure = gst_query_get_structure (query);
-      gchar *name = gst_element_get_name (object);
-      res = g_strcmp0 (name, gst_structure_get_name (structure)) == 0;
-      g_free (name);
-      break;
-    }
-    default:
-      res = gst_pad_query_default (pad, object, query);
-      break;
-  }
-
-  return res;
-}
-
-static gboolean
 gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
-  gboolean res = FALSE;
   GstVideoInfo vinfo;
   GstGLTestSrc *gltestsrc = GST_GL_TEST_SRC (bsrc);
 
@@ -346,18 +315,25 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   gltestsrc->out_info = vinfo;
   gltestsrc->negotiated = TRUE;
 
-  if (!(res = gst_gl_display_gen_fbo (gltestsrc->display,
-              GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
-              GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info),
-              &gltestsrc->fbo, &gltestsrc->depthbuffer)))
-    GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
-        GST_GL_DISPLAY_ERR_MSG (gltestsrc->display), (NULL));
+  if (!gst_gl_display_gen_fbo (gltestsrc->display,
+          GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
+          GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info),
+          &gltestsrc->fbo, &gltestsrc->depthbuffer))
+    goto display_error;
 
-  return res;
+  return TRUE;
 
+/* ERRORS */
 wrong_caps:
   {
     GST_WARNING ("wrong caps");
+    return FALSE;
+  }
+
+display_error:
+  {
+    GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
+        GST_GL_DISPLAY_ERR_MSG (gltestsrc->display), (NULL));
     return FALSE;
   }
 }
@@ -532,51 +508,33 @@ static gboolean
 gst_gl_test_src_start (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
-  GstElement *parent = GST_ELEMENT (gst_element_get_parent (src));
-  GstStructure *structure = NULL;
-  GstQuery *query = NULL;
-  gboolean isPerformed = FALSE;
-  gchar *name;
+  GstStructure *structure;
+  GstQuery *display_query;
+  const GValue *id_value;
 
-  if (!parent) {
-    GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE, (NULL),
-        ("A parent bin is required"));
+  structure = gst_structure_new_empty ("gstgldisplay");
+  display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+  if (!gst_pad_peer_query (basesrc->srcpad, display_query)) {
+    GST_WARNING ("Could not query GstGLDisplay from downstream");
     return FALSE;
   }
 
-  name = gst_element_get_name (src);
-  structure = gst_structure_new_empty (name);
-  query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-  g_free (name);
-
-  isPerformed = gst_element_query (parent, query);
-
-  if (isPerformed) {
-    const GValue *id_value =
-        gst_structure_get_value (structure, "gstgldisplay");
-    if (G_VALUE_HOLDS_POINTER (id_value))
-      /* at least one gl element is before in our gl chain */
-      src->display =
-          g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    else {
-      /* this gl filter is a sink in terms of the gl chain */
-      src->display = gst_gl_display_new ();
-      isPerformed = gst_gl_display_create_context (src->display, 0);
-
-      if (!isPerformed)
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-            GST_GL_DISPLAY_ERR_MSG (src->display), (NULL));
-    }
+  id_value = gst_structure_get_value (structure, "gstgldisplay");
+  if (G_VALUE_HOLDS_POINTER (id_value))
+    /* at least one gl element is after in our gl chain */
+    src->display =
+        g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+  else {
+    GST_WARNING ("Incorrect GstGLDisplay from downstream");
+    return FALSE;
   }
-
-  gst_query_unref (query);
-  gst_object_unref (GST_OBJECT (parent));
 
   src->running_time = 0;
   src->n_frames = 0;
   src->negotiated = FALSE;
 
-  return isPerformed;
+  return TRUE;
 }
 
 static gboolean
@@ -648,4 +606,7 @@ gst_gl_test_src_callback (gint width, gint height, guint texture,
 
   src->make_image (src, src->buffer, GST_VIDEO_INFO_WIDTH (&src->out_info),
       GST_VIDEO_INFO_HEIGHT (&src->out_info));
+
+  gst_buffer_unref (src->buffer);
+  src->buffer = NULL;
 }

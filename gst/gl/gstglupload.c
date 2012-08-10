@@ -254,48 +254,29 @@ static gboolean
 gst_gl_upload_start (GstBaseTransform * bt)
 {
   GstGLUpload *upload = GST_GL_UPLOAD (bt);
-  GstElement *parent = GST_ELEMENT (gst_element_get_parent (upload));
-  GstStructure *structure = NULL;
-  GstQuery *query = NULL;
-  gboolean isPerformed = FALSE;
-  gchar *name;
+  GstStructure *structure;
+  GstQuery *display_query;
+  const GValue *id_value;
 
-  if (!parent) {
-    GST_ELEMENT_ERROR (upload, CORE, STATE_CHANGE, (NULL),
-        ("A parent bin is required"));
+  structure = gst_structure_new_empty ("gstgldisplay");
+  display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+  if (!gst_pad_peer_query (bt->srcpad, display_query)) {
+    GST_WARNING ("Could not query GstGLDisplay from downstream");
     return FALSE;
   }
 
-  name = gst_element_get_name (upload);
-  structure = gst_structure_new_empty (name);
-  query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-  g_free (name);
-
-  isPerformed = gst_element_query (parent, query);
-
-  if (isPerformed) {
-    const GValue *id_value =
-        gst_structure_get_value (structure, "gstgldisplay");
-    if (G_VALUE_HOLDS_POINTER (id_value))
-      /* at least one gl element is after in our gl chain */
-      upload->display =
-          g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    else {
-      /* this gl filter is a sink in terms of the gl chain */
-      upload->display = gst_gl_display_new ();
-      isPerformed = gst_gl_display_create_context (upload->display,
-          upload->external_gl_context);
-
-      if (!isPerformed)
-        GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
-            GST_GL_DISPLAY_ERR_MSG (upload->display), (NULL));
-    }
+  id_value = gst_structure_get_value (structure, "gstgldisplay");
+  if (G_VALUE_HOLDS_POINTER (id_value))
+    /* at least one gl element is after in our gl chain */
+    upload->display =
+        g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
+  else {
+    GST_WARNING ("Incorrect GstGLDisplay from downstream");
+    return FALSE;
   }
 
-  gst_query_unref (query);
-  gst_object_unref (GST_OBJECT (parent));
-
-  return isPerformed;
+  return TRUE;
 }
 
 static gboolean
@@ -414,18 +395,23 @@ gst_gl_upload_set_caps (GstBaseTransform * bt, GstCaps * incaps,
   upload->out_info = out_vinfo;
 
   //init colorspace conversion if needed
-  ret = gst_gl_display_init_upload (upload->display,
-      GST_VIDEO_INFO_FORMAT (&upload->in_info),
-      GST_VIDEO_INFO_WIDTH (&upload->out_info),
-      GST_VIDEO_INFO_HEIGHT (&upload->out_info),
-      GST_VIDEO_INFO_WIDTH (&upload->in_info),
-      GST_VIDEO_INFO_HEIGHT (&upload->in_info));
+  if (!gst_gl_display_init_upload (upload->display,
+          GST_VIDEO_INFO_FORMAT (&upload->in_info),
+          GST_VIDEO_INFO_WIDTH (&upload->out_info),
+          GST_VIDEO_INFO_HEIGHT (&upload->out_info),
+          GST_VIDEO_INFO_WIDTH (&upload->in_info),
+          GST_VIDEO_INFO_HEIGHT (&upload->in_info)))
+    goto display_error;
 
-  if (!ret)
+  return TRUE;
+
+/* ERRORS */
+display_error:
+  {
     GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
         GST_GL_DISPLAY_ERR_MSG (upload->display), (NULL));
-
-  return ret;
+    return FALSE;
+  }
 }
 
 static gboolean
