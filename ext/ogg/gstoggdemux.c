@@ -478,6 +478,7 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   GstClockTime out_timestamp, out_duration;
   guint64 out_offset, out_offset_end;
   gboolean delta_unit = FALSE;
+  gboolean is_header;
 
   cret = GST_FLOW_OK;
 
@@ -545,7 +546,8 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   }
 
   /* get timing info for the packet */
-  if (gst_ogg_stream_packet_is_header (&pad->map, packet)) {
+  is_header = gst_ogg_stream_packet_is_header (&pad->map, packet);
+  if (is_header) {
     duration = 0;
     GST_DEBUG_OBJECT (ogg, "packet is header");
   } else {
@@ -639,6 +641,10 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   /* set delta flag for OGM content */
   if (delta_unit)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  /* set header flag for buffers that are also in the streamheaders */
+  if (is_header)
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
 
   if (packet->packet != NULL) {
     /* copy packet in buffer */
