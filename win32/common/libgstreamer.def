@@ -90,6 +90,8 @@ EXPORTS
 	gst_bin_remove_many
 	gst_bitmask_get_type
 	gst_buffer_add_meta
+	gst_buffer_append
+	gst_buffer_append_memory
 	gst_buffer_append_region
 	gst_buffer_copy_flags_get_type
 	gst_buffer_copy_into
@@ -99,8 +101,12 @@ EXPORTS
 	gst_buffer_find_memory
 	gst_buffer_flags_get_type
 	gst_buffer_foreach_meta
+	gst_buffer_get_all_memory
+	gst_buffer_get_memory
 	gst_buffer_get_memory_range
 	gst_buffer_get_meta
+	gst_buffer_get_size
+	gst_buffer_get_sizes
 	gst_buffer_get_sizes_range
 	gst_buffer_get_type
 	gst_buffer_insert_memory
@@ -113,6 +119,7 @@ EXPORTS
 	gst_buffer_list_new
 	gst_buffer_list_new_sized
 	gst_buffer_list_remove
+	gst_buffer_map
 	gst_buffer_map_range
 	gst_buffer_memcmp
 	gst_buffer_memset
@@ -141,10 +148,17 @@ EXPORTS
 	gst_buffer_pool_release_buffer
 	gst_buffer_pool_set_active
 	gst_buffer_pool_set_config
+	gst_buffer_prepend_memory
+	gst_buffer_remove_all_memory
+	gst_buffer_remove_memory
 	gst_buffer_remove_memory_range
 	gst_buffer_remove_meta
+	gst_buffer_replace_all_memory
+	gst_buffer_replace_memory
 	gst_buffer_replace_memory_range
+	gst_buffer_resize
 	gst_buffer_resize_range
+	gst_buffer_set_size
 	gst_buffer_unmap
 	gst_buffering_mode_get_type
 	gst_bus_add_signal_watch
