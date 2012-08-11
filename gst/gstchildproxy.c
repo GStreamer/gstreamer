@@ -167,7 +167,7 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  * @name: name of the property to look up
  * @target: (out) (allow-none) (transfer full): pointer to a #GObject that
  *     takes the real object to set property on
- * @pspec: (out) (allow-none) (transfer full): pointer to take the #GParamSpec
+ * @pspec: (out) (allow-none) (transfer none): pointer to take the #GParamSpec
  *     describing the property
  *
  * Looks up which object and #GParamSpec would be effected by the given @name.
