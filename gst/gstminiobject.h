@@ -73,7 +73,8 @@ typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
  * @obj: the mini object
  *
  * A #GstMiniObjectNotify function can be added to a mini object as a
- * callback that gets triggered with gst_mini_object_notify().
+ * callback that gets triggered when gst_mini_object_unref() drops the
+ * last ref and @obj is about to be freed.
  */
 typedef void (*GstMiniObjectNotify) (gpointer user_data, GstMiniObject * obj);
 

@@ -35,28 +35,31 @@
  *
  * Using TOC is very easy. Firstly, create #GstToc structure which represents root
  * contents of the source. You can also attach TOC-specific tags to it. Then fill
- * it with #GstTocEntry entries by appending them to #GstToc.entries #GstTocEntry.subentries
- * lists. You should use GST_TOC_ENTRY_TYPE_CHAPTER for generic TOC entry and
- * GST_TOC_ENTRY_TYPE_EDITION for the entries which are considered to be alternatives
- * (like DVD angles, Matroska editions and so on).
+ * it with #GstTocEntry entries by appending them to the #GstToc using
+ * gst_toc_append_entry(), and appending subentries to a #GstTocEntry using
+ * gst_toc_entry_append_sub_entry().
  *
  * Note that root level of the TOC can contain only either editions or chapters. You
  * should not mix them together at the same level. Otherwise you will get serialization
  * /deserialization errors. Make sure that no one of the entries has negative start and
  *  stop values.
  *
- * Please, use #GstToc.info and #GstTocEntry.info fields in that way: create a #GstStructure,
- * put all info related to your element there and put this structure into the info field under
- * the name of your element. Some fields in the info structure can be used for internal purposes,
- * so you should use it in the way described above to not to overwrite already existent fields.
- *
  * Use gst_event_new_toc() to create a new TOC #GstEvent, and gst_event_parse_toc() to
  * parse received TOC event. Use gst_event_new_toc_select() to create a new TOC select #GstEvent,
  * and gst_event_parse_toc_select() to parse received TOC select event. The same rule for
  * the #GstMessage: gst_message_new_toc() to create new TOC #GstMessage, and
- * gst_message_parse_toc() to parse received TOC message. Also you can create a new TOC query
- * with gst_query_new_toc(), set it with gst_query_set_toc() and parse it with
- * gst_query_parse_toc().
+ * gst_message_parse_toc() to parse received TOC message.
+ *
+ * TOCs can have global scope or current scope. Global scope TOCs contain
+ * all entries that can possibly be selected using a toc select event, and
+ * are what an application is usually interested in. TOCs with current scope
+ * only contain the parts of the TOC relevant to the currently selected/playing
+ * stream; the current scope TOC is used by downstream elements such as muxers
+ * to write correct TOC entries when transcoding files, for example. When
+ * playing a DVD, the global TOC would contain a hierarchy of all titles,
+ * chapters and angles, for example, while the current TOC would only contain
+ * the chapters for the currently playing title if playback of a specific
+ * title was requested.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -421,7 +424,7 @@ gst_toc_entry_copy (const GstTocEntry * entry)
  * Copy #GstToc with all subentries (deep copy).
  *
  * Returns: newly allocated #GstToc in case of success, NULL otherwise;
- * free it when done with gst_toc_free().
+ * free it when done with gst_toc_unref().
  */
 static GstToc *
 gst_toc_copy (const GstToc * toc)

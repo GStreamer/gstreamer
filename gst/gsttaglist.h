@@ -213,7 +213,7 @@ gboolean               gst_tag_is_fixed        (const gchar * tag);
 /* tag lists */
 
 /**
- * GstTagEventScope:
+ * GstTagScope:
  * @GST_TAG_SCOPE_STREAM: tags specific to this single stream
  * @GST_TAG_SCOPE_GLOBAL: global tags for the complete medium
  *

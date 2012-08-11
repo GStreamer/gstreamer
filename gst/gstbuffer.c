@@ -1344,7 +1344,7 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
  * @info: (out): info about the mapping
  * @flags: flags for the mapping
  *
- * This function fills @idx with the #GstMapInfo of all merged memory
+ * This function fills @info with the #GstMapInfo of all merged memory
  * blocks in @buffer.
  *
  * @flags describe the desired access of the memory. When @flags is
@@ -1355,10 +1355,10 @@ gst_buffer_resize_range (GstBuffer * buffer, guint idx, gint length,
  * automatically be created and returned. The readonly copy of the
  * buffer memory will then also be replaced with this writable copy.
  *
- * The memory in @idx should be unmapped with gst_buffer_unmap() after
+ * The memory in @info should be unmapped with gst_buffer_unmap() after
  * usage.
  *
- * Returns: %TRUE if the map succeeded and @idx contains valid data.
+ * Returns: %TRUE if the map succeeded and @info contains valid data.
  */
 gboolean
 gst_buffer_map (GstBuffer * buffer, GstMapInfo * info, GstMapFlags flags)

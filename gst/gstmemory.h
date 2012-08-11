@@ -179,7 +179,7 @@ typedef struct {
   guint8 *data;
   gsize size;
   gsize maxsize;
-  /*< private >*/
+  /*< protected >*/
   gpointer user_data[4];
 } GstMapInfo;
 

@@ -571,11 +571,14 @@ wrong_config:
  *
  * @config is a #GstStructure that contains the configuration parameters for
  * the pool. A default and mandatory set of parameters can be configured with
- * gst_buffer_pool_config_set(). This function takes ownership of @config.
+ * gst_buffer_pool_config_set_params(), gst_buffer_pool_config_set_allocator()
+ * and gst_buffer_pool_config_add_option().
  *
  * If the parameters in @config can not be set exactly, this function returns
  * FALSE and will try to update as much state as possible. The new state can
- * then be retrieved and refined with gst_buffer_pool_config_get().
+ * then be retrieved and refined with gst_buffer_pool_get_config().
+ *
+ * This function takes ownership of @config.
  *
  * Returns: TRUE when the configuration could be set.
  */

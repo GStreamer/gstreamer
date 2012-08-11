@@ -739,6 +739,10 @@ gst_tag_list_new_empty (void)
  * function. The tag list will make copies of any arguments passed
  * (e.g. strings, buffers).
  *
+ * After creation you might also want to set a #GstTagScope on the returned
+ * taglist to signal if the contained tags are global or stream tags. By
+ * default stream scope is assumes. See gst_tag_list_set_scope().
+ *
  * Free-function: gst_tag_list_unref
  *
  * Returns: (transfer full): a new #GstTagList. Free with gst_tag_list_unref()
@@ -792,7 +796,7 @@ gst_tag_list_new_valist (va_list var_args)
  * @scope: new scope for @list
  *
  * Sets the scope of @list to @scope. By default the scope
- * of a taglist is #GST_TAG_SCOPE_STREAM.
+ * of a taglist is stream scope.
  *
  */
 void

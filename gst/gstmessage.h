@@ -89,7 +89,14 @@ typedef struct _GstMessage GstMessage;
  * strategy for Quality of Service reasons.
  * @GST_MESSAGE_PROGRESS: A progress message.
  * @GST_MESSAGE_TOC: A new table of contents (TOC) was found or previously found TOC
- * was updated. Since:
+ * was updated.
+ * @GST_MESSAGE_RESET_TIME: Message to request resetting the pipeline's
+ *     running time from the pipeline. This is an internal message which
+ *     applications will likely never receive.
+ * @GST_MESSAGE_STREAM_START: Message indicating start of a new stream. Useful
+ *     e.g. when using playbin in gapless playback mode, to get notified when
+ *     the next title actually starts playing (which will be some time after
+ *     the URI for the next title has been set).
  * @GST_MESSAGE_ANY: mask for all of the above messages.
  *
  * The different message types that are available.

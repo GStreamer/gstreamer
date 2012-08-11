@@ -1611,7 +1611,8 @@ gst_event_parse_sink_message (GstEvent * event, GstMessage ** msg)
  * stream. A new stream-id should only be created for a stream if the upstream
  * stream is split into (potentially) multiple new streams, e.g. in a demuxer,
  * but not for every single element in the pipeline.
- * gst_util_create_stream_id() can be used to create a stream-id.
+ * gst_pad_create_stream_id() or gst_pad_create_stream_id_printf() can be
+ * used to create a stream-id.
  *
  * Returns: (transfer full): the new STREAM_START event.
  */

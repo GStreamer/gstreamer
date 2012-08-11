@@ -60,6 +60,7 @@ typedef void (* GstControlBindingConvert) (GstControlBinding *binding, gdouble s
 /**
  * GstControlBinding:
  * @name: name of the property of this binding
+ * @pspec: #GParamSpec for this property
  *
  * The instance structure of #GstControlBinding.
  */
@@ -67,8 +68,8 @@ struct _GstControlBinding {
   GstObject parent;
   
   /*< public >*/
-  gchar *name;                  /* name of the property */
-  GParamSpec *pspec;            /* GParamSpec for this property */
+  gchar *name;
+  GParamSpec *pspec;
 
   /*< private >*/
   GstObject *object;            /* GstObject owning the property
@@ -81,7 +82,6 @@ struct _GstControlBinding {
 /**
  * GstControlBindingClass:
  * @parent_class: Parent class
- * @convert: Class method to convert control-values
  *
  * The class structure of #GstControlBinding.
  */

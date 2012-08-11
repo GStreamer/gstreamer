@@ -546,7 +546,6 @@ gst_clock_set_timeout
 gst_clock_id_get_time
 gst_clock_id_wait
 gst_clock_id_wait_async
-gst_clock_id_wait_async_full
 gst_clock_id_unschedule
 gst_clock_id_compare_func
 gst_clock_id_ref
@@ -1100,21 +1099,16 @@ gst_ghost_pad_get_target
 
 gst_ghost_pad_construct
 
-gst_ghost_pad_unlink_default
-gst_ghost_pad_link_default
 gst_ghost_pad_activate_mode_default
 
 gst_ghost_pad_internal_activate_mode_default
 
 gst_proxy_pad_get_internal
 
-gst_proxy_pad_event_default
-gst_proxy_pad_query_default
 gst_proxy_pad_iterate_internal_links_default
 gst_proxy_pad_chain_default
 gst_proxy_pad_chain_list_default
 gst_proxy_pad_getrange_default
-gst_proxy_pad_unlink_default
 <SUBSECTION Standard>
 GstGhostPadClass
 GST_GHOST_PAD
@@ -1458,6 +1452,7 @@ gst_message_new_toc
 gst_message_parse_toc
 gst_message_new_reset_time
 gst_message_parse_reset_time
+gst_message_new_stream_start
 
 GstStructureChangeType
 gst_message_new_structure_change
@@ -1638,7 +1633,6 @@ GstPadLinkReturn
 GST_PAD_LINK_FAILED
 GST_PAD_LINK_SUCCESSFUL
 GstPadLinkCheck
-GST_PAD_LINK_CHECK_DEFAULT
 GstFlowReturn
 GstPadMode
 
@@ -1747,6 +1741,7 @@ gst_pad_set_activatemode_function
 gst_pad_set_activatemode_function_full
 GstPadActivateModeFunction
 
+gst_pad_needs_reconfigure
 gst_pad_check_reconfigure
 gst_pad_mark_reconfigure
 
@@ -1788,6 +1783,8 @@ gst_pad_set_element_private
 gst_pad_get_element_private
 
 gst_pad_create_stream_id
+gst_pad_create_stream_id_printf
+gst_pad_create_stream_id_printf_valist
 
 GstPadForwardFunction
 gst_pad_forward
@@ -1850,11 +1847,14 @@ GST_PAD_NEEDS_RECONFIGURE
 GST_PAD_HAS_PENDING_EVENTS
 GST_PAD_IS_PROXY_ALLOCATION
 GST_PAD_IS_PROXY_CAPS
+GST_PAD_IS_PROXY_SCHEDULING
 GST_PAD_NEEDS_PARENT
 GST_PAD_SET_PROXY_ALLOCATION
 GST_PAD_UNSET_PROXY_ALLOCATION
 GST_PAD_SET_PROXY_CAPS
 GST_PAD_UNSET_PROXY_CAPS
+GST_PAD_SET_PROXY_SCHEDULING
+GST_PAD_UNSET_PROXY_SCHEDULING
 
 GST_PAD_IS_IN_GETCAPS
 GST_PAD_MODE_ACTIVATE
@@ -2479,6 +2479,8 @@ GstTagFlag
 GstTagForeachFunc
 GstTagMergeFunc
 
+GstTagScope
+
 GST_TAG_TITLE
 GST_TAG_TITLE_SORTNAME
 GST_TAG_ARTIST
@@ -2575,6 +2577,8 @@ gst_tag_list_new_empty
 gst_tag_list_new_valist
 gst_tag_list_new_from_string
 gst_tag_list_free
+gst_tag_list_get_scope
+gst_tag_list_set_scope
 gst_tag_list_to_string
 gst_tag_list_is_empty
 gst_tag_list_is_equal
@@ -2630,10 +2634,12 @@ GST_TAG_MODE_IS_VALID
 GST_TYPE_TAG_LIST
 GST_TYPE_TAG_FLAG
 GST_TYPE_TAG_MERGE_MODE
+GST_TYPE_TAG_SCOPE
 <SUBSECTION Private>
 gst_tag_list_get_type
 gst_tag_flag_get_type
 gst_tag_merge_mode_get_type
+gst_tag_scope_get_type
 </SECTION>
 
 
@@ -2755,7 +2761,6 @@ gst_toc_merge_tags
 gst_toc_set_tags
 gst_toc_dump
 gst_toc_entry_new
-gst_toc_entry_new_with_pad
 gst_toc_entry_ref
 gst_toc_entry_unref
 gst_toc_entry_copy
@@ -2781,10 +2786,12 @@ GST_TOC_ENTRY_TYPE_IS_SEQUENCE
 GST_TYPE_TOC
 GST_TYPE_TOC_ENTRY
 GST_TYPE_TOC_ENTRY_TYPE
+GST_TYPE_TOC_SCOPE
 <SUBSECTION Private>
 gst_toc_get_type
 gst_toc_entry_get_type
 gst_toc_entry_type_get_type
+gst_toc_scope_get_type
 </SECTION>
 
 
@@ -2987,9 +2994,11 @@ gst_date_time_get_time_zone_offset
 gst_date_time_get_second
 gst_date_time_get_year
 gst_date_time_new
+gst_date_time_new_ymd
+gst_date_time_new_ym
+gst_date_time_new_y
 gst_date_time_new_from_unix_epoch_local_time
 gst_date_time_new_from_unix_epoch_utc
-gst_date_time_new_ymd
 gst_date_time_new_local_time
 gst_date_time_new_now_local_time
 gst_date_time_new_now_utc
@@ -3002,9 +3011,6 @@ gst_date_time_has_second
 gst_date_time_has_time
 gst_date_time_has_year
 
-gst_date_time_new_y
-gst_date_time_new_ym
-gst_date_time_new
 
 gst_date_time_new_from_iso8601_string
 gst_date_time_to_iso8601_string
