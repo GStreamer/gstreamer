@@ -561,6 +561,15 @@ The 0.11 porting guide
     GstGError -> GError
     GST_TYPE_G_ERROR / gst_g_error_get_type() -> G_TYPE_ERROR
 
+* GstVideo
+
+    GstXOverlay interface -> renamed to GstVideoOverlay, and now part of
+    the video library in gst-plugins-base, as the interfaces library
+    no longer exists.
+
+    gst_video_format_parse_caps() -> use gst_video_info_from_caps() and
+        then GstVideoInfo.
+
 * "codec-data" and "streamheader" field in GstCaps (not implemented yet!)
 
     codec-data and stream headers are no longer in GstCaps, but sent as
