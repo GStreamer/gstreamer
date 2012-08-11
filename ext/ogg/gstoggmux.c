@@ -523,16 +523,17 @@ gst_ogg_mux_handle_src_event (GstPad * pad, GstObject * parent,
 {
   gboolean res = FALSE;
   GstOggMux *ogg_mux = GST_OGG_MUX (parent);
-  GstEventType type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
-  switch (type) {
+  switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:{
       GstSeekFlags flags;
 
       gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
       if (!ogg_mux->need_headers && (flags & GST_SEEK_FLAG_FLUSH) != 0) {
-        /* disable flushing seeks once we started */
-        goto eat;
+        /* don't allow flushing seeks once we started */
+        gst_event_unref (event);
+        event = NULL;
+        res = FALSE;
       }
       break;
     }
@@ -540,8 +541,9 @@ gst_ogg_mux_handle_src_event (GstPad * pad, GstObject * parent,
       break;
   }
 
-  res = gst_pad_event_default (pad, parent, event);
-eat:
+  if (event != NULL)
+    res = gst_pad_event_default (pad, parent, event);
+
   return res;
 }
 
