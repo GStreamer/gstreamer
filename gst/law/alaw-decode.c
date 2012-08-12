@@ -185,11 +185,11 @@ gst_alaw_dec_getcaps (GstPad * pad, GstCaps * filter)
 
       if (pad == alawdec->sinkpad) {
         /* remove the fields we don't want */
-        gst_structure_remove_fields (structure, "format", NULL);
+        gst_structure_remove_fields (structure, "format", "layout", NULL);
       } else {
         /* add fixed fields */
         gst_structure_set (structure, "format", G_TYPE_STRING,
-            GST_AUDIO_NE (S16), NULL);
+            GST_AUDIO_NE (S16), "layout", G_TYPE_STRING, "interleaved", NULL);
       }
     }
     /* filter against the allowed caps of the pad to return our result */
