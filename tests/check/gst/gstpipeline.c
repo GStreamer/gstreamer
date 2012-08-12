@@ -38,6 +38,7 @@ GST_START_TEST (test_async_state_change_empty)
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING), GST_STATE_CHANGE_SUCCESS);
 
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
 }
 
@@ -60,6 +61,7 @@ GST_START_TEST (test_async_state_change_fake_ready)
   fail_unless_equals_int (gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_READY), GST_STATE_CHANGE_SUCCESS);
 
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_object_unref (pipeline);
 }
 
