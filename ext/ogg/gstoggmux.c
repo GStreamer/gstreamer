@@ -533,7 +533,6 @@ gst_ogg_mux_handle_src_event (GstPad * pad, GstObject * parent,
         /* don't allow flushing seeks once we started */
         gst_event_unref (event);
         event = NULL;
-        res = FALSE;
       }
       break;
     }
