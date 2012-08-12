@@ -139,7 +139,7 @@ echo "by autogen.sh/configure"
 echo
 echo "==========================================================================================="
 echo
-echo "Also see http://gstreamer.freedesktop.org/wiki/UninstalledSetup
+echo "Also see http://gstreamer.freedesktop.org/wiki/UninstalledSetup"
 echo
 echo "==========================================================================================="
 
