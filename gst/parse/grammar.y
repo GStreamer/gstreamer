@@ -339,7 +339,7 @@ gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, child_proxy, "new child %s, checking property %s",
       name, set->name);
 
-  if (gst_child_proxy_lookup (G_OBJECT (child_proxy), set->name, &target, &pspec)) {
+  if (gst_child_proxy_lookup (child_proxy, set->name, &target, &pspec)) {
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
@@ -388,7 +388,7 @@ error:
 static void
 gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 {
-  GParamSpec *pspec;
+  GParamSpec *pspec = NULL;
   gchar *pos = value;
   GValue v = { 0, };
   GObject *target = NULL;
@@ -416,13 +416,31 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
   }
   gst_parse_unescape (pos);
 
-  if (gst_child_proxy_lookup (G_OBJECT (element), value, &target, &pspec)) {
+  if (GST_IS_CHILD_PROXY (element)) {
+    if (!gst_child_proxy_lookup (GST_CHILD_PROXY (element), value, &target, &pspec)) {
+      /* do a delayed set */
+      gst_parse_add_delayed_set (element, value, pos);
+    }
+  } else {
+    pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), value);
+    if (pspec != NULL) {
+      target = g_object_ref (element);
+      GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, target, "found %s property", value);
+    } else {
+      SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
+          _("no property \"%s\" in element \"%s\""), value, \
+          GST_ELEMENT_NAME (element));
+    }
+  }
+
+  if (pspec != NULL && target != NULL) {
     gboolean got_value = FALSE;
 
     value_type = pspec->value_type;
 
-    GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "parsing property %s as a %s", pspec->name,
-      g_type_name (value_type));
+    GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "parsing property %s as a %s",
+        pspec->name, g_type_name (value_type));
+
     g_value_init (&v, value_type);
     if (gst_value_deserialize (&v, pos))
       got_value = TRUE;
@@ -438,16 +456,6 @@ gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
     if (!got_value)
       goto error;
     g_object_set_property (target, pspec->name, &v);
-  } else {
-    /* do a delayed set */
-    if (GST_IS_CHILD_PROXY (element)) {
-      gst_parse_add_delayed_set (element, value, pos);
-    }
-    else {
-      SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY, \
-          _("no property \"%s\" in element \"%s\""), value, \
-          GST_ELEMENT_NAME (element));
-    }
   }
 
 out:
