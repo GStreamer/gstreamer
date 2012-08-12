@@ -119,6 +119,7 @@ check_PROGRAMS =				\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstparamspecs			\
+	gst/gstpipeline				\
 	gst/gstpoll     			\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
@@ -144,7 +145,6 @@ check_PROGRAMS =				\
 
 # failing tests
 noinst_PROGRAMS =				\
-	gst/gstpipeline				\
 	libs/collectpads
 
 # elements to ignore for the state tests

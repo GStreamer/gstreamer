@@ -240,10 +240,19 @@ GST_END_TEST;
 static GMutex *probe_lock;
 static GCond *probe_cond;
 
-static gboolean
-sink_pad_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
-    GstClockTime * first_timestamp)
+static GstPadProbeReturn
+sink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
+  GstClockTime *first_timestamp = user_data;
+  GstBuffer *buffer;
+
+  fail_unless ((GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_BUFFER));
+
+  buffer = GST_BUFFER (info->data);
+
+  GST_LOG_OBJECT (pad, "buffer with timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
+
   fail_if (GST_BUFFER_TIMESTAMP (buffer) == GST_CLOCK_TIME_NONE,
       "testing if buffer timestamps are right, but got CLOCK_TIME_NONE");
 
@@ -255,7 +264,7 @@ sink_pad_probe (GstPad * pad, GstPadProbeType type, GstBuffer * buffer,
   g_cond_signal (probe_cond);
   g_mutex_unlock (probe_lock);
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 GST_START_TEST (test_base_time)
@@ -277,8 +286,8 @@ GST_START_TEST (test_base_time)
   gst_element_link (fakesrc, fakesink);
 
   sink = gst_element_get_static_pad (fakesink, "sink");
-  gst_pad_add_probe (sink, GST_PAD_PROBE_TYPE_BUFFER,
-      (GstPadProbeCallback) sink_pad_probe, &observed, NULL);
+  gst_pad_add_probe (sink, GST_PAD_PROBE_TYPE_BUFFER, sink_pad_probe,
+      &observed, NULL);
 
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PAUSED)
       == GST_STATE_CHANGE_NO_PREROLL, "expected no-preroll from live pipeline");
@@ -488,6 +497,8 @@ GST_START_TEST (test_base_time)
         "insufficient tstamp delta: %" GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
         GST_TIME_ARGS (observed), GST_TIME_ARGS (oldobserved));
   }
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   gst_object_unref (sink);
   gst_object_unref (clock);
