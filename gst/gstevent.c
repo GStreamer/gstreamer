@@ -1634,21 +1634,25 @@ gst_event_new_stream_start (const gchar * stream_id)
  * @event: a stream-start event.
  * @stream_id: (out): pointer to store the stream-id
  *
- * Parse a stream-id @event and store the result in the given @stream_id location.
+ * Parse a stream-id @event and store the result in the given @stream_id
+ * location. The string stored in @stream_id must not be modified and will
+ * remain valid only until @event gets freed. Make a copy if you want to
+ * modify it or store it for later use.
  */
 void
 gst_event_parse_stream_start (GstEvent * event, const gchar ** stream_id)
 {
   const GstStructure *structure;
+  const GValue *val;
 
   g_return_if_fail (event != NULL);
   g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
 
   structure = gst_event_get_structure (event);
+  val = gst_structure_id_get_value (structure, GST_QUARK (STREAM_ID));
 
   if (stream_id)
-    gst_structure_id_get (structure,
-        GST_QUARK (STREAM_ID), G_TYPE_STRING, stream_id, NULL);
+    *stream_id = g_value_get_string (val);
 }
 
 /**
