@@ -74,7 +74,7 @@ GObject * gst_child_proxy_get_child_by_name  (GstChildProxy * parent, const gcha
 guint     gst_child_proxy_get_children_count (GstChildProxy * parent);
 GObject * gst_child_proxy_get_child_by_index (GstChildProxy * parent, guint index);
 
-gboolean  gst_child_proxy_lookup             (GObject *object, const gchar *name,
+gboolean  gst_child_proxy_lookup             (GstChildProxy *object, const gchar *name,
                                               GObject **target, GParamSpec **pspec);
 
 void      gst_child_proxy_get_property       (GstChildProxy * object, const gchar *name,

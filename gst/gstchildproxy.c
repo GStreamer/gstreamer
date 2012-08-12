@@ -163,7 +163,7 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
 
 /**
  * gst_child_proxy_lookup:
- * @object: object to lookup the property in
+ * @childproxy: child proxy object to lookup the property in
  * @name: name of the property to look up
  * @target: (out) (allow-none) (transfer full): pointer to a #GObject that
  *     takes the real object to set property on
@@ -179,19 +179,20 @@ gst_child_proxy_get_children_count (GstChildProxy * parent)
  * usage. For plain GObjects @target is the same as @object.
  */
 gboolean
-gst_child_proxy_lookup (GObject * object, const gchar * name,
+gst_child_proxy_lookup (GstChildProxy * childproxy, const gchar * name,
     GObject ** target, GParamSpec ** pspec)
 {
+  GObject *object;
   gboolean res = FALSE;
   gchar **names, **current;
 
-  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_IS_CHILD_PROXY (childproxy), FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
-  g_object_ref (object);
+  object = g_object_ref (childproxy);
 
   current = names = g_strsplit (name, "::", -1);
-  // find the owner of the property
+  /* find the owner of the property */
   while (current[1]) {
     GObject *next;
 
@@ -212,7 +213,7 @@ gst_child_proxy_lookup (GObject * object, const gchar * name,
     current++;
   }
 
-  // look for psec
+  /* look for psec */
   if (current[1] == NULL) {
     GParamSpec *spec =
         g_object_class_find_property (G_OBJECT_GET_CLASS (object), current[0]);
@@ -253,7 +254,7 @@ gst_child_proxy_get_property (GstChildProxy * object, const gchar * name,
   g_return_if_fail (name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
 
-  if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
+  if (!gst_child_proxy_lookup (object, name, &target, &pspec))
     goto not_found;
 
   g_object_get_property (target, pspec->name, value);
@@ -293,7 +294,7 @@ gst_child_proxy_get_valist (GstChildProxy * object,
 
   /* iterate over pairs */
   while (name) {
-    if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
+    if (!gst_child_proxy_lookup (object, name, &target, &pspec))
       goto not_found;
 
     g_value_init (&value, pspec->value_type);
@@ -363,7 +364,7 @@ gst_child_proxy_set_property (GstChildProxy * object, const gchar * name,
   g_return_if_fail (name != NULL);
   g_return_if_fail (G_IS_VALUE (value));
 
-  if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
+  if (!gst_child_proxy_lookup (object, name, &target, &pspec))
     goto not_found;
 
   g_object_set_property (target, pspec->name, value);
@@ -402,7 +403,7 @@ gst_child_proxy_set_valist (GstChildProxy * object,
 
   /* iterate over pairs */
   while (name) {
-    if (!gst_child_proxy_lookup ((GObject *) object, name, &target, &pspec))
+    if (!gst_child_proxy_lookup (object, name, &target, &pspec))
       goto not_found;
 
     G_VALUE_COLLECT_INIT (&value, pspec->value_type, var_args,
