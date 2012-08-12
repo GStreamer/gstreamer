@@ -79,10 +79,19 @@ collected_cb (GstCollectPads * pads, gpointer user_data)
 static gpointer
 push_buffer (gpointer user_data)
 {
+  GstFlowReturn flow;
+  GstCaps *caps;
   TestData *test_data = (TestData *) user_data;
 
-  fail_unless (gst_pad_push (test_data->pad, test_data->buffer)
-      == GST_FLOW_OK);
+  gst_pad_push_event (test_data->pad, gst_event_new_stream_start ("test"));
+
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  gst_pad_push_event (test_data->pad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  flow = gst_pad_push (test_data->pad, test_data->buffer);
+  fail_unless (flow == GST_FLOW_OK, "got flow %s instead of OK",
+      gst_flow_get_name (flow));
 
   return NULL;
 }
@@ -260,6 +269,8 @@ GST_START_TEST (test_collect_twice)
       sinkpad2, sizeof (TestData));
   fail_unless (data2 != NULL);
 
+  GST_INFO ("round 1");
+
   buf1 = gst_buffer_new ();
 
   /* start collect pads */
@@ -294,7 +305,13 @@ GST_START_TEST (test_collect_twice)
   gst_collect_pads_stop (collect);
   collected = FALSE;
 
+  GST_INFO ("round 2");
+
   buf2 = gst_buffer_new ();
+
+  /* clear EOS from pads */
+  gst_pad_push_event (srcpad1, gst_event_new_flush_stop (TRUE));
+  gst_pad_push_event (srcpad2, gst_event_new_flush_stop (TRUE));
 
   /* start collect pads */
   gst_collect_pads_start (collect);

@@ -139,13 +139,13 @@ check_PROGRAMS =				\
 	libs/bitreader				\
 	libs/bytereader				\
 	libs/bytewriter				\
+	libs/collectpads			\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
 	libs/transform1
 
 # failing tests
-noinst_PROGRAMS =				\
-	libs/collectpads
+noinst_PROGRAMS =
 
 # elements to ignore for the state tests
 # STATE_IGNORE_ELEMENTS =
