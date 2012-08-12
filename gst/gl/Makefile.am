@@ -2,7 +2,7 @@
 plugin_LTLIBRARIES = libgstopengl.la
 
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-AM_LIBS = $(GST_BASE_LIBS)
+AM_LIBS = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
 
 # full opengl required
 if GL_IS_OPENGL
@@ -90,6 +90,7 @@ libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
+	-lgstpbutils-$(GST_API_VERSION) \
 	$(GL_LIBS) \
 	$(LIBPNG_LIBS) \
         $(JPEG_LIBS) \
