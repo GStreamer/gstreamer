@@ -65,9 +65,11 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
         GST_TIME_ARGS (GST_BUFFER_PTS (GST_BUFFER_CAST (data))),
         GST_TIME_ARGS (GST_BUFFER_DTS (GST_BUFFER_CAST (data))));
     /* If an EOS went through, a buffer would be invalid */
-    fail_if (consist->eos, "Buffer received after EOS");
+    fail_if (consist->eos, "Buffer received after EOS on pad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
     /* Buffers need to be preceded by a segment event */
-    fail_unless (consist->segment, "Buffer received without segment");
+    fail_unless (consist->segment, "Buffer received without segment "
+        "on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   } else if (GST_IS_EVENT (data)) {
     GstEvent *event = (GstEvent *) data;
 
@@ -82,13 +84,16 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
       case GST_EVENT_FLUSH_STOP:
         /* Receiving a flush-stop is only valid after receiving a flush-start */
         fail_unless (consist->flushing,
-            "Received a FLUSH_STOP without a FLUSH_START");
-        fail_if (consist->eos, "Received a FLUSH_STOP after an EOS");
+            "Received a FLUSH_STOP without a FLUSH_START on pad %s:%s",
+            GST_DEBUG_PAD_NAME (pad));
+        fail_if (consist->eos, "Received a FLUSH_STOP after an EOS on "
+            "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
         consist->flushing = consist->expect_flush = FALSE;
         break;
       case GST_EVENT_STREAM_START:
         fail_if (consist->saw_serialized_event && !consist->saw_stream_start,
-            "Got a STREAM_START event after a serialized event");
+            "Got a STREAM_START event after a serialized event on pad %s:%s",
+            GST_DEBUG_PAD_NAME (pad));
         consist->saw_stream_start = TRUE;
         break;
       case GST_EVENT_STREAM_CONFIG:
@@ -98,13 +103,15 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
         break;
       case GST_EVENT_SEGMENT:
         fail_if ((consist->expect_flush && consist->flushing),
-            "Received SEGMENT while in a flushing seek");
+            "Received SEGMENT while in a flushing seek on pad %s:%s",
+            GST_DEBUG_PAD_NAME (pad));
         consist->segment = TRUE;
         consist->eos = FALSE;
         break;
       case GST_EVENT_EOS:
         /* FIXME : not 100% sure about whether two eos in a row is valid */
-        fail_if (consist->eos, "Received EOS just after another EOS");
+        fail_if (consist->eos, "Received EOS just after another EOS on "
+            "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
         consist->eos = TRUE;
         consist->segment = FALSE;
         break;
@@ -115,7 +122,9 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
       default:
         if (GST_EVENT_IS_SERIALIZED (event) && GST_EVENT_IS_DOWNSTREAM (event)) {
           fail_if (consist->eos, "Event received after EOS");
-          fail_unless (consist->segment, "Event received before segment");
+          fail_unless (consist->segment, "Event %s received before segment "
+              "on pad %s:%s", GST_EVENT_TYPE_NAME (event),
+              GST_DEBUG_PAD_NAME (pad));
         }
         /* FIXME : Figure out what to do for other events */
         break;
@@ -123,8 +132,8 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
     if (GST_EVENT_IS_SERIALIZED (event)) {
       fail_if (!consist->saw_stream_start
           && GST_EVENT_TYPE (event) != GST_EVENT_STREAM_START,
-          "Got a serialized event (%s) before a STREAM_START",
-          GST_EVENT_TYPE_NAME (event));
+          "Got a serialized event (%s) before a STREAM_START on pad %s:%s",
+          GST_EVENT_TYPE_NAME (event), GST_DEBUG_PAD_NAME (pad));
       consist->saw_serialized_event = TRUE;
     }
   }
@@ -145,9 +154,11 @@ sink_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
     GST_DEBUG_OBJECT (pad, "Buffer %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (GST_BUFFER (data))));
     /* If an EOS went through, a buffer would be invalid */
-    fail_if (consist->eos, "Buffer received after EOS");
+    fail_if (consist->eos, "Buffer received after EOS on pad %s:%s",
+        GST_DEBUG_PAD_NAME (pad));
     /* Buffers need to be preceded by a segment event */
-    fail_unless (consist->segment, "Buffer received without segment");
+    fail_unless (consist->segment, "Buffer received without segment "
+        "on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
   } else if (GST_IS_EVENT (data)) {
     GstEvent *event = (GstEvent *) data;
 
@@ -165,7 +176,8 @@ sink_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
       }
       case GST_EVENT_SEGMENT:
         fail_if ((consist->expect_flush && consist->flushing),
-            "Received SEGMENT while in a flushing seek");
+            "Received SEGMENT while in a flushing seek on pad %s:%s",
+            GST_DEBUG_PAD_NAME (pad));
         consist->segment = TRUE;
         consist->eos = FALSE;
         break;
