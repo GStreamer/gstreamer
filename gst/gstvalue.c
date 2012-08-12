@@ -186,10 +186,15 @@ gst_value_serialize_any_list (const GValue * value, const gchar * begin,
   for (i = 0; i < alen; i++) {
     v = &g_array_index (array, GValue, i);
     s_val = gst_value_serialize (v);
-    g_string_append (s, s_val);
-    g_free (s_val);
-    if (i < alen - 1) {
-      g_string_append_len (s, ", ", 2);
+    if (s_val != NULL) {
+      g_string_append (s, s_val);
+      g_free (s_val);
+      if (i < alen - 1) {
+        g_string_append_len (s, ", ", 2);
+      }
+    } else {
+      GST_WARNING ("Could not serialize list/array value of type '%s'",
+          G_VALUE_TYPE_NAME (v));
     }
   }
   g_string_append (s, end);
@@ -1839,6 +1844,7 @@ gst_value_serialize_segment (const GValue * value)
   gchar *t, *res;
   GstStructure *s;
 
+  /* FIXME: serialize segment offset as well ? */
   s = gst_structure_new ("GstSegment",
       "flags", GST_TYPE_SEGMENT_FLAGS, seg->flags,
       "rate", G_TYPE_DOUBLE, seg->rate,
