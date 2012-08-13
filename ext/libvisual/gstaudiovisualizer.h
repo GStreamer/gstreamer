@@ -37,7 +37,7 @@ G_BEGIN_DECLS
 typedef struct _GstAudioVisualizer GstAudioVisualizer;
 typedef struct _GstAudioVisualizerClass GstAudioVisualizerClass;
 
-typedef void (*GstAudioVisualizerShaderFunc)(GstAudioVisualizer *scope, const guint8 *s, guint8 *d);
+typedef void (*GstAudioVisualizerShaderFunc)(GstAudioVisualizer *scope, const GstVideoFrame *s, GstVideoFrame *d);
 
 /**
  * GstAudioVisualizerShader:
@@ -88,23 +88,18 @@ struct _GstAudioVisualizer
 
   /* video state */
   GstVideoInfo vinfo;
-  GstVideoFormat video_format;
-  gint fps_n, fps_d;
-  gint width;
-  gint height;
   guint64 frame_duration;
-  guint bpf;                    /* bytes per frame */
 
   /* audio state */
   GstAudioInfo ainfo;
 
   /* configuration mutex */
   GMutex config_lock;
-  
+
   /* QoS stuff *//* with LOCK */
   gdouble proportion;
   GstClockTime earliest_time;
-  
+
   GstSegment segment;
 };
 
@@ -116,7 +111,7 @@ struct _GstAudioVisualizerClass
   gboolean (*setup) (GstAudioVisualizer * scope);
 
   /* virtual function for rendering a frame */
-  gboolean (*render) (GstAudioVisualizer * scope, GstBuffer * audio, GstBuffer * video);
+  gboolean (*render) (GstAudioVisualizer * scope, GstBuffer * audio, GstVideoFrame * video);
 };
 
 GType gst_audio_visualizer_get_type (void);
