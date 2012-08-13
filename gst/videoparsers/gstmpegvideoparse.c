@@ -756,7 +756,8 @@ gst_mpegv_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_DURATION (buffer) = 0;
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
+  if (mpvparse->frame_repeat_count
+      && GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
     GST_BUFFER_DURATION (buffer) =
         (1 + mpvparse->frame_repeat_count) * GST_BUFFER_DURATION (buffer) / 2;
   }
