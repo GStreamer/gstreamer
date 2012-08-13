@@ -294,7 +294,7 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  *    one plane.
  * @plane: the plane number where a component can be found
  * @poffset: the offset in the plane where the first pixel of the components
- *    can be found. If bits < 8 the amount is specified in bits.
+ *    can be found.
  * @w_sub: subsampling factor of the width for the component. Use
  *     GST_VIDEO_SUB_SCALE to scale a width.
  * @h_sub: subsampling factor of the height for the component. Use
