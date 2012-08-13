@@ -945,7 +945,7 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
   GList *tmp;
 
   if (!gst_structure_id_has_field (topology, _TOPOLOGY_PAD_QUARK)) {
-    GST_DEBUG ("Could not find pad for node %" GST_PTR_FORMAT "\n", topology);
+    GST_DEBUG ("Could not find pad for node %" GST_PTR_FORMAT, topology);
     return NULL;
   }
 
