@@ -143,7 +143,9 @@ struct _GstRegistryPrivate
   GList *plugins;
   GList *features;
 
+#if 0
   GList *paths;
+#endif
 
   int cache_file;
 
@@ -336,6 +338,7 @@ gst_registry_get (void)
   return registry;
 }
 
+#if 0
 /**
  * gst_registry_add_path:
  * @registry: the registry to add the path to
@@ -404,7 +407,7 @@ gst_registry_get_path_list (GstRegistry * registry)
 
   return list;
 }
-
+#endif
 
 /**
  * gst_registry_add_plugin:

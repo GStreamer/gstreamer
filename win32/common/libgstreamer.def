@@ -931,7 +931,6 @@ EXPORTS
 	gst_query_writable_structure
 	gst_rank_get_type
 	gst_registry_add_feature
-	gst_registry_add_path
 	gst_registry_add_plugin
 	gst_registry_check_feature_version
 	gst_registry_feature_filter
@@ -943,7 +942,6 @@ EXPORTS
 	gst_registry_get_feature_list
 	gst_registry_get_feature_list_by_plugin
 	gst_registry_get_feature_list_cookie
-	gst_registry_get_path_list
 	gst_registry_get_plugin_list
 	gst_registry_get_type
 	gst_registry_lookup

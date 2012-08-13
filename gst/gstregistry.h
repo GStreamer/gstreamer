@@ -62,8 +62,11 @@ GType                   gst_registry_get_type           (void);
 GstRegistry *           gst_registry_get                (void);
 
 gboolean                gst_registry_scan_path          (GstRegistry *registry, const gchar *path);
+
+#if 0
 void                    gst_registry_add_path           (GstRegistry * registry, const gchar * path);
 GList*                  gst_registry_get_path_list      (GstRegistry *registry);
+#endif
 
 gboolean                gst_registry_add_plugin         (GstRegistry *registry, GstPlugin *plugin);
 void                    gst_registry_remove_plugin      (GstRegistry *registry, GstPlugin *plugin);
