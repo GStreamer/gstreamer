@@ -24,8 +24,6 @@
  *
  * Renders the given text in the specified font, at specified position, and
  * with the specified background pattern.
- *
- * Note: creates a silent #GESTrackAudioTestSource to fill audio tracks
  */
 
 #include "ges-internal.h"
@@ -33,7 +31,6 @@
 #include "ges-timeline-source.h"
 #include "ges-track-object.h"
 #include "ges-track-title-source.h"
-#include "ges-track-audio-test-source.h"
 #include <string.h>
 
 G_DEFINE_TYPE (GESTimelineTitleSource, ges_timeline_title_source,
@@ -670,12 +667,6 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
     ges_track_title_source_set_color ((GESTrackTitleSource *) res, priv->color);
     ges_track_title_source_set_xpos ((GESTrackTitleSource *) res, priv->xpos);
     ges_track_title_source_set_ypos ((GESTrackTitleSource *) res, priv->ypos);
-  }
-
-  else if (track->type == GES_TRACK_TYPE_AUDIO) {
-    res = (GESTrackObject *) ges_track_audio_test_source_new ();
-    if (priv->mute)
-      ges_track_object_set_active (res, FALSE);
   }
 
   return res;
