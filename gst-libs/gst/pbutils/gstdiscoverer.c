@@ -824,11 +824,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.caps = gst_caps_ref (caps);
     }
 
-    /* FIXME : gst_video_info_from_caps only works with raw caps,
-     * wouldn't we want to get all the info below for non-raw caps ? 
-     */
-    if (g_str_has_prefix (name, "video/x-raw") &&
-        gst_video_info_from_caps (&vinfo, caps)) {
+    if (gst_video_info_from_caps (&vinfo, caps)) {
       info->width = (guint) vinfo.width;
       info->height = (guint) vinfo.height;
 
