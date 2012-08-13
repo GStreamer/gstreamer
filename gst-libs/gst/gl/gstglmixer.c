@@ -394,7 +394,7 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
 
         if (ret) {
           gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-              mix->display, NULL);
+              mixpad->display, NULL);
         } else {
           GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
               GST_GL_DISPLAY_ERR_MSG (mixpad->display), (NULL));
