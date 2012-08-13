@@ -2623,7 +2623,7 @@ gst_audio_encoder_negotiate (GstAudioEncoder * enc)
 gboolean
 gst_audio_encoder_set_output_format (GstAudioEncoder * enc, GstCaps * caps)
 {
-  gboolean res = FALSE;
+  gboolean res = TRUE;
   GstCaps *templ_caps;
 
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
