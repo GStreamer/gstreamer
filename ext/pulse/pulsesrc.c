@@ -1152,9 +1152,6 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps)
     if (spec.info.channels == 1) {
       pa_channel_map_init_mono (&channel_map);
     } else if (spec.info.channels == 2) {
-      gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK,
-          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
-          GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT), NULL);
       pa_channel_map_init_stereo (&channel_map);
     } else {
       need_channel_layout = TRUE;
