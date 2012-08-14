@@ -54,8 +54,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vp8dec_debug);
 #define GST_CAT_DEFAULT gst_vp8dec_debug
 
+#ifndef HAVE_VP8_MFQE
+#define VP8_MFQE (1<<10)
+#endif
+
 #define DEFAULT_POST_PROCESSING FALSE
-#define DEFAULT_POST_PROCESSING_FLAGS (VP8_DEBLOCK | VP8_DEMACROBLOCK)
+#define DEFAULT_POST_PROCESSING_FLAGS (VP8_DEBLOCK | VP8_DEMACROBLOCK | VP8_MFQE)
 #define DEFAULT_DEBLOCKING_LEVEL 4
 #define DEFAULT_NOISE_LEVEL 0
 
@@ -77,6 +81,7 @@ gst_vp8_dec_post_processing_flags_get_type (void)
     {C_FLAGS (VP8_DEBLOCK), "Deblock", "deblock"},
     {C_FLAGS (VP8_DEMACROBLOCK), "Demacroblock", "demacroblock"},
     {C_FLAGS (VP8_ADDNOISE), "Add noise", "addnoise"},
+    {C_FLAGS (VP8_MFQE), "Multi-frame quality enhancement", "mfqe"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -430,7 +435,11 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
   if ((caps & VPX_CODEC_CAP_POSTPROC) && dec->post_processing) {
     vp8_postproc_cfg_t pp_cfg = { 0, };
 
+#ifndef HAVE_VP8_MFQE
+    pp_cfg.post_proc_flag = (dec->post_processing_flags & (~VP8_MFQE));
+#else
     pp_cfg.post_proc_flag = dec->post_processing_flags;
+#endif
     pp_cfg.deblocking_level = dec->deblocking_level;
     pp_cfg.noise_level = dec->noise_level;
 
