@@ -1144,6 +1144,7 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps)
   gboolean need_channel_layout = FALSE;
   GstAudioRingBufferSpec spec;
   const gchar *name;
+  int i;
 
   s = gst_caps_get_structure (*caps, 0);
   gst_structure_get_int (s, "channels", &spec.info.channels);
@@ -1175,7 +1176,8 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps)
     need_channel_layout = TRUE;
     gst_structure_set (s, "channel-mask", GST_TYPE_BITMASK,
         G_GUINT64_CONSTANT (0), NULL);
-    memset (spec.info.position, 0xff, sizeof (spec.info.position));
+    for (i = 0; i < G_N_ELEMENTS (spec.info.position); i++)
+      spec.info.position[i] = GST_AUDIO_CHANNEL_POSITION_INVALID;
   }
 
   if (!gst_pulse_fill_sample_spec (&spec, &pulsesrc->sample_spec))
