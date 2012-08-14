@@ -2311,10 +2311,6 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   if (!gst_video_info_from_caps (&self->vinfo, caps))
     goto invalid_caps;
 
-  if (GST_VIDEO_INFO_FPS_N (&self->vinfo) == 0 ||
-      GST_VIDEO_INFO_FLAG_IS_SET (&self->vinfo, GST_VIDEO_FLAG_VARIABLE_FPS))
-    goto no_framerate;
-
   fps_n = GST_VIDEO_INFO_FPS_N (&self->vinfo);
   fps_d = GST_VIDEO_INFO_FPS_D (&self->vinfo);
 
@@ -2390,11 +2386,6 @@ done:
 invalid_caps:
   res = FALSE;
   GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
-  goto done;
-
-no_framerate:
-  res = FALSE;
-  GST_ERROR_OBJECT (pad, "No framerate in caps: %" GST_PTR_FORMAT, caps);
   goto done;
 
 caps_not_accepted:
