@@ -309,7 +309,8 @@ main (gint argc, gchar * argv[])
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, screen);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, screen,
+      NULL);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message::error", G_CALLBACK (message_cb), pipeline);
   g_signal_connect (bus, "message::warning", G_CALLBACK (message_cb), pipeline);
