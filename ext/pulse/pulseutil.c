@@ -279,6 +279,9 @@ gst_pulse_channel_map_to_gst (const pa_channel_map * map,
   if (invalid) {
     for (i = 0; i < channels; i++)
       pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+  } else {
+    if (pos[0] != GST_AUDIO_CHANNEL_POSITION_NONE)
+      spec->info.flags &= ~GST_AUDIO_FLAG_UNPOSITIONED;
   }
 
   return spec;
