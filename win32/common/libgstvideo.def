@@ -77,6 +77,8 @@ EXPORTS
 	gst_video_decoder_allocate_output_frame
 	gst_video_decoder_drop_frame
 	gst_video_decoder_finish_frame
+	gst_video_decoder_get_allocator
+	gst_video_decoder_get_buffer_pool
 	gst_video_decoder_get_estimate_rate
 	gst_video_decoder_get_frame
 	gst_video_decoder_get_latency
@@ -97,6 +99,7 @@ EXPORTS
 	gst_video_encoder_allocate_output_buffer
 	gst_video_encoder_allocate_output_frame
 	gst_video_encoder_finish_frame
+	gst_video_encoder_get_allocator
 	gst_video_encoder_get_frame
 	gst_video_encoder_get_latency
 	gst_video_encoder_get_oldest_frame
