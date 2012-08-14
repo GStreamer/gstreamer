@@ -3296,8 +3296,6 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
   switch (video_format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ARGB:
 #ifndef OPENGL_ES2
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
           GL_UNSIGNED_BYTE, frame->data[0]);
@@ -3306,14 +3304,44 @@ gst_gl_display_thread_do_download_draw_rgb (GstGLDisplay * display)
           frame->data[0]);
 #endif
       break;
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_ARGB:
+#ifndef OPENGL_ES2
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8, frame->data[0]);
+#else
+      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8_REV, frame->data[0]);
+#endif /* G_BYTE_ORDER */
+#else /* OPENGL_ES2 */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      glReadPixels (0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8,
+          frame->data[0]);
+#else
+      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8_REV, frame->data[0]);
+#endif /* G_BYTE_ORDER */
+#endif /* !OPENGL_ES2 */
+      break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_ABGR:
 #ifndef OPENGL_ES2
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
           GL_UNSIGNED_BYTE, frame->data[0]);
 #endif
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_ABGR:
+#ifndef OPENGL_ES2
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          GL_UNSIGNED_INT_8_8_8_8, frame->data[0]);
+#else
+      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+          GL_UNSIGNED_INT_8_8_8_8_REV, frame->data[0]);
+#endif /* G_BYTE_ORDER */
+#endif /* !OPENGL_ES2 */
       break;
     case GST_VIDEO_FORMAT_RGB:
 #ifndef OPENGL_ES2
