@@ -847,6 +847,12 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   spec = &sink->ringbuffer->spec;
 
+  if (G_UNLIKELY (spec->caps && gst_caps_is_equal (spec->caps, caps))) {
+    GST_DEBUG_OBJECT (sink,
+        "Ringbuffer caps haven't changed, skipping reconfiguration");
+    return TRUE;
+  }
+
   GST_DEBUG_OBJECT (sink, "release old ringbuffer");
 
   /* get current time, updates the last_time. When the subclass has a clock that
