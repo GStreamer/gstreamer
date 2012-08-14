@@ -209,6 +209,8 @@ gst_base_src_set_do_timestamp
 gst_base_src_set_dynamic_size
 gst_base_src_new_seamless_segment
 gst_base_src_set_caps
+gst_base_src_get_allocator
+gst_base_src_get_buffer_pool
 
 GST_BASE_SRC_PAD
 <SUBSECTION Standard>
@@ -299,6 +301,8 @@ gst_base_transform_update_qos
 gst_base_transform_set_gap_aware
 gst_base_transform_suggest
 gst_base_transform_reconfigure
+gst_base_transform_get_allocator
+gst_base_transform_get_buffer_pool
 
 GST_BASE_TRANSFORM_SINK_NAME
 GST_BASE_TRANSFORM_SRC_NAME
