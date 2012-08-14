@@ -66,6 +66,7 @@ struct _GstVP8Dec
   enum vp8_postproc_level post_processing_flags;
   gint deblocking_level;
   gint noise_level;
+  gint threads;
 
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
