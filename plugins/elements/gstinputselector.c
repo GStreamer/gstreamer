@@ -649,6 +649,8 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     active_selpad = GST_SELECTOR_PAD_CAST (active_sinkpad);
 
     if (seg->format != GST_FORMAT_TIME) {
+      GST_DEBUG_OBJECT (selpad,
+          "Not waiting because we don't have a TIME segment");
       GST_INPUT_SELECTOR_UNLOCK (sel);
       return FALSE;
     }
@@ -668,6 +670,8 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
         gst_segment_to_running_time (seg, GST_FORMAT_TIME, running_time);
     /* If this is outside the segment don't sync */
     if (running_time == -1) {
+      GST_DEBUG_OBJECT (selpad,
+          "Not waiting because buffer is outside segment");
       GST_INPUT_SELECTOR_UNLOCK (sel);
       return FALSE;
     }
@@ -694,6 +698,8 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
        * we can't do any syncing at all */
       if (active_seg->format != GST_FORMAT_TIME
           && active_seg->format != GST_FORMAT_UNDEFINED) {
+        GST_DEBUG_OBJECT (selpad,
+            "Not waiting because active segment isn't in TIME format");
         GST_INPUT_SELECTOR_UNLOCK (sel);
         return FALSE;
       }
@@ -713,7 +719,8 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
             "Waiting for active streams to advance. %" GST_TIME_FORMAT " >= %"
             GST_TIME_FORMAT, GST_TIME_ARGS (running_time),
             GST_TIME_ARGS (cur_running_time));
-      }
+      } else
+        GST_DEBUG_OBJECT (selpad, "Waiting for selector to unblock");
 
       GST_INPUT_SELECTOR_WAIT (sel);
     } else {
