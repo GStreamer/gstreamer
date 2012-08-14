@@ -1790,6 +1790,19 @@ return 0;
     AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
+      AC_MSG_CHECKING([for VP8_MFQE presence])
+      AC_TRY_COMPILE([
+#include <vpx/vpx_decoder.h>
+#include <vpx/vp8dx.h>
+int foo=VP8_MFQE;
+      ], [
+return 0;
+      ], [
+        AC_DEFINE(HAVE_VP8_MFQE, 1, [Defined if the VP8 decoder has MFQE support])
+	AC_MSG_RESULT(yes)
+      ], [
+	AC_MSG_RESULT(no)
+      ])
     ])
     LIBS="$OLD_LIBS"
   fi
