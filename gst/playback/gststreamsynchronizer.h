@@ -45,7 +45,7 @@ struct _GstStreamSynchronizer
   GstElement parent;
 
   /* < private > */
-  GMutex *lock;
+  GMutex lock;
   gboolean shutdown;
 
   GList *streams;
