@@ -126,8 +126,8 @@ main (int argc, char *argv[])
   GstElement *srcbin;
   GstElement *tee;
   GstElement *queue[N_ACTORS], *sink[N_ACTORS];
-/*
   GstElement *upload[N_ACTORS];
+/*
   GstElement *effect[N_ACTORS];
 */
   ClutterActor *stage;
@@ -185,12 +185,12 @@ main (int argc, char *argv[])
 
   for (i = 0; i < N_ACTORS; i++) {
     queue[i] = gst_element_factory_make ("queue", NULL);
-/*    upload[i] = gst_element_factory_make ("glupload", NULL);
-      effect[i] = gst_element_factory_make ("gleffects", NULL); */
+    upload[i] = gst_element_factory_make ("glupload", NULL);
+/*      effect[i] = gst_element_factory_make ("gleffects", NULL); */
     sink[i] = gst_element_factory_make ("glimagesink", NULL);
 /*    gst_bin_add_many (GST_BIN (pipeline),
         queue[i], upload[i], effect[i], sink[i], NULL); */
-    gst_bin_add_many (GST_BIN (pipeline), queue[i], sink[i], NULL);
+    gst_bin_add_many (GST_BIN (pipeline), queue[i], upload[i], sink[i], NULL);
   }
 
   gst_element_link_many (srcbin, tee, NULL);
@@ -198,7 +198,7 @@ main (int argc, char *argv[])
   for (i = 0; i < N_ACTORS; i++) {
     ok |=
 //        gst_element_link_many (tee, queue[i], upload[i], effect[i], sink[i],
-        gst_element_link_many (tee, queue[i], sink[i], NULL);
+        gst_element_link_many (tee, queue[i], upload[i], sink[i], NULL);
   }
 
   if (!ok)
@@ -214,7 +214,8 @@ main (int argc, char *argv[])
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, actor);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, actor,
+      NULL);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 

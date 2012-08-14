@@ -30,25 +30,15 @@
 #ifndef WIN32
 #include <clutter/x11/clutter-x11.h>
 #endif
+
 #include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/gl/gstglmeta.h>
 
 /* This example shows how to use textures that come from a
  * gst-plugins-gl pipeline, into the clutter framework
  * It requires at least clutter 0.8.6
  */
-
-/* hack */
-typedef struct _GstGLBuffer GstGLBuffer;
-struct _GstGLBuffer
-{
-  GstBuffer buffer;
-
-  GObject *obj;
-
-  gint width;
-  gint height;
-  GLuint texture;
-};
 
 /* rotation */
 void
@@ -116,17 +106,24 @@ update_texture_actor (gpointer data)
       g_object_get_data (G_OBJECT (texture_actor), "queue_input_buf");
   GAsyncQueue *queue_output_buf =
       g_object_get_data (G_OBJECT (texture_actor), "queue_output_buf");
-  GstGLBuffer *gst_gl_buf = g_async_queue_pop (queue_input_buf);
+  GstBuffer *inbuf = g_async_queue_pop (queue_input_buf);
   ClutterActor *stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
   CoglHandle cogl_texture = 0;
+  GstVideoMeta *v_meta;
+  GstGLMeta *gl_meta;
+
+  v_meta = gst_buffer_get_video_meta (inbuf);
+  gl_meta = gst_buffer_get_gl_meta (inbuf);
+  if (!v_meta || !gl_meta)
+    g_warning ("Required Meta was not found on buffers");
 
   /* Create a cogl texture from the gst gl texture */
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gst_gl_buf->texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_meta->memory->tex_id);
   if (glGetError () != GL_NO_ERROR)
     g_debug ("failed to bind texture that comes from gst-gl\n");
-  cogl_texture = cogl_texture_new_from_foreign (gst_gl_buf->texture,
-      GL_TEXTURE_RECTANGLE_ARB, gst_gl_buf->width, gst_gl_buf->height, 0, 0,
+  cogl_texture = cogl_texture_new_from_foreign (gl_meta->memory->tex_id,
+      GL_TEXTURE_RECTANGLE_ARB, v_meta->width, v_meta->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 
@@ -142,7 +139,7 @@ update_texture_actor (gpointer data)
     clutter_actor_show_all (stage);
 
   /* push buffer so it can be unref later */
-  g_async_queue_push (queue_output_buf, gst_gl_buf);
+  g_async_queue_push (queue_output_buf, inbuf);
 
   return FALSE;
 }

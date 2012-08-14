@@ -159,7 +159,8 @@ main (int argc, char *argv[])
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, actor);
+  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, actor,
+      NULL);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
