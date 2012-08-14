@@ -711,7 +711,6 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
     }
 
     if (selpad != active_selpad && !sel->flushing && !selpad->flushing &&
-        (sel->cache_buffers || active_selpad->pushed) &&
         (sel->blocked || cur_running_time == -1
             || running_time >= cur_running_time)) {
       if (!sel->blocked) {
