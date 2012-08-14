@@ -94,6 +94,7 @@ check_PROGRAMS = \
 	elements/audioconvert \
 	elements/audiotestsrc \
 	elements/decodebin \
+	elements/streamsynchronizer \
 	$(check_encodebin) \
 	generic/clock-selection \
 	generic/states \
