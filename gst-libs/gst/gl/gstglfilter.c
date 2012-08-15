@@ -53,7 +53,7 @@ enum
 
 #define DEBUG_INIT \
   GST_DEBUG_CATEGORY_INIT (gst_gl_filter_debug, "glfilter", 0, "glfilter element");
-
+#define gst_gl_filter_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGLFilter, gst_gl_filter, GST_TYPE_BASE_TRANSFORM,
     DEBUG_INIT);
 
@@ -62,6 +62,8 @@ static void gst_gl_filter_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static gboolean gst_gl_filter_query (GstBaseTransform * trans,
+    GstPadDirection direction, GstQuery * query);
 static GstCaps *gst_gl_filter_transform_caps (GstBaseTransform * bt,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static void gst_gl_filter_reset (GstGLFilter * filter);
@@ -97,6 +99,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
       gst_gl_filter_transform_caps;
   GST_BASE_TRANSFORM_CLASS (klass)->transform = gst_gl_filter_transform;
+  GST_BASE_TRANSFORM_CLASS (klass)->query = gst_gl_filter_query;
   GST_BASE_TRANSFORM_CLASS (klass)->start = gst_gl_filter_start;
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_filter_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->set_caps = gst_gl_filter_set_caps;
@@ -164,6 +167,40 @@ gst_gl_filter_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
+{
+  GstGLFilter *filter;
+  gboolean res;
+
+  filter = GST_GL_FILTER (trans);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CUSTOM:
+    {
+      GstStructure *structure = gst_query_writable_structure (query);
+      if (direction == GST_PAD_SINK &&
+          gst_structure_has_name (structure, "gstgldisplay")) {
+        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+            filter->display, NULL);
+        res = TRUE;
+      } else
+        res =
+            GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+            query);
+      break;
+    }
+    default:
+      res =
+          GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+          query);
+      break;
+  }
+
+  return res;
+}
+
 static void
 gst_gl_filter_reset (GstGLFilter * filter)
 {
@@ -204,8 +241,8 @@ gst_gl_filter_start (GstBaseTransform * bt)
   display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
   if (!gst_pad_peer_query (bt->srcpad, display_query)) {
-    GST_WARNING ("Could not query GstGLDisplay from downstream");
-    return FALSE;
+    GST_WARNING
+        ("Could not query GstGLDisplay from downstream (peer query failed)");
   }
 
   id_value = gst_structure_get_value (structure, "gstgldisplay");
@@ -214,8 +251,13 @@ gst_gl_filter_start (GstBaseTransform * bt)
     filter->display =
         g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
   else {
-    GST_WARNING ("Incorrect GstGLDisplay from downstream");
-    return FALSE;
+    GST_INFO ("Creating GstGLDisplay");
+    filter->display = gst_gl_display_new ();
+    if (!gst_gl_display_create_context (filter->display, 0)) {
+      GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
+          GST_GL_DISPLAY_ERR_MSG (filter->display), (NULL));
+      return FALSE;
+    }
   }
 
   if (filter_class->onStart)

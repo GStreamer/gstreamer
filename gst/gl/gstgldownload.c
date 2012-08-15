@@ -238,6 +238,7 @@ gst_gl_download_start (GstBaseTransform * bt)
 {
   GstGLDownload *download = GST_GL_DOWNLOAD (bt);
 
+  GST_INFO ("Creating GstGLDisplay");
   download->display = gst_gl_display_new ();
   if (!gst_gl_display_create_context (download->display, 0)) {
     GST_ELEMENT_ERROR (download, RESOURCE, NOT_FOUND,

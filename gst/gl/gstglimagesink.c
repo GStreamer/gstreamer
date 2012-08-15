@@ -373,6 +373,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (!glimage_sink->display) {
         gboolean ok = FALSE;
+
+        GST_INFO ("Creating GstGLDisplay");
         glimage_sink->display = gst_gl_display_new ();
 
         /* init opengl context */

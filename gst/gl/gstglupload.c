@@ -262,8 +262,8 @@ gst_gl_upload_start (GstBaseTransform * bt)
   display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
   if (!gst_pad_peer_query (bt->srcpad, display_query)) {
-    GST_WARNING ("Could not query GstGLDisplay from downstream");
-    return FALSE;
+    GST_WARNING
+        ("Could not query GstGLDisplay from downstream (peer query failed)");
   }
 
   id_value = gst_structure_get_value (structure, "gstgldisplay");
@@ -272,8 +272,13 @@ gst_gl_upload_start (GstBaseTransform * bt)
     upload->display =
         g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
   else {
-    GST_WARNING ("Incorrect GstGLDisplay from downstream");
-    return FALSE;
+    GST_INFO ("Creating GstGLDisplay");
+    upload->display = gst_gl_display_new ();
+    if (!gst_gl_display_create_context (upload->display, 0)) {
+      GST_ELEMENT_ERROR (upload, RESOURCE, NOT_FOUND,
+          GST_GL_DISPLAY_ERR_MSG (upload->display), (NULL));
+      return FALSE;
+    }
   }
 
   return TRUE;
