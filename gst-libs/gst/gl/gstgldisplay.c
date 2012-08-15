@@ -366,7 +366,7 @@ gst_gl_display_init (GstGLDisplay * display)
       "void main(void) {\n"
       "  float r,g,b,r2,b2,g2,y,u,v;\n"
       "  vec2 nxy=gl_TexCoord[0].xy;\n"
-      "  vec2 nxy2=mod(2.0*nxy, vec2(w, h));\n"
+      "  vec2 nxy2=nxy*2.0;\n"
       "  r=texture2DRect(tex,nxy).r;\n"
       "  g=texture2DRect(tex,nxy).g;\n"
       "  b=texture2DRect(tex,nxy).b;\n"
@@ -3574,33 +3574,45 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
 
   switch (video_format) {
     case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_xRGB:
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
       glReadPixels (0, 0, width, height, GL_BGRA,
-          GL_UNSIGNED_INT_8_8_8_8, frame->data[0]);
+          GL_UNSIGNED_INT_8_8_8_8, GST_VIDEO_FRAME_PLANE_DATA (frame, 0));
+#else
+      glReadPixels (0, 0, width, height, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8_REV, GST_VIDEO_FRAME_PLANE_DATA (frame, 0));
+#endif
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, frame->data[0]);
+#else
+      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, height, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8, frame->data[0]);
+#endif
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     {
       glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          frame->data[0]);
+          GST_VIDEO_FRAME_COMP_DATA (frame, 0));
 
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
 #endif
+
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          frame->data[1]);
+          GST_VIDEO_FRAME_COMP_DATA (frame, 1));
+
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
 #endif
+
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          frame->data[2]);
+          GST_VIDEO_FRAME_COMP_DATA (frame, 2));
     }
       break;
     default:
