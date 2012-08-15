@@ -39,7 +39,6 @@ GType gst_gl_allocator_get_type(void);
 #define GST_GL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_ALLOCATOR, GstGLAllocatorClass))
 #define GST_GL_ALLOCATOR_CAST(obj)            ((GstGLAllocator *)(obj))
 
-typedef struct _GstGLMemoryInitParams GstGLMemoryInitParams;
 typedef struct _GstGLMemory GstGLMemory;
 typedef struct _GstGLAllocator GstGLAllocator;
 typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
@@ -72,7 +71,7 @@ struct _GstGLMemory
 void gst_gl_memory_init (void);
 
 GstMemory * gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
-                                gsize width, gsize height);
+                                 gsize width, gsize height);
 
 gboolean gst_is_gl_memory (GstMemory * mem);
 
