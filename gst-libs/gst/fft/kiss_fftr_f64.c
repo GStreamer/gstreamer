@@ -78,10 +78,8 @@ kiss_fftr_f64 (kiss_fftr_f64_cfg st, const kiss_fft_f64_scalar * timedata,
   int k, ncfft;
   kiss_fft_f64_cpx fpnk, fpk, f1k, f2k, tw, tdc;
 
-  if (st->substate->inverse) {
-    fprintf (stderr, "kiss fft usage error: improper alloc\n");
-    exit (1);
-  }
+  /* kiss fft usage error: improper alloc */
+  g_return_if_fail (st->substate->inverse == 0);
 
   ncfft = st->substate->nfft;
 
@@ -135,10 +133,8 @@ kiss_fftri_f64 (kiss_fftr_f64_cfg st, const kiss_fft_f64_cpx * freqdata,
   /* input buffer timedata is stored row-wise */
   int k, ncfft;
 
-  if (st->substate->inverse == 0) {
-    fprintf (stderr, "kiss fft usage error: improper alloc\n");
-    exit (1);
-  }
+  /* kiss fft usage error: improper alloc */
+  g_return_if_fail (st->substate->inverse != 0);
 
   ncfft = st->substate->nfft;
 
