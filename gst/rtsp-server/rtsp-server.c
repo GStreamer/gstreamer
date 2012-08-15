@@ -594,7 +594,10 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
     sockaddr =
         g_socket_address_enumerator_next (enumerator, cancellable, error);
     if (!sockaddr) {
-      GST_DEBUG_OBJECT (server, "no more addresses %s", (*error)->message);
+      if (!*error)
+        GST_DEBUG_OBJECT (server, "no more addresses %s", *error ? (*error)->message : "");
+      else
+        GST_DEBUG_OBJECT (server, "failed to retrieve next address %s", (*error)->message);
       break;
     }
 
@@ -696,7 +699,7 @@ close_error:
         g_error_free (sock_error);
     }
     if (bind_error) {
-      if (error == NULL)
+      if ((error == NULL) || (*error == NULL))
         g_propagate_error (error, bind_error);
       else
         g_error_free (bind_error);

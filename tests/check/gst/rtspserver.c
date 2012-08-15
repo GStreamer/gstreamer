@@ -688,6 +688,39 @@ GST_START_TEST (test_play_without_session)
 
 GST_END_TEST;
 
+GST_START_TEST (test_bind_already_in_use)
+{
+  GstRTSPServer *serv;
+  GSocketService *service;
+  GError *error = NULL;
+  guint16 port;
+  gchar *port_str;
+
+  serv = gst_rtsp_server_new ();
+  service = g_socket_service_new ();
+
+  /* bind service to port */
+  port = g_socket_listener_add_any_inet_port (G_SOCKET_LISTENER (service), NULL, &error);
+  g_assert_no_error (error);
+
+  port_str = g_strdup_printf ("%d\n", port);
+
+  /* try to bind server to the same port */
+  g_object_set (serv, "service", port_str, NULL);
+  g_free (port_str);
+
+  /* attach to default main context */
+  fail_unless (gst_rtsp_server_attach (serv, NULL) == 0);
+
+  /* cleanup */
+  g_object_unref (serv);
+  g_socket_listener_close (G_SOCKET_LISTENER (service));
+  g_object_unref (service);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtspserver_suite (void)
 {
@@ -704,6 +737,7 @@ rtspserver_suite (void)
   tcase_add_test (tc, test_setup_non_existing_stream);
   tcase_add_test (tc, test_play);
   tcase_add_test (tc, test_play_without_session);
+  tcase_add_test (tc, test_bind_already_in_use);
 
   return s;
 }
