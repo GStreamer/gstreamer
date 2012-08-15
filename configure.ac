@@ -567,7 +567,7 @@ AG_GST_CHECK_FEATURE(DIRECTSHOW, [DirectShow plug-in], winks, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -lole32 -luuid -lstrmiids"
   AC_MSG_CHECKING(for DirectShow LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <strmif.h>
 #include <uuids.h>
@@ -580,7 +580,7 @@ int main () {
 
   return 0;
 }
-],
+]])],
     [HAVE_DIRECTSHOW="yes"],
     [HAVE_DIRECTSHOW="no"])
   AC_MSG_RESULT($HAVE_DIRECTSHOW)
