@@ -782,14 +782,10 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   guint64 dist, ts;
   guint avail, sbpf;
   gpointer adata;
-  gboolean (*render) (GstAudioVisualizer * scope, GstBuffer * audio,
-      GstBuffer * video);
   gint bps, channels, rate;
 
   scope = GST_AUDIO_VISUALIZER (parent);
   klass = GST_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
-
-  render = klass->render;
 
   GST_LOG_OBJECT (scope, "chainfunc called");
 
@@ -892,8 +888,8 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
             sbpf, NULL, NULL));
 
     /* call class->render() vmethod */
-    if (render) {
-      if (!render (scope, inbuf, outbuf)) {
+    if (klass->render) {
+      if (!klass->render (scope, inbuf, outbuf)) {
         ret = GST_FLOW_ERROR;
       } else {
         /* run various post processing (shading and geometri transformation */
