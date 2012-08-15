@@ -970,8 +970,8 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
     display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
 
     if (!gst_pad_peer_query (mix->srcpad, display_query)) {
-      GST_WARNING ("Could not query GstGLDisplay from downstream");
-      return FALSE;
+      GST_WARNING
+          ("Could not query GstGLDisplay from downstream (peer query failed)");
     }
 
     id_value = gst_structure_get_value (structure, "gstgldisplay");
@@ -979,8 +979,13 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
       mix->display =
           g_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
     else {
-      GST_WARNING ("Incorrect GstGLDisplay from downstream");
-      return FALSE;
+      GST_INFO ("Creating GstGLDisplay");
+      mix->display = gst_gl_display_new ();
+      if (!gst_gl_display_create_context (mix->display, 0)) {
+        GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+            GST_GL_DISPLAY_ERR_MSG (mix->display), (NULL));
+        return FALSE;
+      }
     }
   }
 
