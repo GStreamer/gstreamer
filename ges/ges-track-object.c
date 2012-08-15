@@ -1388,12 +1388,12 @@ cant_copy:
 /**
  * ges_track_object_list_children_properties:
  * @object: The #GESTrackObject to get the list of children properties from
- * @n_properties: return location for the length of the returned array
+ * @n_properties: (out): return location for the length of the returned array
  *
  * Gets an array of #GParamSpec* for all configurable properties of the
  * children of @object.
  *
- * Returns: (transfer full) (array): an array of #GParamSpec* which should be freed after use or
+ * Returns: (transfer full) (array length=n_properties): an array of #GParamSpec* which should be freed after use or
  * %NULL if something went wrong
  *
  * Since: 0.10.2
