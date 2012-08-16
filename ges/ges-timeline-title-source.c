@@ -50,6 +50,7 @@ struct _GESTimelineTitleSourcePrivate
   GESTextVAlign valign;
   GSList *track_titles;
   guint32 color;
+  guint32 background;
   gdouble xpos;
   gdouble ypos;
 };
@@ -63,6 +64,7 @@ enum
   PROP_HALIGNMENT,
   PROP_VALIGNMENT,
   PROP_COLOR,
+  PROP_BACKGROUND,
   PROP_XPOS,
   PROP_YPOS,
 };
@@ -104,6 +106,9 @@ ges_timeline_title_source_get_property (GObject * object, guint property_id,
     case PROP_COLOR:
       g_value_set_uint (value, priv->color);
       break;
+    case PROP_BACKGROUND:
+      g_value_set_uint (value, priv->background);
+      break;
     case PROP_XPOS:
       g_value_set_double (value, priv->xpos);
       break;
@@ -139,6 +144,9 @@ ges_timeline_title_source_set_property (GObject * object, guint property_id,
       break;
     case PROP_COLOR:
       ges_timeline_title_source_set_color (tfs, g_value_get_uint (value));
+      break;
+    case PROP_BACKGROUND:
+      ges_timeline_title_source_set_background (tfs, g_value_get_uint (value));
       break;
     case PROP_XPOS:
       ges_timeline_title_source_set_xpos (tfs, g_value_get_double (value));
@@ -245,7 +253,18 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           0, G_MAXUINT32, G_MAXUINT32, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:xpos:
+   * GESTimelineTitleSource:background:
+   *
+   * The background of the text
+   */
+
+  g_object_class_install_property (object_class, PROP_BACKGROUND,
+      g_param_spec_uint ("background", "Background",
+          "The background of the text", 0, G_MAXUINT32, G_MAXUINT32,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GESTimelineTitleSource:xpos
    *
    * The horizontal position of the text
    */
@@ -279,6 +298,7 @@ ges_timeline_title_source_init (GESTimelineTitleSource * self)
   self->priv->halign = DEFAULT_HALIGNMENT;
   self->priv->valign = DEFAULT_VALIGNMENT;
   self->priv->color = G_MAXUINT32;
+  self->priv->background = G_MAXUINT32;
   self->priv->xpos = 0.5;
   self->priv->ypos = 0.5;
 }
@@ -445,6 +465,30 @@ ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
 }
 
 /**
+ * ges_timeline_title_source_set_background:
+ * @self: the #GESTimelineTitleSource* to set
+ * @background: The color @self is being set to
+ *
+ * Sets the background of the text.
+ */
+void
+ges_timeline_title_source_set_background (GESTimelineTitleSource * self,
+    guint32 background)
+{
+  GSList *tmp;
+
+  GST_DEBUG ("self:%p, background:%d", self, background);
+
+  self->priv->background = background;
+
+  for (tmp = self->priv->track_titles; tmp; tmp = tmp->next) {
+    ges_track_title_source_set_background (GES_TRACK_TITLE_SOURCE (tmp->data),
+        self->priv->background);
+  }
+}
+
+
+/**
  * ges_timeline_title_source_set_xpos:
  * @self: the #GESTimelineTitleSource* to set
  * @position: The horizontal position @self is being set to
@@ -586,6 +630,20 @@ ges_timeline_title_source_get_color (GESTimelineTitleSource * self)
 }
 
 /**
+ * ges_timeline_title_source_get_background:
+ * @self: a #GESTimelineTitleSource
+ *
+ * Get the background used by @self.
+ *
+ * Returns: The color used by @self.
+ */
+const guint32
+ges_timeline_title_source_get_background (GESTimelineTitleSource * self)
+{
+  return self->priv->background;
+}
+
+/**
  * ges_timeline_title_source_get_xpos:
  * @self: a #GESTimelineTitleSource
  *
@@ -665,6 +723,8 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
     ges_track_title_source_set_valignment ((GESTrackTitleSource *) res,
         priv->valign);
     ges_track_title_source_set_color ((GESTrackTitleSource *) res, priv->color);
+    ges_track_title_source_set_background ((GESTrackTitleSource *) res,
+        priv->background);
     ges_track_title_source_set_xpos ((GESTrackTitleSource *) res, priv->xpos);
     ges_track_title_source_set_ypos ((GESTrackTitleSource *) res, priv->ypos);
   }

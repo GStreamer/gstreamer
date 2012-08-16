@@ -98,6 +98,10 @@ ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
     guint32 color);
 
 void
+ges_timeline_title_source_set_background (GESTimelineTitleSource * self,
+    guint32 background);
+
+void
 ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
     gdouble position);
 
@@ -105,7 +109,7 @@ void
 ges_timeline_title_source_set_ypos (GESTimelineTitleSource * self,
     gdouble position);
 
-const gchar* 
+const gchar*
 ges_timeline_title_source_get_font_desc (GESTimelineTitleSource * self);
 
 GESTextVAlign
@@ -116,6 +120,9 @@ ges_timeline_title_source_get_halignment (GESTimelineTitleSource * self);
 
 const guint32
 ges_timeline_title_source_get_color (GESTimelineTitleSource * self);
+
+const guint32
+ges_timeline_title_source_get_background (GESTimelineTitleSource * self);
 
 const gdouble
 ges_timeline_title_source_get_xpos (GESTimelineTitleSource * self);

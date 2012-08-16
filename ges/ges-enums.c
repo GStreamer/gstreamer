@@ -591,6 +591,15 @@ static GEnumValue vpattern_enum_values[] = {
   ,
   {GES_VIDEO_TEST_PATTERN_SMPTE75, "SMPTE 75% color bars", "smpte75"}
   ,
+  {GES_VIDEO_TEST_ZONE_PLATE, "Zone plate", "zone-plate"}
+  ,
+  {GES_VIDEO_TEST_GAMUT, "Gamut checkers", "gamut"}
+  ,
+  {GES_VIDEO_TEST_CHROMA_ZONE_PLATE, "Chroma zone plate",
+      "chroma-zone-plate"}
+  ,
+  {GES_VIDEO_TEST_PATTERN_SOLID, "Solid color", "solid-color"}
+  ,
   {0, NULL, NULL}
 };
 

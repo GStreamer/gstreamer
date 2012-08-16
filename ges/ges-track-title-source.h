@@ -90,6 +90,8 @@ void ges_track_title_source_set_valignment (GESTrackTitleSource *self,
 
 void ges_track_title_source_set_color (GESTrackTitleSource *self,
 					   guint32 color);
+void ges_track_title_source_set_background (GESTrackTitleSource *self,
+					   guint32 color);
 void ges_track_title_source_set_xpos (GESTrackTitleSource *self,
 					   gdouble position);
 void ges_track_title_source_set_ypos (GESTrackTitleSource *self,
@@ -100,6 +102,7 @@ const gchar *ges_track_title_source_get_font_desc (GESTrackTitleSource *source);
 GESTextHAlign ges_track_title_source_get_halignment (GESTrackTitleSource *source);
 GESTextVAlign ges_track_title_source_get_valignment (GESTrackTitleSource *source);
 const guint32 ges_track_title_source_get_color (GESTrackTitleSource *source);
+const guint32 ges_track_title_source_get_background (GESTrackTitleSource *source);
 const gdouble ges_track_title_source_get_xpos (GESTrackTitleSource *source);
 const gdouble ges_track_title_source_get_ypos (GESTrackTitleSource *source);
 

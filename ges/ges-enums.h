@@ -271,6 +271,7 @@ GType ges_text_halign_get_type (void);
  * @GES_VIDEO_TEST_PATTERN_CHECKERS4: Checkers pattern (4px)
  * @GES_VIDEO_TEST_PATTERN_CHECKERS8: Checkers pattern (8px)
  * @GES_VIDEO_TEST_PATTERN_CIRCULAR: Circular pattern
+ * @GES_VIDEO_TEST_PATTERN_SOLID: Solid color
  * @GES_VIDEO_TEST_PATTERN_BLINK: Alternate between black and white
  * @GES_VIDEO_TEST_PATTERN_SMPTE75: SMPTE test pattern (75% color bars)
  *
@@ -292,6 +293,10 @@ typedef enum {
   GES_VIDEO_TEST_PATTERN_CIRCULAR,
   GES_VIDEO_TEST_PATTERN_BLINK,
   GES_VIDEO_TEST_PATTERN_SMPTE75,
+  GES_VIDEO_TEST_ZONE_PLATE,
+  GES_VIDEO_TEST_GAMUT,
+  GES_VIDEO_TEST_CHROMA_ZONE_PLATE,
+  GES_VIDEO_TEST_PATTERN_SOLID,
 } GESVideoTestPattern;
 
 
