@@ -316,10 +316,12 @@ GstBufferPool *gst_video_decoder_get_buffer_pool (GstVideoDecoder *decoder);
 
 /* Object methods */
 
-GstVideoCodecFrame *gst_video_decoder_get_frame       (GstVideoDecoder *decoder,
-						       int frame_number);
+GstVideoCodecFrame *gst_video_decoder_get_frame        (GstVideoDecoder *decoder,
+						        int frame_number);
 
 GstVideoCodecFrame *gst_video_decoder_get_oldest_frame (GstVideoDecoder *decoder);
+
+GList *             gst_video_decoder_get_frames       (GstVideoDecoder *decoder);
 
 /* Parsing related methods */
 void           gst_video_decoder_add_to_frame     (GstVideoDecoder *decoder,

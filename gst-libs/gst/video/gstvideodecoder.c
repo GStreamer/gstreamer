@@ -2646,6 +2646,27 @@ gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
   return frame;
 }
 
+/**
+ * gst_video_decoder_get_frames:
+ * @decoder: a #GstVideoDecoder
+ *
+ * Get all pending unfinished #GstVideoCodecFrame
+ * 
+ * Returns: (transfer full) (element-type GstVideoCodecFrame): pending unfinished #GstVideoCodecFrame.
+ */
+GList *
+gst_video_decoder_get_frames (GstVideoDecoder * decoder)
+{
+  GList *frames;
+
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  frames = g_list_copy (decoder->priv->frames);
+  g_list_foreach (frames, (GFunc) gst_video_codec_frame_ref, NULL);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  return frames;
+}
+
 static gboolean
 gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
     GstQuery * query)

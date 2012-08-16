@@ -2007,6 +2007,27 @@ gst_video_encoder_get_frame (GstVideoEncoder * encoder, int frame_number)
 }
 
 /**
+ * gst_video_encoder_get_frames:
+ * @encoder: a #GstVideoEncoder
+ *
+ * Get all pending unfinished #GstVideoCodecFrame
+ * 
+ * Returns: (transfer full) (element-type GstVideoCodecFrame): pending unfinished #GstVideoCodecFrame.
+ */
+GList *
+gst_video_encoder_get_frames (GstVideoEncoder * encoder)
+{
+  GList *frames;
+
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  frames = g_list_copy (encoder->priv->frames);
+  g_list_foreach (frames, (GFunc) gst_video_codec_frame_ref, NULL);
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+  return frames;
+}
+
+/**
  * gst_video_encoder_merge_tags:
  * @encoder: a #GstVideoEncoder
  * @tags: a #GstTagList to merge
