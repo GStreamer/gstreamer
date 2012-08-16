@@ -243,6 +243,7 @@ enum
 };
 
 #define DEFAULT_LATENCY_MS           200
+#define DEFAULT_DROP_ON_LATENCY      FALSE
 #define DEFAULT_SDES                 NULL
 #define DEFAULT_DO_LOST              FALSE
 #define DEFAULT_IGNORE_PT            FALSE
@@ -257,6 +258,7 @@ enum
 {
   PROP_0,
   PROP_LATENCY,
+  PROP_DROP_ON_LATENCY,
   PROP_SDES,
   PROP_DO_LOST,
   PROP_IGNORE_PT,
@@ -1428,6 +1430,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
 
   /* configure latency and packet lost */
   g_object_set (buffer, "latency", rtpbin->latency_ms, NULL);
+  g_object_set (buffer, "drop-on-latency", rtpbin->drop_on_latency, NULL);
   g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
   g_object_set (buffer, "mode", rtpbin->buffer_mode, NULL);
 
@@ -1552,6 +1555,12 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Default amount of ms to buffer in the jitterbuffers", 0,
           G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DROP_ON_LATENCY,
+      g_param_spec_boolean ("drop-on-latency",
+          "Drop buffers when maximum latency is reached",
+          "Tells the jitterbuffer to never exceed the given latency in size",
+          DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRtpBin::request-pt-map:
@@ -1878,6 +1887,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
 
   rtpbin->latency_ms = DEFAULT_LATENCY_MS;
   rtpbin->latency_ns = DEFAULT_LATENCY_MS * GST_MSECOND;
+  rtpbin->drop_on_latency = DEFAULT_DROP_ON_LATENCY;
   rtpbin->do_lost = DEFAULT_DO_LOST;
   rtpbin->ignore_pt = DEFAULT_IGNORE_PT;
   rtpbin->ntp_sync = DEFAULT_NTP_SYNC;
@@ -1986,6 +1996,14 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       /* propagate the property down to the jitterbuffer */
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "latency", value);
       break;
+    case PROP_DROP_ON_LATENCY:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->drop_on_latency = g_value_get_boolean (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      /* propagate the property down to the jitterbuffer */
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
+          "drop-on-latency", value);
+      break;
     case PROP_SDES:
       gst_rtp_bin_set_sdes_struct (rtpbin, g_value_get_boxed (value));
       break;
@@ -2050,6 +2068,11 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
     case PROP_LATENCY:
       GST_RTP_BIN_LOCK (rtpbin);
       g_value_set_uint (value, rtpbin->latency_ms);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
+    case PROP_DROP_ON_LATENCY:
+      GST_RTP_BIN_LOCK (rtpbin);
+      g_value_set_boolean (value, rtpbin->drop_on_latency);
       GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     case PROP_SDES:

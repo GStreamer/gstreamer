@@ -47,6 +47,7 @@ struct _GstRtpBin {
   /* default latency for sessions */
   guint           latency_ms;
   guint64         latency_ns;
+  gboolean        drop_on_latency;
   gboolean        do_lost;
   gboolean        ignore_pt;
   gboolean        ntp_sync;
