@@ -23,8 +23,10 @@
 #endif
 
 #include "gstamc.h"
+#include "gstamc-constants.h"
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <string.h>
 #include <jni.h>
 
@@ -36,6 +38,52 @@ static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen,
     jsize * nVMs);
 static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
+
+/* Global cached references */
+static struct
+{
+  jclass klass;
+  jmethodID constructor;
+} java_string;
+static struct
+{
+  jclass klass;
+  jmethodID configure;
+  jmethodID create_by_codec_name;
+  jmethodID dequeue_input_buffer;
+  jmethodID dequeue_output_buffer;
+  jmethodID flush;
+  jmethodID get_input_buffers;
+  jmethodID get_output_buffers;
+  jmethodID get_output_format;
+  jmethodID queue_input_buffer;
+  jmethodID release;
+  jmethodID release_output_buffer;
+  jmethodID start;
+  jmethodID stop;
+} media_codec;
+static struct
+{
+  jclass klass;
+  jmethodID constructor;
+  jfieldID flags;
+  jfieldID offset;
+  jfieldID presentation_time_us;
+  jfieldID size;
+} media_codec_buffer_info;
+static struct
+{
+  jclass klass;
+  jmethodID create_audio_format;
+  jmethodID create_video_format;
+  jmethodID contains_key;
+  jmethodID get_float;
+  jmethodID set_float;
+  jmethodID get_integer;
+  jmethodID set_integer;
+  jmethodID get_string;
+  jmethodID set_string;
+} media_format;
 
 static JNIEnv *
 gst_amc_attach_current_thread (void)
@@ -131,149 +179,1162 @@ create_failed:
   }
 }
 
+static jstring
+gst_amc_jstring_new (JNIEnv * env, const gchar * chars, jint len)
+{
+  jcharArray array;
+  jstring result;
+
+  array = (*env)->NewCharArray (env, len);
+  if (array == NULL) {
+    GST_ERROR ("Failed to create char array of length %d", len);
+    (*env)->ExceptionClear (env);
+    return NULL;
+  }
+
+  (*env)->SetCharArrayRegion (env, array, 0, len, (const jchar *) chars);
+
+  result =
+      (*env)->NewObject (env, java_string.klass, java_string.constructor,
+      array);
+
+  (*env)->DeleteLocalRef (env, array);
+
+  return result;
+}
 
 GstAmcCodec *
 gst_amc_codec_new (const gchar * name)
 {
-  return NULL;
+  JNIEnv *env;
+  GstAmcCodec *codec;
+  jstring name_str;
+  jobject object = NULL;
+
+  g_return_val_if_fail (name != NULL, NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  name_str = gst_amc_jstring_new (env, name, strlen (name));
+  if (name_str == NULL)
+    goto error;
+
+  codec = g_slice_new0 (GstAmcCodec);
+
+  object =
+      (*env)->CallStaticObjectMethod (env, media_codec.klass,
+      media_codec.create_by_codec_name, name_str);
+  if ((*env)->ExceptionCheck (env) || !object) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to create codec '%s'", codec);
+    goto error;
+  }
+
+  codec->object = (*env)->NewGlobalRef (env, object);
+  if (!codec->object) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+    goto error;
+  }
+
+done:
+  if (object)
+    (*env)->DeleteLocalRef (env, object);
+  if (name_str)
+    (*env)->DeleteLocalRef (env, name_str);
+  name_str = NULL;
+  gst_amc_detach_current_thread ();
+
+  return codec;
+
+error:
+  g_slice_free (GstAmcCodec, codec);
+  codec = NULL;
+  goto done;
 }
 
 void
 gst_amc_codec_free (GstAmcCodec * codec)
 {
+  JNIEnv *env;
 
+  g_return_if_fail (codec != NULL);
+
+  env = gst_amc_attach_current_thread ();
+  (*env)->DeleteGlobalRef (env, codec->object);
+  g_slice_free (GstAmcCodec, codec);
+  gst_amc_detach_current_thread ();
 }
 
-void
-gst_amc_codec_configure (GstAmcCodec * codec, gint flags)
+gboolean
+gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags)
 {
+  JNIEnv *env;
+  gboolean ret = TRUE;
 
+  g_return_val_if_fail (codec != NULL, FALSE);
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.configure,
+      format->object, flags);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 GstAmcFormat *
 gst_amc_codec_get_output_format (GstAmcCodec * codec)
 {
-  return NULL;
+  JNIEnv *env;
+  GstAmcFormat *ret = NULL;
+  jobject object = NULL;
+
+  g_return_val_if_fail (codec != NULL, NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  object =
+      (*env)->CallObjectMethod (env, codec->object,
+      media_codec.get_output_format);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  ret = g_slice_new0 (GstAmcFormat);
+
+  ret->object = (*env)->NewGlobalRef (env, object);
+  if (!ret->object) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+    g_slice_free (GstAmcFormat, ret);
+    ret = NULL;
+  }
+
+  (*env)->DeleteLocalRef (env, object);
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
-void
+gboolean
 gst_amc_codec_start (GstAmcCodec * codec)
 {
+  JNIEnv *env;
+  gboolean ret = TRUE;
 
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.start);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
-void
+gboolean
 gst_amc_codec_stop (GstAmcCodec * codec)
 {
+  JNIEnv *env;
+  gboolean ret = TRUE;
 
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.stop);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
+}
+
+gboolean
+gst_amc_codec_flush (GstAmcCodec * codec)
+{
+  JNIEnv *env;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.flush);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
+}
+
+gboolean
+gst_amc_codec_release (GstAmcCodec * codec)
+{
+  JNIEnv *env;
+  gboolean ret = TRUE;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.release);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 void
-gst_amc_codec_flush (GstAmcCodec * codec)
+gst_amc_codec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
 {
+  JNIEnv *env;
+  jsize i;
 
+  g_return_if_fail (buffers != NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  for (i = 0; i < n_buffers; i++) {
+    if (buffers[i].object)
+      (*env)->DeleteGlobalRef (env, buffers[i].object);
+  }
+  g_free (buffers);
+
+  gst_amc_detach_current_thread ();
 }
 
 GstAmcBuffer *
 gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers)
 {
-  return NULL;
+  JNIEnv *env;
+  jobject output_buffers = NULL;
+  jsize n_output_buffers;
+  GstAmcBuffer *ret = NULL;
+  jsize i;
+
+  g_return_val_if_fail (codec != NULL, NULL);
+  g_return_val_if_fail (n_buffers != NULL, NULL);
+
+  *n_buffers = 0;
+  env = gst_amc_attach_current_thread ();
+
+  output_buffers =
+      (*env)->CallObjectMethod (env, codec->object,
+      media_codec.get_output_buffers);
+  if ((*env)->ExceptionCheck (env) || !output_buffers) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  n_output_buffers = (*env)->GetArrayLength (env, output_buffers);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get output buffers array length");
+    goto done;
+  }
+
+  *n_buffers = n_output_buffers;
+  ret = g_new0 (GstAmcBuffer, n_output_buffers);
+
+  for (i = 0; i < n_output_buffers; i++) {
+    jobject buffer = NULL;
+
+    buffer = (*env)->GetObjectArrayElement (env, output_buffers, i);
+    if ((*env)->ExceptionCheck (env) || !buffer) {
+      (*env)->ExceptionClear (env);
+      GST_ERROR ("Failed to get output buffer %d", i);
+      goto error;
+    }
+
+    ret[i].object = (*env)->NewGlobalRef (env, buffer);
+    (*env)->DeleteLocalRef (env, buffer);
+    if (!ret[i].object) {
+      (*env)->ExceptionClear (env);
+      GST_ERROR ("Failed to create global reference %d", i);
+      goto error;
+    }
+
+    ret[i].data = (*env)->GetDirectBufferAddress (env, ret[i].object);
+    if (!ret[i].data) {
+      (*env)->ExceptionClear (env);
+      GST_ERROR ("Failed to get buffer address %d", i);
+      goto error;
+    }
+    ret[i].size = (*env)->GetDirectBufferCapacity (env, ret[i].object);
+  }
+
+done:
+  if (output_buffers)
+    (*env)->DeleteLocalRef (env, output_buffers);
+  output_buffers = NULL;
+
+  gst_amc_detach_current_thread ();
+
+  return ret;
+error:
+  if (ret)
+    gst_amc_codec_free_buffers (ret, n_output_buffers);
+  ret = NULL;
+  *n_buffers = 0;
+  goto done;
 }
 
 GstAmcBuffer *
 gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers)
 {
-  return NULL;
+  JNIEnv *env;
+  jobject input_buffers = NULL;
+  jsize n_input_buffers;
+  GstAmcBuffer *ret = NULL;
+  jsize i;
+
+  g_return_val_if_fail (codec != NULL, NULL);
+  g_return_val_if_fail (n_buffers != NULL, NULL);
+
+  *n_buffers = 0;
+  env = gst_amc_attach_current_thread ();
+
+  input_buffers =
+      (*env)->CallObjectMethod (env, codec->object,
+      media_codec.get_input_buffers);
+  if ((*env)->ExceptionCheck (env) || !input_buffers) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  n_input_buffers = (*env)->GetArrayLength (env, input_buffers);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get input buffers array length");
+    goto done;
+  }
+
+  *n_buffers = n_input_buffers;
+  ret = g_new0 (GstAmcBuffer, n_input_buffers);
+
+  for (i = 0; i < n_input_buffers; i++) {
+    jobject buffer = NULL;
+
+    buffer = (*env)->GetObjectArrayElement (env, input_buffers, i);
+    if ((*env)->ExceptionCheck (env) || !buffer) {
+      (*env)->ExceptionClear (env);
+      GST_ERROR ("Failed to get input buffer %d", i);
+      goto error;
+    }
+
+    ret[i].object = (*env)->NewGlobalRef (env, buffer);
+    (*env)->DeleteLocalRef (env, buffer);
+    if (!ret[i].object) {
+      (*env)->ExceptionClear (env);
+      GST_ERROR ("Failed to create global reference %d", i);
+      goto error;
+    }
+
+    ret[i].data = (*env)->GetDirectBufferAddress (env, ret[i].object);
+    if (!ret[i].data) {
+      (*env)->ExceptionClear (env);
+      GST_ERROR ("Failed to get buffer address %d", i);
+      goto error;
+    }
+    ret[i].size = (*env)->GetDirectBufferCapacity (env, ret[i].object);
+  }
+
+done:
+  if (input_buffers)
+    (*env)->DeleteLocalRef (env, input_buffers);
+  input_buffers = NULL;
+
+  gst_amc_detach_current_thread ();
+
+  return ret;
+error:
+  if (ret)
+    gst_amc_codec_free_buffers (ret, n_input_buffers);
+  ret = NULL;
+  *n_buffers = 0;
+  goto done;
 }
 
 gint
 gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs)
 {
-  return -1;
+  JNIEnv *env;
+  gint ret = G_MININT;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  ret =
+      (*env)->CallIntMethod (env, codec->object,
+      media_codec.dequeue_input_buffer, timeoutUs);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = G_MININT;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
+}
+
+static gboolean
+gst_amc_codec_fill_buffer_info (JNIEnv * env, jobject buffer_info,
+    GstAmcBufferInfo * info)
+{
+  g_return_val_if_fail (buffer_info != NULL, FALSE);
+
+  info->flags =
+      (*env)->GetIntField (env, buffer_info, media_codec_buffer_info.flags);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get buffer info field");
+    return FALSE;
+  }
+
+  info->offset =
+      (*env)->GetIntField (env, buffer_info, media_codec_buffer_info.offset);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get buffer info field");
+    return FALSE;
+  }
+
+  info->presentation_time_us =
+      (*env)->GetLongField (env, buffer_info,
+      media_codec_buffer_info.presentation_time_us);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get buffer info field");
+    return FALSE;
+  }
+
+  info->size =
+      (*env)->GetIntField (env, buffer_info, media_codec_buffer_info.size);
+  if ((*env)->ExceptionCheck (env)) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get buffer info field");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 gint
 gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
     GstAmcBufferInfo * info, gint64 timeoutUs)
 {
-  return -1;
+  JNIEnv *env;
+  gint ret = G_MININT;
+  jobject info_o = NULL;
+
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  info_o =
+      (*env)->NewObject (env, media_codec_buffer_info.klass,
+      media_codec_buffer_info.constructor);
+  if (!info_o) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  ret =
+      (*env)->CallIntMethod (env, codec->object,
+      media_codec.dequeue_output_buffer, info_o, timeoutUs);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = G_MININT;
+    goto done;
+  }
+
+  if (!gst_amc_codec_fill_buffer_info (env, info_o, info)) {
+    ret = G_MININT;
+    goto done;
+  }
+
+done:
+  if (info_o)
+    (*env)->DeleteLocalRef (env, info_o);
+  info_o = NULL;
+
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
-void
+gboolean
 gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
     const GstAmcBufferInfo * info)
 {
+  JNIEnv *env;
+  gboolean ret = TRUE;
 
+  g_return_val_if_fail (codec != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.queue_input_buffer,
+      index, info->offset, info->size, info->presentation_time_us, info->flags);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
-void
+gboolean
 gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index)
 {
+  JNIEnv *env;
+  gboolean ret = TRUE;
 
+  g_return_val_if_fail (codec != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  (*env)->CallVoidMethod (env, codec->object, media_codec.release_output_buffer,
+      index, JNI_FALSE);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    ret = FALSE;
+    goto done;
+  }
+
+done:
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 GstAmcFormat *
 gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
 {
-  return NULL;
+  JNIEnv *env;
+  GstAmcFormat *format;
+  jstring mime_str;
+  jobject object = NULL;
+
+  g_return_val_if_fail (mime != NULL, NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  mime_str = gst_amc_jstring_new (env, mime, strlen (mime));
+  if (mime_str == NULL)
+    goto error;
+
+  format = g_slice_new0 (GstAmcFormat);
+
+  object =
+      (*env)->CallStaticObjectMethod (env, media_format.klass,
+      media_format.create_audio_format, mime_str, sample_rate, channels);
+  if ((*env)->ExceptionCheck (env) || !object) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to create format '%s'", mime);
+    goto error;
+  }
+
+  format->object = (*env)->NewGlobalRef (env, object);
+  if (!format->object) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+    goto error;
+  }
+
+done:
+  if (object)
+    (*env)->DeleteLocalRef (env, object);
+  if (mime_str)
+    (*env)->DeleteLocalRef (env, mime_str);
+  mime_str = NULL;
+  gst_amc_detach_current_thread ();
+
+  return format;
+
+error:
+  g_slice_free (GstAmcFormat, format);
+  format = NULL;
+  goto done;
 }
 
 GstAmcFormat *
 gst_amc_format_new_video (const gchar * mime, gint width, gint height)
 {
-  return NULL;
+  JNIEnv *env;
+  GstAmcFormat *format;
+  jstring mime_str;
+  jobject object = NULL;
+
+  g_return_val_if_fail (mime != NULL, NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  mime_str = gst_amc_jstring_new (env, mime, strlen (mime));
+  if (mime_str == NULL)
+    goto error;
+
+  format = g_slice_new0 (GstAmcFormat);
+
+  object =
+      (*env)->CallStaticObjectMethod (env, media_format.klass,
+      media_format.create_video_format, mime_str, width, height);
+  if ((*env)->ExceptionCheck (env) || !object) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to create format '%s'", mime);
+    goto error;
+  }
+
+  format->object = (*env)->NewGlobalRef (env, object);
+  if (!format->object) {
+    GST_ERROR ("Failed to create global reference");
+    (*env)->ExceptionClear (env);
+    goto error;
+  }
+
+done:
+  if (object)
+    (*env)->DeleteLocalRef (env, object);
+  if (mime_str)
+    (*env)->DeleteLocalRef (env, mime_str);
+  mime_str = NULL;
+  gst_amc_detach_current_thread ();
+
+  return format;
+
+error:
+  g_slice_free (GstAmcFormat, format);
+  format = NULL;
+  goto done;
 }
 
 void
 gst_amc_format_free (GstAmcFormat * format)
 {
+  JNIEnv *env;
 
+  g_return_if_fail (format != NULL);
+
+  env = gst_amc_attach_current_thread ();
+  (*env)->DeleteGlobalRef (env, format->object);
+  g_slice_free (GstAmcFormat, format);
+  gst_amc_detach_current_thread ();
 }
 
 gboolean
 gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
 {
-  return FALSE;
+  JNIEnv *env;
+  gboolean ret = FALSE;
+  jstring key_str = NULL;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  ret =
+      (*env)->CallBooleanMethod (env, format->object, media_format.contains_key,
+      key_str);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 gboolean
 gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
     gfloat * value)
 {
-  return FALSE;
+  JNIEnv *env;
+  gboolean ret = FALSE;
+  jstring key_str = NULL;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  *value = 0;
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  *value =
+      (*env)->CallFloatMethod (env, format->object, media_format.get_float);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+  ret = TRUE;
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 void
 gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
-    gfloat * value)
+    gfloat value)
 {
+  JNIEnv *env;
+  jstring key_str = NULL;
 
+  g_return_if_fail (format != NULL);
+  g_return_if_fail (key != NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  (*env)->CallVoidMethod (env, format->object, media_format.set_float, value);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  gst_amc_detach_current_thread ();
 }
 
 gboolean
 gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
 {
-  return FALSE;
+  JNIEnv *env;
+  gboolean ret = FALSE;
+  jstring key_str = NULL;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  *value = 0;
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  *value =
+      (*env)->CallIntMethod (env, format->object, media_format.get_integer);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+  ret = TRUE;
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  gst_amc_detach_current_thread ();
+
+  return ret;
+
 }
 
 void
-gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint * value)
+gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
 {
+  JNIEnv *env;
+  jstring key_str = NULL;
 
+  g_return_if_fail (format != NULL);
+  g_return_if_fail (key != NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  (*env)->CallVoidMethod (env, format->object, media_format.set_integer, value);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  gst_amc_detach_current_thread ();
 }
 
 gboolean
 gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
     gchar ** value)
 {
-  return FALSE;
+  JNIEnv *env;
+  gboolean ret = FALSE;
+  jstring key_str = NULL;
+  jstring v_str = NULL;
+  const gchar *v = NULL;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  *value = 0;
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  v_str =
+      (*env)->CallObjectMethod (env, format->object, media_format.get_string);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  v = (*env)->GetStringUTFChars (env, v_str, NULL);
+  if (!v) {
+    GST_ERROR ("Failed to convert string to UTF8");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  *value = g_strdup (v);
+
+  ret = TRUE;
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  if (v)
+    (*env)->ReleaseStringUTFChars (env, v_str, v);
+  if (v_str)
+    (*env)->DeleteLocalRef (env, v_str);
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 void
 gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
     const gchar * value)
 {
+  JNIEnv *env;
+  jstring key_str = NULL;
+  jstring v_str = NULL;
 
+  g_return_if_fail (format != NULL);
+  g_return_if_fail (key != NULL);
+  g_return_if_fail (value != NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  v_str = gst_amc_jstring_new (env, value, strlen (value));
+  if (!v_str)
+    goto done;
+
+  (*env)->CallVoidMethod (env, format->object, media_format.set_string, v_str);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  if (v_str)
+    (*env)->DeleteLocalRef (env, v_str);
+  gst_amc_detach_current_thread ();
+}
+
+static gboolean
+get_java_classes (void)
+{
+  gboolean ret = TRUE;
+  JNIEnv *env;
+  jclass tmp;
+
+  env = gst_amc_attach_current_thread ();
+
+  tmp = (*env)->FindClass (env, "java/lang/String");
+  if (!tmp) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get string class");
+    goto done;
+  }
+  java_string.klass = (*env)->NewGlobalRef (env, tmp);
+  if (!java_string.klass) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get string class global reference");
+    goto done;
+  }
+  (*env)->DeleteLocalRef (env, tmp);
+  tmp = NULL;
+
+  java_string.constructor =
+      (*env)->GetMethodID (env, java_string.klass, "<init>", "([C)V");
+  if (!java_string.constructor) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get string methods");
+    goto done;
+  }
+
+  tmp = (*env)->FindClass (env, "android/media/MediaCodec");
+  if (!tmp) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get codec class");
+    goto done;
+  }
+  media_codec.klass = (*env)->NewGlobalRef (env, tmp);
+  if (!media_codec.klass) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get codec class global reference");
+    goto done;
+  }
+  (*env)->DeleteLocalRef (env, tmp);
+  tmp = NULL;
+
+  media_codec.create_by_codec_name =
+      (*env)->GetStaticMethodID (env, media_codec.klass, "createByCodecName",
+      "(Ljava/lang/String;)Landroid/media/MediaCodec;");
+  media_codec.configure =
+      (*env)->GetMethodID (env, media_codec.klass, "configure",
+      "(Landroid/media/MediaFormat;Landroid/view/Surface;Landroid/media/MediaCrypto;I)V");
+  media_codec.dequeue_input_buffer =
+      (*env)->GetMethodID (env, media_codec.klass, "dequeueInputBuffer",
+      "(J)I");
+  media_codec.dequeue_output_buffer =
+      (*env)->GetMethodID (env, media_codec.klass, "dequeueOutputBuffer",
+      "(Landroid/media/MediaCodec$BufferInfo;J)I");
+  media_codec.flush =
+      (*env)->GetMethodID (env, media_codec.klass, "flush", "()V");
+  media_codec.get_input_buffers =
+      (*env)->GetMethodID (env, media_codec.klass, "getInputBuffers",
+      "()[Ljava/nio/ByteBuffer;");
+  media_codec.get_output_buffers =
+      (*env)->GetMethodID (env, media_codec.klass, "getOutputBuffers",
+      "()[Ljava/nio/ByteBuffer;");
+  media_codec.get_output_format =
+      (*env)->GetMethodID (env, media_codec.klass, "getOutputFormat",
+      "()Landroid/media/MediaFormat;");
+  media_codec.queue_input_buffer =
+      (*env)->GetMethodID (env, media_codec.klass, "queueInputBuffer",
+      "(IIIJI)V");
+  media_codec.release =
+      (*env)->GetMethodID (env, media_codec.klass, "release", "()V");
+  media_codec.release_output_buffer =
+      (*env)->GetMethodID (env, media_codec.klass, "releaseOutputBuffer",
+      "(IZ)V");
+  media_codec.start =
+      (*env)->GetMethodID (env, media_codec.klass, "start", "()V");
+  media_codec.stop =
+      (*env)->GetMethodID (env, media_codec.klass, "stop", "()V");
+
+  if (!media_codec.configure ||
+      !media_codec.create_by_codec_name ||
+      !media_codec.dequeue_input_buffer ||
+      !media_codec.dequeue_output_buffer ||
+      !media_codec.flush ||
+      !media_codec.get_input_buffers ||
+      !media_codec.get_output_buffers ||
+      !media_codec.get_output_format ||
+      !media_codec.queue_input_buffer ||
+      !media_codec.release ||
+      !media_codec.release_output_buffer ||
+      !media_codec.start || !media_codec.stop) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get codec methods");
+    goto done;
+  }
+
+  tmp = (*env)->FindClass (env, "android/media/MediaCodec$BufferInfo");
+  if (!tmp) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get codec buffer info class");
+    goto done;
+  }
+  media_codec_buffer_info.klass = (*env)->NewGlobalRef (env, tmp);
+  if (!media_codec_buffer_info.klass) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get codec buffer info class global reference");
+    goto done;
+  }
+  (*env)->DeleteLocalRef (env, tmp);
+  tmp = NULL;
+
+  media_codec_buffer_info.constructor =
+      (*env)->GetMethodID (env, media_codec_buffer_info.klass, "<init>", "()V");
+  media_codec_buffer_info.flags =
+      (*env)->GetFieldID (env, media_codec_buffer_info.klass, "flags", "I");
+  media_codec_buffer_info.offset =
+      (*env)->GetFieldID (env, media_codec_buffer_info.klass, "offset", "I");
+  media_codec_buffer_info.presentation_time_us =
+      (*env)->GetFieldID (env, media_codec_buffer_info.klass,
+      "presentationTimeUs", "J");
+  media_codec_buffer_info.size =
+      (*env)->GetFieldID (env, media_codec_buffer_info.klass, "size", "I");
+  if (!media_codec_buffer_info.constructor || !media_codec_buffer_info.flags
+      || !media_codec_buffer_info.offset
+      || !media_codec_buffer_info.presentation_time_us
+      || !media_codec_buffer_info.size) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get buffer info methods and fields");
+    goto done;
+  }
+
+  tmp = (*env)->FindClass (env, "android/media/MediaFormat");
+  if (!tmp) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get format class");
+    goto done;
+  }
+  media_format.klass = (*env)->NewGlobalRef (env, tmp);
+  if (!media_format.klass) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get format class global reference");
+    goto done;
+  }
+  (*env)->DeleteLocalRef (env, tmp);
+  tmp = NULL;
+
+  media_format.create_audio_format =
+      (*env)->GetStaticMethodID (env, media_format.klass, "createAudioFormat",
+      "(Ljava/lang/String;II)Landroid/media/MediaFormat;");
+  media_format.create_video_format =
+      (*env)->GetStaticMethodID (env, media_format.klass, "createVideoFormat",
+      "(Ljava/lang/String;II)Landroid/media/MediaFormat;");
+  media_format.contains_key =
+      (*env)->GetMethodID (env, media_format.klass, "containsKey",
+      "(Ljava/lang/String;)Z");
+  media_format.get_float =
+      (*env)->GetMethodID (env, media_format.klass, "getFloat",
+      "(Ljava/lang/String;)F");
+  media_format.set_float =
+      (*env)->GetMethodID (env, media_format.klass, "setFloat",
+      "(Ljava/lang/String;F)V");
+  media_format.get_integer =
+      (*env)->GetMethodID (env, media_format.klass, "getInteger",
+      "(Ljava/lang/String;)I");
+  media_format.set_integer =
+      (*env)->GetMethodID (env, media_format.klass, "setInteger",
+      "(Ljava/lang/String;I)V");
+  media_format.get_string =
+      (*env)->GetMethodID (env, media_format.klass, "getString",
+      "(Ljava/lang/String;)Ljava/lang/String;");
+  media_format.set_string =
+      (*env)->GetMethodID (env, media_format.klass, "setString",
+      "(Ljava/lang/String;Ljava/lang/String;)V");
+  if (!media_format.create_audio_format || !media_format.create_video_format
+      || !media_format.contains_key || !media_format.get_float
+      || !media_format.set_float || !media_format.get_integer
+      || !media_format.set_integer || !media_format.get_string
+      || !media_format.set_string) {
+    ret = FALSE;
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get format methods");
+    goto done;
+  }
+
+done:
+  if (tmp)
+    (*env)->DeleteLocalRef (env, tmp);
+  tmp = NULL;
+  gst_amc_detach_current_thread ();
+
+  return ret;
 }
 
 static GList *codec_infos = NULL;
@@ -332,7 +1393,7 @@ register_codecs (void)
     jarray supported_types = NULL;
     jsize n_supported_types;
     jsize j;
-    gboolean valid_type = FALSE;
+    gboolean valid_codec = TRUE;
 
     gst_codec_info = g_new0 (GstAmcCodecInfo, 1);
 
@@ -342,6 +1403,7 @@ register_codecs (void)
     if ((*env)->ExceptionCheck (env) || !codec_info) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec info %d", i);
+      valid_codec = FALSE;
       goto next_codec;
     }
 
@@ -349,6 +1411,7 @@ register_codecs (void)
     if (!codec_list_class) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec info class");
+      valid_codec = FALSE;
       goto next_codec;
     }
 
@@ -367,6 +1430,7 @@ register_codecs (void)
         || !get_supported_types_id || !is_encoder_id) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec info method IDs");
+      valid_codec = FALSE;
       goto next_codec;
     }
 
@@ -374,12 +1438,14 @@ register_codecs (void)
     if ((*env)->ExceptionCheck (env)) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get codec name");
+      valid_codec = FALSE;
       goto next_codec;
     }
     name_str = (*env)->GetStringUTFChars (env, name, NULL);
     if ((*env)->ExceptionCheck (env)) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to convert codec name to UTF8");
+      valid_codec = FALSE;
       goto next_codec;
     }
 
@@ -389,6 +1455,7 @@ register_codecs (void)
     if (strcmp (name_str, "AACEncoder") == 0 ||
         strcmp (name_str, "OMX.google.raw.decoder") == 0) {
       GST_INFO ("Skipping compatibility codec '%s'", name_str);
+      valid_codec = FALSE;
       goto next_codec;
     }
     gst_codec_info->name = g_strdup (name_str);
@@ -397,6 +1464,7 @@ register_codecs (void)
     if ((*env)->ExceptionCheck (env)) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to detect if codec is an encoder");
+      valid_codec = FALSE;
       goto next_codec;
     }
     gst_codec_info->is_encoder = is_encoder;
@@ -406,6 +1474,7 @@ register_codecs (void)
     if ((*env)->ExceptionCheck (env)) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get supported types");
+      valid_codec = FALSE;
       goto next_codec;
     }
 
@@ -413,6 +1482,7 @@ register_codecs (void)
     if ((*env)->ExceptionCheck (env)) {
       (*env)->ExceptionClear (env);
       GST_ERROR ("Failed to get supported types array length");
+      valid_codec = FALSE;
       goto next_codec;
     }
 
@@ -420,6 +1490,12 @@ register_codecs (void)
 
     gst_codec_info->supported_types = g_new0 (GstAmcCodecType, 1);
     gst_codec_info->n_supported_types = n_supported_types;
+
+    if (n_supported_types == 0) {
+      valid_codec = FALSE;
+      GST_ERROR ("Codec has no supported types");
+      goto next_codec;
+    }
 
     for (j = 0; j < n_supported_types; j++) {
       GstAmcCodecType *gst_codec_type;
@@ -439,6 +1515,7 @@ register_codecs (void)
       if ((*env)->ExceptionCheck (env)) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get %d-th supported type", j);
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
@@ -447,12 +1524,12 @@ register_codecs (void)
       if ((*env)->ExceptionCheck (env) || !supported_type_str) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to convert supported type to UTF8");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
       GST_INFO ("Supported type '%s'", supported_type_str);
       gst_codec_type->mime = g_strdup (supported_type_str);
-      valid_type = TRUE;
 
       capabilities =
           (*env)->CallObjectMethod (env, codec_info,
@@ -460,6 +1537,7 @@ register_codecs (void)
       if ((*env)->ExceptionCheck (env)) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get capabilities for supported type");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
@@ -467,6 +1545,7 @@ register_codecs (void)
       if (!capabilities_class) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get capabilities class");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
@@ -478,6 +1557,7 @@ register_codecs (void)
       if (!color_formats_id || !profile_levels_id) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get capabilities field IDs");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
@@ -486,10 +1566,17 @@ register_codecs (void)
       if ((*env)->ExceptionCheck (env)) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get color formats");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
       n_elems = (*env)->GetArrayLength (env, color_formats);
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionClear (env);
+        GST_ERROR ("Failed to get color formats array length");
+        valid_codec = FALSE;
+        goto next_supported_type;
+      }
       gst_codec_type->n_color_formats = n_elems;
       gst_codec_type->color_formats = g_new0 (gint, n_elems);
       color_formats_elems =
@@ -497,6 +1584,7 @@ register_codecs (void)
       if ((*env)->ExceptionCheck (env)) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get color format elements");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
@@ -510,10 +1598,17 @@ register_codecs (void)
       if ((*env)->ExceptionCheck (env)) {
         (*env)->ExceptionClear (env);
         GST_ERROR ("Failed to get profile/levels");
+        valid_codec = FALSE;
         goto next_supported_type;
       }
 
       n_elems = (*env)->GetArrayLength (env, profile_levels);
+      if ((*env)->ExceptionCheck (env)) {
+        (*env)->ExceptionClear (env);
+        GST_ERROR ("Failed to get profile/levels array length");
+        valid_codec = FALSE;
+        goto next_supported_type;
+      }
       gst_codec_type->n_profile_levels = n_elems;
       gst_codec_type->profile_levels =
           g_malloc0 (sizeof (gst_codec_type->profile_levels) * n_elems);
@@ -527,6 +1622,7 @@ register_codecs (void)
         if ((*env)->ExceptionCheck (env)) {
           (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get %d-th profile/level", k);
+          valid_codec = FALSE;
           goto next_profile_level;
         }
 
@@ -534,6 +1630,7 @@ register_codecs (void)
         if (!profile_level_class) {
           (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get profile/level class");
+          valid_codec = FALSE;
           goto next_profile_level;
         }
 
@@ -543,6 +1640,7 @@ register_codecs (void)
         if (!level_id || !profile_id) {
           (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get profile/level field IDs");
+          valid_codec = FALSE;
           goto next_profile_level;
         }
 
@@ -550,6 +1648,7 @@ register_codecs (void)
         if ((*env)->ExceptionCheck (env)) {
           (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get level");
+          valid_codec = FALSE;
           goto next_profile_level;
         }
         GST_INFO ("Level %d: 0x%08x", k, level);
@@ -559,6 +1658,7 @@ register_codecs (void)
         if ((*env)->ExceptionCheck (env)) {
           (*env)->ExceptionClear (env);
           GST_ERROR ("Failed to get profile");
+          valid_codec = FALSE;
           goto next_profile_level;
         }
         GST_INFO ("Profile %d: 0x%08x", k, profile);
@@ -571,6 +1671,8 @@ register_codecs (void)
         if (profile_level_class)
           (*env)->DeleteLocalRef (env, profile_level_class);
         profile_level_class = NULL;
+        if (!valid_codec)
+          break;
       }
 
     next_supported_type:
@@ -596,10 +1698,12 @@ register_codecs (void)
       if (supported_type)
         (*env)->DeleteLocalRef (env, supported_type);
       supported_type = NULL;
+      if (!valid_codec)
+        break;
     }
 
     /* We need at least a valid supported type */
-    if (valid_type) {
+    if (valid_codec) {
       GST_LOG ("Successfully scanned codec '%s'", name_str);
       codec_infos = g_list_append (codec_infos, gst_codec_info);
       gst_codec_info = NULL;
@@ -637,7 +1741,7 @@ register_codecs (void)
       g_free (gst_codec_info);
     }
     gst_codec_info = NULL;
-    valid_type = FALSE;
+    valid_codec = TRUE;
   }
 
   ret = codec_infos != NULL;
@@ -651,6 +1755,355 @@ done:
   return ret;
 }
 
+static const struct
+{
+  gint color_format;
+  GstVideoFormat video_format;
+} color_format_mapping_table[] = {
+  {
+  COLOR_FormatYUV420Planar, GST_VIDEO_FORMAT_I420}
+};
+
+GstVideoFormat
+gst_amc_color_format_to_video_format (gint color_format)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (color_format_mapping_table); i++) {
+    if (color_format_mapping_table[i].color_format == color_format)
+      return color_format_mapping_table[i].video_format;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+gint
+gst_amc_video_format_to_color_format (GstVideoFormat video_format)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (color_format_mapping_table); i++) {
+    if (color_format_mapping_table[i].video_format == video_format)
+      return color_format_mapping_table[i].color_format;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *str;
+} avc_profile_mapping_table[] = {
+  {
+  AVCProfileBaseline, "baseline"}, {
+  AVCProfileMain, "main"}, {
+  AVCProfileExtended, "extended"}, {
+  AVCProfileHigh, "high"}, {
+  AVCProfileHigh10, "high-10"}, {
+  AVCProfileHigh422, "high-4:2:2"}, {
+  AVCProfileHigh444, "high-4:4:4"}
+};
+
+const gchar *
+gst_amc_avc_profile_to_string (gint profile)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (avc_profile_mapping_table); i++) {
+    if (avc_profile_mapping_table[i].id == profile)
+      return avc_profile_mapping_table[i].str;
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_avc_profile_from_string (const gchar * profile)
+{
+  gint i;
+
+  g_return_val_if_fail (profile != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (avc_profile_mapping_table); i++) {
+    if (strcmp (avc_profile_mapping_table[i].str, profile) == 0)
+      return avc_profile_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *str;
+} avc_level_mapping_table[] = {
+  {
+  AVCLevel1, "1"}, {
+  AVCLevel1b, "1b"}, {
+  AVCLevel11, "1.1"}, {
+  AVCLevel12, "1.2"}, {
+  AVCLevel13, "1.3"}, {
+  AVCLevel2, "2"}, {
+  AVCLevel21, "2.1"}, {
+  AVCLevel22, "2.2"}, {
+  AVCLevel3, "3"}, {
+  AVCLevel31, "3.1"}, {
+  AVCLevel32, "3.2"}, {
+  AVCLevel4, "4"}, {
+  AVCLevel41, "4.1"}, {
+  AVCLevel42, "4.2"}, {
+  AVCLevel5, "5"}, {
+  AVCLevel51, "5.1"}
+};
+
+const gchar *
+gst_amc_avc_level_to_string (gint level)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (avc_level_mapping_table); i++) {
+    if (avc_level_mapping_table[i].id == level)
+      return avc_level_mapping_table[i].str;
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_avc_level_from_string (const gchar * level)
+{
+  gint i;
+
+  g_return_val_if_fail (level != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (avc_level_mapping_table); i++) {
+    if (strcmp (avc_level_mapping_table[i].str, level) == 0)
+      return avc_level_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  gint gst_id;
+} h263_profile_mapping_table[] = {
+  {
+  H263ProfileBaseline, 0}, {
+  H263ProfileH320Coding, 1}, {
+  H263ProfileBackwardCompatible, 2}, {
+  H263ProfileISWV2, 3}, {
+  H263ProfileISWV3, 4}, {
+  H263ProfileHighCompression, 5}, {
+  H263ProfileInternet, 6}, {
+  H263ProfileInterlace, 7}, {
+  H263ProfileHighLatency, 8}
+};
+
+gint
+gst_amc_h263_profile_to_gst_id (gint profile)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (h263_profile_mapping_table); i++) {
+    if (h263_profile_mapping_table[i].id == profile)
+      return h263_profile_mapping_table[i].gst_id;
+  }
+
+  return -1;
+}
+
+gint
+gst_amc_h263_profile_from_gst_id (gint profile)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (h263_profile_mapping_table); i++) {
+    if (h263_profile_mapping_table[i].gst_id == profile)
+      return h263_profile_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  gint gst_id;
+} h263_level_mapping_table[] = {
+  {
+  H263Level10, 10}, {
+  H263Level20, 20}, {
+  H263Level30, 30}, {
+  H263Level40, 40}, {
+  H263Level50, 50}, {
+  H263Level60, 60}, {
+  H263Level70, 70}
+};
+
+gint
+gst_amc_h263_level_to_gst_id (gint level)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (h263_level_mapping_table); i++) {
+    if (h263_level_mapping_table[i].id == level)
+      return h263_level_mapping_table[i].gst_id;
+  }
+
+  return -1;
+}
+
+gint
+gst_amc_h263_level_from_gst_id (gint level)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (h263_level_mapping_table); i++) {
+    if (h263_level_mapping_table[i].gst_id == level)
+      return h263_level_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *str;
+} mpeg4_profile_mapping_table[] = {
+  {
+  MPEG4ProfileSimple, "simple"}, {
+  MPEG4ProfileSimpleScalable, "simple-scalable"}, {
+  MPEG4ProfileCore, "core"}, {
+  MPEG4ProfileMain, "main"}, {
+  MPEG4ProfileNbit, "n-bit"}, {
+  MPEG4ProfileScalableTexture, "scalable"}, {
+  MPEG4ProfileSimpleFace, "simple-face"}, {
+  MPEG4ProfileSimpleFBA, "simple-fba"}, {
+  MPEG4ProfileBasicAnimated, "basic-animated-texture"}, {
+  MPEG4ProfileHybrid, "hybrid"}, {
+  MPEG4ProfileAdvancedRealTime, "advanced-real-time"}, {
+  MPEG4ProfileCoreScalable, "core-scalable"}, {
+  MPEG4ProfileAdvancedCoding, "advanced-coding-efficiency"}, {
+  MPEG4ProfileAdvancedCore, "advanced-core"}, {
+  MPEG4ProfileAdvancedScalable, "advanced-scalable-texture"}, {
+  MPEG4ProfileAdvancedSimple, "advanced-simple"}
+};
+
+const gchar *
+gst_amc_mpeg4_profile_to_string (gint profile)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (mpeg4_profile_mapping_table); i++) {
+    if (mpeg4_profile_mapping_table[i].id == profile)
+      return mpeg4_profile_mapping_table[i].str;
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_avc_mpeg4_profile_from_string (const gchar * profile)
+{
+  gint i;
+
+  g_return_val_if_fail (profile != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (mpeg4_profile_mapping_table); i++) {
+    if (strcmp (mpeg4_profile_mapping_table[i].str, profile) == 0)
+      return mpeg4_profile_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *str;
+} mpeg4_level_mapping_table[] = {
+  {
+  MPEG4Level0, "0"}, {
+  MPEG4Level0b, "0b"}, {
+  MPEG4Level1, "1"}, {
+  MPEG4Level2, "2"}, {
+  MPEG4Level3, "3"}, {
+  MPEG4Level4, "4"}, {
+  MPEG4Level4a, "4a"}, {
+MPEG4Level5, "5"},};
+
+const gchar *
+gst_amc_mpeg4_level_to_string (gint level)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (mpeg4_level_mapping_table); i++) {
+    if (mpeg4_level_mapping_table[i].id == level)
+      return mpeg4_level_mapping_table[i].str;
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_mpeg4_level_from_string (const gchar * level)
+{
+  gint i;
+
+  g_return_val_if_fail (level != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (mpeg4_level_mapping_table); i++) {
+    if (strcmp (mpeg4_level_mapping_table[i].str, level) == 0)
+      return mpeg4_level_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
+static const struct
+{
+  gint id;
+  const gchar *str;
+} aac_profile_mapping_table[] = {
+  {
+  AACObjectMain, "main"}, {
+  AACObjectLC, "lc"}, {
+  AACObjectSSR, "ssr"}, {
+  AACObjectLTP, "ltp"}
+};
+
+const gchar *
+gst_amc_aac_profile_to_string (gint profile)
+{
+  gint i;
+
+  for (i = 0; i < G_N_ELEMENTS (aac_profile_mapping_table); i++) {
+    if (aac_profile_mapping_table[i].id == profile)
+      return aac_profile_mapping_table[i].str;
+  }
+
+  return NULL;
+}
+
+gint
+gst_amc_aac_profile_from_string (const gchar * profile)
+{
+  gint i;
+
+  g_return_val_if_fail (profile != NULL, -1);
+
+  for (i = 0; i < G_N_ELEMENTS (aac_profile_mapping_table); i++) {
+    if (strcmp (aac_profile_mapping_table[i].str, profile) == 0)
+      return aac_profile_mapping_table[i].id;
+  }
+
+  return -1;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -659,7 +2112,7 @@ plugin_init (GstPlugin * plugin)
   if (!initialize_java_vm ())
     return FALSE;
 
-  if (!register_codecs ())
+  if (!get_java_classes () || !register_codecs ())
     return FALSE;
 
   return TRUE;
