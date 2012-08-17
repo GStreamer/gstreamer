@@ -380,7 +380,29 @@ config_failed:
   }
 }
 
-static const struct wl_callback_listener frame_callback_listener;
+static void
+handle_ping (void *data, struct wl_shell_surface *shell_surface,
+    uint32_t serial)
+{
+  wl_shell_surface_pong (shell_surface, serial);
+}
+
+static void
+handle_configure (void *data, struct wl_shell_surface *shell_surface,
+    uint32_t edges, int32_t width, int32_t height)
+{
+}
+
+static void
+handle_popup_done (void *data, struct wl_shell_surface *shell_surface)
+{
+}
+
+static const struct wl_shell_surface_listener shell_surface_listener = {
+  handle_ping,
+  handle_configure,
+  handle_popup_done
+};
 
 static void
 create_window (GstWaylandSink * sink, struct display *display, int width,
@@ -403,6 +425,12 @@ create_window (GstWaylandSink * sink, struct display *display, int width,
 
   window->shell_surface = wl_shell_get_shell_surface (display->shell,
       window->surface);
+
+  g_return_if_fail (window->shell_surface);
+
+  wl_shell_surface_add_listener (window->shell_surface,
+      &shell_surface_listener, window);
+
   wl_shell_surface_set_toplevel (window->shell_surface);
   wl_shell_surface_set_fullscreen (window->shell_surface,
       WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, NULL);
