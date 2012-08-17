@@ -25,7 +25,8 @@
  * Reads buffers from sequentially named files. If used together with an image
  * decoder, one needs to use the #GstMultiFileSrc:caps property or a capsfilter
  * to force to caps containing a framerate. Otherwise image decoders send EOS
- * after the first picture.
+ * after the first picture. We also need a videorate element to set timestamps
+ * on all buffers after the first one in accordance with the framerate.
  *
  * File names are created by replacing "\%d" with the index using printf().
  *
@@ -33,7 +34,7 @@
  * <title>Example launch line</title>
  * |[
  * gst-launch multifilesrc location="img.%04d.png" index=0 caps="image/png,framerate=\(fraction\)12/1" ! \
- *     pngdec ! ffmpegcolorspace ! theoraenc ! oggmux ! \
+ *     pngdec ! videoconvert ! videorate ! theoraenc ! oggmux ! \
  *     filesink location="images.ogg"
  * ]| This pipeline creates a video file "images.ogg" by joining multiple PNG
  * files named img.0000.png, img.0001.png, etc.
