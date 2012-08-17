@@ -55,10 +55,6 @@
  *      wide
  *     - can we use a lock inside a names shared memory segment?
  *
- * - need to add support for GstChildProxy
- *   we can do this in a next iteration, the format is flexible enough
- *   http://www.buzztard.org/index.php/Preset_handling_interface
- *
  * - should there be a 'preset-list' property to get the preset list
  *   (and to connect a notify:: to to listen for changes)
  *   we could use gnome_vfs_monitor_add() to monitor the user preset_file.
@@ -66,33 +62,14 @@
  * - should there be a 'preset-name' property so that we can set a preset via
  *   gst-launch, or should we handle this with special syntax in gst-launch:
  *   gst-launch element preset:<preset-name> property=value ...
- *   - this would alloow to hanve preset-bundles too (a preset on bins that
+ *   - this would allow to have preset-bundles too (a preset on bins that
  *     specifies presets for children
- *
- * - GstChildProxy suport
- *   - if we stick with GParamSpec **_list_properties()
- *     we need to use g_param_spec_set_qdata() to specify the instance on each GParamSpec
- *     OBJECT_LOCK(obj);  // ChildProxy needs GstIterator support
- *     num=gst_child_proxy_get_children_count(obj);
- *     for(i=0;i<num;i++) {
- *       child=gst_child_proxy_get_child_by_index(obj,i);
- *       // v1 ----
- *       g_object_class_list_properties(child,&num);
- *       // foreach prop
- *       //   g_param_spec_set_qdata(prop, quark, (gpointer)child);
- *       //   add to result
- *       // v2 ----
- *       // children have to implement preset-iface too tag the returned GParamSpec* with the owner
- *       props=gst_preset_list_properties(child);
- *       // add props to result
- *     }
- *     OBJECT_UNLOCK(obj);
- *
  */
 
 #include "gst_private.h"
 
 #include "gstpreset.h"
+#include "gstchildproxy.h"
 #include "gstinfo.h"
 #include "gstvalue.h"
 
@@ -119,7 +96,7 @@ static GQuark preset_quark = 0;
 
 /*static GQuark property_list_quark = 0;*/
 
-/* the application can set a custom path that is checked in addition to standart
+/* the application can set a custom path that is checked in addition to standard
  * system and user dirs. This helps to develop new presets first local to the
  * application.
  */
@@ -149,7 +126,7 @@ preset_get_paths (GstPreset * preset, const gchar ** preset_user_path,
   gchar *preset_path;
   const gchar *element_name;
 
-  /* we use the element name when we must contruct the paths */
+  /* we use the element name when we must construct the paths */
   element_name = G_OBJECT_TYPE_NAME (preset);
   GST_INFO_OBJECT (preset, "element_name: '%s'", element_name);
 
@@ -236,7 +213,7 @@ preset_parse_version (const gchar * str_version)
 
   /* parse version (e.g. 0.10.15.1) to guint64 */
   num = sscanf (str_version, "%u.%u.%u.%u", &major, &minor, &micro, &nano);
-  /* make sure we have atleast "major.minor" */
+  /* make sure we have at least "major.minor" */
   if (num > 1) {
     guint64 version;
 
@@ -486,42 +463,66 @@ static gchar **
 gst_preset_default_get_property_names (GstPreset * preset)
 {
   GParamSpec **props;
-  guint i, j, n_props;
+  guint i, j = 0, n_props;
   GObjectClass *gclass;
-  gchar **result;
+  gboolean is_child_proxy;
+  gchar **result = NULL;
 
   gclass = G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS (preset));
+  is_child_proxy = GST_IS_CHILD_PROXY (preset);
 
-  /* get a list of normal properties. 
-   * FIXME, change this for childproxy support. */
+  /* get a list of object properties */
   props = g_object_class_list_properties (gclass, &n_props);
-  if (!props)
-    goto no_properties;
+  if (props) {
+    /* allocate array big enough to hold the worst case, including a terminating
+     * NULL pointer. */
+    result = g_new (gchar *, n_props + 1);
 
-  /* allocate array big enough to hold the worst case, including a terminating
-   * NULL pointer. */
-  result = g_new (gchar *, n_props + 1);
-
-  /* now filter out the properties that we can use for presets */
-  GST_DEBUG_OBJECT (preset, "  filtering properties: %u", n_props);
-  for (i = j = 0; i < n_props; i++) {
-    if (preset_skip_property (props[i]))
-      continue;
-
-    /* copy and increment out pointer */
-    result[j++] = g_strdup (props[i]->name);
+    /* now filter out the properties that we can use for presets */
+    GST_DEBUG_OBJECT (preset, "  filtering properties: %u", n_props);
+    for (i = 0; i < n_props; i++) {
+      if (preset_skip_property (props[i]))
+        continue;
+      GST_DEBUG_OBJECT (preset, "    using: %s", props[i]->name);
+      result[j++] = g_strdup (props[i]->name);
+    }
+    g_free (props);
   }
-  result[j] = NULL;
-  g_free (props);
 
-  return result;
+  if (is_child_proxy) {
+    guint c, n_children;
+    GstObject *child;
 
-  /* ERRORS */
-no_properties:
-  {
+    n_children = gst_child_proxy_get_children_count ((GstChildProxy *) preset);
+    for (c = 0; c < n_children; c++) {
+      child = gst_child_proxy_get_child_by_index ((GstChildProxy *) preset, c);
+      gclass = G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS (child));
+
+      props = g_object_class_list_properties (gclass, &n_props);
+      if (props) {
+        /* resize property name array */
+        result = g_renew (gchar *, result, j + n_props + 1);
+
+        /* now filter out the properties that we can use for presets */
+        GST_DEBUG_OBJECT (preset, "  filtering properties: %u", n_props);
+        for (i = 0; i < n_props; i++) {
+          if (preset_skip_property (props[i]))
+            continue;
+          GST_DEBUG_OBJECT (preset, "    using: %s::%s",
+              GST_OBJECT_NAME (child), props[i]->name);
+          result[j++] = g_strdup_printf ("%s::%s", GST_OBJECT_NAME (child),
+              props[i]->name);
+        }
+        g_free (props);
+      }
+    }
+  }
+  if (!result) {
     GST_INFO_OBJECT (preset, "object has no properties");
-    return NULL;
+  } else {
+    result[j] = NULL;
   }
+  return result;
 }
 
 /* load the presets of @name for the instance @preset. Returns %FALSE if something
@@ -533,6 +534,7 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
   gchar **props;
   guint i;
   GObjectClass *gclass;
+  gboolean is_child_proxy;
 
   /* get the presets from the type */
   if (!(presets = preset_get_keyfile (preset)))
@@ -549,13 +551,14 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
     goto no_properties;
 
   gclass = G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS (preset));
+  is_child_proxy = GST_IS_CHILD_PROXY (preset);
 
   /* for each of the property names, find the preset parameter and try to
    * configure the property with its value */
   for (i = 0; props[i]; i++) {
     gchar *str;
     GValue gvalue = { 0, };
-    GParamSpec *property;
+    GParamSpec *property = NULL;
 
     /* check if we have a settings for this element property */
     if (!(str = g_key_file_get_value (presets, name, props[i], NULL))) {
@@ -567,8 +570,12 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
     GST_DEBUG_OBJECT (preset, "setting value '%s' for property '%s'", str,
         props[i]);
 
-    /* FIXME, change for childproxy to get the property and element.  */
-    if (!(property = g_object_class_find_property (gclass, props[i]))) {
+    if (is_child_proxy) {
+      gst_child_proxy_lookup ((GstObject *) preset, props[i], NULL, &property);
+    } else {
+      property = g_object_class_find_property (gclass, props[i]);
+    }
+    if (!property) {
       /* the parameter was in the keyfile, the element said it supported it but
        * then the property was not found in the element. This should not happen. */
       GST_WARNING_OBJECT (preset, "property '%s' not in object", props[i]);
@@ -580,8 +587,11 @@ gst_preset_default_load_preset (GstPreset * preset, const gchar * name)
      * the object property */
     g_value_init (&gvalue, property->value_type);
     if (gst_value_deserialize (&gvalue, str)) {
-      /* FIXME, change for childproxy support */
-      g_object_set_property (G_OBJECT (preset), props[i], &gvalue);
+      if (is_child_proxy) {
+        gst_child_proxy_set_property ((GstObject *) preset, props[i], &gvalue);
+      } else {
+        g_object_set_property ((GObject *) preset, props[i], &gvalue);
+      }
     } else {
       GST_WARNING_OBJECT (preset,
           "deserialization of value '%s' for property '%s' failed", str,
@@ -701,6 +711,7 @@ gst_preset_default_save_preset (GstPreset * preset, const gchar * name)
   gchar **props;
   guint i;
   GObjectClass *gclass;
+  gboolean is_child_proxy;
 
   GST_INFO_OBJECT (preset, "saving new preset: %s", name);
 
@@ -713,16 +724,21 @@ gst_preset_default_save_preset (GstPreset * preset, const gchar * name)
     goto no_properties;
 
   gclass = G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS (preset));
+  is_child_proxy = GST_IS_CHILD_PROXY (preset);
 
   /* loop over the object properties and store the property value in the
    * keyfile */
   for (i = 0; props[i]; i++) {
     GValue gvalue = { 0, };
     gchar *str;
-    GParamSpec *property;
+    GParamSpec *property = NULL;
 
-    /* FIXME, change for childproxy to get the property and element.  */
-    if (!(property = g_object_class_find_property (gclass, props[i]))) {
+    if (is_child_proxy) {
+      gst_child_proxy_lookup ((GstObject *) preset, props[i], NULL, &property);
+    } else {
+      property = g_object_class_find_property (gclass, props[i]);
+    }
+    if (!property) {
       /* the element said it supported the property but then it does not have
        * that property. This should not happen. */
       GST_WARNING_OBJECT (preset, "property '%s' not in object", props[i]);
@@ -730,8 +746,11 @@ gst_preset_default_save_preset (GstPreset * preset, const gchar * name)
     }
 
     g_value_init (&gvalue, property->value_type);
-    /* FIXME, change for childproxy */
-    g_object_get_property (G_OBJECT (preset), props[i], &gvalue);
+    if (is_child_proxy) {
+      gst_child_proxy_get_property ((GstObject *) preset, props[i], &gvalue);
+    } else {
+      g_object_get_property ((GObject *) preset, props[i], &gvalue);
+    }
 
     if ((str = gst_value_serialize (&gvalue))) {
       g_key_file_set_string (presets, name, props[i], (gpointer) str);
