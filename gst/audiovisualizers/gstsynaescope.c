@@ -67,7 +67,7 @@ static void gst_synae_scope_finalize (GObject * object);
 
 static gboolean gst_synae_scope_setup (GstAudioVisualizer * scope);
 static gboolean gst_synae_scope_render (GstAudioVisualizer * scope,
-    GstBuffer * audio, GstBuffer * video);
+    GstBuffer * audio, GstVideoFrame * video);
 
 
 G_DEFINE_TYPE (GstSynaeScope, gst_synae_scope, GST_TYPE_AUDIO_VISUALIZER);
@@ -152,7 +152,7 @@ static gboolean
 gst_synae_scope_setup (GstAudioVisualizer * bscope)
 {
   GstSynaeScope *scope = GST_SYNAE_SCOPE (bscope);
-  guint num_freq = bscope->height + 1;
+  guint num_freq = GST_VIDEO_INFO_HEIGHT (&bscope->vinfo) + 1;
 
   if (scope->fft_ctx)
     gst_fft_s16_free (scope->fft_ctx);
@@ -201,10 +201,10 @@ add_pixel (guint32 * _p, guint32 _c)
 
 static gboolean
 gst_synae_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
-    GstBuffer * video)
+    GstVideoFrame * video)
 {
   GstSynaeScope *scope = GST_SYNAE_SCOPE (bscope);
-  GstMapInfo amap, vmap;
+  GstMapInfo amap;
   guint32 *vdata;
   gint16 *adata;
   gint16 *adata_l = scope->adata_l;
@@ -213,8 +213,8 @@ gst_synae_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
   GstFFTS16Complex *fdata_r = scope->freq_data_r;
   gint x, y;
   guint off;
-  guint w = bscope->width;
-  guint h = bscope->height;
+  guint w = GST_VIDEO_INFO_WIDTH (&bscope->vinfo);
+  guint h = GST_VIDEO_INFO_HEIGHT (&bscope->vinfo);
   guint32 *colors = scope->colors, c;
   guint *shade = scope->shade;
   //guint w2 = w /2;
@@ -227,10 +227,9 @@ gst_synae_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
   gdouble frl, fil, frr, fir;
   const guint sl = 30;
 
-  gst_buffer_map (video, &vmap, GST_MAP_WRITE);
   gst_buffer_map (audio, &amap, GST_MAP_READ);
 
-  vdata = (guint32 *) vmap.data;
+  vdata = (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (video, 0);
   adata = (gint16 *) amap.data;
 
   num_samples = amap.size / (ch * sizeof (gint16));
@@ -303,7 +302,6 @@ gst_synae_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
       }
     }
   }
-  gst_buffer_unmap (video, &vmap);
   gst_buffer_unmap (audio, &amap);
 
   return TRUE;

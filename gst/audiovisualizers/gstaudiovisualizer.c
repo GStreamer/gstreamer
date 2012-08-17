@@ -39,6 +39,10 @@
 
 #include <string.h>
 
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
+
 #include "gstaudiovisualizer.h"
 
 GST_DEBUG_CATEGORY_STATIC (audio_visualizer_debug);
@@ -120,8 +124,8 @@ gst_audio_visualizer_shader_get_type (void)
   if (G_UNLIKELY (shader_type == 0)) {
     /* TODO: rename when exporting it as a library */
     shader_type =
-        g_enum_register_static
-        ("GstAudioVisualizerShader-BadGstAudioVisualizers", shaders);
+        g_enum_register_static ("GstAudioVisualizerShader-BaseExtVisual",
+        shaders);
   }
   return shader_type;
 }
@@ -129,232 +133,315 @@ gst_audio_visualizer_shader_get_type (void)
 /* we're only supporting GST_VIDEO_FORMAT_xRGB right now) */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 
-#define SHADE1(_d, _s, _i, _r, _g, _b)          \
-G_STMT_START {                                  \
-    _d[_i] = (_s[_i] > _b) ? _s[_i] - _b : 0;   \
-    _i++;                                       \
-    _d[_i] = (_s[_i] > _g) ? _s[_i] - _g : 0;   \
-    _i++;                                       \
-    _d[_i] = (_s[_i] > _r) ? _s[_i] - _r : 0;   \
-    _i++;                                       \
-    _d[_i++] = 0;                               \
+#define SHADE(_d, _s, _i, _r, _g, _b)                     \
+G_STMT_START {                                            \
+    _d[_i * 4 + 0] = (_s[_i * 4 + 0] > _b) ? _s[_i * 4 + 0] - _b : 0; \
+    _d[_i * 4 + 1] = (_s[_i * 4 + 1] > _g) ? _s[_i * 4 + 1] - _g : 0; \
+    _d[_i * 4 + 2] = (_s[_i * 4 + 2] > _r) ? _s[_i * 4 + 2] - _r : 0; \
+    _d[_i * 4 + 3] = 0;                                       \
 } G_STMT_END
 
-#define SHADE2(_d, _s, _j, _i, _r, _g, _b)      \
-G_STMT_START {                                  \
-    _d[_j++] = (_s[_i] > _b) ? _s[_i] - _b : 0; \
-    _i++;                                       \
-    _d[_j++] = (_s[_i] > _g) ? _s[_i] - _g : 0; \
-    _i++;                                       \
-    _d[_j++] = (_s[_i] > _r) ? _s[_i] - _r : 0; \
-    _i++;                                       \
-    _d[_j++] = 0;                               \
-    _i++;                                       \
-} G_STMT_END
+#else /* G_BYTE_ORDER == G_LITTLE_ENDIAN */
 
-#else
-
-#define SHADE1(_d, _s, _i, _r, _g, _b)          \
-G_STMT_START {                                  \
-    _d[_i++] = 0;                               \
-    _d[_i] = (_s[_i] > _r) ? _s[_i] - _r : 0;   \
-    _i++;                                       \
-    _d[_i] = (_s[_i] > _g) ? _s[_i] - _g : 0;   \
-    _i++;                                       \
-    _d[_i] = (_s[_i] > _b) ? _s[_i] - _b : 0;   \
-    _i++;                                       \
-} G_STMT_END
-
-#define SHADE2(_d, _s, _j, _i, _r, _g, _b)      \
-G_STMT_START {                                  \
-    _d[_j++] = 0;                               \
-    _i++;                                       \
-    _d[_j++] = (_s[_i] > _r) ? _s[_i] - _r : 0; \
-    _i++;                                       \
-    _d[_j++] = (_s[_i] > _g) ? _s[_i] - _g : 0; \
-    _i++;                                       \
-    _d[_j++] = (_s[_i] > _b) ? _s[_i] - _b : 0; \
-    _i++;                                       \
+#define SHADE(_d, _s, _i, _r, _g, _b)                     \
+G_STMT_START {                                            \
+    _d[_i * 4 + 0] = 0;                                       \
+    _d[_i * 4 + 1] = (_s[_i * 4 + 1] > _r) ? _s[_i * 4 + 1] - _r : 0; \
+    _d[_i * 4 + 2] = (_s[_i * 4 + 2] > _g) ? _s[_i * 4 + 2] - _g : 0; \
+    _d[_i * 4 + 3] = (_s[_i * 4 + 3] > _b) ? _s[_i * 4 + 3] - _b : 0; \
 } G_STMT_END
 
 #endif
 
 static void
-shader_fade (GstAudioVisualizer * scope, const guint8 * s, guint8 * d)
+shader_fade (GstAudioVisualizer * scope, const GstVideoFrame * sframe,
+    GstVideoFrame * dframe)
 {
-  guint i, bpf = scope->bpf;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
 
-  for (i = 0; i < bpf;) {
-    SHADE1 (d, s, i, r, g, b);
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  for (j = 0; j < height; j++) {
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    s += ss;
+    d += ds;
   }
 }
 
 static void
-shader_fade_and_move_up (GstAudioVisualizer * scope, const guint8 * s,
-    guint8 * d)
+shader_fade_and_move_up (GstAudioVisualizer * scope,
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, bpf = scope->bpf;
-  guint bpl = 4 * scope->width;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
 
-  for (j = 0, i = bpl; i < bpf;) {
-    SHADE2 (d, s, j, i, r, g, b);
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  for (j = 1; j < height; j++) {
+    s += ss;
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    d += ds;
   }
 }
 
 static void
-shader_fade_and_move_down (GstAudioVisualizer * scope, const guint8 * s,
-    guint8 * d)
+shader_fade_and_move_down (GstAudioVisualizer * scope,
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, bpf = scope->bpf;
-  guint bpl = 4 * scope->width;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
 
-  for (j = bpl, i = 0; j < bpf;) {
-    SHADE2 (d, s, j, i, r, g, b);
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  for (j = 1; j < height; j++) {
+    d += ds;
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    s += ss;
   }
 }
 
 static void
 shader_fade_and_move_left (GstAudioVisualizer * scope,
-    const guint8 * s, guint8 * d)
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, k, bpf = scope->bpf;
-  guint w = scope->width;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
+
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  width -= 1;
+  s += 4;
 
   /* move to the left */
-  for (j = 0, i = 4; i < bpf;) {
-    for (k = 0; k < w - 1; k++) {
-      SHADE2 (d, s, j, i, r, g, b);
+  for (j = 0; j < height; j++) {
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
     }
-    i += 4;
-    j += 4;
+    d += ds;
+    s += ss;
   }
 }
 
 static void
 shader_fade_and_move_right (GstAudioVisualizer * scope,
-    const guint8 * s, guint8 * d)
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, k, bpf = scope->bpf;
-  guint w = scope->width;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
 
-  /* move to the left */
-  for (j = 4, i = 0; i < bpf;) {
-    for (k = 0; k < w - 1; k++) {
-      SHADE2 (d, s, j, i, r, g, b);
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  width -= 1;
+  d += 4;
+
+  /* move to the right */
+  for (j = 0; j < height; j++) {
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
     }
-    i += 4;
-    j += 4;
+    d += ds;
+    s += ss;
   }
 }
 
 static void
 shader_fade_and_move_horiz_out (GstAudioVisualizer * scope,
-    const guint8 * s, guint8 * d)
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, bpf = scope->bpf / 2;
-  guint bpl = 4 * scope->width;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
+
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
 
   /* move upper half up */
-  for (j = 0, i = bpl; i < bpf;) {
-    SHADE2 (d, s, j, i, r, g, b);
+  for (j = 0; j < height / 2; j++) {
+    s += ss;
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    d += ds;
   }
   /* move lower half down */
-  for (j = bpf + bpl, i = bpf; j < bpf + bpf;) {
-    SHADE2 (d, s, j, i, r, g, b);
+  for (j = 0; j < height / 2; j++) {
+    d += ds;
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    s += ss;
   }
 }
 
 static void
 shader_fade_and_move_horiz_in (GstAudioVisualizer * scope,
-    const guint8 * s, guint8 * d)
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, bpf = scope->bpf / 2;
-  guint bpl = 4 * scope->width;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *d;
+  gint ss, ds, width, height;
+
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
 
   /* move upper half down */
-  for (i = 0, j = bpl; i < bpf;) {
-    SHADE2 (d, s, j, i, r, g, b);
+  for (j = 0; j < height / 2; j++) {
+    d += ds;
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    s += ss;
   }
   /* move lower half up */
-  for (i = bpf + bpl, j = bpf; i < bpf + bpf;) {
-    SHADE2 (d, s, j, i, r, g, b);
+  for (j = 0; j < height / 2; j++) {
+    s += ss;
+    for (i = 0; i < width; i++) {
+      SHADE (d, s, i, r, g, b);
+    }
+    d += ds;
   }
 }
 
 static void
 shader_fade_and_move_vert_out (GstAudioVisualizer * scope,
-    const guint8 * s, guint8 * d)
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, k, bpf = scope->bpf;
-  guint m = scope->width / 2;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *s1, *d, *d1;
+  gint ss, ds, width, height;
 
-  /* move left half to the left */
-  for (j = 0, i = 4; i < bpf;) {
-    for (k = 0; k < m; k++) {
-      SHADE2 (d, s, j, i, r, g, b);
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  for (j = 0; j < height; j++) {
+    /* move left half to the left */
+    s1 = s + 1;
+    for (i = 0; i < width / 2; i++) {
+      SHADE (d, s1, i, r, g, b);
     }
-    j += 4 * m;
-    i += 4 * m;
-  }
-  /* move right half to the right */
-  for (j = 4 * (m + 1), i = 4 * m; j < bpf;) {
-    for (k = 0; k < m; k++) {
-      SHADE2 (d, s, j, i, r, g, b);
+    /* move right half to the right */
+    d1 = d + 1;
+    for (; i < width - 1; i++) {
+      SHADE (d1, s, i, r, g, b);
     }
-    j += 4 * m;
-    i += 4 * m;
+    s += ss;
+    d += ds;
   }
 }
 
 static void
 shader_fade_and_move_vert_in (GstAudioVisualizer * scope,
-    const guint8 * s, guint8 * d)
+    const GstVideoFrame * sframe, GstVideoFrame * dframe)
 {
-  guint i, j, k, bpf = scope->bpf;
-  guint m = scope->width / 2;
+  guint i, j;
   guint r = (scope->shade_amount >> 16) & 0xff;
   guint g = (scope->shade_amount >> 8) & 0xff;
   guint b = (scope->shade_amount >> 0) & 0xff;
+  guint8 *s, *s1, *d, *d1;
+  gint ss, ds, width, height;
 
-  /* move left half to the right */
-  for (j = 4, i = 0; j < bpf;) {
-    for (k = 0; k < m; k++) {
-      SHADE2 (d, s, j, i, r, g, b);
+  s = GST_VIDEO_FRAME_PLANE_DATA (sframe, 0);
+  ss = GST_VIDEO_FRAME_PLANE_STRIDE (sframe, 0);
+  d = GST_VIDEO_FRAME_PLANE_DATA (dframe, 0);
+  ds = GST_VIDEO_FRAME_PLANE_STRIDE (dframe, 0);
+
+  width = GST_VIDEO_FRAME_WIDTH (sframe);
+  height = GST_VIDEO_FRAME_HEIGHT (sframe);
+
+  for (j = 0; j < height; j++) {
+    /* move left half to the right */
+    d1 = d + 1;
+    for (i = 0; i < width / 2; i++) {
+      SHADE (d1, s, i, r, g, b);
     }
-    j += 4 * m;
-    i += 4 * m;
-  }
-  /* move right half to the left */
-  for (j = 4 * m, i = 4 * (m + 1); i < bpf;) {
-    for (k = 0; k < m; k++) {
-      SHADE2 (d, s, j, i, r, g, b);
+    /* move right half to the left */
+    s1 = s + 1;
+    for (; i < width - 1; i++) {
+      SHADE (d, s1, i, r, g, b);
     }
-    j += 4 * m;
-    i += 4 * m;
+    s += ss;
+    d += ds;
   }
 }
 
@@ -497,10 +584,7 @@ gst_audio_visualizer_init (GstAudioVisualizer * scope,
   scope->shade_amount = DEFAULT_SHADE_AMOUNT;
 
   /* reset the initial video state */
-  scope->width = 320;
-  scope->height = 200;
-  scope->fps_n = 25;            /* desired frame rate */
-  scope->fps_d = 1;
+  gst_video_info_init (&scope->vinfo);
   scope->frame_duration = GST_CLOCK_TIME_NONE;
 
   /* reset the initial state */
@@ -562,9 +646,10 @@ gst_audio_visualizer_dispose (GObject * object)
     gst_buffer_unref (scope->inbuf);
     scope->inbuf = NULL;
   }
-  if (scope->pixelbuf) {
-    g_free (scope->pixelbuf);
-    scope->pixelbuf = NULL;
+  if (scope->tempbuf) {
+    gst_video_frame_unmap (&scope->tempframe);
+    gst_buffer_unref (scope->tempbuf);
+    scope->tempbuf = NULL;
   }
   if (scope->config_lock.p) {
     g_mutex_clear (&scope->config_lock);
@@ -616,41 +701,36 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
 {
   GstVideoInfo info;
   GstAudioVisualizerClass *klass;
-  GstStructure *structure;
   gboolean res;
 
   if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &scope->width) ||
-      !gst_structure_get_int (structure, "height", &scope->height) ||
-      !gst_structure_get_fraction (structure, "framerate", &scope->fps_n,
-          &scope->fps_d))
-    goto wrong_caps;
-
   klass = GST_AUDIO_VISUALIZER_CLASS (G_OBJECT_GET_CLASS (scope));
 
   scope->vinfo = info;
-  scope->video_format = info.finfo->format;
 
   scope->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
-      scope->fps_d, scope->fps_n);
+      GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
   scope->spf = gst_util_uint64_scale_int (GST_AUDIO_INFO_RATE (&scope->ainfo),
-      scope->fps_d, scope->fps_n);
+      GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
   scope->req_spf = scope->spf;
 
-  scope->bpf = scope->width * scope->height * 4;
-
-  if (scope->pixelbuf)
-    g_free (scope->pixelbuf);
-  scope->pixelbuf = g_malloc0 (scope->bpf);
+  if (scope->tempbuf) {
+    gst_video_frame_unmap (&scope->tempframe);
+    gst_buffer_unref (scope->tempbuf);
+  }
+  scope->tempbuf = gst_buffer_new_wrapped (g_malloc0 (scope->vinfo.size),
+      scope->vinfo.size);
+  gst_video_frame_map (&scope->tempframe, &scope->vinfo, scope->tempbuf,
+      GST_MAP_READWRITE);
 
   if (klass->setup)
     res = klass->setup (scope);
 
   GST_DEBUG_OBJECT (scope, "video: dimension %dx%d, framerate %d/%d",
-      scope->width, scope->height, scope->fps_n, scope->fps_d);
+      GST_VIDEO_INFO_WIDTH (&info), GST_VIDEO_INFO_HEIGHT (&info),
+      GST_VIDEO_INFO_FPS_N (&info), GST_VIDEO_INFO_FPS_D (&info));
   GST_DEBUG_OBJECT (scope, "blocks: spf %u, req_spf %u",
       scope->spf, scope->req_spf);
 
@@ -698,10 +778,10 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
 
   target = gst_caps_make_writable (target);
   structure = gst_caps_get_structure (target, 0);
-  gst_structure_fixate_field_nearest_int (structure, "width", scope->width);
-  gst_structure_fixate_field_nearest_int (structure, "height", scope->height);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate",
-      scope->fps_n, scope->fps_d);
+  gst_structure_fixate_field_nearest_int (structure, "width", 320);
+  gst_structure_fixate_field_nearest_int (structure, "height", 200);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 25, 1);
+
   target = gst_caps_fixate (target);
 
   GST_DEBUG_OBJECT (scope, "final caps are %" GST_PTR_FORMAT, target);
@@ -722,16 +802,17 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
   } else {
     pool = NULL;
-    size = scope->bpf;
+    size = 0;
     min = max = 0;
   }
 
   if (pool == NULL) {
     /* we did not get a pool, make one ourselves then */
-    pool = gst_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
   config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, target, size, min, max);
   gst_buffer_pool_set_config (pool, config);
 
@@ -825,7 +906,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   GST_LOG_OBJECT (scope, "avail: %u, bpf: %u", avail, sbpf);
   while (avail >= sbpf) {
     GstBuffer *outbuf;
-    GstMapInfo map;
+    GstVideoFrame outframe;
 
     /* get timestamp of the current adapter content */
     ts = gst_adapter_prev_timestamp (scope->adapter, &dist);
@@ -872,16 +953,18 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     GST_BUFFER_TIMESTAMP (outbuf) = ts;
     GST_BUFFER_DURATION (outbuf) = scope->frame_duration;
 
-    gst_buffer_map (outbuf, &map, GST_MAP_WRITE);
-    if (scope->shader) {
-      memcpy (map.data, scope->pixelbuf, scope->bpf);
-    } else {
-      memset (map.data, 0, scope->bpf);
-    }
-
     /* this can fail as the data size we need could have changed */
     if (!(adata = (gpointer) gst_adapter_map (scope->adapter, sbpf)))
       break;
+
+    gst_video_frame_map (&outframe, &scope->vinfo, outbuf, GST_MAP_READWRITE);
+
+    if (scope->shader) {
+      gst_video_frame_copy (&outframe, &scope->tempframe);
+    } else {
+      /* gst_video_frame_clear() or is output frame already cleared */
+      memset (outframe.data, 0, scope->vinfo.size);
+    }
 
     gst_buffer_replace_all_memory (inbuf,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, adata, sbpf, 0,
@@ -889,18 +972,16 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
     /* call class->render() vmethod */
     if (klass->render) {
-      if (!klass->render (scope, inbuf, outbuf)) {
+      if (!klass->render (scope, inbuf, &outframe)) {
         ret = GST_FLOW_ERROR;
       } else {
         /* run various post processing (shading and geometri transformation */
         if (scope->shader) {
-          scope->shader (scope, map.data, scope->pixelbuf);
+          scope->shader (scope, &outframe, &scope->tempframe);
         }
       }
     }
-
-    gst_buffer_unmap (outbuf, &map);
-    gst_buffer_resize (outbuf, 0, scope->bpf);
+    gst_video_frame_unmap (&outframe);
 
     g_mutex_unlock (&scope->config_lock);
     ret = gst_pad_push (scope->srcpad, outbuf);

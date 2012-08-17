@@ -116,7 +116,7 @@ static void render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
 
 static gboolean gst_wave_scope_setup (GstAudioVisualizer * scope);
 static gboolean gst_wave_scope_render (GstAudioVisualizer * base,
-    GstBuffer * audio, GstBuffer * video);
+    GstBuffer * audio, GstVideoFrame * video);
 
 #define gst_wave_scope_parent_class parent_class
 G_DEFINE_TYPE (GstWaveScope, gst_wave_scope, GST_TYPE_AUDIO_VISUALIZER);
@@ -240,8 +240,8 @@ render_dots (GstAudioVisualizer * base, guint32 * vdata, gint16 * adata,
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
-  guint w = base->width;
-  guint h = base->height;
+  guint w = GST_VIDEO_INFO_WIDTH (&base->vinfo);
+  guint h = GST_VIDEO_INFO_HEIGHT (&base->vinfo);
 
   /* draw dots */
   dx = (gfloat) w / (gfloat) num_samples;
@@ -265,8 +265,8 @@ render_lines (GstAudioVisualizer * base, guint32 * vdata, gint16 * adata,
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
-  guint w = base->width;
-  guint h = base->height;
+  guint w = GST_VIDEO_INFO_WIDTH (&base->vinfo);
+  guint h = GST_VIDEO_INFO_HEIGHT (&base->vinfo);
   gint x2, y2;
 
   /* draw lines */
@@ -310,8 +310,8 @@ render_color_dots (GstAudioVisualizer * base, guint32 * vdata,
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
-  guint w = base->width;
-  guint h = base->height, h1 = h - 2;
+  guint w = GST_VIDEO_INFO_WIDTH (&base->vinfo);
+  guint h = GST_VIDEO_INFO_HEIGHT (&base->vinfo), h1 = h - 2;
   gdouble *flt = scope->flt;
 
   /* draw dots */
@@ -350,8 +350,8 @@ render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
   guint i, c, s, x, y, oy;
   gfloat dx, dy;
-  guint w = base->width;
-  guint h = base->height, h1 = h - 2;
+  guint w = GST_VIDEO_INFO_WIDTH (&base->vinfo);
+  guint h = GST_VIDEO_INFO_HEIGHT (&base->vinfo), h1 = h - 2;
   gdouble *flt = scope->flt;
   gint x2, y2, y3, y4;
 
@@ -403,21 +403,19 @@ render_color_lines (GstAudioVisualizer * base, guint32 * vdata,
 
 static gboolean
 gst_wave_scope_render (GstAudioVisualizer * base, GstBuffer * audio,
-    GstBuffer * video)
+    GstVideoFrame * video)
 {
   GstWaveScope *scope = GST_WAVE_SCOPE (base);
-  GstMapInfo amap, vmap;
+  GstMapInfo amap;
   guint num_samples;
   gint channels = GST_AUDIO_INFO_CHANNELS (&base->ainfo);
 
   gst_buffer_map (audio, &amap, GST_MAP_READ);
-  gst_buffer_map (video, &vmap, GST_MAP_WRITE);
 
   num_samples = amap.size / (channels * sizeof (gint16));
-  scope->process (base, (guint32 *) vmap.data, (gint16 *) amap.data,
-      num_samples);
+  scope->process (base, (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (video, 0),
+      (gint16 *) amap.data, num_samples);
 
-  gst_buffer_unmap (video, &vmap);
   gst_buffer_unmap (audio, &amap);
 
   return TRUE;

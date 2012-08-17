@@ -68,7 +68,7 @@ static void gst_spectra_scope_finalize (GObject * object);
 
 static gboolean gst_spectra_scope_setup (GstAudioVisualizer * scope);
 static gboolean gst_spectra_scope_render (GstAudioVisualizer * scope,
-    GstBuffer * audio, GstBuffer * video);
+    GstBuffer * audio, GstVideoFrame * video);
 
 
 G_DEFINE_TYPE (GstSpectraScope, gst_spectra_scope, GST_TYPE_AUDIO_VISUALIZER);
@@ -122,7 +122,7 @@ static gboolean
 gst_spectra_scope_setup (GstAudioVisualizer * bscope)
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);
-  guint num_freq = bscope->width + 1;
+  guint num_freq = GST_VIDEO_INFO_WIDTH (&bscope->vinfo) + 1;
 
   if (scope->fft_ctx)
     gst_fft_s16_free (scope->fft_ctx);
@@ -162,22 +162,21 @@ add_pixel (guint32 * _p, guint32 _c)
 
 static gboolean
 gst_spectra_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
-    GstBuffer * video)
+    GstVideoFrame * video)
 {
   GstSpectraScope *scope = GST_SPECTRA_SCOPE (bscope);
   gint16 *mono_adata;
   GstFFTS16Complex *fdata = scope->freq_data;
-  guint x, y, off;
-  guint l, h = bscope->height - 1;
+  guint x, y, off, l;
+  guint w = GST_VIDEO_INFO_WIDTH (&bscope->vinfo);
+  guint h = GST_VIDEO_INFO_HEIGHT (&bscope->vinfo) - 1;
   gfloat fr, fi;
-  guint w = bscope->width;
-  GstMapInfo amap, vmap;
+  GstMapInfo amap;
   guint32 *vdata;
   gint channels;
 
   gst_buffer_map (audio, &amap, GST_MAP_READ);
-  gst_buffer_map (video, &vmap, GST_MAP_WRITE);
-  vdata = (guint32 *) vmap.data;
+  vdata = (guint32 *) GST_VIDEO_FRAME_PLANE_DATA (video, 0);
 
   channels = GST_AUDIO_INFO_CHANNELS (&bscope->ainfo);
 
@@ -204,7 +203,7 @@ gst_spectra_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
   g_free (mono_adata);
 
   /* draw lines */
-  for (x = 0; x < bscope->width; x++) {
+  for (x = 0; x < w; x++) {
     /* figure out the range so that we don't need to clip,
      * or even better do a log mapping? */
     fr = (gfloat) fdata[1 + x].r / 512.0;
@@ -222,7 +221,6 @@ gst_spectra_scope_render (GstAudioVisualizer * bscope, GstBuffer * audio,
     /* ensure bottom line is full bright (especially in move-up mode) */
     add_pixel (&vdata[off], 0x007F7F7F);
   }
-  gst_buffer_unmap (video, &vmap);
   gst_buffer_unmap (audio, &amap);
   return TRUE;
 }
