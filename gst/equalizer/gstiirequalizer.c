@@ -62,7 +62,8 @@ static GstFlowReturn gst_iir_equalizer_transform_ip (GstBaseTransform * btrans,
 G_DEFINE_TYPE_WITH_CODE (GstIirEqualizer, gst_iir_equalizer,
     GST_TYPE_AUDIO_FILTER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_CHILD_PROXY,
-        gst_iir_equalizer_child_proxy_interface_init));
+        gst_iir_equalizer_child_proxy_interface_init)
+    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 
 
 /* child object */
@@ -347,7 +348,6 @@ gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
   iface->get_child_by_index = gst_iir_equalizer_child_proxy_get_child_by_index;
   iface->get_children_count = gst_iir_equalizer_child_proxy_get_children_count;
 }
-
 
 /* equalizer implementation */
 

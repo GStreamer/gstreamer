@@ -310,6 +310,57 @@ GST_START_TEST (test_equalizer_band_number_changing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_equalizer_presets)
+{
+  GstElement *eq1, *eq2;
+  gint type;
+  gdouble gain, freq;
+
+  eq1 = gst_check_setup_element ("equalizer-nbands");
+  g_object_set (G_OBJECT (eq1), "num-bands", 3, NULL);
+
+  /* set properties to non-defaults */
+  gst_child_proxy_set ((GstChildProxy *) eq1,
+      "band0::type", 0, "band0::gain", -3.0, "band0::freq", 100.0,
+      "band1::type", 1, "band1::gain", +3.0, "band1::freq", 1000.0,
+      "band2::type", 2, "band2::gain", +9.0, "band2::freq", 10000.0, NULL);
+
+  /* save preset */
+  gst_preset_save_preset ((GstPreset *) eq1, "_testpreset_");
+  GST_INFO_OBJECT (eq1, "Preset saved");
+
+  eq2 = gst_check_setup_element ("equalizer-nbands");
+  g_object_set (G_OBJECT (eq2), "num-bands", 3, NULL);
+
+  /* load preset */
+  gst_preset_load_preset ((GstPreset *) eq2, "_testpreset_");
+  GST_INFO_OBJECT (eq1, "Preset loaded");
+
+  /* compare properties */
+  gst_child_proxy_get ((GstChildProxy *) eq2,
+      "band0::type", &type, "band0::gain", &gain, "band0::freq", &freq, NULL);
+  ck_assert_int_eq (type, 0);
+  fail_unless (gain == -3.0, NULL);
+  fail_unless (freq == 100.0, NULL);
+  gst_child_proxy_get ((GstChildProxy *) eq2,
+      "band1::type", &type, "band1::gain", &gain, "band1::freq", &freq, NULL);
+  ck_assert_int_eq (type, 1);
+  fail_unless (gain == +3.0, NULL);
+  fail_unless (freq == 1000.0, NULL);
+  gst_child_proxy_get ((GstChildProxy *) eq2,
+      "band2::type", &type, "band2::gain", &gain, "band2::freq", &freq, NULL);
+  ck_assert_int_eq (type, 2);
+  fail_unless (gain == +9.0, NULL);
+  fail_unless (freq == 10000.0, NULL);
+
+  gst_preset_delete_preset ((GstPreset *) eq1, "_testpreset_");
+  gst_check_teardown_element (eq1);
+  gst_check_teardown_element (eq2);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 equalizer_suite (void)
 {
@@ -321,6 +372,7 @@ equalizer_suite (void)
   tcase_add_test (tc_chain, test_equalizer_5bands_minus_24);
   tcase_add_test (tc_chain, test_equalizer_5bands_plus_12);
   tcase_add_test (tc_chain, test_equalizer_band_number_changing);
+  tcase_add_test (tc_chain, test_equalizer_presets);
 
   return s;
 }

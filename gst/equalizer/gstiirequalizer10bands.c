@@ -63,8 +63,8 @@ GST_DEBUG_CATEGORY_EXTERN (equalizer_debug);
 
 
 #define gst_iir_equalizer_10bands_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstIirEqualizer10Bands, gst_iir_equalizer_10bands,
-    GST_TYPE_IIR_EQUALIZER, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
+G_DEFINE_TYPE (GstIirEqualizer10Bands, gst_iir_equalizer_10bands,
+    GST_TYPE_IIR_EQUALIZER);
 
 /* equalizer implementation */
 
