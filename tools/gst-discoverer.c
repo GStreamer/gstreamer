@@ -27,7 +27,6 @@
 #include <gst/pbutils/pbutils.h>
 
 static gboolean async = FALSE;
-static gboolean silent = FALSE;
 static gboolean show_toc = FALSE;
 static gboolean verbose = FALSE;
 
@@ -536,8 +535,6 @@ main (int argc, char **argv)
   GOptionEntry options[] = {
     {"async", 'a', 0, G_OPTION_ARG_NONE, &async,
         "Run asynchronously", NULL},
-    {"silent", 's', 0, G_OPTION_ARG_NONE, &silent,
-        "Don't output the information structure", NULL},
     {"timeout", 't', 0, G_OPTION_ARG_INT, &timeout,
         "Specify timeout (in seconds, default 10)", "T"},
     /* {"elem", 'e', 0, G_OPTION_ARG_NONE, &elem_seek, */
