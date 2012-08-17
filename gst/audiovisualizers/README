@@ -24,11 +24,15 @@ afterwards.
   - would be nice to use a generic 3x3 matrix operation, we don't run inplace
     anyway
   - this way we could also blur the background
+  - we need to handle visualizer that don't draw with alpha:
+    - add API to set can_mix and if so enable shaders
+    - ev. do mixing ourself (needs extra buffer)
 
 = Elements to port =
-gst-plugin-ugly/gst/synaestesia -> synaescope
-gst-plugin-bad/gst/smoothwave -> wavescope
-gst-plugin-good/gst/monoscope -> blend into what we have in wavescope
+gst-plugins-ugly/gst/synaestesia -> synaescope
+gst-plugins-bad/gst/smoothwave -> wavescope
+gst-plugins-good/gst/monoscope -> blend into what we have in wavescope
+gst-plugins-base/ext/libvisual - done
 
 = Elements to add =
 spectrascope - done
