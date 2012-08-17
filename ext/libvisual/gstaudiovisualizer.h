@@ -77,7 +77,8 @@ struct _GstAudioVisualizer
   GstBufferPool *pool;
   GstAdapter *adapter;
   GstBuffer *inbuf;
-  guint8 *pixelbuf;
+  GstBuffer *tempbuf;
+  GstVideoFrame tempframe;
 
   GstAudioVisualizerShader shader_type;
   GstAudioVisualizerShaderFunc shader;

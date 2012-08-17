@@ -646,9 +646,10 @@ gst_audio_visualizer_dispose (GObject * object)
     gst_buffer_unref (scope->inbuf);
     scope->inbuf = NULL;
   }
-  if (scope->pixelbuf) {
-    g_free (scope->pixelbuf);
-    scope->pixelbuf = NULL;
+  if (scope->tempbuf) {
+    gst_video_frame_unmap (&scope->tempframe);
+    gst_buffer_unref (scope->tempbuf);
+    scope->tempbuf = NULL;
   }
   if (scope->config_lock.p) {
     g_mutex_clear (&scope->config_lock);
@@ -715,9 +716,14 @@ gst_audio_visualizer_src_setcaps (GstAudioVisualizer * scope, GstCaps * caps)
       GST_VIDEO_INFO_FPS_D (&info), GST_VIDEO_INFO_FPS_N (&info));
   scope->req_spf = scope->spf;
 
-  if (scope->pixelbuf)
-    g_free (scope->pixelbuf);
-  scope->pixelbuf = g_malloc0 (info.size);
+  if (scope->tempbuf) {
+    gst_video_frame_unmap (&scope->tempframe);
+    gst_buffer_unref (scope->tempbuf);
+  }
+  scope->tempbuf = gst_buffer_new_wrapped (g_malloc0 (scope->vinfo.size),
+      scope->vinfo.size);
+  gst_video_frame_map (&scope->tempframe, &scope->vinfo, scope->tempbuf,
+      GST_MAP_READWRITE);
 
   if (klass->setup)
     res = klass->setup (scope);
@@ -953,14 +959,12 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
 
     gst_video_frame_map (&outframe, &scope->vinfo, outbuf, GST_MAP_READWRITE);
 
-#if 0
-    /* FIXME? copy uninitialized memory into the destination buffer? */
     if (scope->shader) {
-      memcpy (map.data, scope->pixelbuf, scope->bpf);
+      gst_video_frame_copy (&outframe, &scope->tempframe);
     } else {
-      memset (map.data, 0, scope->bpf);
+      /* gst_video_frame_clear() or is output frame already cleared */
+      memset (outframe.data, 0, scope->vinfo.size);
     }
-#endif
 
     gst_buffer_replace_all_memory (inbuf,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, adata, sbpf, 0,
@@ -971,13 +975,10 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       if (!klass->render (scope, inbuf, &outframe)) {
         ret = GST_FLOW_ERROR;
       } else {
-#if 0
-        /* FIXME, dest and source reversed? */
         /* run various post processing (shading and geometri transformation */
         if (scope->shader) {
-          scope->shader (scope, outframe, scope->pixelbuf);
+          scope->shader (scope, &outframe, &scope->tempframe);
         }
-#endif
       }
     }
     gst_video_frame_unmap (&outframe);
