@@ -448,13 +448,13 @@ a stack trace in the usual way.
 .
 .SH FILES
 .TP 8
-~/.gstreamer-GST_API_VERSION/registry-*.bin
+~/.cache/gstreamer-GST_API_VERSION/registry-*.bin
 The plugin cache; can be deleted at any time, will be re-created
-automatically when it does not exist yet or plugins change.
+automatically when it does not exist yet or plugins change. Based on
+XDG_CACHE_DIR, so may be in a different location than the one suggested.
 .
 .SH "SEE ALSO"
-.BR gst\-feedback (1),
-.BR gst\-inspect (1),
-.BR gst\-typefind (1)
+.BR gst\-inspect\-GST_API_VERSION (1),
+.BR gst\-launch\-GST_API_VERSION (1),
 .SH "AUTHOR"
 The GStreamer team at http://gstreamer.freedesktop.org/
