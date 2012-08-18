@@ -2,7 +2,8 @@ bin_SCRIPTS = \
 	gst-visualise-@GST_API_VERSION@
 
 man_MANS = \
-        gst-visualise-@GST_API_VERSION@.1
+        gst-visualise-@GST_API_VERSION@.1 \
+        gst-discoverer-@GST_API_VERSION@.1
 
 bin_PROGRAMS = \
 	gst-discoverer-@GST_API_VERSION@
@@ -12,7 +13,7 @@ gst_discoverer_@GST_API_VERSION@_SOURCES = gst-discoverer.c
 CLEANFILES = $(man_MANS) $(bin_SCRIPTS) $(bin_PROGRAMS)
 
 EXTRA_DIST = \
-	gst-visualise-m.m gst-visualise.1.in
+	gst-visualise-m.m gst-visualise.1.in gst-discoverer.1.in
 
 
 LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
