@@ -25,7 +25,6 @@ The videosink to use to display the visualisation will be read from the
 VIDEOSINK parameter in ~/.gst, defaulting to sdlvideosink.
 
 .SH "SEE ALSO"
-.BR gst\-launch\-ext (1),
 .BR gst\-inspect (1),
 .BR gst\-launch (1),
 .SH "AUTHOR"
