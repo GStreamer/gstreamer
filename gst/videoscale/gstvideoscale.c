@@ -143,7 +143,7 @@ gst_video_scale_method_get_type (void)
     {GST_VIDEO_SCALE_NEAREST, "Nearest Neighbour", "nearest-neighbour"},
     {GST_VIDEO_SCALE_BILINEAR, "Bilinear", "bilinear"},
     {GST_VIDEO_SCALE_4TAP, "4-tap", "4-tap"},
-    {GST_VIDEO_SCALE_LANCZOS, "Lanczos", "lanczos"},
+    {GST_VIDEO_SCALE_LANCZOS, "Lanczos (experimental/unstable)", "lanczos"},
     {0, NULL, NULL},
   };
 
