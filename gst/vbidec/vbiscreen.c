@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -83,6 +83,7 @@ osd_string_show_text (osd_string_t * os, char *s, int len)
     gst_vbidec_show_text (os->vbidec, s, len);
   }
 }
+
 int
 osd_string_get_height (osd_string_t * os)
 {
@@ -114,6 +115,7 @@ blit_colour_packed422_scanline (unsigned char *d, int w, int luma, int cb,
     int cr)
 {
 }
+
 int
 osd_string_visible (osd_string_t * os)
 {

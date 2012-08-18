@@ -23,7 +23,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -192,12 +192,15 @@ ccdecode (unsigned char *vbiline)
 const char *movies[] = { "N/A", "G", "PG", "PG-13", "R",
   "NC-17", "X", "Not Rated"
 };
+
 const char *usa_tv[] = { "Not Rated", "TV-Y", "TV-Y7", "TV-G",
   "TV-PG", "TV-14", "TV-MA", "Not Rated"
 };
+
 const char *cane_tv[] = { "Exempt", "C", "C8+", "G", "PG",
   "14+", "18+", "Reserved"
 };
+
 const char *canf_tv[] = { "Exempt", "G", "8 ans +", "13 ans +",
   "16 ans +", "18 ans +", "Reserved",
   "Reserved"

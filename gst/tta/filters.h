@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * aint with this program; if not, write to the Free Software
- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * Please see the file COPYING in this directory for full copyright
  * information.
