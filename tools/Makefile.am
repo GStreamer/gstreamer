@@ -1,8 +1,6 @@
-bin_SCRIPTS = \
-	gst-visualise-@GST_API_VERSION@
+bin_SCRIPTS =
 
 man_MANS = \
-        gst-visualise-@GST_API_VERSION@.1 \
         gst-discoverer-@GST_API_VERSION@.1
 
 bin_PROGRAMS = \
@@ -10,10 +8,10 @@ bin_PROGRAMS = \
 
 gst_discoverer_@GST_API_VERSION@_SOURCES = gst-discoverer.c
 
-CLEANFILES = $(man_MANS) $(bin_SCRIPTS) $(bin_PROGRAMS)
+CLEANFILES = $(bin_SCRIPTS) $(bin_PROGRAMS)
 
 EXTRA_DIST = \
-	gst-visualise-m.m gst-visualise.1.in gst-discoverer.1.in
+	gst-discoverer.1.in
 
 
 LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
@@ -24,11 +22,6 @@ LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la 
 
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 
-# generate versioned scripts from templates
-%-@GST_API_VERSION@: %-m.m
-	$(AM_V_GEN)sed -e s,\@GST_API_VERSION\@,@GST_API_VERSION@,g $< > $@ && \
-	chmod +x $@
-
 # generate man pages
 %-@GST_API_VERSION@.1: %.1.in
 	$(AM_V_GEN)sed \
@@ -38,12 +31,12 @@ AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 all: all-am chmod
 
 chmod: $(bin_SCRIPTS)
-	@chmod +x $^
+#	@chmod +x $^
 
 Android.mk: Makefile.am
-	androgenizer -:PROJECT gst-discoverer \
+	androgenizer -:PROJECT gst-discoverer-@GST_API_VERSION@ \
 	 -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:EXECUTABLE gst-discoverer -:TAGS eng debug \
+	 -:EXECUTABLE gst-discoverer-@GST_API_VERSION@ -:TAGS eng debug \
 	 -:SOURCES $(gst_discoverer_@GST_API_VERSION@_SOURCES) \
 	 -:CFLAGS $(DEFS) $(AM_CFLAGS) \
 	 -:LDFLAGS -lgstpbutils-@GST_API_VERSION@ -lgstvideo-@GST_API_VERSION@ \
