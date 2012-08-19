@@ -3762,9 +3762,21 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       GST_TIME_FORMAT, gst_format_get_name (format), rate,
       start_type, GST_TIME_ARGS (start), stop_type, GST_TIME_ARGS (stop));
 
-  /* we can only handle TIME */
-  if (format != GST_FORMAT_TIME)
-    goto done;
+  /* we can only handle TIME, so check if subclass can convert
+   * to TIME format if it's some other format (such as DEFAULT) */
+  if (format != GST_FORMAT_TIME) {
+    if (!gst_base_parse_convert (parse, format, start, GST_FORMAT_TIME, &start)
+        || !gst_base_parse_convert (parse, format, stop, GST_FORMAT_TIME,
+            &stop))
+      goto no_convert_to_time;
+
+    GST_INFO_OBJECT (parse, "converted %s format to start time "
+        "%" GST_TIME_FORMAT " and stop time %" GST_TIME_FORMAT,
+        gst_format_get_name (format), GST_TIME_ARGS (start),
+        GST_TIME_ARGS (stop));
+
+    format = GST_FORMAT_TIME;
+  }
 
   /* no negative rates in push mode (unless upstream takes care of that, but
    * we've already tried upstream and it didn't handle the seek request) */
@@ -3982,6 +3994,13 @@ negative_rate:
 wrong_type:
   {
     GST_DEBUG_OBJECT (parse, "unsupported seek type.");
+    res = FALSE;
+    goto done;
+  }
+no_convert_to_time:
+  {
+    GST_DEBUG_OBJECT (parse, "seek in %s format was requested, but subclass "
+        "couldn't convert that into TIME format", gst_format_get_name (format));
     res = FALSE;
     goto done;
   }
