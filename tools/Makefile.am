@@ -1,5 +1,3 @@
-bin_SCRIPTS =
-
 man_MANS = \
         gst-discoverer-@GST_API_VERSION@.1
 
@@ -10,8 +8,7 @@ gst_discoverer_@GST_API_VERSION@_SOURCES = gst-discoverer.c
 
 CLEANFILES = $(bin_SCRIPTS) $(bin_PROGRAMS)
 
-EXTRA_DIST = \
-	gst-discoverer.1.in
+EXTRA_DIST = gst-discoverer-1.0.1
 
 
 LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
@@ -21,17 +18,6 @@ LDADD = $(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la 
 	$(GST_BASE_LIBS) $(GST_LIBS)
 
 AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
-
-# generate man pages
-%-@GST_API_VERSION@.1: %.1.in
-	$(AM_V_GEN)sed \
-                -e s,gst-visualise,gst-visualise-@GST_API_VERSION@,g \
-                $< >$@
-
-all: all-am chmod
-
-chmod: $(bin_SCRIPTS)
-#	@chmod +x $^
 
 Android.mk: Makefile.am
 	androgenizer -:PROJECT gst-discoverer-@GST_API_VERSION@ \
