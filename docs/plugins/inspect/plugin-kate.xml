@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>text/plain; text/x-pango-markup; video/x-dvd-subpicture</details>
+          <details>text/plain; text/x-pango-markup; subpicture/x-dvd</details>
         </caps>
       </pads>
     </element>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>text/plain; text/x-pango-markup; video/x-dvd-subpicture</details>
+          <details>text/plain; text/x-pango-markup; subpicture/x-dvd</details>
         </caps>
         <caps>
           <name>src</name>

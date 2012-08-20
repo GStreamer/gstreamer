@@ -299,7 +299,7 @@ gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase * decoder,
           }
           if (strcmp (decoder->k.ki->category, "K-SPU") == 0 ||
               strcmp (decoder->k.ki->category, "spu-subtitles") == 0) {
-            *src_caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
+            *src_caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
           } else if (decoder->k.ki->text_markup_type == kate_markup_none) {
             *src_caps = gst_caps_new_empty_simple ("text/plain");
           } else {

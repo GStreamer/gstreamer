@@ -187,7 +187,7 @@ struct _TSDemuxStream
 
 /* Can also use the subpicture pads for text subtitles? */
 #define SUBPICTURE_CAPS \
-    GST_STATIC_CAPS ("subpicture/x-pgs; video/x-dvd-subpicture")
+    GST_STATIC_CAPS ("subpicture/x-pgs; subpicture/x-dvd")
 
 static GstStaticPadTemplate video_template =
 GST_STATIC_PAD_TEMPLATE ("video_%04x", GST_PAD_SRC,
@@ -947,7 +947,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     case ST_PS_DVD_SUBPICTURE:
       template = gst_static_pad_template_get (&subpicture_template);
       name = g_strdup_printf ("subpicture_%04x", bstream->pid);
-      caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
+      caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
       break;
     case ST_BD_PGS_SUBPICTURE:
       template = gst_static_pad_template_get (&subpicture_template);

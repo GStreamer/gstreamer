@@ -514,7 +514,7 @@ GST_START_TEST (test_kate_encode_spu)
   GST_BUFFER_DURATION (inbuffer) = 5 * GST_SECOND;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
-  caps = gst_caps_from_string ("video/x-dvd-subpicture");
+  caps = gst_caps_from_string ("subpicture/x-dvd");
   fail_unless (caps != NULL);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);

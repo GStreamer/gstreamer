@@ -76,7 +76,7 @@ static GstStaticPadTemplate subpicture_src_template =
 GST_STATIC_PAD_TEMPLATE ("subpicture",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-dvd-subpicture")
+    GST_STATIC_CAPS ("subpicture/x-dvd")
     );
 
 static void rsn_dvdbin_do_init (GType rsn_dvdbin_type);
@@ -696,7 +696,7 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
   if (can_sink_caps (dvdbin->pieces[DVD_ELEM_VIDDEC], caps)) {
     dest_pad =
         gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDDEC], "sink");
-  } else if (g_str_equal (gst_structure_get_name (s), "video/x-dvd-subpicture")) {
+  } else if (g_str_equal (gst_structure_get_name (s), "subpicture/x-dvd")) {
     dest_pad =
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_SPU_SELECT],
         "sink_%u");

@@ -78,7 +78,7 @@ static GstStaticPadTemplate subpic_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("subpicture",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dvd-subpicture; subpicture/x-pgs")
+    GST_STATIC_CAPS ("subpicture/x-dvd; subpicture/x-pgs")
     );
 
 static const guint32 default_clut[16] = {
@@ -1156,7 +1156,7 @@ gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (gst_structure_has_name (s, "video/x-dvd-subpicture")) {
+  if (gst_structure_has_name (s, "subpicture/x-dvd")) {
     input_type = SPU_INPUT_TYPE_VOBSUB;
   } else if (gst_structure_has_name (s, "subpicture/x-pgs")) {
     input_type = SPU_INPUT_TYPE_PGS;

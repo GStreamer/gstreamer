@@ -527,7 +527,7 @@ gst_kate_enc_setcaps (GstPad * pad, GstCaps * caps)
         GST_ELEMENT_WARNING (ke, LIBRARY, SETTINGS, (NULL),
             ("Category set to '%s', but input is text-based.", ke->category));
       }
-    } else if (gst_structure_has_name (s, "video/x-dvd-subpicture")) {
+    } else if (gst_structure_has_name (s, "subpicture/x-dvd")) {
       if (strcmp (ke->category, "SUB") == 0 ||
           strcmp (ke->category, "subtitles") == 0) {
         GST_ELEMENT_WARNING (ke, LIBRARY, SETTINGS, (NULL),

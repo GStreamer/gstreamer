@@ -20,7 +20,7 @@
           <name>subpicture</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture; subpicture/x-pgs</details>
+          <details>subpicture/x-dvd; subpicture/x-pgs</details>
         </caps>
         <caps>
           <name>video</name>

@@ -38,7 +38,7 @@
           <name>subpicture_%02x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>subpicture/x-dvd</details>
         </caps>
         <caps>
           <name>video_%02x</name>

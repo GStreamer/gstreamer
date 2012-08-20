@@ -89,7 +89,7 @@ static GstStaticPadTemplate subpicture_template =
 GST_STATIC_PAD_TEMPLATE ("subpicture_%02x",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("video/x-dvd-subpicture")
+    GST_STATIC_CAPS ("subpicture/x-dvd")
     );
 
 static GstStaticPadTemplate private_template =
@@ -313,7 +313,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
     case ST_PS_DVD_SUBPICTURE:
       template = klass->subpicture_template;
       name = g_strdup_printf ("subpicture_%02x", id);
-      caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+      caps = gst_caps_new_simple ("subpicture/x-dvd", NULL);
       break;
     case ST_GST_AUDIO_RAWA52:
       template = klass->audio_template;

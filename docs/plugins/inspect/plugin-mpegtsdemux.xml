@@ -39,7 +39,7 @@ Edward Hervey &lt;edward.hervey@collabora.co.uk&gt;</author>
           <name>subpicture_%04x</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>subpicture/x-pgs; video/x-dvd-subpicture</details>
+          <details>subpicture/x-pgs; subpicture/x-dvd</details>
         </caps>
         <caps>
           <name>video_%04x</name>

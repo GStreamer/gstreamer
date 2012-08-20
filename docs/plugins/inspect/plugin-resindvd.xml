@@ -26,7 +26,7 @@
           <name>subpicture</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>subpicture/x-dvd</details>
         </caps>
         <caps>
           <name>video</name>
