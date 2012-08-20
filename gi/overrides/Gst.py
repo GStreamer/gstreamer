@@ -160,7 +160,9 @@ Fraction = override(Fraction)
 __all__.append('Fraction')
 
 initialized, argv = Gst.init_check(sys.argv)
+
 import _gi_gst
+_gi_gst
 
 sys.argv = list(argv)
 if not initialized:

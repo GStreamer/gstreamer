@@ -18,3 +18,18 @@ _gi_gst_la_SOURCES = gstmodule.c
 _gi_gst_la_CFLAGS = $(common_cflags)
 _gi_gst_la_LIBADD = $(common_libadd)
 _gi_gst_la_LDFLAGS = $(common_ldflags)
+
+# if we build in a separate tree, we need to symlink the *.so files from the
+# source tree; Python does not accept the extensions and modules in different
+# paths
+build_pylinks:
+	for f in $(pygioverrides_PYTHON); do \
+	    [ -e $(builddir)/$$f ] || $(LN_S) $(srcdir)/$$f $(builddir)/$$f; \
+	done
+
+all: $(pygioverridesexec_LTLIBRARIES:.la=.so) build_pylinks
+check-local: $(pygioverridesexec_LTLIBRARIES:.la=.so) build_pylinks
+clean-local:
+	rm -f $(pygioverridesexec_LTLIBRARIES:.la=.so)
+.la.so:
+	$(LN_S) .libs/$@ $@ || true
