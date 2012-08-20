@@ -231,6 +231,7 @@ gst_buffer_add_video_meta_full (GstBuffer * buffer,
   for (i = 0; i < n_planes; i++) {
     meta->offset[i] = offset[i];
     meta->stride[i] = stride[i];
+    GST_LOG ("plane %d, offset %u, stride %d", i, offset[i], stride[i]);
   }
   meta->map = default_map;
   meta->unmap = default_unmap;
