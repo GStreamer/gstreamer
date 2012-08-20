@@ -619,3 +619,21 @@ The 0.11 porting guide
  * playbin also proxies the GstColorBalance and GstNavigation interfaces,
    so applications that use this don't need to go fishing for elements
    that may implement those any more, but can just use them unconditionally.
+
+ * media type / caps changes:
+
+      audio/x-raw-int   -> audio/x-raw
+      audio/x-raw-float -> audio/x-raw
+
+      video/x-raw-rgb   -> video/x-raw
+      video/x-raw-yuv   -> video/x-raw
+      video/x-raw-bayer -> video/x-bayer
+
+      video/x-dvd-subpicture -> subpicture/x-dvd
+
+      application/ogg  -> audio/ogg or video/ogg (or application/ogg)
+
+      video/x-matroska -> audio/x-matroska or video/x-matroska or video/x-matroska-3d
+
+      video/webm -> audio/webm or video/webm
+
