@@ -675,7 +675,7 @@ done:
  * stride alignment in @align is respected.
  *
  * Extra padding will be added to the right side when stride alignment padding
- * is required.
+ * is required and @align will be updated with the new padding values.
  */
 void
 gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
@@ -717,6 +717,8 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
     /* increase padded_width */
     padded_width += padded_width & ~(padded_width - 1);
   } while (!aligned);
+
+  align->padding_right = padded_width - width - align->padding_left;
 
   info->width = width;
   info->height = height;
