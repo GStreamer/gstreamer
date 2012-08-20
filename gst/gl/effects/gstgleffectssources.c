@@ -267,7 +267,6 @@ const gchar *luma_threshold_fragment_source =
   "uniform sampler2DRect tex;"
   "void main () {"
   "  vec2 texturecoord = gl_TexCoord[0].st;"
-  "  int i;"
   "  vec4 color = texture2DRect(tex, texturecoord);"
   "  float luma = dot(color.rgb, vec3(0.2125, 0.7154, 0.0721));"    /* BT.709 (from orange book) */
   "  gl_FragColor = vec4 (vec3 (smoothstep (0.30, 0.50, luma)), color.a);"
@@ -284,7 +283,7 @@ const gchar *sep_sobel_length_fragment_source =
   "  float len = length (g);"
   /* little trick to avoid IF operator */
   /* TODO: test if a standalone inverting pass is worth */
-  "  gl_FragColor = abs(int(invert) - vec4(vec3(len), 1.0));"
+  "  gl_FragColor = abs(vec4(vec3(float(invert) - len), 1.0));"
   "}";
 
 const gchar *desaturate_fragment_source =
@@ -455,7 +454,7 @@ const gchar *sin_fragment_source =
   "  vec4 color = texture2DRect (tex, vec2(gl_TexCoord[0].st));"
   "  float luma = dot(color.rgb, vec3(0.2125, 0.7154, 0.0721));"
 /* calculate hue with the Preucil formula */
-  "  float cosh = 0.5*(2*color.r - color.g - color.b);"
+  "  float cosh = color.r - 0.5*(color.g + color.b);"
 /* sqrt(3)/2 = 0.866 */
   "  float sinh = 0.866*(color.g - color.b);"
 /* hue = atan2 h */
