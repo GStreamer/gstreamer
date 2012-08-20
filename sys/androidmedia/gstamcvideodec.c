@@ -981,6 +981,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     return FALSE;
   }
 
+  /* FIXME: This buffer needs to be valid until the codec is stopped again */
   if (self->codec_data)
     gst_amc_format_set_buffer (format, "csd-0", self->codec_data);
 
