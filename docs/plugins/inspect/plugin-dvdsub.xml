@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>subpicture/x-dvd</details>
         </caps>
         <caps>
           <name>src</name>
@@ -41,13 +41,13 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture</details>
+          <details>subpicture/x-dvd</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-dvd-subpicture, parsed=(boolean)true</details>
+          <details>subpicture/x-dvd, parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>

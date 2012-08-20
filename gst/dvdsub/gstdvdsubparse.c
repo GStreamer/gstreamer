@@ -31,13 +31,13 @@ GST_DEBUG_CATEGORY_STATIC (dvdsubparse_debug);
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dvd-subpicture, parsed=(boolean)true")
+    GST_STATIC_CAPS ("subpicture/x-dvd, parsed=(boolean)true")
     );
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-dvd-subpicture")
+    GST_STATIC_CAPS ("subpicture/x-dvd")
     );
 
 static void gst_dvd_sub_parse_finalize (GObject * object);
