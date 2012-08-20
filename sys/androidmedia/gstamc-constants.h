@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012, Collabora Ltd.
- *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -84,7 +84,16 @@ enum
   COLOR_FormatL2 = 33,
   COLOR_FormatL4 = 34,
   COLOR_FormatL8 = 35,
-  COLOR_FormatL16 = 36
+  COLOR_FormatL16 = 36,
+  COLOR_FormatL24 = 37,
+  COLOR_FormatL32 = 38,
+  COLOR_FormatYUV420PackedSemiPlanar = 39,
+  COLOR_FormatYUV422PackedSemiPlanar = 40,
+  COLOR_Format18BitBGR666 = 41,
+  COLOR_Format24BitARGB6666 = 42,
+  COLOR_Format24BitABGR6666 = 43,
+  COLOR_TI_FormatYUV420PackedSemiPlanar = 0x7f000100,
+  COLOR_QCOM_FormatYUV420SemiPlanar = 0x7fa30c00
 };
 
 enum
