@@ -115,7 +115,7 @@ static GstStaticPadTemplate subtitle_src_templ =
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("text/x-pango-markup; application/x-ssa; "
-        "application/x-ass;application/x-usf; video/x-dvd-subpicture; "
+        "application/x-ass;application/x-usf; subpicture/x-dvd; "
         "subpicture/x-pgs; subtitle/x-kate; " "application/x-subtitle-unknown")
     );
 
@@ -5643,7 +5643,7 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     context->postprocess_frame = gst_matroska_demux_check_subtitle_buffer;
     subtitlecontext->check_markup = FALSE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
-    caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
+    caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
     ((GstMatroskaTrackContext *) subtitlecontext)->send_dvd_event = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_HDMVPGS)) {
     caps = gst_caps_new_empty_simple ("subpicture/x-pgs");

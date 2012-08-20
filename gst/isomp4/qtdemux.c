@@ -9749,7 +9749,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
   switch (fourcc) {
     case GST_MAKE_FOURCC ('m', 'p', '4', 's'):
       _codec ("DVD subtitle");
-      caps = gst_caps_new_empty_simple ("video/x-dvd-subpicture");
+      caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
       break;
     case GST_MAKE_FOURCC ('t', 'e', 'x', 't'):
       _codec ("Quicktime timed text");
