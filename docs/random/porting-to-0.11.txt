@@ -501,7 +501,7 @@ The 0.11 porting guide
     gst_tag_list_free() has been replaced by gst_tag_list_unref().
 
     GST_TAG_IMAGE, GST_TAG_PREVIEW_IMAGE, GST_TAG_ATTACHMENT: many tags that
-    used to be of type GstBuffer are not of type GstSample (which is basically
+    used to be of type GstBuffer are now of type GstSample (which is basically
     a struct containing a buffer alongside caps and some other info).
 
     gst_tag_list_get_buffer() => gst_tag_list_get_sample()
@@ -569,6 +569,13 @@ The 0.11 porting guide
 
     gst_video_format_parse_caps() -> use gst_video_info_from_caps() and
         then GstVideoInfo.
+
+* GstChildProxy
+
+    gst_child_proxy_lookup() can no longer be called on GObjects that
+    do not implement the GstChildProxy interface. Use
+      g_object_class_find_property (G_OBJECT_GET_CLASS (obj), "foo")
+    instead for non-childproxy objects.
 
 * "codec-data" and "streamheader" field in GstCaps (not implemented yet!)
 
