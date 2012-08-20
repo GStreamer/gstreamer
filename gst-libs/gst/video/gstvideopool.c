@@ -102,6 +102,7 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   gint width, height;
   gint padded_width, padded_height;
   gint i, n_planes;
+  gboolean aligned;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
@@ -113,13 +114,31 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   padded_width = width + align->padding_left + align->padding_right;
   padded_height = height + align->padding_top + align->padding_bottom;
 
-  gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
-      padded_width, padded_height);
+  n_planes = GST_VIDEO_INFO_N_PLANES (info);
+  do {
+    GST_LOG ("padded dimension %u-%u", padded_width, padded_height);
+
+    gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
+        padded_width, padded_height);
+
+    /* check alignment */
+    aligned = TRUE;
+    for (i = 0; i < n_planes; i++) {
+      GST_LOG ("plane %d, stride %d, alignment %u", i, info->stride[i],
+          align->stride_align[i]);
+      aligned &= (info->stride[i] & align->stride_align[i]) == 0;
+    }
+    if (aligned)
+      break;
+
+    GST_LOG ("unaligned strides, increasing dimension");
+    /* increase padded_width */
+    padded_width += padded_width & ~(padded_width - 1);
+  } while (!aligned);
 
   info->width = width;
   info->height = height;
 
-  n_planes = GST_VIDEO_INFO_N_PLANES (info);
   if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (vinfo))
     n_planes--;
 
