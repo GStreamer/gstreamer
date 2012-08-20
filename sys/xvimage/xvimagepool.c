@@ -548,7 +548,6 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (priv->caps)
     gst_caps_unref (priv->caps);
   priv->caps = gst_caps_ref (caps);
-  priv->info = info;
 
   /* enable metadata based on config of the pool */
   priv->add_metavideo =
@@ -566,6 +565,9 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         priv->align.padding_left, priv->align.padding_left,
         priv->align.padding_bottom);
 
+    /* do padding and alignment */
+    gst_video_info_align (&info, &priv->align);
+
     /* we need the video metadata too now */
     priv->add_metavideo = TRUE;
   } else {
@@ -579,6 +581,8 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->padded_height =
       GST_VIDEO_INFO_HEIGHT (&info) + priv->align.padding_top +
       priv->align.padding_bottom;
+
+  priv->info = info;
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
@@ -632,38 +636,10 @@ xvimage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   if (priv->add_metavideo) {
-    GstVideoMeta *meta;
-    const GstVideoFormatInfo *vinfo = info->finfo;
-    gint i;
-
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
-    /* these are just the defaults for now */
-    meta = gst_buffer_add_video_meta (xvimage, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (info), priv->padded_width, priv->padded_height);
-
-    if (priv->need_alignment) {
-      meta->width = GST_VIDEO_INFO_WIDTH (&priv->info);
-      meta->height = GST_VIDEO_INFO_HEIGHT (&priv->info);
-
-      /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
-       * plane */
-      for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++) {
-        gint vedge, hedge, plane;
-
-        hedge =
-            GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i,
-            priv->align.padding_left);
-        vedge =
-            GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i,
-            priv->align.padding_top);
-        plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
-
-        GST_LOG_OBJECT (pool, "comp %d, plane %d: hedge %d, vedge %d", i,
-            plane, hedge, vedge);
-
-        meta->offset[plane] += (vedge * meta->stride[plane]) + hedge;
-      }
-    }
+    gst_buffer_add_video_meta_full (xvimage, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), priv->padded_width, priv->padded_height,
+        GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
   }
 
   *buffer = xvimage;

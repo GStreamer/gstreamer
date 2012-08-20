@@ -502,8 +502,6 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   if (!gst_video_info_from_caps (&info, caps))
     goto wrong_caps;
 
-  priv->info = info;
-
   GST_LOG_OBJECT (pool, "%dx%d, caps %" GST_PTR_FORMAT, info.width, info.height,
       caps);
 
@@ -528,6 +526,9 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         priv->align.padding_left, priv->align.padding_left,
         priv->align.padding_bottom);
 
+    /* do padding and alignment */
+    gst_video_info_align (&info, &priv->align);
+
     /* we need the video metadata too now */
     priv->add_metavideo = TRUE;
   } else {
@@ -541,6 +542,8 @@ ximage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->padded_height =
       GST_VIDEO_INFO_HEIGHT (&info) + priv->align.padding_top +
       priv->align.padding_bottom;
+
+  priv->info = info;
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
@@ -583,25 +586,11 @@ ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     goto no_buffer;
   }
   if (priv->add_metavideo) {
-    GstVideoMeta *meta;
-
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
     /* these are just the defaults for now */
-    meta = gst_buffer_add_video_meta (ximage, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (info), priv->padded_width, priv->padded_height);
-
-    if (priv->need_alignment) {
-      gint vpad, hpad, pstride;
-
-      vpad = priv->align.padding_left;
-      hpad = priv->align.padding_top;
-
-      meta->width = GST_VIDEO_INFO_WIDTH (&priv->info);
-      meta->height = GST_VIDEO_INFO_HEIGHT (&priv->info);
-      pstride = GST_VIDEO_INFO_COMP_PSTRIDE (&priv->info, 0);
-
-      meta->offset[0] += (vpad * meta->stride[0]) + (hpad * pstride);
-    }
+    gst_buffer_add_video_meta_full (ximage, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), priv->padded_width, priv->padded_height,
+        GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
   }
   *buffer = ximage;
 
