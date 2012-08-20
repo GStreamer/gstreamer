@@ -2528,7 +2528,10 @@ gboolean
 gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
     GstBuffer * src)
 {
-  if (v4l2object->info.finfo) {
+  const GstVideoFormatInfo *finfo = v4l2object->info.finfo;
+
+  if (finfo && (finfo->format != GST_VIDEO_FORMAT_UNKNOWN ||
+          finfo->format != GST_VIDEO_FORMAT_ENCODED)) {
     GstVideoFrame src_frame, dest_frame;
 
     GST_DEBUG_OBJECT (v4l2object->element, "copy video frame");
@@ -2554,6 +2557,7 @@ gst_v4l2_object_copy (GstV4l2Object * v4l2object, GstBuffer * dest,
     gst_buffer_map (src, &map, GST_MAP_READ);
     gst_buffer_fill (dest, 0, map.data, map.size);
     gst_buffer_unmap (src, &map);
+    gst_buffer_resize (dest, 0, map.size);
   }
   GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, v4l2object->element,
       "slow copy into buffer %p", dest);
