@@ -101,7 +101,7 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   const GstVideoFormatInfo *vinfo = info->finfo;
   gint width, height;
   gint padded_width, padded_height;
-  gint i, n_comp;
+  gint i, n_planes;
 
   width = GST_VIDEO_INFO_WIDTH (info);
   height = GST_VIDEO_INFO_HEIGHT (info);
@@ -119,24 +119,30 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   info->width = width;
   info->height = height;
 
-  n_comp = GST_VIDEO_INFO_N_COMPONENTS (info);
+  n_planes = GST_VIDEO_INFO_N_PLANES (info);
   if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (vinfo))
-    n_comp--;
+    n_planes--;
 
-  /* FIXME, not quite correct, NV12 would apply the vedge twice on the second
-   * plane */
-  for (i = 0; i < n_comp; i++) {
-    gint vedge, hedge, plane;
+  for (i = 0; i < n_planes; i++) {
+    gint vedge, hedge, comp;
 
-    hedge = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, i, align->padding_left);
-    vedge = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, i, align->padding_top);
-    plane = GST_VIDEO_FORMAT_INFO_PLANE (vinfo, i);
+    /* Find the component for this plane, FIXME, we assume the plane number and
+     * component number is the same for now, for scaling the dimensions this is
+     * currently true for all formats but it might not be when adding new
+     * formats. We might need to add a plane subsamling in the format info to
+     * make this more generic or maybe use a plane -> component mapping. */
+    comp = i;
 
-    GST_DEBUG ("plane %d: hedge %d vedge %d align %d stride %d", plane, hedge,
-        vedge, align->stride_align[i], info->stride[plane]);
+    hedge =
+        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, comp, align->padding_left);
+    vedge =
+        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, comp, align->padding_top);
 
-    info->offset[plane] += (vedge * info->stride[plane]) +
-        (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, i));
+    GST_DEBUG ("plane %d: comp: %d, hedge %d vedge %d align %d stride %d", i,
+        comp, hedge, vedge, align->stride_align[i], info->stride[i]);
+
+    info->offset[i] += (vedge * info->stride[i]) +
+        (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp));
   }
 }
 
