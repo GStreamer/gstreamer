@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012, Collabora Ltd.
- *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -77,6 +77,8 @@ struct _GstAmcBufferInfo {
   gint size;
 };
 
+extern GQuark gst_amc_codec_info_quark;
+
 GstAmcCodec * gst_amc_codec_new (const gchar *name);
 void gst_amc_codec_free (GstAmcCodec * codec);
 
@@ -111,6 +113,8 @@ gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *v
 void gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value);
 gboolean gst_amc_format_get_string (GstAmcFormat *format, const gchar *key, gchar **value);
 void gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value);
+gboolean gst_amc_format_get_buffer (GstAmcFormat *format, const gchar *key, GstBuffer **value);
+void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, GstBuffer *value);
 
 GstVideoFormat gst_amc_color_format_to_video_format (gint color_format);
 gint gst_amc_video_format_to_color_format (GstVideoFormat video_format);

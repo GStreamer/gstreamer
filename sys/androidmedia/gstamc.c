@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2012, Collabora Ltd.
- *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>, Collabora Ltd.
+ *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,9 @@
 GST_DEBUG_CATEGORY (gst_amc_debug);
 #define GST_CAT_DEFAULT gst_amc_debug
 
+GQuark gst_amc_codec_info_quark = 0;
+
+static GList *codec_infos = NULL;
 static GModule *java_module;
 static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen,
     jsize * nVMs);
@@ -83,6 +86,8 @@ static struct
   jmethodID set_integer;
   jmethodID get_string;
   jmethodID set_string;
+  jmethodID get_byte_buffer;
+  jmethodID set_byte_buffer;
 } media_format;
 
 static JNIEnv *
@@ -605,7 +610,7 @@ gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs)
   JNIEnv *env;
   gint ret = G_MININT;
 
-  g_return_val_if_fail (codec != NULL, FALSE);
+  g_return_val_if_fail (codec != NULL, G_MININT);
 
   env = gst_amc_attach_current_thread ();
 
@@ -675,7 +680,7 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
   gint ret = G_MININT;
   jobject info_o = NULL;
 
-  g_return_val_if_fail (codec != NULL, FALSE);
+  g_return_val_if_fail (codec != NULL, G_MININT);
 
   env = gst_amc_attach_current_thread ();
 
@@ -1129,6 +1134,97 @@ done:
   gst_amc_detach_current_thread ();
 }
 
+gboolean
+gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
+    GstBuffer ** value)
+{
+  JNIEnv *env;
+  gboolean ret = FALSE;
+  jstring key_str = NULL;
+  jobject v = NULL;
+  guint8 *data;
+  gsize size;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  *value = 0;
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  v = (*env)->CallObjectMethod (env, format->object,
+      media_format.get_byte_buffer);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  data = (*env)->GetDirectBufferAddress (env, v);
+  if (!data) {
+    (*env)->ExceptionClear (env);
+    GST_ERROR ("Failed to get buffer address");
+    goto done;
+  }
+  size = (*env)->GetDirectBufferCapacity (env, v);
+  *value = gst_buffer_new_and_alloc (size);
+  memcpy (GST_BUFFER_DATA (*value), data, size);
+
+  ret = TRUE;
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  if (v)
+    (*env)->DeleteLocalRef (env, v);
+  gst_amc_detach_current_thread ();
+
+  return ret;
+}
+
+void
+gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
+    GstBuffer * value)
+{
+  JNIEnv *env;
+  jstring key_str = NULL;
+  jobject v = NULL;
+
+  g_return_if_fail (format != NULL);
+  g_return_if_fail (key != NULL);
+  g_return_if_fail (value != NULL);
+
+  env = gst_amc_attach_current_thread ();
+
+  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  if (!key_str)
+    goto done;
+
+  /* FIXME: The buffer must remain valid until the codec is stopped */
+  v = (*env)->NewDirectByteBuffer (env, GST_BUFFER_DATA (value),
+      GST_BUFFER_SIZE (value));
+  if (!v)
+    goto done;
+
+  (*env)->CallVoidMethod (env, format->object, media_format.set_byte_buffer, v);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+done:
+  if (key_str)
+    (*env)->DeleteLocalRef (env, key_str);
+  if (v)
+    (*env)->DeleteLocalRef (env, v);
+  gst_amc_detach_current_thread ();
+}
+
 static gboolean
 get_java_classes (void)
 {
@@ -1317,11 +1413,18 @@ get_java_classes (void)
   media_format.set_string =
       (*env)->GetMethodID (env, media_format.klass, "setString",
       "(Ljava/lang/String;Ljava/lang/String;)V");
+  media_format.get_byte_buffer =
+      (*env)->GetMethodID (env, media_format.klass, "getByteBuffer",
+      "(Ljava/lang/String;)Ljava/nio/ByteBuffer;");
+  media_format.set_byte_buffer =
+      (*env)->GetMethodID (env, media_format.klass, "setByteBuffer",
+      "(Ljava/lang/String;Ljava/nio/ByteBuffer;)V");
   if (!media_format.create_audio_format || !media_format.create_video_format
       || !media_format.contains_key || !media_format.get_float
       || !media_format.set_float || !media_format.get_integer
       || !media_format.set_integer || !media_format.get_string
-      || !media_format.set_string) {
+      || !media_format.set_string || !media_format.get_byte_buffer
+      || !media_format.set_byte_buffer) {
     ret = FALSE;
     (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get format methods");
@@ -1337,10 +1440,8 @@ done:
   return ret;
 }
 
-static GList *codec_infos = NULL;
-
 static gboolean
-register_codecs (void)
+scan_codecs (void)
 {
   gboolean ret = TRUE;
   JNIEnv *env;
@@ -1761,7 +1862,10 @@ static const struct
   GstVideoFormat video_format;
 } color_format_mapping_table[] = {
   {
-  COLOR_FormatYUV420Planar, GST_VIDEO_FORMAT_I420}
+  COLOR_FormatYUV420Planar, GST_VIDEO_FORMAT_I420}, {
+  COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_TI_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}
 };
 
 GstVideoFormat
@@ -2112,7 +2216,12 @@ plugin_init (GstPlugin * plugin)
   if (!initialize_java_vm ())
     return FALSE;
 
-  if (!get_java_classes () || !register_codecs ())
+  gst_plugin_add_dependency_simple (plugin, NULL, "/etc", "media_codecs.xml",
+      GST_PLUGIN_DEPENDENCY_FLAG_NONE);
+
+  gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
+
+  if (!get_java_classes () || !scan_codecs ())
     return FALSE;
 
   return TRUE;
