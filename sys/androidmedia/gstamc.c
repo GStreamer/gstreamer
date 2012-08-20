@@ -25,6 +25,8 @@
 #include "gstamc.h"
 #include "gstamc-constants.h"
 
+#include "gstamcvideodec.h"
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <string.h>
@@ -2208,6 +2210,158 @@ gst_amc_aac_profile_from_string (const gchar * profile)
   return -1;
 }
 
+static gchar *
+create_type_name (const gchar * parent_name, const gchar * codec_name)
+{
+  gchar *typified_name;
+  gint i, k;
+  gint parent_name_len = strlen (parent_name);
+  gint codec_name_len = strlen (codec_name);
+  gboolean upper = TRUE;
+
+  typified_name = g_new0 (gchar, parent_name_len + 1 + strlen (codec_name) + 1);
+  memcpy (typified_name, parent_name, parent_name_len);
+  typified_name[parent_name_len] = '-';
+
+  for (i = 0, k = 0; i < codec_name_len; i++) {
+    if (g_ascii_isalnum (codec_name[i])) {
+      if (upper)
+        typified_name[parent_name_len + 1 + k++] =
+            g_ascii_toupper (codec_name[i]);
+      else
+        typified_name[parent_name_len + 1 + k++] =
+            g_ascii_tolower (codec_name[i]);
+
+      upper = FALSE;
+    } else {
+      /* Skip all non-alnum chars and start a new upper case word */
+      upper = TRUE;
+    }
+  }
+
+  return typified_name;
+}
+
+static gchar *
+create_element_name (gboolean video, gboolean encoder, const gchar * codec_name)
+{
+#define PREFIX_LEN 10
+  static const gchar *prefixes[] = {
+    "amcviddec-",
+    "amcauddec-",
+    "amcvidenc-",
+    "amcaudenc-"
+  };
+  gchar *element_name;
+  gint i, k;
+  gint codec_name_len = strlen (codec_name);
+  const gchar *prefix;
+
+  if (video && !encoder)
+    prefix = prefixes[0];
+  else if (!video && !encoder)
+    prefix = prefixes[1];
+  else if (video && encoder)
+    prefix = prefixes[2];
+  else
+    prefix = prefixes[3];
+
+  element_name = g_new0 (gchar, PREFIX_LEN + strlen (codec_name) + 1);
+  memcpy (element_name, prefix, PREFIX_LEN);
+
+  for (i = 0, k = 0; i < codec_name_len; i++) {
+    if (g_ascii_isalnum (codec_name[i])) {
+      element_name[PREFIX_LEN + k++] = g_ascii_tolower (codec_name[i]);
+    }
+    /* Skip all non-alnum chars */
+  }
+
+  return element_name;
+}
+
+#undef PREFIX_LEN
+
+static gboolean
+register_codecs (GstPlugin * plugin)
+{
+  gboolean ret = TRUE;
+  GList *l;
+
+  for (l = codec_infos; l; l = l->next) {
+    GstAmcCodecInfo *codec_info = l->data;
+    gboolean is_audio = FALSE;
+    gboolean is_video = FALSE;
+    gint i;
+    gint n_types;
+
+    GST_DEBUG ("Registering codec '%s'", codec_info->name);
+    for (i = 0; i < codec_info->n_supported_types; i++) {
+      GstAmcCodecType *codec_type = &codec_info->supported_types[i];
+
+      if (g_str_has_prefix (codec_type->mime, "audio/"))
+        is_audio = TRUE;
+      else if (g_str_has_prefix (codec_type->mime, "video/"))
+        is_video = TRUE;
+    }
+
+    n_types = 0;
+    if (is_audio)
+      n_types++;
+    if (is_video)
+      n_types++;
+
+    for (i = 0; i < n_types; i++) {
+      GTypeQuery type_query;
+      GTypeInfo type_info = { 0, };
+      GType type, subtype;
+      gchar *type_name, *element_name;
+      guint rank;
+
+      if (is_video && !codec_info->is_encoder)
+        type = gst_amc_video_dec_get_type ();
+      else
+        continue;
+
+
+      g_type_query (type, &type_query);
+      memset (&type_info, 0, sizeof (type_info));
+      type_info.class_size = type_query.class_size;
+      type_info.instance_size = type_query.instance_size;
+      type_name = create_type_name (type_query.type_name, codec_info->name);
+
+      if (g_type_from_name (type_name) != G_TYPE_INVALID) {
+        GST_ERROR ("Type '%s' already exists for codec '%s'", type_name,
+            codec_info->name);
+        g_free (type_name);
+        continue;
+      }
+
+      subtype = g_type_register_static (type, type_name, &type_info, 0);
+      g_free (type_name);
+
+      g_type_set_qdata (type, gst_amc_codec_info_quark, codec_info);
+
+      element_name =
+          create_element_name (is_video, codec_info->is_encoder,
+          codec_info->name);
+
+      /* Give the Google software codec a secondary rank,
+       * everything else is likely a hardware codec */
+      if (g_str_has_prefix (codec_info->name, "OMX.google"))
+        rank = GST_RANK_SECONDARY;
+      else
+        rank = GST_RANK_PRIMARY;
+
+      ret |= gst_element_register (plugin, element_name, rank, subtype);
+      g_free (element_name);
+
+      is_video = FALSE;
+    }
+  }
+
+  return ret;
+}
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
@@ -2219,9 +2373,12 @@ plugin_init (GstPlugin * plugin)
   gst_plugin_add_dependency_simple (plugin, NULL, "/etc", "media_codecs.xml",
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
+  if (!get_java_classes () || !scan_codecs ())
+    return FALSE;
+
   gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
 
-  if (!get_java_classes () || !scan_codecs ())
+  if (!register_codecs (plugin))
     return FALSE;
 
   return TRUE;
