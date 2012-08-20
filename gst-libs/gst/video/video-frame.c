@@ -230,7 +230,10 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   ss = sinfo->stride[plane];
   ds = dinfo->stride[plane];
 
-  w = MIN (ABS (ss), ABS (ds));
+  /* FIXME. assumes subsampling of component N is the same as plane N, which is
+   * currently true for all formats we have but it might not be in the future. */
+  w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
+      plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
   h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
 
   GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w, h);
