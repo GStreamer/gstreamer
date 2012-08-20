@@ -177,6 +177,11 @@ gboolean     gst_video_info_convert     (GstVideoInfo *info,
 gboolean     gst_video_info_is_equal    (const GstVideoInfo *info,
 					 const GstVideoInfo *other);
 
+#include <gst/video/video.h>
+
+void         gst_video_info_align       (GstVideoInfo * info, GstVideoAlignment * align);
+
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_INFO_H__ */

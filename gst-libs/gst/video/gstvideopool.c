@@ -21,27 +21,6 @@
 #include "gst/video/gstvideopool.h"
 
 /**
- * gst_video_alignment_reset:
- * @align: a #GstVideoAlignment
- *
- * Set @align to its default values with no padding and no alignment.
- */
-void
-gst_video_alignment_reset (GstVideoAlignment * align)
-{
-  gint i;
-
-  g_return_if_fail (align != NULL);
-
-  align->padding_top = 0;
-  align->padding_bottom = 0;
-  align->padding_left = 0;
-  align->padding_right = 0;
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    align->stride_align[i] = 0;
-}
-
-/**
  * gst_buffer_pool_config_set_video_alignment:
  * @config: a #GstStructure
  * @align: a #GstVideoAlignment
@@ -93,76 +72,6 @@ gst_buffer_pool_config_get_video_alignment (GstStructure * config,
       "stride-align1", G_TYPE_UINT, &align->stride_align[1],
       "stride-align2", G_TYPE_UINT, &align->stride_align[2],
       "stride-align3", G_TYPE_UINT, &align->stride_align[3], NULL);
-}
-
-static void
-gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
-{
-  const GstVideoFormatInfo *vinfo = info->finfo;
-  gint width, height;
-  gint padded_width, padded_height;
-  gint i, n_planes;
-  gboolean aligned;
-
-  width = GST_VIDEO_INFO_WIDTH (info);
-  height = GST_VIDEO_INFO_HEIGHT (info);
-
-  GST_LOG ("padding %u-%ux%u-%u", align->padding_top,
-      align->padding_left, align->padding_right, align->padding_bottom);
-
-  /* add the padding */
-  padded_width = width + align->padding_left + align->padding_right;
-  padded_height = height + align->padding_top + align->padding_bottom;
-
-  n_planes = GST_VIDEO_INFO_N_PLANES (info);
-  do {
-    GST_LOG ("padded dimension %u-%u", padded_width, padded_height);
-
-    gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
-        padded_width, padded_height);
-
-    /* check alignment */
-    aligned = TRUE;
-    for (i = 0; i < n_planes; i++) {
-      GST_LOG ("plane %d, stride %d, alignment %u", i, info->stride[i],
-          align->stride_align[i]);
-      aligned &= (info->stride[i] & align->stride_align[i]) == 0;
-    }
-    if (aligned)
-      break;
-
-    GST_LOG ("unaligned strides, increasing dimension");
-    /* increase padded_width */
-    padded_width += padded_width & ~(padded_width - 1);
-  } while (!aligned);
-
-  info->width = width;
-  info->height = height;
-
-  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (vinfo))
-    n_planes--;
-
-  for (i = 0; i < n_planes; i++) {
-    gint vedge, hedge, comp;
-
-    /* Find the component for this plane, FIXME, we assume the plane number and
-     * component number is the same for now, for scaling the dimensions this is
-     * currently true for all formats but it might not be when adding new
-     * formats. We might need to add a plane subsamling in the format info to
-     * make this more generic or maybe use a plane -> component mapping. */
-    comp = i;
-
-    hedge =
-        GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (vinfo, comp, align->padding_left);
-    vedge =
-        GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, comp, align->padding_top);
-
-    GST_DEBUG ("plane %d: comp: %d, hedge %d vedge %d align %d stride %d", i,
-        comp, hedge, vedge, align->stride_align[i], info->stride[i]);
-
-    info->offset[i] += (vedge * info->stride[i]) +
-        (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp));
-  }
 }
 
 /* bufferpool */

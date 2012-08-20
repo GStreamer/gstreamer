@@ -45,31 +45,6 @@ G_BEGIN_DECLS
  */
 #define GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT "GstBufferPoolOptionVideoAlignment"
 
-typedef struct _GstVideoAlignment GstVideoAlignment;
-
-/**
- * GstVideoAlignment:
- * @padding_left: extra pixels on the left side
- * @padding_right: extra pixels on the right side
- * @padding_top: extra pixels on the top
- * @padding_bottom: extra pixels on the bottom
- * @stride_align: array with extra alignment requirements for the strides
- *
- * Extra alignment paramters for the memory of video buffers. This
- * structure is usually used to configure the bufferpool if it supports the
- * #GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT.
- */
-struct _GstVideoAlignment
-{
-  guint padding_top;
-  guint padding_bottom;
-  guint padding_left;
-  guint padding_right;
-  guint stride_align[GST_VIDEO_MAX_PLANES];
-};
-
-void gst_video_alignment_reset (GstVideoAlignment *align);
-
 /* setting a bufferpool config */
 void             gst_buffer_pool_config_set_video_alignment  (GstStructure *config, GstVideoAlignment *align);
 gboolean         gst_buffer_pool_config_get_video_alignment  (GstStructure *config, GstVideoAlignment *align);

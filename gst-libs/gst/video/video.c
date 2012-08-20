@@ -97,3 +97,24 @@ error_overflow:
     return FALSE;
   }
 }
+
+/**
+ * gst_video_alignment_reset:
+ * @align: a #GstVideoAlignment
+ *
+ * Set @align to its default values with no padding and no alignment.
+ */
+void
+gst_video_alignment_reset (GstVideoAlignment * align)
+{
+  gint i;
+
+  g_return_if_fail (align != NULL);
+
+  align->padding_top = 0;
+  align->padding_bottom = 0;
+  align->padding_left = 0;
+  align->padding_right = 0;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    align->stride_align[i] = 0;
+}

@@ -21,6 +21,9 @@
 #define __GST_VIDEO_H__
 
 #include <gst/gst.h>
+
+typedef struct _GstVideoAlignment GstVideoAlignment;
+
 #include <gst/video/video-event.h>
 #include <gst/video/video-format.h>
 #include <gst/video/video-color.h>
@@ -29,6 +32,30 @@
 #include <gst/video/video-enumtypes.h>
 
 G_BEGIN_DECLS
+
+/**
+ * GstVideoAlignment:
+ * @padding_left: extra pixels on the left side
+ * @padding_right: extra pixels on the right side
+ * @padding_top: extra pixels on the top
+ * @padding_bottom: extra pixels on the bottom
+ * @stride_align: array with extra alignment requirements for the strides
+ *
+ * Extra alignment paramters for the memory of video buffers. This
+ * structure is usually used to configure the bufferpool if it supports the
+ * #GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT.
+ */
+struct _GstVideoAlignment
+{
+  guint padding_top;
+  guint padding_bottom;
+  guint padding_left;
+  guint padding_right;
+  guint stride_align[GST_VIDEO_MAX_PLANES];
+};
+
+void           gst_video_alignment_reset         (GstVideoAlignment *align);
+
 
 /* some helper functions */
 gboolean       gst_video_calculate_display_ratio (guint * dar_n,
