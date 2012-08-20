@@ -645,9 +645,12 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
   }
 
   index = meta->vbuffer.index;
+  meta->vbuffer.bytesused = gst_buffer_get_size (buf);
 
-  GST_LOG_OBJECT (pool, "enqueue buffer %p, index:%d, queued:%d, flags:%08x",
-      buf, index, pool->num_queued, meta->vbuffer.flags);
+  GST_LOG_OBJECT (pool,
+      "enqueue buffer %p, index:%d, queued:%d, flags:%08x used:%d",
+      buf, index, pool->num_queued, meta->vbuffer.flags,
+      meta->vbuffer.bytesused);
 
   if (pool->buffers[index] != NULL)
     goto already_queued;
