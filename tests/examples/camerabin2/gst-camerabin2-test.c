@@ -853,17 +853,15 @@ static void
 set_metadata (GstElement * camera)
 {
   GstTagSetter *setter = GST_TAG_SETTER (camera);
-  GTimeVal time = { 0, 0 };
+  GstDateTime *datetime;
   gchar *desc_str;
-  GDate *date = g_date_new ();
 
-  g_get_current_time (&time);
-  g_date_set_time_val (date, &time);
+  datetime = gst_date_time_new_now_local_time ();
 
   desc_str = g_strdup_printf ("captured by %s", g_get_real_name ());
 
   gst_tag_setter_add_tags (setter, GST_TAG_MERGE_REPLACE,
-      GST_TAG_DATE, date,
+      GST_TAG_DATE_TIME, datetime,
       GST_TAG_DESCRIPTION, desc_str,
       GST_TAG_TITLE, "gst-camerabin-test capture",
       GST_TAG_GEO_LOCATION_LONGITUDE, 1.0,
@@ -873,7 +871,7 @@ set_metadata (GstElement * camera)
       GST_TAG_DEVICE_MODEL, "gst-camerabin-test model", NULL);
 
   g_free (desc_str);
-  g_date_free (date);
+  gst_date_time_unref (datetime);
 }
 
 static gboolean
