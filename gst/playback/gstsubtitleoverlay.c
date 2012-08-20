@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v filesrc location=test.mkv ! matroskademux name=demux ! "video/x-h264" ! queue2 ! decodebin ! subtitleoverlay name=overlay ! videoconvert ! autovideosink  demux. ! "video/x-dvd-subpicture" ! queue2 ! overlay.
+ * gst-launch -v filesrc location=test.mkv ! matroskademux name=demux ! "video/x-h264" ! queue2 ! decodebin ! subtitleoverlay name=overlay ! videoconvert ! autovideosink  demux. ! "subpicture/x-dvd" ! queue2 ! overlay.
  * ]| This will play back the given Matroska file with h264 video and subpicture subtitles.
  * </refsect2>
  */

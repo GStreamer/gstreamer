@@ -172,7 +172,7 @@ static const FormatInfo formats[] = {
   {"video/x-dirac", "Dirac", 0},
   {"video/x-dnxhd", "Digital Nonlinear Extensible High Definition (DNxHD)", 0},
   /* FIXME 0.11: rename to subpicture/x-dvd or so */
-  {"video/x-dvd-subpicture", "DVD subpicture", 0},
+  {"subpicture/x-dvd", "DVD subpicture", 0},
   {"video/x-ffv", N_("FFMpeg v1"), 0},
   {"video/x-flash-screen", "Flash Screen Video", 0},
   {"video/x-flash-video", "Sorenson Spark Video", 0},

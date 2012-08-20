@@ -266,7 +266,7 @@ static const gchar *caps_strings[] = {
   "audio/x-wms", "audio/x-voxware", "video/sp5x", "video/vivo",
   "video/x-3ivx", "video/x-4xm", "video/x-apple-video", "video/x-camtasia",
   "video/x-cdxa", "video/x-cinepak", "video/x-cirrus-logic-accupak",
-  "video/x-compressed-yuv", "video/x-dirac", "video/x-dvd-subpicture",
+  "video/x-compressed-yuv", "video/x-dirac", "subpicture/x-dvd",
   "video/x-ffv", "video/x-flash-screen", "video/x-flash-video",
   "video/x-h261", "video/x-huffyuv", "video/x-intel-h263", "video/x-jpeg",
   "video/x-mjpeg", "video/x-mjpeg-b", "video/mpegts", "video/x-mng",

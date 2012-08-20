@@ -1217,7 +1217,7 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->selector[PLAYBIN_STREAM_TEXT].media_list[1] = "application/x-subtitle";
   group->selector[PLAYBIN_STREAM_TEXT].media_list[2] = "application/x-ssa";
   group->selector[PLAYBIN_STREAM_TEXT].media_list[3] = "application/x-ass";
-  group->selector[PLAYBIN_STREAM_TEXT].media_list[4] = "video/x-dvd-subpicture";
+  group->selector[PLAYBIN_STREAM_TEXT].media_list[4] = "subpicture/x-dvd";
   group->selector[PLAYBIN_STREAM_TEXT].media_list[5] = "subpicture/";
   group->selector[PLAYBIN_STREAM_TEXT].media_list[6] = "subtitle/";
   group->selector[PLAYBIN_STREAM_TEXT].get_media_caps =
@@ -2754,8 +2754,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       GST_DEBUG_PAD_NAME (pad), caps, group);
 
   /* major type of the pad, this determines the selector to use,
-     try exact match first so we don't prematurely match video/
-     for video/x-dvd-subpicture */
+     try exact match first */
   for (pass = 0; !select && pass < 2; pass++) {
     for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
       if (array_has_value (group->selector[i].media_list, name, pass == 0)) {
