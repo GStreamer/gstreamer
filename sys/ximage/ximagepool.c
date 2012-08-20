@@ -589,8 +589,9 @@ ximage_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
     /* these are just the defaults for now */
     gst_buffer_add_video_meta_full (ximage, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_INFO_FORMAT (info), priv->padded_width, priv->padded_height,
-        GST_VIDEO_INFO_N_PLANES (info), info->offset, info->stride);
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        info->offset, info->stride);
   }
   *buffer = ximage;
 
