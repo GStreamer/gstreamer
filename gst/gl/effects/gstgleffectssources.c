@@ -458,7 +458,7 @@ const gchar *sin_fragment_source =
 /* sqrt(3)/2 = 0.866 */
   "  float sinh = 0.866*(color.g - color.b);"
 /* hue = atan2 h */
-  "  float tanh = sinh/cosh;"
+  "  float sch = (1.0-sinh)*cosh;"
 /* ok this is a little trick I came up because I didn't find any
  * detailed proof of the Preucil formula. The issue is that tan(h) is
  * pi-periodic so the smoothstep thing gives both reds (h = 0) and
@@ -467,9 +467,9 @@ const gchar *sin_fragment_source =
  * the circle where cosine is positive */
 /* take a slightly purple color trying to get rid of human skin reds */
 /* tanh = +-1.0 for h = +-45, where yellow=60, magenta=-60 */
-  "  float a = smoothstep (-1.0, -0.5, tanh);"
-  "  float b = smoothstep (-0.1, 0.4, tanh);"
-  "  float mix = (a - b) * step (0.0, cosh);"
+  "  float a = smoothstep (0.3, 1.0, sch);"
+  "  float b = smoothstep (-0.4, -0.1, sinh);"
+  "  float mix = a * b;"
   "  gl_FragColor = color * mix + luma * (1.0 - mix);"
   "}";
 
