@@ -21,25 +21,18 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <string.h>
 
-#include "gstgdkpixbuf.h"
-#include "gstgdkpixbufoverlay.h"
-#include "gstgdkpixbufsink.h"
-#include "pixbufscale.h"
+#include "gstgdkpixbufdec.h"
 
-GST_DEBUG_CATEGORY_STATIC (gst_gdk_pixbuf_debug);
-#define GST_CAT_DEFAULT gst_gdk_pixbuf_debug
+GST_DEBUG_CATEGORY_STATIC (gdkpixbufdec_debug);
+#define GST_CAT_DEFAULT gdkpixbufdec_debug
 
-enum
-{
-  ARG_0,
-};
-
-static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
+static GstStaticPadTemplate gst_gdk_pixbuf_dec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -63,7 +56,7 @@ static GstStaticPadTemplate gst_gdk_pixbuf_sink_template =
         "image/x-pcx; image/svg; image/svg+xml")
     );
 
-static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
+static GstStaticPadTemplate gst_gdk_pixbuf_dec_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -72,21 +65,18 @@ static GstStaticPadTemplate gst_gdk_pixbuf_src_template =
     );
 
 static GstStateChangeReturn
-gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition);
-static GstFlowReturn gst_gdk_pixbuf_chain (GstPad * pad, GstObject * parent,
+gst_gdk_pixbuf_dec_change_state (GstElement * element,
+    GstStateChange transition);
+static GstFlowReturn gst_gdk_pixbuf_dec_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
-static gboolean gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent,
+static gboolean gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-#ifdef enable_typefind
-static void gst_gdk_pixbuf_type_find (GstTypeFind * tf, gpointer ignore);
-#endif
-
-#define gst_gdk_pixbuf_parent_class parent_class
-G_DEFINE_TYPE (GstGdkPixbuf, gst_gdk_pixbuf, GST_TYPE_ELEMENT);
+#define gst_gdk_pixbuf_dec_parent_class parent_class
+G_DEFINE_TYPE (GstGdkPixbufDec, gst_gdk_pixbuf_dec, GST_TYPE_ELEMENT);
 
 static gboolean
-gst_gdk_pixbuf_sink_setcaps (GstGdkPixbuf * filter, GstCaps * caps)
+gst_gdk_pixbuf_dec_sink_setcaps (GstGdkPixbufDec * filter, GstCaps * caps)
 {
   const GValue *framerate;
   GstStructure *s;
@@ -108,7 +98,7 @@ gst_gdk_pixbuf_sink_setcaps (GstGdkPixbuf * filter, GstCaps * caps)
 }
 
 static GstCaps *
-gst_gdk_pixbuf_get_capslist (GstCaps * filter)
+gst_gdk_pixbuf_dec_get_capslist (GstCaps * filter)
 {
   GSList *slist;
   GSList *slist0;
@@ -134,7 +124,8 @@ gst_gdk_pixbuf_get_capslist (GstCaps * filter)
   }
   g_slist_free (slist0);
 
-  tmpl_caps = gst_static_caps_get (&gst_gdk_pixbuf_sink_template.static_caps);
+  tmpl_caps =
+      gst_static_caps_get (&gst_gdk_pixbuf_dec_sink_template.static_caps);
   return_caps = gst_caps_intersect (capslist, tmpl_caps);
 
   gst_caps_unref (tmpl_caps);
@@ -152,7 +143,8 @@ gst_gdk_pixbuf_get_capslist (GstCaps * filter)
 }
 
 static gboolean
-gst_gdk_pixbuf_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_gdk_pixbuf_dec_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   gboolean res;
 
@@ -162,7 +154,7 @@ gst_gdk_pixbuf_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_gdk_pixbuf_get_capslist (filter);
+      caps = gst_gdk_pixbuf_dec_get_capslist (filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
 
@@ -179,40 +171,45 @@ gst_gdk_pixbuf_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
 /* initialize the plugin's class */
 static void
-gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
+gst_gdk_pixbuf_dec_class_init (GstGdkPixbufDecClass * klass)
 {
   GstElementClass *gstelement_class;
 
   gstelement_class = (GstElementClass *) klass;
 
   gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_change_state);
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_dec_change_state);
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gdk_pixbuf_src_template));
+      gst_static_pad_template_get (&gst_gdk_pixbuf_dec_src_template));
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&gst_gdk_pixbuf_sink_template));
+      gst_static_pad_template_get (&gst_gdk_pixbuf_dec_sink_template));
   gst_element_class_set_static_metadata (gstelement_class,
       "GdkPixbuf image decoder", "Codec/Decoder/Image",
       "Decodes images in a video stream using GdkPixbuf",
       "David A. Schleef <ds@schleef.org>, Renato Filho <renato.filho@indt.org.br>");
+
+  GST_DEBUG_CATEGORY_INIT (gdkpixbufdec_debug, "gdkpixbuf", 0,
+      "GdkPixbuf image decoder");
 }
 
 static void
-gst_gdk_pixbuf_init (GstGdkPixbuf * filter)
+gst_gdk_pixbuf_dec_init (GstGdkPixbufDec * filter)
 {
   filter->sinkpad =
-      gst_pad_new_from_static_template (&gst_gdk_pixbuf_sink_template, "sink");
+      gst_pad_new_from_static_template (&gst_gdk_pixbuf_dec_sink_template,
+      "sink");
   gst_pad_set_query_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_query));
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_dec_sink_query));
   gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_chain));
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_dec_chain));
   gst_pad_set_event_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_sink_event));
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_dec_sink_event));
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   filter->srcpad =
-      gst_pad_new_from_static_template (&gst_gdk_pixbuf_src_template, "src");
+      gst_pad_new_from_static_template (&gst_gdk_pixbuf_dec_src_template,
+      "src");
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
@@ -221,7 +218,7 @@ gst_gdk_pixbuf_init (GstGdkPixbuf * filter)
 }
 
 static gboolean
-gst_gdk_pixbuf_setup_pool (GstGdkPixbuf * filter, GstVideoInfo * info)
+gst_gdk_pixbuf_dec_setup_pool (GstGdkPixbufDec * filter, GstVideoInfo * info)
 {
   GstCaps *target;
   GstQuery *query;
@@ -274,7 +271,7 @@ gst_gdk_pixbuf_setup_pool (GstGdkPixbuf * filter, GstVideoInfo * info)
 }
 
 static GstFlowReturn
-gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
+gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
 {
   GstBuffer *outbuf;
   GdkPixbuf *pixbuf;
@@ -325,7 +322,7 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
     gst_pad_set_caps (filter->srcpad, caps);
     gst_caps_unref (caps);
 
-    gst_gdk_pixbuf_setup_pool (filter, &info);
+    gst_gdk_pixbuf_dec_setup_pool (filter, &info);
   }
 
   ret = gst_buffer_pool_acquire_buffer (filter->pool, &outbuf, NULL);
@@ -378,13 +375,14 @@ no_buffer:
 }
 
 static gboolean
-gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_gdk_pixbuf_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstFlowReturn res = GST_FLOW_OK;
   gboolean ret = TRUE, forward = TRUE;
-  GstGdkPixbuf *pixbuf;
+  GstGdkPixbufDec *pixbuf;
 
-  pixbuf = GST_GDK_PIXBUF (parent);
+  pixbuf = GST_GDK_PIXBUF_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
@@ -392,14 +390,14 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_gdk_pixbuf_sink_setcaps (pixbuf, caps);
+      ret = gst_gdk_pixbuf_dec_sink_setcaps (pixbuf, caps);
       forward = FALSE;
       break;
     }
     case GST_EVENT_EOS:
       if (pixbuf->pixbuf_loader != NULL) {
         gdk_pixbuf_loader_close (pixbuf->pixbuf_loader, NULL);
-        res = gst_gdk_pixbuf_flush (pixbuf);
+        res = gst_gdk_pixbuf_dec_flush (pixbuf);
         g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
         pixbuf->pixbuf_loader = NULL;
         /* as long as we don't have flow returns for event functions we need
@@ -433,15 +431,15 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_gdk_pixbuf_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+gst_gdk_pixbuf_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstGdkPixbuf *filter;
+  GstGdkPixbufDec *filter;
   GstFlowReturn ret = GST_FLOW_OK;
   GError *error = NULL;
   GstClockTime timestamp;
   GstMapInfo map;
 
-  filter = GST_GDK_PIXBUF (parent);
+  filter = GST_GDK_PIXBUF_DEC (parent);
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
@@ -461,10 +459,11 @@ gst_gdk_pixbuf_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
           &error))
     goto error;
 
-  /* packetised mode? */
+  /* packetised mode? *//* FIXME: shouln't this be fps_d != 0, since 0/1
+   * might be packetised mode but variable framerate */
   if (filter->in_fps_n != 0) {
     gdk_pixbuf_loader_close (filter->pixbuf_loader, NULL);
-    ret = gst_gdk_pixbuf_flush (filter);
+    ret = gst_gdk_pixbuf_dec_flush (filter);
     g_object_unref (filter->pixbuf_loader);
     filter->pixbuf_loader = NULL;
   }
@@ -487,10 +486,11 @@ error:
 }
 
 static GstStateChangeReturn
-gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
+gst_gdk_pixbuf_dec_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstGdkPixbuf *dec = GST_GDK_PIXBUF (element);
+  GstGdkPixbufDec *dec = GST_GDK_PIXBUF_DEC (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -522,94 +522,3 @@ gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
 
   return ret;
 }
-
-#define GST_GDK_PIXBUF_TYPE_FIND_SIZE 1024
-
-#ifdef enable_typefind
-static void
-gst_gdk_pixbuf_type_find (GstTypeFind * tf, gpointer ignore)
-{
-  guint8 *data;
-  GdkPixbufLoader *pixbuf_loader;
-  GdkPixbufFormat *format;
-
-  data = gst_type_find_peek (tf, 0, GST_GDK_PIXBUF_TYPE_FIND_SIZE);
-  if (data == NULL)
-    return;
-
-  GST_DEBUG ("creating new loader");
-
-  pixbuf_loader = gdk_pixbuf_loader_new ();
-
-  gdk_pixbuf_loader_write (pixbuf_loader, data, GST_GDK_PIXBUF_TYPE_FIND_SIZE,
-      NULL);
-
-  format = gdk_pixbuf_loader_get_format (pixbuf_loader);
-
-  if (format != NULL) {
-    GstCaps *caps;
-    gchar **p;
-    gchar **mlist = gdk_pixbuf_format_get_mime_types (format);
-
-    for (p = mlist; *p; ++p) {
-      GST_DEBUG ("suggesting mime type %s", *p);
-      caps = gst_caps_new_simple (*p, NULL);
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, caps);
-      gst_caps_free (caps);
-    }
-    g_strfreev (mlist);
-  }
-
-  GST_DEBUG ("closing pixbuf loader, hope it doesn't hang ...");
-  /* librsvg 2.4.x has a bug where it triggers an endless loop in trying
-     to close a gzip that's not an svg; fixed upstream but no good way
-     to work around it */
-  gdk_pixbuf_loader_close (pixbuf_loader, NULL);
-  GST_DEBUG ("closed pixbuf loader");
-  g_object_unref (G_OBJECT (pixbuf_loader));
-}
-#endif
-
-/* entry point to initialize the plug-in
- * initialize the plug-in itself
- * register the element factories and pad templates
- * register the features
- */
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_gdk_pixbuf_debug, "gdkpixbuf", 0,
-      "gdk pixbuf loader");
-
-  if (!gst_element_register (plugin, "gdkpixbufdec", GST_RANK_SECONDARY,
-          GST_TYPE_GDK_PIXBUF))
-    return FALSE;
-
-#ifdef enable_typefind
-  gst_type_find_register (plugin, "image/*", GST_RANK_MARGINAL,
-      gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
-#endif
-
-  if (!gst_element_register (plugin, "gdkpixbufoverlay", GST_RANK_NONE,
-          GST_TYPE_GDK_PIXBUF_OVERLAY))
-    return FALSE;
-
-  if (!gst_element_register (plugin, "gdkpixbufsink", GST_RANK_NONE,
-          GST_TYPE_GDK_PIXBUF_SINK))
-    return FALSE;
-
-  if (!pixbufscale_init (plugin))
-    return FALSE;
-
-  /* plugin initialisation succeeded */
-  return TRUE;
-}
-
-
-/* this is the structure that gst-register looks for
- * so keep the name plugin_desc, or you cannot get your plug-in registered */
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    gdkpixbuf,
-    "GdkPixbuf-based image decoder, scaler and sink",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

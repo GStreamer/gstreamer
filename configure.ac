@@ -297,7 +297,7 @@ dnl *** plug-ins to include ***
 
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED="cairo cairo_gobject gdk_pixbuf osx_audio "
+GST_PLUGINS_NONPORTED="cairo cairo_gobject osx_audio "
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
