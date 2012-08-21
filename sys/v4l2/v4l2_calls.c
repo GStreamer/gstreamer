@@ -129,7 +129,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 
     input.index = n;
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENUMINPUT, &input) < 0) {
-      if (errno == EINVAL)
+      if (errno == EINVAL || errno == ENOTTY)
         break;                  /* end of enumeration */
       else {
         GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
