@@ -123,8 +123,9 @@ gst_audio_visualizer_shader_get_type (void)
 
   if (G_UNLIKELY (shader_type == 0)) {
     /* TODO: rename when exporting it as a library */
+    /* FIXME: -Bad- name */
     shader_type =
-        g_enum_register_static ("GstAudioVisualizerShader-BaseExtVisual",
+        g_enum_register_static ("GstAudioVisualizerShader-Bad-BaseExtVisual",
         shaders);
   }
   return shader_type;
