@@ -316,6 +316,7 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   data = rtp->data[0] = rtp->map[0].data;
   size = rtp->map[0].size;
 
+  /* the header must be completely in the first buffer */
   header_len = GST_RTP_HEADER_LEN;
   if (G_UNLIKELY (size < header_len))
     goto wrong_length;
@@ -338,7 +339,8 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
     guint8 *extdata;
     guint16 extlen;
 
-    /* find memory for the extension bits */
+    /* find memory for the extension bits, we find the block for the first 4
+     * bytes, all other extension bytes should also be in this block */
     if (!gst_buffer_find_memory (buffer, header_len, 4, &idx, &length, &skip))
       goto wrong_length;
 
@@ -350,8 +352,15 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
     extdata += 2;
     /* read length as the number of 32 bits words */
     extlen = GST_READ_UINT16_BE (extdata);
+    extlen *= sizeof (guint32);
+    /* add id and length */
+    extlen += 4;
 
-    rtp->size[1] = extlen * sizeof (guint32);
+    /* all extension bytes must be in this block */
+    if (G_UNLIKELY (rtp->map[1].size < extlen))
+      goto wrong_length;
+
+    rtp->size[1] = extlen;
 
     header_len += rtp->size[1];
   } else {
