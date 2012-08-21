@@ -43,7 +43,8 @@ typedef struct _GstRTPBuffer GstRTPBuffer;
  * GstRTPBuffer:
  * @buffer: pointer to RTP buffer
  * @state: internal state
- * @n_map: number of mappings in @map
+ * @data: array of data
+ * @size: array of size
  * @map: array of #GstMapInfo
  *
  * Data structure that points to an RTP packet.
@@ -53,13 +54,12 @@ struct _GstRTPBuffer
 {
   GstBuffer   *buffer;
   guint        state;
-  guint        n_map;
   gpointer     data[4];
   gsize        size[4];
   GstMapInfo   map[4];
 };
 
-#define GST_RTP_BUFFER_INIT { NULL, 0, 0, { NULL, NULL, NULL, NULL}, { 0, 0, 0, 0 }, \
+#define GST_RTP_BUFFER_INIT { NULL, 0, { NULL, NULL, NULL, NULL}, { 0, 0, 0, 0 }, \
   { GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, GST_MAP_INFO_INIT, GST_MAP_INFO_INIT} }
 
 /* creating buffers */

@@ -389,7 +389,6 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   rtp->data[2] = NULL;
   rtp->size[2] = 0;
   rtp->state = 0;
-  rtp->n_map = 1;
 
   return TRUE;
 
@@ -441,7 +440,6 @@ gst_rtp_buffer_unmap (GstRTPBuffer * rtp)
       gst_buffer_unmap (rtp->buffer, &rtp->map[i]);
   }
   rtp->buffer = NULL;
-  rtp->n_map = 0;
 }
 
 
