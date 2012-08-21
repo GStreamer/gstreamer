@@ -629,7 +629,6 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   if (template) {
     /* text sink */
     overlay->text_sinkpad = gst_pad_new_from_template (template, "text_sink");
-    gst_object_unref (template);
 
     gst_pad_set_event_function (overlay->text_sinkpad,
         GST_DEBUG_FUNCPTR (gst_base_text_overlay_text_event));
