@@ -59,16 +59,16 @@ gint gst_sbc_parse_mode_to_sbc(const gchar *mode);
 const gchar *gst_sbc_parse_allocation_from_sbc(gint alloc);
 gint gst_sbc_parse_allocation_to_sbc(const gchar *allocation);
 
-GstCaps* gst_sbc_parse_caps_from_sbc(sbc_t *sbc);
+GstCaps *gst_sbc_parse_caps_from_sbc(sbc_t *sbc);
 
-GstCaps* gst_sbc_util_caps_fixate(GstCaps *caps, gchar** error_message);
+GstCaps *gst_sbc_util_caps_fixate(GstCaps *caps, gchar **error_message);
 
 void gst_sbc_util_set_structure_int_param(GstStructure *structure,
-			const gchar* field, gint field_value,
+			const gchar *field, gint field_value,
 			GValue *value);
 
 void gst_sbc_util_set_structure_string_param(GstStructure *structure,
-			const gchar* field, const gchar* field_value,
+			const gchar *field, const gchar *field_value,
 			GValue *value);
 
 gboolean gst_sbc_util_fill_sbc_params(sbc_t *sbc, GstCaps *caps);
