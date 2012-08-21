@@ -192,6 +192,7 @@ static GstBuffer *
 id3v2_tag_to_buffer (GstId3v2Tag * tag)
 {
   GstByteWriter *w;
+  GstMapInfo info;
   GstBuffer *buf;
   guint8 *dest;
   guint i, size, offset, size_frames = 0;
@@ -217,8 +218,9 @@ id3v2_tag_to_buffer (GstId3v2Tag * tag)
   gst_byte_writer_write_uint8 (w, 0);   /* flags */
   gst_byte_writer_write_uint32_syncsafe (w, size - 10);
 
-  buf = gst_buffer_new_and_alloc (size);
-  dest = GST_BUFFER_DATA (buf);
+  buf = gst_buffer_new_allocate (NULL, size, NULL);
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  dest = info.data;
   gst_byte_writer_copy_bytes (w, dest, 0, 10);
   offset = 10;
 
@@ -233,6 +235,7 @@ id3v2_tag_to_buffer (GstId3v2Tag * tag)
   memset (dest + offset, 0, size - offset);
 
   gst_byte_writer_free (w);
+  gst_buffer_unmap (buf, &info);
 
   return buf;
 }
@@ -472,6 +475,7 @@ add_text_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   g_free (strings);
 }
 
+/* FIXME: id3v2-private frames need to be extracted as samples */
 static void
 add_id3v2frame_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar * tag, guint num_tags, const gchar * unused)
@@ -479,42 +483,57 @@ add_id3v2frame_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   guint i;
 
   for (i = 0; i < num_tags; ++i) {
-    const GValue *val;
+    GstSample *sample;
     GstBuffer *buf;
+    GstCaps *caps;
 
-    val = gst_tag_list_get_value_index (list, tag, i);
-    buf = gst_value_get_buffer (val);
+    if (!gst_tag_list_get_sample_index (list, tag, i, &sample))
+      continue;
 
-    if (buf && GST_BUFFER_CAPS (buf)) {
+    buf = gst_sample_get_buffer (sample);
+
+    /* FIXME: should use auxiliary sample struct instead of caps for this */
+    caps = gst_sample_get_caps (sample);
+
+    if (buf && caps) {
       GstStructure *s;
       gint version = 0;
 
-      s = gst_caps_get_structure (GST_BUFFER_CAPS (buf), 0);
+      s = gst_caps_get_structure (caps, 0);
       /* We can only add it if this private buffer is for the same ID3 version,
          because we don't understand the contents at all. */
       if (s && gst_structure_get_int (s, "version", &version) &&
           version == id3v2tag->major_version) {
         GstId3v2Frame frame;
+        GstMapInfo mapinfo;
         gchar frame_id[5];
         guint16 flags;
-        guint8 *data = GST_BUFFER_DATA (buf);
-        gint size = GST_BUFFER_SIZE (buf);
+        guint8 *data;
+        gint size;
 
-        if (size < 10)          /* header size */
-          return;
+        if (!gst_buffer_map (buf, &mapinfo, GST_MAP_READ))
+          continue;
 
-        /* We only reach here if the frame version matches the muxer. Since the
-           muxer only does v2.3 or v2.4, the frame must be one of those - and
-           so the frame header is the same format */
-        memcpy (frame_id, data, 4);
-        frame_id[4] = 0;
-        flags = GST_READ_UINT16_BE (data + 8);
+        size = mapinfo.size;
+        data = mapinfo.data;
 
-        id3v2_frame_init (&frame, frame_id, flags);
-        id3v2_frame_write_bytes (&frame, data + 10, size - 10);
+        if (size >= 10) {       /* header size */
+          /* We only get here if the frame version matches the muxer. Since the
+           * muxer only does v2.3 or v2.4, the frame must be one of those - and
+           * so the frame header is the same format */
+          memcpy (frame_id, data, 4);
+          frame_id[4] = 0;
+          flags = GST_READ_UINT16_BE (data + 8);
 
-        g_array_append_val (id3v2tag->frames, frame);
-        GST_DEBUG ("Added unparsed tag with %d bytes", size);
+          id3v2_frame_init (&frame, frame_id, flags);
+          id3v2_frame_write_bytes (&frame, data + 10, size - 10);
+
+          g_array_append_val (id3v2tag->frames, frame);
+          GST_DEBUG ("Added unparsed tag with %d bytes", size);
+          gst_buffer_unmap (buf, &mapinfo);
+        } else {
+          GST_WARNING ("Short ID3v2 frame");
+        }
       } else {
         GST_WARNING ("Discarding unrecognised ID3 tag for different ID3 "
             "version");
@@ -687,25 +706,29 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   guint n;
 
   for (n = 0; n < num_tags; ++n) {
-    const GValue *val;
+    GstSample *sample;
     GstBuffer *image;
+    GstCaps *caps;
 
     GST_DEBUG ("image %u/%u", n + 1, num_tags);
 
-    val = gst_tag_list_get_value_index (list, tag, n);
-    image = gst_value_get_buffer (val);
+    if (!gst_tag_list_get_sample_index (list, tag, n, &sample))
+      continue;
 
-    if (GST_IS_BUFFER (image) && GST_BUFFER_SIZE (image) > 0 &&
-        GST_BUFFER_CAPS (image) != NULL &&
-        !gst_caps_is_empty (GST_BUFFER_CAPS (image))) {
+    image = gst_sample_get_buffer (sample);
+    caps = gst_sample_get_caps (sample);
+
+    if (image != NULL && gst_buffer_get_size (image) > 0 &&
+        caps != NULL && !gst_caps_is_empty (caps)) {
       const gchar *mime_type;
       GstStructure *s;
 
-      s = gst_caps_get_structure (GST_BUFFER_CAPS (image), 0);
+      s = gst_caps_get_structure (caps, 0);
       mime_type = gst_structure_get_name (s);
       if (mime_type != NULL) {
         const gchar *desc;
         GstId3v2Frame frame;
+        GstMapInfo mapinfo;
         int encoding;
 
         /* APIC frame specifies "-->" if we're providing a URL to the image
@@ -713,8 +736,8 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
         if (strcmp (mime_type, "text/uri-list") == 0)
           mime_type = "-->";
 
-        GST_DEBUG ("Attaching picture of %u bytes and mime type %s",
-            GST_BUFFER_SIZE (image), mime_type);
+        GST_DEBUG ("Attaching picture of %" G_GSIZE_FORMAT " bytes and "
+            "mime type %s", gst_buffer_get_size (image), mime_type);
 
         id3v2_frame_init (&frame, "APIC", 0);
 
@@ -734,14 +757,17 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
         id3v2_frame_write_string (&frame, encoding, desc, TRUE);
 
-        id3v2_frame_write_bytes (&frame, GST_BUFFER_DATA (image),
-            GST_BUFFER_SIZE (image));
-
-        g_array_append_val (id3v2tag->frames, frame);
+        if (gst_buffer_map (image, &mapinfo, GST_MAP_READ)) {
+          id3v2_frame_write_bytes (&frame, mapinfo.data, mapinfo.size);
+          g_array_append_val (id3v2tag->frames, frame);
+          gst_buffer_unmap (image, &mapinfo);
+        } else {
+          GST_WARNING ("Couldn't map image tag buffer");
+          id3v2_frame_unset (&frame);
+        }
       }
     } else {
-      GST_WARNING ("NULL image or no caps on image buffer (%p, caps=%"
-          GST_PTR_FORMAT ")", image, (image) ? GST_BUFFER_CAPS (image) : NULL);
+      GST_WARNING ("no image or caps: %p, caps=%" GST_PTR_FORMAT, image, caps);
     }
   }
 }
@@ -839,28 +865,32 @@ add_date_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
   else
     frame_id = "TDRC";
 
-  GST_LOG ("Adding date frame");
+  GST_LOG ("Adding date time frame");
 
   strings = g_new0 (gchar *, num_tags + 1);
   for (n = 0; n < num_tags; ++n) {
-    GDate *date = NULL;
+    GstDateTime *dt = NULL;
+    guint year;
+    gchar *s;
 
-    if (gst_tag_list_get_date_index (list, tag, n, &date) && date != NULL) {
-      GDateYear year;
-      gchar *s;
+    if (!gst_tag_list_get_date_time_index (list, tag, n, &dt) || dt == NULL)
+      continue;
 
-      year = g_date_get_year (date);
-      if (year > 500 && year < 2100) {
-        s = g_strdup_printf ("%u", year);
-        GST_LOG ("%s[%u] = '%s'", tag, n, s);
-        strings[i] = s;
-        i++;
-      } else {
-        GST_WARNING ("invalid year %u, skipping", year);
-      }
-
-      g_date_free (date);
+    year = gst_date_time_get_year (dt);
+    if (year > 500 && year < 2100) {
+      s = g_strdup_printf ("%u", year);
+      GST_LOG ("%s[%u] = '%s'", tag, n, s);
+      strings[i] = s;
+      i++;
+    } else {
+      GST_WARNING ("invalid year %u, skipping", year);
     }
+
+    if (gst_date_time_has_month (dt)) {
+      if (id3v2tag->major_version == 3)
+        GST_FIXME ("write TDAT and possibly also TIME frame");
+    }
+    gst_date_time_free (dt);
   }
 
   if (strings[0] != NULL) {
@@ -1089,7 +1119,7 @@ static const struct
     /* Up to here, all the frame ids and contents have been the same between
        versions 2.3 and 2.4. The rest of them differ... */
     /* Date (in ID3v2.3, this is a TYER tag. In v2.4, it's a TDRC tag */
-  GST_TAG_DATE, add_date_tag, NULL}, {
+  GST_TAG_DATE_TIME, add_date_tag, NULL}, {
 
     /* Replaygain data (not really supported in 2.3, we use an experimental
        tag there) */
@@ -1159,7 +1189,7 @@ id3_mux_render_v2_tag (GstTagMux * mux, const GstTagList * taglist, int version)
 
   /* Create buffer with tag */
   buf = id3v2_tag_to_buffer (&tag);
-  GST_LOG_OBJECT (mux, "tag size = %d bytes", GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (mux, "tag size = %d bytes", (int) gst_buffer_get_size (buf));
 
   id3v2_tag_unset (&tag);
 
@@ -1265,6 +1295,7 @@ track_number_convert (const GstTagList * list, const gchar * tag,
   }
 }
 
+/* FIXME: get rid of silly table */
 static const struct
 {
   const gchar *gst_tag;
@@ -1286,11 +1317,15 @@ static const struct
 GstBuffer *
 id3_mux_render_v1_tag (GstTagMux * mux, const GstTagList * taglist)
 {
-  GstBuffer *buf = gst_buffer_new_and_alloc (ID3_V1_TAG_SIZE);
-  guint8 *data = GST_BUFFER_DATA (buf);
+  GstMapInfo info;
+  GstBuffer *buf;
+  guint8 *data;
   gboolean wrote_tag = FALSE;
   int i;
 
+  buf = gst_buffer_new_allocate (NULL, ID3_V1_TAG_SIZE, NULL);
+  gst_buffer_map (buf, &info, GST_MAP_WRITE);
+  data = info.data;
   memset (data, 0, ID3_V1_TAG_SIZE);
 
   data[0] = 'T';
@@ -1304,6 +1339,8 @@ id3_mux_render_v1_tag (GstTagMux * mux, const GstTagList * taglist)
     v1_funcs[i].func (taglist, v1_funcs[i].gst_tag, data + v1_funcs[i].offset,
         v1_funcs[i].length, &wrote_tag);
   }
+
+  gst_buffer_unmap (buf, &info);
 
   if (!wrote_tag) {
     GST_WARNING_OBJECT (mux, "no ID3v1 tag written (no suitable tags found)");

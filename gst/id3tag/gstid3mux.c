@@ -1,7 +1,7 @@
 /* GStreamer ID3 v1 and v2 muxer
  *
  * Copyright (C) 2006 Christophe Fergeau <teuf@gnome.org>
- * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
+ * Copyright (C) 2006-2012 Tim-Philipp Müller <tim centricular net>
  * Copyright (C) 2009 Pioneers of the Inevitable <songbird@songbirdnest.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -81,7 +81,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-id3"));
 
-GST_BOILERPLATE (GstId3Mux, gst_id3_mux, GstTagMux, GST_TYPE_TAG_MUX);
+G_DEFINE_TYPE (GstId3Mux, gst_id3_mux, GST_TYPE_TAG_MUX);
 
 static GstBuffer *gst_id3_mux_render_v2_tag (GstTagMux * mux,
     const GstTagList * taglist);
@@ -94,26 +94,9 @@ static void gst_id3_mux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static void
-gst_id3_mux_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-
-  gst_element_class_set_details_simple (element_class,
-      "ID3 v1 and v2 Muxer", "Formatter/Metadata",
-      "Adds an ID3v2 header and ID3v1 footer to a file",
-      "Michael Smith <msmith@songbirdnest.com>, "
-      "Tim-Philipp Müller <tim centricular net>");
-}
-
-static void
 gst_id3_mux_class_init (GstId3MuxClass * klass)
 {
+  GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->set_property = gst_id3_mux_set_property;
@@ -139,10 +122,22 @@ gst_id3_mux_class_init (GstId3MuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_id3_mux_render_v2_tag);
   GST_TAG_MUX_CLASS (klass)->render_end_tag =
       GST_DEBUG_FUNCPTR (gst_id3_mux_render_v1_tag);
+
+  gst_element_class_set_details_simple (element_class,
+      "ID3 v1 and v2 Muxer", "Formatter/Metadata",
+      "Adds an ID3v2 header and ID3v1 footer to a file",
+      "Michael Smith <msmith@songbirdnest.com>, "
+      "Tim-Philipp Müller <tim centricular net>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
 }
 
 static void
-gst_id3_mux_init (GstId3Mux * id3mux, GstId3MuxClass * id3mux_class)
+gst_id3_mux_init (GstId3Mux * id3mux)
 {
   id3mux->write_v1 = DEFAULT_WRITE_V1;
   id3mux->write_v2 = DEFAULT_WRITE_V2;
