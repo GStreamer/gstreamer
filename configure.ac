@@ -898,26 +898,9 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 dnl **** Wayland ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
-  PKG_CHECK_MODULES(WAYLAND, wayland-server >= 0.95.0 wayland-client >= 0.95.0, [
-    AC_CHECK_HEADER(wayland-client.h, HAVE_WAYLAND_CLIENT="yes", HAVE_WAYLAND_CLIENT="no")
-    AC_CHECK_HEADER(wayland-client-protocol.h, HAVE_WAYLAND_CLIENT_PROTOCOL="yes", HAVE_WAYLAND_CLIENT_PROTOCOL="no")
-    if test "x$HAVE_WAYLAND_CLIENT" = "xno"; then
-      AC_MSG_RESULT(wayland-client.h could not be found.)
-      HAVE_WAYLAND="no"
-    elif test "x$HAVE_WAYLAND_CLIENT_PROTOCOL" = "xno"; then
-      AC_MSG_RESULT(wayland-client-protocol.h could not be found.)
-      HAVE_WAYLAND="no"
-    else
-      HAVE_WAYLAND="yes"
-      WAYLAND_LIBS="-lwayland-client"
-    fi
-  ], [
-    AC_MSG_RESULT(no wayland.)
-    HAVE_WAYLAND="no"
+  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 0.95.0, [
+    HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"
   ])
-WAYLAND_CFLAGS=""
-AC_SUBST(WAYLAND_CFLAGS)
-AC_SUBST(WAYLAND_LIBS)
 ])
 
 dnl **** Dirac ****
