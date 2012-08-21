@@ -135,6 +135,7 @@ EXPORTS
 	gst_video_frame_map
 	gst_video_frame_map_id
 	gst_video_frame_unmap
+	gst_video_info_align
 	gst_video_info_convert
 	gst_video_info_from_caps
 	gst_video_info_init
