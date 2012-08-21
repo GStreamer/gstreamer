@@ -84,7 +84,7 @@ gboolean gst_avdtp_sink_set_device_caps(GstAvdtpSink *sink,
 guint gst_avdtp_sink_get_link_mtu(GstAvdtpSink *sink);
 
 void gst_avdtp_sink_set_device(GstAvdtpSink *sink,
-		const gchar* device);
+		const gchar *device);
 
 void gst_avdtp_sink_set_transport(GstAvdtpSink *sink,
 		const gchar *transport);
