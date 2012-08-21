@@ -890,7 +890,7 @@ add_date_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       if (id3v2tag->major_version == 3)
         GST_FIXME ("write TDAT and possibly also TIME frame");
     }
-    gst_date_time_free (dt);
+    gst_date_time_unref (dt);
   }
 
   if (strings[0] != NULL) {
