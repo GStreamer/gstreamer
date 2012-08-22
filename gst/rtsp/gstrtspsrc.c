@@ -179,6 +179,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_BUFFER_MODE      BUFFER_MODE_AUTO
 #define DEFAULT_PORT_RANGE       NULL
 #define DEFAULT_SHORT_HEADER     FALSE
+#define DEFAULT_PROBATION        2
 
 enum
 {
@@ -203,6 +204,7 @@ enum
   PROP_PORT_RANGE,
   PROP_UDP_BUFFER_SIZE,
   PROP_SHORT_HEADER,
+  PROP_PROBATION,
   PROP_LAST
 };
 
@@ -482,6 +484,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Only send the basic RTSP headers for broken encoders",
           DEFAULT_SHORT_HEADER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROBATION,
+      g_param_spec_uint ("probation", "Number of probations",
+          "Consecutive packet sequence numbers to accept the source",
+          0, G_MAXUINT, DEFAULT_PROBATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -525,6 +533,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->client_port_range.max = 0;
   src->udp_buffer_size = DEFAULT_UDP_BUFFER_SIZE;
   src->short_header = DEFAULT_SHORT_HEADER;
+  src->probation = DEFAULT_PROBATION;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -719,6 +728,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_SHORT_HEADER:
       rtspsrc->short_header = g_value_get_boolean (value);
       break;
+    case PROP_PROBATION:
+      rtspsrc->probation = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -819,6 +831,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SHORT_HEADER:
       g_value_set_boolean (value, rtspsrc->short_header);
+      break;
+    case PROP_PROBATION:
+      g_value_set_uint (value, rtspsrc->probation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2475,6 +2490,9 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
           g_object_set (rtpsession, "rtcp-rs-bandwidth", stream->rs_bandwidth,
               NULL);
         }
+
+        g_object_set (rtpsession, "probation", src->probation, NULL);
+
         g_signal_connect (rtpsession, "on-bye-ssrc", (GCallback) on_bye_ssrc,
             stream);
         g_signal_connect (rtpsession, "on-bye-timeout", (GCallback) on_timeout,

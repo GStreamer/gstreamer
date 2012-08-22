@@ -217,6 +217,7 @@ struct _GstRTSPSrc {
   GstRTSPRange      client_port_range;
   gint              udp_buffer_size;
   gboolean          short_header;
+  guint             probation;
 
   /* state */
   GstRTSPState       state;

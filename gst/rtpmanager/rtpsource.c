@@ -39,6 +39,7 @@ enum
 #define DEFAULT_IS_VALIDATED         FALSE
 #define DEFAULT_IS_SENDER            FALSE
 #define DEFAULT_SDES                 NULL
+#define DEFAULT_PROBATION            RTP_DEFAULT_PROBATION
 
 enum
 {
@@ -49,6 +50,7 @@ enum
   PROP_IS_SENDER,
   PROP_SDES,
   PROP_STATS,
+  PROP_PROBATION,
   PROP_LAST
 };
 
@@ -199,6 +201,12 @@ rtp_source_class_init (RTPSourceClass * klass)
           "The stats of this source", GST_TYPE_STRUCTURE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROBATION,
+      g_param_spec_uint ("probation", "Number of probations",
+          "Consecutive packet sequence numbers to accept the source",
+          0, G_MAXUINT, DEFAULT_PROBATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   GST_DEBUG_CATEGORY_INIT (rtp_source_debug, "rtpsource", 0, "RTP Source");
 }
 
@@ -227,7 +235,8 @@ rtp_source_init (RTPSource * src)
    * packets or a valid RTCP packet */
   src->validated = FALSE;
   src->internal = FALSE;
-  src->probation = RTP_DEFAULT_PROBATION;
+  src->probation = DEFAULT_PROBATION;
+  src->curr_probation = src->probation;
   src->closing = FALSE;
 
   src->sdes = gst_structure_new_empty ("application/x-rtp-source-sdes");
@@ -461,6 +470,9 @@ rtp_source_set_property (GObject * object, guint prop_id,
     case PROP_SSRC:
       src->ssrc = g_value_get_uint (value);
       break;
+    case PROP_PROBATION:
+      src->probation = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -493,6 +505,9 @@ rtp_source_get_property (GObject * object, guint prop_id,
       break;
     case PROP_STATS:
       g_value_take_boxed (value, rtp_source_create_stats (src));
+      break;
+    case PROP_PROBATION:
+      g_value_set_uint (value, src->probation);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1057,28 +1072,28 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
     /* first time we heard of this source */
     init_seq (src, seqnr);
     src->stats.max_seq = seqnr - 1;
-    src->probation = RTP_DEFAULT_PROBATION;
+    src->curr_probation = src->probation;
   }
 
   udelta = seqnr - stats->max_seq;
 
   /* if we are still on probation, check seqnum */
-  if (src->probation) {
+  if (src->curr_probation) {
     expected = src->stats.max_seq + 1;
 
     /* when in probation, we require consecutive seqnums */
     if (seqnr == expected) {
       /* expected packet */
       GST_DEBUG ("probation: seqnr %d == expected %d", seqnr, expected);
-      src->probation--;
+      src->curr_probation--;
       src->stats.max_seq = seqnr;
-      if (src->probation == 0) {
+      if (src->curr_probation == 0) {
         GST_DEBUG ("probation done!");
         init_seq (src, seqnr);
       } else {
         GstBuffer *q;
 
-        GST_DEBUG ("probation %d: queue buffer", src->probation);
+        GST_DEBUG ("probation %d: queue buffer", src->curr_probation);
         /* when still in probation, keep packets in a list. */
         g_queue_push_tail (src->packets, buffer);
         /* remove packets from queue if there are too many */
@@ -1113,7 +1128,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
     }
   } else {
     /* duplicate or reordered packet, will be filtered by jitterbuffer. */
-    GST_WARNING ("duplicate or reordered packet");
+    GST_WARNING ("duplicate or reordered packet (seqnr %d)", seqnr);
   }
 
   src->stats.octets_received += arrival->payload_len;
@@ -1149,7 +1164,7 @@ bad_sequence:
 probation_seqnum:
   {
     GST_WARNING ("probation: seqnr %d != expected %d", seqnr, expected);
-    src->probation = RTP_DEFAULT_PROBATION;
+    src->curr_probation = src->probation;
     src->stats.max_seq = seqnr;
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;

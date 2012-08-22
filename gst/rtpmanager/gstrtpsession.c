@@ -201,6 +201,7 @@ enum
 #define DEFAULT_NUM_ACTIVE_SOURCES   0
 #define DEFAULT_USE_PIPELINE_CLOCK   FALSE
 #define DEFAULT_RTCP_MIN_INTERVAL    (RTP_STATS_MIN_INTERVAL * GST_SECOND)
+#define DEFAULT_PROBATION            RTP_DEFAULT_PROBATION
 
 enum
 {
@@ -215,6 +216,7 @@ enum
   PROP_INTERNAL_SESSION,
   PROP_USE_PIPELINE_CLOCK,
   PROP_RTCP_MIN_INTERVAL,
+  PROP_PROBATION,
   PROP_LAST
 };
 
@@ -572,6 +574,12 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROBATION,
+      g_param_spec_uint ("probation", "Number of probations",
+          "Consecutive packet sequence numbers to accept the source",
+          0, G_MAXUINT, DEFAULT_PROBATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -696,6 +704,9 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
       g_object_set_property (G_OBJECT (priv->session), "rtcp-min-interval",
           value);
       break;
+    case PROP_PROBATION:
+      g_object_set_property (G_OBJECT (priv->session), "probation", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -746,6 +757,9 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_RTCP_MIN_INTERVAL:
       g_object_get_property (G_OBJECT (priv->session), "rtcp-min-interval",
           value);
+      break;
+    case PROP_PROBATION:
+      g_object_get_property (G_OBJECT (priv->session), "probation", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
