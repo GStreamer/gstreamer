@@ -214,7 +214,7 @@ GstAmcCodec *
 gst_amc_codec_new (const gchar * name)
 {
   JNIEnv *env;
-  GstAmcCodec *codec;
+  GstAmcCodec *codec = NULL;
   jstring name_str;
   jobject object = NULL;
 
@@ -233,7 +233,7 @@ gst_amc_codec_new (const gchar * name)
       media_codec.create_by_codec_name, name_str);
   if ((*env)->ExceptionCheck (env) || !object) {
     (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to create codec '%s'", codec);
+    GST_ERROR ("Failed to create codec '%s'", name);
     goto error;
   }
 
@@ -255,7 +255,8 @@ done:
   return codec;
 
 error:
-  g_slice_free (GstAmcCodec, codec);
+  if (codec)
+    g_slice_free (GstAmcCodec, codec);
   codec = NULL;
   goto done;
 }
@@ -776,7 +777,7 @@ GstAmcFormat *
 gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
 {
   JNIEnv *env;
-  GstAmcFormat *format;
+  GstAmcFormat *format = NULL;
   jstring mime_str;
   jobject object = NULL;
 
@@ -817,7 +818,8 @@ done:
   return format;
 
 error:
-  g_slice_free (GstAmcFormat, format);
+  if (format)
+    g_slice_free (GstAmcFormat, format);
   format = NULL;
   goto done;
 }
@@ -826,7 +828,7 @@ GstAmcFormat *
 gst_amc_format_new_video (const gchar * mime, gint width, gint height)
 {
   JNIEnv *env;
-  GstAmcFormat *format;
+  GstAmcFormat *format = NULL;
   jstring mime_str;
   jobject object = NULL;
 
@@ -867,7 +869,8 @@ done:
   return format;
 
 error:
-  g_slice_free (GstAmcFormat, format);
+  if (format)
+    g_slice_free (GstAmcFormat, format);
   format = NULL;
   goto done;
 }
@@ -2387,6 +2390,6 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "androidmediacodec",
-    "GStreamer Android MediaCodec Plug-ins",
+    "",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
