@@ -38,7 +38,11 @@
  * </listitem>
  * <listitem>
  * Retrieving the current pixbuf via the #GstGdkPixbufSink:last-pixbuf property
- * when needed.
+ * when needed. This is the easiest way to get at pixbufs for snapshotting
+ * purposes - just wait until the pipeline is prerolled (ASYNC_DONE message
+ * on the bus), then read the property. If you use this method, you may want
+ * to disable message posting by setting the #GstGdkPixbufSink:post-messages
+ * property to #FALSE. This avoids unnecessary memory overhead.
  * </listitem>
  * </itemizedlist>
  *
