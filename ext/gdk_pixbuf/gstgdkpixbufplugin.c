@@ -26,10 +26,7 @@
 
 #include "gstgdkpixbufdec.h"
 #include "gstgdkpixbufoverlay.h"
-
-#if 0
 #include "gstgdkpixbufsink.h"
-#endif
 
 
 #if 0
@@ -97,18 +94,13 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_GDK_PIXBUF_OVERLAY))
     return FALSE;
 
-#if 0
   if (!gst_element_register (plugin, "gdkpixbufsink", GST_RANK_NONE,
           GST_TYPE_GDK_PIXBUF_SINK))
     return FALSE;
-#endif
 
   return TRUE;
 }
 
-
-/* this is the structure that gst-register looks for
- * so keep the name plugin_desc, or you cannot get your plug-in registered */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     gdkpixbuf,
