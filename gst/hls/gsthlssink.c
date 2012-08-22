@@ -240,7 +240,7 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       title = "ciao";
       GST_INFO_OBJECT (sink, "COUNT %d", sink->index);
       if (sink->playlist_root == NULL)
-        entry_location = g_strdup (filename);
+        entry_location = g_path_get_basename (filename);
       else {
         gchar *name = g_path_get_basename (filename);
         entry_location = g_build_filename (sink->playlist_root, name, NULL);
