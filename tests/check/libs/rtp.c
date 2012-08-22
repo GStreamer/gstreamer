@@ -50,12 +50,12 @@ GST_START_TEST (test_rtp_buffer)
 
   /* check defaults */
   fail_unless_equals_int (gst_rtp_buffer_get_version (&rtp), 2);
-  fail_unless (gst_rtp_buffer_get_padding (&rtp) == FALSE);
+  fail_unless (gst_rtp_buffer_get_padding (&rtp) == TRUE);
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
   fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (&rtp), 0);
   fail_unless (gst_rtp_buffer_get_marker (&rtp) == FALSE);
   fail_unless (gst_rtp_buffer_get_payload_type (&rtp) == 0);
-  fail_unless_equals_int (GST_READ_UINT16_BE (data), 0x8000);
+  fail_unless_equals_int (GST_READ_UINT16_BE (data), 0xa000);
 
   /* check version in bitfield */
   gst_rtp_buffer_set_version (&rtp, 3);
@@ -224,7 +224,6 @@ GST_END_TEST;
 GST_START_TEST (test_rtp_buffer_set_extension_data)
 {
   GstBuffer *buf;
-  GstMapInfo map;
   guint8 *data;
   guint16 bits;
   guint size;
@@ -235,33 +234,19 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
 
   /* check GstRTPHeader structure alignment and packing */
   buf = gst_rtp_buffer_new_allocate (4, 0, 0);
-  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
-  data = map.data;
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
-  /* should be impossible to set the extension data */
-  ASSERT_WARNING (fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 0,
-              4) == FALSE));
-  fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
-
   /* should be possible to set the extension data */
-  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 270, 0) == TRUE);
+  fail_unless (gst_rtp_buffer_set_extension_data (&rtp, 270, 4) == TRUE);
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == TRUE);
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   fail_unless (bits == 270);
-  fail_unless (size == 0);
-  fail_unless (pointer == data + 16);
-  pointer = gst_rtp_buffer_get_payload (&rtp);
-  fail_unless (pointer == data + 16);
-
-  gst_buffer_unmap (buf, &map);
+  fail_unless (size == 4);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
-  data = map.data;
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -270,18 +255,12 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   gst_rtp_buffer_get_extension_data (&rtp, &bits, &pointer, &size);
   fail_unless (bits == 333);
   fail_unless (size == 2);
-  fail_unless (pointer == data + 16);
-  pointer = gst_rtp_buffer_get_payload (&rtp);
-  fail_unless (pointer == data + 24);
 
-  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 
   /* Test header extensions with a one byte header */
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
-  data = map.data;
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -339,14 +318,11 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
-  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 
   /* Test header extensions with a two bytes header */
   buf = gst_rtp_buffer_new_allocate (20, 0, 0);
-  gst_buffer_map (buf, &map, GST_MAP_READWRITE);
-  data = map.data;
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
 
   fail_unless (gst_rtp_buffer_get_extension (&rtp) == FALSE);
@@ -405,7 +381,6 @@ GST_START_TEST (test_rtp_buffer_set_extension_data)
   fail_unless (size == 2);
   fail_unless (memcmp (pointer, misc_data, 2) == 0);
 
-  gst_buffer_unmap (buf, &map);
   gst_rtp_buffer_unmap (&rtp);
   gst_buffer_unref (buf);
 }
