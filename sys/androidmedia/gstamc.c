@@ -98,6 +98,7 @@ gst_amc_attach_current_thread (void)
   JNIEnv *env;
   JavaVMAttachArgs args;
 
+  GST_DEBUG ("Attaching thread %p", g_thread_self ());
   args.version = JNI_VERSION_1_6;
   args.name = NULL;
   args.group = NULL;
@@ -113,7 +114,8 @@ gst_amc_attach_current_thread (void)
 static void
 gst_amc_detach_current_thread (void)
 {
-  (*java_vm)->DetachCurrentThread (java_vm);
+  GST_DEBUG ("FIXME: Not detaching thread %p", g_thread_self ());
+  /*(*java_vm)->DetachCurrentThread (java_vm); */
 }
 
 static gboolean
@@ -1237,6 +1239,8 @@ get_java_classes (void)
   JNIEnv *env;
   jclass tmp;
 
+  GST_DEBUG ("Retrieving Java classes");
+
   env = gst_amc_attach_current_thread ();
 
   tmp = (*env)->FindClass (env, "java/lang/String");
@@ -1454,6 +1458,8 @@ scan_codecs (void)
   jmethodID get_codec_count_id, get_codec_info_at_id;
   jint codec_count, i;
 
+  GST_DEBUG ("Scanning codecs");
+
   env = gst_amc_attach_current_thread ();
 
   codec_list_class = (*env)->FindClass (env, "android/media/MediaCodecList");
@@ -1594,7 +1600,8 @@ scan_codecs (void)
 
     GST_INFO ("Codec '%s' has %d supported types", name_str, n_supported_types);
 
-    gst_codec_info->supported_types = g_new0 (GstAmcCodecType, 1);
+    gst_codec_info->supported_types =
+        g_new0 (GstAmcCodecType, n_supported_types);
     gst_codec_info->n_supported_types = n_supported_types;
 
     if (n_supported_types == 0) {
@@ -1717,7 +1724,7 @@ scan_codecs (void)
       }
       gst_codec_type->n_profile_levels = n_elems;
       gst_codec_type->profile_levels =
-          g_malloc0 (sizeof (gst_codec_type->profile_levels) * n_elems);
+          g_malloc0 (sizeof (gst_codec_type->profile_levels[0]) * n_elems);
       for (k = 0; k < n_elems; k++) {
         jobject profile_level = NULL;
         jclass profile_level_class = NULL;
@@ -2289,6 +2296,8 @@ register_codecs (GstPlugin * plugin)
 {
   gboolean ret = TRUE;
   GList *l;
+
+  GST_DEBUG ("Registering plugins");
 
   for (l = codec_infos; l; l = l->next) {
     GstAmcCodecInfo *codec_info = l->data;
