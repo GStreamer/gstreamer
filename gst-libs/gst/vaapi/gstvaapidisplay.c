@@ -1415,3 +1415,54 @@ gst_vaapi_display_set_render_mode(
         return FALSE;
     return TRUE;
 }
+
+/**
+ * gst_vaapi_display_get_rotation:
+ * @display: a #GstVaapiDisplay
+ *
+ * Returns the current VA @display rotation angle. If the VA driver
+ * does not support "rotation" display attribute, then the display is
+ * assumed to be un-rotated.
+ *
+ * Return value: the current #GstVaapiRotation value
+ */
+GstVaapiRotation
+gst_vaapi_display_get_rotation(GstVaapiDisplay *display)
+{
+    gint value;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), GST_VAAPI_ROTATION_0);
+
+    if (!get_attribute(display, VADisplayAttribRotation, &value))
+        value = VA_ROTATION_NONE;
+    return to_GstVaapiRotation(value);
+}
+
+/**
+ * gst_vaapi_display_set_rotation:
+ * @display: a #GstVaapiDisplay
+ * @rotation: the #GstVaapiRotation value to set
+ *
+ * Sets the VA @display rotation angle to the supplied @rotation
+ * value. This function returns %FALSE if the rotation angle could not
+ * be set, e.g. the VA driver does not allow to change the display
+ * rotation angle.
+ *
+ * Return value: %TRUE if VA @display rotation angle could be changed
+ *   to the requested value
+ */
+gboolean
+gst_vaapi_display_set_rotation(
+    GstVaapiDisplay *display,
+    GstVaapiRotation rotation
+)
+{
+    guint value;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    value = from_GstVaapiRotation(rotation);
+    if (!set_attribute(display, VADisplayAttribRotation, value))
+        return FALSE;
+    return TRUE;
+}

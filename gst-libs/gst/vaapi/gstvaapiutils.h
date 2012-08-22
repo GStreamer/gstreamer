@@ -81,4 +81,12 @@ G_GNUC_INTERNAL
 guint
 to_GstVaapiSurfaceStatus(guint va_flags);
 
+G_GNUC_INTERNAL
+guint
+from_GstVaapiRotation(guint value);
+
+G_GNUC_INTERNAL
+guint
+to_GstVaapiRotation(guint value);
+
 #endif /* GST_VAAPI_UTILS_H */

@@ -273,3 +273,31 @@ to_GstVaapiSurfaceStatus(guint va_flags)
 #endif
     return flags;
 }
+
+/* Translate GstVaapiRotation value to VA-API rotation value */
+guint
+from_GstVaapiRotation(guint value)
+{
+    switch (value) {
+    case GST_VAAPI_ROTATION_0:   return VA_ROTATION_NONE;
+    case GST_VAAPI_ROTATION_90:  return VA_ROTATION_90;
+    case GST_VAAPI_ROTATION_180: return VA_ROTATION_180;
+    case GST_VAAPI_ROTATION_270: return VA_ROTATION_270;
+    }
+    GST_ERROR("unsupported GstVaapiRotation value %d", value);
+    return VA_ROTATION_NONE;
+}
+
+/* Translate VA-API rotation value to GstVaapiRotation value */
+guint
+to_GstVaapiRotation(guint value)
+{
+    switch (value) {
+    case VA_ROTATION_NONE: return GST_VAAPI_ROTATION_0;
+    case VA_ROTATION_90:   return GST_VAAPI_ROTATION_90;
+    case VA_ROTATION_180:  return GST_VAAPI_ROTATION_180;
+    case VA_ROTATION_270:  return GST_VAAPI_ROTATION_270;
+    }
+    GST_ERROR("unsupported VA-API rotation value %d", value);
+    return GST_VAAPI_ROTATION_0;
+}

@@ -54,6 +54,15 @@ G_BEGIN_DECLS
  */
 #define GST_VAAPI_TYPE_RENDER_MODE gst_vaapi_render_mode_get_type()
 
+/**
+ * GST_VAAPI_TYPE_ROTATION:
+ *
+ * A type that represents the VA display rotation.
+ *
+ * Return value: the #GType of GstVaapiRotation
+ */
+#define GST_VAAPI_TYPE_ROTATION gst_vaapi_rotation_get_type()
+
 GType
 gst_vaapi_id_get_type(void) G_GNUC_CONST;
 
@@ -65,6 +74,9 @@ gst_vaapi_value_set_id(GValue *value, GstVaapiID id);
 
 GType
 gst_vaapi_render_mode_get_type(void) G_GNUC_CONST;
+
+GType
+gst_vaapi_rotation_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 

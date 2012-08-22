@@ -135,6 +135,21 @@ enum _GstVaapiRenderMode {
     GST_VAAPI_RENDER_MODE_TEXTURE
 };
 
+/**
+ * GstVaapiRotation:
+ * @GST_VAAPI_ROTATION_0: the VA display is not rotated.
+ * @GST_VAAPI_ROTATION_90: the VA display is rotated by 90°, clockwise.
+ * @GST_VAAPI_ROTATION_180: the VA display is rotated by 180°, clockwise.
+ * @GST_VAAPI_ROTATION_270: the VA display is rotated by 270°, clockwise.
+ */
+typedef enum _GstVaapiRotation GstVaapiRotation;
+enum _GstVaapiRotation {
+    GST_VAAPI_ROTATION_0   = 0,
+    GST_VAAPI_ROTATION_90  = 90,
+    GST_VAAPI_ROTATION_180 = 180,
+    GST_VAAPI_ROTATION_270 = 270,
+};
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_TYPES_H */

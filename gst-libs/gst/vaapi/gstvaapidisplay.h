@@ -234,6 +234,15 @@ gst_vaapi_display_set_render_mode(
     GstVaapiRenderMode mode
 );
 
+GstVaapiRotation
+gst_vaapi_display_get_rotation(GstVaapiDisplay *display);
+
+gboolean
+gst_vaapi_display_set_rotation(
+    GstVaapiDisplay *display,
+    GstVaapiRotation rotation
+);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_H */
