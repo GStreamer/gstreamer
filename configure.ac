@@ -117,7 +117,7 @@ dnl check if the compiler supports do while(0) macros
 AG_GST_CHECK_DOWHILE_MACROS
 
 dnl check for documentation tools
-GTK_DOC_CHECK([1.3])
+GTK_DOC_CHECK([1.12])
 AS_PATH_PYTHON([2.1])
 AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
