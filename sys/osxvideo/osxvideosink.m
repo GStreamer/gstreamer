@@ -134,18 +134,17 @@ gst_osx_videosink_check_main_run_loop (GstOSXVideoSink *sink)
      * be awaken by this function. */
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     GstOSXVideoSinkObject * object = (GstOSXVideoSinkObject *) sink->osxvideosinkobject;
-    GTimeVal abstime;
+    gint64 abstime;
 
-    g_mutex_lock(sink->mrl_check_lock);
+    g_mutex_lock (&sink->mrl_check_lock);
     [object performSelectorOnMainThread:
           @selector(checkMainRunLoop)
           withObject:nil waitUntilDone:NO];
     /* Wait 100 ms */
-    g_get_current_time (&abstime);
-    g_time_val_add (&abstime, 100 * 1000);
-    is_running = g_cond_timed_wait(sink->mrl_check_cond,
-        sink->mrl_check_lock, &abstime);
-    g_mutex_unlock(sink->mrl_check_lock);
+    abstime = g_get_monotonic_time () + 100 * 1000;
+    is_running = g_cond_wait_until (&sink->mrl_check_cond,
+        &sink->mrl_check_lock, abstime);
+    g_mutex_unlock (&sink->mrl_check_lock);
 
     [pool release];
   }
@@ -188,10 +187,10 @@ gst_osx_video_sink_run_cocoa_loop (GstOSXVideoSink * sink )
         selector:@selector(nsAppThread) object:nil];
     [sink->ns_app_thread start];
 
-    g_mutex_lock (sink->loop_thread_lock);
+    g_mutex_lock (&sink->loop_thread_lock);
     while (!sink->app_started)
-      g_cond_wait (sink->loop_thread_cond, sink->loop_thread_lock);
-    g_mutex_unlock (sink->loop_thread_lock);
+      g_cond_wait (&sink->loop_thread_cond, &sink->loop_thread_lock);
+    g_mutex_unlock (&sink->loop_thread_lock);
 #else
   /* assume that there is a GMainLoop and iterate the main runloop from there
    */
@@ -505,11 +504,11 @@ gst_osx_video_sink_init (GstOSXVideoSink * sink)
   sink->superview = NULL;
   sink->osxvideosinkobject = [[GstOSXVideoSinkObject alloc] initWithSink:sink];
 #ifdef RUN_NS_APP_THREAD
-  sink->loop_thread_lock = g_mutex_new ();
-  sink->loop_thread_cond = g_cond_new ();
+  g_mutex_init (&sink->loop_thread_lock);
+  g_cond_init (&sink->loop_thread_cond);
 #endif
-  sink->mrl_check_lock = g_mutex_new ();
-  sink->mrl_check_cond = g_cond_new ();
+  g_mutex_init (&sink->mrl_check_lock);
+  g_cond_init (&sink->mrl_check_cond);
   sink->mrl_check_done = FALSE;
   sink->main_run_loop_running = FALSE;
   sink->app_started = FALSE;
@@ -540,11 +539,8 @@ gst_osx_video_sink_finalize (GObject *object)
   if (osxvideosink->osxvideosinkobject)
     [(GstOSXVideoSinkObject*)(osxvideosink->osxvideosinkobject) release];
 
-  if (osxvideosink->mrl_check_lock)
-    g_mutex_free (osxvideosink->mrl_check_lock);
-
-  if (osxvideosink->mrl_check_cond)
-    g_cond_free (osxvideosink->mrl_check_cond);
+  g_mutex_clear (&osxvideosink->mrl_check_lock);
+  g_cond_clear (&osxvideosink->mrl_check_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -917,10 +913,10 @@ gst_osx_video_sink_get_type (void)
   [NSApplication sharedApplication];
   [NSApp finishLaunching];
 
-  g_mutex_lock (sink->loop_thread_lock);
+  g_mutex_lock (&sink->loop_thread_lock);
   sink->app_started = TRUE;
-  g_cond_signal (sink->loop_thread_cond);
-  g_mutex_unlock (sink->loop_thread_lock);
+  g_cond_signal (&sink->loop_thread_cond);
+  g_mutex_unlock (&sink->loop_thread_lock);
 
   /* run the loop */
   run_ns_app_loop ();
@@ -931,9 +927,9 @@ gst_osx_video_sink_get_type (void)
 
 -(void) checkMainRunLoop
 {
-  g_mutex_lock(osxvideosink->mrl_check_lock);
-  g_cond_signal(osxvideosink->mrl_check_cond);
-  g_mutex_unlock(osxvideosink->mrl_check_lock);
+  g_mutex_lock (&osxvideosink->mrl_check_lock);
+  g_cond_signal (&osxvideosink->mrl_check_cond);
+  g_mutex_unlock (&osxvideosink->mrl_check_lock);
 }
 
 @end

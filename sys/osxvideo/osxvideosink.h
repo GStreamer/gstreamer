@@ -85,13 +85,13 @@ struct _GstOSXVideoSink {
   NSView *superview;
   NSThread *ns_app_thread;
 #ifdef RUN_NS_APP_THREAD
-  GMutex *loop_thread_lock;
-  GCond *loop_thread_cond;
+  GMutex loop_thread_lock;
+  GCond loop_thread_cond;
 #else
   guint cocoa_timeout;
 #endif
-  GMutex *mrl_check_lock;
-  GCond *mrl_check_cond;
+  GMutex mrl_check_lock;
+  GCond mrl_check_cond;
   gboolean mrl_check_done;
   gboolean main_run_loop_running;
   gboolean app_started;
