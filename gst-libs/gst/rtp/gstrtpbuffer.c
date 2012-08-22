@@ -443,7 +443,14 @@ wrong_padding:
   }
 dump_packet:
   {
+    gint i;
+
     GST_MEMDUMP ("buffer", data, size);
+
+    for (i = 0; i < G_N_ELEMENTS (rtp->map); ++i) {
+      if (rtp->data[i] != NULL)
+        gst_buffer_unmap (buffer, &rtp->map[i]);
+    }
     return FALSE;
   }
 }
