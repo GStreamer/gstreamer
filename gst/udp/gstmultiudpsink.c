@@ -790,7 +790,8 @@ join_group_failed:
   {
     gst_multiudpsink_stop (GST_BASE_SINK (sink));
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not join multicast group: %s", err->message));
+        ("Could not join multicast group: %s",
+            err ? err->message : "unknown reason"));
     g_clear_error (&err);
     return FALSE;
   }
