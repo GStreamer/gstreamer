@@ -763,7 +763,8 @@ gst_matroska_read_common_parse_toc_tag (GstTocEntry * entry,
 
 static GstFlowReturn
 gst_matroska_read_common_parse_metadata_targets (GstMatroskaReadCommon * common,
-    GstEbmlRead * ebml, GArray * edition_targets, GArray * chapter_targets)
+    GstEbmlRead * ebml, GArray * edition_targets, GArray * chapter_targets,
+    GArray * track_targets)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 id;
@@ -789,6 +790,11 @@ gst_matroska_read_common_parse_metadata_targets (GstMatroskaReadCommon * common,
       case GST_MATROSKA_ID_TARGETEDITIONUID:
         if ((ret = gst_ebml_read_uint (ebml, &id, &uid)) == GST_FLOW_OK)
           g_array_append_val (edition_targets, uid);
+        break;
+
+      case GST_MATROSKA_ID_TARGETTRACKUID:
+        if ((ret = gst_ebml_read_uint (ebml, &id, &uid)) == GST_FLOW_OK)
+          g_array_append_val (track_targets, uid);
         break;
 
       default:
@@ -1873,7 +1879,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
 {
   guint32 id;
   GstFlowReturn ret;
-  GArray *chapter_targets, *edition_targets;
+  GArray *chapter_targets, *edition_targets, *track_targets;
   GstTagList *taglist;
   GList *cur;
 
@@ -1886,6 +1892,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
 
   edition_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
   chapter_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
+  track_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
   taglist = gst_tag_list_new_empty ();
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
@@ -1903,7 +1910,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
       case GST_MATROSKA_ID_TARGETS:
         ret =
             gst_matroska_read_common_parse_metadata_targets (common, ebml,
-            edition_targets, chapter_targets);
+            edition_targets, chapter_targets, track_targets);
         break;
 
       default:
@@ -1915,18 +1922,42 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   DEBUG_ELEMENT_STOP (common, ebml, "Tag", ret);
 
   /* if tag is chapter/edition specific - try to find that entry */
-  if (G_UNLIKELY (chapter_targets->len > 0 || edition_targets->len > 0)) {
-    if (common->toc == NULL)
-      GST_WARNING_OBJECT (common,
-          "Found chapter/edition specific tag, but TOC doesn't present");
-    else {
-      cur = gst_toc_get_entries (common->toc);
-      while (cur != NULL) {
-        gst_matroska_read_common_parse_toc_tag (cur->data, edition_targets,
-            chapter_targets, taglist);
-        cur = cur->next;
+  if (G_UNLIKELY (chapter_targets->len > 0 || edition_targets->len > 0 ||
+          track_targets->len > 0)) {
+    gint i;
+    if (chapter_targets->len > 0 || edition_targets->len > 0) {
+      if (common->toc == NULL)
+        GST_WARNING_OBJECT (common,
+            "Found chapter/edition specific tag, but TOC is not present");
+      else {
+        cur = gst_toc_get_entries (common->toc);
+        while (cur != NULL) {
+          gst_matroska_read_common_parse_toc_tag (cur->data, edition_targets,
+              chapter_targets, taglist);
+          cur = cur->next;
+        }
+        common->toc_updated = TRUE;
       }
-      common->toc_updated = TRUE;
+    }
+    for (i = 0; i < track_targets->len; i++) {
+      gint j;
+      gboolean found = FALSE;
+      guint64 tgt = g_array_index (track_targets, guint64, i);
+
+      for (j = 0; j < common->src->len; j++) {
+        GstMatroskaTrackContext *stream = g_ptr_array_index (common->src, j);
+
+        if (stream->uid == tgt) {
+          gst_tag_list_insert (stream->pending_tags, taglist,
+              GST_TAG_MERGE_REPLACE);
+          found = TRUE;
+        }
+      }
+      if (!found) {
+        GST_WARNING_OBJECT (common,
+            "Found track-specific tag(s), but track %" G_GUINT64_FORMAT
+            " is not known (yet?)", tgt);
+      }
     }
   } else
     gst_tag_list_insert (*p_taglist, taglist, GST_TAG_MERGE_APPEND);
@@ -1934,6 +1965,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   gst_tag_list_unref (taglist);
   g_array_unref (chapter_targets);
   g_array_unref (edition_targets);
+  g_array_unref (track_targets);
 
   return ret;
 }
@@ -2182,7 +2214,7 @@ gst_matroska_read_common_read_track_encoding (GstMatroskaReadCommon * common,
         if (!gst_matroska_read_common_encoding_order_unique (context->encodings,
                 num)) {
           GST_ERROR_OBJECT (common, "ContentEncodingOrder %" G_GUINT64_FORMAT
-              "is not unique for track %d", num, context->num);
+              "is not unique for track %" G_GUINT64_FORMAT, num, context->num);
           ret = GST_FLOW_ERROR;
           break;
         }

@@ -210,7 +210,7 @@
 #define GST_MATROSKA_ID_TARGETTYPEVALUE            0x68CA
 #define GST_MATROSKA_ID_TARGETTYPE                 0x63CA
 #define GST_MATROSKA_ID_TARGETTRACKUID             0x63C5
-#define GST_MATROSKA_ID_TARGETEDITIONUID           0x63C5
+#define GST_MATROSKA_ID_TARGETEDITIONUID           0x63C9
 #define GST_MATROSKA_ID_TARGETCHAPTERUID           0x63C4
 #define GST_MATROSKA_ID_TARGETATTACHMENTUID        0x63C6
 
@@ -491,7 +491,7 @@ struct _GstMatroskaTrackContext {
   gpointer      codec_state;
   gsize         codec_state_size;
   GstMatroskaTrackType type;
-  guint         uid, num;
+  guint64       uid, num;
   GstMatroskaTrackFlags flags;
   guint64       default_duration;
   guint64       pos;

@@ -3030,8 +3030,9 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     if (g_utf8_validate ((gchar *) map.data, map.size, NULL)) {
       goto next;
     }
-    GST_WARNING_OBJECT (element, "subtitle stream %d is not valid UTF-8, this "
-        "is broken according to the matroska specification", stream->num);
+    GST_WARNING_OBJECT (element, "subtitle stream %" G_GUINT64_FORMAT
+        " is not valid UTF-8, this is broken according to the matroska"
+        " specification", stream->num);
     sub_stream->invalid_utf8 = TRUE;
   }
 
