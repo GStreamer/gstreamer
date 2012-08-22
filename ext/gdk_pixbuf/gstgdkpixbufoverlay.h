@@ -46,11 +46,6 @@ struct _GstGdkPixbufOverlay
 {
   GstVideoFilter               videofilter;
 
-  /* negotiated format */
-  GstVideoFormat               format;
-  gint                         width;
-  gint                         height;
-
   /* properties */
   gchar                      * location;
 
@@ -65,11 +60,8 @@ struct _GstGdkPixbufOverlay
 
   gdouble                      alpha;
 
-  /* the loaded image */
+  /* the loaded image, as BGRA/ARGB pixels, with GstVideoMeta */
   GstBuffer                  * pixels;
-  guint                        pixels_width;
-  guint                        pixels_height;
-  guint                        pixels_stride;
 
   GstVideoOverlayComposition * comp;
 

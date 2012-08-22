@@ -10,6 +10,7 @@ plugin_LTLIBRARIES = libgstgdkpixbuf.la
 # gstgdkpixbufsink.h gstgdkpixbufoverlay.h
 
 libgstgdkpixbuf_la_SOURCES = \
+	gstgdkpixbufoverlay.c \
 	gstgdkpixbufplugin.c \
 	gstgdkpixbufdec.c
 libgstgdkpixbuf_la_CFLAGS = \
@@ -26,4 +27,5 @@ libgstgdkpixbuf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstgdkpixbuf_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
-	gstgdkpixbufdec.h
+    gstgdkpixbufdec.h \
+    gstgdkpixbufoverlay.h

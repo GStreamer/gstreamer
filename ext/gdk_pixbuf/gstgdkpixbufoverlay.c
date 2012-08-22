@@ -50,8 +50,9 @@
 #endif
 
 #include <gst/gst.h>
-
 #include "gstgdkpixbufoverlay.h"
+
+#include <gst/video/gstvideometa.h>
 
 GST_DEBUG_CATEGORY_STATIC (gdkpixbufoverlay_debug);
 #define GST_CAT_DEFAULT gdkpixbufoverlay_debug
@@ -65,12 +66,13 @@ static void gst_gdk_pixbuf_overlay_finalize (GObject * object);
 static gboolean gst_gdk_pixbuf_overlay_start (GstBaseTransform * trans);
 static gboolean gst_gdk_pixbuf_overlay_stop (GstBaseTransform * trans);
 static GstFlowReturn
-gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf);
+gst_gdk_pixbuf_overlay_transform_frame_ip (GstVideoFilter * filter,
+    GstVideoFrame * frame);
 static void gst_gdk_pixbuf_overlay_before_transform (GstBaseTransform * trans,
     GstBuffer * outbuf);
-static gboolean
-gst_gdk_pixbuf_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps);
+static gboolean gst_gdk_pixbuf_overlay_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
+    GstVideoInfo * out_info);
 
 enum
 {
@@ -85,54 +87,34 @@ enum
   PROP_ALPHA
 };
 
-#define VIDEO_CAPS \
-    GST_VIDEO_CAPS_BGRx ";" \
-    GST_VIDEO_CAPS_RGB ";" \
-    GST_VIDEO_CAPS_BGR ";" \
-    GST_VIDEO_CAPS_RGBx ";" \
-    GST_VIDEO_CAPS_xRGB ";" \
-    GST_VIDEO_CAPS_xBGR ";" \
-    GST_VIDEO_CAPS_RGBA ";" \
-    GST_VIDEO_CAPS_BGRA ";" \
-    GST_VIDEO_CAPS_ARGB ";" \
-    GST_VIDEO_CAPS_ABGR ";" \
-    GST_VIDEO_CAPS_YUV ("{I420, YV12, AYUV, YUY2, UYVY, v308, v210," \
-        " v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420," \
-        " YUV9, IYU1}")
+#define VIDEO_FORMATS "{ RGBx, RGB, BGR, BGRx, xRGB, xBGR, " \
+    "RGBA, BGRA, ARGB, ABGR, I420, YV12, AYUV, YUY2, UYVY, " \
+    "v308, v210, v216, Y41B, Y42B, Y444, YVYU, NV12, NV21, UYVP, " \
+    "RGB16, BGR16, RGB15, BGR15, UYVP, A420, YUV9, YVU9, " \
+    "IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, " \
+    "GRAY8, GRAY16_BE, GRAY16_LE }"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (VIDEO_FORMATS))
     );
 
-GST_BOILERPLATE (GstGdkPixbufOverlay, gst_gdk_pixbuf_overlay,
-    GstVideoFilter, GST_TYPE_VIDEO_FILTER);
-
-static void
-gst_gdk_pixbuf_overlay_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template (element_class, &sink_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
-
-  gst_element_class_set_static_metadata (element_class,
-      "GdkPixbuf Overlay", "Filter/Effect/Video",
-      "Overlay an image onto a video stream",
-      "Tim-Philipp Müller <tim centricular net>");
-}
+G_DEFINE_TYPE (GstGdkPixbufOverlay, gst_gdk_pixbuf_overlay,
+    GST_TYPE_VIDEO_FILTER);
 
 static void
 gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
 {
+  GstVideoFilterClass *videofilter_class = GST_VIDEO_FILTER_CLASS (klass);
   GstBaseTransformClass *basetrans_class = GST_BASE_TRANSFORM_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_gdk_pixbuf_overlay_set_property;
@@ -141,12 +123,14 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
 
   basetrans_class->start = GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_start);
   basetrans_class->stop = GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_stop);
-  basetrans_class->set_caps =
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_set_caps);
-  basetrans_class->transform_ip =
-      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_transform_ip);
+
   basetrans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_before_transform);
+
+  videofilter_class->set_info =
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_set_info);
+  videofilter_class->transform_frame_ip =
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_overlay_transform_frame_ip);
 
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "location",
@@ -193,13 +177,21 @@ gst_gdk_pixbuf_overlay_class_init (GstGdkPixbufOverlayClass * klass)
           0.0, 1.0, 1.0, GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING
           | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_static_metadata (element_class,
+      "GdkPixbuf Overlay", "Filter/Effect/Video",
+      "Overlay an image onto a video stream",
+      "Tim-Philipp Müller <tim centricular net>");
   GST_DEBUG_CATEGORY_INIT (gdkpixbufoverlay_debug, "gdkpixbufoverlay", 0,
       "debug category for gdkpixbufoverlay element");
 }
 
 static void
-gst_gdk_pixbuf_overlay_init (GstGdkPixbufOverlay * overlay,
-    GstGdkPixbufOverlayClass * overlay_class)
+gst_gdk_pixbuf_overlay_init (GstGdkPixbufOverlay * overlay)
 {
   overlay->offset_x = 0;
   overlay->offset_y = 0;
@@ -311,15 +303,16 @@ gst_gdk_pixbuf_overlay_finalize (GObject * object)
   g_free (overlay->location);
   overlay->location = NULL;
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_gdk_pixbuf_overlay_parent_class)->finalize (object);
 }
 
 static gboolean
 gst_gdk_pixbuf_overlay_load_image (GstGdkPixbufOverlay * overlay, GError ** err)
 {
+  GstVideoMeta *video_meta;
   GdkPixbuf *pixbuf;
   guint8 *pixels, *p;
-  gint width, height, stride, w, h;
+  gint width, height, stride, w, h, plane;
 
   pixbuf = gdk_pixbuf_new_from_file (overlay->location, err);
 
@@ -366,17 +359,18 @@ gst_gdk_pixbuf_overlay_load_image (GstGdkPixbufOverlay * overlay, GError ** err)
     }
   }
 
-  overlay->pixels = gst_buffer_new ();
-  GST_BUFFER_DATA (overlay->pixels) = pixels;
   /* assume we have row padding even for the last row */
-  GST_BUFFER_SIZE (overlay->pixels) = height * stride;
-  /* transfer ownership of pixbuf to buffer */
-  GST_BUFFER_MALLOCDATA (overlay->pixels) = (guint8 *) pixbuf;
-  GST_BUFFER_FREE_FUNC (overlay->pixels) = (GFreeFunc) g_object_unref;
+  /* transfer ownership of pixbuf to the buffer */
+  overlay->pixels = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      pixels, height * stride, 0, height * stride, pixbuf,
+      (GDestroyNotify) g_object_unref);
 
-  overlay->pixels_width = width;
-  overlay->pixels_height = height;
-  overlay->pixels_stride = stride;
+  video_meta = gst_buffer_add_video_meta (overlay->pixels,
+      GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
+      width, height);
+
+  for (plane = 0; plane < video_meta->n_planes; ++plane)
+    video_meta->stride[plane] = stride;
 
   overlay->update_composition = TRUE;
 
@@ -428,19 +422,10 @@ gst_gdk_pixbuf_overlay_stop (GstBaseTransform * trans)
 }
 
 static gboolean
-gst_gdk_pixbuf_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
-    GstCaps * outcaps)
+gst_gdk_pixbuf_overlay_set_info (GstVideoFilter * filter, GstCaps * incaps,
+    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
 {
-  GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (trans);
-  GstVideoFormat video_format;
-  int w, h;
-
-  if (!gst_video_format_parse_caps (incaps, &video_format, &w, &h))
-    return FALSE;
-
-  overlay->format = video_format;
-  overlay->width = w;
-  overlay->height = h;
+  GST_INFO_OBJECT (filter, "caps: %" GST_PTR_FORMAT, incaps);
   return TRUE;
 }
 
@@ -449,6 +434,7 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
 {
   GstVideoOverlayComposition *comp;
   GstVideoOverlayRectangle *rect;
+  GstVideoMeta *overlay_meta;
   gint x, y, width, height;
 
   if (overlay->comp) {
@@ -459,8 +445,10 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
   if (overlay->alpha == 0.0)
     return;
 
-  x = overlay->offset_x + (overlay->relative_x * overlay->pixels_width);
-  y = overlay->offset_y + (overlay->relative_y * overlay->pixels_height);
+  overlay_meta = gst_buffer_get_video_meta (overlay->pixels);
+
+  x = overlay->offset_x + (overlay->relative_x * overlay_meta->width);
+  y = overlay->offset_y + (overlay->relative_y * overlay_meta->height);
 
   /* FIXME: this should work, but seems to crash */
   if (x < 0)
@@ -470,23 +458,24 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
 
   width = overlay->overlay_width;
   if (width == 0)
-    width = overlay->pixels_width;
+    width = overlay_meta->width;
 
   height = overlay->overlay_height;
   if (height == 0)
-    height = overlay->pixels_height;
+    height = overlay_meta->height;
 
   GST_DEBUG_OBJECT (overlay, "overlay image dimensions: %d x %d, alpha=%.2f",
-      overlay->pixels_width, overlay->pixels_height, overlay->alpha);
+      overlay_meta->width, overlay_meta->height, overlay->alpha);
   GST_DEBUG_OBJECT (overlay, "properties: x,y: %d,%d (%g%%,%g%%) - WxH: %dx%d",
       overlay->offset_x, overlay->offset_y,
       overlay->relative_x * 100.0, overlay->relative_y * 100.0,
       overlay->overlay_height, overlay->overlay_width);
   GST_DEBUG_OBJECT (overlay, "overlay rendered: %d x %d @ %d,%d (onto %d x %d)",
-      width, height, x, y, overlay->width, overlay->height);
+      width, height, x, y,
+      GST_VIDEO_INFO_WIDTH (&GST_VIDEO_FILTER (overlay)->in_info),
+      GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_FILTER (overlay)->in_info));
 
   rect = gst_video_overlay_rectangle_new_argb (overlay->pixels,
-      overlay->pixels_width, overlay->pixels_height, overlay->pixels_stride,
       x, y, width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
   if (overlay->alpha != 1.0)
@@ -508,13 +497,14 @@ gst_gdk_pixbuf_overlay_before_transform (GstBaseTransform * trans,
       GST_BUFFER_TIMESTAMP (outbuf));
 
   if (GST_CLOCK_TIME_IS_VALID (stream_time))
-    gst_object_sync_values (G_OBJECT (trans), stream_time);
+    gst_object_sync_values (GST_OBJECT (trans), stream_time);
 }
 
 static GstFlowReturn
-gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
+gst_gdk_pixbuf_overlay_transform_frame_ip (GstVideoFilter * filter,
+    GstVideoFrame * frame)
 {
-  GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (trans);
+  GstGdkPixbufOverlay *overlay = GST_GDK_PIXBUF_OVERLAY (filter);
 
   GST_OBJECT_LOCK (overlay);
 
@@ -526,7 +516,7 @@ gst_gdk_pixbuf_overlay_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   GST_OBJECT_UNLOCK (overlay);
 
   if (overlay->comp != NULL)
-    gst_video_overlay_composition_blend (overlay->comp, buf);
+    gst_video_overlay_composition_blend (overlay->comp, frame);
 
   return GST_FLOW_OK;
 }

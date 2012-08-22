@@ -25,9 +25,9 @@
 #include <gst/gst.h>
 
 #include "gstgdkpixbufdec.h"
+#include "gstgdkpixbufoverlay.h"
 
 #if 0
-#include "gstgdkpixbufoverlay.h"
 #include "gstgdkpixbufsink.h"
 #endif
 
@@ -93,11 +93,9 @@ plugin_init (GstPlugin * plugin)
       gst_gdk_pixbuf_type_find, NULL, GST_CAPS_ANY, NULL);
 #endif
 
-#if 0
   if (!gst_element_register (plugin, "gdkpixbufoverlay", GST_RANK_NONE,
           GST_TYPE_GDK_PIXBUF_OVERLAY))
     return FALSE;
-#endif
 
 #if 0
   if (!gst_element_register (plugin, "gdkpixbufsink", GST_RANK_NONE,
