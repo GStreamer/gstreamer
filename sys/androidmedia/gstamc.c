@@ -2329,11 +2329,12 @@ register_codecs (GstPlugin * plugin)
       gchar *type_name, *element_name;
       guint rank;
 
-      if (is_video && !codec_info->is_encoder)
+      if (is_video && !codec_info->is_encoder) {
         type = gst_amc_video_dec_get_type ();
-      else
+      } else {
+        GST_DEBUG ("Skipping unsupported codec type");
         continue;
-
+      }
 
       g_type_query (type, &type_query);
       memset (&type_info, 0, sizeof (type_info));
@@ -2351,7 +2352,7 @@ register_codecs (GstPlugin * plugin)
       subtype = g_type_register_static (type, type_name, &type_info, 0);
       g_free (type_name);
 
-      g_type_set_qdata (type, gst_amc_codec_info_quark, codec_info);
+      g_type_set_qdata (subtype, gst_amc_codec_info_quark, codec_info);
 
       element_name =
           create_element_name (is_video, codec_info->is_encoder,
