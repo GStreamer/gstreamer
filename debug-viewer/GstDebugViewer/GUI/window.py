@@ -41,8 +41,7 @@ from GstDebugViewer.GUI.filters import (CategoryFilter,
 from GstDebugViewer.GUI.models import (FilteredLogModel,
                                        LazyLogModel,
                                        LineViewLogModel,
-                                       LogModelBase,
-                                       RangeFilteredLogModel)
+                                       LogModelBase)
 
 def action (func):
 
@@ -119,8 +118,8 @@ class LineView (object):
         line_index = path[0]
         line_model = view.get_model ()
         log_model = self.log_view.get_model ()
-        top_index = line_model.line_index_to_top (line_index)
-        log_index = log_model.line_index_from_top (top_index)
+        super_index = line_model.line_index_to_super (line_index)
+        log_index = log_model.line_index_from_super (super_index)
         path = (log_index,)
         self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
         sel = self.log_view.get_selection ()
@@ -131,7 +130,7 @@ class LineView (object):
         log_model = view.get_model ()
         line_index = path[0]
 
-        top_line_index = log_model.line_index_to_top (line_index)
+        super_index = log_model.line_index_to_super (line_index)
         line_model = self.line_view.get_model ()
         if line_model is None:
             return
@@ -143,14 +142,14 @@ class LineView (object):
         else:
             position = 0
         if len (line_model) > 1:
-            other_index = line_model.line_index_to_top (position - 1)
+            other_index = line_model.line_index_to_super (position - 1)
         else:
             other_index = -1
-        if other_index == top_line_index and position != 1:
+        if other_index == super_index and position != 1:
             # Already have the line.
             pass
         else:
-            line_model.insert_line (position, top_line_index)
+            line_model.insert_line (position, super_index)
             self.clear_action.props.sensitive = True
 
     def handle_log_view_selection_changed (self, selection):
@@ -165,7 +164,7 @@ class LineView (object):
             return
 
         path = model.get_path (tree_iter)
-        line_index = model.line_index_to_top (path[0])
+        line_index = model.line_index_to_super (path[0])
 
         if len (line_model) == 0:
             line_model.insert_line (0, line_index)
@@ -409,7 +408,7 @@ class Window (object):
             super_index = None
             self.logger.debug ("no line selected")
         else:
-            super_index = model.line_index_to_top (line_index)
+            super_index = model.line_index_to_super (line_index)
             self.logger.debug ("pushing selected line %i (abs %i)",
                                line_index, super_index)
 
@@ -419,7 +418,7 @@ class Window (object):
         if vis_range is not None:
             start_path, end_path = vis_range
             start_index = start_path[0]
-            self.default_start_index = model.line_index_to_top (start_index)
+            self.default_start_index = model.line_index_to_super (start_index)
 
     def update_model (self, model = None):
 
@@ -445,7 +444,7 @@ class Window (object):
         if selected_index is not None:
 
             try:
-                select_index = model.line_index_from_top (selected_index)
+                select_index = model.line_index_from_super (selected_index)
             except IndexError as exc:
                 self.logger.debug ("abs line index %i filtered out, not reselecting",
                                    selected_index)
@@ -467,7 +466,7 @@ class Window (object):
                     yield i
             for current_index in traverse ():
                 try:
-                    target_index = model.line_index_from_top (current_index)
+                    target_index = model.line_index_from_super (current_index)
                 except IndexError:
                     continue
                 else:
@@ -574,16 +573,16 @@ class Window (object):
             return
 
         if after:
-            first_index = model.line_index_to_top (0)
-            last_index = model.line_index_to_top (filtered_line_index)
+            first_index = model.line_index_to_super (0)
+            last_index = model.line_index_to_super (filtered_line_index)
 
             self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
                               filtered_line_index,
                               last_index,
                               first_index)
         else:
-            first_index = model.line_index_to_top (filtered_line_index)
-            last_index = model.line_index_to_top (len (model) - 1)
+            first_index = model.line_index_to_super (filtered_line_index)
+            last_index = model.line_index_to_super (len (model) - 1)
 
             self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
                               filtered_line_index,

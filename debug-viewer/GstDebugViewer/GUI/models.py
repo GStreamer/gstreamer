@@ -233,41 +233,6 @@ class FilteredLogModelBase (LogModelBase):
 
         raise NotImplementedError ("index conversion not supported")
 
-    def line_index_to_top (self, line_index):
-
-        _log_indices = [line_index]
-
-        super_index = line_index
-        for model in self._iter_hierarchy ():
-            super_index = model.line_index_to_super (super_index)
-            _log_indices.append (super_index)
-
-        _log_trans = " -> ".join ([str (x) for x in _log_indices])
-        self.logger.debug ("translated index to top: %s", _log_trans)
-
-        return super_index
-
-    def line_index_from_top (self, super_index):
-
-        _log_indices = [super_index]
-
-        line_index = super_index
-        for model in reversed (list (self._iter_hierarchy ())):
-            line_index = model.line_index_from_super (line_index)
-            _log_indices.append (line_index)
-
-        _log_trans = " -> ".join ([str (x) for x in _log_indices])
-        self.logger.debug ("translated index from top: %s", _log_trans)
-
-        return line_index
-
-    def _iter_hierarchy (self):
-
-        model = self
-        while hasattr (model, "super_model") and model.super_model:
-            yield model
-            model = model.super_model
-
 class FilteredLogModel (FilteredLogModelBase):
 
     def __init__ (self, super_model):
@@ -276,29 +241,16 @@ class FilteredLogModel (FilteredLogModelBase):
 
         self.logger = logging.getLogger ("filtered-log-model")
 
-        self.range_model = RangeFilteredLogModel (super_model)
-
         self.filters = []
-        self.super_index = []
-        self.from_super_index = {}
         self.reset ()
         self.__active_process = None
         self.__filter_progress = 0.
 
-    def _iter_hierarchy (self):
-
-        yield self
-        yield self.range_model
-
     def reset (self):
 
-        range_model = self.range_model
-        range_model.reset ()
-        self.line_offsets = range_model.line_offsets
-        self.line_levels = range_model.line_levels
-
-        del self.super_index[:]
-        self.from_super_index.clear ()
+        self.line_offsets = self.super_model.line_offsets
+        self.line_levels = self.super_model.line_levels
+        self.super_index = xrange (len (self.line_offsets))
 
         del self.filters[:]
 
@@ -312,23 +264,14 @@ class FilteredLogModel (FilteredLogModelBase):
         new_line_offsets = []
         new_line_levels = []
         new_super_index = []
-        new_from_super_index = {}
         level_id = self.COL_LEVEL
         func = filter.filter_func
-        if len (self.filters) == 1:
-            # This is the first filter that gets applied.
-            def enum ():
-                i = 0
-                for row, offset in self.iter_rows_offset ():
-                    yield (i, row, offset,)
-                    i += 1
-        else:
-            def enum ():
-                i = 0
-                for row, offset in self.iter_rows_offset ():
-                    line_index = self.super_index[i]
-                    yield (line_index, row, offset,)
-                    i += 1
+        def enum ():
+            i = 0
+            for row, offset in self.iter_rows_offset ():
+                line_index = self.super_index[i]
+                yield (line_index, row, offset,)
+                i += 1
         self.logger.debug ("running filter")
         progress = 0.
         progress_full = float (len (self))
@@ -338,7 +281,6 @@ class FilteredLogModel (FilteredLogModelBase):
                 new_line_offsets.append (offset)
                 new_line_levels.append (row[level_id])
                 new_super_index.append (i)
-                new_from_super_index[i] = len (new_super_index) - 1
             y -= 1
             if y == 0:
                 progress += float (YIELD_LIMIT)
@@ -348,7 +290,6 @@ class FilteredLogModel (FilteredLogModelBase):
         self.line_offsets = new_line_offsets
         self.line_levels = new_line_levels
         self.super_index = new_super_index
-        self.from_super_index = new_from_super_index
         self.logger.debug ("filtering finished")
 
         self.__filter_progress = 1.
@@ -395,112 +336,45 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def line_index_from_super (self, super_line_index):
 
-        if len (self.filters) == 0:
-            # Identity.
-            return super_line_index
-
-        try:
-            return self.from_super_index[super_line_index]
-        except KeyError:
-            raise IndexError ("super index %i not handled" % (super_line_index,))
+        return bisect_left (self.super_index, super_line_index)
 
     def line_index_to_super (self, line_index):
 
-        if len (self.filters) == 0:
-            # Identity.
-            return line_index
-
         return self.super_index[line_index]
 
-    def __filtered_indices_in_range (self, start, stop):
+    def set_range (self, super_start, super_stop):
 
-        if start < 0:
-            raise ValueError ("start cannot be negative (got %r)" % (start,))
+        old_super_start = self.line_index_to_super (0)
+        old_super_stop = self.line_index_to_super (len (self.super_index) - 1) + 1
 
-        super_start = bisect_left (self.super_index, start)
-        super_stop = bisect_left (self.super_index, stop)
+        self.logger.debug ("set range (%i, %i), current (%i, %i)",
+                           super_start, super_stop, old_super_start, old_super_stop)
 
-        return super_stop - super_start
-
-    def set_range (self, start_index, stop_index):
-
-        range_model = self.range_model
-        old_start, old_stop = range_model.line_index_range
-        range_model.set_range (start_index, stop_index)
-
-        if isinstance (self.line_offsets, SubRange):
-            # FIXME: Can only take this shortcut when shrinking the range.
-            self.line_offsets = range_model.line_offsets
-            self.line_levels = range_model.line_levels
+        if len (self.filters) == 0:
+            # Identity.
+            self.super_index = xrange (super_start, super_stop)
+            self.line_offsets = SubRange (self.super_model.line_offsets,
+                                          super_start, super_stop)
+            self.line_levels = SubRange (self.super_model.line_levels,
+                                         super_start, super_stop)
             return
 
-        super_start, super_stop = range_model.line_index_range
-
-        super_start_offset = super_start - old_start
-        if super_start_offset < 0:
+        if super_start < old_super_start:
             # TODO:
             raise NotImplementedError ("Only handling further restriction of the range"
-                                       " (start offset = %i)" % (super_start_offset,))
+                                       " (start offset = %i)" % (start_offset,))
 
-        super_end_offset = super_stop - old_stop
-        if super_end_offset > 0:
+        if super_stop > old_super_stop:
             # TODO:
             raise NotImplementedError ("Only handling further restriction of the range"
-                                       " (end offset = %i)" % (super_end_offset,))
+                                       " (end offset = %i)" % (stop_offset,))
 
-        if super_end_offset < 0:
-            if not self.super_index:
-                # Identity; there are no filters.
-                end_offset = len (self.line_offsets) + super_end_offset
-            else:
-                n_filtered = self.__filtered_indices_in_range (super_stop - super_start,
-                                                               old_stop - super_start)
-                end_offset = len (self.line_offsets) - n_filtered
-            stop = len (self.line_offsets) # FIXME?
-            assert end_offset < stop
+        start = self.line_index_from_super (super_start)
+        stop = self.line_index_from_super (super_stop)
 
-            self.__remove_range (end_offset, stop)
-
-        if super_start_offset > 0:
-            if not self.super_index:
-                # Identity; there are no filters.
-                n_filtered = super_start_offset
-                start_offset = n_filtered
-            else:
-                n_filtered = self.__filtered_indices_in_range (0, super_start_offset)
-                start_offset = n_filtered
-
-            if n_filtered > 0:
-                self.__remove_range (0, start_offset)
-
-            from_super = self.from_super_index
-            for i in self.super_index:
-                old_index = from_super[i]
-                del from_super[i]
-                from_super[i - super_start_offset] = old_index - start_offset
-
-            for i in range (len (self.super_index)):
-                self.super_index[i] -= super_start_offset
-
-    def __remove_range (self, start, stop):
-
-        if start < 0:
-            raise ValueError ("start cannot be negative (got %r)" % (start,))
-        if start == stop:
-            return
-        if stop > len (self.line_offsets):
-            raise ValueError ("stop value out of range (got %r)" % (stop,))
-        if start > stop:
-            raise ValueError ("start cannot be greater than stop (got %r, %r)" % (start, stop,))
-
-        self.logger.debug ("removing line range (%i, %i)",
-                           start, stop)
-
-        del self.line_offsets[start:stop]
-        del self.line_levels[start:stop]
-        for super_index in self.super_index[start:stop]:
-            del self.from_super_index[super_index]
-        del self.super_index[start:stop]
+        self.super_index = SubRange (self.super_index, start, stop)
+        self.line_offsets = SubRange (self.line_offsets, start, stop)
+        self.line_levels = SubRange (self.line_levels, start, stop)
 
 class SubRange (object):
 
@@ -510,6 +384,12 @@ class SubRange (object):
 
         if start > stop:
             raise ValueError ("need start <= stop (got %r, %r)" % (start, stop,))
+
+        if type (l) == type (self):
+            # Another SubRange, don't stack:
+            start += l.start
+            stop += l.start
+            l = l.l
 
         self.l = l
         self.start = start
@@ -528,51 +408,6 @@ class SubRange (object):
         l = self.l
         for i in xrange (self.start, self.stop):
             yield l[i]
-
-class RangeFilteredLogModel (FilteredLogModelBase):
-
-    def __init__ (self, super_model):
-
-        FilteredLogModelBase.__init__ (self, super_model)
-
-        self.logger = logging.getLogger ("range-filtered-model")
-
-        self.line_index_range = None
-
-    def set_range (self, start_index, stop_index):
-
-        self.logger.debug ("setting range to start = %i, stop = %i",
-                           start_index, stop_index)
-
-        self.line_index_range = (start_index, stop_index,)
-        self.line_offsets = SubRange (self.super_model.line_offsets,
-                                      start_index, stop_index)
-        self.line_levels = SubRange (self.super_model.line_levels,
-                                     start_index, stop_index)
-
-    def reset (self):
-
-        self.logger.debug ("reset")
-
-        start_index = 0
-        stop_index = len (self.super_model)
-
-        self.set_range (start_index, stop_index,)
-
-    def line_index_to_super (self, line_index):
-
-        start_index = self.line_index_range[0]
-
-        return line_index + start_index
-
-    def line_index_from_super (self, li):
-
-        start, stop = self.line_index_range
-
-        if li < start or li >= stop:
-            raise IndexError ("not in range")
-
-        return li - start
 
 class LineViewLogModel (FilteredLogModelBase):
 
@@ -627,4 +462,3 @@ class LineViewLogModel (FilteredLogModelBase):
 
         path = (line_index,)
         self.row_deleted (path)
-
