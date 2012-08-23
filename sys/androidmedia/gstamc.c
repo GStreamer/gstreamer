@@ -114,6 +114,9 @@ gst_amc_attach_current_thread (void)
 static void
 gst_amc_detach_current_thread (void)
 {
+  /* FIXME: At some point we need to detach threads, otherwise
+   * we leak memory
+   */
   GST_DEBUG ("FIXME: Not detaching thread %p", g_thread_self ());
   /*(*java_vm)->DetachCurrentThread (java_vm); */
 }
