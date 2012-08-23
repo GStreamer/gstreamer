@@ -272,7 +272,7 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags)
   env = gst_amc_attach_current_thread ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.configure,
-      format->object, flags);
+      format->object, NULL, NULL, flags);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -927,7 +927,8 @@ gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
     goto done;
 
   *value =
-      (*env)->CallFloatMethod (env, format->object, media_format.get_float);
+      (*env)->CallFloatMethod (env, format->object, media_format.get_float,
+      key_str);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -959,7 +960,8 @@ gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
   if (!key_str)
     goto done;
 
-  (*env)->CallVoidMethod (env, format->object, media_format.set_float, value);
+  (*env)->CallVoidMethod (env, format->object, media_format.set_float, key_str,
+      value);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -991,7 +993,8 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
     goto done;
 
   *value =
-      (*env)->CallIntMethod (env, format->object, media_format.get_integer);
+      (*env)->CallIntMethod (env, format->object, media_format.get_integer,
+      key_str);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -1023,7 +1026,8 @@ gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
   if (!key_str)
     goto done;
 
-  (*env)->CallVoidMethod (env, format->object, media_format.set_integer, value);
+  (*env)->CallVoidMethod (env, format->object, media_format.set_integer,
+      key_str, value);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -1058,7 +1062,8 @@ gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
     goto done;
 
   v_str =
-      (*env)->CallObjectMethod (env, format->object, media_format.get_string);
+      (*env)->CallObjectMethod (env, format->object, media_format.get_string,
+      key_str);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -1110,7 +1115,8 @@ gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
   if (!v_str)
     goto done;
 
-  (*env)->CallVoidMethod (env, format->object, media_format.set_string, v_str);
+  (*env)->CallVoidMethod (env, format->object, media_format.set_string, key_str,
+      v_str);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -1148,7 +1154,7 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
     goto done;
 
   v = (*env)->CallObjectMethod (env, format->object,
-      media_format.get_byte_buffer);
+      media_format.get_byte_buffer, key_str);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
@@ -1201,7 +1207,8 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
   if (!v)
     goto done;
 
-  (*env)->CallVoidMethod (env, format->object, media_format.set_byte_buffer, v);
+  (*env)->CallVoidMethod (env, format->object, media_format.set_byte_buffer,
+      key_str, v);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
