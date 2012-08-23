@@ -191,30 +191,6 @@ create_failed:
   }
 }
 
-static jstring
-gst_amc_jstring_new (JNIEnv * env, const gchar * chars, jint len)
-{
-  jcharArray array;
-  jstring result;
-
-  array = (*env)->NewCharArray (env, len);
-  if (array == NULL) {
-    GST_ERROR ("Failed to create char array of length %d", len);
-    (*env)->ExceptionClear (env);
-    return NULL;
-  }
-
-  (*env)->SetCharArrayRegion (env, array, 0, len, (const jchar *) chars);
-
-  result =
-      (*env)->NewObject (env, java_string.klass, java_string.constructor,
-      array);
-
-  (*env)->DeleteLocalRef (env, array);
-
-  return result;
-}
-
 GstAmcCodec *
 gst_amc_codec_new (const gchar * name)
 {
@@ -227,7 +203,7 @@ gst_amc_codec_new (const gchar * name)
 
   env = gst_amc_attach_current_thread ();
 
-  name_str = gst_amc_jstring_new (env, name, strlen (name));
+  name_str = (*env)->NewStringUTF (env, name);
   if (name_str == NULL)
     goto error;
 
@@ -790,7 +766,7 @@ gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
 
   env = gst_amc_attach_current_thread ();
 
-  mime_str = gst_amc_jstring_new (env, mime, strlen (mime));
+  mime_str = (*env)->NewStringUTF (env, mime);
   if (mime_str == NULL)
     goto error;
 
@@ -841,7 +817,7 @@ gst_amc_format_new_video (const gchar * mime, gint width, gint height)
 
   env = gst_amc_attach_current_thread ();
 
-  mime_str = gst_amc_jstring_new (env, mime, strlen (mime));
+  mime_str = (*env)->NewStringUTF (env, mime);
   if (mime_str == NULL)
     goto error;
 
@@ -905,7 +881,7 @@ gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
 
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -941,7 +917,7 @@ gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
   *value = 0;
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -974,7 +950,7 @@ gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
 
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -1005,7 +981,7 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
   *value = 0;
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -1038,7 +1014,7 @@ gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
 
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -1072,7 +1048,7 @@ gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
   *value = 0;
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -1121,11 +1097,11 @@ gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
 
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
-  v_str = gst_amc_jstring_new (env, value, strlen (value));
+  v_str = (*env)->NewStringUTF (env, value);
   if (!v_str)
     goto done;
 
@@ -1162,7 +1138,7 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   *value = 0;
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -1210,7 +1186,7 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
 
   env = gst_amc_attach_current_thread ();
 
-  key_str = gst_amc_jstring_new (env, key, strlen (key));
+  key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
 
@@ -1463,6 +1439,9 @@ scan_codecs (void)
 
   GST_DEBUG ("Scanning codecs");
 
+  /* TODO: Cache this in the plugin and also cache
+   * classes and method ids
+   */
   env = gst_amc_attach_current_thread ();
 
   codec_list_class = (*env)->FindClass (env, "android/media/MediaCodecList");
