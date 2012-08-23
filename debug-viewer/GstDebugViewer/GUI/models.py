@@ -286,10 +286,10 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def reset (self):
 
-        del self.line_offsets[:]
-        self.line_offsets += self.super_model.line_offsets
-        del self.line_levels[:]
-        self.line_levels += self.super_model.line_levels
+        range_model = self.super_model
+        self.line_offsets = range_model.line_offsets
+        self.line_levels = range_model.line_levels
+        self.__old_super_model_range = range_model.line_index_range
 
         del self.super_index[:]
         self.from_super_index.clear ()
@@ -419,6 +419,15 @@ class FilteredLogModel (FilteredLogModelBase):
     def super_model_changed_range (self):
 
         range_model = self.super_model
+
+        if isinstance (self.line_offsets, SubRange):
+            # FIXME: Can only take this shortcut when shrinking the range.
+            self.line_offsets = range_model.line_offsets
+            self.line_levels = range_model.line_levels
+            self.__old_super_model_range = range_model.line_index_range
+            assert self.__old_super_model_range is not None
+            return
+
         old_start, old_stop = self.__old_super_model_range
         super_start, super_stop = range_model.line_index_range
 

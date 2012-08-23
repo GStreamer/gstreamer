@@ -269,7 +269,9 @@ class Window (object):
         self.actions.add_group (self.column_manager.action_group)
 
         self.log_file = None
-        self.setup_model (LazyLogModel ())
+        self.log_model = None
+        self.log_range = None
+        self.log_filter = None
 
         self.widget_factory = Common.GUI.WidgetFactory (Main.Paths.data_dir)
         self.widgets = self.widget_factory.make ("main-window.ui", "main_window")
@@ -304,16 +306,12 @@ class Window (object):
         self.attach ()
         self.column_manager.attach (self.log_view)
 
-    def setup_model (self, model, filter = False):
+    def setup_model (self, model):
 
         self.log_model = model
         self.log_range = RangeFilteredLogModel (self.log_model)
-        if filter:
-            self.log_filter = FilteredLogModel (self.log_range)
-            self.log_filter.handle_process_finished = self.handle_log_filter_process_finished
-        else:
-            self.log_filter = None
-
+        self.log_filter = FilteredLogModel (self.log_range)
+        self.log_filter.handle_process_finished = self.handle_log_filter_process_finished
     def get_top_attach_point (self):
 
         return self.widgets.vbox_main
@@ -598,8 +596,7 @@ class Window (object):
         start_index = first_index
         stop_index = last_index + 1
         self.log_range.set_range (start_index, stop_index)
-        if self.log_filter:
-            self.log_filter.super_model_changed_range ()
+        self.log_filter.super_model_changed_range ()
         self.update_model ()
         self.pop_view_state ()
         self.actions.show_hidden_lines.props.sensitive = True
@@ -609,9 +606,10 @@ class Window (object):
 
         self.logger.info ("restoring model filter to show all lines")
         self.push_view_state ()
+        self.log_view.set_model (None)
         self.log_range.reset ()
-        self.log_filter = None
-        self.update_model (self.log_range)
+        self.log_filter.reset ()
+        self.update_model (self.log_filter)
         self.pop_view_state (scroll_to_selection = True)
         self.actions.show_hidden_lines.props.sensitive = False
 
@@ -701,9 +699,6 @@ class Window (object):
         # things down for nothing.
         self.push_view_state ()
         self.log_view.set_model (None)
-        if self.log_filter is None:
-            self.log_filter = FilteredLogModel (self.log_range)
-            self.log_filter.handle_process_finished = self.handle_log_filter_process_finished
         self.log_filter.add_filter (filter, dispatcher = dispatcher)
 
         gobject.timeout_add (250, self.update_filter_progress)
@@ -902,7 +897,7 @@ class Window (object):
 
         self.log_model.set_log (self.log_file)
         self.log_range.reset ()
-        self.log_filter = None
+        self.log_filter.reset ()
 
         self.actions.reload_file.props.sensitive = True
         self.actions.groups["RowActions"].props.sensitive = True
