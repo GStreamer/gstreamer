@@ -218,7 +218,7 @@ noinst_HEADERS = 		\
 	gst_private.h
 
 gstenumtypes.h: $(gst_headers)
-	$(AM_V_GEN)glib-mkenums \
+	$(AM_V_GEN)$(GLIB_MKENUMS) \
 	--fhead "#ifndef __GST_ENUM_TYPES_H__\n#define __GST_ENUM_TYPES_H__\n\n#include <glib-object.h>\n\nG_BEGIN_DECLS\n" \
 	--fprod "\n/* enumerations from \"@filename@\" */\n" \
 	--vhead "GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n"         \
@@ -226,7 +226,7 @@ gstenumtypes.h: $(gst_headers)
 	$^ > gstenumtypes.h
 
 gstenumtypes.c: $(gst_headers)
-	$(AM_V_GEN)glib-mkenums \
+	$(AM_V_GEN)$(GLIB_MKENUMS) \
 	--fhead "#include \"gst_private.h\"\n#include <gst/gst.h>\n#define C_ENUM(v) ((gint) v)\n#define C_FLAGS(v) ((guint) v)\n " \
 	--fprod "\n/* enumerations from \"@filename@\" */" \
 	--vhead "GType\n@enum_name@_get_type (void)\n{\n  static gsize id = 0;\n  static const G@Type@Value values[] = {"     \
