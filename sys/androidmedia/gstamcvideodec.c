@@ -1004,6 +1004,15 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     return FALSE;
   }
 
+  if (self->input_buffers)
+    gst_amc_codec_free_buffers (self->input_buffers, self->n_input_buffers);
+  self->input_buffers =
+      gst_amc_codec_get_input_buffers (self->codec, &self->n_input_buffers);
+  if (!self->input_buffers) {
+    GST_ERROR_OBJECT (self, "Failed to get input buffers");
+    return FALSE;
+  }
+
   self->started = TRUE;
   self->input_state_changed = TRUE;
 
