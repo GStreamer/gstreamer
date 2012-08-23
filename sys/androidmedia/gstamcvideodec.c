@@ -631,13 +631,13 @@ gst_amc_video_dec_loop (GstAmcVideoDec * self)
   GST_VIDEO_DECODER_STREAM_LOCK (self);
 
 retry:
-  if (self->input_state_changed) {
-    idx = INFO_OUTPUT_FORMAT_CHANGED;
-  } else {
-    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    idx = gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, -1);
-    GST_VIDEO_DECODER_STREAM_LOCK (self);
-  }
+  /*if (self->input_state_changed) {
+     idx = INFO_OUTPUT_FORMAT_CHANGED;
+     } else { */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (self);
+  idx = gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, -1);
+  GST_VIDEO_DECODER_STREAM_LOCK (self);
+  /*} */
 
   if (idx < 0) {
     switch (idx) {
