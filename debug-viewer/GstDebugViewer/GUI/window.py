@@ -292,6 +292,13 @@ class Window (object):
         self.view_popup = ui.get_widget ("/ui/context/LogViewContextMenu").get_submenu ()
         Common.GUI.widget_add_popup_menu (self.log_view, self.view_popup)
 
+        # Widgets to set insensitive when the window is considered as
+        # such. This is done during loading/filtering, where we can't set the
+        # whole window insensitive because the progress info bar should be
+        # usable to allow cancellation.
+        self.main_sensitivity = [menubar]
+        self.main_sensitivity.extend (self.widgets.vbox_main.get_children ())
+
         self.line_view = LineView ()
 
         self.attach ()
@@ -543,6 +550,8 @@ class Window (object):
             gobject.source_remove (self.update_progress_id)
             self.update_progress_id = None
 
+        self.set_sensitive (True)
+
     @action
     def handle_close_window_action_activate (self, action):
 
@@ -654,6 +663,11 @@ class Window (object):
 
         self.app.state_section.zoom_level = int (round (scale * 100.))
 
+    def set_sensitive (self, sensitive):
+
+        for widget in self.main_sensitivity:
+            widget.props.sensitive = sensitive
+
     def show_info (self, widget):
 
         self.hide_info ()
@@ -692,6 +706,8 @@ class Window (object):
 
         gobject.timeout_add (250, self.update_filter_progress)
 
+        self.set_sensitive (False)
+
     def update_filter_progress (self):
 
         if self.progress_dialog is None:
@@ -716,6 +732,8 @@ class Window (object):
         self.log_view.set_model (self.log_filter)
         self.pop_view_state ()
 
+        self.set_sensitive (True)
+
     def handle_log_filter_process_finished (self):
 
         self.hide_info ()
@@ -726,6 +744,8 @@ class Window (object):
         self.pop_view_state ()
 
         self.actions.show_hidden_lines.props.sensitive = True
+
+        self.set_sensitive (True)
 
     @action
     def handle_set_base_time_action_activate (self, action):
@@ -853,6 +873,8 @@ class Window (object):
         self.progress_dialog.handle_cancel = self.handle_load_progress_dialog_cancel
         self.update_progress_id = gobject.timeout_add (250, self.update_load_progress)
 
+        self.set_sensitive (False)
+
     def handle_load_progress_dialog_cancel (self):
 
         self.actions.cancel_load.activate ()
@@ -883,6 +905,8 @@ class Window (object):
         self.actions.reload_file.props.sensitive = True
         self.actions.groups["RowActions"].props.sensitive = True
         self.actions.show_hidden_lines.props.sensitive = False
+
+        self.set_sensitive (True)
 
         if len (self.log_model) == 0:
             self.show_error (_("The file does not contain any parsable lines."),
