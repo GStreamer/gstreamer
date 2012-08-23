@@ -28,6 +28,7 @@ import os.path
 from bisect import bisect_right, bisect_left
 import logging
 
+import pango
 import gobject
 import gtk
 
@@ -180,18 +181,24 @@ class ProgressDialog (object):
 
     def __init__ (self, window, title = ""):
 
-        widgets = window.widget_factory.make ("progress-dialog.ui", "progress_dialog")
-        dialog = widgets.progress_dialog
-        dialog.connect ("response", self.__handle_dialog_response)
+        bar = gtk.InfoBar ()
+        bar.props.message_type = gtk.MESSAGE_INFO
+        bar.connect ("response", self.__handle_info_bar_response)
+        bar.add_button (gtk.STOCK_CANCEL, 1)
+        area_box = bar.get_content_area ()
+        box = gtk.HBox (spacing = 8)
 
-        self.__dialog = dialog
-        self.__progress_bar = widgets.progress_bar
-        self.__progress_bar.props.text = title
+        box.pack_start (gtk.Label (title), False, False, 0)
 
-        dialog.set_transient_for (window.gtk_window)
-        dialog.show ()
+        progress = gtk.ProgressBar ()
+        box.pack_start (progress, False, False, 0)
 
-    def __handle_dialog_response (self, dialog, resp):
+        area_box.pack_start (box, False, False, 0)
+
+        self.widget = bar
+        self.__progress_bar = progress
+
+    def __handle_info_bar_response (self, info_bar, response):
 
         self.handle_cancel ()
 
@@ -206,14 +213,6 @@ class ProgressDialog (object):
 
         self.__progress_bar.props.fraction = progress
 
-    def destroy (self):
-
-        if self.__dialog is None:
-            return
-        self.__dialog.destroy ()
-        self.__dialog = None
-        self.__progress_bar = None
-
 class Window (object):
 
     def __init__ (self, app):
@@ -222,6 +221,7 @@ class Window (object):
         self.app = app
 
         self.dispatcher = None
+        self.info_widget = None
         self.progress_dialog = None
         self.update_progress_id = None
 
@@ -536,8 +536,8 @@ class Window (object):
 
         self.set_log_file (None)
 
-        if self.progress_dialog:
-            self.progress_dialog.destroy ()
+        if self.progress_dialog is not None:
+            self.hide_info ()
             self.progress_dialog = None
         if self.update_progress_id is not None:
             gobject.source_remove (self.update_progress_id)
@@ -654,9 +654,28 @@ class Window (object):
 
         self.app.state_section.zoom_level = int (round (scale * 100.))
 
+    def show_info (self, widget):
+
+        self.hide_info ()
+
+        box = self.widgets.vbox_main
+        box.pack_start (widget, False, False, 0)
+        box.reorder_child (widget, 2)
+        widget.show_all ()
+        self.info_widget = widget
+
+    def hide_info (self):
+
+        if self.info_widget is None:
+            return
+
+        self.info_widget.destroy ()
+        self.info_widget = None
+
     def add_model_filter (self, filter):
 
         self.progress_dialog = ProgressDialog (self, _("Filtering"))
+        self.show_info (self.progress_dialog.widget)
         self.progress_dialog.handle_cancel = self.handle_filter_progress_dialog_cancel
         dispatcher = Common.Data.GSourceDispatcher ()
         self.filter_dispatcher = dispatcher
@@ -690,7 +709,7 @@ class Window (object):
 
     def handle_filter_progress_dialog_cancel (self):
 
-        self.progress_dialog.destroy ()
+        self.hide_info ()
         self.progress_dialog = None
 
         self.log_filter.abort_process ()
@@ -699,7 +718,7 @@ class Window (object):
 
     def handle_log_filter_process_finished (self):
 
-        self.progress_dialog.destroy ()
+        self.hide_info ()
         self.progress_dialog = None
 
         # No push_view_state here, did this in add_model_filter.
@@ -811,20 +830,26 @@ class Window (object):
 
     def show_error (self, message1, message2):
 
-        dialog = gtk.MessageDialog (self.gtk_window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR,
-                                    gtk.BUTTONS_OK, message1)
-        # The property for secondary text is new in 2.10, so we use this clunky
-        # method instead.
-        dialog.format_secondary_text (message2)
-        dialog.set_default_response (0)
-        dialog.run ()
-        dialog.destroy ()
+        bar = gtk.InfoBar ()
+        bar.props.message_type = gtk.MESSAGE_ERROR
+        box = bar.get_content_area ()
+
+        attrs = pango.AttrList ()
+        attrs.insert (pango.AttrWeight (pango.WEIGHT_BOLD, 0, len (message1)))
+        label = gtk.Label ()
+        label.props.label = "%s %s" % (message1, message2)
+        label.props.attributes = attrs
+        label.props.selectable = True
+        box.pack_start (label, False, False, 0)
+
+        self.show_info (bar)
 
     def handle_load_started (self):
 
         self.logger.debug ("load has started")
 
         self.progress_dialog = ProgressDialog (self, _("Loading log file"))
+        self.show_info (self.progress_dialog.widget)
         self.progress_dialog.handle_cancel = self.handle_load_progress_dialog_cancel
         self.update_progress_id = gobject.timeout_add (250, self.update_load_progress)
 
@@ -848,7 +873,7 @@ class Window (object):
 
         self.logger.debug ("load has finshed")
 
-        self.progress_dialog.destroy ()
+        self.hide_info ()
         self.progress_dialog = None
 
         self.log_model.set_log (self.log_file)
