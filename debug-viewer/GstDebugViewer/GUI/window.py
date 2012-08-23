@@ -270,7 +270,6 @@ class Window (object):
 
         self.log_file = None
         self.log_model = None
-        self.log_range = None
         self.log_filter = None
 
         self.widget_factory = Common.GUI.WidgetFactory (Main.Paths.data_dir)
@@ -309,8 +308,7 @@ class Window (object):
     def setup_model (self, model):
 
         self.log_model = model
-        self.log_range = RangeFilteredLogModel (self.log_model)
-        self.log_filter = FilteredLogModel (self.log_range)
+        self.log_filter = FilteredLogModel (self.log_model)
         self.log_filter.handle_process_finished = self.handle_log_filter_process_finished
     def get_top_attach_point (self):
 
@@ -595,8 +593,7 @@ class Window (object):
         self.push_view_state ()
         start_index = first_index
         stop_index = last_index + 1
-        self.log_range.set_range (start_index, stop_index)
-        self.log_filter.super_model_changed_range ()
+        self.log_filter.set_range (start_index, stop_index)
         self.update_model ()
         self.pop_view_state ()
         self.actions.show_hidden_lines.props.sensitive = True
@@ -607,7 +604,6 @@ class Window (object):
         self.logger.info ("restoring model filter to show all lines")
         self.push_view_state ()
         self.log_view.set_model (None)
-        self.log_range.reset ()
         self.log_filter.reset ()
         self.update_model (self.log_filter)
         self.pop_view_state (scroll_to_selection = True)
@@ -896,7 +892,6 @@ class Window (object):
         self.progress_dialog = None
 
         self.log_model.set_log (self.log_file)
-        self.log_range.reset ()
         self.log_filter.reset ()
 
         self.actions.reload_file.props.sensitive = True
@@ -910,12 +905,12 @@ class Window (object):
                              _("It is not a GStreamer log file."))
 
         def idle_set ():
-            self.log_view.set_model (self.log_range)
+            self.log_view.set_model (self.log_filter)
 
             self.line_view.handle_attach_log_file (self)
             for feature in self.features:
                 feature.handle_attach_log_file (self, self.log_file)
-            if len (self.log_range):
+            if len (self.log_filter):
                 sel = self.log_view.get_selection ()
                 sel.select_path ((0,))
             return False

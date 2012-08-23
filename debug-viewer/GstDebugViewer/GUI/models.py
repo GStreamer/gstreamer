@@ -276,20 +276,26 @@ class FilteredLogModel (FilteredLogModelBase):
 
         self.logger = logging.getLogger ("filtered-log-model")
 
+        self.range_model = RangeFilteredLogModel (super_model)
+
         self.filters = []
         self.super_index = []
         self.from_super_index = {}
         self.reset ()
         self.__active_process = None
         self.__filter_progress = 0.
-        self.__old_super_model_range = super_model.line_index_range
+
+    def _iter_hierarchy (self):
+
+        yield self
+        yield self.range_model
 
     def reset (self):
 
-        range_model = self.super_model
+        range_model = self.range_model
+        range_model.reset ()
         self.line_offsets = range_model.line_offsets
         self.line_levels = range_model.line_levels
-        self.__old_super_model_range = range_model.line_index_range
 
         del self.super_index[:]
         self.from_super_index.clear ()
@@ -416,19 +422,18 @@ class FilteredLogModel (FilteredLogModelBase):
 
         return super_stop - super_start
 
-    def super_model_changed_range (self):
+    def set_range (self, start_index, stop_index):
 
-        range_model = self.super_model
+        range_model = self.range_model
+        old_start, old_stop = range_model.line_index_range
+        range_model.set_range (start_index, stop_index)
 
         if isinstance (self.line_offsets, SubRange):
             # FIXME: Can only take this shortcut when shrinking the range.
             self.line_offsets = range_model.line_offsets
             self.line_levels = range_model.line_levels
-            self.__old_super_model_range = range_model.line_index_range
-            assert self.__old_super_model_range is not None
             return
 
-        old_start, old_stop = self.__old_super_model_range
         super_start, super_stop = range_model.line_index_range
 
         super_start_offset = super_start - old_start
@@ -476,8 +481,6 @@ class FilteredLogModel (FilteredLogModelBase):
 
             for i in range (len (self.super_index)):
                 self.super_index[i] -= super_start_offset
-
-        self.__old_super_model_range = (super_start, super_stop,)
 
     def __remove_range (self, start, stop):
 
