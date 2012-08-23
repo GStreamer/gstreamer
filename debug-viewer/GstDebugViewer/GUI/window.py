@@ -884,6 +884,10 @@ class Window (object):
         self.actions.groups["RowActions"].props.sensitive = True
         self.actions.show_hidden_lines.props.sensitive = False
 
+        if len (self.log_model) == 0:
+            self.show_error (_("The file does not contain any parsable lines."),
+                             _("It is not a GStreamer log file."))
+
         def idle_set ():
             self.log_view.set_model (self.log_range)
 
