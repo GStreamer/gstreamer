@@ -350,6 +350,10 @@ class Window (object):
 
         self.line_view.attach (self)
 
+        # Do not translate; fallback application name for e.g. gnome-shell if
+        # the desktop file is not installed:
+        self.gtk_window.set_wmclass ("gst-debug-viewer", "GStreamer Debug Viewer")
+
         self.gtk_window.show ()
 
     def detach (self):
