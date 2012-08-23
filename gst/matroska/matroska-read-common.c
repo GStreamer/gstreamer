@@ -60,6 +60,15 @@ GST_DEBUG_CATEGORY (matroskareadcommon_debug);
 #define GST_MATROSKA_TOC_UID_EDITION "edition"
 #define GST_MATROSKA_TOC_UID_EMPTY "empty"
 
+typedef struct
+{
+  GstTagList *result;
+  guint64 target_type_value;
+  gchar *target_type;
+  gboolean audio_only;
+} TargetTypeContext;
+
+
 static gboolean
 gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
     gpointer * data_out, gsize * size_out,
@@ -764,13 +773,18 @@ gst_matroska_read_common_parse_toc_tag (GstTocEntry * entry,
 static GstFlowReturn
 gst_matroska_read_common_parse_metadata_targets (GstMatroskaReadCommon * common,
     GstEbmlRead * ebml, GArray * edition_targets, GArray * chapter_targets,
-    GArray * track_targets)
+    GArray * track_targets, guint64 * target_type_value, gchar ** target_type)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 id;
   guint64 uid;
+  guint64 tmp;
+  gchar *str;
 
   DEBUG_ELEMENT_START (common, ebml, "TagTargets");
+
+  *target_type_value = 50;
+  *target_type = NULL;
 
   if ((ret = gst_ebml_read_master (ebml, &id)) != GST_FLOW_OK) {
     DEBUG_ELEMENT_STOP (common, ebml, "TagTargets", ret);
@@ -795,6 +809,19 @@ gst_matroska_read_common_parse_metadata_targets (GstMatroskaReadCommon * common,
       case GST_MATROSKA_ID_TARGETTRACKUID:
         if ((ret = gst_ebml_read_uint (ebml, &id, &uid)) == GST_FLOW_OK)
           g_array_append_val (track_targets, uid);
+        break;
+
+      case GST_MATROSKA_ID_TARGETTYPEVALUE:
+        if ((ret = gst_ebml_read_uint (ebml, &id, &tmp)) == GST_FLOW_OK)
+          *target_type_value = tmp;
+        break;
+
+      case GST_MATROSKA_ID_TARGETTYPE:
+        if ((ret = gst_ebml_read_ascii (ebml, &id, &str)) == GST_FLOW_OK) {
+          if (*target_type != NULL)
+            g_free (*target_type);
+          *target_type = str;
+        }
         break;
 
       default:
@@ -1777,7 +1804,9 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
     GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
     GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
-    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}
+    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}, {
+    GST_MATROSKA_TAG_ID_TOTAL_PARTS, GST_TAG_TRACK_COUNT}, {
+    GST_MATROSKA_TAG_ID_PART_NUMBER, GST_TAG_TRACK_NUMBER}
   };
   GstFlowReturn ret;
   guint32 id;
@@ -1873,6 +1902,137 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
   return ret;
 }
 
+
+static void
+gst_matroska_read_common_count_streams (GstMatroskaReadCommon * common,
+    gint * a, gint * v, gint * s)
+{
+  gint i;
+  gint video_streams = 0, audio_streams = 0, subtitle_streams = 0;
+
+  for (i = 0; i < common->src->len; i++) {
+    GstMatroskaTrackContext *stream;
+
+    stream = g_ptr_array_index (common->src, i);
+    if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO)
+      video_streams += 1;
+    else if (stream->type == GST_MATROSKA_TRACK_TYPE_AUDIO)
+      audio_streams += 1;
+    else if (stream->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE)
+      subtitle_streams += 1;
+  }
+  *v = video_streams;
+  *a = audio_streams;
+  *v = subtitle_streams;
+}
+
+
+static void
+gst_matroska_read_common_apply_target_type_foreach (const GstTagList * list,
+    const gchar * tag, gpointer user_data)
+{
+  guint vallen;
+  guint i;
+  TargetTypeContext *ctx = (TargetTypeContext *) user_data;
+
+  vallen = gst_tag_list_get_tag_size (list, tag);
+  if (vallen == 0)
+    return;
+
+  for (i = 0; i < vallen; i++) {
+    GValue val = { 0 };
+    const GValue *val_ref;
+
+    val_ref = gst_tag_list_get_value_index (list, tag, i);
+    if (val_ref == NULL)
+      continue;
+    g_value_init (&val, G_VALUE_TYPE (val_ref));
+    g_value_copy (val_ref, &val);
+
+    /* TODO: use the optional ctx->target_type somehow */
+    if (strcmp (tag, GST_TAG_TITLE) == 0) {
+      if (ctx->target_type_value >= 70 && !ctx->audio_only) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_SHOW_NAME, &val);
+        continue;
+      } else if (ctx->target_type_value >= 50) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_ALBUM, &val);
+        continue;
+      }
+    } else if (strcmp (tag, GST_TAG_TITLE_SORTNAME) == 0) {
+      if (ctx->target_type_value >= 70 && !ctx->audio_only) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_SHOW_SORTNAME, &val);
+        continue;
+      } else if (ctx->target_type_value >= 50) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_ALBUM_SORTNAME, &val);
+        continue;
+      }
+    } else if (strcmp (tag, GST_TAG_ARTIST) == 0) {
+      if (ctx->target_type_value >= 50) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_ALBUM_ARTIST, &val);
+        continue;
+      }
+    } else if (strcmp (tag, GST_TAG_ARTIST_SORTNAME) == 0) {
+      if (ctx->target_type_value >= 50) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_ALBUM_ARTIST_SORTNAME, &val);
+        continue;
+      }
+    } else if (strcmp (tag, GST_TAG_TRACK_COUNT) == 0) {
+      if (ctx->target_type_value >= 60) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_ALBUM_VOLUME_COUNT, &val);
+        continue;
+      }
+    } else if (strcmp (tag, GST_TAG_TRACK_NUMBER) == 0) {
+      if (ctx->target_type_value >= 60 && !ctx->audio_only) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_SHOW_SEASON_NUMBER, &val);
+        continue;
+      } else if (ctx->target_type_value >= 50 && !ctx->audio_only) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_SHOW_EPISODE_NUMBER, &val);
+        continue;
+      } else if (ctx->target_type_value >= 50) {
+        gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND,
+            GST_TAG_ALBUM_VOLUME_NUMBER, &val);
+        continue;
+      }
+    }
+    gst_tag_list_add_value (ctx->result, GST_TAG_MERGE_APPEND, tag, &val);
+    g_value_unset (&val);
+  }
+}
+
+
+static GstTagList *
+gst_matroska_read_common_apply_target_type (GstMatroskaReadCommon * common,
+    GstTagList * taglist, guint64 target_type_value, gchar * target_type)
+{
+  TargetTypeContext ctx;
+  gint a = 0;
+  gint v = 0;
+  gint s = 0;
+
+  gst_matroska_read_common_count_streams (common, &a, &v, &s);
+
+  ctx.audio_only = (a > 0 && v == 0 && s == 0);
+  ctx.result = gst_tag_list_new_empty ();
+  ctx.target_type_value = target_type_value;
+  ctx.target_type = target_type;
+
+  gst_tag_list_foreach (taglist,
+      gst_matroska_read_common_apply_target_type_foreach, &ctx);
+
+  gst_tag_list_unref (taglist);
+  return ctx.result;
+}
+
+
 static GstFlowReturn
 gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
     GstEbmlRead * ebml, GstTagList ** p_taglist)
@@ -1882,6 +2042,8 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   GArray *chapter_targets, *edition_targets, *track_targets;
   GstTagList *taglist;
   GList *cur;
+  guint64 target_type_value;
+  gchar *target_type;
 
   DEBUG_ELEMENT_START (common, ebml, "Tag");
 
@@ -1894,6 +2056,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   chapter_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
   track_targets = g_array_new (FALSE, FALSE, sizeof (guint64));
   taglist = gst_tag_list_new_empty ();
+  target_type = NULL;
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     /* read all sub-entries */
@@ -1908,9 +2071,11 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
         break;
 
       case GST_MATROSKA_ID_TARGETS:
-        ret =
-            gst_matroska_read_common_parse_metadata_targets (common, ebml,
-            edition_targets, chapter_targets, track_targets);
+        g_free (target_type);
+        target_type = NULL;
+        ret = gst_matroska_read_common_parse_metadata_targets (common, ebml,
+            edition_targets, chapter_targets, track_targets,
+            &target_type_value, &target_type);
         break;
 
       default:
@@ -1920,6 +2085,10 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   }
 
   DEBUG_ELEMENT_STOP (common, ebml, "Tag", ret);
+
+  taglist = gst_matroska_read_common_apply_target_type (common, taglist,
+      target_type_value, target_type);
+  g_free (target_type);
 
   /* if tag is chapter/edition specific - try to find that entry */
   if (G_UNLIKELY (chapter_targets->len > 0 || edition_targets->len > 0 ||
