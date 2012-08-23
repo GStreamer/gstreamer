@@ -261,33 +261,12 @@ class FilteredLogModelBase (LogModelBase):
 
         return line_index
 
-    def super_model_changed (self):
-
-        pass
-
     def _iter_hierarchy (self):
 
         model = self
         while hasattr (model, "super_model") and model.super_model:
             yield model
             model = model.super_model
-
-class FilteredLogModelIdentity (FilteredLogModelBase):
-
-    def __init__ (self, super_model):
-
-        FilteredLogModelBase.__init__ (self, super_model)
-
-        self.line_offsets = self.super_model.line_offsets
-        self.line_levels = self.super_model.line_levels
-
-    def line_index_from_super (self, super_line_index):
-
-        return super_line_index
-
-    def line_index_to_super (self, line_index):
-
-        return line_index
 
 class FilteredLogModel (FilteredLogModelBase):
 
