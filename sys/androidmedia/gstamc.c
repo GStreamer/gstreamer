@@ -147,13 +147,18 @@ initialize_java_vm (void)
   } else {
     JNIEnv *env;
     JavaVMInitArgs vm_args;
-    JavaVMOption options[1];
+    JavaVMOption options[4];
+
+    options[0].optionString = "-verbose:jni";
+    options[1].optionString = "-verbose:gc";
+    options[2].optionString = "-Xcheck:jni";
+    options[3].optionString = "-Xdebug";
 
     /* FIXME: Do we need any options here? Like exit()
      * handler, or classpaths? */
     vm_args.version = JNI_VERSION_1_6;
     vm_args.options = options;
-    vm_args.nOptions = 0;
+    vm_args.nOptions = 4;
     vm_args.ignoreUnrecognized = JNI_TRUE;
     if (create_java_vm (&java_vm, &env, &vm_args) < 0)
       goto create_failed;
