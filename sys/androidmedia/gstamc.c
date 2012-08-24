@@ -32,6 +32,8 @@
 #include <string.h>
 #include <jni.h>
 
+#include <pthread.h>
+
 GST_DEBUG_CATEGORY (gst_amc_debug);
 #define GST_CAT_DEFAULT gst_amc_debug
 
@@ -92,6 +94,8 @@ static struct
   jmethodID set_byte_buffer;
 } media_format;
 
+static pthread_key_t current_jni_env;
+
 static JNIEnv *
 gst_amc_attach_current_thread (void)
 {
@@ -112,13 +116,23 @@ gst_amc_attach_current_thread (void)
 }
 
 static void
-gst_amc_detach_current_thread (void)
+gst_amc_detach_current_thread (void *env)
 {
-  /* FIXME: At some point we need to detach threads, otherwise
-   * we leak memory
-   */
-  GST_DEBUG ("FIXME: Not detaching thread %p", g_thread_self ());
-  /*(*java_vm)->DetachCurrentThread (java_vm); */
+  GST_DEBUG ("Detaching thread %p", g_thread_self ());
+  (*java_vm)->DetachCurrentThread (java_vm);
+}
+
+static JNIEnv *
+gst_amc_get_jni_env (void)
+{
+  JNIEnv *env;
+
+  if ((env = pthread_getspecific (current_jni_env)) == NULL) {
+    env = gst_amc_attach_current_thread ();
+    pthread_setspecific (current_jni_env, env);
+  }
+
+  return env;
 }
 
 static gboolean
@@ -206,7 +220,7 @@ gst_amc_codec_new (const gchar * name)
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   name_str = (*env)->NewStringUTF (env, name);
   if (name_str == NULL)
@@ -236,7 +250,6 @@ done:
   if (name_str)
     (*env)->DeleteLocalRef (env, name_str);
   name_str = NULL;
-  gst_amc_detach_current_thread ();
 
   return codec;
 
@@ -254,10 +267,9 @@ gst_amc_codec_free (GstAmcCodec * codec)
 
   g_return_if_fail (codec != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
   (*env)->DeleteGlobalRef (env, codec->object);
   g_slice_free (GstAmcCodec, codec);
-  gst_amc_detach_current_thread ();
 }
 
 gboolean
@@ -269,7 +281,7 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags)
   g_return_val_if_fail (codec != NULL, FALSE);
   g_return_val_if_fail (format != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.configure,
       format->object, NULL, NULL, flags);
@@ -281,7 +293,6 @@ gst_amc_codec_configure (GstAmcCodec * codec, GstAmcFormat * format, gint flags)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -295,7 +306,7 @@ gst_amc_codec_get_output_format (GstAmcCodec * codec)
 
   g_return_val_if_fail (codec != NULL, NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   object =
       (*env)->CallObjectMethod (env, codec->object,
@@ -319,7 +330,6 @@ gst_amc_codec_get_output_format (GstAmcCodec * codec)
   (*env)->DeleteLocalRef (env, object);
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -332,7 +342,7 @@ gst_amc_codec_start (GstAmcCodec * codec)
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.start);
   if ((*env)->ExceptionCheck (env)) {
@@ -343,7 +353,6 @@ gst_amc_codec_start (GstAmcCodec * codec)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -356,7 +365,7 @@ gst_amc_codec_stop (GstAmcCodec * codec)
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.stop);
   if ((*env)->ExceptionCheck (env)) {
@@ -367,7 +376,6 @@ gst_amc_codec_stop (GstAmcCodec * codec)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -380,7 +388,7 @@ gst_amc_codec_flush (GstAmcCodec * codec)
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.flush);
   if ((*env)->ExceptionCheck (env)) {
@@ -391,7 +399,6 @@ gst_amc_codec_flush (GstAmcCodec * codec)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -404,7 +411,7 @@ gst_amc_codec_release (GstAmcCodec * codec)
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.release);
   if ((*env)->ExceptionCheck (env)) {
@@ -415,7 +422,6 @@ gst_amc_codec_release (GstAmcCodec * codec)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -428,15 +434,13 @@ gst_amc_codec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
 
   g_return_if_fail (buffers != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   for (i = 0; i < n_buffers; i++) {
     if (buffers[i].object)
       (*env)->DeleteGlobalRef (env, buffers[i].object);
   }
   g_free (buffers);
-
-  gst_amc_detach_current_thread ();
 }
 
 GstAmcBuffer *
@@ -452,7 +456,7 @@ gst_amc_codec_get_output_buffers (GstAmcCodec * codec, gsize * n_buffers)
   g_return_val_if_fail (n_buffers != NULL, NULL);
 
   *n_buffers = 0;
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   output_buffers =
       (*env)->CallObjectMethod (env, codec->object,
@@ -505,8 +509,6 @@ done:
     (*env)->DeleteLocalRef (env, output_buffers);
   output_buffers = NULL;
 
-  gst_amc_detach_current_thread ();
-
   return ret;
 error:
   if (ret)
@@ -529,7 +531,7 @@ gst_amc_codec_get_input_buffers (GstAmcCodec * codec, gsize * n_buffers)
   g_return_val_if_fail (n_buffers != NULL, NULL);
 
   *n_buffers = 0;
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   input_buffers =
       (*env)->CallObjectMethod (env, codec->object,
@@ -582,8 +584,6 @@ done:
     (*env)->DeleteLocalRef (env, input_buffers);
   input_buffers = NULL;
 
-  gst_amc_detach_current_thread ();
-
   return ret;
 error:
   if (ret)
@@ -601,7 +601,7 @@ gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs)
 
   g_return_val_if_fail (codec != NULL, G_MININT);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   ret =
       (*env)->CallIntMethod (env, codec->object,
@@ -614,7 +614,6 @@ gst_amc_codec_dequeue_input_buffer (GstAmcCodec * codec, gint64 timeoutUs)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -671,7 +670,7 @@ gst_amc_codec_dequeue_output_buffer (GstAmcCodec * codec,
 
   g_return_val_if_fail (codec != NULL, G_MININT);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   info_o =
       (*env)->NewObject (env, media_codec_buffer_info.klass,
@@ -702,8 +701,6 @@ done:
     (*env)->DeleteLocalRef (env, info_o);
   info_o = NULL;
 
-  gst_amc_detach_current_thread ();
-
   return ret;
 }
 
@@ -717,7 +714,7 @@ gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
   g_return_val_if_fail (codec != NULL, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.queue_input_buffer,
       index, info->offset, info->size, info->presentation_time_us, info->flags);
@@ -729,7 +726,6 @@ gst_amc_codec_queue_input_buffer (GstAmcCodec * codec, gint index,
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -742,7 +738,7 @@ gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index)
 
   g_return_val_if_fail (codec != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   (*env)->CallVoidMethod (env, codec->object, media_codec.release_output_buffer,
       index, JNI_FALSE);
@@ -754,7 +750,6 @@ gst_amc_codec_release_output_buffer (GstAmcCodec * codec, gint index)
   }
 
 done:
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -769,7 +764,7 @@ gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels)
 
   g_return_val_if_fail (mime != NULL, NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   mime_str = (*env)->NewStringUTF (env, mime);
   if (mime_str == NULL)
@@ -799,7 +794,6 @@ done:
   if (mime_str)
     (*env)->DeleteLocalRef (env, mime_str);
   mime_str = NULL;
-  gst_amc_detach_current_thread ();
 
   return format;
 
@@ -820,7 +814,7 @@ gst_amc_format_new_video (const gchar * mime, gint width, gint height)
 
   g_return_val_if_fail (mime != NULL, NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   mime_str = (*env)->NewStringUTF (env, mime);
   if (mime_str == NULL)
@@ -850,7 +844,6 @@ done:
   if (mime_str)
     (*env)->DeleteLocalRef (env, mime_str);
   mime_str = NULL;
-  gst_amc_detach_current_thread ();
 
   return format;
 
@@ -868,10 +861,9 @@ gst_amc_format_free (GstAmcFormat * format)
 
   g_return_if_fail (format != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
   (*env)->DeleteGlobalRef (env, format->object);
   g_slice_free (GstAmcFormat, format);
-  gst_amc_detach_current_thread ();
 }
 
 gboolean
@@ -884,7 +876,7 @@ gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (key != NULL, FALSE);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -902,7 +894,6 @@ gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
 done:
   if (key_str)
     (*env)->DeleteLocalRef (env, key_str);
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -920,7 +911,7 @@ gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
   g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -939,7 +930,6 @@ gst_amc_format_get_float (GstAmcFormat * format, const gchar * key,
 done:
   if (key_str)
     (*env)->DeleteLocalRef (env, key_str);
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -954,7 +944,7 @@ gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
   g_return_if_fail (format != NULL);
   g_return_if_fail (key != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -971,7 +961,6 @@ gst_amc_format_set_float (GstAmcFormat * format, const gchar * key,
 done:
   if (key_str)
     (*env)->DeleteLocalRef (env, key_str);
-  gst_amc_detach_current_thread ();
 }
 
 gboolean
@@ -986,7 +975,7 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
   g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -1005,7 +994,6 @@ gst_amc_format_get_int (GstAmcFormat * format, const gchar * key, gint * value)
 done:
   if (key_str)
     (*env)->DeleteLocalRef (env, key_str);
-  gst_amc_detach_current_thread ();
 
   return ret;
 
@@ -1020,7 +1008,7 @@ gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
   g_return_if_fail (format != NULL);
   g_return_if_fail (key != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -1037,7 +1025,6 @@ gst_amc_format_set_int (GstAmcFormat * format, const gchar * key, gint value)
 done:
   if (key_str)
     (*env)->DeleteLocalRef (env, key_str);
-  gst_amc_detach_current_thread ();
 }
 
 gboolean
@@ -1055,7 +1042,7 @@ gst_amc_format_get_string (GstAmcFormat * format, const gchar * key,
   g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -1088,7 +1075,6 @@ done:
     (*env)->ReleaseStringUTFChars (env, v_str, v);
   if (v_str)
     (*env)->DeleteLocalRef (env, v_str);
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -1105,7 +1091,7 @@ gst_amc_format_set_string (GstAmcFormat * format, const gchar * key,
   g_return_if_fail (key != NULL);
   g_return_if_fail (value != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -1128,7 +1114,6 @@ done:
     (*env)->DeleteLocalRef (env, key_str);
   if (v_str)
     (*env)->DeleteLocalRef (env, v_str);
-  gst_amc_detach_current_thread ();
 }
 
 gboolean
@@ -1147,7 +1132,7 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
   g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -1178,7 +1163,6 @@ done:
     (*env)->DeleteLocalRef (env, key_str);
   if (v)
     (*env)->DeleteLocalRef (env, v);
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -1195,7 +1179,7 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
   g_return_if_fail (key != NULL);
   g_return_if_fail (value != NULL);
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
@@ -1220,7 +1204,6 @@ done:
     (*env)->DeleteLocalRef (env, key_str);
   if (v)
     (*env)->DeleteLocalRef (env, v);
-  gst_amc_detach_current_thread ();
 }
 
 static gboolean
@@ -1232,7 +1215,7 @@ get_java_classes (void)
 
   GST_DEBUG ("Retrieving Java classes");
 
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   tmp = (*env)->FindClass (env, "java/lang/String");
   if (!tmp) {
@@ -1435,7 +1418,6 @@ done:
   if (tmp)
     (*env)->DeleteLocalRef (env, tmp);
   tmp = NULL;
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -1454,7 +1436,7 @@ scan_codecs (void)
   /* TODO: Cache this in the plugin and also cache
    * classes and method ids
    */
-  env = gst_amc_attach_current_thread ();
+  env = gst_amc_get_jni_env ();
 
   codec_list_class = (*env)->FindClass (env, "android/media/MediaCodecList");
   if (!codec_list_class) {
@@ -1856,8 +1838,6 @@ scan_codecs (void)
 done:
   if (codec_list_class)
     (*env)->DeleteLocalRef (env, codec_list_class);
-
-  gst_amc_detach_current_thread ();
 
   return ret;
 }
@@ -2374,6 +2354,8 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_amc_debug, "amc", 0, "android-media-codec");
+
+  pthread_key_create (&current_jni_env, gst_amc_detach_current_thread);
 
   if (!initialize_java_vm ())
     return FALSE;
