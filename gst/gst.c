@@ -591,6 +591,11 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
   }
 #endif
 
+#ifndef G_ATOMIC_LOCK_FREE
+  GST_CAT_WARNING (GST_CAT_PERFORMANCE, "GLib atomic operations are NOT "
+      "implemented using real hardware atomic operations!");
+#endif
+
   return TRUE;
 }
 
