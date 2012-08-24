@@ -540,7 +540,12 @@ decode_buffer(GstVaapiDecoderJpeg *decoder, GstBuffer *buffer)
             status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             break;
         case GST_JPEG_MARKER_EOI:
-            status = decode_current_picture(decoder);
+            if (decode_current_picture(decoder)) {
+                /* Get out of the loop, trailing data is not needed */
+                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+                goto end;
+            }
+            status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
             break;
         case GST_JPEG_MARKER_DHT:
             status = decode_huffman_table(decoder, buf + seg.offset, seg.size);
@@ -601,6 +606,7 @@ decode_buffer(GstVaapiDecoderJpeg *decoder, GstBuffer *buffer)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
     }
+end:
     return status;
 }
 
