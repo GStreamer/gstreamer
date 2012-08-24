@@ -1,7 +1,3 @@
-glib_enum_prefix = gst_shm
-
-include $(top_srcdir)/common/glib-gen.mak
-
 plugin_LTLIBRARIES = libgstshm.la
 
 libgstshm_la_SOURCES = shmpipe.c shmalloc.c gstshm.c gstshmsrc.c gstshmsink.c
