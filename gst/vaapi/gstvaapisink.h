@@ -59,7 +59,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiSink                    GstVaapiSink;
 typedef struct _GstVaapiSinkClass               GstVaapiSinkClass;
+#if !USE_GLX
 typedef struct _GstVaapiTexture                 GstVaapiTexture;
+#endif
 
 struct _GstVaapiSink {
     /*< private >*/
