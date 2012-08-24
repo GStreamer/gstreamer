@@ -1592,7 +1592,6 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
     encoder, GstVideoCodecFrame * frame, gsize size)
 {
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (G_UNLIKELY (encoder->priv->output_state_changed
