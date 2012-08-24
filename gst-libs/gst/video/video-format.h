@@ -288,7 +288,8 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  * @depth: the depth in bits for each component
  * @pixel_stride: the pixel stride of each component. This is the amount of
  *    bytes to the pixel immediately to the right. When bits < 8, the stride is
- *    expressed in bits.
+ *    expressed in bits. For 24-bit RGB, this would be 3 bytes, for example,
+ *    while it would be 4 bytes for RGBx or ARGB.
  * @n_planes: the number of planes for this format. The number of planes can be
  *    less than the amount of components when multiple components are packed into
  *    one plane.
@@ -347,8 +348,37 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_N_COMPONENTS(info) ((info)->n_components)
 #define GST_VIDEO_FORMAT_INFO_SHIFT(info,c)      ((info)->shift[c])
 #define GST_VIDEO_FORMAT_INFO_DEPTH(info,c)      ((info)->depth[c])
+/**
+ * GST_VIDEO_FORMAT_INFO_PSTRIDE:
+ *
+ * pixel stride for the given component. This is the amount of bytes to the
+ * pixel immediately to the right, so basically bytes from one pixel to the
+ * next. When bits < 8, the stride is expressed in bits.
+ *
+ * Examples: for 24-bit RGB, the pixel stride would be 3 bytes, while it
+ * would be 4 bytes for RGBx or ARGB, and 8 bytes for ARGB64 or AYUV64.
+ * For planar formats such as I420 the pixel stride is usually 1. For
+ * YUY2 it would be 2 bytes.
+ */
 #define GST_VIDEO_FORMAT_INFO_PSTRIDE(info,c)    ((info)->pixel_stride[c])
+/**
+ * GST_VIDEO_FORMAT_INFO_N_PLANES:
+ *
+ * Number of planes. This is the number of planes the pixel layout is
+ * organized in in memory. The number of planes can be less than the
+ * number of components (e.g. Y,U,V,A or R, G, B, A) when multiple
+ * components are packed into one plane.
+ *
+ * Examples: RGB/RGBx/RGBA: 1 plane, 3/3/4 components;
+ * I420: 3 planes, 3 components; NV21/NV12: 2 planes, 3 components.
+ */
 #define GST_VIDEO_FORMAT_INFO_N_PLANES(info)     ((info)->n_planes)
+/**
+ * GST_VIDEO_FORMAT_INFO_PLANE:
+ *
+ * Plane number where the given component can be found. A plane may
+ * contain data for multiple components.
+ */
 #define GST_VIDEO_FORMAT_INFO_PLANE(info,c)      ((info)->plane[c])
 #define GST_VIDEO_FORMAT_INFO_POFFSET(info,c)    ((info)->poffset[c])
 #define GST_VIDEO_FORMAT_INFO_W_SUB(info,c)      ((info)->w_sub[c])
@@ -362,6 +392,14 @@ struct _GstVideoFormatInfo {
 
 #define GST_VIDEO_FORMAT_INFO_DATA(info,planes,comp) \
   (((guint8*)(planes)[(info)->plane[comp]]) + (info)->poffset[comp])
+/**
+ * GST_VIDEO_FORMAT_INFO_STRIDE:
+ *
+ * Row stride in bytes, that is number of bytes from the first pixel component
+ * of a row to the first pixel component in the next row. This might include
+ * some row padding (memory not actually used for anything, to make sure the
+ * beginning of the next row is aligned in a particular way).
+ */
 #define GST_VIDEO_FORMAT_INFO_STRIDE(info,strides,comp) ((strides)[(info)->plane[comp]])
 #define GST_VIDEO_FORMAT_INFO_OFFSET(info,offsets,comp) \
   (((offsets)[(info)->plane[comp]]) + (info)->poffset[comp])
