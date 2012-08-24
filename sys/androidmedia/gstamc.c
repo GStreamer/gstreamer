@@ -1423,19 +1423,94 @@ done:
 }
 
 static gboolean
-scan_codecs (void)
+scan_codecs (GstPlugin * plugin)
 {
   gboolean ret = TRUE;
   JNIEnv *env;
   jclass codec_list_class = NULL;
   jmethodID get_codec_count_id, get_codec_info_at_id;
   jint codec_count, i;
+  const GstStructure *cache_data;
 
   GST_DEBUG ("Scanning codecs");
 
-  /* TODO: Cache this in the plugin and also cache
-   * classes and method ids
-   */
+  if ((cache_data = gst_plugin_get_cache_data (plugin))) {
+    const GValue *arr = gst_structure_get_value (cache_data, "codecs");
+    guint i, n;
+
+    GST_DEBUG ("Getting codecs from cache");
+    n = gst_value_array_get_size (arr);
+    for (i = 0; i < n; i++) {
+      const GValue *cv = gst_value_array_get_value (arr, i);
+      const GstStructure *cs = gst_value_get_structure (cv);
+      const gchar *name;
+      gboolean is_encoder;
+      const GValue *starr;
+      guint j, n2;
+      GstAmcCodecInfo *gst_codec_info;
+
+      gst_codec_info = g_new0 (GstAmcCodecInfo, 1);
+
+      name = gst_structure_get_string (cs, "name");
+      gst_structure_get_boolean (cs, "is-encoder", &is_encoder);
+      gst_codec_info->name = g_strdup (name);
+      gst_codec_info->is_encoder = is_encoder;
+
+      starr = gst_structure_get_value (cs, "supported-types");
+      n2 = gst_value_array_get_size (starr);
+
+      gst_codec_info->n_supported_types = n2;
+      gst_codec_info->supported_types = g_new0 (GstAmcCodecType, n2);
+
+      for (j = 0; j < n2; j++) {
+        const GValue *stv = gst_value_array_get_value (starr, j);
+        const GstStructure *sts = gst_value_get_structure (stv);
+        const gchar *mime;
+        const GValue *cfarr;
+        const GValue *plarr;
+        guint k, n3;
+        GstAmcCodecType *gst_codec_type = &gst_codec_info->supported_types[j];
+
+        mime = gst_structure_get_string (sts, "mime");
+        gst_codec_type->mime = g_strdup (mime);
+
+        cfarr = gst_structure_get_value (sts, "color-formats");
+        n3 = gst_value_array_get_size (cfarr);
+
+        gst_codec_type->n_color_formats = n3;
+        gst_codec_type->color_formats = g_new0 (gint, n3);
+
+        for (k = 0; k < n3; k++) {
+          const GValue *cfv = gst_value_array_get_value (cfarr, k);
+          gint cf = g_value_get_int (cfv);
+
+          gst_codec_type->color_formats[k] = cf;
+        }
+
+        plarr = gst_structure_get_value (sts, "profile-levels");
+        n3 = gst_value_array_get_size (plarr);
+
+        gst_codec_type->n_profile_levels = n3;
+        gst_codec_type->profile_levels =
+            g_malloc0 (sizeof (gst_codec_type->profile_levels[0]) * n3);
+
+        for (k = 0; k < n3; k++) {
+          const GValue *plv = gst_value_array_get_value (plarr, k);
+          const GValue *p, *l;
+
+          p = gst_value_array_get_value (plv, 0);
+          l = gst_value_array_get_value (plv, 1);
+          gst_codec_type->profile_levels[k].profile = g_value_get_int (p);
+          gst_codec_type->profile_levels[k].level = g_value_get_int (l);
+        }
+      }
+
+      codec_infos = g_list_append (codec_infos, gst_codec_info);
+    }
+
+    return TRUE;
+  }
+
   env = gst_amc_get_jni_env ();
 
   codec_list_class = (*env)->FindClass (env, "android/media/MediaCodecList");
@@ -1834,6 +1909,85 @@ scan_codecs (void)
   }
 
   ret = codec_infos != NULL;
+
+  /* If successful we store a cache of the codec information in
+   * the registry. Otherwise we would always load all codecs during
+   * plugin initialization which can take quite some time (because
+   * of hardware) and also loads lots of shared libraries (which
+   * number is limited by 64 in Android).
+   */
+  if (ret) {
+    GstStructure *new_cache_data = gst_structure_empty_new ("gst-amc-cache");
+    GList *l;
+    GValue arr = { 0, };
+
+    g_value_init (&arr, GST_TYPE_ARRAY);
+
+    for (l = codec_infos; l; l = l->next) {
+      GstAmcCodecInfo *gst_codec_info = l->data;
+      GValue cv = { 0, };
+      GstStructure *cs = gst_structure_empty_new ("gst-amc-codec");
+      GValue starr = { 0, };
+      gint i;
+
+      gst_structure_set (cs, "name", G_TYPE_STRING, gst_codec_info->name,
+          "is-encoder", G_TYPE_BOOLEAN, gst_codec_info->is_encoder, NULL);
+
+      g_value_init (&starr, GST_TYPE_ARRAY);
+
+      for (i = 0; i < gst_codec_info->n_supported_types; i++) {
+        GstAmcCodecType *gst_codec_type = &gst_codec_info->supported_types[i];
+        GstStructure *sts = gst_structure_empty_new ("gst-amc-supported-type");
+        GValue tmparr = { 0, };
+        gint j;
+
+        gst_structure_set (sts, "mime", G_TYPE_STRING, gst_codec_type->mime,
+            NULL);
+
+        g_value_init (&tmparr, GST_TYPE_ARRAY);
+        for (j = 0; j < gst_codec_type->n_color_formats; j++) {
+          GValue tmp = { 0, };
+
+          g_value_init (&tmp, G_TYPE_INT);
+          g_value_set_int (&tmp, gst_codec_type->color_formats[j]);
+          gst_value_array_append_value (&tmparr, &tmp);
+          g_value_unset (&tmp);
+        }
+        gst_structure_set_value (sts, "color-formats", &tmparr);
+        g_value_unset (&tmparr);
+
+        g_value_init (&tmparr, GST_TYPE_ARRAY);
+        for (j = 0; j < gst_codec_type->n_profile_levels; j++) {
+          GValue tmparr2 = { 0, };
+          GValue tmp = { 0, };
+
+          g_value_init (&tmparr2, GST_TYPE_ARRAY);
+          g_value_init (&tmp, G_TYPE_INT);
+          g_value_set_int (&tmp, gst_codec_type->profile_levels[j].profile);
+          gst_value_array_append_value (&tmparr2, &tmp);
+          g_value_set_int (&tmp, gst_codec_type->profile_levels[j].level);
+          gst_value_array_append_value (&tmparr2, &tmp);
+          gst_value_array_append_value (&tmparr, &tmparr2);
+          g_value_unset (&tmp);
+          g_value_unset (&tmparr2);
+        }
+        gst_structure_set_value (sts, "profile-levels", &tmparr);
+        g_value_unset (&tmparr);
+      }
+
+      gst_structure_set_value (cs, "supported-types", &starr);
+      g_value_unset (&starr);
+
+      g_value_init (&cv, GST_TYPE_STRUCTURE);
+      gst_value_array_append_value (&arr, &cv);
+      g_value_unset (&cv);
+    }
+
+    gst_structure_set_value (new_cache_data, "codecs", &arr);
+    g_value_unset (&arr);
+
+    gst_plugin_set_cache_data (plugin, new_cache_data);
+  }
 
 done:
   if (codec_list_class)
@@ -2363,7 +2517,7 @@ plugin_init (GstPlugin * plugin)
   gst_plugin_add_dependency_simple (plugin, NULL, "/etc", "media_codecs.xml",
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
-  if (!get_java_classes () || !scan_codecs ())
+  if (!get_java_classes () || !scan_codecs (plugin))
     return FALSE;
 
   gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
