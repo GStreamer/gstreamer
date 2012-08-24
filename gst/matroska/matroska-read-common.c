@@ -1779,7 +1779,7 @@ gst_matroska_read_common_parse_info (GstMatroskaReadCommon * common,
 
 static GstFlowReturn
 gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
-    common, GstEbmlRead * ebml, GstTagList ** p_taglist)
+    common, GstEbmlRead * ebml, GstTagList ** p_taglist, gchar * parent)
 {
   /* FIXME: check if there are more useful mappings */
   static const struct
@@ -1921,10 +1921,33 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     GST_MATROSKA_TAG_ID_LICENSE, GST_TAG_LICENSE}, {    /* The license applied to the content (like Creative Commons variants). */
     GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}
   };
+  static const struct
+  {
+    const gchar *matroska_tagname;
+    const gchar *gstreamer_tagname;
+  }
+  child_tag_conv[] = {
+    {
+    "TITLE/SORT_WITH=", GST_TAG_TITLE_SORTNAME}, {
+    "ARTIST/SORT_WITH=", GST_TAG_ARTIST_SORTNAME}, {
+      /* ALBUM-stuff is handled elsewhere */
+    "COMPOSER/SORT_WITH=", GST_TAG_TITLE_SORTNAME}, {
+    "ORIGINAL/URL=", GST_TAG_LOCATION}, {
+      /* EMAIL, PHONE, FAX all can be mapped to GST_TAG_CONTACT, there is special
+       * code for that later.
+       */
+    "TITLE/URL=", GST_TAG_HOMEPAGE}, {
+    "ARTIST/URL=", GST_TAG_HOMEPAGE}, {
+    "COPYRIGHT/URL=", GST_TAG_COPYRIGHT_URI}, {
+    "LICENSE/URL=", GST_TAG_LICENSE_URI}, {
+    "LICENSE/URL=", GST_TAG_LICENSE_URI}
+  };
   GstFlowReturn ret;
   guint32 id;
   gchar *value = NULL;
   gchar *tag = NULL;
+  gchar *name_with_parent = NULL;
+  GstTagList *child_taglist = NULL;
 
   DEBUG_ELEMENT_START (common, ebml, "SimpleTag");
 
@@ -1932,6 +1955,11 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     DEBUG_ELEMENT_STOP (common, ebml, "SimpleTag", ret);
     return ret;
   }
+
+  if (parent)
+    child_taglist = *p_taglist;
+  else
+    child_taglist = gst_tag_list_new_empty ();
 
   while (ret == GST_FLOW_OK && gst_ebml_read_has_remaining (ebml, 1, TRUE)) {
     /* read all sub-entries */
@@ -1945,6 +1973,11 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
         tag = NULL;
         ret = gst_ebml_read_ascii (ebml, &id, &tag);
         GST_DEBUG_OBJECT (common, "TagName: %s", GST_STR_NULL (tag));
+        g_free (name_with_parent);
+        if (parent != NULL)
+          name_with_parent = g_strdup_printf ("%s/%s", parent, tag);
+        else
+          name_with_parent = g_strdup (tag);
         break;
 
       case GST_MATROSKA_ID_TAGSTRING:
@@ -1954,11 +1987,23 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
         GST_DEBUG_OBJECT (common, "TagString: %s", GST_STR_NULL (value));
         break;
 
+      case GST_MATROSKA_ID_SIMPLETAG:
+        /* Recursive SimpleTag */
+        /* This implementation requires tag name of _this_ tag to be known
+         * in order to read its children. It's not in the spec, just the way
+         * the code is written.
+         */
+        if (name_with_parent != NULL) {
+          ret = gst_matroska_read_common_parse_metadata_id_simple_tag (common,
+              ebml, &child_taglist, name_with_parent);
+          break;
+        }
+        /* fall-through */
+
       default:
         ret = gst_matroska_read_common_parse_skip (common, ebml, "SimpleTag",
             id);
         break;
-        /* fall-through */
 
       case GST_MATROSKA_ID_TAGLANGUAGE:
       case GST_MATROSKA_ID_TAGDEFAULT:
@@ -1970,7 +2015,14 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
 
   DEBUG_ELEMENT_STOP (common, ebml, "SimpleTag", ret);
 
-  if (tag && value) {
+  if (parent && tag && value) {
+    /* Don't bother mapping children tags - parent will do that */
+    gchar *key_val;
+    /* TODO: read LANGUAGE sub-tag, and use "key[lc]=val" form */
+    key_val = g_strdup_printf ("%s=%s", name_with_parent, value);
+    gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
+        GST_TAG_EXTENDED_COMMENT, key_val, NULL);
+  } else if (tag && value) {
     gboolean matched = FALSE;
     guint i;
 
@@ -2017,8 +2069,92 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
     }
   }
 
+  if (!parent) {
+    /* Map children tags. This only supports top-anchored mapping. That is,
+     * we start at toplevel tag (this tag), and see how its combinations
+     * with its children can be mapped. Which means that grandchildren
+     * are also combined here, with _this_ tag taken into consideration.
+     * If grandchildren can be combined only with children, that combination
+     * will not happen.
+     */
+    gint child_tags_n = gst_tag_list_n_tags (child_taglist);
+    if (child_tags_n > 0) {
+      gint i;
+      for (i = 0; i < child_tags_n; i++) {
+        gint j;
+        const gchar *child_name = gst_tag_list_nth_tag_name (child_taglist, i);
+        guint taglen = gst_tag_list_get_tag_size (child_taglist, child_name);
+        for (j = 0; j < taglen; j++) {
+          gchar *val;
+          gboolean matched = FALSE;
+          gchar *val_pre, *val_post;
+          gint k;
+
+          if (!gst_tag_list_get_string_index (child_taglist, child_name,
+                  j, &val))
+            continue;
+          if (!strchr (val, '=')) {
+            g_free (val);
+            continue;
+          }
+          val_post = g_strdup (strchr (val, '=') + 1);
+          val_pre = g_strdup (val);
+          *(strchr (val_pre, '=') + 1) = '\0';
+
+          for (k = 0; !matched && k < G_N_ELEMENTS (child_tag_conv); k++) {
+            const gchar *tagname_gst = child_tag_conv[k].gstreamer_tagname;
+
+            const gchar *tagname_mkv = child_tag_conv[k].matroska_tagname;
+
+            /* TODO: Once "key[lc]=value" form support is implemented,
+             * strip [lc] here. It can't be used in combined tags.
+             * If a tag is not combined, leave [lc] as it is.
+             */
+            if (strcmp (tagname_mkv, val_pre) == 0) {
+              GValue dest = { 0, };
+              GType dest_type = gst_tag_get_type (tagname_gst);
+
+              g_value_init (&dest, dest_type);
+              if (gst_value_deserialize (&dest, val_post)) {
+                gst_tag_list_add_values (*p_taglist, GST_TAG_MERGE_APPEND,
+                    tagname_gst, &dest, NULL);
+              } else {
+                GST_WARNING_OBJECT (common, "Can't transform complex tag '%s' "
+                    "to target type '%s'", val, g_type_name (dest_type));
+              }
+              g_value_unset (&dest);
+              matched = TRUE;
+            }
+          }
+          if (!matched) {
+            gchar *last_slash = strrchr (val_pre, '/');
+            if (last_slash) {
+              last_slash++;
+              if (strcmp (last_slash, "EMAIL=") == 0 ||
+                  strcmp (last_slash, "PHONE=") == 0 ||
+                  strcmp (last_slash, "ADDRESS=") == 0 ||
+                  strcmp (last_slash, "FAX=") == 0) {
+                gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
+                    GST_TAG_CONTACT, val_post, NULL);
+                matched = TRUE;
+              }
+            }
+          }
+          if (!matched)
+            gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
+                GST_TAG_EXTENDED_COMMENT, val, NULL);
+          g_free (val_post);
+          g_free (val_pre);
+          g_free (val);
+        }
+      }
+    }
+    gst_tag_list_unref (child_taglist);
+  }
+
   g_free (tag);
   g_free (value);
+  g_free (name_with_parent);
 
   return ret;
 }
@@ -2188,7 +2324,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
     switch (id) {
       case GST_MATROSKA_ID_SIMPLETAG:
         ret = gst_matroska_read_common_parse_metadata_id_simple_tag (common,
-            ebml, &taglist);
+            ebml, &taglist, NULL);
         break;
 
       case GST_MATROSKA_ID_TARGETS:
