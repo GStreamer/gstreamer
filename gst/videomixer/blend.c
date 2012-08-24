@@ -106,7 +106,7 @@ BLEND_A32_LOOP (bgra, blend);
 BLEND_A32_LOOP (argb, overlay);
 BLEND_A32_LOOP (bgra, overlay);
 
-#if G_BYTE_ORDER == LITTLE_ENDIAN
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 BLEND_A32 (argb, blend, _blend_loop_argb);
 BLEND_A32 (bgra, blend, _blend_loop_bgra);
 BLEND_A32 (argb, overlay, _overlay_loop_argb);
