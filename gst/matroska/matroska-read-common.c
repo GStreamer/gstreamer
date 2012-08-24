@@ -1789,24 +1789,137 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
   }
   tag_conv[] = {
     {
-    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
-    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
-    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
-    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {
-    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {
-    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {
-    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
-    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
-    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {
-    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
-    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
-    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
-    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}, {
-    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
-    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
-    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}, {
+      /* The following list has the _same_ order as the one in Matroska spec. Please, don't mess it up. */
+      /* TODO: Nesting information:
+         ORIGINAL A special tag that is meant to have other tags inside (using nested tags) to describe the original work of art that this item is based on. All tags in this list can be used "under" the ORIGINAL tag like LYRICIST, PERFORMER, etc.
+         SAMPLE A tag that contains other tags to describe a sample used in the targeted item taken from another work of art. All tags in this list can be used "under" the SAMPLE tag like TITLE, ARTIST, DATE_RELEASED, etc.
+         COUNTRY The name of the country (biblio ISO-639-2) that is meant to have other tags inside (using nested tags) to country specific information about the item. All tags in this list can be used "under" the COUNTRY_SPECIFIC tag like LABEL, PUBLISH_RATING, etc.
+       */
+
+      /* Organizational Information */
     GST_MATROSKA_TAG_ID_TOTAL_PARTS, GST_TAG_TRACK_COUNT}, {
-    GST_MATROSKA_TAG_ID_PART_NUMBER, GST_TAG_TRACK_NUMBER}
+    GST_MATROSKA_TAG_ID_PART_NUMBER, GST_TAG_TRACK_NUMBER}, {
+      /* TODO: PART_OFFSET A number to add to PART_NUMBER when the parts at that level don't start at 1. (e.g. if TargetType is TRACK, the track number of the second audio CD) */
+
+      /* Titles */
+    GST_MATROSKA_TAG_ID_SUBTITLE, GST_TAG_TITLE}, {     /* Sub Title of the entity. Since we're concat'ing all title-like entities anyway, might as well add the sub-title. */
+    GST_MATROSKA_TAG_ID_TITLE, GST_TAG_TITLE}, {
+    GST_MATROSKA_TAG_ID_ALBUM, GST_TAG_ALBUM}, {        /* Matroska spec does NOT have this tag! Dunno what it was doing here, probably for compatibility. */
+
+      /* TODO: Nested Information:
+         URL URL corresponding to the tag it's included in.
+         SORT_WITH A child element to indicate what alternative value the parent tag can have to be sorted, for example "Pet Shop Boys" instead of "The Pet Shop Boys". Or "Marley Bob" and "Marley Ziggy" (no comma needed).
+         INSTRUMENTS The instruments that are being used/played, separated by a comma. It should be a child of the following tags: ARTIST, LEAD_PERFORMER or ACCOMPANIMENT.
+         EMAIL Email corresponding to the tag it's included in.
+         ADDRESS The physical address of the entity. The address should include a country code. It can be useful for a recording label.
+         FAX The fax number corresponding to the tag it's included in. It can be useful for a recording label.
+         PHONE The phone number corresponding to the tag it's included in. It can be useful for a recording label.
+       */
+
+      /* Entities */
+    GST_MATROSKA_TAG_ID_ARTIST, GST_TAG_ARTIST}, {
+    GST_MATROSKA_TAG_ID_LEAD_PERFORMER, GST_TAG_PERFORMER}, {
+    GST_MATROSKA_TAG_ID_ACCOMPANIMENT, GST_TAG_PERFORMER}, {    /* Band/orchestra/accompaniment/musician. This is akin to the TPE2 tag in ID3. */
+    GST_MATROSKA_TAG_ID_COMPOSER, GST_TAG_COMPOSER}, {
+      /* ARRANGER The person who arranged the piece, e.g., Ravel. */
+    GST_MATROSKA_TAG_ID_LYRICS, GST_TAG_LYRICS}, {      /* The lyrics corresponding to a song (in case audio synchronization is not known or as a doublon to a subtitle track). Editing this value when subtitles are found should also result in editing the subtitle track for more consistency. */
+      /* LYRICIST The person who wrote the lyrics for a musical item. This is akin to the TEXT tag in ID3. */
+    GST_MATROSKA_TAG_ID_CONDUCTOR, GST_TAG_PERFORMER}, {        /* Conductor/performer refinement. This is akin to the TPE3 tag in ID3. */
+      /* DIRECTOR This is akin to the IART tag in RIFF. */
+    GST_MATROSKA_TAG_ID_AUTHOR, GST_TAG_ARTIST}, {
+      /* ASSISTANT_DIRECTOR The name of the assistant director. */
+      /* DIRECTOR_OF_PHOTOGRAPHY The name of the director of photography, also known as cinematographer. This is akin to the ICNM tag in Extended RIFF. */
+      /* SOUND_ENGINEER The name of the sound engineer or sound recordist. */
+      /* ART_DIRECTOR The person who oversees the artists and craftspeople who build the sets. */
+      /* PRODUCTION_DESIGNER Artist responsible for designing the overall visual appearance of a movie. */
+      /* CHOREGRAPHER The name of the choregrapher */
+      /* COSTUME_DESIGNER The name of the costume designer */
+      /* ACTOR An actor or actress playing a role in this movie. This is the person's real name, not the character's name the person is playing. */
+      /* CHARACTER The name of the character an actor or actress plays in this movie. This should be a sub-tag of an ACTOR tag in order not to cause ambiguities. */
+      /* WRITTEN_BY The author of the story or script (used for movies and TV shows). */
+      /* SCREENPLAY_BY The author of the screenplay or scenario (used for movies and TV shows). */
+      /* EDITED_BY This is akin to the IEDT tag in Extended RIFF. */
+      /* PRODUCER Produced by. This is akin to the IPRO tag in Extended RIFF. */
+      /* COPRODUCER The name of a co-producer. */
+      /* EXECUTIVE_PRODUCER The name of an executive producer. */
+      /* DISTRIBUTED_BY This is akin to the IDST tag in Extended RIFF. */
+      /* MASTERED_BY The engineer who mastered the content for a physical medium or for digital distribution. */
+    GST_MATROSKA_TAG_ID_ENCODED_BY, GST_TAG_ENCODED_BY}, {      /* This is akin to the TENC tag in ID3. */
+      /* MIXED_BY DJ mix by the artist specified */
+      /* REMIXED_BY Interpreted, remixed, or otherwise modified by. This is akin to the TPE4 tag in ID3. */
+      /* PRODUCTION_STUDIO This is akin to the ISTD tag in Extended RIFF. */
+      /* THANKS_TO A very general tag for everyone else that wants to be listed. */
+      /* PUBLISHER This is akin to the TPUB tag in ID3. */
+      /* LABEL The record label or imprint on the disc. */
+      /* Search / Classification */
+    GST_MATROSKA_TAG_ID_GENRE, GST_TAG_GENRE}, {
+      /* MOOD Intended to reflect the mood of the item with a few keywords, e.g. "Romantic", "Sad" or "Uplifting". The format follows that of the TMOO tag in ID3. */
+      /* ORIGINAL_MEDIA_TYPE Describes the original type of the media, such as, "DVD", "CD", "computer image," "drawing," "lithograph," and so forth. This is akin to the TMED tag in ID3. */
+      /* CONTENT_TYPE The type of the item. e.g. Documentary, Feature Film, Cartoon, Music Video, Music, Sound FX, ... */
+      /* SUBJECT Describes the topic of the file, such as "Aerial view of Seattle." */
+    GST_MATROSKA_TAG_ID_DESCRIPTION, GST_TAG_DESCRIPTION}, {    /* A short description of the content, such as "Two birds flying." */
+    GST_MATROSKA_TAG_ID_KEYWORDS, GST_TAG_KEYWORDS}, {  /* Keywords to the item separated by a comma, used for searching. */
+      /* SUMMARY A plot outline or a summary of the story. */
+      /* SYNOPSIS A description of the story line of the item. */
+      /* INITIAL_KEY The initial key that a musical track starts in. The format is identical to ID3. */
+      /* PERIOD Describes the period that the piece is from or about. For example, "Renaissance". */
+      /* LAW_RATING Depending on the country it's the format of the rating of a movie (P, R, X in the USA, an age in other countries or a URI defining a logo). */
+      /* ICRA The ICRA content rating for parental control. (Previously RSACi) */
+
+      /* Temporal Information */
+    GST_MATROSKA_TAG_ID_DATE_RELEASED, GST_TAG_DATE}, { /* The time that the item was originaly released. This is akin to the TDRL tag in ID3. */
+    GST_MATROSKA_TAG_ID_DATE_RECORDED, GST_TAG_DATE}, { /* The time that the recording began. This is akin to the TDRC tag in ID3. */
+    GST_MATROSKA_TAG_ID_DATE_ENCODED, GST_TAG_DATE}, {  /* The time that the encoding of this item was completed began. This is akin to the TDEN tag in ID3. */
+    GST_MATROSKA_TAG_ID_DATE_TAGGED, GST_TAG_DATE}, {   /* The time that the tags were done for this item. This is akin to the TDTG tag in ID3. */
+    GST_MATROSKA_TAG_ID_DATE_DIGITIZED, GST_TAG_DATE}, {        /* The time that the item was tranfered to a digital medium. This is akin to the IDIT tag in RIFF. */
+    GST_MATROSKA_TAG_ID_DATE_WRITTEN, GST_TAG_DATE}, {  /* The time that the writing of the music/script began. */
+    GST_MATROSKA_TAG_ID_DATE_PURCHASED, GST_TAG_DATE}, {        /* Information on when the file was purchased (see also purchase tags). */
+    GST_MATROSKA_TAG_ID_DATE, GST_TAG_DATE}, {  /* Matroska spec does NOT have this tag! Dunno what it was doing here, probably for compatibility. */
+
+      /* Spacial Information */
+    GST_MATROSKA_TAG_ID_RECORDING_LOCATION, GST_TAG_GEO_LOCATION_NAME}, {       /* The location where the item was recorded. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. This code is followed by a comma, then more detailed information such as state/province, another comma, and then city. For example, "US, Texas, Austin". This will allow for easy sorting. It is okay to only store the country, or the country and the state/province. More detailed information can be added after the city through the use of additional commas. In cases where the province/state is unknown, but you want to store the city, simply leave a space between the two commas. For example, "US, , Austin". */
+      /* COMPOSITION_LOCATION Location that the item was originaly designed/written. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. This code is followed by a comma, then more detailed information such as state/province, another comma, and then city. For example, "US, Texas, Austin". This will allow for easy sorting. It is okay to only store the country, or the country and the state/province. More detailed information can be added after the city through the use of additional commas. In cases where the province/state is unknown, but you want to store the city, simply leave a space between the two commas. For example, "US, , Austin". */
+      /* COMPOSER_NATIONALITY Nationality of the main composer of the item, mostly for classical music. The countries corresponding to the string, same 2 octets as in Internet domains, or possibly ISO-3166. */
+
+      /* Personal */
+    GST_MATROSKA_TAG_ID_COMMENT, GST_TAG_COMMENT}, {    /* Any comment related to the content. */
+    GST_MATROSKA_TAG_ID_COMMENTS, GST_TAG_COMMENT}, {   /* Matroska spec does NOT have this tag! Dunno what it was doing here, probably for compatibility. */
+      /* PLAY_COUNTER The number of time the item has been played. */
+      /* TODO: RATING A numeric value defining how much a person likes the song/movie. The number is between 0 and 5 with decimal values possible (e.g. 2.7), 5(.0) being the highest possible rating. Other rating systems with different ranges will have to be scaled. */
+
+      /* Technical Information */
+    GST_MATROSKA_TAG_ID_ENCODER, GST_TAG_ENCODER}, {
+      /* ENCODER_SETTINGS A list of the settings used for encoding this item. No specific format. */
+    GST_MATROSKA_TAG_ID_BPS, GST_TAG_BITRATE}, {
+    GST_MATROSKA_TAG_ID_BITSPS, GST_TAG_BITRATE}, {     /* Matroska spec does NOT have this tag! Dunno what it was doing here, probably for compatibility. */
+      /* WONTFIX (already handled in another way): FPS The average frames per second of the specified item. This is typically the average number of Blocks per second. In the event that lacing is used, each laced chunk is to be counted as a seperate frame. */
+    GST_MATROSKA_TAG_ID_BPM, GST_TAG_BEATS_PER_MINUTE}, {
+      /* MEASURE In music, a measure is a unit of time in Western music like "4/4". It represents a regular grouping of beats, a meter, as indicated in musical notation by the time signature.. The majority of the contemporary rock and pop music you hear on the radio these days is written in the 4/4 time signature. */
+      /* TUNING It is saved as a frequency in hertz to allow near-perfect tuning of instruments to the same tone as the musical piece (e.g. "441.34" in Hertz). The default value is 440.0 Hz. */
+      /* TODO: REPLAYGAIN_GAIN The gain to apply to reach 89dB SPL on playback. This is based on the Replay Gain standard. Note that ReplayGain information can be found at all TargetType levels (track, album, etc). */
+      /* TODO: REPLAYGAIN_PEAK The maximum absolute peak value of the item. This is based on the Replay Gain standard. */
+
+      /* Identifiers */
+    GST_MATROSKA_TAG_ID_ISRC, GST_TAG_ISRC}, {
+      /* MCDI This is a binary dump of the TOC of the CDROM that this item was taken from. This holds the same information as the MCDI in ID3. */
+      /* ISBN International Standard Book Number */
+      /* BARCODE EAN-13 (European Article Numbering) or UPC-A (Universal Product Code) bar code identifier */
+      /* CATALOG_NUMBER A label-specific string used to identify the release (TIC 01 for example). */
+      /* LABEL_CODE A 4-digit or 5-digit number to identify the record label, typically printed as (LC) xxxx or (LC) 0xxxx on CDs medias or covers (only the number is stored). */
+      /* LCCN Library of Congress Control Number */
+
+      /* Commercial */
+      /* PURCHASE_ITEM URL to purchase this file. This is akin to the WPAY tag in ID3. */
+      /* PURCHASE_INFO Information on where to purchase this album. This is akin to the WCOM tag in ID3. */
+      /* PURCHASE_OWNER Information on the person who purchased the file. This is akin to the TOWN tag in ID3. */
+      /* PURCHASE_PRICE The amount paid for entity. There should only be a numeric value in here. Only numbers, no letters or symbols other than ".". For instance, you would store "15.59" instead of "$15.59USD". */
+      /* PURCHASE_CURRENCY The currency type used to pay for the entity. Use ISO-4217 for the 3 letter currency code. */
+
+      /* Legal */
+    GST_MATROSKA_TAG_ID_COPYRIGHT, GST_TAG_COPYRIGHT}, {
+    GST_MATROSKA_TAG_ID_PRODUCTION_COPYRIGHT, GST_TAG_COPYRIGHT}, {     /* The copyright information as per the production copyright holder. This is akin to the TPRO tag in ID3. */
+    GST_MATROSKA_TAG_ID_LICENSE, GST_TAG_LICENSE}, {    /* The license applied to the content (like Creative Commons variants). */
+    GST_MATROSKA_TAG_ID_TERMS_OF_USE, GST_TAG_LICENSE}
   };
   GstFlowReturn ret;
   guint32 id;
@@ -1858,9 +1971,10 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
   DEBUG_ELEMENT_STOP (common, ebml, "SimpleTag", ret);
 
   if (tag && value) {
+    gboolean matched = FALSE;
     guint i;
 
-    for (i = 0; i < G_N_ELEMENTS (tag_conv); i++) {
+    for (i = 0; !matched && i < G_N_ELEMENTS (tag_conv); i++) {
       const gchar *tagname_gst = tag_conv[i].gstreamer_tagname;
 
       const gchar *tagname_mkv = tag_conv[i].matroska_tagname;
@@ -1891,8 +2005,15 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
               g_type_name (dest_type));
         }
         g_value_unset (&dest);
-        break;
+        matched = TRUE;
       }
+    }
+    if (!matched) {
+      gchar *key_val;
+      /* TODO: read LANGUAGE sub-tag, and use "key[lc]=val" form */
+      key_val = g_strdup_printf ("%s=%s", tag, value);
+      gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
+          GST_TAG_EXTENDED_COMMENT, key_val, NULL);
     }
   }
 
