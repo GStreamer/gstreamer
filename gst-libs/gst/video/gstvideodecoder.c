@@ -905,12 +905,13 @@ gst_video_decoder_handle_eos (GstVideoDecoder * dec)
     /* Forward mode, if unpacketized, give the child class
      * a final chance to flush out packets */
     if (!priv->packetized) {
-      if (priv->current_frame == NULL)
-        priv->current_frame = gst_video_decoder_new_frame (dec);
+      while (ret == GST_FLOW_OK && gst_adapter_available (priv->input_adapter)) {
+        if (priv->current_frame == NULL)
+          priv->current_frame = gst_video_decoder_new_frame (dec);
 
-      while (ret == GST_FLOW_OK && gst_adapter_available (priv->input_adapter))
         ret = decoder_class->parse (dec, priv->current_frame,
             priv->input_adapter, TRUE);
+      }
     }
   } else {
     /* Reverse playback mode */
@@ -1651,6 +1652,11 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
       goto beach;
 
     do {
+      /* current frame may have been parsed and handled,
+       * so we need to set up a new one when asking subclass to parse */
+      if (priv->current_frame == NULL)
+        priv->current_frame = gst_video_decoder_new_frame (decoder);
+
       ret = klass->parse (decoder, priv->current_frame,
           priv->input_adapter, at_eos);
     } while (ret == GST_FLOW_OK && gst_adapter_available (priv->input_adapter));
