@@ -223,6 +223,7 @@ gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
 static void
 gst_vaapisink_destroy(GstVaapiSink *sink)
 {
+    gst_buffer_replace(&sink->video_buffer, NULL);
     g_clear_object(&sink->texture);
     g_clear_object(&sink->display);
 
@@ -468,6 +469,7 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
+    gst_buffer_replace(&sink->video_buffer, NULL);
     g_clear_object(&sink->window);
     g_clear_object(&sink->display);
 
@@ -772,7 +774,12 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         success = FALSE;
         break;
     }
-    return success ? GST_FLOW_OK : GST_FLOW_UNEXPECTED;
+    if (!success)
+        return GST_FLOW_UNEXPECTED;
+
+    /* Retain VA surface until the next one is displayed */
+    gst_buffer_replace(&sink->video_buffer, buffer);
+    return GST_FLOW_OK;
 }
 
 static gboolean
@@ -938,6 +945,7 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->window_width   = 0;
     sink->window_height  = 0;
     sink->texture        = NULL;
+    sink->video_buffer   = NULL;
     sink->video_width    = 0;
     sink->video_height   = 0;
     sink->video_par_n    = 1;
