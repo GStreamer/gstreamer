@@ -504,7 +504,7 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoSequenceHdr * const seq_hdr = &priv->seq_hdr;
 
-    if (!gst_mpeg_video_parse_sequence_header(seq_hdr, buf, buf_size, 0)) {
+    if (!gst_mpeg_video_parse_sequence_header(seq_hdr, buf, buf_size, 4)) {
         GST_ERROR("failed to parse sequence header");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
@@ -532,7 +532,7 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     GstVaapiProfile profile;
     guint width, height;
 
-    if (!gst_mpeg_video_parse_sequence_extension(seq_ext, buf, buf_size, 0)) {
+    if (!gst_mpeg_video_parse_sequence_extension(seq_ext, buf, buf_size, 4)) {
         GST_ERROR("failed to parse sequence-extension");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
@@ -600,7 +600,7 @@ decode_quant_matrix_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_si
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstMpegVideoQuantMatrixExt * const quant_matrix_ext = &priv->quant_matrix_ext;
 
-    if (!gst_mpeg_video_parse_quant_matrix_extension(quant_matrix_ext, buf, buf_size, 0)) {
+    if (!gst_mpeg_video_parse_quant_matrix_extension(quant_matrix_ext, buf, buf_size, 4)) {
         GST_ERROR("failed to parse quant-matrix-extension");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
@@ -616,7 +616,7 @@ decode_gop(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     GstMpegVideoGop gop;
     GstClockTime pts;
 
-    if (!gst_mpeg_video_parse_gop(&gop, buf, buf_size, 0)) {
+    if (!gst_mpeg_video_parse_gop(&gop, buf, buf_size, 4)) {
         GST_ERROR("failed to parse GOP");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
@@ -676,7 +676,7 @@ decode_picture(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         return status;
     }
 
-    if (!gst_mpeg_video_parse_picture_header(pic_hdr, buf, buf_size, 0)) {
+    if (!gst_mpeg_video_parse_picture_header(pic_hdr, buf, buf_size, 4)) {
         GST_ERROR("failed to parse picture header");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
@@ -713,7 +713,7 @@ decode_picture_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     GstMpegVideoPictureExt * const pic_ext = &priv->pic_ext;
     GstVaapiPicture * const picture = priv->current_picture;
 
-    if (!gst_mpeg_video_parse_picture_extension(pic_ext, buf, buf_size, 0)) {
+    if (!gst_mpeg_video_parse_picture_extension(pic_ext, buf, buf_size, 4)) {
         GST_ERROR("failed to parse picture-extension");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
@@ -887,6 +887,7 @@ decode_slice(
 
     /* Parse slice */
     gst_bit_reader_init(&br, buf, buf_size);
+    SKIP(&br, 32); /* slice_start_code */
     if (priv->height > 2800)
         READ_UINT8(&br, slice_vertical_position_extension, 3);
     if (priv->has_seq_scalable_ext) {
@@ -977,7 +978,7 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         ofs = scan_for_start_code(priv->adapter, 4, size - 4, NULL);
         if (ofs < 0)
             break;
-        gst_adapter_flush(priv->adapter, 4);
+        buffer = gst_adapter_take_buffer(priv->adapter, ofs);
         size -= ofs;
 
         if (ofs == 4) {
@@ -989,7 +990,6 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
             break;
         }
 
-        buffer   = gst_adapter_take_buffer(priv->adapter, ofs - 4);
         buf      = GST_BUFFER_DATA(buffer);
         buf_size = GST_BUFFER_SIZE(buffer);
 
@@ -1004,7 +1004,7 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
             status = decode_sequence(decoder, buf, buf_size);
             break;
         case GST_MPEG_VIDEO_PACKET_EXTENSION: {
-            const guchar id = buf[0] >> 4;
+            const guchar id = buf[4] >> 4;
             switch (id) {
             case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE:
                 status = decode_sequence_ext(decoder, buf, buf_size);
