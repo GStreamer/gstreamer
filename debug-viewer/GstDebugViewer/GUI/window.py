@@ -230,7 +230,7 @@ class Window (object):
         self.actions = Common.GUI.Actions ()
 
         group = gtk.ActionGroup ("MenuActions")
-        group.add_actions ([("FileMenuAction", None, _("_File")),
+        group.add_actions ([("AppMenuAction", None, _("_Application")),
                             ("ViewMenuAction", None, _("_View")),
                             ("ViewColumnsMenuAction", None, _("_Columns")),
                             ("HelpMenuAction", None, _("_Help")),
@@ -244,7 +244,7 @@ class Window (object):
                             ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
                             ("cancel-load", gtk.STOCK_CANCEL, None,),
                             ("clear-line-view", gtk.STOCK_CLEAR, None),
-                            ("show-about", gtk.STOCK_ABOUT, None),
+                            ("show-about", None, _("About GStreamer Debug Viewer",)),
                             ("enlarge-text", gtk.STOCK_ZOOM_IN, _("Enlarge Text"), "<Ctrl>plus"),
                             ("shrink-text", gtk.STOCK_ZOOM_OUT, _("Shrink Text"), "<Ctrl>minus"),
                             ("reset-text", gtk.STOCK_ZOOM_100, _("Normal Text Size"), "<Ctrl>0")])

@@ -1,14 +1,14 @@
 <!-- -*- mode: xml; -*- -->
 <ui>
   <menubar>
-    <menu name="FileMenu" action="FileMenuAction">
-      <menuitem name="FileNewWindow" action="new-window"/>
-      <menuitem name="FileOpen" action="open-file"/>
-      <menuitem name="FileReload" action="reload-file"/>
+    <menu name="AppMenu" action="AppMenuAction">
+      <menuitem name="AppNewWindow" action="new-window"/>
+      <menuitem name="WindowOpen" action="open-file"/>
+      <menuitem name="WindowReload" action="reload-file"/>
       <separator/>
-      <placeholder name="FileMenuAdditions"/>
+      <menuitem name="ShowAbout" action="show-about"/>
       <separator/>
-      <menuitem name="FileCloseWindow" action="close-window"/>
+      <menuitem name="WindowClose" action="close-window"/>
     </menu>
     <menu name="ViewMenu" action="ViewMenuAction">
       <menu name="ViewColumnsMenu" action="ViewColumnsMenuAction">
@@ -38,10 +38,6 @@
       <menuitem name="ZoomIn" action="enlarge-text"/>
       <menuitem name="ZoomOut" action="shrink-text"/>
       <menuitem name="Zoom100" action="reset-text"/>
-    </menu>
-    <menu name="HelpMenu" action="HelpMenuAction">
-      <placeholder name="HelpMenuAdditions"/>
-      <menuitem name="HelpInfo" action="show-about"/>
     </menu>
   </menubar>
   <menubar name="context">
