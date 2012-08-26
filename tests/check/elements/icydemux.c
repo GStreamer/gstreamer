@@ -72,6 +72,27 @@ typefind_succeed (GstTypeFind * tf, gpointer private)
   }
 }
 
+static gboolean
+test_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_LOG_OBJECT (pad, "%s event: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
+
+  /* a sink would post tag events as messages, so do the same here,
+   * esp. since we're polling on the bus waiting for TAG messages.. */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+    GstTagList *taglist;
+
+    gst_event_parse_tag (event, &taglist);
+
+    gst_bus_post (bus, gst_message_new_tag (GST_OBJECT (pad),
+            gst_tag_list_copy (taglist)));
+  }
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
 static void
 icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
 {
@@ -86,6 +107,7 @@ icydemux_found_pad (GstElement * src, GstPad * pad, gpointer data)
   srcpad = gst_element_get_static_pad (icydemux, "src");
   fail_if (srcpad == NULL, "Failed to get srcpad from icydemux");
   gst_pad_set_chain_function (sinkpad, gst_check_chain_func);
+  gst_pad_set_event_function (sinkpad, test_event_func);
 
   GST_DEBUG ("checking srcpad %p refcount", srcpad);
   /* 1 from element, 1 from signal, 1 from us */
