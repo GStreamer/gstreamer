@@ -2358,7 +2358,7 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
   if (self->mode != GST_DEINTERLACE_MODE_DISABLED) {
     srccaps = gst_caps_make_writable (srccaps);
-    gst_caps_set_simple (srccaps, "interlace-method", G_TYPE_STRING,
+    gst_caps_set_simple (srccaps, "interlace-mode", G_TYPE_STRING,
         "progressive", NULL);
   }
 

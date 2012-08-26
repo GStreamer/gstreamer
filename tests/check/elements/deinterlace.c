@@ -249,7 +249,12 @@ deinterlace_check_passthrough (gint mode, const gchar * infiltercaps)
   fail_unless (gst_element_set_state (pipeline, GST_STATE_PLAYING) !=
       GST_STATE_CHANGE_FAILURE);
 
-  msg = gst_bus_poll (GST_ELEMENT_BUS (pipeline), GST_MESSAGE_EOS, -1);
+  msg = gst_bus_poll (GST_ELEMENT_BUS (pipeline),
+      GST_MESSAGE_ERROR | GST_MESSAGE_EOS, -1);
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+    GST_ERROR ("ERROR: %" GST_PTR_FORMAT, msg);
+    fail ("Unexpected error message");
+  }
   gst_message_unref (msg);
 
   /* queue should be empty */
@@ -283,11 +288,11 @@ deinterlace_set_caps_and_check (GstCaps * input, gboolean must_deinterlace)
 
     othercaps = gst_caps_make_writable (othercaps);
     s = gst_caps_get_structure (othercaps, 0);
-    gst_structure_remove_field (s, "interlaced");
+    gst_structure_remove_field (s, "interlace-mode");
 
     input = gst_caps_make_writable (input);
     s = gst_caps_get_structure (input, 0);
-    gst_structure_remove_field (s, "interlaced");
+    gst_structure_remove_field (s, "interlace-mode");
 
     fail_unless (gst_caps_is_equal (input, othercaps));
   }
