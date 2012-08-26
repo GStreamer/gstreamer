@@ -36,7 +36,7 @@
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
- * gst-launch-0.11 \
+ * gst-launch-1.0 \
  *   videotestsrc pattern=1 ! \
  *   video/x-raw,format=AYUV,framerate=\(fraction\)10/1,width=100,height=100 ! \
  *   videobox border-alpha=0 top=-70 bottom=-70 right=-220 ! \
@@ -52,21 +52,21 @@
  * video test source behind and the checker pattern under it. Note that the
  * framerate of the output video is 10 frames per second.
  * |[
- * gst-launch-0.11 videotestsrc pattern=1 ! \
+ * gst-launch-1.0 videotestsrc pattern=1 ! \
  *   video/x-raw, framerate=\(fraction\)10/1, width=100, height=100 ! \
  *   videomixer name=mix ! videoconvert ! ximagesink \
  *   videotestsrc !  \
  *   video/x-raw, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to demostrate bgra mixing. (This does not demonstrate alpha blending). 
  * |[
- * gst-launch-0.11 videotestsrc pattern=1 ! \
+ * gst-launch-1.0 videotestsrc pattern=1 ! \
  *   video/x-raw,format =I420, framerate=\(fraction\)10/1, width=100, height=100 ! \
  *   videomixer name=mix ! videoconvert ! ximagesink \
  *   videotestsrc ! \
  *   video/x-raw,format=I420, framerate=\(fraction\)5/1, width=320, height=240 ! mix.
  * ]| A pipeline to test I420
  * |[
- * gst-launch-0.11 videomixer name=mixer sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50 ! \
+ * gst-launch-1.0 videomixer name=mixer sink_1::alpha=0.5 sink_1::xpos=50 sink_1::ypos=50 ! \
  *   videoconvert ! ximagesink \
  *   videotestsrc pattern=snow timestamp-offset=3000000000 ! \
  *   "video/x-raw,format=AYUV,width=640,height=480,framerate=(fraction)30/1" ! \
