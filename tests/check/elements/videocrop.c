@@ -258,7 +258,7 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
   /* the exact values we check for come from videotestsrc */
   static const guint yuv_values[] = { 81, 90, 240, 255 };
   static const guint rgb_values[] = { 0xff, 0, 0, 255 };
-  static const guint gray_values[] = { 63, 63, 63, 255 };
+  static const guint gray_values[] = { 0x51 };
   const guint *values;
   guint i;
   const GstVideoFormatInfo *finfo;
