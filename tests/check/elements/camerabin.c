@@ -1519,9 +1519,21 @@ GST_START_TEST (test_image_location_switching)
   g_idle_add (image_location_switch_do_capture, filenames);
   g_main_loop_run (main_loop);
 
-  msg = wait_for_element_message (camera, "image-done", GST_CLOCK_TIME_NONE);
-  fail_unless (msg != NULL);
-  gst_message_unref (msg);
+  while (1) {
+    const gchar *filename;
+
+    msg = wait_for_element_message (camera, "image-done", GST_CLOCK_TIME_NONE);
+    fail_unless (msg != NULL);
+
+    filename =
+        gst_structure_get_string (gst_message_get_structure (msg), "filename");
+    if (strcmp (filename,
+            filenames[LOCATION_SWITCHING_FILENAMES_COUNT - 1]) == 0) {
+      gst_message_unref (msg);
+      break;
+    }
+    gst_message_unref (msg);
+  }
 
   gst_element_set_state (GST_ELEMENT (camera), GST_STATE_NULL);
 
