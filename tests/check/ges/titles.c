@@ -57,7 +57,7 @@ GST_START_TEST (test_title_source_properties)
 
   ges_init ();
 
-  track = ges_track_new (GES_TRACK_TYPE_AUDIO, GST_CAPS_ANY);
+  track = ges_track_video_raw_new ();
   fail_unless (track != NULL);
 
   object = (GESTimelineObject *)
@@ -96,14 +96,6 @@ GST_START_TEST (test_title_source_properties)
   assert_equals_uint64 (GES_TRACK_OBJECT_INPOINT (trackobject), 120);
 
   /* And let's also check that it propagated correctly to GNonLin */
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, TRUE);
-
-  /* Test mute support */
-  g_object_set (object, "mute", TRUE, NULL);
-  gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
-      510, 0, FALSE);
-  g_object_set (object, "mute", FALSE, NULL);
   gnl_object_check (ges_track_object_get_gnlobject (trackobject), 420, 510, 120,
       510, 0, TRUE);
 
