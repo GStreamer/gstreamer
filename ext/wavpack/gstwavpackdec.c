@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=test.wv ! wavpackparse ! wavpackdec ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 filesrc location=test.wv ! wavpackparse ! wavpackdec ! audioconvert ! audioresample ! autoaudiosink
  * ]| This pipeline decodes the Wavpack file test.wv into raw audio buffers and
  * tries to play it back using an automatically found audio sink.
  * </refsect2>

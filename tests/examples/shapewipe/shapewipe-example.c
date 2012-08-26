@@ -83,7 +83,7 @@ main (gint argc, gchar ** argv)
 
   pipeline_string =
       g_strdup_printf
-      ("videotestsrc ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! shapewipe name=shape border=%f ! videomixer name=mixer ! ffmpegcolorspace ! autovideosink     filesrc location=%s ! typefind ! decodebin2 ! ffmpegcolorspace ! videoscale ! queue ! shape.mask_sink    videotestsrc pattern=snow ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! queue ! mixer.",
+      ("videotestsrc ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! shapewipe name=shape border=%f ! videomixer name=mixer ! videoconvert ! autovideosink     filesrc location=%s ! typefind ! decodebin2 ! videoconvert ! videoscale ! queue ! shape.mask_sink    videotestsrc pattern=snow ! video/x-raw-yuv,format=(fourcc)AYUV,width=640,height=480 ! queue ! mixer.",
       border, argv[1]);
 
   pipeline = gst_parse_launch (pipeline_string, NULL);

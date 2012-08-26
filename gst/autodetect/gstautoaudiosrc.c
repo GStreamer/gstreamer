@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m autoaudiosrc ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 -v -m autoaudiosrc ! audioconvert ! audioresample ! autoaudiosink
  * ]|
  * </refsect2>
  */

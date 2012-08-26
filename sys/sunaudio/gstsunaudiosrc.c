@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch sunaudiosrc ! wavenc ! filesink location=audio.wav
+ * gst-launch-1.0 sunaudiosrc ! wavenc ! filesink location=audio.wav
  * ]|
  * </refsect2>
  */

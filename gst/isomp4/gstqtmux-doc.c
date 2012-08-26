@@ -98,7 +98,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch gst-launch v4l2src num-buffers=50 ! queue ! x264enc ! mp4mux ! filesink location=video.mp4
+ * gst-launch-1.0 gst-launch-1.0 v4l2src num-buffers=50 ! queue ! x264enc ! mp4mux ! filesink location=video.mp4
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into H.264
  * and muxes it into an mp4 file.
@@ -162,7 +162,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch v4l2src num-buffers=50 ! queue ! ffenc_h263 ! 3gppmux ! filesink location=video.3gp
+ * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! ffenc_h263 ! 3gppmux ! filesink location=video.3gp
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into H.263
  * and muxes it into an 3gp file.
@@ -226,7 +226,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
+ * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into JPEG-2000
  * and muxes it into an mj2 file.
@@ -290,7 +290,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
+ * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
  * ]|
  * Records a video stream captured from a v4l2 device, encodes it into JPEG-2000
  * and muxes it into an mj2 file.

@@ -36,7 +36,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -t filesrc location=file.mpc ! apedemux ! fakesink
+ * gst-launch-1.0 -t filesrc location=file.mpc ! apedemux ! fakesink
  * ]| This pipeline should read any available APE tag information and output it.
  * The contents of the file inside the APE tag regions should be detected, and
  * the appropriate mime type set on buffers produced from apedemux.

@@ -32,10 +32,10 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ...
+ * gst-launch-1.0 splitfilesrc location="/path/to/part-*.mpg" ! decodebin ! ...
  * ]| Plays the different parts as if they were one single MPEG file.
  * |[
- * gst-launch playbin uri="splitfile://path/to/foo.avi.*"
+ * gst-launch-1.0 playbin uri="splitfile://path/to/foo.avi.*"
  * ]| Plays the different parts as if they were one single AVI file.
  * </refsect2>
  *

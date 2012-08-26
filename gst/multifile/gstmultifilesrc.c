@@ -33,7 +33,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch multifilesrc location="img.%04d.png" index=0 caps="image/png,framerate=\(fraction\)12/1" ! \
+ * gst-launch-1.0 multifilesrc location="img.%04d.png" index=0 caps="image/png,framerate=\(fraction\)12/1" ! \
  *     pngdec ! videoconvert ! videorate ! theoraenc ! oggmux ! \
  *     filesink location="images.ogg"
  * ]| This pipeline creates a video file "images.ogg" by joining multiple PNG

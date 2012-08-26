@@ -34,7 +34,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! optv ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! optv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of optv on a test stream.
  * </refsect2>
  */

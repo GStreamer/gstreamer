@@ -50,7 +50,7 @@ AOFFSET=0
 VELEM="v4l2src"
 #VELEM="videotestsrc is-live=1"
 VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
-VSOURCE="$VELEM ! queue ! videorate ! ffmpegcolorspace ! $VCAPS"
+VSOURCE="$VELEM ! queue ! videorate ! videoconvert ! $VCAPS"
 VENC="x264enc tune=zerolatency byte-stream=true bitrate=300 ! rtph264pay"
 
 VRTPSINK="udpsink port=5000 host=$DEST ts-offset=$VOFFSET name=vrtpsink"
@@ -67,7 +67,7 @@ ARTPSINK="udpsink port=5002 host=$DEST ts-offset=$AOFFSET name=artpsink"
 ARTCPSINK="udpsink port=5003 host=$DEST sync=false async=false name=artcpsink"
 ARTCPSRC="udpsrc port=5007 name=artpsrc"
 
-gst-launch -v gstrtpbin name=rtpbin \
+gst-launch-1.0 -v gstrtpbin name=rtpbin \
     $VSOURCE ! $VENC ! rtpbin.send_rtp_sink_0                                             \
         rtpbin.send_rtp_src_0 ! $VRTPSINK                                                 \
         rtpbin.send_rtcp_src_0 ! $VRTCPSINK                                               \

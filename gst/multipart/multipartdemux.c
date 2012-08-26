@@ -40,7 +40,7 @@
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
- * gst-launch filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! ffmpegcolorspace ! ximagesink
+ * gst-launch-1.0 filesrc location=/tmp/test.multipart ! multipartdemux ! jpegdec ! videoconvert ! ximagesink
  * ]| a simple pipeline to demux a multipart file muxed with #GstMultipartMux
  * containing JPEG frames.
  * </refsect2>

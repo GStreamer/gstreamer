@@ -39,7 +39,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! dicetv ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! dicetv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of dicetv on a test stream.
  * </refsect2>
  */

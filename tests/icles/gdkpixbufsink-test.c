@@ -80,7 +80,7 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
   if (!g_str_has_prefix (sname, "video/x-raw-"))
     goto not_video;
 
-  csp = create_element ("ffmpegcolorspace");
+  csp = create_element ("videoconvert");
   scale = create_element ("videoscale");
   filter = create_element ("capsfilter");
   info->sink = create_element ("gdkpixbufsink");
@@ -90,11 +90,11 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
 
   sinkpad = gst_element_get_static_pad (csp, "sink");
   if (GST_PAD_LINK_FAILED (gst_pad_link (new_pad, sinkpad)))
-    g_error ("Can't link new decoded pad to ffmpegcolorspace's sink pad");
+    g_error ("Can't link new decoded pad to videoconvert's sink pad");
   gst_object_unref (sinkpad);
 
   if (!gst_element_link (csp, scale))
-    g_error ("Can't link ffmpegcolorspace to videoscale");
+    g_error ("Can't link videoconvert to videoscale");
   if (!gst_element_link (scale, filter))
     g_error ("Can't link videoscale to capsfilter");
   if (!gst_element_link (filter, info->sink))

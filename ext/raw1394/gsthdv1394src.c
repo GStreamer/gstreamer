@@ -24,10 +24,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch hdv1394src ! queue ! decodebin name=d ! queue ! xvimagesink d. ! queue ! alsasink
+ * gst-launch-1.0 hdv1394src ! queue ! decodebin name=d ! queue ! xvimagesink d. ! queue ! alsasink
  * ]| captures from the firewire port and plays the streams.
  * |[
- * gst-launch hdv1394src ! queue ! filesink location=mydump.ts
+ * gst-launch-1.0 hdv1394src ! queue ! filesink location=mydump.ts
  * ]| capture to a disk file
  * </refsect2>
  */

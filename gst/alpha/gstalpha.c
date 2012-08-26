@@ -30,7 +30,7 @@
  *
  * Sample pipeline:
  * |[
- * gst-launch videotestsrc pattern=smpte75 ! alpha method=green ! \
+ * gst-launch-1.0 videotestsrc pattern=smpte75 ! alpha method=green ! \
  *   videomixer name=mixer ! videoconvert ! autovideosink     \
  *   videotestsrc pattern=snow ! mixer.
  * ]| This pipeline adds a alpha channel to the SMPTE color bars

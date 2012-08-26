@@ -36,10 +36,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! gamma gamma=2.0 ! ffmpegcolorspace ! ximagesink
+ * gst-launch-1.0 videotestsrc ! gamma gamma=2.0 ! videoconvert ! ximagesink
  * ]| This pipeline will make the image "brighter".
  * |[
- * gst-launch videotestsrc ! gamma gamma=0.5 ! ffmpegcolorspace ! ximagesink
+ * gst-launch-1.0 videotestsrc ! gamma gamma=0.5 ! videoconvert ! ximagesink
  * ]| This pipeline will make the image "darker".
  * </refsect2>
  *

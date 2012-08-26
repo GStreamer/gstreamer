@@ -28,7 +28,7 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch filesrc location=subtitle.avi ! avidemux name=demux ! queue ! avisubtitle ! subparse ! textoverlay name=overlay ! ffmpegcolorspace ! autovideosink demux. ! queue ! decodebin ! overlay.
+ * gst-launch-1.0 filesrc location=subtitle.avi ! avidemux name=demux ! queue ! avisubtitle ! subparse ! textoverlay name=overlay ! videoconvert ! autovideosink demux. ! queue ! decodebin ! overlay.
  * </programlisting>
  * This plays an avi file with a video and subtitle stream.
  * </para>

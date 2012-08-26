@@ -26,7 +26,7 @@
  *
  * Sample pipeline:
  * |[
- * gst-launch videotestsrc ! "video/x-raw,format=(fourcc)AYUV" ! \
+ * gst-launch-1.0 videotestsrc ! "video/x-raw,format=(fourcc)AYUV" ! \
  *   alphacolor ! videoconvert ! autovideosink
  * ]|
  */

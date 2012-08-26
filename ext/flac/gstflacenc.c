@@ -27,7 +27,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc num-buffers=100 ! flacenc ! filesink location=beep.flac
+ * gst-launch-1.0 audiotestsrc num-buffers=100 ! flacenc ! filesink location=beep.flac
  * ]|
  * </refsect2>
  */

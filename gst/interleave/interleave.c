@@ -47,12 +47,12 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src_0 ! queue ! audioconvert ! i.sink_1    d.src_1 ! queue ! audioconvert ! i.sink_0
+ * gst-launch-1.0 filesrc location=file.mp3 ! decodebin ! audioconvert ! "audio/x-raw,channels=2" ! deinterleave name=d  interleave name=i ! audioconvert ! wavenc ! filesink location=test.wav    d.src_0 ! queue ! audioconvert ! i.sink_1    d.src_1 ! queue ! audioconvert ! i.sink_0
  * ]| Decodes and deinterleaves a Stereo MP3 file into separate channels and
  * then interleaves the channels again to a WAV file with the channel with the
  * channels exchanged.
  * |[
- * gst-launch interleave name=i ! audioconvert ! wavenc ! filesink location=file.wav  filesrc location=file1.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1" ! queue ! i.sink_0   filesrc location=file2.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1" ! queue ! i.sink_1
+ * gst-launch-1.0 interleave name=i ! audioconvert ! wavenc ! filesink location=file.wav  filesrc location=file1.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1" ! queue ! i.sink_0   filesrc location=file2.wav ! decodebin ! audioconvert ! "audio/x-raw,channels=1" ! queue ! i.sink_1
  * ]| Interleaves two Mono WAV files to a single Stereo WAV file.
  * </refsect2>
  */

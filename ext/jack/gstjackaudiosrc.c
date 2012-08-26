@@ -67,7 +67,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch jackaudiosrc connect=0 ! jackaudiosink connect=0
+ * gst-launch-1.0 jackaudiosrc connect=0 ! jackaudiosink connect=0
  * ]| Get audio input into gstreamer from jack.
  * </refsect2>
  *

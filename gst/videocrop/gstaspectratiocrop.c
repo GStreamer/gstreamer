@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! video/x-raw-rgb,height=640,width=480 ! aspectratiocrop aspect-ratio=16/9 ! ximagesink
+ * gst-launch-1.0 -v videotestsrc ! video/x-raw-rgb,height=640,width=480 ! aspectratiocrop aspect-ratio=16/9 ! ximagesink
  * ]| This pipeline generates a videostream in 4/3 and crops it to 16/9.
  * </refsect2>
  */

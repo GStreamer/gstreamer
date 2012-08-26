@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m playbin uri=pushfile:///home/you/some/file.ogg
+ * gst-launch-1.0 -m playbin uri=pushfile:///home/you/some/file.ogg
  * ]| This plays back the given file using playbin, with the demuxer operating
  * push-based.
  * </refsect2>

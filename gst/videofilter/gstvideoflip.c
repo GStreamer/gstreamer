@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! videoflip method=clockwise ! ffmpegcolorspace ! ximagesink
+ * gst-launch-1.0 videotestsrc ! videoflip method=clockwise ! videoconvert ! ximagesink
  * ]| This pipeline flips the test image 90 degrees clockwise.
  * </refsect2>
  *

@@ -25,10 +25,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! aasink
+ * gst-launch-1.0 filesrc location=test.avi ! decodebin ! videoconvert ! aasink
  * ]| This pipeline renders a video to ascii art into a separate window.
  * |[
- * gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! aasink driver=curses
+ * gst-launch-1.0 filesrc location=test.avi ! decodebin ! videoconvert ! aasink driver=curses
  * ]| This pipeline renders a video to ascii art into the current terminal.
  * </refsect2>
  */

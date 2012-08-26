@@ -50,7 +50,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! revtv ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! revtv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of revtv on a test stream.
  * </refsect2>
  */

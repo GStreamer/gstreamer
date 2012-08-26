@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v osssrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=mymusic.ogg
+ * gst-launch-1.0 -v osssrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=mymusic.ogg
  * ]| will record sound from your sound card using OSS and encode it to an
  * Ogg/Vorbis file (this will only work if your mixer settings are right
  * and the right inputs enabled etc.)

@@ -99,8 +99,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc ! multifilesink
- * gst-launch videotestsrc ! multifilesink post-messages=true filename="frame%d"
+ * gst-launch-1.0 audiotestsrc ! multifilesink
+ * gst-launch-1.0 videotestsrc ! multifilesink post-messages=true filename="frame%d"
  * ]|
  * </refsect2>
  *

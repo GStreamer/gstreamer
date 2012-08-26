@@ -66,12 +66,12 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
+ * gst-launch-1.0 udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
  *     gstrtpbin ! rtptheoradepay ! theoradec ! xvimagesink
  * ]| Receive RTP data from port 5000 and send to the session 0 in gstrtpbin.
  * |[
- * gst-launch gstrtpbin name=rtpbin \
- *         v4l2src ! ffmpegcolorspace ! ffenc_h263 ! rtph263ppay ! rtpbin.send_rtp_sink_0 \
+ * gst-launch-1.0 gstrtpbin name=rtpbin \
+ *         v4l2src ! videoconvert ! ffenc_h263 ! rtph263ppay ! rtpbin.send_rtp_sink_0 \
  *                   rtpbin.send_rtp_src_0 ! udpsink port=5000                            \
  *                   rtpbin.send_rtcp_src_0 ! udpsink port=5001 sync=false async=false    \
  *                   udpsrc port=5005 ! rtpbin.recv_rtcp_sink_0                           \
@@ -89,7 +89,7 @@
  * as soon as possible and do not participate in preroll, sync=false and
  * async=false is configured on udpsink
  * |[
- * gst-launch -v gstrtpbin name=rtpbin                                          \
+ * gst-launch-1.0 -v gstrtpbin name=rtpbin                                          \
  *     udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H263-1998" \
  *             port=5000 ! rtpbin.recv_rtp_sink_0                                \
  *         rtpbin. ! rtph263pdepay ! ffdec_h263 ! xvimagesink                    \

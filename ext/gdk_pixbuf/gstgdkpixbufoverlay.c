@@ -36,7 +36,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! gdkpixbufoverlay location=image.png ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! gdkpixbufoverlay location=image.png ! autovideosink
  * ]|
  * Overlays the image in image.png onto the test video picture produced by
  * videotestsrc.

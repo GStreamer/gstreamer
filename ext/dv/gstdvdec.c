@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=test.dv ! dvdemux name=demux ! dvdec ! xvimagesink
+ * gst-launch-1.0 filesrc location=test.dv ! dvdemux name=demux ! dvdec ! xvimagesink
  * ]| This pipeline decodes and renders the raw DV stream to a videosink.
  * </refsect2>
  *

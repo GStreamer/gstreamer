@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc num-buffers=300 ! theoraenc ! oggmux !
+ * gst-launch-1.0 -v videotestsrc num-buffers=300 ! theoraenc ! oggmux !
  *   souphttpclientsink location=http://server/filename.ogv
  * ]|
  * 

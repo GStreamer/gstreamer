@@ -50,7 +50,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch osxaudiosrc ! wavenc ! filesink location=audio.wav
+ * gst-launch-1.0 osxaudiosrc ! wavenc ! filesink location=audio.wav
  * ]|
  * </refsect2>
  */

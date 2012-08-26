@@ -45,9 +45,9 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc freq=1500 ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=501 ! audioconvert ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsinclimit mode=high-pass frequency=15000 length=501 ! audioconvert ! alsasink
- * gst-launch audiotestsrc wave=white-noise ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=10001 window=blackman ! audioconvert ! alsasink
+ * gst-launch-1.0 audiotestsrc freq=1500 ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=501 ! audioconvert ! alsasink
+ * gst-launch-1.0 filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audiowsinclimit mode=high-pass frequency=15000 length=501 ! audioconvert ! alsasink
+ * gst-launch-1.0 audiotestsrc wave=white-noise ! audioconvert ! audiowsinclimit mode=low-pass frequency=1000 length=10001 window=blackman ! audioconvert ! alsasink
  * ]|
  * </refsect2>
  */

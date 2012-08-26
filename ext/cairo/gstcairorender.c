@@ -26,7 +26,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc num-buffers=3 ! cairorender ! "application/pdf" ! filesink location=test.pdf
+ * gst-launch-1.0 videotestsrc num-buffers=3 ! cairorender ! "application/pdf" ! filesink location=test.pdf
  * ]|
  * </refsect2>
  */

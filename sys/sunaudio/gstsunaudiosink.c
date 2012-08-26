@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc volume=0.5 ! sunaudiosink
+ * gst-launch-1.0 audiotestsrc volume=0.5 ! sunaudiosink
  * ]|
  * </refsect2>
  */

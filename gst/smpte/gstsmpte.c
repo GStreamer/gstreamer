@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Sample pipelines</title>
  * |[
- * gst-launch -v videotestsrc pattern=1 ! smpte name=s border=20000 type=234 duration=2000000000 ! ffmpegcolorspace ! ximagesink videotestsrc ! s.
+ * gst-launch-1.0 -v videotestsrc pattern=1 ! smpte name=s border=20000 type=234 duration=2000000000 ! videoconvert ! ximagesink videotestsrc ! s.
  * ]| A pipeline to demonstrate the smpte transition.
  * It shows a pinwheel transition a from a snow videotestsrc to an smpte
  * pattern videotestsrc. The transition will take 2 seconds to complete. The

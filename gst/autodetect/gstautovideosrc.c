@@ -31,7 +31,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m autovideosrc ! xvimagesink
+ * gst-launch-1.0 -v -m autovideosrc ! xvimagesink
  * ]|
  * </refsect2>
  */

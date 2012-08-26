@@ -239,7 +239,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
   }
 #if 0
   /* We used to have this HACK to reverse the outgoing bytes, but the problem
-   * that originally required the hack seems to have been in ffmpegcolorspace's
+   * that originally required the hack seems to have been in videoconvert's
    * RGBA descriptions. It doesn't seem needed now that's fixed, but might
    * still be needed on big-endian systems, I'm not sure. J.S. 6/7/2007 */
   if (color_type == PNG_COLOR_TYPE_RGB_ALPHA)

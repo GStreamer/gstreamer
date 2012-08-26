@@ -12,12 +12,12 @@ DEST=localhost
 VIDEO_DEC="rtph263pdepay ! ffdec_h263"
 AUDIO_DEC="rtppcmadepay ! alawdec"
 
-VIDEO_SINK="ffmpegcolorspace ! autovideosink"
+VIDEO_SINK="videoconvert ! autovideosink"
 AUDIO_SINK="audioconvert ! audioresample ! autoaudiosink"
 
 LATENCY=100
 
-gst-launch -v gstrtpbin name=rtpbin latency=$LATENCY                                    \
+gst-launch-1.0 -v gstrtpbin name=rtpbin latency=$LATENCY                                    \
            udpsrc caps=$VIDEO_CAPS port=5000 ! rtpbin.recv_rtp_sink_0                   \
 	         rtpbin. ! $VIDEO_DEC ! $VIDEO_SINK                                     \
            udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0                                   \

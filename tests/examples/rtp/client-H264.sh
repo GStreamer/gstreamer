@@ -26,7 +26,7 @@ VIDEO_CAPS="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding
 
 VIDEO_DEC="rtph264depay ! ffdec_h264"
 
-VIDEO_SINK="ffmpegcolorspace ! autovideosink"
+VIDEO_SINK="videoconvert ! autovideosink"
 
 # the destination machine to send RTCP to. This is the address of the sender and
 # is used to send back the RTCP reports of this receiver. If the data is sent
@@ -35,7 +35,7 @@ DEST=127.0.0.1
 
 LATENCY=200
 
-gst-launch -v gstrtpbin name=rtpbin latency=$LATENCY                                \
+gst-launch-1.0 -v gstrtpbin name=rtpbin latency=$LATENCY                                \
     udpsrc caps=$VIDEO_CAPS port=5000 ! rtpbin.recv_rtp_sink_0                      \
       rtpbin. ! $VIDEO_DEC ! $VIDEO_SINK                                            \
     udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0                                      \

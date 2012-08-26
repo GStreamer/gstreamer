@@ -29,7 +29,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! vertigotv ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! vertigotv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of vertigotv on a test stream.
  * </refsect2>
  */

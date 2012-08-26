@@ -49,7 +49,7 @@
  * 
  * Sample pipeline:
  * |[
- * gst-launch videotestsrc ! videobox autocrop=true ! \
+ * gst-launch-1.0 videotestsrc ! videobox autocrop=true ! \
  *   "video/x-raw, width=600, height=400" ! videoconvert ! ximagesink
  * ]|
  */

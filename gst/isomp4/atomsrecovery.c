@@ -51,7 +51,7 @@
  *
  * 2) CRASH!
  *
- * 3) gst-launch qtmoovrecover recovery-input=path.mrf broken-input=moovie.mov \
+ * 3) gst-launch-1.0 qtmoovrecover recovery-input=path.mrf broken-input=moovie.mov \
         fixed-output=recovered.mov
  *
  * 4) (Hopefully) enjoy recovered.mov.

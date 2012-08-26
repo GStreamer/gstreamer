@@ -55,7 +55,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! osxaudiosink
+ * gst-launch-1.0 filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! osxaudiosink
  * ]| Play an Ogg/Vorbis file.
  * </refsect2>
  *

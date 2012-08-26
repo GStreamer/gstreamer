@@ -30,11 +30,11 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch v4l2src ! xvimagesink
+ * gst-launch-1.0 v4l2src ! xvimagesink
  * ]| This pipeline shows the video captured from /dev/video0 tv card and for
  * webcams.
  * |[
- * gst-launch v4l2src ! jpegdec ! xvimagesink
+ * gst-launch-1.0 v4l2src ! jpegdec ! xvimagesink
  * ]| This pipeline shows the video captured from a webcam that delivers jpeg
  * images.
  * </refsect2>

@@ -25,11 +25,11 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * CACA_GEOMETRY=160x60 CACA_FONT=5x7 gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! cacasink
+ * CACA_GEOMETRY=160x60 CACA_FONT=5x7 gst-launch-1.0 filesrc location=test.avi ! decodebin ! videoconvert ! cacasink
  * ]| This pipeline renders a video to ascii art into a separate window using a
  * small font and specifying the ascii resolution.
  * |[
- * CACA_DRIVER=ncurses gst-launch filesrc location=test.avi ! decodebin ! ffmpegcolorspace ! cacasink
+ * CACA_DRIVER=ncurses gst-launch-1.0 filesrc location=test.avi ! decodebin ! videoconvert ! cacasink
  * ]| This pipeline renders a video to ascii art into the current terminal.
  * </refsect2>
  */

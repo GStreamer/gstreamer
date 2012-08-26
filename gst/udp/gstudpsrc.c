@@ -89,16 +89,16 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v udpsrc ! fakesink dump=1
+ * gst-launch-1.0 -v udpsrc ! fakesink dump=1
  * ]| A pipeline to read from the default port and dump the udp packets.
  * To actually generate udp packets on the default port one can use the
  * udpsink element. When running the following pipeline in another terminal, the
  * above mentioned pipeline should dump data packets to the console.
  * |[
- * gst-launch -v audiotestsrc ! udpsink
+ * gst-launch-1.0 -v audiotestsrc ! udpsink
  * ]|
  * |[
- * gst-launch -v udpsrc port=0 ! fakesink
+ * gst-launch-1.0 -v udpsrc port=0 ! fakesink
  * ]| read udp packets from a free port.
  * </refsect2>
  *

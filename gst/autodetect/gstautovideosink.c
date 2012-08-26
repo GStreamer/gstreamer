@@ -30,7 +30,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v -m videotestsrc ! autovideosink
+ * gst-launch-1.0 -v -m videotestsrc ! autovideosink
  * ]|
  * </refsect2>
  */

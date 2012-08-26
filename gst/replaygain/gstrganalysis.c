@@ -46,14 +46,14 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch -t audiotestsrc wave=sine num-buffers=512 ! rganalysis ! fakesink
+ * gst-launch-1.0 -t audiotestsrc wave=sine num-buffers=512 ! rganalysis ! fakesink
  * ]| Analyze a simple test waveform
  * |[
- * gst-launch -t filesrc location=filename.ext ! decodebin \
+ * gst-launch-1.0 -t filesrc location=filename.ext ! decodebin \
  *     ! audioconvert ! audioresample ! rganalysis ! fakesink
  * ]| Analyze a given file
  * |[
- * gst-launch -t gnomevfssrc location=http://replaygain.hydrogenaudio.org/ref_pink.wav \
+ * gst-launch-1.0 -t gnomevfssrc location=http://replaygain.hydrogenaudio.org/ref_pink.wav \
  *     ! wavparse ! rganalysis ! fakesink
  * ]| Analyze the pink noise reference file
  * <para>

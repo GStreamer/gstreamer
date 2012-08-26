@@ -170,7 +170,7 @@ video_crop_get_test_caps (GstElement * videocrop)
 
 static gchar *opt_videosink_str;        /* NULL */
 static gchar *opt_filtercaps_str;       /* NULL */
-static gboolean opt_with_ffmpegcolorspace;      /* FALSE */
+static gboolean opt_with_videoconvert;  /* FALSE */
 
 int
 main (int argc, char **argv)
@@ -180,9 +180,9 @@ main (int argc, char **argv)
         "videosink to use (default: " DEFAULT_VIDEOSINK ")", NULL},
     {"caps", '\0', 0, G_OPTION_ARG_STRING, &opt_filtercaps_str,
         "filter caps to narrow down formats to test", NULL},
-    {"with-ffmpegcolorspace", '\0', 0, G_OPTION_ARG_NONE,
-          &opt_with_ffmpegcolorspace,
-          "whether to add an ffmpegcolorspace element in front of the sink",
+    {"with-videoconvert", '\0', 0, G_OPTION_ARG_NONE,
+          &opt_with_videoconvert,
+          "whether to add an videoconvert element in front of the sink",
         NULL},
     {NULL, '\0', 0, 0, NULL, NULL, NULL}
   };
@@ -217,9 +217,9 @@ main (int argc, char **argv)
   filter2 = gst_element_factory_make ("capsfilter", "capsfilter2");
   g_assert (filter2 != NULL);
 
-  if (opt_with_ffmpegcolorspace) {
-    g_print ("Adding ffmpegcolorspace\n");
-    csp = gst_element_factory_make ("ffmpegcolorspace", "colorspace");
+  if (opt_with_videoconvert) {
+    g_print ("Adding videoconvert\n");
+    csp = gst_element_factory_make ("videoconvert", "colorspace");
   } else {
     csp = gst_element_factory_make ("identity", "colorspace");
   }
@@ -276,10 +276,10 @@ main (int argc, char **argv)
     g_error ("Failed to link videoscale to capsfilter2");
 
   if (!gst_element_link (filter2, csp))
-    g_error ("Failed to link capsfilter2 to ffmpegcolorspace");
+    g_error ("Failed to link capsfilter2 to videoconvert");
 
   if (!gst_element_link (csp, sink))
-    g_error ("Failed to link ffmpegcolorspace to video sink");
+    g_error ("Failed to link videoconvert to video sink");
 
   caps_list = video_crop_get_test_caps (crop);
   for (l = caps_list; l != NULL; l = l->next) {

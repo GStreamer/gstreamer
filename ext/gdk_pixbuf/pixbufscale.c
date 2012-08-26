@@ -31,7 +31,7 @@
 #define ROUND_UP_4(x)  (((x)+3)&~3)
 #define ROUND_UP_8(x)  (((x)+7)&~7)
 
-/* These match the ones gstffmpegcolorspace uses (Tim) */
+/* These match the ones gstvideoconvert uses (Tim) */
 #define GST_RGB24_ROWSTRIDE(width)    (ROUND_UP_4 ((width)*3))
 #define GST_RGB24_SIZE(width,height)  ((height)*GST_RGB24_ROWSTRIDE(width))
 

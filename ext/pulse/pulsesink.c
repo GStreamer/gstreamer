@@ -31,13 +31,13 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
+ * gst-launch-1.0 -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! pulsesink
  * ]| Play an Ogg/Vorbis file.
  * |[
- * gst-launch -v audiotestsrc ! audioconvert ! volume volume=0.4 ! pulsesink
+ * gst-launch-1.0 -v audiotestsrc ! audioconvert ! volume volume=0.4 ! pulsesink
  * ]| Play a 440Hz sine wave.
  * |[
- * gst-launch -v audiotestsrc ! pulsesink stream-properties="props,media.title=test"
+ * gst-launch-1.0 -v audiotestsrc ! pulsesink stream-properties="props,media.title=test"
  * ]| Play a sine wave and set a stream property. The property can be checked
  * with "pactl list".
  * </refsect2>

@@ -69,7 +69,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch rtspsrc location=rtsp://some.server/url ! fakesink
+ * gst-launch-1.0 rtspsrc location=rtsp://some.server/url ! fakesink
  * ]| Establish a connection to an RTSP server and send the raw RTP packets to a
  * fakesink.
  * </refsect2>

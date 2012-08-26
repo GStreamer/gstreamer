@@ -86,7 +86,7 @@
  * <refsect2>
  * <title>Example pipeline</title>
  * |[
- * gst-launch -m -v videotestsrc num-buffers=1 ! gdkpixbufsink
+ * gst-launch-1.0 -m -v videotestsrc num-buffers=1 ! gdkpixbufsink
  * ]| Process one single test image as pixbuf (note that the output you see will
  * be slightly misleading. The message structure does contain a valid pixbuf
  * object even if the structure string says &apos;(NULL)&apos;).

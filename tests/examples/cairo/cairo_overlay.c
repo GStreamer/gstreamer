@@ -119,9 +119,9 @@ setup_gst_pipeline (CairoOverlayState * overlay_state)
 
   /* Adaptors needed because cairooverlay only supports ARGB data */
   source = gst_element_factory_make ("videotestsrc", "source");
-  adaptor1 = gst_element_factory_make ("ffmpegcolorspace", "adaptor1");
+  adaptor1 = gst_element_factory_make ("videoconvert", "adaptor1");
   cairo_overlay = gst_element_factory_make ("cairooverlay", "overlay");
-  adaptor2 = gst_element_factory_make ("ffmpegcolorspace", "adaptor2");
+  adaptor2 = gst_element_factory_make ("videoconvert", "adaptor2");
   sink = gst_element_factory_make ("autovideosink", "sink");
 
   /* If failing, the element could not be created */

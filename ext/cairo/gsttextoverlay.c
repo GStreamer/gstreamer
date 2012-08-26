@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! cairotextoverlay text="hello" ! autovideosink
+ * gst-launch-1.0 videotestsrc ! cairotextoverlay text="hello" ! autovideosink
  * ]|
  * </refsect2>
  */

@@ -32,7 +32,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=filename.ext ! decodebin ! audioconvert \
+ * gst-launch-1.0 filesrc location=filename.ext ! decodebin ! audioconvert \
  *            ! rgvolume pre-amp=6.0 headroom=10.0 ! rglimiter \
  *            ! audioconvert ! audioresample ! alsasink
  * ]|Playback of a file

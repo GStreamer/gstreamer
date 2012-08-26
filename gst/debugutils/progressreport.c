@@ -56,10 +56,10 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m filesrc location=foo.ogg ! decodebin ! progressreport update-freq=1 ! audioconvert ! audioresample ! autoaudiosink
+ * gst-launch-1.0 -m filesrc location=foo.ogg ! decodebin ! progressreport update-freq=1 ! audioconvert ! audioresample ! autoaudiosink
  * ]| This shows a progress query where a duration is available.
  * |[
- * gst-launch -m audiotestsrc ! progressreport update-freq=1 ! audioconvert ! autoaudiosink
+ * gst-launch-1.0 -m audiotestsrc ! progressreport update-freq=1 ! audioconvert ! autoaudiosink
  * ]| This shows a progress query where no duration is available.
  * </refsect2>
  */

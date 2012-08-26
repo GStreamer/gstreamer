@@ -42,7 +42,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! videocrop top=42 left=1 right=4 bottom=0 ! ximagesink
+ * gst-launch-1.0 -v videotestsrc ! videocrop top=42 left=1 right=4 bottom=0 ! ximagesink
  * ]|
  * </refsect2>
  */

@@ -31,10 +31,10 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch videotestsrc ! v4l2sink device=/dev/video1
+ * gst-launch-1.0 videotestsrc ! v4l2sink device=/dev/video1
  * ]| This pipeline displays a test pattern on /dev/video1
  * |[
- * gst-launch -v videotestsrc ! navigationtest ! v4l2sink
+ * gst-launch-1.0 -v videotestsrc ! navigationtest ! v4l2sink
  * ]| A pipeline to test navigation events.
  * While moving the mouse pointer over the test signal you will see a black box
  * following the mouse pointer. If you press the mouse button somewhere on the

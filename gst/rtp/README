@@ -181,7 +181,7 @@ of the sender.
 
 Some pipelines to illustrate the process:
 
-    gst-launch v4l2src ! ffenc_h263p ! rtph263ppay ! udpsink
+    gst-launch-1.0 v4l2src ! ffenc_h263p ! rtph263ppay ! udpsink
 
   v4l2src puts a GStreamer timestamp on the video frames base on the current
   running_time. The encoder encodes and passed the timestamp on. The payloader
@@ -204,7 +204,7 @@ it back as soon as possible, this is with the timestamp when it was received
 from the network. For the above sender pipeline this would be done with the
 following pipeline:
 
-    gst-launch udpsrc caps="application/x-rtp, media=(string)video,
+    gst-launch-1.0 udpsrc caps="application/x-rtp, media=(string)video,
       clock-rate=(int)90000, encoding-name=(string)H263-1998" ! rtph263pdepay !
       ffdec_h263 ! xvimagesink
 
@@ -237,7 +237,7 @@ GStreamer timestamp on the RTP packet, which is copied to the depayloaded data.
 
 The following pipeline illustrates a receiver with a jitterbuffer.
 
-    gst-launch udpsrc caps="application/x-rtp, media=(string)video,
+    gst-launch-1.0 udpsrc caps="application/x-rtp, media=(string)video,
       clock-rate=(int)90000, encoding-name=(string)H263-1998" !
       gstrtpjitterbuffer latency=100 ! rtph263pdepay !  ffdec_h263 ! xvimagesink
 
@@ -253,10 +253,10 @@ usage with UDP
 
 To correctly and completely use the RTP payloaders on the sender and the
 receiver you need to write an application. It is not possible to write a full
-blown RTP server with a single gst-launch line.
+blown RTP server with a single gst-launch-1.0 line.
 
 That said, it is possible to do something functional with a few gst-launch
-lines. The biggest problem when constructing a correct gst-launch line lies on
+lines. The biggest problem when constructing a correct gst-launch-1.0 line lies on
 the receiver end. 
 
 The receiver needs to know about the type of the RTP data along with a set of
@@ -269,7 +269,7 @@ server can be found in the caps on the server end. The client receives this
 information in some way (caps are converted to and from SDP, as explained above,
 for example).
 
-Some gst-launch lines:
+Some gst-launch-1.0 lines:
 
   gst-launch-0.10 -v videotestsrc ! ffenc_h263p ! rtph263ppay ! udpsink
 
@@ -319,7 +319,7 @@ Some gst-launch lines:
 
  Again copy the caps on both sinks to the receiver launch line
 
-    gst-launch 
+    gst-launch-1.0
      udpsrc port=5000 caps="application/x-rtp, media=(string)video, payload=(int)96,
       clock-rate=(int)90000, encoding-name=(string)MP4V-ES, ssrc=(guint)1162703703,
       clock-base=(guint)816135835, seqnum-base=(guint)9294, profile-level-id=(string)3,

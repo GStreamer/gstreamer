@@ -45,7 +45,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m filesrc location=foo.ogg ! decodebin ! audioconvert ! cutter ! autoaudiosink
+ * gst-launch-1.0 -m filesrc location=foo.ogg ! decodebin ! audioconvert ! cutter ! autoaudiosink
  * ]| Show cut messages.
  * </refsect2>
  */

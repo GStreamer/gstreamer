@@ -42,7 +42,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch udpsrc caps="application/x-rtp" ! gstrtpptdemux ! fakesink
+ * gst-launch-1.0 udpsrc caps="application/x-rtp" ! gstrtpptdemux ! fakesink
  * ]| Takes an RTP stream and send the RTP packets with the first detected
  * payload type to fakesink, discarding the other payload types.
  * </refsect2>

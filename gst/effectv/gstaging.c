@@ -33,7 +33,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! agingtv ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! agingtv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of agingtv on a test stream.
  * </refsect2>
  */

@@ -36,7 +36,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! streaktv ! videoconvert ! autovideosink
+ * gst-launch-1.0 -v videotestsrc ! streaktv ! videoconvert ! autovideosink
  * ]| This pipeline shows the effect of streaktv on a test stream.
  * </refsect2>
  */

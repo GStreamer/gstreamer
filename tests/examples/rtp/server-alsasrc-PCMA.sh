@@ -28,7 +28,7 @@ AELEM=audiotestsrc
 ASOURCE="$AELEM ! audioconvert"
 AENC="alawenc ! rtppcmapay"
 
-gst-launch -v gstrtpbin name=rtpbin \
+gst-launch-1.0 -v gstrtpbin name=rtpbin \
      $ASOURCE ! $AENC ! rtpbin.send_rtp_sink_0  \
             rtpbin.send_rtp_src_0 ! udpsink port=5002 host=$DEST                      \
             rtpbin.send_rtcp_src_0 ! udpsink port=5003 host=$DEST sync=false async=false \

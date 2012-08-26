@@ -48,7 +48,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc ! jackaudiosink
+ * gst-launch-1.0 audiotestsrc ! jackaudiosink
  * ]| Play a sine wave to using jack.
  * </refsect2>
  *

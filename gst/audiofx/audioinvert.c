@@ -29,9 +29,9 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch audiotestsrc wave=saw ! audioinvert invert=0.4 ! alsasink
- * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audioinvert invert=0.4 ! alsasink
- * gst-launch audiotestsrc wave=saw ! audioconvert ! audioinvert invert=0.4 ! audioconvert ! alsasink
+ * gst-launch-1.0 audiotestsrc wave=saw ! audioinvert invert=0.4 ! alsasink
+ * gst-launch-1.0 filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! audioinvert invert=0.4 ! alsasink
+ * gst-launch-1.0 audiotestsrc wave=saw ! audioconvert ! audioinvert invert=0.4 ! audioconvert ! alsasink
  * ]|
  * </refsect2>
  */

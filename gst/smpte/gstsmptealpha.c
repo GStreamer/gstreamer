@@ -38,8 +38,8 @@
  * <para>
  * Here is a pipeline to demonstrate the smpte transition :
  * <programlisting>
- * gst-launch -v videotestsrc ! smptealpha border=20000 type=44
- * position=0.5 ! videomixer ! ffmpegcolorspace ! ximagesink 
+ * gst-launch-1.0 -v videotestsrc ! smptealpha border=20000 type=44
+ * position=0.5 ! videomixer ! videoconvert ! ximagesink
  * </programlisting>
  * This shows a midway bowtie-h transition a from a videotestsrc to a
  * transparent image. The edges of the transition are smoothed with a

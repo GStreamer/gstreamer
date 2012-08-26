@@ -46,4 +46,4 @@ PIPELINE="gstrtpbin name=rtpbin
 
 echo $PIPELINE
 
-gst-launch -v $PIPELINE
+gst-launch-1.0 -v $PIPELINE

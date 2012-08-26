@@ -39,7 +39,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=file.mp3 ! id3demux ! fakesink -t
+ * gst-launch-1.0 filesrc location=file.mp3 ! id3demux ! fakesink -t
  * ]| This pipeline should read any available ID3 tag information and output it.
  * The contents of the file inside the ID3 tag regions should be detected, and
  * the appropriate mime type set on buffers produced from id3demux.

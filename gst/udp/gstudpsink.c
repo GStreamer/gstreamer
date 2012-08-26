@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v audiotestsrc ! udpsink
+ * gst-launch-1.0 -v audiotestsrc ! udpsink
  * ]|
  * </refsect2>
  */
