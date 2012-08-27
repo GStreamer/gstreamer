@@ -146,7 +146,7 @@ gst_gl_window_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindow *
-gst_gl_window_new (gulong external_gl_context)
+gst_gl_window_new (guintptr external_gl_context)
 {
   GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
   GstGLWindowPrivate *priv = window->priv;
@@ -205,11 +205,11 @@ gst_gl_window_error_quark (void)
   return g_quark_from_static_string ("gst-gl-window-error");
 }
 
-gulong
+guintptr
 gst_gl_window_get_internal_gl_context (GstGLWindow * window)
 {
   GstGLWindowPrivate *priv = window->priv;
-  return (gulong) priv->gl_context;
+  return (guintptr) priv->gl_context;
 }
 
 void
@@ -239,7 +239,7 @@ gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, gulong id)
+gst_gl_window_set_external_window_id (GstGLWindow * window, guintptr id)
 {
   GstGLWindowPrivate *priv = window->priv;
 
