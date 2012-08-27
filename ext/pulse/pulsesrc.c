@@ -1228,9 +1228,10 @@ gst_pulsesrc_create_stream (GstPulseSrc * pulsesrc, GstCaps ** caps,
         new_spec.info.channels);
     gst_caps_unref (*caps);
     *caps = gst_audio_info_to_caps (&new_spec.info);
+
+    GST_DEBUG_OBJECT (pulsesrc, "Caps are %" GST_PTR_FORMAT, *caps);
   }
 
-  GST_DEBUG_OBJECT (pulsesrc, "Caps are %" GST_PTR_FORMAT, *caps);
 
   pa_stream_set_state_callback (pulsesrc->stream, gst_pulsesrc_stream_state_cb,
       pulsesrc);
