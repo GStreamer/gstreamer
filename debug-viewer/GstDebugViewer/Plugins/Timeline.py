@@ -517,9 +517,9 @@ class TimelineWidget (gtk.DrawingArea):
 
     def update (self, model):
 
+        self.clear ()
         self.model = model
 
-        self.process.abort ()
         if model is not None:
             self.process.freq_sentinel = LineFrequencySentinel (model)
             self.process.dist_sentinel = LevelDistributionSentinel (self.process.freq_sentinel, model)
@@ -529,6 +529,7 @@ class TimelineWidget (gtk.DrawingArea):
 
     def clear (self):
 
+        self.model = None
         self.process.abort ()
         self.process.freq_sentinel = None
         self.process.dist_sentinel = None
