@@ -51,6 +51,10 @@ struct _GstVaapiProperty {
     VADisplayAttribute  attribute;
 };
 
+/* XXX: export property names when the API is stable enough */
+#define GST_VAAPI_DISPLAY_PROP_RENDER_MODE      "render-mode"
+#define GST_VAAPI_DISPLAY_PROP_ROTATION         "rotation"
+
 enum {
     PROP_0,
 
@@ -580,12 +584,24 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         GST_DEBUG("  %s", string_of_VADisplayAttributeType(attr->type));
 
         switch (attr->type) {
+#if !VA_CHECK_VERSION(0,34,0)
+        case VADisplayAttribDirectSurface:
+            prop.name = GST_VAAPI_DISPLAY_PROP_RENDER_MODE;
+            break;
+#endif
+        case VADisplayAttribRenderMode:
+            prop.name = GST_VAAPI_DISPLAY_PROP_RENDER_MODE;
+            break;
+        case VADisplayAttribRotation:
+            prop.name = GST_VAAPI_DISPLAY_PROP_ROTATION;
+            break;
         default:
-            prop.attribute.flags = 0;
+            prop.name = NULL;
             break;
         }
-        if (!prop.attribute.flags)
+        if (!prop.name)
             continue;
+        prop.attribute = *attr;
         g_array_append_val(priv->properties, prop);
     }
 
