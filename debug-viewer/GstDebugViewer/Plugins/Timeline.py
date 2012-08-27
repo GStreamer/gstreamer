@@ -519,12 +519,11 @@ class TimelineWidget (gtk.DrawingArea):
 
         self.model = model
 
-        width = self.get_allocation ()[2]
-
         self.process.abort ()
-        if model:
+        if model is not None:
             self.process.freq_sentinel = LineFrequencySentinel (model)
             self.process.dist_sentinel = LevelDistributionSentinel (self.process.freq_sentinel, model)
+            width = self.get_allocation ()[2]
             self.process.freq_sentinel.run_for (width)
             self.process.run ()
 
