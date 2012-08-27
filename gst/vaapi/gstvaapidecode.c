@@ -407,6 +407,18 @@ gst_vaapidecode_reset(GstVaapiDecode *decode, GstCaps *caps)
     return gst_vaapidecode_create(decode, caps);
 }
 
+static gboolean
+gst_vaapidecode_flush(GstVaapiDecode *decode)
+{
+    g_return_val_if_fail(decode->decoder, FALSE);
+
+    if (!gst_vaapi_decoder_put_buffer(decode->decoder, NULL))
+        return FALSE;
+    if (gst_vaapidecode_step(decode) != GST_FLOW_OK)
+        return FALSE;
+    return TRUE;
+}
+
 /* GstImplementsInterface interface */
 
 static gboolean
@@ -678,6 +690,11 @@ gst_vaapidecode_sink_event(GstPad *pad, GstEvent *event)
         if (!GST_PAD_PEER(decode->srcpad)) {
             decode->delayed_new_seg = gst_event_ref(event);
             return TRUE;
+        }
+        break;
+    case GST_EVENT_EOS:
+        if (!gst_vaapidecode_flush(decode)) {
+            GST_WARNING("failed to flush buffers");
         }
         break;
     default:
