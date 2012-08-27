@@ -956,8 +956,6 @@ class AttachedWindow (object):
 
         view = self.window.log_view
         view.scroll_to_cell (path, use_align = True, row_align = .5)
-        sel = view.get_selection ()
-        sel.select_path (path)
 
         return False
 
