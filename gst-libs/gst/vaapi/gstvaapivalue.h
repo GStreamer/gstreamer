@@ -44,6 +44,16 @@ G_BEGIN_DECLS
  */
 #define GST_VAAPI_VALUE_HOLDS_ID(x) (G_VALUE_HOLDS((x), GST_VAAPI_TYPE_ID))
 
+/**
+ * GST_VAAPI_TYPE_RENDER_MODE:
+ *
+ * A #GstVaapiRenderMode type that represents the VA display backend
+ * rendering mode: overlay (2D engine) or textured-blit (3D engine).
+ *
+ * Return value: the #GType of GstVaapiRenderMode
+ */
+#define GST_VAAPI_TYPE_RENDER_MODE gst_vaapi_render_mode_get_type()
+
 GType
 gst_vaapi_id_get_type(void) G_GNUC_CONST;
 
@@ -52,6 +62,9 @@ gst_vaapi_value_get_id(const GValue *value);
 
 void
 gst_vaapi_value_set_id(GValue *value, GstVaapiID id);
+
+GType
+gst_vaapi_render_mode_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 

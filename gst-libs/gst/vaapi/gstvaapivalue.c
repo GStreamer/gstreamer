@@ -163,3 +163,25 @@ gst_vaapi_value_set_id(GValue *value, GstVaapiID id)
 
     GST_VAAPI_VALUE_ID(value) = id;
 }
+
+/* --- GstVaapiRenderMode --- */
+
+GType
+gst_vaapi_render_mode_get_type(void)
+{
+    static GType render_mode_type = 0;
+
+    static const GEnumValue render_modes[] = {
+        { GST_VAAPI_RENDER_MODE_OVERLAY,
+          "Overlay render mode", "overlay" },
+        { GST_VAAPI_RENDER_MODE_TEXTURE,
+          "Textured-blit render mode", "texture" },
+        { 0, NULL, NULL }
+    };
+
+    if (!render_mode_type) {
+        render_mode_type =
+            g_enum_register_static("GstVaapiRenderMode", render_modes);
+    }
+    return render_mode_type;
+}

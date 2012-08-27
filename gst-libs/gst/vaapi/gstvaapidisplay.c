@@ -1237,3 +1237,181 @@ gst_vaapi_display_has_property(GstVaapiDisplay *display, const gchar *name)
 
     return find_property(display->priv->properties, name) != NULL;
 }
+
+static gboolean
+get_attribute(GstVaapiDisplay *display, VADisplayAttribType type, gint *value)
+{
+    VADisplayAttribute attr;
+    VAStatus status;
+
+    attr.type  = type;
+    attr.flags = VA_DISPLAY_ATTRIB_GETTABLE;
+    status = vaGetDisplayAttributes(display->priv->display, &attr, 1);
+    if (!vaapi_check_status(status, "vaGetDisplayAttributes()"))
+        return FALSE;
+    *value = attr.value;
+    return TRUE;
+}
+
+static gboolean
+set_attribute(GstVaapiDisplay *display, VADisplayAttribType type, gint value)
+{
+    VADisplayAttribute attr;
+    VAStatus status;
+
+    attr.type  = type;
+    attr.value = value;
+    attr.flags = VA_DISPLAY_ATTRIB_SETTABLE;
+    status = vaSetDisplayAttributes(display->priv->display, &attr, 1);
+    if (!vaapi_check_status(status, "vaSetDisplayAttributes()"))
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
+get_render_mode_VADisplayAttribRenderMode(
+    GstVaapiDisplay    *display,
+    GstVaapiRenderMode *pmode
+)
+{
+    gint modes, devices;
+
+    if (!get_attribute(display, VADisplayAttribRenderDevice, &devices))
+        return FALSE;
+    if (!devices)
+        return FALSE;
+    if (!get_attribute(display, VADisplayAttribRenderMode, &modes))
+        return FALSE;
+
+    /* Favor "overlay" mode since it is the most restrictive one */
+    if (modes & (VA_RENDER_MODE_LOCAL_OVERLAY|VA_RENDER_MODE_EXTERNAL_OVERLAY))
+        *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;
+    else
+        *pmode = GST_VAAPI_RENDER_MODE_TEXTURE;
+    return TRUE;
+}
+
+static gboolean
+get_render_mode_VADisplayAttribDirectSurface(
+    GstVaapiDisplay    *display,
+    GstVaapiRenderMode *pmode
+)
+{
+#if VA_CHECK_VERSION(0,34,0)
+    /* VADisplayAttribDirectsurface was removed in VA-API >= 0.34.0 */
+    return FALSE;
+#else
+    gint direct_surface;
+
+    if (!get_attribute(display, VADisplayAttribDirectSurface, &direct_surface))
+        return FALSE;
+    if (direct_surface)
+        *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;
+    else
+        *pmode = GST_VAAPI_RENDER_MODE_TEXTURE;
+    return TRUE;
+#endif
+}
+
+static gboolean
+get_render_mode_default(
+    GstVaapiDisplay    *display,
+    GstVaapiRenderMode *pmode
+)
+{
+    switch (display->priv->display_type) {
+#if USE_WAYLAND
+    case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
+        /* wl_buffer mapped from VA surface through vaGetSurfaceBufferWl() */
+        *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;
+        break;
+#endif
+#if USE_DRM
+    case GST_VAAPI_DISPLAY_TYPE_DRM:
+        /* vaGetSurfaceBufferDRM() returns the underlying DRM buffer handle */
+        *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;
+        break;
+#endif
+    default:
+        /* This includes VA/X11 and VA/GLX modes */
+        *pmode = GST_VAAPI_RENDER_MODE_TEXTURE;
+        break;
+    }
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_display_get_render_mode:
+ * @display: a #GstVaapiDisplay
+ * @pmode: return location for the VA @display rendering mode
+ *
+ * Returns the current VA @display rendering mode.
+ *
+ * Return value: %TRUE if VA @display rendering mode could be determined
+ */
+gboolean
+gst_vaapi_display_get_render_mode(
+    GstVaapiDisplay    *display,
+    GstVaapiRenderMode *pmode
+)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    /* Try with render-mode attribute */
+    if (get_render_mode_VADisplayAttribRenderMode(display, pmode))
+        return TRUE;
+
+    /* Try with direct-surface attribute */
+    if (get_render_mode_VADisplayAttribDirectSurface(display, pmode))
+        return TRUE;
+
+    /* Default: determine from the display type */
+    return get_render_mode_default(display, pmode);
+}
+
+/**
+ * gst_vaapi_display_set_render_mode:
+ * @display: a #GstVaapiDisplay
+ * @mode: the #GstVaapiRenderMode to set
+ *
+ * Sets the VA @display rendering mode to the supplied @mode. This
+ * function returns %FALSE if the rendering mode could not be set,
+ * e.g. run-time switching rendering mode is not supported.
+ *
+ * Return value: %TRUE if VA @display rendering @mode could be changed
+ *   to the requested value
+ */
+gboolean
+gst_vaapi_display_set_render_mode(
+    GstVaapiDisplay   *display,
+    GstVaapiRenderMode mode
+)
+{
+    gint modes, devices;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+
+    if (!get_attribute(display, VADisplayAttribRenderDevice, &devices))
+        return FALSE;
+
+    modes = 0;
+    switch (mode) {
+    case GST_VAAPI_RENDER_MODE_OVERLAY:
+        if (devices & VA_RENDER_DEVICE_LOCAL)
+            modes |= VA_RENDER_MODE_LOCAL_OVERLAY;
+        if (devices & VA_RENDER_DEVICE_EXTERNAL)
+            modes |= VA_RENDER_MODE_EXTERNAL_OVERLAY;
+        break;
+    case GST_VAAPI_RENDER_MODE_TEXTURE:
+        if (devices & VA_RENDER_DEVICE_LOCAL)
+            modes |= VA_RENDER_MODE_LOCAL_GPU;
+        if (devices & VA_RENDER_DEVICE_EXTERNAL)
+            modes |= VA_RENDER_MODE_EXTERNAL_GPU;
+        break;
+    }
+    if (!modes)
+        return FALSE;
+    if (!set_attribute(display, VADisplayAttribRenderMode, modes))
+        return FALSE;
+    return TRUE;
+}

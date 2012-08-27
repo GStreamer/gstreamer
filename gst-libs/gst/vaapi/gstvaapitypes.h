@@ -116,6 +116,25 @@ struct _GstVaapiRectangle {
     guint32 height;
 };
 
+/**
+ * GstVaapiRenderMode:
+ * @GST_VAAPI_RENDER_MODE_OVERLAY: in this mode, the VA display
+ *   backend renders surfaces with an overlay engine. This means that
+ *   the surface that is currently displayed shall not be re-used
+ *   right away for decoding. i.e. it needs to be retained further,
+ *   until the next surface is to be displayed.
+ * @GST_VAAPI_RENDER_MODE_TEXTURE: in this modem the VA display
+ *   backend renders surfaces with a textured blit (GPU/3D engine).
+ *   This means that the surface is copied to some intermediate
+ *   backing store, or back buffer of a frame buffer, and is free to
+ *   be re-used right away for decoding.
+ */
+typedef enum _GstVaapiRenderMode GstVaapiRenderMode;
+enum _GstVaapiRenderMode {
+    GST_VAAPI_RENDER_MODE_OVERLAY = 1,
+    GST_VAAPI_RENDER_MODE_TEXTURE
+};
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_TYPES_H */
