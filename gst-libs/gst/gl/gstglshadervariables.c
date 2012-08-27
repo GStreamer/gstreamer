@@ -18,6 +18,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "gstglshadervariables.h"
 
 #if !defined(strtok_r) && defined(G_OS_WIN32)
@@ -550,6 +554,7 @@ gst_gl_shadervariable_set (GstGLShader * shader,
           (float *) ret->value);
       break;
 
+#ifndef OPENGL_ES2
     case _mat2x3:
       gst_gl_shader_set_uniform_matrix_2x3fv (shader, ret->name, ret->count, 0,
           (float *) ret->value);
@@ -569,13 +574,13 @@ gst_gl_shadervariable_set (GstGLShader * shader,
       gst_gl_shader_set_uniform_matrix_4x2fv (shader, ret->name, ret->count, 0,
           (float *) ret->value);
       break;
-
+#endif
     case _mat3:
     case _mat3x3:
       gst_gl_shader_set_uniform_matrix_3fv (shader, ret->name, ret->count, 0,
           (float *) ret->value);
       break;
-
+#ifndef OPENGL_ES2
     case _mat3x4:
       gst_gl_shader_set_uniform_matrix_3x4fv (shader, ret->name, ret->count, 0,
           (float *) ret->value);
@@ -585,7 +590,7 @@ gst_gl_shadervariable_set (GstGLShader * shader,
       gst_gl_shader_set_uniform_matrix_4x3fv (shader, ret->name, ret->count, 0,
           (float *) ret->value);
       break;
-
+#endif
     case _mat4:
     case _mat4x4:
       gst_gl_shader_set_uniform_matrix_4fv (shader, ret->name, ret->count, 0,

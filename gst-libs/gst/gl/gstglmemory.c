@@ -170,11 +170,11 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
       case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
         GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
         break;
-
+#ifndef OPENGL_ES2
       case GL_FRAMEBUFFER_UNDEFINED:
         GST_ERROR ("GL_FRAMEBUFFER_UNDEFINED");
         break;
-
+#endif
       default:
         GST_ERROR ("Unknown FBO error");
     }
