@@ -2144,15 +2144,14 @@ gst_gl_display_check_framebuffer_status (void)
     case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
       break;
-
     case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
       GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
       break;
-
+#ifndef OPENGL_ES2
     case GL_FRAMEBUFFER_UNDEFINED:
       GST_ERROR ("GL_FRAMEBUFFER_UNDEFINED");
       break;
-
+#endif
     default:
       GST_ERROR ("General FBO error");
   }
@@ -3379,12 +3378,6 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
   GstVideoInfo vinfo;
   GstVideoFrame *frame;
 
-  frame = display->download_frame;
-  vinfo = frame->info;
-  width = GST_VIDEO_INFO_WIDTH (&vinfo);
-  height = GST_VIDEO_INFO_HEIGHT (&vinfo);
-  video_format = GST_VIDEO_INFO_FORMAT (&vinfo);
-
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
 
@@ -3400,6 +3393,12 @@ gst_gl_display_thread_do_download_draw_yuv (GstGLDisplay * display)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 #endif
+
+  frame = display->download_frame;
+  vinfo = frame->info;
+  width = GST_VIDEO_INFO_WIDTH (&vinfo);
+  height = GST_VIDEO_INFO_HEIGHT (&vinfo);
+  video_format = GST_VIDEO_INFO_FORMAT (&vinfo);
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, display->download_fbo);
 
