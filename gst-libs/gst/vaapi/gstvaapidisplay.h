@@ -218,6 +218,9 @@ gst_vaapi_display_has_subpicture_format(
     GstVaapiImageFormat format
 );
 
+gboolean
+gst_vaapi_display_has_property(GstVaapiDisplay *display, const gchar *name);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_DISPLAY_H */

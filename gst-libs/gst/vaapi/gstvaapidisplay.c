@@ -45,6 +45,12 @@ struct _GstVaapiConfig {
     GstVaapiEntrypoint  entrypoint;
 };
 
+typedef struct _GstVaapiProperty GstVaapiProperty;
+struct _GstVaapiProperty {
+    const gchar        *name;
+    VADisplayAttribute  attribute;
+};
+
 enum {
     PROP_0,
 
@@ -304,6 +310,40 @@ get_format_caps(GArray *formats)
     return out_caps;
 }
 
+/* Find display attribute */
+static const GstVaapiProperty *
+find_property(GArray *properties, const gchar *name)
+{
+    GstVaapiProperty *prop;
+    guint i;
+
+    if (!name)
+        return NULL;
+
+    for (i = 0; i < properties->len; i++) {
+        prop = &g_array_index(properties, GstVaapiProperty, i);
+        if (strcmp(prop->name, name) == 0)
+            return prop;
+    }
+    return NULL;
+}
+
+#if 0
+static const GstVaapiProperty *
+find_property_by_type(GArray *properties, VADisplayAttribType type)
+{
+    GstVaapiProperty *prop;
+    guint i;
+
+    for (i = 0; i < properties->len; i++) {
+        prop = &g_array_index(properties, GstVaapiProperty, i);
+        if (prop->attribute.type == type)
+            return prop;
+    }
+    return NULL;
+}
+#endif
+
 static void
 gst_vaapi_display_calculate_pixel_aspect_ratio(GstVaapiDisplay *display)
 {
@@ -372,6 +412,11 @@ gst_vaapi_display_destroy(GstVaapiDisplay *display)
     if (priv->subpicture_formats) {
         g_array_free(priv->subpicture_formats, TRUE);
         priv->subpicture_formats = NULL;
+    }
+
+    if (priv->properties) {
+        g_array_free(priv->properties, TRUE);
+        priv->properties = NULL;
     }
 
     if (priv->display) {
@@ -523,9 +568,26 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     if (!vaapi_check_status(status, "vaQueryDisplayAttributes()"))
         goto end;
 
+    priv->properties = g_array_new(FALSE, FALSE, sizeof(GstVaapiProperty));
+    if (!priv->properties)
+        goto end;
+
     GST_DEBUG("%d display attributes", n);
-    for (i = 0; i < n; i++)
-        GST_DEBUG("  %s", string_of_VADisplayAttributeType(display_attrs[i].type));
+    for (i = 0; i < n; i++) {
+        VADisplayAttribute * const attr = &display_attrs[i];
+        GstVaapiProperty prop;
+
+        GST_DEBUG("  %s", string_of_VADisplayAttributeType(attr->type));
+
+        switch (attr->type) {
+        default:
+            prop.attribute.flags = 0;
+            break;
+        }
+        if (!prop.attribute.flags)
+            continue;
+        g_array_append_val(priv->properties, prop);
+    }
 
     /* VA image formats */
     formats = g_new(VAImageFormat, vaMaxNumImageFormats(priv->display));
@@ -755,6 +817,7 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->encoders              = NULL;
     priv->image_formats         = NULL;
     priv->subpicture_formats    = NULL;
+    priv->properties            = NULL;
     priv->create_display        = TRUE;
 
     g_static_rec_mutex_init(&priv->mutex);
@@ -1152,4 +1215,25 @@ gst_vaapi_display_has_subpicture_format(
     g_return_val_if_fail(format, FALSE);
 
     return find_format(display->priv->subpicture_formats, format);
+}
+
+/**
+ * gst_vaapi_display_has_property:
+ * @display: a #GstVaapiDisplay
+ * @name: the property name to check
+ *
+ * Returns whether VA @display supports the requested property. The
+ * check is performed against the property @name. So, the client
+ * application may perform this check only once and cache this
+ * information.
+ *
+ * Return value: %TRUE if VA @display supports property @name
+ */
+gboolean
+gst_vaapi_display_has_property(GstVaapiDisplay *display, const gchar *name)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), FALSE);
+    g_return_val_if_fail(name, FALSE);
+
+    return find_property(display->priv->properties, name) != NULL;
 }
