@@ -158,7 +158,7 @@ gst_segment_free (GstSegment * segment)
  * @segment: a #GstSegment structure.
  * @format: the format of the segment.
  *
- * The start/last_stop positions are set to 0 and the stop/duration
+ * The start/position fields are set to 0 and the stop/duration
  * fields are set to -1 (unknown). The default rate of 1.0 and no
  * flags are set.
  *
