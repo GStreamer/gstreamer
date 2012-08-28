@@ -244,10 +244,14 @@ theora_dec_stop (GstVideoDecoder * decoder)
   th_decode_free (dec->decoder);
   dec->decoder = NULL;
   gst_theora_dec_reset (dec);
-  if (dec->input_state)
+  if (dec->input_state) {
     gst_video_codec_state_unref (dec->input_state);
-  if (dec->output_state)
+    dec->input_state = NULL;
+  }
+  if (dec->output_state) {
     gst_video_codec_state_unref (dec->output_state);
+    dec->output_state = NULL;
+  }
 
   return TRUE;
 }
