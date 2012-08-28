@@ -50,6 +50,7 @@ typedef struct _GstVaapiProperty GstVaapiProperty;
 struct _GstVaapiProperty {
     const gchar        *name;
     VADisplayAttribute  attribute;
+    gint                old_value;
 };
 
 #define DEFAULT_RENDER_MODE     GST_VAAPI_RENDER_MODE_TEXTURE
@@ -71,6 +72,12 @@ enum {
 static GstVaapiDisplayCache *g_display_cache = NULL;
 
 static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
+
+static gboolean
+get_attribute(GstVaapiDisplay *display, VADisplayAttribType type, gint *value);
+
+static gboolean
+set_attribute(GstVaapiDisplay *display, VADisplayAttribType type, gint value);
 
 static inline GstVaapiDisplayCache *
 get_display_cache(void)
@@ -607,8 +614,12 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
         }
         if (!prop.name)
             continue;
+
+        /* Assume the attribute is really supported if we can get the
+         * actual and current value */
         prop.attribute = *attr;
-        g_array_append_val(priv->properties, prop);
+        if (get_attribute(display, attr->type, &prop.old_value))
+            g_array_append_val(priv->properties, prop);
     }
 
     /* VA image formats */
