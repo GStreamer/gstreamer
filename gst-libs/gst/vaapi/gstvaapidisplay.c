@@ -61,10 +61,14 @@ enum {
     PROP_DISPLAY,
     PROP_DISPLAY_TYPE,
     PROP_WIDTH,
-    PROP_HEIGHT
+    PROP_HEIGHT,
+
+    N_PROPERTIES
 };
 
 static GstVaapiDisplayCache *g_display_cache = NULL;
+
+static GParamSpec *g_properties[N_PROPERTIES] = { NULL, };
 
 static inline GstVaapiDisplayCache *
 get_display_cache(void)
@@ -777,41 +781,35 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
     dpy_class->lock             = gst_vaapi_display_lock_default;
     dpy_class->unlock           = gst_vaapi_display_unlock_default;
 
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY,
-         g_param_spec_pointer("display",
-                              "VA display",
-                              "VA display",
-                              G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+    g_properties[PROP_DISPLAY] =
+        g_param_spec_pointer("display",
+                             "VA display",
+                             "VA display",
+                             G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY);
 
-    g_object_class_install_property
-        (object_class,
-         PROP_DISPLAY_TYPE,
-         g_param_spec_enum("display-type",
-                           "VA display type",
-                           "VA display type",
-                           GST_VAAPI_TYPE_DISPLAY_TYPE,
-                           GST_VAAPI_DISPLAY_TYPE_ANY,
-                           G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY));
+    g_properties[PROP_DISPLAY_TYPE] =
+        g_param_spec_enum("display-type",
+                          "VA display type",
+                          "VA display type",
+                          GST_VAAPI_TYPE_DISPLAY_TYPE,
+                          GST_VAAPI_DISPLAY_TYPE_ANY,
+                          G_PARAM_READWRITE|G_PARAM_CONSTRUCT_ONLY);
 
-    g_object_class_install_property
-        (object_class,
-         PROP_WIDTH,
-         g_param_spec_uint("width",
-                           "Width",
-                           "The display width",
-                           1, G_MAXUINT32, 1,
-                           G_PARAM_READABLE));
+    g_properties[PROP_WIDTH] =
+        g_param_spec_uint("width",
+                          "Width",
+                          "The display width",
+                          1, G_MAXUINT32, 1,
+                          G_PARAM_READABLE);
 
-    g_object_class_install_property
-        (object_class,
-         PROP_HEIGHT,
-         g_param_spec_uint("height",
-                           "height",
-                           "The display height",
-                           1, G_MAXUINT32, 1,
-                           G_PARAM_READABLE));
+    g_properties[PROP_HEIGHT] =
+        g_param_spec_uint("height",
+                          "height",
+                          "The display height",
+                          1, G_MAXUINT32, 1,
+                          G_PARAM_READABLE);
+
+    g_object_class_install_properties(object_class, N_PROPERTIES, g_properties);
 }
 
 static void
