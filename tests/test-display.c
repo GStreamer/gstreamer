@@ -45,6 +45,18 @@
 #endif
 
 static void
+print_value(const GValue *value, const gchar *name)
+{
+    gchar *value_string;
+
+    value_string = g_strdup_value_contents(value);
+    if (!value_string)
+        return;
+    g_print("  %s: %s\n", name, value_string);
+    g_free(value_string);
+}
+
+static void
 print_profile_caps(GstCaps *caps, const gchar *name)
 {
     guint i, n_caps = gst_caps_get_size(caps);
@@ -122,8 +134,109 @@ print_format_caps(GstCaps *caps, const gchar *name)
     }
 }
 
+typedef struct _GstVaapiDisplayProperty GstVaapiDisplayProperty;
+struct _GstVaapiDisplayProperty {
+    const gchar *name;
+    GValue       value;
+};
+
 static void
-dump_caps(GstVaapiDisplay *display)
+gst_vaapi_display_property_free(GstVaapiDisplayProperty *prop)
+{
+    if (!prop)
+        return;
+    g_value_unset(&prop->value);
+    g_slice_free(GstVaapiDisplayProperty, prop);
+}
+
+static GstVaapiDisplayProperty *
+gst_vaapi_display_property_new(const gchar *name)
+{
+    GstVaapiDisplayProperty *prop;
+
+    prop = g_slice_new0(GstVaapiDisplayProperty);
+    if (!prop)
+        return NULL;
+    prop->name = name;
+    return prop;
+}
+
+static void
+free_property_cb(gpointer data, gpointer user_data)
+{
+    gst_vaapi_display_property_free(data);
+}
+
+static inline GParamSpec *
+get_display_property(GstVaapiDisplay *display, const gchar *name)
+{
+    GObjectClass *klass;
+
+    klass = G_OBJECT_CLASS(GST_VAAPI_DISPLAY_GET_CLASS(display));
+    if (!klass)
+        return NULL;
+    return g_object_class_find_property(klass, name);
+}
+
+static void
+dump_properties(GstVaapiDisplay *display)
+{
+    GstVaapiDisplayProperty *prop;
+    GPtrArray *properties;
+    guint i;
+
+    static const gchar *g_properties[] = {
+        GST_VAAPI_DISPLAY_PROP_RENDER_MODE,
+        GST_VAAPI_DISPLAY_PROP_ROTATION,
+        GST_VAAPI_DISPLAY_PROP_HUE,
+        GST_VAAPI_DISPLAY_PROP_SATURATION,
+        GST_VAAPI_DISPLAY_PROP_BRIGHTNESS,
+        GST_VAAPI_DISPLAY_PROP_CONTRAST,
+        NULL
+    };
+
+    properties = g_ptr_array_new();
+    if (!properties)
+        return;
+
+    for (i = 0; g_properties[i] != NULL; i++) {
+        GParamSpec *pspec = get_display_property(display, g_properties[i]);
+
+        if (!pspec) {
+            GST_ERROR("failed to find GstVaapiDisplay property '%s'",
+                      g_properties[i]);
+            goto end;
+        }
+
+        if (!gst_vaapi_display_has_property(display, pspec->name))
+            continue;
+            
+        prop = gst_vaapi_display_property_new(pspec->name);
+        if (!prop) {
+            GST_ERROR("failed to allocate GstVaapiDisplayProperty");
+            goto end;
+        }
+
+        g_value_init(&prop->value, pspec->value_type);
+        g_object_get_property(G_OBJECT(display), pspec->name, &prop->value);
+        g_ptr_array_add(properties, prop);
+    }
+
+    g_print("%u properties\n", properties->len);
+    for (i = 0; i < properties->len; i++) {
+        prop = g_ptr_array_index(properties, i);
+        print_value(&prop->value, prop->name);
+    }
+
+end:
+    if (properties) {
+        g_ptr_array_foreach(properties, free_property_cb, NULL);
+        g_ptr_array_free(properties, TRUE);
+    }
+}
+
+static void
+dump_info(GstVaapiDisplay *display)
 {
     GstCaps *caps;
 
@@ -154,6 +267,8 @@ dump_caps(GstVaapiDisplay *display)
 
     print_format_caps(caps, "subpicture");
     gst_caps_unref(caps);
+
+    dump_properties(display);
 }
 
 int
@@ -173,7 +288,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
     }
     g_print("\n");
@@ -192,7 +307,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
         close(drm_device);
     }
@@ -217,7 +332,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
         close(drm_device);
     }
@@ -239,7 +354,7 @@ main(int argc, char *argv[])
         gst_vaapi_display_get_pixel_aspect_ratio(display, &par_n, &par_d);
         g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
     }
     g_print("\n");
@@ -258,7 +373,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
         XCloseDisplay(x11_display);
     }
@@ -283,7 +398,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
         XCloseDisplay(x11_display);
     }
@@ -305,7 +420,7 @@ main(int argc, char *argv[])
         gst_vaapi_display_get_pixel_aspect_ratio(display, &par_n, &par_d);
         g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
     }
     g_print("\n");
@@ -324,7 +439,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
         XCloseDisplay(x11_display);
     }
@@ -350,7 +465,7 @@ main(int argc, char *argv[])
         if (!display)
             g_error("could not create Gst/VA display");
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
         XCloseDisplay(x11_display);
     }
@@ -373,7 +488,7 @@ main(int argc, char *argv[])
         gst_vaapi_display_get_pixel_aspect_ratio(display, &par_n, &par_d);
         g_print("Pixel aspect ratio: %u/%u\n", par_n, par_d);
 
-        dump_caps(display);
+        dump_info(display);
         g_object_unref(display);
     }
     g_print("\n");
