@@ -28,6 +28,7 @@
 #include "sysdeps.h"
 #include <string.h>
 #include "gstvaapiutils.h"
+#include "gstvaapivalue.h"
 #include "gstvaapidisplay.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiworkarounds.h"
@@ -51,9 +52,8 @@ struct _GstVaapiProperty {
     VADisplayAttribute  attribute;
 };
 
-/* XXX: export property names when the API is stable enough */
-#define GST_VAAPI_DISPLAY_PROP_RENDER_MODE      "render-mode"
-#define GST_VAAPI_DISPLAY_PROP_ROTATION         "rotation"
+#define DEFAULT_RENDER_MODE     GST_VAAPI_RENDER_MODE_TEXTURE
+#define DEFAULT_ROTATION        GST_VAAPI_ROTATION_0
 
 enum {
     PROP_0,
@@ -62,6 +62,8 @@ enum {
     PROP_DISPLAY_TYPE,
     PROP_WIDTH,
     PROP_HEIGHT,
+    PROP_RENDER_MODE,
+    PROP_ROTATION,
 
     N_PROPERTIES
 };
@@ -713,6 +715,12 @@ gst_vaapi_display_set_property(
     case PROP_DISPLAY_TYPE:
         display->priv->display_type = g_value_get_enum(value);
         break;
+    case PROP_RENDER_MODE:
+        gst_vaapi_display_set_render_mode(display, g_value_get_enum(value));
+        break;
+    case PROP_ROTATION:
+        gst_vaapi_display_set_rotation(display, g_value_get_enum(value));
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -741,6 +749,16 @@ gst_vaapi_display_get_property(
         break;
     case PROP_HEIGHT:
         g_value_set_uint(value, gst_vaapi_display_get_height(display));
+        break;
+    case PROP_RENDER_MODE: {
+        GstVaapiRenderMode mode;
+        if (!gst_vaapi_display_get_render_mode(display, &mode))
+            mode = DEFAULT_RENDER_MODE;
+        g_value_set_enum(value, mode);
+        break;
+    }
+    case PROP_ROTATION:
+        g_value_set_enum(value, gst_vaapi_display_get_rotation(display));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -808,6 +826,32 @@ gst_vaapi_display_class_init(GstVaapiDisplayClass *klass)
                           "The display height",
                           1, G_MAXUINT32, 1,
                           G_PARAM_READABLE);
+
+    /**
+     * GstVaapiDisplay:render-mode:
+     *
+     * The VA display rendering mode, expressed as a #GstVaapiRenderMode.
+     */
+    g_properties[PROP_RENDER_MODE] =
+        g_param_spec_enum(GST_VAAPI_DISPLAY_PROP_RENDER_MODE,
+                          "render mode",
+                          "The display rendering mode",
+                          GST_VAAPI_TYPE_RENDER_MODE,
+                          DEFAULT_RENDER_MODE,
+                          G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiDisplay:rotation:
+     *
+     * The VA display rotation mode, expressed as a #GstVaapiRotation.
+     */
+    g_properties[PROP_ROTATION] =
+        g_param_spec_enum(GST_VAAPI_DISPLAY_PROP_ROTATION,
+                          "rotation",
+                          "The display rotation mode",
+                          GST_VAAPI_TYPE_ROTATION,
+                          DEFAULT_ROTATION,
+                          G_PARAM_READWRITE);
 
     g_object_class_install_properties(object_class, N_PROPERTIES, g_properties);
 }
@@ -1348,7 +1392,7 @@ get_render_mode_default(
 #endif
     default:
         /* This includes VA/X11 and VA/GLX modes */
-        *pmode = GST_VAAPI_RENDER_MODE_TEXTURE;
+        *pmode = DEFAULT_RENDER_MODE;
         break;
     }
     return TRUE;
@@ -1445,7 +1489,7 @@ gst_vaapi_display_get_rotation(GstVaapiDisplay *display)
 {
     gint value;
 
-    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), GST_VAAPI_ROTATION_0);
+    g_return_val_if_fail(GST_VAAPI_IS_DISPLAY(display), DEFAULT_ROTATION);
 
     if (!get_attribute(display, VADisplayAttribRotation, &value))
         value = VA_ROTATION_NONE;

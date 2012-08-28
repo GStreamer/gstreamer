@@ -97,6 +97,14 @@ struct _GstVaapiDisplayInfo {
 };
 
 /**
+ * GstVaapiDisplayProperties:
+ * @GST_VAAPI_DISPLAY_PROP_RENDER_MODE: rendering mode (#GstVaapiRenderMode).
+ * @GST_VAAPI_DISPLAY_PROP_ROTATION: rotation angle (#GstVaapiRotation).
+ */
+#define GST_VAAPI_DISPLAY_PROP_RENDER_MODE      "render-mode"
+#define GST_VAAPI_DISPLAY_PROP_ROTATION         "rotation"
+
+/**
  * GstVaapiDisplay:
  *
  * Base class for VA displays.
