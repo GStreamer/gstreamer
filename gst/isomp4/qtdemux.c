@@ -2445,6 +2445,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
                 0, GST_CLOCK_TIME_NONE,
                 gst_util_uint64_scale (decode_time,
                     GST_SECOND, stream->timescale)));
+        /* ref added when replaced, release the original _new one */
+        gst_event_unref (qtdemux->pending_newsegment);
       }
     }
 
