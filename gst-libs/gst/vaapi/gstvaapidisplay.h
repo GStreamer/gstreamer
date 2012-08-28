@@ -100,9 +100,17 @@ struct _GstVaapiDisplayInfo {
  * GstVaapiDisplayProperties:
  * @GST_VAAPI_DISPLAY_PROP_RENDER_MODE: rendering mode (#GstVaapiRenderMode).
  * @GST_VAAPI_DISPLAY_PROP_ROTATION: rotation angle (#GstVaapiRotation).
+ * @GST_VAAPI_DISPLAY_PROP_HUE: hue (float: [-180 ; 180], default: 0).
+ * @GST_VAAPI_DISPLAY_PROP_SATURATION: saturation (float: [0 ; 2], default: 1).
+ * @GST_VAAPI_DISPLAY_PROP_BRIGHTNESS: brightness (float: [-1 ; 1], default: 0).
+ * @GST_VAAPI_DISPLAY_PROP_CONTRAST: contrast (float: [0 ; 2], default: 1).
  */
 #define GST_VAAPI_DISPLAY_PROP_RENDER_MODE      "render-mode"
 #define GST_VAAPI_DISPLAY_PROP_ROTATION         "rotation"
+#define GST_VAAPI_DISPLAY_PROP_HUE              "hue"
+#define GST_VAAPI_DISPLAY_PROP_SATURATION       "saturation"
+#define GST_VAAPI_DISPLAY_PROP_BRIGHTNESS       "brightness"
+#define GST_VAAPI_DISPLAY_PROP_CONTRAST         "contrast"
 
 /**
  * GstVaapiDisplay:
