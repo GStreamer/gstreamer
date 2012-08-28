@@ -2440,11 +2440,13 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       qtdemux_parse_tfdt (qtdemux, &tfdt_data, &decode_time);
       /* If there is a new segment pending, update the time/position */
       if (qtdemux->pending_newsegment) {
+        GstSegment segment;
+
+        gst_segment_init (&segment, GST_FORMAT_TIME);
+        segment.time = gst_util_uint64_scale (decode_time,
+            GST_SECOND, stream->timescale);
         gst_event_replace (&qtdemux->pending_newsegment,
-            gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                0, GST_CLOCK_TIME_NONE,
-                gst_util_uint64_scale (decode_time,
-                    GST_SECOND, stream->timescale)));
+            gst_event_new_segment (&segment));
         /* ref added when replaced, release the original _new one */
         gst_event_unref (qtdemux->pending_newsegment);
       }
