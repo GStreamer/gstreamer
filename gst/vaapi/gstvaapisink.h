@@ -80,11 +80,14 @@ struct _GstVaapiSink {
     gint                video_par_n;
     gint                video_par_d;
     GstVaapiRectangle   display_rect;
+    GstVaapiRotation    rotation;
+    GstVaapiRotation    rotation_req;
     guint               foreign_window  : 1;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
     guint               use_reflection  : 1;
     guint               use_overlay     : 1;
+    guint               use_rotation    : 1;
 };
 
 struct _GstVaapiSinkClass {
