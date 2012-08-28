@@ -2847,7 +2847,10 @@ gst_value_serialize_flags (const GValue * value)
   /* if no flags are set, try to serialize to the _NONE string */
   if (!flags) {
     fl = g_flags_get_first_value (klass, flags);
-    return g_strdup (fl->value_name);
+    if (fl)
+      return g_strdup (fl->value_name);
+    else
+      return g_strdup ("0");
   }
 
   /* some flags are set, so serialize one by one */
