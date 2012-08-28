@@ -609,6 +609,7 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
     for (i = 0; i < n; i++) {
         VADisplayAttribute * const attr = &display_attrs[i];
         GstVaapiProperty prop;
+        gint value;
 
         GST_DEBUG("  %s", string_of_VADisplayAttributeType(attr->type));
 
@@ -645,9 +646,24 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
 
         /* Assume the attribute is really supported if we can get the
          * actual and current value */
+        if (!get_attribute(display, attr->type, &value))
+            continue;
+
+        /* Some drivers (e.g. EMGD) have completely random initial
+         * values. So try to reset sensible ones */
+        if (value < attr->min_value || value > attr->max_value) {
+            gint v;
+            if (!(attr->flags & VA_DISPLAY_ATTRIB_SETTABLE))
+                continue;
+            if (!set_attribute(display, attr->type, attr->value))
+                continue;
+            if (!get_attribute(display, attr->type, &v) || v != value)
+                continue;
+        }
+
         prop.attribute = *attr;
-        if (get_attribute(display, attr->type, &prop.old_value))
-            g_array_append_val(priv->properties, prop);
+        prop.old_value = value;
+        g_array_append_val(priv->properties, prop);
     }
 
     /* VA image formats */
