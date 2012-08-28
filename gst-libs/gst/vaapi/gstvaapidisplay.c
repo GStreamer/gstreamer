@@ -1471,6 +1471,8 @@ gst_vaapi_display_set_render_mode(
         return FALSE;
     if (!set_attribute(display, VADisplayAttribRenderMode, modes))
         return FALSE;
+
+    g_object_notify_by_pspec(G_OBJECT(display), g_properties[PROP_RENDER_MODE]);
     return TRUE;
 }
 
@@ -1522,5 +1524,7 @@ gst_vaapi_display_set_rotation(
     value = from_GstVaapiRotation(rotation);
     if (!set_attribute(display, VADisplayAttribRotation, value))
         return FALSE;
+
+    g_object_notify_by_pspec(G_OBJECT(display), g_properties[PROP_ROTATION]);
     return TRUE;
 }
