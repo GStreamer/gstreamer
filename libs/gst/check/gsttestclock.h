@@ -79,6 +79,18 @@ void gst_test_clock_set_time (GstTestClock * test_clock, GstClockTime new_time);
 void gst_test_clock_advance_time (GstTestClock * test_clock,
     GstClockTimeDiff delta);
 
+guint gst_test_clock_peek_id_count (GstTestClock * test_clock);
+gboolean gst_test_clock_has_id (GstTestClock * test_clock, GstClockID id);
+gboolean gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
+    GstClockID * pending_id);
+void gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
+    GstClockID * pending_id);
+void gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
+    guint count);
+
+GstClockID gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
+GstClockTime gst_test_clock_get_next_entry_time (GstTestClock * test_clock);
+
 G_END_DECLS
 
 #endif /* __GST_TEST_CLOCK_H__ */

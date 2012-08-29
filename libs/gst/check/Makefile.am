@@ -94,7 +94,14 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_test_clock_new \
 	gst_test_clock_new_with_start_time \
 	gst_test_clock_set_time \
-	gst_test_clock_advance_time
+	gst_test_clock_advance_time \
+	gst_test_clock_peek_id_count \
+	gst_test_clock_has_id \
+	gst_test_clock_peek_next_pending_id \
+	gst_test_clock_wait_for_next_pending_id \
+	gst_test_clock_wait_for_pending_id_count \
+	gst_test_clock_process_next_clock_id \
+	gst_test_clock_get_next_entry_time
 
 LIBGSTCHECK_EXPORTED_SYMBOLS = \
 	$(LIBGSTCHECK_EXPORTED_VARS) \
