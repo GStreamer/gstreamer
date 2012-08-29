@@ -96,10 +96,9 @@ gi_gst_register_types (PyObject * d)
 static int
 add_templates (gpointer gclass, PyObject * templates)
 {
-  gint i, len;
-  PyGObject *templ;
-
   if (PyTuple_Check (templates)) {
+    gint i, len;
+    PyGObject *templ;
 
     len = PyTuple_Size (templates);
     if (len == 0)
@@ -123,7 +122,7 @@ add_templates (gpointer gclass, PyObject * templates)
 
   }
 
-  if (GST_IS_PAD_TEMPLATE (pygobject_get (templ)) == FALSE) {
+  if (GST_IS_PAD_TEMPLATE (pygobject_get (templates)) == FALSE) {
     PyErr_SetString (PyExc_TypeError,
         "entry for __gsttemplates__ must be of type GstPadTemplate");
     return -1;
