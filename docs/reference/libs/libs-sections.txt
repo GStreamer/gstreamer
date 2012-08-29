@@ -40,20 +40,6 @@ GST_VAAPI_VIDEO_POOL_GET_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>gstvaapivideosink</FILE>
-<TITLE>GstVaapiVideoSink</TITLE>
-GST_VAAPI_VIDEO_SINK_GET_INTERFACE
-GstVaapiVideoSinkInterface
-gst_vaapi_video_sink_get_display
-gst_vaapi_video_sink_lookup
-<SUBSECTION Standard>
-GST_VAAPI_VIDEO_SINK
-GST_VAAPI_IS_VIDEO_SINK
-GST_VAAPI_TYPE_VIDEO_SINK
-gst_vaapi_video_sink_get_type
-</SECTION>
-
-<SECTION>
 <FILE>gstvaapidisplay_x11</FILE>
 <TITLE>GstVaapiDisplayX11</TITLE>
 GstVaapiDisplayX11

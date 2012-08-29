@@ -31,7 +31,6 @@
 #include "config.h"
 
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapivideosink.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/video/videocontext.h>
 

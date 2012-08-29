@@ -34,7 +34,6 @@
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
-#include <gst/vaapi/gstvaapivideosink.h>
 #if USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 #endif
@@ -128,7 +127,7 @@ gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface)
     iface->supported = gst_vaapisink_implements_interface_supported;
 }
 
-/* GstVaapiVideoSink interface */
+/* GstVideoContext interface */
 
 static void
 gst_vaapisink_set_video_context(GstVideoContext *context, const gchar *type,
