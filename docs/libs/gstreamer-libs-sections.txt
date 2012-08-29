@@ -999,3 +999,25 @@ gst_consistency_checker_reset
 gst_consistency_checker_free
 </SECTION>
 
+<SECTION>
+<FILE>gsttestclock</FILE>
+<TITLE>GstTestClock</TITLE>
+<INCLUDE>libs/gst/check/gsttestclock.h</INCLUDE>
+GstTestClock
+GstTestClockClass
+gst_test_clock_new
+gst_test_clock_new_with_start_time
+gst_test_clock_set_time
+gst_test_clock_advance_time
+<SUBSECTION Standard>
+GST_TEST_CLOCK
+GST_IS_TEST_CLOCK
+GST_TYPE_TEST_CLOCK
+GST_TEST_CLOCK_CLASS
+GST_IS_TEST_CLOCK_CLASS
+GST_TEST_CLOCK_GET_CLASS
+GST_TEST_CLOCK_CAST
+<SUBSECTION Private>
+GstTestClockPrivate
+gst_test_clock_get_type
+</SECTION>

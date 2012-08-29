@@ -62,6 +62,7 @@ GTKDOC_LIBS = \
 	$(top_builddir)/libs/gst/controller/libgstcontroller-@GST_API_VERSION@.la \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_API_VERSION@.la \
 	$(top_builddir)/libs/gst/net/libgstnet-@GST_API_VERSION@.la \
+	$(top_builddir)/libs/gst/check/libgstcheck-@GST_API_VERSION@.la \
 	$(GST_OBJ_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)

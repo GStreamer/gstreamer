@@ -11,7 +11,8 @@ libgstcheck_@GST_API_VERSION@_la_DEPENDENCIES = \
 libgstcheck_@GST_API_VERSION@_la_SOURCES =	\
 	gstbufferstraw.c			\
 	gstcheck.c				\
-	gstconsistencychecker.c
+	gstconsistencychecker.c			\
+	gsttestclock.c
 
 libgstcheck_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
 	-I$(top_builddir)/libs \
@@ -26,10 +27,11 @@ libgstcheck_@GST_API_VERSION@_la_LDFLAGS = \
 libgstcheck_@GST_API_VERSION@includedir =		\
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/check
 
-libgstcheck_@GST_API_VERSION@include_HEADERS =	 \
+libgstcheck_@GST_API_VERSION@include_HEADERS =	\
 	gstbufferstraw.h			\
 	gstcheck.h				\
-	gstconsistencychecker.h
+	gstconsistencychecker.h			\
+	gsttestclock.h
 
 nodist_libgstcheck_@GST_API_VERSION@include_HEADERS =	\
 	internal-check.h	
@@ -87,7 +89,12 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_consistency_checker_add_pad \
 	gst_consistency_checker_new \
 	gst_consistency_checker_reset \
-	gst_consistency_checker_free
+	gst_consistency_checker_free \
+	gst_test_clock_get_type \
+	gst_test_clock_new \
+	gst_test_clock_new_with_start_time \
+	gst_test_clock_set_time \
+	gst_test_clock_advance_time
 
 LIBGSTCHECK_EXPORTED_SYMBOLS = \
 	$(LIBGSTCHECK_EXPORTED_VARS) \

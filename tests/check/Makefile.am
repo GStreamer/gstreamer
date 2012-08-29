@@ -138,6 +138,7 @@ check_PROGRAMS =				\
 	libs/collectpads			\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
+	libs/gsttestclock			\
 	libs/transform1				\
 	tools/gstinspect
 
