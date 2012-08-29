@@ -5373,6 +5373,10 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     caps = gst_caps_new_simple ("audio/x-eac3",
         "framed", G_TYPE_BOOLEAN, TRUE, NULL);
     *codec_name = g_strdup ("E-AC-3 audio");
+  } else if (!strncmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_TRUEHD,
+          strlen (GST_MATROSKA_CODEC_ID_AUDIO_TRUEHD))) {
+    caps = gst_caps_new_empty_simple ("audio/x-true-hd");
+    *codec_name = g_strdup ("Dolby TrueHD");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_DTS)) {
     caps = gst_caps_new_empty_simple ("audio/x-dts");
     *codec_name = g_strdup ("DTS audio");
