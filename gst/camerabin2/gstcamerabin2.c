@@ -1261,7 +1261,12 @@ encodebin_find_pad (GstCameraBin2 * camera, GstElement * encodebin,
 
     klass = GST_ELEMENT_GET_CLASS (encodebin);
     tmpl = gst_element_class_get_pad_template (klass, pad_type == VIDEO_PAD ?
-        "video_%d" : "audio_%d");
+        "video_%u" : "audio_%u");
+
+    if (!tmpl) {
+      GST_DEBUG_OBJECT (camera, "No templates found, can't request pad");
+      return NULL;
+    }
 
     pad = gst_element_request_pad (encodebin, tmpl, NULL, NULL);
     GST_DEBUG_OBJECT (camera, "Got pad: %s", pad ? GST_PAD_NAME (pad) : "null");
