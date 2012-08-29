@@ -120,12 +120,12 @@
 
 typedef enum
 {
-  GST_ENC_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
-  GST_ENC_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
-} GstEncFlags;
+  GST_ENCODEBIN_FLAG_NO_AUDIO_CONVERSION = (1 << 0),
+  GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION = (1 << 1)
+} GstEncodeBinFlags;
 
-#define GST_TYPE_ENC_FLAGS (gst_enc_flags_get_type())
-GType gst_enc_flags_get_type (void);
+#define GST_TYPE_ENCODEBIN_FLAGS (gst_encodebin_flags_get_type())
+GType gst_encodebin_flags_get_type (void);
 
 /* generic templates */
 static GstStaticPadTemplate muxer_src_template =
@@ -190,7 +190,7 @@ struct _GstEncodeBin
   guint64 tolerance;
   gboolean avoid_reencoding;
 
-  GstEncFlags flags;
+  GstEncodeBinFlags flags;
 };
 
 struct _GstEncodeBinClass
@@ -261,13 +261,13 @@ enum
 #define C_FLAGS(v) ((guint) v)
 
 GType
-gst_enc_flags_get_type (void)
+gst_encodebin_flags_get_type (void)
 {
   static const GFlagsValue values[] = {
-    {C_FLAGS (GST_ENC_FLAG_NO_AUDIO_CONVERSION), "Do not use audio conversion "
-          "elements", "no-audio-conversion"},
-    {C_FLAGS (GST_ENC_FLAG_NO_VIDEO_CONVERSION), "Do not use video conversion "
-          "elements", "no-video-conversion"},
+    {C_FLAGS (GST_ENCODEBIN_FLAG_NO_AUDIO_CONVERSION), "Do not use audio "
+          "conversion elements", "no-audio-conversion"},
+    {C_FLAGS (GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION), "Do not use video "
+          "conversion elements", "no-video-conversion"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -275,7 +275,7 @@ gst_enc_flags_get_type (void)
   if (g_once_init_enter ((gsize *) & id)) {
     GType _id;
 
-    _id = g_flags_register_static ("GstEncFlags", values);
+    _id = g_flags_register_static ("GstEncodeBinFlags", values);
 
     g_once_init_leave ((gsize *) & id, _id);
   }
@@ -381,7 +381,7 @@ gst_encode_bin_class_init (GstEncodeBinClass * klass)
    */
   g_object_class_install_property (gobject_klass, PROP_FLAGS,
       g_param_spec_flags ("flags", "Flags", "Flags to control behaviour",
-          GST_TYPE_ENC_FLAGS, DEFAULT_FLAGS,
+          GST_TYPE_ENCODEBIN_FLAGS, DEFAULT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* Signals */
@@ -1229,7 +1229,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
     const gboolean native_video =
-        ! !(ebin->flags & GST_ENC_FLAG_NO_VIDEO_CONVERSION);
+        ! !(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");
@@ -1291,7 +1291,7 @@ _create_stream_group (GstEncodeBin * ebin, GstEncodingProfile * sprof,
     }
 
   } else if (GST_IS_ENCODING_AUDIO_PROFILE (sprof)
-      && !(ebin->flags & GST_ENC_FLAG_NO_AUDIO_CONVERSION)) {
+      && !(ebin->flags & GST_ENCODEBIN_FLAG_NO_AUDIO_CONVERSION)) {
     GstElement *aconv, *ares, *arate, *aconv2;
 
     GST_LOG ("Adding conversion elements for audio stream");
