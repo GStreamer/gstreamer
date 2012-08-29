@@ -1542,7 +1542,7 @@ main (int argc, char *argv[])
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", err->message);
+    g_printerr ("Error initializing: %s\n", err->message);
     exit (1);
   }
   g_option_context_free (ctx);
@@ -1553,12 +1553,12 @@ main (int argc, char *argv[])
   gst_tools_print_version ();
 
   if (print_all && argc > 1) {
-    g_print ("-a requires no extra arguments\n");
+    g_printerr ("-a requires no extra arguments\n");
     return 1;
   }
 
   if (uri_handlers && argc > 1) {
-    g_print ("-u requires no extra arguments\n");
+    g_printerr ("-u requires no extra arguments\n");
     exit (1);
   }
 
@@ -1621,12 +1621,12 @@ main (int argc, char *argv[])
               print_plugin_features (plugin);
             }
           } else {
-            g_print (_("Could not load plugin file: %s\n"), error->message);
+            g_printerr (_("Could not load plugin file: %s\n"), error->message);
             g_error_free (error);
             return -1;
           }
         } else {
-          g_print (_("No such element or plugin '%s'\n"), arg);
+          g_printerr (_("No such element or plugin '%s'\n"), arg);
           return -1;
         }
       }
