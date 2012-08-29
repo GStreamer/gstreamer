@@ -650,16 +650,9 @@ gst_vaapi_display_create(GstVaapiDisplay *display)
             continue;
 
         /* Some drivers (e.g. EMGD) have completely random initial
-         * values. So try to reset sensible ones */
-        if (value < attr->min_value || value > attr->max_value) {
-            gint v;
-            if (!(attr->flags & VA_DISPLAY_ATTRIB_SETTABLE))
-                continue;
-            if (!set_attribute(display, attr->type, attr->value))
-                continue;
-            if (!get_attribute(display, attr->type, &v) || v != value)
-                continue;
-        }
+         * values */
+        if (value < attr->min_value || value > attr->max_value)
+            continue;
 
         prop.attribute = *attr;
         prop.old_value = value;
