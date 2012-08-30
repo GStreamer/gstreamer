@@ -3811,6 +3811,10 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
   /* do block probes */
   PROBE_PUSH (pad, type | GST_PAD_PROBE_TYPE_BLOCK, data, probe_stopped);
 
+  /* recheck sticky events because the probe might have cause a relink */
+  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+    goto events_error;
+
   /* do post-blocking probes */
   PROBE_PUSH (pad, type, data, probe_stopped);
 
@@ -3992,6 +3996,10 @@ gst_pad_get_range_unchecked (GstPad * pad, guint64 offset, guint size,
    * valid result buffer */
   PROBE_PULL (pad, GST_PAD_PROBE_TYPE_PULL | GST_PAD_PROBE_TYPE_BLOCK,
       res_buf, offset, size, probe_stopped);
+
+  /* recheck sticky events because the probe might have cause a relink */
+  if (G_UNLIKELY ((ret = check_sticky (pad))) != GST_FLOW_OK)
+    goto events_error;
 
   ACQUIRE_PARENT (pad, parent, no_parent);
   GST_OBJECT_UNLOCK (pad);
