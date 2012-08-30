@@ -1389,6 +1389,10 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     if (check_collision (sess, source, arrival, rtp)) {
       return NULL;
     }
+    /* Receiving RTCP packets of an SSRC is a strong indication that we
+     * are dealing with a valid source. */
+    if (!rtp)
+      g_object_set (source, "probation", 0, NULL);
   }
   /* update last activity */
   source->last_activity = arrival->current_time;
