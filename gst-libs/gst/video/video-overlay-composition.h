@@ -112,9 +112,16 @@ typedef enum {
 #define GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB      GST_VIDEO_FORMAT_ARGB
 #endif
 
+/**
+  * GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV:
+  *
+  * Supported YUV overlay video format.
+  */
+#define GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV      GST_VIDEO_FORMAT_AYUV
+
 GType                        gst_video_overlay_rectangle_get_type (void);
 
-GstVideoOverlayRectangle *   gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
+GstVideoOverlayRectangle *   gst_video_overlay_rectangle_new_raw  (GstBuffer * pixels,
                                                                    gint render_x, gint render_y,
                                                                    guint render_width, guint render_height,
                                                                    GstVideoOverlayFormatFlags flags);
@@ -135,10 +142,10 @@ gboolean                     gst_video_overlay_rectangle_get_render_rectangle   
                                                                                    guint                     * render_width,
                                                                                    guint                     * render_height);
 
-GstBuffer *                  gst_video_overlay_rectangle_get_pixels_argb          (GstVideoOverlayRectangle  * rectangle,
+GstBuffer *                  gst_video_overlay_rectangle_get_pixels_raw           (GstVideoOverlayRectangle  * rectangle,
                                                                                    GstVideoOverlayFormatFlags  flags);
 
-GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle  * rectangle,
+GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_raw  (GstVideoOverlayRectangle  * rectangle,
                                                                                    GstVideoOverlayFormatFlags  flags);
 
 GstVideoOverlayFormatFlags   gst_video_overlay_rectangle_get_flags                (GstVideoOverlayRectangle  * rectangle);

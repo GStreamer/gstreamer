@@ -637,7 +637,7 @@ gst_video_overlay_rectangle_is_same_alpha_type (GstVideoOverlayFormatFlags
 
 
 /**
- * gst_video_overlay_rectangle_new_argb:
+ * gst_video_overlay_rectangle_new_raw:
  * @pixels: (transfer none): a #GstBuffer pointing to the pixel memory
  * @render_x: the X co-ordinate on the video where the top-left corner of this
  *     overlay rectangle should be rendered to
@@ -662,31 +662,28 @@ gst_video_overlay_rectangle_is_same_alpha_type (GstVideoOverlayFormatFlags
  *     gst_video_overlay_rectangle_unref() when no longer needed.
  */
 GstVideoOverlayRectangle *
-gst_video_overlay_rectangle_new_argb (GstBuffer * pixels,
+gst_video_overlay_rectangle_new_raw (GstBuffer * pixels,
     gint render_x, gint render_y, guint render_width, guint render_height,
     GstVideoOverlayFormatFlags flags)
 {
   GstVideoOverlayRectangle *rect;
-  GstVideoFormat format;
   GstVideoMeta *vmeta;
+  GstVideoFormat format;
   guint width, height;
 
   g_return_val_if_fail (GST_IS_BUFFER (pixels), NULL);
   g_return_val_if_fail (render_height > 0 && render_width > 0, NULL);
   g_return_val_if_fail (gst_video_overlay_rectangle_check_flags (flags), NULL);
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-  format = GST_VIDEO_FORMAT_BGRA;
-#else
-  format = GST_VIDEO_FORMAT_ARGB;
-#endif
-
   /* buffer must have video meta with some expected settings */
   vmeta = gst_buffer_get_video_meta (pixels);
   g_return_val_if_fail (vmeta, NULL);
-  g_return_val_if_fail (vmeta->format == format, NULL);
+  g_return_val_if_fail (vmeta->format ==
+      GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB ||
+      vmeta->format == GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV, NULL);
   g_return_val_if_fail (vmeta->flags == GST_VIDEO_FRAME_FLAG_NONE, NULL);
 
+  format = vmeta->format;
   width = vmeta->width;
   height = vmeta->height;
 
@@ -797,21 +794,9 @@ gst_video_overlay_rectangle_set_render_rectangle (GstVideoOverlayRectangle *
   rectangle->render_height = render_height;
 }
 
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-# define ARGB_A 3
-# define ARGB_R 2
-# define ARGB_G 1
-# define ARGB_B 0
-#else
-# define ARGB_A 0
-# define ARGB_R 1
-# define ARGB_G 2
-# define ARGB_B 3
-#endif
-
 /* FIXME: orc-ify */
 static void
-gst_video_overlay_rectangle_premultiply (GstVideoFrame * frame)
+gst_video_overlay_rectangle_premultiply_0 (GstVideoFrame * frame)
 {
   int i, j;
   for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
@@ -820,18 +805,17 @@ gst_video_overlay_rectangle_premultiply (GstVideoFrame * frame)
     line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
     line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
     for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
-      int a = line[ARGB_A];
-      line[ARGB_R] = line[ARGB_R] * a / 255;
-      line[ARGB_G] = line[ARGB_G] * a / 255;
-      line[ARGB_B] = line[ARGB_B] * a / 255;
+      int a = line[0];
+      line[1] = line[1] * a / 255;
+      line[2] = line[2] * a / 255;
+      line[3] = line[3] * a / 255;
       line += 4;
     }
   }
 }
 
-/* FIXME: orc-ify */
 static void
-gst_video_overlay_rectangle_unpremultiply (GstVideoFrame * frame)
+gst_video_overlay_rectangle_premultiply_3 (GstVideoFrame * frame)
 {
   int i, j;
   for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
@@ -840,14 +824,93 @@ gst_video_overlay_rectangle_unpremultiply (GstVideoFrame * frame)
     line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
     line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
     for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
-      int a = line[ARGB_A];
+      int a = line[3];
+      line[0] = line[0] * a / 255;
+      line[1] = line[1] * a / 255;
+      line[2] = line[2] * a / 255;
+      line += 4;
+    }
+  }
+}
+
+static void
+gst_video_overlay_rectangle_premultiply (GstVideoFrame * frame)
+{
+  gint alpha_offset;
+
+  alpha_offset = GST_VIDEO_FRAME_COMP_POFFSET (frame, 3);
+  switch (alpha_offset) {
+    case 0:
+      gst_video_overlay_rectangle_premultiply_0 (frame);
+      break;
+    case 3:
+      gst_video_overlay_rectangle_premultiply_3 (frame);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+}
+
+/* FIXME: orc-ify */
+static void
+gst_video_overlay_rectangle_unpremultiply_0 (GstVideoFrame * frame)
+{
+  int i, j;
+  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+    guint8 *line;
+
+    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
+    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+      int a = line[0];
       if (a) {
-        line[ARGB_R] = MIN ((line[ARGB_R] * 255 + a / 2) / a, 255);
-        line[ARGB_G] = MIN ((line[ARGB_G] * 255 + a / 2) / a, 255);
-        line[ARGB_B] = MIN ((line[ARGB_B] * 255 + a / 2) / a, 255);
+        line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
+        line[2] = MIN ((line[2] * 255 + a / 2) / a, 255);
+        line[3] = MIN ((line[3] * 255 + a / 2) / a, 255);
       }
       line += 4;
     }
+  }
+}
+
+static void
+gst_video_overlay_rectangle_unpremultiply_3 (GstVideoFrame * frame)
+{
+  int i, j;
+  for (j = 0; j < GST_VIDEO_FRAME_HEIGHT (frame); ++j) {
+    guint8 *line;
+
+    line = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    line += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) * j;
+    for (i = 0; i < GST_VIDEO_FRAME_WIDTH (frame); ++i) {
+      int a = line[3];
+      if (a) {
+        line[0] = MIN ((line[0] * 255 + a / 2) / a, 255);
+        line[1] = MIN ((line[1] * 255 + a / 2) / a, 255);
+        line[2] = MIN ((line[2] * 255 + a / 2) / a, 255);
+      }
+      line += 4;
+    }
+  }
+}
+
+static void
+gst_video_overlay_rectangle_unpremultiply (GstVideoFrame * frame)
+{
+  gint alpha_offset;
+
+  alpha_offset = GST_VIDEO_FRAME_COMP_POFFSET (frame, 3);
+  switch (alpha_offset) {
+    case 0:
+      gst_video_overlay_rectangle_unpremultiply_0 (frame);
+      break;
+    case 3:
+      gst_video_overlay_rectangle_unpremultiply_3 (frame);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 }
 
@@ -857,7 +920,10 @@ gst_video_overlay_rectangle_extract_alpha (GstVideoOverlayRectangle * rect)
 {
   guint8 *src, *dst;
   GstVideoFrame frame;
-  gint i, j, w, h, stride;
+  gint i, j, w, h, stride, alpha_offset;
+
+  alpha_offset = GST_VIDEO_INFO_COMP_POFFSET (&rect->info, 3);
+  g_return_if_fail (alpha_offset == 0 || alpha_offset == 3);
 
   gst_video_frame_map (&frame, &rect->info, rect->pixels, GST_MAP_READ);
   src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
@@ -871,7 +937,7 @@ gst_video_overlay_rectangle_extract_alpha (GstVideoOverlayRectangle * rect)
 
   for (i = 0; i < h; i++) {
     for (j = 0; j < w; j++) {
-      *dst = src[ARGB_A];
+      *dst = src[alpha_offset];
       dst++;
       src += 4;
     }
@@ -888,6 +954,7 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
   guint8 *src, *dst;
   GstVideoFrame frame;
   gint i, j, w, h, stride;
+  gint argb_a, argb_r, argb_g, argb_b;
 
   g_assert (!(rect->applied_global_alpha != 1.0
           && rect->initial_alpha == NULL));
@@ -907,22 +974,27 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
   h = GST_VIDEO_INFO_HEIGHT (&rect->info);
   stride = GST_VIDEO_INFO_PLANE_STRIDE (&rect->info, 0);
 
+  argb_a = GST_VIDEO_INFO_COMP_POFFSET (&rect->info, 3);
+  argb_r = (argb_a + 1) % 4;
+  argb_g = (argb_a + 2) % 4;
+  argb_b = (argb_a + 3) % 4;
+
   for (i = 0; i < h; i++) {
     for (j = 0; j < w; j++) {
       guint8 na = (guint8) (*src * global_alpha);
 
       if (! !(rect->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)) {
-        dst[ARGB_R] =
-            (guint8) ((double) (dst[ARGB_R] * 255) / (double) dst[ARGB_A]) *
+        dst[argb_r] =
+            (guint8) ((double) (dst[argb_r] * 255) / (double) dst[argb_a]) *
             na / 255;
-        dst[ARGB_G] =
-            (guint8) ((double) (dst[ARGB_G] * 255) / (double) dst[ARGB_A]) *
+        dst[argb_g] =
+            (guint8) ((double) (dst[argb_g] * 255) / (double) dst[argb_a]) *
             na / 255;
-        dst[ARGB_B] =
-            (guint8) ((double) (dst[ARGB_B] * 255) / (double) dst[ARGB_A]) *
+        dst[argb_b] =
+            (guint8) ((double) (dst[argb_b] * 255) / (double) dst[argb_a]) *
             na / 255;
       }
-      dst[ARGB_A] = na;
+      dst[argb_a] = na;
       src++;
       dst += 4;
     }
@@ -934,7 +1006,7 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
 }
 
 static GstBuffer *
-gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
+gst_video_overlay_rectangle_get_pixels_raw_internal (GstVideoOverlayRectangle *
     rectangle, GstVideoOverlayFormatFlags flags, gboolean unscaled)
 {
   GstVideoOverlayFormatFlags new_flags;
@@ -1030,7 +1102,7 @@ gst_video_overlay_rectangle_get_pixels_argb_internal (GstVideoOverlayRectangle *
   }
   gst_video_frame_unmap (&frame);
 
-  scaled_rect = gst_video_overlay_rectangle_new_argb (buf,
+  scaled_rect = gst_video_overlay_rectangle_new_raw (buf,
       0, 0, wanted_width, wanted_height, new_flags);
   if (rectangle->global_alpha != 1.0)
     gst_video_overlay_rectangle_set_global_alpha (scaled_rect,
@@ -1061,7 +1133,7 @@ done:
 
 
 /**
- * gst_video_overlay_rectangle_get_pixels_argb:
+ * gst_video_overlay_rectangle_get_pixels_raw:
  * @rectangle: a #GstVideoOverlayRectangle
  * @flags: flags
  *    If a global_alpha value != 1 is set for the rectangle, the caller
@@ -1076,15 +1148,15 @@ done:
  *    with gst_buffer_ref() if needed.
  */
 GstBuffer *
-gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
+gst_video_overlay_rectangle_get_pixels_raw (GstVideoOverlayRectangle *
     rectangle, GstVideoOverlayFormatFlags flags)
 {
-  return gst_video_overlay_rectangle_get_pixels_argb_internal (rectangle,
+  return gst_video_overlay_rectangle_get_pixels_raw_internal (rectangle,
       flags, FALSE);
 }
 
 /**
- * gst_video_overlay_rectangle_get_pixels_unscaled_argb:
+ * gst_video_overlay_rectangle_get_pixels_unscaled_raw:
  * @rectangle: a #GstVideoOverlayRectangle
  * @flags: flags.
  *    If a global_alpha value != 1 is set for the rectangle, the caller
@@ -1102,12 +1174,12 @@ gst_video_overlay_rectangle_get_pixels_argb (GstVideoOverlayRectangle *
  *    should obtain a reference of her own with gst_buffer_ref() if needed.
  */
 GstBuffer *
-gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle *
+gst_video_overlay_rectangle_get_pixels_unscaled_raw (GstVideoOverlayRectangle *
     rectangle, GstVideoOverlayFormatFlags flags)
 {
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), NULL);
 
-  return gst_video_overlay_rectangle_get_pixels_argb_internal (rectangle,
+  return gst_video_overlay_rectangle_get_pixels_raw_internal (rectangle,
       flags, TRUE);
 }
 
@@ -1202,7 +1274,7 @@ gst_video_overlay_rectangle_copy (GstVideoOverlayRectangle * rectangle)
 
   g_return_val_if_fail (GST_IS_VIDEO_OVERLAY_RECTANGLE (rectangle), NULL);
 
-  copy = gst_video_overlay_rectangle_new_argb (rectangle->pixels,
+  copy = gst_video_overlay_rectangle_new_raw (rectangle->pixels,
       rectangle->x, rectangle->y,
       rectangle->render_width, rectangle->render_height, rectangle->flags);
   if (rectangle->global_alpha != 1)
