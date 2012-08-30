@@ -806,6 +806,8 @@ gst_input_selector_cleanup_old_cached_buffers (GstInputSelector * sel,
         cur_running_time -= base_time;
       else
         cur_running_time = 0;
+
+      gst_object_unref (clock);
     }
   } else {
     GstPad *active_sinkpad;
