@@ -681,7 +681,7 @@ gst_flac_parse_frame_is_valid (GstFlacParse * flacparse,
           gst_flac_parse_frame_header_is_valid (flacparse, map.data + i,
           remaining, FALSE, NULL, &suspect_end);
       if (header_ret == FRAME_HEADER_VALID) {
-        if (flacparse->check_frame_checksums) {
+        if (flacparse->check_frame_checksums || suspect_start || suspect_end) {
           guint16 actual_crc = gst_flac_calculate_crc16 (map.data, i - 2);
           guint16 expected_crc = GST_READ_UINT16_BE (map.data + i - 2);
 
