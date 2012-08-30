@@ -50,6 +50,7 @@ enum
 enum
 {
   SIGNAL_CLOSED,
+  SIGNAL_NEW_SESSION,
   SIGNAL_LAST
 };
 
@@ -101,6 +102,11 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_signal_new ("closed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPClientClass, closed), NULL, NULL,
       g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  gst_rtsp_client_signals[SIGNAL_NEW_SESSION] =
+      g_signal_new ("new-session", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPClientClass, new_session), NULL, NULL,
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -1313,6 +1319,9 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
   g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
       client);
   client->sessions = g_list_prepend (client->sessions, session);
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_NEW_SESSION], 0,
+      session);
 }
 
 static void

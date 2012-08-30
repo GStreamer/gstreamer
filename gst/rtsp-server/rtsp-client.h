@@ -113,6 +113,7 @@ struct _GstRTSPClientClass {
 
   /* signals */
   void     (*closed)        (GstRTSPClient *client);
+  void     (*new_session)   (GstRTSPClient *client, GstRTSPSession *session);
 };
 
 GType                 gst_rtsp_client_get_type          (void);
