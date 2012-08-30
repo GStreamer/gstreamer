@@ -660,9 +660,6 @@ GST_START_TEST (test_raw_single_video_stream_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -739,9 +736,6 @@ GST_START_TEST (test_compressed_single_video_stream_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -823,9 +817,6 @@ GST_START_TEST (test_raw_single_video_stream_demuxer_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -905,9 +896,6 @@ GST_START_TEST (test_compressed_single_video_stream_demuxer_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -990,9 +978,6 @@ GST_START_TEST (test_raw_single_audio_stream_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1069,9 +1054,6 @@ GST_START_TEST (test_compressed_single_audio_stream_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -1153,9 +1135,6 @@ GST_START_TEST (test_raw_single_audio_stream_demuxer_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1236,9 +1215,6 @@ GST_START_TEST (test_compressed_single_audio_stream_demuxer_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1318,9 +1294,6 @@ GST_START_TEST (test_raw_audio_video_stream_demuxer_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -1403,9 +1376,6 @@ GST_START_TEST (test_compressed_audio_video_stream_demuxer_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1486,9 +1456,6 @@ GST_START_TEST (test_raw_compressed_video_stream_demuxer_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1565,9 +1532,6 @@ GST_START_TEST (test_raw_compressed_audio_stream_demuxer_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -1685,9 +1649,6 @@ GST_START_TEST (test_raw_compressed_video_stream_demuxer_switch_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1779,9 +1740,6 @@ GST_START_TEST (test_compressed_raw_video_stream_demuxer_switch_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -1875,9 +1833,6 @@ GST_START_TEST (test_raw_raw_video_stream_demuxer_switch_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -1970,9 +1925,6 @@ GST_START_TEST
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -2084,9 +2036,6 @@ GST_START_TEST (test_raw_compressed_audio_stream_demuxer_switch_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -2178,9 +2127,6 @@ GST_START_TEST (test_compressed_raw_audio_stream_demuxer_switch_manual_sink)
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
@@ -2274,9 +2220,6 @@ GST_START_TEST (test_raw_raw_audio_stream_demuxer_switch_manual_sink)
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
         break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
-        break;
       default:
         break;
     }
@@ -2369,9 +2312,6 @@ GST_START_TEST
         break;
       case GST_MESSAGE_ERROR:
         fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
-        break;
-      case GST_MESSAGE_WARNING:
-        fail_if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_WARNING);
         break;
       default:
         break;
