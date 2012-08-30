@@ -1066,10 +1066,6 @@ gst_wrapper_camera_bin_src_start_capture (GstBaseCameraSrc * camerasrc)
       g_mutex_lock (&camerasrc->capturing_mutex);
       gst_caps_unref (caps);
       gst_caps_unref (anycaps);
-
-      /* We caught this event in the src pad event handler and now we want to
-       * actually push it upstream */
-      gst_pad_send_event (src->outsel_vidpad, gst_event_new_reconfigure ());
     }
     if (src->video_rec_status == GST_VIDEO_RECORDING_STATUS_DONE) {
       src->video_rec_status = GST_VIDEO_RECORDING_STATUS_STARTING;
