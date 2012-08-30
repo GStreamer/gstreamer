@@ -475,7 +475,7 @@ gst_gdk_pixbuf_overlay_update_composition (GstGdkPixbufOverlay * overlay)
       GST_VIDEO_INFO_WIDTH (&GST_VIDEO_FILTER (overlay)->in_info),
       GST_VIDEO_INFO_HEIGHT (&GST_VIDEO_FILTER (overlay)->in_info));
 
-  rect = gst_video_overlay_rectangle_new_argb (overlay->pixels,
+  rect = gst_video_overlay_rectangle_new_raw (overlay->pixels,
       x, y, width, height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
 
   if (overlay->alpha != 1.0)
