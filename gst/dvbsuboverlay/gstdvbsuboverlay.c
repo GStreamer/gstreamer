@@ -725,25 +725,9 @@ gst_dvbsub_overlay_subs_to_comp (GstDVBSubOverlay * overlay,
     for (k = 0; k < h; k++) {
       for (l = 0; l < w; l++) {
         guint32 ayuv;
-        gint a, y, u, v, r, g, b;
 
-        /* convert ayuv to argb */
         ayuv = palette[*in_data];
-        a = ayuv >> 24;
-        y = (ayuv >> 16) & 0xff;
-        u = (ayuv >> 8) & 0xff;
-        v = (ayuv & 0xff);
-
-        r = (298 * y + 459 * v - 63514) >> 8;
-        g = (298 * y - 55 * u - 136 * v + 19681) >> 8;
-        b = (298 * y + 541 * u - 73988) >> 8;
-
-        r = CLAMP (r, 0, 255);
-        g = CLAMP (g, 0, 255);
-        b = CLAMP (b, 0, 255);
-
-        *data = ((a << 24) | (r << 16) | (g << 8) | b);
-
+        GST_WRITE_UINT32_BE (data, ayuv);
         in_data++;
         data++;
       }
@@ -764,8 +748,8 @@ gst_dvbsub_overlay_subs_to_comp (GstDVBSubOverlay * overlay,
         rw, rh, rx, ry);
 
     gst_buffer_add_video_meta (buf, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB, w, h);
-    rect = gst_video_overlay_rectangle_new_argb (buf, rx, ry, rw, rh, 0);
+        GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV, w, h);
+    rect = gst_video_overlay_rectangle_new_raw (buf, rx, ry, rw, rh, 0);
     g_assert (rect);
     if (comp) {
       gst_video_overlay_composition_add_rectangle (comp, rect);
