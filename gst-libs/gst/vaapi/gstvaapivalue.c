@@ -202,6 +202,7 @@ gst_vaapi_rotation_get_type(void)
           "Rotated by 180°, clockwise", "180" },
         { GST_VAAPI_ROTATION_270,
           "Rotated by 270°, clockwise", "270" },
+        { 0, NULL, NULL },
     };
 
     if (!g_type)
