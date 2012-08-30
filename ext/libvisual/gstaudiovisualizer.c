@@ -831,6 +831,7 @@ gst_audio_visualizer_src_negotiate (GstAudioVisualizer * scope)
 
 no_format:
   {
+    GST_ERROR_OBJECT (scope, "no format");
     gst_caps_unref (target);
     return FALSE;
   }
@@ -886,6 +887,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
   bps = GST_AUDIO_INFO_BPS (&scope->ainfo);
 
   if (bps == 0) {
+    GST_ERROR_OBJECT (scope, "no BPS set");
     ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
@@ -973,6 +975,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     /* call class->render() vmethod */
     if (klass->render) {
       if (!klass->render (scope, inbuf, &outframe)) {
+        GST_ERROR_OBJECT (scope, "render failed");
         ret = GST_FLOW_ERROR;
       } else {
         /* run various post processing (shading and geometri transformation */
