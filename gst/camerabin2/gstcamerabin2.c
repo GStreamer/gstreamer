@@ -390,20 +390,7 @@ gst_camera_bin_start_capture (GstCameraBin2 * camerabin)
   if (camerabin->location)
     location = g_strdup_printf (camerabin->location, capture_index);
 
-  if (camerabin->mode == MODE_VIDEO) {
-    if (camerabin->audio_src) {
-      GstClock *clock = gst_pipeline_get_clock (GST_PIPELINE_CAST (camerabin));
-
-      gst_element_set_state (camerabin->audio_src, GST_STATE_PAUSED);
-
-      gst_element_set_base_time (camerabin->audio_src,
-          gst_element_get_base_time (GST_ELEMENT_CAST (camerabin)));
-      if (clock) {
-        gst_element_set_clock (camerabin->audio_src, clock);
-        gst_object_unref (clock);
-      }
-    }
-  } else {
+  if (camerabin->mode == MODE_IMAGE) {
     /* store the next capture buffer filename */
     g_mutex_lock (&camerabin->image_capture_mutex);
     camerabin->image_location_list =
