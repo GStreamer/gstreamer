@@ -1297,12 +1297,13 @@ gst_auto_convert_internal_src_event (GstPad * pad, GstObject * parent,
   gboolean drop = FALSE;
 
   GST_AUTOCONVERT_LOCK (autoconvert);
-  if (autoconvert->current_internal_sinkpad != pad) {
+  if (autoconvert->current_internal_srcpad != pad) {
     drop = TRUE;
   }
   GST_AUTOCONVERT_UNLOCK (autoconvert);
 
   if (drop) {
+    GST_DEBUG_OBJECT (autoconvert, "Dropping event %" GST_PTR_FORMAT, event);
     gst_event_unref (event);
     return TRUE;
   }
