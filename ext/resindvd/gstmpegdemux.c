@@ -430,7 +430,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     GstBuffer * buf)
 {
   GstFlowReturn result;
-  guint64 timestamp;
+  GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
   guint size;
 
   if (stream == NULL)
@@ -438,9 +438,9 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 
   /* timestamps */
   if (G_UNLIKELY (demux->next_pts != G_MAXUINT64))
-    timestamp = MPEGTIME_TO_GSTTIME (demux->next_pts);
-  else
-    timestamp = GST_CLOCK_TIME_NONE;
+    pts = MPEGTIME_TO_GSTTIME (demux->next_pts);
+  if (G_UNLIKELY (demux->next_dts != G_MAXUINT64))
+    dts = MPEGTIME_TO_GSTTIME (demux->next_dts);
 
   if (demux->current_scr != G_MAXUINT64) {
     GstClockTime cur_scr_time = MPEGTIME_TO_GSTTIME (demux->current_scr);
@@ -456,12 +456,14 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   }
 
   /* OK, sent new segment now prepare the buffer for sending */
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_PTS (buf) = pts;
+  GST_BUFFER_DTS (buf) = dts;
 
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
     GST_DEBUG_OBJECT (demux, "discont buffer to pad %" GST_PTR_FORMAT
-        " with TS %" GST_TIME_FORMAT, stream->pad, GST_TIME_ARGS (timestamp));
+        " with PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT,
+        stream->pad, GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
 
     stream->discont = FALSE;
@@ -472,9 +474,9 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   demux->next_dts = G_MAXUINT64;
 
   result = gst_pad_push (stream->pad, buf);
-  GST_DEBUG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, time: %"
+  GST_DEBUG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, pts time: %"
       GST_TIME_FORMAT ", size %d. result: %s",
-      stream->id, stream->type, GST_TIME_ARGS (timestamp),
+      stream->id, stream->type, GST_TIME_ARGS (pts),
       size, gst_flow_get_name (result));
 
   return result;

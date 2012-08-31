@@ -475,7 +475,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     GstBuffer * buf)
 {
   GstFlowReturn result;
-  guint64 timestamp;
+  GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
   guint size;
 
   if (stream == NULL)
@@ -483,9 +483,9 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 
   /* timestamps */
   if (G_UNLIKELY (demux->next_pts != G_MAXUINT64))
-    timestamp = MPEGTIME_TO_GSTTIME (demux->next_pts);
-  else
-    timestamp = GST_CLOCK_TIME_NONE;
+    pts = MPEGTIME_TO_GSTTIME (demux->next_pts);
+  if (G_UNLIKELY (demux->next_dts != G_MAXUINT64))
+    dts = MPEGTIME_TO_GSTTIME (demux->next_dts);
 
   /* discont */
   if (G_UNLIKELY (stream->need_segment)) {
@@ -493,9 +493,9 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     GstSegment segment;
     GstEvent *newsegment;
 
-    GST_DEBUG ("timestamp:%" GST_TIME_FORMAT " base_time %" GST_TIME_FORMAT
+    GST_DEBUG ("PTS timestamp:%" GST_TIME_FORMAT " base_time %" GST_TIME_FORMAT
         " src_segment.start:%" GST_TIME_FORMAT " .stop:%" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp), GST_TIME_ARGS (demux->base_time),
+        GST_TIME_ARGS (pts), GST_TIME_ARGS (demux->base_time),
         GST_TIME_ARGS (demux->src_segment.start),
         GST_TIME_ARGS (demux->src_segment.stop));
 
@@ -511,13 +511,13 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     else
       stop = -1;
 
-    if (timestamp != GST_CLOCK_TIME_NONE) {
+    if (pts != GST_CLOCK_TIME_NONE) {
       if (demux->src_segment.rate > 0) {
-        if (GST_CLOCK_DIFF (start, timestamp) > GST_SECOND)
-          start = timestamp;
+        if (GST_CLOCK_DIFF (start, pts) > GST_SECOND)
+          start = pts;
       } else {
-        if (GST_CLOCK_DIFF (stop, timestamp) > GST_SECOND)
-          stop = timestamp;
+        if (GST_CLOCK_DIFF (stop, pts) > GST_SECOND)
+          stop = pts;
       }
     }
     if (GST_CLOCK_TIME_IS_VALID (demux->base_time) && start > demux->base_time)
@@ -546,7 +546,8 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   }
 
   /* OK, sent new segment now prepare the buffer for sending */
-  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_PTS (buf) = pts;
+  GST_BUFFER_DTS (buf) = dts;
 
   /* update position in the segment */
   gst_segment_set_position (&demux->src_segment, GST_FORMAT_TIME,
@@ -574,7 +575,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
     GST_DEBUG_OBJECT (demux, "discont buffer to pad %" GST_PTR_FORMAT
-        " with TS %" GST_TIME_FORMAT, stream->pad, GST_TIME_ARGS (timestamp));
+        " with TS %" GST_TIME_FORMAT, stream->pad, GST_TIME_ARGS (dts));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
 
     stream->discont = FALSE;
@@ -585,9 +586,9 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   demux->next_dts = G_MAXUINT64;
 
   result = gst_pad_push (stream->pad, buf);
-  GST_DEBUG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, time: %"
+  GST_DEBUG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, pts time: %"
       GST_TIME_FORMAT ", size %d. result: %s",
-      stream->id, stream->type, GST_TIME_ARGS (timestamp),
+      stream->id, stream->type, GST_TIME_ARGS (pts),
       size, gst_flow_get_name (result));
 
   return result;
