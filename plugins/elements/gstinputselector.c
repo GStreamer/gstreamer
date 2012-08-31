@@ -57,8 +57,6 @@
 
 #include "gstinputselector.h"
 
-#include "gst/glib-compat-private.h"
-
 #define DEBUG_CACHED_BUFFERS 0
 
 GST_DEBUG_CATEGORY_STATIC (input_selector_debug);

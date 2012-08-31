@@ -836,7 +836,8 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 
   if (newtarget) {
     /* and link to internal pad without any checks */
-    GST_DEBUG_OBJECT (gpad, "connecting internal pad to target");
+    GST_DEBUG_OBJECT (gpad, "connecting internal pad to target %"
+        GST_PTR_FORMAT, newtarget);
 
     if (GST_PAD_IS_SRC (internal))
       lret =
