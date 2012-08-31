@@ -338,6 +338,29 @@ _pad_block_destroy_notify (RsnDvdBinPadBlockCtx * ctx)
 }
 
 static gboolean
+try_link_pieces (GstElement * e1, const gchar * pad1, GstElement * e2,
+    const gchar * pad2)
+{
+  GstPad *src = gst_element_get_static_pad (e1, pad1);
+  GstPad *sink = gst_element_get_static_pad (e2, pad2);
+  gboolean ret = FALSE;
+
+  if (src == NULL || sink == NULL)
+    goto done;
+
+  if (GST_PAD_LINK_FAILED (gst_pad_link (src, sink)))
+    goto done;
+
+  ret = TRUE;
+done:
+  if (src)
+    gst_object_unref (src);
+  if (sink)
+    gst_object_unref (sink);
+  return ret;
+}
+
+static gboolean
 create_elements (RsnDvdBin * dvdbin)
 {
   GstPadTemplate *src_templ = NULL;
@@ -380,6 +403,10 @@ create_elements (RsnDvdBin * dvdbin)
       "max-size-time", (7 * GST_SECOND / 10), "max-size-bytes", 0,
       "max-size-buffers", 0, NULL);
 
+  if (!try_create_piece (dvdbin, DVD_ELEM_VIDPARSE, "mpegvideoparse", 0,
+          "vidparse", "video parser"))
+    return FALSE;
+
   /* Decodebin will throw a missing element message to find an MPEG decoder */
   if (!try_create_piece (dvdbin, DVD_ELEM_VIDDEC, NULL, RSN_TYPE_VIDEODEC,
           "viddec", "video decoder"))
@@ -389,6 +416,10 @@ create_elements (RsnDvdBin * dvdbin)
   if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, "identity", 0,        //RSN_TYPE_RSNPARSETTER,
           "rsnparsetter", "Aspect ratio adjustment"))
     return FALSE;
+
+  if (!try_link_pieces (dvdbin->pieces[DVD_ELEM_VIDPARSE], "src",
+          dvdbin->pieces[DVD_ELEM_VIDDEC], "sink"))
+    goto failed_vidparse_connect;
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDDEC], "src");
   sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_PARSET], "sink");
@@ -511,6 +542,10 @@ create_elements (RsnDvdBin * dvdbin)
 failed_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
       ("Could not connect DVD source and demuxer elements"));
+  goto error_out;
+failed_vidparse_connect:
+  GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
+      ("Could not connect DVD video parser and video decoder"));
   goto error_out;
 failed_viddec_connect:
   GST_ELEMENT_ERROR (dvdbin, CORE, FAILED, (NULL),
@@ -674,10 +709,10 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
   s = gst_caps_get_structure (caps, 0);
   g_return_if_fail (s != NULL);
 
-  if (can_sink_caps (dvdbin->pieces[DVD_ELEM_VIDDEC], caps)) {
+  if (can_sink_caps (dvdbin->pieces[DVD_ELEM_VIDPARSE], caps)) {
     GST_LOG_OBJECT (dvdbin, "Found video pad w/ caps %" GST_PTR_FORMAT, caps);
     dest_pad =
-        gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDDEC], "sink");
+        gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_VIDPARSE], "sink");
   } else if (g_str_equal (gst_structure_get_name (s), "subpicture/x-dvd")) {
     GST_LOG_OBJECT (dvdbin, "Found subpicture pad w/ caps %" GST_PTR_FORMAT,
         caps);
