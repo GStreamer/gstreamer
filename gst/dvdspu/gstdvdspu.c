@@ -1117,6 +1117,22 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     }
+    case GST_EVENT_GAP:
+    {
+      GstClockTime timestamp, duration;
+      gst_event_parse_gap (event, &timestamp, &duration);
+      if (GST_CLOCK_TIME_IS_VALID (duration))
+        timestamp += duration;
+
+      DVD_SPU_LOCK (dvdspu);
+      dvdspu->subp_seg.position = timestamp;
+      GST_LOG_OBJECT (dvdspu, "Received GAP. Segment now: %" GST_SEGMENT_FORMAT,
+          &dvdspu->subp_seg);
+      DVD_SPU_UNLOCK (dvdspu);
+
+      gst_event_unref (event);
+      break;
+    }
     case GST_EVENT_FLUSH_START:
       gst_event_unref (event);
       goto done;
