@@ -925,6 +925,21 @@ gst_audio_decoder_push_event (GstAudioDecoder * dec, GstEvent * event)
   return gst_pad_push_event (dec->srcpad, event);
 }
 
+static void
+send_pending_events (GstAudioDecoder * dec)
+{
+  GstAudioDecoderPrivate *priv = dec->priv;
+  GList *pending_events, *l;
+
+  pending_events = priv->pending_events;
+  priv->pending_events = NULL;
+
+  GST_DEBUG_OBJECT (dec, "Pushing pending events");
+  for (l = pending_events; l; l = l->next)
+    gst_audio_decoder_push_event (dec, l->data);
+  g_list_free (pending_events);
+}
+
 /**
  * gst_audio_decoder_finish_frame:
  * @dec: a #GstAudioDecoder
@@ -986,15 +1001,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   }
 
   if (buf && priv->pending_events) {
-    GList *pending_events, *l;
-
-    pending_events = priv->pending_events;
-    priv->pending_events = NULL;
-
-    GST_DEBUG_OBJECT (dec, "Pushing pending events");
-    for (l = pending_events; l; l = l->next)
-      gst_audio_decoder_push_event (dec, l->data);
-    g_list_free (pending_events);
+    send_pending_events (dec);
   }
 
   /* output shoud be whole number of sample frames */
@@ -1683,29 +1690,6 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       /* finish current segment */
       gst_audio_decoder_drain (dec);
 
-#if 0
-      if (update) {
-        /* time progressed without data, see if we can fill the gap with
-         * some concealment data */
-        GST_DEBUG_OBJECT (dec,
-            "segment update: plc %d, do_plc %d, position %" GST_TIME_FORMAT,
-            dec->priv->plc, dec->priv->ctx.do_plc,
-            GST_TIME_ARGS (dec->input_segment.position));
-        if (dec->priv->plc && dec->priv->ctx.do_plc &&
-            dec->input_segment.rate > 0.0
-            && dec->input_segment.position < start) {
-          GstAudioDecoderClass *klass;
-          GstBuffer *buf;
-
-          klass = GST_AUDIO_DECODER_GET_CLASS (dec);
-          /* hand subclass empty frame with duration that needs covering */
-          buf = gst_buffer_new ();
-          GST_BUFFER_DURATION (buf) = start - dec->input_segment.position;
-          /* best effort, not much error handling */
-          gst_audio_decoder_handle_frame (dec, klass, buf);
-        }
-      } else
-#endif
       {
         /* prepare for next one */
         gst_audio_decoder_flush (dec, FALSE);
@@ -1727,7 +1711,39 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       ret = TRUE;
       break;
     }
+    case GST_EVENT_GAP:{
+      GstClockTime timestamp, duration;
+      gst_event_parse_gap (event, &timestamp, &duration);
 
+      /* time progressed without data, see if we can fill the gap with
+       * some concealment data */
+      GST_DEBUG_OBJECT (dec,
+          "gap event: plc %d, do_plc %d, position %" GST_TIME_FORMAT
+          " duration %" GST_TIME_FORMAT,
+          dec->priv->plc, dec->priv->ctx.do_plc,
+          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+      if (dec->priv->plc && dec->priv->ctx.do_plc &&
+          dec->input_segment.rate > 0.0) {
+        GstAudioDecoderClass *klass;
+        GstBuffer *buf;
+
+        klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+        /* hand subclass empty frame with duration that needs covering */
+        buf = gst_buffer_new ();
+        GST_BUFFER_TIMESTAMP (buf) = timestamp;
+        GST_BUFFER_DURATION (buf) = duration;
+        /* best effort, not much error handling */
+        gst_audio_decoder_handle_frame (dec, klass, buf);
+        ret = TRUE;
+        gst_event_unref (event);
+      } else {
+        /* FIXME: sub-class doesn't know how to handle empty buffers,
+         * so just try sending GAP downstream */
+        send_pending_events (dec);
+        ret = gst_audio_decoder_push_event (dec, event);
+      }
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
       /* prepare for fresh start */
@@ -1784,6 +1800,8 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         ret =
             gst_pad_event_default (dec->sinkpad, GST_OBJECT_CAST (dec), event);
       } else {
+        GST_DEBUG_OBJECT (dec, "Enqueuing event %d, %s", GST_EVENT_TYPE (event),
+            GST_EVENT_TYPE_NAME (event));
         GST_AUDIO_DECODER_STREAM_LOCK (dec);
         dec->priv->pending_events =
             g_list_append (dec->priv->pending_events, event);
