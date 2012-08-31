@@ -39,6 +39,7 @@
  * Fluendo, S.L. All Rights Reserved.
  *
  * Contributor(s): Wim Taymans <wim@fluendo.com>
+ *                 Jan Schmidt <thaytan@noraisin.net>
  */
 
 #ifndef __GST_FLUPS_DEMUX_H__
@@ -50,12 +51,14 @@
 #include "gstpesfilter.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_FLUPS_DEMUX		(gst_flups_demux_get_type())
 #define GST_FLUPS_DEMUX(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLUPS_DEMUX,GstFluPSDemux))
 #define GST_FLUPS_DEMUX_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FLUPS_DEMUX,GstFluPSDemuxClass))
 #define GST_FLUPS_DEMUX_GET_CLASS(klass) (G_TYPE_INSTANCE_GET_CLASS((klass),GST_TYPE_FLUPS_DEMUX,GstFluPSDemuxClass))
 #define GST_IS_FLUPS_DEMUX(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLUPS_DEMUX))
 #define GST_IS_FLUPS_DEMUX_CLASS(obj)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLUPS_DEMUX))
+
 typedef struct _GstFluPSStream GstFluPSStream;
 typedef struct _GstFluPSDemux GstFluPSDemux;
 typedef struct _GstFluPSDemuxClass GstFluPSDemuxClass;

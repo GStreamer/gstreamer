@@ -412,8 +412,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   }
 
   if (name == NULL || template == NULL || caps == NULL) {
-    if (name)
-      g_free (name);
+    g_free (name);
     if (caps)
       gst_caps_unref (caps);
     return FALSE;
@@ -574,7 +573,8 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 
   /* Set the buffer discont flag, and clear discont state on the stream */
   if (stream->discont) {
-    GST_DEBUG_OBJECT (demux, "marking discont buffer");
+    GST_DEBUG_OBJECT (demux, "discont buffer to pad %" GST_PTR_FORMAT
+        " with TS %" GST_TIME_FORMAT, stream->pad, GST_TIME_ARGS (timestamp));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
 
     stream->discont = FALSE;
@@ -678,7 +678,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
       g_snprintf (cur_stream_name, 32, "audio-%d-format", i);
       if (!gst_structure_get_int (structure, cur_stream_name, &stream_format))
-        break;
+        continue;
 
       switch (stream_format) {
         case 0x0:
@@ -965,6 +965,9 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_CAPS:
+      gst_event_unref (event);
+      break;
     default:
       gst_flups_demux_send_event (demux, event);
       break;
@@ -1305,6 +1308,11 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstClockTime pos;
       GstFormat format;
 
+      /* See if upstream can immediately answer */
+      res = gst_pad_peer_query (demux->sinkpad, query);
+      if (res)
+        break;
+
       gst_query_parse_position (query, &format, NULL);
 
       if (format != GST_FORMAT_TIME) {
@@ -1315,6 +1323,7 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       pos = demux->src_segment.position - demux->src_segment.start;
       GST_LOG_OBJECT (demux, "Position %" GST_TIME_FORMAT, GST_TIME_ARGS (pos));
+
       gst_query_set_position (query, format, pos);
       res = TRUE;
       break;
@@ -1323,7 +1332,6 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     {
       GstFormat format;
       gint64 duration;
-      GstPad *peer;
       GstQuery *byte_query;
 
       gst_query_parse_duration (query, &format, NULL);
@@ -1336,21 +1344,14 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         break;
       }
 
-      if ((peer = gst_pad_get_peer (demux->sinkpad)) == NULL) {
-        GST_DEBUG_OBJECT (demux, "duration not possible, no peer");
-        goto not_supported;
-      }
-
       /* For any format other than bytes, see if upstream knows first */
       if (format == GST_FORMAT_BYTES) {
         GST_DEBUG_OBJECT (demux, "duration not supported for format %d",
             format);
-        gst_object_unref (peer);
         goto not_supported;
       }
 
-      if (gst_pad_query (peer, query)) {
-        gst_object_unref (peer);
+      if (gst_pad_peer_query (demux->sinkpad, query)) {
         res = TRUE;
         break;
       }
@@ -1360,25 +1361,21 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (format != GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (demux, "duration not supported for format %d",
             format);
-        gst_object_unref (peer);
         goto not_supported;
       }
 
       if (demux->mux_rate == -1) {
         GST_DEBUG_OBJECT (demux, "duration not possible, no mux_rate");
-        gst_object_unref (peer);
         goto not_supported;
       }
 
       byte_query = gst_query_new_duration (GST_FORMAT_BYTES);
 
-      if (!gst_pad_query (peer, byte_query)) {
+      if (!gst_pad_peer_query (demux->sinkpad, byte_query)) {
         GST_LOG_OBJECT (demux, "query on peer pad failed");
         gst_query_unref (byte_query);
-        gst_object_unref (peer);
         goto not_supported;
       }
-      gst_object_unref (peer);
 
       gst_query_parse_duration (byte_query, &format, &duration);
       gst_query_unref (byte_query);
@@ -2918,9 +2915,8 @@ gst_flups_demux_sink_activate_mode (GstPad * pad, GstObject * parent,
     return gst_flups_demux_sink_activate_push (pad, parent, active);
   } else if (mode == GST_PAD_MODE_PULL) {
     return gst_flups_demux_sink_activate_pull (pad, parent, active);
-  } else {
-    return FALSE;
   }
+  return FALSE;
 }
 
 static GstFlowReturn
