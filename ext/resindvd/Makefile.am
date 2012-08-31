@@ -12,8 +12,7 @@ libgstresindvd_la_SOURCES = \
         gstpesfilter.c \
 	rsninputselector.c \
 	# rsnparsetter.c \
-	# rsnwrappedbuffer.c \
-	# rsnaudiomunge.c
+	# rsnwrappedbuffer.c
 
 libgstresindvd_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
@@ -25,7 +24,6 @@ libgstresindvd_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstresindvd_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = resindvdbin.h \
-	rsnaudiomunge.h \
 	rsndec.h \
 	rsninputselector.h \
         resindvdsrc.h \

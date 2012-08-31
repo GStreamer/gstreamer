@@ -630,7 +630,7 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
      * event, then sleep */
     still_event = gst_video_event_new_still_frame (TRUE);
 
-    segment->position = src->cur_end_ts;
+    segment->stop = segment->position = src->cur_end_ts;
 
     seg_event = gst_event_new_segment (segment);
 

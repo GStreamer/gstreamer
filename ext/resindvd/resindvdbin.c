@@ -466,28 +466,12 @@ create_elements (RsnDvdBin * dvdbin)
           RSN_TYPE_INPUT_SELECTOR, "audioselect", "Audio stream selector"))
     return FALSE;
 
-  if (!try_create_piece (dvdbin, DVD_ELEM_AUD_MUNGE, "identity",
-          0 /* RSN_TYPE_AUDIOMUNGE */ , "audioearlymunge",
-          "Audio output filter"))
-    return FALSE;
-
   if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, NULL,
           RSN_TYPE_AUDIODEC, "auddec", "audio decoder"))
     return FALSE;
 
-  src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_MUNGE], "src");
-  sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUDDEC], "sink");
-  if (src == NULL || sink == NULL)
-    goto failed_aud_connect;
-  if (GST_PAD_LINK_FAILED (gst_pad_link (src, sink)))
-    goto failed_aud_connect;
-  gst_object_unref (sink);
-  gst_object_unref (src);
-  src = sink = NULL;
-
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_SELECT], "src");
-  sink =
-      gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUD_MUNGE], "sink");
+  sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_AUDDEC], "sink");
   if (src == NULL || sink == NULL)
     goto failed_aud_connect;
   if (GST_PAD_LINK_FAILED (gst_pad_link (src, sink)))
@@ -701,7 +685,7 @@ demux_pad_added (GstElement * element, GstPad * pad, RsnDvdBin * dvdbin)
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_SPU_SELECT],
         "sink_%u");
     skip_mq = TRUE;
-  } else if (can_sink_caps (dvdbin->pieces[DVD_ELEM_AUD_MUNGE], caps)) {
+  } else if (can_sink_caps (dvdbin->pieces[DVD_ELEM_AUDDEC], caps)) {
     GST_LOG_OBJECT (dvdbin, "Found audio pad w/ caps %" GST_PTR_FORMAT, caps);
     dest_pad =
         gst_element_get_request_pad (dvdbin->pieces[DVD_ELEM_AUD_SELECT],

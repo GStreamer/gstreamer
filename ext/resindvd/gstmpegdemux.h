@@ -97,7 +97,7 @@ struct _GstFluPSDemux {
   GstPad         * sinkpad;
   gboolean random_access;       /* If we operate in pull mode */
   gboolean flushing;
-
+  gboolean in_still;
 
   GstAdapter     * adapter;
   GstAdapter     * rev_adapter;

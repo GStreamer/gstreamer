@@ -24,6 +24,7 @@
 #endif
 
 #include <string.h>
+#include <gst/video/video.h>
 
 #include "gstmpegdefs.h"
 #include "gstmpegdemux.h"
@@ -122,7 +123,7 @@ static gboolean gst_flups_demux_src_query (GstPad * pad, GstObject * parent,
 static GstStateChangeReturn gst_flups_demux_change_state (GstElement * element,
     GstStateChange transition);
 
-static inline void gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
+static inline void gst_flups_demux_send_gap_updates (GstFluPSDemux * demux,
     GstClockTime new_time);
 static inline void gst_flups_demux_clear_times (GstFluPSDemux * demux);
 
@@ -770,6 +771,7 @@ gst_flups_demux_flush (GstFluPSDemux * demux)
   demux->current_scr = G_MAXUINT64;
   demux->bytes_since_scr = 0;
   demux->scr_adjust = GSTTIME_TO_MPEGTIME (SCR_MUNGE);
+  demux->in_still = FALSE;
 }
 
 static inline void
@@ -788,8 +790,7 @@ gst_flups_demux_clear_times (GstFluPSDemux * demux)
 }
 
 static inline void
-gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
-    GstClockTime new_time)
+gst_flups_demux_send_gap_updates (GstFluPSDemux * demux, GstClockTime new_time)
 {
   gint id;
   GstEvent *event = NULL;
@@ -807,35 +808,20 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
         stream->last_ts = demux->src_segment.start;
       if (stream->last_ts + stream->segment_thresh < new_time) {
 #if 0
-        g_print ("Segment update to pad %s time %" GST_TIME_FORMAT " stop now %"
-            GST_TIME_FORMAT " position %" GST_TIME_FORMAT "\n",
-            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time),
-            GST_TIME_ARGS (demux->src_segment.stop),
-            GST_TIME_ARGS (demux->src_segment.position));
+        g_print ("Gap event update to pad %s from time %" GST_TIME_FORMAT
+            " to %" GST_TIME_FORMAT "\n", GST_PAD_NAME (stream->pad),
+            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (new_time));
 #endif
         GST_DEBUG_OBJECT (demux,
-            "Segment update to pad %s time %" GST_TIME_FORMAT,
-            GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
-        if (event == NULL) {
-          GstSegment segment;
-          gst_segment_init (&segment, GST_FORMAT_TIME);
-          segment.rate = demux->src_segment.rate;
-          segment.applied_rate = demux->src_segment.applied_rate;
-          segment.start = new_time;
-          segment.stop = demux->src_segment.stop;
-          segment.time =
-              demux->src_segment.time + (new_time - demux->src_segment.start);
-          event = gst_event_new_segment (&segment);
-        }
-        gst_event_ref (event);
+            "Gap event update to pad %s from time %" GST_TIME_FORMAT " to %"
+            GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
+            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (new_time));
+        event = gst_event_new_gap (stream->last_ts, new_time - stream->last_ts);
         gst_pad_push_event (stream->pad, event);
         stream->last_seg_start = stream->last_ts = new_time;
       }
     }
   }
-
-  if (event)
-    gst_event_unref (event);
 }
 
 static inline void
@@ -934,7 +920,6 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           "demux: received new segment start %" G_GINT64_FORMAT " stop %"
           G_GINT64_FORMAT " time %" G_GINT64_FORMAT, start, stop, time);
 
-
       adjust = base - start + SCR_MUNGE;
       start = base + SCR_MUNGE;
 
@@ -961,9 +946,14 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->src_segment.rate = segment->rate;
       demux->src_segment.applied_rate = segment->applied_rate;
       demux->src_segment.format = segment->format;
-      demux->src_segment.start = segment->start;
-      demux->src_segment.stop = segment->stop;
-      demux->src_segment.time = segment->time;
+      demux->src_segment.start = start;
+      demux->src_segment.stop = stop;
+      demux->src_segment.time = time;
+
+      if (demux->in_still && stop != -1) {
+        /* Generate gap buffers, due to closing segment from a still-frame */
+        gst_flups_demux_send_gap_updates (demux, stop);
+      }
 
       gst_event_unref (event);
       event = gst_event_new_segment (&demux->src_segment);
@@ -983,8 +973,15 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
     {
       const GstStructure *structure = gst_event_get_structure (event);
+      gboolean in_still;
 
-      if (structure != NULL
+      if (gst_video_event_parse_still_frame (event, &in_still)) {
+        /* Remember the still-frame state, so we can generate a pre-roll
+         * GAP event when a segment event arrives */
+        demux->in_still = in_still;
+        GST_INFO_OBJECT (demux, "still-state now %d", demux->in_still);
+        gst_flups_demux_send_event (demux, event);
+      } else if (structure != NULL
           && gst_structure_has_name (structure, "application/x-gst-dvd")) {
         res = gst_flups_demux_handle_dvd_event (demux, event);
       } else {
@@ -1473,7 +1470,7 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
   if (new_time != GST_CLOCK_TIME_NONE) {
     // g_print ("SCR now %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (new_time));
     gst_segment_set_position (&demux->src_segment, GST_FORMAT_TIME, new_time);
-    gst_flups_demux_send_segment_updates (demux, new_time);
+    gst_flups_demux_send_gap_updates (demux, new_time);
   }
 
   /* Reset the bytes_since_scr value to count the data remaining in the
