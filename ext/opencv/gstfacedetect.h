@@ -70,11 +70,28 @@ G_BEGIN_DECLS
 typedef struct _GstFaceDetect GstFaceDetect;
 typedef struct _GstFaceDetectClass GstFaceDetectClass;
 
+/**
+ * GstFaceDetectUpdates
+ * @GST_FACEDETECT_UPDATES_EVERY_FRAME: Send bus update messages for every frame
+ * @GST_FACEDETECT_UPDATES_ON_CHANGE: Send bus update messages on change (face detected/not detected)
+ * @GST_FACEDETECT_UPDATES_ON_FACE: Send bus update messages when a face is detected
+ * @GST_FACEDETECT_UPDATES_NONE: No bus update messages
+ *
+ * Bus messages update scheme
+ */
+enum _GstFaceDetectUpdates {
+  GST_FACEDETECT_UPDATES_EVERY_FRAME      = 0,
+  GST_FACEDETECT_UPDATES_ON_CHANGE        = 1,
+  GST_FACEDETECT_UPDATES_ON_FACE          = 2,
+  GST_FACEDETECT_UPDATES_NONE             = 3
+};
+
 struct _GstFaceDetect
 {
   GstOpencvVideoFilter element;
 
   gboolean display;
+  gboolean face_detected;
 
   gchar *face_profile;
   gchar *nose_profile;
@@ -85,6 +102,7 @@ struct _GstFaceDetect
   gint flags;
   gint min_size_width;
   gint min_size_height;
+  gint updates;
 
   IplImage *cvGray;
   CvHaarClassifierCascade *cvFaceDetect;
