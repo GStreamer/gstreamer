@@ -317,13 +317,16 @@ gst_plugin_feature_check_version (GstPluginFeature * feature,
     GST_DEBUG ("version string '%s' parsed to %d values", ver_str, nscan);
 
     if (nscan >= 3) {
-      /* FIXME 1.0: Remove this before doing the actual 1.0.0 release */
-      if ((major == 0 && minor == 11 && micro >= 90) ||
-          (major == 0 && minor == 11 && micro == 89 && nano > 0)) {
-        major = 1;
-        minor = 0;
-        micro = 0;
-        nano = 0;
+      if (!g_str_has_prefix (PACKAGE_VERSION, "1.")) {
+        /* FIXME 1.0: Remove this before doing the actual 1.0.0 release */
+        if ((major == 0 && minor == 11 && micro >= 90)) {
+          major = 1;
+          minor = 0;
+          micro = 0;
+          nano = 0;
+        }
+      } else {
+        GST_FIXME ("Remove pre-1.0 versions mangling");
       }
 
       if (major > min_major)
