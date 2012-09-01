@@ -94,7 +94,8 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-utils.h
 
 noinst_HEADERS = \
-	ges-internal.h
+	ges-internal.h \
+	ges-internal-enums.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
 		$(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \

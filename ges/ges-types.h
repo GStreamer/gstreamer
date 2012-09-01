@@ -140,4 +140,9 @@ typedef struct _GESKeyfileFormatterClass GESKeyfileFormatterClass;
 typedef struct _GESPitiviFormatter GESPitiviFormatter;
 typedef struct _GESPitiviFormatterClass GESPitiviFormatterClass;
 
+#if 0
+typedef struct _GESAsset GESAsset;
+typedef struct _GESAssetClass GESAssetClass;
+#endif
+
 #endif /* __GES_TYPES_H__ */

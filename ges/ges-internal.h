@@ -22,8 +22,14 @@
 #define __GES_INTERNAL_H__
 
 #include <gst/gst.h>
+#include <gio/gio.h>
+
 #include "ges-timeline.h"
 #include "ges-track-object.h"
+
+#if 0
+#include "ges-asset.h"
+#endif
 
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
@@ -59,4 +65,27 @@ timeline_move_object           (GESTimeline *timeline, GESTrackObject * object,
 gboolean
 timeline_context_to_layer      (GESTimeline *timeline, gint offset);
 
+#if 0
+G_GNUC_INTERNAL void
+ges_asset_cache_init (void);
+
+G_GNUC_INTERNAL void
+ges_asset_set_id (GESAsset *asset, const gchar *id);
+
+G_GNUC_INTERNAL void
+ges_asset_cache_put (GESAsset * asset, GSimpleAsyncResult *res);
+
+G_GNUC_INTERNAL gboolean
+ges_asset_cache_set_loaded(GType extractable_type, const gchar * id, GError *error);
+
+GESAsset*
+ges_asset_cache_lookup(GType extractable_type, const gchar * id);
+
+gboolean
+ges_asset_set_proxy (GESAsset *asset, const gchar *new_id);
+
+G_GNUC_INTERNAL gboolean
+ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,
+    GError *error);
+#endif
 #endif /* __GES_INTERNAL_H__ */

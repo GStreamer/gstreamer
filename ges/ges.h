@@ -45,6 +45,9 @@
 #include <ges/ges-timeline-effect.h>
 #include <ges/ges-timeline-file-source.h>
 #include <ges/ges-screenshot.h>
+#if 0
+#include <ges/ges-asset.h>
+#endif
 
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>
@@ -78,6 +81,8 @@ gboolean ges_init    (void);
 
 void     ges_version (guint * major, guint * minor, guint * micro,
                       guint * nano);
+
+#define GES_ERROR_DOMAIN g_quark_from_static_string("GES")
 
 G_END_DECLS
 

@@ -297,6 +297,7 @@ GES_TYPE_TIMELINE
 GESTimelineLayer
 GESTimelineLayerClass
 ges_timeline_layer_add_object
+ges_timeline_layer_add_asset
 ges_timeline_layer_new
 ges_timeline_layer_remove_object
 ges_timeline_layer_set_priority
@@ -796,19 +797,10 @@ GESFormatterLoadedMethod
 ges_default_formatter_new
 ges_formatter_load_from_uri
 ges_formatter_save_to_uri
-ges_formatter_new_for_uri
 ges_formatter_can_load_uri
 ges_formatter_can_save_uri
-ges_formatter_update_source_uri
-ges_formatter_load
-ges_formatter_save
-ges_formatter_set_data
-ges_formatter_clear_data
-ges_formatter_get_data
 GESFormatterCanLoadURIMethod
 GESFormatterCanSaveURIMethod
-GESFormatterLoadMethod
-GESFormatterSaveMethod
 <SUBSECTION>
 ges_formatter_emit_loaded
 <SUBSECTION Standard>
@@ -821,22 +813,6 @@ GES_TYPE_FORMATTER
 <SUBSECTION Private>
 ges_formatter_get_type
 GESFormatterPrivate
-</SECTION>
-
-<SECTION>
-<FILE>ges-keyfile-formatter</FILE>
-<TITLE>GESKeyFileFormatter</TITLE>
-GESKeyfileFormatter
-ges_keyfile_formatter_new
-<SUBSECTION Standard>
-GESKeyfileFormatterClass
-GES_IS_KEYFILE_FORMATTER
-GES_IS_KEYFILE_FORMATTER_CLASS
-GES_KEYFILE_FORMATTER
-GES_KEYFILE_FORMATTER_CLASS
-GES_KEYFILE_FORMATTER_GET_CLASS
-GES_TYPE_KEYFILE_FORMATTER
-ges_keyfile_formatter_get_type
 </SECTION>
 
 <SECTION>
@@ -950,4 +926,26 @@ GES_META_CONTAINER
 GES_META_CONTAINER_GET_INTERFACE
 GES_TYPE_META_CONTAINER
 ges_meta_container_get_ype
+</SECTION>
+
+<SECTION>
+<FILE>ges-asset</FILE>
+<TITLE>GESAsset</TITLE>
+GESAsset
+ges_asset_get_extractable_type
+ges_asset_get_id
+ges_asset_request
+ges_asset_request_async
+ges_asset_request_finish
+ges_asset_extract
+ges_list_assets
+<SUBSECTION Standard>
+GESAssetPrivate
+GES_ASSET
+GES_TYPE_ASSET
+GES_ASSET_CLASS
+GES_IS_ASSET
+GES_IS_ASSET_CLASS
+GES_ASSET_GET_CLASS
+ges_asset_get_type
 </SECTION>
