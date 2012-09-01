@@ -1505,6 +1505,11 @@ main (int argc, char *argv[])
   gboolean plugin_name = FALSE;
   gboolean print_aii = FALSE;
   gboolean uri_handlers = FALSE;
+  gboolean check_exists = FALSE;
+  gchar *min_version = NULL;
+  guint minver_maj = GST_VERSION_MAJOR;
+  guint minver_min = GST_VERSION_MINOR;
+  guint minver_micro = 0;
 #ifndef GST_DISABLE_OPTION_PARSING
   GOptionEntry options[] = {
     {"print-all", 'a', 0, G_OPTION_ARG_NONE, &print_all,
@@ -1518,6 +1523,12 @@ main (int argc, char *argv[])
               "installation mechanisms"), NULL},
     {"plugin", '\0', 0, G_OPTION_ARG_NONE, &plugin_name,
         N_("List the plugin contents"), NULL},
+    {"exists", '\0', 0, G_OPTION_ARG_NONE, &check_exists,
+        N_("Check if the specified element or plugin exists"), NULL},
+    {"atleast-version", '\0', 0, G_OPTION_ARG_STRING, &min_version,
+        N_
+          ("When checking if an element or plugin exists, also check that its "
+              "version is at least the version specified"), NULL},
     {"uri-handlers", 'u', 0, G_OPTION_ARG_NONE, &uri_handlers,
           N_
           ("Print supported URI schemes, with the elements that implement them"),
@@ -1543,7 +1554,7 @@ main (int argc, char *argv[])
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
-    exit (1);
+    return -1;
   }
   g_option_context_free (ctx);
 #else
@@ -1554,12 +1565,49 @@ main (int argc, char *argv[])
 
   if (print_all && argc > 1) {
     g_printerr ("-a requires no extra arguments\n");
-    return 1;
+    return -1;
   }
 
   if (uri_handlers && argc > 1) {
     g_printerr ("-u requires no extra arguments\n");
-    exit (1);
+    return -1;
+  }
+
+  /* --atleast-version implies --exists */
+  if (min_version != NULL) {
+    if (sscanf (min_version, "%u.%u.%u", &minver_maj, &minver_min,
+            &minver_micro) < 2) {
+      g_printerr ("Can't parse version '%s' passed to --atleast-version\n",
+          min_version);
+      return -1;
+    }
+    check_exists = TRUE;
+  }
+
+  if (check_exists) {
+    int exit_code;
+
+    if (argc == 1) {
+      g_printerr ("--exists requires an extra command line argument\n");
+      exit_code = -1;
+    } else {
+      if (!plugin_name) {
+        GstPluginFeature *feature;
+
+        feature = gst_registry_lookup_feature (gst_registry_get (), argv[1]);
+        if (feature != NULL && gst_plugin_feature_check_version (feature,
+                minver_maj, minver_min, minver_micro)) {
+          exit_code = 0;
+        } else {
+          exit_code = 1;
+        }
+      } else {
+        /* FIXME: support checking for plugins too */
+        g_printerr ("Checking for plugins is not supported yet\n");
+        exit_code = -1;
+      }
+    }
+    return exit_code;
   }
 
   /* if no arguments, print out list of elements */
