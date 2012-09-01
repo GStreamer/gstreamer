@@ -142,7 +142,8 @@ check_PROGRAMS =				\
 	libs/collectpads			\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
-	libs/transform1
+	libs/transform1				\
+	tools/gstinspect
 
 # failing tests
 noinst_PROGRAMS =
@@ -203,7 +204,8 @@ libs_gstnettimeprovider_LDADD = \
 # these just need valgrind fixing, period
 VALGRIND_TO_FIX = \
 	gst/gstinfo \
-	pipelines/parse-launch
+	pipelines/parse-launch \
+	tools/gstinspect
 
 VALGRIND_IGNORE = \
 	pipelines/stress
