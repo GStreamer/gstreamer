@@ -276,6 +276,44 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
   return TRUE;
 }
 
+static gboolean
+gst_mpeg4vparse_get_vop_coded (GstMpeg4VParse * mp4vparse, const guint8 * data,
+    gint vop_offset, gsize size, gsize frame_size)
+{
+  if (frame_size > 9) {         /* assuming bigger frame will always have vop_coded (saves some parsing) */
+    return TRUE;
+  } else if (size > vop_offset + 3) {
+    GstBitReader reader;
+    guint8 value;
+
+    gst_bit_reader_init (&reader, data + vop_offset + 1, size - vop_offset);
+    gst_bit_reader_skip (&reader, 2);   /* VOP_coding_type */
+
+    /* modulo_time_base (ends with 0) */
+    while (gst_bit_reader_get_bits_uint8 (&reader, &value, 1) && value);
+
+    /* marker_bit */
+    g_return_val_if_fail (gst_bit_reader_get_bits_uint8 (&reader, &value, 1)
+        && value, TRUE);
+
+    /* VOP_time_increment */
+    gst_bit_reader_skip (&reader, mp4vparse->vol.vop_time_increment_bits);
+
+    /* marker_bit */
+    g_return_val_if_fail (gst_bit_reader_get_bits_uint8 (&reader, &value, 1)
+        && value, TRUE);
+
+    /* VOP_coded */
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &value, 1)) {
+      return FALSE;
+    }
+
+    return value;
+  }
+
+  return FALSE;
+}
+
 /* caller guarantees at least start code in @buf at @off */
 static gboolean
 gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
@@ -295,8 +333,12 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
       GST_WARNING_OBJECT (mp4vparse, "no data following VOP startcode");
       mp4vparse->intra_frame = FALSE;
     }
-    GST_LOG_OBJECT (mp4vparse, "ending frame of size %d, is intra %d",
-        packet->offset - 3, mp4vparse->intra_frame);
+    mp4vparse->vop_coded =
+        gst_mpeg4vparse_get_vop_coded (mp4vparse, packet->data,
+        mp4vparse->vop_offset, size, packet->offset - 3);
+    GST_LOG_OBJECT (mp4vparse,
+        "ending frame of size %d, is intra %d, vop_coded %d",
+        packet->offset - 3, mp4vparse->intra_frame, mp4vparse->vop_coded);
     return TRUE;
   }
 
@@ -566,6 +608,9 @@ gst_mpeg4vparse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   else
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+  if (!mp4vparse->vop_coded)    /* buffer without VOP_coded has no data */
+    GST_BUFFER_DURATION (buffer) = 0;
 
   if (G_UNLIKELY (mp4vparse->drop && !mp4vparse->config)) {
     GST_LOG_OBJECT (mp4vparse, "dropping frame as no config yet");

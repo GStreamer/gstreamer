@@ -52,6 +52,7 @@ struct _GstMpeg4VParse {
   gint vop_offset;
   gboolean vo_found;
   gboolean intra_frame;
+  gboolean vop_coded;
   gboolean update_caps;
 
   GstBuffer *config;
