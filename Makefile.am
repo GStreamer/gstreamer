@@ -30,7 +30,7 @@ include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
 	gstreamer.spec gstreamer.spec.in \
-	gst-element-check.m4.in \
+	gst-element-check.m4 \
 	configure.ac autogen.sh depcomp \
 	MAINTAINERS ABOUT-NLS RELEASE gstreamer.doap \
 	scripts/gst-uninstalled \
@@ -153,7 +153,7 @@ endif
 check: $(CHECK_EXPORTS) check-enum-gettypes
 
 gst-element-check-@GST_API_VERSION@.m4: gst-element-check.m4
-	$(AM_V_GEN)cp gst-element-check.m4 gst-element-check-@GST_API_VERSION@.m4
+	$(AM_V_GEN)cp $(srcdir)/gst-element-check.m4 gst-element-check-@GST_API_VERSION@.m4
 
 # cruft: plugins that have been merged or moved or renamed
 
