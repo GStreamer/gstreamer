@@ -16,7 +16,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <glib/gtypes.h>
 #include <glib.h>
 
 typedef struct

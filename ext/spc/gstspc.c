@@ -18,11 +18,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
+ * with newer GLib versions (>= 2.31.0) */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include "gstspc.h"
+#include <gst/audio/audio.h>
 
 #include <string.h>
 #include <glib/gprintf.h>
@@ -34,18 +39,23 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 32000, " "channels = (int) 2"));
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "layout = (string) interleaved, "
+        "rate = (int) 32000, " "channels = (int) 2"));
 
-GST_BOILERPLATE (GstSpcDec, gst_spc_dec, GstElement, GST_TYPE_ELEMENT);
 
-static GstFlowReturn gst_spc_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean gst_spc_dec_sink_event (GstPad * pad, GstEvent * event);
-static gboolean gst_spc_dec_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_spc_dec_src_query (GstPad * pad, GstQuery * query);
+#define gst_spc_dec_parent_class parent_class
+G_DEFINE_TYPE (GstSpcDec, gst_spc_dec, GST_TYPE_ELEMENT);
+
+static GstFlowReturn gst_spc_dec_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
+static gboolean gst_spc_dec_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_spc_dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_spc_dec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstStateChangeReturn gst_spc_dec_change_state (GstElement * element,
     GstStateChange transition);
 static void spc_play (GstPad * pad);
@@ -55,53 +65,20 @@ static gboolean spc_setup (GstSpcDec * spc);
 static gboolean
 spc_negotiate (GstSpcDec * spc)
 {
-  GstCaps *allowed, *caps;
-  GstStructure *structure;
-  gint width = 16, depth = 16;
-  gboolean sign;
-  int rate = 32000;
-  int channels = 2;
+  GstCaps *caps;
 
-  allowed = gst_pad_get_allowed_caps (spc->srcpad);
-  if (!allowed) {
-    GST_DEBUG_OBJECT (spc, "couldn't get allowed caps");
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (spc, "allowed caps: %" GST_PTR_FORMAT, allowed);
-
-  structure = gst_caps_get_structure (allowed, 0);
-  gst_structure_get_int (structure, "width", &width);
-  gst_structure_get_int (structure, "depth", &depth);
-
-  if (width && depth && width != depth) {
-    GST_DEBUG_OBJECT (spc, "width %d and depth %d are different", width, depth);
-    gst_caps_unref (allowed);
-    return FALSE;
-  }
-
-  gst_structure_get_boolean (structure, "signed", &sign);
-  gst_structure_get_int (structure, "rate", &rate);
-  gst_structure_get_int (structure, "channels", &channels);
-
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "width", G_TYPE_INT, width,
-      "depth", G_TYPE_INT, depth,
-      "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
+  caps = gst_pad_get_pad_template_caps (spc->srcpad);
   gst_pad_set_caps (spc->srcpad, caps);
-
   gst_caps_unref (caps);
-  gst_caps_unref (allowed);
 
   return TRUE;
 }
 
 static void
-gst_spc_dec_base_init (gpointer g_class)
+gst_spc_dec_class_init (GstSpcDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *element_class = (GstElementClass *) klass;
+  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gst_element_class_set_details_simple (element_class, "OpenSPC SPC decoder",
       "Codec/Audio/Decoder",
@@ -112,33 +89,13 @@ gst_spc_dec_base_init (gpointer g_class)
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
-}
-
-static void
-gst_spc_dec_class_init (GstSpcDecClass * klass)
-{
-  GstElementClass *element_class = (GstElementClass *) klass;
-  GObjectClass *gobject_class = (GObjectClass *) klass;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_spc_dec_change_state);
   gobject_class->dispose = gst_spc_dec_dispose;
 }
 
-static const GstQueryType *
-gst_spc_dec_src_query_type (GstPad * pad)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    (GstQueryType) 0
-  };
-
-  return query_types;
-}
-
-
 static void
-gst_spc_dec_init (GstSpcDec * spc, GstSpcDecClass * klass)
+gst_spc_dec_init (GstSpcDec * spc)
 {
   spc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   /* gst_pad_set_query_function (spc->sinkpad, NULL); */
@@ -149,7 +106,6 @@ gst_spc_dec_init (GstSpcDec * spc, GstSpcDecClass * klass)
   spc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_event_function (spc->srcpad, gst_spc_dec_src_event);
   gst_pad_set_query_function (spc->srcpad, gst_spc_dec_src_query);
-  gst_pad_set_query_type_function (spc->srcpad, gst_spc_dec_src_query_type);
   gst_pad_use_fixed_caps (spc->srcpad);
   gst_element_add_pad (GST_ELEMENT (spc), spc->srcpad);
 
@@ -174,9 +130,9 @@ gst_spc_dec_dispose (GObject * object)
 }
 
 static GstFlowReturn
-gst_spc_dec_chain (GstPad * pad, GstBuffer * buffer)
+gst_spc_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstSpcDec *spc = GST_SPC_DEC (parent);
 
   if (spc->buf) {
     spc->buf = gst_buffer_append (spc->buf, buffer);
@@ -184,15 +140,13 @@ gst_spc_dec_chain (GstPad * pad, GstBuffer * buffer)
     spc->buf = buffer;
   }
 
-  gst_object_unref (spc);
-
   return GST_FLOW_OK;
 }
 
 static gboolean
-gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
+gst_spc_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstSpcDec *spc = GST_SPC_DEC (parent);
   gboolean result = TRUE;
   gboolean forward = FALSE;
 
@@ -214,8 +168,6 @@ gst_spc_dec_sink_event (GstPad * pad, GstEvent * event)
     result = gst_pad_push_event (spc->srcpad, event);
   else
     gst_event_unref (event);
-
-  gst_object_unref (spc);
 
   return result;
 }
@@ -253,9 +205,9 @@ gst_spc_fadeout (GstSpcDec * spc)
 
 
 static gboolean
-gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
+gst_spc_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstSpcDec *spc = GST_SPC_DEC (parent);
   gboolean result = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -285,6 +237,7 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
         stop = GST_CLOCK_TIME_NONE;
 
       if (start_type == GST_SEEK_TYPE_SET) {
+        GstSegment seg;
         guint64 cur =
             gst_util_uint64_scale (spc->byte_pos, GST_SECOND, 32000 * 2 * 2);
         guint64 dest = (guint64) start;
@@ -310,14 +263,18 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
         }
 
         if (flush) {
-          gst_pad_push_event (spc->srcpad, gst_event_new_flush_stop ());
+          gst_pad_push_event (spc->srcpad, gst_event_new_flush_stop (TRUE));
         }
 
         if (stop == GST_CLOCK_TIME_NONE)
           stop = (guint64) (gst_spc_duration (spc) + gst_spc_fadeout (spc));
 
-        gst_pad_push_event (spc->srcpad, gst_event_new_new_segment (FALSE, rate,
-                GST_FORMAT_TIME, dest, stop, dest));
+        gst_segment_init (&seg, GST_FORMAT_TIME);
+        seg.rate = rate;
+        seg.start = dest;
+        seg.stop = stop;
+        seg.time = dest;
+        gst_pad_push_event (spc->srcpad, gst_event_new_segment (&seg));
 
         /* spc->byte_pos += OSPC_Run(-1, NULL, (unsigned int) (gst_util_uint64_scale(dest - cur, 32000*2*2, GST_SECOND))); */
         spc->seekpoint =
@@ -336,16 +293,13 @@ gst_spc_dec_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_event_unref (event);
-  gst_object_unref (spc);
-
   return result;
 }
 
 static gboolean
-gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
+gst_spc_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  GstSpcDec *spc = GST_SPC_DEC (gst_pad_get_parent (pad));
+  GstSpcDec *spc = GST_SPC_DEC (parent);
   gboolean result = TRUE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -377,11 +331,9 @@ gst_spc_dec_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
-      result = gst_pad_query_default (pad, query);
+      result = gst_pad_query_default (pad, parent, query);
       break;
   }
-
-  gst_object_unref (spc);
 
   return result;
 }
@@ -394,17 +346,21 @@ spc_play (GstPad * pad)
   GstBuffer *out;
   gboolean seeking = spc->seeking;
   gint64 duration, fade, end, position;
+  GstMapInfo map;
 
   if (!seeking) {
     out = gst_buffer_new_and_alloc (1600 * 4);
-    gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
     GST_BUFFER_TIMESTAMP (out) =
         (gint64) gst_util_uint64_scale ((guint64) spc->byte_pos, GST_SECOND,
         32000 * 2 * 2);
-    spc->byte_pos += OSPC_Run (-1, (short *) GST_BUFFER_DATA (out), 1600 * 4);
+    gst_buffer_map (out, &map, GST_MAP_WRITE);
+    spc->byte_pos += OSPC_Run (-1, (short *) map.data, 1600 * 4);
+    gst_buffer_unmap (out, &map);
   } else {
     if (spc->seekpoint < spc->byte_pos) {
-      OSPC_Init (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf));
+      gst_buffer_map (spc->buf, &map, GST_MAP_WRITE);
+      OSPC_Init (map.data, map.size);
+      gst_buffer_unmap (spc->buf, &map);
       spc->byte_pos = 0;
     }
     spc->byte_pos += OSPC_Run (-1, NULL, 1600 * 4);
@@ -412,7 +368,6 @@ spc_play (GstPad * pad)
       spc->seeking = FALSE;
     }
     out = gst_buffer_new ();
-    gst_buffer_set_caps (out, GST_PAD_CAPS (pad));
   }
 
   duration = gst_spc_duration (spc);
@@ -423,11 +378,15 @@ spc_play (GstPad * pad)
       32000 * 2 * 2);
 
   if (position >= duration) {
-    gint16 *data = (gint16 *) GST_BUFFER_DATA (out);
-    guint32 size = GST_BUFFER_SIZE (out) / sizeof (gint16);
+    gint16 *data;
+    guint32 size;
     unsigned int i;
+    gint64 num;
 
-    gint64 num = (fade - (position - duration));
+    gst_buffer_map (out, &map, GST_MAP_WRITE);
+    data = (gint16 *) map.data;
+    size = map.size / sizeof (gint16);
+    num = (fade - (position - duration));
 
     for (i = 0; i < size; i++) {
       /* Apply a parabolic volume envelope */
@@ -441,8 +400,7 @@ spc_play (GstPad * pad)
 
     gst_pad_pause_task (pad);
 
-    if (flow_return <= GST_FLOW_UNEXPECTED
-        || flow_return == GST_FLOW_NOT_LINKED) {
+    if (flow_return <= GST_FLOW_EOS || flow_return == GST_FLOW_NOT_LINKED) {
       gst_pad_push_event (pad, gst_event_new_eos ());
     }
   }
@@ -463,6 +421,8 @@ spc_setup (GstSpcDec * spc)
   spc_tag_info *info;
   GstTagList *taglist;
   guint64 total_duration;
+  GstSegment seg;
+  GstMapInfo map;
 
   if (!spc->buf || !spc_negotiate (spc)) {
     return FALSE;
@@ -470,10 +430,10 @@ spc_setup (GstSpcDec * spc)
 
   info = &(spc->tag_info);
 
-  spc_tag_get_info (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf),
-      info);
+  gst_buffer_map (spc->buf, &map, GST_MAP_READ);
+  spc_tag_get_info (map.data, map.size, info);
 
-  taglist = gst_tag_list_new ();
+  taglist = gst_tag_list_new_empty ();
 
   if (info->title)
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_TITLE,
@@ -523,17 +483,18 @@ spc_setup (GstSpcDec * spc)
       GST_TAG_DURATION, total_duration,
       GST_TAG_GENRE, "Game", GST_TAG_CODEC, "SPC700", NULL);
 
-  gst_element_found_tags_for_pad (GST_ELEMENT (spc), spc->srcpad, taglist);
+  gst_pad_push_event (spc->srcpad, gst_event_new_tag (taglist));
 
   /* spc_tag_info_free(&info); */
 
 
-  if (OSPC_Init (GST_BUFFER_DATA (spc->buf), GST_BUFFER_SIZE (spc->buf)) != 0) {
+  if (OSPC_Init (map.data, map.size) != 0) {
     return FALSE;
   }
+  gst_buffer_unmap (spc->buf, &map);
 
-  gst_pad_push_event (spc->srcpad, gst_event_new_new_segment (FALSE, 1.0,
-          GST_FORMAT_TIME, 0, -1, 0));
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  gst_pad_push_event (spc->srcpad, gst_event_new_segment (&seg));
 
   gst_pad_start_task (spc->srcpad, (GstTaskFunction) spc_play, spc->srcpad,
       NULL);
@@ -565,7 +526,9 @@ gst_spc_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  result =
+      GST_ELEMENT_CLASS (gst_spc_dec_parent_class)->change_state (element,
+      transition);
   if (result == GST_STATE_CHANGE_FAILURE)
     return result;
 

@@ -16,15 +16,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <glib/gstring.h>
-#include <glib/gtypes.h>
-#include <glib/gmem.h>
-#include <glib/gprintf.h>
-
 #include <tag.h>
 #include <string.h>
 #include <stdlib.h>
-
 
 #define EXTENDED_OFFSET 0x10200
 #define EXTENDED_MAGIC ((guint32) ('x' << 0 | 'i' << 8 | 'd' << 16 | '6' << 24))
