@@ -489,6 +489,7 @@ spc_setup (GstSpcDec * spc)
 
 
   if (OSPC_Init (map.data, map.size) != 0) {
+    gst_buffer_unmap (spc->buf, &map);
     return FALSE;
   }
   gst_buffer_unmap (spc->buf, &map);
