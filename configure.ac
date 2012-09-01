@@ -3,6 +3,11 @@ AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, git and prerelease does Werror too
+dnl
+dnl
+dnl ==========> REMOVE GST_USE_UNSTABLE_API when doing 1.0.0 <=============
+dnl             (also check libtool version)
+dnl
 AC_INIT(GStreamer, 0.11.93.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
