@@ -692,8 +692,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
       basesrc = GST_BASE_SRC_CAST (src);
       basesrc->segment.duration = src->content_size;
       gst_element_post_message (GST_ELEMENT (src),
-          gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
-              src->content_size));
+          gst_message_new_duration_changed (GST_OBJECT (src)));
     }
   }
 

@@ -3674,8 +3674,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           GST_OBJECT_UNLOCK (demux);
           if (!demux->invalid_duration) {
             gst_element_post_message (GST_ELEMENT_CAST (demux),
-                gst_message_new_duration (GST_OBJECT_CAST (demux),
-                    GST_FORMAT_TIME, GST_CLOCK_TIME_NONE));
+                gst_message_new_duration_changed (GST_OBJECT_CAST (demux)));
             demux->invalid_duration = TRUE;
           }
         } else {
