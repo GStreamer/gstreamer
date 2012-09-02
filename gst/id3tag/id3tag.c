@@ -1232,11 +1232,11 @@ static void
 date_v1_convert (const GstTagList * list, const gchar * tag,
     guint8 * dst, int maxlen, gboolean * wrote_tag)
 {
-  GDate *date;
+  GstDateTime *dt;
 
   /* Only one date supported */
-  if (gst_tag_list_get_date_index (list, tag, 0, &date) && date != NULL) {
-    GDateYear year = g_date_get_year (date);
+  if (gst_tag_list_get_date_time_index (list, tag, 0, &dt)) {
+    guint year = gst_date_time_get_year (dt);
     /* Check for plausible year */
     if (year > 500 && year < 2100) {
       gchar str[5];
@@ -1247,7 +1247,7 @@ date_v1_convert (const GstTagList * list, const gchar * tag,
       GST_WARNING ("invalid year %u, skipping", year);
     }
 
-    g_date_free (date);
+    gst_date_time_unref (dt);
   }
 }
 
@@ -1307,7 +1307,7 @@ static const struct
   GST_TAG_TITLE, 3, 30, latin1_convert}, {
   GST_TAG_ARTIST, 33, 30, latin1_convert}, {
   GST_TAG_ALBUM, 63, 30, latin1_convert}, {
-  GST_TAG_DATE, 93, 4, date_v1_convert}, {
+  GST_TAG_DATE_TIME, 93, 4, date_v1_convert}, {
   GST_TAG_COMMENT, 97, 28, latin1_convert}, {
     /* Note: one-byte gap here */
   GST_TAG_TRACK_NUMBER, 126, 1, track_number_convert}, {
