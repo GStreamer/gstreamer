@@ -208,7 +208,6 @@ static const FormatInfo formats[] = {
   {"video/x-vp6-alpha", "On2 VP6 with alpha", 0},
   {"video/x-vp7", "On2 VP7", 0},
   {"video/x-vp8", "VP8", 0},
-  {"video/x-xvid", "XVID MPEG-4", 0},
   {"video/x-zlib", "Lossless zlib video", 0},
   {"video/x-zmbv", "Zip Motion Block video", 0},
 

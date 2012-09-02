@@ -407,19 +407,6 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("DivX MPEG-4 Version 5");
       break;
 
-    case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
-    case GST_MAKE_FOURCC ('x', 'v', 'i', 'd'):
-      caps = gst_caps_new_empty_simple ("video/x-xvid");
-      if (codec_name)
-        *codec_name = g_strdup ("XVID MPEG-4");
-      break;
-
-    case GST_MAKE_FOURCC ('R', 'M', 'P', '4'):
-      caps = gst_caps_new_empty_simple ("video/x-xvid");
-      if (codec_name)
-        *codec_name = g_strdup ("Sigma-Designs MPEG-4");
-      break;
-
     case GST_MAKE_FOURCC ('M', 'P', 'G', '4'):
     case GST_MAKE_FOURCC ('M', 'P', '4', '1'):
     case GST_MAKE_FOURCC ('m', 'p', '4', '1'):
@@ -462,6 +449,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("FFmpeg MPEG-4");
       break;
 
+    case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
+    case GST_MAKE_FOURCC ('x', 'v', 'i', 'd'):
     case GST_MAKE_FOURCC ('E', 'M', '4', 'A'):
     case GST_MAKE_FOURCC ('E', 'P', 'V', 'H'):
     case GST_MAKE_FOURCC ('F', 'V', 'F', 'W'):
@@ -478,6 +467,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('G', 'E', 'O', 'X'):
     case GST_MAKE_FOURCC ('M', 'P', '4', 'V'):
     case GST_MAKE_FOURCC ('m', 'p', '4', 'v'):
+    case GST_MAKE_FOURCC ('R', 'M', 'P', '4'):
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4, NULL);
       if (codec_name)

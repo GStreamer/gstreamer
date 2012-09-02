@@ -275,7 +275,7 @@ static const gchar *caps_strings[] = {
   "video/x-smoke", "video/x-tarkin", "video/x-theora", "video/x-rle",
   "video/x-ultimotion", "video/x-vcd", "video/x-vmnc", "video/x-vp3",
   "video/x-vp5", "video/x-vp6", "video/x-vp6-flash", "video/x-vp7",
-  "video/x-xvid", "video/x-zlib", "image/bmp", "image/x-bmp",
+  "video/x-zlib", "image/bmp", "image/x-bmp",
   "image/x-MS-bmp", "image/gif", "image/jpeg", "image/jng", "image/png",
   "image/pbm", "image/ppm", "image/svg+xml", "image/tiff",
   "image/x-cmu-raster", "image/x-icon", "image/x-xcf", "image/x-pixmap",
