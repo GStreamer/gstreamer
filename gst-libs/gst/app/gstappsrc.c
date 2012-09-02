@@ -977,8 +977,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
     GST_OBJECT_UNLOCK (appsrc);
 
     gst_element_post_message (GST_ELEMENT (appsrc),
-        gst_message_new_duration (GST_OBJECT (appsrc), GST_FORMAT_BYTES,
-            priv->size));
+        gst_message_new_duration_changed (GST_OBJECT (appsrc)));
   } else {
     GST_OBJECT_UNLOCK (appsrc);
   }

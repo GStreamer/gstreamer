@@ -1448,9 +1448,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
         ogg->push_time_length = ogg->total_time;
         GST_INFO_OBJECT (ogg, "New duration found: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (ogg->total_time));
-        message =
-            gst_message_new_duration (GST_OBJECT (ogg), GST_FORMAT_TIME,
-            ogg->total_time);
+        message = gst_message_new_duration_changed (GST_OBJECT (ogg));
         gst_element_post_message (GST_ELEMENT (ogg), message);
 
         GST_DEBUG_OBJECT (ogg,

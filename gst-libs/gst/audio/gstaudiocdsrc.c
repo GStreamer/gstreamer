@@ -1145,7 +1145,7 @@ gst_audio_cd_src_update_duration (GstAudioCdSrc * src)
   basesrc->segment.duration = dur;
 
   gst_element_post_message (GST_ELEMENT (src),
-      gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_TIME, -1));
+      gst_message_new_duration_changed (GST_OBJECT (src)));
 
   GST_LOG_OBJECT (src, "duration updated to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (dur));
