@@ -55,6 +55,9 @@ struct _GstMpeg4VParse {
   gboolean vop_coded;
   gboolean update_caps;
 
+  GstMpeg4VisualObject vo;
+  gint vo_offset;
+
   GstBuffer *config;
   GstMpeg4VideoObjectLayer vol;
   gboolean vol_offset;
