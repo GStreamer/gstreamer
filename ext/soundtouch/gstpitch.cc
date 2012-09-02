@@ -211,7 +211,7 @@ gst_pitch_update_duration (GstPitch * pitch)
 {
   GstMessage *m;
 
-  m = gst_message_new_duration (GST_OBJECT (pitch), GST_FORMAT_TIME, -1);
+  m = gst_message_new_duration_changed (GST_OBJECT (pitch));
   gst_element_post_message (GST_ELEMENT (pitch), m);
 }
 

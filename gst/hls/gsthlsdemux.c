@@ -902,8 +902,7 @@ gst_hls_demux_cache_fragments (GstHLSDemux * demux)
         GST_TIME_ARGS (duration));
     if (duration != GST_CLOCK_TIME_NONE)
       gst_element_post_message (GST_ELEMENT (demux),
-          gst_message_new_duration (GST_OBJECT (demux),
-              GST_FORMAT_TIME, duration));
+          gst_message_new_duration_changed (GST_OBJECT (demux)));
   }
 
   /* Cache the first fragments */

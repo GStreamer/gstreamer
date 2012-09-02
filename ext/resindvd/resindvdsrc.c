@@ -1048,8 +1048,7 @@ rsn_dvdsrc_step (resinDvdSrc * src, gboolean have_dvd_lock)
           GST_TIME_FORMAT, GST_TIME_ARGS (src->pgc_duration),
           GST_TIME_ARGS (src->cur_position));
 
-      message = gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_TIME,
-          src->pgc_duration);
+      message = gst_message_new_duration_changed (GST_OBJECT (src));
       gst_element_post_message (GST_ELEMENT (src), message);
 
       rsn_dvdsrc_prepare_streamsinfo_event (src);
