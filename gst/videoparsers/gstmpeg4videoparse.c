@@ -347,13 +347,15 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
   switch (packet->type) {
     case GST_MPEG4_VIDEO_OBJ_PLANE:
     case GST_MPEG4_GROUP_OF_VOP:
+    case GST_MPEG4_USER_DATA:
     {
-
       if (packet->type == GST_MPEG4_VIDEO_OBJ_PLANE) {
         GST_LOG_OBJECT (mp4vparse, "startcode is VOP");
         mp4vparse->vop_offset = packet->offset;
-      } else {
+      } else if (packet->type == GST_MPEG4_GROUP_OF_VOP) {
         GST_LOG_OBJECT (mp4vparse, "startcode is GOP");
+      } else {
+        GST_LOG_OBJECT (mp4vparse, "startcode is User Data");
       }
       /* parse config data ending here if proper startcodes found earlier;
        * preferably start at VOS (visual object sequence),
@@ -379,6 +381,7 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
       break;
     case GST_MPEG4_VISUAL_OBJ:
       GST_LOG_OBJECT (mp4vparse, "Visual Object");
+      break;
     default:
       if (packet->type >= GST_MPEG4_VIDEO_LAYER_FIRST &&
           packet->type <= GST_MPEG4_VIDEO_LAYER_LAST) {
@@ -440,7 +443,7 @@ retry:
   }
 
   /* didn't find anything that looks like a sync word, skip */
-  switch (gst_mpeg4_parse (&packet, TRUE, NULL, data, off, size)) {
+  switch (gst_mpeg4_parse (&packet, FALSE, NULL, data, off, size)) {
     case (GST_MPEG4_PARSER_NO_PACKET):
     case (GST_MPEG4_PARSER_ERROR):
       *skipsize = size - 3;
@@ -484,7 +487,7 @@ next:
   off++;
 
   /* so now we have start code at start of data; locate next packet */
-  switch (gst_mpeg4_parse (&packet, TRUE, NULL, data, off, size)) {
+  switch (gst_mpeg4_parse (&packet, FALSE, NULL, data, off, size)) {
     case (GST_MPEG4_PARSER_NO_PACKET_END):
       ret = gst_mpeg4vparse_process_sc (mp4vparse, &packet, size);
       if (ret)
@@ -794,7 +797,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;
-    res = gst_mpeg4_parse (&packet, TRUE, NULL, data, 0, size);
+    res = gst_mpeg4_parse (&packet, FALSE, NULL, data, 0, size);
 
     while (res == GST_MPEG4_PARSER_OK || res == GST_MPEG4_PARSER_NO_PACKET_END) {
 
@@ -802,7 +805,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
           packet.type <= GST_MPEG4_VIDEO_LAYER_LAST)
         mp4vparse->vol_offset = packet.offset;
 
-      res = gst_mpeg4_parse (&packet, TRUE, NULL, data, packet.offset, size);
+      res = gst_mpeg4_parse (&packet, FALSE, NULL, data, packet.offset, size);
     }
 
     /* And take it as config */
