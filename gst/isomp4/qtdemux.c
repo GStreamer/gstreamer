@@ -9809,7 +9809,8 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('t', 'x', '3', 'g'):
       _codec ("3GPP timed text");
     text:
-      caps = gst_caps_new_empty_simple ("text/plain");
+      caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+          "utf8", NULL);
       /* actual text piece needs to be extracted */
       stream->need_process = TRUE;
       break;

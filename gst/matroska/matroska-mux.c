@@ -190,7 +190,7 @@ static GstStaticPadTemplate subtitlesink_templ =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("subtitle/x-kate; "
-        "text/plain; application/x-ssa; application/x-ass; "
+        "text/x-raw, format=utf8; application/x-ssa; application/x-ass; "
         "application/x-usf; subpicture/x-dvd; "
         "application/x-subtitle-unknown")
     );
@@ -2014,7 +2014,7 @@ gst_matroska_mux_subtitle_pad_setcaps (GstPad * pad, GstCaps * caps)
       ret = FALSE;
       goto exit;
     }
-  } else if (!strcmp (mimetype, "text/plain")) {
+  } else if (!strcmp (mimetype, "text/x-raw")) {
     gst_matroska_mux_set_codec_id (context,
         GST_MATROSKA_CODEC_ID_SUBTITLE_UTF8);
   } else if (!strcmp (mimetype, "application/x-ssa")) {
