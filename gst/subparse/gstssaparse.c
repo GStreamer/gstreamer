@@ -41,7 +41,7 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/x-pango-markup")
+    GST_STATIC_CAPS ("text/x-raw, format=pango-markup")
     );
 
 #define gst_ssa_parse_parent_class parent_class
@@ -196,7 +196,9 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   gst_buffer_unmap (priv, &map);
   gst_buffer_unref (priv);
 
-  outcaps = gst_caps_new_empty_simple ("text/x-pango-markup");
+  outcaps = gst_caps_new_simple ("text/x-raw",
+      "format", G_TYPE_STRING, "pango-markup", NULL);
+
   ret = gst_pad_set_caps (parse->srcpad, outcaps);
   gst_caps_unref (outcaps);
 

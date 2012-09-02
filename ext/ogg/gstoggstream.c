@@ -1575,7 +1575,8 @@ setup_ogmtext_mapper (GstOggStream * pad, ogg_packet * packet)
   if (pad->granulerate_d <= 0)
     return FALSE;
 
-  pad->caps = gst_caps_new_empty_simple ("text/plain");
+  pad->caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+      "utf8", NULL);
 
   pad->n_header_packets = 1;
   pad->is_ogm = TRUE;

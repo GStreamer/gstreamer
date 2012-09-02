@@ -143,7 +143,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (app->textsink), "ts-offset", 0 * GST_SECOND, NULL);
   g_signal_connect (app->textsink, "new-buffer", G_CALLBACK (have_subtitle),
       app);
-  subcaps = gst_caps_from_string ("text/x-pango-markup; text/plain");
+  subcaps = gst_caps_from_string ("text/x-raw, format={ utf8, pango-markup }");
   g_object_set (G_OBJECT (app->textsink), "caps", subcaps, NULL);
   gst_caps_unref (subcaps);
 

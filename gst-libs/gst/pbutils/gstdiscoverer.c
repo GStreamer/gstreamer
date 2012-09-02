@@ -498,10 +498,10 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
   return GST_PAD_PROBE_OK;
 }
 
-static GstStaticCaps subtitle_caps = GST_STATIC_CAPS ("text/plain; "
-    "text/x-pango-markup; subpicture/x-pgs; subpicture/x-dvb; "
+static GstStaticCaps subtitle_caps = GST_STATIC_CAPS ("text/x-raw; "
+    "subpicture/x-pgs; subpicture/x-dvb; subpicture/x-dvd; "
     "application/x-subtitle-unknown; application/x-ssa; application/x-ass; "
-    "subtitle/x-kate; application/x-kate; subpicture/x-dvd");
+    "subtitle/x-kate; application/x-kate");
 
 static gboolean
 is_subtitle_caps (const GstCaps * caps)

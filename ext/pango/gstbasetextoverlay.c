@@ -744,10 +744,11 @@ static gboolean
 gst_base_text_overlay_setcaps_txt (GstBaseTextOverlay * overlay, GstCaps * caps)
 {
   GstStructure *structure;
+  const gchar *format;
 
   structure = gst_caps_get_structure (caps, 0);
-  overlay->have_pango_markup =
-      gst_structure_has_name (structure, "text/x-pango-markup");
+  format = gst_structure_get_string (structure, "format");
+  overlay->have_pango_markup = (strcmp (format, "pango-markup") == 0);
 
   return TRUE;
 }

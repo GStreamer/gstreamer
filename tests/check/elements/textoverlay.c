@@ -59,7 +59,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate text_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain")
+    GST_STATIC_CAPS ("text/x-raw, format=utf8")
     );
 
 static GstStaticPadTemplate video_srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -510,7 +510,8 @@ GST_START_TEST (test_video_waits_for_text)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  caps = gst_caps_new_empty_simple ("text/plain");
+  caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING, "utf8",
+      NULL);
   gst_pad_set_caps (mytextsrcpad, caps);
   gst_caps_unref (caps);
 
@@ -684,7 +685,8 @@ GST_START_TEST (test_render_continuity)
       NULL, FALSE, NULL);
   fail_unless (thread != NULL);
 
-  caps = gst_caps_new_empty_simple ("text/plain");
+  caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING, "utf8",
+      NULL);
   gst_pad_set_caps (mytextsrcpad, caps);
   gst_caps_unref (caps);
 

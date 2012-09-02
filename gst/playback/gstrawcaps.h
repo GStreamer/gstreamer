@@ -28,8 +28,7 @@ G_BEGIN_DECLS
 #define DEFAULT_RAW_CAPS \
     "video/x-raw; " \
     "audio/x-raw; " \
-    "text/plain; " \
-    "text/x-pango-markup; " \
+    "text/x-raw; " \
     "subpicture/x-dvd; " \
     "subpicture/x-pgs"
 

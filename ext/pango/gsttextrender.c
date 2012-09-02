@@ -96,10 +96,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate sink_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/x-pango-markup; text/plain")
+    GST_STATIC_CAPS ("text/x-raw, format = { pango-markup, utf8 }")
     );
 
 #define GST_TYPE_TEXT_RENDER_VALIGN (gst_text_render_valign_get_type())

@@ -312,7 +312,8 @@ static void
 gst_ogm_text_parse_base_init (GstOgmParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstCaps *caps = gst_caps_new_simple ("text/plain", NULL, NULL);
+  GstCaps *caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+      "utf8", NULL);
 
   gst_element_class_set_static_metadata (element_class,
       "OGM text stream parser", "Codec/Decoder/Subtitle",
@@ -604,7 +605,8 @@ gst_ogm_parse_stream_header (GstOgmParse * ogm, const guint8 * data, guint size)
       GST_LOG_OBJECT (ogm, "Type: %s, s/u: %" G_GINT64_FORMAT
           ", timeunit=%" G_GINT64_FORMAT,
           ogm->hdr.streamtype, ogm->hdr.samples_per_unit, ogm->hdr.time_unit);
-      caps = gst_caps_new_empty_simple ("text/plain");
+      caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING,
+          "utf8", NULL);
       break;
     }
     default:

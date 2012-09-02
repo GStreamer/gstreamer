@@ -68,7 +68,7 @@
  * ]|
  * One can also feed arbitrary live text into the element:
  * |[
- * gst-launch fdsrc fd=0 ! text/plain ! txt. videotestsrc ! \
+ * gst-launch fdsrc fd=0 ! text/x-raw,format=utf8 ! txt. videotestsrc ! \
  * textoverlay  name=txt shaded-background=yes font-desc="Serif 40" wait-text=false ! \
  * xvimagesink
  * ]| This shows new text as entered on the terminal (stdin). This is not suited
@@ -86,10 +86,10 @@
 #include <gsttextoverlay.h>
 
 static GstStaticPadTemplate text_sink_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("text_sink",
+GST_STATIC_PAD_TEMPLATE ("text_sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/x-pango-markup; text/plain")
+    GST_STATIC_CAPS ("text/x-raw, format = { pango-markup, utf8 }")
     );
 
 G_DEFINE_TYPE (GstTextOverlay, gst_text_overlay, GST_TYPE_BASE_TEXT_OVERLAY);

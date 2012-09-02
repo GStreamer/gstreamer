@@ -28,7 +28,7 @@
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain; text/x-pango-markup")
+    GST_STATIC_CAPS ("text/x-raw, format = { pango-markup, utf8 }")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -240,8 +240,9 @@ test_srt_do_test (SubParseInputChunk * input, guint start_idx, guint num)
     /* check caps */
     fail_unless (outcaps != NULL);
     buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
-    fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
-        "text/x-pango-markup");
+    fail_unless (gst_structure_has_name (buffer_caps_struct, "text/x-raw"));
+    fail_unless_equals_string (gst_structure_get_string (buffer_caps_struct,
+            "format"), "pango-markup");
   }
   gst_caps_unref (outcaps);
 
@@ -277,7 +278,7 @@ GST_START_TEST (test_srt)
 GST_END_TEST;
 
 static void
-do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
+do_test (SubParseInputChunk * input, guint num, const gchar * format)
 {
   guint n;
   GstCaps *outcaps;
@@ -333,8 +334,9 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
     /* check caps */
     fail_unless (outcaps != NULL);
     buffer_caps_struct = gst_caps_get_structure (outcaps, 0);
-    fail_unless_equals_string (gst_structure_get_name (buffer_caps_struct),
-        media_type);
+    fail_unless (gst_structure_has_name (buffer_caps_struct, "text/x-raw"));
+    fail_unless_equals_string (gst_structure_get_string (buffer_caps_struct,
+            "format"), format);
   }
   gst_caps_unref (outcaps);
 
@@ -344,13 +346,13 @@ do_test (SubParseInputChunk * input, guint num, const gchar * media_type)
 static void
 test_tmplayer_do_test (SubParseInputChunk * input, guint num)
 {
-  do_test (input, num, "text/plain");
+  do_test (input, num, "utf8");
 }
 
 static void
 test_microdvd_do_test (SubParseInputChunk * input, guint num)
 {
-  do_test (input, num, "text/x-pango-markup");
+  do_test (input, num, "pango-markup");
 }
 
 GST_START_TEST (test_tmplayer_multiline)
@@ -575,7 +577,7 @@ GST_START_TEST (test_mpl2)
         "Normal\n<i>Italic</i>"}
   };
 
-  do_test (mpl2_input, G_N_ELEMENTS (mpl2_input), "text/x-pango-markup");
+  do_test (mpl2_input, G_N_ELEMENTS (mpl2_input), "pango-markup");
 }
 
 GST_END_TEST;
@@ -606,7 +608,7 @@ GST_START_TEST (test_subviewer)
         "The heavens shook as the armies\nof Falis, God of Light..."}
   };
 
-  do_test (subviewer_input, G_N_ELEMENTS (subviewer_input), "text/plain");
+  do_test (subviewer_input, G_N_ELEMENTS (subviewer_input), "utf8");
 }
 
 GST_END_TEST;
@@ -638,7 +640,7 @@ GST_START_TEST (test_subviewer2)
         "AND THE GREAT HERDS RUN FREE.\nSO WHAT?!"}
   };
 
-  do_test (subviewer2_input, G_N_ELEMENTS (subviewer2_input), "text/plain");
+  do_test (subviewer2_input, G_N_ELEMENTS (subviewer2_input), "utf8");
 }
 
 GST_END_TEST;
@@ -655,7 +657,7 @@ GST_START_TEST (test_dks)
         "AND THE GREAT HERDS RUN FREE.\nSO WHAT?!"}
   };
 
-  do_test (dks_input, G_N_ELEMENTS (dks_input), "text/plain");
+  do_test (dks_input, G_N_ELEMENTS (dks_input), "utf8");
 }
 
 GST_END_TEST;
@@ -692,7 +694,7 @@ GST_START_TEST (test_sami)
         "This is a third comment.\nThis is a fourth comment."}
   };
 
-  do_test (sami_input, G_N_ELEMENTS (sami_input), "text/x-pango-markup");
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "pango-markup");
 }
 
 GST_END_TEST;

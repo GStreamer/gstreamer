@@ -232,8 +232,7 @@ struct _StreamGroup
 #define DEFAULT_RAW_CAPS			\
   "video/x-raw; "				\
   "audio/x-raw; "				\
-  "text/plain; "				\
-  "text/x-pango-markup; "			\
+  "text/x-raw; "				\
   "subpicture/x-dvd; "			\
   "subpicture/x-pgs"
 
@@ -483,7 +482,7 @@ gst_encode_bin_init (GstEncodeBin * encode_bin)
   encode_bin->raw_video_caps = gst_caps_from_string ("video/x-raw");
   encode_bin->raw_audio_caps = gst_caps_from_string ("audio/x-raw");
   /* encode_bin->raw_text_caps = */
-  /*     gst_caps_from_string ("text/plain;text/x-pango-markup"); */
+  /*     gst_caps_from_string ("text/x-raw"); */
 
   encode_bin->queue_buffers_max = DEFAULT_QUEUE_BUFFERS_MAX;
   encode_bin->queue_bytes_max = DEFAULT_QUEUE_BYTES_MAX;

@@ -76,7 +76,7 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain; text/x-pango-markup")
+    GST_STATIC_CAPS ("text/x-raw, format= { pango-markup, utf8 }")
     );
 
 
@@ -1340,36 +1340,45 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
   switch (format) {
     case GST_SUB_PARSE_FORMAT_MDVDSUB:
       self->parse_line = parse_mdvdsub;
-      return gst_caps_new_empty_simple ("text/x-pango-markup");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_SUBRIP:
       self->parse_line = parse_subrip;
-      return gst_caps_new_empty_simple ("text/x-pango-markup");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_MPSUB:
       self->parse_line = parse_mpsub;
-      return gst_caps_new_empty_simple ("text/plain");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "utf8", NULL);
 #ifndef GST_DISABLE_XML
     case GST_SUB_PARSE_FORMAT_SAMI:
       self->parse_line = parse_sami;
       sami_context_init (&self->state);
-      return gst_caps_new_empty_simple ("text/x-pango-markup");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "pango-markup", NULL);
 #endif
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       self->parse_line = parse_tmplayer;
       self->state.max_duration = 5 * GST_SECOND;
-      return gst_caps_new_empty_simple ("text/plain");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "utf8", NULL);
     case GST_SUB_PARSE_FORMAT_MPL2:
       self->parse_line = parse_mpl2;
-      return gst_caps_new_empty_simple ("text/x-pango-markup");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_DKS:
       self->parse_line = parse_dks;
-      return gst_caps_new_empty_simple ("text/plain");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "utf8", NULL);
     case GST_SUB_PARSE_FORMAT_SUBVIEWER:
       self->parse_line = parse_subviewer;
-      return gst_caps_new_empty_simple ("text/plain");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "utf8", NULL);
     case GST_SUB_PARSE_FORMAT_QTTEXT:
       self->parse_line = parse_qttext;
       qttext_context_init (&self->state);
-      return gst_caps_new_empty_simple ("text/x-pango-markup");
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
