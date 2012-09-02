@@ -278,6 +278,7 @@ ges_timeline_get_tracks
 ges_timeline_get_layers
 ges_timeline_get_track_for_pad
 ges_timeline_get_duration
+ges_timeline_get_project
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
@@ -987,4 +988,32 @@ GES_ASSET_FILESOURCE_CLASS
 GES_IS_ASSET_FILESOURCE
 GES_IS_ASSET_FILESOURCE_CLASS
 GES_ASSET_FILESOURCE_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>ges-project</FILE>
+<TITLE>GESProject</TITLE>
+GESProject
+ges_project_add_asset
+ges_project_remove_asset
+ges_project_list_assets
+ges_project_get_asset
+ges_project_save
+ges_project_create_asset
+ges_project_get_type
+ges_project_get_uri
+ges_project_new
+ges_project_add_encoding_profile
+ges_project_list_encoding_profiles
+GESProjectFindNewUriFunction
+<SUBSECTION Standard>
+GESProjectPrivate
+GES_PROJECT
+GES_PROJECT_CLASS
+GES_IS_PROJECT
+GES_IS_PROJECT_CLASS
+GES_PROJECT_GET_CLASS
+GES_TYPE_PROJECT
+</SECTION>
+
 </SECTION>

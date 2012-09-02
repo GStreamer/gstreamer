@@ -146,6 +146,9 @@ typedef struct _GESAssetClass GESAssetClass;
 typedef struct _GESAssetFileSource GESAssetFileSource;
 typedef struct _GESAssetFileSourceClass GESAssetFileSourceClass;
 
+typedef struct _GESProject GESProject;
+typedef struct _GESProjectClass GESProjectClass;
+
 typedef struct _GESExtractable GESExtractable;
 typedef struct _GESExtractableInterface GESExtractableInterface;
 

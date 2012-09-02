@@ -47,6 +47,9 @@
 #include <ges/ges-screenshot.h>
 #include <ges/ges-asset.h>
 #include <ges/ges-asset-file-source.h>
+#if 0
+#include <ges/ges-project.h>
+#endif
 #include <ges/ges-extractable.h>
 
 #include <ges/ges-track.h>
