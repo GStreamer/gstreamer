@@ -943,6 +943,9 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
   if (vo) {
     vol->verid = vo->verid;
     vol->priority = vo->priority;
+  } else {
+    vol->verid = 1;
+    vol->priority = 0;
   }
 
   vol->low_delay = FALSE;
@@ -1074,10 +1077,9 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
     READ_UINT8 (&br, vol->interlaced, 1);
     READ_UINT8 (&br, vol->obmc_disable, 1);
 
-    if (vol->verid == 0x1) {
+    if (vol->verid == 0x1)
       READ_UINT8 (&br, tmp, 1);
-      vol->sprite_enable = tmp;
-    } else
+    else
       READ_UINT8 (&br, tmp, 2);
     vol->sprite_enable = tmp;
 
@@ -1115,7 +1117,7 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
             gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
     }
 
-    if (vol->shape != GST_MPEG4_RECTANGULAR)
+    if (vol->verid != 0x1 && vol->shape != GST_MPEG4_RECTANGULAR)
       READ_UINT8 (&br, vol->sadct_disable, 1);
 
     READ_UINT8 (&br, vol->not_8_bit, 1);
@@ -1169,14 +1171,14 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
     if (vol->data_partitioned)
       READ_UINT8 (&br, vol->reversible_vlc, 1);
 
-    if (vol->verid != 0x01)
+    if (vol->verid != 0x01) {
       READ_UINT8 (&br, vol->newpred_enable, 1);
+      if (vol->newpred_enable)
+        /* requested_upstream_message_type and newpred_segment_type */
+        SKIP (&br, 3);
 
-    if (vol->newpred_enable)
-      /* requested_upstream_message_type and newpred_segment_type */
-      SKIP (&br, 3);
-
-    READ_UINT8 (&br, vol->reduced_resolution_vop_enable, 1);
+      READ_UINT8 (&br, vol->reduced_resolution_vop_enable, 1);
+    }
 
     READ_UINT8 (&br, vol->scalability, 1);
     if (vol->scalability) {
