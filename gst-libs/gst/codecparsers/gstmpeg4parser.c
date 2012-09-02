@@ -1161,9 +1161,35 @@ gst_mpeg4_parse_video_object_layer (GstMpeg4VideoObjectLayer * vol,
       READ_UINT8 (&br, vol->quarter_sample, 1);
 
     READ_UINT8 (&br, vol->complexity_estimation_disable, 1);
-    if (!vol->complexity_estimation_disable)
-      goto complexity_estimation_error;
+    if (!vol->complexity_estimation_disable) {
+      guint8 estimation_method;
+      guint8 estimation_disable;
 
+      /* skip unneeded properties */
+      READ_UINT8 (&br, estimation_method, 2);
+      if (estimation_method < 2) {
+        READ_UINT8 (&br, estimation_disable, 1);
+        if (!estimation_disable)
+          SKIP (&br, 6);
+        READ_UINT8 (&br, estimation_disable, 1);
+        if (!estimation_disable)
+          SKIP (&br, 4);
+        CHECK_MARKER (&br);
+        READ_UINT8 (&br, estimation_disable, 1);
+        if (!estimation_disable)
+          SKIP (&br, 4);
+        READ_UINT8 (&br, estimation_disable, 1);
+        if (!estimation_disable)
+          SKIP (&br, 6);
+        CHECK_MARKER (&br);
+
+        if (estimation_method == 1) {
+          READ_UINT8 (&br, estimation_disable, 1);
+          if (!estimation_disable)
+            SKIP (&br, 2);
+        }
+      }
+    }
 
     READ_UINT8 (&br, vol->resync_marker_disable, 1);
     READ_UINT8 (&br, vol->data_partitioned, 1);
@@ -1201,10 +1227,6 @@ failed:
 
 wrong_start_code:
   GST_WARNING ("got buffer with wrong start code");
-  goto failed;
-
-complexity_estimation_error:
-  GST_WARNING ("don't support complexity estimation");
   goto failed;
 }
 
