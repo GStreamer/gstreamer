@@ -78,7 +78,7 @@
  *     a SEGMENT_START have posted a SEGMENT_DONE.</para></listitem>
  *   </varlistentry>
  *   <varlistentry>
- *     <term>GST_MESSAGE_DURATION</term>
+ *     <term>GST_MESSAGE_DURATION_CHANGED</term>
  *     <listitem><para> Is posted by an element that detected a change
  *     in the stream duration. The default bin behaviour is to clear any
  *     cached duration values so that the next duration query will perform
@@ -3229,7 +3229,7 @@ bin_do_message_forward (GstBin * bin, GstMessage * message)
  *     with the segment_done message. If there are no more segment_start
  *     messages, post segment_done message upwards.
  *
- * GST_MESSAGE_DURATION: remove all previously cached duration messages.
+ * GST_MESSAGE_DURATION_CHANGED: clear any cached durations.
  *     Whenever someone performs a duration query on the bin, we store the
  *     result so we can answer it quicker the next time. Any element that
  *     changes its duration marks our cached values invalid.
@@ -3392,13 +3392,15 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       }
       break;
     }
-    case GST_MESSAGE_DURATION:
+    case GST_MESSAGE_DURATION_CHANGED:
     {
-      /* remove all cached duration messages, next time somebody asks
+      /* FIXME: remove all cached durations, next time somebody asks
        * for duration, we will recalculate. */
+#if 0
       GST_OBJECT_LOCK (bin);
       bin_remove_messages (bin, NULL, GST_MESSAGE_DURATION);
       GST_OBJECT_UNLOCK (bin);
+#endif
       goto forward;
     }
     case GST_MESSAGE_CLOCK_LOST:
@@ -3634,11 +3636,14 @@ bin_query_duration_done (GstBin * bin, QueryFold * fold)
 
   GST_DEBUG_OBJECT (bin, "max duration %" G_GINT64_FORMAT, fold->max);
 
+  /* FIXME: re-implement duration caching */
+#if 0
   /* and cache now */
   GST_OBJECT_LOCK (bin);
   bin->messages = g_list_prepend (bin->messages,
       gst_message_new_duration (GST_OBJECT_CAST (bin), format, fold->max));
   GST_OBJECT_UNLOCK (bin);
+#endif
 }
 
 static gboolean
@@ -3752,6 +3757,8 @@ gst_bin_query (GstElement * element, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
+      /* FIXME: implement duration caching in GstBin again */
+#if 0
       GList *cached;
       GstFormat qformat;
 
@@ -3782,6 +3789,9 @@ gst_bin_query (GstElement * element, GstQuery * query)
         }
       }
       GST_OBJECT_UNLOCK (bin);
+#else
+      GST_FIXME ("implement duration caching in GstBin again");
+#endif
       /* no cached value found, iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
       fold_init = bin_query_min_max_init;
@@ -3847,7 +3857,6 @@ gst_bin_query (GstElement * element, GstQuery * query)
 done:
   gst_iterator_free (iter);
 
-exit:
   GST_DEBUG_OBJECT (bin, "query %p result %d", query, res);
 
   return res;

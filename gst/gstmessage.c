@@ -96,7 +96,7 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_ELEMENT, "element", 0},
   {GST_MESSAGE_SEGMENT_START, "segment-start", 0},
   {GST_MESSAGE_SEGMENT_DONE, "segment-done", 0},
-  {GST_MESSAGE_DURATION, "duration", 0},
+  {GST_MESSAGE_DURATION_CHANGED, "duration-changed", 0},
   {GST_MESSAGE_LATENCY, "latency", 0},
   {GST_MESSAGE_ASYNC_START, "async-start", 0},
   {GST_MESSAGE_ASYNC_DONE, "async-done", 0},
@@ -805,33 +805,28 @@ gst_message_new_element (GstObject * src, GstStructure * structure)
 }
 
 /**
- * gst_message_new_duration:
+ * gst_message_new_duration_changed:
  * @src: (transfer none): The object originating the message.
- * @format: The format of the duration
- * @duration: The new duration 
  *
- * Create a new duration message. This message is posted by elements that
- * know the duration of a stream in a specific format. This message
+ * Create a new duration changed message. This message is posted by elements
+ * that know the duration of a stream when the duration changes. This message
  * is received by bins and is used to calculate the total duration of a
  * pipeline. Elements may post a duration message with a duration of
  * GST_CLOCK_TIME_NONE to indicate that the duration has changed and the 
  * cached duration should be discarded. The new duration can then be 
  * retrieved via a query.
  *
- * Returns: (transfer full): The new duration message.
+ * Returns: (transfer full): The new duration-changed message.
  *
  * MT safe.
  */
 GstMessage *
-gst_message_new_duration (GstObject * src, GstFormat format, gint64 duration)
+gst_message_new_duration_changed (GstObject * src)
 {
   GstMessage *message;
-  GstStructure *structure;
 
-  structure = gst_structure_new_id (GST_QUARK (MESSAGE_DURATION),
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
-      GST_QUARK (DURATION), G_TYPE_INT64, duration, NULL);
-  message = gst_message_new_custom (GST_MESSAGE_DURATION, src, structure);
+  message = gst_message_new_custom (GST_MESSAGE_DURATION_CHANGED, src,
+      gst_structure_new_id_empty (GST_QUARK (MESSAGE_DURATION_CHANGED)));
 
   return message;
 }
@@ -1479,39 +1474,6 @@ gst_message_parse_segment_done (GstMessage * message, GstFormat * format,
     *position =
         g_value_get_int64 (gst_structure_id_get_value (structure,
             GST_QUARK (POSITION)));
-}
-
-/**
- * gst_message_parse_duration:
- * @message: A valid #GstMessage of type GST_MESSAGE_DURATION.
- * @format: (out): Result location for the format, or NULL
- * @duration: (out): Result location for the duration, or NULL
- *
- * Extracts the duration and format from the duration message. The duration
- * might be GST_CLOCK_TIME_NONE, which indicates that the duration has
- * changed. Applications should always use a query to retrieve the duration
- * of a pipeline.
- *
- * MT safe.
- */
-void
-gst_message_parse_duration (GstMessage * message, GstFormat * format,
-    gint64 * duration)
-{
-  GstStructure *structure;
-
-  g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_DURATION);
-
-  structure = GST_MESSAGE_STRUCTURE (message);
-  if (format)
-    *format = (GstFormat)
-        g_value_get_enum (gst_structure_id_get_value (structure,
-            GST_QUARK (FORMAT)));
-  if (duration)
-    *duration =
-        g_value_get_int64 (gst_structure_id_get_value (structure,
-            GST_QUARK (DURATION)));
 }
 
 /**

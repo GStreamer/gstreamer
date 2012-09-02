@@ -80,6 +80,19 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 
 #ifndef GST_DISABLE_DEPRECATED
 
+#define GST_MESSAGE_DURATION GST_MESSAGE_DURATION_CHANGED
+#define gst_message_new_duration_changed(src,fmt,dur) \
+    gst_message_new_duration_changed(src)
+#define gst_message_parse_duration(msg,fmt,dur) \
+G_STMT_START { \
+  GstFormat *p_fmt = fmt; \
+  gint64 *p_dur = dur; \
+  if (p_fmt) \
+    *p_fmt = GST_FORMAT_TIME; \
+  if (p_dur) \
+    *p_dur = GST_CLOCK_TIME_NONE; \
+} G_STMT_END
+
 #endif /* not GST_DISABLE_DEPRECATED */
 
 G_END_DECLS

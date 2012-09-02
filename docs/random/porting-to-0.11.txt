@@ -351,6 +351,11 @@ The 0.11 porting guide
     The GstStructure is removed from the public API, use the getters to get
     a handle to a GstStructure.
 
+    GST_MESSAGE_DURATION -> GST_MESSAGE_DURATION_CHANGED
+
+    gst_message_parse_duration() was removed (not needed any longer, do
+    a duration query to query the updated duration)
+
 * GstCaps
     Is now a boxed type derived from GstMiniObject.
 
@@ -602,8 +607,8 @@ The 0.11 porting guide
    create request pads from elements.
 
  * some elements that used to have a single dynamic source pad have a
-   static source pad now. Example: wavparse, id3demux, apedemux. (This
-   does not affect applications using decodebin or playbin)
+   static source pad now. Example: wavparse, id3demux, iceydemux, apedemux.
+   (This does not affect applications using decodebin or playbin).
 
  * the name of the GstXOverlay "prepare-xwindow-id" message has changed
    to "prepare-window-handle" (and GstXOverlay has been renamed to
