@@ -1356,8 +1356,7 @@ gst_base_parse_update_duration (GstBaseParse * baseparse)
         if (parse->priv->estimated_drift > GST_SECOND ||
             parse->priv->estimated_drift < -GST_SECOND) {
           gst_element_post_message (GST_ELEMENT (parse),
-              gst_message_new_duration (GST_OBJECT (parse),
-                  GST_FORMAT_TIME, dest_value));
+              gst_message_new_duration_changed (GST_OBJECT (parse)));
           parse->priv->estimated_drift = 0;
         }
         parse->priv->estimated_duration = dest_value;
@@ -3107,7 +3106,7 @@ gst_base_parse_set_duration (GstBaseParse * parse,
   if (duration != parse->priv->duration) {
     GstMessage *m;
 
-    m = gst_message_new_duration (GST_OBJECT (parse), fmt, duration);
+    m = gst_message_new_duration_changed (GST_OBJECT (parse));
     gst_element_post_message (GST_ELEMENT (parse), m);
 
     /* TODO: what about duration tag? */
