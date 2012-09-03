@@ -1783,7 +1783,7 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 
   GST_DEBUG ("parsing \"Slice header\", slice type %u", slice->type);
 
-  READ_UE_ALLOWED (&nr, pps_id, 0, GST_H264_MAX_PPS_COUNT);
+  READ_UE_ALLOWED (&nr, pps_id, 0, GST_H264_MAX_PPS_COUNT - 1);
   pps = gst_h264_parser_get_pps (nalparser, pps_id);
 
   if (!pps) {
