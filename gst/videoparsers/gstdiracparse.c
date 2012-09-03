@@ -215,7 +215,7 @@ get_profile_name (int profile)
       return "vc2-simple";
     case 2:
       return "vc2-main";
-    case 3:
+    case 8:
       return "main";
     default:
       break;
