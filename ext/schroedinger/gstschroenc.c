@@ -138,9 +138,12 @@ register_enum_list (const SchroEncoderSetting * setting)
 
   enumtypes = g_malloc0 ((n + 1) * sizeof (GEnumValue));
   for (i = 0; i < n; i++) {
+    gchar *nick;
+
     enumtypes[i].value = i;
-    enumtypes[i].value_name = setting->enum_list[i];
-    enumtypes[i].value_nick = setting->enum_list[i];
+    nick = g_strdelimit (g_strdup (setting->enum_list[i]), "_", '-');
+    enumtypes[i].value_name = g_intern_static_string (nick);
+    enumtypes[i].value_nick = enumtypes[i].value_name;
   }
 
   typename = g_strdup_printf ("SchroEncoderSettingEnum_%s", setting->name);
@@ -424,10 +427,9 @@ gst_schro_enc_set_property (GObject * object, guint prop_id,
 {
   GstSchroEnc *src;
 
-  g_return_if_fail (GST_IS_SCHRO_ENC (object));
   src = GST_SCHRO_ENC (object);
 
-  GST_DEBUG ("gst_schro_enc_set_property");
+  GST_DEBUG ("%s", pspec->name);
 
   if (prop_id >= 1) {
     const SchroEncoderSetting *setting;
@@ -459,7 +461,6 @@ gst_schro_enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstSchroEnc *src;
 
-  g_return_if_fail (GST_IS_SCHRO_ENC (object));
   src = GST_SCHRO_ENC (object);
 
   if (prop_id >= 1) {
