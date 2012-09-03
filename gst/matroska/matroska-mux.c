@@ -895,11 +895,11 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
   GstMatroskaPad *collect_pad;
   GstStructure *structure;
   const gchar *mimetype;
+  const gchar *interlace_mode;
   const GValue *value = NULL;
   GstBuffer *codec_buf = NULL;
   gint width, height, pixel_width, pixel_height;
   gint fps_d, fps_n;
-  gboolean interlaced = FALSE;
 
   mux = GST_MATROSKA_MUX (GST_PAD_PARENT (pad));
 
@@ -916,8 +916,8 @@ gst_matroska_mux_video_pad_setcaps (GstPad * pad, GstCaps * caps)
 
   mimetype = gst_structure_get_name (structure);
 
-  if (gst_structure_get_boolean (structure, "interlaced", &interlaced)
-      && interlaced)
+  interlace_mode = gst_structure_get_string (structure, "interlace-mode");
+  if (interlace_mode != NULL && strcmp (interlace_mode, "progressive") != 0)
     context->flags |= GST_MATROSKA_VIDEOTRACK_INTERLACED;
 
   if (!strcmp (mimetype, "video/x-theora")) {
