@@ -598,8 +598,7 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
 
   src->content_size = gmyth_file_get_filesize (src->file);
 
-  msg = gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
-      src->content_size);
+  msg = gst_message_new_duration_changed (GST_OBJECT (src));
   gst_element_post_message (GST_ELEMENT (src), msg);
 
   src->do_start = FALSE;
@@ -608,8 +607,7 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES,
       src->content_size);
   gst_element_post_message (GST_ELEMENT (src),
-      gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
-          src->content_size));
+      gst_message_new_duration_changed (GST_OBJECT (src)));
 #if 0
   gst_pad_push_event (GST_BASE_SRC_PAD (GST_BASE_SRC (src)),
       gst_event_new_new_segment (TRUE, 1.0,
