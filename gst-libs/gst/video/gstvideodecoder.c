@@ -296,6 +296,7 @@
 #include "gstvideodecoder.h"
 #include "gstvideoutils.h"
 
+#include <gst/video/video-event.h>
 #include <gst/video/gstvideopool.h>
 #include <gst/video/gstvideometa.h>
 #include <string.h>
@@ -893,7 +894,7 @@ gst_video_decoder_push_event (GstVideoDecoder * decoder, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_video_decoder_handle_eos (GstVideoDecoder * dec)
+gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
 {
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_GET_CLASS (dec);
   GstVideoDecoderPrivate *priv = dec->priv;
@@ -918,8 +919,10 @@ gst_video_decoder_handle_eos (GstVideoDecoder * dec)
     ret = gst_video_decoder_flush_parse (dec, TRUE);
   }
 
-  if (decoder_class->finish)
-    ret = decoder_class->finish (dec);
+  if (at_eos) {
+    if (decoder_class->finish)
+      ret = decoder_class->finish (dec);
+  }
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
 
@@ -932,6 +935,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 {
   GstVideoDecoderPrivate *priv;
   gboolean ret = FALSE;
+  gboolean forward_immediate = FALSE;
 
   priv = decoder->priv;
 
@@ -951,11 +955,25 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     {
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
-      flow_ret = gst_video_decoder_handle_eos (decoder);
+      flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
       ret = (flow_ret == GST_FLOW_OK);
-
+      forward_immediate = TRUE;
       break;
     }
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+    {
+      gboolean in_still;
+      GstFlowReturn flow_ret = GST_FLOW_OK;
+
+      if (gst_video_event_parse_still_frame (event, &in_still)) {
+        if (in_still) {
+          flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+          ret = (flow_ret == GST_FLOW_OK);
+          forward_immediate = TRUE;
+        }
+      }
+    }
+
     case GST_EVENT_SEGMENT:
     {
       GstSegment segment;
@@ -1012,6 +1030,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       /* well, this is kind of worse than a DISCONT */
       gst_video_decoder_flush (decoder, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      forward_immediate = TRUE;
       break;
     }
     case GST_EVENT_TAG:
@@ -1044,9 +1063,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
    * to be forwarded immediately and no buffers are queued anyway.
    */
   if (event) {
-    if (!GST_EVENT_IS_SERIALIZED (event)
-        || GST_EVENT_TYPE (event) == GST_EVENT_EOS
-        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+    if (!GST_EVENT_IS_SERIALIZED (event) || forward_immediate) {
       ret = gst_video_decoder_push_event (decoder, event);
     } else {
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
