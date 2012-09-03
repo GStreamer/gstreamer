@@ -261,8 +261,10 @@ struct _GstBaseParsePrivate
 
   gint64 offset;
   gint64 sync_offset;
-  GstClockTime next_ts;
-  GstClockTime prev_ts;
+  GstClockTime next_pts;
+  GstClockTime next_dts;
+  GstClockTime prev_pts;
+  GstClockTime prev_dts;
   GstClockTime frame_duration;
   gboolean seen_keyframe;
   gboolean is_video;
@@ -272,7 +274,8 @@ struct _GstBaseParsePrivate
   guint64 bytecount;
   guint64 data_bytecount;
   guint64 acc_duration;
-  GstClockTime first_frame_ts;
+  GstClockTime first_frame_pts;
+  GstClockTime first_frame_dts;
   gint64 first_frame_offset;
 
   gboolean post_min_bitrate;
@@ -315,7 +318,8 @@ struct _GstBaseParsePrivate
   GSList *buffers_head;
   GSList *buffers_queued;
   GSList *buffers_send;
-  GstClockTime last_ts;
+  GstClockTime last_pts;
+  GstClockTime last_dts;
   gint64 last_offset;
 
   /* Pending serialized events */
@@ -712,11 +716,13 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->framecount = 0;
   parse->priv->bytecount = 0;
   parse->priv->acc_duration = 0;
-  parse->priv->first_frame_ts = GST_CLOCK_TIME_NONE;
+  parse->priv->first_frame_pts = GST_CLOCK_TIME_NONE;
+  parse->priv->first_frame_dts = GST_CLOCK_TIME_NONE;
   parse->priv->first_frame_offset = -1;
   parse->priv->estimated_duration = -1;
   parse->priv->estimated_drift = 0;
-  parse->priv->next_ts = 0;
+  parse->priv->next_pts = 0;
+  parse->priv->next_dts = 0;
   parse->priv->syncable = TRUE;
   parse->priv->passthrough = FALSE;
   parse->priv->has_timing_info = FALSE;
@@ -738,7 +744,8 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->exact_position = TRUE;
   parse->priv->seen_keyframe = FALSE;
 
-  parse->priv->last_ts = GST_CLOCK_TIME_NONE;
+  parse->priv->last_dts = GST_CLOCK_TIME_NONE;
+  parse->priv->last_pts = GST_CLOCK_TIME_NONE;
   parse->priv->last_offset = 0;
 
   g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
@@ -779,9 +786,13 @@ gst_base_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstBuffer *buffer = frame->buffer;
 
-  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-      GST_CLOCK_TIME_IS_VALID (parse->priv->next_ts)) {
-    GST_BUFFER_TIMESTAMP (buffer) = parse->priv->next_ts;
+  if (!GST_BUFFER_PTS_IS_VALID (buffer) &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->next_pts)) {
+    GST_BUFFER_PTS (buffer) = parse->priv->next_pts;
+  }
+  if (!GST_BUFFER_DTS_IS_VALID (buffer) &&
+      GST_CLOCK_TIME_IS_VALID (parse->priv->next_dts)) {
+    GST_BUFFER_DTS (buffer) = parse->priv->next_dts;
   }
   if (!GST_BUFFER_DURATION_IS_VALID (buffer) &&
       GST_CLOCK_TIME_IS_VALID (parse->priv->frame_duration)) {
@@ -941,7 +952,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
     {
       const GstSegment *in_segment;
       GstSegment out_segment;
-      gint64 offset = 0, next_ts;
+      gint64 offset = 0, next_pts;
 
 #if 0
       gdouble rate, applied_rate;
@@ -984,7 +995,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
           out_segment.stop = seek->segment.stop;
           out_segment.time = seek->segment.start;
 
-          next_ts = seek->start_ts;
+          next_pts = seek->start_ts;
           parse->priv->exact_position = seek->accurate;
           g_free (seek);
         } else {
@@ -992,11 +1003,11 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
           /* as these are only estimates, stop is kept open-ended to avoid
            * premature cutting */
           gst_base_parse_convert (parse, GST_FORMAT_BYTES, in_segment->start,
-              GST_FORMAT_TIME, (gint64 *) & next_ts);
+              GST_FORMAT_TIME, (gint64 *) & next_pts);
 
-          out_segment.start = next_ts;
+          out_segment.start = next_pts;
           out_segment.stop = GST_CLOCK_TIME_NONE;
-          out_segment.time = next_ts;
+          out_segment.time = next_pts;
 
           parse->priv->exact_position = (in_segment->start == 0);
         }
@@ -1019,12 +1030,12 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
         event = gst_event_new_segment (&out_segment);
 
-        next_ts = 0;
+        next_pts = 0;
       } else {
         /* not considered BYTE seekable if it is talking to us in TIME,
          * whatever else it might claim */
         parse->priv->upstream_seekable = FALSE;
-        next_ts = in_segment->start;
+        next_pts = in_segment->start;
       }
 
       memcpy (&parse->segment, &out_segment, sizeof (GstSegment));
@@ -1052,8 +1063,9 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
       parse->priv->offset = offset;
       parse->priv->sync_offset = offset;
-      parse->priv->next_ts = next_ts;
-      parse->priv->last_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->next_pts = next_pts;
+      parse->priv->last_pts = GST_CLOCK_TIME_NONE;
+      parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->discont = TRUE;
       parse->priv->seen_keyframe = FALSE;
       break;
@@ -1073,7 +1085,8 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       gst_base_parse_clear_queues (parse);
       parse->priv->flushing = FALSE;
       parse->priv->discont = TRUE;
-      parse->priv->last_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->last_pts = GST_CLOCK_TIME_NONE;
+      parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->new_frame = TRUE;
       break;
 
@@ -1777,7 +1790,7 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
 
   /* track skipping */
   if (*skip > 0) {
-    GstClockTime timestamp;
+    GstClockTime pts, dts;
     GstBuffer *outbuf;
 
     GST_LOG_OBJECT (parse, "finding sync, skipping %d bytes", *skip);
@@ -1785,10 +1798,12 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
       /* reverse playback, and no frames found yet, so we are skipping
        * the leading part of a fragment, which may form the tail of
        * fragment coming later, hopefully subclass skips efficiently ... */
-      timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
+      pts = gst_adapter_prev_pts (parse->priv->adapter, NULL);
+      dts = gst_adapter_prev_dts (parse->priv->adapter, NULL);
       outbuf = gst_adapter_take_buffer (parse->priv->adapter, *skip);
       outbuf = gst_buffer_make_writable (outbuf);
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+      GST_BUFFER_PTS (outbuf) = pts;
+      GST_BUFFER_DTS (outbuf) = dts;
       parse->priv->buffers_head =
           g_slist_prepend (parse->priv->buffers_head, outbuf);
       outbuf = NULL;
@@ -1842,13 +1857,14 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
   /* check if subclass/format can provide ts.
    * If so, that allows and enables extra seek and duration determining options */
   if (G_UNLIKELY (parse->priv->first_frame_offset < 0)) {
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) && parse->priv->has_timing_info
+    if (GST_BUFFER_PTS_IS_VALID (buffer) && parse->priv->has_timing_info
         && parse->priv->pad_mode == GST_PAD_MODE_PULL) {
       parse->priv->first_frame_offset = offset;
-      parse->priv->first_frame_ts = GST_BUFFER_TIMESTAMP (buffer);
+      parse->priv->first_frame_pts = GST_BUFFER_PTS (buffer);
+      parse->priv->first_frame_dts = GST_BUFFER_DTS (buffer);
       GST_DEBUG_OBJECT (parse, "subclass provided ts %" GST_TIME_FORMAT
           " for first frame at offset %" G_GINT64_FORMAT,
-          GST_TIME_ARGS (parse->priv->first_frame_ts),
+          GST_TIME_ARGS (parse->priv->first_frame_pts),
           parse->priv->first_frame_offset);
       if (!GST_CLOCK_TIME_IS_VALID (parse->priv->duration)) {
         gint64 off;
@@ -1868,21 +1884,28 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
   /* again use default handler to add missing metadata;
    * we may have new information on frame properties */
   gst_base_parse_parse_frame (parse, frame);
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) &&
-      GST_BUFFER_DURATION_IS_VALID (buffer)) {
-    parse->priv->next_ts =
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+
+  parse->priv->next_pts = GST_CLOCK_TIME_NONE;
+  if (GST_BUFFER_DTS_IS_VALID (buffer) && GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    parse->priv->next_dts =
+        GST_BUFFER_DTS (buffer) + GST_BUFFER_DURATION (buffer);
+    if (GST_BUFFER_PTS_IS_VALID (buffer)) {
+      GstClockTime next_pts =
+          GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer);
+      if (next_pts >= parse->priv->next_dts)
+        parse->priv->next_pts = next_pts;
+    }
   } else {
     /* we lost track, do not produce bogus time next time around
      * (probably means parser subclass has given up on parsing as well) */
     GST_DEBUG_OBJECT (parse, "no next fallback timestamp");
-    parse->priv->next_ts = GST_CLOCK_TIME_NONE;
+    parse->priv->next_dts = GST_CLOCK_TIME_NONE;
   }
 
   if (parse->priv->upstream_seekable && parse->priv->exact_position &&
-      GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+      GST_BUFFER_PTS_IS_VALID (buffer))
     gst_base_parse_add_index_entry (parse, offset,
-        GST_BUFFER_TIMESTAMP (buffer),
+        GST_BUFFER_PTS (buffer),
         !GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT), FALSE);
 
   /* All OK, push queued frames if there are any */
@@ -2289,8 +2312,10 @@ gst_base_parse_start_fragment (GstBaseParse * parse)
 
   /* invalidate so no fall-back timestamping is performed;
    * ok if taken from subclass or upstream */
-  parse->priv->next_ts = GST_CLOCK_TIME_NONE;
-  parse->priv->prev_ts = GST_CLOCK_TIME_NONE;
+  parse->priv->next_pts = GST_CLOCK_TIME_NONE;
+  parse->priv->prev_pts = GST_CLOCK_TIME_NONE;
+  parse->priv->next_dts = GST_CLOCK_TIME_NONE;
+  parse->priv->prev_dts = GST_CLOCK_TIME_NONE;
   /* prevent it hanging around stop all the time */
   parse->segment.position = GST_CLOCK_TIME_NONE;
   /* mark next run */
@@ -2349,29 +2374,40 @@ gst_base_parse_finish_fragment (GstBaseParse * parse, gboolean prev_head)
 
   /* add metadata (if needed to queued buffers */
   GST_LOG_OBJECT (parse, "last timestamp: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (parse->priv->last_ts));
+      GST_TIME_ARGS (parse->priv->last_pts));
   while (parse->priv->buffers_queued) {
     buf = GST_BUFFER_CAST (parse->priv->buffers_queued->data);
 
     /* no touching if upstream or parsing provided time */
-    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    if (GST_BUFFER_PTS_IS_VALID (buf)) {
       GST_LOG_OBJECT (parse, "buffer has time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-    } else if (GST_CLOCK_TIME_IS_VALID (parse->priv->last_ts) &&
-        GST_BUFFER_DURATION_IS_VALID (buf)) {
-      if (G_LIKELY (GST_BUFFER_DURATION (buf) <= parse->priv->last_ts))
-        parse->priv->last_ts -= GST_BUFFER_DURATION (buf);
-      else
-        parse->priv->last_ts = 0;
-      GST_BUFFER_TIMESTAMP (buf) = parse->priv->last_ts;
-      GST_LOG_OBJECT (parse, "applied time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+          GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+    } else if (GST_BUFFER_DURATION_IS_VALID (buf)) {
+      if (GST_CLOCK_TIME_IS_VALID (parse->priv->last_pts)) {
+        if (G_LIKELY (GST_BUFFER_DURATION (buf) <= parse->priv->last_pts))
+          parse->priv->last_pts -= GST_BUFFER_DURATION (buf);
+        else
+          parse->priv->last_pts = 0;
+        GST_BUFFER_PTS (buf) = parse->priv->last_pts;
+        GST_LOG_OBJECT (parse, "applied time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+      }
+      if (GST_CLOCK_TIME_IS_VALID (parse->priv->last_dts)) {
+        if (G_LIKELY (GST_BUFFER_DURATION (buf) <= parse->priv->last_dts))
+          parse->priv->last_dts -= GST_BUFFER_DURATION (buf);
+        else
+          parse->priv->last_dts = 0;
+        GST_BUFFER_DTS (buf) = parse->priv->last_dts;
+        GST_LOG_OBJECT (parse, "applied dts %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_DTS (buf)));
+      }
     } else {
       /* no idea, very bad */
       GST_WARNING_OBJECT (parse, "could not determine time for buffer");
     }
 
-    parse->priv->last_ts = GST_BUFFER_TIMESTAMP (buf);
+    parse->priv->last_pts = GST_BUFFER_PTS (buf);
+    parse->priv->last_dts = GST_BUFFER_DTS (buf);
 
     /* reverse order for ascending sending */
     /* send downstream at keyframe not preceded by a keyframe
@@ -2439,7 +2475,7 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gint skip = -1;
   const guint8 *data;
   guint min_size, av;
-  GstClockTime timestamp;
+  GstClockTime pts, dts;
 
   parse = GST_BASE_PARSE (parent);
   bclass = GST_BASE_PARSE_GET_CLASS (parse);
@@ -2570,10 +2606,11 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     /* move along with upstream timestamp (if any),
      * but interpolate in between */
-    timestamp = gst_adapter_prev_timestamp (parse->priv->adapter, NULL);
-    if (GST_CLOCK_TIME_IS_VALID (timestamp) &&
-        (parse->priv->prev_ts != timestamp)) {
-      parse->priv->prev_ts = parse->priv->next_ts = timestamp;
+    pts = gst_adapter_prev_pts (parse->priv->adapter, NULL);
+    dts = gst_adapter_prev_dts (parse->priv->adapter, NULL);
+    if (GST_CLOCK_TIME_IS_VALID (pts) && (parse->priv->prev_pts != pts)) {
+      parse->priv->prev_pts = parse->priv->next_pts = pts;
+      parse->priv->prev_dts = parse->priv->next_dts = dts;
     }
 
     /* always pass all available data */
@@ -2691,10 +2728,11 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
   GstFlowReturn ret;
 
   GST_DEBUG_OBJECT (parse, "fragment ended; last_ts = %" GST_TIME_FORMAT
-      ", last_offset = %" G_GINT64_FORMAT, GST_TIME_ARGS (parse->priv->last_ts),
-      parse->priv->last_offset);
+      ", last_offset = %" G_GINT64_FORMAT,
+      GST_TIME_ARGS (parse->priv->last_pts), parse->priv->last_offset);
 
-  if (!parse->priv->last_offset || parse->priv->last_ts <= parse->segment.start) {
+  if (!parse->priv->last_offset
+      || parse->priv->last_pts <= parse->segment.start) {
     GST_DEBUG_OBJECT (parse, "past start of segment %" GST_TIME_FORMAT,
         GST_TIME_ARGS (parse->segment.start));
     ret = GST_FLOW_EOS;
@@ -2703,8 +2741,8 @@ gst_base_parse_handle_previous_fragment (GstBaseParse * parse)
 
   /* last fragment started at last_offset / last_ts;
    * seek back 10s capped at 1MB */
-  if (parse->priv->last_ts >= 10 * GST_SECOND)
-    ts = parse->priv->last_ts - 10 * GST_SECOND;
+  if (parse->priv->last_pts >= 10 * GST_SECOND)
+    ts = parse->priv->last_pts - 10 * GST_SECOND;
   /* if we are exact now, we will be more so going backwards */
   if (parse->priv->exact_position) {
     offset = gst_base_parse_find_offset (parse, ts, TRUE, NULL);
@@ -3586,7 +3624,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
 
   /* need initial positions; start and end */
   lpos = parse->priv->first_frame_offset;
-  ltime = parse->priv->first_frame_ts;
+  ltime = parse->priv->first_frame_pts;
   if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &htime)) {
     GST_DEBUG_OBJECT (parse, "Unknown time duration, cannot bisect");
     return GST_FLOW_ERROR;
@@ -3925,8 +3963,10 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       parse->priv->last_offset = seekpos;
       parse->priv->seen_keyframe = FALSE;
       parse->priv->discont = TRUE;
-      parse->priv->next_ts = start_ts;
-      parse->priv->last_ts = GST_CLOCK_TIME_NONE;
+      parse->priv->next_pts = start_ts;
+      parse->priv->next_dts = GST_CLOCK_TIME_NONE;
+      parse->priv->last_dts = GST_CLOCK_TIME_NONE;
+      parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->sync_offset = seekpos;
       parse->priv->exact_position = accurate;
     }
