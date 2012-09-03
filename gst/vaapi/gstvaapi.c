@@ -32,18 +32,22 @@
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
+#if !GST_CHECK_VERSION(1,0,0)
     gst_element_register(plugin, "vaapidownload",
                          GST_RANK_SECONDARY,
                          GST_TYPE_VAAPIDOWNLOAD);
     gst_element_register(plugin, "vaapiupload",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIUPLOAD);
+#endif
     gst_element_register(plugin, "vaapidecode",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIDECODE);
+#if !GST_CHECK_VERSION(1,0,0)
     gst_element_register(plugin, "vaapipostproc",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIPOSTPROC);
+#endif
     gst_element_register(plugin, "vaapisink",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPISINK);
@@ -52,7 +56,7 @@ plugin_init (GstPlugin *plugin)
 
 GST_PLUGIN_DEFINE(
     GST_VERSION_MAJOR, GST_VERSION_MINOR,
-    "vaapi",
+    vaapi,
     "VA-API based elements",
     plugin_init,
     PACKAGE_VERSION,

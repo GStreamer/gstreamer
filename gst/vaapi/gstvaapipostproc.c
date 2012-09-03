@@ -651,12 +651,10 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapipostproc_sink_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 
     /* src pad */
     pad_template = gst_static_pad_template_get(&gst_vaapipostproc_src_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 
     /**
      * GstVaapiPostproc:deinterlace-mode:

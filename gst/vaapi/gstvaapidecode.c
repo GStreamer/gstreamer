@@ -80,6 +80,7 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 
 /* GstImplementsInterface interface */
+#if !GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapidecode_implements_interface_supported(
     GstImplementsInterface *iface,
@@ -94,6 +95,7 @@ gst_vaapidecode_implements_iface_init(GstImplementsInterfaceClass *iface)
 {
     iface->supported = gst_vaapidecode_implements_interface_supported;
 }
+#endif
 
 /* GstVideoContext interface */
 static void
@@ -115,8 +117,10 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDecode,
     gst_vaapidecode,
     GST_TYPE_VIDEO_DECODER,
+#if !GST_CHECK_VERSION(1,0,0)
     G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
                           gst_vaapidecode_implements_iface_init);
+#endif
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init))
 
@@ -233,7 +237,7 @@ error_decode_timeout:
     {
         GST_WARNING("decode timeout. Decoder required a VA surface but none "
                     "got available within one second");
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
     }
 error_decode:
     {
@@ -245,7 +249,7 @@ error_decode:
             ret = GST_FLOW_NOT_SUPPORTED;
             break;
         default:
-            ret = GST_FLOW_UNEXPECTED;
+            ret = GST_FLOW_EOS;
             break;
         }
         gst_video_decoder_drop_frame(vdec, frame);
@@ -301,13 +305,13 @@ error_create_buffer:
                   GST_VAAPI_ID_ARGS(surface_id));
         gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
     }
 error_commit_buffer:
     {
         GST_DEBUG("video sink rejected the video buffer (error %d)", ret);
         gst_video_codec_frame_unref(out_frame);
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
     }
 }
 
@@ -337,7 +341,7 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
 error_flush:
     {
         GST_ERROR("failed to flush decoder (status %d)", status);
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
     }
 }
 
@@ -535,7 +539,7 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
         break;
     default:
         GST_ERROR("parse error %d", status);
-        ret = GST_FLOW_UNEXPECTED;
+        ret = GST_FLOW_EOS;
         break;
     }
     return ret;
@@ -571,12 +575,10 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapidecode_sink_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 
     /* src pad */
     pad_template = gst_static_pad_template_get(&gst_vaapidecode_src_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 }
 
 static gboolean
@@ -615,7 +617,8 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
             "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
             NULL
         );
-        gst_caps_merge_structure(decode->allowed_caps, structure);
+        decode->allowed_caps =
+            gst_caps_merge_structure(decode->allowed_caps, structure);
     }
 
     gst_caps_unref(decode_caps);
@@ -652,7 +655,7 @@ gst_vaapidecode_get_caps(GstPad *pad)
 }
 
 static gboolean
-gst_vaapidecode_query (GstPad *pad, GstQuery *query) {
+gst_vaapidecode_query (GstPad *pad, GstObject *parent, GstQuery *query) {
     GstVaapiDecode *decode = GST_VAAPIDECODE (gst_pad_get_parent_element (pad));
     gboolean res;
 
@@ -661,9 +664,9 @@ gst_vaapidecode_query (GstPad *pad, GstQuery *query) {
     if (gst_vaapi_reply_to_query (query, decode->display))
       res = TRUE;
     else if (GST_PAD_IS_SINK(pad))
-      res = decode->sinkpad_query(decode->sinkpad, query);
+        res = decode->sinkpad_query(decode->sinkpad, parent, query);
     else
-      res = decode->srcpad_query(decode->srcpad, query);
+      res = decode->srcpad_query(decode->srcpad, parent, query);
 
     g_object_unref (decode);
     return res;
@@ -690,7 +693,9 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     decode->sinkpad = GST_VIDEO_DECODER_SINK_PAD(vdec);
     decode->sinkpad_query = GST_PAD_QUERYFUNC(decode->sinkpad);
     gst_pad_set_query_function(decode->sinkpad, gst_vaapidecode_query);
+#if !GST_CHECK_VERSION(1,0,0)
     gst_pad_set_getcaps_function(decode->sinkpad, gst_vaapidecode_get_caps);
+#endif
 
     /* Pad through which data goes out of the element */
     decode->srcpad = GST_VIDEO_DECODER_SRC_PAD(vdec);

@@ -449,10 +449,12 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
         goto error;
     }
 
+#if 0
     GST_BUFFER_DATA(buffer) = gst_vaapi_image_get_plane(image, 0);
     GST_BUFFER_SIZE(buffer) = gst_vaapi_image_get_data_size(image);
 
     gst_buffer_set_caps(buffer, priv->image_caps);
+#endif
     return buffer;
 
 error:

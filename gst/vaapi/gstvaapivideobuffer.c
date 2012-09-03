@@ -26,11 +26,19 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <gst/video/gstsurfacebuffer.h>
 #include "gstvaapivideobuffer.h"
 #if USE_GLX
 # include "gstvaapivideoconverter_glx.h"
 #endif
+
+#if GST_CHECK_VERSION(1,0,0)
+static inline GstBuffer *
+gst_surface_buffer_new(void)
+{
+    return gst_buffer_new();
+}
+#else
+#include <gst/video/gstsurfacebuffer.h>
 
 #define GST_VAAPI_TYPE_VIDEO_BUFFER \
     (gst_vaapi_video_buffer_get_type())
@@ -117,6 +125,13 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 {
 }
 
+static inline GstBuffer *
+gst_surface_buffer_new(void)
+{
+    return GST_BUFFER_CAST(gst_mini_object_new(GST_TYPE_SURFACE_BUFFER));
+}
+#endif
+
 static GFunc
 get_surface_converter(GstVaapiDisplay *display)
 {
@@ -145,7 +160,7 @@ new_vbuffer(GstVaapiVideoMeta *meta)
     gst_vaapi_video_meta_set_surface_converter(meta,
         get_surface_converter(gst_vaapi_video_meta_get_display(meta)));
 
-    buffer = GST_BUFFER_CAST(gst_mini_object_new(GST_TYPE_SURFACE_BUFFER));
+    buffer = gst_surface_buffer_new();
     if (buffer)
         gst_buffer_set_vaapi_video_meta(buffer, meta);
     gst_vaapi_video_meta_unref(meta);

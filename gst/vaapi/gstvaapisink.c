@@ -51,7 +51,21 @@
 #endif
 
 /* Supported interfaces */
-#include <gst/interfaces/xoverlay.h>
+#if GST_CHECK_VERSION(1,0,0)
+# include <gst/video/videooverlay.h>
+#else
+# include <gst/interfaces/xoverlay.h>
+
+# define GST_TYPE_VIDEO_OVERLAY         GST_TYPE_X_OVERLAY
+# define GST_VIDEO_OVERLAY              GST_X_OVERLAY
+# define GstVideoOverlay                GstXOverlay
+# define GstVideoOverlayInterface       GstXOverlayClass
+
+# define gst_video_overlay_prepare_window_handle(sink) \
+    gst_x_overlay_prepare_xwindow_id(sink)
+# define gst_video_overlay_got_window_handle(sink, window_handle) \
+    gst_x_overlay_got_window_handle(sink, window_handle)
+#endif
 
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
@@ -65,9 +79,11 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapisink);
 
 /* Default template */
 static const char gst_vaapisink_sink_caps_str[] =
+#if !GST_CHECK_VERSION(1,0,0)
     "video/x-raw-yuv, "
     "width  = (int) [ 1, MAX ], "
     "height = (int) [ 1, MAX ]; "
+#endif
     GST_VAAPI_SURFACE_CAPS;
 
 static GstStaticPadTemplate gst_vaapisink_sink_factory =
@@ -78,6 +94,7 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
         GST_STATIC_CAPS(gst_vaapisink_sink_caps_str));
 
 /* GstImplementsInterface interface */
+#if !GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapisink_implements_interface_supported(
     GstImplementsInterface *iface,
@@ -85,7 +102,7 @@ gst_vaapisink_implements_interface_supported(
 )
 {
     return (type == GST_TYPE_VIDEO_CONTEXT ||
-            type == GST_TYPE_X_OVERLAY);
+            type == GST_TYPE_VIDEO_OVERLAY);
 }
 
 static void
@@ -93,6 +110,7 @@ gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface)
 {
     iface->supported = gst_vaapisink_implements_interface_supported;
 }
+#endif
 
 /* GstVideoContext interface */
 static void
@@ -110,18 +128,20 @@ gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
 }
 
 static void
-gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface);
+gst_vaapisink_video_overlay_iface_init(GstVideoOverlayInterface *iface);
 
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiSink,
     gst_vaapisink,
     GST_TYPE_VIDEO_SINK,
+#if !GST_CHECK_VERSION(1,0,0)
     G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
                           gst_vaapisink_implements_iface_init);
+#endif
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_vaapisink_video_context_iface_init);
-    G_IMPLEMENT_INTERFACE(GST_TYPE_X_OVERLAY,
-                          gst_vaapisink_xoverlay_iface_init))
+    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_OVERLAY,
+                          gst_vaapisink_video_overlay_iface_init))
 
 enum {
     PROP_0,
@@ -136,7 +156,7 @@ enum {
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
 #define DEFAULT_ROTATION                GST_VAAPI_ROTATION_0
 
-/* GstXOverlay interface */
+/* GstVideoOverlay interface */
 
 #if USE_X11
 static gboolean
@@ -147,7 +167,7 @@ static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
 static void
-gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window)
+gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay, guintptr window)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
@@ -170,8 +190,8 @@ gst_vaapisink_xoverlay_set_window_handle(GstXOverlay *overlay, guintptr window)
 }
 
 static void
-gst_vaapisink_xoverlay_set_render_rectangle(
-    GstXOverlay *overlay,
+gst_vaapisink_video_overlay_set_render_rectangle(
+    GstVideoOverlay *overlay,
     gint         x,
     gint         y,
     gint         width,
@@ -192,12 +212,19 @@ gst_vaapisink_xoverlay_set_render_rectangle(
 }
 
 static void
-gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
+gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay)
 {
     GstBaseSink * const base_sink = GST_BASE_SINK(overlay);
     GstBuffer *buffer;
 
+#if GST_CHECK_VERSION(1,0,0)
+    GstSample * const sample = gst_base_sink_get_last_sample(base_sink);
+    if (!sample)
+        return;
+    buffer = gst_sample_get_buffer(sample);
+#else
     buffer = gst_base_sink_get_last_buffer(base_sink);
+#endif
     if (buffer) {
         gst_vaapisink_show_frame(base_sink, buffer);
         gst_buffer_unref(buffer);
@@ -205,11 +232,11 @@ gst_vaapisink_xoverlay_expose(GstXOverlay *overlay)
 }
 
 static void
-gst_vaapisink_xoverlay_iface_init(GstXOverlayClass *iface)
+gst_vaapisink_video_overlay_iface_init(GstVideoOverlayInterface *iface)
 {
-    iface->set_window_handle    = gst_vaapisink_xoverlay_set_window_handle;
-    iface->set_render_rectangle = gst_vaapisink_xoverlay_set_render_rectangle;
-    iface->expose               = gst_vaapisink_xoverlay_expose;
+    iface->set_window_handle    = gst_vaapisink_video_overlay_set_window_handle;
+    iface->set_render_rectangle = gst_vaapisink_video_overlay_set_render_rectangle;
+    iface->expose               = gst_vaapisink_video_overlay_expose;
 }
 
 static void
@@ -443,16 +470,16 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 #if USE_GLX
         case GST_VAAPI_DISPLAY_TYPE_GLX:
             sink->window = gst_vaapi_window_glx_new(display, width, height);
-            goto notify_xoverlay_interface;
+            goto notify_video_overlay_interface;
 #endif
 #if USE_X11
         case GST_VAAPI_DISPLAY_TYPE_X11:
             sink->window = gst_vaapi_window_x11_new(display, width, height);
-        notify_xoverlay_interface:
+        notify_video_overlay_interface:
             if (!sink->window)
                 break;
-            gst_x_overlay_got_window_handle(
-                GST_X_OVERLAY(sink),
+            gst_video_overlay_got_window_handle(
+                GST_VIDEO_OVERLAY(sink),
                 gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window))
             );
             break;
@@ -589,7 +616,7 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
 }
 
 static GstCaps *
-gst_vaapisink_get_caps(GstBaseSink *base_sink)
+gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstCaps *out_caps, *yuv_caps;
@@ -642,7 +669,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     }
     else {
         gst_vaapi_display_lock(sink->display);
-        gst_x_overlay_prepare_xwindow_id(GST_X_OVERLAY(sink));
+        gst_video_overlay_prepare_window_handle(GST_VIDEO_OVERLAY(sink));
         gst_vaapi_display_unlock(sink->display);
         if (sink->window)
             return TRUE;
@@ -840,24 +867,30 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     gboolean success;
 
     meta = gst_buffer_get_vaapi_video_meta(src_buffer);
+#if GST_CHECK_VERSION(1,0,0)
+    if (!meta)
+        return GST_FLOW_EOS;
+    buffer = gst_buffer_ref(src_buffer);
+#else
     if (meta)
         buffer = gst_buffer_ref(src_buffer);
     else if (sink->use_video_raw) {
         buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
         if (!buffer)
-            return GST_FLOW_UNEXPECTED;
+            return GST_FLOW_EOS;
         meta = gst_buffer_get_vaapi_video_meta(buffer);
         if (!meta)
             goto error;
     }
     else
-        return GST_FLOW_UNEXPECTED;
+        return GST_FLOW_EOS;
 
     if (sink->use_video_raw &&
         !gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer)) {
         GST_WARNING("failed to process raw YUV buffer");
         goto error;
     }
+#endif
 
     if (sink->display != gst_vaapi_video_meta_get_display(meta)) {
         g_clear_object(&sink->display);
@@ -918,9 +951,10 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 
 error:
     gst_buffer_unref(buffer);
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
 }
 
+#if !GST_CHECK_VERSION(1,0,0)
 static GstFlowReturn
 gst_vaapisink_buffer_alloc(
     GstBaseSink        *base_sink,
@@ -961,6 +995,7 @@ gst_vaapisink_buffer_alloc(
     *pbuf = buf;
     return GST_FLOW_OK;
 }
+#endif
 
 static gboolean
 gst_vaapisink_query(GstBaseSink *base_sink, GstQuery *query)
@@ -1069,7 +1104,9 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;
     basesink_class->query        = gst_vaapisink_query;
+#if !GST_CHECK_VERSION(1,0,0)
     basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
+#endif
 
     gst_element_class_set_static_metadata(element_class,
         "VA-API sink",
@@ -1079,7 +1116,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 
     pad_template = gst_static_pad_template_get(&gst_vaapisink_sink_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 
     g_object_class_install_property
         (object_class,

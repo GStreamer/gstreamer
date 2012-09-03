@@ -215,12 +215,10 @@ gst_vaapiupload_class_init(GstVaapiUploadClass *klass)
     /* sink pad */
     pad_template = gst_static_pad_template_get(&gst_vaapiupload_sink_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 
     /* src pad */
     pad_template = gst_static_pad_template_get(&gst_vaapiupload_src_factory);
     gst_element_class_add_pad_template(element_class, pad_template);
-    gst_object_unref(pad_template);
 }
 
 static void

@@ -335,9 +335,18 @@ gst_vaapi_append_surface_caps(GstCaps *out_caps, GstCaps *in_caps)
 gboolean
 gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer)
 {
+#if GST_CHECK_VERSION(1,0,0)
+    GstVideoOverlayCompositionMeta * const cmeta =
+        gst_buffer_get_video_overlay_composition_meta(buffer);
+    GstVideoOverlayComposition *composition;
+
+    if (!cmeta)
+        return TRUE;
+    composition = cmeta->overlay;
+#else
     GstVideoOverlayComposition * const composition =
         gst_video_buffer_get_overlay_composition(buffer);
-
+#endif
     if (!composition)
         return TRUE;
     return gst_vaapi_surface_set_subpictures_from_composition(surface,

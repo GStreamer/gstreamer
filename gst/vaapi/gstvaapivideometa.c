@@ -30,9 +30,6 @@
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include "gstvaapivideometa.h"
 
-#define GST_VAAPI_TYPE_VIDEO_META \
-    (gst_vaapi_video_meta_get_type())
-
 #define GST_VAAPI_VIDEO_META(obj) \
     ((GstVaapiVideoMeta *)(obj))
 
@@ -100,6 +97,8 @@ gst_vaapi_video_meta_destroy_surface(GstVaapiVideoMeta *meta)
     g_clear_object(&meta->surface_pool);
 }
 
+#if !GST_CHECK_VERSION(1,0,0)
+#define GST_VAAPI_TYPE_VIDEO_META gst_vaapi_video_meta_get_type()
 static GType
 gst_vaapi_video_meta_get_type(void)
 {
@@ -114,6 +113,7 @@ gst_vaapi_video_meta_get_type(void)
     }
     return (GType)g_type;
 }
+#endif
 
 static void
 gst_vaapi_video_meta_finalize(GstVaapiVideoMeta *meta)
@@ -649,6 +649,105 @@ gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags)
     meta->render_flags = flags;
 }
 
+#if GST_CHECK_VERSION(1,0,0)
+
+#define GST_VAAPI_VIDEO_META_HOLDER(meta) \
+    ((GstVaapiVideoMetaHolder *)(meta))
+
+typedef struct _GstVaapiVideoMetaHolder GstVaapiVideoMetaHolder;
+struct _GstVaapiVideoMetaHolder {
+    GstMeta             base;
+    GstVaapiVideoMeta  *meta;
+};
+
+static gboolean
+gst_vaapi_video_meta_holder_init(GstVaapiVideoMetaHolder *meta,
+    gpointer params, GstBuffer *buffer)
+{
+    meta->meta = NULL;
+    return TRUE;
+}
+
+static void
+gst_vaapi_video_meta_holder_free(GstVaapiVideoMetaHolder *meta,
+     GstBuffer *buffer)
+{
+    if (meta->meta)
+        gst_vaapi_video_meta_unref(meta->meta);
+}
+
+static gboolean
+gst_vaapi_video_meta_holder_transform(GstBuffer *dst_buffer, GstMeta *meta,
+    GstBuffer *src_buffer, GQuark type, gpointer data)
+{
+    GstVaapiVideoMetaHolder * const src_meta =
+        GST_VAAPI_VIDEO_META_HOLDER(meta);
+
+    if (GST_META_TRANSFORM_IS_COPY(type)) {
+        gst_buffer_set_vaapi_video_meta(dst_buffer, src_meta->meta);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+GType
+gst_vaapi_video_meta_api_get_type(void)
+{
+    static gsize g_type;
+    static const gchar *tags[] = { "memory", NULL };
+
+    if (g_once_init_enter(&g_type)) {
+        GType type = gst_meta_api_type_register("GstVaapiVideoMetaAPI", tags);
+        g_once_init_leave(&g_type, type);
+    }
+    return g_type;
+}
+
+#define GST_VAAPI_VIDEO_META_INFO gst_vaapi_video_meta_info_get()
+static const GstMetaInfo *
+gst_vaapi_video_meta_info_get(void)
+{
+    static gsize g_meta_info;
+
+    if (g_once_init_enter(&g_meta_info)) {
+        gsize meta_info = GPOINTER_TO_SIZE(gst_meta_register(
+            GST_VAAPI_VIDEO_META_API_TYPE,
+            "GstVaapiVideoMeta", sizeof(GstVaapiVideoMetaHolder),
+            (GstMetaInitFunction)gst_vaapi_video_meta_holder_init,
+            (GstMetaFreeFunction)gst_vaapi_video_meta_holder_free,
+            (GstMetaTransformFunction)gst_vaapi_video_meta_holder_transform));
+        g_once_init_leave(&g_meta_info, meta_info);
+    }
+    return GSIZE_TO_POINTER(g_meta_info);
+}
+
+GstVaapiVideoMeta *
+gst_buffer_get_vaapi_video_meta(GstBuffer *buffer)
+{
+    GstMeta *m;
+
+    g_return_val_if_fail(GST_IS_BUFFER(buffer), NULL);
+
+    m = gst_buffer_get_meta(buffer, GST_VAAPI_VIDEO_META_API_TYPE);
+    if (!m)
+        return NULL;
+    return GST_VAAPI_VIDEO_META_HOLDER(m)->meta;
+}
+
+void
+gst_buffer_set_vaapi_video_meta(GstBuffer *buffer, GstVaapiVideoMeta *meta)
+{
+    GstMeta *m;
+
+    g_return_if_fail(GST_IS_BUFFER(buffer));
+    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
+
+    m = gst_buffer_add_meta(buffer, GST_VAAPI_VIDEO_META_INFO, NULL);
+    if (m)
+        GST_VAAPI_VIDEO_META_HOLDER(m)->meta = gst_vaapi_video_meta_ref(meta);
+}
+#else
+
 #define GST_VAAPI_VIDEO_META_QUARK gst_vaapi_video_meta_quark_get()
 static GQuark
 gst_vaapi_video_meta_quark_get(void)
@@ -704,3 +803,4 @@ gst_buffer_set_vaapi_video_meta(GstBuffer *buffer, GstVaapiVideoMeta *meta)
         gst_structure_id_new(GST_VAAPI_VIDEO_META_QUARK,
             META_QUARK, GST_VAAPI_TYPE_VIDEO_META, meta, NULL));
 }
+#endif

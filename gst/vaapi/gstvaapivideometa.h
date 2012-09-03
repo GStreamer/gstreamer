@@ -33,6 +33,15 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiVideoMeta               GstVaapiVideoMeta;
 
+#if GST_CHECK_VERSION(1,0,0)
+#define GST_VAAPI_VIDEO_META_API_TYPE \
+    gst_vaapi_video_meta_api_get_type()
+
+G_GNUC_INTERNAL
+GType
+gst_vaapi_video_meta_api_get_type(void) G_GNUC_CONST;
+#endif
+
 G_GNUC_INTERNAL
 GstVaapiVideoMeta *
 gst_vaapi_video_meta_new(GstVaapiDisplay *display);

@@ -27,8 +27,13 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
 
+#if GST_CHECK_VERSION(1,0,0)
+typedef gboolean (*GstSurfaceUploadFunction)(GstSurfaceConverter *,
+    GstBuffer *);
+#else
 typedef gboolean (*GstSurfaceUploadFunction)(GstSurfaceConverter *,
     GstSurfaceBuffer *);
+#endif
 
 static void
 gst_vaapi_video_converter_glx_iface_init(GstSurfaceConverterInterface *iface);

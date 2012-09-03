@@ -32,11 +32,8 @@ endif
 libgstvaapi_source_c = \
 	gstvaapi.c		\
 	gstvaapidecode.c	\
-	gstvaapidownload.c	\
 	gstvaapipluginutil.c	\
-	gstvaapipostproc.c	\
 	gstvaapisink.c		\
-	gstvaapiupload.c	\
 	gstvaapiuploader.c	\
 	gstvaapivideobuffer.c	\
 	gstvaapivideometa.c	\
@@ -44,11 +41,8 @@ libgstvaapi_source_c = \
 
 libgstvaapi_source_h = \
 	gstvaapidecode.h	\
-	gstvaapidownload.h	\
 	gstvaapipluginutil.h	\
-	gstvaapipostproc.h	\
 	gstvaapisink.h		\
-	gstvaapiupload.h	\
 	gstvaapiuploader.h	\
 	gstvaapivideobuffer.h	\
 	gstvaapivideometa.h	\
