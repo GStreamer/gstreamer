@@ -86,7 +86,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "width=(int)[1,MAX], height=(int)[1,MAX], "
         "framerate=(fraction)[0/1,MAX], "
         "pixel-aspect-ratio=(fraction)[0/1,MAX], "
-        "interlaced=(boolean){TRUE,FALSE}, "
+        "interlace-mode=(string) { progressive, interleaved }, "
         "profile=(string){ vc2-low-delay, vc2-simple, vc2-main, main }, "
         "level=(string) { 0, 1, 128}")
     );
@@ -346,7 +346,8 @@ gst_dirac_parse_handle_frame (GstBaseParse * parse,
           "pixel-aspect-ratio", GST_TYPE_FRACTION,
           sequence_header.aspect_ratio_numerator,
           sequence_header.aspect_ratio_denominator,
-          "interlaced", G_TYPE_BOOLEAN, sequence_header.interlaced,
+          "interlace-mode", G_TYPE_STRING,
+          sequence_header.interlaced ? "interleaved" : "progressive",
           "profile", G_TYPE_STRING, get_profile_name (sequence_header.profile),
           "level", G_TYPE_STRING, get_level_name (sequence_header.level), NULL);
       gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
