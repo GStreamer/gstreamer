@@ -328,9 +328,6 @@ struct _GstVideoDecoderPrivate
   /* Whether input is considered packetized or not */
   gboolean packetized;
 
-  /* Whether we have pushed out at least one frame since last flush */
-  gboolean have_prerolled;
-
   /* Error handling */
   gint max_errors;
   gint error_count;
@@ -858,9 +855,6 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
         (GDestroyNotify) gst_event_unref);
     priv->current_frame_events = NULL;
   }
-
-  priv->have_prerolled = FALSE;
-
   /* and get (re)set for the sequel */
   gst_video_decoder_reset (dec, FALSE);
 
@@ -1052,8 +1046,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
   if (event) {
     if (!GST_EVENT_IS_SERIALIZED (event)
         || GST_EVENT_TYPE (event) == GST_EVENT_EOS
-        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP
-        || decoder->priv->have_prerolled) {
+        || GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
       ret = gst_video_decoder_push_event (decoder, event);
     } else {
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
@@ -2368,8 +2361,6 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     priv->error_count--;
 
   ret = gst_pad_push (decoder->srcpad, buf);
-
-  priv->have_prerolled = TRUE;
 
 done:
   return ret;
