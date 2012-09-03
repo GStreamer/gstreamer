@@ -87,7 +87,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "framerate=(fraction)[0/1,MAX], "
         "pixel-aspect-ratio=(fraction)[0/1,MAX], "
         "interlaced=(boolean){TRUE,FALSE}, "
-        "profile=(int)[0,MAX], level=(int)[0,MAX]")
+        "profile=(string){ vc2-low-delay, vc2-simple, vc2-main, main }, "
+        "level=(string) { 0, 1, 128}")
     );
 
 /* class initialization */
@@ -204,6 +205,42 @@ gst_dirac_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   return TRUE;
 }
 
+static const gchar *
+get_profile_name (int profile)
+{
+  switch (profile) {
+    case 0:
+      return "vc2-low-delay";
+    case 1:
+      return "vc2-simple";
+    case 2:
+      return "vc2-main";
+    case 3:
+      return "main";
+    default:
+      break;
+  }
+  return "unknown";
+}
+
+static const gchar *
+get_level_name (int level)
+{
+  switch (level) {
+    case 0:
+      return "0";
+    case 1:
+      return "1";
+    case 128:
+      return "128";
+    default:
+      break;
+  }
+  /* need to add it to template caps, so return 0 for now */
+  GST_WARNING ("unhandled dirac level %u", level);
+  return "0";
+}
+
 static GstFlowReturn
 gst_dirac_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize)
@@ -310,8 +347,8 @@ gst_dirac_parse_handle_frame (GstBaseParse * parse,
           sequence_header.aspect_ratio_numerator,
           sequence_header.aspect_ratio_denominator,
           "interlaced", G_TYPE_BOOLEAN, sequence_header.interlaced,
-          "profile", G_TYPE_INT, sequence_header.profile,
-          "level", G_TYPE_INT, sequence_header.level, NULL);
+          "profile", G_TYPE_STRING, get_profile_name (sequence_header.profile),
+          "level", G_TYPE_STRING, get_level_name (sequence_header.level), NULL);
       gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
       gst_caps_unref (caps);
 
