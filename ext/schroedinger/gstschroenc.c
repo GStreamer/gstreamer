@@ -181,6 +181,10 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
         || strcmp (setting->name, "level") == 0)
       continue;
 
+    /* we configure this based on the input caps */
+    if (strcmp (setting->name, "interlaced_coding") == 0)
+      continue;
+
     switch (setting->type) {
       case SCHRO_ENCODER_SETTING_TYPE_BOOLEAN:
         g_object_class_install_property (gobject_class, i + 1,
@@ -433,6 +437,10 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
       schro_enc->video_format->chroma_excursion = 511;
       break;
 #endif
+  }
+
+  if (GST_VIDEO_INFO_IS_INTERLACED (&state->info)) {
+    schro_enc->video_format->interlaced_coding = 1;
   }
 
   /* See if downstream caps specify profile/level */
