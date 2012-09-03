@@ -174,6 +174,13 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
 
     setting = schro_encoder_get_setting_info (i);
 
+    /* we do this by checking downstream caps, and the profile/level selected
+     * should be read from the output caps and not from properties */
+    if (strcmp (setting->name, "force_profile") == 0
+        || strcmp (setting->name, "profile") == 0
+        || strcmp (setting->name, "level") == 0)
+      continue;
+
     switch (setting->type) {
       case SCHRO_ENCODER_SETTING_TYPE_BOOLEAN:
         g_object_class_install_property (gobject_class, i + 1,
@@ -256,6 +263,89 @@ gst_schro_enc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static const gchar *
+get_profile_name (int profile)
+{
+  switch (profile) {
+    case 0:
+      return "vc2-low-delay";
+    case 1:
+      return "vc2-simple";
+    case 2:
+      return "vc2-main";
+    case 8:
+      return "main";
+    default:
+      break;
+  }
+  return "unknown";
+}
+
+static const gchar *
+get_level_name (int level)
+{
+  switch (level) {
+    case 0:
+      return "0";
+    case 1:
+      return "1";
+    case 128:
+      return "128";
+    default:
+      break;
+  }
+  /* need to add it to template caps, so return 0 for now */
+  GST_WARNING ("unhandled dirac level %u", level);
+  return "0";
+}
+
+static void
+gst_schro_enc_negotiate_profile (GstSchroEnc * enc)
+{
+  GstStructure *s;
+  const gchar *profile;
+  const gchar *level;
+  GstCaps *allowed_caps;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (enc));
+
+  GST_DEBUG_OBJECT (enc, "allowed caps: %" GST_PTR_FORMAT, allowed_caps);
+
+  if (allowed_caps == NULL)
+    return;
+
+  if (gst_caps_is_empty (allowed_caps) || gst_caps_is_any (allowed_caps))
+    goto out;
+
+  allowed_caps = gst_caps_make_writable (allowed_caps);
+  allowed_caps = gst_caps_fixate (allowed_caps);
+  s = gst_caps_get_structure (allowed_caps, 0);
+
+  profile = gst_structure_get_string (s, "profile");
+  if (profile) {
+    if (!strcmp (profile, "vc2-low-delay")) {
+      schro_encoder_setting_set_double (enc->encoder, "force_profile", 1);
+    } else if (!strcmp (profile, "vc2-simple")) {
+      schro_encoder_setting_set_double (enc->encoder, "force_profile", 2);
+    } else if (!strcmp (profile, "vc2-main")) {
+      schro_encoder_setting_set_double (enc->encoder, "force_profile", 3);
+    } else if (!strcmp (profile, "main")) {
+      schro_encoder_setting_set_double (enc->encoder, "force_profile", 4);
+    } else {
+      GST_WARNING_OBJECT (enc, "ignoring unknown profile '%s'", profile);
+    }
+  }
+
+  level = gst_structure_get_string (s, "level");
+  if (level != NULL && strcmp (level, "0") != 0) {
+    GST_FIXME_OBJECT (enc, "level setting not implemented");
+  }
+
+out:
+
+  gst_caps_unref (allowed_caps);
+}
+
 static gboolean
 gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
     GstVideoCodecState * state)
@@ -265,6 +355,8 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
   GstVideoInfo *info = &state->info;
   GstVideoCodecState *output_state;
   GstClockTime latency;
+  GstCaps *out_caps;
+  int level, profile;
 
   GST_DEBUG ("set_output_caps");
 
@@ -343,6 +435,9 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
 #endif
   }
 
+  /* See if downstream caps specify profile/level */
+  gst_schro_enc_negotiate_profile (schro_enc);
+
   /* Finally set latency */
   latency = gst_util_uint64_scale (GST_SECOND,
       GST_VIDEO_INFO_FPS_D (info) *
@@ -362,9 +457,15 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
 
   schro_enc->granule_offset = ~0;
 
+  profile = schro_encoder_setting_get_double (schro_enc->encoder, "profile");
+  level = schro_encoder_setting_get_double (schro_enc->encoder, "level");
+  GST_ERROR ("profile=%d, level=%d", profile, level);
+  out_caps = gst_caps_new_simple ("video/x-dirac",
+      "profile", G_TYPE_STRING, get_profile_name (profile),
+      "level", G_TYPE_STRING, get_level_name (level), NULL);
+
   output_state =
-      gst_video_encoder_set_output_state (base_video_encoder,
-      gst_caps_new_empty_simple ("video/x-dirac"), state);
+      gst_video_encoder_set_output_state (base_video_encoder, out_caps, state);
 
   GST_BUFFER_FLAG_SET (seq_header_buffer, GST_BUFFER_FLAG_HEADER);
   {
