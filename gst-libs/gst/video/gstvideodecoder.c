@@ -960,20 +960,21 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       forward_immediate = TRUE;
       break;
     }
-    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       gboolean in_still;
       GstFlowReturn flow_ret = GST_FLOW_OK;
 
       if (gst_video_event_parse_still_frame (event, &in_still)) {
         if (in_still) {
+          GST_DEBUG_OBJECT (decoder, "draining current data for still-frame");
           flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
           ret = (flow_ret == GST_FLOW_OK);
-          forward_immediate = TRUE;
         }
+        forward_immediate = TRUE;
       }
+      break;
     }
-
     case GST_EVENT_SEGMENT:
     {
       GstSegment segment;
