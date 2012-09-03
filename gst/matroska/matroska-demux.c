@@ -5030,14 +5030,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     *codec_name = g_strdup ("MPEG-4 simple profile");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_ASP) ||
       !strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_AP)) {
-#if 0
-    caps = gst_caps_new_full (gst_structure_new ("video/x-divx",
-            "divxversion", G_TYPE_INT, 5, NULL),
-        gst_structure_new ("video/x-xvid", NULL),
-        gst_structure_new ("video/mpeg",
-            "mpegversion", G_TYPE_INT, 4,
-            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL), NULL);
-#endif
     caps = gst_caps_new_simple ("video/mpeg",
         "mpegversion", G_TYPE_INT, 4,
         "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);

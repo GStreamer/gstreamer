@@ -110,8 +110,6 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-divx, "
         COMMON_VIDEO_CAPS "; "
-        "video/x-xvid, "
-        COMMON_VIDEO_CAPS "; "
         "video/x-huffyuv, "
         COMMON_VIDEO_CAPS "; "
         "video/x-dv, "
@@ -994,9 +992,8 @@ skip_details:
       videocontext->fourcc = GST_STR_FOURCC (fstr);
   } else if (!strcmp (mimetype, "image/jpeg")) {
     gst_matroska_mux_set_codec_id (context, GST_MATROSKA_CODEC_ID_VIDEO_MJPEG);
-  } else if (!strcmp (mimetype, "video/x-xvid") /* MS/VfW compatibility cases */
-      ||!strcmp (mimetype, "video/x-huffyuv")
-      || !strcmp (mimetype, "video/x-divx")
+  } else if (!strcmp (mimetype, "video/x-huffyuv")      /* MS/VfW compatibility cases */
+      ||!strcmp (mimetype, "video/x-divx")
       || !strcmp (mimetype, "video/x-dv")
       || !strcmp (mimetype, "video/x-h263")
       || !strcmp (mimetype, "video/x-msmpeg")
@@ -1006,9 +1003,7 @@ skip_details:
     gint size = sizeof (gst_riff_strf_vids);
     guint32 fourcc = 0;
 
-    if (!strcmp (mimetype, "video/x-xvid"))
-      fourcc = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
-    else if (!strcmp (mimetype, "video/x-huffyuv"))
+    if (!strcmp (mimetype, "video/x-huffyuv"))
       fourcc = GST_MAKE_FOURCC ('H', 'F', 'Y', 'U');
     else if (!strcmp (mimetype, "video/x-dv"))
       fourcc = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');

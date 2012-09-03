@@ -32,7 +32,8 @@ static GstPad *mysrcpad, *mysinkpad;
 #define AUDIO_CAPS_STRING "audio/x-ac3, " \
                         "channels = (int) 1, " \
                         "rate = (int) 8000"
-#define VIDEO_CAPS_STRING "video/x-xvid, " \
+#define VIDEO_CAPS_STRING "video/mpeg, mpegversion = (int) 4, " \
+                           "systemstream = (bool) false, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
