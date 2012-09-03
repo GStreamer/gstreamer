@@ -107,32 +107,32 @@ failed:
   return FALSE;
 }
 
-/* Set the Pixel Aspect Ratio in our hdr from a DAR code in the data */
+/* Set the Pixel Aspect Ratio in our hdr from a ASR code in the data */
 static void
-set_par_from_dar (GstMpegVideoSequenceHdr * seqhdr, guint8 asr_code)
+set_par_from_asr_mpeg1 (GstMpegVideoSequenceHdr * seqhdr, guint8 asr_code)
 {
-  /* Pixel_width = DAR_width * display_vertical_size */
-  /* Pixel_height = DAR_height * display_horizontal_size */
-  switch (asr_code) {
-    case 0x02:                 /* 3:4 DAR = 4:3 pixels */
-      seqhdr->par_w = 4 * seqhdr->height;
-      seqhdr->par_h = 3 * seqhdr->width;
-      break;
-    case 0x03:                 /* 9:16 DAR */
-      seqhdr->par_w = 16 * seqhdr->height;
-      seqhdr->par_h = 9 * seqhdr->width;
-      break;
-    case 0x04:                 /* 1:2.21 DAR */
-      seqhdr->par_w = 221 * seqhdr->height;
-      seqhdr->par_h = 100 * seqhdr->width;
-      break;
-    case 0x01:                 /* Square pixels */
-      seqhdr->par_w = seqhdr->par_h = 1;
-      break;
-    default:
-      GST_DEBUG ("unknown/invalid aspect_ratio_information %d", asr_code);
-      break;
-  }
+  int ratios[16][2] = {
+    {0, 0},                     /* 0, Invalid */
+    {1, 1},                     /* 1, 1.0 */
+    {10000, 6735},              /* 2, 0.6735 */
+    {64, 45},                   /* 3, 0.7031 16:9 625 line */
+    {10000, 7615},              /* 4, 0.7615 */
+    {10000, 8055},              /* 5, 0.8055 */
+    {32, 27},                   /* 6, 0.8437 */
+    {10000, 8935},              /* 7, 0.8935 */
+    {10000, 9375},              /* 8, 0.9375 */
+    {10000, 9815},              /* 9, 0.9815 */
+    {10000, 10255},             /* 10, 1.0255 */
+    {10000, 10695},             /* 11, 1.0695 */
+    {8, 9},                     /* 12, 1.125 */
+    {10000, 11575},             /* 13, 1.1575 */
+    {10000, 12015},             /* 14, 1.2015 */
+    {0, 0},                     /* 15, invalid */
+  };
+  asr_code &= 0xf;
+
+  seqhdr->par_w = ratios[asr_code][0];
+  seqhdr->par_h = ratios[asr_code][1];
 }
 
 static void
@@ -153,79 +153,6 @@ set_fps_from_code (GstMpegVideoSequenceHdr * seqhdr, guint8 fps_code)
     /* FIXME or should this be kept unknown ?? */
     seqhdr->fps_n = 30000;
     seqhdr->fps_d = 1001;
-  }
-}
-
-static gboolean
-gst_mpeg_video_parse_sequence (GstMpegVideoSequenceHdr * seqhdr,
-    GstBitReader * br)
-{
-  guint8 bits;
-  guint8 load_intra_flag, load_non_intra_flag;
-
-  /* Setting the height/width codes */
-  READ_UINT16 (br, seqhdr->width, 12);
-  READ_UINT16 (br, seqhdr->height, 12);
-
-  READ_UINT8 (br, seqhdr->aspect_ratio_info, 4);
-  set_par_from_dar (seqhdr, seqhdr->aspect_ratio_info);
-
-  READ_UINT8 (br, seqhdr->frame_rate_code, 4);
-  set_fps_from_code (seqhdr, seqhdr->frame_rate_code);
-
-  READ_UINT32 (br, seqhdr->bitrate_value, 18);
-  if (seqhdr->bitrate_value == 0x3ffff) {
-    /* VBR stream */
-    seqhdr->bitrate = 0;
-  } else {
-    /* Value in header is in units of 400 bps */
-    seqhdr->bitrate *= 400;
-  }
-
-  READ_UINT8 (br, bits, 1);
-  if (bits != MARKER_BIT)
-    goto failed;
-
-  /* VBV buffer size */
-  READ_UINT16 (br, seqhdr->vbv_buffer_size_value, 10);
-
-  /* constrained_parameters_flag */
-  READ_UINT8 (br, seqhdr->constrained_parameters_flag, 1);
-
-  /* load_intra_quantiser_matrix */
-  READ_UINT8 (br, load_intra_flag, 1);
-  if (load_intra_flag) {
-    gint i;
-    for (i = 0; i < 64; i++)
-      READ_UINT8 (br, seqhdr->intra_quantizer_matrix[mpeg_zigzag_8x8[i]], 8);
-  } else
-    memcpy (seqhdr->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
-
-  /* non intra quantizer matrix */
-  READ_UINT8 (br, load_non_intra_flag, 1);
-  if (load_non_intra_flag) {
-    gint i;
-    for (i = 0; i < 64; i++)
-      READ_UINT8 (br, seqhdr->non_intra_quantizer_matrix[mpeg_zigzag_8x8[i]],
-          8);
-  } else
-    memset (seqhdr->non_intra_quantizer_matrix, 16, 64);
-
-  /* dump some info */
-  GST_LOG ("width x height: %d x %d", seqhdr->width, seqhdr->height);
-  GST_LOG ("fps: %d/%d", seqhdr->fps_n, seqhdr->fps_d);
-  GST_LOG ("par: %d/%d", seqhdr->par_w, seqhdr->par_h);
-  GST_LOG ("bitrate: %d", seqhdr->bitrate);
-
-  return TRUE;
-
-  /* ERRORS */
-failed:
-  {
-    GST_WARNING ("Failed to parse sequence header");
-    /* clear out stuff */
-    memset (seqhdr, 0, sizeof (*seqhdr));
-    return FALSE;
   }
 }
 
@@ -347,6 +274,8 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
     const guint8 * data, gsize size, guint offset)
 {
   GstBitReader br;
+  guint8 bits;
+  guint8 load_intra_flag, load_non_intra_flag;
 
   g_return_val_if_fail (seqhdr != NULL, FALSE);
 
@@ -357,7 +286,72 @@ gst_mpeg_video_parse_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
 
   gst_bit_reader_init (&br, &data[offset], size);
 
-  return gst_mpeg_video_parse_sequence (seqhdr, &br);
+  /* Setting the height/width codes */
+  READ_UINT16 (&br, seqhdr->width, 12);
+  READ_UINT16 (&br, seqhdr->height, 12);
+
+  READ_UINT8 (&br, seqhdr->aspect_ratio_info, 4);
+  /* Interpret PAR according to MPEG-1. Needs to be reinterpreted
+   * later, if a sequence_display extension is seen */
+  set_par_from_asr_mpeg1 (seqhdr, seqhdr->aspect_ratio_info);
+
+  READ_UINT8 (&br, seqhdr->frame_rate_code, 4);
+  set_fps_from_code (seqhdr, seqhdr->frame_rate_code);
+
+  READ_UINT32 (&br, seqhdr->bitrate_value, 18);
+  if (seqhdr->bitrate_value == 0x3ffff) {
+    /* VBR stream */
+    seqhdr->bitrate = 0;
+  } else {
+    /* Value in header is in units of 400 bps */
+    seqhdr->bitrate *= 400;
+  }
+
+  READ_UINT8 (&br, bits, 1);
+  if (bits != MARKER_BIT)
+    goto failed;
+
+  /* VBV buffer size */
+  READ_UINT16 (&br, seqhdr->vbv_buffer_size_value, 10);
+
+  /* constrained_parameters_flag */
+  READ_UINT8 (&br, seqhdr->constrained_parameters_flag, 1);
+
+  /* load_intra_quantiser_matrix */
+  READ_UINT8 (&br, load_intra_flag, 1);
+  if (load_intra_flag) {
+    gint i;
+    for (i = 0; i < 64; i++)
+      READ_UINT8 (&br, seqhdr->intra_quantizer_matrix[mpeg_zigzag_8x8[i]], 8);
+  } else
+    memcpy (seqhdr->intra_quantizer_matrix, default_intra_quantizer_matrix, 64);
+
+  /* non intra quantizer matrix */
+  READ_UINT8 (&br, load_non_intra_flag, 1);
+  if (load_non_intra_flag) {
+    gint i;
+    for (i = 0; i < 64; i++)
+      READ_UINT8 (&br, seqhdr->non_intra_quantizer_matrix[mpeg_zigzag_8x8[i]],
+          8);
+  } else
+    memset (seqhdr->non_intra_quantizer_matrix, 16, 64);
+
+  /* dump some info */
+  GST_LOG ("width x height: %d x %d", seqhdr->width, seqhdr->height);
+  GST_LOG ("fps: %d/%d", seqhdr->fps_n, seqhdr->fps_d);
+  GST_LOG ("par: %d/%d", seqhdr->par_w, seqhdr->par_h);
+  GST_LOG ("bitrate: %d", seqhdr->bitrate);
+
+  return TRUE;
+
+  /* ERRORS */
+failed:
+  {
+    GST_WARNING ("Failed to parse sequence header");
+    /* clear out stuff */
+    memset (seqhdr, 0, sizeof (*seqhdr));
+    return FALSE;
+  }
 }
 
 /**
@@ -422,6 +416,110 @@ gst_mpeg_video_parse_sequence_extension (GstMpegVideoSequenceExt * seqext,
   /* framerate extension */
   seqext->fps_n_ext = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
   seqext->fps_d_ext = gst_bit_reader_get_bits_uint8_unchecked (&br, 2);
+
+  return TRUE;
+}
+
+gboolean
+gst_mpeg_video_parse_sequence_display_extension (GstMpegVideoSequenceDisplayExt
+    * seqdisplayext, const guint8 * data, gsize size, guint offset)
+{
+  GstBitReader br;
+
+  g_return_val_if_fail (seqdisplayext != NULL, FALSE);
+  if (offset > size)
+    return FALSE;
+
+  size -= offset;
+  if (size < 5) {
+    GST_DEBUG ("not enough bytes to parse the extension");
+    return FALSE;
+  }
+
+  gst_bit_reader_init (&br, &data[offset], size);
+
+  if (gst_bit_reader_get_bits_uint8_unchecked (&br, 4) !=
+      GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY) {
+    GST_DEBUG ("Not parsing a sequence display extension");
+    return FALSE;
+  }
+
+  seqdisplayext->video_format =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
+  seqdisplayext->colour_description_flag =
+      gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+
+  if (seqdisplayext->colour_description_flag) {
+    seqdisplayext->colour_primaries =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
+    seqdisplayext->transfer_characteristics =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
+    seqdisplayext->matrix_coefficients =
+        gst_bit_reader_get_bits_uint8_unchecked (&br, 8);
+  }
+
+  if (gst_bit_reader_get_remaining (&br) < 29) {
+    GST_DEBUG ("Not enough remaining bytes to parse the extension");
+    return FALSE;
+  }
+
+  seqdisplayext->display_horizontal_size =
+      gst_bit_reader_get_bits_uint16_unchecked (&br, 14);
+  /* skip marker bit */
+  gst_bit_reader_skip_unchecked (&br, 1);
+  seqdisplayext->display_vertical_size =
+      gst_bit_reader_get_bits_uint16_unchecked (&br, 14);
+
+  return TRUE;
+}
+
+gboolean
+gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr * seqhdr,
+    GstMpegVideoSequenceExt * seqext,
+    GstMpegVideoSequenceDisplayExt * displayext)
+{
+  guint32 w;
+  guint32 h;
+
+  if (seqext) {
+    seqhdr->fps_n = seqhdr->fps_n * (seqext->fps_n_ext + 1);
+    seqhdr->fps_d = seqhdr->fps_d * (seqext->fps_d_ext + 1);
+    /* Extend width and height to 14 bits by adding the extension bits */
+    seqhdr->width |= (seqext->horiz_size_ext << 12);
+    seqhdr->height |= (seqext->vert_size_ext << 12);
+  }
+
+  w = seqhdr->width;
+  h = seqhdr->height;
+  if (displayext) {
+    /* Use the display size for calculating PAR when display ext present */
+    w = displayext->display_horizontal_size;
+    h = displayext->display_vertical_size;
+  }
+
+  /* Pixel_width = DAR_width * display_vertical_size */
+  /* Pixel_height = DAR_height * display_horizontal_size */
+  switch (seqhdr->aspect_ratio_info) {
+    case 0x01:                 /* Square pixels */
+      seqhdr->par_w = seqhdr->par_h = 1;
+      break;
+    case 0x02:                 /* 3:4 DAR = 4:3 pixels */
+      seqhdr->par_w = 4 * h;
+      seqhdr->par_h = 3 * w;
+      break;
+    case 0x03:                 /* 9:16 DAR */
+      seqhdr->par_w = 16 * h;
+      seqhdr->par_h = 9 * w;
+      break;
+    case 0x04:                 /* 1:2.21 DAR */
+      seqhdr->par_w = 221 * h;
+      seqhdr->par_h = 100 * w;
+      break;
+    default:
+      GST_DEBUG ("unknown/invalid aspect_ratio_information %d",
+          seqhdr->aspect_ratio_info);
+      break;
+  }
 
   return TRUE;
 }

@@ -175,6 +175,7 @@ typedef enum {
 
 typedef struct _GstMpegVideoSequenceHdr     GstMpegVideoSequenceHdr;
 typedef struct _GstMpegVideoSequenceExt     GstMpegVideoSequenceExt;
+typedef struct _GstMpegVideoSequenceDisplayExt GstMpegVideoSequenceDisplayExt;
 typedef struct _GstMpegVideoPictureHdr      GstMpegVideoPictureHdr;
 typedef struct _GstMpegVideoGop             GstMpegVideoGop;
 typedef struct _GstMpegVideoPictureExt      GstMpegVideoPictureExt;
@@ -218,16 +219,16 @@ struct _GstMpegVideoSequenceHdr
 
 /**
  * GstMpegVideoSequenceExt:
- * @profile: mpeg2 decoder profil
+ * @profile: mpeg2 decoder profile
  * @level: mpeg2 decoder level
- * @progressive: %TRUE if the frames are progressive %FALSE otherwize
+ * @progressive: %TRUE if the frames are progressive %FALSE otherwise
  * @chroma_format: indicates the chrominance format
  * @horiz_size_ext: Horizontal size
  * @vert_size_ext: Vertical size
  * @bitrate_ext: The bitrate
- * @vbv_buffer_size_extension: Vbv vuffer size
+ * @vbv_buffer_size_extension: VBV vuffer size
  * @low_delay: %TRUE if the sequence doesn't contain any B-pictures, %FALSE
- * otherwize
+ * otherwise
  * @fps_n_ext: Framerate nominator code
  * @fps_d_ext: Framerate denominator code
  *
@@ -250,6 +251,25 @@ struct _GstMpegVideoSequenceExt
   guint8 low_delay;
   guint8 fps_n_ext, fps_d_ext;
 
+};
+
+/**
+ * GstMpegVideoSequenceDisplayExt:
+ * @profile: mpeg2 decoder profil
+
+ */
+struct _GstMpegVideoSequenceDisplayExt
+{
+  guint8 video_format;
+  guint8 colour_description_flag;
+
+  /* if colour_description_flag: */
+    guint8 colour_primaries;
+    guint8 transfer_characteristics;
+    guint8 matrix_coefficients;
+
+  guint16 display_horizontal_size;
+  guint16 display_vertical_size;
 };
 
 /**
@@ -384,6 +404,10 @@ gboolean gst_mpeg_video_parse                         (GstMpegVideoPacket * pack
 gboolean gst_mpeg_video_parse_sequence_header         (GstMpegVideoSequenceHdr * params,
                                                        const guint8 * data, gsize size, guint offset);
 
+/* seqext and displayext may be NULL if not received */
+gboolean gst_mpeg_video_finalise_mpeg2_sequence_header (GstMpegVideoSequenceHdr *hdr,
+   GstMpegVideoSequenceExt *seqext, GstMpegVideoSequenceDisplayExt *displayext);
+
 gboolean gst_mpeg_video_parse_picture_header          (GstMpegVideoPictureHdr* hdr,
                                                        const guint8 * data, gsize size, guint offset);
 
@@ -394,6 +418,9 @@ gboolean gst_mpeg_video_parse_gop                     (GstMpegVideoGop * gop,
                                                        const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_sequence_extension      (GstMpegVideoSequenceExt * seqext,
+                                                       const guint8 * data, gsize size, guint offset);
+
+gboolean gst_mpeg_video_parse_sequence_display_extension (GstMpegVideoSequenceDisplayExt * seqdisplayext,
                                                        const guint8 * data, gsize size, guint offset);
 
 gboolean gst_mpeg_video_parse_quant_matrix_extension  (GstMpegVideoQuantMatrixExt * quant,

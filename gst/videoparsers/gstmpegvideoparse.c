@@ -169,7 +169,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
 static void
 gst_mpegv_parse_init (GstMpegvParse * parse)
 {
-  parse->mpeg_version = 0;
+  parse->config_flags = FLAG_NONE;
 }
 
 static void
@@ -196,6 +196,7 @@ gst_mpegv_parse_reset (GstMpegvParse * mpvparse)
   gst_buffer_replace (&mpvparse->config, NULL);
   memset (&mpvparse->sequencehdr, 0, sizeof (mpvparse->sequencehdr));
   memset (&mpvparse->sequenceext, 0, sizeof (mpvparse->sequenceext));
+  memset (&mpvparse->sequencedispext, 0, sizeof (mpvparse->sequencedispext));
   memset (&mpvparse->pichdr, 0, sizeof (mpvparse->pichdr));
 }
 
@@ -232,6 +233,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   guint8 *data;
   guint8 *data_with_prefix;
   GstMapInfo map;
+  gint i, offset;
 
   if (mpvparse->seq_offset < 4) {
     /* This shouldn't happen, but just in case... */
@@ -256,13 +258,8 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     return TRUE;
   }
 
-  if (gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
+  if (!gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
           size - mpvparse->seq_offset, 0)) {
-    if (mpvparse->fps_num == 0 || mpvparse->fps_den == 0) {
-      mpvparse->fps_num = mpvparse->sequencehdr.fps_n;
-      mpvparse->fps_den = mpvparse->sequencehdr.fps_d;
-    }
-  } else {
     GST_DEBUG_OBJECT (mpvparse,
         "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
@@ -273,22 +270,40 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   GST_LOG_OBJECT (mpvparse, "accepting parsed config size %d", size);
 
   /* Set mpeg version, and parse sequence extension */
-  if (mpvparse->mpeg_version <= 0) {
-    gint i, offset;
-
-    mpvparse->mpeg_version = 1;
-    for (i = 0; i < mpvparse->ext_count; ++i) {
-      offset = mpvparse->ext_offsets[i];
-      mpvparse->mpeg_version = 2;
-      if (offset < size &&
-          gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
+  mpvparse->config_flags = FLAG_NONE;
+  for (i = 0; i < mpvparse->ext_count; ++i) {
+    offset = mpvparse->ext_offsets[i];
+    mpvparse->config_flags |= FLAG_MPEG2;
+    if (offset < size) {
+      if (gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
               map.data, size, offset)) {
-        mpvparse->fps_num =
-            mpvparse->sequencehdr.fps_n * (mpvparse->sequenceext.fps_n_ext + 1);
-        mpvparse->fps_den =
-            mpvparse->sequencehdr.fps_d * (mpvparse->sequenceext.fps_d_ext + 1);
+        GST_LOG_OBJECT (mpvparse, "Read Sequence Extension");
+        mpvparse->config_flags |= FLAG_SEQUENCE_EXT;
+      } else
+          if (gst_mpeg_video_parse_sequence_display_extension
+          (&mpvparse->sequencedispext, map.data, size, offset)) {
+        GST_LOG_OBJECT (mpvparse, "Read Sequence Display Extension");
+        mpvparse->config_flags |= FLAG_SEQUENCE_DISPLAY_EXT;
       }
     }
+  }
+  if (mpvparse->config_flags & FLAG_MPEG2) {
+    /* Update the sequence header based on extensions */
+    GstMpegVideoSequenceExt *seqext = NULL;
+    GstMpegVideoSequenceDisplayExt *seqdispext = NULL;
+
+    if (mpvparse->config_flags & FLAG_SEQUENCE_EXT)
+      seqext = &mpvparse->sequenceext;
+    if (mpvparse->config_flags & FLAG_SEQUENCE_DISPLAY_EXT)
+      seqdispext = &mpvparse->sequencedispext;
+
+    gst_mpeg_video_finalise_mpeg2_sequence_header (&mpvparse->sequencehdr,
+        seqext, seqdispext);
+  }
+
+  if (mpvparse->fps_num == 0 || mpvparse->fps_den == 0) {
+    mpvparse->fps_num = mpvparse->sequencehdr.fps_n;
+    mpvparse->fps_den = mpvparse->sequencehdr.fps_d;
   }
 
   /* parsing ok, so accept it as new config */
@@ -627,10 +642,9 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
    * config data, so we should at least know about version.
    * If not, it means it has been requested not to drop data, and
    * upstream and/or app must know what they are doing ... */
-
-  if (G_LIKELY (mpvparse->mpeg_version))
-    gst_caps_set_simple (caps,
-        "mpegversion", G_TYPE_INT, mpvparse->mpeg_version, NULL);
+  gst_caps_set_simple (caps,
+      "mpegversion", G_TYPE_INT, (mpvparse->config_flags & FLAG_MPEG2) ? 2 : 1,
+      NULL);
 
   gst_caps_set_simple (caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
@@ -664,7 +678,7 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
         GST_TYPE_BUFFER, mpvparse->config, NULL);
   }
 
-  if (mpvparse->mpeg_version == 2) {
+  if (mpvparse->config_flags & FLAG_SEQUENCE_EXT) {
     const guint profile_c = mpvparse->sequenceext.profile;
     const guint level_c = mpvparse->sequenceext.level;
     const gchar *profile = NULL, *level = NULL;
@@ -782,7 +796,9 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gchar *codec;
 
     /* codec tag */
-    codec = g_strdup_printf ("MPEG %d Video", mpvparse->mpeg_version);
+    codec =
+        g_strdup_printf ("MPEG %d Video",
+        (mpvparse->config_flags & FLAG_MPEG2) ? 2 : 1);
     taglist = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec, NULL);
     g_free (codec);
 

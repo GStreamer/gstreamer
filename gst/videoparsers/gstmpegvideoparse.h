@@ -47,6 +47,14 @@ G_BEGIN_DECLS
 typedef struct _GstMpegvParse GstMpegvParse;
 typedef struct _GstMpegvParseClass GstMpegvParseClass;
 
+/* Config/sequence flags. Reset each time config is re-parsed */
+enum {
+  FLAG_NONE = 0,
+  FLAG_MPEG2 = 1,
+  FLAG_SEQUENCE_EXT = 2,
+  FLAG_SEQUENCE_DISPLAY_EXT = 4
+};
+
 struct _GstMpegvParse {
   GstBaseParse element;
 
@@ -62,9 +70,10 @@ struct _GstMpegvParse {
 
   GstBuffer *config;
   guint8 profile;
-  guint mpeg_version;
+  guint config_flags;
   GstMpegVideoSequenceHdr sequencehdr;
   GstMpegVideoSequenceExt sequenceext;
+  GstMpegVideoSequenceDisplayExt sequencedispext;
   GstMpegVideoPictureHdr pichdr;
 
   /* properties */
