@@ -51,6 +51,14 @@ enum
 {
   SIGNAL_CLOSED,
   SIGNAL_NEW_SESSION,
+  SIGNAL_OPTIONS_REQUEST,
+  SIGNAL_DESCRIBE_REQUEST,
+  SIGNAL_SETUP_REQUEST,
+  SIGNAL_PLAY_REQUEST,
+  SIGNAL_PAUSE_REQUEST,
+  SIGNAL_TEARDOWN_REQUEST,
+  SIGNAL_SET_PARAMETER_REQUEST,
+  SIGNAL_GET_PARAMETER_REQUEST,
   SIGNAL_LAST
 };
 
@@ -107,6 +115,54 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_signal_new ("new-session", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPClientClass, new_session), NULL, NULL,
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_RTSP_SESSION);
+
+  gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST] =
+      g_signal_new ("options-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, options_request),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+      G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST] =
+      g_signal_new ("describe-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, describe_request),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+      G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST] =
+      g_signal_new ("setup-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, setup_request),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+      G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST] =
+      g_signal_new ("play-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, play_request),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+      G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST] =
+      g_signal_new ("pause-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, pause_request),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+      G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST] =
+      g_signal_new ("teardown-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass, teardown_request),
+      NULL, NULL, g_cclosure_marshal_VOID__POINTER, G_TYPE_NONE, 1,
+      G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST] =
+      g_signal_new ("set-parameter-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          set_parameter_request), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST] =
+      g_signal_new ("get-parameter-request", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          get_parameter_request), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   tunnels =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -544,6 +600,10 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   send_response (client, session, state->response);
 
+  /* we emit the signal before closing the connection */
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_TEARDOWN_REQUEST],
+      0, state);
+
   close_connection (client);
 
   return TRUE;
@@ -583,6 +643,10 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPClientState * state)
 
     send_response (client, state->session, state->response);
   }
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_GET_PARAMETER_REQUEST],
+      0, state);
+
   return TRUE;
 
   /* ERRORS */
@@ -615,6 +679,10 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPClientState * state)
 
     send_response (client, state->session, state->response);
   }
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_SET_PARAMETER_REQUEST],
+      0, state);
+
   return TRUE;
 
   /* ERRORS */
@@ -662,6 +730,9 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   /* the state is now READY */
   media->state = GST_RTSP_STATE_READY;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST],
+      0, state);
 
   return TRUE;
 
@@ -797,6 +868,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   gst_rtsp_session_media_set_state (media, GST_STATE_PLAYING);
 
   media->state = GST_RTSP_STATE_PLAYING;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST],
+      0, state);
 
   return TRUE;
 
@@ -1037,6 +1111,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   }
   g_object_unref (session);
 
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST],
+      0, state);
+
   return TRUE;
 
   /* ERRORS */
@@ -1216,6 +1293,9 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   send_response (client, state->session, state->response);
 
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_DESCRIBE_REQUEST],
+      0, state);
+
   return TRUE;
 
   /* ERRORS */
@@ -1254,6 +1334,9 @@ handle_options_request (GstRTSPClient * client, GstRTSPClientState * state)
   g_free (str);
 
   send_response (client, state->session, state->response);
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_OPTIONS_REQUEST],
+      0, state);
 
   return TRUE;
 }

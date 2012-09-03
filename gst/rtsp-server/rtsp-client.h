@@ -112,8 +112,16 @@ struct _GstRTSPClientClass {
   GstSDPMessage * (*create_sdp) (GstRTSPClient *client, GstRTSPMedia *media);
 
   /* signals */
-  void     (*closed)        (GstRTSPClient *client);
-  void     (*new_session)   (GstRTSPClient *client, GstRTSPSession *session);
+  void     (*closed)                  (GstRTSPClient *client);
+  void     (*new_session)             (GstRTSPClient *client, GstRTSPSession *session);
+  void     (*options_request)         (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*describe_request)        (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*setup_request)           (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*play_request)            (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*pause_request)           (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*teardown_request)        (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*set_parameter_request)   (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*get_parameter_request)   (GstRTSPClient *client, GstRTSPClientState *state);
 };
 
 GType                 gst_rtsp_client_get_type          (void);
