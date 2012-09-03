@@ -456,6 +456,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
   switch (nal_type) {
     case GST_H264_NAL_SPS:
       gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
+      /* TODO: check for failure (sps.id not set) */
 
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
@@ -473,6 +474,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       break;
     case GST_H264_NAL_PPS:
       gst_h264_parser_parse_pps (nalparser, nalu, &pps);
+      /* TODO: check for failure (pps.id not set) */
       /* parameters might have changed, force caps check */
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
