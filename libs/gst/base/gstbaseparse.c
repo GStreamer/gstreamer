@@ -890,7 +890,7 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_base_parse_handle_tag (parse, event);
 
     parse->priv->pending_events =
-        g_list_append (parse->priv->pending_events, event);
+        g_list_prepend (parse->priv->pending_events, event);
     ret = TRUE;
   } else {
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
@@ -1049,7 +1049,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
        * the caps are fixed and the next linked element can receive
        * the segment. */
       parse->priv->pending_events =
-          g_list_append (parse->priv->pending_events, event);
+          g_list_prepend (parse->priv->pending_events, event);
       parse->priv->pending_segment = TRUE;
       ret = TRUE;
 
@@ -1988,13 +1988,14 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   /* Push pending events, including NEWSEGMENT events */
   if (G_UNLIKELY (parse->priv->pending_events)) {
+    GList *r = g_list_reverse (parse->priv->pending_events);
     GList *l;
 
-    for (l = parse->priv->pending_events; l != NULL; l = l->next) {
+    parse->priv->pending_events = NULL;
+    for (l = r; l != NULL; l = l->next) {
       gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
     }
-    g_list_free (parse->priv->pending_events);
-    parse->priv->pending_events = NULL;
+    g_list_free (r);
     parse->priv->pending_segment = FALSE;
   }
 
@@ -2985,13 +2986,14 @@ pause:
     if (push_eos) {
       /* Push pending events, including NEWSEGMENT events */
       if (G_UNLIKELY (parse->priv->pending_events)) {
+        GList *r = g_list_reverse (parse->priv->pending_events);
         GList *l;
 
-        for (l = parse->priv->pending_events; l != NULL; l = l->next) {
+        parse->priv->pending_events = NULL;
+        for (l = r; l != NULL; l = l->next) {
           gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
         }
-        g_list_free (parse->priv->pending_events);
-        parse->priv->pending_events = NULL;
+        g_list_free (r);
         parse->priv->pending_segment = FALSE;
       }
 
@@ -3096,7 +3098,7 @@ gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         parse->priv->pending_events =
-            g_list_append (parse->priv->pending_events,
+            g_list_prepend (parse->priv->pending_events,
             gst_event_new_segment (&parse->segment));
         parse->priv->pending_segment = TRUE;
         result = TRUE;
@@ -3927,7 +3929,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
     /* This will be sent later in _loop() */
     parse->priv->pending_segment = TRUE;
     parse->priv->pending_events =
-        g_list_append (parse->priv->pending_events,
+        g_list_prepend (parse->priv->pending_events,
         gst_event_new_segment (&parse->segment));
 
     GST_DEBUG_OBJECT (parse, "Created newseg format %d, "
