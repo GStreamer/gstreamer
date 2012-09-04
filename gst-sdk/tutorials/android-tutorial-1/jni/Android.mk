@@ -22,7 +22,7 @@ LOCAL_LDLIBS := -L./ -lgstreamer_android
 LOCAL_CFLAGS := $(shell pkg-config gstreamer-0.10 --cflags)
 include $(BUILD_SHARED_LIBRARY)
 
-GSTREAMER_PLUGINS = vorbis coreelements audiotestsrc videotestsrc ogg theora
+GSTREAMER_PLUGINS = coreelements audiotestsrc videotestsrc ogg theora vorbis ffmpegcolorspace playback
 GSTREAMER_STATIC_PLUGINS_PATH=/home/fluendo/cerbero/dist/android_arm/lib/gstreamer-0.10/static
 GSTREAMER_MK_PATH=/home/fluendo/cerbero/data/ndk-build/
 include $(GSTREAMER_MK_PATH)/gstreamer.mk

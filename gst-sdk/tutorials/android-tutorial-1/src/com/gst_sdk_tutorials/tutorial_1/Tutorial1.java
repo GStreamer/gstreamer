@@ -36,6 +36,8 @@ public class Tutorial1 extends Activity
          */
         TextView  tv = new TextView(this);
         tv.setMovementMethod(new ScrollingMovementMethod());
+        tv.setClickable (false);
+        tv.setLongClickable (false);
         tv.setText( gstVersion() );
         setContentView(tv);
     }
