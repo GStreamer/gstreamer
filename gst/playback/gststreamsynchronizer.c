@@ -387,6 +387,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         stream->new_stream = FALSE;
         stream->drop_discont = FALSE;
         stream->seen_data = FALSE;
+        g_cond_broadcast (&stream->stream_finish_cond);
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
