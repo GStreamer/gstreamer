@@ -18,6 +18,7 @@ package com.gst_sdk_tutorials.tutorial_1;
 import android.app.Activity;
 import android.widget.TextView;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 
 public class Tutorial1 extends Activity
 {
@@ -34,6 +35,7 @@ public class Tutorial1 extends Activity
          * function.
          */
         TextView  tv = new TextView(this);
+        tv.setMovementMethod(new ScrollingMovementMethod());
         tv.setText( gstVersion() );
         setContentView(tv);
     }
