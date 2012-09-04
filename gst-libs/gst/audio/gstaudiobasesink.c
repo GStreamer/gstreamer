@@ -174,7 +174,7 @@ static GstFlowReturn gst_audio_base_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean gst_audio_base_sink_event (GstBaseSink * bsink,
     GstEvent * event);
-static GstFlowReturn gst_audio_base_sink_wait_eos (GstBaseSink * bsink,
+static GstFlowReturn gst_audio_base_sink_wait_event (GstBaseSink * bsink,
     GstEvent * event);
 static void gst_audio_base_sink_get_times (GstBaseSink * bsink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
@@ -278,8 +278,8 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
   gstbasesink_class->fixate = GST_DEBUG_FUNCPTR (gst_audio_base_sink_fixate);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_audio_base_sink_setcaps);
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_audio_base_sink_event);
-  gstbasesink_class->wait_eos =
-      GST_DEBUG_FUNCPTR (gst_audio_base_sink_wait_eos);
+  gstbasesink_class->wait_event =
+      GST_DEBUG_FUNCPTR (gst_audio_base_sink_wait_event);
   gstbasesink_class->get_times =
       GST_DEBUG_FUNCPTR (gst_audio_base_sink_get_times);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_audio_base_sink_preroll);
@@ -1004,18 +1004,23 @@ gst_audio_base_sink_drain (GstAudioBaseSink * sink)
 }
 
 static GstFlowReturn
-gst_audio_base_sink_wait_eos (GstBaseSink * bsink, GstEvent * event)
+gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
 {
   GstAudioBaseSink *sink = GST_AUDIO_BASE_SINK (bsink);
   GstFlowReturn ret;
 
-  ret = GST_BASE_SINK_CLASS (parent_class)->wait_eos (bsink, event);
+  ret = GST_BASE_SINK_CLASS (parent_class)->wait_event (bsink, event);
   if (ret != GST_FLOW_OK)
     return ret;
 
-  /* now wait till we played everything */
-  gst_audio_base_sink_drain (sink);
-
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      /* now wait till we played everything */
+      gst_audio_base_sink_drain (sink);
+      break;
+    default:
+      break;
+  }
   return ret;
 }
 
