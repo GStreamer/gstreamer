@@ -22,32 +22,35 @@ jstring
 Java_com_gst_1sdk_1tutorials_tutorial_11_Tutorial1_gstVersion (JNIEnv* env,
                                                   jobject thiz )
 {
-  char buffer[8192] = "";
+  jstring ret;
+  char *buffer, *tmp;
   GList *original_plugin_list = gst_registry_get_plugin_list (gst_registry_get_default());
   GList *plugin_list = original_plugin_list;
 
-  g_strlcat (buffer, gst_version_string(), sizeof (buffer));
-  g_strlcat (buffer, "\n", sizeof (buffer));
+  buffer = g_strdup_printf ("Version: %s\n", gst_version_string());
   while (plugin_list) {
     GstPlugin *plugin = (GstPlugin *)plugin_list->data;
     GList *original_features_list, *features_list;
     plugin_list = plugin_list->next;
 
-    g_strlcat (buffer, gst_plugin_get_name (plugin), sizeof (buffer));
-    g_strlcat (buffer, "\n", sizeof (buffer));
+    tmp = g_strdup_printf ("%sPlugin: %s\n", buffer, gst_plugin_get_name (plugin));
+    g_free (buffer);
+    buffer = tmp;
     original_features_list = features_list = gst_registry_get_feature_list_by_plugin (gst_registry_get_default(), plugin->desc.name);
 
     while (features_list) {
       GstPluginFeature *feature = (GstPluginFeature *)features_list->data;
       features_list = features_list->next;
 
-      g_strlcat (buffer, "  ", sizeof (buffer));
-      g_strlcat (buffer, gst_plugin_feature_get_name (feature), sizeof (buffer));
-      g_strlcat (buffer, "\n", sizeof (buffer));
+      tmp = g_strdup_printf ("%s    %s\n", buffer, gst_plugin_feature_get_name (feature));
+      g_free (buffer);
+      buffer = tmp;
     }
     gst_plugin_feature_list_free (original_features_list);
   }
   gst_plugin_list_free (original_plugin_list);
-  return (*env)->NewStringUTF(env, buffer);
+  ret = (*env)->NewStringUTF(env, buffer);
+  g_free (buffer);
+  return ret;
 }
 
