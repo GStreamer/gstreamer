@@ -30,14 +30,13 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiimageformat.h"
 
-typedef enum _GstVaapiImageFormatType           GstVaapiImageFormatType;
 typedef struct _GstVaapiImageFormatMap          GstVaapiImageFormatMap;
 
-enum _GstVaapiImageFormatType {
+typedef enum {
     GST_VAAPI_IMAGE_FORMAT_TYPE_YCBCR = 1,      /* YUV */
     GST_VAAPI_IMAGE_FORMAT_TYPE_RGB,            /* RGB */
     GST_VAAPI_IMAGE_FORMAT_TYPE_INDEXED         /* paletted */
-};
+} GstVaapiImageFormatType;
 
 struct _GstVaapiImageFormatMap {
     GstVaapiImageFormatType     type;

@@ -26,10 +26,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum _GstVaapiCodec                     GstVaapiCodec;
-typedef enum _GstVaapiProfile                   GstVaapiProfile;
-typedef enum _GstVaapiEntrypoint                GstVaapiEntrypoint;
-
 /**
  * GstVaapiCodec:
  * @GST_VAAPI_CODEC_MPEG1: MPEG-1 (ISO/IEC 11172)
@@ -42,7 +38,7 @@ typedef enum _GstVaapiEntrypoint                GstVaapiEntrypoint;
  *
  * The set of all codecs for #GstVaapiCodec.
  */
-enum _GstVaapiCodec {
+typedef enum {
     GST_VAAPI_CODEC_MPEG1       = GST_MAKE_FOURCC('M','P','1',0),
     GST_VAAPI_CODEC_MPEG2       = GST_MAKE_FOURCC('M','P','2',0),
     GST_VAAPI_CODEC_MPEG4       = GST_MAKE_FOURCC('M','P','4',0),
@@ -51,7 +47,7 @@ enum _GstVaapiCodec {
     GST_VAAPI_CODEC_WMV3        = GST_MAKE_FOURCC('W','M','V',0),
     GST_VAAPI_CODEC_VC1         = GST_MAKE_FOURCC('V','C','1',0),
     GST_VAAPI_CODEC_JPEG        = GST_MAKE_FOURCC('J','P','G',0),
-};
+} GstVaapiCodec;
 
 /**
  * GST_VAAPI_MAKE_PROFILE:
@@ -99,7 +95,7 @@ enum _GstVaapiCodec {
  *
  * The set of all profiles for #GstVaapiProfile.
  */
-enum _GstVaapiProfile {
+typedef enum {
     GST_VAAPI_PROFILE_UNKNOWN               = 0,
     GST_VAAPI_PROFILE_MPEG1                 = GST_VAAPI_MAKE_PROFILE(MPEG1,1),
     GST_VAAPI_PROFILE_MPEG2_SIMPLE          = GST_VAAPI_MAKE_PROFILE(MPEG2,1),
@@ -116,7 +112,7 @@ enum _GstVaapiProfile {
     GST_VAAPI_PROFILE_VC1_MAIN              = GST_VAAPI_MAKE_PROFILE(VC1,2),
     GST_VAAPI_PROFILE_VC1_ADVANCED          = GST_VAAPI_MAKE_PROFILE(VC1,3),
     GST_VAAPI_PROFILE_JPEG_BASELINE         = GST_VAAPI_MAKE_PROFILE(JPEG,1),
-};
+} GstVaapiProfile;
 
 /**
  * GstVaapiEntrypoint:
@@ -127,12 +123,12 @@ enum _GstVaapiProfile {
  *
  * The set of all entrypoints for #GstVaapiEntrypoint
  */
-enum _GstVaapiEntrypoint {
+typedef enum {
     GST_VAAPI_ENTRYPOINT_VLD = 1,
     GST_VAAPI_ENTRYPOINT_IDCT,
     GST_VAAPI_ENTRYPOINT_MOCO,
     GST_VAAPI_ENTRYPOINT_SLICE_ENCODE
-};
+} GstVaapiEntrypoint;
 
 GstVaapiProfile
 gst_vaapi_profile(VAProfile profile);

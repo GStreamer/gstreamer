@@ -53,7 +53,6 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DECODER,  \
                                GstVaapiDecoderClass))
 
-typedef enum _GstVaapiDecoderStatus             GstVaapiDecoderStatus;
 typedef struct _GstVaapiDecoder                 GstVaapiDecoder;
 typedef struct _GstVaapiDecoderPrivate          GstVaapiDecoderPrivate;
 typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
@@ -75,7 +74,7 @@ typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
  *
  * Decoder status for gst_vaapi_decoder_get_surface().
  */
-enum _GstVaapiDecoderStatus {
+typedef enum {
     GST_VAAPI_DECODER_STATUS_SUCCESS = 0,
     GST_VAAPI_DECODER_STATUS_END_OF_STREAM,
     GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED,
@@ -88,7 +87,7 @@ enum _GstVaapiDecoderStatus {
     GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE,
     GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT,
     GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN = -1
-};
+} GstVaapiDecoderStatus;
 
 /**
  * GstVaapiDecoder:

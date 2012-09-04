@@ -32,10 +32,6 @@
 
 G_BEGIN_DECLS
 
-typedef enum _GstVaapiChromaType                GstVaapiChromaType;
-typedef enum _GstVaapiSurfaceStatus             GstVaapiSurfaceStatus;
-typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
-
 /**
  * GST_VAAPI_SURFACE_CAPS_NAME:
  *
@@ -64,11 +60,11 @@ typedef enum _GstVaapiSurfaceRenderFlags        GstVaapiSurfaceRenderFlags;
  *
  * The set of all chroma types for #GstVaapiSurface.
  */
-enum _GstVaapiChromaType {
+typedef enum {
     GST_VAAPI_CHROMA_TYPE_YUV420 = 1,
     GST_VAAPI_CHROMA_TYPE_YUV422,
     GST_VAAPI_CHROMA_TYPE_YUV444
-};
+} GstVaapiChromaType;
 
 /**
  * GstVaapiSurfaceStatus:
@@ -83,12 +79,12 @@ enum _GstVaapiChromaType {
  *
  * The set of all surface status for #GstVaapiSurface.
  */
-enum _GstVaapiSurfaceStatus {
+typedef enum {
     GST_VAAPI_SURFACE_STATUS_IDLE       = 1 << 0,
     GST_VAAPI_SURFACE_STATUS_RENDERING  = 1 << 1,
     GST_VAAPI_SURFACE_STATUS_DISPLAYING = 1 << 2,
     GST_VAAPI_SURFACE_STATUS_SKIPPED    = 1 << 3
-};
+} GstVaapiSurfaceStatus;
 
 /**
  * GstVaapiSurfaceRenderFlags
@@ -105,7 +101,7 @@ enum _GstVaapiSurfaceStatus {
  *
  * The set of all render flags for gst_vaapi_window_put_surface().
  */
-enum _GstVaapiSurfaceRenderFlags {
+typedef enum {
     GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD       = 1 << 0,
     GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD    = 1 << 1,
     GST_VAAPI_PICTURE_STRUCTURE_FRAME           =
@@ -115,7 +111,7 @@ enum _GstVaapiSurfaceRenderFlags {
     ),
     GST_VAAPI_COLOR_STANDARD_ITUR_BT_601        = 1 << 2,
     GST_VAAPI_COLOR_STANDARD_ITUR_BT_709        = 1 << 3,
-};
+} GstVaapiSurfaceRenderFlags;
 
 #define GST_VAAPI_TYPE_SURFACE \
     (gst_vaapi_surface_get_type())

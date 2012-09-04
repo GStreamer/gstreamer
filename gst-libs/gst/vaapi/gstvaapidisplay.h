@@ -55,7 +55,6 @@ G_BEGIN_DECLS
                                GST_VAAPI_TYPE_DISPLAY,  \
                                GstVaapiDisplayClass))
 
-typedef enum   _GstVaapiDisplayType             GstVaapiDisplayType;
 typedef struct _GstVaapiDisplayInfo             GstVaapiDisplayInfo;
 typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
 typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
@@ -69,13 +68,13 @@ typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
  * @GST_VAAPI_DISPLAY_TYPE_WAYLAND: VA/Wayland display.
  * @GST_VAAPI_DISPLAY_TYPE_DRM: VA/DRM display.
  */
-enum _GstVaapiDisplayType {
+typedef enum {
     GST_VAAPI_DISPLAY_TYPE_ANY = 0,
     GST_VAAPI_DISPLAY_TYPE_X11,
     GST_VAAPI_DISPLAY_TYPE_GLX,
     GST_VAAPI_DISPLAY_TYPE_WAYLAND,
     GST_VAAPI_DISPLAY_TYPE_DRM,
-};
+} GstVaapiDisplayType;
 
 #define GST_VAAPI_TYPE_DISPLAY_TYPE \
     (gst_vaapi_display_type_get_type())

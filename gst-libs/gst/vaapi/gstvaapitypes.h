@@ -129,11 +129,10 @@ struct _GstVaapiRectangle {
  *   backing store, or back buffer of a frame buffer, and is free to
  *   be re-used right away for decoding.
  */
-typedef enum _GstVaapiRenderMode GstVaapiRenderMode;
-enum _GstVaapiRenderMode {
+typedef enum {
     GST_VAAPI_RENDER_MODE_OVERLAY = 1,
     GST_VAAPI_RENDER_MODE_TEXTURE
-};
+} GstVaapiRenderMode;
 
 /**
  * GstVaapiRotation:
@@ -142,13 +141,12 @@ enum _GstVaapiRenderMode {
  * @GST_VAAPI_ROTATION_180: the VA display is rotated by 180°, clockwise.
  * @GST_VAAPI_ROTATION_270: the VA display is rotated by 270°, clockwise.
  */
-typedef enum _GstVaapiRotation GstVaapiRotation;
-enum _GstVaapiRotation {
+typedef enum {
     GST_VAAPI_ROTATION_0   = 0,
     GST_VAAPI_ROTATION_90  = 90,
     GST_VAAPI_ROTATION_180 = 180,
     GST_VAAPI_ROTATION_270 = 270,
-};
+} GstVaapiRotation;
 
 G_END_DECLS
 

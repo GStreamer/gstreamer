@@ -57,20 +57,17 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiPostproc                GstVaapiPostproc;
 typedef struct _GstVaapiPostprocClass           GstVaapiPostprocClass;
 
-typedef enum _GstVaapiDeinterlaceMode           GstVaapiDeinterlaceMode;
-typedef enum _GstVaapiDeinterlaceMethod         GstVaapiDeinterlaceMethod;
-
 /**
  * GstVaapiDeinterlaceMode:
  * @GST_VAAPI_DEINTERLACE_MODE_AUTO: Auto detect needs for deinterlacing.
  * @GST_VAAPI_DEINTERLACE_MODE_INTERLACED: Force deinterlacing.
  * @GST_VAAPI_DEINTERLACE_MODE_DISABLED: Never perform deinterlacing.
  */
-enum _GstVaapiDeinterlaceMode {
+typedef enum {
     GST_VAAPI_DEINTERLACE_MODE_AUTO = 0,
     GST_VAAPI_DEINTERLACE_MODE_INTERLACED,
     GST_VAAPI_DEINTERLACE_MODE_DISABLED,
-};
+} GstVaapiDeinterlaceMode;
 
 /**
  * GstVaapiDeinterlaceMethod:
@@ -79,12 +76,12 @@ enum _GstVaapiDeinterlaceMode {
  * @GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE: Motion adaptive deinterlacing algorithm.
  * @GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED: Motion compensated deinterlacing algorithm.
  */
-enum _GstVaapiDeinterlaceMethod {
+typedef enum {
     GST_VAAPI_DEINTERLACE_METHOD_BOB = 1,
     GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
     GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
     GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
-};
+} GstVaapiDeinterlaceMethod;
 
 struct _GstVaapiPostproc {
     /*< private >*/
