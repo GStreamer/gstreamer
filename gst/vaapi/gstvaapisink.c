@@ -378,6 +378,56 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     return TRUE;
 }
 
+static void
+gst_vaapisink_ensure_window_size(GstVaapiSink *sink, guint *pwidth, guint *pheight)
+{
+    GstVideoRectangle src_rect, dst_rect, out_rect;
+    guint num, den, display_width, display_height, display_par_n, display_par_d;
+    gboolean success, scale;
+
+    if (sink->foreign_window) {
+        *pwidth  = sink->window_width;
+        *pheight = sink->window_height;
+        return;
+    }
+
+    gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
+    if (sink->fullscreen) {
+        *pwidth  = display_width;
+        *pheight = display_height;
+        return;
+    }
+
+    gst_vaapi_display_get_pixel_aspect_ratio(
+        sink->display,
+        &display_par_n, &display_par_d
+    );
+
+    success = gst_video_calculate_display_ratio(
+        &num, &den,
+        sink->video_width, sink->video_height,
+        sink->video_par_n, sink->video_par_d,
+        display_par_n, display_par_d
+    );
+    if (!success) {
+        num = sink->video_par_n;
+        den = sink->video_par_d;
+    }
+
+    src_rect.x = 0;
+    src_rect.y = 0;
+    src_rect.w = gst_util_uint64_scale_int(sink->video_height, num, den);
+    src_rect.h = sink->video_height;
+    dst_rect.x = 0;
+    dst_rect.y = 0;
+    dst_rect.w = display_width;
+    dst_rect.h = display_height;
+    scale      = (src_rect.w > dst_rect.w || src_rect.h > dst_rect.h);
+    gst_video_sink_center_rect(src_rect, dst_rect, &out_rect, scale);
+    *pwidth    = out_rect.w;
+    *pheight   = out_rect.h;
+}
+
 static inline gboolean
 gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
 {
@@ -531,7 +581,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    guint win_width, win_height, display_width, display_height;
+    guint win_width, win_height;
     gint video_width, video_height, video_par_n = 1, video_par_d = 1;
 
 #if USE_DRM
@@ -560,21 +610,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 
     gst_vaapisink_ensure_rotation(sink, FALSE);
 
-    gst_vaapi_display_get_size(sink->display, &display_width, &display_height);
-    if (sink->foreign_window) {
-        win_width  = sink->window_width;
-        win_height = sink->window_height;
-    }
-    else if (sink->fullscreen ||
-             video_width > display_width || video_height > display_height) {
-        win_width  = display_width;
-        win_height = display_height;
-    }
-    else {
-        win_width  = video_width;
-        win_height = video_height;
-    }
-
+    gst_vaapisink_ensure_window_size(sink, &win_width, &win_height);
     if (sink->window) {
         if (!sink->foreign_window || sink->fullscreen)
             gst_vaapi_window_set_size(sink->window, win_width, win_height);
