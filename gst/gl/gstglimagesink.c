@@ -564,10 +564,10 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   if (!(v_meta = gst_buffer_get_video_meta (buf)))
-    goto no_video_meta;
+    GST_WARNING ("Buffer %" GST_PTR_FORMAT " is missing GstVideoMeta");
 
   if (!(gl_meta = gst_buffer_get_gl_meta (buf)))
-    goto no_gl_meta;
+    GST_WARNING ("Buffer %" GST_PTR_FORMAT " is missing required GstGLMeta");
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     glimage_sink->window_id = glimage_sink->new_window_id;
@@ -603,18 +603,6 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   return GST_FLOW_OK;
 
 /* ERRORS */
-no_video_meta:
-  {
-    GST_ERROR ("Buffer %" GST_PTR_FORMAT " is missing required GstVideoMeta");
-    return GST_FLOW_ERROR;
-  }
-
-no_gl_meta:
-  {
-    GST_ERROR ("Buffer %" GST_PTR_FORMAT " is missing required GstGLMeta");
-    return GST_FLOW_ERROR;
-  }
-
 redisplay_failed:
   {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,

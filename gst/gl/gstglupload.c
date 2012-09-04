@@ -438,22 +438,13 @@ gst_gl_upload_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstGLUpload *upload = GST_GL_UPLOAD (trans);
-  GstVideoMeta *smeta, *dmeta;
   GstGLMeta *gl_meta;
   GstVideoFrame frame;
 
-  smeta = gst_buffer_get_video_meta (inbuf);
-  dmeta = gst_buffer_get_video_meta (outbuf);
   gl_meta = gst_buffer_get_gl_meta (outbuf);
 
-  if (!smeta) {
-    GST_ERROR ("Input buffer does not have required GstVideoMeta");
-    goto error;
-  }
-  if (!dmeta || !gl_meta) {
-    GST_ERROR
-        ("Output buffer does not have required GstVideoMeta or GstGLMeta");
-    goto error;
+  if (!gl_meta) {
+    GST_WARNING ("Output buffer does not have required GstGLMeta");
   }
 
   if (!gst_video_frame_map (&frame, &upload->in_info, inbuf, GST_MAP_READ)) {
