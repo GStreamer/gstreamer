@@ -11,3 +11,6 @@ bin
 gen
 libs
 obj
+.classpath
+.project
+.settings
