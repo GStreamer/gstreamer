@@ -127,8 +127,9 @@ struct _GstBaseSink {
  *     any state they set during unlock(), such as clearing command queues.
  * @query: perform a #GstQuery on the element.
  * @event: Override this to handle events arriving on the sink pad
- * @wait_eos: Override this to implement custom logic to wait for the EOS time.
- *     subclasses should always first chain up to the default implementation.
+ * @wait_event: Override this to implement custom logic to wait for the event
+ *     time (for events like EOS and GAP). Subclasses should always first
+ *     chain up to the default implementation.
  * @prepare: Called to prepare the buffer for @render and @preroll. This
  *     function is called before synchronisation is performed.
  * @prepare_list: Called to prepare the buffer list for @render_list. This
@@ -180,8 +181,8 @@ struct _GstBaseSinkClass {
 
   /* notify subclass of event */
   gboolean      (*event)        (GstBaseSink *sink, GstEvent *event);
-  /* wait for eos, subclasses should chain up to parent first */
-  GstFlowReturn (*wait_eos)     (GstBaseSink *sink, GstEvent *event);
+  /* wait for eos or gap, subclasses should chain up to parent first */
+  GstFlowReturn (*wait_event)   (GstBaseSink *sink, GstEvent *event);
 
   /* notify subclass of buffer or list before doing sync */
   GstFlowReturn (*prepare)      (GstBaseSink *sink, GstBuffer *buffer);
