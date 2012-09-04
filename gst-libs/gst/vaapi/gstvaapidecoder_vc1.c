@@ -1255,13 +1255,18 @@ gst_vaapi_decoder_vc1_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderStatus status;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
+    GstMapInfo map_info;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    status = decode_buffer(decoder,
-        (GST_BUFFER_DATA(buffer) + unit->offset), unit->size);
+    if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ)) {
+        GST_ERROR("failed to map buffer");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    status = decode_buffer(decoder, map_info.data + unit->offset, unit->size);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;

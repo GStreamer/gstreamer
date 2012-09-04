@@ -913,6 +913,24 @@ gst_vaapi_image_get_data_size(GstVaapiImage *image)
     return image->priv->image.data_size;
 }
 
+#if GST_CHECK_VERSION(1,0,0)
+#include <gst/video/gstvideometa.h>
+
+static gboolean
+init_image_from_video_meta(GstVaapiImageRaw *raw_image, GstVideoMeta *vmeta)
+{
+    GST_FIXME("map from GstVideoMeta + add fini_image_from_buffer()");
+    return FALSE;
+}
+
+static gboolean
+init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
+{
+    GstVideoMeta * const vmeta = gst_buffer_get_video_meta(buffer);
+
+    return vmeta ? init_image_from_video_meta(raw_image, vmeta) : FALSE;
+}
+#else
 static gboolean
 init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
 {
@@ -989,6 +1007,7 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
     }
     return TRUE;
 }
+#endif
 
 /* Copy N lines of an image */
 static inline void

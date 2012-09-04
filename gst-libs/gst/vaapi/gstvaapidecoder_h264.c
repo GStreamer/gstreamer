@@ -2700,6 +2700,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstVaapiSlice *slice;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
+    GstMapInfo map_info;
 
     GST_DEBUG("slice (%u bytes)", pi->nalu.size);
 
@@ -2708,9 +2709,13 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
     }
 
+    if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ)) {
+        GST_ERROR("failed to map buffer");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
     slice = GST_VAAPI_SLICE_NEW(H264, decoder,
-        (GST_BUFFER_DATA(buffer) + unit->offset + pi->nalu.offset),
-        pi->nalu.size);
+        (map_info.data + unit->offset + pi->nalu.offset), pi->nalu.size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -2918,7 +2923,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     }
     ps->input_offset2 = 0;
 
-    buf = (guchar *)gst_adapter_peek(adapter, buf_size);
+    buf = (guchar *)gst_adapter_map(adapter, buf_size);
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 

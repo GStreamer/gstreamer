@@ -27,7 +27,6 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisubpicture.h>
-#include <gst/video/gstsurfacebuffer.h>
 #include <gst/video/video-overlay-composition.h>
 
 G_BEGIN_DECLS
@@ -37,7 +36,7 @@ G_BEGIN_DECLS
  *
  * Generic caps type for VA surfaces.
  */
-#define GST_VAAPI_SURFACE_CAPS_NAME GST_VIDEO_CAPS_SURFACE
+#define GST_VAAPI_SURFACE_CAPS_NAME "video/x-surface"
 
 /**
  * GST_VAAPI_SURFACE_CAPS:

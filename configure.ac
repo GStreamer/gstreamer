@@ -18,10 +18,13 @@ m4_define([gst_vaapi_lt_age],      [0])
 m4_define([glib_version], [2.28])
 
 # gstreamer version number
-m4_define([gst_api_version],            [0.10])
+m4_define([gst_api_version],            [1.0])
 m4_define([gst0_version],               [0.10.36])
 m4_define([gst0_plugins_base_version],  [0.10.31])
 m4_define([gst0_plugins_bad_version],   [0.10.22])
+m4_define([gst1_version],               [1.0.0])
+m4_define([gst1_plugins_base_version],  [1.0.0])
+m4_define([gst1_plugins_bad_version],   [1.0.0])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.0])
@@ -135,6 +138,11 @@ case $GST_API_VERSION in
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst0_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst0_plugins_bad_version
     ;;
+1.0)
+    GST_VERSION_REQUIRED=gst1_version
+    GST_PLUGINS_BASE_VERSION_REQUIRED=gst1_plugins_base_version
+    GST_PLUGINS_BAD_VERSION_REQUIRED=gst1_plugins_bad_version
+    ;;
 *)
     AC_MSG_ERROR([unsupported GStreamer API version $GST_API_VERSION])
     ;;
@@ -172,8 +180,10 @@ fi
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
     [gstreamer-plugins-base-$GST_API_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+if test "$GST_API_VERSION" = "0.10"; then
 PKG_CHECK_MODULES([GST_INTERFACES],
     [gstreamer-interfaces-$GST_API_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+fi
 
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],

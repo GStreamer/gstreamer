@@ -252,8 +252,30 @@ overlay_rectangle_changed_pixels(GstVaapiOverlayRectangle *overlay,
     buffer = gst_video_overlay_rectangle_get_pixels_unscaled_raw(rect, flags);
     if (!buffer)
         return FALSE;
+#if GST_CHECK_VERSION(1,0,0)
+    {
+        const guint n_blocks = gst_buffer_n_memory(buffer);
+        gsize ofs;
+        guint i;
+
+        if (buffer == overlay->rect_buffer)
+            return TRUE;
+
+        if (n_blocks != gst_buffer_n_memory(overlay->rect_buffer))
+            return FALSE;
+
+        for (i = 0; i < n_blocks; i++) {
+            GstMemory * const mem1 = gst_buffer_peek_memory(buffer, i);
+            GstMemory * const mem2 =
+                gst_buffer_peek_memory(overlay->rect_buffer, i);
+            if (!gst_memory_is_span(mem1, mem2, &ofs))
+                return FALSE;
+        }
+    }
+#else
     if (GST_BUFFER_DATA(overlay->rect_buffer) != GST_BUFFER_DATA(buffer))
         return FALSE;
+#endif
     return TRUE;
 }
 

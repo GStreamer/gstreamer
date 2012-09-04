@@ -1196,6 +1196,7 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
     GstMpegVideoSliceHdr * const slice_hdr = unit->parsed_info;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
+    GstMapInfo map_info;
 
     GST_DEBUG("slice %d (%u bytes)", slice_hdr->slice_vertical_position,
               unit->size);
@@ -1203,8 +1204,13 @@ decode_slice(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
     if (!is_valid_state(decoder, GST_MPEG_VIDEO_STATE_VALID_PIC_HEADERS))
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+    if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ)) {
+        GST_ERROR("failed to map buffer");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
     slice = GST_VAAPI_SLICE_NEW(MPEG2, decoder,
-        (GST_BUFFER_DATA(buffer) + unit->offset), unit->size);
+        (map_info.data + unit->offset), unit->size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
@@ -1393,7 +1399,7 @@ gst_vaapi_decoder_mpeg2_parse(GstVaapiDecoder *base_decoder,
     if (buf_size < 4)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    buf = gst_adapter_peek(adapter, buf_size);
+    buf = gst_adapter_map(adapter, buf_size);
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
@@ -1476,12 +1482,18 @@ gst_vaapi_decoder_mpeg2_decode(GstVaapiDecoder *base_decoder,
     GstMpegVideoPacket packet;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
+    GstMapInfo map_info;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    packet.data = GST_BUFFER_DATA(buffer) + unit->offset;
+    if (!gst_buffer_map(buffer, &map_info, GST_MAP_READ)) {
+        GST_ERROR("failed to map buffer");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    packet.data = map_info.data + unit->offset;
     packet.size = unit->size;
     packet.type = packet.data[3];
     packet.offset = 4;

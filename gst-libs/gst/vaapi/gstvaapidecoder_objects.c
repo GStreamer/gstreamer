@@ -315,9 +315,12 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
     if (GST_VAAPI_PICTURE_IS_SKIPPED(picture))
         GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
             GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+#if !GST_CHECK_VERSION(1,0,0)
+    /* XXX: replaced with GST_VIDEO_BUFFER_FLAG_TFF */
     if (GST_VAAPI_PICTURE_IS_TFF(picture))
         GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
             GST_VIDEO_CODEC_FRAME_FLAG_TFF);
+#endif
 
     gst_vaapi_decoder_push_frame(GET_DECODER(picture), out_frame);
 

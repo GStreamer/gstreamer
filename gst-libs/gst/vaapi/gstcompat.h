@@ -24,6 +24,37 @@
 
 #include <gst/gst.h>
 
+/* ------------------------------------------------------------------------ */
+/* --- GStreamer >= 1.0                                                 --- */
+/* ------------------------------------------------------------------------ */
+
+#if GST_CHECK_VERSION(1,0,0)
+#include <gst/video/gstvideometa.h>
+
+/* GstStructure */
+#undef  gst_structure_get_fourcc
+#define gst_structure_get_fourcc(structure, fieldname, value) \
+    gst_compat_structure_get_fourcc(structure, fieldname, value)
+
+static inline gboolean
+gst_compat_structure_get_fourcc(const GstStructure *structure,
+    const gchar *fieldname, guint32 *value)
+{
+    const gchar *s = gst_structure_get_string(structure, fieldname);
+
+    if (!s || strlen(s) != 4)
+        return FALSE;
+
+    *value = GST_MAKE_FOURCC(s[0], s[1], s[2], s[3]);
+    return TRUE;
+}
+
+/* ------------------------------------------------------------------------ */
+/* --- GStreamer = 0.10                                                 --- */
+/* ------------------------------------------------------------------------ */
+
+#else
+
 /* GstVideoOverlayComposition */
 #include <gst/video/video-overlay-composition.h>
 
@@ -70,5 +101,7 @@ gst_compat_element_class_set_static_metadata(GstElementClass *klass,
 
 typedef guint8 *(*GstCompatTypeFindPeekFunction)(gpointer, gint64, guint);
 typedef void (*GstCompatTypeFindSuggestFunction)(gpointer, guint, const GstCaps *);
+
+#endif
 
 #endif /* GST_COMPAT_H */

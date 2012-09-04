@@ -91,7 +91,7 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "video/x-wmv, wmvversion=3", "main"
     },
     { GST_VAAPI_PROFILE_VC1_ADVANCED, VAProfileVC1Advanced,
-      "video/x-wmv, wmvversion=3, format=(fourcc)WVC1", "advanced"
+      "video/x-wmv, wmvversion=3, format=(string)WVC1", "advanced"
     },
 #if VA_CHECK_VERSION(0,32,0)
     { GST_VAAPI_PROFILE_JPEG_BASELINE, VAProfileJPEGBaseline,
@@ -168,7 +168,10 @@ static GstVaapiProfile
 gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
 {
     /* MPEG-4 Part 15: Advanced Video Coding (AVC) file format */
-    guchar * const buf = GST_BUFFER_DATA(buffer);
+    guchar buf[2];
+
+    if (gst_buffer_extract(buffer, 0, buf, sizeof(buf)) != sizeof(buf))
+        return 0;
 
     if (buf[0] != 1)    /* configurationVersion = 1 */
         return 0;
@@ -317,7 +320,7 @@ gst_vaapi_profile_get_caps(GstVaapiProfile profile)
             "profile", G_TYPE_STRING, m->profile_str,
             NULL
         );
-        gst_caps_merge(out_caps, caps);
+        out_caps = gst_caps_merge(out_caps, caps);
     }
     return out_caps;
 }

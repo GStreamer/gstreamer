@@ -332,7 +332,7 @@ get_profile_caps(GArray *configs)
         config = &g_array_index(configs, GstVaapiConfig, i);
         caps   = gst_vaapi_profile_get_caps(config->profile);
         if (caps)
-            gst_caps_merge(out_caps, caps);
+            out_caps = gst_caps_merge(out_caps, caps);
     }
     return out_caps;
 }

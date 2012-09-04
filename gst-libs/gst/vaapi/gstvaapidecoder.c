@@ -111,7 +111,7 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     }
 
     GST_DEBUG("queue encoded data buffer %p (%d bytes)",
-              buffer, GST_BUFFER_SIZE(buffer));
+              buffer, gst_buffer_get_size(buffer));
 
     g_queue_push_tail(priv->buffers, buffer);
     return TRUE;
@@ -128,7 +128,7 @@ pop_buffer(GstVaapiDecoder *decoder)
         return NULL;
 
     GST_DEBUG("dequeue buffer %p for decoding (%d bytes)",
-              buffer, GST_BUFFER_SIZE(buffer));
+              buffer, gst_buffer_get_size(buffer));
 
     return buffer;
 }
@@ -662,7 +662,7 @@ gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
 
     if (buf) {
-        if (!GST_BUFFER_DATA(buf) || GST_BUFFER_SIZE(buf) <= 0)
+        if (gst_buffer_get_size(buf) == 0)
             return TRUE;
         buf = gst_buffer_ref(buf);
     }
@@ -950,6 +950,7 @@ gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder)
     GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
     GstBuffer * const codec_data = GST_VAAPI_DECODER_CODEC_DATA(decoder);
     GstVaapiDecoderStatus status;
+    GstMapInfo map_info;
     const guchar *buf;
     guint buf_size;
 
@@ -960,11 +961,16 @@ gst_vaapi_decoder_decode_codec_data(GstVaapiDecoder *decoder)
     if (!klass->decode_codec_data)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
-    buf      = GST_BUFFER_DATA(codec_data);
-    buf_size = GST_BUFFER_SIZE(codec_data);
-    if (!buf || buf_size == 0)
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    if (!gst_buffer_map(codec_data, &map_info, GST_MAP_READ)) {
+        GST_ERROR("failed to map buffer");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
 
-    status = klass->decode_codec_data(decoder, buf, buf_size);
+    buf      = map_info.data;
+    buf_size = map_info.size;
+    if (G_LIKELY(buf && buf_size > 0))
+        status = klass->decode_codec_data(decoder, buf, buf_size);
+    else
+        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
     return status;
 }
