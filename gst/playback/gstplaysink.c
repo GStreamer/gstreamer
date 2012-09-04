@@ -4173,12 +4173,15 @@ gst_play_sink_release_pad (GstPlaySink * playsink, GstPad * pad)
     res = &playsink->video_pad;
     g_signal_handlers_disconnect_by_func (playsink->video_pad, caps_notify_cb,
         playsink);
+    video_set_blocked (playsink, FALSE);
   } else if (pad == playsink->audio_pad) {
     res = &playsink->audio_pad;
     g_signal_handlers_disconnect_by_func (playsink->audio_pad, caps_notify_cb,
         playsink);
+    audio_set_blocked (playsink, FALSE);
   } else if (pad == playsink->text_pad) {
     res = &playsink->text_pad;
+    text_set_blocked (playsink, FALSE);
   } else {
     /* try to release the given pad anyway, these could be the FLUSHING pads. */
     res = &pad;
