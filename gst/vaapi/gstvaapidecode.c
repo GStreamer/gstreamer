@@ -174,6 +174,9 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
 static void
 gst_vaapidecode_release(GstVaapiDecode *decode, GObject *dead_object)
 {
+    if (!decode->decoder_mutex || !decode->decoder_ready)
+        return;
+
     g_mutex_lock(decode->decoder_mutex);
     g_cond_signal(decode->decoder_ready);
     g_mutex_unlock(decode->decoder_mutex);
