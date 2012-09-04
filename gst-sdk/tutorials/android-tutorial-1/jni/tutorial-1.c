@@ -22,6 +22,32 @@ jstring
 Java_com_gst_1sdk_1tutorials_tutorial_11_Tutorial1_gstVersion (JNIEnv* env,
                                                   jobject thiz )
 {
-  return (*env)->NewStringUTF(env, gst_version_string());
+  char buffer[8192] = "";
+  GList *original_plugin_list = gst_registry_get_plugin_list (gst_registry_get_default());
+  GList *plugin_list = original_plugin_list;
+
+  g_strlcat (buffer, gst_version_string(), sizeof (buffer));
+  g_strlcat (buffer, "\n", sizeof (buffer));
+  while (plugin_list) {
+    GstPlugin *plugin = (GstPlugin *)plugin_list->data;
+    GList *original_features_list, *features_list;
+    plugin_list = plugin_list->next;
+
+    g_strlcat (buffer, gst_plugin_get_name (plugin), sizeof (buffer));
+    g_strlcat (buffer, "\n", sizeof (buffer));
+    original_features_list = features_list = gst_registry_get_feature_list_by_plugin (gst_registry_get_default(), plugin->desc.name);
+
+    while (features_list) {
+      GstPluginFeature *feature = (GstPluginFeature *)features_list->data;
+      features_list = features_list->next;
+
+      g_strlcat (buffer, "  ", sizeof (buffer));
+      g_strlcat (buffer, gst_plugin_feature_get_name (feature), sizeof (buffer));
+      g_strlcat (buffer, "\n", sizeof (buffer));
+    }
+    gst_plugin_feature_list_free (original_features_list);
+  }
+  gst_plugin_list_free (original_plugin_list);
+  return (*env)->NewStringUTF(env, buffer);
 }
 
