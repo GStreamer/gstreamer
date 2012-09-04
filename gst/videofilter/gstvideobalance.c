@@ -601,10 +601,10 @@ gst_video_balance_colorbalance_set_value (GstColorBalance * balance,
     changed = new_val != vb->contrast;
     vb->contrast = new_val;
   }
+  GST_OBJECT_UNLOCK (vb);
 
   if (changed)
     gst_video_balance_update_properties (vb);
-  GST_OBJECT_UNLOCK (vb);
 
   if (changed) {
     gst_color_balance_value_changed (balance, channel,
