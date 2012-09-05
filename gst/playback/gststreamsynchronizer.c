@@ -451,9 +451,10 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         /* if EOS, but no data has passed, then send something to replace EOS
          * for preroll purposes */
         if (!seen_data) {
-          GstBuffer *buf = gst_buffer_new ();
+          GstEvent *event;
 
-          gst_pad_push (srcpad, buf);
+          event = gst_event_new_gap (0, 0);
+          gst_pad_push_event (srcpad, event);
         }
       }
       gst_object_unref (srcpad);
