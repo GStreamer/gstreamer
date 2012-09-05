@@ -2044,6 +2044,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         g_object_unref (mix->display);
         mix->display = NULL;
       }
+      walk = mix->sinkpads;
       while (walk) {
         GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
         walk = g_slist_next (walk);
