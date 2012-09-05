@@ -691,26 +691,6 @@ gst_dvdemux_handle_sink_event (GstPad * pad, GstObject * parent,
       switch (segment->format) {
         case GST_FORMAT_BYTES:
           gst_segment_copy_into (segment, &dvdemux->byte_segment);
-
-#if 0
-          /* FIXME ?? no longer such subtle distinction in 0.11 */
-          /* the update can always be sent */
-          if (update) {
-            GstEvent *update;
-
-            update = gst_event_new_new_segment (TRUE,
-                dvdemux->time_segment.rate, dvdemux->time_segment.format,
-                dvdemux->time_segment.start, dvdemux->time_segment.position,
-                dvdemux->time_segment.time);
-
-            gst_dvdemux_push_event (dvdemux, update);
-          } else {
-            /* and queue a SEGMENT before sending the next set of buffers, we
-             * cannot convert to time yet as we might not know the size of the
-             * frames, etc.. */
-            dvdemux->need_segment = TRUE;
-          }
-#endif
           dvdemux->need_segment = TRUE;
           gst_event_unref (event);
           break;
