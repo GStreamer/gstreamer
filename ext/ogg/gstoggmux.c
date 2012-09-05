@@ -205,20 +205,6 @@ gst_ogg_mux_class_init (GstOggMuxClass * klass)
 
 }
 
-#if 0
-static const GstEventMask *
-gst_ogg_mux_get_sink_event_masks (GstPad * pad)
-{
-  static const GstEventMask gst_ogg_mux_sink_event_masks[] = {
-    {GST_EVENT_EOS, 0},
-    {GST_EVENT_DISCONTINUOUS, 0},
-    {0,}
-  };
-
-  return gst_ogg_mux_sink_event_masks;
-}
-#endif
-
 static void
 gst_ogg_mux_clear (GstOggMux * ogg_mux)
 {
