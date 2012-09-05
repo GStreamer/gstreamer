@@ -1370,6 +1370,7 @@ gst_collect_pads_recalculate_waiting (GstCollectPads * pads)
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *data = (GstCollectData *) collected->data;
     int cmp_res;
+    GstClockTime comp_time;
 
     /* check if pad has a segment */
     if (data->segment.format == GST_FORMAT_UNDEFINED) {
@@ -1386,7 +1387,8 @@ gst_collect_pads_recalculate_waiting (GstCollectPads * pads)
     }
 
     /* check if the waiting state should be changed */
-    cmp_res = pads->priv->compare_func (pads, data, data->segment.start,
+    comp_time = MAX (data->segment.start, data->segment.position);
+    cmp_res = pads->priv->compare_func (pads, data, comp_time,
         pads->priv->earliest_data, pads->priv->earliest_time,
         pads->priv->compare_user_data);
     if (cmp_res > 0)
@@ -1561,6 +1563,35 @@ gst_collect_pads_default_compare_func (GstCollectPads * pads,
   return 0;
 }
 
+/* called with STREAM_LOCK */
+static void
+gst_collect_pads_handle_position_update (GstCollectPads * pads,
+    GstCollectData * data, GstClockTime new_pos)
+{
+  gint cmp_res;
+
+  /* If oldest time is not known, or current pad got newsegment;
+   * recalculate the state */
+  if (!pads->priv->earliest_data || pads->priv->earliest_data == data) {
+    gst_collect_pads_recalculate_full (pads);
+    goto exit;
+  }
+
+  /* Check if the waiting state of the pad should change. */
+  cmp_res =
+      pads->priv->compare_func (pads, data, new_pos,
+      pads->priv->earliest_data, pads->priv->earliest_time,
+      pads->priv->compare_user_data);
+
+  if (cmp_res > 0)
+    /* Stop waiting */
+    gst_collect_pads_set_waiting (pads, data, FALSE);
+
+exit:
+  return;
+
+}
+
 /**
  * gst_collect_pads_event_default:
  * @pads: the collectspads to use
@@ -1664,13 +1695,15 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
     case GST_EVENT_SEGMENT:
     {
       GstSegment seg;
-      gint cmp_res;
 
       GST_COLLECT_PADS_STREAM_LOCK (pads);
 
       gst_event_copy_segment (event, &seg);
 
       GST_DEBUG_OBJECT (data->pad, "got segment %" GST_SEGMENT_FORMAT, &seg);
+
+      /* sanitize to make sure; reasonably so at start */
+      seg.position = seg.start;
 
       /* default collection can not handle other segment formats than time */
       if (buffer_func && seg.format != GST_FORMAT_TIME) {
@@ -1686,27 +1719,30 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
       if (!buffer_func)
         goto newsegment_done;
 
-      /* If oldest time is not known, or current pad got newsegment;
-       * recalculate the state */
-      if (!pads->priv->earliest_data || pads->priv->earliest_data == data) {
-        gst_collect_pads_recalculate_full (pads);
-        goto newsegment_done;
-      }
-
-      /* Check if the waiting state of the pad should change. */
-      cmp_res =
-          pads->priv->compare_func (pads, data, seg.start,
-          pads->priv->earliest_data, pads->priv->earliest_time,
-          pads->priv->compare_user_data);
-
-      if (cmp_res > 0)
-        /* Stop waiting */
-        gst_collect_pads_set_waiting (pads, data, FALSE);
+      gst_collect_pads_handle_position_update (pads, data, seg.start);
 
     newsegment_done:
       GST_COLLECT_PADS_STREAM_UNLOCK (pads);
       /* we must not forward this event since multiple segments will be
        * accumulated and this is certainly not what we want. */
+      goto eat;
+    }
+    case GST_EVENT_GAP:
+    {
+      GstClockTime start, duration;
+
+      GST_COLLECT_PADS_STREAM_LOCK (pads);
+
+      gst_event_parse_gap (event, &start, &duration);
+      if (GST_CLOCK_TIME_IS_VALID (duration))
+        start += duration;
+      /* we do not expect another buffer until after gap,
+       * so that is our position now */
+      data->segment.position = start;
+
+      gst_collect_pads_handle_position_update (pads, data, start);
+
+      GST_COLLECT_PADS_STREAM_UNLOCK (pads);
       goto eat;
     }
     case GST_EVENT_STREAM_START:
