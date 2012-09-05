@@ -20,14 +20,14 @@ AC_DEFUN([GST_ELEMENT_CHECK],
     AC_MSG_CHECKING(GStreamer $gstapiversion element $1 >= $2)
     if [ $gstinspect --exists --atleast-version=$2 $1 ]; then
       AC_MSG_RESULT([found])
-      $2
+      $3
     else
       if [ $gstinspect --exists $1 ]; then
         AC_MSG_RESULT([found, but too old])
       else
         AC_MSG_RESULT([not found])
       fi
-      $3
+      $4
     fi
   fi
 ])
