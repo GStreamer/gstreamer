@@ -427,10 +427,10 @@ static void gst_base_parse_loop (GstPad * pad);
 static GstFlowReturn gst_base_parse_parse_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 
-static gboolean gst_base_parse_sink_eventfunc (GstBaseParse * parse,
+static gboolean gst_base_parse_sink_default (GstBaseParse * parse,
     GstEvent * event);
 
-static gboolean gst_base_parse_src_eventfunc (GstBaseParse * parse,
+static gboolean gst_base_parse_src_default (GstBaseParse * parse,
     GstEvent * event);
 
 static void gst_base_parse_drain (GstBaseParse * parse);
@@ -535,8 +535,8 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
 #endif
 
   /* Default handlers */
-  klass->sink_event = gst_base_parse_sink_eventfunc;
-  klass->src_event = gst_base_parse_src_eventfunc;
+  klass->sink_event = gst_base_parse_sink_default;
+  klass->src_event = gst_base_parse_src_default;
   klass->convert = gst_base_parse_convert_default;
 
   GST_DEBUG_CATEGORY_INIT (gst_base_parse_debug, "baseparse", 0,
@@ -866,53 +866,17 @@ gst_base_parse_convert (GstBaseParse * parse,
 static gboolean
 gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstBaseParse *parse;
-  GstBaseParseClass *bclass;
+  GstBaseParse *parse = GST_BASE_PARSE (parent);
+  GstBaseParseClass *bclass = GST_BASE_PARSE_GET_CLASS (parse);
   gboolean ret;
 
-  parse = GST_BASE_PARSE (parent);
-  bclass = GST_BASE_PARSE_GET_CLASS (parse);
-
-  GST_DEBUG_OBJECT (parse, "handling event %d, %s", GST_EVENT_TYPE (event),
-      GST_EVENT_TYPE_NAME (event));
-
-  /* Cache all serialized events except EOS, SEGMENT and FLUSH_STOP if we have a
-   * pending segment */
-  if (parse->priv->pending_segment && GST_EVENT_IS_SERIALIZED (event)
-      && GST_EVENT_TYPE (event) != GST_EVENT_EOS
-      && GST_EVENT_TYPE (event) != GST_EVENT_SEGMENT
-      && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_START
-      && GST_EVENT_TYPE (event) != GST_EVENT_FLUSH_STOP
-      && GST_EVENT_TYPE (event) != GST_EVENT_CAPS) {
-
-    if (GST_EVENT_TYPE (event) == GST_EVENT_TAG)
-      /* See if any bitrate tags were posted */
-      gst_base_parse_handle_tag (parse, event);
-
-    parse->priv->pending_events =
-        g_list_prepend (parse->priv->pending_events, event);
-    ret = TRUE;
-  } else {
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
-        parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE)
-      /* We've not posted bitrate tags yet - do so now */
-      gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
-
-    if (bclass->sink_event)
-      ret = bclass->sink_event (parse, event);
-    else {
-      gst_event_unref (event);
-      ret = FALSE;
-    }
-  }
-
-  GST_DEBUG_OBJECT (parse, "event handled");
+  ret = bclass->sink_event (parse, event);
 
   return ret;
 }
 
 
-/* gst_base_parse_sink_eventfunc:
+/* gst_base_parse_sink_default:
  * @parse: #GstBaseParse.
  * @event: #GstEvent to be handled.
  *
@@ -924,17 +888,19 @@ gst_base_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
  * Returns: %TRUE if the event was handled and not need forwarding.
  */
 static gboolean
-gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
+gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
 {
-  gboolean ret;
+  GstBaseParseClass *klass = GST_BASE_PARSE_GET_CLASS (parse);
+  gboolean ret = FALSE;
+  gboolean forward_immediate = FALSE;
+
+  GST_DEBUG_OBJECT (parse, "handling event %d, %s", GST_EVENT_TYPE (event),
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
-      GstBaseParseClass *klass;
-
-      klass = GST_BASE_PARSE_GET_CLASS (parse);
 
       gst_event_parse_caps (event, &caps);
       GST_DEBUG_OBJECT (parse, "caps: %" GST_PTR_FORMAT, caps);
@@ -946,6 +912,7 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
 
       /* will send our own caps downstream */
       gst_event_unref (event);
+      event = NULL;
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -953,13 +920,6 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       const GstSegment *in_segment;
       GstSegment out_segment;
       gint64 offset = 0, next_pts;
-
-#if 0
-      gdouble rate, applied_rate;
-      GstFormat format;
-      gint64 start, stop, pos, next_ts;
-      gboolean update;
-#endif
 
       gst_event_parse_segment (event, &in_segment);
       gst_segment_init (&out_segment, GST_FORMAT_TIME);
@@ -1048,8 +1008,6 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       /* save the segment for later, right before we push a new buffer so that
        * the caps are fixed and the next linked element can receive
        * the segment. */
-      parse->priv->pending_events =
-          g_list_prepend (parse->priv->pending_events, event);
       parse->priv->pending_segment = TRUE;
       ret = TRUE;
 
@@ -1072,15 +1030,11 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
     }
 
     case GST_EVENT_FLUSH_START:
+      /* FIXME: locking */
       parse->priv->flushing = TRUE;
-      ret = gst_pad_push_event (parse->srcpad, event);
-      /* Wait for _chain() to exit by taking the srcpad STREAM_LOCK */
-      GST_PAD_STREAM_LOCK (parse->srcpad);
-      GST_PAD_STREAM_UNLOCK (parse->srcpad);
       break;
 
     case GST_EVENT_FLUSH_STOP:
-      ret = gst_pad_push_event (parse->srcpad, event);
       gst_adapter_clear (parse->priv->adapter);
       gst_base_parse_clear_queues (parse);
       parse->priv->flushing = FALSE;
@@ -1088,6 +1042,8 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->new_frame = TRUE;
+
+      forward_immediate = TRUE;
       break;
 
     case GST_EVENT_EOS:
@@ -1112,15 +1068,46 @@ gst_base_parse_sink_eventfunc (GstBaseParse * parse, GstEvent * event)
         parse->priv->pending_events = NULL;
         parse->priv->pending_segment = FALSE;
       }
-      ret = gst_pad_push_event (parse->srcpad, event);
+      forward_immediate = TRUE;
       break;
-
     default:
-      ret =
-          gst_pad_event_default (parse->sinkpad, GST_OBJECT_CAST (parse),
-          event);
       break;
   }
+
+  /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
+   * For EOS this is required because no buffer or serialized event
+   * will come after EOS and nothing could trigger another
+   * _finish_frame() call.   *
+   * If the subclass handles sending of EOS manually it can return
+   * _DROPPED from ::finish() and all other subclasses should have
+   * decoded/flushed all remaining data before this
+   *
+   * For FLUSH_STOP this is required because it is expected
+   * to be forwarded immediately and no buffers are queued anyway.
+   */
+  if (event) {
+    if (!GST_EVENT_IS_SERIALIZED (event) || forward_immediate) {
+      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
+          parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
+        /* We've not posted bitrate tags yet - do so now */
+        gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
+      }
+      ret = gst_pad_push_event (parse->srcpad, event);
+    } else {
+      // GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+        /* See if any bitrate tags were posted */
+        gst_base_parse_handle_tag (parse, event);
+      }
+      parse->priv->pending_events =
+          g_list_prepend (parse->priv->pending_events, event);
+      // GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      ret = TRUE;
+    }
+  }
+
+  GST_DEBUG_OBJECT (parse, "event handled");
+
   return ret;
 }
 
@@ -1216,7 +1203,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
   return parse->priv->syncable;
 }
 
-/* gst_base_parse_src_eventfunc:
+/* gst_base_parse_src_default:
  * @parse: #GstBaseParse.
  * @event: #GstEvent that was received.
  *
@@ -1225,7 +1212,7 @@ gst_base_parse_is_seekable (GstBaseParse * parse)
  * Returns: TRUE if the event was handled and can be dropped.
  */
 static gboolean
-gst_base_parse_src_eventfunc (GstBaseParse * parse, GstEvent * event)
+gst_base_parse_src_default (GstBaseParse * parse, GstEvent * event)
 {
   gboolean res = FALSE;
 
