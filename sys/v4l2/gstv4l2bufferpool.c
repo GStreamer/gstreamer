@@ -632,13 +632,8 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   GstV4l2Object *obj = pool->obj;
   GstClockTime timestamp;
 
-  if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
-    /* select works for input devices when data is available. According to the
-     * specs we can also poll to find out when a frame has been displayed but
-     * that just seems to lock up here */
-    if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
-      goto poll_error;
-  }
+  if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
+    goto poll_error;
 
   memset (&vbuffer, 0x00, sizeof (vbuffer));
   vbuffer.type = obj->type;

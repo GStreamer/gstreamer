@@ -481,7 +481,10 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
 
   pollfd.fd = v4l2object->video_fd;
   gst_poll_add_fd (v4l2object->poll, &pollfd);
-  gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
+  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+    gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
+  else
+    gst_poll_fd_ctl_write (v4l2object->poll, &pollfd, TRUE);
 
   return TRUE;
 
