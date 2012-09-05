@@ -1762,6 +1762,23 @@ gst_base_text_overlay_text_event (GstPad * pad, GstObject * parent,
       GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
       break;
     }
+    case GST_EVENT_GAP:
+    {
+      GstClockTime start, duration;
+
+      gst_event_parse_gap (event, &start, &duration);
+      if (GST_CLOCK_TIME_IS_VALID (duration))
+        start += duration;
+      /* we do not expect another buffer until after gap,
+       * so that is our position now */
+      overlay->text_segment.position = start;
+
+      /* wake up the video chain, it might be waiting for a text buffer or
+       * a text segment update */
+      GST_BASE_TEXT_OVERLAY_LOCK (overlay);
+      GST_BASE_TEXT_OVERLAY_BROADCAST (overlay);
+      GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_BASE_TEXT_OVERLAY_LOCK (overlay);
       GST_INFO_OBJECT (overlay, "text flush stop");
