@@ -4398,14 +4398,8 @@ gst_ogg_demux_sync_streams (GstOggDemux * ogg)
 
         stream->position = cur;
 
-#if 0
-        ogg->segment.base += cur - stream->position;
-        /* advance stream time (FIXME: is this right, esp. time_pos?) */
         gst_pad_push_event (GST_PAD_CAST (stream),
-            gst_event_new_new_segment (TRUE, ogg->segment.rate,
-                ogg->segment.applied_rate,
-                GST_FORMAT_TIME, stream->position, -1, stream->position));
-#endif
+            gst_event_new_gap (stream->position, cur - stream->position));
       }
     }
   }
