@@ -416,8 +416,8 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
       if (gst_event_has_name (event, "GstRTPPacketLost")) {
         /* we get this event from the jitterbuffer when it considers a packet as
          * being lost. We send it to our packet_lost vmethod. The default
-         * implementation will make time progress by pushing out a NEWSEGMENT
-         * update event. Subclasses can override and to one of the following:
+         * implementation will make time progress by pushing out a GAP event.
+         * Subclasses can override and to one of the following:
          *  - Adjust timestamp/duration to something more accurate before
          *    calling the parent (default) packet_lost method.
          *  - do some more advanced error concealing on the already received
@@ -461,8 +461,7 @@ gst_rtp_base_depayload_handle_sink_event (GstPad * pad, GstObject * parent,
 }
 
 static GstEvent *
-create_segment_event (GstRTPBaseDepayload * filter, gboolean update,
-    GstClockTime position)
+create_segment_event (GstRTPBaseDepayload * filter, GstClockTime position)
 {
   GstEvent *event;
   GstClockTime stop;
@@ -552,7 +551,7 @@ gst_rtp_base_depayload_prepare_push (GstRTPBaseDepayload * filter,
   if (G_UNLIKELY (filter->need_newsegment)) {
     GstEvent *event;
 
-    event = create_segment_event (filter, FALSE, 0);
+    event = create_segment_event (filter, 0);
 
     gst_pad_push_event (filter->srcpad, event);
 
@@ -617,7 +616,7 @@ gst_rtp_base_depayload_push_list (GstRTPBaseDepayload * filter,
   return res;
 }
 
-/* convert the PacketLost event form a jitterbuffer to a segment update.
+/* convert the PacketLost event form a jitterbuffer to a GAP event.
  * subclasses can override this.  */
 static gboolean
 gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
@@ -640,8 +639,8 @@ gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
   if (duration != -1)
     position += duration;
 
-  /* update the current segment with the elapsed time */
-  sevent = create_segment_event (filter, TRUE, position);
+  /* send GAP event */
+  sevent = gst_event_new_gap (timestamp, duration);
 
   return gst_pad_push_event (filter->srcpad, sevent);
 }
