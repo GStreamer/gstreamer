@@ -145,7 +145,19 @@ gboolean                     gst_video_overlay_rectangle_get_render_rectangle   
 GstBuffer *                  gst_video_overlay_rectangle_get_pixels_raw           (GstVideoOverlayRectangle  * rectangle,
                                                                                    GstVideoOverlayFormatFlags  flags);
 
+GstBuffer *                  gst_video_overlay_rectangle_get_pixels_argb          (GstVideoOverlayRectangle  * rectangle,
+                                                                                   GstVideoOverlayFormatFlags  flags);
+
+GstBuffer *                  gst_video_overlay_rectangle_get_pixels_ayuv          (GstVideoOverlayRectangle  * rectangle,
+                                                                                   GstVideoOverlayFormatFlags  flags);
+
 GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_raw  (GstVideoOverlayRectangle  * rectangle,
+                                                                                   GstVideoOverlayFormatFlags  flags);
+
+GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_argb (GstVideoOverlayRectangle  * rectangle,
+                                                                                   GstVideoOverlayFormatFlags  flags);
+
+GstBuffer *                  gst_video_overlay_rectangle_get_pixels_unscaled_ayuv (GstVideoOverlayRectangle  * rectangle,
                                                                                    GstVideoOverlayFormatFlags  flags);
 
 GstVideoOverlayFormatFlags   gst_video_overlay_rectangle_get_flags                (GstVideoOverlayRectangle  * rectangle);

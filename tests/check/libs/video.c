@@ -973,6 +973,35 @@ GST_START_TEST (test_overlay_composition)
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
   fail_unless (pix1 == pix2);
 
+  /* get in different format */
+  pix1 = gst_video_overlay_rectangle_get_pixels_ayuv (rect2,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 != pix2);
+  /* get it again, should be same (caching) */
+  pix2 = gst_video_overlay_rectangle_get_pixels_ayuv (rect2,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 == pix2);
+  /* get unscaled, should be different */
+  pix2 = gst_video_overlay_rectangle_get_pixels_unscaled_ayuv (rect2,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 != pix2);
+  /* but should be cached */
+  pix1 = gst_video_overlay_rectangle_get_pixels_unscaled_ayuv (rect2,
+      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+  fail_unless (pix1 == pix2);
+
+  vmeta = gst_buffer_get_video_meta (pix1);
+  fail_unless (vmeta != NULL);
+  w = vmeta->width;
+  h = vmeta->height;
+  fail_unless_equals_int (w, 200);
+  fail_unless_equals_int (h, 50);
+  fail_unless_equals_int (vmeta->format,
+      GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_YUV);
+  fail_unless (gst_buffer_get_size (pix1) == w * h * 4);
+  gst_buffer_extract (pix1, 0, &seq1, 4);
+  fail_unless (seq1 != 0);
+
   /* now compare the original unscaled ones */
   pix1 = gst_video_overlay_rectangle_get_pixels_unscaled_raw (rect1,
       GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
