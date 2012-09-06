@@ -391,7 +391,13 @@ gst_amc_video_dec_close (GstVideoDecoder * decoder)
   GST_DEBUG_OBJECT (self, "Closing decoder");
 
   if (self->codec) {
+    /* FIXME: This crashes for some reason, looks like the
+     * MediaCodec API is not threadsafe between stop() and
+     * release()
+     */
+#if 0
     gst_amc_codec_release (self->codec);
+#endif
     gst_amc_codec_free (self->codec);
   }
   self->codec = NULL;
