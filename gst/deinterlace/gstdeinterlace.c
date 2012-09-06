@@ -2115,7 +2115,6 @@ gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
   return TRUE;
 }
 
-/* FIXME: use filter in getcaps */
 static GstCaps *
 gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
 {
@@ -2244,6 +2243,16 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
         g_value_unset (&nlist);
       }
     }
+  }
+
+  if (filter) {
+    GstCaps *filter_caps;
+
+    GST_LOG_OBJECT (pad, "intersecting with %" GST_PTR_FORMAT, filter);
+    filter_caps = gst_caps_intersect_full (filter, ret,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = filter_caps;
   }
 
   GST_DEBUG_OBJECT (pad, "Returning caps %" GST_PTR_FORMAT, ret);
