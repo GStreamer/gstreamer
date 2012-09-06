@@ -610,6 +610,8 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
       if (result)
         gst_caps_unref (result);
       result = othercaps;
+    } else {
+      gst_caps_unref (othercaps);
     }
   } else {
     gst_caps_unref (othercaps);
