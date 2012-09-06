@@ -18,8 +18,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := tutorial-1
 LOCAL_SRC_FILES := tutorial-1.c
-LOCAL_LDLIBS := -L./ -lgstreamer_android
-LOCAL_CFLAGS := $(shell pkg-config gstreamer-0.10 --cflags)
+LOCAL_SHARED_LIBRARIES := gstreamer_android
 include $(BUILD_SHARED_LIBRARY)
 
 GSTREAMER_PLUGINS = coreelements audiotestsrc videotestsrc ogg theora vorbis ffmpegcolorspace playback app audioconvert audiorate audioresample adder coreindexers gdp gio uridecodebin videorate videoscale typefindfunctions libvisual pango subparse
