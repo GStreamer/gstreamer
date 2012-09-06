@@ -18,6 +18,9 @@
 #include <jni.h>
 #include <gst/gst.h>
 
+GST_DEBUG_CATEGORY_STATIC (debug_category);
+#define GST_CAT_DEFAULT debug_category
+
 jstring
 Java_com_gst_1sdk_1tutorials_tutorial_11_Tutorial1_gstVersion (JNIEnv* env,
                                                   jobject thiz )
@@ -27,6 +30,7 @@ Java_com_gst_1sdk_1tutorials_tutorial_11_Tutorial1_gstVersion (JNIEnv* env,
   GList *original_plugin_list = gst_registry_get_plugin_list (gst_registry_get_default());
   GList *plugin_list = original_plugin_list;
 
+  GST_DEBUG ("Preparing to dump plugin list");
   buffer = g_strdup_printf ("Version: %s\n", gst_version_string());
   while (plugin_list) {
     GstPlugin *plugin = (GstPlugin *)plugin_list->data;
@@ -48,9 +52,14 @@ Java_com_gst_1sdk_1tutorials_tutorial_11_Tutorial1_gstVersion (JNIEnv* env,
     }
     gst_plugin_feature_list_free (original_features_list);
   }
+  GST_DEBUG ("Plugin list dumped");
   gst_plugin_list_free (original_plugin_list);
   ret = (*env)->NewStringUTF(env, buffer);
   g_free (buffer);
   return ret;
 }
 
+jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-1", 0, "Android tutorial 1");
+  return JNI_VERSION_1_4;
+}
