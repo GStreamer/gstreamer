@@ -791,7 +791,6 @@ gst_base_transform_set_allocation (GstBaseTransform * trans,
     gst_query_unref (oldquery);
   }
   return TRUE;
-
 }
 
 static gboolean
