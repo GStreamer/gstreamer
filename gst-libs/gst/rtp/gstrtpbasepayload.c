@@ -49,6 +49,8 @@ struct _GstRTPBasePayloadPrivate
 
   gint64 prop_max_ptime;
   gint64 caps_max_ptime;
+
+  gboolean negotiated;
 };
 
 /* RTPBasePayload signals and args */
@@ -361,6 +363,8 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
       else
         res = TRUE;
 
+      rtpbasepayload->priv->negotiated = res;
+
       gst_event_unref (event);
       break;
     }
@@ -467,6 +471,9 @@ gst_rtp_base_payload_chain (GstPad * pad, GstObject * parent,
   if (!rtpbasepayload_class->handle_buffer)
     goto no_function;
 
+  if (!rtpbasepayload->priv->negotiated)
+    goto not_negotiated;
+
   ret = rtpbasepayload_class->handle_buffer (rtpbasepayload, buffer);
 
   return ret;
@@ -478,6 +485,14 @@ no_function:
         ("subclass did not implement handle_buffer function"));
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
+  }
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (rtpbasepayload, CORE, NEGOTIATION, (NULL),
+        ("No input format was negotiated, i.e. no caps event was received. "
+            "Perhaps you need a parser or typefind element before the payloader"));
+    gst_buffer_unref (buffer);
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
@@ -858,8 +873,8 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
       (is_list) ? -1 : gst_buffer_get_size (GST_BUFFER (obj)),
       payload->seqnum, data.rtptime, GST_TIME_ARGS (data.pts));
 
-  if (g_atomic_int_compare_and_exchange (&payload->
-          priv->notified_first_timestamp, 1, 0)) {
+  if (g_atomic_int_compare_and_exchange (&payload->priv->
+          notified_first_timestamp, 1, 0)) {
     g_object_notify (G_OBJECT (payload), "timestamp");
     g_object_notify (G_OBJECT (payload), "seqnum");
   }
@@ -1079,6 +1094,7 @@ gst_rtp_base_payload_change_state (GstElement * element,
       rtpbasepayload->timestamp = rtpbasepayload->ts_base;
       g_atomic_int_set (&rtpbasepayload->priv->notified_first_timestamp, 1);
       priv->base_offset = GST_BUFFER_OFFSET_NONE;
+      priv->negotiated = FALSE;
       break;
     default:
       break;
