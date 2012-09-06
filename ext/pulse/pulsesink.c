@@ -1979,6 +1979,8 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   ret = pad_caps != NULL;
   gst_caps_unref (pad_caps);
 
+  GST_DEBUG_OBJECT (psink, "caps %" GST_PTR_FORMAT, caps);
+
   /* Either template caps didn't match, or we're still in NULL state */
   if (!ret || !pbuf->context)
     goto done;
