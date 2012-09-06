@@ -2587,6 +2587,7 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_caps (query, &filter);
       caps = gst_deinterlace_getcaps (self, pad, filter);
       gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
       res = TRUE;
       break;
     }
