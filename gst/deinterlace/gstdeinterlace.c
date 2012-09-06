@@ -745,8 +745,6 @@ gst_deinterlace_init (GstDeinterlace * self)
   self->pattern_buf_dur = GST_CLOCK_TIME_NONE;
   self->still_frame_mode = FALSE;
 
-  gst_deinterlace_set_allocation (self, NULL, NULL, NULL);
-
   gst_deinterlace_reset (self);
 }
 
