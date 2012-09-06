@@ -2060,19 +2060,6 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   return ret;
 }
 
-static gint
-gst_greatest_common_divisor (gint a, gint b)
-{
-  while (b != 0) {
-    int temp = a;
-
-    a = b;
-    b = temp % b;
-  }
-
-  return ABS (a);
-}
-
 static gboolean
 gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
 {
@@ -2087,7 +2074,7 @@ gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
   if (n == 0 || (n == G_MAXINT && d == 1))
     return TRUE;
 
-  gcd = gst_greatest_common_divisor (n, d);
+  gcd = gst_util_greatest_common_divisor (n, d);
   n /= gcd;
   d /= gcd;
 
