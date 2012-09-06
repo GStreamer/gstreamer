@@ -704,6 +704,8 @@ retry:
         g_assert_not_reached ();
         break;
     }
+
+    goto retry;
   }
 
   GST_DEBUG_OBJECT (self, "Got output buffer at index %d", idx);
@@ -1133,6 +1135,8 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
           g_assert_not_reached ();
           break;
       }
+
+      continue;
     }
 
     if (idx >= self->n_input_buffers)
