@@ -461,9 +461,9 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     enc->priv->ctx.headers = NULL;
     enc->priv->ctx.new_headers = FALSE;
 
+    gst_caps_replace (&enc->priv->ctx.caps, NULL);
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
     gst_audio_info_init (&enc->priv->ctx.info);
-    gst_caps_replace (&enc->priv->ctx.caps, NULL);
 
     if (enc->priv->tags)
       gst_tag_list_free (enc->priv->tags);
@@ -1047,6 +1047,7 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       gst_caps_unref (caps);
       goto not_negotiated;
     }
+    gst_caps_unref (caps);
     priv->do_caps = FALSE;
   }
 
@@ -1528,6 +1529,7 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
         gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
 
         gst_audio_encoder_merge_tags (enc, tags, GST_TAG_MERGE_REPLACE);
+        gst_tag_list_unref (tags);
         gst_event_unref (event);
         event = NULL;
         res = TRUE;
