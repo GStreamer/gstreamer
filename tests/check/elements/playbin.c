@@ -55,6 +55,7 @@ GST_START_TEST (test_uri)
   g_object_get (playbin, "uri", &uri, NULL);
 
   fail_unless_equals_string (uri, "redvideo://");
+  g_free (uri);
 
   g_object_get (playbin, "current-uri", &uri, NULL);
   fail_unless_equals_string (uri, NULL);
@@ -68,6 +69,7 @@ GST_START_TEST (test_uri)
   fail_unless_equals_string (uri, NULL);
   g_object_get (playbin, "current-uri", &uri, NULL);
   fail_unless_equals_string (uri, "redvideo://");
+  g_free (uri);
 
   gst_element_set_state (playbin, GST_STATE_NULL);
   gst_object_unref (playbin);
