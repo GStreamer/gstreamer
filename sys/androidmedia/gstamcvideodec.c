@@ -553,6 +553,9 @@ _find_nearest_frame (GstAmcVideoDec * self, GstClockTime reference_timestamp)
     }
   }
 
+  if (best)
+    gst_video_codec_frame_ref (best);
+
   g_list_foreach (frames, (GFunc) gst_video_codec_frame_unref, NULL);
   g_list_free (frames);
 
