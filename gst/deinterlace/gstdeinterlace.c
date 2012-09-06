@@ -307,6 +307,9 @@ static GstFlowReturn gst_deinterlace_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 static GstStateChangeReturn gst_deinterlace_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean gst_deinterlace_set_allocation (GstDeinterlace * self,
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params);
 
 static gboolean gst_deinterlace_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -741,6 +744,8 @@ gst_deinterlace_init (GstDeinterlace * self)
   self->pattern_base_ts = GST_CLOCK_TIME_NONE;
   self->pattern_buf_dur = GST_CLOCK_TIME_NONE;
   self->still_frame_mode = FALSE;
+
+  gst_deinterlace_set_allocation (self, NULL, NULL, NULL);
 
   gst_deinterlace_reset (self);
 }
@@ -1709,28 +1714,9 @@ restart:
     GST_DEBUG_OBJECT (self, "deinterlacing top field");
 
     /* create new buffer */
-    outbuf = gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&self->vinfo), NULL);  // FIXME: pad_alloc_buffer
-
-    if (outbuf == NULL)
-      return GST_FLOW_ERROR;    // FIXME: report proper out of mem error?
-
-#if 0
-    if (GST_PAD_CAPS (self->srcpad) != GST_BUFFER_CAPS (outbuf) &&
-        !gst_caps_is_equal (GST_PAD_CAPS (self->srcpad),
-            GST_BUFFER_CAPS (outbuf))) {
-      gst_caps_replace (&self->request_caps, GST_BUFFER_CAPS (outbuf));
-      GST_DEBUG_OBJECT (self, "Upstream wants new caps %" GST_PTR_FORMAT,
-          self->request_caps);
-
-      gst_buffer_unref (outbuf);
-      outbuf =
-          gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&self->vinfo),
-          NULL);
-
-      if (!outbuf)
-        return GST_FLOW_ERROR;
-    }
-#endif
+    ret = gst_buffer_pool_acquire_buffer (self->pool, &outbuf, NULL);
+    if (ret != GST_FLOW_OK)
+      goto no_buffer;
 
     g_return_val_if_fail (self->history_count >=
         1 + gst_deinterlace_method_get_latency (self->method), GST_FLOW_ERROR);
@@ -1864,30 +1850,9 @@ restart:
     GST_DEBUG_OBJECT (self, "deinterlacing bottom field");
 
     /* create new buffer */
-    outbuf = gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&self->vinfo), NULL);  // FIXME: pad_alloc_buffer
-
-    if (outbuf == NULL)
-      return GST_FLOW_ERROR;    // FIXME: report out of mem error?
-
-#if 0
-    if (GST_PAD_CAPS (self->srcpad) != GST_BUFFER_CAPS (outbuf) &&
-        !gst_caps_is_equal (GST_PAD_CAPS (self->srcpad),
-            GST_BUFFER_CAPS (outbuf))) {
-      gst_caps_replace (&self->request_caps, GST_BUFFER_CAPS (outbuf));
-      GST_DEBUG_OBJECT (self, "Upstream wants new caps %" GST_PTR_FORMAT,
-          self->request_caps);
-
-      gst_buffer_unref (outbuf);
-      outbuf =
-          gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&self->vinfo),
-          NULL);
-
-      if (!outbuf)
-        return GST_FLOW_ERROR;
-
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (self->srcpad));
-    }
-#endif
+    ret = gst_buffer_pool_acquire_buffer (self->pool, &outbuf, NULL);
+    if (ret != GST_FLOW_OK)
+      goto no_buffer;
 
     g_return_val_if_fail (self->history_count - 1 -
         gst_deinterlace_method_get_latency (self->method) >= 0, GST_FLOW_ERROR);
@@ -1993,8 +1958,15 @@ restart:
   return ret;
 
 need_more:
-  self->need_more = TRUE;
-  return ret;
+  {
+    self->need_more = TRUE;
+    return ret;
+  }
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (self, "could not allocate buffer");
+    return ret;
+  }
 }
 
 static gboolean
@@ -2284,6 +2256,111 @@ error:
   return NULL;
 }
 
+/* takes ownership of the pool, allocator and query */
+static gboolean
+gst_deinterlace_set_allocation (GstDeinterlace * self,
+    GstBufferPool * pool, GstAllocator * allocator,
+    GstAllocationParams * params)
+{
+  GstAllocator *oldalloc;
+  GstBufferPool *oldpool;
+
+  GST_OBJECT_LOCK (self);
+  oldpool = self->pool;
+  self->pool = pool;
+
+  oldalloc = self->allocator;
+  self->allocator = allocator;
+
+  if (params)
+    self->params = *params;
+  else
+    gst_allocation_params_init (&self->params);
+  GST_OBJECT_UNLOCK (self);
+
+  if (oldpool) {
+    GST_DEBUG_OBJECT (self, "deactivating old pool %p", oldpool);
+    gst_buffer_pool_set_active (oldpool, FALSE);
+    gst_object_unref (oldpool);
+  }
+  if (oldalloc) {
+    gst_object_unref (oldalloc);
+  }
+  if (pool) {
+    GST_DEBUG_OBJECT (self, "activating new pool %p", pool);
+    gst_buffer_pool_set_active (pool, TRUE);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
+{
+  GstQuery *query;
+  gboolean result = TRUE;
+  GstBufferPool *pool;
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstStructure *config;
+  guint size, min, max;
+
+  if (self->passthrough) {
+    /* we are in passthrough, the input buffer is never copied and always passed
+     * along. We never allocate an output buffer on the srcpad. What we do is
+     * let the upstream element decide if it wants to use a bufferpool and
+     * then we will proxy the downstream pool */
+    GST_DEBUG_OBJECT (self, "we're passthough, delay bufferpool");
+    gst_deinterlace_set_allocation (self, NULL, NULL, NULL);
+    return TRUE;
+  }
+
+  /* not passthrough, we need to allocate */
+  /* find a pool for the negotiated caps now */
+  GST_DEBUG_OBJECT (self, "doing allocation query");
+  query = gst_query_new_allocation (outcaps, TRUE);
+  if (!gst_pad_peer_query (self->srcpad, query)) {
+    /* not a problem, just debug a little */
+    GST_DEBUG_OBJECT (self, "peer ALLOCATION query failed");
+  }
+
+  GST_DEBUG_OBJECT (self, "ALLOCATION (%d) params: %" GST_PTR_FORMAT, result,
+      query);
+
+  /* we got configuration from our peer or the decide_allocation method,
+   * parse them */
+  if (gst_query_get_n_allocation_params (query) > 0) {
+    gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
+  } else {
+    allocator = NULL;
+    gst_allocation_params_init (&params);
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0)
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  else {
+    pool = NULL;
+    size = GST_VIDEO_INFO_SIZE (&self->vinfo), min = max = 0;
+  }
+
+  if (pool == NULL) {
+    /* no pool, we can make our own */
+    GST_DEBUG_OBJECT (self, "no pool, making new pool");
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  /* now configure */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+  gst_buffer_pool_set_config (pool, config);
+
+  /* now store */
+  result = gst_deinterlace_set_allocation (self, pool, allocator, &params);
+
+  return result;
+}
+
+
 static gboolean
 gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 {
@@ -2373,6 +2450,9 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (pad, "Sink caps: %" GST_PTR_FORMAT, caps);
   GST_DEBUG_OBJECT (pad, "Src  caps: %" GST_PTR_FORMAT, srccaps);
 
+  if (!gst_deinterlace_do_bufferpool (self, srccaps))
+    goto no_bufferpool;
+
   gst_caps_unref (srccaps);
 
   return TRUE;
@@ -2385,6 +2465,12 @@ invalid_caps:
 caps_not_accepted:
   {
     GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, srccaps);
+    gst_caps_unref (srccaps);
+    return FALSE;
+  }
+no_bufferpool:
+  {
+    GST_ERROR_OBJECT (pad, "could not negotiate bufferpool");
     gst_caps_unref (srccaps);
     return FALSE;
   }

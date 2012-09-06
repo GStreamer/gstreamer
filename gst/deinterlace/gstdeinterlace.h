@@ -24,6 +24,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/gstvideopool.h>
 #include <gst/video/gstvideofilter.h>
 
 #include "gstdeinterlacemethod.h"
@@ -131,14 +132,9 @@ struct _GstDeinterlace
   GstDeinterlaceMethod *method;
 
   GstVideoInfo vinfo;
-
-#if 0
-  GstVideoFormat format;
-  gint width, height; /* frame width & height */
-  guint frame_size; /* frame size in bytes */
-  gint fps_n, fps_d; /* frame rate */
-  gboolean interlaced; /* is input interlaced? */
-#endif
+  GstBufferPool *pool;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   gboolean passthrough;
 
