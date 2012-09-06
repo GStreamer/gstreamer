@@ -2507,19 +2507,10 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       res = TRUE;
       break;
     }
-    default:{
-      GstPad *peer = gst_pad_get_peer (self->srcpad);
-
-      if (peer) {
-        res = gst_pad_query (peer, query);
-        gst_object_unref (peer);
-      } else {
-        res = FALSE;
-      }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
       break;
-    }
   }
-
   return res;
 }
 
@@ -2643,17 +2634,9 @@ gst_deinterlace_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         }
         break;
       }
-    default:{
-      GstPad *peer = gst_pad_get_peer (self->sinkpad);
-
-      if (peer) {
-        res = gst_pad_query (peer, query);
-        gst_object_unref (peer);
-      } else {
-        res = FALSE;
-      }
+    default:
+      res = gst_pad_query_default (pad, parent, query);
       break;
-    }
   }
 
   return res;
