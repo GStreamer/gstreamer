@@ -1011,6 +1011,7 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
         gst_tag_list_remove_tag (tags, GST_TAG_ENCODER_VERSION);
 
         gst_video_encoder_merge_tags (encoder, tags, GST_TAG_MERGE_REPLACE);
+        gst_tag_list_unref (tags);
         gst_event_unref (event);
         event = NULL;
         ret = TRUE;
@@ -1250,6 +1251,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       gst_caps_unref (caps);
       goto not_negotiated;
     }
+    gst_caps_unref (caps);
     encoder->priv->do_caps = FALSE;
   }
 
