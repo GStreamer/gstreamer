@@ -358,6 +358,8 @@ gst_rtp_base_payload_sink_event_default (GstRTPBasePayload * rtpbasepayload,
       rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
       if (rtpbasepayload_class->set_caps)
         res = rtpbasepayload_class->set_caps (rtpbasepayload, caps);
+      else
+        res = TRUE;
 
       gst_event_unref (event);
       break;
