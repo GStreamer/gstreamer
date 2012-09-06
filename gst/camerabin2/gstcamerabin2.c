@@ -1436,9 +1436,9 @@ gst_camera_bin_audio_src_data_probe (GstPad * pad, GstPadProbeInfo * info,
   GstCameraBin2 *camera = data;
   gboolean ret = GST_PAD_PROBE_OK;
 
-  if (GST_IS_BUFFER (data)) {
+  if (GST_IS_BUFFER (info->data)) {
     if (G_UNLIKELY (camera->audio_send_newseg)) {
-      GstBuffer *buf = GST_BUFFER_CAST (data);
+      GstBuffer *buf = GST_BUFFER_CAST (info->data);
       GstClockTime ts = GST_BUFFER_TIMESTAMP (buf);
       GstPad *peer;
       GstSegment segment;
