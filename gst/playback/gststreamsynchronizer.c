@@ -458,6 +458,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         }
       }
       gst_object_unref (srcpad);
+      gst_event_unref (event);
       goto done;
       break;
     }
