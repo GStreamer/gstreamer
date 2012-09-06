@@ -32,6 +32,10 @@
 #include "gstvaapidisplay_x11.h"
 #include "gstvaapidisplay_x11_priv.h"
 
+#ifdef HAVE_XRANDR
+# include <X11/extensions/Xrandr.h>
+#endif
+
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
@@ -265,6 +269,14 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *display)
 
     if (priv->synchronous)
         XSynchronize(priv->x11_display, True);
+
+#ifdef HAVE_XRANDR
+    {
+        int evt_base, err_base;
+        priv->use_xrandr = XRRQueryExtension(
+            priv->x11_display, &evt_base, &err_base);
+    }
+#endif
     return TRUE;
 }
 
@@ -375,15 +387,52 @@ gst_vaapi_display_x11_get_size_mm(
 {
     GstVaapiDisplayX11Private * const priv =
         GST_VAAPI_DISPLAY_X11(display)->priv;
+    guint width_mm, height_mm;
 
     if (!priv->x11_display)
         return;
 
+    width_mm  = DisplayWidthMM(priv->x11_display, priv->x11_screen);
+    height_mm = DisplayHeightMM(priv->x11_display, priv->x11_screen);
+
+#ifdef HAVE_XRANDR
+    /* XXX: fix up physical size if the display is rotated */
+    if (priv->use_xrandr) {
+        XRRScreenConfiguration *xrr_config = NULL;
+        XRRScreenSize *xrr_sizes;
+        Window win;
+        int num_xrr_sizes, size_id, screen;
+        Rotation rotation;
+
+        do {
+            win    = DefaultRootWindow(priv->x11_display);
+            screen = XRRRootToScreen(priv->x11_display, win);
+
+            xrr_config = XRRGetScreenInfo(priv->x11_display, win);
+            if (!xrr_config)
+                break;
+
+            size_id = XRRConfigCurrentConfiguration(xrr_config, &rotation);
+            if (rotation == RR_Rotate_0 || rotation == RR_Rotate_180)
+                break;
+
+            xrr_sizes = XRRSizes(priv->x11_display, screen, &num_xrr_sizes);
+            if (!xrr_sizes || size_id >= num_xrr_sizes)
+                break;
+
+            width_mm  = xrr_sizes[size_id].mheight;
+            height_mm = xrr_sizes[size_id].mwidth;
+        } while (0);
+        if (xrr_config)
+            XRRFreeScreenConfigInfo(xrr_config);
+    }
+#endif
+
     if (pwidth)
-        *pwidth = DisplayWidthMM(priv->x11_display, priv->x11_screen);
+        *pwidth = width_mm;
 
     if (pheight)
-        *pheight = DisplayHeightMM(priv->x11_display, priv->x11_screen);
+        *pheight = height_mm;
 }
 
 static void
@@ -476,6 +525,7 @@ gst_vaapi_display_x11_init(GstVaapiDisplayX11 *display)
     priv->x11_display    = NULL;
     priv->x11_screen     = 0;
     priv->display_name   = NULL;
+    priv->use_xrandr     = FALSE;
 }
 
 /**

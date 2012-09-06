@@ -60,6 +60,7 @@ struct _GstVaapiDisplayX11Private {
     int         x11_screen;
     guint       create_display  : 1;
     guint       synchronous     : 1;
+    guint       use_xrandr      : 1;
 };
 
 G_END_DECLS

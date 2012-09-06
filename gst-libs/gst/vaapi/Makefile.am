@@ -278,12 +278,14 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_CFLAGS =	\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
 	$(X11_CFLAGS)				\
+	$(XRANDR_CFLAGS)			\
 	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
 	$(X11_LIBS)				\
+	$(XRANDR_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
 	libgstvaapi-@GST_MAJORMINOR@.la		\
 	$(NULL)

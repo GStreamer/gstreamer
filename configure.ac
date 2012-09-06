@@ -312,6 +312,23 @@ if test "$enable_x11" = "yes"; then
     fi
 fi
 
+dnl Check for XRandR
+HAVE_XRANDR=0
+if test $USE_X11 -eq 1; then
+    HAVE_XRANDR=1
+    PKG_CHECK_MODULES([XRANDR], [xrandr], [:], [HAVE_XRANDR=0])
+    if test $HAVE_XRANDR -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $XRANDR_CFLAGS"
+        AC_CHECK_HEADERS([X11/extensions/Xrandr.h], [:], [HAVE_XRANDR=0])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
+fi
+if test $HAVE_XRANDR -eq 1; then
+    AC_DEFINE_UNQUOTED(HAVE_XRANDR, 1,
+        [Defined to 1 if the XRandR extension exists.])
+fi
+
 dnl OpenGL
 enable_opengl="no"
 if test "$enable_glx" = "yes"; then
