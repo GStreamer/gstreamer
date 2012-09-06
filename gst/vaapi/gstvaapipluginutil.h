@@ -50,4 +50,10 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps);
 
+#ifndef G_PRIMITIVE_SWAP
+#define G_PRIMITIVE_SWAP(type, a, b) do {       \
+        const type t = a; a = b; b = t;         \
+    } while (0)
+#endif
+
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
