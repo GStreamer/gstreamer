@@ -2494,7 +2494,8 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GST_LOG_OBJECT (pad, "%s query", GST_QUERY_TYPE_NAME (query));
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:{
+    case GST_QUERY_CAPS:
+    {
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
@@ -2503,6 +2504,12 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_ALLOCATION:
+      if (self->passthrough)
+        res = gst_pad_peer_query (self->srcpad, query);
+      else
+        res = gst_pad_query_default (pad, parent, query);
+      break;
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
