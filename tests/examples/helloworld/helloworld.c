@@ -38,6 +38,7 @@ main (gint argc, gchar * argv[])
   GstElement *playbin;
   GMainLoop *loop;
   GstBus *bus;
+  guint bus_watch_id;
   gchar *uri;
 
   gst_init (&argc, &argv);
@@ -65,7 +66,7 @@ main (gint argc, gchar * argv[])
   loop = g_main_loop_new (NULL, FALSE);
 
   bus = gst_element_get_bus (playbin);
-  gst_bus_add_watch (bus, bus_call, loop);
+  bus_watch_id = gst_bus_add_watch (bus, bus_call, loop);
   g_object_unref (bus);
 
   /* start play back and listed to events */
@@ -75,6 +76,7 @@ main (gint argc, gchar * argv[])
   /* cleanup */
   gst_element_set_state (playbin, GST_STATE_NULL);
   g_object_unref (playbin);
+  g_source_remove (bus_watch_id);
   g_main_loop_unref (loop);
 
   return 0;
