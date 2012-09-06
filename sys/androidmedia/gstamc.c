@@ -1938,6 +1938,7 @@ scan_codecs (GstPlugin * plugin)
       for (i = 0; i < gst_codec_info->n_supported_types; i++) {
         GstAmcCodecType *gst_codec_type = &gst_codec_info->supported_types[i];
         GstStructure *sts = gst_structure_empty_new ("gst-amc-supported-type");
+        GValue stv = { 0, };
         GValue tmparr = { 0, };
         gint j;
 
@@ -1972,15 +1973,22 @@ scan_codecs (GstPlugin * plugin)
           g_value_unset (&tmparr2);
         }
         gst_structure_set_value (sts, "profile-levels", &tmparr);
+
+        g_value_init (&stv, GST_TYPE_STRUCTURE);
+        gst_value_set_structure (&stv, sts);
+        gst_value_array_append_value (&starr, &stv);
         g_value_unset (&tmparr);
+        gst_structure_free (sts);
       }
 
       gst_structure_set_value (cs, "supported-types", &starr);
       g_value_unset (&starr);
 
       g_value_init (&cv, GST_TYPE_STRUCTURE);
+      gst_value_set_structure (&cv, cs);
       gst_value_array_append_value (&arr, &cv);
       g_value_unset (&cv);
+      gst_structure_free (cs);
     }
 
     gst_structure_set_value (new_cache_data, "codecs", &arr);
