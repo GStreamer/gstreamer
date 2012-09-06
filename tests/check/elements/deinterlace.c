@@ -263,6 +263,8 @@ deinterlace_check_passthrough (gint mode, const gchar * infiltercaps)
   fail_unless (gst_element_set_state (pipeline, GST_STATE_NULL) ==
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pipeline);
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
   g_queue_free (queue);
 }
 
