@@ -506,8 +506,11 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
   if (stream) {
     stream->seen_data = TRUE;
     if (stream->drop_discont) {
-      buffer = gst_buffer_make_writable (buffer);
-      GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
+      if (GST_BUFFER_IS_DISCONT (buffer)) {
+        GST_DEBUG_OBJECT (pad, "removing DISCONT from buffer %p", buffer);
+        buffer = gst_buffer_make_writable (buffer);
+        GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
+      }
       stream->drop_discont = FALSE;
     }
 
