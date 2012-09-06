@@ -2287,7 +2287,6 @@ error:
 static gboolean
 gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 {
-  gboolean res = TRUE;
   GstCaps *srccaps;
   GstVideoInterlaceMode interlacing_mode;
   gint fps_n, fps_d;
@@ -2313,9 +2312,6 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
   fps_n = GST_VIDEO_INFO_FPS_N (&self->vinfo);
   fps_d = GST_VIDEO_INFO_FPS_D (&self->vinfo);
-
-  if (!res)
-    goto invalid_caps;
 
   gst_deinterlace_update_passthrough (self);
 
@@ -2379,20 +2375,19 @@ gst_deinterlace_setcaps (GstDeinterlace * self, GstPad * pad, GstCaps * caps)
 
   gst_caps_unref (srccaps);
 
-done:
-
-  return res;
+  return TRUE;
 
 invalid_caps:
-  res = FALSE;
-  GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
-  goto done;
-
+  {
+    GST_ERROR_OBJECT (pad, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
 caps_not_accepted:
-  res = FALSE;
-  GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, srccaps);
-  gst_caps_unref (srccaps);
-  goto done;
+  {
+    GST_ERROR_OBJECT (pad, "Caps not accepted: %" GST_PTR_FORMAT, srccaps);
+    gst_caps_unref (srccaps);
+    return FALSE;
+  }
 }
 
 static gboolean
