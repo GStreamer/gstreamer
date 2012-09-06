@@ -2464,9 +2464,6 @@ gst_deinterlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
       self->have_eos = TRUE;
       gst_deinterlace_reset_history (self, FALSE);
-
-      /* fall through */
-    default:
       res = gst_pad_push_event (self->srcpad, event);
       break;
 
@@ -2478,6 +2475,10 @@ gst_deinterlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_deinterlace_reset_qos (self);
       res = gst_pad_push_event (self->srcpad, event);
       gst_deinterlace_reset_history (self, TRUE);
+      break;
+
+    default:
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -2565,7 +2566,7 @@ gst_deinterlace_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
       /* fall through */
     default:
-      res = gst_pad_push_event (self->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
