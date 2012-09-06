@@ -1821,7 +1821,7 @@ GST_START_TEST (test_decode_stream2)
   int i, num_buffers;
   GstCaps *out_caps;
   GstCaps *caps;
-  guint offset;
+  guint offset = 0;
 
   mpeg2dec = setup_mpeg2dec ();
 
