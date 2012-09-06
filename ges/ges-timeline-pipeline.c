@@ -621,8 +621,9 @@ no_more_pads_cb (GstElement * timeline, GESTimelinePipeline * self)
     if (chain->blocked_pad) {
       GST_DEBUG_OBJECT (chain->blocked_pad, "unblocking pad");
       gst_pad_remove_probe (chain->blocked_pad, chain->probe_id);
+      gst_object_unref (chain->blocked_pad);
+      chain->blocked_pad = NULL;
       chain->probe_id = 0;
-      /* do we need to unref and NULL the pad here? */
     }
   }
 }
