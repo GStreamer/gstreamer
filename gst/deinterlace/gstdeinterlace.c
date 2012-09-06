@@ -852,6 +852,8 @@ gst_deinterlace_reset (GstDeinterlace * self)
 
   self->need_more = FALSE;
   self->have_eos = FALSE;
+
+  gst_deinterlace_set_allocation (self, NULL, NULL, NULL);
 }
 
 static void
@@ -2352,6 +2354,8 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
 
   /* now store */
   result = gst_deinterlace_set_allocation (self, pool, allocator, &params);
+
+  gst_query_unref (query);
 
   return result;
 }
