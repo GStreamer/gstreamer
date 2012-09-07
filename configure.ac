@@ -397,9 +397,17 @@ VA_MICRO_VERSION=`echo "$VA_VERSION" | cut -d'.' -f3`
 VA_VERSION_STR="$VA_VERSION"
 
 dnl VA/DRM API
-if test "$enable_drm" = "yes"; then
+HAVE_VA_DRM=0
+if test $USE_DRM -eq 1; then
     PKG_CHECK_MODULES([LIBVA_DRM], [libva-drm >= va_api_drm_version],
-        [:], [USE_DRM=0])
+        [HAVE_VA_DRM=1], [USE_DRM=0])
+
+    if test $HAVE_VA_DRM -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$LIBVA_DRM_CPPFLAGS"
+        AC_CHECK_HEADERS([va/va_drm.h], [:], [HAVE_VA_DRM=0 USE_DRM=0])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
 fi
 
 dnl VA/X11 API
