@@ -391,13 +391,15 @@ GST_END_TEST;
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw,format=F32LE,channels=1,rate=44100")
+    GST_STATIC_CAPS ("audio/x-raw,format=" GST_AUDIO_NE (F32)
+        ",channels=1,rate=44100")
     );
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw,format=F32LE,channels=1,rate=44100")
+    GST_STATIC_CAPS ("audio/x-raw,format=" GST_AUDIO_NE (F32)
+        ",channels=1,rate=44100")
     );
 
 GST_START_TEST (test_large_discont)
