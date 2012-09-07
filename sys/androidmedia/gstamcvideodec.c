@@ -691,7 +691,7 @@ retry:
       }
       case INFO_TRY_AGAIN_LATER:
         GST_DEBUG_OBJECT (self, "Dequeueing output buffer timed out");
-        if (!self->flushing)
+        if (self->flushing)
           goto flushing;
         else
           goto retry;
