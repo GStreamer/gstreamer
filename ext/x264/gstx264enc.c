@@ -1170,6 +1170,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   encoder->reconfig = FALSE;
+  /* good start, will be corrected if needed */
+  encoder->dts_offset = 0;
 
   GST_OBJECT_UNLOCK (encoder);
 
@@ -1699,11 +1701,24 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
       "output: dts %" G_GINT64_FORMAT " pts %" G_GINT64_FORMAT,
       (gint64) pic_out.i_dts, (gint64) pic_out.i_pts);
 
-  if (pic_out.i_dts < 0)
+  /* we want to know if x264 is messing around with this */
+  g_assert (frame->pts == pic_out.i_pts);
+  if (pic_out.b_keyframe) {
+    /* expect dts == pts, and also positive ts,
+     * so arrange for an offset if needed */
+    if (pic_out.i_dts + encoder->dts_offset != pic_out.i_pts) {
+      encoder->dts_offset = pic_out.i_pts - pic_out.i_dts;
+      GST_DEBUG_OBJECT (encoder, "determined dts offset %" G_GINT64_FORMAT,
+          encoder->dts_offset);
+    }
+  }
+
+  frame->dts = pic_out.i_dts + encoder->dts_offset;
+  /* should be ok now, surprise if not */
+  if (frame->dts < 0) {
+    GST_WARNING_OBJECT (encoder, "negative dts after offset compensation");
     frame->dts = GST_CLOCK_TIME_NONE;
-  else
-    frame->dts = pic_out.i_dts;
-  frame->pts = pic_out.i_pts;
+  }
 
   if (pic_out.b_keyframe) {
     GST_INFO ("Output keyframe");
