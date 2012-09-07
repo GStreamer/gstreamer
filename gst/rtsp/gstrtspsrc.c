@@ -5548,6 +5548,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
 setup_failed:
   {
     GST_ERROR_OBJECT (src, "setup failed");
+    gst_rtspsrc_cleanup (src);
     return res;
   }
 }
