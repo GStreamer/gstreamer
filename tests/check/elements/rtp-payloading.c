@@ -62,11 +62,17 @@ rtp_pipeline_chain_list (GstPad * pad, GstObject * parent, GstBufferList * list)
   /* Loop through all groups */
   for (i = 0; i < len; i++) {
     GstBuffer *paybuf;
+    GstMemory *mem;
+    gint size;
 
-    /* FIXME need to discard RTP header */
     paybuf = gst_buffer_list_get (list, i);
-    /* Loop through all payload buffers in the current group */
-    chain_list_bytes_received += gst_buffer_get_size (paybuf);
+    /* only count real data which is expected in last memory block */
+    fail_unless (gst_buffer_n_memory (paybuf) > 1);
+    mem = gst_buffer_get_memory_range (paybuf, gst_buffer_n_memory (paybuf) - 1,
+        1);
+    size = gst_memory_get_sizes (mem, NULL, NULL);
+    gst_memory_unref (mem);
+    chain_list_bytes_received += size;
   }
   gst_buffer_list_unref (list);
 
@@ -529,8 +535,9 @@ static int rtp_h264_list_lt_mtu_frame_data_size = 16;
 
 static int rtp_h264_list_lt_mtu_frame_count = 2;
 
-/* NAL = 4 bytes + 12 bytes RTP header */
-static int rtp_h264_list_lt_mtu_bytes_sent = 2 * (12 + 16 - 4);
+/* NAL = 4 bytes */
+/* also 2 bytes FU-A header each time */
+static int rtp_h264_list_lt_mtu_bytes_sent = 2 * (16 - 4);
 
 static int rtp_h264_list_lt_mtu_mtu_size = 1024;
 
@@ -560,8 +567,7 @@ static int rtp_h264_list_gt_mtu_frame_data_size = 64;
 static int rtp_h264_list_gt_mtu_frame_count = 1;
 
 /* NAL = 4 bytes. When data does not fit into 1 mtu, 1 byte will be skipped */
-/* Also 12 byte RTP header + 2 byte fragment header */
-static int rtp_h264_list_gt_mtu_bytes_sent = 1 * (64 - 4) - 1 + (5 * 14);
+static int rtp_h264_list_gt_mtu_bytes_sent = 1 * (64 - 4) - 1;
 
 static int rtp_h264_list_gt_mtu_mty_size = 28;
 
