@@ -413,6 +413,8 @@ gst_rtp_amr_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GST_DEBUG_OBJECT (depayload, "pushing buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (outbuf));
   }
+
+  gst_rtp_buffer_unmap (&rtp);
   return outbuf;
 
   /* ERRORS */
@@ -449,6 +451,7 @@ wrong_length_2:
 bad_packet:
   {
     /* no fatal error */
+    gst_rtp_buffer_unmap (&rtp);
     return NULL;
   }
 }
