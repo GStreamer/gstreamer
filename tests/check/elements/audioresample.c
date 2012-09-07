@@ -837,9 +837,8 @@ GST_START_TEST (test_timestamp_drift)
 
   capsfilter1 = gst_element_factory_make ("capsfilter", "capsfilter1");
   fail_unless (capsfilter1 != NULL);
-  caps =
-      gst_caps_from_string
-      ("audio/x-raw, format=F64LE, channels=1, rate=16384");
+  caps = gst_caps_from_string ("audio/x-raw, format=" GST_AUDIO_NE (F64)
+      ", channels=1, rate=16384");
   g_object_set (G_OBJECT (capsfilter1), "caps", caps, NULL);
   gst_caps_unref (caps);
 
@@ -853,8 +852,8 @@ GST_START_TEST (test_timestamp_drift)
   fail_unless (audioresample != NULL);
   capsfilter2 = gst_element_factory_make ("capsfilter", "capsfilter2");
   fail_unless (capsfilter2 != NULL);
-  caps =
-      gst_caps_from_string ("audio/x-raw, format=F64LE, channels=1, rate=4096");
+  caps = gst_caps_from_string ("audio/x-raw, format=" GST_AUDIO_NE (F64)
+      ", channels=1, rate=4096");
   g_object_set (G_OBJECT (capsfilter2), "caps", caps, NULL);
   gst_caps_unref (caps);
 
