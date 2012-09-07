@@ -1682,6 +1682,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     if (!strcmp (in_plugin->name, "gif") ||
         !strcmp (in_plugin->name, "theora") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
+        strstr (in_plugin->name, "crystalhd") != NULL ||
         !strcmp (in_plugin->name, "ass") ||
         !strcmp (in_plugin->name, "srt") ||
         !strcmp (in_plugin->name, "pgssub") ||
