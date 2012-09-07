@@ -582,7 +582,7 @@ gst_vaapi_decoder_push_surface_proxy(
     GstVaapiSurfaceProxy *proxy
 )
 {
-    return push_surface(decoder, proxy);
+    push_surface(decoder, proxy);
 }
 
 GstVaapiDecoderStatus
