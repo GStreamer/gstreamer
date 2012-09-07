@@ -18,19 +18,7 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
 
 #include "rtsp-client.h"
 #include "rtsp-sdp.h"
@@ -73,7 +61,7 @@ static void gst_rtsp_client_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_client_finalize (GObject * obj);
 
-static GstSDPMessage * create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
+static GstSDPMessage *create_sdp (GstRTSPClient * client, GstRTSPMedia * media);
 static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_streams (GstRTSPClient * client,
@@ -2012,9 +2000,6 @@ attach_client (GstRTSPClient * client, GSocket * socket,
   GSource *source;
   GMainContext *context;
   GstRTSPUrl *url;
-  struct sockaddr_storage addr;
-  socklen_t addrlen;
-  gchar ip[INET6_ADDRSTRLEN];
 
   read_socket = gst_rtsp_connection_get_read_socket (conn);
   client->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
@@ -2022,18 +2007,17 @@ attach_client (GstRTSPClient * client, GSocket * socket,
   if (!(addres = g_socket_get_remote_address (read_socket, error)))
     goto no_address;
 
-  addrlen = sizeof (addr);
-  if (!g_socket_address_to_native (addres, &addr, addrlen, error))
-    goto native_failed;
-  g_object_unref (addres);
-
-  if (getnameinfo ((struct sockaddr *) &addr, addrlen, ip, sizeof (ip), NULL, 0,
-          NI_NUMERICHOST) != 0)
-    goto getnameinfo_failed;
-
-  /* keep the original ip that the client connected to */
   g_free (client->server_ip);
-  client->server_ip = g_strndup (ip, sizeof (ip));
+  /* keep the original ip that the client connected to */
+  if (G_IS_INET_SOCKET_ADDRESS (addres)) {
+    GInetAddress *iaddr;
+
+    iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (addres));
+
+    client->server_ip = g_inet_address_to_string (iaddr);
+  } else {
+    client->server_ip = g_strdup ("unknown");
+  }
 
   GST_INFO ("client %p connected to server ip %s, ipv6 = %d", client,
       client->server_ip, client->is_ipv6);
@@ -2064,17 +2048,6 @@ attach_client (GstRTSPClient * client, GSocket * socket,
 no_address:
   {
     GST_ERROR ("could not get remote address %s", (*error)->message);
-    return FALSE;
-  }
-native_failed:
-  {
-    g_object_unref (addres);
-    GST_ERROR ("could not get native address %s", (*error)->message);
-    return FALSE;
-  }
-getnameinfo_failed:
-  {
-    GST_ERROR ("getnameinfo failed: %s", g_strerror (errno));
     return FALSE;
   }
 }
