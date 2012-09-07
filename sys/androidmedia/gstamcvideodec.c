@@ -442,6 +442,8 @@ gst_amc_video_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      self->flushing = TRUE;
+      gst_amc_codec_flush (self->codec);
       g_mutex_lock (self->drain_lock);
       self->draining = FALSE;
       g_cond_broadcast (self->drain_cond);
@@ -649,6 +651,9 @@ retry:
   /*} */
 
   if (idx < 0) {
+    if (self->flushing)
+      goto flushing;
+
     switch (idx) {
       case INFO_OUTPUT_BUFFERS_CHANGED:{
         GST_DEBUG_OBJECT (self, "Output buffers have changed");
@@ -691,10 +696,7 @@ retry:
       }
       case INFO_TRY_AGAIN_LATER:
         GST_DEBUG_OBJECT (self, "Dequeueing output buffer timed out");
-        if (self->flushing)
-          goto flushing;
-        else
-          goto retry;
+        goto retry;
         break;
       case G_MININT:
         GST_ERROR_OBJECT (self, "Failure dequeueing input buffer");
@@ -1120,13 +1122,12 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_VIDEO_DECODER_STREAM_LOCK (self);
 
     if (idx < 0) {
+      if (self->flushing)
+        goto flushing;
       switch (idx) {
         case INFO_TRY_AGAIN_LATER:
           GST_DEBUG_OBJECT (self, "Dequeueing input buffer timed out");
-          if (self->flushing)
-            goto flushing;
-          else
-            continue;           /* next try */
+          continue;             /* next try */
           break;
         case G_MININT:
           GST_ERROR_OBJECT (self, "Failed to dequeue input buffer");
