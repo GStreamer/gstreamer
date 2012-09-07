@@ -1047,7 +1047,7 @@ gst_rtp_h264_pay_handle_buffer (GstRTPBasePayload * basepayload,
     data = gst_adapter_map (rtph264pay->adapter, size);
     GST_DEBUG_OBJECT (basepayload,
         "got %" G_GSIZE_FORMAT " bytes (%" G_GSIZE_FORMAT ")", size,
-        gst_buffer_get_size (buffer));
+        buffer ? gst_buffer_get_size (buffer) : 0);
 
     if (buffer) {
       if (!GST_CLOCK_TIME_IS_VALID (dts))
