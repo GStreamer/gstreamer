@@ -483,8 +483,8 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GESTimelinePipeline * self)
     }
     chain->blocked_pad = tmppad;
     GST_DEBUG_OBJECT (tmppad, "blocking pad");
-    chain->probe_id = gst_pad_add_probe (tmppad, GST_PAD_PROBE_TYPE_BLOCK,
-        pad_blocked, NULL, NULL);
+    chain->probe_id = gst_pad_add_probe (tmppad,
+        GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, pad_blocked, NULL, NULL);
 
     GST_DEBUG ("Reconfiguring playsink");
 
