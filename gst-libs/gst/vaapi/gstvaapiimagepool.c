@@ -33,7 +33,7 @@
 G_DEFINE_TYPE(
     GstVaapiImagePool,
     gst_vaapi_image_pool,
-    GST_VAAPI_TYPE_VIDEO_POOL);
+    GST_VAAPI_TYPE_VIDEO_POOL)
 
 #define GST_VAAPI_IMAGE_POOL_GET_PRIVATE(obj)                   \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

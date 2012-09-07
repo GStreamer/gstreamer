@@ -39,7 +39,7 @@
 
 G_DEFINE_TYPE(GstVaapiDecoderJpeg,
               gst_vaapi_decoder_jpeg,
-              GST_VAAPI_TYPE_DECODER);
+              GST_VAAPI_TYPE_DECODER)
 
 #define GST_VAAPI_DECODER_JPEG_GET_PRIVATE(obj)                 \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

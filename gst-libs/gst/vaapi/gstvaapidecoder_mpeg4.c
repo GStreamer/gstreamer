@@ -39,7 +39,7 @@
 
 G_DEFINE_TYPE(GstVaapiDecoderMpeg4,
               gst_vaapi_decoder_mpeg4,
-              GST_VAAPI_TYPE_DECODER);
+              GST_VAAPI_TYPE_DECODER)
 
 #define GST_VAAPI_DECODER_MPEG4_GET_PRIVATE(obj)                \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

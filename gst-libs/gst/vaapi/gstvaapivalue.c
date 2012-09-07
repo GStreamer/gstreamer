@@ -131,7 +131,7 @@ static const GTypeValueTable gst_vaapi_id_value_table = {
     gst_vaapi_value_id_lcopy
 };
 
-GST_VAAPI_TYPE_DEFINE(id, "GstVaapiID");
+GST_VAAPI_TYPE_DEFINE(id, "GstVaapiID")
 
 /**
  * gst_vaapi_value_get_id:

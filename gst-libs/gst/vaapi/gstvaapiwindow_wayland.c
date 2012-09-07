@@ -38,7 +38,7 @@
 
 G_DEFINE_TYPE(GstVaapiWindowWayland,
               gst_vaapi_window_wayland,
-              GST_VAAPI_TYPE_WINDOW);
+              GST_VAAPI_TYPE_WINDOW)
 
 #define GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE(obj)               \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

@@ -37,7 +37,7 @@
 
 G_DEFINE_TYPE(GstVaapiWindowGLX,
               gst_vaapi_window_glx,
-              GST_VAAPI_TYPE_WINDOW_X11);
+              GST_VAAPI_TYPE_WINDOW_X11)
 
 #define GST_VAAPI_WINDOW_GLX_GET_PRIVATE(obj)                   \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

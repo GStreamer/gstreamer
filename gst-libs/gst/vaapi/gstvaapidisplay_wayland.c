@@ -35,7 +35,7 @@
 
 G_DEFINE_TYPE(GstVaapiDisplayWayland,
               gst_vaapi_display_wayland,
-              GST_VAAPI_TYPE_DISPLAY);
+              GST_VAAPI_TYPE_DISPLAY)
 
 enum {
     PROP_0,

@@ -32,7 +32,7 @@ static void gst_vaapi_video_converter_glx_iface_init (GstSurfaceConverterInterfa
 G_DEFINE_TYPE_WITH_CODE (GstVaapiVideoConverterGLX, gst_vaapi_video_converter_glx,
                          G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (GST_TYPE_SURFACE_CONVERTER,
-                                                gst_vaapi_video_converter_glx_iface_init));
+                                                gst_vaapi_video_converter_glx_iface_init))
 
 struct _GstVaapiVideoConverterGLXPrivate {
     GstVaapiTexture *texture;

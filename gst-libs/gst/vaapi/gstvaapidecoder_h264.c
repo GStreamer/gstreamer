@@ -240,7 +240,7 @@ gst_vaapi_slice_h264_new(
 
 G_DEFINE_TYPE(GstVaapiDecoderH264,
               gst_vaapi_decoder_h264,
-              GST_VAAPI_TYPE_DECODER);
+              GST_VAAPI_TYPE_DECODER)
 
 #define GST_VAAPI_DECODER_H264_GET_PRIVATE(obj)                 \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

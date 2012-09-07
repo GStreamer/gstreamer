@@ -41,7 +41,7 @@
 
 G_DEFINE_TYPE(GstVaapiDisplayDRM,
               gst_vaapi_display_drm,
-              GST_VAAPI_TYPE_DISPLAY);
+              GST_VAAPI_TYPE_DISPLAY)
 
 enum {
     PROP_0,

@@ -32,7 +32,7 @@
 
 G_DEFINE_TYPE(GstVaapiWindowDRM,
               gst_vaapi_window_drm,
-              GST_VAAPI_TYPE_WINDOW);
+              GST_VAAPI_TYPE_WINDOW)
 
 static gboolean
 gst_vaapi_window_drm_show(GstVaapiWindow *window)

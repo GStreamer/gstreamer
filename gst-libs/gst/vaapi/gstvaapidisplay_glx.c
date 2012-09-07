@@ -39,7 +39,7 @@
 
 G_DEFINE_TYPE(GstVaapiDisplayGLX,
               gst_vaapi_display_glx,
-              GST_VAAPI_TYPE_DISPLAY_X11);
+              GST_VAAPI_TYPE_DISPLAY_X11)
 
 static void
 gst_vaapi_display_glx_finalize(GObject *object)

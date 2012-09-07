@@ -38,7 +38,7 @@
 
 G_DEFINE_TYPE(GstVaapiDecoderVC1,
               gst_vaapi_decoder_vc1,
-              GST_VAAPI_TYPE_DECODER);
+              GST_VAAPI_TYPE_DECODER)
 
 #define GST_VAAPI_DECODER_VC1_GET_PRIVATE(obj)                  \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \

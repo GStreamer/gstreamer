@@ -33,7 +33,7 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiObject, gst_vaapi_object, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GstVaapiObject, gst_vaapi_object, G_TYPE_OBJECT)
 
 enum {
     PROP_0,

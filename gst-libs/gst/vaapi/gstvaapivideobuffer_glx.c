@@ -38,7 +38,7 @@
 
 G_DEFINE_TYPE(GstVaapiVideoBufferGLX,
               gst_vaapi_video_buffer_glx,
-              GST_VAAPI_TYPE_VIDEO_BUFFER);
+              GST_VAAPI_TYPE_VIDEO_BUFFER)
 
 static void
 gst_vaapi_video_buffer_glx_class_init(GstVaapiVideoBufferGLXClass *klass)

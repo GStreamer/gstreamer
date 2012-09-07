@@ -38,7 +38,7 @@
 
 GST_DEBUG_CATEGORY(gst_debug_vaapi);
 
-G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GstVaapiDisplay, gst_vaapi_display, G_TYPE_OBJECT)
 
 typedef struct _GstVaapiConfig GstVaapiConfig;
 struct _GstVaapiConfig {

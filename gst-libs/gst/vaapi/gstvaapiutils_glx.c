@@ -625,13 +625,11 @@ get_proc_address_func(void)
     GLXGetProcAddressProc get_proc_func;
 
     dlerror();
-    get_proc_func = (GLXGetProcAddressProc)
-        dlsym(RTLD_DEFAULT, "glXGetProcAddress");
+    *(void **)(&get_proc_func) = dlsym(RTLD_DEFAULT, "glXGetProcAddress");
     if (!dlerror())
         return get_proc_func;
 
-    get_proc_func = (GLXGetProcAddressProc)
-        dlsym(RTLD_DEFAULT, "glXGetProcAddressARB");
+    *(void **)(&get_proc_func) = dlsym(RTLD_DEFAULT, "glXGetProcAddressARB");
     if (!dlerror())
         return get_proc_func;
 
