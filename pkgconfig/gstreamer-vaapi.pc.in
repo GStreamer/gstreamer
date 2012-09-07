@@ -8,5 +8,5 @@ Name: GStreamer VA-API Plugins Libraries
 Description: Streaming media framework, VA-API plugins libraries
 Requires: gstreamer-@GST_MAJORMINOR@ gstreamer-base-@GST_MAJORMINOR@ @LIBVA_PKGNAME@
 Version: @VERSION@
-Libs: -L${libdir} -lgstvaapi-@GST_MAJORMINOR@ @LIBVA_EXTRA_LIBS@
-Cflags: -I${includedir} @LIBVA_EXTRA_CFLAGS@
+Libs: -L${libdir} -lgstvaapi-@GST_MAJORMINOR@
+Cflags: -I${includedir}
