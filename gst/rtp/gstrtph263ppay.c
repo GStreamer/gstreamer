@@ -247,9 +247,12 @@ gst_rtp_h263p_pay_sink_getcaps (GstRTPBasePayload * payload, GstPad * pad,
 
   /* if we're just outputting to udpsink or fakesink or so, we should also
    * accept any input compatible with our sink template caps */
-  if (!peercaps || gst_caps_is_any (peercaps))
+  if (!peercaps || gst_caps_is_any (peercaps)) {
+    if (peercaps)
+      gst_caps_unref (peercaps);
     return
         gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
+  }
 
   /* We basically need to differentiate two use-cases here: One where there's
    * a capsfilter after the payloader with caps created from an SDP; in this
