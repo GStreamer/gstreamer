@@ -36,6 +36,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_hls_sink_debug);
 #define DEFAULT_PLAYLIST_LOCATION "playlist.m3u8"
 #define DEFAULT_PLAYLIST_ROOT NULL
 #define DEFAULT_MAX_FILES 10
+#define DEFAULT_TARGET_DURATION 15
 
 enum
 {
@@ -43,7 +44,8 @@ enum
   PROP_LOCATION,
   PROP_PLAYLIST_LOCATION,
   PROP_PLAYLIST_ROOT,
-  PROP_MAX_FILES
+  PROP_MAX_FILES,
+  PROP_TARGET_DURATION
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -140,6 +142,13 @@ gst_hls_sink_class_init (GstHlsSinkClass * klass)
           "old files start to be deleted to make room for new ones.",
           0, G_MAXUINT, DEFAULT_MAX_FILES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_TARGET_DURATION,
+      g_param_spec_uint ("target-duration", "Target duration",
+          "The target duration in seconds of a segment/file. "
+          "(0 - disabled, useful for management of segment duration by the "
+          "streaming server)",
+          0, G_MAXUINT, DEFAULT_TARGET_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -160,6 +169,9 @@ gst_hls_sink_init (GstHlsSink * sink, GstHlsSinkClass * sink_class)
   sink->playlist_root = g_strdup (DEFAULT_PLAYLIST_ROOT);
   sink->playlist = gst_m3u8_playlist_new (6, 5, FALSE);
   sink->max_files = DEFAULT_MAX_FILES;
+  sink->target_duration = DEFAULT_TARGET_DURATION;
+  sink->count = 0;
+  sink->timeout_id = 0;
 }
 
 static gboolean
@@ -250,6 +262,27 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
+static gboolean
+send_force_key_unit_event (gpointer user_data)
+{
+  GstHlsSink *sink = GST_HLS_SINK_CAST (user_data);
+  GstPad *sinkpad = gst_element_get_static_pad (GST_ELEMENT (sink), "sink");
+
+  /* FIXME - try to make segments >= target duration in length by setting the
+   * time parameter of the force key unit event to last segment cut time +
+   * target duration */
+  sink->count++;
+  if (!gst_pad_push_event (sinkpad,
+          gst_video_event_new_upstream_force_key_unit (sink->target_duration *
+              sink->count, TRUE, sink->count))) {
+    GST_WARNING_OBJECT (sink, "Failed to push upstream force key unit event");
+  }
+
+  gst_object_unref (sinkpad);
+
+  return TRUE;
+}
+
 static GstStateChangeReturn
 gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
 {
@@ -262,6 +295,13 @@ gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      if (sink->target_duration) {
+        sink->timeout_id =
+            g_timeout_add_seconds (sink->target_duration,
+            send_force_key_unit_event, sink);
+      }
+      break;
     default:
       break;
   }
@@ -269,6 +309,16 @@ gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, trans);
 
   switch (trans) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      if (sink->timeout_id && !g_source_remove (sink->timeout_id)) {
+        GST_WARNING_OBJECT (sink, "Failed to remove target-duration timeout");
+      }
+      sink->timeout_id = 0;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      /* reset the segment/file count */
+      sink->count = 0;
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
     default:
@@ -307,6 +357,9 @@ gst_hls_sink_set_property (GObject * object, guint prop_id,
             NULL);
       }
       break;
+    case PROP_TARGET_DURATION:
+      sink->target_duration = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -331,6 +384,9 @@ gst_hls_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_FILES:
       g_value_set_uint (value, sink->max_files);
+      break;
+    case PROP_TARGET_DURATION:
+      g_value_set_uint (value, sink->target_duration);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

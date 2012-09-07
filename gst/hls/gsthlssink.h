@@ -50,6 +50,9 @@ struct _GstHlsSink
   GstM3U8Playlist *playlist;
   guint index;
   gint max_files;
+  gint target_duration;
+  gint count;
+  guint timeout_id;
 };
 
 struct _GstHlsSinkClass
