@@ -97,7 +97,7 @@ G_DEFINE_TYPE_WITH_CODE(
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_vaapisink_video_context_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_X_OVERLAY,
-                          gst_vaapisink_xoverlay_iface_init));
+                          gst_vaapisink_xoverlay_iface_init))
 
 enum {
     PROP_0,

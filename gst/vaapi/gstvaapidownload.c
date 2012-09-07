@@ -114,7 +114,7 @@ G_DEFINE_TYPE_WITH_CODE(
     G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
                           gst_vaapidownload_implements_iface_init);
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_video_context_interface_init));
+                          gst_video_context_interface_init))
 
 static gboolean
 gst_vaapidownload_start(GstBaseTransform *trans);
