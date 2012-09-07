@@ -21,6 +21,7 @@
 
 
 #include <gst/check/gstcheck.h>
+#include <gst/audio/audio-format.h>
 
 #ifndef GST_DISABLE_PARSE
 
@@ -112,8 +113,9 @@ GST_START_TEST (test_element_negotiation)
    * will apply those caps to the buffers.
    * see http://bugzilla.gnome.org/show_bug.cgi?id=315126 */
   s = "fakesrc num-buffers=2 ! "
-      "audio/x-raw,format=S16LE,rate=22050,channels=1 ! "
-      "audioconvert ! audio/x-raw,format=S16LE,rate=22050,channels=1 "
+      "audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=22050,channels=1 "
+      "! audioconvert "
+      "! audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=22050,channels=1 "
       "! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
@@ -157,15 +159,16 @@ GST_START_TEST (test_basetransform_based)
   /* Check that audioresample can pick a samplerate to use from a
    * range that doesn't include the input */
   s = "audiotestsrc num-buffers=2 ! "
-      "audio/x-raw,format=S16LE,rate=8000 ! "
+      "audio/x-raw,format=" GST_AUDIO_NE (S16) ",rate=8000 ! "
       "audioresample ! audio/x-raw,rate=[16000,48000] ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
 
   /* Check that audioconvert can pick a depth to use, given a width */
-  s = "audiotestsrc num-buffers=30 ! audio/x-raw,format=S16LE ! "
-      "audioconvert ! " "audio/x-raw,format=S32LE ! fakesink";
+  s = "audiotestsrc num-buffers=30 ! audio/x-raw,format=" GST_AUDIO_NE (S16)
+      " ! audioconvert ! " "audio/x-raw,format=" GST_AUDIO_NE (S32)
+      " ! fakesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN);
