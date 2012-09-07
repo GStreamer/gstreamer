@@ -308,7 +308,7 @@ decode_sequence(GstVaapiDecoderMpeg4 *decoder, const guint8 *buf, guint buf_size
         profile = GST_VAAPI_PROFILE_MPEG4_ADVANCED_SIMPLE;
         break;
     default:
-        GST_DEBUG("unsupported profile %d", profile);
+        GST_DEBUG("unsupported profile %d", vos_hdr->profile);
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
     }
     if (priv->profile != profile) {
