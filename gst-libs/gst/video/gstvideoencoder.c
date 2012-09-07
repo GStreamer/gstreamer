@@ -1645,6 +1645,10 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   GST_LOG_OBJECT (encoder,
       "finish frame fpn %d", frame->presentation_frame_number);
 
+  GST_LOG_OBJECT (encoder, "frame PTS %" GST_TIME_FORMAT
+      ", DTS %" GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts),
+      GST_TIME_ARGS (frame->dts));
+
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
@@ -1747,7 +1751,11 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     priv->distance_from_sync = 0;
     GST_BUFFER_FLAG_UNSET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     /* For keyframes, DTS = PTS */
-    frame->dts = frame->pts;
+    if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+      frame->dts = frame->pts;
+    } else if (GST_CLOCK_TIME_IS_VALID (frame->pts) && frame->pts != frame->dts) {
+      GST_WARNING_OBJECT (encoder, "keyframe PTS != DTS");
+    }
   } else {
     GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   }
