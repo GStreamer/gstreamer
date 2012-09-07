@@ -76,7 +76,7 @@ static GParamSpec *properties[PROP_LAST];
 
 /* mapping functions */
 
-#define DEFINE_CONVERT(type,Type,TYPE) \
+#define DEFINE_CONVERT(type,Type,TYPE,ROUNDING_OP) \
 static void \
 convert_g_value_to_##type (GstDirectControlBinding *self, gdouble s, GValue *d) \
 { \
@@ -84,7 +84,7 @@ convert_g_value_to_##type (GstDirectControlBinding *self, gdouble s, GValue *d) 
   g##type v; \
   \
   s = CLAMP (s, 0.0, 1.0); \
-  v = pspec->minimum + (g##type) ((pspec->maximum - pspec->minimum) * s); \
+  v = pspec->minimum + (g##type) ROUNDING_OP ((pspec->maximum - pspec->minimum) * s); \
   g_value_set_##type (d, v); \
 } \
 \
@@ -95,18 +95,18 @@ convert_value_to_##type (GstDirectControlBinding *self, gdouble s, gpointer d_) 
   g##type *d = (g##type *)d_; \
   \
   s = CLAMP (s, 0.0, 1.0); \
-  *d = pspec->minimum + (g##type) ((pspec->maximum - pspec->minimum) * s); \
+  *d = pspec->minimum + (g##type) ROUNDING_OP ((pspec->maximum - pspec->minimum) * s); \
 }
 
 
-DEFINE_CONVERT (int, Int, INT);
-DEFINE_CONVERT (uint, UInt, UINT);
-DEFINE_CONVERT (long, Long, LONG);
-DEFINE_CONVERT (ulong, ULong, ULONG);
-DEFINE_CONVERT (int64, Int64, INT64);
-DEFINE_CONVERT (uint64, UInt64, UINT64);
-DEFINE_CONVERT (float, Float, FLOAT);
-DEFINE_CONVERT (double, Double, DOUBLE);
+DEFINE_CONVERT (int, Int, INT, rint);
+DEFINE_CONVERT (uint, UInt, UINT, rint);
+DEFINE_CONVERT (long, Long, LONG, rint);
+DEFINE_CONVERT (ulong, ULong, ULONG, rint);
+DEFINE_CONVERT (int64, Int64, INT64, rint);
+DEFINE_CONVERT (uint64, UInt64, UINT64, rint);
+DEFINE_CONVERT (float, Float, FLOAT, /*NOOP*/);
+DEFINE_CONVERT (double, Double, DOUBLE, /*NOOP*/);
 
 static void
 convert_g_value_to_boolean (GstDirectControlBinding * self, gdouble s,
