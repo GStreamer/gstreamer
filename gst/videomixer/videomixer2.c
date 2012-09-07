@@ -104,7 +104,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer2_debug);
   (g_mutex_unlock(GST_VIDEO_MIXER2_GET_LOCK (mix)))
 
 #define FORMATS " { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "\
-                "   YVYU, I420, YV12, Y41B, RGB, BGR, xRGB, xBGR, RGBx, BGRx } "
+                "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
+                "   RGBx, BGRx } "
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -1505,6 +1506,20 @@ gst_videomixer2_src_setcaps (GstPad * pad, GstVideoMixer2 * mix, GstCaps * caps)
       mix->overlay = mix->blend;
       mix->fill_checker = gst_video_mixer_fill_checker_yv12;
       mix->fill_color = gst_video_mixer_fill_color_yv12;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      mix->blend = gst_video_mixer_blend_nv12;
+      mix->overlay = mix->blend;
+      mix->fill_checker = gst_video_mixer_fill_checker_nv12;
+      mix->fill_color = gst_video_mixer_fill_color_nv12;
+      ret = TRUE;
+      break;
+    case GST_VIDEO_FORMAT_NV21:
+      mix->blend = gst_video_mixer_blend_nv21;
+      mix->overlay = mix->blend;
+      mix->fill_checker = gst_video_mixer_fill_checker_nv21;
+      mix->fill_color = gst_video_mixer_fill_color_nv21;
       ret = TRUE;
       break;
     case GST_VIDEO_FORMAT_Y41B:
