@@ -100,15 +100,15 @@ enum {
 #define DEFAULT_DEINTERLACE_MODE        GST_VAAPI_DEINTERLACE_MODE_AUTO
 #define DEFAULT_DEINTERLACE_METHOD      GST_VAAPI_DEINTERLACE_METHOD_BOB
 
-#define GST_TYPE_VAAPI_DEINTERLACE_MODES \
-    gst_vaapi_deinterlace_modes_get_type()
+#define GST_VAAPI_TYPE_DEINTERLACE_MODE \
+    gst_vaapi_deinterlace_mode_get_type()
 
 static GType
-gst_vaapi_deinterlace_modes_get_type(void)
+gst_vaapi_deinterlace_mode_get_type(void)
 {
-    static GType deinterlace_modes_type = 0;
+    static GType deinterlace_mode_type = 0;
 
-    static const GEnumValue modes_types[] = {
+    static const GEnumValue mode_types[] = {
         { GST_VAAPI_DEINTERLACE_MODE_AUTO,
           "Auto detection", "auto" },
         { GST_VAAPI_DEINTERLACE_MODE_INTERLACED,
@@ -118,22 +118,22 @@ gst_vaapi_deinterlace_modes_get_type(void)
         { 0, NULL, NULL },
     };
 
-    if (!deinterlace_modes_type) {
-        deinterlace_modes_type =
-            g_enum_register_static("GstVaapiDeinterlaceModes", modes_types);
+    if (!deinterlace_mode_type) {
+        deinterlace_mode_type =
+            g_enum_register_static("GstVaapiDeinterlaceMode", mode_types);
     }
-    return deinterlace_modes_type;
+    return deinterlace_mode_type;
 }
 
-#define GST_TYPE_VAAPI_DEINTERLACE_METHODS \
-    gst_vaapi_deinterlace_methods_get_type()
+#define GST_VAAPI_TYPE_DEINTERLACE_METHOD \
+    gst_vaapi_deinterlace_method_get_type()
 
 static GType
-gst_vaapi_deinterlace_methods_get_type(void)
+gst_vaapi_deinterlace_method_get_type(void)
 {
-    static GType deinterlace_methods_type = 0;
+    static GType deinterlace_method_type = 0;
 
-    static const GEnumValue methods_types[] = {
+    static const GEnumValue method_types[] = {
         { GST_VAAPI_DEINTERLACE_METHOD_BOB,
           "Bob deinterlacing", "bob" },
 #if 0
@@ -148,11 +148,11 @@ gst_vaapi_deinterlace_methods_get_type(void)
         { 0, NULL, NULL },
     };
 
-    if (!deinterlace_methods_type) {
-        deinterlace_methods_type =
-            g_enum_register_static("GstVaapiDeinterlaceMethods", methods_types);
+    if (!deinterlace_method_type) {
+        deinterlace_method_type =
+            g_enum_register_static("GstVaapiDeinterlaceMethod", method_types);
     }
-    return deinterlace_methods_type;
+    return deinterlace_method_type;
 }
 
 static inline GstVaapiPostproc *
@@ -681,7 +681,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
          g_param_spec_enum("deinterlace",
                            "Deinterlace",
                            "Deinterlace mode to use",
-                           GST_TYPE_VAAPI_DEINTERLACE_MODES,
+                           GST_VAAPI_TYPE_DEINTERLACE_MODE,
                            DEFAULT_DEINTERLACE_MODE,
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -696,7 +696,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
          g_param_spec_enum("deinterlace-method",
                            "Deinterlace method",
                            "Deinterlace method to use",
-                           GST_TYPE_VAAPI_DEINTERLACE_METHODS,
+                           GST_VAAPI_TYPE_DEINTERLACE_METHOD,
                            DEFAULT_DEINTERLACE_METHOD,
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
