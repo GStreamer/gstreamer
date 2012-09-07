@@ -17,20 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <arpa/inet.h>
-#include <sys/ioctl.h>
 
 #include "rtsp-server.h"
 #include "rtsp-client.h"
@@ -595,9 +583,11 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
         g_socket_address_enumerator_next (enumerator, cancellable, error);
     if (!sockaddr) {
       if (!*error)
-        GST_DEBUG_OBJECT (server, "no more addresses %s", *error ? (*error)->message : "");
+        GST_DEBUG_OBJECT (server, "no more addresses %s",
+            *error ? (*error)->message : "");
       else
-        GST_DEBUG_OBJECT (server, "failed to retrieve next address %s", (*error)->message);
+        GST_DEBUG_OBJECT (server, "failed to retrieve next address %s",
+            (*error)->message);
       break;
     }
 
@@ -799,7 +789,7 @@ accept_failed:
  */
 gboolean
 gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
-    const gchar * ip, gint port, const gchar *initial_buffer)
+    const gchar * ip, gint port, const gchar * initial_buffer)
 {
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
@@ -814,7 +804,7 @@ gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
 
   /* a new client connected, create a client object to handle the client. */
   if (!gst_rtsp_client_create_from_socket (client, socket, ip, port,
-      initial_buffer, &error)) {
+          initial_buffer, &error)) {
     goto transfer_failed;
   }
 
