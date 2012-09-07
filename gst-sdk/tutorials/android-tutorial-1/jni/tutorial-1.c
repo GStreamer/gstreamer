@@ -17,49 +17,137 @@
 #include <string.h>
 #include <jni.h>
 #include <gst/gst.h>
+#include <pthread.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
 
-jstring
-Java_com_gst_1sdk_1tutorials_tutorial_11_Tutorial1_gstVersion (JNIEnv* env,
-                                                  jobject thiz )
-{
-  jstring ret;
-  char *buffer, *tmp;
-  GList *original_plugin_list = gst_registry_get_plugin_list (gst_registry_get_default());
-  GList *plugin_list = original_plugin_list;
+typedef struct _CustomData {
+  JNIEnv *env;
+  GstElement *pipeline;
+  GMainLoop *main_loop;
+} CustomData;
 
-  GST_DEBUG ("Preparing to dump plugin list");
-  buffer = g_strdup_printf ("Version: %s\n", gst_version_string());
-  while (plugin_list) {
-    GstPlugin *plugin = (GstPlugin *)plugin_list->data;
-    GList *original_features_list, *features_list;
-    plugin_list = plugin_list->next;
+static pthread_t gst_app_thread;
+static pthread_key_t gst_app_thread_key;
+static JavaVM *java_vm;
+static jfieldID custom_data_field_id;
 
-    tmp = g_strdup_printf ("%sPlugin: %s\n", buffer, gst_plugin_get_name (plugin));
-    g_free (buffer);
-    buffer = tmp;
-    original_features_list = features_list = gst_registry_get_feature_list_by_plugin (gst_registry_get_default(), plugin->desc.name);
-
-    while (features_list) {
-      GstPluginFeature *feature = (GstPluginFeature *)features_list->data;
-      features_list = features_list->next;
-
-      tmp = g_strdup_printf ("%s    %s\n", buffer, gst_plugin_feature_get_name (feature));
-      g_free (buffer);
-      buffer = tmp;
-    }
-    gst_plugin_feature_list_free (original_features_list);
-  }
-  GST_DEBUG ("Plugin list dumped");
-  gst_plugin_list_free (original_plugin_list);
-  ret = (*env)->NewStringUTF(env, buffer);
-  g_free (buffer);
-  return ret;
+/*
+ * Private methods
+ */
+static void gst_detach_current_thread (void *env) {
+  GST_DEBUG ("Detaching thread %p", g_thread_self ());
+  (*java_vm)->DetachCurrentThread (java_vm);
 }
 
+static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+    GST_DEBUG ("Message: %s", GST_MESSAGE_TYPE_NAME (msg));
+}
+
+static void *gst_app_function (void *userdata) {
+  JavaVMAttachArgs args;
+  GstBus *bus;
+  GstMessage *msg;
+  CustomData *data = (CustomData *)userdata;
+
+  pthread_key_create (&gst_app_thread_key, gst_detach_current_thread);
+  pthread_setspecific (gst_app_thread_key, &data);
+
+  GST_DEBUG ("Attaching thread %p", g_thread_self ());
+  args.version = JNI_VERSION_1_4;
+  args.name = NULL;
+  args.group = NULL;
+
+  if ((*java_vm)->AttachCurrentThread (java_vm, &data->env, &args) < 0) {
+    GST_ERROR ("Failed to attach current thread");
+    return;
+  }
+
+  GST_DEBUG ("Creating pipeline in CustomData at %p", data);
+
+  data->pipeline = gst_parse_launch ("videotestsrc num-buffers=10000 ! fakesink", NULL);
+
+  /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
+  bus = gst_element_get_bus (data->pipeline);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)error_cb, data);
+  gst_object_unref (bus);
+  
+  /* Create a GLib Main Loop and set it to run */
+  GST_DEBUG ("Entering main loop...");
+  data->main_loop = g_main_loop_new (NULL, FALSE);
+  g_main_loop_run (data->main_loop);
+  GST_DEBUG ("Exitted main loop");
+
+  /* Free resources */
+  gst_object_unref (bus);
+  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+  gst_object_unref (data->pipeline);
+  // data = pthread_getspecific (gst_app_thread_key);
+}
+
+/*
+ * Java Bindings
+ */
+void gst_native_init (JNIEnv* env, jobject thiz) {
+  CustomData *data = (CustomData *)g_malloc0 (sizeof (CustomData));
+  (*env)->SetLongField (env, thiz, custom_data_field_id, (jlong)data);
+  GST_DEBUG ("Created CustomData at %p", data);
+  pthread_create (&gst_app_thread, NULL, &gst_app_function, data);
+}
+
+void gst_native_finalize (JNIEnv* env, jobject thiz) {
+  CustomData *data = (CustomData *)(*env)->GetLongField (env, thiz, custom_data_field_id);
+  GST_DEBUG ("Quitting main loop...");
+  g_main_loop_quit (data->main_loop);
+  GST_DEBUG ("Waiting for thread to finish...");
+  pthread_join (gst_app_thread, NULL);
+  GST_DEBUG ("Freeing CustomData at %p", data);
+  g_free (data);
+  GST_DEBUG ("Done finalizing");
+}
+
+void gst_native_play (JNIEnv* env, jobject thiz) {
+  CustomData *data = (CustomData *)(*env)->GetLongField (env, thiz, custom_data_field_id);
+  GST_DEBUG ("Setting state to PLAYING");
+  gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+}
+
+void gst_native_pause (JNIEnv* env, jobject thiz) {
+  CustomData *data = (CustomData *)(*env)->GetLongField (env, thiz, custom_data_field_id);
+  GST_DEBUG ("Setting state to READY");
+  gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+}
+
+void gst_class_init (JNIEnv* env, jclass klass) {
+  custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
+  GST_DEBUG ("The FieldID for the native_custom_data field is %p", custom_data_field_id);
+}
+
+static JNINativeMethod native_methods[] = {
+  { "nativeInit", "()V", (void *) gst_native_init},
+  { "nativeFinalize", "()V", (void *) gst_native_finalize},
+  { "nativePlay", "()V", (void *) gst_native_play},
+  { "nativePause", "()V", (void *) gst_native_pause},
+  { "classInit", "()V", (void *) gst_class_init}
+};
+
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
+  JNIEnv *env = NULL;
+  int ret;
+
   GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-1", 0, "Android tutorial 1");
+
+  java_vm = vm;
+
+  if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
+    GST_ERROR ("Could not retrieve JNIEnv");
+    return 0;
+  }
+  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
+  ret = (*env)->RegisterNatives (env, klass, native_methods, 5);
+
   return JNI_VERSION_1_4;
 }

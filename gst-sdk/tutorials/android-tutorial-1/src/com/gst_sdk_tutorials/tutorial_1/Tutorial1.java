@@ -16,34 +16,56 @@
 package com.gst_sdk_tutorials.tutorial_1;
 
 import android.app.Activity;
-import android.widget.TextView;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.ImageButton;
+import android.widget.TextView;
 
 public class Tutorial1 extends Activity
 {
-    public native String gstVersion();
+    public native void nativeInit();
+    public native void nativeFinalize();
+    public native void nativePlay();
+    public native void nativePause();
+    private static native void classInit();
+    private long native_custom_data;
 
     /* Called when the activity is first created. 
     @Override */
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        
+        setContentView(R.layout.main);
+        
+        ImageButton play = (ImageButton)this.findViewById(R.id.button_play);
+        play.setOnClickListener(new OnClickListener() {
+          
+          public void onClick(View v) {
+        	  nativePlay();
+          }
+        });
+        
+        ImageButton pause = (ImageButton)this.findViewById(R.id.button_stop);
+        pause.setOnClickListener(new OnClickListener() {
+          
+          public void onClick(View v) {
+        	  nativePause();
+          }
+        });
 
-        /* Create a TextView and set its content.
-         * the text is retrieved by calling a native
-         * function.
-         */
-        TextView  tv = new TextView(this);
-        tv.setMovementMethod(new ScrollingMovementMethod());
-        tv.setClickable (false);
-        tv.setLongClickable (false);
-        tv.setText( gstVersion() );
-        setContentView(tv);
+        nativeInit();
+    }
+
+    protected void onDestroy () {
+      nativeFinalize();
+      super.onDestroy();
     }
 
     static {
         System.loadLibrary("gstreamer_android");
         System.loadLibrary("tutorial-1");
+        classInit();
     }
 }
