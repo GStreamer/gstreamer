@@ -783,7 +783,7 @@ _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
         raw_image->height     = va_image->height;
         raw_image->num_planes = va_image->num_planes;
         for (i = 0; i < raw_image->num_planes; i++) {
-            raw_image->pixels[i] = image_data + va_image->offsets[i];
+            raw_image->pixels[i] = (guchar *)image_data + va_image->offsets[i];
             raw_image->stride[i] = va_image->pitches[i];
         }
     }
