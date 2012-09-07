@@ -1257,8 +1257,9 @@ gst_amc_video_dec_finish (GstVideoDecoder * decoder)
   GST_VIDEO_DECODER_STREAM_UNLOCK (self);
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
-   * the EOS buffer arrives on the output port. */
-  idx = gst_amc_codec_dequeue_input_buffer (self->codec, -1);
+   * the EOS buffer arrives on the output port.
+   * Wait at most 0.5s here. */
+  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000);
   GST_VIDEO_DECODER_STREAM_LOCK (self);
 
   if (idx >= 0 && idx < self->n_input_buffers) {
@@ -1308,8 +1309,9 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self)
   GST_VIDEO_DECODER_STREAM_UNLOCK (self);
   /* Send an EOS buffer to the component and let the base
    * class drop the EOS event. We will send it later when
-   * the EOS buffer arrives on the output port. */
-  idx = gst_amc_codec_dequeue_input_buffer (self->codec, -1);
+   * the EOS buffer arrives on the output port.
+   * Wait at most 0.5s here. */
+  idx = gst_amc_codec_dequeue_input_buffer (self->codec, 500000);
   GST_VIDEO_DECODER_STREAM_LOCK (self);
 
   if (idx >= 0 && idx < self->n_input_buffers) {
