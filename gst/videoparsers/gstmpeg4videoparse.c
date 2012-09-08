@@ -533,6 +533,7 @@ static void
 gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
 {
   GstCaps *caps = NULL;
+  GstStructure *s = NULL;
 
   GST_LOG_OBJECT (mp4vparse, "Updating caps");
 
@@ -547,6 +548,7 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
     GstCaps *tmp = gst_caps_copy (caps);
     gst_caps_unref (caps);
     caps = tmp;
+    s = gst_caps_get_structure (caps, 0);
   } else {
     caps = gst_caps_new_simple ("video/mpeg",
         "mpegversion", G_TYPE_INT, 4, NULL);
@@ -570,8 +572,9 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
         "height", G_TYPE_INT, mp4vparse->vol.height, NULL);
   }
 
-  /* perhaps we have  a framerate */
-  if (mp4vparse->vol.fixed_vop_time_increment != 0) {
+  /* perhaps we have a framerate */
+  if (mp4vparse->vol.fixed_vop_time_increment != 0 &&
+      (!s || !gst_structure_has_field (s, "framerate"))) {
     gint fps_num = mp4vparse->vol.vop_time_increment_resolution;
     gint fps_den = mp4vparse->vol.fixed_vop_time_increment;
     GstClockTime latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
@@ -584,7 +587,8 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
   }
 
   /* or pixel-aspect-ratio */
-  if (mp4vparse->vol.par_width > 0 && mp4vparse->vol.par_height > 0) {
+  if (mp4vparse->vol.par_width > 0 && mp4vparse->vol.par_height > 0 &&
+      (!s || !gst_structure_has_field (s, "pixel-aspect-ratio"))) {
     gst_caps_set_simple (caps, "pixel-aspect-ratio",
         GST_TYPE_FRACTION, mp4vparse->vol.par_width,
         mp4vparse->vol.par_height, NULL);
