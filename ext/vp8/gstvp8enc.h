@@ -57,34 +57,78 @@ struct _GstVP8Enc
   /* < private > */
   vpx_codec_ctx_t encoder;
 
+  /* from downstream caps */
+  int profile;
+
   /* properties */
-  int bitrate;
-  enum vpx_rc_mode mode;
-  unsigned int minsection_pct;
-  unsigned int maxsection_pct;
-  int min_quantizer;
-  int max_quantizer;
-  double quality;
-  gboolean error_resilient;
-  int max_latency;
-  int max_keyframe_distance;
-  int speed;
-  int threads;
+  /* Rate control options */
+  enum vpx_rc_mode rc_end_usage;
+  unsigned int rc_target_bitrate;
+  gboolean rc_target_bitrate_set;
+  unsigned int rc_min_quantizer, rc_max_quantizer;
+
+  unsigned int rc_dropframe_thresh;
+  gboolean rc_resize_allowed;
+  unsigned int rc_resize_up_thresh;
+  unsigned int rc_resize_down_thresh;
+  unsigned int rc_undershoot_pct;
+  unsigned int rc_overshoot_pct;
+  unsigned int rc_buf_sz;
+  unsigned int rc_buf_initial_sz;
+  unsigned int rc_buf_optimal_sz;
+
+  unsigned int rc_2pass_vbr_bias_pct;
+  unsigned int rc_2pass_vbr_minsection_pct;
+  unsigned int rc_2pass_vbr_maxsection_pct;
+
+  /* Global keyframe options */
+  enum vpx_kf_mode kf_mode;
+  unsigned int kf_max_dist;
+
+  /* Global two-pass options */
   enum vpx_enc_pass multipass_mode;
   gchar *multipass_cache_file;
   GByteArray *first_pass_cache_content;
   vpx_fixed_buf_t last_pass_cache_content;
-  gboolean auto_alt_ref_frames;
+
+  /* Global temporal scalability options */
+  unsigned int ts_number_layers;
+  unsigned int ts_target_bitrate[VPX_TS_MAX_LAYERS];
+  int n_ts_target_bitrate;
+  unsigned int ts_rate_decimator[VPX_TS_MAX_LAYERS];
+  int n_ts_rate_decimator;
+  unsigned int ts_periodicity;
+  unsigned int ts_layer_id[VPX_TS_MAX_PERIODICITY];
+  int n_ts_layer_id;
+
+  /* Global, other options */
+  vpx_codec_er_flags_t error_resilient;
   unsigned int lag_in_frames;
-  int sharpness;
-  int noise_sensitivity;
-#ifdef HAVE_VP8ENC_TUNING
-  vp8e_tuning tuning;
+
+  int threads;
+#if 0
+  /* Only usage 0 is defined right now */
+  int usage;
 #endif
-  int static_threshold;
-  gboolean drop_frame;
-  gboolean resize_allowed;
-  gboolean partitions;
+
+  /* Encode parameter */
+  gint64 deadline;
+
+  /* Controls */
+  VPX_SCALING_MODE h_scaling_mode;
+  VPX_SCALING_MODE v_scaling_mode;
+  int cpu_used;
+  gboolean enable_auto_alt_ref;
+  unsigned int noise_sensitivity;
+  unsigned int sharpness;
+  unsigned int static_threshold;
+  vp8e_token_partitions token_partitions;
+  unsigned int arnr_maxframes;
+  unsigned int arnr_strength;
+  unsigned int arnr_type;
+  vp8e_tuning tuning;
+  unsigned int cq_level;
+  unsigned int max_intra_bitrate_pct;
 
   /* state */
   gboolean inited;
