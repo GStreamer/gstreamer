@@ -527,6 +527,11 @@ gst_decklink_sink_stop (GstDecklinkSink * decklinksink)
   decklinksink->output->DisableAudioOutput ();
   decklinksink->output->DisableVideoOutput ();
 
+  decklinksink->output->Release ();
+  decklinksink->output = NULL;
+  decklinksink->decklink->Release ();
+  decklinksink->decklink = NULL;
+
   return TRUE;
 }
 
