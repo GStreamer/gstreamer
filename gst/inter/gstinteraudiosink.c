@@ -219,9 +219,10 @@ gst_inter_audio_sink_dispose (GObject * object)
 void
 gst_inter_audio_sink_finalize (GObject * object)
 {
-  /* GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (object); */
+  GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (object);
 
   /* clean up object here */
+  g_free (interaudiosink->channel);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
