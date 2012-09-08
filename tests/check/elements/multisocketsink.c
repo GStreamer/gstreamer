@@ -193,6 +193,9 @@ GST_START_TEST (test_add_client)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (srcsocket);
+  g_object_unref (sinksocket);
 }
 
 GST_END_TEST;
@@ -359,6 +362,11 @@ GST_START_TEST (test_streamheader)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (socket[0]);
+  g_object_unref (socket[1]);
+  g_object_unref (socket[2]);
+  g_object_unref (socket[3]);
 }
 
 GST_END_TEST;
@@ -481,6 +489,11 @@ GST_START_TEST (test_change_streamheader)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (socket[0]);
+  g_object_unref (socket[1]);
+  g_object_unref (socket[2]);
+  g_object_unref (socket[3]);
 }
 
 GST_END_TEST;
@@ -586,6 +599,13 @@ GST_START_TEST (test_burst_client_bytes)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (socket[0]);
+  g_object_unref (socket[1]);
+  g_object_unref (socket[2]);
+  g_object_unref (socket[3]);
+  g_object_unref (socket[4]);
+  g_object_unref (socket[5]);
 }
 
 GST_END_TEST;
@@ -675,6 +695,13 @@ GST_START_TEST (test_burst_client_bytes_keyframe)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (socket[0]);
+  g_object_unref (socket[1]);
+  g_object_unref (socket[2]);
+  g_object_unref (socket[3]);
+  g_object_unref (socket[4]);
+  g_object_unref (socket[5]);
 }
 
 GST_END_TEST;
@@ -770,6 +797,13 @@ GST_START_TEST (test_burst_client_bytes_with_keyframe)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (socket[0]);
+  g_object_unref (socket[1]);
+  g_object_unref (socket[2]);
+  g_object_unref (socket[3]);
+  g_object_unref (socket[4]);
+  g_object_unref (socket[5]);
 }
 
 GST_END_TEST;
@@ -817,6 +851,9 @@ GST_START_TEST (test_client_next_keyframe)
 
   ASSERT_CAPS_REFCOUNT (caps, "caps", 1);
   gst_caps_unref (caps);
+
+  g_object_unref (socket[0]);
+  g_object_unref (socket[1]);
 }
 
 GST_END_TEST;
