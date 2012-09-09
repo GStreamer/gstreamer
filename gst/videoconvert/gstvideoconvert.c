@@ -102,7 +102,7 @@ dither_method_get_type (void)
       {0, NULL, NULL}
     };
 
-    gtype = g_enum_register_static ("GstColorspaceDitherMethod", values);
+    gtype = g_enum_register_static ("GstVideoConvertDitherMethod", values);
   }
   return gtype;
 }
