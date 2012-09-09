@@ -162,8 +162,7 @@ gst_dp_header_from_buffer_any (const GstBuffer * buffer, GstDPHeaderFlag flags,
 
   gst_buffer_unmap ((GstBuffer *) buffer, &map);
 
-  GST_LOG ("created header from buffer:");
-  gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
+  GST_MEMDUMP ("created header from buffer", h, GST_DP_HEADER_LENGTH);
   *header = h;
   return TRUE;
 }
@@ -199,8 +198,7 @@ gst_dp_packet_from_caps_any (const GstCaps * caps, GstDPHeaderFlag flags,
 
   GST_DP_SET_CRC (h, flags, string, payload_length);
 
-  GST_LOG ("created header from caps:");
-  gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
+  GST_MEMDUMP ("created header from caps", h, GST_DP_HEADER_LENGTH);
   *header = h;
   *payload = string;
   return TRUE;
@@ -268,28 +266,6 @@ gst_dp_crc (const guint8 * buffer, guint length)
         gst_dp_crc_table[((crc_register >> 8) & 0x00ff) ^ *buffer++]);
   }
   return (0xffff ^ crc_register);
-}
-
-/* debugging function; dumps byte array values per 8 bytes */
-/* FIXME: would be nice to merge this with gst_util_dump_mem () */
-void
-gst_dp_dump_byte_array (guint8 * array, guint length)
-{
-  int i;
-  int n = 8;                    /* number of bytes per line */
-  gchar *line = g_malloc0 (3 * n + 1);
-
-  GST_LOG ("dumping byte array of length %d", length);
-  for (i = 0; i < length; ++i) {
-    g_sprintf (line + 3 * (i % n), "%02x ", array[i]);
-    if (i % n == (n - 1)) {
-      GST_LOG ("%03d: %s", i - (n - 1), line);
-    }
-  }
-  if (i % n != 0) {
-    GST_LOG ("%03d: %s", (i / n) * n, line);
-  }
-  g_free (line);
 }
 
 GType
@@ -422,8 +398,7 @@ gst_dp_packet_from_event_1_0 (const GstEvent * event, GstDPHeaderFlag flags,
 
   GST_DP_SET_CRC (h, flags, string, pl_length);
 
-  GST_LOG ("created header from event:");
-  gst_dp_dump_byte_array (h, GST_DP_HEADER_LENGTH);
+  GST_MEMDUMP ("created header from event", h, GST_DP_HEADER_LENGTH);
   *header = h;
   *payload = string;
   return TRUE;
@@ -578,6 +553,8 @@ gst_dp_event_from_packet_1_0 (guint header_length, const guint8 * header,
     s = gst_structure_from_string (string, NULL);
     g_free (string);
   }
+  GST_LOG ("Creating event of type 0x%x with structure '%" GST_PTR_FORMAT "'",
+      type, s);
   event = gst_event_new_custom (type, s);
   return event;
 }
