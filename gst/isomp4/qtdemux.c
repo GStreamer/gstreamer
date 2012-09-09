@@ -9416,11 +9416,6 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-msmpeg",
           "msmpegversion", G_TYPE_INT, 43, NULL);
       break;
-    case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
-    case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
-      _codec ("3ivX video");
-      caps = gst_caps_new_empty_simple ("video/x-3ivx");
-      break;
     case GST_MAKE_FOURCC ('D', 'I', 'V', '3'):
       _codec ("DivX 3");
       caps = gst_caps_new_simple ("video/x-divx",
@@ -9437,18 +9432,17 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-divx",
           "divxversion", G_TYPE_INT, 5, NULL);
       break;
+
+    case GST_MAKE_FOURCC ('3', 'I', 'V', '1'):
+    case GST_MAKE_FOURCC ('3', 'I', 'V', '2'):
     case GST_MAKE_FOURCC ('X', 'V', 'I', 'D'):
     case GST_MAKE_FOURCC ('x', 'v', 'i', 'd'):
-      _codec ("XVID MPEG-4");
-      caps = gst_caps_new_empty_simple ("video/x-xvid");
-      break;
-
     case GST_MAKE_FOURCC ('F', 'M', 'P', '4'):
     case GST_MAKE_FOURCC ('U', 'M', 'P', '4'):
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4, NULL);
       if (codec_name)
-        *codec_name = g_strdup ("FFmpeg MPEG-4");
+        *codec_name = g_strdup ("MPEG-4");
       break;
 
     case GST_MAKE_FOURCC ('c', 'v', 'i', 'd'):

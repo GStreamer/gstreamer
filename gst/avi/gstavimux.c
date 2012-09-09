@@ -106,10 +106,6 @@ static GstStaticPadTemplate video_sink_factory =
         "height = (int) [ 16, 4096 ], "
         "framerate = (fraction) [ 0, MAX ], "
         "divxversion = (int) [ 3, 5 ]; "
-        "video/x-3ivx, "
-        "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], "
-        "framerate = (fraction) [ 0, MAX ]; "
         "video/x-msmpeg, "
         "width = (int) [ 16, 4096 ], "
         "height = (int) [ 16, 4096 ], "
@@ -507,10 +503,6 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
           avipad->vids.compression = GST_MAKE_FOURCC ('D', 'X', '5', '0');
           break;
       }
-    } else if (!strcmp (mimetype, "video/x-xvid")) {
-      avipad->vids.compression = GST_MAKE_FOURCC ('X', 'V', 'I', 'D');
-    } else if (!strcmp (mimetype, "video/x-3ivx")) {
-      avipad->vids.compression = GST_MAKE_FOURCC ('3', 'I', 'V', '2');
     } else if (gst_structure_has_name (structure, "video/x-msmpeg")) {
       gint msmpegversion;
 
