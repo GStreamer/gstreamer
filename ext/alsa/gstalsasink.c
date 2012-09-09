@@ -53,7 +53,6 @@
 
 #include <gst/audio/gstaudioiec61937.h>
 #include <gst/gst-i18n-plugin.h>
-#include "gst/glib-compat-private.h"
 
 #define DEFAULT_DEVICE		"default"
 #define DEFAULT_DEVICE_NAME	""

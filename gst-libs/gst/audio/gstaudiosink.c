@@ -71,8 +71,6 @@
 
 #include "gstaudiosink.h"
 
-#include "gst/glib-compat-private.h"
-
 GST_DEBUG_CATEGORY_STATIC (gst_audio_sink_debug);
 #define GST_CAT_DEFAULT gst_audio_sink_debug
 

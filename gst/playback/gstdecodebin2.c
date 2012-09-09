@@ -99,8 +99,6 @@
 #include "gstplayback.h"
 #include "gstrawcaps.h"
 
-#include "gst/glib-compat-private.h"
-
 /* Also used by gsturidecodebin.c */
 gint _decode_bin_compare_factories_func (gconstpointer p1, gconstpointer p2);
 

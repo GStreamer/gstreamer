@@ -67,8 +67,6 @@
 
 #include "gstrtspconnection.h"
 
-#include "gst/glib-compat-private.h"
-
 #ifdef IP_TOS
 union gst_sockaddr
 {

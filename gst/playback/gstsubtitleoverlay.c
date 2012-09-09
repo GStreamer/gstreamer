@@ -44,8 +44,6 @@
 #include <gst/video/video.h>
 #include <string.h>
 
-#include "gst/glib-compat-private.h"
-
 GST_DEBUG_CATEGORY_STATIC (subtitle_overlay_debug);
 #define GST_CAT_DEFAULT subtitle_overlay_debug
 

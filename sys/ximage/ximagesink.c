@@ -115,8 +115,6 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
-#include "gst/glib-compat-private.h"
-
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 

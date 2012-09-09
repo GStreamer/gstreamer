@@ -46,8 +46,6 @@
 
 #include "gstoggdemux.h"
 
-#include "gst/glib-compat-private.h"
-
 #define CHUNKSIZE (8500)        /* this is out of vorbisfile */
 
 /* we hope we get a granpos within this many bytes off the end */

@@ -43,8 +43,6 @@
 
 #include "gstaudioringbuffer.h"
 
-#include "gst/glib-compat-private.h"
-
 GST_DEBUG_CATEGORY_STATIC (gst_audio_ring_buffer_debug);
 #define GST_CAT_DEFAULT gst_audio_ring_buffer_debug
 
