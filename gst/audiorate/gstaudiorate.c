@@ -77,7 +77,7 @@ enum
 };
 
 #define DEFAULT_SILENT     TRUE
-#define DEFAULT_TOLERANCE  0
+#define DEFAULT_TOLERANCE  (40 * GST_MSECOND)
 #define DEFAULT_SKIP_TO_FIRST FALSE
 
 enum
