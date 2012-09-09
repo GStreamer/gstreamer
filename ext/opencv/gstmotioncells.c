@@ -258,10 +258,14 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
       g_param_spec_boolean ("usealpha", "Use alpha",
           "Use or not alpha blending on frames with motion cells", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#if 0
+  /* FIXME: should not be a long property, make it either gint or gint64
+   * (is this property actually used or useful for anything?) */
   g_object_class_install_property (gobject_class, PROP_DATE,
       g_param_spec_long ("date", "Motion Cell Date",
           "Current Date in milliseconds", DATE_MIN, DATE_MAX, DATE_DEF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
   g_object_class_install_property (gobject_class, PROP_DATAFILE,
       g_param_spec_string ("datafile", "DataFile",
           "Location of motioncells data file (empty string means no saving)",
