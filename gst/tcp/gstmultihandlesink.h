@@ -34,6 +34,7 @@ G_BEGIN_DECLS
   (gst_multi_handle_sink_get_type())
 #define GST_MULTI_HANDLE_SINK(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTI_HANDLE_SINK,GstMultiHandleSink))
+#define GST_MULTI_HANDLE_SINK_CAST(obj) ((GstMultiHandleSink *)(obj))
 #define GST_MULTI_HANDLE_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTI_HANDLE_SINK,GstMultiHandleSinkClass))
 #define GST_IS_MULTI_HANDLE_SINK(obj) \
@@ -238,31 +239,10 @@ struct _GstMultiHandleSink {
   gint time_queued;     /* number of queued time */
 };
 
-/* MultiHandleSink signals implemented in base class and declared
- * in subclass
- */
-enum
-{
-  /* signals */
-  GST_MULTI_HANDLE_SIGNAL_CLIENT_ADDED,
-  GST_MULTI_HANDLE_SIGNAL_CLIENT_REMOVED,
-  GST_MULTI_HANDLE_SIGNAL_CLIENT_HANDLE_REMOVED,
-
-  GST_MULTI_HANDLE_LAST_SIGNAL
-};
-
-
 struct _GstMultiHandleSinkClass {
   GstBaseSinkClass parent_class;
 
-  /* element methods */
-  void          (*add)          (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
-  void          (*add_full)     (GstMultiHandleSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
-		                 GstFormat format, guint64 value, 
-				 GstFormat max_format, guint64 max_value);
-  void          (*remove)       (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
-  void          (*remove_flush) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
-
+  /* methods */
   void          (*clear)        (GstMultiHandleSink *sink);
   void          (*stop_pre)     (GstMultiHandleSink *sink);
   void          (*stop_post)    (GstMultiHandleSink *sink);
@@ -275,8 +255,8 @@ struct _GstMultiHandleSinkClass {
                                  GstBuffer *buffer);
   int           (*client_get_fd)
                                 (GstMultiHandleClient *client);
-  void          (*client_free)
-                                (GstMultiHandleClient *client);
+  void          (*client_free)  (GstMultiHandleSink   *mhsink,
+                                 GstMultiHandleClient *client);
   void          (*handle_debug) (GstMultiSinkHandle handle, gchar debug[30]);
   gpointer      (*handle_hash_key)  (GstMultiSinkHandle handle);
   /* called when the client hash/list has been changed */
@@ -286,26 +266,20 @@ struct _GstMultiHandleSinkClass {
   GstMultiHandleClient* (*new_client) (GstMultiHandleSink *mhsink, GstMultiSinkHandle handle, GstSyncMethod sync_method);
 
 
-  GstStructure* (*get_stats)    (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
-
-
   /* vtable */
   gboolean (*init)   (GstMultiHandleSink *sink);
   gboolean (*close)  (GstMultiHandleSink *sink);
   void (*removed) (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
 
-  /* signals */
-  void (*client_added) (GstElement *element, GstMultiSinkHandle handle);
-  void (*client_removed) (GstElement *element, GstMultiSinkHandle handle, GstClientStatus status);
-  void (*client_handle_removed) (GstElement *element, GstMultiSinkHandle handle);
-
-  guint signals[GST_MULTI_HANDLE_LAST_SIGNAL];
+  /* subclass needs to emit these because actual argument size (int/pointer) differs */
+  void (*emit_client_added)          (GstMultiHandleSink *mhsink, GstMultiSinkHandle handle);
+  void (*emit_client_removed)        (GstMultiHandleSink *mhsink, GstMultiSinkHandle handle, GstClientStatus status);
 };
 
 GType gst_multi_handle_sink_get_type (void);
 
-void          gst_multi_handle_sink_add          (GstMultiHandleSink *sink, GstMultiSinkHandle);
-void          gst_multi_handle_sink_add_full     (GstMultiHandleSink *sink, GstMultiSinkHandle, GstSyncMethod sync, 
+void          gst_multi_handle_sink_add          (GstMultiHandleSink *sink, GstMultiSinkHandle handle);
+void          gst_multi_handle_sink_add_full     (GstMultiHandleSink *sink, GstMultiSinkHandle handle, GstSyncMethod sync,
                                               GstFormat min_format, guint64 min_value,
                                               GstFormat max_format, guint64 max_value);
 void          gst_multi_handle_sink_remove       (GstMultiHandleSink *sink, GstMultiSinkHandle handle);

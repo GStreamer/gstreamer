@@ -131,6 +131,9 @@ enum
   SIGNAL_GET_STATS,
 
   /* signals */
+  SIGNAL_CLIENT_ADDED,
+  SIGNAL_CLIENT_REMOVED,
+  SIGNAL_CLIENT_HANDLE_REMOVED,
 
   LAST_SIGNAL
 };
@@ -144,6 +147,23 @@ enum
 
 static void gst_multi_socket_sink_finalize (GObject * object);
 
+static void gst_multi_socket_sink_add (GstMultiSocketSink * sink,
+    GSocket * socket);
+static void gst_multi_socket_sink_add_full (GstMultiSocketSink * sink,
+    GSocket * socket, GstSyncMethod sync, GstFormat min_format,
+    guint64 min_value, GstFormat max_format, guint64 max_value);
+static void gst_multi_socket_sink_remove (GstMultiSocketSink * sink,
+    GSocket * socket);
+static void gst_multi_socket_sink_remove_flush (GstMultiSocketSink * sink,
+    GSocket * socket);
+static GstStructure *gst_multi_socket_sink_get_stats (GstMultiSocketSink * sink,
+    GSocket * socket);
+
+static void gst_multi_socket_sink_emit_client_added (GstMultiHandleSink * mhs,
+    GstMultiSinkHandle handle);
+static void gst_multi_socket_sink_emit_client_removed (GstMultiHandleSink * mhs,
+    GstMultiSinkHandle handle, GstClientStatus status);
+
 static void gst_multi_socket_sink_stop_pre (GstMultiHandleSink * mhsink);
 static void gst_multi_socket_sink_stop_post (GstMultiHandleSink * mhsink);
 static gboolean gst_multi_socket_sink_start_pre (GstMultiHandleSink * mhsink);
@@ -152,7 +172,8 @@ static GstMultiHandleClient
     * gst_multi_socket_sink_new_client (GstMultiHandleSink * mhsink,
     GstMultiSinkHandle handle, GstSyncMethod sync_method);
 static int gst_multi_socket_sink_client_get_fd (GstMultiHandleClient * client);
-static void gst_multi_socket_sink_client_free (GstMultiHandleClient * client);
+static void gst_multi_socket_sink_client_free (GstMultiHandleSink * mhsink,
+    GstMultiHandleClient * client);
 static void gst_multi_socket_sink_handle_debug (GstMultiSinkHandle handle,
     gchar debug[30]);
 
@@ -207,7 +228,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_ADD] =
       g_signal_new ("add", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiHandleSinkClass, add), NULL, NULL,
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, add), NULL, NULL,
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_SOCKET);
   /**
    * GstMultiSocketSink::add-full:
@@ -227,7 +248,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_ADD_BURST] =
       g_signal_new ("add-full", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiHandleSinkClass, add_full), NULL, NULL,
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, add_full), NULL, NULL,
       gst_tcp_marshal_VOID__OBJECT_ENUM_ENUM_UINT64_ENUM_UINT64, G_TYPE_NONE, 6,
       G_TYPE_SOCKET, GST_TYPE_SYNC_METHOD, GST_TYPE_FORMAT, G_TYPE_UINT64,
       GST_TYPE_FORMAT, G_TYPE_UINT64);
@@ -241,7 +262,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_REMOVE] =
       g_signal_new ("remove", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiHandleSinkClass, remove), NULL, NULL,
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove), NULL, NULL,
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_SOCKET);
   /**
    * GstMultiSocketSink::remove-flush:
@@ -254,7 +275,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_REMOVE_FLUSH] =
       g_signal_new ("remove-flush", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiHandleSinkClass, remove_flush), NULL, NULL,
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, remove_flush), NULL, NULL,
       g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
   /**
@@ -274,7 +295,7 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gst_multi_socket_sink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_STRUCT_OFFSET (GstMultiHandleSinkClass, get_stats), NULL, NULL,
+      G_STRUCT_OFFSET (GstMultiSocketSinkClass, get_stats), NULL, NULL,
       gst_tcp_marshal_BOXED__OBJECT, GST_TYPE_STRUCTURE, 1, G_TYPE_SOCKET);
 
   /**
@@ -286,10 +307,9 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    * be emitted from the streaming thread so application should be prepared
    * for that.
    */
-  gstmultihandlesink_class->signals[GST_MULTI_HANDLE_SIGNAL_CLIENT_ADDED] =
+  gst_multi_socket_sink_signals[SIGNAL_CLIENT_ADDED] =
       g_signal_new ("client-added", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiHandleSinkClass,
-          client_added), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, G_TYPE_OBJECT);
   /**
    * GstMultiSocketSink::client-removed:
@@ -305,11 +325,9 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    * the get-stats signal from this callback. For the same reason it is
    * not safe to close() and reuse @socket in this callback.
    */
-  gstmultihandlesink_class->signals[GST_MULTI_HANDLE_SIGNAL_CLIENT_REMOVED]
-      =
+  gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED] =
       g_signal_new ("client-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiHandleSinkClass,
-          client_removed), NULL, NULL, gst_tcp_marshal_VOID__OBJECT_ENUM,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_tcp_marshal_VOID__OBJECT_ENUM,
       G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_CLIENT_STATUS);
   /**
    * GstMultiSocketSink::client-socket-removed:
@@ -326,11 +344,10 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    *
    * Since: 0.10.7
    */
-  gstmultihandlesink_class->signals
-      [GST_MULTI_HANDLE_SIGNAL_CLIENT_HANDLE_REMOVED] =
+  /* FIXME: rename to client-socket-removed */
+  gst_multi_socket_sink_signals[SIGNAL_CLIENT_HANDLE_REMOVED] =
       g_signal_new ("client-handle-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstMultiHandleSinkClass,
-          client_handle_removed), NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -343,6 +360,17 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_unlock);
   gstbasesink_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_unlock_stop);
+
+  klass->add = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_add);
+  klass->add_full = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_add_full);
+  klass->remove = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_remove);
+  klass->remove_flush = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_remove_flush);
+  klass->get_stats = GST_DEBUG_FUNCPTR (gst_multi_socket_sink_get_stats);
+
+  gstmultihandlesink_class->emit_client_added =
+      gst_multi_socket_sink_emit_client_added;
+  gstmultihandlesink_class->emit_client_removed =
+      gst_multi_socket_sink_emit_client_removed;
 
   gstmultihandlesink_class->stop_pre =
       GST_DEBUG_FUNCPTR (gst_multi_socket_sink_stop_pre);
@@ -394,6 +422,76 @@ gst_multi_socket_sink_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* methods to emit signals */
+
+static void
+gst_multi_socket_sink_emit_client_added (GstMultiHandleSink * mhsink,
+    GstMultiSinkHandle handle)
+{
+  g_signal_emit (mhsink, gst_multi_socket_sink_signals[SIGNAL_CLIENT_ADDED], 0,
+      handle.socket);
+}
+
+static void
+gst_multi_socket_sink_emit_client_removed (GstMultiHandleSink * mhsink,
+    GstMultiSinkHandle handle, GstClientStatus status)
+{
+  g_signal_emit (mhsink, gst_multi_socket_sink_signals[SIGNAL_CLIENT_REMOVED],
+      0, handle.socket, status);
+}
+
+/* action signals */
+
+static void
+gst_multi_socket_sink_add (GstMultiSocketSink * sink, GSocket * socket)
+{
+  GstMultiSinkHandle handle;
+
+  handle.socket = socket;
+  gst_multi_handle_sink_add (GST_MULTI_HANDLE_SINK_CAST (sink), handle);
+}
+
+static void
+gst_multi_socket_sink_add_full (GstMultiSocketSink * sink, GSocket * socket,
+    GstSyncMethod sync, GstFormat min_format, guint64 min_value,
+    GstFormat max_format, guint64 max_value)
+{
+  GstMultiSinkHandle handle;
+
+  handle.socket = socket;
+  gst_multi_handle_sink_add_full (GST_MULTI_HANDLE_SINK_CAST (sink), handle,
+      sync, min_format, min_value, max_format, max_value);
+}
+
+static void
+gst_multi_socket_sink_remove (GstMultiSocketSink * sink, GSocket * socket)
+{
+  GstMultiSinkHandle handle;
+
+  handle.socket = socket;
+  gst_multi_handle_sink_remove (GST_MULTI_HANDLE_SINK_CAST (sink), handle);
+}
+
+static void
+gst_multi_socket_sink_remove_flush (GstMultiSocketSink * sink, GSocket * socket)
+{
+  GstMultiSinkHandle handle;
+
+  handle.socket = socket;
+  gst_multi_handle_sink_remove_flush (GST_MULTI_HANDLE_SINK_CAST (sink),
+      handle);
+}
+
+static GstStructure *
+gst_multi_socket_sink_get_stats (GstMultiSocketSink * sink, GSocket * socket)
+{
+  GstMultiSinkHandle handle;
+
+  handle.socket = socket;
+  return gst_multi_handle_sink_get_stats (GST_MULTI_HANDLE_SINK_CAST (sink),
+      handle);
+}
+
 static GstMultiHandleClient *
 gst_multi_socket_sink_new_client (GstMultiHandleSink * mhsink,
     GstMultiSinkHandle handle, GstSyncMethod sync_method)
@@ -431,9 +529,15 @@ gst_multi_socket_sink_client_get_fd (GstMultiHandleClient * client)
 }
 
 static void
-gst_multi_socket_sink_client_free (GstMultiHandleClient * client)
+gst_multi_socket_sink_client_free (GstMultiHandleSink * mhsink,
+    GstMultiHandleClient * client)
 {
   g_assert (G_IS_SOCKET (client->handle.socket));
+
+  g_signal_emit (mhsink,
+      gst_multi_socket_sink_signals[SIGNAL_CLIENT_HANDLE_REMOVED], 0,
+      client->handle.socket);
+
   g_object_unref (client->handle.socket);
 }
 

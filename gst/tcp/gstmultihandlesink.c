@@ -474,12 +474,14 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
   klass->client_queue_buffer =
       GST_DEBUG_FUNCPTR (gst_multi_handle_sink_client_queue_buffer);
 
+#if 0
   klass->add = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_add);
   klass->add_full = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_add_full);
   klass->remove = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_remove);
   klass->remove_flush = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_remove_flush);
+#endif
+
   klass->clear = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_clear);
-  klass->get_stats = GST_DEBUG_FUNCPTR (gst_multi_handle_sink_get_stats);
 
   GST_DEBUG_CATEGORY_INIT (multihandlesink_debug, "multihandlesink", 0,
       "Multi socket sink");
@@ -689,8 +691,7 @@ gst_multi_handle_sink_add_full (GstMultiHandleSink * sink,
 
   CLIENTS_UNLOCK (sink);
 
-  g_signal_emit (G_OBJECT (sink),
-      mhsinkclass->signals[GST_MULTI_HANDLE_SIGNAL_CLIENT_ADDED], 0, handle);
+  mhsinkclass->emit_client_added (mhsink, handle);
 
   return;
 
@@ -707,9 +708,8 @@ duplicate:
   {
     CLIENTS_UNLOCK (sink);
     GST_WARNING_OBJECT (sink, "%s duplicate client found, refusing", debug);
-    g_signal_emit (G_OBJECT (sink),
-        mhsinkclass->signals[GST_MULTI_HANDLE_SIGNAL_CLIENT_REMOVED], 0,
-        handle, GST_CLIENT_STATUS_DUPLICATE);
+    mhsinkclass->emit_client_removed (mhsink, handle,
+        GST_CLIENT_STATUS_DUPLICATE);
     return;
   }
 }
@@ -977,9 +977,7 @@ gst_multi_handle_sink_remove_client_link (GstMultiHandleSink * sink,
    * might query some properties */
   CLIENTS_UNLOCK (sink);
 
-  g_signal_emit (G_OBJECT (sink),
-      mhsinkclass->signals[GST_MULTI_HANDLE_SIGNAL_CLIENT_REMOVED], 0,
-      mhclient->handle, mhclient->status);
+  mhsinkclass->emit_client_removed (sink, mhclient->handle, mhclient->status);
 
   /* lock again before we remove the client completely */
   CLIENTS_LOCK (sink);
@@ -1004,13 +1002,12 @@ gst_multi_handle_sink_remove_client_link (GstMultiHandleSink * sink,
 
   CLIENTS_UNLOCK (sink);
 
-  /* and the handle is really gone now */
-  g_signal_emit (G_OBJECT (sink),
-      mhsinkclass->signals[GST_MULTI_HANDLE_SIGNAL_CLIENT_HANDLE_REMOVED],
-      0, mhclient->handle);
+  /* sub-class must implement this to emit the client-$handle-removed signal */
+  g_assert (mhsinkclass->client_free != NULL);
 
-  if (mhsinkclass->client_free)
-    mhsinkclass->client_free (mhclient);
+  /* and the handle is really gone now */
+  mhsinkclass->client_free (sink, mhclient);
+
   g_free (mhclient);
 
   CLIENTS_LOCK (sink);

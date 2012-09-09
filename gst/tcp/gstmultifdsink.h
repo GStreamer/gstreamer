@@ -75,6 +75,13 @@ struct _GstMultiFdSinkClass {
   GstMultiHandleSinkClass parent_class;
 
   /* element methods */
+  void          (*add)          (GstMultiFdSink *sink, int fd);
+  void          (*add_full)     (GstMultiFdSink *sink, int fd, GstSyncMethod sync,
+                                 GstFormat format, guint64 value,
+                                 GstFormat max_format, guint64 max_value);
+  void          (*remove)       (GstMultiFdSink *sink, int fd);
+  void          (*remove_flush) (GstMultiFdSink *sink, int fd);
+  GstStructure* (*get_stats)    (GstMultiFdSink *sink, int fd);
 
   /* vtable */
   gboolean (*wait)   (GstMultiFdSink *sink, GstPoll *set);

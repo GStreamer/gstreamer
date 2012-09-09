@@ -75,6 +75,14 @@ struct _GstMultiSocketSinkClass {
   GstMultiHandleSinkClass parent_class;
 
   /* element methods */
+  void          (*add)          (GstMultiSocketSink *sink, GSocket *socket);
+  void          (*add_full)     (GstMultiSocketSink *sink, GSocket *socket,
+                                 GstSyncMethod sync,
+                                 GstFormat format, guint64 value,
+                                 GstFormat max_format, guint64 max_value);
+  void          (*remove)       (GstMultiSocketSink *sink, GSocket *socket);
+  void          (*remove_flush) (GstMultiSocketSink *sink, GSocket *socket);
+  GstStructure* (*get_stats)    (GstMultiSocketSink *sink, GSocket *socket);
 
   /* signals */
 };
