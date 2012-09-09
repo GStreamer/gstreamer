@@ -43,6 +43,7 @@
 #endif
 
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 
 #include "pbutils.h"
 #include "pbutils-private.h"
@@ -762,6 +763,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
   if (g_str_has_prefix (name, "audio/")) {
     GstDiscovererAudioInfo *info;
+    const gchar *format_str;
 
     if (parent)
       info = (GstDiscovererAudioInfo *) gst_discoverer_stream_info_ref (parent);
@@ -777,8 +779,17 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
     if (gst_structure_get_int (caps_st, "channels", &tmp))
       info->channels = (guint) tmp;
 
-    if (gst_structure_get_int (caps_st, "depth", &tmp))
-      info->depth = (guint) tmp;
+    /* FIXME: we only want to extract depth if raw audio is what's in the
+     * container (i.e. not if there is a decoder involved) */
+    format_str = gst_structure_get_string (caps_st, "format");
+    if (format_str != NULL) {
+      const GstAudioFormatInfo *finfo;
+      GstAudioFormat format;
+
+      format = gst_audio_format_from_string (format_str);
+      finfo = gst_audio_format_get_info (format);
+      info->depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
+    }
 
     if (gst_structure_id_has_field (st, _TAGS_QUARK)) {
       gst_structure_id_get (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, &tags_st, NULL);
