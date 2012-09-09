@@ -380,6 +380,27 @@ gst_dvd_spu_video_proxy_getcaps (GstPad * pad, GstCaps * filter)
   return caps;
 }
 
+/* With SPU lock held */
+static void
+update_video_to_position (GstDVDSpu * dvdspu, GstClockTime new_pos)
+{
+  SpuState *state = &dvdspu->spu_state;
+#if 0
+  g_print ("Segment update for video. Advancing from %" GST_TIME_FORMAT
+      " to %" GST_TIME_FORMAT "\n",
+      GST_TIME_ARGS (dvdspu->video_seg.position), GST_TIME_ARGS (start));
+#endif
+  while (dvdspu->video_seg.position < new_pos &&
+      !(state->flags & SPU_STATE_STILL_FRAME)) {
+    DVD_SPU_UNLOCK (dvdspu);
+    if (dvdspu_handle_vid_buffer (dvdspu, NULL) != GST_FLOW_OK) {
+      DVD_SPU_LOCK (dvdspu);
+      break;
+    }
+    DVD_SPU_LOCK (dvdspu);
+  }
+}
+
 static gboolean
 gst_dvd_spu_video_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -456,26 +477,29 @@ gst_dvd_spu_video_event (GstPad * pad, GstObject * parent, GstEvent * event)
       DVD_SPU_LOCK (dvdspu);
 
       if (seg.start > dvdspu->video_seg.position) {
-#if 0
-        g_print ("Segment update for video. Advancing from %" GST_TIME_FORMAT
-            " to %" GST_TIME_FORMAT "\n",
-            GST_TIME_ARGS (dvdspu->video_seg.position), GST_TIME_ARGS (start));
-#endif
-        while (dvdspu->video_seg.position < seg.start &&
-            !(state->flags & SPU_STATE_STILL_FRAME)) {
-          DVD_SPU_UNLOCK (dvdspu);
-          if (dvdspu_handle_vid_buffer (dvdspu, NULL) != GST_FLOW_OK) {
-            DVD_SPU_LOCK (dvdspu);
-            break;
-          }
-          DVD_SPU_LOCK (dvdspu);
-        }
+        update_video_to_position (dvdspu, seg.start);
       }
 
       dvdspu->video_seg = seg;
       DVD_SPU_UNLOCK (dvdspu);
 
       res = gst_pad_event_default (pad, parent, event);
+      break;
+    }
+    case GST_EVENT_GAP:
+    {
+      GstClockTime timestamp, duration;
+      gst_event_parse_gap (event, &timestamp, &duration);
+      if (GST_CLOCK_TIME_IS_VALID (duration))
+        timestamp += duration;
+
+      DVD_SPU_LOCK (dvdspu);
+      GST_LOG_OBJECT (dvdspu, "Received GAP. Advancing to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp));
+      update_video_to_position (dvdspu, timestamp);
+      DVD_SPU_UNLOCK (dvdspu);
+
+      gst_event_unref (event);
       break;
     }
     case GST_EVENT_FLUSH_START:
