@@ -3,10 +3,10 @@
   <description>Subtitle parsing</description>
   <filename>../../gst/subparse/.libs/libgstsubparse.so</filename>
   <basename>libgstsubparse.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.93.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>text/x-pango-markup</details>
+          <details>text/x-raw, format=(string)pango-markup</details>
         </caps>
       </pads>
     </element>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>text/plain; text/x-pango-markup</details>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
         </caps>
       </pads>
     </element>

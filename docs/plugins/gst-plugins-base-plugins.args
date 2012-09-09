@@ -75,7 +75,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Force aspect ratio</NICK>
 <BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -215,7 +215,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Force aspect ratio</NICK>
 <BLURB>When enabled, reverse caps negotiation (scaling) will respect original aspect ratio.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1205,7 +1205,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
 <BLURB>Flags to control behaviour.</BLURB>
-<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume|Use software color balance</DEFAULT>
+<DEFAULT>Render the video stream|Render the audio stream|Render subtitles|Use software volume|Deinterlace video if necessary|Use software color balance</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1336,6 +1336,16 @@
 <NICK>Current URI</NICK>
 <BLURB>The currently playing URI.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPlayBin::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force Aspect Ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1584,7 +1594,7 @@
 <RANGE>[0,3]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed level</NICK>
-<BLURB>Controls the amount of motion vector searching done while encoding.  This property requires libtheora version >= 1.0.</BLURB>
+<BLURB>Controls the amount of motion vector searching done while encoding.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
 
@@ -1593,8 +1603,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>VP3 Compatible</NICK>
-<BLURB>Enable capping of bit reservoir overflows.  This property requires libtheora version >= 1.1.</BLURB>
+<NICK>Cap overflow</NICK>
+<BLURB>Enable capping of bit reservoir overflows.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1603,8 +1613,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>VP3 Compatible</NICK>
-<BLURB>Enable capping of bit reservoir underflows.  This property requires libtheora version >= 1.1.</BLURB>
+<NICK>Cap underflow</NICK>
+<BLURB>Enable capping of bit reservoir underflows.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -1613,8 +1623,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>VP3 Compatible</NICK>
-<BLURB>Allow or disallow frame dropping.  This property requires libtheora version >= 1.1.</BLURB>
+<NICK>Drop frames</NICK>
+<BLURB>Allow or disallow frame dropping.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1624,7 +1634,7 @@
 <RANGE>[0,1000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Rate Control Buffer</NICK>
-<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.  This property requires libtheora version >= 1.1.</BLURB>
+<BLURB>Sets the size of the rate control buffer, in units of frames.  The default value of 0 instructs the encoder to automatically select an appropriate value.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1633,8 +1643,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>VP3 Compatible</NICK>
-<BLURB>Disables non-VP3 compatible features.  This property requires libtheora version >= 1.1.</BLURB>
+<NICK>VP3 compatible</NICK>
+<BLURB>Disables non-VP3 compatible features.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -2145,7 +2155,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>tolerance</NICK>
 <BLURB>Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>40000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3859,6 +3869,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPlaySink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force Aspect Ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSubtitleOverlay::font-desc</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -3950,7 +3970,7 @@
 
 <ARG>
 <NAME>GstEncodeBin::flags</NAME>
-<TYPE>GstEncFlags</TYPE>
+<TYPE>GstEncodeBinFlags</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flags</NICK>
@@ -4160,7 +4180,7 @@
 
 <ARG>
 <NAME>GstVideoConvert::dither</NAME>
-<TYPE>GstColorspaceDitherMethod</TYPE>
+<TYPE>GstVideoConvertDitherMethod</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Dither</NICK>

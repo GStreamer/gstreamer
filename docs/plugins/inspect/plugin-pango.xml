@@ -3,10 +3,10 @@
   <description>Pango-based text rendering and overlay</description>
   <filename>../../ext/pango/.libs/libgstpango.so</filename>
   <basename>libgstpango.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.93.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -20,13 +20,13 @@
           <name>video_sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
@@ -41,19 +41,19 @@
           <name>text_sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>text/x-pango-markup; text/plain</details>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
         </caps>
         <caps>
           <name>video_sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
@@ -68,7 +68,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>text/x-pango-markup; text/plain</details>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -89,13 +89,13 @@
           <name>video_sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, AYUV, I420, UYVY, NV12, NV21 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

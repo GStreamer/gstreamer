@@ -1,6 +1,8 @@
 GObject
   GInitiallyUnowned
     GstObject
+      GstAllocator
+        GstDefaultAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -13,10 +15,21 @@ GObject
       GstElement
         GstAdder
         GstAudioDecoder
+          GstIVorbisDec
           GstVorbisDec
         GstAudioEncoder
           GstVorbisEnc
         GstAudioRate
+        GstAudioVisualizer-BaseExtVisual
+          GstVisual
+            GstVisualbumpscope
+            GstVisualcorona
+            GstVisualinfinite
+            GstVisualjakdaw
+            GstVisualjess
+            GstVisuallv_analyzer
+            GstVisuallv_scope
+            GstVisualoinksie
         GstBaseSink
           GstAppSink
           GstAudioBaseSink
@@ -87,15 +100,6 @@ GObject
           GstTheoraDec
         GstVideoEncoder
           GstTheoraEnc
-        GstVisual
-          GstVisualbumpscope
-          GstVisualcorona
-          GstVisualinfinite
-          GstVisualjakdaw
-          GstVisualjess
-          GstVisuallv_analyzer
-          GstVisuallv_scope
-          GstVisualoinksie
         GstVorbisParse
           GstVorbisTag
       GstPad

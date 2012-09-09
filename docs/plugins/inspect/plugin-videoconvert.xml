@@ -1,0 +1,34 @@
+<plugin>
+  <name>videoconvert</name>
+  <description>Colorspace conversion</description>
+  <filename>../../gst/videoconvert/.libs/libgstvideoconvert.so</filename>
+  <basename>libgstvideoconvert.so</basename>
+  <version>0.11.93.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package></package>
+  <origin></origin>
+  <elements>
+    <element>
+      <name>videoconvert</name>
+      <longname> Colorspace converter</longname>
+      <class>Filter/Converter/Video</class>
+      <description>Converts video from one colorspace to another</description>
+      <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
