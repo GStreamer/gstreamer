@@ -489,7 +489,7 @@ ptr_array_contains_string (GPtrArray * arr, const gchar * s)
 }
 
 static gboolean
-gst_install_plugins_spawn_child (gchar ** details,
+gst_install_plugins_spawn_child (const gchar * const *details,
     GstInstallPluginsContext * ctx, GPid * child_pid, gint * exit_status)
 {
   GPtrArray *arr;
@@ -511,7 +511,7 @@ gst_install_plugins_spawn_child (gchar ** details,
   /* finally, add the detail strings, but without duplicates */
   while (details != NULL && details[0] != NULL) {
     if (!ptr_array_contains_string (arr, details[0]))
-      g_ptr_array_add (arr, details[0]);
+      g_ptr_array_add (arr, (gpointer) details[0]);
     ++details;
   }
 
@@ -618,8 +618,9 @@ gst_install_plugins_installer_exited (GPid pid, gint status, gpointer data)
  */
 
 GstInstallPluginsReturn
-gst_install_plugins_async (gchar ** details, GstInstallPluginsContext * ctx,
-    GstInstallPluginsResultFunc func, gpointer user_data)
+gst_install_plugins_async (const gchar * const *details,
+    GstInstallPluginsContext * ctx, GstInstallPluginsResultFunc func,
+    gpointer user_data)
 {
   GstInstallPluginsAsyncHelper *helper;
   GPid pid;
@@ -665,7 +666,8 @@ gst_install_plugins_async (gchar ** details, GstInstallPluginsContext * ctx,
  * Returns: the result of the installation.
  */
 GstInstallPluginsReturn
-gst_install_plugins_sync (gchar ** details, GstInstallPluginsContext * ctx)
+gst_install_plugins_sync (const gchar * const *details,
+    GstInstallPluginsContext * ctx)
 {
   gint status;
 

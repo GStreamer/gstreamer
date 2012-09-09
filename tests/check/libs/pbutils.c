@@ -480,7 +480,7 @@ result_cb (GstInstallPluginsReturn result, gpointer user_data)
 
 /* make sure our script gets called with the right parameters */
 static void
-test_pb_utils_install_plugins_do_callout (gchar ** details,
+test_pb_utils_install_plugins_do_callout (const gchar * const *details,
     GstInstallPluginsContext * ctx, const gchar * script,
     GstInstallPluginsReturn expected_result)
 {
@@ -548,9 +548,8 @@ GST_START_TEST (test_pb_utils_install_plugins)
 {
   GstInstallPluginsContext *ctx;
   GstInstallPluginsReturn ret;
-  gchar *details[] = { (char *) "detail1", (char *) "detail2", NULL };
-  gchar *details_multi[] =
-      { (char *) "detail1", (char *) "detail1", (char *) "detail2", NULL };
+  const gchar *details[] = { "detail1", "detail2", NULL };
+  const gchar *details_multi[] = { "detail1", "detail1", "detail2", NULL };
 
   ctx = gst_install_plugins_context_new ();
 

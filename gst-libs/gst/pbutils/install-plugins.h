@@ -118,12 +118,12 @@ GType  gst_install_plugins_context_get_type (void);
 typedef void (*GstInstallPluginsResultFunc) (GstInstallPluginsReturn  result,
                                              gpointer                 user_data);
 
-GstInstallPluginsReturn  gst_install_plugins_async (gchar                    ** details,
+GstInstallPluginsReturn  gst_install_plugins_async (const gchar * const * details,
                                                     GstInstallPluginsContext  * ctx,
                                                     GstInstallPluginsResultFunc func,
                                                     gpointer                    user_data);
 
-GstInstallPluginsReturn  gst_install_plugins_sync  (gchar                    ** details,
+GstInstallPluginsReturn  gst_install_plugins_sync  (const gchar * const       * details,
                                                     GstInstallPluginsContext  * ctx);
 
 const gchar * gst_install_plugins_return_get_name (GstInstallPluginsReturn ret);
