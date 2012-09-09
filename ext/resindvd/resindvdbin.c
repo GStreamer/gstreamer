@@ -99,6 +99,7 @@ static void rsn_dvdbin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn rsn_dvdbin_change_state (GstElement * element,
     GstStateChange transition);
+static void rsn_dvdbin_no_more_pads (RsnDvdBin * dvdbin);
 
 static void
 rsn_dvdbin_class_init (RsnDvdBinClass * klass)
@@ -270,6 +271,21 @@ rsn_dvdbin_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = rsn_dvdbin_uri_get_protocols;
   iface->get_uri = rsn_dvdbin_uri_get_uri;
   iface->set_uri = rsn_dvdbin_uri_set_uri;
+}
+
+static void
+rsn_dvdbin_no_more_pads (RsnDvdBin * dvdbin)
+{
+  if (dvdbin->did_no_more_pads)
+    return;
+  dvdbin->did_no_more_pads = TRUE;
+
+  GST_DEBUG_OBJECT (dvdbin, "Firing no more pads");
+  /* Shrink subpicture queue to smaller size */
+  g_object_set (dvdbin->pieces[DVD_ELEM_SPUQ],
+      "max-size-time", G_GUINT64_CONSTANT (0), "max-size-bytes", 0,
+      "max-size-buffers", 1, NULL);
+  gst_element_no_more_pads (GST_ELEMENT (dvdbin));
 }
 
 static gboolean
@@ -462,9 +478,10 @@ create_elements (RsnDvdBin * dvdbin)
   if (!try_create_piece (dvdbin, DVD_ELEM_SPUQ, "queue", 0, "spu_q",
           "subpicture decoder buffer"))
     return FALSE;
+  /* Allow a lot more while pre-rolling */
   g_object_set (dvdbin->pieces[DVD_ELEM_SPUQ],
       "max-size-time", G_GUINT64_CONSTANT (0), "max-size-bytes", 0,
-      "max-size-buffers", 1, NULL);
+      "max-size-buffers", 100, NULL);
 
   src = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_SPU_SELECT], "src");
   sink = gst_element_get_static_pad (dvdbin->pieces[DVD_ELEM_SPUQ], "sink");
@@ -538,8 +555,7 @@ create_elements (RsnDvdBin * dvdbin)
 
   if (dvdbin->video_added && (dvdbin->audio_added || dvdbin->audio_broken)
       && dvdbin->subpicture_added) {
-    GST_DEBUG_OBJECT (dvdbin, "Firing no more pads");
-    gst_element_no_more_pads (GST_ELEMENT (dvdbin));
+    rsn_dvdbin_no_more_pads (dvdbin);
   }
 
   return TRUE;
@@ -634,6 +650,7 @@ remove_elements (RsnDvdBin * dvdbin)
   dvdbin->video_added = dvdbin->audio_added = dvdbin->subpicture_added = FALSE;
   dvdbin->audio_broken = FALSE;
   dvdbin->video_pad = dvdbin->audio_pad = dvdbin->subpicture_pad = NULL;
+  dvdbin->did_no_more_pads = FALSE;
 }
 
 static GstPad *
@@ -802,7 +819,7 @@ demux_no_more_pads (GstElement * element, RsnDvdBin * dvdbin)
   if (no_more_pads) {
     GST_DEBUG_OBJECT (dvdbin,
         "Firing no more pads from demuxer no-more-pads cb");
-    gst_element_no_more_pads (GST_ELEMENT (dvdbin));
+    rsn_dvdbin_no_more_pads (dvdbin);
   }
 }
 
@@ -867,7 +884,7 @@ dvdbin_pad_blocked_cb (GstPad * opad,
 
   if (added_last_pad) {
     GST_DEBUG_OBJECT (dvdbin, "Firing no more pads from pad-blocked cb");
-    gst_element_no_more_pads (GST_ELEMENT (dvdbin));
+    rsn_dvdbin_no_more_pads (dvdbin);
   }
 
   return GST_PAD_PROBE_OK;

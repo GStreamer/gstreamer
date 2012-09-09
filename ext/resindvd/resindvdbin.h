@@ -74,6 +74,8 @@ struct _RsnDvdBin
   gboolean audio_broken;
   gboolean subpicture_added;
 
+  gboolean did_no_more_pads;
+
   GList *mq_req_pads;
 };
 
