@@ -1202,12 +1202,14 @@ discoverer_collect (GstDiscoverer * dc)
     if (dc->priv->current_info->duration == 0 &&
         dc->priv->current_info->stream_info != NULL &&
         dc->priv->current_info->stream_info->next == NULL) {
-      GstStructure *st =
-          gst_caps_get_structure (dc->priv->current_info->stream_info->caps, 0);
+      GstDiscovererStreamInfo *stream_info;
+      GstStructure *st;
+
+      stream_info = dc->priv->current_info->stream_info;
+      st = gst_caps_get_structure (stream_info->caps, 0);
 
       if (g_str_has_prefix (gst_structure_get_name (st), "image/"))
-        ((GstDiscovererVideoInfo *) dc->priv->current_info->
-            stream_info)->is_image = TRUE;
+        ((GstDiscovererVideoInfo *) stream_info)->is_image = TRUE;
     }
   }
 
