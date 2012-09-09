@@ -83,7 +83,7 @@ gst_audio_ring_buffer_init (GstAudioRingBuffer * ringbuffer)
   ringbuffer->open = FALSE;
   ringbuffer->acquired = FALSE;
   ringbuffer->state = GST_AUDIO_RING_BUFFER_STATE_STOPPED;
-  ringbuffer->cond = g_cond_new ();
+  g_cond_init (&ringbuffer->cond);
   ringbuffer->waiting = 0;
   ringbuffer->empty_seg = NULL;
   ringbuffer->flushing = TRUE;
@@ -105,7 +105,7 @@ gst_audio_ring_buffer_finalize (GObject * object)
 {
   GstAudioRingBuffer *ringbuffer = GST_AUDIO_RING_BUFFER (object);
 
-  g_cond_free (ringbuffer->cond);
+  g_cond_clear (&ringbuffer->cond);
   g_free (ringbuffer->empty_seg);
 
   G_OBJECT_CLASS (gst_audio_ring_buffer_parent_class)->finalize (G_OBJECT

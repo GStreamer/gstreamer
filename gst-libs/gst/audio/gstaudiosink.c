@@ -92,7 +92,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_audio_sink_debug);
 typedef struct _GstAudioSinkRingBuffer GstAudioSinkRingBuffer;
 typedef struct _GstAudioSinkRingBufferClass GstAudioSinkRingBufferClass;
 
-#define GST_AUDIO_SINK_RING_BUFFER_GET_COND(buf) (((GstAudioSinkRingBuffer *)buf)->cond)
+#define GST_AUDIO_SINK_RING_BUFFER_GET_COND(buf) (&(((GstAudioSinkRingBuffer *)buf)->cond))
 #define GST_AUDIO_SINK_RING_BUFFER_WAIT(buf)     (g_cond_wait (GST_AUDIO_SINK_RING_BUFFER_GET_COND (buf), GST_OBJECT_GET_LOCK (buf)))
 #define GST_AUDIO_SINK_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_AUDIO_SINK_RING_BUFFER_GET_COND (buf)))
 #define GST_AUDIO_SINK_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_AUDIO_SINK_RING_BUFFER_GET_COND (buf)))
@@ -104,7 +104,7 @@ struct _GstAudioSinkRingBuffer
   gboolean running;
   gint queuedseg;
 
-  GCond *cond;
+  GCond cond;
 };
 
 struct _GstAudioSinkRingBufferClass
@@ -320,7 +320,7 @@ gst_audio_sink_ring_buffer_init (GstAudioSinkRingBuffer * ringbuffer,
   ringbuffer->running = FALSE;
   ringbuffer->queuedseg = 0;
 
-  ringbuffer->cond = g_cond_new ();
+  g_cond_init (&ringbuffer->cond);
 }
 
 static void
@@ -334,7 +334,7 @@ gst_audio_sink_ring_buffer_finalize (GObject * object)
 {
   GstAudioSinkRingBuffer *ringbuffer = GST_AUDIO_SINK_RING_BUFFER_CAST (object);
 
-  g_cond_free (ringbuffer->cond);
+  g_cond_clear (&ringbuffer->cond);
 
   G_OBJECT_CLASS (ring_parent_class)->finalize (object);
 }

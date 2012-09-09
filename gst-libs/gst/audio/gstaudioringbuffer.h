@@ -145,7 +145,7 @@ struct _GstAudioRingBufferSpec
   gpointer _gst_reserved[GST_PADDING];
 };
 
-#define GST_AUDIO_RING_BUFFER_GET_COND(buf) (((GstAudioRingBuffer *)buf)->cond)
+#define GST_AUDIO_RING_BUFFER_GET_COND(buf) (&(((GstAudioRingBuffer *)buf)->cond))
 #define GST_AUDIO_RING_BUFFER_WAIT(buf)     (g_cond_wait (GST_AUDIO_RING_BUFFER_GET_COND (buf), GST_OBJECT_GET_LOCK (buf)))
 #define GST_AUDIO_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_AUDIO_RING_BUFFER_GET_COND (buf)))
 #define GST_AUDIO_RING_BUFFER_BROADCAST(buf)(g_cond_broadcast (GST_AUDIO_RING_BUFFER_GET_COND (buf)))
@@ -171,7 +171,7 @@ struct _GstAudioRingBuffer {
   GstObject                   object;
 
   /*< public >*/ /* with LOCK */
-  GCond                      *cond;
+  GCond                      cond;
   gboolean                    open;
   gboolean                    acquired;
   guint8                     *memory;
