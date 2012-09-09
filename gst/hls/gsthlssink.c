@@ -64,7 +64,6 @@ static void gst_hls_sink_get_property (GObject * object, guint prop_id,
 static void gst_hls_sink_handle_message (GstBin * bin, GstMessage * message);
 static gboolean gst_hls_sink_ghost_event_probe (GstPad * pad,
     GstEvent * event, gpointer data);
-
 static GstStateChangeReturn
 gst_hls_sink_change_state (GstElement * element, GstStateChange trans);
 
@@ -84,11 +83,9 @@ gst_hls_sink_finalize (GObject * object)
 {
   GstHlsSink *sink = GST_HLS_SINK_CAST (object);
 
-  gst_event_replace (&sink->force_key_unit_event, NULL);
   g_free (sink->location);
   g_free (sink->playlist_location);
   g_free (sink->playlist_root);
-  gst_m3u8_playlist_free (sink->playlist);
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) sink);
 }
@@ -160,16 +157,6 @@ gst_hls_sink_class_init (GstHlsSinkClass * klass)
 }
 
 static void
-gst_hls_sink_reset (GstHlsSink * sink)
-{
-  sink->index = 0;
-  sink->multifilesink = NULL;
-  sink->last_stream_time = 0;
-
-  sink->playlist = gst_m3u8_playlist_new (6, sink->playlist_length, FALSE);
-}
-
-static void
 gst_hls_sink_init (GstHlsSink * sink, GstHlsSinkClass * sink_class)
 {
   GstPadTemplate *templ = gst_static_pad_template_get (&sink_template);
@@ -185,9 +172,28 @@ gst_hls_sink_init (GstHlsSink * sink, GstHlsSinkClass * sink_class)
   sink->playlist_length = DEFAULT_PLAYLIST_LENGTH;
   sink->max_files = DEFAULT_MAX_FILES;
   sink->target_duration = DEFAULT_TARGET_DURATION;
+
+  gst_hls_sink_reset (sink);
+}
+
+static void
+gst_hls_sink_reset (GstHlsSink * sink)
+{
+  sink->index = 0;
   sink->count = 0;
   sink->timeout_id = 0;
-  gst_hls_sink_reset (sink);
+  sink->last_running_time = 0;
+  /* we don't need to unref since we gst_bin_add-ed multifilesink
+   * to ourselves
+   */
+  sink->multifilesink = NULL;
+  sink->waiting_fku = FALSE;
+  gst_event_replace (&sink->force_key_unit_event, NULL);
+  gst_segment_init (&sink->segment, GST_FORMAT_UNDEFINED);
+
+  if (sink->playlist)
+    gst_m3u8_playlist_free (sink->playlist);
+  sink->playlist = gst_m3u8_playlist_new (6, sink->playlist_length, FALSE);
 }
 
 static gboolean
@@ -332,8 +338,7 @@ gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
       sink->timeout_id = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      /* reset the segment/file count */
-      sink->count = 0;
+      gst_hls_sink_reset (sink);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_hls_sink_reset (sink);
