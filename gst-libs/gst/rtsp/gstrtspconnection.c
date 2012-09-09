@@ -2872,7 +2872,7 @@ struct _GstRTSPWatch
 
   /* queued message for transmission */
   guint id;
-  GMutex *mutex;
+  GMutex mutex;
   GQueue *messages;
   guint8 *write_data;
   guint write_off;
@@ -3015,7 +3015,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
     if (watch->writefd.revents & WRITE_ERR)
       goto write_error;
 
-    g_mutex_lock (watch->mutex);
+    g_mutex_lock (&watch->mutex);
     do {
       if (watch->write_data == NULL) {
         GstRTSPRec *rec;
@@ -3035,7 +3035,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
 
       res = write_bytes (watch->conn->write_socket, watch->write_data,
           &watch->write_off, watch->write_size, watch->conn->cancellable);
-      g_mutex_unlock (watch->mutex);
+      g_mutex_unlock (&watch->mutex);
 
       if (res == GST_RTSP_EINTR)
         goto write_blocked;
@@ -3045,7 +3045,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
       } else {
         goto write_error;
       }
-      g_mutex_lock (watch->mutex);
+      g_mutex_lock (&watch->mutex);
 
       g_free (watch->write_data);
       watch->write_data = NULL;
@@ -3053,7 +3053,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
 
     watch->writefd.events = WRITE_ERR;
 
-    g_mutex_unlock (watch->mutex);
+    g_mutex_unlock (&watch->mutex);
   }
 
 write_blocked:
@@ -3131,7 +3131,7 @@ gst_rtsp_source_finalize (GSource * source)
   watch->messages = NULL;
   g_free (watch->write_data);
 
-  g_mutex_free (watch->mutex);
+  g_mutex_clear (&watch->mutex);
 
   if (watch->notify)
     watch->notify (watch->user_data);
@@ -3181,7 +3181,7 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
   result->conn = conn;
   result->builder.state = STATE_START;
 
-  result->mutex = g_mutex_new ();
+  g_mutex_init (&result->mutex);
   result->messages = g_queue_new ();
 
   result->readfd.fd = -1;
@@ -3288,7 +3288,7 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
   g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (size != 0, GST_RTSP_EINVAL);
 
-  g_mutex_lock (watch->mutex);
+  g_mutex_lock (&watch->mutex);
 
   /* try to send the message synchronously first */
   if (watch->messages->length == 0 && watch->write_data == NULL) {
@@ -3334,7 +3334,7 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
   res = GST_RTSP_OK;
 
 done:
-  g_mutex_unlock (watch->mutex);
+  g_mutex_unlock (&watch->mutex);
 
   if (context)
     g_main_context_wakeup (context);
