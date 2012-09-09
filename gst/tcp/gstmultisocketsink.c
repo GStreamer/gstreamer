@@ -133,7 +133,7 @@ enum
   /* signals */
   SIGNAL_CLIENT_ADDED,
   SIGNAL_CLIENT_REMOVED,
-  SIGNAL_CLIENT_HANDLE_REMOVED,
+  SIGNAL_CLIENT_SOCKET_REMOVED,
 
   LAST_SIGNAL
 };
@@ -344,9 +344,8 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    *
    * Since: 0.10.7
    */
-  /* FIXME: rename to client-socket-removed */
-  gst_multi_socket_sink_signals[SIGNAL_CLIENT_HANDLE_REMOVED] =
-      g_signal_new ("client-handle-removed", G_TYPE_FROM_CLASS (klass),
+  gst_multi_socket_sink_signals[SIGNAL_CLIENT_SOCKET_REMOVED] =
+      g_signal_new ("client-socket-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT,
       G_TYPE_NONE, 1, G_TYPE_SOCKET);
 
@@ -535,7 +534,7 @@ gst_multi_socket_sink_client_free (GstMultiHandleSink * mhsink,
   g_assert (G_IS_SOCKET (client->handle.socket));
 
   g_signal_emit (mhsink,
-      gst_multi_socket_sink_signals[SIGNAL_CLIENT_HANDLE_REMOVED], 0,
+      gst_multi_socket_sink_signals[SIGNAL_CLIENT_SOCKET_REMOVED], 0,
       client->handle.socket);
 
   g_object_unref (client->handle.socket);

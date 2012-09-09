@@ -142,7 +142,7 @@ enum
   /* signals */
   SIGNAL_CLIENT_ADDED,
   SIGNAL_CLIENT_REMOVED,
-  SIGNAL_CLIENT_HANDLE_REMOVED,
+  SIGNAL_CLIENT_FD_REMOVED,
 
   LAST_SIGNAL
 };
@@ -355,9 +355,8 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    *
    * Since: 0.10.7
    */
-  /* FIXME: rename to client-fd-removed */
-  gst_multi_fd_sink_signals[SIGNAL_CLIENT_HANDLE_REMOVED] =
-      g_signal_new ("client-handle-removed", G_TYPE_FROM_CLASS (klass),
+  gst_multi_fd_sink_signals[SIGNAL_CLIENT_FD_REMOVED] =
+      g_signal_new ("client-fd-removed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, gst_tcp_marshal_VOID__INT,
       G_TYPE_NONE, 1, G_TYPE_INT);
 
@@ -437,9 +436,8 @@ static void
 gst_multi_fd_sink_client_free (GstMultiHandleSink * mhsink,
     GstMultiHandleClient * client)
 {
-  g_signal_emit (mhsink,
-      gst_multi_fd_sink_signals[SIGNAL_CLIENT_HANDLE_REMOVED], 0,
-      client->handle.fd);
+  g_signal_emit (mhsink, gst_multi_fd_sink_signals[SIGNAL_CLIENT_FD_REMOVED],
+      0, client->handle.fd);
 }
 
 /* action signals */
