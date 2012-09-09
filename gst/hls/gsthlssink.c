@@ -72,9 +72,6 @@ gst_hls_sink_dispose (GObject * object)
 {
   GstHlsSink *sink = GST_HLS_SINK_CAST (object);
 
-  if (sink->multifilesink)
-    g_object_unref (sink->multifilesink);
-
   G_OBJECT_CLASS (parent_class)->dispose ((GObject *) sink);
 }
 
