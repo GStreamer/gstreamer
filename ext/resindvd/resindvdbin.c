@@ -395,7 +395,7 @@ create_elements (RsnDvdBin * dvdbin)
   g_signal_connect (G_OBJECT (dvdbin->pieces[DVD_ELEM_DEMUX]), "no-more-pads",
       G_CALLBACK (demux_no_more_pads), dvdbin);
 
-  if (!try_create_piece (dvdbin, DVD_ELEM_MQUEUE, "multiqueue", 0, "mq",
+  if (!try_create_piece (dvdbin, DVD_ELEM_MQUEUE, "multiqueue", 0, "rsnmq",
           "multiqueue"))
     return FALSE;
 
@@ -404,12 +404,12 @@ create_elements (RsnDvdBin * dvdbin)
       "max-size-buffers", 0, NULL);
 
   if (!try_create_piece (dvdbin, DVD_ELEM_VIDPARSE, "mpegvideoparse", 0,
-          "vidparse", "video parser"))
+          "rsnvidparse", "video parser"))
     return FALSE;
 
   /* Decodebin will throw a missing element message to find an MPEG decoder */
   if (!try_create_piece (dvdbin, DVD_ELEM_VIDDEC, NULL, RSN_TYPE_VIDEODEC,
-          "viddec", "video decoder"))
+          "rsnviddec", "video decoder"))
     return FALSE;
 
   /* FIXME: Replace identity */
@@ -450,10 +450,13 @@ create_elements (RsnDvdBin * dvdbin)
   gst_object_unref (src);
   src = NULL;
 
-  /* FIXME: Core input selector OK? */
+  /* FIXME: Merge stream-selection logic to core and switch back */
   if (!try_create_piece (dvdbin, DVD_ELEM_SPU_SELECT, NULL,
           RSN_TYPE_INPUT_SELECTOR, "subpselect", "Subpicture stream selector"))
     return FALSE;
+
+  g_object_set (G_OBJECT (dvdbin->pieces[DVD_ELEM_SPU_SELECT]),
+      "sync-streams", FALSE, NULL);
 
   /* Add a single standalone queue to hold a single buffer of SPU data */
   if (!try_create_piece (dvdbin, DVD_ELEM_SPUQ, "queue", 0, "spu_q",
@@ -493,9 +496,11 @@ create_elements (RsnDvdBin * dvdbin)
   gst_object_unref (src);
   src = NULL;
 
-  if (!try_create_piece (dvdbin, DVD_ELEM_AUD_SELECT, "input-selector",
+  if (!try_create_piece (dvdbin, DVD_ELEM_AUD_SELECT, NULL,
           RSN_TYPE_INPUT_SELECTOR, "audioselect", "Audio stream selector"))
     return FALSE;
+  g_object_set (G_OBJECT (dvdbin->pieces[DVD_ELEM_AUD_SELECT]),
+      "sync-streams", FALSE, NULL);
 
   if (!try_create_piece (dvdbin, DVD_ELEM_AUDDEC, NULL,
           RSN_TYPE_AUDIODEC, "auddec", "audio decoder"))
