@@ -22,6 +22,18 @@
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
 
+/*
+ * These macros provide a way to store the native pointer to CustomData, which might be 32 or 64 bits, into
+ * a jlong, which is always 64 bits, without warnings.
+ */
+#if GLIB_SIZEOF_VOID_P == 8
+# define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(*env)->GetLongField (env, thiz, fieldID)
+# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)data)
+#else
+# define GET_CUSTOM_DATA(env, thiz, fieldID) (CustomData *)(jint)(*env)->GetLongField (env, thiz, fieldID)
+# define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
+#endif
+
 typedef struct _CustomData {
   JNIEnv *env;
   GstElement *pipeline;
@@ -29,16 +41,44 @@ typedef struct _CustomData {
 } CustomData;
 
 static pthread_t gst_app_thread;
-static pthread_key_t gst_app_thread_key;
+static pthread_key_t current_jni_env;
 static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 
 /*
  * Private methods
  */
+static JNIEnv * gst_attach_current_thread (void) {
+  JNIEnv *env;
+  JavaVMAttachArgs args;
+
+  GST_DEBUG ("Attaching thread %p", g_thread_self ());
+  args.version = JNI_VERSION_1_4;
+  args.name = NULL;
+  args.group = NULL;
+
+  if ((*java_vm)->AttachCurrentThread (java_vm, &env, &args) < 0) {
+    GST_ERROR ("Failed to attach current thread");
+    return NULL;
+  }
+
+  return env;
+}
+
 static void gst_detach_current_thread (void *env) {
   GST_DEBUG ("Detaching thread %p", g_thread_self ());
   (*java_vm)->DetachCurrentThread (java_vm);
+}
+
+static JNIEnv *gst_get_jni_env (void) {
+  JNIEnv *env;
+
+  if ((env = pthread_getspecific (current_jni_env)) == NULL) {
+    env = gst_attach_current_thread ();
+    pthread_setspecific (current_jni_env, env);
+  }
+
+  return env;
 }
 
 static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
@@ -50,19 +90,6 @@ static void *gst_app_function (void *userdata) {
   GstBus *bus;
   GstMessage *msg;
   CustomData *data = (CustomData *)userdata;
-
-  pthread_key_create (&gst_app_thread_key, gst_detach_current_thread);
-  pthread_setspecific (gst_app_thread_key, &data);
-
-  GST_DEBUG ("Attaching thread %p", g_thread_self ());
-  args.version = JNI_VERSION_1_4;
-  args.name = NULL;
-  args.group = NULL;
-
-  if ((*java_vm)->AttachCurrentThread (java_vm, &data->env, &args) < 0) {
-    GST_ERROR ("Failed to attach current thread");
-    return;
-  }
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
@@ -85,7 +112,6 @@ static void *gst_app_function (void *userdata) {
   gst_object_unref (bus);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->pipeline);
-  // data = pthread_getspecific (gst_app_thread_key);
 }
 
 /*
@@ -93,13 +119,13 @@ static void *gst_app_function (void *userdata) {
  */
 void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = (CustomData *)g_malloc0 (sizeof (CustomData));
-  (*env)->SetLongField (env, thiz, custom_data_field_id, (jlong)data);
+  SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG ("Created CustomData at %p", data);
   pthread_create (&gst_app_thread, NULL, &gst_app_function, data);
 }
 
 void gst_native_finalize (JNIEnv* env, jobject thiz) {
-  CustomData *data = (CustomData *)(*env)->GetLongField (env, thiz, custom_data_field_id);
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   GST_DEBUG ("Quitting main loop...");
   g_main_loop_quit (data->main_loop);
   GST_DEBUG ("Waiting for thread to finish...");
@@ -110,13 +136,13 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
 }
 
 void gst_native_play (JNIEnv* env, jobject thiz) {
-  CustomData *data = (CustomData *)(*env)->GetLongField (env, thiz, custom_data_field_id);
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   GST_DEBUG ("Setting state to PLAYING");
   gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
 }
 
 void gst_native_pause (JNIEnv* env, jobject thiz) {
-  CustomData *data = (CustomData *)(*env)->GetLongField (env, thiz, custom_data_field_id);
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   GST_DEBUG ("Setting state to READY");
   gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 }
@@ -148,6 +174,8 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
   ret = (*env)->RegisterNatives (env, klass, native_methods, 5);
+
+  pthread_key_create (&current_jni_env, gst_detach_current_thread);
 
   return JNI_VERSION_1_4;
 }
