@@ -694,7 +694,7 @@ AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
 dnl *** UVC H264 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_UVCH264, true)
 AG_GST_CHECK_FEATURE(UVCH264, [UVC H264], uvch264, [
-  AC_CHECK_HEADER(linux/uvcvideo.h, HAVE_UVCH264=yes, HAVE_UVCH264=no)
+  AC_CHECK_HEADER(linux/uvcvideo.h, HAVE_UVCVIDEO_H=yes, HAVE_UVCVIDEO_H=no)
   AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-0.10 >= 0.10.36)
   PKG_CHECK_MODULES(G_UDEV, gudev-1.0 , [
           AC_DEFINE([HAVE_GUDEV], 1, [Define if gudev is installed])
@@ -704,6 +704,13 @@ AG_GST_CHECK_FEATURE(UVCH264, [UVC H264], uvch264, [
           AC_DEFINE([HAVE_LIBUSB], 1, [Define if libusb 1.x is installed])
           HAVE_LIBUSB="yes" ],
           [HAVE_LIBUSB="no"])
+  if test "x$HAVE_UVCVIDEO_H" == "xyes" && \
+     test "x$HAVE_GUDEV" == "xyes" && \
+     test "x$HAVE_LIBUSB" == "xyes"; then
+    HAVE_UVCH264=yes
+  else
+    HAVE_UVCH264=no
+  fi
 ])
 AC_SUBST(LIBUDEV_CFLAGS)
 AC_SUBST(LIBUDEV_LIBS)

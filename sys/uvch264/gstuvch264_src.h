@@ -30,9 +30,7 @@
 
 #include <gst/gst.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
-#if defined (HAVE_GUDEV) && defined (HAVE_LIBUSB)
 #include <libusb.h>
-#endif
 
 #include "uvc_h264.h"
 
@@ -105,9 +103,7 @@ struct _GstUvcH264Src
 
   int v4l2_fd;
   guint8 h264_unit_id;
-#if defined (HAVE_GUDEV) && defined (HAVE_LIBUSB)
   libusb_context *usb_ctx;
-#endif
 
   GstPadEventFunction srcpad_event_func;
   GstEvent *key_unit_event;
