@@ -159,11 +159,8 @@ gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced);
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_decoder_ensure_context(
-    GstVaapiDecoder    *decoder,
-    GstVaapiProfile     profile,
-    GstVaapiEntrypoint  entrypoint,
-    guint               width,
-    guint               height
+    GstVaapiDecoder     *decoder,
+    GstVaapiContextInfo *cip
 );
 
 G_GNUC_INTERNAL

@@ -306,6 +306,66 @@ clear_references(
     guint                *picture_count
 );
 
+/* Get number of reference frames to use */
+static guint
+get_max_dec_frame_buffering(GstH264SPS *sps)
+{
+    guint max_dec_frame_buffering, MaxDpbMbs, PicSizeMbs;
+
+    /* Table A-1 - Level limits */
+    switch (sps->level_idc) {
+    case 10: MaxDpbMbs = 396;    break;
+    case 11: MaxDpbMbs = 900;    break;
+    case 12: MaxDpbMbs = 2376;   break;
+    case 13: MaxDpbMbs = 2376;   break;
+    case 20: MaxDpbMbs = 2376;   break;
+    case 21: MaxDpbMbs = 4752;   break;
+    case 22: MaxDpbMbs = 8100;   break;
+    case 30: MaxDpbMbs = 8100;   break;
+    case 31: MaxDpbMbs = 18000;  break;
+    case 32: MaxDpbMbs = 20480;  break;
+    case 40: MaxDpbMbs = 32768;  break;
+    case 41: MaxDpbMbs = 32768;  break;
+    case 42: MaxDpbMbs = 34816;  break;
+    case 50: MaxDpbMbs = 110400; break;
+    case 51: MaxDpbMbs = 184320; break;
+    default:
+        g_assert(0 && "unhandled level");
+        break;
+    }
+
+    PicSizeMbs = ((sps->pic_width_in_mbs_minus1 + 1) *
+                  (sps->pic_height_in_map_units_minus1 + 1) *
+                  (sps->frame_mbs_only_flag ? 1 : 2));
+    max_dec_frame_buffering = MaxDpbMbs / PicSizeMbs;
+
+    /* VUI parameters */
+    if (sps->vui_parameters_present_flag) {
+        GstH264VUIParams * const vui_params = &sps->vui_parameters;
+        if (vui_params->bitstream_restriction_flag)
+            max_dec_frame_buffering = vui_params->max_dec_frame_buffering;
+        else {
+            switch (sps->profile_idc) {
+            case 44:  // CAVLC 4:4:4 Intra profile
+            case 86:  // Scalable High profile
+            case 100: // High profile
+            case 110: // High 10 profile
+            case 122: // High 4:2:2 profile
+            case 244: // High 4:4:4 Predictive profile
+                if (sps->constraint_set3_flag)
+                    max_dec_frame_buffering = 0;
+                break;
+            }
+        }
+    }
+
+    if (max_dec_frame_buffering > 16)
+        max_dec_frame_buffering = 16;
+    else if (max_dec_frame_buffering < sps->num_ref_frames)
+        max_dec_frame_buffering = sps->num_ref_frames;
+    return MAX(1, max_dec_frame_buffering);
+}
+
 static void
 dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
 {
@@ -415,64 +475,12 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     return TRUE;
 }
 
-static void
+static inline void
 dpb_reset(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint max_dec_frame_buffering, MaxDpbMbs, PicSizeMbs;
 
-    /* Table A-1 - Level limits */
-    switch (sps->level_idc) {
-    case 10: MaxDpbMbs = 396;    break;
-    case 11: MaxDpbMbs = 900;    break;
-    case 12: MaxDpbMbs = 2376;   break;
-    case 13: MaxDpbMbs = 2376;   break;
-    case 20: MaxDpbMbs = 2376;   break;
-    case 21: MaxDpbMbs = 4752;   break;
-    case 22: MaxDpbMbs = 8100;   break;
-    case 30: MaxDpbMbs = 8100;   break;
-    case 31: MaxDpbMbs = 18000;  break;
-    case 32: MaxDpbMbs = 20480;  break;
-    case 40: MaxDpbMbs = 32768;  break;
-    case 41: MaxDpbMbs = 32768;  break;
-    case 42: MaxDpbMbs = 34816;  break;
-    case 50: MaxDpbMbs = 110400; break;
-    case 51: MaxDpbMbs = 184320; break;
-    default:
-        g_assert(0 && "unhandled level");
-        break;
-    }
-
-    PicSizeMbs = ((sps->pic_width_in_mbs_minus1 + 1) *
-                  (sps->pic_height_in_map_units_minus1 + 1) *
-                  (sps->frame_mbs_only_flag ? 1 : 2));
-    max_dec_frame_buffering = MaxDpbMbs / PicSizeMbs;
-
-    /* VUI parameters */
-    if (sps->vui_parameters_present_flag) {
-        GstH264VUIParams * const vui_params = &sps->vui_parameters;
-        if (vui_params->bitstream_restriction_flag)
-            max_dec_frame_buffering = vui_params->max_dec_frame_buffering;
-        else {
-            switch (sps->profile_idc) {
-            case 44:  // CAVLC 4:4:4 Intra profile
-            case 86:  // Scalable High profile
-            case 100: // High profile
-            case 110: // High 10 profile
-            case 122: // High 4:2:2 profile
-            case 244: // High 4:4:4 Predictive profile
-                if (sps->constraint_set3_flag)
-                    max_dec_frame_buffering = 0;
-                break;
-            }
-        }
-    }
-
-    if (max_dec_frame_buffering > 16)
-        max_dec_frame_buffering = 16;
-    else if (max_dec_frame_buffering < sps->num_ref_frames)
-        max_dec_frame_buffering = sps->num_ref_frames;
-    priv->dpb_size = MAX(1, max_dec_frame_buffering);
+    priv->dpb_size = get_max_dec_frame_buffering(sps);
     GST_DEBUG("DPB size %u", priv->dpb_size);
 }
 
@@ -632,13 +640,15 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     }
 
     if (reset_context) {
-        success = gst_vaapi_decoder_ensure_context(
-            GST_VAAPI_DECODER(decoder),
-            priv->profile,
-            entrypoint,
-            priv->width, priv->height
-        );
-        if (!success)
+        GstVaapiContextInfo info;
+
+        info.profile    = priv->profile;
+        info.entrypoint = entrypoint;
+        info.width      = priv->width;
+        info.height     = priv->height;
+        info.ref_frames = get_max_dec_frame_buffering(sps);
+
+        if (!gst_vaapi_decoder_ensure_context(GST_VAAPI_DECODER(decoder), &info))
             return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
         priv->has_context = TRUE;
 

@@ -410,11 +410,16 @@ ensure_context(GstVaapiDecoderMpeg2 *decoder)
     }
 
     if (reset_context) {
-        reset_context = gst_vaapi_decoder_ensure_context(
+        GstVaapiContextInfo info;
+
+        info.profile    = priv->hw_profile;
+        info.entrypoint = entrypoint;
+        info.width      = priv->width;
+        info.height     = priv->height;
+        info.ref_frames = 2;
+        reset_context   = gst_vaapi_decoder_ensure_context(
             GST_VAAPI_DECODER(decoder),
-            priv->hw_profile,
-            entrypoint,
-            priv->width, priv->height
+            &info
         );
         if (!reset_context)
             return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
