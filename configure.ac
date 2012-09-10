@@ -123,9 +123,6 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
-dnl orc is required for cpu detection for libpostproc
-ORC_CHECK([$ORC_REQ])
-
 dnl *** set variables based on configure arguments ***
 
 dnl set location of plugin directory
@@ -221,9 +218,6 @@ AC_ARG_WITH(system-libav,
 
 if test "x$with_system_libav" = "xyes"; then
   PKG_CHECK_MODULES(LIBAV, libavformat libavcodec libavutil) 
-  if test "x$enable_lgpl" != "xyes"; then
-    PKG_CHECK_MODULES(POSTPROC, libpostproc libavcodec libavutil)
-  fi
   PKG_CHECK_MODULES(SWSCALE, libswscale libavutil)
   saved_CPPFLAGS="$CPPFLAGS"
   CPPFLAGS="$CPPFLAGS $LIBAV_CFLAGS"
@@ -275,14 +269,7 @@ else
   LIBAV_LIBS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
                \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
                \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
-  dnl
-  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/ \
-                   -Wno-deprecated-declarations"
 
-  dnl libgstpostproc.la: libs to statically link to
-  POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/libav/libpostproc/libpostproc.a \
-  		 \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
-  				 
   dnl
   SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
                   -Wno-deprecated-declarations"
@@ -311,8 +298,7 @@ else
 	--enable-optimizations"
 
   if test "x$enable_lgpl" != "xyes"; then
-    emblibav_configure_args="$emblibav_configure_args --enable-postproc \
-        --enable-gpl"
+    emblibav_configure_args="$emblibav_configure_args --enable-gpl"
   fi
 
   # if we are cross-compiling, tell libav so
@@ -385,8 +371,6 @@ fi
 AC_SUBST(LIBAV_CFLAGS)
 AC_SUBST(LIBAV_LIBS)
 AC_SUBST(LIBAV_SUBDIRS)
-AC_SUBST(POSTPROC_CFLAGS)
-AC_SUBST(POSTPROC_LIBS)
 AC_SUBST(SWSCALE_CFLAGS)
 AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
@@ -403,7 +387,6 @@ common/m4/Makefile
 gst-libav.spec
 ext/Makefile
 ext/ffmpeg/Makefile
-ext/libpostproc/Makefile
 ext/libswscale/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile
