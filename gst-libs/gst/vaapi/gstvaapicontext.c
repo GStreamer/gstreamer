@@ -86,6 +86,7 @@ get_max_ref_frames(GstVaapiProfile profile)
 
     switch (gst_vaapi_profile_get_codec(profile)) {
     case GST_VAAPI_CODEC_H264:  ref_frames = 16; break;
+    case GST_VAAPI_CODEC_JPEG:  ref_frames =  0; break;
     default:                    ref_frames =  2; break;
     }
     return ref_frames;
