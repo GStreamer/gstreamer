@@ -30,11 +30,19 @@
 #include "ges-timeline-file-source.h"
 #include "ges-timeline-source.h"
 #include "ges-track-filesource.h"
+#include "ges-asset-file-source.h"
+#include "ges-extractable.h"
 #include "ges-track-image-source.h"
 #include "ges-track-audio-test-source.h"
 
-G_DEFINE_TYPE (GESTimelineFileSource, ges_timeline_filesource,
-    GES_TYPE_TIMELINE_SOURCE);
+static void ges_extractable_interface_init (GESExtractableInterface * iface);
+
+G_DEFINE_TYPE_WITH_CODE (GESTimelineFileSource, ges_timeline_filesource,
+    GES_TYPE_TIMELINE_SOURCE,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
+
+GESExtractableInterface *parent_extractable_iface;
 
 struct _GESTimelineFileSourcePrivate
 {
@@ -160,6 +168,71 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
       ges_timeline_filesource_create_track_object;
   timobj_class->set_max_duration = filesource_set_max_duration;
   timobj_class->need_fill_track = FALSE;
+
+}
+
+static gchar *
+extractable_check_id (GType type, const gchar * id)
+{
+  if (gst_uri_is_valid (id))
+    return g_strdup (id);
+
+  return NULL;
+}
+
+static GParameter *
+extractable_get_parameters_from_id (const gchar * id, guint * n_params)
+{
+  GParameter *params = g_new0 (GParameter, 3);
+
+  params[0].name = g_strdup ("uri");
+  g_value_init (&params[0].value, G_TYPE_STRING);
+  g_value_set_string (&params[0].value, id);
+
+  return params;
+}
+
+static gchar *
+extractable_get_id (GESExtractable * self)
+{
+  return g_strdup (GES_TIMELINE_FILE_SOURCE (self)->priv->uri);
+}
+
+static void
+extractable_set_asset (GESExtractable * self, GESAsset * asset)
+{
+  GESTimelineFileSource *tfs = GES_TIMELINE_FILE_SOURCE (self);
+  GESAssetFileSource *filesource_asset = GES_ASSET_FILESOURCE (asset);
+  GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (self);
+
+  if (GST_CLOCK_TIME_IS_VALID (tlobj->duration) == FALSE)
+    ges_timeline_object_set_duration (GES_TIMELINE_OBJECT (tfs),
+        ges_asset_filesource_get_duration (filesource_asset));
+
+  ges_timeline_filesource_set_max_duration (tfs,
+      ges_asset_filesource_get_duration (filesource_asset));
+  ges_timeline_filesource_set_is_image (tfs,
+      ges_asset_filesource_is_image (filesource_asset));
+
+  if (ges_timeline_object_get_supported_formats (tlobj) ==
+      GES_TRACK_TYPE_UNKNOWN) {
+    ges_timeline_object_set_supported_formats (tlobj,
+        ges_asset_filesource_get_supported_types (filesource_asset));
+  }
+
+  ges_timeline_filesource_set_uri (tfs, g_strdup (ges_asset_get_id (asset)));
+
+  GES_TIMELINE_OBJECT (tfs)->asset = asset;
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->asset_type = GES_TYPE_ASSET_FILESOURCE;
+  iface->check_id = (GESExtractableCheckId) extractable_check_id;
+  iface->get_parameters_from_id = extractable_get_parameters_from_id;
+  iface->get_id = extractable_get_id;
+  iface->set_asset = extractable_set_asset;
 }
 
 static void
@@ -346,7 +419,8 @@ ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
   GESTrackObject *res;
 
   if (!(ges_timeline_object_get_supported_formats (obj) & track->type)) {
-    GST_DEBUG ("We don't support this track format");
+    GST_DEBUG ("We don't support this track format (caps %" GST_PTR_FORMAT
+        ")", ges_track_get_caps (track));
     return NULL;
   }
 
