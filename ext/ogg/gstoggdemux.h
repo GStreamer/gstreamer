@@ -142,7 +142,7 @@ struct _GstOggDemux
   guint64 max_packet_size, max_page_size;
 
   /* state */
-  GMutex *chain_lock;           /* we need the lock to protect the chains */
+  GMutex chain_lock;           /* we need the lock to protect the chains */
   GArray *chains;               /* list of chains we know */
   GstClockTime total_time;
   gint bitrate;                 /* bitrate of the current chain */
@@ -162,7 +162,7 @@ struct _GstOggDemux
   gint64 prestime;
 
   /* push mode seeking support */
-  GMutex *push_lock; /* we need the lock to protect the push mode variables */
+  GMutex push_lock; /* we need the lock to protect the push mode variables */
   gint64 push_byte_offset; /* where were are at in the stream, in bytes */
   gint64 push_byte_length; /* length in bytes of the stream, -1 if unknown */
   GstClockTime push_time_length; /* length in time of the stream */

@@ -61,19 +61,19 @@
 #define GST_FLOW_LIMIT GST_FLOW_CUSTOM_ERROR
 #define GST_FLOW_SKIP_PUSH GST_FLOW_CUSTOM_SUCCESS_1
 
-#define GST_CHAIN_LOCK(ogg)     g_mutex_lock((ogg)->chain_lock)
-#define GST_CHAIN_UNLOCK(ogg)   g_mutex_unlock((ogg)->chain_lock)
+#define GST_CHAIN_LOCK(ogg)     g_mutex_lock(&(ogg)->chain_lock)
+#define GST_CHAIN_UNLOCK(ogg)   g_mutex_unlock(&(ogg)->chain_lock)
 
 #define GST_PUSH_LOCK(ogg)                  \
   do {                                      \
     GST_TRACE_OBJECT(ogg, "Push lock");     \
-    g_mutex_lock((ogg)->push_lock);         \
+    g_mutex_lock(&(ogg)->push_lock);        \
   } while(0)
 
 #define GST_PUSH_UNLOCK(ogg)                \
   do {                                      \
     GST_TRACE_OBJECT(ogg, "Push unlock");   \
-    g_mutex_unlock((ogg)->push_lock);       \
+    g_mutex_unlock(&(ogg)->push_lock);      \
   } while(0)
 
 GST_DEBUG_CATEGORY (gst_ogg_demux_debug);
@@ -2019,8 +2019,8 @@ gst_ogg_demux_init (GstOggDemux * ogg)
       gst_ogg_demux_sink_activate_mode);
   gst_element_add_pad (GST_ELEMENT (ogg), ogg->sinkpad);
 
-  ogg->chain_lock = g_mutex_new ();
-  ogg->push_lock = g_mutex_new ();
+  g_mutex_init (&ogg->chain_lock);
+  g_mutex_init (&ogg->push_lock);
   ogg->chains = g_array_new (FALSE, TRUE, sizeof (GstOggChain *));
 
   ogg->stats_nbisections = 0;
@@ -2040,8 +2040,8 @@ gst_ogg_demux_finalize (GObject * object)
   ogg = GST_OGG_DEMUX (object);
 
   g_array_free (ogg->chains, TRUE);
-  g_mutex_free (ogg->chain_lock);
-  g_mutex_free (ogg->push_lock);
+  g_mutex_clear (&ogg->chain_lock);
+  g_mutex_clear (&ogg->push_lock);
   ogg_sync_clear (&ogg->sync);
 
   if (ogg->newsegment)
