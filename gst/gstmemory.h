@@ -181,6 +181,9 @@ typedef struct {
   gsize maxsize;
   /*< protected >*/
   gpointer user_data[4];
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 } GstMapInfo;
 
 /**
