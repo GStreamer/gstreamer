@@ -119,7 +119,7 @@ void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, GstBuffe
 GstVideoFormat gst_amc_color_format_to_video_format (gint color_format);
 gint gst_amc_video_format_to_color_format (GstVideoFormat video_format);
 
-const gchar * gst_amc_avc_profile_to_string (gint profile);
+const gchar * gst_amc_avc_profile_to_string (gint profile, const gchar **alternative);
 gint gst_amc_avc_profile_from_string (const gchar *profile);
 const gchar * gst_amc_avc_level_to_string (gint level);
 gint gst_amc_avc_level_from_string (const gchar *level);

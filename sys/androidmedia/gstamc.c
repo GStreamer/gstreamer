@@ -2047,25 +2047,28 @@ static const struct
 {
   gint id;
   const gchar *str;
+  const gchar *alt_str;
 } avc_profile_mapping_table[] = {
   {
-  AVCProfileBaseline, "baseline"}, {
-  AVCProfileMain, "main"}, {
-  AVCProfileExtended, "extended"}, {
+  AVCProfileBaseline, "baseline", "constrained-baseline"}, {
+  AVCProfileMain, "main", NULL}, {
+  AVCProfileExtended, "extended", NULL}, {
   AVCProfileHigh, "high"}, {
-  AVCProfileHigh10, "high-10"}, {
-  AVCProfileHigh422, "high-4:2:2"}, {
-  AVCProfileHigh444, "high-4:4:4"}
+  AVCProfileHigh10, "high-10", "high-10-intra"}, {
+  AVCProfileHigh422, "high-4:2:2", "high-4:2:2-intra"}, {
+  AVCProfileHigh444, "high-4:4:4", "high-4:4:4-intra"}
 };
 
 const gchar *
-gst_amc_avc_profile_to_string (gint profile)
+gst_amc_avc_profile_to_string (gint profile, const gchar ** alternative)
 {
   gint i;
 
   for (i = 0; i < G_N_ELEMENTS (avc_profile_mapping_table); i++) {
-    if (avc_profile_mapping_table[i].id == profile)
+    if (avc_profile_mapping_table[i].id == profile) {
+      *alternative = avc_profile_mapping_table[i].alt_str;
       return avc_profile_mapping_table[i].str;
+    }
   }
 
   return NULL;

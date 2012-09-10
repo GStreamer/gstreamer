@@ -120,20 +120,36 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
       for (j = 0; j < type->n_profile_levels; j++) {
         const gchar *profile, *level;
+        gint k;
+        GValue va = { 0, };
+        GValue v = { 0, };
+
+        g_value_init (&va, GST_TYPE_LIST);
+        g_value_init (&v, G_TYPE_STRING);
 
         profile =
             gst_amc_mpeg4_profile_to_string (type->profile_levels[j].profile);
-        level = gst_amc_mpeg4_level_to_string (type->profile_levels[j].level);
-        if (!profile || !level) {
-          GST_ERROR ("Unable to map MPEG4 profile/level 0x%08x/0x%08x",
-              type->profile_levels[j].profile, type->profile_levels[j].level);
+        if (!profile) {
+          GST_ERROR ("Unable to map MPEG4 profile 0x%08x",
+              type->profile_levels[j].profile);
           continue;
         }
 
+        for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
+          level = gst_amc_mpeg4_level_to_string (k);
+          if (!level)
+            continue;
+
+          g_value_set_string (&v, level);
+          gst_value_list_append_value (&va, &v);
+          g_value_reset (&v);
+        }
+
         tmp2 = gst_structure_copy (tmp);
-        gst_structure_set (tmp2,
-            "profile", G_TYPE_STRING, profile,
-            "level", G_TYPE_STRING, level, NULL);
+        gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
+        gst_structure_set_value (tmp2, "level", &va);
+        g_value_unset (&va);
+        g_value_unset (&v);
         gst_caps_append_structure (ret, tmp2);
         have_profile_level = TRUE;
       }
@@ -158,19 +174,36 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
       for (j = 0; j < type->n_profile_levels; j++) {
         gint profile, level;
+        gint k;
+        GValue va = { 0, };
+        GValue v = { 0, };
+
+        g_value_init (&va, GST_TYPE_LIST);
+        g_value_init (&v, G_TYPE_UINT);
 
         profile =
             gst_amc_h263_profile_to_gst_id (type->profile_levels[j].profile);
-        level = gst_amc_h263_level_to_gst_id (type->profile_levels[j].level);
-        if (profile == -1 || level == -1) {
-          GST_ERROR ("Unable to map h263 profile/level 0x%08x/0x%08x",
-              type->profile_levels[j].profile, type->profile_levels[j].level);
+
+        if (profile == -1) {
+          GST_ERROR ("Unable to map h263 profile 0x%08x",
+              type->profile_levels[j].profile);
           continue;
         }
 
+        for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
+          level = gst_amc_h263_level_to_gst_id (k);
+          if (level == -1)
+            continue;
+
+          g_value_set_uint (&v, level);
+          gst_value_list_append_value (&va, &v);
+          g_value_reset (&v);
+        }
         tmp2 = gst_structure_copy (tmp);
-        gst_structure_set (tmp2,
-            "profile", G_TYPE_UINT, profile, "level", G_TYPE_UINT, level, NULL);
+        gst_structure_set (tmp2, "profile", G_TYPE_UINT, profile, NULL);
+        gst_structure_set_value (tmp2, "level", &va);
+        g_value_unset (&va);
+        g_value_unset (&v);
         gst_caps_append_structure (ret, tmp2);
         have_profile_level = TRUE;
       }
@@ -185,31 +218,58 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
       GstStructure *tmp, *tmp2;
       gboolean have_profile_level = FALSE;
 
-      /* FIXME: Alignment and stream-format? */
-
       tmp = gst_structure_new ("video/x-h264",
           "width", GST_TYPE_INT_RANGE, 16, 4096,
           "height", GST_TYPE_INT_RANGE, 16, 4096,
           "framerate", GST_TYPE_FRACTION_RANGE,
-          0, 1, G_MAXINT, 1, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          0, 1, G_MAXINT, 1,
+          "parsed", G_TYPE_BOOLEAN, TRUE,
+          "stream-format", G_TYPE_STRING, "byte-stream",
+          "alignment", G_TYPE_STRING, "au", NULL);
 
       for (j = 0; j < type->n_profile_levels; j++) {
-        const gchar *profile, *level;
+        const gchar *profile, *alternative = NULL, *level;
+        gint k;
+        GValue va = { 0, };
+        GValue v = { 0, };
+
+        g_value_init (&va, GST_TYPE_LIST);
+        g_value_init (&v, G_TYPE_STRING);
 
         profile =
-            gst_amc_avc_profile_to_string (type->profile_levels[j].profile);
-        level = gst_amc_avc_level_to_string (type->profile_levels[j].level);
-        if (!profile || !level) {
-          GST_ERROR ("Unable to map h264 profile/level 0x%08x/0x%08x",
-              type->profile_levels[j].profile, type->profile_levels[j].level);
+            gst_amc_avc_profile_to_string (type->profile_levels[j].profile,
+            &alternative);
+
+        if (!profile) {
+          GST_ERROR ("Unable to map H264 profile 0x%08x",
+              type->profile_levels[j].profile);
           continue;
         }
 
+        for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
+          level = gst_amc_avc_level_to_string (k);
+          if (!level)
+            continue;
+
+          g_value_set_string (&v, level);
+          gst_value_list_append_value (&va, &v);
+          g_value_reset (&v);
+        }
         tmp2 = gst_structure_copy (tmp);
-        gst_structure_set (tmp2,
-            "profile", G_TYPE_STRING, profile,
-            "level", G_TYPE_STRING, level, NULL);
+        gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
+        gst_structure_set_value (tmp2, "level", &va);
+        if (!alternative)
+          g_value_unset (&va);
+        g_value_unset (&v);
         gst_caps_append_structure (ret, tmp2);
+
+        if (alternative) {
+          tmp2 = gst_structure_copy (tmp);
+          gst_structure_set (tmp2, "profile", G_TYPE_STRING, alternative, NULL);
+          gst_structure_set_value (tmp2, "level", &va);
+          g_value_unset (&va);
+          gst_caps_append_structure (ret, tmp2);
+        }
         have_profile_level = TRUE;
       }
 
