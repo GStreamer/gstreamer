@@ -17,35 +17,126 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gio/gio.h>
 #include <ges/ges.h>
 #include <gst/pbutils/gstdiscoverer.h>
 #include <gst/pbutils/encoding-profile.h>
 
-GstDiscovererInfo *get_info_for_file (GstDiscoverer * disco, gchar * filename);
+static void
+bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop);
 
-GstDiscovererInfo *
-get_info_for_file (GstDiscoverer * disco, gchar * filename)
+static GstEncodingProfile *make_profile_from_info (GstDiscovererInfo * info);
+
+GESTimelinePipeline *pipeline = NULL;
+gchar *output_uri = NULL;
+guint assetsCount = 0;
+guint assetsLoaded = 0;
+GStaticMutex assetsLoadedLock = G_STATIC_MUTEX_INIT;
+
+static void
+asset_loaded_cb (GObject * source_object, GAsyncResult * res,
+    GMainLoop * mainloop)
 {
-  GError *err;
-  gchar *path, *uri;
+  GError *error = NULL;
 
-  /* Convert to a URI */
-  if (!g_path_is_absolute (filename)) {
-    gchar *cur_dir;
+  GESAssetFileSource *mfs =
+      GES_ASSET_FILESOURCE (ges_asset_request_finish (res, &error));
 
-    cur_dir = g_get_current_dir ();
-    path = g_build_filename (cur_dir, filename, NULL);
-    g_free (cur_dir);
-  } else {
-    path = g_strdup (filename);
+  if (error) {
+    GST_WARNING ("error creating asseti %s", error->message);
+
+    return;
   }
 
-  uri = g_filename_to_uri (path, NULL, &err);
-  g_free (path);
-  path = NULL;
+  g_static_mutex_lock (&assetsLoadedLock);
+  assetsLoaded++;
+  g_static_mutex_unlock (&assetsLoadedLock);
 
-  /* Get information */
-  return gst_discoverer_discover_uri (disco, uri, &err);
+  /*
+   * Check if we have loaded last asset and trigger concatenating
+   */
+  if (assetsLoaded == assetsCount) {
+    GstDiscovererInfo *info = ges_asset_filesource_get_info (mfs);
+    GstEncodingProfile *profile = make_profile_from_info (info);
+    ges_timeline_pipeline_set_render_settings (pipeline, output_uri, profile);
+    /* We want the pipeline to render (without any preview) */
+    if (!ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER)) {
+      g_main_loop_quit (mainloop);
+      return;
+    }
+    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  }
+
+  g_object_unref (mfs);
+}
+
+int
+main (int argc, char **argv)
+{
+  GMainLoop *mainloop = NULL;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer = NULL;
+  GstBus *bus = NULL;
+  guint i;
+
+
+  if (argc < 3) {
+    g_print ("Usage: %s <output uri> <list of files>\n", argv[0]);
+    return -1;
+  }
+
+  gst_init (&argc, &argv);
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+
+  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
+  if (!ges_timeline_add_layer (timeline, layer))
+    return -1;
+
+  output_uri = argv[1];
+  assetsCount = argc - 2;
+
+  for (i = 2; i < argc; i++) {
+    ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE, argv[i],
+        NULL, (GAsyncReadyCallback) asset_loaded_cb, mainloop);
+  }
+
+  /* In order to view our timeline, let's grab a convenience pipeline to put
+   * our timeline in. */
+  pipeline = ges_timeline_pipeline_new ();
+
+  /* Add the timeline to that pipeline */
+  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
+    return -1;
+
+  mainloop = g_main_loop_new (NULL, FALSE);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
+
+  g_main_loop_run (mainloop);
+
+  return 0;
+
+}
+
+static void
+bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+      g_print ("ERROR\n");
+      g_main_loop_quit (mainloop);
+      break;
+    case GST_MESSAGE_EOS:
+      g_print ("Done\n");
+      g_main_loop_quit (mainloop);
+      break;
+    default:
+      break;
+  }
 }
 
 static GstEncodingProfile *
@@ -94,110 +185,5 @@ make_profile_from_info (GstDiscovererInfo * info)
   if (sinfo)
     gst_discoverer_stream_info_unref (sinfo);
 
-  return (GstEncodingProfile *) profile;
-}
-
-static void
-bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
-{
-  switch (GST_MESSAGE_TYPE (message)) {
-    case GST_MESSAGE_ERROR:
-      g_print ("ERROR\n");
-      g_main_loop_quit (mainloop);
-      break;
-    case GST_MESSAGE_EOS:
-      g_print ("Done\n");
-      g_main_loop_quit (mainloop);
-      break;
-    default:
-      break;
-  }
-}
-
-int
-main (int argc, gchar ** argv)
-{
-  GESTimelinePipeline *pipeline;
-  GESTimeline *timeline;
-  GESTimelineLayer *layer;
-  GList *sources = NULL;
-  GMainLoop *mainloop;
-  GstEncodingProfile *profile = NULL;
-  gchar *output_uri;
-  guint i;
-  gboolean gotprofile = FALSE;
-  GstDiscoverer *disco;
-  GstBus *bus;
-
-  if (argc < 3) {
-    g_print ("Usage: %s <output uri> <list of files>\n", argv[0]);
-    return -1;
-  }
-
-  gst_init (&argc, &argv);
-  ges_init ();
-
-  timeline = ges_timeline_new_audio_video ();
-
-  layer = (GESTimelineLayer *) ges_simple_timeline_layer_new ();
-  if (!ges_timeline_add_layer (timeline, layer))
-    return -1;
-
-  disco = gst_discoverer_new (10 * GST_SECOND, NULL);
-
-  for (i = 2; i < argc; i++) {
-    GstDiscovererInfo *info;
-    GESTimelineFileSource *src;
-
-    info = get_info_for_file (disco, argv[i]);
-
-    if (!gotprofile) {
-      profile = make_profile_from_info (info);
-      gotprofile = TRUE;
-    }
-
-    src = ges_timeline_filesource_new ((gchar *)
-        gst_discoverer_info_get_uri (info));
-    g_object_set (src, (gchar *) "duration",
-        gst_discoverer_info_get_duration (info), NULL);
-    /* Since we're using a GESSimpleTimelineLayer, objects will be automatically
-     * appended to the end of the layer */
-    ges_timeline_layer_add_object (layer, (GESTimelineObject *) src);
-
-    gst_discoverer_info_unref (info);
-    sources = g_list_append (sources, src);
-  }
-
-  /* In order to view our timeline, let's grab a convenience pipeline to put
-   * our timeline in. */
-  pipeline = ges_timeline_pipeline_new ();
-
-  /* Add the timeline to that pipeline */
-  if (!ges_timeline_pipeline_add_timeline (pipeline, timeline))
-    return -1;
-
-
-  /* RENDER SETTINGS ! */
-  /* We set our output URI and rendering setting on the pipeline */
-  output_uri = argv[1];
-  if (!ges_timeline_pipeline_set_render_settings (pipeline, output_uri,
-          profile))
-    return -1;
-
-  /* We want the pipeline to render (without any preview) */
-  if (!ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_SMART_RENDER))
-    return -1;
-
-
-  mainloop = g_main_loop_new (NULL, FALSE);
-
-  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
-
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-
-  g_main_loop_run (mainloop);
-
-  return 0;
+  return GST_ENCODING_PROFILE (profile);
 }
