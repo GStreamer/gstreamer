@@ -79,7 +79,7 @@ struct _GstDiscovererPrivate
   /* list of pending URI to process (current excluded) */
   GList *pending_uris;
 
-  GMutex *lock;
+  GMutex lock;
 
   /* TRUE if processing a URI */
   gboolean processing;
@@ -124,8 +124,8 @@ struct _GstDiscovererPrivate
   gulong bus_cb_id;
 };
 
-#define DISCO_LOCK(dc) g_mutex_lock (dc->priv->lock);
-#define DISCO_UNLOCK(dc) g_mutex_unlock (dc->priv->lock);
+#define DISCO_LOCK(dc) g_mutex_lock (&dc->priv->lock);
+#define DISCO_UNLOCK(dc) g_mutex_unlock (&dc->priv->lock);
 
 static void
 _do_init (void)
@@ -176,6 +176,7 @@ static void uridecodebin_source_changed_cb (GstElement * uridecodebin,
     GParamSpec * pspec, GstDiscoverer * dc);
 
 static void gst_discoverer_dispose (GObject * dc);
+static void gst_discoverer_finalize (GObject * dc);
 static void gst_discoverer_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_discoverer_get_property (GObject * object, guint prop_id,
@@ -187,6 +188,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->dispose = gst_discoverer_dispose;
+  gobject_class->finalize = gst_discoverer_finalize;
 
   gobject_class->set_property = gst_discoverer_set_property;
   gobject_class->get_property = gst_discoverer_get_property;
@@ -297,7 +299,7 @@ gst_discoverer_init (GstDiscoverer * dc)
   dc->priv->async = FALSE;
   dc->priv->async_done = FALSE;
 
-  dc->priv->lock = g_mutex_new ();
+  g_mutex_init (&dc->priv->lock);
 
   dc->priv->pending_subtitle_pads = 0;
 
@@ -395,17 +397,22 @@ gst_discoverer_dispose (GObject * obj)
 
   gst_discoverer_stop (dc);
 
-  if (dc->priv->lock) {
-    g_mutex_free (dc->priv->lock);
-    dc->priv->lock = NULL;
-  }
-
   if (dc->priv->seeking_query) {
     gst_query_unref (dc->priv->seeking_query);
     dc->priv->seeking_query = NULL;
   }
 
   G_OBJECT_CLASS (gst_discoverer_parent_class)->dispose (obj);
+}
+
+static void
+gst_discoverer_finalize (GObject * obj)
+{
+  GstDiscoverer *dc = (GstDiscoverer *) obj;
+
+  g_mutex_clear (&dc->priv->lock);
+
+  G_OBJECT_CLASS (gst_discoverer_parent_class)->finalize (obj);
 }
 
 static void
