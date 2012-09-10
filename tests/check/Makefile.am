@@ -156,6 +156,20 @@ else
 check_curl =
 endif
 
+if USE_UVCH264
+check_uvch264=elements/uvch264demux
+else
+check_uvch264=
+endif
+uvch264_dist_data = elements/uvch264demux_data/valid_h264_jpg.mjpg \
+			elements/uvch264demux_data/valid_h264_jpg.jpg \
+			elements/uvch264demux_data/valid_h264_jpg.h264 \
+			elements/uvch264demux_data/valid_h264_yuy2.mjpg \
+			elements/uvch264demux_data/valid_h264_yuy2.h264 \
+			elements/uvch264demux_data/valid_h264_yuy2.yuy2
+
+
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc \
 	elements/mplex    \
@@ -209,6 +223,7 @@ check_PROGRAMS = \
 	elements/rtpmux \
 	libs/mpegvideoparser \
 	libs/h264parser \
+	$(check_uvch264) \
 	libs/vc1parser \
 	$(check_schro) \
 	$(check_vp8) \
@@ -332,8 +347,10 @@ elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION
 elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
+elements_uvch264demux_CFLAGS = -DUVCH264DEMUX_DATADIR="$(srcdir)/elements/uvch264demux_data" \
+				$(AM_CFLAGS)
 
-EXTRA_DIST = gst-plugins-bad.supp
+EXTRA_DIST = gst-plugins-bad.supp $(uvch264_dist_data)
 
 orc_bayer_CFLAGS = $(ORC_CFLAGS)
 orc_bayer_LDADD = $(ORC_LIBS) -lorc-test-0.4

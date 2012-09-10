@@ -325,7 +325,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  gsettings jasper ladspa \
  musepack musicbrainz nas neon ofa openal rsvg sdl sndfile spandsp  timidity \
  directsound directdraw direct3d9 acm wininet \
- wildmidi xvid lv2 teletextdec sndio"
+ wildmidi xvid lv2 teletextdec sndio uvch264"
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
@@ -688,6 +688,27 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
   AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
 ])
+
+
+dnl *** UVC H264 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_UVCH264, true)
+AG_GST_CHECK_FEATURE(UVCH264, [UVC H264], uvch264, [
+  AC_CHECK_HEADER(linux/uvcvideo.h, HAVE_UVCH264=yes, HAVE_UVCH264=no)
+  AG_GST_PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-0.10 >= 0.10.36)
+  PKG_CHECK_MODULES(G_UDEV, gudev-1.0 , [
+          AC_DEFINE([HAVE_GUDEV], 1, [Define if gudev is installed])
+          HAVE_GUDEV="yes" ],
+          [HAVE_GUDEV="no"])
+  PKG_CHECK_MODULES(LIBUSB, libusb-1.0 , [
+          AC_DEFINE([HAVE_LIBUSB], 1, [Define if libusb 1.x is installed])
+          HAVE_LIBUSB="yes" ],
+          [HAVE_LIBUSB="no"])
+])
+AC_SUBST(LIBUDEV_CFLAGS)
+AC_SUBST(LIBUDEV_LIBS)
+AC_SUBST(LIBUSB_CFLAGS)
+AC_SUBST(LIBUSB_LIBS)
+
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
@@ -1905,6 +1926,7 @@ AM_CONDITIONAL(USE_VP8, false)
 AM_CONDITIONAL(USE_RTMP, false)
 AM_CONDITIONAL(USE_TELETEXTDEC, false)
 AM_CONDITIONAL(USE_SNDIO, false)
+AM_CONDITIONAL(USE_UVCH264, false)
 
 fi dnl of EXT plugins
 
@@ -2079,6 +2101,7 @@ sys/linsys/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/shm/Makefile
+sys/uvch264/Makefile
 sys/vcd/Makefile
 sys/vdpau/Makefile
 sys/vdpau/gstvdp/Makefile
@@ -2097,6 +2120,7 @@ tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
 tests/examples/scaletempo/Makefile
 tests/examples/opencv/Makefile
+tests/examples/uvch264/Makefile
 tests/icles/Makefile
 ext/voamrwbenc/Makefile
 ext/voaacenc/Makefile
