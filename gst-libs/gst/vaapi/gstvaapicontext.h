@@ -56,8 +56,24 @@ G_BEGIN_DECLS
                                GstVaapiContextClass))
 
 typedef struct _GstVaapiContext                 GstVaapiContext;
+typedef struct _GstVaapiContextInfo             GstVaapiContextInfo;
 typedef struct _GstVaapiContextPrivate          GstVaapiContextPrivate;
 typedef struct _GstVaapiContextClass            GstVaapiContextClass;
+
+/**
+ * GstVaapiContextInfo:
+ *
+ * Structure holding VA context info like encoded size, decoder
+ * profile and entry-point to use, and maximum number of reference
+ * frames reported by the bitstream.
+ */
+struct _GstVaapiContextInfo {
+    GstVaapiProfile     profile;
+    GstVaapiEntrypoint  entrypoint;
+    guint               width;
+    guint               height;
+    guint               ref_frames;
+};
 
 /**
  * GstVaapiContext:
@@ -93,14 +109,20 @@ gst_vaapi_context_new(
     guint               height
 );
 
+GstVaapiContext *
+gst_vaapi_context_new_full(GstVaapiDisplay *display, GstVaapiContextInfo *cip);
+
 gboolean
 gst_vaapi_context_reset(
     GstVaapiContext    *context,
     GstVaapiProfile     profile,
     GstVaapiEntrypoint  entrypoint,
-    unsigned int        width,
-    unsigned int        height
+    guint               width,
+    guint               height
 );
+
+gboolean
+gst_vaapi_context_reset_full(GstVaapiContext *context, GstVaapiContextInfo *cip);
 
 GstVaapiID
 gst_vaapi_context_get_id(GstVaapiContext *context);
