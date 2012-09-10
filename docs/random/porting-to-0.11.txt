@@ -140,6 +140,8 @@ The 0.11 porting guide
 
     GST_FLOW_UNEXPECTED -> GST_FLOW_EOS
 
+    GST_FLOW_WRONG_STATE -> GST_FLOW_FLUSHING
+
     GstActivateMode -> GstPadMode, GST_ACTIVATE_* -> GST_PAD_MODE_*
 
     The GstPadAcceptCapsFunction was removed and replaced with a
