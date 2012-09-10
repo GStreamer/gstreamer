@@ -543,7 +543,6 @@ gst_app_src_finalize (GObject * obj)
 
   g_mutex_clear (&priv->mutex);
   g_cond_clear (&priv->cond);
-  g_cond_clear (&priv->cond);
   g_queue_free (priv->queue);
 
   g_free (priv->uri);
