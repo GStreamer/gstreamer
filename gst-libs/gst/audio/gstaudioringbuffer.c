@@ -834,6 +834,30 @@ gst_audio_ring_buffer_set_flushing (GstAudioRingBuffer * buf, gboolean flushing)
 }
 
 /**
+ * gst_audio_ring_buffer_is_flushing:
+ * @buf: the #GstAudioRingBuffer
+ *
+ * Check if @buf is flushing.
+ *
+ * MT safe.
+ *
+ * Returns: TRUE if the device is flushing.
+ */
+gboolean
+gst_audio_ring_buffer_is_flushing (GstAudioRingBuffer * buf)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_AUDIO_RING_BUFFER (buf), TRUE);
+
+  GST_OBJECT_LOCK (buf);
+  res = buf->flushing;
+  GST_OBJECT_UNLOCK (buf);
+
+  return res;
+}
+
+/**
  * gst_audio_ring_buffer_start:
  * @buf: the #GstAudioRingBuffer to start
  *

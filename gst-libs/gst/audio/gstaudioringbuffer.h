@@ -288,6 +288,7 @@ gboolean        gst_audio_ring_buffer_is_active       (GstAudioRingBuffer *buf);
 
 /* flushing */
 void            gst_audio_ring_buffer_set_flushing    (GstAudioRingBuffer *buf, gboolean flushing);
+gboolean        gst_audio_ring_buffer_is_flushing     (GstAudioRingBuffer *buf);
 
 /* playback/pause */
 gboolean        gst_audio_ring_buffer_start           (GstAudioRingBuffer *buf);
