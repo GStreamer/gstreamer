@@ -59,7 +59,7 @@ _gst_sample_copy (GstSample * sample)
   GstSample *copy;
 
   copy = gst_sample_new (sample->buffer, sample->caps, &sample->segment,
-      gst_structure_copy (sample->info));
+      (sample->info) ? gst_structure_copy (sample->info) : NULL);
 
   return copy;
 }
@@ -73,7 +73,10 @@ _gst_sample_free (GstSample * sample)
     gst_buffer_unref (sample->buffer);
   if (sample->caps)
     gst_caps_unref (sample->caps);
-
+  if (sample->info) {
+    gst_structure_set_parent_refcount (sample->info, NULL);
+    gst_structure_free (sample->info);
+  }
   g_slice_free1 (sizeof (GstSample), sample);
 }
 
