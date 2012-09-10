@@ -36,20 +36,18 @@ public class Tutorial1 extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        
+
         setContentView(R.layout.main);
-        
+
         ImageButton play = (ImageButton)this.findViewById(R.id.button_play);
         play.setOnClickListener(new OnClickListener() {
-          
           public void onClick(View v) {
         	  nativePlay();
           }
         });
-        
+
         ImageButton pause = (ImageButton)this.findViewById(R.id.button_stop);
         pause.setOnClickListener(new OnClickListener() {
-          
           public void onClick(View v) {
         	  nativePause();
           }
