@@ -94,7 +94,7 @@ static gboolean gst_oss4_source_prepare (GstAudioSrc * asrc,
     GstAudioRingBufferSpec * spec);
 static gboolean gst_oss4_source_unprepare (GstAudioSrc * asrc);
 static guint gst_oss4_source_read (GstAudioSrc * asrc, gpointer data,
-    guint length);
+    guint length, GstClockTime * timestamp);
 static guint gst_oss4_source_delay (GstAudioSrc * asrc);
 static void gst_oss4_source_reset (GstAudioSrc * asrc);
 
@@ -485,7 +485,8 @@ couldnt_reopen:
 }
 
 static guint
-gst_oss4_source_read (GstAudioSrc * asrc, gpointer data, guint length)
+gst_oss4_source_read (GstAudioSrc * asrc, gpointer data, guint length,
+    GstClockTime * timestamp)
 {
   GstOss4Source *oss;
   int n;

@@ -94,7 +94,7 @@ static gboolean gst_pulsesrc_prepare (GstAudioSrc * asrc,
 static gboolean gst_pulsesrc_unprepare (GstAudioSrc * asrc);
 
 static guint gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data,
-    guint length);
+    guint length, GstClockTime * timestamp);
 static guint gst_pulsesrc_delay (GstAudioSrc * asrc);
 
 static void gst_pulsesrc_reset (GstAudioSrc * src);
@@ -990,7 +990,8 @@ gst_pulsesrc_unprepare (GstAudioSrc * asrc)
 }
 
 static guint
-gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length)
+gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length,
+    GstClockTime * timestamp)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (asrc);
   size_t sum = 0;
