@@ -714,7 +714,72 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       caps = gst_caps_new_empty_simple ("audio/x-mulaw");
       break;
     case 11:
+    {
+      GValue streamheader = G_VALUE_INIT;
+      GValue value = G_VALUE_INIT;
+      GstStructure *structure;
+      GstBuffer *buf;
+      guint8 *data, *mallocdata;
+
+      g_value_init (&streamheader, GST_TYPE_ARRAY);
+
       caps = gst_caps_new_empty_simple ("audio/x-speex");
+      structure = gst_caps_get_structure (caps, 0);
+
+      data = mallocdata = g_malloc (80);
+
+      GST_DEBUG_OBJECT (demux, "generating speex header");
+
+      memcpy (data, "Speex   ", 8);
+      data += 8;
+      memcpy (data, "1.1.12", 7);
+      data += 20;
+      GST_WRITE_UINT32_LE (data, 1);    /* version */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 80);   /* header_size */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 16000);        /* rate */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 1);    /* mode: Wideband */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 4);    /* mode_bitstream_version */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 1);    /* nb_channels: 1 */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, -1);   /* bitrate */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 0x50); /* frame_size */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 0);    /* VBR */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 1);    /* frames_per_packet */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 0);    /* extra_headers */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 0);    /* reserved1 */
+      data += 4;
+      GST_WRITE_UINT32_LE (data, 0);    /* reserved2 */
+
+      buf = gst_buffer_new_wrapped (mallocdata, 80);
+      g_value_init (&value, GST_TYPE_BUFFER);   /* Speex decoder expects it to be { [header], [comment] } */
+      gst_value_set_buffer (&value, buf);       /* setting header part */
+      gst_value_array_append_value (&streamheader, &value);
+
+      g_value_unset (&value);
+      gst_buffer_unref (buf);
+
+      data = mallocdata = g_malloc (12);        /* setting comment part */
+      memcpy (data, "No comments", 12);
+
+      g_value_init (&value, GST_TYPE_BUFFER);
+      buf = gst_buffer_new_wrapped (mallocdata, 12);
+      gst_value_set_buffer (&value, buf);
+      gst_value_array_append_value (&streamheader, &value);
+
+      g_value_unset (&value);
+      gst_buffer_unref (buf);
+      gst_structure_set_value (structure, "streamheader", &streamheader);
+    }
       break;
     default:
       GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
