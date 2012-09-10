@@ -366,6 +366,9 @@ gst_pulsesrc_finalize (GObject * object)
 static gboolean
 gst_pulsesrc_is_dead (GstPulseSrc * pulsesrc, gboolean check_stream)
 {
+  if (!pulsesrc->stream_connected)
+    return TRUE;
+
   if (!CONTEXT_OK (pulsesrc->context))
     goto error;
 
@@ -1004,6 +1007,9 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length,
   pa_threaded_mainloop_lock (pulsesrc->mainloop);
   pulsesrc->in_read = TRUE;
 
+  if (!pulsesrc->stream_connected)
+    goto not_connected;
+
   if (pulsesrc->paused)
     goto was_paused;
 
@@ -1069,6 +1075,11 @@ gst_pulsesrc_read (GstAudioSrc * asrc, gpointer data, guint length,
   return sum;
 
   /* ERRORS */
+not_connected:
+  {
+    GST_LOG_OBJECT (pulsesrc, "we are not connected");
+    goto unlock_and_fail;
+  }
 was_paused:
   {
     GST_LOG_OBJECT (pulsesrc, "we are paused");
