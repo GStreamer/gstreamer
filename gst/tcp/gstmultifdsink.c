@@ -697,9 +697,9 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
       if (mhclient->bufpos == -1) {
         /* client is too fast, remove from write queue until new buffer is
          * available */
-        // FIXME: specific
+        /* FIXME: specific */
         gst_poll_fd_ctl_write (sink->fdset, &client->gfd, FALSE);
-        //
+
         /* if we flushed out all of the client buffers, we can stop */
         if (mhclient->flushcount == 0)
           goto flushed;
@@ -722,7 +722,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
             mhclient->bufpos = position;
           } else {
             /* cannot send data to this client yet */
-            // FIXME: specific
+            /* FIXME: specific */
             gst_poll_fd_ctl_write (sink->fdset, &client->gfd, FALSE);
             return TRUE;
           }
@@ -774,7 +774,7 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
       data = info.data;
       maxsize = info.size - mhclient->bufoffset;
 
-      // FIXME: specific
+      /* FIXME: specific */
       /* try to write the complete buffer */
 #ifdef MSG_NOSIGNAL
 #define FLAGS MSG_NOSIGNAL

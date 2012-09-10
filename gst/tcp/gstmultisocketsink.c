@@ -656,13 +656,13 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
       if (mhclient->bufpos == -1) {
         /* client is too fast, remove from write queue until new buffer is
          * available */
-        // FIXME: specific
+        /* FIXME: specific */
         if (client->source) {
           g_source_destroy (client->source);
           g_source_unref (client->source);
           client->source = NULL;
         }
-        //
+
         /* if we flushed out all of the client buffers, we can stop */
         if (mhclient->flushcount == 0)
           goto flushed;
@@ -685,13 +685,13 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
             mhclient->bufpos = position;
           } else {
             /* cannot send data to this client yet */
-            // FIXME: specific
+            /* FIXME: specific */
             if (client->source) {
               g_source_destroy (client->source);
               g_source_unref (client->source);
               client->source = NULL;
             }
-            //
+
             return TRUE;
           }
         }
@@ -738,7 +738,7 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
       gst_buffer_map (head, &map, GST_MAP_READ);
       maxsize = map.size - mhclient->bufoffset;
 
-      // FIXME: specific
+      /* FIXME: specific */
       /* try to write the complete buffer */
 
       wrote =

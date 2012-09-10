@@ -1083,7 +1083,7 @@ gst_multi_output_sink_remove_client_link (GstMultiOutputSink * sink,
       break;
   }
 
-  // FIXME: convert to vfunc to cleanup a client
+  /* FIXME: convert to vfunc to cleanup a client */
 
   fclass->delete_client (sink, client);
 
