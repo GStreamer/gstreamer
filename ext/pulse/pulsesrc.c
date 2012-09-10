@@ -1721,10 +1721,11 @@ gst_pulsesrc_get_time (GstClock * clock, GstPulseSrc * src)
   pa_usec_t time = 0;
 
   pa_threaded_mainloop_lock (src->mainloop);
-
-  if (gst_pulsesrc_is_dead (src, TRUE)) {
+  if (!src->stream)
     goto unlock_and_out;
-  }
+
+  if (gst_pulsesrc_is_dead (src, TRUE))
+    goto unlock_and_out;
 
   if (pa_stream_get_time (src->stream, &time) < 0) {
     GST_DEBUG_OBJECT (src, "could not get time");
