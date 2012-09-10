@@ -1180,8 +1180,6 @@ gst_object_add_control_binding (GstObject * object, GstControlBinding * binding)
 
   g_return_val_if_fail (GST_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_IS_CONTROL_BINDING (binding), FALSE);
-  //g_return_val_if_fail (g_type_is_a (binding->pspec->owner_type,
-  //        G_OBJECT_TYPE (object)), FALSE);
 
   GST_OBJECT_LOCK (object);
   if ((old = gst_object_find_control_binding (object, binding->name))) {
