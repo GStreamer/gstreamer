@@ -136,7 +136,7 @@ The 0.11 porting guide
 
     The request-link signal was removed. It was never used.
 
-    gst_pad_get_negotiated_caps() -> get_pad_get_current_caps()
+    gst_pad_get_negotiated_caps() -> gst_pad_get_current_caps()
 
     GST_FLOW_UNEXPECTED -> GST_FLOW_EOS
 
@@ -512,6 +512,8 @@ The 0.11 porting guide
     a struct containing a buffer alongside caps and some other info).
 
     gst_tag_list_get_buffer() => gst_tag_list_get_sample()
+
+    gst_is_tag_list() => GST_IS_TAG_LIST ()
 
 * GstController:
     has now been merged into GstObject. It does not exists as a individual
