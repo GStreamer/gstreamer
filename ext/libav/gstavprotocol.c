@@ -28,8 +28,8 @@
 
 #include <gst/gst.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegpipe.h"
+#include "gstav.h"
+#include "gstavpipe.h"
 
 typedef struct _GstProtocolInfo GstProtocolInfo;
 

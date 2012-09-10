@@ -33,11 +33,11 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideometa.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
-#include "gstffmpegutils.h"
-#include "gstffmpegvidenc.h"
-#include "gstffmpegcfg.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
+#include "gstavutils.h"
+#include "gstavvidenc.h"
+#include "gstavcfg.h"
 
 #define DEFAULT_VIDEO_BITRATE 300000    /* in bps */
 #define DEFAULT_VIDEO_GOP_SIZE 15

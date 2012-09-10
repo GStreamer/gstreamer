@@ -20,7 +20,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "gstffmpegutils.h"
+#include "gstavutils.h"
 #include <unistd.h>
 #ifdef __APPLE__
 #include <sys/sysctl.h>

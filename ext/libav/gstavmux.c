@@ -27,9 +27,9 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
-#include "gstffmpegutils.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
+#include "gstavutils.h"
 
 typedef struct _GstFFMpegMux GstFFMpegMux;
 typedef struct _GstFFMpegMuxPad GstFFMpegMuxPad;

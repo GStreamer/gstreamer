@@ -22,7 +22,7 @@
 #define __GST_FFMPEGPIPE_H__
 
 #include <gst/base/gstadapter.h>
-#include "gstffmpeg.h"
+#include "gstav.h"
 
 G_BEGIN_DECLS
 

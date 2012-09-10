@@ -28,9 +28,9 @@
 
 #include <gst/gst.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
-#include "gstffmpegutils.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
+#include "gstavutils.h"
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 

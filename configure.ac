@@ -19,7 +19,7 @@ dnl check if this is a release version
 AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([ext/ffmpeg/gstffmpeg.c])
+AC_CONFIG_SRCDIR([ext/libav/gstav.c])
 
 dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
@@ -386,7 +386,7 @@ common/Makefile
 common/m4/Makefile
 gst-libav.spec
 ext/Makefile
-ext/ffmpeg/Makefile
+ext/libav/Makefile
 ext/libswscale/Makefile
 gst-libs/Makefile
 gst-libs/ext/Makefile

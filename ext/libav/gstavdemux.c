@@ -29,10 +29,10 @@
 /* #include <ffmpeg/avi.h> */
 #include <gst/gst.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
-#include "gstffmpegutils.h"
-#include "gstffmpegpipe.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
+#include "gstavutils.h"
+#include "gstavpipe.h"
 
 #define MAX_STREAMS 20
 

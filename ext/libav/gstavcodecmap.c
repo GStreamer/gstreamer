@@ -28,8 +28,8 @@
 #include <gst/gst.h>
 #include <libavcodec/avcodec.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
 
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>

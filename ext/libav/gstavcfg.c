@@ -25,9 +25,9 @@
 #include "config.h"
 #endif
 
-#include "gstffmpeg.h"
-#include "gstffmpegvidenc.h"
-#include "gstffmpegcfg.h"
+#include "gstav.h"
+#include "gstavvidenc.h"
+#include "gstavcfg.h"
 
 #include <string.h>
 

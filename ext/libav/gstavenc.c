@@ -32,10 +32,10 @@
 
 #include <gst/gst.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
-#include "gstffmpegutils.h"
-#include "gstffmpegenc.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
+#include "gstavutils.h"
+#include "gstavenc.h"
 
 #define DEFAULT_AUDIO_BITRATE 128000
 

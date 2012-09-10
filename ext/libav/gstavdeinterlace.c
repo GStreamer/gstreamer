@@ -29,9 +29,9 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegcodecmap.h"
-#include "gstffmpegutils.h"
+#include "gstav.h"
+#include "gstavcodecmap.h"
+#include "gstavutils.h"
 
 
 /* Properties */

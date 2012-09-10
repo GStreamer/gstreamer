@@ -31,8 +31,8 @@
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 
-#include "gstffmpeg.h"
-#include "gstffmpegutils.h"
+#include "gstav.h"
+#include "gstavutils.h"
 
 GST_DEBUG_CATEGORY (ffmpeg_debug);
 

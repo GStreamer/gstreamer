@@ -6,22 +6,22 @@ else
     BZ2_LIBS =
 endif
 
-libgstlibav_la_SOURCES = gstffmpeg.c	\
-			  gstffmpegprotocol.c	\
-			  gstffmpegcodecmap.c	\
-			  gstffmpegutils.c	\
-			  gstffmpegenc.c	\
-			  gstffmpegvidenc.c	\
-			  gstffmpegdec.c	\
-			  gstffmpegviddec.c	\
-			  gstffmpegcfg.c	\
-			  gstffmpegdemux.c	\
-			  gstffmpegmux.c    \
-			  gstffmpegdeinterlace.c
+libgstlibav_la_SOURCES = gstav.c	\
+			  gstavprotocol.c	\
+			  gstavcodecmap.c	\
+			  gstavutils.c	\
+			  gstavenc.c	\
+			  gstavvidenc.c	\
+			  gstavdec.c	\
+			  gstavviddec.c	\
+			  gstavcfg.c	\
+			  gstavdemux.c	\
+			  gstavmux.c    \
+			  gstavdeinterlace.c
 #\
-#			  gstffmpegaudioresample.c
+#			  gstavaudioresample.c
 # 	\
-# 			  gstffmpegscale.c
+# 			  gstavscale.c
 
 libgstlibav_la_CFLAGS = $(LIBAV_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstlibav_la_LIBADD = $(LIBAV_LIBS) $(GST_PLUGINS_BASE_LIBS) \
@@ -37,10 +37,10 @@ endif
 
 
 noinst_HEADERS = \
-	gstffmpeg.h \
-	gstffmpegcodecmap.h \
-	gstffmpegutils.h \
-	gstffmpegenc.h \
-	gstffmpegvidenc.h \
-	gstffmpegcfg.h \
-	gstffmpegpipe.h
+	gstav.h \
+	gstavcodecmap.h \
+	gstavutils.h \
+	gstavenc.h \
+	gstavvidenc.h \
+	gstavcfg.h \
+	gstavpipe.h
