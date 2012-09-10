@@ -112,7 +112,7 @@ gst_alsasrc_finalize (GObject * object)
   GstAlsaSrc *src = GST_ALSA_SRC (object);
 
   g_free (src->device);
-  g_mutex_free (src->alsa_lock);
+  g_mutex_clear (&src->alsa_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -225,7 +225,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc)
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
 
-  alsasrc->alsa_lock = g_mutex_new ();
+  g_mutex_init (&alsasrc->alsa_lock);
 }
 
 #define CHECK(call, error) \
