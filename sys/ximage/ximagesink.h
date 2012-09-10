@@ -180,8 +180,8 @@ struct _GstXImageSink
   gint fps_n;
   gint fps_d;
 
-  GMutex *x_lock;
-  GMutex *flow_lock;
+  GMutex x_lock;
+  GMutex flow_lock;
 
   /* object-set pixel aspect ratio */
   GValue *par;
