@@ -109,7 +109,7 @@ gst_rtp_sv3v_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-// only on the sink
+/* only on the sink */
 gboolean
 gst_rtp_sv3v_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
@@ -117,7 +117,7 @@ gst_rtp_sv3v_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
   gint clock_rate;
 
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
-    clock_rate = 90000;         // default
+    clock_rate = 90000;         /* default */
   filter->clock_rate = clock_rate;
 
   /* will set caps later */

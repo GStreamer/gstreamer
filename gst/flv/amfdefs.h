@@ -27,7 +27,7 @@
 #define AMF0_BOOLEAN_MARKER 0x1
 #define AMF0_STRING_MARKER 0x2
 #define AMF0_OBJECT_MARKER 0x3
-#define AMF0_MOVIECLIP_MARKER 0x4 // Reserved, not supported
+#define AMF0_MOVIECLIP_MARKER 0x4 /* Reserved, not supported */
 #define AMF0_NULL_MARKER 0x5
 #define AMF0_UNDEFINED_MARKER 0x6
 #define AMF0_REFERENCE_MARKER 0x7
@@ -37,7 +37,7 @@
 #define AMF0_DATE_MARKER 0xB
 #define AMF0_LONG_STRING_MARKER 0xC
 #define AMF0_UNSUPPORTED_MARKER 0xD
-#define AMF0_RECORDSET_MARKER 0xE // Reserved, not supported
+#define AMF0_RECORDSET_MARKER 0xE /* Reserved, not supported */
 #define AMF0_XML_DOCUMENT_MARKER 0xF
 #define AMF0_TYPED_OBJECT_MARKER 0x10
 
