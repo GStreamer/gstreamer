@@ -1240,8 +1240,6 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
 #define LINE(x) ((guint16 *)((tmpbuf) + (dest_size)*((x)&1)))
 
   acc = 0;
-  //video_scale_orc_resample_bilinear_u64 (LINE (0), src->pixels,
-  //    0, x_increment, dest->width);
   xacc = 0;
   vs_scanline_resample_linear_AYUV64 ((guint8 *) LINE (0),
       src->pixels, src->width, dest->width, &xacc, x_increment);
@@ -1258,8 +1256,6 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
         vs_scanline_resample_linear_AYUV64 ((guint8 *) LINE (j),
             src->pixels + j * src->stride, src->width, dest->width, &xacc,
             x_increment);
-        //video_scale_orc_resample_bilinear_u64 (LINE (j),
-        //    src->pixels + j * src->stride, 0, x_increment, dest->width);
         y1++;
       }
       if (j >= y1) {
@@ -1270,10 +1266,6 @@ vs_image_scale_linear_AYUV64 (const VSImage * dest, const VSImage * src,
         video_scale_orc_merge_linear_u16 ((guint16 *) (dest->pixels +
                 i * dest->stride), LINE (j), LINE (j + 1), 65536 - x, x,
             dest->width * 4);
-        //video_scale_orc_resample_merge_bilinear_u64 (dest->pixels +
-        //    i * dest->stride, LINE (j + 1), LINE (j),
-        //    src->pixels + (j + 1) * src->stride, (x >> 8), 0, x_increment,
-        //    dest->width);
         y1++;
       } else {
         video_scale_orc_merge_linear_u16 ((guint16 *) (dest->pixels +
