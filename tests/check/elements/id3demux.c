@@ -139,14 +139,15 @@ run_check_for_file (const gchar * filename, CheckTagsFunc * check_func)
 static void
 check_date_1977_06_23 (const GstTagList * tags, const gchar * file)
 {
-  GDate *date = NULL;
+  GstDateTime *date = NULL;
 
-  gst_tag_list_get_date (tags, GST_TAG_DATE, &date);
-  fail_unless (date != NULL, "Tags from %s should contain a GST_TAG_DATE tag");
-  fail_unless_equals_int (g_date_get_year (date), 1977);
-  fail_unless_equals_int (g_date_get_month (date), 6);
-  fail_unless_equals_int (g_date_get_day (date), 23);
-  g_date_free (date);
+  gst_tag_list_get_date_time (tags, GST_TAG_DATE_TIME, &date);
+  fail_unless (date != NULL,
+      "Tags from %s should contain a GST_TAG_DATE_TIME tag");
+  fail_unless_equals_int (gst_date_time_get_year (date), 1977);
+  fail_unless_equals_int (gst_date_time_get_month (date), 6);
+  fail_unless_equals_int (gst_date_time_get_day (date), 23);
+  gst_date_time_unref (date);
 }
 
 GST_START_TEST (test_tdat_tyer)
