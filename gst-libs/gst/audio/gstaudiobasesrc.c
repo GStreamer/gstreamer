@@ -759,7 +759,9 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   GstAudioRingBufferSpec *spec;
   guint read;
   GstClockTime timestamp, duration;
+  GstClockTime rb_timestamp = GST_CLOCK_TIME_NONE;
   GstClock *clock;
+  gboolean first;
 
   ringbuffer = src->ringbuffer;
   spec = &ringbuffer->spec;
@@ -803,8 +805,16 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
 
   gst_buffer_map (buf, &info, GST_MAP_WRITE);
   ptr = info.data;
+  first = TRUE;
   do {
-    read = gst_audio_ring_buffer_read (ringbuffer, sample, ptr, samples);
+    GstClockTime tmp_ts;
+
+    read =
+        gst_audio_ring_buffer_read (ringbuffer, sample, ptr, samples, &tmp_ts);
+    if (first && GST_CLOCK_TIME_IS_VALID (tmp_ts)) {
+      first = FALSE;
+      rb_timestamp = tmp_ts;
+    }
     GST_DEBUG_OBJECT (src, "read %u of %u", read, samples);
     /* if we read all, we're done */
     if (read == samples)
@@ -984,8 +994,13 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   } else {
     GstClockTime base_time;
 
-    /* to get the timestamp against the clock we also need to add our offset */
-    timestamp = gst_audio_clock_adjust (clock, timestamp);
+    if (GST_CLOCK_TIME_IS_VALID (rb_timestamp)) {
+      /* the read method returned a timestamp so we use this instead */
+      timestamp = rb_timestamp;
+    } else {
+      /* to get the timestamp against the clock we also need to add our offset */
+      timestamp = gst_audio_clock_adjust (clock, timestamp);
+    }
 
     /* we are not slaved, subtract base_time */
     base_time = GST_ELEMENT_CAST (src)->base_time;
@@ -1013,6 +1028,9 @@ no_sync:
   GST_BUFFER_OFFSET_END (buf) = sample + samples;
 
   *outbuf = buf;
+
+  GST_LOG_OBJECT (src, "Pushed buffer timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
   return GST_FLOW_OK;
 

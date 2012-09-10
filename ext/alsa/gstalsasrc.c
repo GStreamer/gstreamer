@@ -72,7 +72,8 @@ static void gst_alsasrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_alsasrc_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-
+static GstStateChangeReturn gst_alsasrc_change_state (GstElement * element,
+    GstStateChange transition);
 static GstCaps *gst_alsasrc_getcaps (GstBaseSrc * bsrc, GstCaps * filter);
 
 static gboolean gst_alsasrc_open (GstAudioSrc * asrc);
@@ -80,7 +81,8 @@ static gboolean gst_alsasrc_prepare (GstAudioSrc * asrc,
     GstAudioRingBufferSpec * spec);
 static gboolean gst_alsasrc_unprepare (GstAudioSrc * asrc);
 static gboolean gst_alsasrc_close (GstAudioSrc * asrc);
-static guint gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length);
+static guint gst_alsasrc_read
+    (GstAudioSrc * asrc, gpointer data, guint length, GstClockTime * timestamp);
 static guint gst_alsasrc_delay (GstAudioSrc * asrc);
 static void gst_alsasrc_reset (GstAudioSrc * asrc);
 
@@ -150,6 +152,7 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gstaudiosrc_class->read = GST_DEBUG_FUNCPTR (gst_alsasrc_read);
   gstaudiosrc_class->delay = GST_DEBUG_FUNCPTR (gst_alsasrc_delay);
   gstaudiosrc_class->reset = GST_DEBUG_FUNCPTR (gst_alsasrc_reset);
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_alsasrc_change_state);
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
@@ -217,6 +220,41 @@ gst_alsasrc_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstStateChangeReturn
+gst_alsasrc_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstAudioBaseSrc *src = GST_AUDIO_BASE_SRC (element);
+  GstAlsaSrc *alsa = GST_ALSA_SRC (element);
+  GstClock *clk;
+
+  switch (transition) {
+      /* show the compiler that we care */
+    case GST_STATE_CHANGE_NULL_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      break;
+
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      clk = src->clock;
+      alsa->driver_timestamps = FALSE;
+      if (GST_IS_SYSTEM_CLOCK (clk)) {
+        gint clocktype;
+        g_object_get (clk, "clock-type", &clocktype, NULL);
+        if (clocktype == GST_CLOCK_TYPE_MONOTONIC) {
+          GST_INFO ("Using driver timestamps !");
+          alsa->driver_timestamps = TRUE;
+        }
+      }
+      break;
+  }
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  return ret;
+}
+
 static void
 gst_alsasrc_init (GstAlsaSrc * alsasrc)
 {
@@ -224,6 +262,7 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc)
 
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
+  alsasrc->driver_timestamps = FALSE;
 
   g_mutex_init (&alsasrc->alsa_lock);
 }
@@ -450,6 +489,9 @@ set_swparams (GstAlsaSrc * alsa)
   /* start the transfer on first read */
   CHECK (snd_pcm_sw_params_set_start_threshold (alsa->handle, params,
           0), start_threshold);
+  /* use monotonic timestamping */
+  CHECK (snd_pcm_sw_params_set_tstamp_mode (alsa->handle, params,
+          SND_PCM_TSTAMP_MMAP), tstamp_mode);
 
 #if GST_CHECK_ALSA_VERSION(1,0,16)
   /* snd_pcm_sw_params_set_xfer_align() is deprecated, alignment is always 1 */
@@ -485,6 +527,13 @@ set_avail:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set avail min for playback: %s", snd_strerror (err)));
+    snd_pcm_sw_params_free (params);
+    return err;
+  }
+tstamp_mode:
+  {
+    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
+        ("Unable to set tstamp mode for playback: %s", snd_strerror (err)));
     snd_pcm_sw_params_free (params);
     return err;
   }
@@ -644,7 +693,8 @@ gst_alsasrc_open (GstAudioSrc * asrc)
   alsa = GST_ALSA_SRC (asrc);
 
   CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_CAPTURE,
-          SND_PCM_NONBLOCK), open_error);
+          (alsa->driver_timestamps == TRUE) ? 0 : SND_PCM_NONBLOCK),
+      open_error);
 
   return TRUE;
 
@@ -780,8 +830,66 @@ xrun_recovery (GstAlsaSrc * alsa, snd_pcm_t * handle, gint err)
   return err;
 }
 
+static GstClockTime
+gst_alsasrc_get_timestamp (GstAlsaSrc * asrc)
+{
+  snd_pcm_status_t *status;
+  snd_htimestamp_t tstamp;
+  GstClockTime timestamp;
+  snd_pcm_uframes_t avail;
+  gint err = -EPIPE;
+
+  if (G_UNLIKELY (!asrc)) {
+    GST_ERROR_OBJECT (asrc, "No alsa handle created yet !");
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (G_UNLIKELY (snd_pcm_status_malloc (&status) != 0)) {
+    GST_ERROR_OBJECT (asrc, "snd_pcm_status_malloc failed");
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (G_UNLIKELY (snd_pcm_status (asrc->handle, status) != 0)) {
+    GST_ERROR_OBJECT (asrc, "snd_pcm_status failed");
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  /* in case an xrun condition has occured we need to handle this */
+  if (snd_pcm_status_get_state (status) != SND_PCM_STATE_RUNNING) {
+    if (xrun_recovery (asrc, asrc->handle, err) < 0) {
+      GST_WARNING_OBJECT (asrc, "Could not recover from xrun condition !");
+    }
+    /* reload the status alsa status object, since recovery made it invalid */
+    if (G_UNLIKELY (snd_pcm_status (asrc->handle, status) != 0)) {
+      GST_ERROR_OBJECT (asrc, "snd_pcm_status failed");
+    }
+  }
+
+  /* get high resolution time stamp from driver */
+  snd_pcm_status_get_htstamp (status, &tstamp);
+  timestamp = GST_TIMESPEC_TO_TIME (tstamp);
+
+  /* max available frames sets the depth of the buffer */
+  avail = snd_pcm_status_get_avail (status);
+
+  /* calculate the timestamp of the next sample to be read */
+  timestamp -= gst_util_uint64_scale_int (avail, GST_SECOND, asrc->rate);
+
+  /* compensate for the fact that we really need the timestamp of the
+   * previously read data segment */
+  timestamp -= asrc->period_time * 1000;
+
+  snd_pcm_status_free (status);
+
+  GST_LOG_OBJECT (asrc, "ALSA timestamp : %" GST_TIME_FORMAT
+      ", delay %lu", GST_TIME_ARGS (timestamp), avail);
+
+  return timestamp;
+}
+
 static guint
-gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
+gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
+    GstClockTime * timestamp)
 {
   GstAlsaSrc *alsa;
   gint err;
@@ -809,6 +917,10 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
     cptr -= err;
   }
   GST_ALSA_SRC_UNLOCK (asrc);
+
+  /* if driver timestamps are enabled we need to return this here */
+  if (alsa->driver_timestamps && timestamp)
+    *timestamp = gst_alsasrc_get_timestamp (alsa);
 
   return length - (cptr * alsa->bpf);
 

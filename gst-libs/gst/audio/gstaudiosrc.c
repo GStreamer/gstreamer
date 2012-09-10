@@ -190,7 +190,8 @@ gst_audio_src_ring_buffer_class_init (GstAudioSrcRingBufferClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_src_ring_buffer_delay);
 }
 
-typedef guint (*ReadFunc) (GstAudioSrc * src, gpointer data, guint length);
+typedef guint (*ReadFunc)
+  (GstAudioSrc * src, gpointer data, guint length, GstClockTime * timestamp);
 
 /* this internal thread does nothing else but read samples from the audio device.
  * It will read each segment in the ringbuffer and will update the play
@@ -212,8 +213,7 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
 
   GST_DEBUG_OBJECT (src, "enter thread");
 
-  readfunc = csrc->read;
-  if (readfunc == NULL)
+  if ((readfunc = csrc->read) == NULL)
     goto no_function;
 
   /* FIXME: maybe we should at least use a custom pointer type here? */
@@ -229,13 +229,14 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
     gint left, len;
     guint8 *readptr;
     gint readseg;
+    GstClockTime timestamp = GST_CLOCK_TIME_NONE;
 
     if (gst_audio_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
       gint read;
 
       left = len;
       do {
-        read = readfunc (src, readptr, left);
+        read = readfunc (src, readptr, left, &timestamp);
         GST_LOG_OBJECT (src, "transfered %d bytes of %d to segment %d", read,
             left, readseg);
         if (read < 0 || read > left) {
@@ -247,6 +248,9 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
         left -= read;
         readptr += read;
       } while (left > 0);
+
+      /* Update timestamp on buffer if required */
+      gst_audio_ring_buffer_set_timestamp (buf, readseg, timestamp);
 
       /* we read one segment */
       gst_audio_ring_buffer_advance (buf, 1);

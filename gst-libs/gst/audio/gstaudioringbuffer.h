@@ -176,6 +176,7 @@ struct _GstAudioRingBuffer {
   gboolean                    acquired;
   guint8                     *memory;
   gsize                       size;
+  GstClockTime               *timestamps;
   GstAudioRingBufferSpec      spec;
   gint                        samples_per_seg;
   guint8                     *empty_seg;
@@ -309,7 +310,11 @@ guint           gst_audio_ring_buffer_commit          (GstAudioRingBuffer * buf,
 
 /* read samples */
 guint           gst_audio_ring_buffer_read            (GstAudioRingBuffer *buf, guint64 sample,
-                                                       guint8 *data, guint len);
+                                                       guint8 *data, guint len, GstClockTime *timestamp);
+
+/* Set timestamp on buffer */
+void            gst_audio_ring_buffer_set_timestamp   (GstAudioRingBuffer * buf, gint readseg, GstClockTime 
+                                                       timestamp);
 
 /* mostly protected */
 /* not yet implemented

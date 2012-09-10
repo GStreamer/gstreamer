@@ -81,7 +81,8 @@ struct _GstAudioSrcClass {
   /* close the device */
   gboolean (*close)     (GstAudioSrc *src);
   /* read samples from the device */
-  guint    (*read)      (GstAudioSrc *src, gpointer data, guint length);
+  guint    (*read)      (GstAudioSrc *src, gpointer data, guint length,
+      GstClockTime *timestamp);
   /* get number of samples queued in the device */
   guint    (*delay)     (GstAudioSrc *src);
   /* reset the audio device, unblock from a write */
