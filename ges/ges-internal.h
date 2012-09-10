@@ -27,9 +27,7 @@
 #include "ges-timeline.h"
 #include "ges-track-object.h"
 
-#if 0
 #include "ges-asset.h"
-#endif
 
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
@@ -65,7 +63,6 @@ timeline_move_object           (GESTimeline *timeline, GESTrackObject * object,
 gboolean
 timeline_context_to_layer      (GESTimeline *timeline, gint offset);
 
-#if 0
 G_GNUC_INTERNAL void
 ges_asset_cache_init (void);
 
@@ -105,5 +102,4 @@ GType
 ges_extractable_get_real_extractable_type_for_id (GType type, const gchar * id);
 
 gboolean ges_extractable_register_metas          (GType extractable_type, GESAsset *asset);
-#endif
 #endif /* __GES_INTERNAL_H__ */

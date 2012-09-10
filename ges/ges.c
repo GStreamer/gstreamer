@@ -75,6 +75,8 @@ ges_init (void)
 
   GES_TYPE_META_CONTAINER;
 
+  ges_asset_cache_init ();
+
   /* check the gnonlin elements are available */
   if (!ges_check_gnonlin_availability ())
     return FALSE;

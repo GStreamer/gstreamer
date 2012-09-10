@@ -140,10 +140,11 @@ typedef struct _GESKeyfileFormatterClass GESKeyfileFormatterClass;
 typedef struct _GESPitiviFormatter GESPitiviFormatter;
 typedef struct _GESPitiviFormatterClass GESPitiviFormatterClass;
 
-#if 0
 typedef struct _GESAsset GESAsset;
 typedef struct _GESAssetClass GESAssetClass;
-#endif
+
+typedef struct _GESAssetFileSource GESAssetFileSource;
+typedef struct _GESAssetFileSourceClass GESAssetFileSourceClass;
 
 typedef struct _GESExtractable GESExtractable;
 typedef struct _GESExtractableInterface GESExtractableInterface;

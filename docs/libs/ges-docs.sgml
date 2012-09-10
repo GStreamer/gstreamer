@@ -97,6 +97,11 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-extractable.xml"/>
   </chapter>
 
+  <chapter>
+    <title>Assets</title>
+    <xi:include href="xml/ges-asset-file-source.xml"/>
+  </chapter>
+
   <chapter id="ges-hierarchy">
     <title>Object Hierarchy</title>
     <xi:include href="xml/tree_index.sgml"/>
