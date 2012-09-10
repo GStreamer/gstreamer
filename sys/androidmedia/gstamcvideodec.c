@@ -623,9 +623,21 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
 
 static gboolean
 gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
-    GstAmcBufferInfo * buffer_info, GstBuffer * outbuf)
+    const GstAmcBufferInfo * buffer_info, GstBuffer * outbuf)
 {
-  /* TODO Implement */
+  GstAmcBuffer *buf = &self->output_buffers[idx];
+
+  if (idx >= self->n_output_buffers) {
+    GST_ERROR_OBJECT (self, "Invalid output buffer index %d of %d",
+        idx, self->n_output_buffers);
+    return FALSE;
+  }
+
+  if (buffer_info->size == GST_BUFFER_SIZE (outbuf)) {
+    memcpy (GST_BUFFER_DATA (outbuf), buf->data, buffer_info->size);
+    return TRUE;
+  }
+
   g_assert_not_reached ();
 }
 
@@ -1161,6 +1173,7 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     buffer_info.offset = 0;
     buffer_info.size =
         MIN (GST_BUFFER_SIZE (frame->input_buffer) - offset, buf->size);
+
     memcpy (buf->data, GST_BUFFER_DATA (frame->input_buffer) + offset,
         buffer_info.size);
 
