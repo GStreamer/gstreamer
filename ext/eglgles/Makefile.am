@@ -4,11 +4,11 @@ libgsteglglessink_la_SOURCES = gsteglglessink.c video_platform_wrapper.c
 
 libgsteglglessink_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
                               $(GST_CFLAGS) \
-                              $(DROIDSINKS_CFLAGS) \
+                              $(EGLGLES_CFLAGS) \
                               $(X11_CFLAGS)
 
 libgsteglglessink_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
-	$(GST_PLUGINS_BASE_LIBS) $(DROIDSINKS_LIBS) $(X11_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) $(EGLGLES_LIBS) $(X11_LIBS) \
 	-lgstvideo-$(GST_MAJORMINOR) \
 	-lgstinterfaces-$(GST_MAJORMINOR)
 
