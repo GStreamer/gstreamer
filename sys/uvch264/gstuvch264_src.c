@@ -64,7 +64,6 @@ typedef struct
 #endif
 
 #include "gstuvch264_src.h"
-#include "gstuvch264-marshal.h"
 
 #ifndef UVCIOC_XU_FIND_UNIT
 /* Define the needed structure if <linux/uvcvideo.h> is too old.
@@ -515,21 +514,19 @@ gst_uvc_h264_src_class_init (GstUvcH264SrcClass * klass)
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_uvc_h264_src_get_enum_setting),
-      NULL, NULL, __gst_uvc_h264_marshal_BOOLEAN__STRING_POINTER_POINTER,
+      NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER, 0);
   _signals[SIGNAL_GET_BOOLEAN_SETTING] =
       g_signal_new_class_handler ("get-boolean-setting",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_CALLBACK (gst_uvc_h264_src_get_boolean_setting), NULL, NULL,
-      __gst_uvc_h264_marshal_BOOLEAN__STRING_POINTER_POINTER,
+      G_CALLBACK (gst_uvc_h264_src_get_boolean_setting), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 3, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER, 0);
   _signals[SIGNAL_GET_INT_SETTING] =
       g_signal_new_class_handler ("get-int-setting",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
-      G_CALLBACK (gst_uvc_h264_src_get_int_setting), NULL, NULL,
-      __gst_uvc_h264_marshal_BOOLEAN__STRING_POINTER_POINTER_POINTER,
+      G_CALLBACK (gst_uvc_h264_src_get_int_setting), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 4, G_TYPE_STRING, G_TYPE_POINTER, G_TYPE_POINTER,
       G_TYPE_POINTER, 0);
 

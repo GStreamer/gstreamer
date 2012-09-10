@@ -1,26 +1,12 @@
 glib_gen_prefix = __gst_uvc_h264
 glib_gen_basename = gstuvch264
 
-include $(top_srcdir)/common/gst-glib-gen.mak
-
-built_sources = gstuvch264-marshal.c
-built_headers = gstuvch264-marshal.h
-
-BUILT_SOURCES = $(built_sources) $(built_headers)
-
-CLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST = gstuvch264-marshal.list
-
-
 plugin_LTLIBRARIES = libgstuvch264.la
 
 libgstuvch264_la_SOURCES = gstuvch264.c \
 			   gstuvch264_mjpgdemux.c \
 			   gstuvch264_src.c \
 			   uvc_h264.c
-
-nodist_libgstuvch264_la_SOURCES = $(built_sources)
 
 libgstuvch264_la_CFLAGS =   $(GST_PLUGINS_BAD_CFLAGS) \
 			    $(GST_PLUGINS_BASE_CFLAGS) \
