@@ -292,7 +292,7 @@ else
 
   # Enable pic and static so that we get .a files, but with PIC code.
   emblibav_configure_args="$emblibav_configure_args --disable-avserver --disable-avplay\
-        --disable-ffmpeg --disable-avprobe --enable-static --enable-pic \
+        --disable-avconv --disable-avprobe --enable-static --enable-pic \
 	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
 	--disable-network --disable-hwaccels --disable-filters --disable-doc\
 	--enable-optimizations"
