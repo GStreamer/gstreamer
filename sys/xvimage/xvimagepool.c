@@ -131,7 +131,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
   GST_DEBUG_OBJECT (xvimagesink, "creating image %p (%dx%d)", buffer,
       width, height);
 
-  g_mutex_lock (xvimagesink->x_lock);
+  g_mutex_lock (&xvimagesink->x_lock);
 
   /* Setting an error handler to catch failure */
   error_caught = FALSE;
@@ -144,7 +144,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
     meta->xvimage = XvShmCreateImage (xcontext->disp,
         xcontext->xv_port_id, im_format, NULL, width, height, &meta->SHMInfo);
     if (!meta->xvimage || error_caught) {
-      g_mutex_unlock (xvimagesink->x_lock);
+      g_mutex_unlock (&xvimagesink->x_lock);
 
       /* Reset error flag */
       error_caught = FALSE;
@@ -159,7 +159,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
       xvimagesink->xcontext->use_xshm = FALSE;
 
       /* Hold X mutex again to try without XShm */
-      g_mutex_lock (xvimagesink->x_lock);
+      g_mutex_lock (&xvimagesink->x_lock);
       goto no_xshm;
     }
 
@@ -276,7 +276,7 @@ gst_buffer_add_xvimage_meta (GstBuffer * buffer, GstXvImageBufferPool * xvpool)
       gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, meta->xvimage->data,
           meta->size + align, offset, meta->size, NULL, NULL));
 
-  g_mutex_unlock (xvimagesink->x_lock);
+  g_mutex_unlock (&xvimagesink->x_lock);
 
   success = TRUE;
 
@@ -289,7 +289,7 @@ beach:
   /* ERRORS */
 create_failed:
   {
-    g_mutex_unlock (xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->x_lock);
     /* Reset error handler */
     error_caught = FALSE;
     XSetErrorHandler (handler);
@@ -303,7 +303,7 @@ create_failed:
 #ifdef HAVE_XSHM
 shmget_failed:
   {
-    g_mutex_unlock (xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->x_lock);
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
             width, height),
@@ -313,7 +313,7 @@ shmget_failed:
   }
 shmat_failed:
   {
-    g_mutex_unlock (xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->x_lock);
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
             width, height), ("Failed to shmat: %s", g_strerror (errno)));
@@ -325,7 +325,7 @@ xattach_failed:
   {
     /* Clean up the shared memory segment */
     shmctl (meta->SHMInfo.shmid, IPC_RMID, NULL);
-    g_mutex_unlock (xvimagesink->x_lock);
+    g_mutex_unlock (&xvimagesink->x_lock);
 
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, WRITE,
         ("Failed to create output image buffer of %dx%d pixels",
@@ -361,7 +361,7 @@ gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer)
     goto beach;
   }
 
-  g_mutex_lock (xvimagesink->x_lock);
+  g_mutex_lock (&xvimagesink->x_lock);
 
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
@@ -386,7 +386,7 @@ gst_xvimage_meta_free (GstXvImageMeta * meta, GstBuffer * buffer)
 
   XSync (xvimagesink->xcontext->disp, FALSE);
 
-  g_mutex_unlock (xvimagesink->x_lock);
+  g_mutex_unlock (&xvimagesink->x_lock);
 
 beach:
   GST_OBJECT_UNLOCK (xvimagesink);
