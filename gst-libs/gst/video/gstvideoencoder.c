@@ -115,10 +115,6 @@
  *   and if it exceeds the recorded one, save it and emit a GST_MESSAGE_LATENCY
  */
 
-/* FIXME 0.11: suppress warnings for deprecated API such as GStaticRecMutex
- * with newer GLib versions (>= 2.31.0) */
-#define GLIB_DISABLE_DEPRECATION_WARNINGS
-
 #include "gstvideoencoder.h"
 #include "gstvideoutils.h"
 
