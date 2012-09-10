@@ -19,7 +19,6 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 #endif
 
 typedef struct _CustomData {
-  JNIEnv *env;
   GstElement *pipeline;
   GMainLoop *main_loop;
 } CustomData;
