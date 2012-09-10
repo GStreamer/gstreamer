@@ -289,10 +289,11 @@ gst_audio_base_src_provide_clock (GstElement * elem)
   if (src->ringbuffer == NULL)
     goto wrong_state;
 
-  if (!gst_audio_ring_buffer_is_acquired (src->ringbuffer))
+  if (gst_audio_ring_buffer_is_flushing (src->ringbuffer))
     goto wrong_state;
 
   GST_OBJECT_LOCK (src);
+
   if (!GST_OBJECT_FLAG_IS_SET (src, GST_ELEMENT_FLAG_PROVIDE_CLOCK))
     goto clock_disabled;
 
@@ -304,7 +305,7 @@ gst_audio_base_src_provide_clock (GstElement * elem)
   /* ERRORS */
 wrong_state:
   {
-    GST_DEBUG_OBJECT (src, "ringbuffer not acquired");
+    GST_DEBUG_OBJECT (src, "ringbuffer is flushing");
     return NULL;
   }
 clock_disabled:
