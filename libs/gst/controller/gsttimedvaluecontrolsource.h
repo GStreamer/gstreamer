@@ -66,7 +66,7 @@ struct _GstControlPoint
   /* internal fields */
 
   /* Caches for the interpolators */
-  // FIXME: we should not have this here already ...
+  /* FIXME: we should not have this here already ... */
   union {
     struct {
       gdouble h;

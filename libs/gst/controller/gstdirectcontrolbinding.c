@@ -207,7 +207,7 @@ gst_direct_control_binding_constructor (GType type, guint n_construct_params,
 
     GST_DEBUG ("  using type %s", g_type_name (base));
 
-    // select mapping function
+    /* select mapping function */
     switch (base) {
       case G_TYPE_INT:
         self->convert_g_value = convert_g_value_to_int;
