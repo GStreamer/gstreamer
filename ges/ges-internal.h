@@ -87,5 +87,23 @@ ges_asset_set_proxy (GESAsset *asset, const gchar *new_id);
 G_GNUC_INTERNAL gboolean
 ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,
     GError *error);
+
+/* GESExtractable internall methods
+ *
+ * FIXME Check if that should be public later
+ */
+GType
+ges_extractable_type_get_asset_type              (GType type);
+
+G_GNUC_INTERNAL gchar *
+ges_extractable_type_check_id                    (GType type, const gchar *id, GError **error);
+
+GParameter *
+ges_extractable_type_get_parameters_from_id      (GType type, const gchar *id,
+                                                  guint *n_params);
+GType
+ges_extractable_get_real_extractable_type_for_id (GType type, const gchar * id);
+
+gboolean ges_extractable_register_metas          (GType extractable_type, GESAsset *asset);
 #endif
 #endif /* __GES_INTERNAL_H__ */

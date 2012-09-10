@@ -297,7 +297,7 @@ GES_TYPE_TIMELINE
 GESTimelineLayer
 GESTimelineLayerClass
 ges_timeline_layer_add_object
-ges_timeline_layer_add_asset
+ges_timeline_layer_add_material
 ges_timeline_layer_new
 ges_timeline_layer_remove_object
 ges_timeline_layer_set_priority
@@ -926,6 +926,23 @@ GES_META_CONTAINER
 GES_META_CONTAINER_GET_INTERFACE
 GES_TYPE_META_CONTAINER
 ges_meta_container_get_ype
+</SECTION>
+
+<SECTION>
+<FILE>ges-extractable</FILE>
+<TITLE>GESExtractableInterface</TITLE>
+GESExtractable
+GESExtractableInterface
+GESExtractableCheckId
+ges_extractable_get_asset
+ges_extractable_set_asset
+ges_extractable_get_id
+<SUBSECTION Standard>
+GES_IS_EXTRACTABLE
+GES_EXTRACTABLE
+GES_EXTRACTABLE_GET_INTERFACE
+GES_TYPE_EXTRACTABLE
+ges_extractable_get_type
 </SECTION>
 
 <SECTION>

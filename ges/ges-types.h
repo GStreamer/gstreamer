@@ -145,4 +145,7 @@ typedef struct _GESAsset GESAsset;
 typedef struct _GESAssetClass GESAssetClass;
 #endif
 
+typedef struct _GESExtractable GESExtractable;
+typedef struct _GESExtractableInterface GESExtractableInterface;
+
 #endif /* __GES_TYPES_H__ */

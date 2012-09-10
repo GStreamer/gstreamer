@@ -47,6 +47,7 @@
 #include <ges/ges-screenshot.h>
 #if 0
 #include <ges/ges-asset.h>
+#include <ges/ges-extractable.h>
 #endif
 
 #include <ges/ges-track.h>
