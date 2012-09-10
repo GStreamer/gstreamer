@@ -264,7 +264,7 @@ ges_timeline_title_source_class_init (GESTimelineTitleSourceClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   /**
-   * GESTimelineTitleSource:xpos
+   * GESTimelineTitleSource:xpos:
    *
    * The horizontal position of the text
    */
@@ -318,7 +318,7 @@ ges_timeline_title_source_set_text (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, text:%s", self, text);
+  GST_DEBUG_OBJECT (self, "text:%s", text);
 
   if (self->priv->text)
     g_free (self->priv->text);
@@ -345,7 +345,7 @@ ges_timeline_title_source_set_font_desc (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, font_desc:%s", self, font_desc);
+  GST_DEBUG_OBJECT (self, "font_desc:%s", font_desc);
 
   if (self->priv->font_desc)
     g_free (self->priv->font_desc);
@@ -372,7 +372,7 @@ ges_timeline_title_source_set_halignment (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, halign:%d", self, halign);
+  GST_DEBUG_OBJECT (self, "halign:%d", halign);
 
   self->priv->halign = halign;
 
@@ -396,7 +396,7 @@ ges_timeline_title_source_set_valignment (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, valign:%d", self, valign);
+  GST_DEBUG_OBJECT (self, "valign:%d", valign);
 
   self->priv->valign = valign;
 
@@ -421,7 +421,7 @@ ges_timeline_title_source_set_mute (GESTimelineTitleSource * self,
   GList *tmp, *trackobjects;
   GESTimelineObject *object = (GESTimelineObject *) self;
 
-  GST_DEBUG ("self:%p, mute:%d", self, mute);
+  GST_DEBUG_OBJECT (self, "mute:%d", mute);
 
   self->priv->mute = mute;
 
@@ -454,7 +454,7 @@ ges_timeline_title_source_set_color (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, color:%d", self, color);
+  GST_DEBUG_OBJECT (self, "color:%d", color);
 
   self->priv->color = color;
 
@@ -477,7 +477,7 @@ ges_timeline_title_source_set_background (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, background:%d", self, background);
+  GST_DEBUG_OBJECT (self, "background:%d", background);
 
   self->priv->background = background;
 
@@ -503,7 +503,7 @@ ges_timeline_title_source_set_xpos (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, xpos:%f", self, position);
+  GST_DEBUG_OBJECT (self, "xpos:%f", position);
 
   self->priv->xpos = position;
 
@@ -528,7 +528,7 @@ ges_timeline_title_source_set_ypos (GESTimelineTitleSource * self,
 {
   GSList *tmp;
 
-  GST_DEBUG ("self:%p, ypos:%f", self, position);
+  GST_DEBUG_OBJECT (self, "ypos:%f", position);
 
   self->priv->ypos = position;
 
@@ -683,7 +683,7 @@ ges_timeline_title_source_track_object_released (GESTimelineObject * obj,
 
   /* If this is called, we should be sure the tckobj exists */
   if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
-    GST_DEBUG ("GESTrackTitle %p released from %p", tckobj, obj);
+    GST_DEBUG_OBJECT (obj, "%p released from %p", tckobj, obj);
     priv->track_titles = g_slist_remove (priv->track_titles, tckobj);
     g_object_unref (tckobj);
   }
@@ -696,7 +696,7 @@ ges_timeline_title_source_track_object_added (GESTimelineObject * obj,
   GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
 
   if (GES_IS_TRACK_TITLE_SOURCE (tckobj)) {
-    GST_DEBUG ("GESTrackTitle %p added to %p", tckobj, obj);
+    GST_DEBUG_OBJECT (obj, "%p added to %p", tckobj, obj);
     priv->track_titles =
         g_slist_prepend (priv->track_titles, g_object_ref (tckobj));
   }
@@ -710,11 +710,11 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
   GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
   GESTrackObject *res = NULL;
 
-  GST_DEBUG ("Creating a GESTrackTitleSource");
+  GST_DEBUG_OBJECT (obj, "a GESTrackTitleSource");
 
   if (track->type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_title_source_new ();
-    GST_DEBUG ("Setting text property");
+    GST_DEBUG_OBJECT (obj, "text property");
     ges_track_title_source_set_text ((GESTrackTitleSource *) res, priv->text);
     ges_track_title_source_set_font_desc ((GESTrackTitleSource *) res,
         priv->font_desc);
