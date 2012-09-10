@@ -71,6 +71,9 @@ struct _GstVideoFrame {
 
   gpointer   data[GST_VIDEO_MAX_PLANES];
   GstMapInfo map[GST_VIDEO_MAX_PLANES];
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 gboolean    gst_video_frame_map           (GstVideoFrame *frame, GstVideoInfo *info,

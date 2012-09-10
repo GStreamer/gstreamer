@@ -145,8 +145,9 @@ struct _GstVideoEncoder
   GstSegment      input_segment;
   GstSegment      output_segment;
 
+  /*< private >*/
   GstVideoEncoderPrivate *priv;
-  /* FIXME before moving to base */
+
   void         *padding[GST_PADDING_LARGE];
 };
 
@@ -250,7 +251,6 @@ struct _GstVideoEncoderClass
                                        GstQuery * query);
 
   /*< private >*/
-  /* FIXME before moving to base */
   gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 

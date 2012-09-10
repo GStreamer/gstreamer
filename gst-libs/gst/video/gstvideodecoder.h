@@ -187,7 +187,7 @@ struct _GstVideoDecoder
 
   GstVideoDecoderPrivate *priv;
 
-  /* FIXME before moving to base */
+  /*< private >*/
   void             *padding[GST_PADDING_LARGE];
 };
 
@@ -280,7 +280,6 @@ struct _GstVideoDecoderClass
   gboolean      (*propose_allocation) (GstVideoDecoder *decoder, GstQuery * query);
 
   /*< private >*/
-  /* FIXME before moving to base */
   void         *padding[GST_PADDING_LARGE];
 };
 
