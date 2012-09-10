@@ -3373,7 +3373,6 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
               if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
                 avi->offset += 8 + GST_ROUND_UP_2 (size);
                 gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
-                // ??? goto iterate; ???
               } else {
                 /* Need more data */
                 return GST_FLOW_OK;
@@ -3384,7 +3383,6 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
           if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
             avi->offset += 8 + GST_ROUND_UP_2 (size);
             gst_adapter_flush (avi->adapter, 8 + GST_ROUND_UP_2 (size));
-            //goto iterate;
           } else {
             /* Need more data */
             return GST_FLOW_OK;
