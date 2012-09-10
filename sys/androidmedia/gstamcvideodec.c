@@ -714,8 +714,7 @@ retry:
 
   frame =
       _find_nearest_frame (self,
-      gst_util_uint64_scale (buffer_info.presentation_time_us, GST_USECOND,
-          GST_SECOND));
+      gst_util_uint64_scale (buffer_info.presentation_time_us, GST_USECOND, 1));
 
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
 
@@ -1178,8 +1177,7 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     if (timestamp != GST_CLOCK_TIME_NONE) {
       buffer_info.presentation_time_us =
-          gst_util_uint64_scale (timestamp + timestamp_offset,
-          GST_USECOND, GST_SECOND);
+          gst_util_uint64_scale (timestamp + timestamp_offset, 1, GST_USECOND);
       self->last_upstream_ts = timestamp + timestamp_offset;
     }
     if (duration != GST_CLOCK_TIME_NONE)
@@ -1272,7 +1270,7 @@ gst_amc_video_dec_finish (GstVideoDecoder * decoder)
     memset (&buffer_info, 0, sizeof (buffer_info));
     buffer_info.size = 0;
     buffer_info.presentation_time_us =
-        gst_util_uint64_scale (self->last_upstream_ts, GST_USECOND, GST_SECOND);
+        gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
     buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
 
     if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info))
@@ -1328,7 +1326,7 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self)
     memset (&buffer_info, 0, sizeof (buffer_info));
     buffer_info.size = 0;
     buffer_info.presentation_time_us =
-        gst_util_uint64_scale (self->last_upstream_ts, GST_USECOND, GST_SECOND);
+        gst_util_uint64_scale (self->last_upstream_ts, 1, GST_USECOND);
     buffer_info.flags |= BUFFER_FLAG_END_OF_STREAM;
 
     if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info)) {
