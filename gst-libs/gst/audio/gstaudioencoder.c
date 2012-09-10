@@ -2360,7 +2360,7 @@ gst_audio_encoder_get_hard_resync (GstAudioEncoder * enc)
  * MT safe.
  */
 void
-gst_audio_encoder_set_tolerance (GstAudioEncoder * enc, gint64 tolerance)
+gst_audio_encoder_set_tolerance (GstAudioEncoder * enc, GstClockTime tolerance)
 {
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
 
@@ -2379,10 +2379,10 @@ gst_audio_encoder_set_tolerance (GstAudioEncoder * enc, gint64 tolerance)
  *
  * MT safe.
  */
-gint64
+GstClockTime
 gst_audio_encoder_get_tolerance (GstAudioEncoder * enc)
 {
-  gint64 result;
+  GstClockTime result;
 
   g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), 0);
 

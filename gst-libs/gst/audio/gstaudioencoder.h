@@ -279,9 +279,9 @@ void            gst_audio_encoder_set_hard_resync (GstAudioEncoder * enc,
 gboolean        gst_audio_encoder_get_hard_resync (GstAudioEncoder * enc);
 
 void            gst_audio_encoder_set_tolerance (GstAudioEncoder * enc,
-                                                 gint64            tolerance);
+                                                 GstClockTime      tolerance);
 
-gint64          gst_audio_encoder_get_tolerance (GstAudioEncoder * enc);
+GstClockTime    gst_audio_encoder_get_tolerance (GstAudioEncoder * enc);
 
 void            gst_audio_encoder_set_hard_min (GstAudioEncoder * enc,
                                                 gboolean enabled);

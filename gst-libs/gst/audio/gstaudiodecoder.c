@@ -2696,7 +2696,7 @@ gst_audio_decoder_get_plc (GstAudioDecoder * dec)
  * MT safe.
  */
 void
-gst_audio_decoder_set_min_latency (GstAudioDecoder * dec, gint64 num)
+gst_audio_decoder_set_min_latency (GstAudioDecoder * dec, GstClockTime num)
 {
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
 
@@ -2715,10 +2715,10 @@ gst_audio_decoder_set_min_latency (GstAudioDecoder * dec, gint64 num)
  *
  * MT safe.
  */
-gint64
+GstClockTime
 gst_audio_decoder_get_min_latency (GstAudioDecoder * dec)
 {
-  gint64 result;
+  GstClockTime result;
 
   g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
 
@@ -2739,7 +2739,7 @@ gst_audio_decoder_get_min_latency (GstAudioDecoder * dec)
  * MT safe.
  */
 void
-gst_audio_decoder_set_tolerance (GstAudioDecoder * dec, gint64 tolerance)
+gst_audio_decoder_set_tolerance (GstAudioDecoder * dec, GstClockTime tolerance)
 {
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
 
@@ -2758,10 +2758,10 @@ gst_audio_decoder_set_tolerance (GstAudioDecoder * dec, gint64 tolerance)
  *
  * MT safe.
  */
-gint64
+GstClockTime
 gst_audio_decoder_get_tolerance (GstAudioDecoder * dec)
 {
-  gint64 result;
+  GstClockTime result;
 
   g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), 0);
 

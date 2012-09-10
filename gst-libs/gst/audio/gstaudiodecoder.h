@@ -325,14 +325,14 @@ void              gst_audio_decoder_set_plc (GstAudioDecoder * dec,
 gboolean          gst_audio_decoder_get_plc (GstAudioDecoder * dec);
 
 void              gst_audio_decoder_set_min_latency (GstAudioDecoder * dec,
-                                                     gint64            num);
+                                                     GstClockTime      num);
 
-gint64            gst_audio_decoder_get_min_latency (GstAudioDecoder * dec);
+GstClockTime      gst_audio_decoder_get_min_latency (GstAudioDecoder * dec);
 
 void              gst_audio_decoder_set_tolerance   (GstAudioDecoder * dec,
-                                                     gint64            tolerance);
+                                                     GstClockTime      tolerance);
 
-gint64            gst_audio_decoder_get_tolerance   (GstAudioDecoder * dec);
+GstClockTime      gst_audio_decoder_get_tolerance   (GstAudioDecoder * dec);
 
 void              gst_audio_decoder_set_drainable (GstAudioDecoder * dec,
                                                    gboolean enabled);
