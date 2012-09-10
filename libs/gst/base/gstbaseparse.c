@@ -2966,6 +2966,7 @@ pause:
 static gboolean
 gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
+  GstSchedulingFlags sched_flags;
   GstBaseParse *parse;
   GstQuery *query;
   gboolean pull_mode;
@@ -2980,7 +2981,11 @@ gst_base_parse_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto baseparse_push;
   }
 
-  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+  gst_query_parse_scheduling (query, &sched_flags, NULL, NULL, NULL);
+
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL)
+      && ((sched_flags & GST_SCHEDULING_FLAG_SEEKABLE) != 0);
+
   gst_query_unref (query);
 
   if (!pull_mode)

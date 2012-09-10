@@ -1165,6 +1165,7 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
   gboolean pull_mode;
   GstCaps *found_caps = NULL;
   GstTypeFindProbability probability = GST_TYPE_FIND_NONE;
+  GstSchedulingFlags sched_flags;
 
   typefind = GST_TYPE_FIND_ELEMENT (parent);
 
@@ -1196,7 +1197,11 @@ gst_type_find_element_activate_sink (GstPad * pad, GstObject * parent)
     goto typefind_push;
   }
 
-  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+  gst_query_parse_scheduling (query, &sched_flags, NULL, NULL, NULL);
+
+  pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL)
+      && ((sched_flags & GST_SCHEDULING_FLAG_SEEKABLE) != 0);
+
   gst_query_unref (query);
 
   if (!pull_mode)
