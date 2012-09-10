@@ -714,7 +714,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (range != NULL, FALSE);
 
-  if (media->seekable) {
+  if (!media->seekable) {
     GST_INFO ("pipeline is not seekable");
     return TRUE;
   }
