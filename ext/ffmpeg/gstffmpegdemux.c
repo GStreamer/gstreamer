@@ -1995,8 +1995,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
       rank = GST_RANK_MARGINAL;
     else {
       GST_DEBUG ("ignoring %s", in_plugin->name);
-      rank = GST_RANK_MARGINAL;
-      //goto next;
+      rank = GST_RANK_NONE;
+      goto next;
     }
 
     p = name = g_strdup (in_plugin->name);
