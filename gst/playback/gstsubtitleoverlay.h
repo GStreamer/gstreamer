@@ -40,7 +40,7 @@ G_BEGIN_DECLS
     GST_LOG_OBJECT (obj,                                                \
                     "locking from thread %p",                           \
                     g_thread_self ());                                  \
-    g_mutex_lock (GST_SUBTITLE_OVERLAY_CAST(obj)->lock);                \
+    g_mutex_lock (&GST_SUBTITLE_OVERLAY_CAST(obj)->lock);               \
     GST_LOG_OBJECT (obj,                                                \
                     "locked from thread %p",                            \
                     g_thread_self ());                                  \
@@ -50,7 +50,7 @@ G_BEGIN_DECLS
     GST_LOG_OBJECT (obj,                                                \
                     "unlocking from thread %p",                         \
                     g_thread_self ());                                  \
-    g_mutex_unlock (GST_SUBTITLE_OVERLAY_CAST(obj)->lock);              \
+    g_mutex_unlock (&GST_SUBTITLE_OVERLAY_CAST(obj)->lock);             \
 } G_STMT_END
 
 typedef struct _GstSubtitleOverlay GstSubtitleOverlay;
@@ -85,12 +85,12 @@ struct _GstSubtitleOverlay
   gboolean subtitle_flush;
   gboolean subtitle_error;
 
-  GMutex *factories_lock;
+  GMutex factories_lock;
   GList *factories;
   guint32 factories_cookie;
   GstCaps *factory_caps;
 
-  GMutex *lock;
+  GMutex lock;
   GstCaps *subcaps;
 
   GstElement *passthrough_identity;

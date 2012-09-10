@@ -41,7 +41,7 @@ G_BEGIN_DECLS
     GST_LOG_OBJECT (obj,                                                \
                     "locking from thread %p",                           \
                     g_thread_self ());                                  \
-    g_mutex_lock (GST_PLAY_SINK_CONVERT_BIN_CAST(obj)->lock);                \
+    g_mutex_lock (&GST_PLAY_SINK_CONVERT_BIN_CAST(obj)->lock);                \
     GST_LOG_OBJECT (obj,                                                \
                     "locked from thread %p",                            \
                     g_thread_self ());                                  \
@@ -51,7 +51,7 @@ G_BEGIN_DECLS
     GST_LOG_OBJECT (obj,                                                \
                     "unlocking from thread %p",                         \
                     g_thread_self ());                                  \
-    g_mutex_unlock (GST_PLAY_SINK_CONVERT_BIN_CAST(obj)->lock);              \
+    g_mutex_unlock (&GST_PLAY_SINK_CONVERT_BIN_CAST(obj)->lock);              \
 } G_STMT_END
 
 typedef struct _GstPlaySinkConvertBin GstPlaySinkConvertBin;
@@ -62,7 +62,7 @@ struct _GstPlaySinkConvertBin
   GstBin parent;
 
   /* < private > */
-  GMutex *lock;
+  GMutex lock;
 
   GstPad *sinkpad, *sink_proxypad;
   guint sink_proxypad_block_id;

@@ -500,7 +500,7 @@ gst_play_sink_convert_bin_finalize (GObject * object)
   GstPlaySinkConvertBin *self = GST_PLAY_SINK_CONVERT_BIN_CAST (object);
 
   gst_object_unref (self->sink_proxypad);
-  g_mutex_free (self->lock);
+  g_mutex_clear (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -616,7 +616,7 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
 {
   GstPadTemplate *templ;
 
-  self->lock = g_mutex_new ();
+  g_mutex_init (&self->lock);
   gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
 
   templ = gst_static_pad_template_get (&sinktemplate);
