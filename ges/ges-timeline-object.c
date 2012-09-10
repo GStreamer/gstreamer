@@ -78,8 +78,12 @@ static gboolean ges_timeline_object_set_priority_internal (GESTimelineObject *
 static GESTimelineObject *ges_timeline_object_copy (GESTimelineObject * object,
     gboolean * deep);
 
-G_DEFINE_ABSTRACT_TYPE (GESTimelineObject, ges_timeline_object,
-    G_TYPE_INITIALLY_UNOWNED);
+static void ges_extractable_interface_init (GESExtractableInterface * iface);
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineObject, ges_timeline_object,
+    G_TYPE_INITIALLY_UNOWNED,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 /* Mapping of relationship between a TimelineObject and the TrackObjects
  * it controls
@@ -136,6 +140,8 @@ struct _GESTimelineObjectPrivate
 
   /* The formats supported by this TimelineObject */
   GESTrackType supportedformats;
+
+  GESAsset *asset;
 };
 
 enum
@@ -406,6 +412,34 @@ ges_timeline_object_init (GESTimelineObject * self)
   self->priv->nb_effects = 0;
   self->priv->is_moving = FALSE;
   self->priv->maxduration = G_MAXUINT64;
+}
+
+static void
+extractable_set_asset (GESExtractable * extractable, GESAsset * asset)
+{
+  GES_TIMELINE_OBJECT (extractable)->asset = asset;
+}
+
+static gboolean
+_register_metas (GESExtractableInterface * iface, GObjectClass * class,
+    GESAsset * asset)
+{
+  GESMetaContainer *container = GES_META_CONTAINER (asset);
+  GParamSpecEnum *pspec =
+      (GParamSpecEnum *) g_object_class_find_property (class,
+      "supported-formats");
+
+  ges_meta_container_set_uint (container,
+      GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS, pspec->default_value);
+
+  return TRUE;
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->set_asset = extractable_set_asset;
+  iface->register_metas = _register_metas;
 }
 
 /**

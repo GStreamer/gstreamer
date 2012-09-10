@@ -172,6 +172,7 @@ struct _GESTimelineObject {
   guint32 height;       /* the span of priorities this object needs */
 
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
+  GESAsset *asset;
 
   /*< private >*/
   GESTimelineObjectPrivate *priv;
