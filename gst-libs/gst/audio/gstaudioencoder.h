@@ -210,7 +210,7 @@ struct _GstAudioEncoderClass {
                                        GstQuery * query);
 
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-2];
+  gpointer       _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType           gst_audio_encoder_get_type         (void);

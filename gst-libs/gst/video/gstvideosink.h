@@ -97,7 +97,7 @@ struct _GstVideoSink {
   /*< private >*/
   GstVideoSinkPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - 1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
