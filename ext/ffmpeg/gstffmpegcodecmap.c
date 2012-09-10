@@ -22,13 +22,11 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#else
-#include <libavcodec/avcodec.h>
-#endif
+
 #include <string.h>
+
+#include <gst/gst.h>
+#include <libavcodec/avcodec.h>
 
 #include "gstffmpeg.h"
 #include "gstffmpegcodecmap.h"

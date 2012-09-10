@@ -28,11 +28,7 @@
 #include <glib/gstdio.h>
 #include <errno.h>
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#else
 #include <libavcodec/avcodec.h>
-#endif
 
 #include <gst/gst.h>
 

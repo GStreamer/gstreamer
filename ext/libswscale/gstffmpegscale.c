@@ -23,11 +23,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <swscale.h>
-#else
 #include <libswscale/swscale.h>
-#endif
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>

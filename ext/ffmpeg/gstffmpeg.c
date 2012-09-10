@@ -27,13 +27,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <gst/gst.h>
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#include <avformat.h>
-#else
+
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#endif
 
 #include "gstffmpeg.h"
 #include "gstffmpegutils.h"

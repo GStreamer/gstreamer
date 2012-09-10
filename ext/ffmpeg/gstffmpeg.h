@@ -24,13 +24,8 @@
 #ifndef __GST_FFMPEG_H__
 #define __GST_FFMPEG_H__
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#include <avformat.h>
-#else
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#endif
 
 #include <gst/gst.h>
 

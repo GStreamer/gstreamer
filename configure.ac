@@ -268,11 +268,7 @@ else
   AC_MSG_NOTICE([Using local Libav snapshot])
   
   dnl libgstlibav.la: include dirs
-  LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libavutil \
-  		 -I \$(top_srcdir)/gst-libs/ext/libav/libavformat \
-                 -I \$(top_srcdir)/gst-libs/ext/libav/libavcodec \
-		 -I \$(top_srcdir)/gst-libs/ext/libav \
-		 -I \$(top_builddir)/gst-libs/ext/libav \
+  LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
                  -Wno-deprecated-declarations"
 
   dnl libgstlibav.la: libs to statically link to        
@@ -280,11 +276,7 @@ else
                \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
                \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   dnl
-  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libpostproc	\
-                   -I \$(top_srcdir)/gst-libs/ext/libav/libavutil 	\
-                   -I \$(top_srcdir)/gst-libs/ext/libav/libavcodec 	\
-                   -I \$(top_srcdir)/gst-libs/ext/libav 	\
-		   -I \$(top_builddir)/gst-libs/ext/libav \
+  POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/ \
                    -Wno-deprecated-declarations"
 
   dnl libgstpostproc.la: libs to statically link to
@@ -292,10 +284,7 @@ else
   		 \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
   				 
   dnl
-  SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav/libswscale	\
-                  -I \$(top_srcdir)/gst-libs/ext/libav/libavutil 	\
-                  -I \$(top_srcdir)/gst-libs/ext/libav 	\
-		   -I \$(top_builddir)/gst-libs/ext/libav \
+  SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
                   -Wno-deprecated-declarations"
 
   dnl libgstswscale.la: libs to statically link to

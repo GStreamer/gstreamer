@@ -29,13 +29,8 @@
 #include <orc/orc.h>
 #endif
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#include <postprocess.h>
-#else
 #include <libavcodec/avcodec.h>
 #include <libpostproc/postprocess.h>
-#endif
 
 
 typedef struct _PostProcDetails PostProcDetails;

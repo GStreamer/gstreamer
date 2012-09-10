@@ -24,12 +24,8 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <mathematics.h>
-#include <avcodec.h>
-#else
 #include <libavcodec/avcodec.h>
-#endif
+#include <libavutil/mathematics.h>
 
 #include <gst/gst.h>
 

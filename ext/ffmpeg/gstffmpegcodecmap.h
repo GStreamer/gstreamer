@@ -20,11 +20,7 @@
 #ifndef __GST_FFMPEG_CODECMAP_H__
 #define __GST_FFMPEG_CODECMAP_H__
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#else
 #include <libavcodec/avcodec.h>
-#endif
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>

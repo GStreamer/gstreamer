@@ -24,11 +24,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avcodec.h>
-#else
 #include <libavcodec/avcodec.h>
-#endif
 
 #include <gst/gst.h>
 #include <gst/base/gstbasetransform.h>

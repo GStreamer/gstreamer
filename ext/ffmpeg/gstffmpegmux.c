@@ -22,12 +22,8 @@
 #endif
 
 #include <string.h>
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avformat.h>
-#else
-#include <libavformat/avformat.h>
-#endif
 
+#include <libavformat/avformat.h>
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 

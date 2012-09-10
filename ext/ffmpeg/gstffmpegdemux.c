@@ -24,17 +24,9 @@
 #endif
 
 #include <string.h>
-#ifdef HAVE_LIBAV_UNINSTALLED
-#include <avformat.h>
-#ifdef HAVE_AVI_H
-#include <avi.h>
-#endif
-#else
+
 #include <libavformat/avformat.h>
-#ifdef HAVE_AVI_H
-#include <ffmpeg/avi.h>
-#endif
-#endif
+/* #include <ffmpeg/avi.h> */
 #include <gst/gst.h>
 
 #include "gstffmpeg.h"
