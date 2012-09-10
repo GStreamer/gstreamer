@@ -125,6 +125,8 @@ struct _GstTagDemuxPrivate
 #define TYPE_FIND_MIN_SIZE 8192
 #define TYPE_FIND_MAX_SIZE 65536
 
+#define DEFAULT_PULL_BLOCKSIZE 4096
+
 GST_DEBUG_CATEGORY_STATIC (tagdemux_debug);
 #define GST_CAT_DEFAULT (tagdemux_debug)
 
@@ -1222,8 +1224,33 @@ gst_tag_demux_element_loop (GstTagDemux * demux)
       ret = gst_tag_demux_element_find (demux);
       break;
     case GST_TAG_DEMUX_STREAMING:
-      ret = GST_FLOW_ERROR;
+    {
+      GstBuffer *outbuf = NULL;
+
+      if (demux->priv->need_newseg) {
+        demux->priv->need_newseg = FALSE;
+        /* FIXME: check segment, should be 0-N for downstream */
+        gst_tag_demux_send_new_segment (demux);
+      }
+
+      /* Send our own pending tag event */
+      if (demux->priv->send_tag_event) {
+        gst_tag_demux_send_tag_event (demux);
+        demux->priv->send_tag_event = FALSE;
+      }
+
+      /* Pull data and push it downstream */
+      ret = gst_pad_pull_range (demux->priv->sinkpad, demux->priv->offset,
+          DEFAULT_PULL_BLOCKSIZE, &outbuf);
+
+      if (ret != GST_FLOW_OK)
+        break;
+
+      demux->priv->offset += gst_buffer_get_size (outbuf);
+
+      ret = gst_pad_push (demux->priv->srcpad, outbuf);
       break;
+    }
     default:
       ret = GST_FLOW_ERROR;
       break;
