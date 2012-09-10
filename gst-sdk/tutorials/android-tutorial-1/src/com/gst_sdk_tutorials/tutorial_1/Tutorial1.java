@@ -16,6 +16,7 @@
 package com.gst_sdk_tutorials.tutorial_1;
 
 import android.app.Activity;
+import android.util.Log;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -59,6 +60,20 @@ public class Tutorial1 extends Activity
     protected void onDestroy () {
       nativeFinalize();
       super.onDestroy();
+    }
+
+    private void setMessage (final String message) {
+      final TextView tv = (TextView)this.findViewById(R.id.textview_message);
+      Log.d ("GStreamer", "Received message " + message);
+      try {
+        runOnUiThread (new Runnable() {@Override public void run()
+          {
+            tv.setText (message);
+          }
+        });
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
 
     static {
