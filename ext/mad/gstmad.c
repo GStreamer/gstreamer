@@ -97,18 +97,6 @@ gst_mad_class_init (GstMadClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GstAudioDecoderClass *base_class = (GstAudioDecoderClass *) klass;
 
-  base_class->start = GST_DEBUG_FUNCPTR (gst_mad_start);
-  base_class->stop = GST_DEBUG_FUNCPTR (gst_mad_stop);
-  base_class->parse = GST_DEBUG_FUNCPTR (gst_mad_parse);
-  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mad_handle_frame);
-  base_class->flush = GST_DEBUG_FUNCPTR (gst_mad_flush);
-
-  base_class->start = GST_DEBUG_FUNCPTR (gst_mad_start);
-  base_class->stop = GST_DEBUG_FUNCPTR (gst_mad_stop);
-  base_class->parse = GST_DEBUG_FUNCPTR (gst_mad_parse);
-  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mad_handle_frame);
-  base_class->flush = GST_DEBUG_FUNCPTR (gst_mad_flush);
-
   gobject_class->set_property = gst_mad_set_property;
   gobject_class->get_property = gst_mad_get_property;
 
@@ -131,6 +119,12 @@ gst_mad_class_init (GstMadClass * klass)
   gst_element_class_set_static_metadata (element_class, "mad mp3 decoder",
       "Codec/Decoder/Audio",
       "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
+
+  base_class->start = GST_DEBUG_FUNCPTR (gst_mad_start);
+  base_class->stop = GST_DEBUG_FUNCPTR (gst_mad_stop);
+  base_class->parse = GST_DEBUG_FUNCPTR (gst_mad_parse);
+  base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_mad_handle_frame);
+  base_class->flush = GST_DEBUG_FUNCPTR (gst_mad_flush);
 }
 
 static void
