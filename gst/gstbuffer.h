@@ -184,8 +184,7 @@ typedef struct _GstBufferPool GstBufferPool;
  *                               video this is typically the end of a frame boundary, for audio
  *                               this is usually the start of a talkspurt.
  * @GST_BUFFER_FLAG_HEADER:      the buffer contains header information that is
- *                               needed to decode the following data. The buffer
- *                               is also part of the headers of the STREAM_CONFIG event.
+ *                               needed to decode the following data.
  * @GST_BUFFER_FLAG_GAP:         the buffer has been created to fill a gap in the
  *                               stream and contains media neutral data (elements can
  *                               switch to optimized code path that ignores the buffer

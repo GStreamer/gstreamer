@@ -96,7 +96,6 @@ source_pad_data_cb (GstPad * pad, GstPadProbeInfo * info,
             GST_DEBUG_PAD_NAME (pad));
         consist->saw_stream_start = TRUE;
         break;
-      case GST_EVENT_STREAM_CONFIG:
       case GST_EVENT_CAPS:
         /* ok to have these before segment event */
         /* FIXME check order more precisely, if so spec'ed somehow ? */

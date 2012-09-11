@@ -591,8 +591,6 @@ gst_event_type_get_type (void)
     {C_ENUM (GST_EVENT_FLUSH_STOP), "GST_EVENT_FLUSH_STOP", "flush-stop"},
     {C_ENUM (GST_EVENT_STREAM_START), "GST_EVENT_STREAM_START", "stream-start"},
     {C_ENUM (GST_EVENT_CAPS), "GST_EVENT_CAPS", "caps"},
-    {C_ENUM (GST_EVENT_STREAM_CONFIG), "GST_EVENT_STREAM_CONFIG",
-        "stream-config"},
     {C_ENUM (GST_EVENT_SEGMENT), "GST_EVENT_SEGMENT", "segment"},
     {C_ENUM (GST_EVENT_TAG), "GST_EVENT_TAG", "tag"},
     {C_ENUM (GST_EVENT_BUFFERSIZE), "GST_EVENT_BUFFERSIZE", "buffersize"},
@@ -643,24 +641,6 @@ gst_qos_type_get_type (void)
 
   if (g_once_init_enter (&id)) {
     GType tmp = g_enum_register_static ("GstQOSType", values);
-    g_once_init_leave (&id, tmp);
-  }
-
-  return (GType) id;
-}
-
-GType
-gst_stream_config_flags_get_type (void)
-{
-  static gsize id = 0;
-  static const GEnumValue values[] = {
-    {C_ENUM (GST_STREAM_CONFIG_FLAG_NONE), "GST_STREAM_CONFIG_FLAG_NONE",
-        "none"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstStreamConfigFlags", values);
     g_once_init_leave (&id, tmp);
   }
 
@@ -824,7 +804,8 @@ gst_message_type_get_type (void)
         "segment-start"},
     {C_FLAGS (GST_MESSAGE_SEGMENT_DONE), "GST_MESSAGE_SEGMENT_DONE",
         "segment-done"},
-    {C_FLAGS (GST_MESSAGE_DURATION), "GST_MESSAGE_DURATION", "duration"},
+    {C_FLAGS (GST_MESSAGE_DURATION_CHANGED), "GST_MESSAGE_DURATION_CHANGED",
+        "duration-changed"},
     {C_FLAGS (GST_MESSAGE_LATENCY), "GST_MESSAGE_LATENCY", "latency"},
     {C_FLAGS (GST_MESSAGE_ASYNC_START), "GST_MESSAGE_ASYNC_START",
         "async-start"},
@@ -1145,6 +1126,8 @@ gst_pad_link_check_get_type (void)
     {C_FLAGS (GST_PAD_LINK_CHECK_TEMPLATE_CAPS),
         "GST_PAD_LINK_CHECK_TEMPLATE_CAPS", "template-caps"},
     {C_FLAGS (GST_PAD_LINK_CHECK_CAPS), "GST_PAD_LINK_CHECK_CAPS", "caps"},
+    {C_FLAGS (GST_PAD_LINK_CHECK_DEFAULT), "GST_PAD_LINK_CHECK_DEFAULT",
+        "default"},
     {0, NULL, NULL}
   };
 

@@ -1755,7 +1755,6 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
       }
       break;
     case GST_EVENT_CAPS:
-    case GST_EVENT_STREAM_CONFIG:
       goto eat;
     default:
       /* forward other events */

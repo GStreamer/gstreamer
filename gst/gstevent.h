@@ -83,8 +83,6 @@ typedef enum {
  *                 other serialized event and only sent at the start of a new stream,
  *                 not after flushing seeks.
  * @GST_EVENT_CAPS: #GstCaps event. Notify the pad of a new media type.
- * @GST_EVENT_STREAM_CONFIG: (unimplemented) contains configuration information for the stream,
- *                 for example stream-headers and codec-data.
  * @GST_EVENT_SEGMENT: A new media segment follows in the dataflow. The
  *                 segment events contains information for clipping buffers and
  *                 converting buffer timestamps to running-time and
@@ -143,7 +141,6 @@ typedef enum {
   /* downstream serialized events */
   GST_EVENT_STREAM_START          = GST_EVENT_MAKE_TYPE (40, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_CAPS                  = GST_EVENT_MAKE_TYPE (50, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
-  GST_EVENT_STREAM_CONFIG         = GST_EVENT_MAKE_TYPE (60, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_SEGMENT               = GST_EVENT_MAKE_TYPE (70, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_TAG                   = GST_EVENT_MAKE_TYPE (80, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_BUFFERSIZE            = GST_EVENT_MAKE_TYPE (90, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
@@ -368,17 +365,6 @@ typedef enum {
 } GstQOSType;
 
 /**
- * GstStreamConfigFlags:
- * @GST_STREAM_CONFIG_FLAG_NONE: no flags set
- *
- * GstStreamConfigFlags are flags passed with the stream config event, see
- * gst_event_new_stream_config().
- */
-typedef enum {
-  GST_STREAM_CONFIG_FLAG_NONE = 0
-} GstStreamConfigFlags;
-
-/**
  * GstEvent:
  * @mini_object: the parent structure
  * @type: the #GstEventType of the event
@@ -495,23 +481,6 @@ void            gst_event_parse_gap             (GstEvent     * event,
 /* Caps events */
 GstEvent *      gst_event_new_caps              (GstCaps *caps) G_GNUC_MALLOC;
 void            gst_event_parse_caps            (GstEvent *event, GstCaps **caps);
-
-/* Stream config */
-GstEvent *      gst_event_new_stream_config                (GstStreamConfigFlags flags) G_GNUC_MALLOC;
-
-void            gst_event_parse_stream_config              (GstEvent * event, GstStreamConfigFlags * flags);
-
-
-void            gst_event_set_stream_config_setup_data     (GstEvent * event, GstBuffer  * buf);
-
-gboolean        gst_event_parse_stream_config_setup_data   (GstEvent * event, GstBuffer ** buf);
-
-
-void            gst_event_add_stream_config_header         (GstEvent * event, GstBuffer  * buf);
-
-guint           gst_event_get_n_stream_config_headers      (GstEvent * event);
-
-gboolean        gst_event_parse_nth_stream_config_header   (GstEvent * event, guint index, GstBuffer ** buf);
 
 /* segment event */
 GstEvent*       gst_event_new_segment           (const GstSegment *segment) G_GNUC_MALLOC;

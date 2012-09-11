@@ -1010,17 +1010,6 @@ gst_event_new_reconfigure
 gst_event_new_caps
 gst_event_parse_caps
 
-GstStreamConfigFlags
-gst_event_new_stream_config
-gst_event_parse_stream_config
-
-gst_event_set_stream_config_setup_data
-gst_event_parse_stream_config_setup_data
-
-gst_event_add_stream_config_header
-gst_event_get_n_stream_config_headers
-gst_event_parse_nth_stream_config_header
-
 gst_event_new_toc
 gst_event_parse_toc
 
@@ -1057,8 +1046,6 @@ gst_seek_type_get_type
 gst_seek_flags_get_type
 gst_qos_type_get_type
 gst_event_type_flags_get_type
-GST_TYPE_STREAM_CONFIG_FLAGS
-gst_stream_config_flags_get_type
 </SECTION>
 
 <SECTION>

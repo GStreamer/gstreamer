@@ -13,7 +13,6 @@ Different types of events exist to implement various functionalities.
   GST_EVENT_FLUSH_START:   data is to be discarded
   GST_EVENT_FLUSH_STOP:    data is allowed again
   GST_EVENT_CAPS:          Format information about the following buffers
-  GST_EVENT_STREAM_CONFIG: Stream config: stream headers and codec setup data
   GST_EVENT_SEGMENT:       Timing information for the following buffers
   GST_EVENT_TAG:           Stream metadata.
   GST_EVENT_BUFFERSIZE:    Buffer size requirements
@@ -140,26 +139,6 @@ the EOS event is received in the PAUSED state, it is queued until the element
 goes to PLAYING.
 
 A FLUSH_STOP event on an element flushes the EOS state and all pending EOS messages.
-
-
-GST_EVENT_STREAM_CONFIG
-~~~~~~~~~~~~~~~~~~~~~~~
-
-A stream config event is sent downstream by an element to pass stream headers
-or codec/stream setup data to elements downstream.
-
-Stream headers are buffers that are to be pre-pended to a stream to create
-a valid decodable bitstream. This is useful for e.g. network elements who
-will send such stream headers first when a new client connects in the middle
-of a streaming session. The stream headers and the current data will then
-create a valid decodable stream. Stream headers are usually also sent as
-buffers at the beginning of a stream in addition to the rest of the stream
-data.
-
-Setup data is codec config data that must be communicated outside of the
-data stream and is required by the consumer / downstream element in order
-to interpret the data stream correctly. Prepending it to the data stream is
-usually not allowed and will not yield a valid stream.
 
 
 SEGMENT

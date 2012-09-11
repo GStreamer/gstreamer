@@ -427,9 +427,7 @@ EXPORTS
 	gst_element_unlink_many
 	gst_element_unlink_pads
 	gst_error_get_message
-	gst_event_add_stream_config_header
 	gst_event_copy_segment
-	gst_event_get_n_stream_config_headers
 	gst_event_get_seqnum
 	gst_event_get_structure
 	gst_event_get_type
@@ -450,7 +448,6 @@ EXPORTS
 	gst_event_new_segment_done
 	gst_event_new_sink_message
 	gst_event_new_step
-	gst_event_new_stream_config
 	gst_event_new_stream_start
 	gst_event_new_tag
 	gst_event_new_toc
@@ -460,21 +457,17 @@ EXPORTS
 	gst_event_parse_flush_stop
 	gst_event_parse_gap
 	gst_event_parse_latency
-	gst_event_parse_nth_stream_config_header
 	gst_event_parse_qos
 	gst_event_parse_seek
 	gst_event_parse_segment
 	gst_event_parse_segment_done
 	gst_event_parse_sink_message
 	gst_event_parse_step
-	gst_event_parse_stream_config
-	gst_event_parse_stream_config_setup_data
 	gst_event_parse_stream_start
 	gst_event_parse_tag
 	gst_event_parse_toc
 	gst_event_parse_toc_select
 	gst_event_set_seqnum
-	gst_event_set_stream_config_setup_data
 	gst_event_type_flags_get_type
 	gst_event_type_get_flags
 	gst_event_type_get_name
@@ -985,7 +978,6 @@ EXPORTS
 	gst_static_pad_template_get
 	gst_static_pad_template_get_caps
 	gst_static_pad_template_get_type
-	gst_stream_config_flags_get_type
 	gst_stream_error_get_type
 	gst_stream_error_quark
 	gst_stream_status_type_get_type

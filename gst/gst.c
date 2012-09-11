@@ -687,7 +687,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_event_type_get_type ());
   g_type_class_ref (gst_seek_type_get_type ());
   g_type_class_ref (gst_seek_flags_get_type ());
-  g_type_class_ref (gst_stream_config_flags_get_type ());
   g_type_class_ref (gst_qos_type_get_type ());
   g_type_class_ref (gst_format_get_type ());
   g_type_class_ref (gst_debug_level_get_type ());
@@ -1053,7 +1052,6 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_parse_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_resource_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_search_mode_get_type ()));
-  g_type_class_unref (g_type_class_peek (gst_stream_config_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_stream_error_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_stream_status_type_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_structure_change_type_get_type
