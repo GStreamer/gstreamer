@@ -808,8 +808,15 @@ gst_pad_activate_default (GstPad * pad, GstObject * parent)
   return gst_pad_activate_mode (pad, GST_PAD_MODE_PUSH, TRUE);
 }
 
-#ifndef GST_DISABLE_GST_DEBUG
-static const gchar *
+/**
+ * gst_pad_mode_get_name:
+ * @mode: the pad mode
+ *
+ * Return the name of a pad mode, for use in debug messages mostly.
+ *
+ * Returns: short mnemonic for pad mode @mode
+ */
+const gchar *
 gst_pad_mode_get_name (GstPadMode mode)
 {
   switch (mode) {
@@ -824,7 +831,6 @@ gst_pad_mode_get_name (GstPadMode mode)
   }
   return "unknown";
 }
-#endif
 
 static void
 pre_activate (GstPad * pad, GstPadMode new_mode)

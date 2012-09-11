@@ -691,6 +691,7 @@ EXPORTS
 	gst_pad_link_full
 	gst_pad_link_return_get_type
 	gst_pad_mark_reconfigure
+	gst_pad_mode_get_name
 	gst_pad_mode_get_type
 	gst_pad_needs_reconfigure
 	gst_pad_new

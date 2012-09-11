@@ -1620,7 +1620,10 @@ GST_PAD_LINK_FAILED
 GST_PAD_LINK_SUCCESSFUL
 GstPadLinkCheck
 GstFlowReturn
+gst_flow_get_name
+gst_flow_to_quark
 GstPadMode
+gst_pad_mode_get_name
 
 <SUBSECTION Application>
 gst_pad_get_name
@@ -2932,8 +2935,6 @@ GFLOAT_TO_BE
 GFLOAT_TO_LE
 
 
-gst_flow_get_name
-gst_flow_to_quark
 gst_guint64_to_gdouble
 gst_gdouble_to_guint64
 gst_util_dump_mem

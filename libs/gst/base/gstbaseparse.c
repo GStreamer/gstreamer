@@ -3048,7 +3048,8 @@ gst_base_parse_sink_activate_mode (GstPad * pad, GstObject * parent,
 
   parse = GST_BASE_PARSE (parent);
 
-  GST_DEBUG_OBJECT (parse, "sink activate mode %d, %d", mode, active);
+  GST_DEBUG_OBJECT (parse, "sink %sactivate in %s mode",
+      (active) ? "" : "de", gst_pad_mode_get_name (mode));
 
   if (!gst_base_parse_activate (parse, active))
     goto activate_failed;
