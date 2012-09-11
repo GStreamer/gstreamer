@@ -50,6 +50,9 @@ query_func (GstPad * pad, GstObject * noparent, GstQuery * query)
       gst_query_set_caps_result (query, *caps);
       break;
     }
+    case GST_QUERY_ACCEPT_CAPS:
+      gst_query_set_accept_caps_result (query, TRUE);
+      break;
     default:
       break;
   }
@@ -68,13 +71,16 @@ event_func (GstPad * pad, GstObject * noparent, GstEvent * event)
 
       gst_event_parse_caps (event, &caps);
       fail_unless (caps2 != NULL && *caps2 != NULL);
-      fail_unless (gst_caps_is_equal (caps, *caps2));
+      fail_unless (gst_caps_is_fixed (caps));
+      fail_unless (gst_caps_is_fixed (*caps2));
+      fail_unless (gst_caps_is_equal_fixed (caps, *caps2));
       break;
     }
     default:
-      gst_event_unref (event);
       break;
   }
+
+  gst_event_unref (event);
 
   return TRUE;
 }
