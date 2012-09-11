@@ -83,7 +83,7 @@ typedef struct _GstEglGlesImageFmt GstEglGlesImageFmt;
 typedef enum {
     GST_EGLGLESSINK_RENDER_SLOW,
     GST_EGLGLESSINK_RENDER_FAST
-} GstVidroidSinkRenderingPath;
+} GstEglGlesSinkRenderingPath;
 
 typedef struct _coord
 {
@@ -141,7 +141,7 @@ struct _GstEglGlesSink
   gboolean have_texture;
   gboolean running;
 
-  GstVidroidSinkRenderingPath rendering_path;
+  GstEglGlesSinkRenderingPath rendering_path;
 
   /* shader vars */
   coord coordarray[4];

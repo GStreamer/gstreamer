@@ -872,7 +872,7 @@ gst_eglglessink_expose (GstXOverlay * overlay)
 }
 
 /* Checks available egl/gles extensions and chooses
- * a suitable rendering path from GstVidroidSinkRenderingPath
+ * a suitable rendering path from GstEglGlesSinkRenderingPath
  * accordingly. This function can only be called after an
  * EGL context has been made current.
  */
