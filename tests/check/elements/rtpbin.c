@@ -107,8 +107,8 @@ typedef struct
   guint16 seqnum;
   gboolean pad_added;
   GstPad *pad;
-  GMutex *lock;
-  GCond *cond;
+  GMutex lock;
+  GCond cond;
   GstPad *sinkpad;
   GList *pads;
 } CleanupData;
@@ -118,8 +118,8 @@ init_data (CleanupData * data)
 {
   data->seqnum = 10;
   data->pad_added = FALSE;
-  data->lock = g_mutex_new ();
-  data->cond = g_cond_new ();
+  g_mutex_init (&data->lock);
+  g_cond_init (&data->cond);
   data->pads = NULL;
 }
 
@@ -128,8 +128,8 @@ clean_data (CleanupData * data)
 {
   g_list_foreach (data->pads, (GFunc) gst_object_unref, NULL);
   g_list_free (data->pads);
-  g_mutex_free (data->lock);
-  g_cond_free (data->cond);
+  g_mutex_clear (&data->lock);
+  g_cond_clear (&data->cond);
 }
 
 static guint8 rtp_packet[] = { 0x80, 0x60, 0x94, 0xbc, 0x8f, 0x37, 0x4e, 0xb8,
@@ -214,11 +214,11 @@ pad_added_cb (GstElement * rtpbin, GstPad * pad, CleanupData * data)
   sinkpad = make_sinkpad (data);
   fail_unless (gst_pad_link (pad, sinkpad) == GST_PAD_LINK_OK);
 
-  g_mutex_lock (data->lock);
+  g_mutex_lock (&data->lock);
   data->pad_added = TRUE;
   data->pad = pad;
-  g_cond_signal (data->cond);
-  g_mutex_unlock (data->lock);
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
 }
 
 static void
@@ -231,10 +231,10 @@ pad_removed_cb (GstElement * rtpbin, GstPad * pad, CleanupData * data)
 
   fail_unless (data->pad_added == TRUE);
 
-  g_mutex_lock (data->lock);
+  g_mutex_lock (&data->lock);
   data->pad_added = FALSE;
-  g_cond_signal (data->cond);
-  g_mutex_unlock (data->lock);
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
 }
 
 GST_START_TEST (test_cleanup_recv)
@@ -275,10 +275,10 @@ GST_START_TEST (test_cleanup_recv)
     fail_unless (res == GST_FLOW_OK);
 
     /* we wait for the new pad to appear now */
-    g_mutex_lock (data.lock);
+    g_mutex_lock (&data.lock);
     while (!data.pad_added)
-      g_cond_wait (data.cond, data.lock);
-    g_mutex_unlock (data.lock);
+      g_cond_wait (&data.cond, &data.lock);
+    g_mutex_unlock (&data.lock);
 
     /* sourcepad created now */
     fail_unless (rtpbin->numsinkpads == 1);
@@ -289,10 +289,10 @@ GST_START_TEST (test_cleanup_recv)
     gst_object_unref (rtp_sink);
 
     /* pad should be gone now */
-    g_mutex_lock (data.lock);
+    g_mutex_lock (&data.lock);
     while (data.pad_added)
-      g_cond_wait (data.cond, data.lock);
-    g_mutex_unlock (data.lock);
+      g_cond_wait (&data.cond, &data.lock);
+    g_mutex_unlock (&data.lock);
 
     /* nothing left anymore now */
     fail_unless (rtpbin->numsinkpads == 0);
@@ -347,10 +347,10 @@ GST_START_TEST (test_cleanup_recv2)
     fail_unless (res == GST_FLOW_OK);
 
     /* we wait for the new pad to appear now */
-    g_mutex_lock (data.lock);
+    g_mutex_lock (&data.lock);
     while (!data.pad_added)
-      g_cond_wait (data.cond, data.lock);
-    g_mutex_unlock (data.lock);
+      g_cond_wait (&data.cond, &data.lock);
+    g_mutex_unlock (&data.lock);
 
     /* sourcepad created now */
     fail_unless (rtpbin->numsinkpads == 1);
@@ -361,10 +361,10 @@ GST_START_TEST (test_cleanup_recv2)
     fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
     /* pad should be gone now */
-    g_mutex_lock (data.lock);
+    g_mutex_lock (&data.lock);
     while (data.pad_added)
-      g_cond_wait (data.cond, data.lock);
-    g_mutex_unlock (data.lock);
+      g_cond_wait (&data.cond, &data.lock);
+    g_mutex_unlock (&data.lock);
 
     /* back to playing for the next round */
     ret = gst_element_set_state (rtpbin, GST_STATE_PLAYING);
