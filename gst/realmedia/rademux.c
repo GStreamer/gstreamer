@@ -365,7 +365,8 @@ gst_real_audio_demux_parse_header (GstRealAudioDemux * demux)
       demux->fourcc = GST_READ_UINT32_LE (data + 56);
       demux->pending_tags = gst_rm_utils_read_tags (data + 63,
           demux->data_offset - 63, gst_rm_utils_read_string8);
-      gst_tag_list_set_scope (demux->pending_tags, GST_TAG_SCOPE_GLOBAL);
+      if (demux->pending_tags)
+        gst_tag_list_set_scope (demux->pending_tags, GST_TAG_SCOPE_GLOBAL);
       break;
     default:
       g_assert_not_reached ();
