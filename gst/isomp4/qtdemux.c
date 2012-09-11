@@ -3120,7 +3120,6 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   rate = segment->rate * qtdemux->segment.rate;
 
   /* update the segment values used for clipping */
-  gst_segment_init (&stream->segment, GST_FORMAT_TIME);
   /* accumulate previous segments */
   if (GST_CLOCK_TIME_IS_VALID (stream->segment.stop))
     stream->segment.base += (stream->segment.stop - stream->segment.start) /
