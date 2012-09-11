@@ -356,6 +356,9 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         GST_WARNING_OBJECT (pad, "Non-TIME segment: %s",
             gst_format_get_name (segment.format));
         gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+        /* Since this stream is not time-based, we mark it so that
+         * other streams don't wait forever on it */
+        stream->wait = TRUE;
       }
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
       break;
