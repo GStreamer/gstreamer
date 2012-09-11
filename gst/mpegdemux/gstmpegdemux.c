@@ -2862,7 +2862,8 @@ gst_flups_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
   GstQuery *query = gst_query_new_scheduling ();
 
   if (gst_pad_peer_query (sinkpad, query)) {
-    if (gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL)) {
+    if (gst_query_has_scheduling_mode_with_flags (query,
+            GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE)) {
       res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PULL, TRUE);
     } else {
       res = gst_pad_activate_mode (sinkpad, GST_PAD_MODE_PUSH, TRUE);
