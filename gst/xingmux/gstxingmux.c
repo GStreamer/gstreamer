@@ -285,8 +285,6 @@ generate_xing_header (GstXingMux * xing)
   }
 
   xing_header = gst_buffer_new_and_alloc (size);
-  // TODO set caps
-//  gst_buffer_set_caps (xing_header, GST_PAD_CAPS (xing->srcpad));
 
   gst_buffer_map (xing_header, &map, GST_MAP_WRITE);
   data = map.data;
