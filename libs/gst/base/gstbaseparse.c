@@ -1030,8 +1030,9 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
     }
 
     case GST_EVENT_FLUSH_START:
-      /* FIXME: locking */
+      GST_OBJECT_LOCK (parse);
       parse->priv->flushing = TRUE;
+      GST_OBJECT_UNLOCK (parse);
       break;
 
     case GST_EVENT_FLUSH_STOP:
@@ -1068,7 +1069,49 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
         parse->priv->pending_events = NULL;
         parse->priv->pending_segment = FALSE;
       }
+      if (parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
+        /* We've not posted bitrate tags yet - do so now */
+        gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
+      }
       forward_immediate = TRUE;
+      break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      /* FIXME: Code duplicated from libgstvideo because core can't depend on -base */
+#ifndef GST_VIDEO_EVENT_STILL_STATE_NAME
+#define GST_VIDEO_EVENT_STILL_STATE_NAME "GstEventStillFrame"
+#endif
+
+      const GstStructure *s;
+      gboolean ev_still_state;
+
+      s = gst_event_get_structure (event);
+      if (s != NULL &&
+          gst_structure_has_name (s, GST_VIDEO_EVENT_STILL_STATE_NAME) &&
+          gst_structure_get_boolean (s, "still-state", &ev_still_state)) {
+        if (ev_still_state) {
+          GST_DEBUG_OBJECT (parse, "draining current data for still-frame");
+          if (parse->segment.rate > 0.0)
+            gst_base_parse_drain (parse);
+          else
+            gst_base_parse_finish_fragment (parse, TRUE);
+        }
+        forward_immediate = TRUE;
+      }
+      break;
+    }
+    case GST_EVENT_GAP:
+    {
+      GST_DEBUG_OBJECT (parse, "draining current data due to gap event");
+      if (parse->segment.rate > 0.0)
+        gst_base_parse_drain (parse);
+      else
+        gst_base_parse_finish_fragment (parse, TRUE);
+      forward_immediate = TRUE;
+      break;
+    }
+    case GST_EVENT_TAG:
+      /* See if any bitrate tags were posted */
+      gst_base_parse_handle_tag (parse, event);
       break;
     default:
       break;
@@ -1087,18 +1130,9 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
    */
   if (event) {
     if (!GST_EVENT_IS_SERIALIZED (event) || forward_immediate) {
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
-          parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
-        /* We've not posted bitrate tags yet - do so now */
-        gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
-      }
       ret = gst_pad_push_event (parse->srcpad, event);
     } else {
       // GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-        /* See if any bitrate tags were posted */
-        gst_base_parse_handle_tag (parse, event);
-      }
       parse->priv->pending_events =
           g_list_prepend (parse->priv->pending_events, event);
       // GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
