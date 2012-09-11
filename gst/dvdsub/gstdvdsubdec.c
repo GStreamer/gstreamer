@@ -664,16 +664,11 @@ static void
 gst_send_empty_fill (GstDvdSubDec * dec, GstClockTime ts)
 {
   if (dec->next_ts < ts) {
-    GstSegment seg;
-
-    GST_LOG_OBJECT (dec, "Sending newsegment update to advance time to %"
+    GST_LOG_OBJECT (dec, "Sending GAP event update to advance time to %"
         GST_TIME_FORMAT, GST_TIME_ARGS (ts));
 
-    gst_segment_init (&seg, GST_FORMAT_TIME);
-    seg.start = ts;
-    seg.time = ts;
-
-    gst_pad_push_event (dec->srcpad, gst_event_new_segment (&seg));
+    gst_pad_push_event (dec->srcpad,
+        gst_event_new_gap (dec->next_ts, ts - dec->next_ts));
   }
   dec->next_ts = ts;
 }
@@ -971,31 +966,36 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_pad_event_default (pad, parent, event);
       break;
     }
+    case GST_EVENT_GAP:
+    {
+      GstClockTime start, duration;
+
+      gst_event_parse_gap (event, &start, &duration);
+      if (GST_CLOCK_TIME_IS_VALID (start)) {
+        if (GST_CLOCK_TIME_IS_VALID (duration))
+          start += duration;
+        /* we do not expect another buffer until after gap,
+         * so that is our position now */
+        GST_DEBUG_OBJECT (dec, "Got GAP event, advancing time from %"
+            GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (dec->next_ts), GST_TIME_ARGS (start));
+
+        gst_dvd_sub_dec_advance_time (dec, start);
+      } else {
+        GST_WARNING_OBJECT (dec, "Got GAP event with invalid position");
+      }
+
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
+    }
     case GST_EVENT_SEGMENT:
     {
       GstSegment seg;
 
       gst_event_copy_segment (event, &seg);
 
-#if 0
-      if (update) {
-        /* update ... advance time */
-        if (GST_CLOCK_TIME_IS_VALID (pos)) {
-          GST_DEBUG_OBJECT (dec, "Got segment update, advancing time from %"
-              GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (dec->next_ts), GST_TIME_ARGS (pos));
-
-          gst_dvd_sub_dec_advance_time (dec, pos);
-        } else {
-          GST_WARNING_OBJECT (dec, "Got segment update with invalid position");
-        }
-        gst_event_unref (event);
-        ret = TRUE;
-      } else
-#endif
       {
-        /* not just an update ... */
-
 #if 0
         /* Turn off forced highlight display */
         dec->forced_display = 0;
