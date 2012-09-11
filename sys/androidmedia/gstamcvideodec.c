@@ -717,6 +717,7 @@ retry:
   /*if (self->input_state_changed) {
      idx = INFO_OUTPUT_FORMAT_CHANGED;
      } else { */
+  GST_DEBUG_OBJECT (self, "Waiting for available output buffer");
   GST_VIDEO_DECODER_STREAM_UNLOCK (self);
   idx = gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, -1);
   GST_VIDEO_DECODER_STREAM_LOCK (self);
