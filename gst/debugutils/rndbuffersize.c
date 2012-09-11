@@ -237,7 +237,8 @@ gst_rnd_buffer_size_activate (GstPad * pad, GstObject * parent)
   query = gst_query_new_scheduling ();
 
   if (gst_pad_peer_query (pad, query))
-    pull_mode = gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL);
+    pull_mode = gst_query_has_scheduling_mode_with_flags (query,
+        GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE);
   else
     pull_mode = FALSE;
 
