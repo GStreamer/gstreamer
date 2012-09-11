@@ -72,6 +72,8 @@ struct _GstVaapiDecode {
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
     GstEvent           *delayed_new_seg;
+    gint64              render_time_base;
+    GstClockTime        last_buffer_time;
     unsigned int        is_ready        : 1;
 };
 

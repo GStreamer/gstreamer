@@ -189,28 +189,30 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
     GstVaapiDecoderStatus status;
     GstBuffer *buffer;
     GstFlowReturn ret;
-    guint tries;
+    GstClockTime timestamp;
+    gint64 end_time;
 
     for (;;) {
-        tries = 0;
-    again:
+        end_time = decode->render_time_base;
+        if (!end_time)
+            end_time = g_get_monotonic_time();
+        end_time += GST_TIME_AS_USECONDS(decode->last_buffer_time);
+        end_time += G_TIME_SPAN_SECOND;
+
         proxy = gst_vaapi_decoder_get_surface(decode->decoder, &status);
         if (!proxy) {
             if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
-                /* Wait for a VA surface to be displayed and free'd */
-                if (++tries > 100)
-                    goto error_decode_timeout;
-                GTimeVal timeout;
-                g_get_current_time(&timeout);
-                g_time_val_add(&timeout, 10000); /* 10 ms each step */
+                gboolean was_signalled;
                 g_mutex_lock(decode->decoder_mutex);
-                g_cond_timed_wait(
+                was_signalled = g_cond_wait_until(
                     decode->decoder_ready,
                     decode->decoder_mutex,
-                    &timeout
+                    end_time
                 );
                 g_mutex_unlock(decode->decoder_mutex);
-                goto again;
+                if (was_signalled)
+                    continue;
+                goto error_decode_timeout;
             }
             if (status != GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA)
                 goto error_decode;
@@ -228,7 +230,12 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
         if (!buffer)
             goto error_create_buffer;
 
-        GST_BUFFER_TIMESTAMP(buffer) = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+        timestamp = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+        if (!decode->render_time_base)
+            decode->render_time_base = g_get_monotonic_time();
+        decode->last_buffer_time = timestamp;
+
+        GST_BUFFER_TIMESTAMP(buffer) = timestamp;
         GST_BUFFER_DURATION(buffer) = GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
         gst_buffer_set_caps(buffer, GST_PAD_CAPS(decode->srcpad));
 
@@ -710,6 +717,8 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
     decode->delayed_new_seg     = NULL;
+    decode->render_time_base    = 0;
+    decode->last_buffer_time    = 0;
     decode->is_ready            = FALSE;
 
     /* Pad through which data comes in to the element */
