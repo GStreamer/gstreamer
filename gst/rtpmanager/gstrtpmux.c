@@ -452,7 +452,14 @@ resend_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
   GstRTPMux *rtp_mux = user_data;
 
-  gst_pad_push_event (rtp_mux->srcpad, gst_event_ref (*event));
+  if (GST_EVENT_TYPE (*event) == GST_EVENT_CAPS) {
+    GstCaps *caps;
+
+    gst_event_parse_caps (*event, &caps);
+    gst_rtp_mux_setcaps (pad, rtp_mux, caps);
+  } else {
+    gst_pad_push_event (rtp_mux->srcpad, gst_event_ref (*event));
+  }
 
   return TRUE;
 }
@@ -836,23 +843,30 @@ static GstStateChangeReturn
 gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
 {
   GstRTPMux *rtp_mux;
+  GstStateChangeReturn ret;
 
   rtp_mux = GST_RTP_MUX (element);
 
   switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_rtp_mux_ready_to_paused (rtp_mux);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     default:
       break;
   }
 
-  return GST_ELEMENT_CLASS (gst_rtp_mux_parent_class)->change_state (element,
+  ret = GST_ELEMENT_CLASS (gst_rtp_mux_parent_class)->change_state (element,
       transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_clear_object (&rtp_mux->last_pad);
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 gboolean
