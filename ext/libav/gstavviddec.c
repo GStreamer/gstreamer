@@ -151,6 +151,8 @@ static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegviddec_get_buffer (AVCodecContext * context,
     AVFrame * picture);
+static int gst_ffmpegviddec_reget_buffer (AVCodecContext * context,
+    AVFrame * picture);
 static void gst_ffmpegviddec_release_buffer (AVCodecContext * context,
     AVFrame * picture);
 
@@ -437,6 +439,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
   /* set buffer functions */
   ffmpegdec->context->get_buffer = gst_ffmpegviddec_get_buffer;
+  ffmpegdec->context->reget_buffer = gst_ffmpegviddec_reget_buffer;
   ffmpegdec->context->release_buffer = gst_ffmpegviddec_release_buffer;
   ffmpegdec->context->draw_horiz_band = NULL;
 
@@ -547,7 +550,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "getting buffer");
+  GST_DEBUG_OBJECT (ffmpegdec, "getting buffer picture %p", picture);
 
   /* apply the last info we have seen to this picture, when we get the
    * picture back from ffmpeg we can use this to correctly timestamp the output
@@ -644,8 +647,60 @@ duplicate_frame:
     return -1;
   }
 no_frame:
-  GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
-  return -1;
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
+    return -1;
+  }
+}
+
+static int
+gst_ffmpegviddec_reget_buffer (AVCodecContext * context, AVFrame * picture)
+{
+  GstVideoCodecFrame *frame;
+  GstFFMpegVidDecVideoFrame *dframe;
+  GstFFMpegVidDec *ffmpegdec;
+
+  ffmpegdec = (GstFFMpegVidDec *) context->opaque;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "regetting buffer picture %p", picture);
+
+  picture->reordered_opaque = context->reordered_opaque;
+
+  /* if there is no opaque, we didn't yet attach any frame to it. What usually
+   * happens is that avcodec_default_reget_buffer will call the getbuffer
+   * function. */
+  dframe = picture->opaque;
+  if (dframe == NULL)
+    goto done;
+
+  frame =
+      gst_video_decoder_get_frame (GST_VIDEO_DECODER (ffmpegdec),
+      picture->reordered_opaque);
+  if (G_UNLIKELY (frame == NULL))
+    goto no_frame;
+
+  if (G_UNLIKELY (frame->output_buffer != NULL))
+    goto duplicate_frame;
+
+  /* replace the frame, this one contains the pts/dts for the correspoding input
+   * buffer, which we need after decoding. */
+  gst_video_codec_frame_unref (dframe->frame);
+  dframe->frame = frame;
+
+done:
+  return avcodec_default_reget_buffer (context, picture);
+
+  /* ERRORS */
+no_frame:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "Couldn't get codec frame !");
+    return -1;
+  }
+duplicate_frame:
+  {
+    GST_WARNING_OBJECT (ffmpegdec, "already alloc'ed output buffer for frame");
+    return -1;
+  }
 }
 
 /* called when ffmpeg is done with our buffer */
