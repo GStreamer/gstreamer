@@ -2267,6 +2267,7 @@ gst_query_add_scheduling_mode
 gst_query_get_n_scheduling_modes
 gst_query_parse_nth_scheduling_mode
 gst_query_has_scheduling_mode
+gst_query_has_scheduling_mode_with_flags
 
 gst_query_new_drain
 <SUBSECTION Standard>

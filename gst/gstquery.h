@@ -456,6 +456,8 @@ void            gst_query_add_scheduling_mode       (GstQuery *query, GstPadMode
 guint           gst_query_get_n_scheduling_modes    (GstQuery *query);
 GstPadMode      gst_query_parse_nth_scheduling_mode (GstQuery *query, guint index);
 gboolean        gst_query_has_scheduling_mode       (GstQuery *query, GstPadMode mode);
+gboolean        gst_query_has_scheduling_mode_with_flags (GstQuery * query, GstPadMode mode,
+                                                    GstSchedulingFlags flags);
 
 /* accept-caps query */
 GstQuery *      gst_query_new_accept_caps          (GstCaps *caps) G_GNUC_MALLOC;

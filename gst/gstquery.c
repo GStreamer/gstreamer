@@ -2130,6 +2130,32 @@ gst_query_has_scheduling_mode (GstQuery * query, GstPadMode mode)
 }
 
 /**
+ * gst_query_has_scheduling_mode_with_flags:
+ * @query: a GST_QUERY_SCHEDULING type query #GstQuery
+ * @mode: the scheduling mode
+ * @flags: #GstSchedulingFlags
+ *
+ * Check if @query has scheduling mode set and @flags is set in
+ * query scheduling flags.
+ *
+ * Returns: TRUE when @mode is in the list of scheduling modes
+ *    and @flags are compatible with query flags.
+ */
+gboolean
+gst_query_has_scheduling_mode_with_flags (GstQuery * query, GstPadMode mode,
+    GstSchedulingFlags flags)
+{
+  GstSchedulingFlags sched_flags;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SCHEDULING, FALSE);
+
+  gst_query_parse_scheduling (query, &sched_flags, NULL, NULL, NULL);
+
+  return ((flags & sched_flags) != 0) &&
+      gst_query_has_scheduling_mode (query, mode);
+}
+
+/**
  * gst_query_new_accept_caps:
  * @caps: a fixed #GstCaps
  *
