@@ -960,6 +960,15 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       forward_immediate = TRUE;
       break;
     }
+    case GST_EVENT_GAP:
+    {
+      GstFlowReturn flow_ret = GST_FLOW_OK;
+
+      flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
+      ret = (flow_ret == GST_FLOW_OK);
+      forward_immediate = TRUE;
+      break;
+    }
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       gboolean in_still;
