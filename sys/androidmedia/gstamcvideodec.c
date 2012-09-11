@@ -686,19 +686,81 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
     const GstAmcBufferInfo * buffer_info, GstBuffer * outbuf)
 {
   GstAmcBuffer *buf = &self->output_buffers[idx];
+  GstVideoCodecState *state =
+      gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
+  GstVideoInfo *info = &state->info;
+  gboolean ret = FALSE;
 
   if (idx >= self->n_output_buffers) {
     GST_ERROR_OBJECT (self, "Invalid output buffer index %d of %d",
         idx, self->n_output_buffers);
-    return FALSE;
+    goto done;
   }
 
+  /* Same video format */
   if (buffer_info->size == GST_BUFFER_SIZE (outbuf)) {
-    memcpy (GST_BUFFER_DATA (outbuf), buf->data, buffer_info->size);
-    return TRUE;
+    memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info->offset,
+        buffer_info->size);
+    goto done;
   }
 
-  g_assert_not_reached ();
+  /* Different video format, try to convert */
+  switch (self->color_format) {
+    case COLOR_FormatYUV420Planar:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+
+      for (i = 0; i < 3; i++) {
+        if (i == 0) {
+          src_stride = self->stride;
+          dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
+        } else {
+          src_stride = self->stride / 2;
+          dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
+        }
+
+        src = buf->data + buffer_info->offset;
+        if (i > 0)
+          src += self->slice_height * self->stride;
+        if (i == 2)
+          src += (self->slice_height / 2) * (self->stride / 2);
+
+        dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
+        height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
+
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, MIN (src_stride, dest_stride));
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
+      break;
+    }
+    case COLOR_FormatYUV420SemiPlanar:
+    case COLOR_TI_FormatYUV420PackedSemiPlanar:
+    case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:
+    case COLOR_QCOM_FormatYUV420SemiPlanar:
+      break;
+    default:
+      GST_ERROR_OBJECT (self, "Unsupported color format %d",
+          self->color_format);
+      goto done;
+      break;
+  }
+
+done:
+  gst_video_codec_state_unref (state);
+  return ret;
 }
 
 static void
