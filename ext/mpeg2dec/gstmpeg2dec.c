@@ -956,6 +956,7 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
       frame->system_frame_number,
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
 
+  gst_buffer_ref (buf);
   if (!gst_buffer_map (buf, &minfo, GST_MAP_READ)) {
     GST_ERROR_OBJECT (mpeg2dec, "Failed to map input buffer");
     return GST_FLOW_ERROR;
@@ -1055,6 +1056,7 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
 
 done:
   gst_buffer_unmap (buf, &minfo);
+  gst_buffer_unref (buf);
   return ret;
 }
 
