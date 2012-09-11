@@ -9,8 +9,6 @@ audioresample
 audiotestsrc
 decodebin
 encodebin
-gdpdepay
-gdppay
 libvisual
 multifdsink
 multisocketsink

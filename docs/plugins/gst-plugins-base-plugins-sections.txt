@@ -275,35 +275,6 @@ GstVideoConvertClass
 </SECTION>
 
 <SECTION>
-<FILE>element-gdpdepay</FILE>
-<TITLE>gdpdepay</TITLE>
-GstGDPDepay
-<SUBSECTION Standard>
-GstGDPDepayClass
-GstGDPDepayState
-GST_GDP_DEPAY
-GST_GDP_DEPAY_CLASS
-GST_IS_GDP_DEPAY
-GST_IS_GDP_DEPAY_CLASS
-GST_TYPE_GDP_DEPAY
-gst_gdp_depay_plugin_init
-</SECTION>
-
-<SECTION>
-<FILE>element-gdppay</FILE>
-<TITLE>gdppay</TITLE>
-GstGDPPay
-<SUBSECTION Standard>
-GstGDPPayClass
-GST_GDP_PAY
-GST_GDP_PAY_CLASS
-GST_IS_GDP_PAY
-GST_IS_GDP_PAY_CLASS
-GST_TYPE_GDP_PAY
-gst_gdp_pay_plugin_init
-</SECTION>
-
-<SECTION>
 <FILE>element-giosink</FILE>
 <TITLE>giosink</TITLE>
 GstGioSink
@@ -562,12 +533,6 @@ GST_IS_TCP_SERVER_SINK
 TCP_DEFAULT_HOST
 TCP_DEFAULT_PORT
 TCP_HIGHEST_PORT
-gst_tcp_gdp_read_buffer
-gst_tcp_gdp_read_caps
-gst_tcp_gdp_read_event
-gst_tcp_gdp_write_buffer
-gst_tcp_gdp_write_caps
-gst_tcp_gdp_write_event
 gst_tcp_host_to_ip
 gst_tcp_read_buffer
 gst_tcp_socket_close

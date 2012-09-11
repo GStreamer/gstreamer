@@ -71,8 +71,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audioconvert/gstaudioconvert.h \
 	$(top_srcdir)/gst/audiotestsrc/gstaudiotestsrc.h \
 	$(top_srcdir)/gst/encoding/gstencodebin.h \
-	$(top_srcdir)/gst/gdp/gstgdpdepay.h \
-	$(top_srcdir)/gst/gdp/gstgdppay.h \
 	$(top_srcdir)/gst/gio/gstgiosink.h \
 	$(top_srcdir)/gst/gio/gstgiosrc.h \
 	$(top_srcdir)/gst/gio/gstgiostreamsink.h \

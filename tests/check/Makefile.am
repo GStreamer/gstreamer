@@ -115,7 +115,6 @@ check_PROGRAMS = \
 	$(cxx_checks) \
 	$(check_orc) \
 	pipelines/simple-launch-lines \
-	pipelines/streamheader \
 	pipelines/basetime \
 	pipelines/capsfilter-renegotiation \
 	pipelines/gio \
@@ -123,8 +122,6 @@ check_PROGRAMS = \
 	elements/appsrc             \
 	elements/audiorate          \
 	elements/audioresample      \
-	elements/gdpdepay           \
-	elements/gdppay             \
 	elements/multifdsink        \
 	elements/multisocketsink    \
 	elements/playbin            \
@@ -321,9 +318,6 @@ elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_libvisual_LDADD =  $(LDADD)
 elements_libvisual_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 
-elements_gdpdepay_LDADD = $(LDADD)
-elements_gdppay_LDADD = $(LDADD)
-
 elements_playbin_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_playbin_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
@@ -424,9 +418,6 @@ elements_multisocketsink_LDADD = $(GIO_LIBS) $(LDADD)
 
 pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
 pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
-
-pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
-pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)
 
 pipelines_vorbisenc_CFLAGS = \
         $(GST_PLUGINS_BASE_CFLAGS) \

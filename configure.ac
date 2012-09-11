@@ -390,7 +390,6 @@ AG_GST_CHECK_PLUGIN(audiorate)
 AG_GST_CHECK_PLUGIN(audiotestsrc)
 AG_GST_CHECK_PLUGIN(encoding)
 AG_GST_CHECK_PLUGIN(videoconvert)
-AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(gio)
 AG_GST_CHECK_PLUGIN(playback)
 AG_GST_CHECK_PLUGIN(audioresample)
@@ -818,7 +817,6 @@ gst/audiorate/Makefile
 gst/audiotestsrc/Makefile
 gst/encoding/Makefile
 gst/videoconvert/Makefile
-gst/gdp/Makefile
 gst/gio/Makefile
 gst/playback/Makefile
 gst/audioresample/Makefile

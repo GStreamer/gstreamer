@@ -82,8 +82,6 @@ GObject
           GstPlaySink
           GstSubtitleOverlay
           GstURIDecodeBin
-        GstGDPDepay
-        GstGDPPay
         GstOggAviParse
         GstOggDemux
         GstOggMux
