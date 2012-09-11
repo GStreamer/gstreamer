@@ -81,37 +81,13 @@ set_autoconvert_factories (GstElement * autoconvert)
   g_list_free (factories);
 }
 
-typedef struct
-{
-  gint n;
-  GstCaps *caps;
-} TestContext;
-
-static void
-generate_test_buffer (GstPad * src, TestContext * ctx)
-{
-  GstBuffer *buf;
-
-  if (ctx->n == 0) {
-    ctx->caps = gst_caps_from_string ("test/caps,type=(int)1");
-  } else if (ctx->n == 10) {
-    gst_caps_unref (ctx->caps);
-    ctx->caps = gst_caps_from_string ("test/caps,type=(int)2");
-  }
-
-  buf = gst_buffer_new_and_alloc (4096);
-  gst_pad_set_caps (src, ctx->caps);
-
-  GST_LOG ("Pushing test buffer, caps %" GST_PTR_FORMAT, ctx->caps);
-  fail_unless (gst_pad_push (src, buf) == GST_FLOW_OK);
-}
-
 GST_START_TEST (test_autoconvert_simple)
 {
   GstPad *test_src_pad, *test_sink_pad;
   GstElement *autoconvert = gst_check_setup_element ("autoconvert");
   GstBus *bus = gst_bus_new ();
-  TestContext ctx = { 0 };
+  GstCaps *caps;
+  guint i;
 
   set_autoconvert_factories (autoconvert);
 
@@ -122,9 +98,29 @@ GST_START_TEST (test_autoconvert_simple)
 
   gst_element_set_state (GST_ELEMENT_CAST (autoconvert), GST_STATE_PLAYING);
 
-  /* Push 20 items */
-  for (ctx.n = 0; ctx.n < 20; ctx.n++)
-    generate_test_buffer (test_src_pad, &ctx);
+  /* Setting original caps */
+  caps = gst_caps_from_string ("test/caps,type=(int)1");
+  fail_unless (gst_pad_set_caps (test_src_pad, caps));
+  gst_caps_unref (caps);
+
+  /* Push 10 items */
+  for (i = 0; i < 10; i++) {
+    GST_LOG ("Pushing test buffer %d, caps 1");
+    fail_unless (gst_pad_push (test_src_pad, gst_buffer_new_and_alloc (4096))
+        == GST_FLOW_OK);
+  }
+
+  GST_LOG ("Changing caps to caps 2");
+  caps = gst_caps_from_string ("test/caps,type=(int)2");
+  fail_unless (gst_pad_set_caps (test_src_pad, caps));
+  gst_caps_unref (caps);
+
+  /* Push 10 more items */
+  for (i = 0; i < 10; i++) {
+    GST_LOG ("Pushing test buffer %d, caps 2");
+    fail_unless (gst_pad_push (test_src_pad, gst_buffer_new_and_alloc (4096))
+        == GST_FLOW_OK);
+  }
 
   /* Check all the items arrived */
   fail_unless_equals_int (g_list_length (buffers), 20);
