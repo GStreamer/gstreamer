@@ -51,8 +51,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 /* some global vars, makes it easy as for the ones above */
-static GMutex *mplex_mutex;
-static GCond *mplex_cond;
+static GMutex mplex_mutex;
+static GCond mplex_cond;
 static gboolean arrived_eos;
 
 /* another easy hack, some mp2 audio data that should please mplex
@@ -103,10 +103,10 @@ test_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      g_mutex_lock (mplex_mutex);
+      g_mutex_lock (&mplex_mutex);
       arrived_eos = TRUE;
-      g_cond_signal (mplex_cond);
-      g_mutex_unlock (mplex_mutex);
+      g_cond_signal (&mplex_cond);
+      g_mutex_unlock (&mplex_mutex);
       break;
     default:
       break;
@@ -191,8 +191,8 @@ setup_mplex (void)
   gst_pad_set_event_function (mysinkpad, test_sink_event);
 
   /* and notify the test run */
-  mplex_mutex = g_mutex_new ();
-  mplex_cond = g_cond_new ();
+  g_mutex_init (&mplex_mutex);
+  g_cond_init (&mplex_cond);
 
   return mplex;
 }
@@ -209,8 +209,8 @@ cleanup_mplex (GstElement * mplex)
   gst_check_teardown_sink_pad (mplex);
   gst_check_teardown_element (mplex);
 
-  g_mutex_free (mplex_mutex);
-  g_cond_free (mplex_cond);
+  g_mutex_clear (&mplex_mutex);
+  g_cond_clear (&mplex_cond);
 
   gst_deinit ();
 }
@@ -245,10 +245,10 @@ GST_START_TEST (test_audio_pad)
   /* need to force eos and state change to make sure the encoding task ends */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
   /* need to wait a bit to make sure mplex task digested all this */
-  g_mutex_lock (mplex_mutex);
+  g_mutex_lock (&mplex_mutex);
   while (!arrived_eos)
-    g_cond_wait (mplex_cond, mplex_mutex);
-  g_mutex_unlock (mplex_mutex);
+    g_cond_wait (&mplex_cond, &mplex_mutex);
+  g_mutex_unlock (&mplex_mutex);
 
   num_buffers = g_list_length (buffers);
   /* well, we do not really know much with mplex, but at least something ... */

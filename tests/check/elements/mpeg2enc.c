@@ -53,8 +53,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 
 /* some global vars, makes it easy as for the ones above */
-static GMutex *mpeg2enc_mutex;
-static GCond *mpeg2enc_cond;
+static GMutex mpeg2enc_mutex;
+static GCond mpeg2enc_cond;
 static gboolean arrived_eos;
 
 static gboolean
@@ -63,10 +63,10 @@ test_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      g_mutex_lock (mpeg2enc_mutex);
+      g_mutex_lock (&mpeg2enc_mutex);
       arrived_eos = TRUE;
-      g_cond_signal (mpeg2enc_cond);
-      g_mutex_unlock (mpeg2enc_mutex);
+      g_cond_signal (&mpeg2enc_cond);
+      g_mutex_unlock (&mpeg2enc_mutex);
       break;
     default:
       break;
@@ -91,8 +91,8 @@ setup_mpeg2enc (void)
   gst_pad_set_event_function (mysinkpad, test_sink_event);
 
   /* and notify the test run */
-  mpeg2enc_mutex = g_mutex_new ();
-  mpeg2enc_cond = g_cond_new ();
+  g_mutex_init (&mpeg2enc_mutex);
+  g_cond_init (&mpeg2enc_cond);
 
   return mpeg2enc;
 }
@@ -109,8 +109,8 @@ cleanup_mpeg2enc (GstElement * mpeg2enc)
   gst_check_teardown_sink_pad (mpeg2enc);
   gst_check_teardown_element (mpeg2enc);
 
-  g_mutex_free (mpeg2enc_mutex);
-  g_cond_free (mpeg2enc_cond);
+  g_mutex_clear (&mpeg2enc_mutex);
+  g_cond_clear (&mpeg2enc_cond);
 }
 
 GST_START_TEST (test_video_pad)
@@ -141,10 +141,10 @@ GST_START_TEST (test_video_pad)
   /* need to force eos and state change to make sure the encoding task ends */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()) == TRUE);
   /* need to wait a bit to make sure mpeg2enc task digested all this */
-  g_mutex_lock (mpeg2enc_mutex);
+  g_mutex_lock (&mpeg2enc_mutex);
   while (!arrived_eos)
-    g_cond_wait (mpeg2enc_cond, mpeg2enc_mutex);
-  g_mutex_unlock (mpeg2enc_mutex);
+    g_cond_wait (&mpeg2enc_cond, &mpeg2enc_mutex);
+  g_mutex_unlock (&mpeg2enc_mutex);
 
   num_buffers = g_list_length (buffers);
   /* well, we do not really know much with mpeg, but at least something ... */
