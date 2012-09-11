@@ -353,6 +353,7 @@ AG_GST_CHECK_PLUGIN(freeverb)
 AG_GST_CHECK_PLUGIN(frei0r)
 AG_GST_CHECK_PLUGIN(gaudieffects)
 AG_GST_CHECK_PLUGIN(geometrictransform)
+AG_GST_CHECK_PLUGIN(gdp)
 AG_GST_CHECK_PLUGIN(hdvparse)
 AG_GST_CHECK_PLUGIN(hls)
 AG_GST_CHECK_PLUGIN(id3tag)
@@ -2033,6 +2034,7 @@ gst/freeverb/Makefile
 gst/frei0r/Makefile
 gst/gaudieffects/Makefile
 gst/geometrictransform/Makefile
+gst/gdp/Makefile
 gst/hdvparse/Makefile
 gst/hls/Makefile
 gst/id3tag/Makefile

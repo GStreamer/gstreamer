@@ -185,6 +185,7 @@ VALGRIND_TESTS_DISABLE = \
 # colorspace: bad memory accesses in orc code for odd width buffers - https://bugzilla.gnome.org/show_bug.cgi?id=663248
 noinst_PROGRAMS = \
 	pipelines/colorspace \
+	pipelines/streamheader \
 	$(check_neon)
 
 check_PROGRAMS = \
@@ -207,7 +208,9 @@ check_PROGRAMS = \
 	elements/baseaudiovisualizer \
 	elements/camerabin \
 	elements/dataurisrc \
-        $(check_jifmux) \
+	elements/gdppay \
+	elements/gdpdepay \
+	$(check_jifmux) \
 	elements/jpegparse \
 	$(check_logoinsert) \
 	elements/h263parse \
@@ -227,7 +230,7 @@ check_PROGRAMS = \
 	libs/vc1parser \
 	$(check_schro) \
 	$(check_vp8) \
-        elements/viewfinderbin \
+	elements/viewfinderbin \
 	$(check_zbar) \
 	$(check_orc) \
 	$(EXPERIMENTAL_CHECKS)
@@ -300,6 +303,14 @@ elements_faac_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
 	-lgstaudio-@GST_API_VERSION@
 
+elements_gdppay_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_gdppay_LDADD =  $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
+elements_gdpdepay_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
+elements_gdpdepay_LDADD = $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD)
+
 elements_voaacenc_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AM_CFLAGS)
@@ -349,6 +360,9 @@ elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION
 
 elements_uvch264demux_CFLAGS = -DUVCH264DEMUX_DATADIR="$(srcdir)/elements/uvch264demux_data" \
 				$(AM_CFLAGS)
+
+pipelines_streamheader_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
+pipelines_streamheader_LDADD = $(GIO_LIBS) $(LDADD)
 
 EXTRA_DIST = gst-plugins-bad.supp $(uvch264_dist_data)
 
