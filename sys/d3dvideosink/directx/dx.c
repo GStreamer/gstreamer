@@ -46,8 +46,8 @@ init_supported_apis (void)
 static DirectXAPI *directx_determine_best_available_api (void);
 
 /* Mutex macros */
-#define DIRECTX_LOCK	  g_static_rec_mutex_lock (&dx_lock);
-#define DIRECTX_UNLOCK  g_static_rec_mutex_unlock (&dx_lock);
+#define DIRECTX_LOCK	  g_rec_mutex_lock (&dx_lock);
+#define DIRECTX_UNLOCK  g_rec_mutex_unlock (&dx_lock);
 
 typedef struct _DirectXInfo DirectXInfo;
 struct _DirectXInfo
@@ -63,7 +63,7 @@ struct _DirectXInfo
 
 /* Private vars */
 static DirectXInfo dx;
-static GStaticRecMutex dx_lock = G_STATIC_REC_MUTEX_INIT;
+static GRecMutex dx_lock;
 
 gboolean
 directx_initialize (DirectXInitParams * init_params)

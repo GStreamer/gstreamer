@@ -319,7 +319,7 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
 {
   gst_d3dvideosink_clear (sink);
 
-  sink->d3d_device_lock = g_mutex_new ();
+  g_mutex_init (&sink->d3d_device_lock);
 
   sink->par = g_new0 (GValue, 1);
   g_value_init (sink->par, GST_TYPE_FRACTION);
@@ -341,8 +341,7 @@ gst_d3dvideosink_finalize (GObject * gobject)
     sink->par = NULL;
   }
 
-  g_mutex_free (sink->d3d_device_lock);
-  sink->d3d_device_lock = NULL;
+  g_mutex_clear (&sink->d3d_device_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
@@ -526,8 +525,8 @@ gst_d3dvideosink_create_shared_hidden_window (GstD3DVideoSink * sink)
   if (shared.hidden_window_created_signal == NULL)
     goto failed;
 
-  shared.hidden_window_thread = g_thread_create ((GThreadFunc)
-      gst_d3dvideosink_shared_hidden_window_thread, sink, TRUE, NULL);
+  shared.hidden_window_thread = g_thread_try_new ("shared hidden window thread",
+      (GThreadFunc) gst_d3dvideosink_shared_hidden_window_thread, sink, NULL);
 
   /* wait maximum 60 seconds for window to be created */
   if (WaitForSingleObject (shared.hidden_window_created_signal,
@@ -1044,9 +1043,8 @@ gst_d3dvideosink_create_default_window (GstD3DVideoSink * sink)
   if (sink->window_created_signal == NULL)
     goto failed;
 
-  sink->window_thread =
-      g_thread_create ((GThreadFunc) gst_d3dvideosink_window_thread, sink, TRUE,
-      NULL);
+  sink->window_thread = g_thread_try_new ("window thread",
+      (GThreadFunc) gst_d3dvideosink_window_thread, sink, NULL);
 
   /* wait maximum 10 seconds for window to be created */
   if (WaitForSingleObject (sink->window_created_signal, 10000) != WAIT_OBJECT_0)
