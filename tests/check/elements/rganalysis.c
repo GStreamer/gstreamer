@@ -66,6 +66,7 @@
  * sink pads we create; otherwise we always have to do get_pad, get_peer, and
  * then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
+static GstBus *mybus;
 
 /* Mapping from supported sample rates to the correct result gain for the
  * following test waveform: 20 * 512 samples with a quarter-full amplitude of
@@ -146,6 +147,27 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (RG_ANALYSIS_CAPS_TEMPLATE_STRING)
     );
 
+static gboolean
+mysink_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GST_LOG_OBJECT (pad, "%s event: %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
+
+  /* a sink would post tag events as messages, so do the same here,
+   * esp. since we're polling on the bus waiting for TAG messages.. */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
+    GstTagList *taglist;
+
+    gst_event_parse_tag (event, &taglist);
+
+    gst_bus_post (mybus, gst_message_new_tag (GST_OBJECT (mysinkpad),
+            gst_tag_list_copy (taglist)));
+  }
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
 static GstElement *
 setup_rganalysis (void)
 {
@@ -156,13 +178,14 @@ setup_rganalysis (void)
   analysis = gst_check_setup_element ("rganalysis");
   mysrcpad = gst_check_setup_src_pad (analysis, &srctemplate);
   mysinkpad = gst_check_setup_sink_pad (analysis, &sinktemplate);
+  gst_pad_set_event_function (mysinkpad, mysink_event_func);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
 
   bus = gst_bus_new ();
   gst_element_set_bus (analysis, bus);
-  /* gst_element_set_bus does not steal a reference. */
-  gst_object_unref (bus);
+
+  mybus = bus;                  /* keep ref */
 
   return analysis;
 }
@@ -175,6 +198,9 @@ cleanup_rganalysis (GstElement * element)
   g_list_foreach (buffers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (buffers);
   buffers = NULL;
+
+  gst_object_unref (mybus);
+  mybus = NULL;
 
   /* The bus owns references to the element: */
   gst_element_set_bus (element, NULL);
@@ -1236,7 +1262,6 @@ GST_START_TEST (test_forced)
   poll_eos (element);
 
   /* Now back to a track without tags. */
-
   send_flush_events (element);
   send_segment_event (element);
   for (i = 20; i--;)
