@@ -48,8 +48,8 @@ G_BEGIN_DECLS
 typedef struct _GstDirectSoundSink GstDirectSoundSink;
 typedef struct _GstDirectSoundSinkClass GstDirectSoundSinkClass;
 
-#define GST_DSOUND_LOCK(obj)	(g_mutex_lock (obj->dsound_lock))
-#define GST_DSOUND_UNLOCK(obj)	(g_mutex_unlock (obj->dsound_lock))
+#define GST_DSOUND_LOCK(obj)	(g_mutex_lock (&obj->dsound_lock))
+#define GST_DSOUND_UNLOCK(obj)	(g_mutex_unlock (&obj->dsound_lock))
 
 struct _GstDirectSoundSink
 {
@@ -76,7 +76,7 @@ struct _GstDirectSoundSink
 
   GstCaps *cached_caps;
   /* lock used to protect writes and resets */
-  GMutex *dsound_lock;
+  GMutex dsound_lock;
 
   gboolean first_buffer_after_reset;
 

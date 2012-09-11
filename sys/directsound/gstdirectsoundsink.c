@@ -136,6 +136,10 @@ G_DEFINE_TYPE_WITH_CODE (GstDirectSoundSink, gst_directsound_sink,
 static void
 gst_directsound_sink_finalize (GObject * object)
 {
+  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (object);
+
+  g_mutex_clear (&dsoundsink->dsound_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -208,7 +212,7 @@ gst_directsound_sink_init (GstDirectSoundSink * dsoundsink)
   dsoundsink->current_circular_offset = 0;
   dsoundsink->buffer_size = DSBSIZE_MIN;
   dsoundsink->volume = 100;
-  dsoundsink->dsound_lock = g_mutex_new ();
+  g_mutex_init (&dsoundsink->dsound_lock);
   dsoundsink->first_buffer_after_reset = FALSE;
 }
 
