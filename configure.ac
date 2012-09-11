@@ -46,7 +46,9 @@ AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.11.93
+
 ORC_REQ=0.4.16
+ORC_CHECK([$ORC_REQ])
 
 dnl *** autotools stuff ****
 
