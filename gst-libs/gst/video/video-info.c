@@ -697,6 +697,10 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   padded_height = height + align->padding_top + align->padding_bottom;
 
   n_planes = GST_VIDEO_INFO_N_PLANES (info);
+
+  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (vinfo))
+    n_planes--;
+
   do {
     GST_LOG ("padded dimension %u-%u", padded_width, padded_height);
 
@@ -722,9 +726,6 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
 
   info->width = width;
   info->height = height;
-
-  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (vinfo))
-    n_planes--;
 
   for (i = 0; i < n_planes; i++) {
     gint vedge, hedge, comp;
