@@ -240,7 +240,7 @@ static gboolean gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink);
 static void gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
     gboolean reset);
-static void gst_eglglessink_render_and_display (GstEglGlesSink * sink,
+static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
     GstBuffer * buf);
 static inline gboolean got_gl_error (const char *wtf);
 
@@ -866,11 +866,7 @@ gst_eglglessink_expose (GstXOverlay * overlay)
   /* Logic would be to get _render_and_display() to use
    * last seen buffer to render from when NULL it's
    * passed on */
-  g_mutex_lock (eglglessink->flow_lock);
-  gst_eglglessink_render_and_display (eglglessink, NULL);
-  g_mutex_unlock (eglglessink->flow_lock);
-
-  return;
+  return gst_eglglessink_render_and_display (eglglessink, NULL);
 }
 
 /* Checks available egl/gles extensions and chooses
@@ -1258,7 +1254,7 @@ HANDLE_ERROR:
 }
 
 /* Rendering and display */
-static void
+static GstFlowReturn
 gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstBuffer * buf)
 {
@@ -1344,12 +1340,13 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   }
 
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
-  return;
+  return GST_FLOW_OK;
 
 HANDLE_EGL_ERROR:
   GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Rendering disabled for this frame");
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -1376,9 +1373,7 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
       "available");
 #endif
 
-  gst_eglglessink_render_and_display (eglglessink, buf);
-
-  return GST_FLOW_OK;
+  return gst_eglglessink_render_and_display (eglglessink, buf);
 }
 
 static gboolean
