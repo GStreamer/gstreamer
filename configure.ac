@@ -265,6 +265,7 @@ else
   
   dnl libgstlibav.la: include dirs
   LIBAV_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
+                -I \$(top_builddir)/gst-libs/ext/libav \
                  -Wno-deprecated-declarations"
 
   dnl libgstlibav.la: libs to statically link to        
@@ -274,6 +275,7 @@ else
 
   dnl
   SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
+                  -I \$(top_builddir)/gst-libs/ext/libav \
                   -Wno-deprecated-declarations"
 
   dnl libgstswscale.la: libs to statically link to
