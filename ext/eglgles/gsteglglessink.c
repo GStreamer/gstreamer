@@ -243,6 +243,7 @@ static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
 static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
     GstBuffer * buf);
 static inline gboolean got_gl_error (const char *wtf);
+static inline void show_egl_error (const char *wtf);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -271,17 +272,20 @@ GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
   pix_surface = eglCreatePixmapSurface (display, config, pix, egl_attribs);
 
   if (pix_surface == EGL_NO_SURFACE) {
+    show_egl_error ("eglCreatePixmapSurface");
     GST_CAT_ERROR (GST_CAT_DEFAULT, "Unable to create pixmap surface");
     goto EGL_ERROR;
   }
 
   if (my_eglLockSurfaceKHR (display, pix_surface, lock_attribs) == EGL_FALSE) {
+    show_egl_error ("eglLockSurfaceKHR");
     GST_CAT_ERROR (GST_CAT_DEFAULT, "Unable to lock surface");
     goto EGL_ERROR;
   }
 
   if (eglQuerySurface (display, pix_surface, EGL_BITMAP_POINTER_KHR, buffer)
       == EGL_FALSE) {
+    show_egl_error ("eglQuerySurface");
     GST_CAT_ERROR (GST_CAT_DEFAULT,
         "Unable to query surface for bitmap pointer");
     goto EGL_ERROR_LOCKED;
@@ -294,9 +298,8 @@ EGL_ERROR_LOCKED:
 EGL_ERROR:
   GST_CAT_ERROR (GST_CAT_DEFAULT, "EGL call returned error %x", eglGetError ());
   if (!eglDestroySurface (display, pix_surface)) {
+    show_egl_error ("eglDestroySurface");
     GST_CAT_ERROR (GST_CAT_DEFAULT, "Couldn't destroy surface");
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "EGL call returned error %x",
-        eglGetError ());
   }
   return NULL;
 }
@@ -823,8 +826,16 @@ got_gl_error (const char *wtf)
     GST_CAT_ERROR (GST_CAT_DEFAULT, "GL ERROR: %s returned %x", wtf, error);
     return TRUE;
   }
-
   return FALSE;
+}
+
+static inline void
+show_egl_error (const char *wtf)
+{
+  EGLint error;
+
+  if ((error = eglGetError ()) != EGL_SUCCESS)
+    GST_CAT_DEBUG (GST_CAT_DEFAULT, "EGL ERROR: %s returned %x", wtf, error);
 }
 
 static EGLNativeWindowType
@@ -1007,7 +1018,10 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR_LOCKED;
+
     glEnableVertexAttribArray (0);
+    if (got_gl_error ("glEnableVertexAttribArray"))
+      goto HANDLE_ERROR_LOCKED;
 
     glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->idata);
     if (got_gl_error ("glBindBuffer idata"))
@@ -1046,14 +1060,15 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       eglglessink->config, eglglessink->window, NULL);
 
   if (eglglessink->surface == EGL_NO_SURFACE) {
-    GST_ERROR_OBJECT (eglglessink, "Can't create surface, eglCreateSurface");
+    show_egl_error ("eglCreateWindowSurface");
+    GST_ERROR_OBJECT (eglglessink, "Can't create surface");
     goto HANDLE_EGL_ERROR_LOCKED;
   }
 
   if (!eglMakeCurrent (eglglessink->display, eglglessink->surface,
           eglglessink->surface, eglglessink->context)) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't bind surface/context, "
-        "eglMakeCurrent");
+    show_egl_error ("eglCreateWindowSurface");
+    GST_ERROR_OBJECT (eglglessink, "Couldn't bind surface/context");
     goto HANDLE_EGL_ERROR_LOCKED;
   }
 
@@ -1157,8 +1172,8 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
   }
 
-  if (eglInitialize (eglglessink->display, &egl_major, &egl_minor)
-      == EGL_FALSE) {
+  if (!eglInitialize (eglglessink->display, &egl_major, &egl_minor)) {
+    show_egl_error ("eglInitialize");
     GST_ERROR_OBJECT (eglglessink, "Could not init EGL display connection");
     goto HANDLE_EGL_ERROR;
   }
@@ -1175,7 +1190,8 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 
   if (!eglChooseConfig (eglglessink->display, eglglessink_RGB16_config,
           &eglglessink->config, 1, &egl_configs)) {
-    GST_ERROR_OBJECT (eglglessink, "eglChooseConfig failed");
+    show_egl_error ("eglChooseConfig");
+    GST_ERROR_OBJECT (eglglessink, "Could not choose EGL config");
     goto HANDLE_EGL_ERROR;
   }
 
