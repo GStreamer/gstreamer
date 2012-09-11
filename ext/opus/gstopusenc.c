@@ -287,7 +287,7 @@ gst_opus_enc_finalize (GObject * object)
 
   enc = GST_OPUS_ENC (object);
 
-  g_mutex_free (enc->property_lock);
+  g_mutex_clear (&enc->property_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -299,7 +299,7 @@ gst_opus_enc_init (GstOpusEnc * enc)
 
   GST_DEBUG_OBJECT (enc, "init");
 
-  enc->property_lock = g_mutex_new ();
+  g_mutex_init (&enc->property_lock);
 
   enc->n_channels = -1;
   enc->sample_rate = -1;
@@ -608,7 +608,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
 
   enc = GST_OPUS_ENC (benc);
 
-  g_mutex_lock (enc->property_lock);
+  g_mutex_lock (&enc->property_lock);
 
   enc->n_channels = GST_AUDIO_INFO_CHANNELS (info);
   enc->sample_rate = GST_AUDIO_INFO_RATE (info);
@@ -622,7 +622,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
     enc->state = NULL;
   }
   if (!gst_opus_enc_setup (enc)) {
-    g_mutex_unlock (enc->property_lock);
+    g_mutex_unlock (&enc->property_lock);
     return FALSE;
   }
 
@@ -631,7 +631,7 @@ gst_opus_enc_set_format (GstAudioEncoder * benc, GstAudioInfo * info)
   /* feedback to base class */
   gst_opus_enc_setup_base_class (enc, benc);
 
-  g_mutex_unlock (enc->property_lock);
+  g_mutex_unlock (&enc->property_lock);
 
   return TRUE;
 }
@@ -793,7 +793,7 @@ gst_opus_enc_encode (GstOpusEnc * enc, GstBuffer * buf)
   gint outsize;
   GstBuffer *outbuf;
 
-  g_mutex_lock (enc->property_lock);
+  g_mutex_lock (&enc->property_lock);
 
   if (G_LIKELY (buf)) {
     gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -859,7 +859,7 @@ done:
 
   if (bdata)
     gst_buffer_unmap (buf, &map);
-  g_mutex_unlock (enc->property_lock);
+  g_mutex_unlock (&enc->property_lock);
 
   if (mdata)
     g_free (mdata);
@@ -914,7 +914,7 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
 
   enc = GST_OPUS_ENC (object);
 
-  g_mutex_lock (enc->property_lock);
+  g_mutex_lock (&enc->property_lock);
 
   switch (prop_id) {
     case PROP_AUDIO:
@@ -955,7 +955,7 @@ gst_opus_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
   }
 
-  g_mutex_unlock (enc->property_lock);
+  g_mutex_unlock (&enc->property_lock);
 }
 
 static void
@@ -967,12 +967,12 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
   enc = GST_OPUS_ENC (object);
 
 #define GST_OPUS_UPDATE_PROPERTY(prop,type,ctl) do { \
-  g_mutex_lock (enc->property_lock); \
+  g_mutex_lock (&enc->property_lock); \
   enc->prop = g_value_get_##type (value); \
   if (enc->state) { \
     opus_multistream_encoder_ctl (enc->state, OPUS_SET_##ctl (enc->prop)); \
   } \
-  g_mutex_unlock (enc->property_lock); \
+  g_mutex_unlock (&enc->property_lock); \
 } while(0)
 
   switch (prop_id) {
@@ -986,18 +986,18 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       GST_OPUS_UPDATE_PROPERTY (bandwidth, enum, BANDWIDTH);
       break;
     case PROP_FRAME_SIZE:
-      g_mutex_lock (enc->property_lock);
+      g_mutex_lock (&enc->property_lock);
       enc->frame_size = g_value_get_enum (value);
       enc->frame_samples = gst_opus_enc_get_frame_samples (enc);
       gst_opus_enc_setup_base_class (enc, GST_AUDIO_ENCODER (enc));
-      g_mutex_unlock (enc->property_lock);
+      g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CBR:
       /* this one has an opposite meaning to the opus ctl... */
-      g_mutex_lock (enc->property_lock);
+      g_mutex_lock (&enc->property_lock);
       enc->cbr = g_value_get_boolean (value);
       opus_multistream_encoder_ctl (enc->state, OPUS_SET_VBR (!enc->cbr));
-      g_mutex_unlock (enc->property_lock);
+      g_mutex_unlock (&enc->property_lock);
       break;
     case PROP_CONSTRAINED_VBR:
       GST_OPUS_UPDATE_PROPERTY (constrained_vbr, boolean, VBR_CONSTRAINT);
@@ -1015,9 +1015,9 @@ gst_opus_enc_set_property (GObject * object, guint prop_id,
       GST_OPUS_UPDATE_PROPERTY (packet_loss_percentage, int, PACKET_LOSS_PERC);
       break;
     case PROP_MAX_PAYLOAD_SIZE:
-      g_mutex_lock (enc->property_lock);
+      g_mutex_lock (&enc->property_lock);
       enc->max_payload_size = g_value_get_uint (value);
-      g_mutex_unlock (enc->property_lock);
+      g_mutex_unlock (&enc->property_lock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
