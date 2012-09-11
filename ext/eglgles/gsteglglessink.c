@@ -238,6 +238,8 @@ static EGLNativeWindowType gst_eglglessink_create_window (GstEglGlesSink *
 static gboolean gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink);
 static void gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink);
+static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
+    gboolean reset);
 static void gst_eglglessink_render_and_display (GstEglGlesSink * sink,
     GstBuffer * buf);
 static inline gboolean got_gl_error (const char *wtf);
@@ -961,6 +963,80 @@ SLOW_PATH_SELECTED:
 }
 
 static gboolean
+gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
+{
+
+  g_mutex_lock (eglglessink->flow_lock);
+
+  GST_INFO_OBJECT (eglglessink, "VBO setup. have_vbo:%d, should reset %d",
+      eglglessink->have_vbo, reset);
+
+  if (!eglglessink->have_vbo || reset) {
+    GST_DEBUG_OBJECT (eglglessink, "Performing VBO setup");
+    eglglessink->coordarray[0].x = -1;
+    eglglessink->coordarray[0].y = 1;
+    eglglessink->coordarray[0].z = 0;
+
+    eglglessink->coordarray[1].x = 1;
+    eglglessink->coordarray[1].y = 1;
+    eglglessink->coordarray[1].z = 0;
+
+    eglglessink->coordarray[2].x = 1;
+    eglglessink->coordarray[2].y = -1;
+    eglglessink->coordarray[2].z = 0;
+
+    eglglessink->coordarray[3].x = -1;
+    eglglessink->coordarray[3].y = -1;
+    eglglessink->coordarray[3].z = 0;
+
+    eglglessink->indexarray[0] = 1;
+    eglglessink->indexarray[1] = 2;
+    eglglessink->indexarray[2] = 0;
+    eglglessink->indexarray[3] = 3;
+
+    glGenBuffers (1, &eglglessink->vdata);
+    glGenBuffers (1, &eglglessink->idata);
+    if (got_gl_error ("glGenBuffers"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->vdata);
+    if (got_gl_error ("glBindBuffer vdata"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->coordarray),
+        eglglessink->coordarray, GL_STATIC_DRAW);
+    if (got_gl_error ("glBufferData vdata"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR_LOCKED;
+    glEnableVertexAttribArray (0);
+
+    glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->idata);
+    if (got_gl_error ("glBindBuffer idata"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (eglglessink->indexarray),
+        eglglessink->indexarray, GL_STATIC_DRAW);
+    if (got_gl_error ("glBufferData idata"))
+      goto HANDLE_ERROR_LOCKED;
+
+    eglglessink->have_vbo = TRUE;
+  } else {
+    GST_INFO_OBJECT (eglglessink, "Won't perform VBO setup");
+  }
+
+  g_mutex_unlock (eglglessink->flow_lock);
+  return TRUE;
+
+HANDLE_ERROR_LOCKED:
+  g_mutex_unlock (eglglessink->flow_lock);
+  GST_ERROR_OBJECT (eglglessink, "Unable to perform VBO setup");
+  return FALSE;
+}
+
+static gboolean
 gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
   GLint test;
@@ -1251,63 +1327,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       /* XXX: VBO stuff this actually makes more sense on the setcaps stub?
        * The way it is right now makes this happen only for the first buffer
        * though so I guess it should work */
-      g_mutex_lock (eglglessink->flow_lock);
-      if (!eglglessink->have_vbo) {
-        GST_DEBUG_OBJECT (eglglessink, "Doing initial VBO setup");
-        eglglessink->coordarray[0].x = -1;
-        eglglessink->coordarray[0].y = 1;
-        eglglessink->coordarray[0].z = 0;
-
-        eglglessink->coordarray[1].x = 1;
-        eglglessink->coordarray[1].y = 1;
-        eglglessink->coordarray[1].z = 0;
-
-        eglglessink->coordarray[2].x = 1;
-        eglglessink->coordarray[2].y = -1;
-        eglglessink->coordarray[2].z = 0;
-
-        eglglessink->coordarray[3].x = -1;
-        eglglessink->coordarray[3].y = -1;
-        eglglessink->coordarray[3].z = 0;
-
-        eglglessink->indexarray[0] = 1;
-        eglglessink->indexarray[1] = 2;
-        eglglessink->indexarray[2] = 0;
-        eglglessink->indexarray[3] = 3;
-
-        glGenBuffers (1, &eglglessink->vdata);
-        glGenBuffers (1, &eglglessink->idata);
-        if (got_gl_error ("glGenBuffers"))
-          goto HANDLE_ERROR_LOCKED;
-
-        glBindBuffer (GL_ARRAY_BUFFER, eglglessink->vdata);
-        if (got_gl_error ("glBindBuffer vdata"))
-          goto HANDLE_ERROR_LOCKED;
-
-        glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->coordarray),
-            eglglessink->coordarray, GL_STATIC_DRAW);
-        if (got_gl_error ("glBufferData vdata"))
-          goto HANDLE_ERROR_LOCKED;
-
-        glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-        if (got_gl_error ("glVertexAttribPointer"))
-          goto HANDLE_ERROR_LOCKED;
-        glEnableVertexAttribArray (0);
-
-        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->idata);
-        if (got_gl_error ("glBindBuffer idata"))
-          goto HANDLE_ERROR_LOCKED;
-
-        glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (eglglessink->indexarray),
-            eglglessink->indexarray, GL_STATIC_DRAW);
-        if (got_gl_error ("glBufferData idata"))
-          goto HANDLE_ERROR_LOCKED;
-
+      if (gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
         glViewport (0, 0, w, h);
-
-        eglglessink->have_vbo = TRUE;
+      } else {
+        GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
+        goto HANDLE_ERROR;
       }
-      g_mutex_unlock (eglglessink->flow_lock);
 
       glClearColor (1.0, 0.0, 0.0, 0.0);
       glClear (GL_COLOR_BUFFER_BIT);
@@ -1323,8 +1348,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 
 HANDLE_EGL_ERROR:
   GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
-HANDLE_ERROR_LOCKED:
-  g_mutex_unlock (eglglessink->flow_lock);
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Rendering disabled for this frame");
 }
