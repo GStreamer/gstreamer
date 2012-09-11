@@ -3577,7 +3577,7 @@ gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent,
    * provide a stream-id for every source pad, otherwise
    * all source pads will have the same and are not
    * distinguishable */
-  g_return_val_if_fail (parent->numsrcpads == 1 || stream_id, NULL);
+  g_return_val_if_fail (parent->numsrcpads <= 1 || stream_id, NULL);
 
   /* First try to get the upstream stream-start stream-id from the sinkpad.
    * This will only work for non-source elements */
