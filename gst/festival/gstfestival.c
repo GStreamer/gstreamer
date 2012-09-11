@@ -123,7 +123,7 @@ static GstStaticPadTemplate sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain")
+    GST_STATIC_CAPS ("text/x-raw, format=(string)utf8")
     );
 
 static GstStaticPadTemplate src_template_factory =
