@@ -54,7 +54,7 @@ struct _GstOpusEnc {
   OpusMSEncoder        *state;
 
   /* Locks those properties which may be changed at play time */
-  GMutex               *property_lock;
+  GMutex                property_lock;
 
   /* properties */
   gboolean              audio_or_voip;
