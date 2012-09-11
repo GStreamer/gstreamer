@@ -43,6 +43,7 @@ struct _GstVaapiSurfaceProxyPrivate {
     GstVaapiContext    *context;
     GstVaapiSurface    *surface;
     GstClockTime        timestamp;
+    GstClockTime        duration;
     guint               is_interlaced   : 1;
     guint               tff             : 1;
 };
@@ -53,6 +54,7 @@ enum {
     PROP_CONTEXT,
     PROP_SURFACE,
     PROP_TIMESTAMP,
+    PROP_DURATION,
     PROP_INTERLACED,
     PROP_TFF
 };
@@ -88,6 +90,9 @@ gst_vaapi_surface_proxy_set_property(
     case PROP_TIMESTAMP:
         gst_vaapi_surface_proxy_set_timestamp(proxy, g_value_get_uint64(value));
         break;
+    case PROP_DURATION:
+        gst_vaapi_surface_proxy_set_duration(proxy, g_value_get_uint64(value));
+        break;
     case PROP_INTERLACED:
         gst_vaapi_surface_proxy_set_interlaced(proxy, g_value_get_boolean(value));
         break;
@@ -119,6 +124,9 @@ gst_vaapi_surface_proxy_get_property(
         break;
     case PROP_TIMESTAMP:
         g_value_set_uint64(value, gst_vaapi_surface_proxy_get_timestamp(proxy));
+        break;
+    case PROP_DURATION:
+        g_value_set_uint64(value, gst_vaapi_surface_proxy_get_duration(proxy));
         break;
     case PROP_INTERLACED:
         g_value_set_boolean(value, gst_vaapi_surface_proxy_get_interlaced(proxy));
@@ -170,6 +178,15 @@ gst_vaapi_surface_proxy_class_init(GstVaapiSurfaceProxyClass *klass)
 
     g_object_class_install_property
         (object_class,
+         PROP_DURATION,
+         g_param_spec_uint64("duration",
+                             "Duration",
+                             "The amount of time the surface is to be presented",
+                             0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
+                             G_PARAM_READWRITE));
+
+    g_object_class_install_property
+        (object_class,
          PROP_INTERLACED,
          g_param_spec_boolean("interlaced",
                               "Interlaced",
@@ -197,6 +214,7 @@ gst_vaapi_surface_proxy_init(GstVaapiSurfaceProxy *proxy)
     priv->context       = NULL;
     priv->surface       = NULL;
     priv->timestamp     = GST_CLOCK_TIME_NONE;
+    priv->duration      = GST_CLOCK_TIME_NONE;
     priv->is_interlaced = FALSE;
     priv->tff           = FALSE;
 }
@@ -364,6 +382,42 @@ gst_vaapi_surface_proxy_set_timestamp(
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
     proxy->priv->timestamp = timestamp;
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_duration:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Returns the presentation duration of the #GstVaapiSurface held by @proxy.
+ *
+ * Return value: the presentation duration of the surface, or
+ *   %GST_CLOCK_TIME_NONE is none was set
+ */
+GstClockTime
+gst_vaapi_surface_proxy_get_duration(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy),
+                         GST_CLOCK_TIME_NONE);
+
+    return proxy->priv->duration;
+}
+
+/**
+ * gst_vaapi_surface_proxy_set_duration:
+ * @proxy: a #GstVaapiSurfaceProxy
+ * @duration: the presentation duration of this surface as a #GstClockTime
+ *
+ * Sets the presentation duration of the @proxy surface to @duration.
+ */
+void
+gst_vaapi_surface_proxy_set_duration(
+    GstVaapiSurfaceProxy *proxy,
+    GstClockTime          duration
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    proxy->priv->duration = duration;
 }
 
 /**
