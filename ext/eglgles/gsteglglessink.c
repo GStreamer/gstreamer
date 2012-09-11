@@ -164,7 +164,7 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB_16));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
 
 /* Filter signals and args */
 enum
@@ -184,10 +184,10 @@ enum
 };
 
 /* XXX: Harcoded for now */
-static EGLint eglglessink_RGB16_config[] = {
-  EGL_RED_SIZE, 5,
-  EGL_GREEN_SIZE, 6,
-  EGL_BLUE_SIZE, 5,
+static EGLint eglglessink_RGB24_config[] = {
+  EGL_RED_SIZE, 8,
+  EGL_GREEN_SIZE, 8,
+  EGL_BLUE_SIZE, 8,
   EGL_NONE
 };
 
@@ -769,7 +769,7 @@ gst_eglglessink_start (GstBaseSink * sink)
    */
   format = g_new0 (GstEglGlesImageFmt, 1);
   if (format) {
-    format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
+    format->fmt = GST_EGLGLESSINK_IMAGE_RGB24;
     format->caps = gst_caps_copy (gst_pad_get_pad_template_caps
         (GST_VIDEO_SINK_PAD (eglglessink)));
     eglglessink->supported_fmts = g_list_append
@@ -1188,7 +1188,7 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   GST_INFO_OBJECT (eglglessink, "System reports supported EGL version v%d.%d",
       egl_major, egl_minor);
 
-  if (!eglChooseConfig (eglglessink->display, eglglessink_RGB16_config,
+  if (!eglChooseConfig (eglglessink->display, eglglessink_RGB24_config,
           &eglglessink->config, 1, &egl_configs)) {
     show_egl_error ("eglChooseConfig");
     GST_ERROR_OBJECT (eglglessink, "Could not choose EGL config");
@@ -1326,7 +1326,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * and no npot extension available.
        */
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-          GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+          GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
       if (got_gl_error ("glTexImage2D"))
         goto HANDLE_ERROR;
 
