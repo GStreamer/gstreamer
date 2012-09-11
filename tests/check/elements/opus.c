@@ -337,7 +337,7 @@ GST_START_TEST (test_opus_encode_properties)
     fail_unless (gst_pad_push_event (myencsrcpad,
             gst_event_new_flush_start ()) == TRUE);
     fail_unless (gst_pad_push_event (myencsrcpad,
-            gst_event_new_flush_stop (FALSE)) == TRUE);
+            gst_event_new_flush_stop (TRUE)) == TRUE);
   }
 
   gst_caps_unref (caps);
