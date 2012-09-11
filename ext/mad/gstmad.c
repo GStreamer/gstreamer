@@ -118,7 +118,8 @@ gst_mad_class_init (GstMadClass * klass)
 
   gst_element_class_set_static_metadata (element_class, "mad mp3 decoder",
       "Codec/Decoder/Audio",
-      "Uses mad code to decode mp3 streams", "Wim Taymans <wim@fluendo.com>");
+      "Uses mad code to decode mp3 streams",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   base_class->start = GST_DEBUG_FUNCPTR (gst_mad_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_mad_stop);
