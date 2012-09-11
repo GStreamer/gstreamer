@@ -45,7 +45,7 @@ static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen,
     jsize * nVMs);
 static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
-static gboolean start_java_vm = FALSE;
+static gboolean started_java_vm = FALSE;
 
 /* Global cached references */
 static struct
