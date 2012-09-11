@@ -129,10 +129,16 @@ static inline void
 push_surface(GstVaapiDecoder *decoder, GstVaapiSurfaceProxy *proxy)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstClockTime duration;
 
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(proxy)));
 
+    if (priv->fps_n && priv->fps_d) {
+        /* Actual field duration is computed in vaapipostproc */
+        duration = gst_util_uint64_scale(GST_SECOND, priv->fps_d, priv->fps_n);
+        gst_vaapi_surface_proxy_set_duration(proxy, duration);
+    }
     g_queue_push_tail(priv->surfaces, proxy);
 }
 

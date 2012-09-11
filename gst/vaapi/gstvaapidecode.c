@@ -229,6 +229,7 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
             goto error_create_buffer;
 
         GST_BUFFER_TIMESTAMP(buffer) = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+        GST_BUFFER_DURATION(buffer) = GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
         gst_buffer_set_caps(buffer, GST_PAD_CAPS(decode->srcpad));
 
         if (GST_VAAPI_SURFACE_PROXY_TFF(proxy))
