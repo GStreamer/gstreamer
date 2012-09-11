@@ -701,6 +701,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
   if (buffer_info->size == GST_BUFFER_SIZE (outbuf)) {
     memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info->offset,
         buffer_info->size);
+    ret = TRUE;
     goto done;
   }
 
@@ -749,8 +750,44 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
     case COLOR_FormatYUV420SemiPlanar:
     case COLOR_TI_FormatYUV420PackedSemiPlanar:
     case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:
-    case COLOR_QCOM_FormatYUV420SemiPlanar:
+    case COLOR_QCOM_FormatYUV420SemiPlanar:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+
+      for (i = 0; i < 2; i++) {
+        if (i == 0) {
+          src_stride = self->stride;
+          dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
+        } else {
+          src_stride = self->stride / 2;
+          dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
+
+          /* XXX: Try this if no stride was set */
+          if (src_stride == 0)
+            src_stride = dest_stride;
+        }
+
+        src = buf->data + buffer_info->offset;
+        if (i == 1)
+          src += self->slice_height * self->stride;
+
+        dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
+        height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
+
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, MIN (src_stride, dest_stride));
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
       break;
+    }
     default:
       GST_ERROR_OBJECT (self, "Unsupported color format %d",
           self->color_format);
