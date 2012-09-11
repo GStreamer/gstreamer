@@ -393,10 +393,16 @@ gst_vaapidecode_destroy(GstVaapiDecode *decode)
 static gboolean
 gst_vaapidecode_reset(GstVaapiDecode *decode, GstCaps *caps)
 {
-    if (decode->decoder &&
-        decode->decoder_caps &&
-        gst_caps_is_always_compatible(caps, decode->decoder_caps))
-        return TRUE;
+    GstVaapiCodec codec;
+
+    /* Only reset decoder if codec type changed */
+    if (decode->decoder && decode->decoder_caps) {
+        if (gst_caps_is_always_compatible(caps, decode->decoder_caps))
+            return TRUE;
+        codec = gst_vaapi_codec_from_caps(caps);
+        if (codec == gst_vaapi_decoder_get_codec(decode->decoder))
+            return TRUE;
+    }
 
     gst_vaapidecode_destroy(decode);
     return gst_vaapidecode_create(decode, caps);

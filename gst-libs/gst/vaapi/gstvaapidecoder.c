@@ -362,6 +362,22 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
 }
 
 /**
+ * gst_vaapi_decoder_get_codec:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Retrieves the @decoder codec type.
+ *
+ * Return value: the #GstVaapiCodec type for @decoder
+ */
+GstVaapiCodec
+gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), (GstVaapiCodec)0);
+
+    return decoder->priv->codec;
+}
+
+/**
  * gst_vaapi_decoder_get_caps:
  * @decoder: a #GstVaapiDecoder
  *
