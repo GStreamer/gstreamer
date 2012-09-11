@@ -1187,6 +1187,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstBuffer * buf)
 {
   gint w, h;
+#ifdef EGL_FAST_RENDERING_POSSIBLE
+  EGLImageKHR img = EGL_NO_IMAGE_KHR;
+  EGLint attrs[] = { EGL_IMAGE_PRESERVED_KHR,
+    EGL_FALSE, EGL_NONE, EGL_NONE
+  };
+#endif
 
   if (!buf) {
     GST_ERROR_OBJECT (eglglessink, "Null buffer, no past queue implemented");
@@ -1207,119 +1213,116 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     goto HANDLE_ERROR;
   }
 
-  /* XXX: This should actually happen each time
-   * frame/window dimension changes.
-   * Also might want to find a way to pass buffer's
-   * width and height values when non power of two
-   * and no npot extension available.
-   */
-  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-      GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
-  if (got_gl_error ("glTexImage2D"))
-    goto HANDLE_ERROR;
+  switch (eglglessink->rendering_path) {
+#ifdef EGL_FAST_RENDERING_POSSIBLE
+    case GST_EGLGLESSINK_RENDER_FAST:
+      /* XXX: Not Fully implemented */
+      img = my_eglCreateImageKHR (eglglessink->display, EGL_NO_CONTEXT,
+          EGL_NATIVE_PIXMAP_KHR, (EGLClientBuffer) GST_BUFFER_DATA (buf),
+          attrs);
 
-  /* resizing params */
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  if (got_gl_error ("glTexParameteri"))
-    goto HANDLE_ERROR;
+      if (img == EGL_NO_IMAGE_KHR) {
+        GST_ERROR_OBJECT (eglglessink, "my_eglCreateImageKHR failed");
+        goto HANDLE_EGL_ERROR;
+      }
 
-  /* XXX: VBO stuff this actually makes more sense on the setcaps stub?
-   * The way it is right now makes this happen only for the first buffer
-   * though so I guess it should work */
-  g_mutex_lock (eglglessink->flow_lock);
-  if (!eglglessink->have_vbo) {
-    GST_DEBUG_OBJECT (eglglessink, "Doing initial VBO setup");
+      my_glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, img);
 
-    eglglessink->coordarray[0].x = -1;
-    eglglessink->coordarray[0].y = 1;
-    eglglessink->coordarray[0].z = 0;
+      break;
+#endif
+    default:                   /* case GST_EGLGLESSINK_RENDER_SLOW */
+      /* XXX: This should actually happen each time
+       * frame/window dimension changes.
+       * Also might want to find a way to pass buffer's
+       * width and height values when non power of two
+       * and no npot extension available.
+       */
+      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+          GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+      if (got_gl_error ("glTexImage2D"))
+        goto HANDLE_ERROR;
 
-    eglglessink->coordarray[1].x = 1;
-    eglglessink->coordarray[1].y = 1;
-    eglglessink->coordarray[1].z = 0;
+      /* resizing params */
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      if (got_gl_error ("glTexParameteri"))
+        goto HANDLE_ERROR;
 
-    eglglessink->coordarray[2].x = 1;
-    eglglessink->coordarray[2].y = -1;
-    eglglessink->coordarray[2].z = 0;
+      /* XXX: VBO stuff this actually makes more sense on the setcaps stub?
+       * The way it is right now makes this happen only for the first buffer
+       * though so I guess it should work */
+      g_mutex_lock (eglglessink->flow_lock);
+      if (!eglglessink->have_vbo) {
+        GST_DEBUG_OBJECT (eglglessink, "Doing initial VBO setup");
+        eglglessink->coordarray[0].x = -1;
+        eglglessink->coordarray[0].y = 1;
+        eglglessink->coordarray[0].z = 0;
 
-    eglglessink->coordarray[3].x = -1;
-    eglglessink->coordarray[3].y = -1;
-    eglglessink->coordarray[3].z = 0;
+        eglglessink->coordarray[1].x = 1;
+        eglglessink->coordarray[1].y = 1;
+        eglglessink->coordarray[1].z = 0;
 
-    eglglessink->indexarray[0] = 1;
-    eglglessink->indexarray[1] = 2;
-    eglglessink->indexarray[2] = 0;
-    eglglessink->indexarray[3] = 3;
+        eglglessink->coordarray[2].x = 1;
+        eglglessink->coordarray[2].y = -1;
+        eglglessink->coordarray[2].z = 0;
 
-    glGenBuffers (1, &eglglessink->vdata);
-    glGenBuffers (1, &eglglessink->idata);
-    if (got_gl_error ("glGenBuffers"))
-      goto HANDLE_ERROR_LOCKED;
+        eglglessink->coordarray[3].x = -1;
+        eglglessink->coordarray[3].y = -1;
+        eglglessink->coordarray[3].z = 0;
 
-    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->vdata);
-    if (got_gl_error ("glBindBuffer vdata"))
-      goto HANDLE_ERROR_LOCKED;
+        eglglessink->indexarray[0] = 1;
+        eglglessink->indexarray[1] = 2;
+        eglglessink->indexarray[2] = 0;
+        eglglessink->indexarray[3] = 3;
 
-    glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->coordarray),
-        eglglessink->coordarray, GL_STATIC_DRAW);
-    if (got_gl_error ("glBufferData vdata"))
-      goto HANDLE_ERROR_LOCKED;
+        glGenBuffers (1, &eglglessink->vdata);
+        glGenBuffers (1, &eglglessink->idata);
+        if (got_gl_error ("glGenBuffers"))
+          goto HANDLE_ERROR_LOCKED;
 
-    glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    if (got_gl_error ("glVertexAttribPointer"))
-      goto HANDLE_ERROR_LOCKED;
-    glEnableVertexAttribArray (0);
+        glBindBuffer (GL_ARRAY_BUFFER, eglglessink->vdata);
+        if (got_gl_error ("glBindBuffer vdata"))
+          goto HANDLE_ERROR_LOCKED;
 
-    glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->idata);
-    if (got_gl_error ("glBindBuffer idata"))
-      goto HANDLE_ERROR_LOCKED;
+        glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->coordarray),
+            eglglessink->coordarray, GL_STATIC_DRAW);
+        if (got_gl_error ("glBufferData vdata"))
+          goto HANDLE_ERROR_LOCKED;
 
-    glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (eglglessink->indexarray),
-        eglglessink->indexarray, GL_STATIC_DRAW);
-    if (got_gl_error ("glBufferData idata"))
-      goto HANDLE_ERROR_LOCKED;
+        glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+        if (got_gl_error ("glVertexAttribPointer"))
+          goto HANDLE_ERROR_LOCKED;
+        glEnableVertexAttribArray (0);
 
-    glViewport (0, 0, w, h);
+        glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->idata);
+        if (got_gl_error ("glBindBuffer idata"))
+          goto HANDLE_ERROR_LOCKED;
 
-    eglglessink->have_vbo = TRUE;
+        glBufferData (GL_ELEMENT_ARRAY_BUFFER, sizeof (eglglessink->indexarray),
+            eglglessink->indexarray, GL_STATIC_DRAW);
+        if (got_gl_error ("glBufferData idata"))
+          goto HANDLE_ERROR_LOCKED;
+
+        glViewport (0, 0, w, h);
+
+        eglglessink->have_vbo = TRUE;
+      }
+      g_mutex_unlock (eglglessink->flow_lock);
+
+      glClearColor (1.0, 0.0, 0.0, 0.0);
+      glClear (GL_COLOR_BUFFER_BIT);
+      glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
+      if (got_gl_error ("glDrawElements"))
+        goto HANDLE_ERROR;
+
+      eglSwapBuffers (eglglessink->display, eglglessink->surface);
   }
-  g_mutex_unlock (eglglessink->flow_lock);
 
-  glClearColor (1.0, 0.0, 0.0, 0.0);
-  glClear (GL_COLOR_BUFFER_BIT);
-  glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
-  if (got_gl_error ("glDrawElements"))
-    goto HANDLE_ERROR;
-
-  eglSwapBuffers (eglglessink->display, eglglessink->surface);
-
+  GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
   return;
-
-/*
-  EGLImageKHR img = EGL_NO_IMAGE_KHR;
-  EGLint attrs[] = { EGL_IMAGE_PRESERVED_KHR,
-    EGL_FALSE, EGL_NONE, EGL_NONE
-  };
-
-  if (!buf) {
-    GST_ERROR_OBJECT (eglglessink, "Null buffer, no past queue implemented");
-    goto HANDLE_ERROR;
-  }
-
-  img = my_eglCreateImageKHR (eglglessink->display, EGL_NO_CONTEXT,
-      EGL_NATIVE_PIXMAP_KHR, (EGLClientBuffer) GST_BUFFER_DATA (buf), attrs);
-
-  if (img == EGL_NO_IMAGE_KHR) {
-    GST_ERROR_OBJECT (eglglessink, "my_eglCreateImageKHR failed");
-    goto HANDLE_EGL_ERROR;
-  }
-
-  my_glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, img);
 
 HANDLE_EGL_ERROR:
   GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
-*/
 HANDLE_ERROR_LOCKED:
   g_mutex_unlock (eglglessink->flow_lock);
 HANDLE_ERROR:
