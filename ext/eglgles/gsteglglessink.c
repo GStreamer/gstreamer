@@ -81,7 +81,7 @@
  * implemented.
  * </para>
  * |[
- * gst-launch -v -m videotestsrc ! eglglessink force_rendering_slow=TRUE 
+ * gst-launch -v -m videotestsrc ! eglglessink can_create_window=FALSE
  * ]|
  * </refsect2>
  */
