@@ -741,12 +741,17 @@ retry:
       }
       case INFO_OUTPUT_FORMAT_CHANGED:{
         GstAmcFormat *format;
+        gchar *format_string;
 
         GST_DEBUG_OBJECT (self, "Output format has changed");
 
         format = gst_amc_codec_get_output_format (self->codec);
         if (!format)
           goto format_error;
+
+        format_string = gst_amc_format_to_string (format);
+        GST_DEBUG_OBJECT (self, "Got new output format: %s", format_string);
+        g_free (format_string);
 
         if (!gst_amc_video_dec_set_src_caps (self, format)) {
           gst_amc_format_free (format);
@@ -1025,6 +1030,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   const gchar *mime;
   gboolean is_format_change = FALSE;
   gboolean needs_disable = FALSE;
+  gchar *format_string;
 
   self = GST_AMC_VIDEO_DEC (decoder);
 
@@ -1077,6 +1083,10 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   /* FIXME: This buffer needs to be valid until the codec is stopped again */
   if (self->codec_data)
     gst_amc_format_set_buffer (format, "csd-0", self->codec_data);
+
+  format_string = gst_amc_format_to_string (format);
+  GST_DEBUG_OBJECT (self, "Configuring codec with format: %s", format_string);
+  g_free (format_string);
 
   /* FIXME: Flags? */
   if (!gst_amc_codec_configure (self->codec, format, 0)) {

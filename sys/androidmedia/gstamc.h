@@ -105,6 +105,8 @@ GstAmcFormat * gst_amc_format_new_audio (const gchar *mime, gint sample_rate, gi
 GstAmcFormat * gst_amc_format_new_video (const gchar *mime, gint width, gint height);
 void gst_amc_format_free (GstAmcFormat * format);
 
+gchar * gst_amc_format_to_string (GstAmcFormat * format);
+
 gboolean gst_amc_format_contains_key (GstAmcFormat *format, const gchar *key);
 
 gboolean gst_amc_format_get_float (GstAmcFormat *format, const gchar *key, gfloat *value);

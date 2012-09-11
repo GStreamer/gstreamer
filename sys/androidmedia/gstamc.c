@@ -83,6 +83,7 @@ static struct
   jclass klass;
   jmethodID create_audio_format;
   jmethodID create_video_format;
+  jmethodID to_string;
   jmethodID contains_key;
   jmethodID get_float;
   jmethodID set_float;
@@ -866,6 +867,44 @@ gst_amc_format_free (GstAmcFormat * format)
   g_slice_free (GstAmcFormat, format);
 }
 
+gchar *
+gst_amc_format_to_string (GstAmcFormat * format)
+{
+  JNIEnv *env;
+  jstring v_str = NULL;
+  const gchar *v = NULL;
+  gchar *ret = NULL;
+
+  g_return_val_if_fail (format != NULL, FALSE);
+
+  env = gst_amc_get_jni_env ();
+
+  v_str =
+      (*env)->CallObjectMethod (env, format->object, media_format.to_string);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  v = (*env)->GetStringUTFChars (env, v_str, NULL);
+  if (!v) {
+    GST_ERROR ("Failed to convert string to UTF8");
+    (*env)->ExceptionClear (env);
+    goto done;
+  }
+
+  ret = g_strdup (v);
+
+done:
+  if (v)
+    (*env)->ReleaseStringUTFChars (env, v_str, v);
+  if (v_str)
+    (*env)->DeleteLocalRef (env, v_str);
+
+  return ret;
+}
+
 gboolean
 gst_amc_format_contains_key (GstAmcFormat * format, const gchar * key)
 {
@@ -1375,6 +1414,9 @@ get_java_classes (void)
   media_format.create_video_format =
       (*env)->GetStaticMethodID (env, media_format.klass, "createVideoFormat",
       "(Ljava/lang/String;II)Landroid/media/MediaFormat;");
+  media_format.to_string =
+      (*env)->GetMethodID (env, media_format.klass, "toString",
+      "()Ljava/lang/String;");
   media_format.contains_key =
       (*env)->GetMethodID (env, media_format.klass, "containsKey",
       "(Ljava/lang/String;)Z");
