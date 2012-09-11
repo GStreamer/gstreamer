@@ -108,9 +108,11 @@ struct _GstJifMuxPrivate
 static void gst_jif_mux_finalize (GObject * object);
 
 static void gst_jif_mux_reset (GstJifMux * self);
-static gboolean gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_jif_mux_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_jif_mux_chain (GstPad * pad, GstBuffer * buffer);
+static gboolean gst_jif_mux_sink_setcaps (GstJifMux * self, GstCaps * caps);
+static gboolean gst_jif_mux_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_jif_mux_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn gst_jif_mux_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -180,15 +182,14 @@ gst_jif_mux_finalize (GObject * object)
 }
 
 static gboolean
-gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_jif_mux_sink_setcaps (GstJifMux * self, GstCaps * caps)
 {
-  GstJifMux *self = GST_JIF_MUX_CAST (GST_PAD_PARENT (pad));
   GstStructure *s = gst_caps_get_structure (caps, 0);
   const gchar *variant;
 
   /* should be {combined (default), EXIF, JFIF} */
   if ((variant = gst_structure_get_string (s, "variant")) != NULL) {
-    GST_INFO_OBJECT (pad, "muxing to '%s'", variant);
+    GST_INFO_OBJECT (self, "muxing to '%s'", variant);
     /* FIXME: do we want to switch it like this or use a gobject property ? */
   }
 
@@ -196,9 +197,9 @@ gst_jif_mux_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static gboolean
-gst_jif_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_jif_mux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstJifMux *self = GST_JIF_MUX (GST_PAD_PARENT (pad));
+  GstJifMux *self = GST_JIF_MUX (parent);
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -207,7 +208,7 @@ gst_jif_mux_sink_event (GstPad * pad, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_jif_mux_sink_setcaps (pad, caps);
+      ret = gst_jif_mux_sink_setcaps (self, caps);
       gst_event_unref (event);
       break;
     }
@@ -220,11 +221,11 @@ gst_jif_mux_sink_event (GstPad * pad, GstEvent * event)
 
       gst_tag_setter_merge_tags (setter, list, mode);
 
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
     }
     default:
-      ret = gst_pad_event_default (pad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
   return ret;
@@ -275,13 +276,12 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
   guint8 marker = 0;
   guint16 size = 0;
   const guint8 *data = NULL;
-  guint8 *bdata;
-  gsize bsize;
+  GstMapInfo map;
 
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_READ);
-  gst_byte_reader_init (&reader, bdata, bsize);
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
-  GST_LOG_OBJECT (self, "Received buffer of size: %u", bsize);
+  GST_LOG_OBJECT (self, "Received buffer of size: %u", map.size);
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
     goto error;
@@ -329,23 +329,19 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
     if (marker == SOS) {
       gint eoi_pos = -1;
       gint i;
-      guint8 *mdata;
-      gsize msize;
 
       /* search the last 5 bytes for the EOI marker */
-      mdata = gst_buffer_map (buf, &msize, NULL, GST_MAP_READ);
-      g_assert (msize >= 5);
+      g_assert (map.size >= 5);
       for (i = 5; i >= 2; i--) {
-        if (mdata[msize - i] == 0xFF && mdata[msize - i + 1] == EOI) {
-          eoi_pos = msize - i;
+        if (map.data[map.size - i] == 0xFF && map.data[map.size - i + 1] == EOI) {
+          eoi_pos = map.size - i;
           break;
         }
       }
       if (eoi_pos == -1) {
         GST_WARNING_OBJECT (self, "Couldn't find an EOI marker");
-        eoi_pos = msize;
+        eoi_pos = map.size;
       }
-      gst_buffer_unmap (buf, mdata, msize);
 
       /* remaining size except EOI is scan data */
       self->priv->scan_size = eoi_pos - gst_byte_reader_get_pos (&reader);
@@ -360,11 +356,11 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
       goto error;
   }
   GST_INFO_OBJECT (self, "done parsing at 0x%x / 0x%x",
-      gst_byte_reader_get_pos (&reader), bsize);
+      gst_byte_reader_get_pos (&reader), map.size);
 
 done:
   self->priv->markers = g_list_reverse (self->priv->markers);
-  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_unmap (buf, &map);
 
   return TRUE;
 
@@ -374,7 +370,7 @@ error:
     GST_WARNING_OBJECT (self,
         "Error parsing image header (need more that %u bytes available)",
         gst_byte_reader_get_remaining (&reader));
-    gst_buffer_unmap (buf, bdata, bsize);
+    gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 }
@@ -523,7 +519,7 @@ gst_jif_mux_mangle_markers (GstJifMux * self)
     cleanup_tags = FALSE;
   }
   if (!tags) {
-    tags = gst_tag_list_new ();
+    tags = gst_tag_list_new_empty ();
     cleanup_tags = TRUE;
   }
 
@@ -652,8 +648,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
   GList *node;
   guint size = self->priv->scan_size;
   gboolean writer_status = TRUE;
-  guint8 *bdata;
-  gsize bsize;
+  GstMapInfo map;
 
   /* iterate list and collect size */
   for (node = self->priv->markers; node; node = g_list_next (node)) {
@@ -677,8 +672,8 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
       GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
 
   /* memcopy markers */
-  bdata = gst_buffer_map (buf, &bsize, NULL, GST_MAP_WRITE);
-  writer = gst_byte_writer_new_with_data (bdata, bsize, TRUE);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
+  writer = gst_byte_writer_new_with_data (map.data, map.size, TRUE);
 
   for (node = self->priv->markers; node && writer_status;
       node = g_list_next (node)) {
@@ -701,7 +696,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
           self->priv->scan_size);
     }
   }
-  gst_buffer_unmap (buf, bdata, bsize);
+  gst_buffer_unmap (buf, &map);
   gst_byte_writer_free (writer);
 
   if (!writer_status) {
@@ -715,9 +710,9 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
 }
 
 static GstFlowReturn
-gst_jif_mux_chain (GstPad * pad, GstBuffer * buf)
+gst_jif_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstJifMux *self = GST_JIF_MUX (GST_PAD_PARENT (pad));
+  GstJifMux *self = GST_JIF_MUX (parent);
   GstFlowReturn fret = GST_FLOW_OK;
 
 #if 0

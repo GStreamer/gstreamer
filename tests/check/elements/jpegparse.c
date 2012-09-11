@@ -308,8 +308,8 @@ make_my_output_buffer (GstBuffer * buffer_in)
   GstBuffer *buffer;
   GstMapInfo map;
 
-  buffer = gst_buffer_new ();
   gst_buffer_map (buffer_in, &map, GST_MAP_READ);
+  buffer = gst_buffer_new_and_alloc (map.size);
   gst_buffer_fill (buffer, 0, map.data, map.size);
   gst_buffer_unmap (buffer_in, &map);
 
