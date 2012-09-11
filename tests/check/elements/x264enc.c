@@ -239,7 +239,7 @@ test_video_profile (const gchar * profile, gint profile_id)
 
 GST_START_TEST (test_video_baseline)
 {
-  test_video_profile ("baseline", 0x42);
+  test_video_profile ("constrained-baseline", 0x42);
 }
 
 GST_END_TEST;
