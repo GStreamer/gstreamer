@@ -45,6 +45,7 @@ static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen,
     jsize * nVMs);
 static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
+static gboolean start_java_vm = FALSE;
 
 /* Global cached references */
 static struct
@@ -178,6 +179,8 @@ initialize_java_vm (void)
     if (create_java_vm (&java_vm, &env, &vm_args) < 0)
       goto create_failed;
     GST_DEBUG ("Successfully created Java VM %p", java_vm);
+
+    started_java_vm = TRUE;
   }
 
   return java_vm != NULL;
@@ -1660,6 +1663,15 @@ scan_codecs (GstPlugin * plugin)
     if (strcmp (name_str, "AACEncoder") == 0 ||
         strcmp (name_str, "OMX.google.raw.decoder") == 0) {
       GST_INFO ("Skipping compatibility codec '%s'", name_str);
+      valid_codec = FALSE;
+      goto next_codec;
+    }
+    /* FIXME: Non-Google codecs usually just don't work and hang forever
+     * or crash when not used from a process that started the Java
+     * VM via the non-public AndroidRuntime class
+     */
+    if (started_java_vm && !g_str_has_prefix (name_str, "OMX.google.")) {
+      GST_INFO ("Skipping non-Google codec in standalone mode");
       valid_codec = FALSE;
       goto next_codec;
     }
