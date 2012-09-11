@@ -2545,8 +2545,10 @@ gst_deinterlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           self->still_frame_mode = FALSE;
         }
       }
+
+      res = gst_pad_push_event (self->srcpad, event);
+      break;
     }
-      /* fall through */
     case GST_EVENT_EOS:
       self->have_eos = TRUE;
       gst_deinterlace_reset_history (self, FALSE);
