@@ -2151,7 +2151,7 @@ gst_query_has_scheduling_mode_with_flags (GstQuery * query, GstPadMode mode,
 
   gst_query_parse_scheduling (query, &sched_flags, NULL, NULL, NULL);
 
-  return ((flags & sched_flags) != 0) &&
+  return ((flags & sched_flags) == flags) &&
       gst_query_has_scheduling_mode (query, mode);
 }
 
