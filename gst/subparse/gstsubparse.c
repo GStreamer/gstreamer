@@ -254,7 +254,7 @@ gst_sub_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
     }
     default:
-      ret = gst_pad_peer_query (self->sinkpad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
