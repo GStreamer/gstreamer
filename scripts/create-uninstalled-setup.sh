@@ -36,7 +36,13 @@ BRANCH="master"
 GIT_ACCESS="anongit"
 
 # git modules to clone
-MODULES="gstreamer gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad gst-ffmpeg"
+MODULES="gstreamer gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad"
+
+if test "$BRANCH" != "0.10"; then
+  MODULES="$MODULES gst-libav"
+else
+  MODULES="$MODULES gst-ffmpeg"
+fi
 
 # note: we use ~/gst because that's what the gst-uninstalled script
 # uses by default, so don't just change that to something else

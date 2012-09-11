@@ -132,6 +132,7 @@ $GST/gstreamer/plugins\
 :$GST/gst-plugins-bad/ext\
 :$GST/gst-plugins-bad/gst\
 :$GST/gst-plugins-bad/sys\
+:$GST/gst-libav/ext/\
 :$GST/gst-ffmpeg/ext/\
 :$GST/gnonlin/gnl/.libs\
 :$GST/gst-openmax/omx/.libs\
@@ -189,6 +190,19 @@ export GI_TYPELIB_PATH=$GST/insanity/lib/insanity:$GST/insanity-gst/lib/insanity
 export LD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$DYLD_LIBRARY_PATH
 export PATH=$GST/gst-editing-services/tools:$PATH
+
+if [ -d "$GST/gst-libav" -a -d "$GST/gst-ffmpeg" ]; then
+  echo
+  echo "====================================================================="
+  echo " You have both an uninstalled gst-ffmpeg checkout and a gst-libav"
+  echo " checkout. You need to remove one of those. You should remove"
+  echo
+  echo "   $GST/gst-ffmpeg"
+  echo
+  echo " since gst-libav replaces gst-ffmpeg."
+  echo "====================================================================="
+  echo
+fi
 
 # if we got a command, run it, else start a shell
 if test ! -z "$1";
