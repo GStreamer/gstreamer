@@ -4,6 +4,7 @@
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
 #include <pthread.h>
+#include <gst/interfaces/xoverlay.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
@@ -89,7 +90,7 @@ static void *gst_app_function (void *userdata) {
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
-  data->pipeline = gst_parse_launch ("videotestsrc num-buffers=1000 ! fakesink", NULL);
+  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink", NULL);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
@@ -163,6 +164,8 @@ void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   }
   data->native_window = ANativeWindow_fromSurface(env, surface);
   GST_DEBUG ("Got Native Window %p", data->native_window);
+
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
 }
 
 void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
@@ -170,6 +173,8 @@ void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
   ANativeWindow_release (data->native_window);
   data->native_window = NULL;
+
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
 }
 
 static JNINativeMethod native_methods[] = {
