@@ -2110,8 +2110,10 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   gint len;
   GstCaps *ourcaps;
   GstCaps *peercaps;
+  gboolean half;
 
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
+  half = pad != self->srcpad;
 
   ourcaps = gst_pad_get_pad_template_caps (pad);
   peercaps = gst_pad_peer_query_caps (otherpad, NULL);
@@ -2147,7 +2149,7 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
         n = gst_value_get_fraction_numerator (val);
         d = gst_value_get_fraction_denominator (val);
 
-        if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+        if (!gst_fraction_double (&n, &d, half)) {
           goto error;
         }
 
@@ -2169,7 +2171,7 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
         n = gst_value_get_fraction_numerator (min);
         d = gst_value_get_fraction_denominator (min);
 
-        if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+        if (!gst_fraction_double (&n, &d, half)) {
           g_value_unset (&nrange);
           g_value_unset (&nmax);
           g_value_unset (&nmin);
@@ -2181,7 +2183,7 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
         n = gst_value_get_fraction_numerator (max);
         d = gst_value_get_fraction_denominator (max);
 
-        if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+        if (!gst_fraction_double (&n, &d, half)) {
           g_value_unset (&nrange);
           g_value_unset (&nmax);
           g_value_unset (&nmin);
@@ -2216,7 +2218,7 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
 
           /* Double/Half the framerate but if this fails simply
            * skip this value from the list */
-          if (!gst_fraction_double (&n, &d, pad != self->srcpad)) {
+          if (!gst_fraction_double (&n, &d, half)) {
             continue;
           }
 
