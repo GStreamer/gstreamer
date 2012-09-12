@@ -74,7 +74,7 @@ main (gint argc, gchar * argv[])
         sysclock, &error);
 
     if (error) {
-      printf ("ERROR: g_thread_create() %s\n", error->message);
+      printf ("ERROR: g_thread_try_new() %s\n", error->message);
       exit (-1);
     }
   }
