@@ -457,7 +457,7 @@ pad_push (GstPad * pad, GstBuffer * buffer, GstClockTime timestamp)
   data->pad = pad;
   data->buffer = buffer;
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
-  data->thread = g_thread_create (pad_push_thread, data, TRUE, NULL);
+  data->thread = g_thread_try_new ("gst-check", pad_push_thread, data, NULL);
 
   return data;
 }
