@@ -438,7 +438,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       GstOggPadData *oggpad;
 
       oggpad = (GstOggPadData *)
-          gst_collect_pads_add_pad_full (ogg_mux->collect, newpad,
+          gst_collect_pads_add_pad (ogg_mux->collect, newpad,
           sizeof (GstOggPadData), gst_ogg_mux_ogg_pad_destroy_notify, FALSE);
       ogg_mux->active_pads++;
 
