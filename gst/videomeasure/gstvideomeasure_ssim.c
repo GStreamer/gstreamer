@@ -1158,7 +1158,8 @@ gst_ssim_request_new_pad (GstElement * element, GstPadTemplate * templ,
   gst_pad_set_getcaps_function (newpad,
       GST_DEBUG_FUNCPTR (gst_ssim_sink_getcaps));
   gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_ssim_setcaps));
-  gst_collect_pads_add_pad (ssim->collect, newpad, sizeof (GstCollectData));
+  gst_collect_pads_add_pad (ssim->collect, newpad, sizeof (GstCollectData),
+      NULL, TRUE);
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the

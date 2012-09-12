@@ -735,7 +735,7 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
   gst_pad_set_query_function (self->sink0,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
   gst_collect_pads_add_pad (self->collect, self->sink0,
-      sizeof (GstCollectData));
+      sizeof (GstCollectData), NULL, TRUE);
   self->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (self->sink0);
   gst_pad_set_event_function (self->sink0,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink0_event));
@@ -751,7 +751,7 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
   gst_pad_set_query_function (self->sink0,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
   gst_collect_pads_add_pad (self->collect, self->sink1,
-      sizeof (GstCollectData));
+      sizeof (GstCollectData), NULL, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink1);
 
   if (klass->info->plugin_type == F0R_PLUGIN_TYPE_MIXER3) {
@@ -765,7 +765,7 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
     gst_pad_set_query_function (self->sink0,
         GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
     gst_collect_pads_add_pad (self->collect, self->sink2,
-        sizeof (GstCollectData));
+        sizeof (GstCollectData), NULL, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink2);
   }
 

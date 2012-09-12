@@ -2288,7 +2288,7 @@ gst_asf_mux_request_new_pad (GstElement * element,
     collect_size = sizeof (GstAsfVideoPad);
   }
   collect_pad = (GstAsfPad *)
-      gst_collect_pads_add_pad_full (asfmux->collect, newpad, collect_size,
+      gst_collect_pads_add_pad (asfmux->collect, newpad, collect_size,
       (GstCollectDataDestroyNotify) (gst_asf_mux_pad_reset), TRUE);
 
   /* set up pad */

@@ -198,9 +198,9 @@ gst_compare_init (GstCompare * comp)
   gst_pad_set_query_function (comp->checkpad, gst_compare_query);
   gst_element_add_pad (GST_ELEMENT (comp), comp->checkpad);
 
-  gst_collect_pads_add_pad_full (comp->cpads, comp->sinkpad,
+  gst_collect_pads_add_pad (comp->cpads, comp->sinkpad,
       sizeof (GstCollectData), NULL, TRUE);
-  gst_collect_pads_add_pad_full (comp->cpads, comp->checkpad,
+  gst_collect_pads_add_pad (comp->cpads, comp->checkpad,
       sizeof (GstCollectData), NULL, TRUE);
 
   comp->srcpad = gst_pad_new_from_static_template (&src_factory, "src");

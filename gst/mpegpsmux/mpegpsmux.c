@@ -598,7 +598,7 @@ mpegpsmux_request_new_pad (GstElement * element,
   pad = gst_pad_new_from_template (templ, name);
 
   pad_data = (MpegPsPadData *) gst_collect_pads_add_pad (mux->collect, pad,
-      sizeof (MpegPsPadData));
+      sizeof (MpegPsPadData), NULL, TRUE);
   if (pad_data == NULL)
     goto pad_failure;
 

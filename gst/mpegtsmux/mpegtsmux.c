@@ -1218,7 +1218,7 @@ mpegtsmux_request_new_pad (GstElement * element, GstPadTemplate * templ,
   g_free (pad_name);
 
   pad_data = (MpegTsPadData *)
-      gst_collect_pads_add_pad_full (mux->collect, pad, sizeof (MpegTsPadData),
+      gst_collect_pads_add_pad (mux->collect, pad, sizeof (MpegTsPadData),
       (GstCollectDataDestroyNotify) (mpegtsmux_pad_reset), TRUE);
   if (pad_data == NULL)
     goto pad_failure;
