@@ -1020,6 +1020,7 @@ GST_START_TEST (test_jifmux_tags)
   GstTagList *taglist;
   GstDateTime *datetime;
   GstBuffer *buffer;
+  GstSample *sample;
   GstMapInfo map;
   gint i;
 
@@ -1037,6 +1038,9 @@ GST_START_TEST (test_jifmux_tags)
   }
   gst_buffer_unmap (buffer, &map);
 
+  sample = gst_sample_new (buffer, NULL, NULL, NULL);
+  gst_buffer_unref (buffer);
+
   taglist = gst_tag_list_new (GST_TAG_ARTIST, "some artist",
       GST_TAG_COPYRIGHT, "My copyright notice",
       GST_TAG_DEVICE_MANUFACTURER, "MyFavoriteBrand",
@@ -1049,7 +1053,7 @@ GST_START_TEST (test_jifmux_tags)
       GST_TAG_CAPTURING_FOCAL_LENGTH, 22.5,
       GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, 5.25,
       GST_TAG_CAPTURING_EXPOSURE_COMPENSATION, -2.5,
-      GST_TAG_APPLICATION_DATA, buffer,
+      GST_TAG_APPLICATION_DATA, sample,
       GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
       GST_TAG_CAPTURING_FLASH_MODE, "auto",
       GST_TAG_CAPTURING_SOURCE, "dsc",
@@ -1066,7 +1070,7 @@ GST_START_TEST (test_jifmux_tags)
       GST_TAG_IMAGE_HORIZONTAL_PPI, 300.0,
       GST_TAG_IMAGE_VERTICAL_PPI, 96.0, NULL);
   gst_date_time_unref (datetime);
-  gst_buffer_unref (buffer);
+  gst_sample_unref (sample);
   generate_jif_file_with_tags_from_taglist (taglist, tmpfile);
   libexif_check_tags_from_taglist (taglist, tmpfile);
   gst_tag_list_unref (taglist);
