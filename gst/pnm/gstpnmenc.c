@@ -32,6 +32,10 @@
  * </refsect2>
  */
 
+/*
+ * FIXME: Port to GstVideoEncoder
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -53,16 +57,15 @@ enum
 
 static GstStaticPadTemplate sink_pad_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
-        "video/x-raw-gray, width =" GST_VIDEO_SIZE_RANGE ", "
-        "height =" GST_VIDEO_SIZE_RANGE ", framerate =" GST_VIDEO_FPS_RANGE ", "
-        "bpp= (int) 8, depth= (int) 8"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB") "; "
+        GST_VIDEO_CAPS_MAKE ("GRAY8")));
+
 
 static GstStaticPadTemplate src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
-GST_BOILERPLATE (GstPnmenc, gst_pnmenc, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstPnmenc, gst_pnmenc, GST_TYPE_ELEMENT);
 
 static void
 gst_pnmenc_set_property (GObject * object, guint prop_id, const GValue * value,
@@ -101,9 +104,9 @@ gst_pnmenc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static GstFlowReturn
-gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
+gst_pnmenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstPnmenc *s = GST_PNMENC (gst_pad_get_parent (pad));
+  GstPnmenc *s = GST_PNMENC (parent);
   GstFlowReturn r;
   gchar *header;
   GstBuffer *out;
@@ -112,9 +115,7 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
   header = g_strdup_printf ("P%i\n%i %i\n%i\n",
       s->info.type + 3 * (1 - s->info.encoding), s->info.width, s->info.height,
       s->info.max);
-  out = gst_buffer_new ();
-  gst_buffer_set_data (out, (guchar *) header, strlen (header));
-  gst_buffer_set_caps (out, GST_PAD_CAPS (s->src));
+  out = gst_buffer_new_wrapped (header, strlen (header));
   if ((r = gst_pad_push (s->src, out)) != GST_FLOW_OK)
     goto out;
 
@@ -124,6 +125,7 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
     guint o_rowstride;
     GstBuffer *obuf;
     guint i;
+    GstMapInfo imap, omap;
 
     if (s->info.type == GST_PNM_TYPE_PIXMAP) {
       o_rowstride = 3 * s->info.width;
@@ -134,91 +136,114 @@ gst_pnmenc_chain (GstPad * pad, GstBuffer * buf)
     }
 
     obuf = gst_buffer_new_and_alloc (o_rowstride * s->info.height);
+    gst_buffer_map (obuf, &omap, GST_MAP_WRITE);
+    gst_buffer_map (buf, &imap, GST_MAP_READ);
     for (i = 0; i < s->info.height; i++)
-      memcpy (GST_BUFFER_DATA (obuf) + o_rowstride * i,
-          GST_BUFFER_DATA (buf) + i_rowstride * i, o_rowstride);
+      memcpy (omap.data + o_rowstride * i, imap.data + i_rowstride * i,
+          o_rowstride);
+    gst_buffer_unmap (buf, &imap);
+    gst_buffer_unmap (obuf, &omap);
     gst_buffer_unref (buf);
     buf = obuf;
   } else {
     /* Pass through the data. */
-    buf = gst_buffer_make_metadata_writable (buf);
+    buf = gst_buffer_make_writable (buf);
   }
 
   /* We might need to convert to ASCII... */
   if (s->info.encoding == GST_PNM_ENCODING_ASCII) {
     GstBuffer *obuf;
     guint i, o;
+    GstMapInfo imap, omap;
 
-    obuf = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) * (4 + 1 / 20.));
-    for (i = o = 0; i < GST_BUFFER_SIZE (buf); i++) {
-      g_snprintf ((char *) GST_BUFFER_DATA (obuf) + o, 4, "%3i",
-          GST_BUFFER_DATA (buf)[i]);
+    gst_buffer_map (buf, &imap, GST_MAP_READ);
+    obuf = gst_buffer_new_and_alloc (imap.size * (4 + 1 / 20.));
+    gst_buffer_map (obuf, &omap, GST_MAP_WRITE);
+    for (i = o = 0; i < imap.size; i++) {
+      g_snprintf ((char *) omap.data + o, 4, "%3i", imap.data[i]);
       o += 3;
-      GST_BUFFER_DATA (obuf)[o++] = ' ';
+      omap.data[o++] = ' ';
       if (!((i + 1) % 20))
-        GST_BUFFER_DATA (obuf)[o++] = '\n';
+        omap.data[o++] = '\n';
     }
+    gst_buffer_unmap (buf, &imap);
+    gst_buffer_unmap (obuf, &omap);
     gst_buffer_unref (buf);
     buf = obuf;
   }
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (s->src));
   r = gst_pad_push (s->src, buf);
 
 out:
-  gst_object_unref (s);
 
   return r;
 }
 
 static gboolean
-gst_pnmenc_setcaps_func_sink (GstPad * pad, GstCaps * caps)
+gst_pnmenc_setcaps (GstPnmenc * s, GstCaps * caps)
 {
-  GstPnmenc *s = GST_PNMENC (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  const gchar *mime = gst_structure_get_name (structure);
-  gboolean r = TRUE;
+  gboolean r;
   GstCaps *srccaps;
 
   s->info.max = 255;
   s->info.fields = GST_PNM_INFO_FIELDS_MAX;
 
-  /* Set caps on the source. */
-  if (!strcmp (mime, "video/x-raw-rgb")) {
+  if (!gst_video_info_from_caps (&s->vinfo, caps))
+    return FALSE;
+
+  if (GST_VIDEO_INFO_IS_RGB (&s->vinfo)) {
     s->info.type = GST_PNM_TYPE_PIXMAP;
     srccaps = gst_caps_from_string (MIME_PM);
-  } else if (!strcmp (mime, "video/x-raw-gray")) {
+  } else if (GST_VIDEO_INFO_IS_GRAY (&s->vinfo)) {
     s->info.type = GST_PNM_TYPE_GRAYMAP;
     srccaps = gst_caps_from_string (MIME_GM);
   } else {
-    r = FALSE;
-    goto out;
+    return FALSE;
   }
-  gst_pad_set_caps (s->src, srccaps);
+  r = gst_pad_set_caps (s->src, srccaps);
   gst_caps_unref (srccaps);
   s->info.fields |= GST_PNM_INFO_FIELDS_TYPE;
 
   /* Remember width and height of the input data. */
-  if (!gst_structure_get_int (structure, "width", (int *) &s->info.width) ||
-      !gst_structure_get_int (structure, "height", (int *) &s->info.height)) {
-    r = FALSE;
-    goto out;
-  }
+  s->info.width = GST_VIDEO_INFO_WIDTH (&s->vinfo);
+  s->info.height = GST_VIDEO_INFO_HEIGHT (&s->vinfo);
   s->info.fields |= GST_PNM_INFO_FIELDS_WIDTH | GST_PNM_INFO_FIELDS_HEIGHT;
 
-out:
-  gst_object_unref (s);
+  return r;
+}
+
+static gboolean
+gst_pnmenc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstPnmenc *s = GST_PNMENC (parent);
+  gboolean r = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      r = gst_pnmenc_setcaps (s, caps);
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      r = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+
   return r;
 }
 
 static void
-gst_pnmenc_init (GstPnmenc * s, GstPnmencClass * klass)
+gst_pnmenc_init (GstPnmenc * s)
 {
   GstPad *pad;
 
   pad = gst_pad_new_from_static_template (&sink_pad_template, "sink");
-  gst_pad_set_setcaps_function (pad, gst_pnmenc_setcaps_func_sink);
   gst_pad_set_chain_function (pad, gst_pnmenc_chain);
+  gst_pad_set_event_function (pad, gst_pnmenc_sink_event);
   gst_pad_use_fixed_caps (pad);
   gst_element_add_pad (GST_ELEMENT (s), pad);
 
@@ -227,9 +252,10 @@ gst_pnmenc_init (GstPnmenc * s, GstPnmencClass * klass)
 }
 
 static void
-gst_pnmenc_base_init (gpointer g_class)
+gst_pnmenc_class_init (GstPnmencClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_pad_template));
@@ -239,12 +265,6 @@ gst_pnmenc_base_init (gpointer g_class)
       "Codec/Encoder/Image",
       "Encodes images into portable pixmap or graymap (PNM) format",
       "Lutz Mueller <lutz@users.sourceforge.net>");
-}
-
-static void
-gst_pnmenc_class_init (GstPnmencClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->set_property = gst_pnmenc_set_property;
   gobject_class->get_property = gst_pnmenc_get_property;

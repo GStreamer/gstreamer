@@ -20,7 +20,8 @@
 #ifndef __GST_PNMENC_H__
 #define __GST_PNMENC_H__
 
-#include <gst/gstelement.h>
+#include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "gstpnmutils.h"
 
@@ -39,6 +40,7 @@ struct _GstPnmenc
 {
   GstElement element;
 
+  GstVideoInfo vinfo;
   GstPnmInfo info;
 
   GstPad *src;

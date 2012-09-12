@@ -20,7 +20,7 @@
 #ifndef __GST_PNMDEC_H__
 #define __GST_PNMDEC_H__
 
-#include <gst/gstelement.h>
+#include <gst/gst.h>
 
 #include "gstpnmutils.h"
 

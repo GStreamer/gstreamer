@@ -30,6 +30,10 @@
  * </refsect2>
  */
 
+/*
+ * FIXME: Port to GstVideoDecoder
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -44,16 +48,14 @@
 
 static GstStaticPadTemplate gst_pnmdec_src_pad_template =
     GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB "; "
-        "video/x-raw-gray, width =" GST_VIDEO_SIZE_RANGE ", "
-        "height =" GST_VIDEO_SIZE_RANGE ", framerate =" GST_VIDEO_FPS_RANGE ", "
-        "bpp= (int) 8, depth= (int) 8"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("RGB") "; "
+        GST_VIDEO_CAPS_MAKE ("GRAY8")));
 
 static GstStaticPadTemplate gst_pnmdec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (MIME_ALL));
 
-GST_BOILERPLATE (GstPnmdec, gst_pnmdec, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstPnmdec, gst_pnmdec, GST_TYPE_ELEMENT);
 
 static GstFlowReturn
 gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
@@ -64,6 +66,7 @@ gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
     guint o_rowstride;
     GstBuffer *obuf;
     guint i;
+    GstMapInfo imap, omap;
 
     if (s->mngr.info.type == GST_PNM_TYPE_PIXMAP) {
       i_rowstride = 3 * s->mngr.info.width;
@@ -75,12 +78,15 @@ gst_pnmdec_push (GstPnmdec * s, GstPad * src, GstBuffer * buf)
 
     obuf = gst_buffer_new_and_alloc (o_rowstride * s->mngr.info.height);
 
-    gst_buffer_copy_metadata (obuf, buf, GST_BUFFER_COPY_ALL);
+    gst_buffer_copy_into (obuf, buf, GST_BUFFER_COPY_METADATA, 0, 0);
 
+    gst_buffer_map (obuf, &omap, GST_MAP_WRITE);
+    gst_buffer_map (buf, &imap, GST_MAP_READ);
     for (i = 0; i < s->mngr.info.height; i++)
-      memcpy (GST_BUFFER_DATA (obuf) + i * o_rowstride,
-          GST_BUFFER_DATA (buf) + i * i_rowstride, i_rowstride);
-
+      memcpy (omap.data + i * o_rowstride, imap.data + i * i_rowstride,
+          i_rowstride);
+    gst_buffer_unmap (buf, &imap);
+    gst_buffer_unmap (obuf, &omap);
     gst_buffer_unref (buf);
     return gst_pad_push (src, obuf);
   } else {
@@ -95,10 +101,9 @@ gst_pnmdec_chain_raw (GstPnmdec * s, GstPad * src, GstBuffer * buf)
   GstBuffer *out;
 
   /* If we got the whole image, just push the buffer. */
-  if (GST_BUFFER_SIZE (buf) == s->size) {
+  if (gst_buffer_get_size (buf) == s->size) {
     memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
     s->size = 0;
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (src));
     return gst_pnmdec_push (s, src, buf);
   }
 
@@ -106,18 +111,14 @@ gst_pnmdec_chain_raw (GstPnmdec * s, GstPad * src, GstBuffer * buf)
   if (!s->buf) {
     s->buf = buf;
   } else {
-    out = gst_buffer_span (s->buf, 0, buf,
-        GST_BUFFER_SIZE (s->buf) + GST_BUFFER_SIZE (buf));
-    gst_buffer_unref (buf);
-    gst_buffer_unref (s->buf);
+    out = gst_buffer_append (s->buf, buf);
     s->buf = out;
   }
   if (!s->buf)
     return GST_FLOW_ERROR;
 
   /* Do we now have the full image? If yes, push. */
-  if (GST_BUFFER_SIZE (s->buf) == s->size) {
-    gst_buffer_set_caps (s->buf, GST_PAD_CAPS (src));
+  if (gst_buffer_get_size (s->buf) == s->size) {
     r = gst_pnmdec_push (s, src, s->buf);
     s->buf = NULL;
     memset (&s->mngr, 0, sizeof (GstPnmInfoMngr));
@@ -133,35 +134,40 @@ gst_pnmdec_chain_ascii (GstPnmdec * s, GstPad * src, GstBuffer * buf)
   GScanner *scanner;
   GstBuffer *out;
   guint i = 0;
-  gchar *b = (gchar *) GST_BUFFER_DATA (buf);
-  guint bs = GST_BUFFER_SIZE (buf);
-  guint target = s->size - (s->buf ? GST_BUFFER_SIZE (s->buf) : 0);
+  gchar *b;
+  guint bs;
+  guint target;
+  GstMapInfo map;
+  GstMapInfo outmap;
 
-  if (!bs) {
-    gst_buffer_unref (buf);
-    return GST_FLOW_OK;
-  }
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  b = (gchar *) map.data;
+  bs = map.size;
+  target = s->size - (s->buf ? map.size : 0);
+
+  if (!bs)
+    goto drop_ok;
 
   if (s->last_byte) {
     while (*b >= '0' && *b <= '9') {
       s->last_byte = 10 * s->last_byte + *b - '0';
       b++;
       if (!--bs) {
-        gst_buffer_unref (buf);
-        return GST_FLOW_OK;
+        goto drop_error;
       }
     }
     if (s->last_byte > 255) {
-      gst_buffer_unref (buf);
       GST_DEBUG_OBJECT (s, "Corrupt ASCII encoded PNM file.");
-      return GST_FLOW_ERROR;
+      goto drop_error;
     }
   }
 
   out = gst_buffer_new_and_alloc (target);
 
+  gst_buffer_map (out, &outmap, GST_MAP_READWRITE);
+
   if (s->last_byte) {
-    GST_BUFFER_DATA (out)[i++] = s->last_byte;
+    outmap.data[i++] = s->last_byte;
     s->last_byte = 0;
   }
 
@@ -172,11 +178,11 @@ gst_pnmdec_chain_ascii (GstPnmdec * s, GstPad * src, GstBuffer * buf)
       case G_TOKEN_INT:
         if (i == target) {
           GST_DEBUG_OBJECT (s, "PNM file contains too much data.");
-          gst_buffer_unref (buf);
+          gst_buffer_unmap (out, &outmap);
           gst_buffer_unref (out);
-          return GST_FLOW_ERROR;
+          goto drop_error;
         }
-        GST_BUFFER_DATA (out)[i++] = scanner->value.v_int;
+        outmap.data[i++] = scanner->value.v_int;
         break;
       default:
         /* Should we care? */ ;
@@ -186,30 +192,47 @@ gst_pnmdec_chain_ascii (GstPnmdec * s, GstPad * src, GstBuffer * buf)
 
   /* If we didn't get the whole image, handle the last byte with care. */
   if (i && i < target && b[bs - 1] > '0' && b[bs - 1] <= '9')
-    s->last_byte = GST_BUFFER_DATA (out)[--i];
+    s->last_byte = outmap.data[--i];
 
+  gst_buffer_unmap (buf, &map);
   gst_buffer_unref (buf);
   if (!i) {
     gst_buffer_unref (out);
     return GST_FLOW_OK;
   }
 
-  GST_BUFFER_SIZE (out) = i;
+  gst_buffer_set_size (out, i);
   return gst_pnmdec_chain_raw (s, src, out);
+
+drop_ok:
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+  return GST_FLOW_OK;
+
+drop_error:
+  gst_buffer_unmap (buf, &map);
+  gst_buffer_unref (buf);
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
-gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
+gst_pnmdec_chain (GstPad * pad, GstObject * parent, GstBuffer * data)
 {
-  GstPnmdec *s = GST_PNMDEC (gst_pad_get_parent (pad));
+  GstPnmdec *s = GST_PNMDEC (parent);
   GstPad *src = gst_element_get_static_pad (GST_ELEMENT (s), "src");
   GstCaps *caps = NULL;
   GstFlowReturn r = GST_FLOW_OK;
   guint offset = 0;
 
   if (s->mngr.info.fields != GST_PNM_INFO_FIELDS_ALL) {
-    switch (gst_pnm_info_mngr_scan (&s->mngr, GST_BUFFER_DATA (data),
-            GST_BUFFER_SIZE (data))) {
+    GstMapInfo map;
+    GstPnmInfoMngrResult res;
+
+    gst_buffer_map (data, &map, GST_MAP_READ);
+    res = gst_pnm_info_mngr_scan (&s->mngr, map.data, map.size);
+    gst_buffer_unmap (data, &map);
+
+    switch (res) {
       case GST_PNM_INFO_MNGR_RESULT_FAILED:
         gst_buffer_unref (data);
         r = GST_FLOW_ERROR;
@@ -251,15 +274,15 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
     }
   }
 
-  if (offset == GST_BUFFER_SIZE (data)) {
+  if (offset == gst_buffer_get_size (data)) {
     gst_buffer_unref (data);
     r = GST_FLOW_OK;
     goto out;
   }
 
   if (offset) {
-    GstBuffer *buf = gst_buffer_create_sub (data, offset,
-        GST_BUFFER_SIZE (data) - offset);
+    GstBuffer *buf = gst_buffer_copy_region (data, GST_BUFFER_COPY_ALL, offset,
+        gst_buffer_get_size (data) - offset);
     gst_buffer_unref (data);
     data = buf;
   }
@@ -271,7 +294,6 @@ gst_pnmdec_chain (GstPad * pad, GstBuffer * data)
 
 out:
   gst_object_unref (src);
-  gst_object_unref (s);
 
   return r;
 }
@@ -286,11 +308,11 @@ gst_pnmdec_finalize (GObject * object)
     dec->buf = NULL;
   }
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_pnmdec_parent_class)->finalize (object);
 }
 
 static void
-gst_pnmdec_init (GstPnmdec * s, GstPnmdecClass * klass)
+gst_pnmdec_init (GstPnmdec * s)
 {
   GstPad *pad;
 
@@ -304,9 +326,10 @@ gst_pnmdec_init (GstPnmdec * s, GstPnmdecClass * klass)
 }
 
 static void
-gst_pnmdec_base_init (gpointer g_class)
+gst_pnmdec_class_init (GstPnmdecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pnmdec_sink_pad_template));
@@ -316,14 +339,6 @@ gst_pnmdec_base_init (gpointer g_class)
       "Codec/Decoder/Image",
       "Decodes images in portable pixmap/graymap/bitmap/anymamp (PNM) format",
       "Lutz Mueller <lutz@users.sourceforge.net>");
-}
-
-static void
-gst_pnmdec_class_init (GstPnmdecClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_pnmdec_finalize;
 }
