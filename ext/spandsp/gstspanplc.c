@@ -222,7 +222,6 @@ static gboolean
 gst_span_plc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSpanPlc *plc = GST_SPAN_PLC (parent);
-  gboolean ret = FALSE;
 
   GST_DEBUG_OBJECT (plc, "received event %s", GST_EVENT_TYPE_NAME (event));
 
@@ -241,7 +240,8 @@ gst_span_plc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_event_parse_gap (event, &timestamp, &duration);
       gst_span_plc_send_fillin (plc, timestamp, duration);
-      break;
+      gst_event_unref (event);
+      return TRUE;
     }
     case GST_EVENT_FLUSH_STOP:
       gst_span_plc_flush (plc, TRUE);
@@ -249,9 +249,6 @@ gst_span_plc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
     default:
       break;
   }
-  ret = gst_pad_push_event (plc->srcpad, event);
 
-  gst_object_unref (plc);
-
-  return ret;
+  return gst_pad_push_event (plc->srcpad, event);
 }
