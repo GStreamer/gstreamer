@@ -69,11 +69,13 @@ static JNIEnv *gst_get_jni_env (void) {
 static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   GST_DEBUG ("Message: %s", GST_MESSAGE_TYPE_NAME (msg));
   JNIEnv *env = gst_get_jni_env ();
-  (*env)->CallVoidMethod (env, data->app, set_message_method_id, (*env)->NewStringUTF(env, GST_MESSAGE_TYPE_NAME (msg)));
+  jstring jmessage = (*env)->NewStringUTF(env, GST_MESSAGE_TYPE_NAME (msg));
+  (*env)->CallVoidMethod (env, data->app, set_message_method_id, jmessage);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
   }
+  (*env)->DeleteLocalRef (env, jmessage);
 }
 
 static void *gst_app_function (void *userdata) {
@@ -112,9 +114,9 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = (CustomData *)g_malloc0 (sizeof (CustomData));
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG ("Created CustomData at %p", data);
-  pthread_create (&gst_app_thread, NULL, &gst_app_function, data);
   data->app = (*env)->NewGlobalRef (env, thiz);
-  GST_DEBUG ("Created GlobalRef for app objet at %p", data->app);
+  GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
+  pthread_create (&gst_app_thread, NULL, &gst_app_function, data);
 }
 
 void gst_native_finalize (JNIEnv* env, jobject thiz) {
@@ -170,7 +172,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return 0;
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
-  ret = (*env)->RegisterNatives (env, klass, native_methods, 5);
+  ret = (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   pthread_key_create (&current_jni_env, gst_detach_current_thread);
 

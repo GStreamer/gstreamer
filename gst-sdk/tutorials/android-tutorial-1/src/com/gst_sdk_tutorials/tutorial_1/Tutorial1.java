@@ -25,10 +25,10 @@ import android.widget.TextView;
 
 public class Tutorial1 extends Activity
 {
-    public native void nativeInit();
-    public native void nativeFinalize();
-    public native void nativePlay();
-    public native void nativePause();
+    private native void nativeInit();
+    private native void nativeFinalize();
+    private native void nativePlay();
+    private native void nativePause();
     private static native void classInit();
     private long native_custom_data;
 
