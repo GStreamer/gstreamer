@@ -27,8 +27,11 @@
 #include <glib.h>
 
 #ifdef G_OS_WIN32
+#include <stdlib.h>
+#include <stdio.h>
 #include <io.h>
-#define pipe(fds) _pipe(fds)
+#include <fcntl.h>
+#define pipe(fds) _pipe(fds,4096,O_BINARY)
 #else
 #include <unistd.h>
 #endif
