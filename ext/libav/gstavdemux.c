@@ -277,8 +277,8 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
 
   /* push based data */
-  demux->ffpipe.tlock = g_mutex_new ();
-  demux->ffpipe.cond = g_cond_new ();
+  g_mutex_init (&demux->ffpipe.tlock);
+  g_cond_init (&demux->ffpipe.cond);
   demux->ffpipe.adapter = gst_adapter_new ();
 
   /* blacklist unreliable push-based demuxers */
@@ -295,8 +295,8 @@ gst_ffmpegdemux_finalize (GObject * object)
 
   demux = (GstFFMpegDemux *) object;
 
-  g_mutex_free (demux->ffpipe.tlock);
-  g_cond_free (demux->ffpipe.cond);
+  g_mutex_clear (&demux->ffpipe.tlock);
+  g_cond_clear (&demux->ffpipe.cond);
   gst_object_unref (demux->ffpipe.adapter);
 
   gst_object_unref (demux->task);

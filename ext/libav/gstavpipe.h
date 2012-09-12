@@ -29,23 +29,23 @@ G_BEGIN_DECLS
 /* pipe protocol helpers */
 #define GST_FFMPEG_PIPE_MUTEX_LOCK(m) G_STMT_START {                    \
   GST_LOG_OBJECT (m, "locking tlock from thread %p", g_thread_self ()); \
-  g_mutex_lock (m->tlock);                                              \
+  g_mutex_lock (&m->tlock);                                              \
   GST_LOG_OBJECT (m, "locked tlock from thread %p", g_thread_self ());  \
 } G_STMT_END
 
 #define GST_FFMPEG_PIPE_MUTEX_UNLOCK(m) G_STMT_START {                    \
-  GST_LOG_OBJECT (m, "unlocking tlock from thread %p", g_thread_self ()); \
-  g_mutex_unlock (m->tlock);                                              \
+  GST_LOG_OBJECT (&m, "unlocking tlock from thread %p", g_thread_self ()); \
+  g_mutex_unlock (&m->tlock);                                              \
 } G_STMT_END
 
 #define GST_FFMPEG_PIPE_WAIT(m) G_STMT_START {                          \
   GST_LOG_OBJECT (m, "thread %p waiting", g_thread_self ());            \
-  g_cond_wait (m->cond, m->tlock);                                      \
+  g_cond_wait (&m->cond, &m->tlock);                                      \
 } G_STMT_END
 
 #define GST_FFMPEG_PIPE_SIGNAL(m) G_STMT_START {                        \
   GST_LOG_OBJECT (m, "signalling from thread %p", g_thread_self ());    \
-  g_cond_signal (m->cond);                                              \
+  g_cond_signal (&m->cond);                                              \
 } G_STMT_END
 
 typedef struct _GstFFMpegPipe GstFFMpegPipe;
@@ -53,10 +53,10 @@ typedef struct _GstFFMpegPipe GstFFMpegPipe;
 struct _GstFFMpegPipe
 {
   /* lock for syncing */
-  GMutex *tlock;
+  GMutex tlock;
   /* with TLOCK */
   /* signals counterpart thread to have a look */
-  GCond *cond;
+  GCond cond;
   /* seen eos */
   gboolean eos;
   /* flowreturn obtained by src task */
