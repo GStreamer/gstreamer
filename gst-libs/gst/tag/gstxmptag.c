@@ -1666,7 +1666,7 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
 }
 
 /**
- * gst_tag_list_to_xmp_buffer_full:
+ * gst_tag_list_to_xmp_buffer:
  * @list: tags
  * @read_only: does the container forbid inplace editing
  * @schemas: %NULL terminated array of schemas to be used on serialization
@@ -1678,7 +1678,7 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
  * Returns: new buffer or %NULL, unref the buffer when done
  */
 GstBuffer *
-gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
+gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only,
     const gchar ** schemas)
 {
   GstBuffer *buffer = NULL;
@@ -1761,21 +1761,6 @@ gst_tag_list_to_xmp_buffer_full (const GstTagList * list, gboolean read_only,
   buffer = gst_buffer_new_wrapped (bdata, bsize);
 
   return buffer;
-}
-
-/**
- * gst_tag_list_to_xmp_buffer:
- * @list: tags
- * @read_only: does the container forbid inplace editing
- *
- * Formats a taglist as a xmp packet.
- *
- * Returns: new buffer or %NULL, unref the buffer when done
- */
-GstBuffer *
-gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only)
-{
-  return gst_tag_list_to_xmp_buffer_full (list, read_only, NULL);
 }
 
 #undef gst_xmp_schema_lookup

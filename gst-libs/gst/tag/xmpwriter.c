@@ -305,7 +305,7 @@ gst_tag_xmp_writer_tag_list_to_xmp_buffer (GstTagXmpWriter * config,
       for (iter = data->schemas; iter; iter = g_slist_next (iter)) {
         array[i++] = (gchar *) iter->data;
       }
-      buf = gst_tag_list_to_xmp_buffer_full (taglist, read_only,
+      buf = gst_tag_list_to_xmp_buffer (taglist, read_only,
           (const gchar **) array);
       g_free (array);
     }

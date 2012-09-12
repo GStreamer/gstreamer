@@ -1643,7 +1643,6 @@ gst_tag_list_from_id3v2_tag
 <INCLUDE>gst/tag/tag.h</INCLUDE>
 gst_tag_list_from_xmp_buffer
 gst_tag_list_to_xmp_buffer
-gst_tag_list_to_xmp_buffer_full
 gst_tag_xmp_list_schemas
 <SUBSECTION Standard>
 </SECTION>

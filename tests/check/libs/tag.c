@@ -962,7 +962,7 @@ GST_START_TEST (test_xmp_formatting)
       GST_TAG_DESCRIPTION, "test decription",
       GST_TAG_KEYWORDS, "keyword1", GST_TAG_KEYWORDS, "keyword2", NULL);
 
-  buf = gst_tag_list_to_xmp_buffer (list, FALSE);
+  buf = gst_tag_list_to_xmp_buffer (list, FALSE, NULL);
   fail_unless (buf != NULL);
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
@@ -1075,7 +1075,7 @@ do_xmp_tag_serialization_deserialization (GstTagList * taglist,
   GstTagList *taglist2;
   GstBuffer *buf;
 
-  buf = gst_tag_list_to_xmp_buffer_full (taglist, TRUE, schemas);
+  buf = gst_tag_list_to_xmp_buffer (taglist, TRUE, schemas);
   taglist2 = gst_tag_list_from_xmp_buffer (buf);
 
   fail_unless (gst_tag_list_is_equal (taglist, taglist2));

@@ -132,7 +132,7 @@ GST_START_TEST (test_default)
   buf =
       gst_tag_xmp_writer_tag_list_to_xmp_buffer (GST_TAG_XMP_WRITER
       (test_element), taglist, TRUE);
-  buf2 = gst_tag_list_to_xmp_buffer (taglist, TRUE);
+  buf2 = gst_tag_list_to_xmp_buffer (taglist, TRUE, NULL);
   fail_unless (gst_buffer_equals (buf, buf2));
 
   gst_object_unref (test_element);
