@@ -270,12 +270,12 @@ GST_START_TEST (test_non_leaky_overrun)
   fail_unless (overrun_count == 1);
 
   /* lock the check_mutex to block the first buffer pushed to mysinkpad */
-  g_mutex_lock (check_mutex);
+  g_mutex_lock (&check_mutex);
   /* now let the queue push all buffers */
   while (g_list_length (buffers) < 3) {
-    g_cond_wait (check_cond, check_mutex);
+    g_cond_wait (&check_cond, &check_mutex);
   }
-  g_mutex_unlock (check_mutex);
+  g_mutex_unlock (&check_mutex);
 
   fail_unless (overrun_count == 1);
   /* make sure we get the underrun signal before we check underrun_count */

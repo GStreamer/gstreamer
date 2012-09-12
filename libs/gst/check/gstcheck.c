@@ -40,13 +40,13 @@ GST_DEBUG_CATEGORY (check_debug);
 
 gboolean _gst_check_threads_running = FALSE;
 GList *thread_list = NULL;
-GMutex *mutex;
-GCond *start_cond;              /* used to notify main thread of thread startups */
-GCond *sync_cond;               /* used to synchronize all threads and main thread */
+GMutex mutex;
+GCond start_cond;               /* used to notify main thread of thread startups */
+GCond sync_cond;                /* used to synchronize all threads and main thread */
 
 GList *buffers = NULL;
-GMutex *check_mutex = NULL;
-GCond *check_cond = NULL;
+GMutex check_mutex;
+GCond check_cond;
 
 /* FIXME 0.11: shouldn't _gst_check_debug be static? Not used anywhere */
 gboolean _gst_check_debug = FALSE;
@@ -136,9 +136,6 @@ gst_check_init (int *argc, char **argv[])
       gst_check_log_critical_func, NULL);
 
   print_plugins ();
-
-  check_cond = g_cond_new ();
-  check_mutex = g_mutex_new ();
 }
 
 /* message checking */
@@ -167,9 +164,9 @@ gst_check_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GST_DEBUG_OBJECT (pad, "chain_func: received buffer %p", buffer);
   buffers = g_list_append (buffers, buffer);
 
-  g_mutex_lock (check_mutex);
-  g_cond_signal (check_cond);
-  g_mutex_unlock (check_mutex);
+  g_mutex_lock (&check_mutex);
+  g_cond_signal (&check_cond);
+  g_mutex_unlock (&check_mutex);
 
   return GST_FLOW_OK;
 }
