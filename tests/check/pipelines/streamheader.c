@@ -24,7 +24,14 @@
 #include "config.h"
 #endif
 
+#include <glib.h>
+
+#ifdef G_OS_WIN32
+#include <io.h>
+#define pipe(fds) _pipe(fds)
+#else
 #include <unistd.h>
+#endif
 
 #include <gio/gio.h>
 #include <gst/check/gstcheck.h>
