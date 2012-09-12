@@ -73,7 +73,6 @@ static gboolean gst_freeze_sink_activate_mode (GstPad * sinkpad,
 static gboolean gst_freeze_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static void gst_freeze_clear_buffer (GstFreeze * freeze);
-static void gst_freeze_buffer_free (gpointer data, gpointer user_data);
 
 
 G_DEFINE_TYPE (GstFreeze, gst_freeze, GST_TYPE_ELEMENT);
@@ -133,9 +132,10 @@ gst_freeze_init (GstFreeze * freeze)
 
   freeze->timestamp_offset = 0;
   freeze->running_time = 0;
-  freeze->current = NULL;
+  freeze->current = 0;
   freeze->max_buffers = 1;
-  freeze->buffers = g_queue_new ();
+  freeze->buffers = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) gst_buffer_unref);
 }
 
 static void
@@ -144,8 +144,7 @@ gst_freeze_dispose (GObject * object)
   GstFreeze *freeze = GST_FREEZE (object);
 
   gst_freeze_clear_buffer (freeze);
-
-  g_queue_free (freeze->buffers);
+  g_ptr_array_free (freeze->buffers, TRUE);
 
   G_OBJECT_CLASS (gst_freeze_parent_class)->dispose (object);
 }
@@ -214,38 +213,27 @@ gst_freeze_play (GstFreeze * freeze, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf;
 
-  if (freeze->current == NULL)
+  if (freeze->buffers->len == 0)
     freeze->timestamp_offset = GST_BUFFER_TIMESTAMP (buf);
 
-  if (g_queue_get_length (freeze->buffers) < freeze->max_buffers ||
-      freeze->max_buffers == 0) {
-    g_queue_push_tail (freeze->buffers, buf);
-    GST_DEBUG_OBJECT (freeze, "accepted buffer %u",
-        g_queue_get_length (freeze->buffers) - 1);
+  if (freeze->buffers->len < freeze->max_buffers || freeze->max_buffers == 0) {
+    g_ptr_array_add (freeze->buffers, buf);
+    GST_DEBUG_OBJECT (freeze, "accepted buffer %u", freeze->buffers->len - 1);
   } else {
     gst_buffer_unref (buf);
   }
 
-
-  if (freeze->current != NULL) {
-    GST_DEBUG_OBJECT (freeze, "switching to next buffer");
-    freeze->current = g_queue_peek_nth (freeze->buffers,
-        g_queue_index (freeze->buffers, (gpointer) freeze->current) + 1);
-  }
-
-  if (freeze->current == NULL) {
-    if (freeze->max_buffers > 1)
-      GST_DEBUG_OBJECT (freeze, "restarting the loop");
-    freeze->current = g_queue_peek_head (freeze->buffers);
-  }
-
-  outbuf = gst_buffer_copy (freeze->current);
+  outbuf =
+      gst_buffer_copy (g_ptr_array_index (freeze->buffers, freeze->current));
+  freeze->current++;
+  freeze->current %= freeze->buffers->len;
 
   GST_BUFFER_TIMESTAMP (outbuf) = freeze->timestamp_offset +
       freeze->running_time;
-  freeze->running_time += GST_BUFFER_DURATION (freeze->current);
+  freeze->running_time += GST_BUFFER_DURATION (outbuf);
 
   ret = gst_pad_push (freeze->srcpad, outbuf);
+
 
   return ret;
 }
@@ -313,18 +301,10 @@ gst_freeze_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
 }
 
 static void
-gst_freeze_buffer_free (gpointer data, gpointer user_data)
-{
-  gst_buffer_unref (GST_BUFFER (data));
-}
-
-static void
 gst_freeze_clear_buffer (GstFreeze * freeze)
 {
-  if (freeze->buffers != NULL) {
-    g_queue_foreach (freeze->buffers, gst_freeze_buffer_free, NULL);
-  }
-  freeze->current = NULL;
+  g_ptr_array_set_size (freeze->buffers, 0);
+  freeze->current = 0;
   freeze->running_time = 0;
 }
 

@@ -39,8 +39,8 @@ struct _GstFreeze
 
   GstPad *sinkpad, *srcpad;
 
-  GQueue *buffers;
-  GstBuffer *current;
+  GPtrArray *buffers;
+  guint current;
   
   guint max_buffers;
 
