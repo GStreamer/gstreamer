@@ -375,30 +375,6 @@ beach:
   return res;
 }
 
-static gboolean
-gst_stream_splitter_src_event (GstPad * pad, GstObject * parent,
-    GstEvent * event)
-{
-  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
-
-  GST_DEBUG_OBJECT (pad, "%s", GST_EVENT_TYPE_NAME (event));
-
-  /* Forward upstream as is */
-  return gst_pad_push_event (stream_splitter->sinkpad, event);
-}
-
-static gboolean
-gst_stream_splitter_src_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
-{
-  GstStreamSplitter *stream_splitter = (GstStreamSplitter *) parent;
-
-  GST_DEBUG_OBJECT (pad, "%s", GST_QUERY_TYPE_NAME (query));
-
-  /* Forward upstream as is */
-  return gst_pad_peer_query (stream_splitter->sinkpad, query);
-}
-
 static void
 gst_stream_splitter_init (GstStreamSplitter * stream_splitter)
 {
@@ -423,8 +399,6 @@ gst_stream_splitter_request_new_pad (GstElement * element,
   GstPad *srcpad;
 
   srcpad = gst_pad_new_from_static_template (&src_template, name);
-  gst_pad_set_event_function (srcpad, gst_stream_splitter_src_event);
-  gst_pad_set_query_function (srcpad, gst_stream_splitter_src_query);
 
   STREAMS_LOCK (stream_splitter);
   stream_splitter->srcpads = g_list_append (stream_splitter->srcpads, srcpad);

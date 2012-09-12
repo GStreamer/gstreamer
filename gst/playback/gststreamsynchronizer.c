@@ -136,25 +136,6 @@ gst_stream_synchronizer_iterate_internal_links (GstPad * pad,
   return it;
 }
 
-static gboolean
-gst_stream_synchronizer_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
-{
-  GstPad *opad;
-  gboolean ret = FALSE;
-
-  GST_LOG_OBJECT (pad, "Handling query %s", GST_QUERY_TYPE_NAME (query));
-
-  opad =
-      gst_stream_get_other_pad_from_pad (GST_STREAM_SYNCHRONIZER (parent), pad);
-  if (opad) {
-    ret = gst_pad_peer_query (opad, query);
-    gst_object_unref (opad);
-  }
-
-  return ret;
-}
-
 /* srcpad functions */
 static gboolean
 gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
@@ -699,8 +680,6 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   gst_pad_set_element_private (stream->sinkpad, stream);
   gst_pad_set_iterate_internal_links_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_iterate_internal_links));
-  gst_pad_set_query_function (stream->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_stream_synchronizer_query));
   gst_pad_set_event_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_event));
   gst_pad_set_chain_function (stream->sinkpad,
@@ -712,8 +691,6 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
   gst_pad_set_element_private (stream->srcpad, stream);
   gst_pad_set_iterate_internal_links_function (stream->srcpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_iterate_internal_links));
-  gst_pad_set_query_function (stream->srcpad,
-      GST_DEBUG_FUNCPTR (gst_stream_synchronizer_query));
   gst_pad_set_event_function (stream->srcpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_src_event));
 

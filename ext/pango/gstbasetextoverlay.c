@@ -988,7 +988,7 @@ gst_base_text_overlay_src_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      ret = gst_pad_peer_query (overlay->video_sinkpad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
