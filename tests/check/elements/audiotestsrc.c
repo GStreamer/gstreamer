@@ -93,10 +93,10 @@ GST_START_TEST (test_all_waves)
             GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
         "could not set to playing");
 
-    g_mutex_lock (check_mutex);
+    g_mutex_lock (&check_mutex);
     while (g_list_length (buffers) < 10)
-      g_cond_wait (check_cond, check_mutex);
-    g_mutex_unlock (check_mutex);
+      g_cond_wait (&check_cond, &check_mutex);
+    g_mutex_unlock (&check_mutex);
 
     gst_element_set_state (audiotestsrc, GST_STATE_READY);
 

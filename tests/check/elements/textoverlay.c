@@ -585,9 +585,10 @@ GST_START_TEST (test_video_waits_for_text)
    * newsegment event to arrive); we spawn a background thread to send such
    * a newsegment event after a second or so so we get back control */
   thread =
-      g_thread_create (test_video_waits_for_text_send_text_newsegment_thread,
-      NULL, FALSE, NULL);
+      g_thread_try_new ("gst-check",
+      test_video_waits_for_text_send_text_newsegment_thread, NULL, NULL);
   fail_unless (thread != NULL);
+  g_thread_unref (thread);
 
   GST_LOG ("pushing video buffer 3");
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_OK);
@@ -614,9 +615,10 @@ GST_START_TEST (test_video_waits_for_text)
    * text buffer (or a newsegment event) to arrive; we spawn a background
    * thread to shut down the element while it's waiting to make sure that
    * works ok */
-  thread = g_thread_create (test_video_waits_for_text_shutdown_element,
-      textoverlay, FALSE, NULL);
+  thread = g_thread_try_new ("gst-check",
+      test_video_waits_for_text_shutdown_element, textoverlay, NULL);
   fail_unless (thread != NULL);
+  g_thread_unref (thread);
 
   GST_LOG ("pushing video buffer 4");
   fail_unless (gst_pad_push (myvideosrcpad, inbuffer) == GST_FLOW_FLUSHING);
@@ -681,9 +683,10 @@ GST_START_TEST (test_render_continuity)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  thread = g_thread_create (test_render_continuity_push_video_buffers_thread,
-      NULL, FALSE, NULL);
+  thread = g_thread_try_new ("gst-check",
+      test_render_continuity_push_video_buffers_thread, NULL, NULL);
   fail_unless (thread != NULL);
+  g_thread_unref (thread);
 
   caps = gst_caps_new_simple ("text/x-raw", "format", G_TYPE_STRING, "utf8",
       NULL);
