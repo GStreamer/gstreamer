@@ -136,6 +136,32 @@ static const guint8 zigzag_4x4[16] = {
   7, 11, 14, 15,
 };
 
+typedef struct
+{
+  guint par_n, par_d;
+} PAR;
+
+/* Table E-1 - Meaning of sample aspect ratio indicator (1..16) */
+static PAR aspect_ratios[17] = {
+  {0, 0},
+  {1, 1},
+  {12, 11},
+  {10, 11},
+  {16, 11},
+  {40, 33},
+  {24, 11},
+  {20, 11},
+  {32, 11},
+  {80, 33},
+  {18, 11},
+  {15, 11},
+  {64, 33},
+  {160, 99},
+  {4, 3},
+  {3, 2},
+  {2, 1}
+};
+
 /* Compute Ceil(Log2(v)) */
 /* Derived from branchless code for integer log2(v) from:
    <http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog> */
@@ -552,6 +578,8 @@ gst_h264_parse_vui_parameters (GstH264SPS * sps, NalReader * nr)
   vui->chroma_sample_loc_type_top_field = 0;
   vui->chroma_sample_loc_type_bottom_field = 0;
   vui->low_delay_hrd_flag = 0;
+  vui->par_n = 0;
+  vui->par_d = 0;
 
   READ_UINT8 (nr, vui->aspect_ratio_info_present_flag, 1);
   if (vui->aspect_ratio_info_present_flag) {
@@ -559,6 +587,11 @@ gst_h264_parse_vui_parameters (GstH264SPS * sps, NalReader * nr)
     if (vui->aspect_ratio_idc == EXTENDED_SAR) {
       READ_UINT16 (nr, vui->sar_width, 16);
       READ_UINT16 (nr, vui->sar_height, 16);
+      vui->par_n = vui->sar_width;
+      vui->par_d = vui->sar_height;
+    } else if (vui->aspect_ratio_idc <= 16) {
+      vui->par_n = aspect_ratios[vui->aspect_ratio_idc].par_n;
+      vui->par_d = aspect_ratios[vui->aspect_ratio_idc].par_d;
     }
   }
 
