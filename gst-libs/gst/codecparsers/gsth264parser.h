@@ -664,7 +664,7 @@ struct _GstH264SEIMessage
     GstH264BufferingPeriod buffering_period;
     GstH264PicTiming pic_timing;
     /* ... could implement more */
-  };
+  } payload;
 };
 
 /**

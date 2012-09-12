@@ -492,10 +492,11 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       switch (sei.payloadType) {
         case GST_H264_SEI_PIC_TIMING:
           h264parse->sei_pic_struct_pres_flag =
-              sei.pic_timing.pic_struct_present_flag;
-          h264parse->sei_cpb_removal_delay = sei.pic_timing.cpb_removal_delay;
+              sei.payload.pic_timing.pic_struct_present_flag;
+          h264parse->sei_cpb_removal_delay =
+              sei.payload.pic_timing.cpb_removal_delay;
           if (h264parse->sei_pic_struct_pres_flag)
-            h264parse->sei_pic_struct = sei.pic_timing.pic_struct;
+            h264parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
           break;
         case GST_H264_SEI_BUF_PERIOD:
           if (h264parse->ts_trn_nb == GST_CLOCK_TIME_NONE ||

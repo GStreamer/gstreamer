@@ -1976,10 +1976,11 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   if (sei->payloadType == GST_H264_SEI_BUF_PERIOD) {
     /* size not set; might depend on emulation_prevention_three_byte */
     res = gst_h264_parser_parse_buffering_period (nalparser,
-        &sei->buffering_period, &nr);
+        &sei->payload.buffering_period, &nr);
   } else if (sei->payloadType == GST_H264_SEI_PIC_TIMING) {
     /* size not set; might depend on emulation_prevention_three_byte */
-    res = gst_h264_parser_parse_pic_timing (nalparser, &sei->pic_timing, &nr);
+    res = gst_h264_parser_parse_pic_timing (nalparser,
+        &sei->payload.pic_timing, &nr);
   } else
     res = GST_H264_PARSER_OK;
 
