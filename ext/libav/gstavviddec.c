@@ -606,7 +606,6 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* tell ffmpeg we own this buffer, tranfer the ref we have on the buffer to
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
-  picture->age = 256 * 256 * 256 * 64;
 
   GST_LOG_OBJECT (ffmpegdec, "returned frame %p", frame->output_buffer);
 

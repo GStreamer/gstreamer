@@ -662,7 +662,7 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   GstVideoFrame vframe;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
-    ffmpegenc->picture->pict_type = FF_I_TYPE;
+    ffmpegenc->picture->pict_type = AV_PICTURE_TYPE_I;
 
   if (!gst_video_frame_map (&vframe, info, frame->input_buffer, GST_MAP_READ)) {
     GST_ERROR_OBJECT (encoder, "Failed to map input buffer");

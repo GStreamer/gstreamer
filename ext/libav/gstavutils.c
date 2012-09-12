@@ -39,21 +39,21 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
 }
 
 gint
-av_smp_format_depth (enum SampleFormat smp_fmt)
+av_smp_format_depth (enum AVSampleFormat smp_fmt)
 {
   gint depth = -1;
   switch (smp_fmt) {
-    case SAMPLE_FMT_U8:
+    case AV_SAMPLE_FMT_U8:
       depth = 1;
       break;
-    case SAMPLE_FMT_S16:
+    case AV_SAMPLE_FMT_S16:
       depth = 2;
       break;
-    case SAMPLE_FMT_S32:
-    case SAMPLE_FMT_FLT:
+    case AV_SAMPLE_FMT_S32:
+    case AV_SAMPLE_FMT_FLT:
       depth = 4;
       break;
-    case SAMPLE_FMT_DBL:
+    case AV_SAMPLE_FMT_DBL:
       depth = 8;
       break;
     default:

@@ -1865,23 +1865,23 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
  */
 
 static GstCaps *
-gst_ffmpeg_smpfmt_to_caps (enum SampleFormat sample_fmt,
+gst_ffmpeg_smpfmt_to_caps (enum AVSampleFormat sample_fmt,
     AVCodecContext * context, enum CodecID codec_id)
 {
   GstCaps *caps = NULL;
   GstAudioFormat format;
 
   switch (sample_fmt) {
-    case SAMPLE_FMT_S16:
+    case AV_SAMPLE_FMT_S16:
       format = GST_AUDIO_FORMAT_S16;
       break;
-    case SAMPLE_FMT_S32:
+    case AV_SAMPLE_FMT_S32:
       format = GST_AUDIO_FORMAT_S32;
       break;
-    case SAMPLE_FMT_FLT:
+    case AV_SAMPLE_FMT_FLT:
       format = GST_AUDIO_FORMAT_F32;
       break;
-    case SAMPLE_FMT_DBL:
+    case AV_SAMPLE_FMT_DBL:
       format = GST_AUDIO_FORMAT_F64;
       break;
     default:
@@ -1930,12 +1930,12 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
     }
   } else {
     GstCaps *temp;
-    enum SampleFormat i;
+    enum AVSampleFormat i;
     AVCodecContext ctx = { 0, };
 
     ctx.channels = -1;
     caps = gst_caps_new_empty ();
-    for (i = 0; i <= SAMPLE_FMT_DBL; i++) {
+    for (i = 0; i <= AV_SAMPLE_FMT_DBL; i++) {
       temp = gst_ffmpeg_smpfmt_to_caps (i, encode ? &ctx : NULL, codec_id);
       if (temp != NULL) {
         gst_caps_append (caps, temp);
@@ -2038,16 +2038,16 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
 
   switch (format) {
     case GST_AUDIO_FORMAT_F32:
-      context->sample_fmt = SAMPLE_FMT_FLT;
+      context->sample_fmt = AV_SAMPLE_FMT_FLT;
       break;
     case GST_AUDIO_FORMAT_F64:
-      context->sample_fmt = SAMPLE_FMT_DBL;
+      context->sample_fmt = AV_SAMPLE_FMT_DBL;
       break;
     case GST_AUDIO_FORMAT_S32:
-      context->sample_fmt = SAMPLE_FMT_S32;
+      context->sample_fmt = AV_SAMPLE_FMT_S32;
       break;
     case GST_AUDIO_FORMAT_S16:
-      context->sample_fmt = SAMPLE_FMT_S16;
+      context->sample_fmt = AV_SAMPLE_FMT_S16;
       break;
     default:
       break;
