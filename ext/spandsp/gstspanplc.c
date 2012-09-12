@@ -34,7 +34,9 @@
 
 #include "gstspanplc.h"
 
-GST_BOILERPLATE (GstSpanPlc, gst_span_plc, GstElement, GST_TYPE_ELEMENT);
+#include <gst/audio/audio.h>
+
+G_DEFINE_TYPE (GstSpanPlc, gst_span_plc, GST_TYPE_ELEMENT);
 
 GST_DEBUG_CATEGORY_STATIC (gst_span_plc_debug);
 #define GST_CAT_DEFAULT gst_span_plc_debug
@@ -43,44 +45,26 @@ GST_DEBUG_CATEGORY_STATIC (gst_span_plc_debug);
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, signed = (bool) TRUE, "
-        "width = (int) 16, depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-raw, format=\"" GST_AUDIO_NE (S16) "\", "
+        "rate = " GST_AUDIO_RATE_RANGE " , channels = (int) 1")
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, signed = (bool) TRUE, "
-        "width = (int) 16, depth = (int) 16, "
-        "rate = (int) [ 1, MAX ], channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-raw, format=\"" GST_AUDIO_NE (S16) "\", "
+        "rate = " GST_AUDIO_RATE_RANGE " , channels = (int) 1")
     );
 
 static void gst_span_plc_dispose (GObject * object);
 
 static GstStateChangeReturn gst_span_plc_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_span_plc_setcaps_sink (GstPad * pad, GstCaps * caps);
-static GstFlowReturn gst_span_plc_chain (GstPad * pad, GstBuffer * buf);
-static gboolean gst_span_plc_event_sink (GstPad * pad, GstEvent * event);
-
-static void
-gst_span_plc_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = (GstElementClass *) gclass;
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-
-  gst_element_class_set_details_simple (element_class, "SpanDSP PLC",
-      "Filter/Effect/Audio",
-      "Adds packet loss concealment to audio",
-      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
-}
+static void gst_span_plc_setcaps_sink (GstSpanPlc * plc, GstCaps * caps);
+static GstFlowReturn gst_span_plc_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
+static gboolean gst_span_plc_event_sink (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
 /* initialize the plugin's class */
 static void
@@ -89,6 +73,16 @@ gst_span_plc_class_init (GstSpanPlcClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_details_simple (gstelement_class, "SpanDSP PLC",
+      "Filter/Effect/Audio",
+      "Adds packet loss concealment to audio",
+      "Youness Alaoui <youness.alaoui@collabora.co.uk>");
+
   gobject_class->dispose = gst_span_plc_dispose;
 
   gstelement_class->change_state =
@@ -96,27 +90,19 @@ gst_span_plc_class_init (GstSpanPlcClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_span_plc_debug, "spanplc",
       0, "spanDSP's packet loss concealment");
+
 }
 
 static void
-gst_span_plc_init (GstSpanPlc * plc, GstSpanPlcClass * gclass)
+gst_span_plc_init (GstSpanPlc * plc)
 {
   GST_DEBUG_OBJECT (plc, "init");
 
   plc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   plc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
 
-  gst_pad_set_setcaps_function (plc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_span_plc_setcaps_sink));
-
-  gst_pad_set_getcaps_function (plc->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_pad_set_getcaps_function (plc->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-
   gst_pad_set_chain_function (plc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_span_plc_chain));
-
   gst_pad_set_event_function (plc->sinkpad,
       GST_DEBUG_FUNCPTR (gst_span_plc_event_sink));
 
@@ -124,7 +110,6 @@ gst_span_plc_init (GstSpanPlc * plc, GstSpanPlcClass * gclass)
   gst_element_add_pad (GST_ELEMENT (plc), plc->sinkpad);
 
   plc->plc_state = NULL;
-  plc->last_stop = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG_OBJECT (plc, "init complete");
 }
@@ -138,7 +123,7 @@ gst_span_plc_dispose (GObject * object)
     plc_free (plc->plc_state);
   plc->plc_state = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (gst_span_plc_parent_class)->dispose (object);
 }
 
 static void
@@ -150,7 +135,6 @@ gst_span_plc_flush (GstSpanPlc * plc, gboolean renew)
     plc->plc_state = plc_init (NULL);
   else
     plc->plc_state = NULL;
-  plc->last_stop = GST_CLOCK_TIME_NONE;
 }
 
 static GstStateChangeReturn
@@ -167,7 +151,8 @@ gst_span_plc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  ret = GST_ELEMENT_CLASS (gst_span_plc_parent_class)->change_state (element,
+      transition);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -179,108 +164,86 @@ gst_span_plc_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean
-gst_span_plc_setcaps_sink (GstPad * pad, GstCaps * caps)
+static void
+gst_span_plc_setcaps_sink (GstSpanPlc * plc, GstCaps * caps)
 {
-  GstSpanPlc *plc = GST_SPAN_PLC (gst_pad_get_parent (pad));
   GstStructure *s = NULL;
-  gboolean ret = FALSE;
+  gint sample_rate;
 
-  ret = gst_pad_set_caps (plc->srcpad, caps);
   s = gst_caps_get_structure (caps, 0);
-  if (s) {
-    gst_structure_get_int (s, "rate", &plc->sample_rate);
-    GST_DEBUG_OBJECT (plc, "setcaps: got sample rate : %d", plc->sample_rate);
+  if (!s)
+    return;
+
+  gst_structure_get_int (s, "rate", &sample_rate);
+  if (sample_rate != plc->sample_rate) {
+    GST_DEBUG_OBJECT (plc, "setcaps: got sample rate : %d", sample_rate);
+    plc->sample_rate = sample_rate;
+    gst_span_plc_flush (plc, TRUE);
   }
-
-  gst_span_plc_flush (plc, TRUE);
-  gst_object_unref (plc);
-
-  return ret;
 }
 
 static GstFlowReturn
-gst_span_plc_chain (GstPad * pad, GstBuffer * buffer)
+gst_span_plc_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  GstSpanPlc *plc = GST_SPAN_PLC (GST_PAD_PARENT (pad));
-  GstClockTime buffer_duration;
-
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
-    plc->last_stop = GST_BUFFER_TIMESTAMP (buffer);
-  else
-    GST_WARNING_OBJECT (plc, "Buffer has no timestamp!");
-
-  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
-    buffer_duration = GST_BUFFER_DURATION (buffer);
-  } else {
-    GST_WARNING_OBJECT (plc, "Buffer has no duration!");
-    buffer_duration = (GST_BUFFER_SIZE (buffer) /
-        (plc->sample_rate * sizeof (guint16))) * GST_SECOND;
-    GST_DEBUG_OBJECT (plc, "Buffer duration : %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (buffer_duration));
-  }
-
-  plc->last_stop += buffer_duration;
+  GstSpanPlc *plc = GST_SPAN_PLC (parent);
+  GstMapInfo map;
 
   if (plc->plc_state->missing_samples != 0)
     buffer = gst_buffer_make_writable (buffer);
-  plc_rx (plc->plc_state, (int16_t *) GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer) / 2);
+  gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
+  plc_rx (plc->plc_state, (int16_t *) map.data, map.size / 2);
+  gst_buffer_unmap (buffer, &map);
 
   return gst_pad_push (plc->srcpad, buffer);
 }
 
 static void
-gst_span_plc_send_fillin (GstSpanPlc * plc, GstClockTime duration)
+gst_span_plc_send_fillin (GstSpanPlc * plc, GstClockTime timestamp,
+    GstClockTime duration)
 {
   guint buf_size;
   GstBuffer *buffer = NULL;
+  GstMapInfo map;
 
   buf_size = ((float) duration / GST_SECOND) * plc->sample_rate;
   buf_size *= sizeof (guint16);
   buffer = gst_buffer_new_and_alloc (buf_size);
   GST_DEBUG_OBJECT (plc, "Missing packet of %" GST_TIME_FORMAT
       " == %d bytes", GST_TIME_ARGS (duration), buf_size);
-  plc_fillin (plc->plc_state, (int16_t *) GST_BUFFER_DATA (buffer),
-      GST_BUFFER_SIZE (buffer) / 2);
-  GST_BUFFER_TIMESTAMP (buffer) = plc->last_stop;
+  gst_buffer_map (buffer, &map, GST_MAP_READWRITE);
+  plc_fillin (plc->plc_state, (int16_t *) map.data, map.size / 2);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_PTS (buffer) = timestamp;
   GST_BUFFER_DURATION (buffer) = duration;
-  gst_buffer_set_caps (buffer, GST_PAD_CAPS (plc->srcpad));
   gst_pad_push (plc->srcpad, buffer);
 }
 
 static gboolean
-gst_span_plc_event_sink (GstPad * pad, GstEvent * event)
+gst_span_plc_event_sink (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  GstSpanPlc *plc = GST_SPAN_PLC (parent);
   gboolean ret = FALSE;
-  GstSpanPlc *plc = GST_SPAN_PLC (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (plc, "received event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:
     {
-      GstFormat format;
-      gdouble rate;
-      gint64 start, stop, time;
-      gboolean update;
-
-      gst_event_parse_new_segment (event, &update, &rate, &format, &start,
-          &stop, &time);
-
-      if (format != GST_FORMAT_TIME)
-        goto newseg_wrong_format;
-
-      if (update) {
-        /* time progressed without data, see if we can fill the gap with
-         * some concealment data */
-        if (plc->last_stop < start)
-          gst_span_plc_send_fillin (plc, start - plc->last_stop);
-      }
-      plc->last_stop = start;
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      gst_span_plc_setcaps_sink (plc, caps);
       break;
     }
-    case GST_EVENT_FLUSH_START:
+    case GST_EVENT_GAP:
+    {
+      GstClockTime timestamp;
+      GstClockTime duration;
+
+      gst_event_parse_gap (event, &timestamp, &duration);
+      gst_span_plc_send_fillin (plc, timestamp, duration);
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
       gst_span_plc_flush (plc, TRUE);
       break;
     default:
@@ -291,10 +254,4 @@ gst_span_plc_event_sink (GstPad * pad, GstEvent * event)
   gst_object_unref (plc);
 
   return ret;
-newseg_wrong_format:
-  {
-    GST_DEBUG_OBJECT (plc, "received non TIME newsegment");
-    gst_object_unref (plc);
-    return FALSE;
-  }
 }

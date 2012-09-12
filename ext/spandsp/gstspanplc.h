@@ -44,7 +44,6 @@ struct _GstSpanPlc
 
   /* <private> */
   plc_state_t *plc_state;
-  GstClockTime last_stop;
   gint sample_rate;
 };
 
