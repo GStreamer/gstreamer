@@ -269,6 +269,11 @@ mxfdemux_suite (void)
   Suite *s = suite_create ("mxfdemux");
   TCase *tc_chain = tcase_create ("general");
 
+  /* FIXME: remove again once ported */
+  if (!gst_registry_check_feature_version (gst_registry_get (), "mxfdemux", 1,
+          0, 0))
+    return s;
+
   suite_add_tcase (s, tc_chain);
   tcase_set_timeout (tc_chain, 180);
   tcase_add_test (tc_chain, test_pull);
