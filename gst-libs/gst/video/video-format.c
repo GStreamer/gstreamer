@@ -1354,6 +1354,136 @@ pack_I420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_I422_10LE GST_VIDEO_FORMAT_AYUV64, unpack_I422_10LE, 1, pack_I422_10LE
+static void
+unpack_I422_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  guint16 *srcY = GET_Y_LINE (y);
+  guint16 *srcU = GET_U_LINE (y);
+  guint16 *srcV = GET_V_LINE (y);
+  guint16 *d = dest, Y, U, V;
+
+  for (i = 0; i < width; i++) {
+    Y = GST_READ_UINT16_LE (srcY + i) << 6;
+    U = GST_READ_UINT16_LE (srcU + (i >> 1)) << 6;
+    V = GST_READ_UINT16_LE (srcV + (i >> 1)) << 6;
+
+    if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+      Y |= (Y >> 10);
+      U |= (U >> 10);
+      V |= (V >> 10);
+    }
+
+    d[i * 4 + 0] = 0xffff;
+    d[i * 4 + 1] = Y;
+    d[i * 4 + 2] = U;
+    d[i * 4 + 3] = V;
+  }
+}
+
+static void
+pack_I422_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint16 *destY = GET_Y_LINE (y);
+  guint16 *destU = GET_U_LINE (y);
+  guint16 *destV = GET_V_LINE (y);
+  guint16 Y0, Y1, U, V;
+  const guint16 *s = src;
+
+  for (i = 0; i < width - 1; i += 2) {
+    Y0 = (s[i * 4 + 1]) >> 6;
+    Y1 = (s[i * 4 + 5]) >> 6;
+    U = ((s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1) >> 6;
+    V = ((s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1) >> 6;
+
+    GST_WRITE_UINT16_LE (destY + i + 0, Y0);
+    GST_WRITE_UINT16_LE (destY + i + 1, Y1);
+    GST_WRITE_UINT16_LE (destU + (i >> 1), U);
+    GST_WRITE_UINT16_LE (destV + (i >> 1), V);
+  }
+  if (i == width - 1) {
+    Y0 = s[i * 4 + 1] >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
+
+    GST_WRITE_UINT16_LE (destY + i, Y0);
+    GST_WRITE_UINT16_LE (destU + (i >> 1), U);
+    GST_WRITE_UINT16_LE (destV + (i >> 1), V);
+  }
+}
+
+#define PACK_I422_10BE GST_VIDEO_FORMAT_AYUV64, unpack_I422_10BE, 1, pack_I422_10BE
+static void
+unpack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  guint16 *srcY = GET_Y_LINE (y);
+  guint16 *srcU = GET_U_LINE (y);
+  guint16 *srcV = GET_V_LINE (y);
+  guint16 *d = dest, Y, U, V;
+
+  for (i = 0; i < width; i++) {
+    Y = GST_READ_UINT16_BE (srcY + i) << 6;
+    U = GST_READ_UINT16_BE (srcU + (i >> 1)) << 6;
+    V = GST_READ_UINT16_BE (srcV + (i >> 1)) << 6;
+
+    if (!(flags & GST_VIDEO_PACK_FLAG_TRUNCATE_RANGE)) {
+      Y |= (Y >> 10);
+      U |= (U >> 10);
+      V |= (V >> 10);
+    }
+
+    d[i * 4 + 0] = 0xffff;
+    d[i * 4 + 1] = Y;
+    d[i * 4 + 2] = U;
+    d[i * 4 + 3] = V;
+  }
+}
+
+static void
+pack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint16 *destY = GET_Y_LINE (y);
+  guint16 *destU = GET_U_LINE (y);
+  guint16 *destV = GET_V_LINE (y);
+  guint16 Y0, Y1, U, V;
+  const guint16 *s = src;
+
+  for (i = 0; i < width - 1; i += 2) {
+    Y0 = s[i * 4 + 1] >> 6;
+    Y1 = s[i * 4 + 5] >> 6;
+    U = ((s[i * 4 + 2] + s[i * 4 + 6] + 1) >> 1) >> 6;
+    V = ((s[i * 4 + 3] + s[i * 4 + 7] + 1) >> 1) >> 6;
+
+    GST_WRITE_UINT16_BE (destY + i + 0, Y0);
+    GST_WRITE_UINT16_BE (destY + i + 1, Y1);
+    GST_WRITE_UINT16_BE (destU + (i >> 1), U);
+    GST_WRITE_UINT16_BE (destV + (i >> 1), V);
+  }
+  if (i == width - 1) {
+    Y0 = s[i * 4 + 1] >> 6;
+    U = s[i * 4 + 2] >> 6;
+    V = s[i * 4 + 3] >> 6;
+
+    GST_WRITE_UINT16_BE (destY + i, Y0);
+    GST_WRITE_UINT16_BE (destU + (i >> 1), U);
+    GST_WRITE_UINT16_BE (destV + (i >> 1), V);
+  }
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -1573,6 +1703,10 @@ static VideoFormat formats[] = {
       PSTR222, PLANE012, OFFS0, SUB420, PACK_I420_10BE),
   MAKE_YUV_LE_FORMAT (I420_10LE, "raw video", 0x00000000, DPTH10_10_10,
       PSTR222, PLANE012, OFFS0, SUB420, PACK_I420_10LE),
+  MAKE_YUV_FORMAT (I422_10BE, "raw video", 0x00000000, DPTH10_10_10,
+      PSTR222, PLANE012, OFFS0, SUB422, PACK_I422_10BE),
+  MAKE_YUV_LE_FORMAT (I422_10LE, "raw video", 0x00000000, DPTH10_10_10,
+      PSTR222, PLANE012, OFFS0, SUB422, PACK_I422_10LE),
 };
 
 static GstVideoFormat

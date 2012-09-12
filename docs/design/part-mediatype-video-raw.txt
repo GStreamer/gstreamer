@@ -1129,3 +1129,59 @@ Formats
           default size: size (component0) + 
                         size (component1) +
                         size (component2)
+
+ "I422_10LE" planar 4:2:2 YUV, 10 bits per channel LE
+
+        Component 0: Y
+          depth:           10 LE
+          pstride:         2
+          default offset:  0
+          default rstride: RU4 (width * 2)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           10 LE
+          pstride:         2
+          default offset:  size (component0)
+          default rstride: RU4 (width)
+          default size:    rstride (component1) * RU2 (height)
+
+        Component 2: V
+          depth            10 LE
+          pstride:         2
+          default offset:  offset (component1) + size (component1)
+          default rstride: RU4 (width)
+          default size:    rstride (component2) * RU2 (height)
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)
+
+ "I422_10BE" planar 4:2:2 YUV, 10 bits per channel BE
+
+        Component 0: Y
+          depth:           10 BE
+          pstride:         2
+          default offset:  0
+          default rstride: RU4 (width * 2)
+          default size:    rstride (component0) * RU2 (height)
+
+        Component 1: U
+          depth:           10 BE
+          pstride:         2
+          default offset:  size (component0)
+          default rstride: RU4 (width)
+          default size:    rstride (component1) * RU2 (height)
+
+        Component 2: V
+          depth            10 BE
+          pstride:         2
+          default offset:  offset (component1) + size (component1)
+          default rstride: RU4 (width)
+          default size:    rstride (component2) * RU2 (height)
+
+        Image
+          default size: size (component0) + 
+                        size (component1) +
+                        size (component2)

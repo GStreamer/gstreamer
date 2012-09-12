@@ -531,6 +531,17 @@ fill_planes (GstVideoInfo * info)
       info->size = info->offset[2] +
           info->stride[2] * (GST_ROUND_UP_2 (height) / 2);
       break;
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I422_10BE:
+      info->stride[0] = GST_ROUND_UP_4 (width * 2);
+      info->stride[1] = GST_ROUND_UP_4 (width);
+      info->stride[2] = info->stride[1];
+      info->offset[0] = 0;
+      info->offset[1] = info->stride[0] * GST_ROUND_UP_2 (height);
+      info->offset[2] = info->offset[1] +
+          info->stride[1] * GST_ROUND_UP_2 (height);
+      info->size = info->offset[2] + info->stride[2] * GST_ROUND_UP_2 (height);
+      break;
     case GST_VIDEO_FORMAT_ENCODED:
       break;
     case GST_VIDEO_FORMAT_UNKNOWN:

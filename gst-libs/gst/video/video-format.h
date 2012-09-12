@@ -72,6 +72,8 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_r210: packed 4:4:4 RGB, 10 bits per channel
  * @GST_VIDEO_FORMAT_I420_10BE: planar 4:2:0 YUV, 10 bits per channel
  * @GST_VIDEO_FORMAT_I420_10LE: planar 4:2:0 YUV, 10 bits per channel
+ * @GST_VIDEO_FORMAT_I422_10BE: planar 4:2:2 YUV, 10 bits per channel
+ * @GST_VIDEO_FORMAT_I422_10LE: planar 4:2:2 YUV, 10 bits per channel
  *
  * Enum value describing the most common video formats.
  */
@@ -119,7 +121,9 @@ typedef enum {
   GST_VIDEO_FORMAT_AYUV64,
   GST_VIDEO_FORMAT_r210,
   GST_VIDEO_FORMAT_I420_10BE,
-  GST_VIDEO_FORMAT_I420_10LE
+  GST_VIDEO_FORMAT_I420_10LE,
+  GST_VIDEO_FORMAT_I422_10BE,
+  GST_VIDEO_FORMAT_I422_10LE,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -433,7 +437,7 @@ const GstVideoFormatInfo *
     "BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, Y41B, Y42B, "  \
     "YVYU, Y444, v210, v216, NV12, NV21, GRAY8, GRAY16_BE, GRAY16_LE, " \
     "v308, RGB16, BGR16, RGB15, BGR15, UYVP, A420, RGB8P, YUV9, YVU9, " \
-    "IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE }"
+    "IYU1, ARGB64, AYUV64, r210, I420_10LE, I420_10BE, I422_10LE, I422_10BE }"
 
 /**
  * GST_VIDEO_CAPS_MAKE:
