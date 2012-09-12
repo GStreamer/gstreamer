@@ -524,7 +524,7 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
   if (!gst_byte_reader_get_uint16_be (reader, &size))
     return FALSE;
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
   /* We'd pry the id of the skipped application segment */
   if (marker >= APP0 && marker <= APP15) {
     const gchar *id_str = NULL;
@@ -540,7 +540,7 @@ gst_jpeg_parse_skip_marker (GstJpegParse * parse,
 #else
   GST_DEBUG_OBJECT (parse, "unhandled marker %x skiping %u bytes", marker,
       size);
-#endif // GST_DISABLE_DEBUG
+#endif // GST_DISABLE_GST_DEBUG
 
   if (!gst_byte_reader_skip (reader, size - 2))
     return FALSE;
