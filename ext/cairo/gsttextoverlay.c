@@ -285,7 +285,7 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
       GST_DEBUG_FUNCPTR (gst_text_overlay_collected), overlay);
 
   overlay->video_collect_data = gst_collect_pads_add_pad (overlay->collect,
-      overlay->video_sinkpad, sizeof (GstCollectData));
+      overlay->video_sinkpad, sizeof (GstCollectData), NULL, TRUE);
 
   /* FIXME: hacked way to override/extend the event function of
    * GstCollectPads; because it sets its own event function giving the
@@ -641,7 +641,7 @@ gst_text_overlay_text_pad_linked (GstPad * pad, GstPad * peer)
 
   if (overlay->text_collect_data == NULL) {
     overlay->text_collect_data = gst_collect_pads_add_pad (overlay->collect,
-        overlay->text_sinkpad, sizeof (GstCollectData));
+        overlay->text_sinkpad, sizeof (GstCollectData), NULL, TRUE);
   }
 
   overlay->need_render = TRUE;

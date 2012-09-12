@@ -1797,7 +1797,7 @@ gst_videomixer2_request_new_pad (GstElement * element,
     mixpad->alpha = DEFAULT_PAD_ALPHA;
 
     mixcol = (GstVideoMixer2Collect *)
-        gst_collect_pads_add_pad_full (mix->collect, GST_PAD (mixpad),
+        gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
         sizeof (GstVideoMixer2Collect),
         (GstCollectDataDestroyNotify) gst_videomixer2_collect_free, TRUE);
 

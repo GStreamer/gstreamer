@@ -356,9 +356,9 @@ gst_smpte_init (GstSMPTE * smpte)
       GST_DEBUG_FUNCPTR (gst_smpte_sink_event), smpte);
 
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad1,
-      sizeof (GstCollectData));
+      sizeof (GstCollectData), NULL, TRUE);
   gst_collect_pads_add_pad (smpte->collect, smpte->sinkpad2,
-      sizeof (GstCollectData));
+      sizeof (GstCollectData), NULL, TRUE);
 
   smpte->type = DEFAULT_PROP_TYPE;
   smpte->border = DEFAULT_PROP_BORDER;

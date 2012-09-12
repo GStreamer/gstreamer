@@ -572,8 +572,8 @@ gst_flv_mux_request_new_pad (GstElement * element,
   }
 
   pad = gst_pad_new_from_template (templ, name);
-  cpad = (GstFlvPad *)
-      gst_collect_pads_add_pad (mux->collect, pad, sizeof (GstFlvPad));
+  cpad = (GstFlvPad *) gst_collect_pads_add_pad (mux->collect, pad,
+      sizeof (GstFlvPad), NULL, TRUE);
 
   cpad->audio_codec_data = NULL;
   cpad->video_codec_data = NULL;

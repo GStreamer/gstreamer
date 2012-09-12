@@ -968,7 +968,7 @@ gst_avi_mux_request_new_pad (GstElement * element,
   g_free (name);
 
   avipad->collect = gst_collect_pads_add_pad (avimux->collect,
-      newpad, sizeof (GstAviCollectData));
+      newpad, sizeof (GstAviCollectData), NULL, TRUE);
   ((GstAviCollectData *) (avipad->collect))->avipad = avipad;
 
   if (!gst_element_add_pad (element, newpad))

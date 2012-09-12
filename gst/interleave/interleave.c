@@ -481,7 +481,8 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   gst_pad_use_fixed_caps (new_pad);
 
-  gst_collect_pads_add_pad (self->collect, new_pad, sizeof (GstCollectData));
+  gst_collect_pads_add_pad (self->collect, new_pad, sizeof (GstCollectData),
+      NULL, TRUE);
 
   gst_collect_pads_set_event_function (self->collect,
       (GstCollectPadsEventFunction)

@@ -195,7 +195,7 @@ gst_multipart_mux_request_new_pad (GstElement * element,
 
     multipartpad = (GstMultipartPadData *)
         gst_collect_pads_add_pad (multipart_mux->collect, newpad,
-        sizeof (GstMultipartPadData));
+        sizeof (GstMultipartPadData), NULL, TRUE);
 
     /* save a pointer to our data in the pad */
     multipartpad->pad = newpad;
