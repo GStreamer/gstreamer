@@ -26,8 +26,8 @@
 #include <gst/check/gstcheck.h>
 
 static gboolean have_eos = FALSE;
-static GCond *eos_cond;
-static GMutex *event_mutex;
+static GCond eos_cond;
+static GMutex event_mutex;
 
 static GstPad *mysinkpad;
 
@@ -41,13 +41,13 @@ event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   gboolean res = TRUE;
 
-  g_mutex_lock (event_mutex);
+  g_mutex_lock (&event_mutex);
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
     have_eos = TRUE;
     GST_DEBUG ("signal EOS");
-    g_cond_broadcast (eos_cond);
+    g_cond_broadcast (&eos_cond);
   }
-  g_mutex_unlock (event_mutex);
+  g_mutex_unlock (&event_mutex);
 
   gst_event_unref (event);
 
@@ -57,13 +57,13 @@ event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 static void
 wait_eos (void)
 {
-  g_mutex_lock (event_mutex);
+  g_mutex_lock (&event_mutex);
   GST_DEBUG ("waiting for EOS");
   while (!have_eos) {
-    g_cond_wait (eos_cond, event_mutex);
+    g_cond_wait (&eos_cond, &event_mutex);
   }
   GST_DEBUG ("received EOS");
-  g_mutex_unlock (event_mutex);
+  g_mutex_unlock (&event_mutex);
 }
 
 static GstElement *
@@ -77,9 +77,6 @@ setup_filesrc (void)
   gst_pad_set_event_function (mysinkpad, event_func);
   gst_pad_set_active (mysinkpad, TRUE);
 
-  eos_cond = g_cond_new ();
-  event_mutex = g_mutex_new ();
-
   return filesrc;
 }
 
@@ -89,9 +86,6 @@ cleanup_filesrc (GstElement * filesrc)
   gst_pad_set_active (mysinkpad, FALSE);
   gst_check_teardown_sink_pad (filesrc);
   gst_check_teardown_element (filesrc);
-
-  g_cond_free (eos_cond);
-  g_mutex_free (event_mutex);
 }
 
 GST_START_TEST (test_seeking)

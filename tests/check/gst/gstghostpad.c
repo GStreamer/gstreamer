@@ -474,8 +474,8 @@ GST_END_TEST;
 
 typedef struct
 {
-  GMutex *mutex;
-  GCond *cond;
+  GMutex mutex;
+  GCond cond;
 } BlockData;
 
 static GstPadProbeReturn
@@ -483,10 +483,10 @@ block_callback (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   BlockData *block_data = (BlockData *) user_data;
 
-  g_mutex_lock (block_data->mutex);
+  g_mutex_lock (&block_data->mutex);
   GST_DEBUG ("blocked\n");
-  g_cond_signal (block_data->cond);
-  g_mutex_unlock (block_data->mutex);
+  g_cond_signal (&block_data->cond);
+  g_mutex_unlock (&block_data->mutex);
 
   return GST_PAD_PROBE_OK;
 }
@@ -512,20 +512,20 @@ GST_START_TEST (test_ghost_pads_block)
   gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
   gst_object_unref (srcpad);
 
-  block_data.mutex = g_mutex_new ();
-  block_data.cond = g_cond_new ();
+  g_mutex_init (&block_data.mutex);
+  g_cond_init (&block_data.cond);
 
-  g_mutex_lock (block_data.mutex);
+  g_mutex_lock (&block_data.mutex);
   gst_pad_add_probe (srcghost, GST_PAD_PROBE_TYPE_BLOCK, block_callback,
       &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
-  g_cond_wait (block_data.cond, block_data.mutex);
-  g_mutex_unlock (block_data.mutex);
+  g_cond_wait (&block_data.cond, &block_data.mutex);
+  g_mutex_unlock (&block_data.mutex);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
-  g_mutex_free (block_data.mutex);
-  g_cond_free (block_data.cond);
+  g_mutex_clear (&block_data.mutex);
+  g_cond_clear (&block_data.cond);
 
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
   gst_object_unref (pipeline);
@@ -554,20 +554,20 @@ GST_START_TEST (test_ghost_pads_probes)
   gst_element_add_pad (GST_ELEMENT (srcbin), srcghost);
   gst_object_unref (srcpad);
 
-  block_data.mutex = g_mutex_new ();
-  block_data.cond = g_cond_new ();
+  g_mutex_init (&block_data.mutex);
+  g_cond_init (&block_data.cond);
 
-  g_mutex_lock (block_data.mutex);
+  g_mutex_lock (&block_data.mutex);
   gst_pad_add_probe (srcghost, GST_PAD_PROBE_TYPE_BLOCK, block_callback,
       &block_data, NULL);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   /* and wait now */
-  g_cond_wait (block_data.cond, block_data.mutex);
-  g_mutex_unlock (block_data.mutex);
+  g_cond_wait (&block_data.cond, &block_data.mutex);
+  g_mutex_unlock (&block_data.mutex);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
-  g_mutex_free (block_data.mutex);
-  g_cond_free (block_data.cond);
+  g_mutex_clear (&block_data.mutex);
+  g_cond_clear (&block_data.cond);
 
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
   gst_object_unref (pipeline);

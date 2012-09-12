@@ -21,8 +21,8 @@
 
 #include <gst/check/gstcheck.h>
 
-static GMutex *af_lock;
-static GCond *af_cond;
+static GMutex af_lock;
+static GCond af_cond;
 
 /* see if the defines make sense */
 GST_START_TEST (test_range)
@@ -90,7 +90,7 @@ error_callback (GstClock * clock, GstClockTime time,
   return FALSE;
 }
 
-GMutex *store_lock;
+GMutex store_lock;
 
 static gboolean
 store_callback (GstClock * clock, GstClockTime time,
@@ -99,9 +99,9 @@ store_callback (GstClock * clock, GstClockTime time,
   GList **list = user_data;
 
   GST_DEBUG ("unlocked async id %p", id);
-  g_mutex_lock (store_lock);
+  g_mutex_lock (&store_lock);
   *list = g_list_append (*list, id);
-  g_mutex_unlock (store_lock);
+  g_mutex_unlock (&store_lock);
   return FALSE;
 }
 
@@ -268,8 +268,6 @@ GST_START_TEST (test_async_order)
   GstClockTime base;
   GstClockReturn result;
 
-  store_lock = g_mutex_new ();
-
   clock = gst_system_clock_obtain ();
   fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
 
@@ -285,32 +283,31 @@ GST_START_TEST (test_async_order)
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / 1000);
   /* at this point at least one of the timers should have timed out */
-  g_mutex_lock (store_lock);
+  g_mutex_lock (&store_lock);
   fail_unless (cb_list != NULL, "expected notification");
   fail_unless (cb_list->data == id2,
       "Expected notification for id2 to come first");
-  g_mutex_unlock (store_lock);
+  g_mutex_unlock (&store_lock);
   g_usleep (TIME_UNIT / 1000);
-  g_mutex_lock (store_lock);
+  g_mutex_lock (&store_lock);
   /* now both should have timed out */
   next = g_list_next (cb_list);
   fail_unless (next != NULL, "expected second notification");
   fail_unless (next->data == id1, "Missing notification for id1");
-  g_mutex_unlock (store_lock);
+  g_mutex_unlock (&store_lock);
 
   gst_clock_id_unref (id1);
   gst_clock_id_unref (id2);
   g_list_free (cb_list);
 
   gst_object_unref (clock);
-  g_mutex_free (store_lock);
 }
 
 GST_END_TEST;
 
 struct test_async_sync_interaction_data
 {
-  GMutex *lock;
+  GMutex lock;
 
   GstClockID sync_id;
   GstClockID sync_id2;
@@ -327,7 +324,7 @@ test_async_sync_interaction_cb (GstClock * clock, GstClockTime time,
   struct test_async_sync_interaction_data *td =
       (struct test_async_sync_interaction_data *) (user_data);
 
-  g_mutex_lock (td->lock);
+  g_mutex_lock (&td->lock);
   /* The first async callback is ignored */
   if (id == td->async_id)
     goto out;
@@ -341,7 +338,7 @@ test_async_sync_interaction_cb (GstClock * clock, GstClockTime time,
     gst_clock_id_unschedule (td->async_id2);
   }
 out:
-  g_mutex_unlock (td->lock);
+  g_mutex_unlock (&td->lock);
   return FALSE;
 }
 
@@ -363,12 +360,12 @@ GST_START_TEST (test_async_sync_interaction)
   clock = gst_system_clock_obtain ();
   fail_unless (clock != NULL, "Could not create instance of GstSystemClock");
 
-  td.lock = g_mutex_new ();
+  g_mutex_init (&td.lock);
 
   for (i = 0; i < 50; i++) {
     gst_clock_debug (clock);
     base = gst_clock_get_time (clock);
-    g_mutex_lock (td.lock);
+    g_mutex_lock (&td.lock);
     td.async_id = gst_clock_new_single_shot_id (clock, base + 40 * GST_MSECOND);
     td.async_id2 =
         gst_clock_new_single_shot_id (clock, base + 30 * GST_MSECOND);
@@ -376,7 +373,7 @@ GST_START_TEST (test_async_sync_interaction)
         gst_clock_new_single_shot_id (clock, base + 20 * GST_MSECOND);
     td.sync_id2 = gst_clock_new_single_shot_id (clock, base + 10 * GST_MSECOND);
     td.sync_id = gst_clock_new_single_shot_id (clock, base + 50 * GST_MSECOND);
-    g_mutex_unlock (td.lock);
+    g_mutex_unlock (&td.lock);
 
     result = gst_clock_id_wait_async (td.async_id,
         test_async_sync_interaction_cb, &td, NULL);
@@ -403,17 +400,17 @@ GST_START_TEST (test_async_sync_interaction)
         "Waiting did not return UNSCHEDULED (was %d)", result);
 
     gst_clock_id_unschedule (td.async_id3);
-    g_mutex_lock (td.lock);
+    g_mutex_lock (&td.lock);
 
     gst_clock_id_unref (td.sync_id);
     gst_clock_id_unref (td.sync_id2);
     gst_clock_id_unref (td.async_id);
     gst_clock_id_unref (td.async_id2);
     gst_clock_id_unref (td.async_id3);
-    g_mutex_unlock (td.lock);
+    g_mutex_unlock (&td.lock);
   }
 
-  g_mutex_free (td.lock);
+  g_mutex_clear (&td.lock);
   gst_object_unref (clock);
 }
 
@@ -537,7 +534,8 @@ GST_START_TEST (test_mixed)
   id = gst_clock_new_periodic_id (info.clock, base, 10 * GST_MSECOND);
 
   /* start waiting for the entry */
-  thread = g_thread_create ((GThreadFunc) mixed_thread, &info, TRUE, &error);
+  thread =
+      g_thread_try_new ("gst-check", (GThreadFunc) mixed_thread, &info, &error);
   fail_unless (error == NULL, "error creating thread");
   fail_unless (thread != NULL, "Could not create thread");
 
@@ -569,20 +567,20 @@ test_async_full_slave_callback (GstClock * master, GstClockTime time,
 
   /* notify the test case that we started */
   GST_INFO ("callback started");
-  g_mutex_lock (af_lock);
-  g_cond_signal (af_cond);
+  g_mutex_lock (&af_lock);
+  g_cond_signal (&af_cond);
 
   /* wait for the test case to unref "clock" and signal */
   GST_INFO ("waiting for test case to signal");
-  g_cond_wait (af_cond, af_lock);
+  g_cond_wait (&af_cond, &af_lock);
 
   stime = gst_clock_get_internal_time (clock);
   mtime = gst_clock_get_time (master);
 
   gst_clock_add_observation (clock, stime, mtime, &r_squared);
 
-  g_cond_signal (af_cond);
-  g_mutex_unlock (af_lock);
+  g_cond_signal (&af_cond);
+  g_mutex_unlock (&af_lock);
   GST_INFO ("callback finished");
 
   return TRUE;
@@ -592,9 +590,6 @@ GST_START_TEST (test_async_full)
 {
   GstClock *master, *slave;
   GstClockID *clockid;
-
-  af_lock = g_mutex_new ();
-  af_cond = g_cond_new ();
 
   /* create master and slave */
   master =
@@ -607,7 +602,7 @@ GST_START_TEST (test_async_full)
   fail_unless (GST_OBJECT_REFCOUNT (slave) == 1);
 
   /* register a periodic shot on the master to calibrate the slave */
-  g_mutex_lock (af_lock);
+  g_mutex_lock (&af_lock);
   clockid = gst_clock_new_periodic_id (master,
       gst_clock_get_time (master), gst_clock_get_timeout (slave));
   gst_clock_id_wait_async (clockid,
@@ -617,7 +612,7 @@ GST_START_TEST (test_async_full)
   /* wait for the shot to be fired and test_async_full_slave_callback to be
    * called */
   GST_INFO ("waiting for the slave callback to start");
-  g_cond_wait (af_cond, af_lock);
+  g_cond_wait (&af_cond, &af_lock);
   GST_INFO ("slave callback running, unreffing slave");
 
   /* unref the slave clock while the slave_callback is running. This should be
@@ -630,17 +625,14 @@ GST_START_TEST (test_async_full)
   gst_clock_id_unref (clockid);
 
   /* signal and wait for the callback to complete */
-  g_cond_signal (af_cond);
+  g_cond_signal (&af_cond);
 
   GST_INFO ("waiting for callback to finish");
-  g_cond_wait (af_cond, af_lock);
+  g_cond_wait (&af_cond, &af_lock);
   GST_INFO ("callback finished");
-  g_mutex_unlock (af_lock);
+  g_mutex_unlock (&af_lock);
 
   gst_object_unref (master);
-
-  g_mutex_free (af_lock);
-  g_cond_free (af_cond);
 }
 
 GST_END_TEST;

@@ -87,8 +87,8 @@ GST_START_TEST (test_hammer_bus)
   test_bus = gst_bus_new ();
 
   for (i = 0; i < NUM_THREADS; i++)
-    threads[i] = g_thread_create (pound_bus_with_messages, GINT_TO_POINTER (i),
-        TRUE, NULL);
+    threads[i] = g_thread_try_new ("gst-check", pound_bus_with_messages,
+        GINT_TO_POINTER (i), NULL);
 
   for (i = 0; i < NUM_THREADS; i++)
     g_thread_join (threads[i]);
@@ -509,7 +509,7 @@ GST_START_TEST (test_timed_pop_thread)
 
   test_bus = gst_bus_new ();
 
-  thread = g_thread_create (pop_thread, test_bus, TRUE, &error);
+  thread = g_thread_try_new ("gst-chek", pop_thread, test_bus, &error);
   fail_if (error != NULL);
 
   send_10_app_messages ();

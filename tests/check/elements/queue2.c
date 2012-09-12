@@ -242,7 +242,9 @@ GST_START_TEST (test_filled_read)
   buffer = gst_buffer_new_and_alloc (4 * 1024);
   fail_unless (gst_pad_chain (sinkpad, buffer) == GST_FLOW_OK);
 
-  thread = g_thread_create ((GThreadFunc) push_buffer, sinkpad, TRUE, NULL);
+  thread =
+      g_thread_try_new ("gst-check", (GThreadFunc) push_buffer, sinkpad, NULL);
+  fail_unless (thread != NULL);
 
   buffer = NULL;
   fail_unless (gst_pad_get_range (srcpad, 1024, 4 * 1024,

@@ -26,11 +26,11 @@
 
 #define fail_unless_collected(expected)           \
 G_STMT_START {                                    \
-  g_mutex_lock (lock);                            \
+  g_mutex_lock (&lock);                           \
   while (expected == TRUE && collected == FALSE)  \
-    g_cond_wait (cond, lock);                     \
+    g_cond_wait (&cond,& lock);                   \
   fail_unless_equals_int (collected, expected);   \
-  g_mutex_unlock (lock);                          \
+  g_mutex_unlock (&lock);                         \
 } G_STMT_END;
 
 typedef struct
@@ -62,16 +62,16 @@ static GstPad *srcpad1, *srcpad2;
 static GstPad *sinkpad1, *sinkpad2;
 static TestData *data1, *data2;
 
-static GMutex *lock;
-static GCond *cond;
+static GMutex lock;
+static GCond cond;
 
 static GstFlowReturn
 collected_cb (GstCollectPads * pads, gpointer user_data)
 {
-  g_mutex_lock (lock);
+  g_mutex_lock (&lock);
   collected = TRUE;
-  g_cond_signal (cond);
-  g_mutex_unlock (lock);
+  g_cond_signal (&cond);
+  g_mutex_unlock (&lock);
 
   return GST_FLOW_OK;
 }
@@ -124,8 +124,6 @@ setup (void)
   gst_pad_set_active (srcpad1, TRUE);
   gst_pad_set_active (srcpad2, TRUE);
 
-  cond = g_cond_new ();
-  lock = g_mutex_new ();
   data1 = NULL;
   data2 = NULL;
   collected = FALSE;
@@ -137,8 +135,6 @@ teardown (void)
   gst_object_unref (sinkpad1);
   gst_object_unref (sinkpad2);
   gst_object_unref (collect);
-  g_cond_free (cond);
-  g_mutex_free (lock);
 }
 
 GST_START_TEST (test_pad_add_remove)
@@ -178,13 +174,13 @@ GST_START_TEST (test_collect)
   /* push buffers on the pads */
   data1->pad = srcpad1;
   data1->buffer = buf1;
-  thread1 = g_thread_create (push_buffer, data1, TRUE, NULL);
+  thread1 = g_thread_try_new ("gst-check", push_buffer, data1, NULL);
   /* here thread1 is blocked and srcpad1 has a queued buffer */
   fail_unless_collected (FALSE);
 
   data2->pad = srcpad2;
   data2->buffer = buf2;
-  thread2 = g_thread_create (push_buffer, data2, TRUE, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_buffer, data2, NULL);
 
   /* now both pads have a buffer */
   fail_unless_collected (TRUE);
@@ -228,13 +224,13 @@ GST_START_TEST (test_collect_eos)
   /* push a buffer on srcpad1 and EOS on srcpad2 */
   data1->pad = srcpad1;
   data1->buffer = buf1;
-  thread1 = g_thread_create (push_buffer, data1, TRUE, NULL);
+  thread1 = g_thread_try_new ("gst-check", push_buffer, data1, NULL);
   /* here thread1 is blocked and srcpad1 has a queued buffer */
   fail_unless_collected (FALSE);
 
   data2->pad = srcpad2;
   data2->event = gst_event_new_eos ();
-  thread2 = g_thread_create (push_event, data2, TRUE, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_event, data2, NULL);
   /* now sinkpad1 has a buffer and sinkpad2 has EOS */
   fail_unless_collected (TRUE);
 
@@ -279,14 +275,14 @@ GST_START_TEST (test_collect_twice)
   /* queue a buffer */
   data1->pad = srcpad1;
   data1->buffer = buf1;
-  thread1 = g_thread_create (push_buffer, data1, TRUE, NULL);
+  thread1 = g_thread_try_new ("gst-check", push_buffer, data1, NULL);
   /* here thread1 is blocked and srcpad1 has a queued buffer */
   fail_unless_collected (FALSE);
 
   /* push EOS on the other pad */
   data2->pad = srcpad2;
   data2->event = gst_event_new_eos ();
-  thread2 = g_thread_create (push_event, data2, TRUE, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_event, data2, NULL);
 
   /* one of the pads has a buffer, the other has EOS */
   fail_unless_collected (TRUE);
@@ -319,13 +315,13 @@ GST_START_TEST (test_collect_twice)
   /* push buffers on the pads */
   data1->pad = srcpad1;
   data1->buffer = buf1;
-  thread1 = g_thread_create (push_buffer, data1, TRUE, NULL);
+  thread1 = g_thread_try_new ("gst-check", push_buffer, data1, NULL);
   /* here thread1 is blocked and srcpad1 has a queued buffer */
   fail_unless_collected (FALSE);
 
   data2->pad = srcpad2;
   data2->buffer = buf2;
-  thread2 = g_thread_create (push_buffer, data2, TRUE, NULL);
+  thread2 = g_thread_try_new ("gst-check", push_buffer, data2, NULL);
 
   /* now both pads have a buffer */
   fail_unless_collected (TRUE);

@@ -300,9 +300,12 @@ GST_START_TEST (test_threads)
   setter = GST_TAG_SETTER (g_object_new (GST_TYPE_DUMMY_ENC, NULL));
 
   spin_and_wait = TRUE;
-  threads[0] = g_thread_create (test_threads_thread_func1, setter, TRUE, NULL);
-  threads[1] = g_thread_create (test_threads_thread_func2, setter, TRUE, NULL);
-  threads[2] = g_thread_create (test_threads_thread_func3, setter, TRUE, NULL);
+  threads[0] = g_thread_try_new ("gst-check", test_threads_thread_func1,
+      setter, NULL);
+  threads[1] = g_thread_try_new ("gst-check", test_threads_thread_func2,
+      setter, NULL);
+  threads[2] = g_thread_try_new ("gst-check", test_threads_thread_func3,
+      setter, NULL);
 
   while (g_atomic_int_get (&threads_running) < 3)
     g_usleep (10);

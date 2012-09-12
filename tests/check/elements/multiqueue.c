@@ -415,14 +415,14 @@ run_output_order_test (gint n_linked)
   struct PadData pad_data[5];
   guint32 max_linked_id;
   guint32 eos_seen;
-  GMutex *mutex;
-  GCond *cond;
+  GMutex mutex;
+  GCond cond;
   gint i;
   const gint NPADS = 5;
   const gint NBUFFERS = 1000;
 
-  mutex = g_mutex_new ();
-  cond = g_cond_new ();
+  g_mutex_init (&mutex);
+  g_cond_init (&cond);
 
   pipe = gst_bin_new ("testbin");
 
@@ -470,8 +470,8 @@ run_output_order_test (gint n_linked)
     pad_data[i].eos_count_ptr = &eos_seen;
     pad_data[i].is_linked = (i < n_linked ? TRUE : FALSE);
     pad_data[i].n_linked = n_linked;
-    pad_data[i].cond = cond;
-    pad_data[i].mutex = mutex;
+    pad_data[i].cond = &cond;
+    pad_data[i].mutex = &mutex;
     pad_data[i].first_buf = TRUE;
     gst_pad_set_element_private (sinkpads[i], pad_data + i);
 
@@ -527,12 +527,12 @@ run_output_order_test (gint n_linked)
   }
 
   /* Wait while the buffers are processed */
-  g_mutex_lock (mutex);
+  g_mutex_lock (&mutex);
   /* We wait until EOS has been pushed on all linked pads */
   while (eos_seen < n_linked) {
-    g_cond_wait (cond, mutex);
+    g_cond_wait (&cond, &mutex);
   }
-  g_mutex_unlock (mutex);
+  g_mutex_unlock (&mutex);
 
   /* Clean up */
   for (i = 0; i < NPADS; i++) {
@@ -549,8 +549,8 @@ run_output_order_test (gint n_linked)
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
 
-  g_cond_free (cond);
-  g_mutex_free (mutex);
+  g_cond_clear (&cond);
+  g_mutex_clear (&mutex);
 }
 
 GST_START_TEST (test_output_order)
@@ -574,14 +574,14 @@ GST_START_TEST (test_sparse_stream)
   GstEvent *event;
   struct PadData pad_data[2];
   guint32 eos_seen, max_linked_id;
-  GMutex *mutex;
-  GCond *cond;
+  GMutex mutex;
+  GCond cond;
   gint i;
   const gint NBUFFERS = 100;
   GstSegment segment;
 
-  mutex = g_mutex_new ();
-  cond = g_cond_new ();
+  g_mutex_init (&mutex);
+  g_cond_init (&cond);
 
   pipe = gst_pipeline_new ("testbin");
   mq = gst_element_factory_make ("multiqueue", NULL);
@@ -626,8 +626,8 @@ GST_START_TEST (test_sparse_stream)
     pad_data[i].eos_count_ptr = &eos_seen;
     pad_data[i].is_linked = (i == 0) ? TRUE : FALSE;
     pad_data[i].n_linked = 1;
-    pad_data[i].cond = cond;
-    pad_data[i].mutex = mutex;
+    pad_data[i].cond = &cond;
+    pad_data[i].mutex = &mutex;
     pad_data[i].first_buf = TRUE;
     gst_pad_set_element_private (sinkpads[i], pad_data + i);
 
@@ -692,12 +692,12 @@ GST_START_TEST (test_sparse_stream)
   gst_pad_push_event (inputpads[1], event);
 
   /* Wait while the buffers are processed */
-  g_mutex_lock (mutex);
+  g_mutex_lock (&mutex);
   /* We wait until EOS has been pushed on all pads */
   while (eos_seen < 2) {
-    g_cond_wait (cond, mutex);
+    g_cond_wait (&cond, &mutex);
   }
-  g_mutex_unlock (mutex);
+  g_mutex_unlock (&mutex);
 
   /* Clean up */
   for (i = 0; i < 2; i++) {
@@ -714,8 +714,8 @@ GST_START_TEST (test_sparse_stream)
   gst_element_set_state (pipe, GST_STATE_NULL);
   gst_object_unref (pipe);
 
-  g_cond_free (cond);
-  g_mutex_free (mutex);
+  g_cond_clear (&cond);
+  g_mutex_clear (&mutex);
 }
 
 GST_END_TEST;

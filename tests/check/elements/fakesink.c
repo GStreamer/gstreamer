@@ -57,7 +57,8 @@ chain_async (GstPad * pad, GstBuffer * buffer)
   chain_data->buffer = buffer;
   chain_data->ret = GST_FLOW_ERROR;
 
-  thread = g_thread_create (chain_async_buffer, chain_data, TRUE, &error);
+  thread =
+      g_thread_try_new ("gst-check", chain_async_buffer, chain_data, &error);
   if (error != NULL) {
     g_warning ("could not create thread reason: %s", error->message);
     g_free (chain_data);

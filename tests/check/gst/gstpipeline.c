@@ -239,8 +239,8 @@ GST_START_TEST (test_bus)
 
 GST_END_TEST;
 
-static GMutex *probe_lock;
-static GCond *probe_cond;
+static GMutex probe_lock;
+static GCond probe_cond;
 
 static GstPadProbeReturn
 sink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
@@ -262,9 +262,9 @@ sink_pad_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     *first_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   }
 
-  g_mutex_lock (probe_lock);
-  g_cond_signal (probe_cond);
-  g_mutex_unlock (probe_lock);
+  g_mutex_lock (&probe_lock);
+  g_cond_signal (&probe_cond);
+  g_mutex_unlock (&probe_lock);
 
   return GST_PAD_PROBE_OK;
 }
@@ -301,9 +301,6 @@ GST_START_TEST (test_base_time)
   fail_unless (gst_element_get_start_time (pipeline) == 0,
       "stream time doesn't start off at 0");
 
-  probe_lock = g_mutex_new ();
-  probe_cond = g_cond_new ();
-
   /* test the first: that base time is being distributed correctly, timestamps
      are correct relative to the running clock and base time */
   {
@@ -316,10 +313,10 @@ GST_START_TEST (test_base_time)
             GST_CLOCK_TIME_NONE)
         == GST_STATE_CHANGE_SUCCESS, "failed state change");
 
-    g_mutex_lock (probe_lock);
+    g_mutex_lock (&probe_lock);
     while (observed == GST_CLOCK_TIME_NONE)
-      g_cond_wait (probe_cond, probe_lock);
-    g_mutex_unlock (probe_lock);
+      g_cond_wait (&probe_cond, &probe_lock);
+    g_mutex_unlock (&probe_lock);
 
     /* now something a little more than lower was distributed as the base time,
      * and the buffer was timestamped between 0 and upper-base
@@ -389,10 +386,10 @@ GST_START_TEST (test_base_time)
             GST_CLOCK_TIME_NONE)
         == GST_STATE_CHANGE_SUCCESS, "failed state change");
 
-    g_mutex_lock (probe_lock);
+    g_mutex_lock (&probe_lock);
     while (observed == GST_CLOCK_TIME_NONE)
-      g_cond_wait (probe_cond, probe_lock);
-    g_mutex_unlock (probe_lock);
+      g_cond_wait (&probe_cond, &probe_lock);
+    g_mutex_unlock (&probe_lock);
 
     /* now the base time should have advanced by more than WAIT_TIME compared
      * to what it was. The buffer will be timestamped between the last stream
@@ -461,10 +458,10 @@ GST_START_TEST (test_base_time)
             GST_CLOCK_TIME_NONE)
         == GST_STATE_CHANGE_SUCCESS, "failed state change");
 
-    g_mutex_lock (probe_lock);
+    g_mutex_lock (&probe_lock);
     while (observed == GST_CLOCK_TIME_NONE)
-      g_cond_wait (probe_cond, probe_lock);
-    g_mutex_unlock (probe_lock);
+      g_cond_wait (&probe_cond, &probe_lock);
+    g_mutex_unlock (&probe_lock);
 
     /* now the base time should be the same as it was, and the timestamp should
      * be more than WAIT_TIME past what it was.
@@ -535,7 +532,7 @@ GST_START_TEST (test_concurrent_create)
   int i;
 
   for (i = 0; i < G_N_ELEMENTS (threads); ++i) {
-    threads[i] = g_thread_create (pipeline_thread, NULL, TRUE, NULL);
+    threads[i] = g_thread_try_new ("gst-check", pipeline_thread, NULL, NULL);
   }
   for (i = 0; i < G_N_ELEMENTS (threads); ++i) {
     if (threads[i])

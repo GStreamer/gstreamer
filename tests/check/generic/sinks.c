@@ -760,16 +760,16 @@ GST_START_TEST (test_add_live)
 
 GST_END_TEST;
 
-static GMutex *blocked_lock;
-static GCond *blocked_cond;
+static GMutex blocked_lock;
+static GCond blocked_cond;
 
 static GstPadProbeReturn
 pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
-  g_mutex_lock (blocked_lock);
+  g_mutex_lock (&blocked_lock);
   GST_DEBUG ("srcpad blocked: %d, sending signal", info->type);
-  g_cond_signal (blocked_cond);
-  g_mutex_unlock (blocked_lock);
+  g_cond_signal (&blocked_cond);
+  g_mutex_unlock (&blocked_lock);
 
   return GST_PAD_PROBE_OK;
 }
@@ -781,9 +781,6 @@ GST_START_TEST (test_add_live2)
   GstState current, pending;
   GstPad *srcpad, *sinkpad;
   gulong id;
-
-  blocked_lock = g_mutex_new ();
-  blocked_cond = g_cond_new ();
 
   pipeline = gst_pipeline_new ("pipeline");
   src = gst_element_factory_make ("fakesrc", "src");
@@ -797,7 +794,7 @@ GST_START_TEST (test_add_live2)
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");
 
-  g_mutex_lock (blocked_lock);
+  g_mutex_lock (&blocked_lock);
 
   GST_DEBUG ("blocking srcpad");
   /* block source pad */
@@ -817,8 +814,8 @@ GST_START_TEST (test_add_live2)
   gst_bin_add (GST_BIN (pipeline), src);
 
   /* wait for pad blocked, this means the source is now PLAYING. */
-  g_cond_wait (blocked_cond, blocked_lock);
-  g_mutex_unlock (blocked_lock);
+  g_cond_wait (&blocked_cond, &blocked_lock);
+  g_mutex_unlock (&blocked_lock);
 
   GST_DEBUG ("linking pads");
 
@@ -845,8 +842,6 @@ GST_START_TEST (test_add_live2)
   ret = gst_element_set_state (pipeline, GST_STATE_NULL);
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not SUCCESS");
 
-  g_cond_free (blocked_cond);
-  g_mutex_free (blocked_lock);
   gst_object_unref (pipeline);
 }
 
@@ -952,7 +947,8 @@ GST_START_TEST (test_fake_eos)
   /* push EOS, this will block for up to 100 seconds, until the previous
    * buffer has finished. We therefore push it in another thread so we can do
    * something else while it blocks. */
-  thread = g_thread_create ((GThreadFunc) send_eos, sinkpad, TRUE, NULL);
+  thread =
+      g_thread_try_new ("gst-check", (GThreadFunc) send_eos, sinkpad, NULL);
   fail_if (thread == NULL, "no thread");
 
   /* wait a while so that the thread manages to start and push the EOS */
@@ -1096,7 +1092,8 @@ GST_START_TEST (test_async_done)
   /* last buffer, blocks because preroll queue is filled. Start the push in a
    * new thread so that we can check the position */
   GST_DEBUG ("starting thread");
-  thread = g_thread_create ((GThreadFunc) send_buffer, sinkpad, TRUE, NULL);
+  thread =
+      g_thread_try_new ("gst-check", (GThreadFunc) send_buffer, sinkpad, NULL);
   fail_if (thread == NULL, "no thread");
 
   GST_DEBUG ("waiting 1 second");
@@ -1207,7 +1204,8 @@ GST_START_TEST (test_async_done_eos)
    * position should now be 10 seconds. */
   GST_DEBUG ("pushing EOS");
   GST_DEBUG ("starting thread");
-  thread = g_thread_create ((GThreadFunc) send_eos, sinkpad, TRUE, NULL);
+  thread =
+      g_thread_try_new ("gst-check", (GThreadFunc) send_eos, sinkpad, NULL);
   fail_if (thread == NULL, "no thread");
 
   /* wait for preroll */
@@ -1228,17 +1226,17 @@ GST_START_TEST (test_async_done_eos)
 
 GST_END_TEST;
 
-static GMutex *preroll_lock;
-static GCond *preroll_cond;
+static GMutex preroll_lock;
+static GCond preroll_cond;
 
 static void
 test_async_false_seek_preroll (GstElement * elem, GstBuffer * buf,
     GstPad * pad, gpointer data)
 {
-  g_mutex_lock (preroll_lock);
+  g_mutex_lock (&preroll_lock);
   GST_DEBUG ("Got preroll buffer %p", buf);
-  g_cond_signal (preroll_cond);
-  g_mutex_unlock (preroll_lock);
+  g_cond_signal (&preroll_cond);
+  g_mutex_unlock (&preroll_lock);
 }
 
 static void
@@ -1253,9 +1251,6 @@ test_async_false_seek_handoff (GstElement * elem, GstBuffer * buf,
 GST_START_TEST (test_async_false_seek)
 {
   GstElement *pipeline, *source, *sink;
-
-  preroll_lock = g_mutex_new ();
-  preroll_cond = g_cond_new ();
 
   /* Create gstreamer elements */
   pipeline = gst_pipeline_new ("test-pipeline");
@@ -1278,55 +1273,49 @@ GST_START_TEST (test_async_false_seek)
   gst_element_link (source, sink);
 
   GST_DEBUG ("Now pausing");
-  g_mutex_lock (preroll_lock);
+  g_mutex_lock (&preroll_lock);
   gst_element_set_state (pipeline, GST_STATE_PAUSED);
 
   /* wait for preroll */
   GST_DEBUG ("wait for preroll");
-  g_cond_wait (preroll_cond, preroll_lock);
-  g_mutex_unlock (preroll_lock);
+  g_cond_wait (&preroll_cond, &preroll_lock);
+  g_mutex_unlock (&preroll_lock);
 
-  g_mutex_lock (preroll_lock);
+  g_mutex_lock (&preroll_lock);
   GST_DEBUG ("Seeking");
   fail_unless (gst_element_seek (pipeline, 1.0, GST_FORMAT_BYTES,
           GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1));
 
   GST_DEBUG ("wait for new preroll");
   /* this either prerolls or fails */
-  g_cond_wait (preroll_cond, preroll_lock);
-  g_mutex_unlock (preroll_lock);
+  g_cond_wait (&preroll_cond, &preroll_lock);
+  g_mutex_unlock (&preroll_lock);
 
   GST_DEBUG ("bring pipe to state NULL");
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   GST_DEBUG ("Deleting pipeline");
   gst_object_unref (GST_OBJECT (pipeline));
-
-  g_mutex_free (preroll_lock);
-  g_cond_free (preroll_cond);
 }
 
 GST_END_TEST;
 
-static GMutex *handoff_lock;
-static GCond *handoff_cond;
+static GMutex handoff_lock;
+static GCond handoff_cond;
 
 static void
 test_async_false_seek_in_playing_handoff (GstElement * elem, GstBuffer * buf,
     GstPad * pad, gpointer data)
 {
-  g_mutex_lock (handoff_lock);
+  g_mutex_lock (&handoff_lock);
   GST_DEBUG ("Got handoff buffer %p", buf);
-  g_cond_signal (handoff_cond);
-  g_mutex_unlock (handoff_lock);
+  g_cond_signal (&handoff_cond);
+  g_mutex_unlock (&handoff_lock);
 }
 
 GST_START_TEST (test_async_false_seek_in_playing)
 {
   GstElement *pipeline, *source, *sink;
-
-  handoff_lock = g_mutex_new ();
-  handoff_cond = g_cond_new ();
 
   /* Create gstreamer elements */
   pipeline = gst_pipeline_new ("test-pipeline");
@@ -1348,28 +1337,25 @@ GST_START_TEST (test_async_false_seek_in_playing)
   GST_DEBUG ("Now playing");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  g_mutex_lock (handoff_lock);
+  g_mutex_lock (&handoff_lock);
   GST_DEBUG ("wait for handoff buffer");
-  g_cond_wait (handoff_cond, handoff_lock);
-  g_mutex_unlock (handoff_lock);
+  g_cond_wait (&handoff_cond, &handoff_lock);
+  g_mutex_unlock (&handoff_lock);
 
   GST_DEBUG ("Seeking");
   fail_unless (gst_element_seek (source, 1.0, GST_FORMAT_BYTES,
           GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1));
 
-  g_mutex_lock (handoff_lock);
+  g_mutex_lock (&handoff_lock);
   GST_DEBUG ("wait for handoff buffer");
-  g_cond_wait (handoff_cond, handoff_lock);
-  g_mutex_unlock (handoff_lock);
+  g_cond_wait (&handoff_cond, &handoff_lock);
+  g_mutex_unlock (&handoff_lock);
 
   GST_DEBUG ("bring pipe to state NULL");
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   GST_DEBUG ("Deleting pipeline");
   gst_object_unref (GST_OBJECT (pipeline));
-
-  g_mutex_free (handoff_lock);
-  g_cond_free (handoff_cond);
 }
 
 GST_END_TEST;

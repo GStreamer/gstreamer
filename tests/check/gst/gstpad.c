@@ -1038,7 +1038,8 @@ test_pad_blocking_with_type (GstPadProbeType type)
   id = gst_pad_add_probe (pad, type, block_async_cb_return_ok, NULL, NULL);
 
 
-  thread = g_thread_create ((GThreadFunc) push_buffer_async, pad, TRUE, NULL);
+  thread = g_thread_try_new ("gst-check", (GThreadFunc) push_buffer_async,
+      pad, NULL);
 
   /* wait for the block */
   while (!gst_pad_is_blocking (pad)) {

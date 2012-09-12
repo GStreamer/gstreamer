@@ -334,8 +334,8 @@ event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
 typedef struct
 {
-  GMutex *lock;
-  GCond *cond;
+  GMutex lock;
+  GCond cond;
   gboolean signaled;
 } SignalData;
 
@@ -343,8 +343,8 @@ static void
 signal_data_init (SignalData * data)
 {
   GST_DEBUG ("init %p", data);
-  data->lock = g_mutex_new ();
-  data->cond = g_cond_new ();
+  g_mutex_init (&data->lock);
+  g_cond_init (&data->cond);
   data->signaled = FALSE;
 }
 
@@ -352,29 +352,29 @@ static void
 signal_data_cleanup (SignalData * data)
 {
   GST_DEBUG ("free %p", data);
-  g_mutex_free (data->lock);
-  g_cond_free (data->cond);
+  g_mutex_clear (&data->lock);
+  g_cond_clear (&data->cond);
 }
 
 static void
 signal_data_signal (SignalData * data)
 {
-  g_mutex_lock (data->lock);
+  g_mutex_lock (&data->lock);
   data->signaled = TRUE;
-  g_cond_broadcast (data->cond);
+  g_cond_broadcast (&data->cond);
   GST_DEBUG ("signaling %p", data);
-  g_mutex_unlock (data->lock);
+  g_mutex_unlock (&data->lock);
 }
 
 static void
 signal_data_wait (SignalData * data)
 {
-  g_mutex_lock (data->lock);
+  g_mutex_lock (&data->lock);
   GST_DEBUG ("signal wait %p", data);
   while (!data->signaled)
-    g_cond_wait (data->cond, data->lock);
+    g_cond_wait (&data->cond, &data->lock);
   GST_DEBUG ("signal wait done %p", data);
-  g_mutex_unlock (data->lock);
+  g_mutex_unlock (&data->lock);
 }
 
 static GstPadProbeReturn

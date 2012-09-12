@@ -41,16 +41,16 @@ GST_START_TEST (test_manual_iteration)
 {
   GList *l;
   guint32 cookie = 0;
-  GMutex *m;
+  GMutex m;
   GstIterator *iter;
   GstIteratorResult res;
   GValue item = { 0, };
   gint i = 0;
 
   l = make_list_of_ints (NUM_ELEMENTS);
-  m = g_mutex_new ();
+  g_mutex_init (&m);
 
-  iter = gst_iterator_new_list (G_TYPE_POINTER, m, &cookie, &l, NULL, NULL);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
 
   fail_unless (iter != NULL);
 
@@ -70,7 +70,7 @@ GST_START_TEST (test_manual_iteration)
   /* clean up */
   g_value_unset (&item);
   gst_iterator_free (iter);
-  g_mutex_free (m);
+  g_mutex_clear (&m);
   g_list_free (l);
 }
 
@@ -80,7 +80,7 @@ GST_START_TEST (test_resync)
 {
   GList *l;
   guint32 cookie = 0;
-  GMutex *m;
+  GMutex m;
   GstIterator *iter;
   GstIteratorResult res;
   GValue item = { 0, };
@@ -88,9 +88,9 @@ GST_START_TEST (test_resync)
   gboolean hacked_list = FALSE;
 
   l = make_list_of_ints (NUM_ELEMENTS);
-  m = g_mutex_new ();
+  g_mutex_init (&m);
 
-  iter = gst_iterator_new_list (G_TYPE_POINTER, m, &cookie, &l, NULL, NULL);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
 
   fail_unless (iter != NULL);
 
@@ -124,7 +124,7 @@ GST_START_TEST (test_resync)
   /* clean up */
   g_value_unset (&item);
   gst_iterator_free (iter);
-  g_mutex_free (m);
+  g_mutex_clear (&m);
   g_list_free (l);
 }
 
@@ -142,15 +142,15 @@ GST_START_TEST (test_fold)
 {
   GList *l;
   guint32 cookie = 0;
-  GMutex *m;
+  GMutex m;
   GstIterator *iter;
   GstIteratorResult res;
   gint i, expected;
   GValue ret = { 0, };
 
   l = make_list_of_ints (NUM_ELEMENTS);
-  m = g_mutex_new ();
-  iter = gst_iterator_new_list (G_TYPE_POINTER, m, &cookie, &l, NULL, NULL);
+  g_mutex_init (&m);
+  iter = gst_iterator_new_list (G_TYPE_POINTER, &m, &cookie, &l, NULL, NULL);
   fail_unless (iter != NULL);
 
   expected = 0;
@@ -167,7 +167,7 @@ GST_START_TEST (test_fold)
 
   /* clean up */
   gst_iterator_free (iter);
-  g_mutex_free (m);
+  g_mutex_clear (&m);
   g_list_free (l);
 }
 

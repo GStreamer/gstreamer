@@ -278,7 +278,7 @@ final_sinkpad_bufferalloc (GstPad * pad, guint64 offset, guint size,
     h->app_thread_prepped = FALSE;
     h->bufferalloc_blocked = TRUE;
 
-    h->app_thread = g_thread_create (app_thread_func, h, TRUE, NULL);
+    h->app_thread = g_thread_try_new ("gst-check", app_thread_func, h, NULL);
     fail_if (h->app_thread == NULL);
 
     /* Wait for the app thread to get ready to call release_request_pad(). */
