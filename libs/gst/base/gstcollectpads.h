@@ -313,8 +313,7 @@ void            gst_collect_pads_set_clip_function    (GstCollectPads *pads,
                                                        gpointer user_data);
 
 /* pad management */
-GstCollectData* gst_collect_pads_add_pad       (GstCollectPads *pads, GstPad *pad, guint size);
-GstCollectData* gst_collect_pads_add_pad_full  (GstCollectPads *pads, GstPad *pad, guint size,
+GstCollectData* gst_collect_pads_add_pad       (GstCollectPads *pads, GstPad *pad, guint size,
                                                 GstCollectDataDestroyNotify destroy_notify,
                                                 gboolean lock);
 gboolean        gst_collect_pads_remove_pad    (GstCollectPads *pads, GstPad *pad);

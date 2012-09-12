@@ -214,7 +214,6 @@ EXPORTS
 	gst_byte_writer_reset_and_get_buffer
 	gst_byte_writer_reset_and_get_data
 	gst_collect_pads_add_pad
-	gst_collect_pads_add_pad_full
 	gst_collect_pads_available
 	gst_collect_pads_clip_running_time
 	gst_collect_pads_event_default

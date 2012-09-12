@@ -140,10 +140,10 @@ teardown (void)
 GST_START_TEST (test_pad_add_remove)
 {
   ASSERT_CRITICAL (gst_collect_pads_add_pad (collect, sinkpad1,
-          sizeof (BadCollectData)));
+          sizeof (BadCollectData)), NULL, TRUE);
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad1, sizeof (TestData));
+      sinkpad1, sizeof (TestData), NULL, TRUE);
   fail_unless (data1 != NULL);
 
   fail_unless (gst_collect_pads_remove_pad (collect, sinkpad2) == FALSE);
@@ -158,11 +158,11 @@ GST_START_TEST (test_collect)
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad1, sizeof (TestData));
+      sinkpad1, sizeof (TestData), NULL, TRUE);
   fail_unless (data1 != NULL);
 
   data2 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad2, sizeof (TestData));
+      sinkpad2, sizeof (TestData), NULL, TRUE);
   fail_unless (data2 != NULL);
 
   buf1 = gst_buffer_new ();
@@ -209,11 +209,11 @@ GST_START_TEST (test_collect_eos)
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad1, sizeof (TestData));
+      sinkpad1, sizeof (TestData), NULL, TRUE);
   fail_unless (data1 != NULL);
 
   data2 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad2, sizeof (TestData));
+      sinkpad2, sizeof (TestData), NULL, TRUE);
   fail_unless (data2 != NULL);
 
   buf1 = gst_buffer_new ();
@@ -258,11 +258,11 @@ GST_START_TEST (test_collect_twice)
   GThread *thread1, *thread2;
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad1, sizeof (TestData));
+      sinkpad1, sizeof (TestData), NULL, TRUE);
   fail_unless (data1 != NULL);
 
   data2 = (TestData *) gst_collect_pads_add_pad (collect,
-      sinkpad2, sizeof (TestData));
+      sinkpad2, sizeof (TestData), NULL, TRUE);
   fail_unless (data2 != NULL);
 
   GST_INFO ("round 1");

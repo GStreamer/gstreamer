@@ -544,37 +544,6 @@ gst_collect_pads_set_clip_function (GstCollectPads * pads,
  * @pads: the collectspads to use
  * @pad: (transfer none): the pad to add
  * @size: the size of the returned #GstCollectData structure
- *
- * Add a pad to the collection of collect pads. The pad has to be
- * a sinkpad. The refcount of the pad is incremented. Use
- * gst_collect_pads_remove_pad() to remove the pad from the collection
- * again.
- *
- * You specify a size for the returned #GstCollectData structure
- * so that you can use it to store additional information.
- *
- * The pad will be automatically activated in push mode when @pads is
- * started.
- *
- * This function calls gst_collect_pads_add_pad_full() passing a value of NULL
- * for destroy_notify and TRUE for locked.
- *
- * MT safe.
- *
- * Returns: a new #GstCollectData to identify the new pad. Or NULL
- *   if wrong parameters are supplied.
- */
-GstCollectData *
-gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
-{
-  return gst_collect_pads_add_pad_full (pads, pad, size, NULL, TRUE);
-}
-
-/**
- * gst_collect_pads_add_pad_full:
- * @pads: the collectspads to use
- * @pad: (transfer none): the pad to add
- * @size: the size of the returned #GstCollectData structure
  * @destroy_notify: function to be called before the returned #GstCollectData
  * structure is freed
  * @lock: whether to lock this pad in usual waiting state
@@ -609,8 +578,8 @@ gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size)
  *   if wrong parameters are supplied.
  */
 GstCollectData *
-gst_collect_pads_add_pad_full (GstCollectPads * pads, GstPad * pad,
-    guint size, GstCollectDataDestroyNotify destroy_notify, gboolean lock)
+gst_collect_pads_add_pad (GstCollectPads * pads, GstPad * pad, guint size,
+    GstCollectDataDestroyNotify destroy_notify, gboolean lock)
 {
   GstCollectData *data;
 

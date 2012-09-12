@@ -645,7 +645,6 @@ GST_COLLECT_PADS_STREAM_UNLOCK
 gst_collect_pads_new
 
 gst_collect_pads_add_pad
-gst_collect_pads_add_pad_full
 gst_collect_pads_remove_pad
 
 gst_collect_pads_start
