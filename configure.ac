@@ -315,7 +315,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  dccp faceoverlay \
  fieldanalysis freeverb freeze frei0r \
  hdvparse inter ivfparse jp2kdecimator \
- kate liveadder librfb \
+ kate librfb \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect pnm real \
  sdi speed subenc stereo tta videofilters \
