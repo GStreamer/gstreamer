@@ -143,7 +143,7 @@ gst_error_get_core_error (GstCoreError code)
     case GST_CORE_ERROR_THREAD:
       return _("Internal GStreamer error: thread problem." FILE_A_BUG);
     case GST_CORE_ERROR_NEGOTIATION:
-      return _("Internal GStreamer error: negotiation problem." FILE_A_BUG);
+      return _("GStreamer error: negotiation problem.");
     case GST_CORE_ERROR_EVENT:
       return _("Internal GStreamer error: event problem." FILE_A_BUG);
     case GST_CORE_ERROR_SEEK:
@@ -155,7 +155,7 @@ gst_error_get_core_error (GstCoreError code)
     case GST_CORE_ERROR_MISSING_PLUGIN:
       return _("Your GStreamer installation is missing a plug-in.");
     case GST_CORE_ERROR_CLOCK:
-      return _("Internal GStreamer error: clock problem." FILE_A_BUG);
+      return _("GStreamer error: clock problem.");
     case GST_CORE_ERROR_DISABLED:
       return _("This application is trying to use GStreamer functionality "
           "that has been disabled.");
