@@ -383,7 +383,8 @@ gst_file_sink_open_file (GstFileSink * sink)
       sink->buffer = g_malloc (sink->buffer_size);
       buffer_size = sink->buffer_size;
     }
-#ifdef HAVE_STDIO_EXT_H
+    /* Cygwin does not have __fbufsize */
+#if defined(HAVE_STDIO_EXT_H) && !defined(__CYGWIN__)
     GST_DEBUG_OBJECT (sink, "change buffer size %u to %u, mode %d",
         (guint) __fbufsize (sink->file), buffer_size, mode);
 #else
