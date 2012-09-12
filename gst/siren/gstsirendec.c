@@ -71,8 +71,6 @@ gst_siren_dec_class_init (GstSirenDecClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstAudioDecoderClass *base_class = GST_AUDIO_DECODER_CLASS (klass);
 
-  GST_DEBUG ("Initializing Class");
-
   GST_DEBUG_CATEGORY_INIT (sirendec_debug, "sirendec", 0, "sirendec");
 
   gst_element_class_add_pad_template (element_class,
