@@ -59,11 +59,3 @@ GType gst_freeze_get_type (void);
 
 G_END_DECLS
 #endif
-/*
- * Local variables:
- * mode: c
- * file-style: k&r
- * c-basic-offset: 2
- * arch-tag: 559a2214-86a1-4c2f-b497-bdcc5f82acf1
- * End:
- */
