@@ -74,4 +74,18 @@ g_clear_object_inline(volatile GObject **object_ptr)
 #define g_static_rec_mutex_unlock(m)    g_rec_mutex_unlock(m)
 #endif
 
+#if !GLIB_CHECK_VERSION(2,31,2)
+static inline gboolean
+g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time)
+{
+    gint64 diff_time;
+    GTimeVal timeout;
+
+    diff_time = end_time - g_get_monotonic_time();
+    g_get_current_time(&timeout);
+    g_time_val_add(&timeout, diff_time > 0 ? diff_time : 0);
+    return g_cond_timed_wait(cond, mutex, &timeout);
+}
+#endif
+
 #endif /* GLIB_COMPAT_H */
