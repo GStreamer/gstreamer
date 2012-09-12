@@ -109,6 +109,8 @@ check_pad_template (GstPadTemplate * tmpl)
         case GST_VIDEO_FORMAT_RGB8P:
         case GST_VIDEO_FORMAT_I420_10BE:
         case GST_VIDEO_FORMAT_I420_10LE:
+        case GST_VIDEO_FORMAT_I422_10BE:
+        case GST_VIDEO_FORMAT_I422_10LE:
           GST_LOG ("Ignoring lack of support for format %s", fmt_str);
           break;
         default:
