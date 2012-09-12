@@ -1256,6 +1256,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           NULL);
       break;
 
+    case CODEC_ID_PRORES:
+      caps =
+          gst_ff_vid_caps_new (context, codec_id, encode, "video/x-prores",
+          NULL);
+      break;
+
     case CODEC_ID_MIMIC:
       caps =
           gst_ff_vid_caps_new (context, codec_id, encode, "video/x-mimic",
@@ -2239,6 +2245,8 @@ static const PixToFmt pixtofmttable[] = {
   /* GST_VIDEO_FORMAT_ARGB64, */
   /* GST_VIDEO_FORMAT_AYUV64, */
   /* GST_VIDEO_FORMAT_r210, */
+  {GST_VIDEO_FORMAT_I422_10LE, PIX_FMT_YUV422P10LE},
+  {GST_VIDEO_FORMAT_I422_10BE, PIX_FMT_YUV422P10BE},
 };
 
 GstVideoFormat
