@@ -19,6 +19,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := tutorial-1
 LOCAL_SRC_FILES := tutorial-1.c
 LOCAL_SHARED_LIBRARIES := gstreamer_android
+LOCAL_LDLIBS := -landroid
 include $(BUILD_SHARED_LIBRARY)
 
 GSTREAMER_PLUGINS = coreelements audiotestsrc videotestsrc ogg theora vorbis ffmpegcolorspace playback app audioconvert audiorate audioresample adder coreindexers gdp gio uridecodebin videorate videoscale typefindfunctions libvisual pango subparse

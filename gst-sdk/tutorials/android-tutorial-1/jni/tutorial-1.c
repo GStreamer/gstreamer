@@ -1,5 +1,7 @@
 #include <string.h>
 #include <jni.h>
+#include <android/native_window.h>
+#include <android/native_window_jni.h>
 #include <gst/gst.h>
 #include <pthread.h>
 
@@ -22,6 +24,7 @@ typedef struct _CustomData {
   jobject app;
   GstElement *pipeline;
   GMainLoop *main_loop;
+  ANativeWindow *native_window;
 } CustomData;
 
 static pthread_t gst_app_thread;
@@ -151,12 +154,32 @@ void gst_class_init (JNIEnv* env, jclass klass) {
   GST_DEBUG ("The MethodID for the setMessage method is %p", set_message_method_id);
 }
 
+void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  GST_DEBUG ("Received surface %p", surface);
+  if (data->native_window) {
+    GST_DEBUG ("Releasing previous native window %p", data->native_window);
+    ANativeWindow_release (data->native_window);
+  }
+  data->native_window = ANativeWindow_fromSurface(env, surface);
+  GST_DEBUG ("Got Native Window %p", data->native_window);
+}
+
+void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  GST_DEBUG ("Releasing Native Window %p", data->native_window);
+  ANativeWindow_release (data->native_window);
+  data->native_window = NULL;
+}
+
 static JNINativeMethod native_methods[] = {
   { "nativeInit", "()V", (void *) gst_native_init},
   { "nativeFinalize", "()V", (void *) gst_native_finalize},
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},
-  { "classInit", "()V", (void *) gst_class_init}
+  { "classInit", "()V", (void *) gst_class_init},
+  { "nativeSurfaceInit", "(Ljava/lang/Object;)V", (void *) gst_native_surface_init},
+  { "nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize}
 };
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
