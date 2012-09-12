@@ -13,6 +13,8 @@ libgsteglglessink_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	-lgstinterfaces-$(GST_MAJORMINOR)
 
 libgsteglglessink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+if !GST_PLUGIN_BUILD_STATIC
 libgsteglglessink_la_LIBTOOLFLAGS = --tag=disable-static
+endif
 
 noinst_HEADERS = gsteglglessink.h video_platform_wrapper.h

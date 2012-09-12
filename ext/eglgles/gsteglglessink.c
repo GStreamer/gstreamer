@@ -1664,9 +1664,9 @@ eglglessink_plugin_init (GstPlugin * plugin)
 #endif
 
 /* gstreamer looks for this structure to register eglglessinks */
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+GST_PLUGIN_DEFINE2 (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "eglglessink",
+    eglglessink,
     "EGL/GLES sink",
     eglglessink_plugin_init,
     VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
