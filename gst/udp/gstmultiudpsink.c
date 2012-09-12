@@ -638,8 +638,8 @@ gst_multiudpsink_setup_qos_dscp (GstMultiUDPSink * sink)
     if (setsockopt (fd, IPPROTO_IPV6, IPV6_TCLASS, &tos, sizeof (tos)) < 0) {
       GST_ERROR_OBJECT (sink, "could not set TCLASS: %s", g_strerror (errno));
     }
-  }
 #endif
+  }
 #endif
 }
 
