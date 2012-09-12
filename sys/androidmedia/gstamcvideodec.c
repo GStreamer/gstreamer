@@ -655,6 +655,16 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
+  if (crop_bottom)
+    height = height - (height - crop_bottom - 1);
+  if (crop_top)
+    height = height - crop_top;
+
+  if (crop_right)
+    width = width - (width - crop_right - 1);
+  if (crop_left)
+    width = width - crop_left;
+
   gst_format = gst_amc_color_format_to_video_format (color_format);
   if (gst_format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Unknown color format 0x%08x", color_format);
@@ -681,6 +691,9 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
   return TRUE;
 }
 
+/* The weird handling of cropping, alignment and everything is taken from
+ * platform/frameworks/media/libstagefright/colorconversion/ColorConversion.cpp
+ */
 static gboolean
 gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
     const GstAmcBufferInfo * buffer_info, GstBuffer * outbuf)
@@ -711,27 +724,34 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       gint i, j, height;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
+      gint row_length;
+
+      /* FIXME: This doesn't look like it could work with
+       * odd widths at all. Needs testing and fixing!
+       */
 
       for (i = 0; i < 3; i++) {
         if (i == 0) {
           src_stride = self->stride;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
         } else {
           src_stride = self->stride / 2;
+          src_stride = GST_ROUND_UP_16 (src_stride);
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
         }
 
         src = buf->data + buffer_info->offset;
-        if (i > 0)
+
+        if (i == 0) {
+          src += self->crop_top * self->stride;
+          src += self->crop_left;
+          row_length = self->width;
+        } else if (i > 0) {
           src += self->slice_height * self->stride;
+          src += self->crop_top * src_stride;
+          src += self->crop_left / 2;
+          row_length = self->width / 2;
+        }
         if (i == 2)
           src += (self->slice_height / 2) * (self->stride / 2);
 
@@ -739,7 +759,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, MIN (src_stride, dest_stride));
+          memcpy (dest, src, row_length);
           src += src_stride;
           dest += dest_stride;
         }
@@ -747,40 +767,77 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       ret = TRUE;
       break;
     }
-    case COLOR_FormatYUV420SemiPlanar:
     case COLOR_TI_FormatYUV420PackedSemiPlanar:
-    case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:
-    case COLOR_QCOM_FormatYUV420SemiPlanar:{
+    case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:{
       gint i, j, height;
       guint8 *src, *dest;
       gint src_stride, dest_stride;
+      gint row_length;
 
       for (i = 0; i < 2; i++) {
         if (i == 0) {
           src_stride = self->stride;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
         } else {
-          src_stride = self->stride / 2;
+          src_stride = self->stride;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
-
-          /* XXX: Try this if no stride was set */
-          if (src_stride == 0)
-            src_stride = dest_stride;
         }
 
         src = buf->data + buffer_info->offset;
-        if (i == 1)
-          src += self->slice_height * self->stride;
+        if (i == 0) {
+          row_length = self->width;
+        } else if (i == 1) {
+          src += (self->slice_height - self->crop_top / 2) * self->stride;
+          row_length = self->width;
+        }
 
         dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, MIN (src_stride, dest_stride));
+          memcpy (dest, src, row_length);
+          src += src_stride;
+          dest += dest_stride;
+        }
+      }
+      ret = TRUE;
+      break;
+    }
+    case COLOR_QCOM_FormatYUV420SemiPlanar:
+    case COLOR_FormatYUV420SemiPlanar:{
+      gint i, j, height;
+      guint8 *src, *dest;
+      gint src_stride, dest_stride;
+      gint row_length;
+
+      /* FIXME: This is untested! */
+
+      for (i = 0; i < 2; i++) {
+        if (i == 0) {
+          src_stride = self->stride;
+          dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
+        } else {
+          src_stride = self->stride;
+          dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
+        }
+
+        src = buf->data + buffer_info->offset;
+        if (i == 0) {
+          src += self->crop_top * self->stride;
+          src += self->crop_left;
+          row_length = self->width;
+        } else if (i == 1) {
+          src += self->slice_height * self->stride;
+          src += self->crop_top * self->stride;
+          src += self->crop_left;
+          row_length = self->width;
+        }
+
+        dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
+        height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
+
+        for (j = 0; j < height; j++) {
+          memcpy (dest, src, row_length);
           src += src_stride;
           dest += dest_stride;
         }
