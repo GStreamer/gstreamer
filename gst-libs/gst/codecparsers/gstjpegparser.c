@@ -20,6 +20,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 #include <gst/base/gstbytereader.h>
 #include "gstjpegparser.h"
 
