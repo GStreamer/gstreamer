@@ -40,12 +40,21 @@ GST_DEBUG_CATEGORY (gst_amc_debug);
 GQuark gst_amc_codec_info_quark = 0;
 
 static GList *codec_infos = NULL;
+#ifdef GST_AMC_IGNORE_UNKNOWN_COLOR_FORMATS
+static gboolean ignore_unknown_color_formats = TRUE;
+#else
+static gboolean ignore_unknown_color_formats = FALSE;
+#endif
+
 static GModule *java_module;
 static jint (*get_created_java_vms) (JavaVM ** vmBuf, jsize bufLen,
     jsize * nVMs);
 static jint (*create_java_vm) (JavaVM ** p_vm, JNIEnv ** p_env, void *vm_args);
 static JavaVM *java_vm;
 static gboolean started_java_vm = FALSE;
+
+static gboolean accepted_color_formats (GstAmcCodecType * type,
+    gboolean is_encoder);
 
 /* Global cached references */
 static struct
@@ -1811,6 +1820,22 @@ scan_codecs (GstPlugin * plugin)
         gst_codec_type->color_formats[k] = color_formats_elems[k];
       }
 
+      if (g_str_has_prefix (gst_codec_type->mime, "video/")) {
+        if (!n_elems) {
+          GST_ERROR ("No supported color formats for video codec");
+          valid_codec = FALSE;
+          goto next_supported_type;
+        }
+
+        if (!ignore_unknown_color_formats
+            && !accepted_color_formats (gst_codec_type, is_encoder)) {
+          GST_ERROR ("Codec has unknown color formats, ignoring");
+          valid_codec = FALSE;
+          g_assert_not_reached ();
+          goto next_supported_type;
+        }
+      }
+
       profile_levels =
           (*env)->GetObjectField (env, capabilities, profile_levels_id);
       if ((*env)->ExceptionCheck (env)) {
@@ -2070,6 +2095,35 @@ static const struct
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}
 };
+
+static gboolean
+accepted_color_formats (GstAmcCodecType * type, gboolean is_encoder)
+{
+  gint i, j;
+  gint accepted = 0, all = type->n_color_formats;
+
+  for (i = 0; i < type->n_color_formats; i++) {
+    gboolean found = FALSE;
+    /* We ignore this one */
+    if (type->color_formats[i] == COLOR_FormatAndroidOpaque)
+      all--;
+
+    for (j = 0; j < G_N_ELEMENTS (color_format_mapping_table); j++) {
+      if (color_format_mapping_table[j].color_format == type->color_formats[i]) {
+        found = TRUE;
+        break;
+      }
+    }
+
+    if (found)
+      accepted++;
+  }
+
+  if (is_encoder)
+    return accepted > 0;
+  else
+    return accepted == all && all > 0;
+}
 
 GstVideoFormat
 gst_amc_color_format_to_video_format (gint color_format)
@@ -2572,6 +2626,8 @@ register_codecs (GstPlugin * plugin)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  const gchar *ignore;
+
   GST_DEBUG_CATEGORY_INIT (gst_amc_debug, "amc", 0, "android-media-codec");
 
   pthread_key_create (&current_jni_env, gst_amc_detach_current_thread);
@@ -2582,7 +2638,18 @@ plugin_init (GstPlugin * plugin)
   gst_plugin_add_dependency_simple (plugin, NULL, "/etc", "media_codecs.xml",
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 
-  if (!get_java_classes () || !scan_codecs (plugin))
+  if (!get_java_classes ())
+    return FALSE;
+
+  /* Set this to TRUE to allow registering decoders that have
+   * any unknown color formats, or encoders that only have
+   * unknown color formats
+   */
+  ignore = g_getenv ("GST_AMC_IGNORE_UNKNOWN_COLOR_FORMATS");
+  if (ignore && strcmp (ignore, "yes") == 0)
+    ignore_unknown_color_formats = TRUE;
+
+  if (!scan_codecs (plugin))
     return FALSE;
 
   gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
