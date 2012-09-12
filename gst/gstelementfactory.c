@@ -686,6 +686,11 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
   klass =
       gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
+  if (klass == NULL) {
+    GST_ERROR_OBJECT (factory, "element factory is missing klass identifiers");
+    return res;
+  }
+
   /* Filter by element type first, as soon as it matches
    * one type, we skip all other tests */
   if (!res && (type & GST_ELEMENT_FACTORY_TYPE_SINK))
