@@ -1261,7 +1261,13 @@ gst_tag_list_add_valist (GstTagList * list, GstTagMergeMode mode,
        */
       return;
     }
-    gst_tag_list_add_value_internal (list, mode, tag, &value, info);
+    /* Facilitate GstBuffer -> GstSample transition */
+    if (G_UNLIKELY (info->type == GST_TYPE_SAMPLE &&
+            !GST_IS_SAMPLE (value.data[0].v_pointer))) {
+      g_warning ("Expected GstSample argument for tag '%s'", tag);
+    } else {
+      gst_tag_list_add_value_internal (list, mode, tag, &value, info);
+    }
     g_value_unset (&value);
     tag = va_arg (var_args, gchar *);
   }
