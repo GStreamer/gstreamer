@@ -375,7 +375,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (dec, "Creating decoder with %d channels, %d Hz",
         dec->n_channels, dec->sample_rate);
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
     gst_opus_common_log_channel_mapping_table (GST_ELEMENT (dec), opusdec_debug,
         "Mapping table", dec->n_channels, dec->channel_mapping);
 #endif

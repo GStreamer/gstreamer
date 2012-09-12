@@ -574,7 +574,7 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
       }
     }
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
     GST_INFO_OBJECT (enc,
         "Mapping tables built: %d channels, %d stereo streams", enc->n_channels,
         enc->n_stereo_streams);
@@ -641,7 +641,7 @@ gst_opus_enc_setup (GstOpusEnc * enc)
 {
   int error = OPUS_OK;
 
-#ifndef GST_DISABLE_DEBUG
+#ifndef GST_DISABLE_GST_DEBUG
   GST_DEBUG_OBJECT (enc,
       "setup: %d Hz, %d channels, %d stereo streams, family %d",
       enc->sample_rate, enc->n_channels, enc->n_stereo_streams,
