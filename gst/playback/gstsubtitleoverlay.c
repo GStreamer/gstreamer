@@ -191,11 +191,13 @@ _is_renderer (GstElementFactory * factory)
   klass = gst_element_factory_get_klass (factory);
   name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory));
 
-  if (strstr (klass, "Overlay/Subtitle") != NULL ||
-      strstr (klass, "Overlay/SubPicture") != NULL)
-    return TRUE;
-  if (strcmp (name, "textoverlay") == 0)
-    return TRUE;
+  if (klass != NULL) {
+    if (strstr (klass, "Overlay/Subtitle") != NULL ||
+        strstr (klass, "Overlay/SubPicture") != NULL)
+      return TRUE;
+    if (strcmp (name, "textoverlay") == 0)
+      return TRUE;
+  }
   return FALSE;
 }
 
@@ -206,7 +208,7 @@ _is_parser (GstElementFactory * factory)
 
   klass = gst_element_factory_get_klass (factory);
 
-  if (strstr (klass, "Parser/Subtitle") != NULL)
+  if (klass != NULL && strstr (klass, "Parser/Subtitle") != NULL)
     return TRUE;
   return FALSE;
 }
