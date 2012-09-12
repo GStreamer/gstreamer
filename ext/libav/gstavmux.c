@@ -434,7 +434,7 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   pad = gst_pad_new_from_template (templ, padname);
   collect_pad = (GstFFMpegMuxPad *)
       gst_collect_pads_add_pad (ffmpegmux->collect, pad,
-      sizeof (GstFFMpegMuxPad));
+      sizeof (GstFFMpegMuxPad), NULL, TRUE);
   collect_pad->padnum = ffmpegmux->context->nb_streams;
 
   /* small hack to put our own event pad function and chain up to collect pad */
