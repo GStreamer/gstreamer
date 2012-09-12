@@ -28,8 +28,7 @@
  * for the vaapisink element, for example.
  */
 
-#include "config.h"
-
+#include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>

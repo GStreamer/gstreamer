@@ -29,7 +29,7 @@
  * create its own internal window and render into it.
  */
 
-#include "config.h"
+#include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>

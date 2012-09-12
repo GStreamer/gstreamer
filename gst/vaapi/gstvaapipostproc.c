@@ -28,7 +28,7 @@
  * implemented.
  */
 
-#include "config.h"
+#include "gst/vaapi/sysdeps.h"
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>

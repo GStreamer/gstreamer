@@ -28,8 +28,7 @@
  * the vaapisink element.
  */
 
-#include "config.h"
-
+#include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapivideobuffer.h>
 #include <gst/video/videocontext.h>

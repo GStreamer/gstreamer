@@ -27,8 +27,7 @@
  * vaapidownload converts from VA surfaces to raw YUV pixels.
  */
 
-#include "config.h"
-
+#include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/videocontext.h>
