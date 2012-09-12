@@ -70,8 +70,8 @@ static gboolean gst_shape_wipe_video_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_shape_wipe_video_sink_setcaps (GstShapeWipe * self,
     GstCaps * caps);
-static GstCaps *gst_shape_wipe_video_sink_getcaps (GstPad * pad,
-    GstCaps * filter);
+static GstCaps *gst_shape_wipe_video_sink_getcaps (GstShapeWipe * self,
+    GstPad * pad, GstCaps * filter);
 static gboolean gst_shape_wipe_video_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static GstFlowReturn gst_shape_wipe_mask_sink_chain (GstPad * pad,
@@ -80,8 +80,8 @@ static gboolean gst_shape_wipe_mask_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_shape_wipe_mask_sink_setcaps (GstShapeWipe * self,
     GstCaps * caps);
-static GstCaps *gst_shape_wipe_mask_sink_getcaps (GstPad * pad,
-    GstCaps * filter);
+static GstCaps *gst_shape_wipe_mask_sink_getcaps (GstShapeWipe * self,
+    GstPad * pad, GstCaps * filter);
 static gboolean gst_shape_wipe_mask_sink_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
 static gboolean gst_shape_wipe_src_event (GstPad * pad, GstObject * parent,
@@ -324,9 +324,9 @@ invalid_caps:
 }
 
 static GstCaps *
-gst_shape_wipe_video_sink_getcaps (GstPad * pad, GstCaps * filter)
+gst_shape_wipe_video_sink_getcaps (GstShapeWipe * self, GstPad * pad,
+    GstCaps * filter)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
   GstCaps *templ, *ret, *tmp;
 
   if (gst_pad_has_current_caps (pad))
@@ -406,9 +406,6 @@ gst_shape_wipe_video_sink_getcaps (GstPad * pad, GstCaps * filter)
     ret = intersection;
   }
 done:
-
-  gst_object_unref (self);
-
   GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
@@ -448,9 +445,9 @@ done:
 }
 
 static GstCaps *
-gst_shape_wipe_mask_sink_getcaps (GstPad * pad, GstCaps * filter)
+gst_shape_wipe_mask_sink_getcaps (GstShapeWipe * self, GstPad * pad,
+    GstCaps * filter)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (gst_pad_get_parent (pad));
   GstCaps *ret, *tmp;
   guint i, n;
 
@@ -526,8 +523,6 @@ gst_shape_wipe_mask_sink_getcaps (GstPad * pad, GstCaps * filter)
   }
 
 done:
-  gst_object_unref (self);
-
   GST_LOG_OBJECT (pad, "Returning caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
@@ -628,7 +623,7 @@ static gboolean
 gst_shape_wipe_video_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
-  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
+  GstShapeWipe *self = (GstShapeWipe *) parent;
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
@@ -640,14 +635,14 @@ gst_shape_wipe_video_sink_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_shape_wipe_video_sink_getcaps (pad, filter);
+      caps = gst_shape_wipe_video_sink_getcaps (self, pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
       break;
     }
     default:
-      ret = gst_pad_peer_query (self->srcpad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
@@ -1086,6 +1081,7 @@ static gboolean
 gst_shape_wipe_mask_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
+  GstShapeWipe *self = GST_SHAPE_WIPE (parent);
   gboolean ret;
 
   GST_LOG_OBJECT (pad, "Handling query of type '%s'",
@@ -1097,7 +1093,7 @@ gst_shape_wipe_mask_sink_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_shape_wipe_mask_sink_getcaps (pad, filter);
+      caps = gst_shape_wipe_mask_sink_getcaps (self, pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
