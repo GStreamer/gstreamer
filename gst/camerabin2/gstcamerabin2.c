@@ -1178,13 +1178,11 @@ encodebin_element_added (GstElement * encodebin, GstElement * new_element,
     }
   }
 
-  /* TODO porting
-     if (gst_element_implements_interface (new_element, GST_TYPE_TAG_SETTER)) {
-     GstTagSetter *tagsetter = GST_TAG_SETTER (new_element);
+  if (GST_IS_TAG_SETTER (new_element)) {
+    GstTagSetter *tagsetter = GST_TAG_SETTER (new_element);
 
-     gst_tag_setter_set_tag_merge_mode (tagsetter, GST_TAG_MERGE_REPLACE);
-     }
-   */
+    gst_tag_setter_set_tag_merge_mode (tagsetter, GST_TAG_MERGE_REPLACE);
+  }
 }
 
 #define VIDEO_PAD 1
