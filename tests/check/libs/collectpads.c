@@ -140,7 +140,7 @@ teardown (void)
 GST_START_TEST (test_pad_add_remove)
 {
   ASSERT_CRITICAL (gst_collect_pads_add_pad (collect, sinkpad1,
-          sizeof (BadCollectData)), NULL, TRUE);
+          sizeof (BadCollectData), NULL, TRUE));
 
   data1 = (TestData *) gst_collect_pads_add_pad (collect,
       sinkpad1, sizeof (TestData), NULL, TRUE);
