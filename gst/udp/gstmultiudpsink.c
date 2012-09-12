@@ -44,6 +44,10 @@
 #include <sys/socket.h>
 #endif
 
+#ifndef G_OS_WIN32
+#include <netinet/in.h>
+#endif
+
 #include "gst/glib-compat-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (multiudpsink_debug);
