@@ -99,7 +99,8 @@ static GstStateChangeReturn gst_dvbsub_overlay_change_state (GstElement *
 #define gst_dvbsub_overlay_parent_class parent_class
 G_DEFINE_TYPE (GstDVBSubOverlay, gst_dvbsub_overlay, GST_TYPE_ELEMENT);
 
-static GstCaps *gst_dvbsub_overlay_getcaps (GstPad * pad, GstCaps * filter);
+static GstCaps *gst_dvbsub_overlay_getcaps (GstDVBSubOverlay * render,
+    GstPad * pad, GstCaps * filter);
 
 static GstFlowReturn gst_dvbsub_overlay_chain_video (GstPad * pad,
     GstObject * parent, GstBuffer * buf);
@@ -368,14 +369,14 @@ gst_dvbsub_overlay_query_src (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_dvbsub_overlay_getcaps (pad, filter);
+      caps = gst_dvbsub_overlay_getcaps (render, pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
       break;
     }
     default:
-      ret = gst_pad_peer_query (render->video_sinkpad, query);
+      ret = gst_pad_query_default (pad, parent, query);
       break;
   }
 
@@ -424,9 +425,9 @@ gst_dvbsub_overlay_event_src (GstPad * pad, GstObject * parent,
 }
 
 static GstCaps *
-gst_dvbsub_overlay_getcaps (GstPad * pad, GstCaps * filter)
+gst_dvbsub_overlay_getcaps (GstDVBSubOverlay * render, GstPad * pad,
+    GstCaps * filter)
 {
-  GstDVBSubOverlay *render = GST_DVBSUB_OVERLAY (gst_pad_get_parent (pad));
   GstPad *otherpad;
   GstCaps *caps, *templ;
 
@@ -452,8 +453,6 @@ gst_dvbsub_overlay_getcaps (GstPad * pad, GstCaps * filter)
     /* no peer, our padtemplate is enough then */
     caps = templ;
   }
-
-  gst_object_unref (render);
 
   return caps;
 }
@@ -921,6 +920,7 @@ static gboolean
 gst_dvbsub_overlay_query_video (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
+  GstDVBSubOverlay *render = (GstDVBSubOverlay *) parent;
   gboolean ret;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -929,7 +929,7 @@ gst_dvbsub_overlay_query_video (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_dvbsub_overlay_getcaps (pad, filter);
+      caps = gst_dvbsub_overlay_getcaps (render, pad, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
