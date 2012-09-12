@@ -61,12 +61,7 @@ enum
 /* assumption here: sizeof (gfloat) = 4 */
 #define GST_SPEED_AUDIO_CAPS \
   "audio/x-raw, " \
-    "format = (string) " GST_AUDIO_NE (F32) ", " \
-    "rate = (int) [ 8000, MAX ], " \
-    "channels = (int) [ 1, 2 ]; " \
-\
-  "audio/x-raw, " \
-    "format = (string) " GST_AUDIO_NE (S16) ", " \
+    "format = {" GST_AUDIO_NE (F32) ", " GST_AUDIO_NE (S16) "}, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, MAX ]"
 
@@ -101,7 +96,6 @@ static gboolean speed_sink_event (GstPad * pad, GstObject * parent,
 static gboolean speed_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 
-#define gst_speed_parent_class parent_class
 G_DEFINE_TYPE (GstSpeed, gst_speed, GST_TYPE_ELEMENT);
 
 static gboolean
@@ -122,37 +116,12 @@ speed_setcaps (GstPad * pad, GstCaps * caps)
 static gboolean
 speed_parse_caps (GstSpeed * filter, const GstCaps * caps)
 {
-  GstAudioInfo info;
-  gint rate, chans, width;
-
   g_return_val_if_fail (filter != NULL, FALSE);
   g_return_val_if_fail (caps != NULL, FALSE);
 
-  gst_audio_info_from_caps (&info, caps);
-
-  if (GST_AUDIO_INFO_IS_FLOAT (&info))
-    filter->format = GST_SPEED_FORMAT_FLOAT;
-  else if (GST_AUDIO_INFO_IS_INTEGER (&info))
-    filter->format = GST_SPEED_FORMAT_INT;
-  else
+  if (!gst_audio_info_from_caps (&filter->info, caps))
     return FALSE;
 
-  rate = info.rate;
-  width = GST_AUDIO_INFO_WIDTH (&info);
-  chans = info.channels;
-  if (!rate || !width || !chans)
-    return FALSE;
-
-  filter->rate = rate;
-  filter->width = width;
-  filter->channels = chans;
-
-  if (filter->format == GST_SPEED_FORMAT_FLOAT) {
-    filter->sample_size = filter->channels * filter->width / 8;
-  } else {
-    /* our caps only allow width == depth for now */
-    filter->sample_size = filter->channels * filter->width / 8;
-  }
 
   return TRUE;
 }
@@ -208,33 +177,32 @@ speed_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
-gst_speed_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
+gst_speed_convert (GstSpeed * filter, GstFormat src_format, gint64 src_value,
     GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean ret = TRUE;
   guint scale = 1;
-  GstSpeed *filter;
 
   if (src_format == *dest_format) {
     *dest_value = src_value;
     return TRUE;
   }
 
-  filter = GST_SPEED (GST_PAD_PARENT (pad));
-
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
         case GST_FORMAT_DEFAULT:
-          if (filter->sample_size == 0) {
+          if (GST_AUDIO_INFO_BPF (&filter->info) == 0) {
             ret = FALSE;
             break;
           }
-          *dest_value = src_value / filter->sample_size;
+          *dest_value = src_value / GST_AUDIO_INFO_BPF (&filter->info);
           break;
         case GST_FORMAT_TIME:
         {
-          gint byterate = filter->sample_size * filter->rate;
+          gint byterate =
+              GST_AUDIO_INFO_BPF (&filter->info) *
+              GST_AUDIO_INFO_RATE (&filter->info);
 
           if (byterate == 0) {
             ret = FALSE;
@@ -250,14 +218,15 @@ gst_speed_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_DEFAULT:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          *dest_value = src_value * filter->sample_size;
+          *dest_value = src_value * GST_AUDIO_INFO_BPF (&filter->info);
           break;
         case GST_FORMAT_TIME:
-          if (filter->rate == 0) {
+          if (GST_AUDIO_INFO_RATE (&filter->info) == 0) {
             ret = FALSE;
             break;
           }
-          *dest_value = src_value * GST_SECOND / filter->rate;
+          *dest_value =
+              src_value * GST_SECOND / GST_AUDIO_INFO_RATE (&filter->info);
           break;
         default:
           ret = FALSE;
@@ -266,10 +235,12 @@ gst_speed_convert (GstPad * pad, GstFormat src_format, gint64 src_value,
     case GST_FORMAT_TIME:
       switch (*dest_format) {
         case GST_FORMAT_BYTES:
-          scale = filter->sample_size;
+          scale = GST_AUDIO_INFO_BPF (&filter->info);
           /* fallthrough */
         case GST_FORMAT_DEFAULT:
-          *dest_value = src_value * scale * filter->rate / GST_SECOND;
+          *dest_value =
+              src_value * scale * GST_AUDIO_INFO_RATE (&filter->info) /
+              GST_SECOND;
           break;
         default:
           ret = FALSE;
@@ -318,7 +289,7 @@ speed_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             cur);
 
       /* convert to time format */
-      if (!gst_speed_convert (pad, rformat, cur, &conv_format, &cur)) {
+      if (!gst_speed_convert (filter, rformat, cur, &conv_format, &cur)) {
         ret = FALSE;
         break;
       }
@@ -327,7 +298,7 @@ speed_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       cur /= filter->speed;
 
       /* convert to time format */
-      if (!gst_speed_convert (pad, conv_format, cur, &format, &cur)) {
+      if (!gst_speed_convert (filter, conv_format, cur, &format, &cur)) {
         ret = FALSE;
         break;
       }
@@ -365,7 +336,7 @@ speed_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             end);
 
       /* convert to time format */
-      if (!gst_speed_convert (pad, rformat, end, &conv_format, &end)) {
+      if (!gst_speed_convert (filter, rformat, end, &conv_format, &end)) {
         ret = FALSE;
         break;
       }
@@ -374,7 +345,7 @@ speed_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       end /= filter->speed;
 
       /* convert to time format */
-      if (!gst_speed_convert (pad, conv_format, end, &format, &end)) {
+      if (!gst_speed_convert (filter, conv_format, end, &format, &end)) {
         ret = FALSE;
         break;
       }
@@ -447,8 +418,6 @@ gst_speed_init (GstSpeed * filter)
 
   filter->offset = 0;
   filter->timestamp = 0;
-  filter->sample_size = 0;
-
 }
 
 static inline guint
@@ -474,10 +443,11 @@ speed_chain_int16 (GstSpeed * filter, GstBuffer * in_buf, GstBuffer * out_buf,
   while (i < in_samples) {
     interp = i_float - floor (i_float);
 
-    out_data[j * filter->channels] =
-        lower * (1 - interp) + in_data[i * filter->channels] * interp;
+    out_data[j * GST_AUDIO_INFO_CHANNELS (&filter->info)] =
+        lower * (1 - interp) +
+        in_data[i * GST_AUDIO_INFO_CHANNELS (&filter->info)] * interp;
 
-    lower = in_data[i * filter->channels];
+    lower = in_data[i * GST_AUDIO_INFO_CHANNELS (&filter->info)];
 
     i_float += filter->speed;
     i = (guint) ceil (i_float);
@@ -513,10 +483,11 @@ speed_chain_float32 (GstSpeed * filter, GstBuffer * in_buf, GstBuffer * out_buf,
   while (i < in_samples) {
     interp = i_float - floor (i_float);
 
-    out_data[j * filter->channels] =
-        lower * (1 - interp) + in_data[i * filter->channels] * interp;
+    out_data[j * GST_AUDIO_INFO_CHANNELS (&filter->info)] =
+        lower * (1 - interp) +
+        in_data[i * GST_AUDIO_INFO_CHANNELS (&filter->info)] * interp;
 
-    lower = in_data[i * filter->channels];
+    lower = in_data[i * GST_AUDIO_INFO_CHANNELS (&filter->info)];
 
     i_float += filter->speed;
     i = (guint) ceil (i_float);
@@ -532,10 +503,8 @@ speed_chain_float32 (GstSpeed * filter, GstBuffer * in_buf, GstBuffer * out_buf,
 static gboolean
 speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstSpeed *filter;
+  GstSpeed *filter = GST_SPEED (parent);
   gboolean ret = FALSE;
-
-  filter = GST_SPEED (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:{
@@ -607,59 +576,50 @@ static GstFlowReturn
 speed_chain (GstPad * pad, GstObject * parent, GstBuffer * in_buf)
 {
   GstBuffer *out_buf;
-  GstSpeed *filter;
+  GstSpeed *filter = GST_SPEED (parent);
   guint c, in_samples, out_samples, out_size;
   GstFlowReturn flow;
   gsize size;
 
-  filter = GST_SPEED (parent);
-
-  if (G_UNLIKELY (filter->sample_size == 0 || filter->rate == 0)) {
-    flow = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
-  }
-
   if (G_UNLIKELY (filter->offset == GST_BUFFER_OFFSET_NONE)) {
-    filter->offset =
-        gst_util_uint64_scale_int (filter->timestamp, filter->rate, GST_SECOND);
+    filter->offset = gst_util_uint64_scale_int (filter->timestamp,
+        GST_AUDIO_INFO_RATE (&filter->info), GST_SECOND);
   }
 
-  /* buffersize has to be aligned by samplesize */
+  /* buffersize has to be aligned to a frame */
   out_size = ceil ((gfloat) gst_buffer_get_size (in_buf) / filter->speed);
-  out_size = ((out_size + filter->sample_size - 1) / filter->sample_size) *
-      filter->sample_size;
+  out_size = ((out_size + GST_AUDIO_INFO_BPF (&filter->info) - 1) /
+      GST_AUDIO_INFO_BPF (&filter->info)) * GST_AUDIO_INFO_BPF (&filter->info);
 
   out_buf = gst_buffer_new_and_alloc (out_size);
 
-  in_samples = gst_buffer_get_size (in_buf) / filter->sample_size;
+  in_samples = gst_buffer_get_size (in_buf) /
+      GST_AUDIO_INFO_BPS (&filter->info);
 
   out_samples = 0;
 
-  for (c = 0; c < filter->channels; ++c) {
-    if (filter->format == GST_SPEED_FORMAT_INT) {
+  for (c = 0; c < GST_AUDIO_INFO_CHANNELS (&filter->info); ++c) {
+    if (GST_AUDIO_INFO_IS_INTEGER (&filter->info))
       out_samples = speed_chain_int16 (filter, in_buf, out_buf, c, in_samples);
-    } else {
+    else
       out_samples =
           speed_chain_float32 (filter, in_buf, out_buf, c, in_samples);
-    }
   }
 
-  size = out_samples * filter->sample_size;
+  size = out_samples * GST_AUDIO_INFO_BPS (&filter->info);
   gst_buffer_set_size (out_buf, size);
 
   GST_BUFFER_OFFSET (out_buf) = filter->offset;
   GST_BUFFER_TIMESTAMP (out_buf) = filter->timestamp;
 
-  filter->offset += size / filter->sample_size;
-  filter->timestamp =
-      gst_util_uint64_scale_int (filter->offset, GST_SECOND, filter->rate);
+  filter->offset += size / GST_AUDIO_INFO_BPS (&filter->info);
+  filter->timestamp = gst_util_uint64_scale_int (filter->offset, GST_SECOND,
+      GST_AUDIO_INFO_RATE (&filter->info));
 
   /* make sure it's at least nominally a perfect stream */
   GST_BUFFER_DURATION (out_buf) =
       filter->timestamp - GST_BUFFER_TIMESTAMP (out_buf);
   flow = gst_pad_push (filter->srcpad, out_buf);
-
-done:
 
   if (G_UNLIKELY (flow != GST_FLOW_OK))
     GST_DEBUG_OBJECT (filter, "flow: %s", gst_flow_get_name (flow));
@@ -711,15 +671,14 @@ speed_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       speed->offset = GST_BUFFER_OFFSET_NONE;
       speed->timestamp = 0;
+      gst_audio_info_init (&speed->info);
       break;
     default:
       break;
   }
 
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  return GST_STATE_CHANGE_SUCCESS;
+  return GST_ELEMENT_CLASS (gst_speed_parent_class)->change_state (element,
+      transition);
 }
 
 static gboolean

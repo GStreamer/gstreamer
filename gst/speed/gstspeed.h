@@ -40,11 +40,6 @@ G_BEGIN_DECLS
 typedef struct _GstSpeed GstSpeed;
 typedef struct _GstSpeedClass GstSpeedClass;
 
-enum _GstSpeedFormat {
-  GST_SPEED_FORMAT_INT,
-  GST_SPEED_FORMAT_FLOAT
-};
-
 typedef enum _GstSpeedFormat GstSpeedFormat;
 
 struct _GstSpeed {
@@ -58,12 +53,7 @@ struct _GstSpeed {
   gint64         offset;
   gint64         timestamp;
 
-  guint          rate;
-  guint          channels;
-  guint          width;
-
-  guint          sample_size;
-  GstSpeedFormat format;
+  GstAudioInfo   info;
 };
 
 struct _GstSpeedClass {
