@@ -1411,11 +1411,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto HANDLE_ERROR;
   }
 
-  if (eglglessink->format == GST_VIDEO_FORMAT_UNKNOWN) {
-    GST_ERROR_OBJECT (eglglessink, "Got unknown video format caps");
-    goto HANDLE_ERROR;
-  }
-
   if (gst_eglglessink_get_compat_format_from_caps (eglglessink, caps) ==
       GST_EGLGLESSINK_IMAGE_NOFMT) {
     GST_ERROR_OBJECT (eglglessink, "Unsupported format");
