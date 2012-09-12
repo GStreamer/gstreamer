@@ -467,7 +467,7 @@ gst_schro_enc_set_format (GstVideoEncoder * base_video_encoder,
 
   profile = schro_encoder_setting_get_double (schro_enc->encoder, "profile");
   level = schro_encoder_setting_get_double (schro_enc->encoder, "level");
-  GST_ERROR ("profile=%d, level=%d", profile, level);
+
   out_caps = gst_caps_new_simple ("video/x-dirac",
       "profile", G_TYPE_STRING, get_profile_name (profile),
       "level", G_TYPE_STRING, get_level_name (level), NULL);
