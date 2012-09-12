@@ -2071,28 +2071,28 @@ gst_fraction_double (gint * n_out, gint * d_out, gboolean half)
   if (d == 0)
     return FALSE;
 
-  if (n == 0 || (n == G_MAXINT && d == 1))
+  if (n == 0)
     return TRUE;
 
   gcd = gst_util_greatest_common_divisor (n, d);
   n /= gcd;
   d /= gcd;
 
-  if (!half) {
-    if (G_MAXINT / 2 >= ABS (n)) {
-      n *= 2;
-    } else if (d >= 2) {
-      d /= 2;
-    } else {
-      return FALSE;
-    }
-  } else {
+  if (half) {
     if (G_MAXINT / 2 >= ABS (d)) {
       d *= 2;
-    } else if (n >= 2) {
+    } else if (n >= 2 && n != G_MAXINT) {
       n /= 2;
     } else {
-      return FALSE;
+      d = G_MAXINT;
+    }
+  } else {
+    if (G_MAXINT / 2 >= ABS (n)) {
+      n *= 2;
+    } else if (d >= 2 && d != G_MAXINT) {
+      d /= 2;
+    } else {
+      n = G_MAXINT;
     }
   }
 
