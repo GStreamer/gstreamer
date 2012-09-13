@@ -15,6 +15,10 @@
  */
 package com.gst_sdk_tutorials.tutorial_1;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 import android.app.Activity;
 import android.util.Log;
 import android.os.Bundle;
@@ -71,7 +75,18 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
 
     private void setMessage(final String message) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_message);
-        Log.d("GStreamer", "Received message " + message);
+        runOnUiThread (new Runnable() {
+          public void run() {
+            tv.setText(message);
+          }
+        });
+    }
+
+    private void setCurrentPosition(long position, long duration) {
+        final TextView tv = (TextView) this.findViewById(R.id.textview_time);
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("UTC"));
+        final String message = df.format(new Date (position)) + " / " + df.format(new Date (duration));
         runOnUiThread (new Runnable() {
           public void run() {
             tv.setText(message);

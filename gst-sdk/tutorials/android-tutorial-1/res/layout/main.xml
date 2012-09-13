@@ -29,6 +29,12 @@
             android:contentDescription="@string/button_stop"
             android:src="@android:drawable/ic_media_pause"
             android:text="@string/button_stop" />
+
+        <TextView
+            android:id="@+id/textview_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical" />
     </LinearLayout>
 
     <SurfaceView

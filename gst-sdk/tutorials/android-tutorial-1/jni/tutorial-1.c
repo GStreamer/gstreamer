@@ -26,6 +26,9 @@ typedef struct _CustomData {
   GstElement *pipeline;
   GMainLoop *main_loop;
   ANativeWindow *native_window;
+  gboolean playing;
+  gint64 position;
+  gint64 duration;
 } CustomData;
 
 static pthread_t gst_app_thread;
@@ -33,11 +36,12 @@ static pthread_key_t current_jni_env;
 static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
+static jmethodID set_current_position_method_id;
 
 /*
  * Private methods
  */
-static JNIEnv *gst_attach_current_thread (void) {
+static JNIEnv *attach_current_thread (void) {
   JNIEnv *env;
   JavaVMAttachArgs args;
 
@@ -54,26 +58,26 @@ static JNIEnv *gst_attach_current_thread (void) {
   return env;
 }
 
-static void gst_detach_current_thread (void *env) {
+static void detach_current_thread (void *env) {
   GST_DEBUG ("Detaching thread %p", g_thread_self ());
   (*java_vm)->DetachCurrentThread (java_vm);
 }
 
-static JNIEnv *gst_get_jni_env (void) {
+static JNIEnv *get_jni_env (void) {
   JNIEnv *env;
 
   if ((env = pthread_getspecific (current_jni_env)) == NULL) {
-    env = gst_attach_current_thread ();
+    env = attach_current_thread ();
     pthread_setspecific (current_jni_env, env);
   }
 
   return env;
 }
 
-static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  GST_DEBUG ("Message: %s", GST_MESSAGE_TYPE_NAME (msg));
-  JNIEnv *env = gst_get_jni_env ();
-  jstring jmessage = (*env)->NewStringUTF(env, GST_MESSAGE_TYPE_NAME (msg));
+static void set_message (const gchar *message, CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  GST_DEBUG ("Setting message to: %s", message);
+  jstring jmessage = (*env)->NewStringUTF(env, message);
   (*env)->CallVoidMethod (env, data->app, set_message_method_id, jmessage);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
@@ -82,7 +86,67 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   (*env)->DeleteLocalRef (env, jmessage);
 }
 
-static void *gst_app_function (void *userdata) {
+static void set_current_position (gint64 position, gint64 duration, CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  GST_DEBUG ("Setting current position/duration to: %lld / %lld (ms)", position, duration);
+  (*env)->CallVoidMethod (env, data->app, set_current_position_method_id, position, duration);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+  }
+}
+
+static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  GError *err;
+  gchar *debug_info;
+  gchar *message_string;
+
+  gst_message_parse_error (msg, &err, &debug_info);
+  message_string = g_strdup_printf ("Error received from element %s: %s", GST_OBJECT_NAME (msg->src), err->message);
+  g_clear_error (&err);
+  g_free (debug_info);
+  set_message (message_string, data);
+  g_free (message_string);
+  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+}
+
+static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  set_message (GST_MESSAGE_TYPE_NAME (msg), data);
+  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+}
+
+static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  GstState old_state, new_state, pending_state;
+  gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+  if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
+    set_message (gst_element_state_get_name (new_state), data);
+    data->playing = (new_state == GST_STATE_PLAYING);
+  }
+}
+
+static gboolean refresh_ui (CustomData *data) {
+  GstFormat fmt = GST_FORMAT_TIME;
+  gint64 current = -1;
+
+  /* We do not want to update anything unless we are in the PLAYING state */
+  if (!data->playing)
+    return TRUE;
+   
+  /* If we didn't know it yet, query the stream duration */
+  if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
+    if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
+      GST_WARNING ("Could not query current duration");
+    }
+  }
+   
+  if (gst_element_query_position (data->pipeline, &fmt, &data->position)) {
+    /* Java expects these values in milliseconds, and Gst provides nanoseconds */
+    set_current_position (data->position/1000000, data->duration/1000000, data);
+  }
+  return TRUE;
+}
+
+static void *app_function (void *userdata) {
   JavaVMAttachArgs args;
   GstBus *bus;
   GstMessage *msg;
@@ -90,15 +154,22 @@ static void *gst_app_function (void *userdata) {
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
-  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0", NULL);
+//  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0", NULL);
+//  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
+  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
+
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, data);
-  g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)error_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, data);
   gst_object_unref (bus);
-  
+
+  /* Register a function that GLib will call every second */
+  g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
+
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop...");
   data->main_loop = g_main_loop_new (NULL, FALSE);
@@ -116,11 +187,12 @@ static void *gst_app_function (void *userdata) {
  */
 void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = (CustomData *)g_malloc0 (sizeof (CustomData));
+  data->duration = GST_CLOCK_TIME_NONE;
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
-  pthread_create (&gst_app_thread, NULL, &gst_app_function, data);
+  pthread_create (&gst_app_thread, NULL, &app_function, data);
 }
 
 void gst_native_finalize (JNIEnv* env, jobject thiz) {
@@ -144,7 +216,7 @@ void gst_native_play (JNIEnv* env, jobject thiz) {
 
 void gst_native_pause (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
-  GST_DEBUG ("Setting state to READY");
+  GST_DEBUG ("Setting state to PAUSED");
   gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 }
 
@@ -153,6 +225,8 @@ void gst_class_init (JNIEnv* env, jclass klass) {
   GST_DEBUG ("The FieldID for the native_custom_data field is %p", custom_data_field_id);
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   GST_DEBUG ("The MethodID for the setMessage method is %p", set_message_method_id);
+  set_current_position_method_id = (*env)->GetMethodID (env, klass, "setCurrentPosition", "(JJ)V");
+  GST_DEBUG ("The MethodID for the setCurrentPosition method is %p", set_current_position_method_id);
 }
 
 void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
@@ -202,7 +276,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
   ret = (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
-  pthread_key_create (&current_jni_env, gst_detach_current_thread);
+  pthread_key_create (&current_jni_env, detach_current_thread);
 
   return JNI_VERSION_1_4;
 }
