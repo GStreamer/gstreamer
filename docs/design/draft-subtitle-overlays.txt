@@ -62,7 +62,7 @@ Currently playbin2 only supports subtitles on top of raw decoded video.
 It will try to find a suitable overlay element from the plugin registry
 based on the input subtitle caps and the rank. (It is assumed that we
 will be able to convert any raw video format into any format required
-by the overlay using a converter such as ffmpegcolorspace.)
+by the overlay using a converter such as videoconvert.)
 
 It will not render subtitles if the video sent to the sink is not
 raw YUV or RGB or if conversions have been disabled by setting the
