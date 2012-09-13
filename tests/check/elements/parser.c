@@ -123,7 +123,7 @@ buffer_verify_data (void *buffer, void *user_data)
     }
   }
   if (!vdata->no_metadata) {
-    fail_unless (GST_BUFFER_TIMESTAMP (buffer) == vdata->ts_counter);
+    fail_unless (GST_BUFFER_DTS (buffer) == vdata->ts_counter);
     fail_unless (GST_BUFFER_DURATION (buffer) != 0);
     fail_unless (GST_BUFFER_OFFSET (buffer) == vdata->offset_counter);
   }
