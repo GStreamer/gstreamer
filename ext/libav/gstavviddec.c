@@ -403,6 +403,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 {
   GstFFMpegVidDec *ffmpegdec;
   GstFFMpegVidDecClass *oclass;
+  GstClockTime latency = GST_CLOCK_TIME_NONE;
   gboolean ret = FALSE;
 
   ffmpegdec = (GstFFMpegVidDec *) decoder;
@@ -489,10 +490,19 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     gst_video_codec_state_unref (ffmpegdec->input_state);
   ffmpegdec->input_state = gst_video_codec_state_ref (state);
 
+  if (ffmpegdec->input_state->info.fps_n) {
+    GstVideoInfo *info = &ffmpegdec->input_state->info;
+    latency = gst_util_uint64_scale_ceil (
+        (ffmpegdec->context->has_b_frames) * GST_SECOND, info->fps_d,
+        info->fps_n);
+  }
+
   ret = TRUE;
 
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
+
+  gst_video_decoder_set_latency (decoder, latency, latency);
 
   return ret;
 
