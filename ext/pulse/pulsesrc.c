@@ -100,6 +100,7 @@ static guint gst_pulsesrc_delay (GstAudioSrc * asrc);
 static void gst_pulsesrc_reset (GstAudioSrc * src);
 
 static gboolean gst_pulsesrc_negotiate (GstBaseSrc * basesrc);
+static gboolean gst_pulsesrc_event (GstBaseSrc * basesrc, GstEvent * event);
 
 static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
     element, GstStateChange transition);
@@ -148,6 +149,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pulsesrc_change_state);
 
+  gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_pulsesrc_event);
   gstbasesrc_class->negotiate = GST_DEBUG_FUNCPTR (gst_pulsesrc_negotiate);
 
   gstaudiosrc_class->open = GST_DEBUG_FUNCPTR (gst_pulsesrc_open);
@@ -1294,6 +1296,21 @@ unlock_and_fail:
   fail:
     return FALSE;
   }
+}
+
+static gboolean
+gst_pulsesrc_event (GstBaseSrc * basesrc, GstEvent * event)
+{
+  GST_DEBUG_OBJECT (basesrc, "handle event %" GST_PTR_FORMAT, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_RECONFIGURE:
+      gst_pad_check_reconfigure (GST_BASE_SRC_PAD (basesrc));
+      break;
+    default:
+      break;
+  }
+  return GST_BASE_SRC_CLASS (parent_class)->event (basesrc, event);
 }
 
 /* This is essentially gst_base_src_negotiate_default() but the caps
