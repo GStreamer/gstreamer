@@ -269,6 +269,11 @@ mxf_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_set_timeout (tc_chain, 180);
 
+  /* FIXME: remove again once ported */
+  if (!gst_registry_check_feature_version (gst_registry_get (), "mxfmux", 1,
+          0, 0))
+    return s;
+
   tcase_add_test (tc_chain, test_mpeg2);
   tcase_add_test (tc_chain, test_raw_video_raw_audio);
   tcase_add_test (tc_chain, test_raw_video_stride_transform);
