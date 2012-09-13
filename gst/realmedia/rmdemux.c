@@ -963,7 +963,11 @@ gst_rmdemux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GstRMDemux *rmdemux = GST_RMDEMUX (parent);
 
   if (rmdemux->base_ts == -1) {
-    rmdemux->base_ts = GST_BUFFER_TIMESTAMP (buffer);
+    if (GST_BUFFER_DTS_IS_VALID (buffer))
+      rmdemux->base_ts = GST_BUFFER_DTS (buffer);
+    else
+      rmdemux->base_ts = GST_BUFFER_PTS (buffer);
+
     GST_LOG_OBJECT (rmdemux, "base_ts %" GST_TIME_FORMAT,
         GST_TIME_ARGS (rmdemux->base_ts));
   }
@@ -1947,8 +1951,10 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
     gst_buffer_map (b, &map, GST_MAP_READ);
 
-    if (p == 0)
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (b);
+    if (p == 0) {
+      GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (b);
+      GST_BUFFER_DTS (outbuf) = GST_BUFFER_DTS (b);
+    }
 
     for (x = 0; x < packet_size / leaf_size; ++x) {
       guint idx;
@@ -1971,8 +1977,9 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
         gst_buffer_copy_region (outbuf, GST_BUFFER_COPY_ALL, p * packet_size,
         packet_size);
 
-    GST_LOG_OBJECT (rmdemux, "pushing buffer timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (subbuf)));
+    GST_LOG_OBJECT (rmdemux, "pushing buffer dts %" GST_TIME_FORMAT ", pts %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_DTS (subbuf)),
+        GST_TIME_ARGS (GST_BUFFER_PTS (subbuf)));
 
     if (stream->discont) {
       GST_BUFFER_FLAG_SET (subbuf, GST_BUFFER_FLAG_DISCONT);
@@ -2027,7 +2034,7 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
   g_ptr_array_set_size (stream->subpackets, 0);
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp = GST_BUFFER_PTS (buf);
 
   frames = (map.data[1] & 0xf0) >> 4;
   index = 2 * frames + 2;
@@ -2036,8 +2043,10 @@ gst_rmdemux_descramble_mp4a_audio (GstRMDemux * rmdemux,
     guint len = (map.data[i * 2 + 2] << 8) | map.data[i * 2 + 3];
 
     outbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, index, len);
-    if (i == 0)
-      GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+    if (i == 0) {
+      GST_BUFFER_PTS (outbuf) = timestamp;
+      GST_BUFFER_DTS (outbuf) = timestamp;
+    }
 
     index += len;
 
@@ -2076,15 +2085,18 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
   for (p = 0; p < height; ++p) {
     GstBuffer *b = g_ptr_array_index (stream->subpackets, p);
 
-    if (p == 0)
-      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (b);
+    if (p == 0) {
+      GST_BUFFER_DTS (outbuf) = GST_BUFFER_DTS (b);
+      GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (b);
+    }
 
     gst_buffer_extract (b, 0, outmap.data + packet_size * p, packet_size);
   }
   gst_buffer_unmap (outbuf, &outmap);
 
-  GST_LOG_OBJECT (rmdemux, "pushing buffer timestamp %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
+  GST_LOG_OBJECT (rmdemux, "pushing buffer dts %" GST_TIME_FORMAT ", pts %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_DTS (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (outbuf)));
 
   if (stream->discont) {
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
@@ -2145,136 +2157,6 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
   }
 
   return ret;
-}
-
-static GstClockTime
-gst_rmdemux_fix_timestamp (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
-    guint8 * data, GstClockTime timestamp)
-{
-  guint8 frame_type;
-  guint16 seq;
-  GstClockTime ts = timestamp;
-
-  if (timestamp == GST_CLOCK_TIME_NONE)
-    goto done;
-
-  /* only adjust when we have a stream with B frames */
-  if (stream->format < 0x20200002)
-    goto done;
-
-  /* Fix timestamp. */
-  switch (stream->fourcc) {
-    case GST_RM_VDO_RV10:
-      goto done;
-    case GST_RM_VDO_RV20:
-    {
-      /*
-       * Bit  1- 2: frame type
-       * Bit  3- 9: ?
-       * Bit 10-22: sequence number
-       * Bit 23-32: ?
-       */
-      frame_type = (data[0] >> 6) & 0x03;
-      seq = ((data[1] & 0x7f) << 6) + ((data[2] & 0xfc) >> 2);
-      break;
-    }
-    case GST_RM_VDO_RV30:
-    {
-      /*
-       * Bit  1- 2: ?
-       * Bit     3: skip packet if 1
-       * Bit  4- 5: frame type
-       * Bit  6-12: ?
-       * Bit 13-25: sequence number
-       * Bit 26-32: ?
-       */
-      frame_type = (data[0] >> 3) & 0x03;
-      seq = ((data[1] & 0x0f) << 9) + (data[2] << 1) + ((data[3] & 0x80) >> 7);
-      break;
-    }
-    case GST_RM_VDO_RV40:
-    {
-      /*
-       * Bit     1: skip packet if 1
-       * Bit  2- 3: frame type
-       * Bit  4-13: ?
-       * Bit 14-26: sequence number
-       * Bit 27-32: ?
-       */
-      frame_type = (data[0] >> 5) & 0x03;
-      seq = ((data[1] & 0x07) << 10) + (data[2] << 2) + ((data[3] & 0xc0) >> 6);
-      break;
-    }
-    default:
-      goto unknown_version;
-  }
-
-  switch (frame_type) {
-    case 0:
-    case 1:
-    {
-      GST_LOG_OBJECT (rmdemux, "I frame %d", frame_type);
-      /* I frame */
-      if (stream->next_ts == -1)
-        stream->next_ts = timestamp;
-      else
-        timestamp = stream->next_ts;
-      stream->last_ts = stream->next_ts;
-      stream->next_ts = ts;
-      stream->last_seq = stream->next_seq;
-      stream->next_seq = seq;
-      break;
-    }
-    case 2:
-    {
-      GST_LOG_OBJECT (rmdemux, "P frame");
-      /* P frame */
-      timestamp = stream->last_ts = stream->next_ts;
-      if (seq < stream->next_seq)
-        stream->next_ts += (seq + 0x2000 - stream->next_seq) * GST_MSECOND;
-      else
-        stream->next_ts += (seq - stream->next_seq) * GST_MSECOND;
-      stream->last_seq = stream->next_seq;
-      stream->next_seq = seq;
-      break;
-    }
-    case 3:
-    {
-      GST_LOG_OBJECT (rmdemux, "B frame");
-      /* B frame */
-      if (seq < stream->last_seq) {
-        timestamp =
-            (seq + 0x2000 - stream->last_seq) * GST_MSECOND + stream->last_ts;
-      } else {
-        timestamp = (seq - stream->last_seq) * GST_MSECOND + stream->last_ts;
-      }
-      break;
-    }
-    default:
-      goto unknown_frame_type;
-  }
-
-done:
-  GST_LOG_OBJECT (rmdemux,
-      "timestamp %" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT, GST_TIME_ARGS (ts),
-      GST_TIME_ARGS (timestamp));
-
-  return timestamp;
-
-  /* Errors */
-unknown_version:
-  {
-    GST_ELEMENT_ERROR (rmdemux, STREAM, DECODE,
-        ("Unknown version: %i.", stream->version), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-unknown_frame_type:
-  {
-    GST_ELEMENT_ERROR (rmdemux, STREAM, DECODE, ("Unknown frame type %d.",
-            frame_type), (NULL));
-    return GST_FLOW_ERROR;
-  }
 }
 
 #define PARSE_NUMBER(data, size, number, label) \
@@ -2459,12 +2341,11 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
         if (rmdemux->base_ts != -1)
           timestamp += rmdemux->base_ts;
       }
-      timestamp =
-          gst_rmdemux_fix_timestamp (rmdemux, stream, outdata, timestamp);
-
       gst_buffer_unmap (out, &outmap);
 
-      GST_BUFFER_TIMESTAMP (out) = timestamp;
+      /* video has DTS */
+      GST_BUFFER_DTS (out) = timestamp;
+      GST_BUFFER_PTS (out) = GST_CLOCK_TIME_NONE;
 
       GST_LOG_OBJECT (rmdemux, "pushing timestamp %" GST_TIME_FORMAT,
           GST_TIME_ARGS (timestamp));
@@ -2532,7 +2413,8 @@ gst_rmdemux_parse_audio_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   if (rmdemux->base_ts != -1)
     timestamp += rmdemux->base_ts;
 
-  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
+  GST_BUFFER_PTS (buffer) = timestamp;
+  GST_BUFFER_DTS (buffer) = timestamp;
 
   if (stream->needs_descrambling) {
     GST_LOG_OBJECT (rmdemux, "descramble timestamp %" GST_TIME_FORMAT,
