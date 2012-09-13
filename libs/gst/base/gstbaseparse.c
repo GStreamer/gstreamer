@@ -246,6 +246,7 @@ struct _GstBaseParsePrivate
 
   guint min_frame_size;
   gboolean passthrough;
+  gboolean pts_interpolate;
   gboolean syncable;
   gboolean has_timing_info;
   guint fps_num, fps_den;
@@ -725,6 +726,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->next_dts = 0;
   parse->priv->syncable = TRUE;
   parse->priv->passthrough = FALSE;
+  parse->priv->pts_interpolate = TRUE;
   parse->priv->has_timing_info = FALSE;
   parse->priv->post_min_bitrate = TRUE;
   parse->priv->post_avg_bitrate = TRUE;
@@ -1910,7 +1912,7 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
   if (GST_BUFFER_DTS_IS_VALID (buffer) && GST_BUFFER_DURATION_IS_VALID (buffer)) {
     parse->priv->next_dts =
         GST_BUFFER_DTS (buffer) + GST_BUFFER_DURATION (buffer);
-    if (GST_BUFFER_PTS_IS_VALID (buffer)) {
+    if (parse->priv->pts_interpolate && GST_BUFFER_PTS_IS_VALID (buffer)) {
       GstClockTime next_pts =
           GST_BUFFER_PTS (buffer) + GST_BUFFER_DURATION (buffer);
       if (next_pts >= parse->priv->next_dts)
@@ -3334,6 +3336,25 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
 {
   parse->priv->passthrough = passthrough;
   GST_INFO_OBJECT (parse, "passthrough: %s", (passthrough) ? "yes" : "no");
+}
+
+/**
+ * gst_base_parse_set_pts_interpolation:
+ * @parse: a #GstBaseParse
+ * @passthrough: %TRUE if parser should interpolate PTS timestamps
+ *
+ * By default, the base class will guess PTS timestamps using a simple
+ * interpolation (previous timestamp + duration), which is incorrect for
+ * data streams with reordering, where PTS can go backward. Sub-classes
+ * implementing such formats should disable PTS interpolation.
+ */
+void
+gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
+    gboolean pts_interpolate)
+{
+  parse->priv->pts_interpolate = pts_interpolate;
+  GST_INFO_OBJECT (parse, "PTS interpolation: %s",
+      (pts_interpolate) ? "yes" : "no");
 }
 
 /**
