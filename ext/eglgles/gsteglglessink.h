@@ -63,11 +63,13 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EGLGLESSINK))
 #define GST_IS_EGLGLESSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EGLGLESSINK))
-/* XXX: Harcoded format. Should be runtime built latter on. */
-#define GST_EGLGLESSINK_IMAGE_RGB24 1
-#define GST_EGLGLESSINK_IMAGE_NOFMT -1
 
-#define GST_EGLGLESSINK_EGL_MIN_VERSION 1 
+#define GST_EGLGLESSINK_IMAGE_NOFMT 0
+#define GST_EGLGLESSINK_IMAGE_RGB888 1
+#define GST_EGLGLESSINK_IMAGE_RGB565 2
+#define GST_EGLGLESSINK_IMAGE_RGBA8888 3 
+
+#define GST_EGLGLESSINK_EGL_MIN_VERSION 1
 
 typedef struct _GstEglGlesBuffer GstEglGlesBuffer;
 typedef struct _GstEglGlesBufferClass GstEglGlesBufferClass;
@@ -95,6 +97,7 @@ typedef struct _coord
 struct _GstEglGlesImageFmt
 {
   gint fmt;
+  const EGLint *eglcfg;
   GstCaps *caps;
 };
 
@@ -124,6 +127,7 @@ struct _GstEglGlesSink
    * format/caps at init.
    */
   GList *supported_fmts;
+  GstEglGlesImageFmt *selected_fmt;
 
   GMutex *flow_lock;
 

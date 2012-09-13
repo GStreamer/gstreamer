@@ -45,8 +45,8 @@
 /**
  * SECTION:element-eglglessink
  *
- * This is a vout sink using EGL/GLES. 
- * 
+ * This is a vout sink using EGL/GLES.
+ *
  * <refsect2>
  * <title>Rationale on OpenGL ES version</title>
  * <para>
@@ -69,7 +69,7 @@
  * available.
  * </para>
  * |[
- * gst-launch -v -m videotestsrc ! eglglessink force_rendering_slow=TRUE 
+ * gst-launch -v -m videotestsrc ! eglglessink force_rendering_slow=TRUE
  * ]|
  * </refsect2>
  *
@@ -157,14 +157,26 @@ static const char *frag_prog = {
 /* Input capabilities.
  *
  * OpenGL ES Standard does not mandate YUV support
- *
- * XXX: Extend RGB support to a set. Maybe implement YUV too.
+ * so we are going to stick to RGB for the time being
  */
 static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB));
+    GST_STATIC_CAPS ("video/x-raw-rgb, "
+        "framerate = (fraction) [ 0, MAX ], "
+        "width = (int) [ 1, MAX ], "
+        "height = (int) [ 1, MAX ], "
+        "bpp = 24; "
+        "video/x-raw-rgb, "
+        "framerate = (fraction) [ 0, MAX ], "
+        "width = (int) [ 1, MAX ], "
+        "height = (int) [ 1, MAX ], "
+        "depth = (int) 24, "
+        "bpp = 32; "
+        "video/x-raw-rgb, "
+        "framerate = (fraction) [ 0, MAX ], "
+        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], " "bpp = 16"));
 
 /* Filter signals and args */
 enum
@@ -183,11 +195,26 @@ enum
   PROP_FORCE_RENDERING_SLOW
 };
 
-/* XXX: Harcoded for now */
-static EGLint eglglessink_RGB24_config[] = {
+/* will probably move elsewhere */
+static EGLint eglglessink_RGBA8888_config[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
+  EGL_ALPHA_SIZE, 8,
+  EGL_NONE
+};
+
+static EGLint eglglessink_RGB888_config[] = {
+  EGL_RED_SIZE, 8,
+  EGL_GREEN_SIZE, 8,
+  EGL_BLUE_SIZE, 8,
+  EGL_NONE
+};
+
+static EGLint eglglessink_RGB565_config[] = {
+  EGL_RED_SIZE, 5,
+  EGL_GREEN_SIZE, 6,
+  EGL_BLUE_SIZE, 5,
   EGL_NONE
 };
 
@@ -244,6 +271,7 @@ static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
     GstBuffer * buf);
 static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
+static void gst_eglglessink_wipe_fmt (gpointer data);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -260,7 +288,7 @@ GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
      static EGLint *gst_eglglesbuffer_create_native (EGLNativeWindowType win,
     EGLConfig config, EGLNativeDisplayType display, const EGLint * egl_attribs)
 {
-  EGLNativePixmapType pix;
+  EGLNativePixmapType pix = 0;
   EGLSurface pix_surface;
   EGLint *buffer = NULL;
 
@@ -488,7 +516,7 @@ gst_eglglesbuffer_get_type (void)
 
 /* This function is sort of meaningless right now as we
  * Only Support one image format / caps but was left here
- * as a reference for future improvements. 
+ * as a reference for future improvements.
  */
 static gint
 gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
@@ -509,12 +537,14 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
         GST_PTR_FORMAT " and %" GST_PTR_FORMAT, format->caps, caps);
     if (format) {
       if (gst_caps_can_intersect (caps, format->caps)) {
+        eglglessink->selected_fmt = format;
         return format->fmt;
       }
     }
     list = g_list_next (list);
   }
 
+  eglglessink->selected_fmt = NULL;
   return GST_EGLGLESSINK_IMAGE_NOFMT;
 }
 
@@ -652,7 +682,7 @@ gst_eglglessink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
       intersection = gst_caps_intersect (eglglessink->current_caps, new_caps);
     }
 
-    /* Try with different dimensions */
+    /* Try with different dimensions and RGB formats */
     if (gst_caps_is_empty (intersection))
       intersection =
           gst_eglglessink_different_size_suggestion (eglglessink, new_caps);
@@ -750,13 +780,6 @@ gst_eglglessink_start (GstBaseSink * sink)
   eglglessink->flow_lock = g_mutex_new ();
   g_mutex_lock (eglglessink->flow_lock);
 
-  ret = gst_eglglessink_init_egl_display (eglglessink);
-
-  if (!ret) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL display");
-    goto HANDLE_ERROR;
-  }
-
   ret = platform_wrapper_init ();
 
   if (!ret) {
@@ -764,17 +787,30 @@ gst_eglglessink_start (GstBaseSink * sink)
     goto HANDLE_ERROR;
   }
 
-  /* Init supported caps list (Right now we just harcode the only one we support)
-   * XXX: Not sure this is the right place to do it.
-   */
-  format = g_new0 (GstEglGlesImageFmt, 1);
-  if (format) {
-    format->fmt = GST_EGLGLESSINK_IMAGE_RGB24;
-    format->caps = gst_caps_copy (gst_pad_get_pad_template_caps
-        (GST_VIDEO_SINK_PAD (eglglessink)));
-    eglglessink->supported_fmts = g_list_append
-        (eglglessink->supported_fmts, format);
-  }
+  /* Init supported format/caps list */
+  format = g_new0 (GstEglGlesImageFmt, 2);
+
+  format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
+  format->eglcfg = eglglessink_RGB888_config;
+  format->caps = gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 24,
+      NULL);
+  eglglessink->supported_fmts = g_list_append
+      (eglglessink->supported_fmts, format);
+
+  format++;
+  format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
+  format->eglcfg = eglglessink_RGB565_config;
+  format->caps = gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 16,
+      NULL);
+  eglglessink->supported_fmts = g_list_append
+      (eglglessink->supported_fmts, format);
+
+  format++;
+  format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
+  format->eglcfg = eglglessink_RGBA8888_config;
+  format->caps = gst_caps_new_simple ("video/x-raw-rgb", "depth", G_TYPE_INT, 24, "bpp", G_TYPE_INT, 32, NULL); /* proly doesn't work for rgba */
+  eglglessink->supported_fmts = g_list_append
+      (eglglessink->supported_fmts, format);
 
   g_mutex_unlock (eglglessink->flow_lock);
 
@@ -785,6 +821,14 @@ HANDLE_ERROR:
   return FALSE;
 }
 
+static void
+gst_eglglessink_wipe_fmt (gpointer data)
+{
+  GstEglGlesImageFmt *format = data;
+  gst_caps_unref (format->caps);
+  g_free (format);
+}
+
 /* XXX: Should implement */
 gboolean
 gst_eglglessink_stop (GstBaseSink * sink)
@@ -792,6 +836,10 @@ gst_eglglessink_stop (GstBaseSink * sink)
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
 
   platform_destroy_native_window (eglglessink->display, eglglessink->window);
+
+  eglglessink->selected_fmt = NULL;
+  g_list_free_full (eglglessink->supported_fmts, gst_eglglessink_wipe_fmt);
+
   g_mutex_free (eglglessink->flow_lock);
   eglglessink->flow_lock = NULL;
 
@@ -871,13 +919,18 @@ static void
 gst_eglglessink_expose (GstXOverlay * overlay)
 {
   GstEglGlesSink *eglglessink;
+  GstFlowReturn ret;
+
   eglglessink = GST_EGLGLESSINK (overlay);
   GST_DEBUG_OBJECT (eglglessink, "Expose catched, redisplay");
 
   /* Logic would be to get _render_and_display() to use
    * last seen buffer to render from when NULL it's
    * passed on */
-  return gst_eglglessink_render_and_display (eglglessink, NULL);
+  GST_WARNING_OBJECT (eglglessink, "_expose() not implemented");
+  ret = gst_eglglessink_render_and_display (eglglessink, NULL);
+  if (ret == GST_FLOW_ERROR)
+    GST_ERROR_OBJECT (eglglessink, "Redisplay failed");
 }
 
 /* Checks available egl/gles extensions and chooses
@@ -908,7 +961,7 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
     goto KHR_IMAGE_NA;
   if (!strstr (eglexts, "EGL_KHR_lock_surface"))
     goto SURFACE_LOCK_NA;
-  if (!strstr (glexts, "GL_OES_EGL_image"))
+  if (!strstr ((char *) glexts, "GL_OES_EGL_image"))
     goto TEXTURE_2DOES_NA;
 
   /* Check for actual extension proc addresses */
@@ -1188,7 +1241,7 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   GST_INFO_OBJECT (eglglessink, "System reports supported EGL version v%d.%d",
       egl_major, egl_minor);
 
-  if (!eglChooseConfig (eglglessink->display, eglglessink_RGB24_config,
+  if (!eglChooseConfig (eglglessink->display, eglglessink->selected_fmt->eglcfg,
           &eglglessink->config, 1, &egl_configs)) {
     show_egl_error ("eglChooseConfig");
     GST_ERROR_OBJECT (eglglessink, "Could not choose EGL config");
@@ -1227,8 +1280,8 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   GST_DEBUG_OBJECT (eglglessink, "We got a window handle!");
 
   if (!id) {
-    /* We are being requested to create our own window. 
-     * 0x0 fires default size creation 
+    /* We are being requested to create our own window.
+     * 0x0 fires default size creation.
      */
     GST_WARNING_OBJECT (eglglessink, "OH NOES they want a new window");
     g_mutex_lock (eglglessink->flow_lock);
@@ -1325,8 +1378,20 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * width and height values when non power of two
        * and no npot extension available.
        */
-      glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-          GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+      switch (eglglessink->selected_fmt->fmt) {
+        case GST_EGLGLESSINK_IMAGE_RGB888:
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+              GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+          break;
+        case GST_EGLGLESSINK_IMAGE_RGB565:
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+              GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+          break;
+        case GST_EGLGLESSINK_IMAGE_RGBA8888:
+          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+              GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+      }
+
       if (got_gl_error ("glTexImage2D"))
         goto HANDLE_ERROR;
 
@@ -1430,6 +1495,11 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_WARNING_OBJECT (eglglessink, "Renegotiation not implemented");
       goto HANDLE_ERROR;
     }
+  }
+
+  if (!gst_eglglessink_init_egl_display (eglglessink)) {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL display");
+    goto HANDLE_ERROR;
   }
 
   /* OK, got caps and had none. Ask application to give us a window */
