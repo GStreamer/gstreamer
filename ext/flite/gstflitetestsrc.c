@@ -177,6 +177,9 @@ gst_flite_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
   GstStructure *structure;
   gint channels;
 
+  caps = gst_caps_truncate (caps);
+  caps = gst_caps_make_writable (caps);
+
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "channels", 2);
