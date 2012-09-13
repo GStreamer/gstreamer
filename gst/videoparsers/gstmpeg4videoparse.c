@@ -180,6 +180,8 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse)
 {
   parse->interval = DEFAULT_CONFIG_INTERVAL;
   parse->last_report = GST_CLOCK_TIME_NONE;
+
+  gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (parse), FALSE);
 }
 
 static void

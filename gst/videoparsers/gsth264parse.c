@@ -145,6 +145,7 @@ static void
 gst_h264_parse_init (GstH264Parse * h264parse)
 {
   h264parse->frame_out = gst_adapter_new ();
+  gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h264parse), FALSE);
 }
 
 

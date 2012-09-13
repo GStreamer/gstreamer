@@ -170,6 +170,8 @@ static void
 gst_mpegv_parse_init (GstMpegvParse * parse)
 {
   parse->config_flags = FLAG_NONE;
+
+  gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (parse), FALSE);
 }
 
 static void
