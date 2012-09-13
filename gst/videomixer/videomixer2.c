@@ -102,6 +102,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_videomixer2_debug);
   (g_mutex_lock(GST_VIDEO_MIXER2_GET_LOCK (mix)))
 #define GST_VIDEO_MIXER2_UNLOCK(mix) \
   (g_mutex_unlock(GST_VIDEO_MIXER2_GET_LOCK (mix)))
+#define GST_VIDEO_MIXER2_GET_SETCAPS_LOCK(mix) \
+  (&GST_VIDEO_MIXER2(mix)->setcaps_lock)
+#define GST_VIDEO_MIXER2_SETCAPS_LOCK(mix) \
+  (g_mutex_lock(GST_VIDEO_MIXER2_GET_SETCAPS_LOCK (mix)))
+#define GST_VIDEO_MIXER2_SETCAPS_UNLOCK(mix) \
+  (g_mutex_unlock(GST_VIDEO_MIXER2_GET_SETCAPS_LOCK (mix)))
 
 #define FORMATS " { AYUV, BGRA, ARGB, RGBA, ABGR, Y444, Y42B, YUY2, UYVY, "\
                 "   YVYU, I420, YV12, NV12, NV21, Y41B, RGB, BGR, xRGB, xBGR, "\
@@ -174,6 +180,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
   gint best_fps_n = -1, best_fps_d = -1;
   gboolean ret = TRUE;
 
+  GST_VIDEO_MIXER2_SETCAPS_LOCK (mix);
   GST_VIDEO_MIXER2_LOCK (mix);
 
   for (l = mix->sinkpads; l; l = l->next) {
@@ -281,6 +288,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
   }
 
 done:
+  GST_VIDEO_MIXER2_SETCAPS_UNLOCK (mix);
   return ret;
 }
 
@@ -1883,6 +1891,7 @@ gst_videomixer2_finalize (GObject * o)
 
   gst_object_unref (mix->collect);
   g_mutex_clear (&mix->lock);
+  g_mutex_clear (&mix->setcaps_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (o);
 }
@@ -2023,6 +2032,7 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
       (GstCollectPadsClipFunction) gst_videomixer2_sink_clip, mix);
 
   g_mutex_init (&mix->lock);
+  g_mutex_init (&mix->setcaps_lock);
   /* initialize variables */
   gst_videomixer2_reset (mix);
 }

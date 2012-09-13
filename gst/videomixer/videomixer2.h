@@ -76,6 +76,10 @@ struct _GstVideoMixer2
 
   /* Lock to prevent the state to change while blending */
   GMutex lock;
+
+  /* Lock to prevent two src setcaps from happening at the same time  */
+  GMutex setcaps_lock;
+
   /* Sink pads using Collect Pads 2*/
   GstCollectPads *collect;
 
