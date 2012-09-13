@@ -374,10 +374,8 @@ GST_STATIC_PAD_TEMPLATE (
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
   GST_STATIC_CAPS (
-    "audio/x-raw-int, "
-      "width = (int) 16, "
-      "depth = (int) 16, "
-      "endianness = (int) BYTE_ORDER, "
+    "audio/x-raw, "
+      "format = (string) " GST_AUDIO_NE (S16) ", "
       "channels = (int) { 1, 2 }, "
       "rate = (int) [ 8000, 96000 ]"
   )

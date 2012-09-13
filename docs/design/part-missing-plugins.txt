@@ -168,7 +168,7 @@ A three step process:
              e.g. urisource-http or urisource-mms
 
          - element-$(ELEMENT_REQUIRED),
-             e.g. element-ffmpegcolorspace
+             e.g. element-videoconvert
 
          - decoder-$(CAPS_REQUIRED)
              e.g. decoder-audio/x-vorbis or

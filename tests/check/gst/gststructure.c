@@ -35,7 +35,7 @@ GST_START_TEST (test_from_string_int)
     "video/x-raw, red_mask = (int) 0x80000000",
     "video/x-raw, red_mask = (int) 0xFF000000",
     /* result from
-     * gst-launch ... ! "video/x-raw-rgb, red_mask=(int)0xFF000000" ! ... */
+     * gst-launch ... ! "video/x-raw, red_mask=(int)0xFF000000" ! ... */
     "video/x-raw,\\ red_mask=(int)0xFF000000",
   };
   gint results[] = {

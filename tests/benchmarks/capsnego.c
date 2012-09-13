@@ -50,12 +50,12 @@ enum
 
 static const gchar *factories[NUM_FLAVOURS][NUM_ELEM] = {
   {"audiotestsrc", "adder", "volume", "audioconvert"},
-  {"videotestsrc", "videomixer", "videoscale", "ffmpegcolorspace"}
+  {"videotestsrc", "videomixer", "videoscale", "videoconvert"}
 };
 
 static const gchar *sink_pads[NUM_FLAVOURS][NUM_ELEM] = {
-  {NULL, "sink%d", NULL, NULL},
-  {NULL, "sink_%d", NULL, NULL}
+  {NULL, "sink_%u", NULL, NULL},
+  {NULL, "sink_%u", NULL, NULL}
 };
 
 

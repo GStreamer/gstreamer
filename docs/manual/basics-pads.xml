@@ -245,23 +245,22 @@ link_to_multiplexer (GstPad     *tolink_pad,
         <quote>audio/x-vorbis</quote>. The source pad will be used
         to send raw (decoded) audio samples to the next element, with
         a raw audio mime-type (in this case,
-	<quote>audio/x-raw-float</quote>).  The source pad will also
+	<quote>audio/x-raw</quote>).  The source pad will also
         contain properties for the audio samplerate and the amount of
         channels, plus some more that you don't need to worry about
         for now.
       </para>
       <programlisting>
+
 Pad Templates:
   SRC template: 'src'
     Availability: Always
     Capabilities:
-      audio/x-raw-float
-                   rate: [ 8000, 50000 ]
-               channels: [ 1, 2 ]
-             endianness: 1234
-                  width: 32
-          buffer-frames: 0
- 
+      audio/x-raw
+                 format: F32LE
+                   rate: [ 1, 2147483647 ]
+               channels: [ 1, 256 ]
+
   SINK template: 'sink'
     Availability: Always
     Capabilities:
@@ -435,7 +434,7 @@ Pad Templates:
           You can do caps filtering by inserting a capsfilter element into
           your pipeline and setting its <quote>caps</quote> property. Caps
           filters are often placed after converter elements like audioconvert,
-          audioresample, ffmpegcolorspace or videoscale to force those
+          audioresample, videoconvert or videoscale to force those
           converters to convert data to a specific output format at a
           certain point in a stream.
         </para>
@@ -528,8 +527,8 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
   gboolean link_ok;
   GstCaps *caps;
 
-  caps = gst_caps_new_simple ("video/x-raw-yuv",
-  	      "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
+  caps = gst_caps_new_simple ("video/x-raw",
+  	      "format", G_TYPE_STRING, "I420",
 	      "width", G_TYPE_INT, 384,
 	      "height", G_TYPE_INT, 288,
 	      "framerate", GST_TYPE_FRACTION, 25, 1,
@@ -569,12 +568,12 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
   GstCaps *caps;
                                                                                 
   caps = gst_caps_new_full (
-      gst_structure_new ("video/x-raw-yuv",
+      gst_structure_new ("video/x-raw",
 			 "width", G_TYPE_INT, 384,
 			 "height", G_TYPE_INT, 288,
 			 "framerate", GST_TYPE_FRACTION, 25, 1,
 			 NULL),
-      gst_structure_new ("video/x-raw-rgb",
+      gst_structure_new ("video/x-bayer",
 			 "width", G_TYPE_INT, 384,
 			 "height", G_TYPE_INT, 288,
 			 "framerate", GST_TYPE_FRACTION, 25, 1,

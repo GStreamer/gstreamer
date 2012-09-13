@@ -25,15 +25,20 @@
 
 #define NUM_CAPS 10000
 
+#define AUDIO_FORMATS_ALL " { S8, U8, " \
+    "S16LE, S16BE, U16LE, U16BE, " \
+    "S24_32LE, S24_32BE, U24_32LE, U24_32BE, " \
+    "S32LE, S32BE, U32LE, U32BE, " \
+    "S24LE, S24BE, U24LE, U24BE, " \
+    "S20LE, S20BE, U20LE, U20BE, " \
+    "S18LE, S18BE, U18LE, U18BE, " \
+    "F32LE, F32BE, F64LE, F64BE }"
 
 #define GST_AUDIO_INT_PAD_TEMPLATE_CAPS \
-  "audio/x-raw-int, " \
+  "audio/x-raw, " \
+  "format = (string) " AUDIO_FORMATS_ALL ", " \
   "rate = (int) [ 1, MAX ], " \
-  "channels = (int) [ 1, MAX ], " \
-  "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-  "width = (int) { 8, 16, 24, 32 }, " \
-  "depth = (int) [ 1, 32 ], " \
-  "signed = (boolean) { true, false }"
+  "channels = (int) [ 1, MAX ]"
 
 
 gint

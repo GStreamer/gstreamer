@@ -145,9 +145,9 @@ gst_my_filter_setcaps (GstPad  *pad,
    * and from that audio type, we need to get the samplerate and
    * number of channels. */
   mime = gst_structure_get_name (structure);
-  if (strcmp (mime, "audio/x-raw-int") != 0) {
+  if (strcmp (mime, "audio/x-raw") != 0) {
     GST_WARNING ("Wrong mimetype %s provided, we only support %s",
-		 mime, "audio/x-raw-int");
+		 mime, "audio/x-raw");
     return FALSE;
   }
 

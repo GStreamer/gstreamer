@@ -97,9 +97,8 @@
     </para>
     <programlisting>
 [..]
-  caps = gst_caps_new_simple ("audio/x-raw-float",
-      "width", G_TYPE_INT, 32,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE(F32),
       "buffer-frames", G_TYPE_INT, &lt;bytes-per-frame&gt;,
       "rate", G_TYPE_INT, &lt;samplerate&gt;,
       "channels", G_TYPE_INT, &lt;num-channels&gt;, NULL);

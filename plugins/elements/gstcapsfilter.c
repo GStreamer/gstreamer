@@ -28,7 +28,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! video/x-raw-gray ! ffmpegcolorspace ! autovideosink
+ * gst-launch videotestsrc ! video/x-raw,format=GRAY8 ! videoconvert ! autovideosink
  * ]| Limits acceptable video from videotestsrc to be grayscale.
  * </refsect2>
  */
@@ -273,8 +273,7 @@ gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
  * This ensures that outgoing buffers have caps if we can, so
  * that pipelines like:
  *   gst-launch filesrc location=rawsamples.raw !
- *       audio/x-raw-int,width=16,depth=16,rate=48000,channels=2,
- *       endianness=4321,signed='(boolean)'true ! alsasink
+ *       audio/x-raw,format=S16LE,rate=48000,channels=2 ! alsasink
  * will work.
  */
 static GstFlowReturn

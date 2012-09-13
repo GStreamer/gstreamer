@@ -131,7 +131,7 @@ for wild (application specific) customisation.
    id3demux         : Extracter/Metadata
    udpsrc           : Source/Network/Protocol/Device
    videomixer       : Mixer/Video
-   ffmpegcolorspace : Filter/Video             (intended use to convert video with as little
+   videoconvert     : Filter/Video             (intended use to convert video with as little
                                                 visible change as possible)
    vertigotv        : Effect/Video             (intended use is to change the video)
    volume           : Effect/Audio             (intended use is to change the audio data)

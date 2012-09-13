@@ -179,18 +179,18 @@ More examples can be found in the gst-launch man page.
 To automatically detect the right codec in a pipeline, try 
 <programlisting>
 gst-launch filesrc location=my-random-media-file.mpeg ! decodebin !
- audioconvert ! audioresample ! osssink
+ audioconvert ! pulsesink
 </programlisting>.
 or
 <programlisting>
 gst-launch filesrc location=my-random-media-file.mpeg ! decodebin !
- ffmpegcolorspace ! xvimagesink
+ videoconvert ! xvimagesink
 </programlisting>
 Something more complicated:
 <programlisting>
 gst-launch filesrc location=my-random-media-file.mpeg ! decodebin name=decoder
-   decoder. ! ffmpegcolorspace ! xvimagesink
-   decoder. ! audioconvert ! audioresample ! osssink
+   decoder. ! videoconvert ! xvimagesink
+   decoder. ! audioconvert ! pulsesink
 </programlisting>
         </para>
         <para>

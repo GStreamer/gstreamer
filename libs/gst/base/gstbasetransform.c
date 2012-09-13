@@ -70,7 +70,7 @@
  *   <itemizedlist>
  *   <title>Example elements</title>
  *     <listitem>Level</listitem>
- *     <listitem>Videoscale, audioconvert, ffmpegcolorspace, audioresample in
+ *     <listitem>Videoscale, audioconvert, videoconvert, audioresample in
  *     certain modes.</listitem>
  *   </itemizedlist>
  * </listitem>
@@ -102,7 +102,7 @@
  *     <listitem>Volume</listitem>
  *     <listitem>Audioconvert in certain modes (signed/unsigned
  *     conversion)</listitem>
- *     <listitem>ffmpegcolorspace in certain modes (endianness
+ *     <listitem>videoconvert in certain modes (endianness
  *     swapping)</listitem>
  *   </itemizedlist>
  *  </listitem>
@@ -141,7 +141,7 @@
  *   </itemizedlist>
  *   <itemizedlist>
  *   <title>Example elements</title>
- *     <listitem>Videoscale, ffmpegcolorspace, audioconvert when doing
+ *     <listitem>Videoscale, videoconvert, audioconvert when doing
  *     scaling/conversions</listitem>
  *   </itemizedlist>
  * </listitem>

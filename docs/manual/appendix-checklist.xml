@@ -132,7 +132,7 @@
     <para>
       &GStreamer; contains a bunch of conversion plugins that most
       applications will find useful. Specifically, those are videoscalers
-      (videoscale), colorspace convertors (ffmpegcolorspace), audio format
+      (videoscale), colorspace convertors (videoconvert), audio format
       convertors and channel resamplers (audioconvert) and audio samplerate
       convertors (audioresample). Those convertors don't do anything when not
       required, they will act in passthrough mode. They will activate when
@@ -155,7 +155,7 @@
         <command>gst-launch</command> is a simple script-like commandline
         application that can be used to test pipelines. For example, the
         command <command>gst-launch audiotestsrc ! audioconvert ! 
-        audio/x-raw-int,channels=2 ! alsasink</command> will run
+        audio/x-raw,channels=2 ! alsasink</command> will run
         a pipeline which generates a sine-wave audio stream and plays it
         to your ALSA audio card. <command>gst-launch</command> also allows
         the use of threads (will be used automatically as required or as queue
@@ -165,7 +165,7 @@
         or even omit the padname to automatically select a pad. Using
         all this, the pipeline
         <command>gst-launch filesrc location=file.ogg ! oggdemux name=d
-         d. ! queue ! theoradec ! ffmpegcolorspace ! xvimagesink
+         d. ! queue ! theoradec ! videoconvert ! xvimagesink
          d. ! queue ! vorbisdec ! audioconvert ! audioresample ! alsasink
         </command> will play an Ogg file
         containing a Theora video-stream and a Vorbis audio-stream. You can

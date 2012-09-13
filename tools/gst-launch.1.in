@@ -212,7 +212,7 @@ Likewise, "xvimagesink" can be substituted with "ximagesink", "sdlvideosink",
 "osxvideosink", or "aasink". Keep in mind though that different sinks might
 accept different formats and even the same sink might accept different formats
 on different machines, so you might need to add converter elements like
-audioconvert and audioresample (for audio) or ffmpegcolorspace (for video)
+audioconvert and audioresample (for audio) or videoconvert (for video)
 in front of the sink to make things work.
 
 .B Audio playback
@@ -310,7 +310,7 @@ an SDL window
 Play both video and audio portions of an MPEG movie
 
 .B
-        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer  demuxer. ! queue ! mpeg2dec ! ffmpegcolorspace ! sdlvideosink   demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
+        gst\-launch filesrc location=movie.mpg ! mpegdemux name=demuxer demuxer. ! queue ! mpeg2dec ! videoconvert ! sdlvideosink   demuxer. ! queue ! mad ! audioconvert ! audioresample ! osssink
 .br
 Play an AVI movie with an external text subtitle stream
 
@@ -318,7 +318,7 @@ This example also shows how to refer to specific pads by name if an element
 (here: textoverlay) has multiple sink or source pads.
 
 .B
-        gst\-launch textoverlay name=overlay ! ffmpegcolorspace ! videoscale ! autovideosink   filesrc location=movie.avi ! decodebin2 ! ffmpegcolorspace ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
+        gst\-launch textoverlay name=overlay ! videoconvert ! videoscale !  autovideosink   filesrc location=movie.avi ! decodebin2 ! videoconvert ! overlay.video_sink   filesrc location=movie.srt ! subparse ! overlay.text_sink
 
 .br
 Play an AVI movie with an external text subtitle stream using playbin2
@@ -331,7 +331,7 @@ Play an AVI movie with an external text subtitle stream using playbin2
 Stream video using RTP and network elements.
 
 .B
-        gst\-launch v4l2src ! video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY ! ffmpegcolorspace ! ffenc_h263 ! video/x-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000 sync=false
+        gst\-launch v4l2src ! video/x-raw,width=128,height=96,format=UYVY ! videoconvert ! ffenc_h263 ! video/x-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000
 .br
 This command would be run on the transmitter
 
@@ -371,7 +371,7 @@ to get a working pipeline.
 Play any supported audio format
 
 .B
-        gst\-launch filesrc location=videofile ! decodebin name=decoder  decoder. ! queue ! audioconvert ! audioresample ! osssink   decoder. ! ffmpegcolorspace ! xvimagesink
+        gst\-launch filesrc location=videofile ! decodebin name=decoder decoder. ! queue ! audioconvert ! audioresample ! osssink   decoder. !  videoconvert ! xvimagesink
 .br
 Play any supported video format with video and audio output. Threads are used
 automatically. To make this even easier, you can use the playbin element:
@@ -386,12 +386,12 @@ automatically. To make this even easier, you can use the playbin element:
 These examples show you how to use filtered caps.
 
 .B
-        gst\-launch videotestsrc ! 'video/x-raw-yuv,format=(fourcc)YUY2;video/x-raw-yuv,format=(fourcc)YV12' ! xvimagesink
+        gst\-launch videotestsrc ! 'video/x-raw,format=YUY2;video/x-raw,format=YV12' ! xvimagesink
 .br
 Show a test image and use the YUY2 or YV12 video format for this.
 
 .B
-        gst\-launch osssrc ! 'audio/x-raw-int,rate=[32000,64000],width=[16,32],depth={16,24,32},signed=(boolean)true' ! wavenc ! filesink location=recording.wav
+        gst\-launch osssrc !  'audio/x-raw,rate=[32000,64000],format={S16LE,S24LE,S32LE}' ! wavenc ! filesink location=recording.wav
 .br
 record audio and write it to a .wav file. Force usage of signed 16 to 32 bit
 samples and a sample rate between 32kHz and 64KHz.

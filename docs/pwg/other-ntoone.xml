@@ -80,7 +80,7 @@ gst_avi_mux_audio_link (GstPad        *pad,
      * stream structure (strh/strf). */
     [..]
     return GST_PAD_LINK_OK;
-  } else if !strcmp (str, "audio/x-raw-int")) {
+  } else if !strcmp (str, "audio/x-raw")) {
     /* See above, but now with the raw audio tag (0x0001). */
     [..]
     return GST_PAD_LINK_OK;
@@ -122,7 +122,7 @@ gst_avi_mux_loop (GstElement *element)
 			NULL);
             break;
           case 0x0001: /* pcm */
-            caps = gst_caps_new_simple ("audio/x-raw-int",
+            caps = gst_caps_new_simple ("audio/x-raw",
 					[..]);
             break;
           [..]

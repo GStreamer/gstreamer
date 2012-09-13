@@ -98,9 +98,9 @@ main (gint   argc,
   filter = gst_element_factory_make ("capsfilter", "filter");
   g_assert (filter != NULL); /* should always exist */
 
-  csp = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  csp = gst_element_factory_make ("videoconvert", "csp");
   if (csp == NULL)
-    g_error ("Could not create 'ffmpegcolorspace' element");
+    g_error ("Could not create 'videoconvert' element");
 
   sink = gst_element_factory_make ("xvimagesink", "sink");
   if (sink == NULL) {
@@ -111,13 +111,11 @@ main (gint   argc,
 
   gst_bin_add_many (GST_BIN (pipeline), src, filter, csp, sink, NULL);
   gst_element_link_many (src, filter, csp, sink, NULL);
-  filtercaps = gst_caps_new_simple ("video/x-raw-rgb",
+  filtercaps = gst_caps_new_simple ("video/x-raw",
+			   "format", G_TYPE_STRING, "RGB16",
 			   "width", G_TYPE_INT, 384,
 			   "height", G_TYPE_INT, 288,
 			   "framerate", GST_TYPE_FRACTION, 25, 1,
-			   "bpp", G_TYPE_INT, 16,
-			   "depth", G_TYPE_INT, 16,
-			   "endianness", G_TYPE_INT, G_BYTE_ORDER,
 			   NULL);
   g_object_set (G_OBJECT (filter), "caps", filtercaps, NULL);
   gst_caps_unref (filtercaps);
@@ -313,18 +311,16 @@ main (gint   argc,
   pipeline = gst_pipeline_new ("pipeline");
   fakesrc = gst_element_factory_make ("fakesrc", "source");
   flt = gst_element_factory_make ("capsfilter", "flt");
-  conv = gst_element_factory_make ("ffmpegcolorspace", "conv");
+  conv = gst_element_factory_make ("videoconvert", "conv");
   videosink = gst_element_factory_make ("xvimagesink", "videosink");
 
   /* setup */
   g_object_set (G_OBJECT (flt), "caps",
-  		gst_caps_new_simple ("video/x-raw-rgb",
+  		gst_caps_new_simple ("video/x-raw",
+				     "format", G_TYPE_STRING, "RGB16",
 				     "width", G_TYPE_INT, 384,
 				     "height", G_TYPE_INT, 288,
 				     "framerate", GST_TYPE_FRACTION, 1, 1,
-				     "bpp", G_TYPE_INT, 16,
-				     "depth", G_TYPE_INT, 16,
-				     "endianness", G_TYPE_INT, G_BYTE_ORDER,
 				     NULL), NULL);
   gst_bin_add_many (GST_BIN (pipeline), fakesrc, flt, conv, videosink, NULL);
   gst_element_link_many (fakesrc, flt, conv, videosink, NULL);
