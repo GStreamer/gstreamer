@@ -228,7 +228,7 @@ gboolean        gst_audio_encoder_set_output_format  (GstAudioEncoder    * enc,
 
 gboolean        gst_audio_encoder_negotiate          (GstAudioEncoder * enc);
 
-GstBuffer *     gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * encoder,
+GstBuffer *     gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc,
                                                           gsize             size);
 
 /* context parameters */

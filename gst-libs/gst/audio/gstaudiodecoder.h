@@ -282,7 +282,7 @@ gboolean          gst_audio_decoder_negotiate (GstAudioDecoder * dec);
 GstFlowReturn     gst_audio_decoder_finish_frame (GstAudioDecoder * dec,
                                                   GstBuffer * buf, gint frames);
 
-GstBuffer *       gst_audio_decoder_allocate_output_buffer (GstAudioDecoder * decoder,
+GstBuffer *       gst_audio_decoder_allocate_output_buffer (GstAudioDecoder * dec,
                                                             gsize              size);
 
 /* context parameters */

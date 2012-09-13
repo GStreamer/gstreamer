@@ -329,7 +329,7 @@ gst_audio_ring_buffer_convert (GstAudioRingBuffer * buf,
 /**
  * gst_audio_ring_buffer_set_callback:
  * @buf: the #GstAudioRingBuffer to set the callback on
- * @cb: the callback to set
+ * @cb: (scope async): the callback to set
  * @user_data: user data passed to the callback
  *
  * Sets the given callback function on the buffer. This function

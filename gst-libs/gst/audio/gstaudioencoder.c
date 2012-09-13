@@ -2589,7 +2589,7 @@ no_decide_allocation:
 
 /**
  * gst_audio_encoder_negotiate:
- * @dec: a #GstAudioEncoder
+ * @enc: a #GstAudioEncoder
  *
  * Negotiate with downstreame elements to currently configured #GstCaps.
  *

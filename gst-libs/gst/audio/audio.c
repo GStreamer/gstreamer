@@ -34,7 +34,7 @@
 
 /**
  * gst_audio_buffer_clip:
- * @buffer: The buffer to clip.
+ * @buffer: (transfer full): The buffer to clip.
  * @segment: Segment in %GST_FORMAT_TIME or %GST_FORMAT_DEFAULT to which
  *           the buffer should be clipped.
  * @rate: sample rate.
@@ -46,7 +46,7 @@
  * After calling this function the caller does not own a reference to
  * @buffer anymore.
  *
- * Returns: %NULL if the buffer is completely outside the configured segment,
+ * Returns: (transfer full): %NULL if the buffer is completely outside the configured segment,
  * otherwise the clipped buffer is returned.
  *
  * If the buffer has no timestamp, it is assumed to be inside the segment and
