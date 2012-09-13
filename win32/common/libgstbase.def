@@ -32,6 +32,7 @@ EXPORTS
 	gst_base_parse_set_latency
 	gst_base_parse_set_min_frame_size
 	gst_base_parse_set_passthrough
+	gst_base_parse_set_pts_interpolation
 	gst_base_parse_set_syncable
 	gst_base_sink_do_preroll
 	gst_base_sink_get_blocksize
