@@ -292,19 +292,35 @@ else
                 -I \$(top_builddir)/gst-libs/ext/libav \
                  -Wno-deprecated-declarations"
 
-  dnl libgstlibav.la: libs to statically link to        
-  LIBAV_LIBS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
-               \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
-               \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
+  LIBAV_DEPS="\$(top_builddir)/gst-libs/ext/libav/libavformat/libavformat.a \
+              \$(top_builddir)/gst-libs/ext/libav/libavcodec/libavcodec.a \
+              \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
+  if test "x$enable_static_plugins" = xyes; then
+      dnl with static linking we can't use the .a archive directly as they would
+      dnl be included in the final libgstlibav.a as a file and won't be usable.
+      dnl libav*.a must be copied to the final destination too
+      LIBAV_LIBS="-lavformat -lavcodec -lavutil"
+  else
+      dnl libgstlibav.la: libs to statically link to
+      LIBAV_LIBS="$LIBAV_DEPS"
+  fi
 
   dnl
   SWSCALE_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/libav \
                   -I \$(top_builddir)/gst-libs/ext/libav \
                   -Wno-deprecated-declarations"
 
-  dnl libgstswscale.la: libs to statically link to
-  SWSCALE_LIBS="\$(top_builddir)/gst-libs/ext/libav/libswscale/libswscale.a \
+  SWSCALE_DEPS="\$(top_builddir)/gst-libs/ext/libav/libswscale/libswscale.a \
                 \$(top_builddir)/gst-libs/ext/libav/libavutil/libavutil.a"
+  if test "x$enable_static_plugins" = xyes; then
+      dnl with static linking we can't use the .a archive directly as they would
+      dnl be included in the final libgstswscale.a as a file and won't be usable.
+      dnl libav*.a must be copied to the final destination too
+      LIBAV_LIBS="-lswscale -lavutil"
+  else
+      dnl libgstswscale.la: libs to statically link to
+      SWSCALE_LIBS="$SWSCALE_DEPS"
+  fi
 
   LIBAV_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
@@ -425,9 +441,11 @@ else
 fi
 
 AC_SUBST(LIBAV_CFLAGS)
+AC_SUBST(LIBAV_DEPS)
 AC_SUBST(LIBAV_LIBS)
 AC_SUBST(LIBAV_SUBDIRS)
 AC_SUBST(SWSCALE_CFLAGS)
+AC_SUBST(SWSCALE_DEPS)
 AC_SUBST(SWSCALE_LIBS)
 AC_SUBST(WIN32_LIBS)
  
