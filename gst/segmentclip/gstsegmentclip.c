@@ -104,8 +104,6 @@ gst_segment_clip_init (GstSegmentClip * self, GstSegmentClipClass * g_class)
   GST_PAD_SET_PROXY_ALLOCATION (self->sinkpad);
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
-  gst_object_unref (templ);
-
   templ = gst_element_class_get_pad_template (element_class, "src");
   g_assert (templ);
 
