@@ -179,6 +179,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_PORT_RANGE       NULL
 #define DEFAULT_SHORT_HEADER     FALSE
 #define DEFAULT_PROBATION        2
+#define DEFAULT_UDP_RECONNECT    TRUE
 
 enum
 {
@@ -204,6 +205,7 @@ enum
   PROP_UDP_BUFFER_SIZE,
   PROP_SHORT_HEADER,
   PROP_PROBATION,
+  PROP_UDP_RECONNECT,
   PROP_LAST
 };
 
@@ -490,6 +492,11 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, G_MAXUINT, DEFAULT_PROBATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_UDP_RECONNECT,
+      g_param_spec_boolean ("udp-reconnect", "Reconnect to the server",
+          "Reconnect to the server if RTSP connection is closed when doing UDP",
+          DEFAULT_UDP_RECONNECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->send_event = gst_rtspsrc_send_event;
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
@@ -534,6 +541,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->udp_buffer_size = DEFAULT_UDP_BUFFER_SIZE;
   src->short_header = DEFAULT_SHORT_HEADER;
   src->probation = DEFAULT_PROBATION;
+  src->udp_reconnect = DEFAULT_UDP_RECONNECT;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -731,6 +739,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_PROBATION:
       rtspsrc->probation = g_value_get_uint (value);
       break;
+    case PROP_UDP_RECONNECT:
+      rtspsrc->udp_reconnect = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -834,6 +845,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PROBATION:
       g_value_set_uint (value, rtspsrc->probation);
+      break;
+    case PROP_UDP_RECONNECT:
+      g_value_set_boolean (value, rtspsrc->udp_reconnect);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3835,10 +3849,13 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
          * see what happens. */
         GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
             ("The server closed the connection."));
-        if ((res =
-                gst_rtsp_conninfo_reconnect (src, &src->conninfo, FALSE)) < 0)
-          goto connect_error;
-
+        if (src->udp_reconnect) {
+          if ((res =
+                  gst_rtsp_conninfo_reconnect (src, &src->conninfo, FALSE)) < 0)
+            goto connect_error;
+        } else {
+          goto server_eof;
+        }
         continue;
       case GST_RTSP_ENET:
         GST_DEBUG_OBJECT (src, "An ethernet problem occured.");
@@ -4581,8 +4598,8 @@ receive_error:
   {
     switch (res) {
       case GST_RTSP_EEOF:
-        GST_WARNING_OBJECT (src, "server closed connection, doing reconnect");
-        if (try == 0) {
+        GST_WARNING_OBJECT (src, "server closed connection");
+        if ((try == 0) && !src->interleaved && src->udp_reconnect) {
           try++;
           /* if reconnect succeeds, try again */
           if ((res =

@@ -218,6 +218,7 @@ struct _GstRTSPSrc {
   gint              udp_buffer_size;
   gboolean          short_header;
   guint             probation;
+  gboolean          udp_reconnect;
 
   /* state */
   GstRTSPState       state;
