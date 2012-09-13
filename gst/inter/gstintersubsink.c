@@ -53,28 +53,13 @@ static void gst_inter_sub_sink_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_inter_sub_sink_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_inter_sub_sink_dispose (GObject * object);
-static void gst_inter_sub_sink_finalize (GObject * object);
 
-static GstCaps *gst_inter_sub_sink_get_caps (GstBaseSink * sink);
-static gboolean gst_inter_sub_sink_set_caps (GstBaseSink * sink,
-    GstCaps * caps);
-static GstFlowReturn gst_inter_sub_sink_buffer_alloc (GstBaseSink * sink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static void gst_inter_sub_sink_get_times (GstBaseSink * sink,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_inter_sub_sink_start (GstBaseSink * sink);
 static gboolean gst_inter_sub_sink_stop (GstBaseSink * sink);
-static gboolean gst_inter_sub_sink_unlock (GstBaseSink * sink);
-static gboolean gst_inter_sub_sink_event (GstBaseSink * sink, GstEvent * event);
-static GstFlowReturn
-gst_inter_sub_sink_preroll (GstBaseSink * sink, GstBuffer * buffer);
 static GstFlowReturn
 gst_inter_sub_sink_render (GstBaseSink * sink, GstBuffer * buffer);
-static GstStateChangeReturn gst_inter_sub_sink_async_play (GstBaseSink * sink);
-static gboolean gst_inter_sub_sink_activate_pull (GstBaseSink * sink,
-    gboolean active);
-static gboolean gst_inter_sub_sink_unlock_stop (GstBaseSink * sink);
 
 enum
 {
@@ -94,17 +79,17 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 /* class initialization */
 
-#define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_inter_sub_sink_debug_category, "intersubsink", 0, \
-      "debug category for intersubsink element");
-
-GST_BOILERPLATE_FULL (GstInterSubSink, gst_inter_sub_sink, GstBaseSink,
-    GST_TYPE_BASE_SINK, DEBUG_INIT);
+G_DEFINE_TYPE (GstInterSubSink, gst_inter_sub_sink, GST_TYPE_BASE_SINK);
 
 static void
-gst_inter_sub_sink_base_init (gpointer g_class)
+gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  GST_DEBUG_CATEGORY_INIT (gst_inter_sub_sink_debug_category, "intersubsink", 0,
+      "debug category for intersubsink element");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_sub_sink_sink_template));
@@ -114,39 +99,13 @@ gst_inter_sub_sink_base_init (gpointer g_class)
       "Sink/Subtitle",
       "Virtual subtitle sink for internal process communication",
       "David Schleef <ds@schleef.org>");
-}
-
-static void
-gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS (klass);
 
   gobject_class->set_property = gst_inter_sub_sink_set_property;
   gobject_class->get_property = gst_inter_sub_sink_get_property;
-  gobject_class->dispose = gst_inter_sub_sink_dispose;
-  gobject_class->finalize = gst_inter_sub_sink_finalize;
-  base_sink_class->get_caps = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_get_caps);
-  base_sink_class->set_caps = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_set_caps);
-  if (0)
-    base_sink_class->buffer_alloc =
-        GST_DEBUG_FUNCPTR (gst_inter_sub_sink_buffer_alloc);
   base_sink_class->get_times = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_get_times);
   base_sink_class->start = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_start);
   base_sink_class->stop = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_stop);
-  base_sink_class->unlock = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_unlock);
-  if (0)
-    base_sink_class->event = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_event);
-  base_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_preroll);
   base_sink_class->render = GST_DEBUG_FUNCPTR (gst_inter_sub_sink_render);
-  if (0)
-    base_sink_class->async_play =
-        GST_DEBUG_FUNCPTR (gst_inter_sub_sink_async_play);
-  if (0)
-    base_sink_class->activate_pull =
-        GST_DEBUG_FUNCPTR (gst_inter_sub_sink_activate_pull);
-  base_sink_class->unlock_stop =
-      GST_DEBUG_FUNCPTR (gst_inter_sub_sink_unlock_stop);
 
   g_object_class_install_property (gobject_class, PROP_CHANNEL,
       g_param_spec_string ("channel", "Channel",
@@ -156,8 +115,7 @@ gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
 }
 
 static void
-gst_inter_sub_sink_init (GstInterSubSink * intersubsink,
-    GstInterSubSinkClass * intersubsink_class)
+gst_inter_sub_sink_init (GstInterSubSink * intersubsink)
 {
 
   intersubsink->channel = g_strdup ("default");
@@ -197,50 +155,6 @@ gst_inter_sub_sink_get_property (GObject * object, guint property_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
-}
-
-void
-gst_inter_sub_sink_dispose (GObject * object)
-{
-  /* GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object); */
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-void
-gst_inter_sub_sink_finalize (GObject * object)
-{
-  /* GstInterSubSink *intersubsink = GST_INTER_SUB_SINK (object); */
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
-
-
-static GstCaps *
-gst_inter_sub_sink_get_caps (GstBaseSink * sink)
-{
-
-  return NULL;
-}
-
-static gboolean
-gst_inter_sub_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
-{
-
-  return FALSE;
-}
-
-static GstFlowReturn
-gst_inter_sub_sink_buffer_alloc (GstBaseSink * sink, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-
-  return GST_FLOW_ERROR;
 }
 
 static void
@@ -293,27 +207,6 @@ gst_inter_sub_sink_stop (GstBaseSink * sink)
   return TRUE;
 }
 
-static gboolean
-gst_inter_sub_sink_unlock (GstBaseSink * sink)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_inter_sub_sink_event (GstBaseSink * sink, GstEvent * event)
-{
-
-  return TRUE;
-}
-
-static GstFlowReturn
-gst_inter_sub_sink_preroll (GstBaseSink * sink, GstBuffer * buffer)
-{
-
-  return GST_FLOW_OK;
-}
-
 static GstFlowReturn
 gst_inter_sub_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
@@ -328,25 +221,4 @@ gst_inter_sub_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   g_mutex_unlock (intersubsink->surface->mutex);
 
   return GST_FLOW_OK;
-}
-
-static GstStateChangeReturn
-gst_inter_sub_sink_async_play (GstBaseSink * sink)
-{
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-
-static gboolean
-gst_inter_sub_sink_activate_pull (GstBaseSink * sink, gboolean active)
-{
-
-  return TRUE;
-}
-
-static gboolean
-gst_inter_sub_sink_unlock_stop (GstBaseSink * sink)
-{
-
-  return TRUE;
 }

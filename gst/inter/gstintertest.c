@@ -190,7 +190,7 @@ gst_inter_test_create_pipeline_vts (GstInterTest * intertest)
 
   g_string_append (pipe_desc, "videotestsrc name=source num-buffers=100 ! ");
   g_string_append (pipe_desc,
-      "video/x-raw-yuv,format=(fourcc)I420,width=320,height=240 ! ");
+      "video/x-raw,format=(string)I420,width=320,height=240 ! ");
   g_string_append (pipe_desc, "timeoverlay ! ");
   g_string_append (pipe_desc, "intervideosink name=sink sync=true ");
   g_string_append (pipe_desc,
@@ -454,7 +454,6 @@ gst_inter_test_handle_message (GstBus * bus, GstMessage * message,
     case GST_MESSAGE_ELEMENT:
     case GST_MESSAGE_SEGMENT_START:
     case GST_MESSAGE_SEGMENT_DONE:
-    case GST_MESSAGE_DURATION:
     case GST_MESSAGE_LATENCY:
     case GST_MESSAGE_ASYNC_START:
     case GST_MESSAGE_ASYNC_DONE:

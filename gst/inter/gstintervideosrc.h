@@ -43,12 +43,8 @@ struct _GstInterVideoSrc
 
   char *channel;
 
-  GstVideoFormat format;
-  int fps_n;
-  int fps_d;
+  GstVideoInfo info;
   int n_frames;
-  int width;
-  int height;
 };
 
 struct _GstInterVideoSrcClass

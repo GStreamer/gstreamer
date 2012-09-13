@@ -314,7 +314,7 @@ GST_PLUGINS_NONPORTED=" aiff \
  cdxaparse \
  dccp faceoverlay \
  fieldanalysis freeverb frei0r \
- hdvparse inter ivfparse jp2kdecimator \
+ hdvparse ivfparse jp2kdecimator \
  kate librfb \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
  patchdetect real \
