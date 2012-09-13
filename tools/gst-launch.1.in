@@ -182,8 +182,6 @@ and the type can have the following case-insensitive values:
 .br
 - \fBf\fR or \fBfloat\fR for float values or ranges
 .br
-- \fB4\fR or \fBfourcc\fR for FOURCC values
-.br
 - \fBb\fR, \fBbool\fR or \fBboolean\fR for boolean values
 .br
 - \fBs\fR, \fBstr\fR or \fBstring\fR for strings
