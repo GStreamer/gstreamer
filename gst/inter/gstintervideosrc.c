@@ -318,6 +318,8 @@ gst_inter_video_src_fixate (GstBaseSrc * src, GstCaps * caps)
 
   GST_DEBUG_OBJECT (intervideosrc, "fixate");
 
+  caps = gst_caps_make_writable (caps);
+
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
