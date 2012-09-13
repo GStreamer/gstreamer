@@ -67,17 +67,13 @@
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
-#define PROP_DEF_ALWAYS_COPY        TRUE
-#define PROP_DEF_DECIMATE           1
-
 #define DEFAULT_PROP_DEVICE   "/dev/video0"
 
 enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
-  PROP_ALWAYS_COPY,
-  PROP_DECIMATE
+  PROP_LAST
 };
 
 /* signals and args */
@@ -162,21 +158,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
 
   gst_v4l2_object_install_properties_helper (gobject_class,
       DEFAULT_PROP_DEVICE);
-  g_object_class_install_property (gobject_class, PROP_ALWAYS_COPY,
-      g_param_spec_boolean ("always-copy", "Always Copy",
-          "If the buffer will or not be used directly from mmap",
-          PROP_DEF_ALWAYS_COPY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstV4l2Src:decimate
-   *
-   * Only use every nth frame
-   *
-   * Since: 0.10.26
-   */
-  g_object_class_install_property (gobject_class, PROP_DECIMATE,
-      g_param_spec_int ("decimate", "Decimate",
-          "Only use every nth frame", 1, G_MAXINT,
-          PROP_DEF_DECIMATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstV4l2Src::prepare-format:
@@ -240,9 +221,6 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
       V4L2_BUF_TYPE_VIDEO_CAPTURE, DEFAULT_PROP_DEVICE,
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
-  v4l2src->v4l2object->always_copy = PROP_DEF_ALWAYS_COPY;
-  v4l2src->decimate = PROP_DEF_DECIMATE;
-
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
 }
@@ -278,12 +256,6 @@ gst_v4l2src_set_property (GObject * object,
   if (!gst_v4l2_object_set_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_ALWAYS_COPY:
-        v4l2src->v4l2object->always_copy = g_value_get_boolean (value);
-        break;
-      case PROP_DECIMATE:
-        v4l2src->decimate = g_value_get_int (value);
-        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -300,12 +272,6 @@ gst_v4l2src_get_property (GObject * object,
   if (!gst_v4l2_object_get_property_helper (v4l2src->v4l2object,
           prop_id, value, pspec)) {
     switch (prop_id) {
-      case PROP_ALWAYS_COPY:
-        g_value_set_boolean (value, v4l2src->v4l2object->always_copy);
-        break;
-      case PROP_DECIMATE:
-        g_value_set_int (value, v4l2src->decimate);
-        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -800,18 +766,6 @@ gst_v4l2src_fill (GstPushSrc * src, GstBuffer * buf)
   GstClock *clock;
   GstClockTime abs_time, base_time, timestamp, duration;
   GstClockTime delay;
-
-#if 0
-  int i;
-  /* decimate, just capture and throw away frames */
-  for (i = 0; i < v4l2src->decimate - 1; i++) {
-    ret = gst_v4l2_buffer_pool_process (obj, buf);
-    if (ret != GST_FLOW_OK) {
-      return ret;
-    }
-    gst_buffer_unref (*buf);
-  }
-#endif
 
   ret =
       gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL_CAST (obj->pool), buf);

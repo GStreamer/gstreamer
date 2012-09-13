@@ -123,7 +123,6 @@ struct _GstV4l2Object {
   GstV4l2IOMode req_mode;
 
   /* optional pool */
-  gboolean always_copy;
   GstBufferPool *pool;
 
   /* the video device's capabilities */

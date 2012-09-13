@@ -60,8 +60,6 @@ struct _GstV4l2Src
   /* pads */
   GstCaps *probed_caps;
 
-  int decimate;
-
   guint64 offset;
 
   GstClockTime ctrl_time;
