@@ -263,6 +263,7 @@ static EGLint *gst_eglglesbuffer_create_native (EGLNativeWindowType win,
 static EGLNativeWindowType gst_eglglessink_create_window (GstEglGlesSink *
     eglglessink, gint width, gint height);
 static gboolean gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink);
+static gboolean gst_eglglessink_choose_config (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink);
 static void gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
@@ -514,10 +515,6 @@ gst_eglglesbuffer_get_type (void)
 }
 
 
-/* This function is sort of meaningless right now as we
- * Only Support one image format / caps but was left here
- * as a reference for future improvements.
- */
 static gint
 gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
     GstCaps * caps)
@@ -787,8 +784,12 @@ gst_eglglessink_start (GstBaseSink * sink)
     goto HANDLE_ERROR;
   }
 
+  if (!gst_eglglessink_init_egl_display (eglglessink)) {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL display");
+    goto HANDLE_ERROR;
+  }
   /* Init supported format/caps list */
-  format = g_new0 (GstEglGlesImageFmt, 2);
+  format = g_new0 (GstEglGlesImageFmt, 3);
 
   format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
   format->eglcfg = eglglessink_RGB888_config;
@@ -1212,10 +1213,7 @@ HANDLE_ERROR:
 static gboolean
 gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 {
-  GLint egl_configs;
   EGLint egl_major, egl_minor;
-
-  EGLint con_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
 
@@ -1241,14 +1239,30 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   GST_INFO_OBJECT (eglglessink, "System reports supported EGL version v%d.%d",
       egl_major, egl_minor);
 
+  eglBindAPI (EGL_OPENGL_ES_API);
+
+  return TRUE;
+
+  /* Errors */
+HANDLE_EGL_ERROR:
+  GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
+HANDLE_ERROR:
+  GST_ERROR_OBJECT (eglglessink, "Couldn't setup window/surface from handle");
+  return FALSE;
+}
+
+static gboolean
+gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
+{
+  EGLint con_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+  GLint egl_configs;
+
   if (!eglChooseConfig (eglglessink->display, eglglessink->selected_fmt->eglcfg,
           &eglglessink->config, 1, &egl_configs)) {
     show_egl_error ("eglChooseConfig");
     GST_ERROR_OBJECT (eglglessink, "Could not choose EGL config");
     goto HANDLE_EGL_ERROR;
   }
-
-  eglBindAPI (EGL_OPENGL_ES_API);
 
   eglglessink->context = eglCreateContext (eglglessink->display,
       eglglessink->config, EGL_NO_CONTEXT, con_attribs);
@@ -1265,8 +1279,7 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   /* Errors */
 HANDLE_EGL_ERROR:
   GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
-HANDLE_ERROR:
-  GST_ERROR_OBJECT (eglglessink, "Couldn't setup window/surface from handle");
+  GST_ERROR_OBJECT (eglglessink, "Couldn't choose config");
   return FALSE;
 }
 
@@ -1497,8 +1510,8 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     }
   }
 
-  if (!gst_eglglessink_init_egl_display (eglglessink)) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL display");
+  if (!gst_eglglessink_choose_config (eglglessink)) {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't choose EGL config");
     goto HANDLE_ERROR;
   }
 
