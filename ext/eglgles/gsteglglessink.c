@@ -262,6 +262,8 @@ static EGLint *gst_eglglesbuffer_create_native (EGLNativeWindowType win,
 /* Utility */
 static EGLNativeWindowType gst_eglglessink_create_window (GstEglGlesSink *
     eglglessink, gint width, gint height);
+static inline gint
+gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_choose_config (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink);
@@ -767,12 +769,62 @@ NO_CAPS:
   }
 }
 
+/* This one needs refactoring like a LOT */
+static inline gint
+gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
+{
+  gint ret = 0;
+  EGLint cfg_number;
+  GstEglGlesImageFmt *format;
+
+  /* Init supported format/caps list */
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGB888_config,
+          NULL, 1, &cfg_number) != EGL_FALSE) {
+    format = g_new0 (GstEglGlesImageFmt, 1);
+    format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
+    format->eglcfg = eglglessink_RGB888_config;
+    format->caps =
+        gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 24, NULL);
+    eglglessink->supported_fmts =
+        g_list_append (eglglessink->supported_fmts, format);
+    ret++;
+  } else
+    GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB888 config");
+
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGB565_config,
+          NULL, 1, &cfg_number) != EGL_FALSE) {
+    format = g_new0 (GstEglGlesImageFmt, 1);
+    format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
+    format->eglcfg = eglglessink_RGB565_config;
+    format->caps =
+        gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 16, NULL);
+    eglglessink->supported_fmts =
+        g_list_append (eglglessink->supported_fmts, format);
+    ret++;
+  } else
+    GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB565 config");
+
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGBA8888_config,
+          NULL, 1, &cfg_number) != EGL_FALSE) {
+    format = g_new0 (GstEglGlesImageFmt, 1);
+    format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
+    format->eglcfg = eglglessink_RGBA8888_config;
+    format->caps = gst_caps_new_simple ("video/x-raw-rgb", "depth", G_TYPE_INT, 24, "bpp", G_TYPE_INT, 32, NULL);       /* proly doesn't work for rgba */
+    eglglessink->supported_fmts = g_list_append
+        (eglglessink->supported_fmts, format);
+    ret++;
+  } else
+    GST_INFO_OBJECT (eglglessink,
+        "EGL display doesn't support RGBA8888 config");
+
+  return ret;
+}
+
 gboolean
 gst_eglglessink_start (GstBaseSink * sink)
 {
   gboolean ret;
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
-  GstEglGlesImageFmt *format;
 
   eglglessink->flow_lock = g_mutex_new ();
   g_mutex_lock (eglglessink->flow_lock);
@@ -788,30 +840,11 @@ gst_eglglessink_start (GstBaseSink * sink)
     GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL display");
     goto HANDLE_ERROR;
   }
-  /* Init supported format/caps list */
-  format = g_new0 (GstEglGlesImageFmt, 3);
 
-  format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
-  format->eglcfg = eglglessink_RGB888_config;
-  format->caps = gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 24,
-      NULL);
-  eglglessink->supported_fmts = g_list_append
-      (eglglessink->supported_fmts, format);
-
-  format++;
-  format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
-  format->eglcfg = eglglessink_RGB565_config;
-  format->caps = gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 16,
-      NULL);
-  eglglessink->supported_fmts = g_list_append
-      (eglglessink->supported_fmts, format);
-
-  format++;
-  format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
-  format->eglcfg = eglglessink_RGBA8888_config;
-  format->caps = gst_caps_new_simple ("video/x-raw-rgb", "depth", G_TYPE_INT, 24, "bpp", G_TYPE_INT, 32, NULL); /* proly doesn't work for rgba */
-  eglglessink->supported_fmts = g_list_append
-      (eglglessink->supported_fmts, format);
+  if (!gst_eglglessink_fill_supported_fbuffer_configs (eglglessink)) {
+    GST_ERROR_OBJECT (eglglessink, "Display support NONE of our configs");
+    goto HANDLE_ERROR;
+  }
 
   g_mutex_unlock (eglglessink->flow_lock);
 
