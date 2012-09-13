@@ -102,8 +102,8 @@ GST_START_TEST (test_mpeg_parse_sequence_header)
   assert_equals_int (seqhdr.width, 1920);
   assert_equals_int (seqhdr.height, 1080);
   assert_equals_int (seqhdr.aspect_ratio_info, 3);
-  assert_equals_int (seqhdr.par_w, 17280);
-  assert_equals_int (seqhdr.par_h, 17280);
+  assert_equals_int (seqhdr.par_w, 64);
+  assert_equals_int (seqhdr.par_h, 45);
   assert_equals_int (seqhdr.frame_rate_code, 7);
   assert_equals_int (seqhdr.fps_n, 60000);
   assert_equals_int (seqhdr.fps_d, 1001);
