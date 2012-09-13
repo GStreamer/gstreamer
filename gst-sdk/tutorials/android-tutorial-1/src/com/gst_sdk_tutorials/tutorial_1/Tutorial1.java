@@ -73,15 +73,11 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
     private void setMessage(final String message) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_message);
         Log.d("GStreamer", "Received message " + message);
-        try {
-        runOnUiThread (new Runnable() {public void run()
-          {
-                    tv.setText(message);
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        runOnUiThread (new Runnable() {
+          public void run() {
+            tv.setText(message);
+          }
+        });
     }
 
     static {
