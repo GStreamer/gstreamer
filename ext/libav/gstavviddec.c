@@ -65,9 +65,6 @@ struct _GstFFMpegVidDec
   gint ctx_time_n;
   gint ctx_interlaced;
 
-  /* for tracking DTS/PTS */
-  gboolean has_b_frames;
-
   guint8 *padded;
   guint padded_size;
 
@@ -442,8 +439,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   ffmpegdec->context->reget_buffer = gst_ffmpegviddec_reget_buffer;
   ffmpegdec->context->release_buffer = gst_ffmpegviddec_release_buffer;
   ffmpegdec->context->draw_horiz_band = NULL;
-
-  ffmpegdec->has_b_frames = FALSE;
 
   GST_LOG_OBJECT (ffmpegdec, "size %dx%d", ffmpegdec->context->width,
       ffmpegdec->context->height);
