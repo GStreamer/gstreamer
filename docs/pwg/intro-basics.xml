@@ -322,49 +322,18 @@
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="3">audio/x-raw-int</entry>
-            <entry morerows="3">
+            <entry>audio/x-raw</entry>
+            <entry>
               Unstructured and uncompressed raw integer audio data.
             </entry>
-            <entry>endianness</entry>
-            <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
+            <entry>format</entry>
+            <entry>string</entry>
             <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
-              means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
-              means <quote>big-endian</quote> (byte order is <quote>most
-              significant byte first</quote>).
+              S8 U8 S16LE S16BE U16LE U16BE S24_32LE S24_32BE U24_32LE U24_32BE S32LE S32BE U32LE U32BE
+              S24LE S24BE U24LE U24BE S20LE S20BE U20LE U20BE S18LE S18BE U18LE U18BE F32LE F32BE F64LE F64BE
             </entry>
-          </row>
-          <row>
-            <entry>signed</entry>
-            <entry>boolean</entry>
-            <entry>TRUE or FALSE</entry>
             <entry>
-              Whether the values of the integer samples are signed or not.
-              Signed samples use one bit to indicate sign (negative or
-              positive) of the value. Unsigned samples are always positive.
-            </entry>
-          </row>
-          <row>
-            <entry>width</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              Number of bits allocated per sample.
-            </entry>
-          </row>
-          <row>
-            <entry>depth</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of bits used per sample. This must be less than or
-              equal to the width: If the depth is less than the width, the
-              low bits are assumed to be the ones used. For example, a width
-              of 32 and a depth of 24 means that each sample is stored in a
-              32 bit word, but only the low 24 bits are actually used.
+              The format of the sample data.
             </entry>
           </row>
 

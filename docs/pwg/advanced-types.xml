@@ -259,76 +259,18 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry morerows="3">audio/x-raw-int</entry>
-            <entry morerows="3">
-              Unstructured and uncompressed raw fixed-integer audio data.
-            </entry>
-            <entry>endianness</entry>
-            <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
+            <entry>audio/x-raw</entry>
             <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
-              means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
-              means <quote>big-endian</quote> (byte order is <quote>most
-              significant byte first</quote>).
+              Unstructured and uncompressed raw audio data.
             </entry>
-          </row>
-          <row>
-            <entry>signed</entry>
-            <entry>boolean</entry>
-            <entry>TRUE or FALSE</entry>
+            <entry>format</entry>
+            <entry>string</entry>
             <entry>
-              Whether the values of the integer samples are signed or not.
-              Signed samples use one bit to indicate sign (negative or
-              positive) of the value. Unsigned samples are always positive.
+              S8 U8 S16LE S16BE U16LE U16BE S24_32LE S24_32BE U24_32LE U24_32BE S32LE S32BE U32LE U32BE
+              S24LE S24BE U24LE U24BE S20LE S20BE U20LE U20BE S18LE S18BE U18LE U18BE F32LE F32BE F64LE F64BE
             </entry>
-          </row>
-          <row>
-            <entry>width</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
             <entry>
-              Number of bits allocated per sample.
-            </entry>
-          </row>
-          <row>
-            <entry>depth</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of bits used per sample. This must be less than or
-              equal to the width: If the depth is less than the width, the
-              low bits are assumed to be the ones used. For example, a width
-              of 32 and a depth of 24 means that each sample is stored in a
-              32 bit word, but only the low 24 bits are actually used.
-            </entry>
-          </row>
-
-          <!-- ############ type ############# -->
-
-          <row>
-            <entry morerows="1">audio/x-raw-float</entry>
-            <entry>
-              Unstructured and uncompressed raw floating-point audio data.
-            </entry>
-            <entry>endianness</entry>
-            <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
-            <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
-              means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
-              means <quote>big-endian</quote> (byte order is <quote>most
-              significant byte first</quote>).
-            </entry>
-          </row>
-          <row>
-            <entry>width</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The amount of bits used and allocated per sample.
+              The format of the sample data.
             </entry>
           </row>
 
@@ -753,13 +695,15 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry>video/x-raw-yuv</entry>
-            <entry>YUV (or Y'Cb'Cr) video format.</entry>
+            <entry>video/x-raw</entry>
+            <entry>Unstructured and uncompressed raw video data.</entry>
             <entry>format</entry>
-            <entry>fourcc</entry>
+            <entry>string</entry>
             <entry>
-              YUY2, YVYU, UYVY, Y41P, IYU2, Y42B, YV12, I420, Y41B, YUV9, YVU9,
-              Y800
+              I420 YV12 YUY2 UYVY AYUV RGBx BGRx xRGB xBGR RGBA BGRA ARGB ABGR RGB BGR Y41B Y42B
+              YVYU Y444 v210 v216 NV12 NV21 GRAY8 GRAY16_BE GRAY16_LE
+              v308 RGB16 BGR16 RGB15 BGR15 UYVP A420 RGB8P YUV9 YVU9
+              IYU1 ARGB64 AYUV64 r210 I420_10LE I420_10BE I422_10LE I422_10BE
             </entry>
             <entry>
               The layout of the video. See <ulink type="http"
@@ -769,54 +713,6 @@ plugin_init (GstPlugin *plugin)
               packed-pixel. Y42B is 4:2:2 planar, YV12 and I420 are 4:2:0
               planar, Y41B is 4:1:1 planar and YUV9 and YVU9 are 4:1:0 planar.
               Y800 contains Y-samples only (black/white).
-            </entry>
-          </row>
-
-          <row>
-            <entry morerows="3">video/x-raw-rgb</entry>
-            <entry morerows="3">Red-Green-Blue (RGB) video.</entry>
-            <entry>bpp</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of bits allocated per pixel. This is usually 16, 24
-              or 32.
-            </entry>
-          </row>
-
-          <row>
-            <entry>depth</entry>
-            <entry>integer</entry>
-            <entry>greater than 0</entry>
-            <entry>
-              The number of bits used per pixel by the R/G/B components. This
-              is usually 15, 16 or 24.
-            </entry>
-          </row>
-
-          <row>
-            <entry>endianness</entry>
-            <entry>integer</entry>
-            <entry>G_BIG_ENDIAN (4321) or G_LITTLE_ENDIAN (1234)</entry>
-            <entry>
-              The order of bytes in a sample. The value G_LITTLE_ENDIAN (1234)
-              means <quote>little-endian</quote> (byte-order is <quote>least
-              significant byte first</quote>). The value G_BIG_ENDIAN (4321)
-              means <quote>big-endian</quote> (byte order is <quote>most
-              significant byte first</quote>). For 24/32bpp, this should always
-              be big endian because the byte order can be given in both.
-            </entry>
-          </row>
-
-          <row>
-            <entry>red_mask, green_mask and blue_mask</entry>
-            <entry>integer</entry>
-            <entry>any</entry>
-            <entry>
-              The masks that cover all the bits used by each of the samples.
-              The mask should be given in the endianness specified above. This
-              means that for 24/32bpp, the masks might be opposite to host byte
-              order (if you are working on little-endian computers).
             </entry>
           </row>
 
