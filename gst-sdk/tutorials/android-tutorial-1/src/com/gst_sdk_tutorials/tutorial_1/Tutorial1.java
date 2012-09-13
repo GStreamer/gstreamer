@@ -18,7 +18,6 @@ package com.gst_sdk_tutorials.tutorial_1;
 import android.app.Activity;
 import android.util.Log;
 import android.os.Bundle;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
