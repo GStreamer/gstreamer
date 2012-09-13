@@ -107,7 +107,29 @@ GOBJECT_INTROSPECTION_CHECK([0.9.6])
 dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
+AS_PATH_PYTHON([2.1])
 AG_GST_PLUGIN_DOCS([1.3],[2.1])
+
+dnl check for python
+AM_PATH_PYTHON
+AC_MSG_CHECKING(for python >= 2.3)
+prog="
+import sys, string
+minver = (2,3,0,'final',0)
+if sys.version_info < minver:
+  sys.exit(1)
+sys.exit(0)"
+
+if $PYTHON -c "$prog" 1>&AC_FD_CC 2>&AC_FD_CC
+then
+  HAVE_PYTHON=yes
+  AC_MSG_RESULT(okay)
+else
+  HAVE_PYTHON=no
+  AC_MSG_RESULT(no python)
+fi
+
+AM_CONDITIONAL(WITH_PYTHON, [test "x$HAVE_PYTHON" = "xyes"])
 
 dnl *** checks for libraries ***
 
@@ -321,5 +343,10 @@ docs/libs/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-editing-services.pc
 pkgconfig/gst-editing-services-uninstalled.pc
+bindings/Makefile
+bindings/python/Makefile
+bindings/python/gi/Makefile
+bindings/python/gi/overrides/Makefile
+bindings/python/examples/Makefile
 )
 AC_OUTPUT
