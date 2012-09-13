@@ -27,6 +27,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
@@ -82,14 +83,17 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         });
     }
 
-    private void setCurrentPosition(long position, long duration) {
+    private void setCurrentPosition(final long position, final long duration) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_time);
+        final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         final String message = df.format(new Date (position)) + " / " + df.format(new Date (duration));
         runOnUiThread (new Runnable() {
           public void run() {
             tv.setText(message);
+            sb.setMax((int)duration);
+            sb.setProgress((int)position);
           }
         });
     }

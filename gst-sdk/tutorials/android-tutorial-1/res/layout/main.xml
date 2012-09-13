@@ -34,7 +34,17 @@
             android:id="@+id/textview_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical" />
+            android:layout_gravity="center_vertical"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip" />
+
+        <SeekBar
+            android:id="@+id/seek_bar"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:indeterminate="false" />
     </LinearLayout>
 
     <SurfaceView

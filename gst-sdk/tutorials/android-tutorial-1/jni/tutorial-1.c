@@ -96,34 +96,6 @@ static void set_current_position (gint64 position, gint64 duration, CustomData *
   }
 }
 
-static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  GError *err;
-  gchar *debug_info;
-  gchar *message_string;
-
-  gst_message_parse_error (msg, &err, &debug_info);
-  message_string = g_strdup_printf ("Error received from element %s: %s", GST_OBJECT_NAME (msg->src), err->message);
-  g_clear_error (&err);
-  g_free (debug_info);
-  set_message (message_string, data);
-  g_free (message_string);
-  gst_element_set_state (data->pipeline, GST_STATE_NULL);
-}
-
-static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  set_message (GST_MESSAGE_TYPE_NAME (msg), data);
-  gst_element_set_state (data->pipeline, GST_STATE_NULL);
-}
-
-static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  GstState old_state, new_state, pending_state;
-  gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
-  if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
-    set_message (gst_element_state_get_name (new_state), data);
-    data->playing = (new_state == GST_STATE_PLAYING);
-  }
-}
-
 static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
@@ -144,6 +116,35 @@ static gboolean refresh_ui (CustomData *data) {
     set_current_position (data->position/1000000, data->duration/1000000, data);
   }
   return TRUE;
+}
+
+static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  GError *err;
+  gchar *debug_info;
+  gchar *message_string;
+
+  gst_message_parse_error (msg, &err, &debug_info);
+  message_string = g_strdup_printf ("Error received from element %s: %s", GST_OBJECT_NAME (msg->src), err->message);
+  g_clear_error (&err);
+  g_free (debug_info);
+  set_message (message_string, data);
+  g_free (message_string);
+  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+}
+
+static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  set_message (GST_MESSAGE_TYPE_NAME (msg), data);
+  refresh_ui (data);
+  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+}
+
+static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  GstState old_state, new_state, pending_state;
+  gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+  if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
+    set_message (gst_element_state_get_name (new_state), data);
+    data->playing = (new_state == GST_STATE_PLAYING);
+  }
 }
 
 static void *app_function (void *userdata) {
