@@ -307,7 +307,11 @@ create_display (void)
 
   display = malloc (sizeof *display);
   display->display = wl_display_connect (NULL);
-  g_return_val_if_fail (display->display, NULL);
+
+  if (display->display == NULL) {
+    free (display);
+    return NULL;
+  }
 
   wl_display_add_global_listener (display->display,
       display_handle_global, display);
@@ -450,6 +454,13 @@ gst_wayland_sink_start (GstBaseSink * bsink)
 
   if (!sink->display)
     sink->display = create_display ();
+
+  if (sink->display == NULL) {
+    GST_ELEMENT_ERROR (bsink, RESOURCE, OPEN_READ_WRITE,
+        ("Could not initialise Wayland output"),
+        ("Could not create Wayland display"));
+    return FALSE;
+  }
 
   return result;
 }
