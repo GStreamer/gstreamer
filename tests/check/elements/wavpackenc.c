@@ -81,6 +81,8 @@ setup_wavpackenc (void)
       "could not set to playing");
   bus = gst_bus_new ();
 
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test-silence"));
+
   return wavpackenc;
 }
 
@@ -104,6 +106,7 @@ cleanup_wavpackenc (GstElement * wavpackenc)
 
 GST_START_TEST (test_encode_silence)
 {
+  GstSegment segment;
   GstElement *wavpackenc;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
@@ -112,11 +115,17 @@ GST_START_TEST (test_encode_silence)
 
   wavpackenc = setup_wavpackenc ();
 
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
   inbuffer = gst_buffer_new_and_alloc (1000);
   gst_buffer_memset (inbuffer, 0, 0, 1000);
+
   caps = gst_caps_from_string (RAW_CAPS_STRING);
   fail_unless (gst_pad_set_caps (mysrcpad, caps));
   gst_caps_unref (caps);
+
+  gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment));
+
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 
