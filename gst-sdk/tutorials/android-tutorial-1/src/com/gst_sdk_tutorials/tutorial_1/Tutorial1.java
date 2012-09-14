@@ -35,10 +35,15 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
     private native void nativeFinalize();
     private native void nativePlay();
     private native void nativePause();
+    private native void nativeSetPosition(int milliseconds);
     private static native void classInit();
     private native void nativeSurfaceInit(Object surface);
     private native void nativeSurfaceFinalize();
     private long native_custom_data;
+    
+    private boolean playing;
+    private int position;
+    private int duration;
 
     /* Called when the activity is first created. 
     @Override */
@@ -52,6 +57,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         play.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 nativePlay();
+                playing = true;
             }
         });
 
@@ -59,6 +65,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         pause.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 nativePause();
+                playing = false;
             }
         });
 
@@ -67,6 +74,21 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         sh.addCallback(this);
 
         nativeInit();
+
+        playing = savedInstanceState==null ? false : savedInstanceState.getBoolean("playing");
+        if (playing) {
+            int milliseconds = savedInstanceState.getInt("position");
+            Log.i ("GStreamer", "Restoring to playing state at " + milliseconds + " ms.");
+            nativePlay();
+            nativeSetPosition(milliseconds);
+        }
+    }
+    
+    protected void onSaveInstanceState (Bundle outState) {
+        Log.d ("GStreamer", "Saving state, playing:" + playing + " position:" + position);
+        outState.putBoolean("playing", playing);
+        outState.putInt("position", position);
+        outState.putInt("duration", duration);
     }
 
     protected void onDestroy() {
@@ -83,7 +105,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         });
     }
 
-    private void setCurrentPosition(final long position, final long duration) {
+    private void setCurrentPosition(final int position, final int duration) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_time);
         final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
@@ -92,10 +114,12 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         runOnUiThread (new Runnable() {
           public void run() {
             tv.setText(message);
-            sb.setMax((int)duration);
-            sb.setProgress((int)position);
+            sb.setMax(duration);
+            sb.setProgress(position);
           }
         });
+        this.position = position;
+        this.duration = duration;
     }
 
     static {

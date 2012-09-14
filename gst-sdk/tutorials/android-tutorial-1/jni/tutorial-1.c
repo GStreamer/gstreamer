@@ -29,6 +29,7 @@ typedef struct _CustomData {
   gboolean playing;
   gint64 position;
   gint64 duration;
+  GstElement *vsink;
 } CustomData;
 
 static pthread_t gst_app_thread;
@@ -86,9 +87,9 @@ static void set_message (const gchar *message, CustomData *data) {
   (*env)->DeleteLocalRef (env, jmessage);
 }
 
-static void set_current_position (gint64 position, gint64 duration, CustomData *data) {
+static void set_current_position (gint position, gint duration, CustomData *data) {
   JNIEnv *env = get_jni_env ();
-  GST_DEBUG ("Setting current position/duration to: %lld / %lld (ms)", position, duration);
+  GST_DEBUG ("Setting current position/duration to: %d / %d (ms)", position, duration);
   (*env)->CallVoidMethod (env, data->app, set_current_position_method_id, position, duration);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
@@ -100,8 +101,8 @@ static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
 
-  /* We do not want to update anything unless we are in the PLAYING state */
-  if (!data->playing)
+  /* We do not want to update anything unless we have a working pipeline in the PLAYING state */
+  if (!data || !data->pipeline || !data->playing)
     return TRUE;
 
   /* If we didn't know it yet, query the stream duration */
@@ -169,6 +170,7 @@ static void new_buffer (GstElement *sink, CustomData *data) {
       for (i=0; i<nbuff.height; i++) {
         memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
       }
+      /* FIXME: Sometimes this segfaults. Maybe the native window has been destroyed while we were copying into it? */
       ANativeWindow_unlockAndPost (data->native_window);
     }
     gst_buffer_unref (buffer);
@@ -180,19 +182,19 @@ static void *app_function (void *userdata) {
   GstBus *bus;
   GstMessage *msg;
   CustomData *data = (CustomData *)userdata;
-  GstElement *vsink;
+  guint timeout_source_id;
+  GSource *timeout_source;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
-//  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0", NULL);
+  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0 name=vsink", NULL);
 //  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280,width=(int)320,height=(int)240,framerate=(fraction)30/1", NULL);
-  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
 
-  vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
-  g_signal_connect (vsink, "new-buffer", G_CALLBACK (new_buffer), data);
-  gst_object_unref (vsink);
+  data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
+//  g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
@@ -203,17 +205,23 @@ static void *app_function (void *userdata) {
   gst_object_unref (bus);
 
   /* Register a function that GLib will call every second */
-  g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
+  timeout_source_id = g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
 
   /* Create a GLib Main Loop and set it to run */
-  GST_DEBUG ("Entering main loop...");
+  GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
   data->main_loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (data->main_loop);
-  GST_DEBUG ("Exitted main loop");
+  GST_DEBUG ("Exited main loop");
+
+  /* Destroy the timeout source */
+  timeout_source = g_main_context_find_source_by_id (NULL, timeout_source_id);
+  GST_DEBUG ("timeout_source:%p", timeout_source);
+  g_source_destroy (timeout_source);
 
   /* Free resources */
   gst_object_unref (bus);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
+  gst_object_unref (data->vsink);
   gst_object_unref (data->pipeline);
 }
 
@@ -228,6 +236,8 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
   pthread_create (&gst_app_thread, NULL, &app_function, data);
+  /* FIXME: Wait until thread has started and the main loop is runing */
+  usleep (100000);
 }
 
 void gst_native_finalize (JNIEnv* env, jobject thiz) {
@@ -256,12 +266,18 @@ void gst_native_pause (JNIEnv* env, jobject thiz) {
   gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 }
 
+void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  GST_DEBUG ("Setting position to %d milliseconds", milliseconds);
+  gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,(gint64)(milliseconds * GST_SECOND / 1000));
+}
+
 void gst_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   GST_DEBUG ("The FieldID for the native_custom_data field is %p", custom_data_field_id);
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   GST_DEBUG ("The MethodID for the setMessage method is %p", set_message_method_id);
-  set_current_position_method_id = (*env)->GetMethodID (env, klass, "setCurrentPosition", "(JJ)V");
+  set_current_position_method_id = (*env)->GetMethodID (env, klass, "setCurrentPosition", "(II)V");
   GST_DEBUG ("The MethodID for the setCurrentPosition method is %p", set_current_position_method_id);
 }
 
@@ -288,7 +304,7 @@ void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   ANativeWindow_release (data->native_window);
   data->native_window = NULL;
 
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)NULL);
 }
 
 static JNINativeMethod native_methods[] = {
@@ -296,6 +312,7 @@ static JNINativeMethod native_methods[] = {
   { "nativeFinalize", "()V", (void *) gst_native_finalize},
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},
+  { "nativeSetPosition", "(I)V", (void*) gst_native_set_position},
   { "classInit", "()V", (void *) gst_class_init},
   { "nativeSurfaceInit", "(Ljava/lang/Object;)V", (void *) gst_native_surface_init},
   { "nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize}
