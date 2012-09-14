@@ -404,7 +404,7 @@ if test $USE_DRM -eq 1; then
 
     if test $HAVE_VA_DRM -eq 1; then
         saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$LIBVA_DRM_CPPFLAGS"
+        CPPFLAGS="$LIBVA_DRM_CFLAGS"
         AC_CHECK_HEADERS([va/va_drm.h], [:], [HAVE_VA_DRM=0 USE_DRM=0])
         CPPFLAGS="$saved_CPPFLAGS"
     fi
@@ -428,7 +428,7 @@ if test $USE_GLX -eq 1; then
 
     if test $HAVE_VA_GLX -eq 1; then
         saved_CPPFLAGS="$CPPFLAGS"
-        CPPFLAGS="$LIBVA_GLX_CPPFLAGS"
+        CPPFLAGS="$LIBVA_GLX_CFLAGS"
         AC_CHECK_HEADERS([va/va_glx.h], [:], [HAVE_VA_GLX=0])
         CPPFLAGS="$saved_CPPFLAGS"
     fi
