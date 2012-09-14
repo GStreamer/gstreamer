@@ -253,7 +253,7 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_dtmf_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "DTMF tone generator",
+  gst_element_class_set_metadata (gstelement_class, "DTMF tone generator",
       "Source/Audio",
       "Generates DTMF tones",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");
