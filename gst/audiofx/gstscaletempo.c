@@ -33,7 +33,7 @@
  * |[
  * filesrc location=media.ext ! decodebin name=d \
  *     d. ! queue ! audioconvert ! audioresample ! scaletempo ! audioconvert ! audioresample ! autoaudiosink \
- *     d. ! queue ! ffmpegcolorspace ! autovideosink
+ *     d. ! queue ! videoconvert ! autovideosink
  * ]|
  * OR
  * |[
