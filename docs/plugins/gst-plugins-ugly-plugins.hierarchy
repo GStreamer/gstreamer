@@ -1,6 +1,8 @@
 GObject
   GInitiallyUnowned
     GstObject
+      GstAllocator
+        GstDefaultAllocator
       GstBus
       GstClock
       GstControlBinding
@@ -18,8 +20,6 @@ GObject
           GstTwoLame
         GstBaseSrc
           GstPushSrc
-            GstAudioCdSrc
-              GstCdioCddaSrc
             GstDvdReadSrc
             GstPNMSrc
         GstBin
@@ -27,7 +27,6 @@ GObject
         GstDvdLpcmDec
         GstDvdSubDec
         GstDvdSubParse
-        GstMpeg2dec
         GstRDTDepay
         GstRDTManager
         GstRMDemux
@@ -37,7 +36,10 @@ GObject
         GstRTSPWMS
         GstRealAudioDemux
         GstSidDec
-        GstX264Enc
+        GstVideoDecoder
+          GstMpeg2dec
+        GstVideoEncoder
+          GstX264Enc
         GstXingMux
       GstPad
       GstPadTemplate

@@ -3,7 +3,7 @@
   <description>Uses libsidplay to decode .sid files</description>
   <filename>../../ext/sidplay/.libs/libgstsid.so</filename>
   <basename>libgstsid.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.94</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>

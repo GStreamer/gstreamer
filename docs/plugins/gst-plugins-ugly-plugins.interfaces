@@ -12,4 +12,5 @@ GstPipeline GstChildProxy
 GstRTSPReal GstRTSPExtension
 GstRTSPWMS GstRTSPExtension
 GstTwoLame GstPreset
+GstVideoEncoder GstPreset
 GstX264Enc GstPreset

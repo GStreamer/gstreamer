@@ -3,7 +3,7 @@
   <description>LibMpeg2 decoder</description>
   <filename>../../ext/mpeg2dec/.libs/libgstmpeg2dec.so</filename>
   <basename>libgstmpeg2dec.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.94</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>mpeg1 and mpeg2 video decoder</longname>
       <class>Codec/Decoder/Video</class>
       <description>Uses libmpeg2 to decode MPEG video streams</description>
-      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ I420, Y42B, Y444 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string){ YV12, I420, Y42B, Y444 }, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

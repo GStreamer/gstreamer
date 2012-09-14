@@ -42,6 +42,15 @@ guint  arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRDTManager::on-npt-stop</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRDTManager *gstrdtmanager
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstMPEGParse::reached-offset</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>f</FLAGS>

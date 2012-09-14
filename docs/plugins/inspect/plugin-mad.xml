@@ -3,7 +3,7 @@
   <description>mp3 decoding based on the mad library</description>
   <filename>../../ext/mad/.libs/libgstmad.so</filename>
   <basename>libgstmad.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.94</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
@@ -14,7 +14,7 @@
       <longname>mad mp3 decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>Uses mad code to decode mp3 streams</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
