@@ -243,12 +243,9 @@ main (int argc, char *argv[])
   convert = gst_element_factory_make ("audioconvert", "convert");
   sink = gst_element_factory_make ("autoaudiosink", "sink");
 
-  caps = gst_caps_new_simple ("audio/x-raw-int",
-      "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-      "channels", G_TYPE_INT, 2,
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "rate", G_TYPE_INT, 44100, "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+  caps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, "S16LE",
+      "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 44100, NULL);
   g_object_set (filter, "caps", caps, NULL);
   gst_caps_unref (caps);
 

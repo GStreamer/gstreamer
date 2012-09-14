@@ -70,10 +70,8 @@ clear_caps (GstCaps * caps, GstCaps * rescaps)
   /* And append to list without duplicates */
   while ((st = gst_caps_steal_structure (res, 0))) {
     /* Skip fake codecs/containers */
-    if (gst_structure_has_name (st, "audio/x-raw-int") ||
-        gst_structure_has_name (st, "audio/x-raw-float") ||
-        gst_structure_has_name (st, "video/x-raw-yuv") ||
-        gst_structure_has_name (st, "video/x-raw-rgb") ||
+    if (gst_structure_has_name (st, "audio/x-raw") ||
+        gst_structure_has_name (st, "video/x-raw") ||
         gst_structure_has_name (st, "unknown/unknown")) {
       gst_structure_free (st);
       continue;

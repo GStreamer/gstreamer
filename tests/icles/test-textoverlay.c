@@ -80,7 +80,7 @@ test_textoverlay (int width, int height)
   gint a, b, c;
 
   pstr = g_strdup_printf ("videotestsrc pattern=blue ! "
-      "video/x-raw-yuv,width=%d,height=%d ! t.video_sink "
+      "video/x-raw,width=%d,height=%d ! t.video_sink "
       "textoverlay name=t font-desc=\"Sans Serif, 20\" ! "
       " videoconvert ! videoscale ! autovideosink", width, height);
 

@@ -107,7 +107,7 @@ B. Goals
    * Uncompressed (but maybe subsampled)
    * Compressed
   * Audio
-   * Uncompressed (audio/x-raw-{int|float})
+   * Uncompressed (audio/x-raw)
    * Compressed
   * Timed text
   * Private streams
@@ -308,7 +308,7 @@ made as to which formatting to use for storing targets and profiles.
       <type>audio</type>
       <format>audio/mpeg,mpegversion=4</format>
       <preset>Quality High/Main</preset>
-      <restriction>audio/x-raw-int,channels=[1,2]</restriction>
+      <restriction>audio/x-raw,channels=[1,2]</restriction>
       <presence>1</presence>
     </stream-profile>
     <stream-profile>
@@ -316,7 +316,7 @@ made as to which formatting to use for storing targets and profiles.
       <format>video/x-h264</format>
       <preset>Profile Baseline/Quality High</preset>
       <restriction>
-        video/x-raw-yuv,width=[16, 800],\
+        video/x-raw,width=[16, 800],\
 	height=[16, 480],framerate=[1/1, 30000/1001]
       </restriction>
       <presence>1</presence>

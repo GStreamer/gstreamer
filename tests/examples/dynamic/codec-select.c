@@ -130,8 +130,7 @@ make_pipeline (void)
   g_assert (audiocaps);
 
   caps =
-      gst_caps_from_string
-      ("audio/x-raw-int,signed=true,width=16,depth=16,rate=48000,channels=1");
+      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=48000,channels=1");
   g_object_set (audiocaps, "caps", caps, NULL);
   gst_caps_unref (caps);
 
@@ -161,14 +160,11 @@ make_pipeline (void)
 
   /* make caps */
   capslist[0] =
-      gst_caps_from_string
-      ("audio/x-raw-int,signed=true,width=16,depth=16,rate=48000,channels=1");
+      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=48000,channels=1");
   capslist[1] =
-      gst_caps_from_string
-      ("audio/x-raw-int,signed=true,width=16,depth=16,rate=16000,channels=1");
+      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=16000,channels=1");
   capslist[2] =
-      gst_caps_from_string
-      ("audio/x-raw-int,signed=true,width=16,depth=16,rate=8000,channels=1");
+      gst_caps_from_string ("audio/x-raw,format=S16LE,rate=8000,channels=1");
 
   /* create encoder elements */
   for (i = 0; i < 3; i++) {

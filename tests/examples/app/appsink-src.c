@@ -6,8 +6,7 @@
 #include <gst/app/gstappsink.h>
 
 /* these are the caps we are going to pass through the appsink and appsrc */
-const gchar *audio_caps =
-    "audio/x-raw-int,channels=1,rate=8000,signed=(boolean)true,width=16,depth=16,endianness=1234";
+const gchar *audio_caps = "audio/x-raw,format=S16LE,channels=1,rate=8000";
 
 typedef struct
 {

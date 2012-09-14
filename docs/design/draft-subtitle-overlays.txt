@@ -540,9 +540,9 @@ Other considerations:
 TEST: should these look (roughly) alike (note text distortion) - needs fixing in textoverlay
 
 gst-launch-0.10 \
-    videotestsrc ! video/x-raw-yuv,width=640,height=480,pixel-aspect-ratio=1/1 ! textoverlay text=Hello font-desc=72 ! xvimagesink \
-    videotestsrc ! video/x-raw-yuv,width=320,height=480,pixel-aspect-ratio=2/1 ! textoverlay text=Hello font-desc=72 ! xvimagesink \
-    videotestsrc ! video/x-raw-yuv,width=640,height=240,pixel-aspect-ratio=1/2 ! textoverlay text=Hello font-desc=72 ! xvimagesink
+    videotestsrc ! video/x-raw,width=640,height=480,pixel-aspect-ratio=1/1 ! textoverlay text=Hello font-desc=72 ! xvimagesink \
+    videotestsrc ! video/x-raw,width=320,height=480,pixel-aspect-ratio=2/1 ! textoverlay text=Hello font-desc=72 ! xvimagesink \
+    videotestsrc ! video/x-raw,width=640,height=240,pixel-aspect-ratio=1/2 ! textoverlay text=Hello font-desc=72 ! xvimagesink
 
  ~~~ THE END ~~~ 
 

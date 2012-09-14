@@ -84,9 +84,9 @@ fine-tune the process.
 
   By default the target caps are:
 
-  _ Raw audio : audio/x-raw-int, audio/x-raw-float
+  _ Raw audio : audio/x-raw
 
-  _ and raw video : video/x-raw-rgb, video/x-raw-yuv
+  _ and raw video : video/x-raw
 
   _ and Text : text/plain, text/x-pango-markup
 

@@ -120,7 +120,7 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (src2), "pattern", 1, NULL);
   capsfilter = gst_element_factory_make ("capsfilter", "caps0");
   g_object_set (G_OBJECT (capsfilter), "caps",
-      gst_caps_from_string ("video/x-raw-rgb,width=640,height=480"), NULL);
+      gst_caps_from_string ("video/x-raw,width=640,height=480"), NULL);
   video_switch = gst_element_factory_make ("input-selector", "video_switch");
   segment = gst_element_factory_make ("identity", "identity-segment");
   g_object_set (G_OBJECT (segment), "silent", TRUE, NULL);

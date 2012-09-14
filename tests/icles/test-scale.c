@@ -119,8 +119,8 @@ main (int argc, char **argv)
       /* we prefer our fixed width and height but allow other dimensions to pass
        * as well */
       capsstr =
-          g_strdup_printf ("video/x-raw-rgb, width=(int)%d, height=(int)%d;"
-          "video/x-raw-rgb", width, height);
+          g_strdup_printf ("video/x-raw, width=(int)%d, height=(int)%d;"
+          "video/x-raw", width, height);
       caps = gst_caps_from_string (capsstr);
       g_free (capsstr);
       g_object_set (filter, "caps", caps, NULL);

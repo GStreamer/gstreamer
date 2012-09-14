@@ -2002,16 +2002,11 @@ shot_cb (GtkButton * button, gpointer data)
   GstCaps *caps;
 
   /* convert to our desired format (RGB24) */
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "bpp", G_TYPE_INT, 24, "depth", G_TYPE_INT, 24,
+  caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING, "RGB24",
       /* Note: we don't ask for a specific width/height here, so that
        * videoscale can adjust dimensions from a non-1/1 pixel aspect
        * ratio to a 1/1 pixel-aspect-ratio */
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-      "endianness", G_TYPE_INT, G_BIG_ENDIAN,
-      "red_mask", G_TYPE_INT, 0xff0000,
-      "green_mask", G_TYPE_INT, 0x00ff00,
-      "blue_mask", G_TYPE_INT, 0x0000ff, NULL);
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1, NULL);
 
   /* convert the latest frame to the requested format */
   g_signal_emit_by_name (pipeline, "convert-frame", caps, &buffer);

@@ -135,7 +135,7 @@ make_mixer_channel (GstElement * pipeline, GstElement * mix, gchar * file_name)
 
   /* prepare mixer channel */
   filesrc = gst_element_factory_make ("filesrc", NULL);
-  decodebin = gst_element_factory_make ("decodebin2", NULL);
+  decodebin = gst_element_factory_make ("decodebin", NULL);
   volume = gst_element_factory_make ("volume", NULL);
   convert = gst_element_factory_make ("audioconvert", NULL);
   format = gst_element_factory_make ("capsfilter", NULL);
@@ -148,10 +148,8 @@ make_mixer_channel (GstElement * pipeline, GstElement * mix, gchar * file_name)
   g_object_set (filesrc, "location", file_name, NULL);
   g_object_set (volume, "volume", (num_vol == 0) ? 1.0 : 0.0, NULL);
 
-  caps = gst_caps_from_string ("audio/x-raw-int, "
-      "channels = (int) 2, "
-      "endianness = (int) BYTE_ORDER, "
-      "width = (int) 16, " "depth = (int) 16, " "signed = (boolean) true");
+  caps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) S16LE, " "channels = (int) 2");
   g_object_set (format, "caps", caps, NULL);
   gst_caps_unref (caps);
 
