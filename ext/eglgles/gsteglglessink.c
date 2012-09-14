@@ -846,6 +846,9 @@ gst_eglglessink_start (GstBaseSink * sink)
     goto HANDLE_ERROR;
   }
 
+  /* Ask for a window to render to */
+  gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
+
   g_mutex_unlock (eglglessink->flow_lock);
 
   return TRUE;
@@ -1325,28 +1328,20 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
   GST_DEBUG_OBJECT (eglglessink, "We got a window handle!");
 
-  if (!id) {
-    /* We are being requested to create our own window.
-     * 0x0 fires default size creation.
-     */
-    GST_WARNING_OBJECT (eglglessink, "OH NOES they want a new window");
-    g_mutex_lock (eglglessink->flow_lock);
-    eglglessink->window = gst_eglglessink_create_window (eglglessink, 0, 0);
-    if (!eglglessink->window) {
-      GST_ERROR_OBJECT (eglglessink, "Got a NULL window");
-      goto HANDLE_ERROR_LOCKED;
-    }
-  } else if (eglglessink->window == id) {       /* Already used window */
+  if (eglglessink->have_window) {
     GST_WARNING_OBJECT (eglglessink,
-        "We've got the same %x window handle again", id);
-    GST_INFO_OBJECT (eglglessink, "Skipping surface setup");
+        "We already have a window. Ignoring request");
+    return;
+  }
+
+  if (!id) {
+    GST_ERROR_OBJECT (eglglessink, "Window handle is invalid");
     goto HANDLE_ERROR;
-  } else {
-    g_mutex_lock (eglglessink->flow_lock);
-    eglglessink->window = (EGLNativeWindowType) id;
   }
 
   /* OK, we have a new window */
+  g_mutex_lock (eglglessink->flow_lock);
+  eglglessink->window = (EGLNativeWindowType) id;
   eglglessink->have_window = TRUE;
   g_mutex_unlock (eglglessink->flow_lock);
 
@@ -1361,8 +1356,6 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   return;
 
   /* Errors */
-HANDLE_ERROR_LOCKED:
-  g_mutex_unlock (eglglessink->flow_lock);
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Couldn't setup window/surface from handle");
   return;
@@ -1509,6 +1502,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstEglGlesSink *eglglessink;
   gboolean ret = TRUE;
   gint width, height;
+  EGLNativeWindowType window;
 
   eglglessink = GST_EGLGLESSINK (bsink);
 
@@ -1548,29 +1542,29 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto HANDLE_ERROR;
   }
 
-  /* OK, got caps and had none. Ask application to give us a window */
-  if (!eglglessink->have_window) {
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
-  }
-
   g_mutex_lock (eglglessink->flow_lock);
   GST_VIDEO_SINK_WIDTH (eglglessink) = width;
   GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
-
-  if (!eglglessink->have_window) {
-    /* Window creation for no x11/mesa hasn't been implemented yet */
-    GST_INFO_OBJECT (eglglessink,
-        "No window. Will attempt internal window creation");
-    if (!(eglglessink->window = gst_eglglessink_create_window (eglglessink,
-                width, height))) {
-      GST_ERROR_OBJECT (eglglessink, "Internal window creation failed!");
-      goto HANDLE_ERROR_LOCKED;
-    }
-  }
-
-  eglglessink->have_window = TRUE;
   eglglessink->current_caps = gst_caps_ref (caps);
   g_mutex_unlock (eglglessink->flow_lock);
+
+  /* By now the application should have set a window
+   * already if it meant to do so
+   */
+  if (!eglglessink->have_window) {
+    if (!eglglessink->can_create_window) {
+      GST_ERROR_OBJECT (eglglessink,
+          "Have no window and we have been told not to create one!");
+      goto HANDLE_ERROR;
+    }
+    GST_INFO_OBJECT (eglglessink,
+        "No window. Will attempt internal window creation");
+    if (!(window = gst_eglglessink_create_window (eglglessink, width, height))) {
+      GST_ERROR_OBJECT (eglglessink, "Internal window creation failed!");
+      goto HANDLE_ERROR;
+    }
+    gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink), window);
+  }
 
   if (!gst_eglglessink_init_egl_surface (eglglessink)) {
     GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface from window");
