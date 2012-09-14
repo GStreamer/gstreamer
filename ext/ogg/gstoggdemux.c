@@ -224,7 +224,7 @@ gst_ogg_pad_dispose (GObject * object)
   }
 
   if (pad->map.taglist) {
-    gst_tag_list_free (pad->map.taglist);
+    gst_tag_list_unref (pad->map.taglist);
     pad->map.taglist = NULL;
   }
 
@@ -1892,7 +1892,7 @@ gst_ogg_chain_new_stream (GstOggChain * chain, guint32 serialno)
   list = gst_tag_list_new_empty ();
   gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, GST_TAG_SERIAL, serialno,
       NULL);
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
 
   GST_DEBUG_OBJECT (chain->ogg,
       "created new ogg src %p for stream with serial %08x", ret, serialno);

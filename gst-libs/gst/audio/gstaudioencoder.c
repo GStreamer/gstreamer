@@ -466,7 +466,7 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
     gst_audio_info_init (&enc->priv->ctx.info);
 
     if (enc->priv->tags)
-      gst_tag_list_free (enc->priv->tags);
+      gst_tag_list_unref (enc->priv->tags);
     enc->priv->tags = NULL;
     enc->priv->tags_changed = FALSE;
 
@@ -1967,7 +1967,7 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
   if (active) {
 
     if (enc->priv->tags)
-      gst_tag_list_free (enc->priv->tags);
+      gst_tag_list_unref (enc->priv->tags);
     enc->priv->tags = gst_tag_list_new_empty ();
     enc->priv->tags_changed = FALSE;
 

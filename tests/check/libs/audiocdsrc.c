@@ -345,7 +345,7 @@ GST_START_TEST (test_discid_calculations)
     fail_unless (tag_list_has_tag (tags, "musicbrainz-discid", G_TYPE_STRING));
     fail_unless (tag_list_has_tag (tags, "musicbrainz-discid-full",
             G_TYPE_STRING));
-    gst_tag_list_free (tags);
+    gst_tag_list_unref (tags);
     gst_message_unref (msg);
 
     msg =

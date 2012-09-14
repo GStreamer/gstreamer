@@ -125,12 +125,12 @@ gst_tag_mux_finalize (GObject * obj)
   }
 
   if (mux->priv->event_tags) {
-    gst_tag_list_free (mux->priv->event_tags);
+    gst_tag_list_unref (mux->priv->event_tags);
     mux->priv->event_tags = NULL;
   }
 
   if (mux->priv->final_tags) {
-    gst_tag_list_free (mux->priv->final_tags);
+    gst_tag_list_unref (mux->priv->final_tags);
     mux->priv->final_tags = NULL;
   }
 
@@ -538,7 +538,7 @@ gst_tag_mux_change_state (GstElement * element, GstStateChange transition)
         mux->priv->newsegment_ev = NULL;
       }
       if (mux->priv->event_tags) {
-        gst_tag_list_free (mux->priv->event_tags);
+        gst_tag_list_unref (mux->priv->event_tags);
         mux->priv->event_tags = NULL;
       }
       mux->priv->start_tag_size = 0;

@@ -204,7 +204,7 @@ GST_START_TEST (test_musicbrainz_tag_registration)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_MUSICBRAINZ_TRMID, "5678901");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST_SORTNAME, "Five, 678901");
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
 }
 
 GST_END_TEST;
@@ -342,45 +342,45 @@ GST_START_TEST (test_vorbis_tags)
     GST_LOG ("even_newer_list = %" GST_PTR_FORMAT, even_newer_list);
     fail_unless (gst_tag_list_is_equal (new_list, even_newer_list));
 
-    gst_tag_list_free (new_list);
-    gst_tag_list_free (even_newer_list);
+    gst_tag_list_unref (new_list);
+    gst_tag_list_unref (even_newer_list);
     gst_buffer_unref (buf);
     gst_buffer_unref (buf2);
   }
 
   /* there can only be one language per taglist ... */
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "fr");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "fr");
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "[fr]");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "fr");
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "French [fr]");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "fr");
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "[eng] English");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "eng");
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "eng");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "eng");
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "[eng]");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "eng");
 
   /* free-form *sigh* */
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   list = gst_tag_list_new_empty ();
   gst_vorbis_tag_add (list, "LANGUAGE", "English");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LANGUAGE_CODE, "English");
@@ -412,7 +412,7 @@ GST_START_TEST (test_vorbis_tags)
     gst_buffer_unref (buf2);
   }
 
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
 
   /* make sure gst_tag_list_from_vorbiscomment_buffer() works with an
    * empty ID (for Speex) */
@@ -448,13 +448,13 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (list != NULL);
     fail_unless (gst_tag_list_n_tags (list) == 0);
     g_free (vendor);
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
 
     /* now again without vendor */
     list = gst_tag_list_from_vorbiscomment_buffer (buf, NULL, 0, NULL);
     fail_unless (list != NULL);
     fail_unless (gst_tag_list_n_tags (list) == 0);
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
 
     gst_buffer_unref (buf);
   }
@@ -496,7 +496,7 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (gst_tag_list_n_tags (list) == 1);
     ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
     g_free (vendor);
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
 
     /* now again without vendor */
     list = gst_tag_list_from_vorbiscomment_buffer (buf,
@@ -504,7 +504,7 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (list != NULL);
     fail_unless (gst_tag_list_n_tags (list) == 1);
     ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST, "foo bar");
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
 
     gst_buffer_unref (buf);
   }
@@ -524,7 +524,7 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (gst_date_time_has_time (dt));
 
     gst_date_time_unref (dt);
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
   }
 
   /* check date with month/day of 00-00 */
@@ -542,7 +542,7 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (!gst_date_time_has_time (dt));
 
     gst_date_time_unref (dt);
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
   }
 
   /* check date with valid month, but day of 00 */
@@ -560,7 +560,7 @@ GST_START_TEST (test_vorbis_tags)
     fail_unless (!gst_date_time_has_time (dt));
 
     gst_date_time_unref (dt);
-    gst_tag_list_free (list);
+    gst_tag_list_unref (list);
   }
 }
 
@@ -679,7 +679,7 @@ GST_START_TEST (test_id3v1_utf8_tag)
   gst_date_time_unref (dt);
   dt = NULL;
 
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 
   g_unsetenv ("GST_ID3V1_TAG_ENCODING");
 }
@@ -979,7 +979,7 @@ GST_START_TEST (test_xmp_formatting)
   gst_buffer_unmap (buf, &map);
 
   gst_buffer_unref (buf);
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
 }
 
 GST_END_TEST;
@@ -1056,7 +1056,7 @@ GST_START_TEST (test_xmp_parsing)
         }
       }
       if (list)
-        gst_tag_list_free (list);
+        gst_tag_list_unref (list);
 
       gst_buffer_unref (buf);
       g_free (text);
@@ -1081,7 +1081,7 @@ do_xmp_tag_serialization_deserialization (GstTagList * taglist,
   fail_unless (gst_tag_list_is_equal (taglist, taglist2));
 
   gst_buffer_unref (buf);
-  gst_tag_list_free (taglist2);
+  gst_tag_list_unref (taglist2);
 }
 
 static void
@@ -1093,7 +1093,7 @@ do_simple_xmp_tag_serialization_deserialization (const gchar * gsttag,
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
 
   do_xmp_tag_serialization_deserialization (taglist, NULL);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_START_TEST (test_xmp_tags_serialization_deserialization)
@@ -1284,13 +1284,13 @@ GST_START_TEST (test_xmp_compound_tags)
       GST_TAG_KEYWORDS, "k2", GST_TAG_TITLE, "title", GST_TAG_KEYWORDS, "k3",
       NULL);
   do_xmp_tag_serialization_deserialization (taglist, NULL);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 
   taglist = gst_tag_list_new_empty ();
   gst_tag_list_add (taglist, GST_TAG_MERGE_APPEND, GST_TAG_GEO_LOCATION_COUNTRY,
       "Brazil", GST_TAG_GEO_LOCATION_CITY, "Campina Grande", NULL);
   do_xmp_tag_serialization_deserialization (taglist, schemas);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;
@@ -1333,7 +1333,7 @@ GST_START_TEST (test_exif_parsing)
   gst_tag_list_peek_string_index (taglist, GST_TAG_COPYRIGHT, 0, &str);
   fail_unless_equals_string (str, "my copyright");
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
   gst_buffer_unref (buf);
 }
 
@@ -1352,7 +1352,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
   gst_buffer_unref (buf);
 
   fail_unless (gst_tag_list_is_equal (taglist, taglist2));
-  gst_tag_list_free (taglist2);
+  gst_tag_list_unref (taglist2);
 
   /* BE */
   buf = gst_tag_list_to_exif_buffer (taglist, G_BIG_ENDIAN, 0);
@@ -1360,7 +1360,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
   gst_buffer_unref (buf);
 
   fail_unless (gst_tag_list_is_equal (taglist, taglist2));
-  gst_tag_list_free (taglist2);
+  gst_tag_list_unref (taglist2);
 
   /* APP1 */
   buf = gst_tag_list_to_exif_buffer_with_tiff_header (taglist);
@@ -1368,7 +1368,7 @@ do_exif_tag_serialization_deserialization (GstTagList * taglist)
   gst_buffer_unref (buf);
 
   fail_unless (gst_tag_list_is_equal (taglist, taglist2));
-  gst_tag_list_free (taglist2);
+  gst_tag_list_unref (taglist2);
 }
 
 static void
@@ -1380,7 +1380,7 @@ do_simple_exif_tag_serialization_deserialization (const gchar * gsttag,
   gst_tag_list_add_value (taglist, GST_TAG_MERGE_REPLACE, gsttag, value);
   do_exif_tag_serialization_deserialization (taglist);
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 /*
@@ -1411,7 +1411,7 @@ GST_START_TEST (test_exif_multiple_tags)
 
   do_exif_tag_serialization_deserialization (taglist);
 
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;
@@ -1767,22 +1767,22 @@ GST_START_TEST (test_exif_tags_serialization_deserialization)
   taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
       GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
   do_exif_tag_serialization_deserialization (taglist);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 
   taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
       GST_TAG_CAPTURING_FLASH_MODE, "auto", NULL);
   do_exif_tag_serialization_deserialization (taglist);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 
   taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, FALSE,
       GST_TAG_CAPTURING_FLASH_MODE, "never", NULL);
   do_exif_tag_serialization_deserialization (taglist);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 
   taglist = gst_tag_list_new (GST_TAG_CAPTURING_FLASH_FIRED, TRUE,
       GST_TAG_CAPTURING_FLASH_MODE, "always", NULL);
   do_exif_tag_serialization_deserialization (taglist);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;

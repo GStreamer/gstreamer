@@ -478,7 +478,7 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
           ps->tags);
       tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
       if (ps->tags)
-        gst_tag_list_free (ps->tags);
+        gst_tag_list_unref (ps->tags);
       ps->tags = tmp;
       GST_DEBUG_OBJECT (pad, "private stream %p new tags %" GST_PTR_FORMAT, ps,
           tmp);
@@ -680,7 +680,7 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
   gst_bin_remove_many (dc->priv->pipeline, ps->sink, ps->queue, NULL);
 
   if (ps->tags) {
-    gst_tag_list_free (ps->tags);
+    gst_tag_list_unref (ps->tags);
   }
   if (ps->toc) {
     gst_toc_unref (ps->toc);
@@ -737,7 +737,7 @@ gst_discoverer_merge_and_replace_tags (GstTagList ** taglist,
   }
 
   gst_tag_list_insert (*taglist, new_tags, GST_TAG_MERGE_REPLACE);
-  gst_tag_list_free (new_tags);
+  gst_tag_list_unref (new_tags);
 }
 
 /* Parses a set of caps and tags in st and populates a GstDiscovererStreamInfo
@@ -1112,9 +1112,9 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       tmp =
           gst_tag_list_merge (cont->parent.tags, (GstTagList *) tags,
           GST_TAG_MERGE_APPEND);
-      gst_tag_list_free (tags);
+      gst_tag_list_unref (tags);
       if (cont->parent.tags)
-        gst_tag_list_free (cont->parent.tags);
+        gst_tag_list_unref (cont->parent.tags);
       cont->parent.tags = tmp;
       GST_DEBUG ("Container info tags %" GST_PTR_FORMAT, tmp);
     }
@@ -1376,9 +1376,9 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
       tmp =
           gst_tag_list_merge (dc->priv->current_info->tags, tl,
           GST_TAG_MERGE_APPEND);
-      gst_tag_list_free (tl);
+      gst_tag_list_unref (tl);
       if (dc->priv->current_info->tags)
-        gst_tag_list_free (dc->priv->current_info->tags);
+        gst_tag_list_unref (dc->priv->current_info->tags);
       dc->priv->current_info->tags = tmp;
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg), "Current info %p, tags %"
           GST_PTR_FORMAT, dc->priv->current_info, tmp);

@@ -241,7 +241,7 @@ gst_vorbis_enc_stop (GstAudioEncoder * enc)
   vorbis_info_clear (&vorbisenc->vi);
   g_free (vorbisenc->last_message);
   vorbisenc->last_message = NULL;
-  gst_tag_list_free (vorbisenc->tags);
+  gst_tag_list_unref (vorbisenc->tags);
   vorbisenc->tags = NULL;
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (enc));
@@ -386,7 +386,7 @@ gst_vorbis_enc_set_metadata (GstVorbisEnc * enc)
   if (merged_tags) {
     GST_DEBUG_OBJECT (enc, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
     gst_tag_list_foreach (merged_tags, gst_vorbis_enc_metadata_set1, enc);
-    gst_tag_list_free (merged_tags);
+    gst_tag_list_unref (merged_tags);
   }
 }
 

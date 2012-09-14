@@ -65,7 +65,7 @@ gst_discoverer_stream_info_finalize (GObject * object)
     gst_caps_unref (info->caps);
 
   if (info->tags)
-    gst_tag_list_free (info->tags);
+    gst_tag_list_unref (info->tags);
 
   if (info->toc)
     gst_toc_unref (info->toc);
@@ -366,7 +366,7 @@ gst_discoverer_info_finalize (GObject * object)
   g_list_free (info->stream_list);
 
   if (info->tags)
-    gst_tag_list_free (info->tags);
+    gst_tag_list_unref (info->tags);
 
   if (info->toc)
     gst_toc_unref (info->toc);

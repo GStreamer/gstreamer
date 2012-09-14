@@ -330,7 +330,7 @@ gst_ogg_mux_sink_event (GstCollectPads * pads, GstCollectData * pad,
       gst_event_parse_tag (event, &tags);
       tags = gst_tag_list_merge (ogg_pad->tags, tags, GST_TAG_MERGE_APPEND);
       if (ogg_pad->tags)
-        gst_tag_list_free (ogg_pad->tags);
+        gst_tag_list_unref (ogg_pad->tags);
       ogg_pad->tags = tags;
 
       GST_DEBUG_OBJECT (ogg_mux, "Got tags %" GST_PTR_FORMAT, ogg_pad->tags);
@@ -2061,7 +2061,7 @@ gst_ogg_mux_clear_collectpads (GstCollectPads * collect)
     }
 
     if (oggpad->tags) {
-      gst_tag_list_free (oggpad->tags);
+      gst_tag_list_unref (oggpad->tags);
       oggpad->tags = NULL;
     }
 

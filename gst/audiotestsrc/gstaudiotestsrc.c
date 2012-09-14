@@ -1133,7 +1133,7 @@ gst_audio_test_src_fill (GstBaseSrc * basesrc, guint64 offset,
       eclass->send_event (GST_ELEMENT_CAST (basesrc),
           gst_event_new_tag (taglist));
     else
-      gst_tag_list_free (taglist);
+      gst_tag_list_unref (taglist);
     src->tags_pushed = TRUE;
   }
 

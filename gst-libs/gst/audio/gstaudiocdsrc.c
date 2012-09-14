@@ -1644,7 +1644,7 @@ gst_audio_cd_src_clear_tracks (GstAudioCdSrc * src)
 
     for (i = 0; i < src->priv->num_all_tracks; ++i) {
       if (src->priv->tracks[i].tags)
-        gst_tag_list_free (src->priv->tracks[i].tags);
+        gst_tag_list_unref (src->priv->tracks[i].tags);
     }
 
     g_free (src->priv->tracks);
@@ -1667,7 +1667,7 @@ gst_audio_cd_src_stop (GstBaseSrc * basesrc)
   gst_audio_cd_src_clear_tracks (src);
 
   if (src->tags) {
-    gst_tag_list_free (src->tags);
+    gst_tag_list_unref (src->tags);
     src->tags = NULL;
   }
 

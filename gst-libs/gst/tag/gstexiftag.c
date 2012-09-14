@@ -515,7 +515,7 @@ gst_exif_reader_reset (GstExifReader * reader, gboolean return_taglist)
   }
 
   if (reader->taglist) {
-    gst_tag_list_free (reader->taglist);
+    gst_tag_list_unref (reader->taglist);
   }
 
   return ret;

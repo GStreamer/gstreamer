@@ -267,11 +267,11 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
   gst_caps_replace (caps_p, NULL);
 
   if (tagdemux->priv->event_tags) {
-    gst_tag_list_free (tagdemux->priv->event_tags);
+    gst_tag_list_unref (tagdemux->priv->event_tags);
     tagdemux->priv->event_tags = NULL;
   }
   if (tagdemux->priv->parsed_tags) {
-    gst_tag_list_free (tagdemux->priv->parsed_tags);
+    gst_tag_list_unref (tagdemux->priv->parsed_tags);
     tagdemux->priv->parsed_tags = NULL;
   }
 
@@ -967,7 +967,7 @@ gst_tag_demux_pull_end_tag (GstTagDemux * demux, GstTagList ** tags)
 
 done:
   if (new_tags)
-    gst_tag_list_free (new_tags);
+    gst_tag_list_unref (new_tags);
   if (buffer)
     gst_buffer_unref (buffer);
   return res;
@@ -1089,7 +1089,7 @@ gst_tag_demux_pull_start_tag (GstTagDemux * demux, GstTagList ** tags)
 
 done:
   if (new_tags)
-    gst_tag_list_free (new_tags);
+    gst_tag_list_unref (new_tags);
   if (buffer)
     gst_buffer_unref (buffer);
   return res;
@@ -1138,9 +1138,9 @@ gst_tag_demux_element_find (GstTagDemux * demux)
   }
 
   if (start_tags)
-    gst_tag_list_free (start_tags);
+    gst_tag_list_unref (start_tags);
   if (end_tags)
-    gst_tag_list_free (end_tags);
+    gst_tag_list_unref (end_tags);
 
   if (!e_tag_ok && !s_tag_ok)
     goto no_tags;

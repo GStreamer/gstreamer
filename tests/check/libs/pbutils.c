@@ -447,7 +447,7 @@ GST_START_TEST (test_pb_utils_taglist_add_codec_info)
   fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list,
           GST_TAG_VIDEO_CODEC, caps));
   fail_if (gst_tag_list_is_empty (list));
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   gst_caps_unref (caps);
 }
 

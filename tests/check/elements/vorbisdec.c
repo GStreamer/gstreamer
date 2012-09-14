@@ -145,7 +145,7 @@ GST_START_TEST (test_identification_header)
   fail_unless_equals_string (artist, "me");
   g_free (artist);
   fail_unless_equals_int (gst_tag_list_get_tag_size (tag_list, "album"), 0);
-  gst_tag_list_free (tag_list);
+  gst_tag_list_unref (tag_list);
   gst_message_unref (message);
 #endif
 

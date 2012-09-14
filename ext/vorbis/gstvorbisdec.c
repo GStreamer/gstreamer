@@ -257,7 +257,7 @@ vorbis_handle_comment_packet (GstVorbisDec * vd, ogg_packet * packet)
 
   gst_audio_decoder_merge_tags (GST_AUDIO_DECODER_CAST (vd), list,
       GST_TAG_MERGE_REPLACE);
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
 
   return GST_FLOW_OK;
 }

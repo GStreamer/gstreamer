@@ -487,7 +487,7 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
   return list;
 
 error:
-  gst_tag_list_free (list);
+  gst_tag_list_unref (list);
   return NULL;
 #undef ADVANCE
 }

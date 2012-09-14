@@ -372,7 +372,7 @@ tag_list_from_vorbiscomment_packet (ogg_packet * packet,
 
 exit:
   if (*tags)
-    gst_tag_list_free (*tags);
+    gst_tag_list_unref (*tags);
   *tags = list;
 
   return ret;
@@ -1856,7 +1856,7 @@ extract_tags_kate (GstOggStream * pad, ogg_packet * packet)
       /* ensure the comment packet cannot override the category/language
          from the identification header */
       gst_tag_list_insert (pad->taglist, list, GST_TAG_MERGE_KEEP_ALL);
-      gst_tag_list_free (list);
+      gst_tag_list_unref (list);
     } else
       pad->taglist = list;
   }

@@ -115,7 +115,7 @@ GST_START_TEST (test_no_xmp)
           (test_element), taglist, TRUE) == NULL);
 
   gst_object_unref (test_element);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;
@@ -138,7 +138,7 @@ GST_START_TEST (test_default)
   gst_object_unref (test_element);
   gst_buffer_unref (buf);
   gst_buffer_unref (buf2);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;
@@ -164,7 +164,7 @@ GST_START_TEST (test_disable)
       (test_element), taglist, TRUE);
   taglist2 = gst_tag_list_from_xmp_buffer (buf);
   fail_unless (gst_tag_list_is_equal (taglist, taglist2));
-  gst_tag_list_free (taglist2);
+  gst_tag_list_unref (taglist2);
   gst_buffer_unref (buf);
 
   gst_tag_xmp_writer_remove_schema (GST_TAG_XMP_WRITER (test_element), "xap");
@@ -179,11 +179,11 @@ GST_START_TEST (test_disable)
   fail_unless (gst_tag_list_get_value_index (taglist2, GST_TAG_USER_RATING,
           0) == NULL);
 
-  gst_tag_list_free (taglist2);
+  gst_tag_list_unref (taglist2);
   gst_buffer_unref (buf);
 
   gst_object_unref (test_element);
-  gst_tag_list_free (taglist);
+  gst_tag_list_unref (taglist);
 }
 
 GST_END_TEST;

@@ -811,7 +811,7 @@ gst_riff_parse_info (GstElement * element,
     *_taglist = taglist;
   } else {
     *_taglist = NULL;
-    gst_tag_list_free (taglist);
+    gst_tag_list_unref (taglist);
   }
   gst_buffer_unmap (buf, &info);
 

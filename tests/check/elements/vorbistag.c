@@ -242,7 +242,7 @@ GST_START_TEST (test_empty_tags_set)
       GST_TAG_MERGE_REPLACE);
   gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (vorbistag),
       GST_TAG_MERGE_KEEP_ALL);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 
   start_pipeline (vorbistag);
 
@@ -297,7 +297,7 @@ GST_START_TEST (test_filled_tags_unset)
       GST_TAG_MERGE_REPLACE);
   gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (vorbistag),
       GST_TAG_MERGE_KEEP_ALL);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 
   start_pipeline (vorbistag);
 
@@ -353,7 +353,7 @@ GST_START_TEST (test_filled_tags_change)
       GST_TAG_MERGE_REPLACE);
   gst_tag_setter_set_tag_merge_mode (GST_TAG_SETTER (vorbistag),
       GST_TAG_MERGE_KEEP_ALL);
-  gst_tag_list_free (tags);
+  gst_tag_list_unref (tags);
 
   start_pipeline (vorbistag);
 
