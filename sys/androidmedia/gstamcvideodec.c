@@ -875,7 +875,9 @@ retry:
      } else { */
   GST_DEBUG_OBJECT (self, "Waiting for available output buffer");
   GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-  idx = gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, -1);
+  /* Wait at most 100ms here, some codecs don't fail dequeueing if
+   * the codec is flushing, causing deadlocks during shutdown */
+  idx = gst_amc_codec_dequeue_output_buffer (self->codec, &buffer_info, 100000);
   GST_VIDEO_DECODER_STREAM_LOCK (self);
   /*} */
 
@@ -1359,7 +1361,9 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
      * _loop() can't call _finish_frame() and we might block forever
      * because no input buffers are released */
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    idx = gst_amc_codec_dequeue_input_buffer (self->codec, -1);
+    /* Wait at most 100ms here, some codecs don't fail dequeueing if
+     * the codec is flushing, causing deadlocks during shutdown */
+    idx = gst_amc_codec_dequeue_input_buffer (self->codec, 100000);
     GST_VIDEO_DECODER_STREAM_LOCK (self);
 
     if (idx < 0) {
