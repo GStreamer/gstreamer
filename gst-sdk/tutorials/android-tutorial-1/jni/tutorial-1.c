@@ -291,7 +291,7 @@ void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   data->native_window = ANativeWindow_fromSurface(env, surface);
   GST_DEBUG ("Got Native Window %p", data->native_window);
 
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
+  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)data->native_window);
 }
 
 void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
