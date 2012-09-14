@@ -552,7 +552,7 @@ done:
   g_mutex_unlock (&context->mutex);
 }
 
-static void
+static GstFlowReturn
 convert_frame_new_preroll_callback (GstElement * sink,
     GstVideoConvertSampleContext * context)
 {
@@ -577,6 +577,8 @@ convert_frame_new_preroll_callback (GstElement * sink,
 
 done:
   g_mutex_unlock (&context->mutex);
+
+  return GST_FLOW_OK;
 }
 
 /**

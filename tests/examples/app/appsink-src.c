@@ -17,7 +17,7 @@ typedef struct
 
 /* called when the appsink notifies us that there is a new buffer ready for
  * processing */
-static void
+static GstFlowReturn
 on_new_sample_from_sink (GstElement * elt, ProgramData * data)
 {
   GstSample *sample;
@@ -36,7 +36,7 @@ on_new_sample_from_sink (GstElement * elt, ProgramData * data)
 
   /* get source an push new buffer */
   source = gst_bin_get_by_name (GST_BIN (data->sink), "testsource");
-  gst_app_src_push_buffer (GST_APP_SRC (source), app_buffer);
+  return gst_app_src_push_buffer (GST_APP_SRC (source), app_buffer);
 }
 
 /* called when we get a GstMessage from the source pipeline when we get EOS, we
