@@ -103,14 +103,14 @@ static gboolean refresh_ui (CustomData *data) {
   /* We do not want to update anything unless we are in the PLAYING state */
   if (!data->playing)
     return TRUE;
-   
+
   /* If we didn't know it yet, query the stream duration */
   if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
     if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
       GST_WARNING ("Could not query current duration");
     }
   }
-   
+
   if (gst_element_query_position (data->pipeline, &fmt, &data->position)) {
     /* Java expects these values in milliseconds, and Gst provides nanoseconds */
     set_current_position (data->position/1000000, data->duration/1000000, data);
@@ -166,7 +166,6 @@ static void new_buffer (GstElement *sink, CustomData *data) {
       ANativeWindow_setBuffersGeometry(data->native_window, width, height, WINDOW_FORMAT_RGBX_8888);
 
       ANativeWindow_lock(data->native_window, &nbuff, NULL);
-      GST_DEBUG ("Native buffer width:%d height:%d stride:%d format:%d", nbuff.width, nbuff.height, nbuff.stride, nbuff.format);
       for (i=0; i<nbuff.height; i++) {
         memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
       }
@@ -241,6 +240,7 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
   (*env)->DeleteGlobalRef (env, data->app);
   GST_DEBUG ("Freeing CustomData at %p", data);
   g_free (data);
+  SET_CUSTOM_DATA (env, thiz, custom_data_field_id, NULL);
   GST_DEBUG ("Done finalizing");
 }
 
@@ -280,6 +280,10 @@ void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
 
 void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) {
+    GST_WARNING ("Received surface finalize but there is no CustomData. Ignoring.");
+    return;
+  }
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
   ANativeWindow_release (data->native_window);
   data->native_window = NULL;
