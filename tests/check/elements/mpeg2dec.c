@@ -29,7 +29,7 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-/* mpeg2 video created with gst-launch-0.10 videotestsrc num-buffers=32 pattern=blue ! "video/x-raw-yuv,format=(fourcc)I420,width=176,height=144,framerate=(fraction)25/1" ! ffenc_mpeg2video ! filesink location=test.mpg
+/* mpeg2 video created with gst-launch-0.10 videotestsrc num-buffers=32 pattern=blue ! "video/x-raw,format=(string)I420,width=176,height=144,framerate=(fraction)25/1" ! ffenc_mpeg2video ! filesink location=test.mpg
 */
 
 guint8 test_stream1[] = {
@@ -554,7 +554,7 @@ guint test_stream_sizes[] = {
   497, 90
 };
 
-/* mpeg2 video created with gst-launch-0.10 videotestsrc num-buffers=32 pattern=blue ! "video/x-raw-yuv,format=(fourcc)I420,width=183,height=217,framerate=(fraction)25/1" ! ffenc_mpeg2video ! filesink location=test.mpg
+/* mpeg2 video created with gst-launch-0.10 videotestsrc num-buffers=32 pattern=blue ! "video/x-raw,format=(string)I420,width=183,height=217,framerate=(fraction)25/1" ! ffenc_mpeg2video ! filesink location=test.mpg
 */
 
 guint8 test_stream2[] = {
