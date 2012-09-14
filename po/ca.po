@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -117,7 +117,8 @@ msgstr "S'ha produït un error intern de GStreamer: problema de ceŀla."
 msgid "Internal GStreamer error: thread problem."
 msgstr "S'ha produït un error intern de GStreamer: problema de fils."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "S'ha produït un error intern de GStreamer: problema de negociació."
 
 msgid "Internal GStreamer error: event problem."
@@ -135,7 +136,8 @@ msgstr "S'ha produït un error intern de GStreamer: problema d'etiqueta."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "La vostra instal·lació del GStreamer manca un connector."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "S'ha produït un error intern de GStreamer: problema de rellotge."
 
 msgid ""
@@ -1025,6 +1027,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Mostra el contingut d'un connector"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""

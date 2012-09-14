@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-11-01 13:39+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -113,7 +113,8 @@ msgstr "Belső GStreamer hiba: kitöltési probléma."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Belső GStreamer hiba: szálprobléma."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Belső GStreamer hiba: megállapodási probléma."
 
 msgid "Internal GStreamer error: event problem."
@@ -131,7 +132,8 @@ msgstr "Belső GStreamer hiba: címkeprobléma."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "A GStreamer telepítésből hiányzik egy bővítmény."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Belső GStreamer hiba: óraprobléma."
 
 msgid ""
@@ -1015,6 +1017,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "A bővítmény tartalmának felsorolása"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Támogatott URI sémák kiírása, az azokat megvalósító elemmel"

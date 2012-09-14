@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2012-01-28 11:44+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -112,7 +112,8 @@ msgstr "Galat GStreamer internal: masalah landasan."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Galat GStreamer internal: masalah benang."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Galat GStreamer internal: masalah negosiasi."
 
 msgid "Internal GStreamer error: event problem."
@@ -130,7 +131,8 @@ msgstr "Galat GStreamer internal: masalah tag."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Instalasi GStreamer anda kehilangan plug-in."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Galat GStreamer internal: masalah jam."
 
 msgid ""
@@ -1015,6 +1017,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Tampilkan isi plugin"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""

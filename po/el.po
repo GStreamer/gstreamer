@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -117,7 +117,8 @@ msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα pad."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα νήματος."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα συνεννόησης."
 
 msgid "Internal GStreamer error: event problem."
@@ -135,7 +136,8 @@ msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα ετικέτ
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Από την εγκατάστασή σας του GStreamer λείπει ένα πρόσθετο."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Εσωτερικό σφάλμα GStreamer: πρόβλημα ρολογιού."
 
 msgid ""
@@ -1038,6 +1040,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Απαρίθμηση των περιεχομένων του προσθέτου"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Εμφάνιση υποστηριζόμενων μορφών URI, με τα στοιχεία που τις υλοποιούν"

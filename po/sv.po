@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2011-01-09 19:46+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -117,7 +117,8 @@ msgstr "Internt GStreamer-fel: kontaktproblem."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Internt GStreamer-fel: trådproblem."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Internt GStreamer-fel: förhandlingsproblem."
 
 msgid "Internal GStreamer error: event problem."
@@ -136,7 +137,8 @@ msgstr "Internt GStreamer-fel: taggproblem."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Din GStreamer-installation saknar en insticksmodul."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Internt GStreamer-fel: klockproblem."
 
 msgid ""
@@ -1032,6 +1034,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Lista insticksmodulens innehåll"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""

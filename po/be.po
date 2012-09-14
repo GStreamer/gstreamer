@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2006-01-18 22:26+0200\n"
 "Last-Translator: Ales Nyakhaychyk <nab@mail.by>\n"
 "Language-Team: Belarusian <i18n@mova.org>\n"
@@ -106,7 +106,7 @@ msgstr ""
 msgid "Internal GStreamer error: thread problem."
 msgstr ""
 
-msgid "Internal GStreamer error: negotiation problem."
+msgid "GStreamer error: negotiation problem."
 msgstr ""
 
 msgid "Internal GStreamer error: event problem."
@@ -124,7 +124,7 @@ msgstr ""
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr ""
 
-msgid "Internal GStreamer error: clock problem."
+msgid "GStreamer error: clock problem."
 msgstr ""
 
 msgid ""
@@ -982,6 +982,14 @@ msgid ""
 msgstr ""
 
 msgid "List the plugin contents"
+msgstr ""
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
 msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"

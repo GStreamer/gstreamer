@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -117,7 +117,8 @@ msgstr "Eroare internă GStreamer: problemă de „pad”."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Eroare internă GStreamer: problemă cu firele de execuție."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Eroare internă GStreamer: problemă de negociere."
 
 msgid "Internal GStreamer error: event problem."
@@ -135,7 +136,8 @@ msgstr "Eroare internă Gstreamer: problemă de etichetă."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Lipsește un modul din instalarea programului GStreamer."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Eroare internă GStreamer: problemă de ceas."
 
 msgid ""
@@ -1043,6 +1045,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Listează conținutul modulului de extensie"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""

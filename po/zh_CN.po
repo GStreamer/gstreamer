@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -107,7 +107,8 @@ msgstr "GStreamer 内部错误: 填充问题。"
 msgid "Internal GStreamer error: thread problem."
 msgstr "GStreamer 内部错误：线程问题。"
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "GStreamer 内部错误: 协商问题。"
 
 msgid "Internal GStreamer error: event problem."
@@ -125,7 +126,8 @@ msgstr "GStreamer 内部错误：标签问题。"
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "您的 GStreamer 安装缺少插件。"
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "GStreamer 内部错误：始终错误。"
 
 msgid ""
@@ -995,6 +997,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "列出插件信息"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "打印所支持的 URI 样式及它们的关联组件"

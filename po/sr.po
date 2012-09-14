@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2011-12-05 10:40+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -116,7 +116,8 @@ msgstr "Унутрашња грешка Гстримера: неприлика �
 msgid "Internal GStreamer error: thread problem."
 msgstr "Унутрашња грешка Гстримера: неприлика са нитима."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Унутрашња грешка Гстримера: неприлика у преговарању."
 
 msgid "Internal GStreamer error: event problem."
@@ -135,7 +136,8 @@ msgstr "Унутрашња грешка Гстримера: неприлика �
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Вашој инсталацији Гстримера недостаје прикључак."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Унутрашња грешка Гстримера: неприлика са сатом."
 
 msgid ""
@@ -1027,6 +1029,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Наводи садржај прикључка"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Штампа подржане шеме адреса, са елементима који их примењују."

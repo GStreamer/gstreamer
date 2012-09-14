@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2011-04-28 09:34+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -119,7 +119,8 @@ msgstr "Erreur interne de GStreamer : problème de connecteur."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Erreur interne de GStreamer : problème de thread."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Erreur interne de GStreamer : problème de négociation."
 
 msgid "Internal GStreamer error: event problem."
@@ -137,7 +138,8 @@ msgstr "Erreur interne de Gstreamer : problème de balise."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Il manque un greffon dans votre installation de GStreamer."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Erreur interne de Gstreamer : problème d'horloge."
 
 msgid ""
@@ -1025,6 +1027,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Énumère le contenu du greffon"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""

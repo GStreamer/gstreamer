@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -114,7 +114,8 @@ msgstr "Vidinė GStreamer klaida: pagrindo klaida."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Vidinė GStreamer klaida: gijos problema."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Vidinė GStreamer klaida: derybų problema."
 
 msgid "Internal GStreamer error: event problem."
@@ -132,7 +133,8 @@ msgstr "Vidinė GStreamer klaida: žymos problema."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Jūsų įdiegtame GStreamer trūksta įskiepio."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Vidinė GStreamer klaida: laikrodžio problema."
 
 msgid ""
@@ -1025,6 +1027,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Parodyti įskiepio turinį"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Išvesti palaikomas URI schemas su jas sukuriančiais elementais"

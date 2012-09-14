@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -113,7 +113,8 @@ msgstr "Lỗi nội bộ GStreamer: vấn đề đệm."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề mạch."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề thỏa thuận."
 
 msgid "Internal GStreamer error: event problem."
@@ -131,7 +132,8 @@ msgstr "Lỗi nội bộ GStreamer: vấn đề thẻ."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Bản cài đặt GStreamer của bạn còn thiếu một bổ sung."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề đồng hồ."
 
 msgid ""
@@ -1023,6 +1025,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Liệt kê nội dung phần bổ sung"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "In ra các lược đồ URI được hỗ trợ, với những yếu tố thực hiện chúng."

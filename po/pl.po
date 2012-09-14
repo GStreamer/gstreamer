@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-07-20 09:34+0200\n"
+"POT-Creation-Date: 2012-09-14 00:33+0100\n"
 "PO-Revision-Date: 2011-04-26 17:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -115,7 +115,8 @@ msgstr "Błąd wewnętrzny GStreamera: problem z wyrównaniem."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Błąd wewnętrzny GStreamera: problem z wątkami."
 
-msgid "Internal GStreamer error: negotiation problem."
+#, fuzzy
+msgid "GStreamer error: negotiation problem."
 msgstr "Błąd wewnętrzny GStreamera: problem z negocjacją."
 
 msgid "Internal GStreamer error: event problem."
@@ -133,7 +134,8 @@ msgstr "Błąd wewnętrzny GStreamera: problem ze znacznikami."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "W tej instalacji GStreamera brakuje wtyczki."
 
-msgid "Internal GStreamer error: clock problem."
+#, fuzzy
+msgid "GStreamer error: clock problem."
 msgstr "Błąd wewnętrzny GStreamera: problem z zegarem."
 
 msgid ""
@@ -1025,6 +1027,14 @@ msgstr ""
 
 msgid "List the plugin contents"
 msgstr "Wypisanie zawartości wtyczek"
+
+msgid "Check if the specified element or plugin exists"
+msgstr ""
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
