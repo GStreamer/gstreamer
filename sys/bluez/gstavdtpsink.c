@@ -790,13 +790,19 @@ gst_avdtp_sink_transport_get_properties (GstAvdtpSink * self)
 
   msg = dbus_message_new_method_call ("org.bluez", self->transport,
       "org.bluez.MediaTransport", "GetProperties");
+  if (!msg) {
+    GST_ERROR_OBJECT (self, "D-Bus Memory allocation failed");
+    return FALSE;
+  }
+
   reply = dbus_connection_send_with_reply_and_block (self->data->conn,
       msg, -1, &err);
+  dbus_message_unref (msg);
 
-  if (dbus_error_is_set (&err) || reply == NULL) {
-    GST_ERROR_OBJECT (self, "Failed to get transport properties: %s",
-        err.message);
-    goto fail;
+  if (dbus_error_is_set (&err)) {
+    GST_ERROR_OBJECT (self, "GetProperties failed: %s", err.message);
+    dbus_error_free (&err);
+    return FALSE;
   }
 
   if (!dbus_message_iter_init (reply, &arg_i)) {
@@ -827,7 +833,6 @@ gst_avdtp_sink_transport_get_properties (GstAvdtpSink * self)
   return gst_avdtp_sink_update_caps (self);
 
 fail:
-  dbus_message_unref (msg);
   dbus_message_unref (reply);
   return FALSE;
 
