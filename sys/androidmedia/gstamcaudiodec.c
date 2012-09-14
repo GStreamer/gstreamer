@@ -114,9 +114,9 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
       g_value_init (&va, GST_TYPE_LIST);
       g_value_init (&v, G_TYPE_STRING);
       g_value_set_string (&v, "raw");
-      gst_value_array_append_value (&va, &v);
+      gst_value_list_append_value (&va, &v);
       g_value_set_string (&v, "adts");
-      gst_value_array_append_value (&va, &v);
+      gst_value_list_append_value (&va, &v);
       g_value_unset (&v);
 
       /* FIXME: Both mpegversions? */
@@ -130,9 +130,6 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
       for (j = 0; j < type->n_profile_levels; j++) {
         const gchar *profile;
-
-        g_value_init (&va, GST_TYPE_LIST);
-        g_value_init (&v, G_TYPE_STRING);
 
         profile =
             gst_amc_aac_profile_to_string (type->profile_levels[j].profile);
