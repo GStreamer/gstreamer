@@ -805,7 +805,7 @@ gst_decklink_src_audio_src_setcaps (GstPad * pad, GstCaps * caps)
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
 
-  pad_caps = gst_pad_get_caps_reffed (pad);
+  pad_caps = gst_pad_get_caps (pad);
   can_intersect = gst_caps_can_intersect (pad_caps, caps);
   gst_caps_unref (pad_caps);
 
@@ -825,7 +825,7 @@ gst_decklink_src_audio_src_acceptcaps (GstPad * pad, GstCaps * caps)
 
   decklinksrc = GST_DECKLINK_SRC (gst_pad_get_parent (pad));
 
-  pad_caps = gst_pad_get_caps_reffed (pad);
+  pad_caps = gst_pad_get_caps (pad);
   can_intersect = gst_caps_can_intersect (pad_caps, caps);
   gst_caps_unref (pad_caps);
 

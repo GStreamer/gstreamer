@@ -230,7 +230,7 @@ gst_jp2k_decimator_getcaps (GstPad * pad)
 
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
 
-  tmp = gst_pad_peer_get_caps_reffed (otherpad);
+  tmp = gst_pad_peer_get_caps (otherpad);
   if (tmp) {
     ret = gst_caps_intersect (tmp, gst_pad_get_pad_template_caps (pad));
     gst_caps_unref (tmp);
