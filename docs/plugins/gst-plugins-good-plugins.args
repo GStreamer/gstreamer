@@ -879,6 +879,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::drop-on-latency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop buffers when maximum latency is reached</NICK>
+<BLURB>Tells the jitterbuffer to never exceed the given latency in size.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::probation</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of probations</NICK>
+<BLURB>Consecutive packet sequence numbers to accept the source.</BLURB>
+<DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -3600,8 +3620,8 @@
 
 <ARG>
 <NAME>GstRndBufferSize::max</NAME>
-<TYPE>glong</TYPE>
-<RANGE>[1,G_MAXINT]</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>maximum</NICK>
 <BLURB>maximum buffer size.</BLURB>
@@ -3610,8 +3630,8 @@
 
 <ARG>
 <NAME>GstRndBufferSize::min</NAME>
-<TYPE>glong</TYPE>
-<RANGE>[0,G_MAXINT]</RANGE>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>mininum</NICK>
 <BLURB>mininum buffer size.</BLURB>
@@ -3620,12 +3640,12 @@
 
 <ARG>
 <NAME>GstRndBufferSize::seed</NAME>
-<TYPE>gulong</TYPE>
-<RANGE><= G_MAXUINT</RANGE>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>random number seed</NICK>
 <BLURB>seed for randomness (initialized when going from READY to PAUSED).</BLURB>
-<DEFAULT></DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3639,6 +3659,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAutoAudioSink::ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TS Offset</NICK>
+<BLURB>Timestamp offset in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAutoVideoSink::filter-caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -3646,6 +3676,16 @@
 <NICK>Filter caps</NICK>
 <BLURB>Filter sink candidates using these caps.</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAutoVideoSink::ts-offset</NAME>
+<TYPE>gint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TS Offset</NICK>
+<BLURB>Timestamp offset in nanoseconds.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20929,6 +20969,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::drop-on-latency</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Drop buffers when maximum latency is reached</NICK>
+<BLURB>Tells the jitterbuffer to never exceed the given latency in size.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -21096,6 +21146,16 @@
 <NICK>Minimum RTCP interval</NICK>
 <BLURB>Minimum interval between Regular RTCP packet (in ns).</BLURB>
 <DEFAULT>5000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpSession::probation</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of probations</NICK>
+<BLURB>Consecutive packet sequence numbers to accept the source.</BLURB>
+<DEFAULT>2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22656,5 +22716,15 @@
 <NICK>Relative Y Offset</NICK>
 <BLURB>Vertical offset of overlay image in fractions of video image height, from top-left corner of video image.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGdkPixbufOverlay::alpha</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alpha</NICK>
+<BLURB>Global alpha of overlay image.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 

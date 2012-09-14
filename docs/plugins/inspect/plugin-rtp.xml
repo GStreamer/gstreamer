@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -650,7 +650,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-h264, stream-format=(string)byte-stream, alignment=(string){ nal, au }; video/x-h264, stream-format=(string)avc, alignment=(string)au</details>
+          <details>video/x-h264, stream-format=(string)avc, alignment=(string)au; video/x-h264, stream-format=(string)byte-stream, alignment=(string){ nal, au }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -965,7 +965,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-xvid; video/x-divx</details>
+          <details>video/mpeg, mpegversion=(int)4, systemstream=(boolean)false; video/x-divx</details>
         </caps>
         <caps>
           <name>src</name>

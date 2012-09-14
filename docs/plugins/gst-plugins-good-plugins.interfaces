@@ -14,6 +14,7 @@ GstDV1394Src GstURIHandler
 GstDV1394Src GstURIHandler GstPropertyProbe
 GstDeinterlace GstChildProxy
 GstFlacEnc GstPreset GstTagSetter
+GstFlacEnc GstPreset GstTagSetter GstTocSetter
 GstFlacEnc GstTagSetter GstPreset
 GstFlacTag GstTagSetter
 GstFlvMux GstTagSetter
@@ -29,9 +30,11 @@ GstHalAudioSrc GstChildProxy
 GstISMLMux GstTagSetter GstTagXmpWriter
 GstId3v2Mux GstTagSetter
 GstIirEqualizer GstChildProxy
+GstIirEqualizer GstChildProxy GstPreset
 GstIirEqualizer10Bands GstChildProxy GstPreset
 GstIirEqualizer3Bands GstChildProxy GstPreset
 GstIirEqualizerNBands GstChildProxy
+GstIirEqualizerNBands GstChildProxy GstPreset
 GstJpegEnc GstPreset
 GstMJ2Mux GstTagSetter GstTagXmpWriter
 GstMP4Mux GstTagSetter GstTagXmpWriter
@@ -64,6 +67,7 @@ GstShout2send GstTagSetter
 GstSoupHTTPSrc GstURIHandler
 GstSpeexEnc GstPreset GstTagSetter
 GstSpeexEnc GstTagSetter GstPreset
+GstSplitFileSrc GstURIHandler
 GstSwitchSink GstChildProxy
 GstSwitchSrc GstChildProxy
 GstTagLibMux GstTagSetter

@@ -1,6 +1,8 @@
 GObject
   GInitiallyUnowned
     GstObject
+      GstAllocator
+        GstDefaultAllocator
       GstAudioRingBuffer
         GstAudioSinkRingBuffer
         GstAudioSrcRingBuffer
@@ -54,6 +56,7 @@ GObject
           GstTest
           GstVideoSink
             GstAASink
+            GstGdkPixbufSink
             GstV4l2Sink
         GstBaseSrc
           GstPushSrc
@@ -109,6 +112,7 @@ GObject
             GstDiceTV
             GstEdgeTV
             GstGamma
+            GstGdkPixbufOverlay
             GstNavigationtest
             GstOpTV
             GstQuarkTV
@@ -135,17 +139,16 @@ GObject
           GstRTSPSrc
           GstRgVolume
           GstRtpBin
-        GstCmmlDec
-        GstCmmlEnc
         GstCutter
         GstDVDec
         GstDVDemux
+        GstDeinterlace
         GstDeinterleave
         GstFlacTag
         GstFlvDemux
         GstFlvMux
         GstFlxDec
-        GstGPPMux
+        GstGdkPixbufDec
         GstGoom
         GstGoom2k1
         GstICYDemux
@@ -272,15 +275,14 @@ GObject
       GstTask
       GstTaskPool
   GSocket
-  GstCmmlTagClip
-  GstCmmlTagHead
-  GstCmmlTagStream
+  GdkPixbuf
   GstColorBalanceChannel
   GstTunerChannel
   GstTunerNorm
   RTPSession
   SoupSession
 GInterface
+  GIcon
   GInitable
   GTypePlugin
   GstChildProxy
