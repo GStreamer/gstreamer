@@ -3,7 +3,7 @@
   <description>plugin for inter-pipeline communication</description>
   <filename>../../gst/inter/.libs/libgstinter.so</filename>
   <basename>libgstinter.so</basename>
-  <version>0.10.23.1</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
@@ -11,40 +11,40 @@
   <elements>
     <element>
       <name>interaudiosink</name>
-      <longname>FIXME Long name</longname>
-      <class>Generic</class>
-      <description>FIXME Description</description>
-      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <longname>Internal audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Virtual audio sink for internal process communication</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)48000, channels=(int)2</details>
         </caps>
       </pads>
     </element>
     <element>
       <name>interaudiosrc</name>
-      <longname>FIXME Long name</longname>
-      <class>Generic</class>
-      <description>FIXME Description</description>
-      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <longname>Internal audio source</longname>
+      <class>Source/Audio</class>
+      <description>Virtual audio source for internal process communication</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)48000, channels=(int)2</details>
         </caps>
       </pads>
     </element>
     <element>
       <name>intersubsink</name>
-      <longname>FIXME Long name</longname>
-      <class>Generic</class>
-      <description>FIXME Description</description>
-      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <longname>Internal subtitle sink</longname>
+      <class>Sink/Subtitle</class>
+      <description>Virtual subtitle sink for internal process communication</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
@@ -56,10 +56,10 @@
     </element>
     <element>
       <name>intersubsrc</name>
-      <longname>Inter-pipeline subtitle source</longname>
+      <longname>Internal subtitle source</longname>
       <class>Source/Subtitle</class>
-      <description>Inter-pipeline subtitle source</description>
-      <author>David Schleef &lt;ds@entropywave.com&gt;</author>
+      <description>Virtual subtitle source for internal process communication</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>src</name>
@@ -71,31 +71,31 @@
     </element>
     <element>
       <name>intervideosink</name>
-      <longname>FIXME Long name</longname>
-      <class>Generic</class>
-      <description>FIXME Description</description>
-      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <longname>Internal video sink</longname>
+      <class>Sink/Video</class>
+      <description>Virtual video sink for internal process communication</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>
     <element>
       <name>intervideosrc</name>
-      <longname>FIXME Long name</longname>
-      <class>Generic</class>
-      <description>FIXME Description</description>
-      <author>FIXME &lt;fixme@example.com&gt;</author>
+      <longname>Internal video source</longname>
+      <class>Source/Video</class>
+      <description>Virtual video source for internal process communication</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-raw-yuv, format=(fourcc)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+          <details>video/x-raw, format=(string)I420, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

@@ -3,10 +3,10 @@
   <description>JPEG interchange format plugin</description>
   <filename>../../gst/jpegformat/.libs/libgstjpegformat.so</filename>
   <basename>libgstjpegformat.so</basename>
-  <version>0.10.23.1</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -47,7 +47,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>image/jpeg, format=(fourcc){ I420, Y41B, UYVY, YV12 }, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], interlaced=(boolean){ true, false }, framerate=(fraction)[ 0/1, 2147483647/1 ], parsed=(boolean)true</details>
+          <details>image/jpeg, format=(string){ I420, Y41B, UYVY, YV12 }, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], interlaced=(boolean){ true, false }, framerate=(fraction)[ 0/1, 2147483647/1 ], parsed=(boolean)true</details>
         </caps>
       </pads>
     </element>

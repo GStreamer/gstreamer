@@ -1,6 +1,8 @@
 GObject
   GInitiallyUnowned
     GstObject
+      GstAllocator
+        GstDefaultAllocator
       GstBus
       GstClock
       GstControlBinding
@@ -15,16 +17,17 @@ GObject
           GstDtsDec
           GstFaad
           GstGSMDec
-          GstOpusDec
+          GstMpg123AudioDec
+          GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstCeltEnc
           GstFaac
           GstGSMEnc
-          GstOpusEnc
+          GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
-        GstBaseAudioVisualizer
+        GstAudioVisualizer-BadGstAudioVisualizers
           GstSpaceScope
           GstSpectraScope
           GstSynaeScope
@@ -36,7 +39,6 @@ GObject
           GstIRTSPParse
           GstMpeg4VParse
           GstMpegvParse
-          GstOpusParse
         GstBaseSink
           GstChecksumSink
           GstCurlBaseSink
@@ -45,18 +47,30 @@ GObject
               GstCurlFtpSink
               GstCurlHttpSink
               GstCurlSmtpSink
+          GstInterAudioSink
+          GstInterSubSink
+          GstInterVideoSink
           GstRTMPSink
           GstShmSink
+          GstVideoSink
+            GstWaylandSink
         GstBaseSrc
           GstDTMFSrc
           GstDataURISrc
           GstFliteTestSrc
+          GstInterAudioSrc
+          GstInterSubSrc
+          GstInterVideoSrc
           GstPushSrc
+            GstDvbSrc
             GstMMS
             GstRTMPSrc
             GstShmSrc
           GstRTPDTMFSrc
         GstBaseTransform
+          GstAudioFilter
+            GstBPMDetect
+            GstChromaprint
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -89,10 +103,20 @@ GObject
               GstMirror
               GstRotate
               GstSquare
+            GstOpencvVideoFilter
+              GstCvDilateErode
+                GstCvDilate
+                GstCvErode
+              GstCvEqualizeHist
+              GstCvLaplace
+              GstCvSmooth
+              GstCvSobel
+              GstFaceDetect
             GstSmooth
             GstSolarize
             GstZBar
         GstBin
+          DvbBaseBin
           GstAutoConvert
           GstAutoVideoConvert
           GstBaseCameraSrc
@@ -102,24 +126,43 @@ GObject
             GstCameraBin
           GstSDPDemux
           GstViewfinderBin
+          RsnDvdBin
         GstBz2dec
         GstBz2enc
         GstChopMyData
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstEdgeDetect
+        GstFaceBlur
+        GstFestival
+        GstFreeze
+        GstGDPDepay
+        GstGDPPay
         GstGmeDec
         GstHLSDemux
+        GstInterlace
+        GstJifMux
+        GstJpegParse
+        GstLiveAdder
+        GstMimDec
+        GstMimEnc
         GstModPlug
+        GstMotioncells
+        GstMpeg2enc
         GstMpegPSDemux
+        GstMplex
+        GstOpencvTextOverlay
         GstPcapParse
+        GstPitch
+        GstPnmdec
+        GstPnmenc
+        GstPyramidSegment
         GstRTPBaseDepayload
-          GstRTPOpusDepay
           GstRtpDTMFDepay
           GstRtpVP8Depay
         GstRTPBasePayload
           GstRtpAsfPay
-          GstRtpOPUSPay
           GstRtpVP8Pay
         GstRTPMux
           GstRTPDTMFMux
@@ -129,6 +172,11 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
+        GstSpanPlc
+        GstSpeed
+        GstTagMux
+          GstId3Mux
+        GstTemplateMatch
         GstVideoDecoder
           GstSchroDec
           GstVP8Dec
@@ -139,6 +187,7 @@ GObject
         MpegTSBase
           GstTSDemux
           MpegTSParse2
+        MpegTsMux
       GstPad
       GstPadTemplate
       GstPlugin
@@ -155,4 +204,5 @@ GInterface
   GstPhotography
   GstPreset
   GstTagSetter
+  GstTagXmpWriter
   GstURIHandler

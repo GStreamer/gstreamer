@@ -3,10 +3,10 @@
   <description>Synthesizes plain text into audio</description>
   <filename>../../gst/festival/.libs/libgstfestival.so</filename>
   <basename>libgstfestival.so</basename>
-  <version>0.10.23.1</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -14,13 +14,13 @@
       <longname>Festival Text-to-Speech synthesizer</longname>
       <class>Filter/Effect/Audio</class>
       <description>Synthesizes plain text into audio</description>
-      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>text/plain</details>
+          <details>text/x-raw, format=(string)utf8</details>
         </caps>
         <caps>
           <name>src</name>

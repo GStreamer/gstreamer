@@ -3,10 +3,10 @@
   <description>DVB elements</description>
   <filename>../../sys/dvb/.libs/libgstdvb.so</filename>
   <basename>libgstdvb.so</basename>
-  <version>0.10.23.1</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -17,13 +17,13 @@
       <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
       <pads>
         <caps>
-          <name>program_%d</name>
+          <name>src</name>
           <direction>source</direction>
-          <presence>sometimes</presence>
+          <presence>always</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>
         </caps>
         <caps>
-          <name>src%d</name>
+          <name>program_%u</name>
           <direction>source</direction>
           <presence>request</presence>
           <details>video/mpegts, systemstream=(boolean)true</details>

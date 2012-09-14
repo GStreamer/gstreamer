@@ -39,6 +39,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPitch::output-rate</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Output Rate</NICK>
+<BLURB>Output rate on downstream segment events.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[-1,100]</RANGE>
@@ -1335,7 +1345,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Version</NICK>
 <BLURB>Version of the GStreamer Data Protocol.</BLURB>
-<DEFAULT>GDP Version 1.0</DEFAULT>
+<DEFAULT>GST_DP_VERSION_1_0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1786,6 +1796,16 @@
 <NICK>Timeout</NICK>
 <BLURB>Post a message after timeout microseconds (0 = disabled).</BLURB>
 <DEFAULT>1000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::dvb-buffer-size</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>dvb-buffer-size</NICK>
+<BLURB>The kernel buffer size used by the DVB api.</BLURB>
+<DEFAULT>1925120</DEFAULT>
 </ARG>
 
 <ARG>
@@ -19120,7 +19140,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Format</NICK>
 <BLURB>Encoding profile format.</BLURB>
-<DEFAULT>Generic MPEG-1</DEFAULT>
+<DEFAULT>DVD MPEG-2</DEFAULT>
 </ARG>
 
 <ARG>
@@ -22431,6 +22451,16 @@
 <NICK>PMT interval</NICK>
 <BLURB>Set the interval (in ticks of the 90kHz clock) for writing out the PMT table.</BLURB>
 <DEFAULT>9000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>MpegTsMux::alignment</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>packet alignment</NICK>
+<BLURB>Number of packets per buffer (padded with dummy packets on EOS) (-1 = auto, 0 = all available packets).</BLURB>
+<DEFAULT>-1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28360,7 +28390,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>inter_wavelet</NICK>
 <BLURB>inter_wavelet.</BLURB>
-<DEFAULT>desl_dubuc_9_7</DEFAULT>
+<DEFAULT>desl-dubuc-9-7</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28380,7 +28410,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>intra_wavelet</NICK>
 <BLURB>intra_wavelet.</BLURB>
-<DEFAULT>desl_dubuc_9_7</DEFAULT>
+<DEFAULT>desl-dubuc-9-7</DEFAULT>
 </ARG>
 
 <ARG>
@@ -28700,7 +28730,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>rate_control</NICK>
 <BLURB>rate_control.</BLURB>
-<DEFAULT>constant_quality</DEFAULT>
+<DEFAULT>constant-quality</DEFAULT>
 </ARG>
 
 <ARG>
@@ -45850,7 +45880,17 @@
 <FLAGS>rw</FLAGS>
 <NICK>Post Processing Flags</NICK>
 <BLURB>Flags to control post processing.</BLURB>
-<DEFAULT>Deblock|Demacroblock</DEFAULT>
+<DEFAULT>Deblock|Demacroblock|Multi-frame quality enhancement</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Dec::threads</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Threads</NICK>
+<BLURB>Maximum number of decoding threads.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 
 <ARG>
@@ -46135,7 +46175,7 @@
 
 <ARG>
 <NAME>GstPhotography::flash-mode</NAME>
-<TYPE>GstFlashMode</TYPE>
+<TYPE>GstPhotographyFlashMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flash mode property</NICK>
@@ -46145,7 +46185,7 @@
 
 <ARG>
 <NAME>GstPhotography::flicker-mode</NAME>
-<TYPE>GstFlickerReductionMode</TYPE>
+<TYPE>GstPhotographyFlickerReductionMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flicker reduction mode property</NICK>
@@ -46155,7 +46195,7 @@
 
 <ARG>
 <NAME>GstPhotography::focus-mode</NAME>
-<TYPE>GstFocusMode</TYPE>
+<TYPE>GstPhotographyFocusMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Focus mode property</NICK>
@@ -46185,7 +46225,7 @@
 
 <ARG>
 <NAME>GstPhotography::scene-mode</NAME>
-<TYPE>GstSceneMode</TYPE>
+<TYPE>GstPhotographySceneMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Scene mode property</NICK>
@@ -46195,7 +46235,7 @@
 
 <ARG>
 <NAME>GstPhotography::white-balance-mode</NAME>
-<TYPE>GstWhiteBalanceMode</TYPE>
+<TYPE>GstPhotographyWhiteBalanceMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>White balance mode property</NICK>
@@ -46231,6 +46271,86 @@
 <NICK>Zoom property</NICK>
 <BLURB>How much the resulted image will be zoomed.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::analog-gain</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Analog gain applied to the sensor</NICK>
+<BLURB>Analog gain applied to the sensor.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::color-temperature</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color temperature in Kelvin units</NICK>
+<BLURB>Color temperature in Kelvin units for manual white balance.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::color-tone-mode</NAME>
+<TYPE>GstPhotographyColorToneMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color tone mode property</NICK>
+<BLURB>Color tone setting changes color shading in the photo.</BLURB>
+<DEFAULT>GST_PHOTOGRAPHY_COLOR_TONE_MODE_NORMAL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::exposure-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Exposure time in milliseconds</NICK>
+<BLURB>Exposure time defines how long the shutter will stay open (0 = auto).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::lens-focus</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Manual lens focus</NICK>
+<BLURB>Focus point in diopter units.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::max-exposure-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Maximum exposure time</NICK>
+<BLURB>Maximum exposure time for automatic exposure mode.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::min-exposure-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum exposure time</NICK>
+<BLURB>Minimum exposure time for automatic exposure mode.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPhotography::white-point</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>White point</NICK>
+<BLURB>Describe color white as raw values.</BLURB>
+<DEFAULT></DEFAULT>
 </ARG>
 
 <ARG>
@@ -47196,7 +47316,7 @@
 <ARG>
 <NAME>GstCvSobel::x-order</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>x order</NICK>
 <BLURB>Order of the derivative x.</BLURB>
@@ -47206,7 +47326,7 @@
 <ARG>
 <NAME>GstCvSobel::y-order</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>y order</NICK>
 <BLURB>Order of the derivative y.</BLURB>
@@ -47491,6 +47611,16 @@
 <NICK>max-page-timeout</NICK>
 <BLURB>Limit maximum display time of a subtitle page (0 - disabled, value in seconds).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDVBSubOverlay::force-end</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force End</NICK>
+<BLURB>Assume PES-aligned subtitles and force end-of-display.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -48410,7 +48540,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>text</NICK>
 <BLURB>Text to be display.</BLURB>
-<DEFAULT>""</DEFAULT>
+<DEFAULT>"Opencv Text Overlay"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58491,5 +58621,465 @@
 <NICK>Use in-band FEC</NICK>
 <BLURB>Use forward error correction if available.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterVideoSrc::channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel name to match inter src and sink elements.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterVideoSink::channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel name to match inter src and sink elements.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterSubSrc::channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel name to match inter src and sink elements.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterSubSink::channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel name to match inter src and sink elements.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterAudioSrc::channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel name to match inter src and sink elements.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstInterAudioSink::channel</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Channel</NICK>
+<BLURB>Channel name to match inter src and sink elements.</BLURB>
+<DEFAULT>"default"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWaylandSink::wayland-display</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Wayland Display</NICK>
+<BLURB>Wayland  Display handle created by the application .</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPyramidSegment::level</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,4]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Level</NICK>
+<BLURB>Maximum level of the pyramid segmentation.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPyramidSegment::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Silent</NICK>
+<BLURB>Produce verbose output ?.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPyramidSegment::threshold1</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold1</NICK>
+<BLURB>Error threshold for establishing links.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPyramidSegment::threshold2</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold2</NICK>
+<BLURB>Error threshold for segment clustering.</BLURB>
+<DEFAULT>60</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::calculatemotion</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Calculate Motion</NICK>
+<BLURB>If needs calculate motion on frame you need this property setting true otherwise false.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::cellscolor</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Color of Motion Cells</NICK>
+<BLURB>The color of motion cells separated with ",".</BLURB>
+<DEFAULT>"255,255,0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::datafile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DataFile</NICK>
+<BLURB>Location of motioncells data file (empty string means no saving).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::datafileextension</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>DataFile Extension</NICK>
+<BLURB>Extension of datafile.</BLURB>
+<DEFAULT>"vamc"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::display</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>Motion Cells visible or not on Current Frame.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::gap</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gap is time in second, elapsed time from last motion timestamp. </NICK>
+<BLURB>If elapsed time minus form last motion timestamp is greater or equal than gap then we post motion finished bus message. .</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::gridx</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,32]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of Horizontal Grids</NICK>
+<BLURB>You can give number of horizontal grid cells.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::gridy</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[8,32]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of Vertical Grids</NICK>
+<BLURB>You can give number of vertical grid cells.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::minimummotionframes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>MINIMUN MOTION FRAMES</NICK>
+<BLURB>Define the minimum number of motion frames that trigger a motion event.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::motioncellsidx</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Cells Of Interest(MOCI)</NICK>
+<BLURB>The line and column idx separated with ":", describe a cell. Cells separated with ",".</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::motioncellthickness</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[G_MAXULONG,5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Cell Thickness</NICK>
+<BLURB>Motion Cell Border Thickness, if it's -1 then motion cell will be fill.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::motionmaskcellspos</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Mask with Cells Position</NICK>
+<BLURB>The line and column idx separated with ":" what cells want we mask-out, describe a cell. Cells separated with ",".</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::motionmaskcoords</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Mask with Coordinates</NICK>
+<BLURB>The upper left x, y and lower right x, y coordinates separated with ":", describe a region. Regions separated with ",".</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::postallmotion</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Post All Motion</NICK>
+<BLURB>Element post bus msg for every motion frame or just motion start and motion stop.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::postnomotion</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,180]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>POSTNOMOTION</NICK>
+<BLURB>If non 0 post a no_motion event is posted on the bus if no motion is detected for N seconds.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::sensitivity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Motion Sensitivity</NICK>
+<BLURB>You can tunning the element motion sensitivity.</BLURB>
+<DEFAULT>0.5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::threshold</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lower bound of motion cells number</NICK>
+<BLURB>Threshold value for motion, when motion cells number greater sum cells * threshold, we show motion.</BLURB>
+<DEFAULT>0.01</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMotioncells::usealpha</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use alpha</NICK>
+<BLURB>Use or not alpha blending on frames with motion cells.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::display</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Display</NICK>
+<BLURB>Sets whether the detected faces should be highlighted in the output.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::eyes-profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Eyes profile</NICK>
+<BLURB>Location of Haar cascade file to use for eye-pair detection.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_eyepair_small.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::flags</NAME>
+<TYPE>GstOpencvFaceDetectFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flags</NICK>
+<BLURB>Flags to cvHaarDetectObjects.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::min-neighbors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mininum neighbors</NICK>
+<BLURB>Minimum number (minus 1) of neighbor rectangles that makes up an object.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::min-size-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum face height</NICK>
+<BLURB>Minimum area height to be recognized as a face.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::min-size-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Minimum face width</NICK>
+<BLURB>Minimum area width to be recognized as a face.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::mouth-profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mouth profile</NICK>
+<BLURB>Location of Haar cascade file to use for mouth detection.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_mouth.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::nose-profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Nose profile</NICK>
+<BLURB>Location of Haar cascade file to use for nose detection.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_mcs_nose.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Face profile</NICK>
+<BLURB>Location of Haar cascade file to use for face detection.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceDetect::scale-factor</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[1.1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Scale factor</NICK>
+<BLURB>Factor by which the frame is scaled after each object scan.</BLURB>
+<DEFAULT>1.1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFaceBlur::profile</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Profile</NICK>
+<BLURB>Location of Haar cascade file to use for face blurion.</BLURB>
+<DEFAULT>"/usr/share/opencv/haarcascades/haarcascade_frontalface_default.xml"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEdgeDetect::aperture</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[3,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Aperture</NICK>
+<BLURB>Aperture size for Sobel operator (Must be either 3, 5 or 7.</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEdgeDetect::mask</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mask</NICK>
+<BLURB>Sets whether the detected edges should be used as a mask on the original input or not.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEdgeDetect::threshold1</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold1</NICK>
+<BLURB>Threshold value for canny edge detection.</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEdgeDetect::threshold2</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold2</NICK>
+<BLURB>Second threshold value for canny edge detection.</BLURB>
+<DEFAULT>150</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromaprint::duration</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Duration limit</NICK>
+<BLURB>Number of seconds of audio to use for fingerprinting.</BLURB>
+<DEFAULT>120</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstChromaprint::fingerprint</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Resulting fingerprint</NICK>
+<BLURB>Resulting fingerprint.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 

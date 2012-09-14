@@ -3,7 +3,7 @@
   <description>videoparsers</description>
   <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
   <basename>libgstvideoparsersbad.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-dirac, parsed=(boolean)true, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], interlaced=(boolean){ true, false }, profile=(int)[ 0, 2147483647 ], level=(int)[ 0, 2147483647 ]</details>
+          <details>video/x-dirac, parsed=(boolean)true, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], interlace-mode=(string){ progressive, interleaved }, profile=(string){ vc2-low-delay, vc2-simple, vc2-main, main }, level=(string){ 0, 1, 128 }</details>
         </caps>
       </pads>
     </element>
