@@ -956,15 +956,11 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
   if (!self->started) {
     GST_ERROR_OBJECT (self, "Codec not started yet");
-    if (inbuf)
-      gst_buffer_unref (inbuf);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
   if (self->eos) {
     GST_WARNING_OBJECT (self, "Got frame after EOS");
-    if (inbuf)
-      gst_buffer_unref (inbuf);
     return GST_FLOW_UNEXPECTED;
   }
 
@@ -1060,42 +1056,35 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
       goto queue_error;
   }
 
-  gst_buffer_unref (inbuf);
-
   return self->downstream_flow_ret;
 
 downstream_error:
   {
     GST_ERROR_OBJECT (self, "Downstream returned %s",
         gst_flow_get_name (self->downstream_flow_ret));
-    gst_buffer_unref (inbuf);
     return self->downstream_flow_ret;
   }
 invalid_buffer_index:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Invalid input buffer index %d of %d", idx, self->n_input_buffers));
-    gst_buffer_unref (inbuf);
     return GST_FLOW_ERROR;
   }
 dequeue_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Failed to dequeue input buffer"));
-    gst_buffer_unref (inbuf);
     return GST_FLOW_ERROR;
   }
 queue_error:
   {
     GST_ELEMENT_ERROR (self, LIBRARY, FAILED, (NULL),
         ("Failed to queue input buffer"));
-    gst_buffer_unref (inbuf);
     return GST_FLOW_ERROR;
   }
 flushing:
   {
     GST_DEBUG_OBJECT (self, "Flushing -- returning WRONG_STATE");
-    gst_buffer_unref (inbuf);
     return GST_FLOW_WRONG_STATE;
   }
 }
