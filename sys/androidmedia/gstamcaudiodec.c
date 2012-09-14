@@ -224,8 +224,8 @@ create_src_caps (const GstAmcCodecInfo * codec_info)
   GstCaps *ret;
 
   ret = gst_caps_new_simple ("audio/x-raw-int",
-      "rate", GST_TYPE_INT_RANGE, 0, G_MAXINT,
-      "channels", GST_TYPE_INT_RANGE, 1, 32,
+      "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
       "width", G_TYPE_INT, 16,
       "depth", G_TYPE_INT, 16,
       "signed", G_TYPE_BOOLEAN, TRUE,
