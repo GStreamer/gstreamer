@@ -327,7 +327,7 @@ gst_osx_audio_sink_acceptcaps (GstPad * pad, GstCaps * caps)
   GST_DEBUG_OBJECT (sink, "acceptcaps called with %s", caps_string);
   g_free (caps_string);
 
-  pad_caps = gst_pad_get_caps_reffed (pad);
+  pad_caps = gst_pad_get_caps (pad);
   if (pad_caps) {
     gboolean cret = gst_caps_can_intersect (pad_caps, caps);
     gst_caps_unref (pad_caps);
