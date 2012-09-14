@@ -4480,9 +4480,8 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 
   /* Note: we gave away ownership of the event at this point but we can still
    * print the old pointer */
-  GST_LOG_OBJECT (pad,
-      "sent event %" GST_PTR_FORMAT " to peerpad %"
-      GST_PTR_FORMAT ", ret %s", event, peerpad, gst_flow_get_name (ret));
+  GST_LOG_OBJECT (pad, "sent event %p to peerpad %" GST_PTR_FORMAT ", ret %s",
+      event, peerpad, gst_flow_get_name (ret));
 
   gst_object_unref (peerpad);
 
