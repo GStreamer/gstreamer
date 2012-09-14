@@ -574,6 +574,8 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   /* GstFFMpegVidDecVideoFrame receives the frame ref */
   picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
 
+  GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
+
   ffmpegdec->context->pix_fmt = context->pix_fmt;
 
   /* see if we need renegotiation */
@@ -1323,9 +1325,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   gboolean do_padding;
 
   GST_LOG_OBJECT (ffmpegdec,
-      "Received new data of size %u, pts:%"
+      "Received new data of size %u, dts %" GST_TIME_FORMAT ", pts:%"
       GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
       gst_buffer_get_size (frame->input_buffer),
+      GST_TIME_ARGS (frame->dts),
       GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->duration));
 
   if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
@@ -1523,8 +1526,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->
-        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->context->
+        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;
