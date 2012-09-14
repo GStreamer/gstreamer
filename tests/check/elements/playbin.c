@@ -652,7 +652,7 @@ gst_red_video_src_class_init (GstRedVideoSrcClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Red Video Src", "Source/Video", "yep", "me");
 
   pushsrc_class->create = gst_red_video_src_create;
@@ -754,7 +754,7 @@ gst_codec_src_class_init (GstCodecSrcClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Codec Src", "Source/Video", "yep", "me");
 
   pushsrc_class->create = gst_codec_src_create;

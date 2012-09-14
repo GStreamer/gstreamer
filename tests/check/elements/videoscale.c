@@ -795,7 +795,7 @@ gst_test_reverse_negotiation_sink_class_init (GstTestReverseNegotiationSinkClass
   gstelement_class = GST_ELEMENT_CLASS (klass);
   gstbase_sink_class = GST_BASE_SINK_CLASS (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "Test Reverse Negotiation Sink",
       "Sink",
       "Some test sink", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

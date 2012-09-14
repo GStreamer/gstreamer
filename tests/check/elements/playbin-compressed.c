@@ -165,7 +165,7 @@ gst_caps_src_class_init (GstCapsSrcClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "CapsSource", "Source/Generic", "yep", "me");
 
   gobject_class->finalize = gst_caps_src_finalize;
@@ -316,7 +316,7 @@ gst_audio_codec_sink_class_init (GstAudioCodecSinkClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "AudioCodecSink", "Sink/Audio", "yep", "me");
 
   basesink_class->set_caps = gst_audio_codec_sink_set_caps;
@@ -367,7 +367,7 @@ gst_video_codec_sink_class_init (GstVideoCodecSinkClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "VideoCodecSink", "Sink/Video", "yep", "me");
 
   basesink_class->set_caps = gst_video_codec_sink_set_caps;
@@ -438,7 +438,7 @@ gst_codec_demuxer_class_init (GstCodecDemuxerClass * klass)
       gst_static_pad_template_get (&cd_sink_templ));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&cd_src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "CodecDemuxer", "Codec/Demuxer", "yep", "me");
 }
 

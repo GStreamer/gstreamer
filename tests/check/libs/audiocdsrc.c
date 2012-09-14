@@ -201,7 +201,7 @@ gst_cd_foo_src_class_init (GstCdFooSrcClass * klass)
   GstAudioCdSrcClass *audiocdsrc_class = GST_AUDIO_CD_SRC_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "CD Audio (cdda) Source, FooBar", "Source/File",
       "Read audio from CD", "Foo Bar <foo@bar.com>");
 

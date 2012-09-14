@@ -228,7 +228,7 @@ test_mpeg_audio_parse_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "MPEG1 Audio Parser",
+  gst_element_class_set_metadata (element_class, "MPEG1 Audio Parser",
       "Codec/Parser/Audio", "Pretends to parse mpeg1 audio stream",
       "Foo Bar <foo@bar.com>");
 }
@@ -395,7 +395,7 @@ gst_fake_h264_parser_base_init (gpointer klass)
       gst_static_pad_template_get (&sink_templ));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "FakeH264Parser", "Codec/Parser/Converter/Video", "yep", "me");
 }
 
@@ -495,7 +495,7 @@ gst_fake_h264_decoder_base_init (gpointer klass)
       gst_static_pad_template_get (&sink_templ));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "FakeH264Decoder", "Codec/Decoder/Video", "yep", "me");
 }
 
