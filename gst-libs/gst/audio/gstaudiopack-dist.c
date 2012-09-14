@@ -283,12 +283,13 @@ audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u8");
@@ -310,17 +311,20 @@ audio_orc_unpack_u8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -397,12 +401,13 @@ audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s8");
@@ -421,17 +426,20 @@ audio_orc_unpack_s8 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -514,12 +522,13 @@ audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u16");
@@ -538,17 +547,20 @@ audio_orc_unpack_u16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -619,12 +631,13 @@ audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s16");
@@ -640,17 +653,20 @@ audio_orc_unpack_s16 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -739,12 +755,13 @@ audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u16_swap");
@@ -766,17 +783,20 @@ audio_orc_unpack_u16_swap (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -853,12 +873,13 @@ audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s16_swap");
@@ -877,17 +898,20 @@ audio_orc_unpack_s16_swap (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -964,12 +988,13 @@ audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u24_32");
@@ -986,17 +1011,20 @@ audio_orc_unpack_u24_32 (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1061,12 +1089,13 @@ audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s24_32");
@@ -1079,17 +1108,20 @@ audio_orc_unpack_s24_32 (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1172,12 +1204,13 @@ audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u24_32_swap");
@@ -1196,17 +1229,20 @@ audio_orc_unpack_u24_32_swap (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1277,12 +1313,13 @@ audio_orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s24_32_swap");
@@ -1298,17 +1335,20 @@ audio_orc_unpack_s24_32_swap (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1379,12 +1419,13 @@ audio_orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u32");
@@ -1397,17 +1438,20 @@ audio_orc_unpack_u32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1484,12 +1528,13 @@ audio_orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_u32_swap");
@@ -1505,17 +1550,20 @@ audio_orc_unpack_u32_swap (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1580,12 +1628,13 @@ audio_orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s32");
@@ -1597,17 +1646,20 @@ audio_orc_unpack_s32 (gint32 * ORC_RESTRICT d1, const guint8 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1672,12 +1724,13 @@ audio_orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_s32_swap");
@@ -1689,17 +1742,20 @@ audio_orc_unpack_s32_swap (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1772,12 +1828,13 @@ audio_orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_f32");
@@ -1789,17 +1846,20 @@ audio_orc_unpack_f32 (gdouble * ORC_RESTRICT d1, const gfloat * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1878,12 +1938,13 @@ audio_orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_f32_swap");
@@ -1898,17 +1959,20 @@ audio_orc_unpack_f32_swap (gdouble * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1973,12 +2037,13 @@ audio_orc_unpack_f64 (gdouble * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_f64");
@@ -1990,17 +2055,20 @@ audio_orc_unpack_f64 (gdouble * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2065,12 +2133,13 @@ audio_orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_unpack_f64_swap");
@@ -2082,17 +2151,20 @@ audio_orc_unpack_f64_swap (gdouble * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2181,12 +2253,13 @@ audio_orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u8");
@@ -2208,17 +2281,20 @@ audio_orc_pack_u8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2295,12 +2371,13 @@ audio_orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s8");
@@ -2319,17 +2396,20 @@ audio_orc_pack_s8 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2412,12 +2492,13 @@ audio_orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u16");
@@ -2436,17 +2517,20 @@ audio_orc_pack_u16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2517,12 +2601,13 @@ audio_orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s16");
@@ -2538,17 +2623,20 @@ audio_orc_pack_s16 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2637,12 +2725,13 @@ audio_orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u16_swap");
@@ -2664,17 +2753,20 @@ audio_orc_pack_u16_swap (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2751,12 +2843,13 @@ audio_orc_pack_s16_swap (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s16_swap");
@@ -2775,17 +2868,20 @@ audio_orc_pack_s16_swap (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2862,12 +2958,13 @@ audio_orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u24_32");
@@ -2884,17 +2981,20 @@ audio_orc_pack_u24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2959,12 +3059,13 @@ audio_orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s24_32");
@@ -2977,17 +3078,20 @@ audio_orc_pack_s24_32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3070,12 +3174,13 @@ audio_orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u24_32_swap");
@@ -3094,17 +3199,20 @@ audio_orc_pack_u24_32_swap (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3175,12 +3283,13 @@ audio_orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s24_32_swap");
@@ -3196,17 +3305,20 @@ audio_orc_pack_s24_32_swap (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3277,12 +3389,13 @@ audio_orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u32");
@@ -3295,17 +3408,20 @@ audio_orc_pack_u32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3370,12 +3486,13 @@ audio_orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s32");
@@ -3387,17 +3504,20 @@ audio_orc_pack_s32 (guint8 * ORC_RESTRICT d1, const gint32 * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3468,12 +3588,13 @@ audio_orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_u32_swap");
@@ -3486,17 +3607,20 @@ audio_orc_pack_u32_swap (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3561,12 +3685,13 @@ audio_orc_pack_s32_swap (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_s32_swap");
@@ -3578,17 +3703,20 @@ audio_orc_pack_s32_swap (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3665,12 +3793,13 @@ audio_orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_f32");
@@ -3682,17 +3811,20 @@ audio_orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3775,12 +3907,13 @@ audio_orc_pack_f32_swap (gfloat * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_f32_swap");
@@ -3795,17 +3928,20 @@ audio_orc_pack_f32_swap (gfloat * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3870,12 +4006,13 @@ audio_orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_f64");
@@ -3887,17 +4024,20 @@ audio_orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3962,12 +4102,13 @@ audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "audio_orc_pack_f64_swap");
@@ -3979,17 +4120,20 @@ audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif

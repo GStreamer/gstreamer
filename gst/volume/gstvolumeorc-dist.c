@@ -233,12 +233,13 @@ volume_orc_scalarmultiply_f64_ns (double *ORC_RESTRICT d1, double p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_scalarmultiply_f64_ns");
@@ -251,11 +252,14 @@ volume_orc_scalarmultiply_f64_ns (double *ORC_RESTRICT d1, double p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -266,7 +270,7 @@ volume_orc_scalarmultiply_f64_ns (double *ORC_RESTRICT d1, double p1, int n)
     ex->params[ORC_VAR_T1] = tmp.x2[1];
   }
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -347,12 +351,13 @@ volume_orc_scalarmultiply_f32_ns (float *ORC_RESTRICT d1, float p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_scalarmultiply_f32_ns");
@@ -365,11 +370,14 @@ volume_orc_scalarmultiply_f32_ns (float *ORC_RESTRICT d1, float p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -379,7 +387,7 @@ volume_orc_scalarmultiply_f32_ns (float *ORC_RESTRICT d1, float p1, int n)
     ex->params[ORC_VAR_P1] = tmp.i;
   }
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -456,12 +464,13 @@ volume_orc_process_int32 (gint32 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_int32");
@@ -479,17 +488,20 @@ volume_orc_process_int32 (gint32 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -566,12 +578,13 @@ volume_orc_process_int32_clamp (gint32 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_int32_clamp");
@@ -590,17 +603,20 @@ volume_orc_process_int32_clamp (gint32 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -677,12 +693,13 @@ volume_orc_process_int16 (gint16 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_int16");
@@ -700,17 +717,20 @@ volume_orc_process_int16 (gint16 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -787,12 +807,13 @@ volume_orc_process_int16_clamp (gint16 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_int16_clamp");
@@ -811,17 +832,20 @@ volume_orc_process_int16_clamp (gint16 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -898,12 +922,13 @@ volume_orc_process_int8 (gint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_int8");
@@ -921,17 +946,20 @@ volume_orc_process_int8 (gint8 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1008,12 +1036,13 @@ volume_orc_process_int8_clamp (gint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_int8_clamp");
@@ -1032,17 +1061,20 @@ volume_orc_process_int8_clamp (gint8 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1103,12 +1135,13 @@ volume_orc_memset_f64 (gdouble * ORC_RESTRICT d1, double p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_memset_f64");
@@ -1120,11 +1153,14 @@ volume_orc_memset_f64 (gdouble * ORC_RESTRICT d1, double p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -1135,7 +1171,7 @@ volume_orc_memset_f64 (gdouble * ORC_RESTRICT d1, double p1, int n)
     ex->params[ORC_VAR_T1] = tmp.x2[1];
   }
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1256,12 +1292,13 @@ volume_orc_prepare_volumes (gdouble * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_prepare_volumes");
@@ -1279,17 +1316,20 @@ volume_orc_prepare_volumes (gdouble * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1376,12 +1416,13 @@ volume_orc_process_controlled_f64_1ch (gdouble * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_f64_1ch");
@@ -1394,17 +1435,20 @@ volume_orc_process_controlled_f64_1ch (gdouble * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1509,12 +1553,13 @@ volume_orc_process_controlled_f32_1ch (gfloat * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_f32_1ch");
@@ -1530,17 +1575,20 @@ volume_orc_process_controlled_f32_1ch (gfloat * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1679,12 +1727,13 @@ volume_orc_process_controlled_f32_2ch (gfloat * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_f32_2ch");
@@ -1703,17 +1752,20 @@ volume_orc_process_controlled_f32_2ch (gfloat * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1824,12 +1876,13 @@ volume_orc_process_controlled_int32_1ch (gint32 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_int32_1ch");
@@ -1847,17 +1900,20 @@ volume_orc_process_controlled_int32_1ch (gint32 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1998,12 +2054,13 @@ volume_orc_process_controlled_int16_1ch (gint16 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_int16_1ch");
@@ -2028,17 +2085,20 @@ volume_orc_process_controlled_int16_1ch (gint16 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2233,12 +2293,13 @@ volume_orc_process_controlled_int16_2ch (gint16 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_int16_2ch");
@@ -2266,17 +2327,20 @@ volume_orc_process_controlled_int16_2ch (gint16 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2429,12 +2493,13 @@ volume_orc_process_controlled_int8_1ch (gint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_int8_1ch");
@@ -2464,17 +2529,20 @@ volume_orc_process_controlled_int8_1ch (gint8 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2685,12 +2753,13 @@ volume_orc_process_controlled_int8_2ch (gint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "volume_orc_process_controlled_int8_2ch");
@@ -2722,17 +2791,20 @@ volume_orc_process_controlled_int8_2ch (gint8 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif

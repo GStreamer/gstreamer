@@ -182,12 +182,13 @@ video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_test_src_orc_splat_u32");
@@ -199,17 +200,20 @@ video_test_src_orc_splat_u32 (guint8 * ORC_RESTRICT d1, int p1, int n)
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->params[ORC_VAR_P1] = p1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif

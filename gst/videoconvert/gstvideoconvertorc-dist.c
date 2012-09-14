@@ -377,12 +377,13 @@ video_convert_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -395,11 +396,14 @@ video_convert_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -408,7 +412,7 @@ video_convert_orc_memcpy_2d (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -581,12 +585,13 @@ video_convert_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_I420_UYVY");
@@ -608,11 +613,14 @@ video_convert_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -622,7 +630,7 @@ video_convert_orc_convert_I420_UYVY (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->arrays[ORC_VAR_S4] = (void *) s4;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -795,12 +803,13 @@ video_convert_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_I420_YUY2");
@@ -822,11 +831,14 @@ video_convert_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -836,7 +848,7 @@ video_convert_orc_convert_I420_YUY2 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->arrays[ORC_VAR_S4] = (void *) s4;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1029,12 +1041,13 @@ video_convert_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_I420_AYUV");
@@ -1068,11 +1081,14 @@ video_convert_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -1082,7 +1098,7 @@ video_convert_orc_convert_I420_AYUV (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->arrays[ORC_VAR_S4] = (void *) s4;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1265,12 +1281,13 @@ video_convert_orc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_YUY2_I420");
@@ -1300,11 +1317,14 @@ video_convert_orc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -1314,7 +1334,7 @@ video_convert_orc_convert_YUY2_I420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1388,12 +1408,13 @@ video_convert_orc_convert_UYVY_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -1407,11 +1428,14 @@ video_convert_orc_convert_UYVY_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -1420,7 +1444,7 @@ video_convert_orc_convert_UYVY_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1514,12 +1538,13 @@ video_convert_orc_planar_chroma_420_422 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -1536,11 +1561,14 @@ video_convert_orc_planar_chroma_420_422 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -1551,7 +1579,7 @@ video_convert_orc_planar_chroma_420_422 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1633,12 +1661,13 @@ video_convert_orc_planar_chroma_420_444 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -1658,11 +1687,14 @@ video_convert_orc_planar_chroma_420_444 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -1673,7 +1705,7 @@ video_convert_orc_planar_chroma_420_444 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1745,12 +1777,13 @@ video_convert_orc_planar_chroma_422_444 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -1767,11 +1800,14 @@ video_convert_orc_planar_chroma_422_444 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -1780,7 +1816,7 @@ video_convert_orc_planar_chroma_422_444 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -1870,12 +1906,13 @@ video_convert_orc_planar_chroma_444_422 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -1893,11 +1930,14 @@ video_convert_orc_planar_chroma_444_422 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -1906,7 +1946,7 @@ video_convert_orc_planar_chroma_444_422 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2020,12 +2060,13 @@ video_convert_orc_planar_chroma_444_420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -2047,11 +2088,14 @@ video_convert_orc_planar_chroma_444_420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -2062,7 +2106,7 @@ video_convert_orc_planar_chroma_444_420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->params[ORC_VAR_S2] = s2_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2146,12 +2190,13 @@ video_convert_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -2166,11 +2211,14 @@ video_convert_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -2181,7 +2229,7 @@ video_convert_orc_planar_chroma_422_420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->params[ORC_VAR_S2] = s2_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2357,12 +2405,13 @@ video_convert_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -2387,11 +2436,14 @@ video_convert_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -2400,7 +2452,7 @@ video_convert_orc_convert_YUY2_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2576,12 +2628,13 @@ video_convert_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -2606,11 +2659,14 @@ video_convert_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -2619,7 +2675,7 @@ video_convert_orc_convert_UYVY_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2751,12 +2807,13 @@ video_convert_orc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -2775,11 +2832,14 @@ video_convert_orc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -2792,7 +2852,7 @@ video_convert_orc_convert_YUY2_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -2924,12 +2984,13 @@ video_convert_orc_convert_UYVY_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -2948,11 +3009,14 @@ video_convert_orc_convert_UYVY_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -2965,7 +3029,7 @@ video_convert_orc_convert_UYVY_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3109,12 +3173,13 @@ video_convert_orc_convert_YUY2_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -3139,11 +3204,14 @@ video_convert_orc_convert_YUY2_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -3156,7 +3224,7 @@ video_convert_orc_convert_YUY2_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3300,12 +3368,13 @@ video_convert_orc_convert_UYVY_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -3330,11 +3399,14 @@ video_convert_orc_convert_UYVY_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -3347,7 +3419,7 @@ video_convert_orc_convert_UYVY_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3530,12 +3602,13 @@ video_convert_orc_convert_UYVY_I420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_UYVY_I420");
@@ -3565,11 +3638,14 @@ video_convert_orc_convert_UYVY_I420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -3579,7 +3655,7 @@ video_convert_orc_convert_UYVY_I420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -3891,12 +3967,13 @@ video_convert_orc_convert_AYUV_I420 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -3940,11 +4017,14 @@ video_convert_orc_convert_AYUV_I420 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -3961,7 +4041,7 @@ video_convert_orc_convert_AYUV_I420 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->params[ORC_VAR_S2] = s2_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -4139,12 +4219,13 @@ video_convert_orc_convert_AYUV_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -4171,11 +4252,14 @@ video_convert_orc_convert_AYUV_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -4184,7 +4268,7 @@ video_convert_orc_convert_AYUV_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -4362,12 +4446,13 @@ video_convert_orc_convert_AYUV_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -4394,11 +4479,14 @@ video_convert_orc_convert_AYUV_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -4407,7 +4495,7 @@ video_convert_orc_convert_AYUV_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -4593,12 +4681,13 @@ video_convert_orc_convert_AYUV_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -4626,11 +4715,14 @@ video_convert_orc_convert_AYUV_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -4643,7 +4735,7 @@ video_convert_orc_convert_AYUV_Y42B (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -4777,12 +4869,13 @@ video_convert_orc_convert_AYUV_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -4804,11 +4897,14 @@ video_convert_orc_convert_AYUV_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -4821,7 +4917,7 @@ video_convert_orc_convert_AYUV_Y444 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -4955,12 +5051,13 @@ video_convert_orc_convert_Y42B_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -4979,11 +5076,14 @@ video_convert_orc_convert_Y42B_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -4996,7 +5096,7 @@ video_convert_orc_convert_Y42B_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -5130,12 +5230,13 @@ video_convert_orc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -5154,11 +5255,14 @@ video_convert_orc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -5171,7 +5275,7 @@ video_convert_orc_convert_Y42B_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -5357,12 +5461,13 @@ video_convert_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -5389,11 +5494,14 @@ video_convert_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -5406,7 +5514,7 @@ video_convert_orc_convert_Y42B_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -5582,12 +5690,13 @@ video_convert_orc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -5613,11 +5722,14 @@ video_convert_orc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -5630,7 +5742,7 @@ video_convert_orc_convert_Y444_YUY2 (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -5806,12 +5918,13 @@ video_convert_orc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -5837,11 +5950,14 @@ video_convert_orc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -5854,7 +5970,7 @@ video_convert_orc_convert_Y444_UYVY (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -5998,12 +6114,13 @@ video_convert_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -6026,11 +6143,14 @@ video_convert_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -6043,7 +6163,7 @@ video_convert_orc_convert_Y444_AYUV (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->params[ORC_VAR_S3] = s3_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -6445,12 +6565,13 @@ video_convert_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -6553,11 +6674,14 @@ video_convert_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -6566,7 +6690,7 @@ video_convert_orc_convert_AYUV_ARGB (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -6968,12 +7092,13 @@ video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -7076,11 +7201,14 @@ video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -7089,7 +7217,7 @@ video_convert_orc_convert_AYUV_BGRA (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -7491,12 +7619,13 @@ video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -7599,11 +7728,14 @@ video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -7612,7 +7744,7 @@ video_convert_orc_convert_AYUV_ABGR (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -8014,12 +8146,13 @@ video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_2d (p);
@@ -8122,11 +8255,14 @@ video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ORC_EXECUTOR_M (ex) = m;
@@ -8135,7 +8271,7 @@ video_convert_orc_convert_AYUV_RGBA (guint8 * ORC_RESTRICT d1, int d1_stride,
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->params[ORC_VAR_S1] = s1_stride;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -8524,12 +8660,13 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_I420_BGRA");
@@ -8633,11 +8770,14 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -8645,7 +8785,7 @@ video_convert_orc_convert_I420_BGRA (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -9076,12 +9216,13 @@ video_convert_orc_convert_I420_BGRA_avg (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_convert_I420_BGRA_avg");
@@ -9196,11 +9337,14 @@ video_convert_orc_convert_I420_BGRA_avg (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -9210,7 +9354,7 @@ video_convert_orc_convert_I420_BGRA_avg (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S4] = (void *) s4;
   ex->arrays[ORC_VAR_S5] = (void *) s5;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -9345,12 +9489,13 @@ video_convert_orc_getline_I420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_I420");
@@ -9378,11 +9523,14 @@ video_convert_orc_getline_I420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -9390,7 +9538,7 @@ video_convert_orc_getline_I420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -9567,12 +9715,13 @@ video_convert_orc_getline_YUV9 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_YUV9");
@@ -9603,11 +9752,14 @@ video_convert_orc_getline_YUV9 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -9615,7 +9767,7 @@ video_convert_orc_getline_YUV9 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -9784,12 +9936,13 @@ video_convert_orc_getline_YUY2 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_YUY2");
@@ -9813,17 +9966,20 @@ video_convert_orc_getline_YUY2 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -9992,12 +10148,13 @@ video_convert_orc_getline_UYVY (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_UYVY");
@@ -10021,17 +10178,20 @@ video_convert_orc_getline_UYVY (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -10206,12 +10366,13 @@ video_convert_orc_getline_YVYU (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_YVYU");
@@ -10237,17 +10398,20 @@ video_convert_orc_getline_YVYU (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -10424,12 +10588,13 @@ video_convert_orc_getline_Y42B (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_Y42B");
@@ -10455,11 +10620,14 @@ video_convert_orc_getline_Y42B (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -10467,7 +10635,7 @@ video_convert_orc_getline_Y42B (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -10602,12 +10770,13 @@ video_convert_orc_getline_Y444 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_Y444");
@@ -10629,11 +10798,14 @@ video_convert_orc_getline_Y444 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -10641,7 +10813,7 @@ video_convert_orc_getline_Y444 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S2] = (void *) s2;
   ex->arrays[ORC_VAR_S3] = (void *) s3;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -10744,12 +10916,13 @@ video_convert_orc_getline_Y800 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_Y800");
@@ -10767,17 +10940,20 @@ video_convert_orc_getline_Y800 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -10886,12 +11062,13 @@ video_convert_orc_getline_Y16 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_Y16");
@@ -10912,17 +11089,20 @@ video_convert_orc_getline_Y16 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -10987,12 +11167,13 @@ video_convert_orc_getline_BGRA (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_BGRA");
@@ -11005,17 +11186,20 @@ video_convert_orc_getline_BGRA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -11176,12 +11360,13 @@ video_convert_orc_getline_ABGR (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_ABGR");
@@ -11212,17 +11397,20 @@ video_convert_orc_getline_ABGR (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -11383,12 +11571,13 @@ video_convert_orc_getline_RGBA (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_RGBA");
@@ -11419,17 +11608,20 @@ video_convert_orc_getline_RGBA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -11584,12 +11776,13 @@ video_convert_orc_getline_NV12 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_NV12");
@@ -11610,18 +11803,21 @@ video_convert_orc_getline_NV12 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -11776,12 +11972,13 @@ video_convert_orc_getline_NV21 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_NV21");
@@ -11805,18 +12002,21 @@ video_convert_orc_getline_NV21 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
   ex->arrays[ORC_VAR_S2] = (void *) s2;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -11955,12 +12155,13 @@ video_convert_orc_getline_A420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_getline_A420");
@@ -11988,11 +12189,14 @@ video_convert_orc_getline_A420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -12001,7 +12205,7 @@ video_convert_orc_getline_A420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_S3] = (void *) s3;
   ex->arrays[ORC_VAR_S4] = (void *) s4;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -12210,12 +12414,13 @@ video_convert_orc_putline_I420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_I420");
@@ -12248,11 +12453,14 @@ video_convert_orc_putline_I420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -12260,7 +12468,7 @@ video_convert_orc_putline_I420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_D3] = d3;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -12427,12 +12635,13 @@ video_convert_orc_putline_YUY2 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_YUY2");
@@ -12458,17 +12667,20 @@ video_convert_orc_putline_YUY2 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -12641,12 +12853,13 @@ video_convert_orc_putline_YVYU (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_YVYU");
@@ -12674,17 +12887,20 @@ video_convert_orc_putline_YVYU (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -12851,12 +13067,13 @@ video_convert_orc_putline_UYVY (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_UYVY");
@@ -12882,17 +13099,20 @@ video_convert_orc_putline_UYVY (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13067,12 +13287,13 @@ video_convert_orc_putline_Y42B (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_Y42B");
@@ -13099,11 +13320,14 @@ video_convert_orc_putline_Y42B (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -13111,7 +13335,7 @@ video_convert_orc_putline_Y42B (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_D3] = d3;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13238,12 +13462,13 @@ video_convert_orc_putline_Y444 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_Y444");
@@ -13264,11 +13489,14 @@ video_convert_orc_putline_Y444 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -13276,7 +13504,7 @@ video_convert_orc_putline_Y444 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_D3] = d3;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13363,12 +13591,13 @@ video_convert_orc_putline_Y800 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_Y800");
@@ -13384,17 +13613,20 @@ video_convert_orc_putline_Y800 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1, ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13493,12 +13725,13 @@ video_convert_orc_putline_Y16 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_Y16");
@@ -13520,17 +13753,20 @@ video_convert_orc_putline_Y16 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13595,12 +13831,13 @@ video_convert_orc_putline_BGRA (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_BGRA");
@@ -13613,17 +13850,20 @@ video_convert_orc_putline_BGRA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13784,12 +14024,13 @@ video_convert_orc_putline_ABGR (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_ABGR");
@@ -13820,17 +14061,20 @@ video_convert_orc_putline_ABGR (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -13991,12 +14235,13 @@ video_convert_orc_putline_RGBA (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_RGBA");
@@ -14027,17 +14272,20 @@ video_convert_orc_putline_RGBA (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -14184,12 +14432,13 @@ video_convert_orc_putline_NV12 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_NV12");
@@ -14213,18 +14462,21 @@ video_convert_orc_putline_NV12 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_D2] = d2;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -14377,12 +14629,13 @@ video_convert_orc_putline_NV21 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_NV21");
@@ -14409,18 +14662,21 @@ video_convert_orc_putline_NV21 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
   ex->arrays[ORC_VAR_D2] = d2;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
@@ -14661,12 +14917,13 @@ video_convert_orc_putline_A420 (guint8 * ORC_RESTRICT d1,
 {
   OrcExecutor _ex, *ex = &_ex;
   static volatile int p_inited = 0;
-  static OrcProgram *p = 0;
+  static OrcCode *c = 0;
   void (*func) (OrcExecutor *);
 
   if (!p_inited) {
     orc_once_mutex_lock ();
     if (!p_inited) {
+      OrcProgram *p;
 
       p = orc_program_new ();
       orc_program_set_name (p, "video_convert_orc_putline_A420");
@@ -14702,11 +14959,14 @@ video_convert_orc_putline_A420 (guint8 * ORC_RESTRICT d1,
           ORC_VAR_D1);
 
       orc_program_compile (p);
+      c = orc_program_take_code (p);
+      orc_program_free (p);
     }
     p_inited = TRUE;
     orc_once_mutex_unlock ();
   }
-  ex->program = p;
+  ex->arrays[ORC_VAR_A2] = c;
+  ex->program = 0;
 
   ex->n = n;
   ex->arrays[ORC_VAR_D1] = d1;
@@ -14715,7 +14975,7 @@ video_convert_orc_putline_A420 (guint8 * ORC_RESTRICT d1,
   ex->arrays[ORC_VAR_D4] = d4;
   ex->arrays[ORC_VAR_S1] = (void *) s1;
 
-  func = p->code_exec;
+  func = c->exec;
   func (ex);
 }
 #endif
