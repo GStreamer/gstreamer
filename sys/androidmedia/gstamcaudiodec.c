@@ -173,6 +173,14 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
       gst_caps_append_structure (ret, tmp);
+    } else if (strcmp (type->mime, "audio/flac") == 0) {
+      GstStructure *tmp;
+
+      tmp = gst_structure_new ("audio/x-flac",
+          "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_caps_append_structure (ret, tmp);
     } else {
       GST_WARNING ("Unsupported mimetype '%s'", type->mime);
     }
