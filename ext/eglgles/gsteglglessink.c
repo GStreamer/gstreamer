@@ -275,6 +275,7 @@ static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
 static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
+static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -824,15 +825,10 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   return ret;
 }
 
-gboolean
-gst_eglglessink_start (GstBaseSink * sink)
+static inline gboolean
+egl_init (GstEglGlesSink * eglglessink)
 {
-  gboolean ret;
-  GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
-
-  ret = platform_wrapper_init ();
-
-  if (!ret) {
+  if (!platform_wrapper_init ()) {
     GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL platform wrapper");
     goto HANDLE_ERROR;
   }
@@ -842,13 +838,42 @@ gst_eglglessink_start (GstBaseSink * sink)
     goto HANDLE_ERROR;
   }
 
+  gst_eglglessink_init_egl_exts (eglglessink);
+
   if (!gst_eglglessink_fill_supported_fbuffer_configs (eglglessink)) {
     GST_ERROR_OBJECT (eglglessink, "Display support NONE of our configs");
     goto HANDLE_ERROR;
   }
 
+  g_mutex_lock (eglglessink->flow_lock);
+  eglglessink->egl_started = TRUE;
+  g_mutex_unlock (eglglessink->flow_lock);
+
+  return TRUE;
+
+HANDLE_ERROR:
+  GST_ERROR_OBJECT (eglglessink, "Failed to perform EGL init");
+  return FALSE;
+}
+
+gboolean
+gst_eglglessink_start (GstBaseSink * sink)
+{
+  GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
+
+  if (!egl_init (eglglessink)) {
+    GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
+    goto HANDLE_ERROR;
+  }
+
   /* Ask for a window to render to */
   gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
+
+  if (!eglglessink->have_window && !eglglessink->can_create_window) {
+    GST_ERROR_OBJECT (eglglessink, "Window handle unavailable and we "
+        "were instructed not to create an internal one. Bailing out.");
+    goto HANDLE_ERROR;
+  }
 
   return TRUE;
 
@@ -1344,13 +1369,20 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   eglglessink->have_window = TRUE;
   g_mutex_unlock (eglglessink->flow_lock);
 
+  if (!eglglessink->egl_started) {
+    GST_INFO_OBJECT (eglglessink, "Got a handle, doing EGL initialization");
+    if (!egl_init (eglglessink)) {
+      GST_ERROR_OBJECT (eglglessink, "EGL Initialization failed!");
+      goto HANDLE_ERROR;
+    }
+  }
+
+/*
   if (!gst_eglglessink_init_egl_surface (eglglessink)) {
     GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface!");
     goto HANDLE_ERROR;
   }
-
-  /* Init extensions */
-  gst_eglglessink_init_egl_exts (eglglessink);
+*/
 
   return;
 
@@ -1551,11 +1583,13 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
    * already if it meant to do so
    */
   if (!eglglessink->have_window) {
+/*
     if (!eglglessink->can_create_window) {
       GST_ERROR_OBJECT (eglglessink,
           "Have no window and we have been told not to create one!");
       goto HANDLE_ERROR;
     }
+*/
     GST_INFO_OBJECT (eglglessink,
         "No window. Will attempt internal window creation");
     if (!(window = gst_eglglessink_create_window (eglglessink, width, height))) {
@@ -1565,12 +1599,13 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink), window);
   }
 
-  if (!gst_eglglessink_init_egl_surface (eglglessink)) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface from window");
-    goto HANDLE_ERROR;
+  if (!eglglessink->have_surface) {
+    if (!gst_eglglessink_init_egl_surface (eglglessink)) {
+      GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface from window");
+      goto HANDLE_ERROR;
+    }
   }
-
-  gst_eglglessink_init_egl_exts (eglglessink);
+//  gst_eglglessink_init_egl_exts (eglglessink);
 
 SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Setcaps succeed");
@@ -1719,6 +1754,7 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->have_surface = FALSE;
   eglglessink->have_vbo = FALSE;
   eglglessink->have_texture = FALSE;
+  eglglessink->egl_started = FALSE;
   eglglessink->running = FALSE; /* XXX: unused */
   eglglessink->can_create_window = TRUE;
   eglglessink->force_rendering_slow = FALSE;
