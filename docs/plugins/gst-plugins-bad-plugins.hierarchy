@@ -18,12 +18,14 @@ GObject
           GstFaad
           GstGSMDec
           GstMpg123AudioDec
+          GstOpusDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstCeltEnc
           GstFaac
           GstGSMEnc
+          GstOpusEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
@@ -39,6 +41,7 @@ GObject
           GstIRTSPParse
           GstMpeg4VParse
           GstMpegvParse
+          GstOpusParse
         GstBaseSink
           GstChecksumSink
           GstCurlBaseSink
@@ -52,8 +55,6 @@ GObject
           GstInterVideoSink
           GstRTMPSink
           GstShmSink
-          GstVideoSink
-            GstWaylandSink
         GstBaseSrc
           GstDTMFSrc
           GstDataURISrc
@@ -70,7 +71,6 @@ GObject
         GstBaseTransform
           GstAudioFilter
             GstBPMDetect
-            GstChromaprint
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -103,15 +103,6 @@ GObject
               GstMirror
               GstRotate
               GstSquare
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstFaceDetect
             GstSmooth
             GstSolarize
             GstZBar
@@ -133,8 +124,6 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstEdgeDetect
-        GstFaceBlur
         GstFestival
         GstFreeze
         GstGDPDepay
@@ -148,21 +137,18 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
-        GstMpeg2enc
         GstMpegPSDemux
-        GstMplex
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
-        GstPyramidSegment
         GstRTPBaseDepayload
+          GstRTPOpusDepay
           GstRtpDTMFDepay
           GstRtpVP8Depay
         GstRTPBasePayload
           GstRtpAsfPay
+          GstRtpOPUSPay
           GstRtpVP8Pay
         GstRTPMux
           GstRTPDTMFMux
@@ -172,11 +158,9 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
-        GstSpanPlc
         GstSpeed
         GstTagMux
           GstId3Mux
-        GstTemplateMatch
         GstVideoDecoder
           GstSchroDec
           GstVP8Dec

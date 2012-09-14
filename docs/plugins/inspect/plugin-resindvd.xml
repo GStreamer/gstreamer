@@ -3,7 +3,7 @@
   <description>Resin DVD playback elements</description>
   <filename>../../ext/resindvd/.libs/libgstresindvd.so</filename>
   <basename>libgstresindvd.so</basename>
-  <version>0.11.94</version>
+  <version>0.11.94.1</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>

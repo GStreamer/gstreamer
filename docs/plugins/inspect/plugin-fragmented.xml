@@ -3,7 +3,7 @@
   <description>Fragmented streaming plugins</description>
   <filename>../../gst/hls/.libs/libgstfragmented.so</filename>
   <basename>libgstfragmented.so</basename>
-  <version>0.11.94</version>
+  <version>0.11.94.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins</package>
