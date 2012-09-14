@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.2 0.10.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2006-08-29 01:08+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -200,18 +200,6 @@ msgid "Video device did not accept new frame rate setting."
 msgstr ""
 
 msgid "Video device could not create buffer pool."
-msgstr ""
-
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
 msgstr ""
 
 #, c-format

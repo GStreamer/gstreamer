@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -209,18 +209,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
@@ -329,6 +317,10 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "\"%s\" avadanlığından kifayət qədər bufferlər alına bilmədi."
 
 #~ msgid "Bass"
 #~ msgstr "Bas"

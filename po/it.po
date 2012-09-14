@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2010-10-25 10:11+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -221,18 +221,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Ottenuta dimensione inattesa del fotogramma: %u invece di %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Tentativo di ottenere fotogrammi video dal device «%s» non riuscito."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Fallito dopo %d tentativi. Device %s. Errore di sistema: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -364,6 +352,16 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Impossibile operare senza un clock"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Ottenuta dimensione inattesa del fotogramma: %u invece di %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr ""
+#~ "Tentativo di ottenere fotogrammi video dal device «%s» non riuscito."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Fallito dopo %d tentativi. Device %s. Errore di sistema: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Bassi"

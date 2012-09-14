@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2010-10-27 12:16+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -219,18 +219,6 @@ msgstr "Η συσκευή εισόδου βίντεο δεν αποδέχθηκ�
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Απροσδόκητο μέγεθος πλαισίου από %u αντί του %u"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Αποτυχία ανάγνωσης πλαισίων βίντεο από την συσκευή '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Αποτυχία έπειτα από %d προσπάθειες. συσκευή %s. σφάλμα συστήματος: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Αποτυχία ανάγνωσης των ρυθμίσεων δέκτη %d στην συσκευή '%s'."
@@ -350,6 +338,16 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Δεν είναι δυνατή η λειτουργία χωρίς ρολόι "
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Απροσδόκητο μέγεθος πλαισίου από %u αντί του %u"
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Αποτυχία ανάγνωσης πλαισίων βίντεο από την συσκευή '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "Αποτυχία έπειτα από %d προσπάθειες. συσκευή %s. σφάλμα συστήματος: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Μπάσα"

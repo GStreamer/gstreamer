@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -228,18 +228,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Ustekabeko fotograma-tamaina jaso da (%u), %u ordez."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Huts egin du '%s' gailutik bideo-fotogramak eskuratzen saiatzean."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Huts egin du %d saio eta gero. %s gailua. Sistema-errorea: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -360,6 +348,15 @@ msgstr "Oraindik ez dago onartua exekutatu bitartean bereizmena aldatzea."
 
 msgid "Cannot operate without a clock"
 msgstr "Ezin du funtzionatu erlojurik gabe"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Ustekabeko fotograma-tamaina jaso da (%u), %u ordez."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Huts egin du '%s' gailutik bideo-fotogramak eskuratzen saiatzean."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Huts egin du %d saio eta gero. %s gailua. Sistema-errorea: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Baxua"

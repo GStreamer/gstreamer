@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-04-27 00:05+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -223,18 +223,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Onverwachte framegrootte, %u in plaats van %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Kan geen videoframes verkrijgen van apparaat '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Fout na %d pogingen. Apparaat %s. Systeemfout: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Kan de instelling van tuner %d op apparaat '%s' niet verkrijgen."
@@ -350,6 +338,15 @@ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Onverwachte framegrootte, %u in plaats van %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Kan geen videoframes verkrijgen van apparaat '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Fout na %d pogingen. Apparaat %s. Systeemfout: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Lage tonen"

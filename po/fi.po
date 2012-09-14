@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -223,18 +223,6 @@ msgstr "Videosyötelaite ei hyväksy uutta kehysnopeusasetusta."
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Saatiin odottamaton kehys kooltaan %u odotetun %u sijaan."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Videoruutujen noutaminen laitteelta ”%s” epäonnistui."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Virittimen %d asetuksia ei voitu lukea laitteelta ”%s”."
@@ -349,6 +337,15 @@ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Saatiin odottamaton kehys kooltaan %u odotetun %u sijaan."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Videoruutujen noutaminen laitteelta ”%s” epäonnistui."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Basso"

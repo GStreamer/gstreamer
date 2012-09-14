@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -226,18 +226,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -357,6 +345,15 @@ msgstr "Schimbarea rezoluției pe durata rulării nu este incă suportată."
 
 msgid "Cannot operate without a clock"
 msgstr "Nu se poate opera fără un ceas"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "S-a obținut o dimensiune neașteptată pentru cadru, %u în loc de %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Obținerea cadrelor video pentru dispozitivul „%s” a eșuat."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "A eșuat după %d încercări. dispozitiv %s. eroare sistem: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Bas"

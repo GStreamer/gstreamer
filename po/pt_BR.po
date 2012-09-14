@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-01-08 01:28-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -228,18 +228,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Foi obtido um tamanho de quadro inesperado de %u, ao invés de %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Falha ao tentar obter os quadros de vídeo do dispositivo \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Falha após %d tentativas. Dispositivo %s. Erro do sistema: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Falha ao obter configurações do sintonizador %d no dispositivo \"%s\"."
@@ -356,6 +344,15 @@ msgstr "Ainda não há suporte a mudança de resolução enquanto está executan
 
 msgid "Cannot operate without a clock"
 msgstr "Não é possível operar sem um temporizador"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Foi obtido um tamanho de quadro inesperado de %u, ao invés de %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Falha ao tentar obter os quadros de vídeo do dispositivo \"%s\"."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Falha após %d tentativas. Dispositivo %s. Erro do sistema: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Grave"

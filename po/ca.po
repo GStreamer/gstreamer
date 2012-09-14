@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -228,20 +228,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "S'ha obtingut una mida de fotograma inesperada de %u en lloc de %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
-"S'ha produït un error en provar d'obtenir fotogrames de vídeo des del "
-"dispositiu «%s»."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Ha fallat després de %d intents. Dispositiu %s. Error de sistema: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -369,6 +355,18 @@ msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
 
 msgid "Cannot operate without a clock"
 msgstr "No es pot operar sense un rellotge"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "S'ha obtingut una mida de fotograma inesperada de %u en lloc de %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr ""
+#~ "S'ha produït un error en provar d'obtenir fotogrames de vídeo des del "
+#~ "dispositiu «%s»."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "Ha fallat després de %d intents. Dispositiu %s. Error de sistema: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Baixos"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2009-11-13 22:20+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -212,18 +212,6 @@ msgstr "视频输入设备不接受新的帧率设置。"
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "取得了 %u 的不需要的帧大小，而不是 %u。"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "从设备‘%s’上获取视频的尝试失败了。"
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "获取设备 %2$s 上的微调钮 %1$d 的设置时出错"
@@ -332,6 +320,15 @@ msgstr "尚不支持在运行时更改分辨率。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "取得了 %u 的不需要的帧大小，而不是 %u。"
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "从设备‘%s’上获取视频的尝试失败了。"
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "在 %d 次尝试后失败。设备 %s。系统错误: %s"
 
 #~ msgid "Bass"
 #~ msgstr "低音(Bass)"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-03-12 18:35+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -224,20 +224,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr ""
-"Nepričakovana vrednost velikosti okvirja (%u). Pričakovana vrednost je %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Napaka med poskusom pridobivanja video sličic z naprave '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-"Neuspešen zagon po %d poskusih na napravi %s. Sporočilo sistemske napake: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Napaka med pridobivanjem nastavitev uglaševalnika %d naprave '%s'."
@@ -354,6 +340,18 @@ msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
 msgstr "Delovanje brez ure ni mogoče"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr ""
+#~ "Nepričakovana vrednost velikosti okvirja (%u). Pričakovana vrednost je %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Napaka med poskusom pridobivanja video sličic z naprave '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "Neuspešen zagon po %d poskusih na napravi %s. Sporočilo sistemske napake: "
+#~ "%s"
 
 #~ msgid "Bass"
 #~ msgstr "Bas"

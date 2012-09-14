@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -215,18 +215,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Problema biex inġib video frames mill-apparat '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Problema wara li pruvajt %d drabi. apparat %s. żball fis-sistema: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Problema biex inġib settings tat-tuner %d fuq l-appart '%s'"
@@ -343,6 +331,16 @@ msgstr "Ma tistax tibdel ir-resolution waqt runtime."
 
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Irċivejt frame size ta' %u minflok kif kien mistenni ta' %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Problema biex inġib video frames mill-apparat '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "Problema wara li pruvajt %d drabi. apparat %s. żball fis-sistema: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Bass"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-04-26 21:13+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -226,18 +226,6 @@ msgstr "Устройство видео-захвата не приняло но�
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Получен неожиданный размер кадра: %u вместо %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Ошибка получения установок тюнера %d устройства «%s»."
@@ -355,6 +343,15 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Получен неожиданный размер кадра: %u вместо %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Низкие"

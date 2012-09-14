@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-09-02 11:23-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -221,18 +221,6 @@ msgstr "Video ievades ierīce nepieņem jaunos kadra frekvences uzstādījumus."
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Saņēmu negaidītu kadra izmēru %u, nevis %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Neizdevās saņemt video kadrus no ierīces \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Neveiksme pēc %d mēģinājumiem. ierīce %s. sistēmas kļūda: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Neizdevās saņemt skaņotāja %d uzstādījumus no ierīces \"%s\"."
@@ -348,6 +336,15 @@ msgstr "Izšķirtspējas mainīšana izpildlaikā pašalik netiek atbalstīta."
 
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Saņēmu negaidītu kadra izmēru %u, nevis %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Neizdevās saņemt video kadrus no ierīces \"%s\"."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Neveiksme pēc %d mēģinājumiem. ierīce %s. sistēmas kļūda: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Basi"

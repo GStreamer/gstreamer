@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -228,18 +228,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Taille de trame imprévue de %u à la place de %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "L'obtention de trames vidéo du périphérique « %s » a échoué."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Échec après %d tentatives. périphérique %s. erreur système : %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -363,6 +351,15 @@ msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr "Impossible de fonctionner sans horloge"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Taille de trame imprévue de %u à la place de %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "L'obtention de trames vidéo du périphérique « %s » a échoué."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Échec après %d tentatives. périphérique %s. erreur système : %s"
 
 #~ msgid "Bass"
 #~ msgstr "Basses"

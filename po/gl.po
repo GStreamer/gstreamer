@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-01-09 21:20+0100\n"
 "Last-Translator: Fran Diéguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -226,21 +226,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Obtívose un tamaño de marco de %u non esperado no lugar de %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr ""
-"Produciuse un fallo ao tentar obter cadros de vídeo do dispositivo «%s»."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr ""
-"Prouciuse un fallo despois de %d intentos. Dispositivo %s. Error do sistema: "
-"%s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -368,6 +353,18 @@ msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
 
 msgid "Cannot operate without a clock"
 msgstr "Non é posíbel operar sen reloxo"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Obtívose un tamaño de marco de %u non esperado no lugar de %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr ""
+#~ "Produciuse un fallo ao tentar obter cadros de vídeo do dispositivo «%s»."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "Prouciuse un fallo despois de %d intentos. Dispositivo %s. Error do "
+#~ "sistema: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Baixos"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-02-26 18:09+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -221,18 +221,6 @@ msgstr "Divais masukan video tak menerima pengaturan rasio bingkai baru."
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Gagal mendapatkan pengaturan tuner %d di divais '%s'."
@@ -345,6 +333,15 @@ msgstr "Mengubah resolusi saat waktu berjalan belum didukung."
 
 msgid "Cannot operate without a clock"
 msgstr "Tak dapat beroperasi tanpa jam"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Mendapatkan ukuran bingkai %u ketimbang %u yang tak diharapkan."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Gagal mencoba untuk mendapatkan bingkai video dari divais '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Gagal setelah %d percobaan. divais %s. galat sistem: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Bas"

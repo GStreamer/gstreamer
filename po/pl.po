@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-01-07 21:53+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -219,18 +219,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Otrzymano nieoczekiwany rozmiar klatki %u zamiast %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Nie udało się uzyskać klatek obrazu z urządzenia '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Niepowodzenie po %d próbach. Urządzenie %s. Błąd systemowy: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Nie udało się uzyskać ustawień tunera %d urządzenia '%s'."
@@ -346,6 +334,15 @@ msgstr "Zmiana rozdzielczości w czasie działania nie jest jeszcze obsługiwana
 
 msgid "Cannot operate without a clock"
 msgstr "Nie można pracować bez zegara"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Otrzymano nieoczekiwany rozmiar klatki %u zamiast %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Nie udało się uzyskać klatek obrazu z urządzenia '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Niepowodzenie po %d próbach. Urządzenie %s. Błąd systemowy: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Niskie"

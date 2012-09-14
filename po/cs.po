@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-01-12 23:07+0100\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -219,18 +219,6 @@ msgstr "Vstupní videozařízení nepřijalo nové nastavení vzorkovací frekve
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Získána neočekávaná velikost snímku %u namísto %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Nezdařil se pokus o získání videosnímků ze zařízení \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Selhání po %d pokusech. Zařízení %s. Systémová chyba: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Selhalo zjištění nastavení tuneru %d na zařízení \"%s\"."
@@ -349,6 +337,15 @@ msgstr "Změna rozlišení za běhu doposud není podporována."
 
 msgid "Cannot operate without a clock"
 msgstr "Není možné fungovat bez hodin"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Získána neočekávaná velikost snímku %u namísto %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Nezdařil se pokus o získání videosnímků ze zařízení \"%s\"."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Selhání po %d pokusech. Zařízení %s. Systémová chyba: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Basy"

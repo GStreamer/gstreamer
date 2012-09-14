@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-01-21 22:36+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -238,19 +238,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-# »Frame« sollten wir im Zusammenhang mit Videos vielleicht besser so belassen. Habe ich in gnome-subtitles auch so gemacht.
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Unerwartete Frame-Größe von %u anstatt %u wurde erhalten."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "%d Versuche sind fehlgeschlagen. Gerät »%s«. Systemfehler: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -372,6 +359,16 @@ msgstr "Ein Wechsel der Auflösung zur Laufzeit wird noch nicht unterstützt."
 # Taktgeber klingt gut.
 msgid "Cannot operate without a clock"
 msgstr "Es kann nicht ohne einen Taktgeber gearbeitet werden."
+
+# »Frame« sollten wir im Zusammenhang mit Videos vielleicht besser so belassen. Habe ich in gnome-subtitles auch so gemacht.
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Unerwartete Frame-Größe von %u anstatt %u wurde erhalten."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Der Versuch Videobilder von Gerät »%s« auszulesen schlug fehl."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "%d Versuche sind fehlgeschlagen. Gerät »%s«. Systemfehler: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Bass"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-08-28 23:59+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -233,18 +233,6 @@ msgstr "ビデオ入力デバイスは新しいフレームレート設定にす
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "予期しないフレームサイズ (%2$u ではなく %1$u) を取得しました。"
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "デバイス '%s' からビデオフレームの取得に失敗しました。"
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "%d 回リトライしましたが失敗しました。デバイス %s。システムエラー: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
@@ -368,6 +356,16 @@ msgstr "実行時の解像度変更はサポートされていません。"
 
 msgid "Cannot operate without a clock"
 msgstr "クロックなしでは動作できません。"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "予期しないフレームサイズ (%2$u ではなく %1$u) を取得しました。"
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "デバイス '%s' からビデオフレームの取得に失敗しました。"
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "%d 回リトライしましたが失敗しました。デバイス %s。システムエラー: %s"
 
 # SUN REVIEWED
 #~ msgid "Bass"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2010-11-08 15:48+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -223,18 +223,6 @@ msgstr ""
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Nepodarilo sa získať nastavenie prijímača %d od zariadenia '%s'."
@@ -351,6 +339,15 @@ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Nastala neočakávaná veľkosť snímky %u namiesto %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Nepodarilo sa získať videosnímky zo zariadenia '%s'."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Nepodarilo sa po %d pokusoch. Zariadenie %s. Systémová chyba: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Basy"

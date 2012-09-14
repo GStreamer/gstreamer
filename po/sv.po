@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-01-09 19:36+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -220,18 +220,6 @@ msgstr "Videoingångsenheten accepterade inte ny inställning för bildfrekvens.
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Fick oväntade bildrutstorleken %u istället för %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Misslyckades med att få videobildrutor från enheten \"%s\"."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Misslyckades efter %d försök. enhet %s. systemfel: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
@@ -354,6 +342,15 @@ msgstr "Ändring av upplösning vid körtid stöds inte än."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Fick oväntade bildrutstorleken %u istället för %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Misslyckades med att få videobildrutor från enheten \"%s\"."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Misslyckades efter %d försök. enhet %s. systemfel: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Bass"

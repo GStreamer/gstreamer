@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:10+0200\n"
+"POT-Creation-Date: 2012-09-14 01:45+0100\n"
 "PO-Revision-Date: 2011-12-04 16:44+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -222,18 +222,6 @@ msgstr "Улазни видео уређај не прихвата нове по
 msgid "Video device could not create buffer pool."
 msgstr ""
 
-#, c-format
-msgid "Got unexpected frame size of %u instead of %u."
-msgstr "Добих неочекивану величину кадра, %u уместо %u."
-
-#, c-format
-msgid "Failed trying to get video frames from device '%s'."
-msgstr "Нисам успео да добавим видео кадрове са уређаја „%s“."
-
-#, c-format
-msgid "Failed after %d tries. device %s. system error: %s"
-msgstr "Нисам успео након %d покушаја. уређај %s. системска грешка: %s"
-
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "Нисам успео да добавим подешавања тјунера %d на уређају „%s“."
@@ -348,6 +336,15 @@ msgstr "Промена резолуције приликом извршавањ�
 
 msgid "Cannot operate without a clock"
 msgstr "Не могу да радим без сата"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Добих неочекивану величину кадра, %u уместо %u."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Нисам успео да добавим видео кадрове са уређаја „%s“."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Нисам успео након %d покушаја. уређај %s. системска грешка: %s"
 
 #~ msgid "Bass"
 #~ msgstr "Бас"
