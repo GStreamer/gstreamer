@@ -638,7 +638,7 @@ test_mp3_enc_class_init (TestMp3EncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "MPEG1 Audio Encoder",
+  gst_element_class_set_metadata (element_class, "MPEG1 Audio Encoder",
       "Codec/Encoder/Audio", "Pretends to encode mp3", "Foo Bar <foo@bar.com>");
 }
 
