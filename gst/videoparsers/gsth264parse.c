@@ -435,10 +435,11 @@ static void
 gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 {
   guint nal_type;
-  GstH264PPS pps;
-  GstH264SPS sps;
+  GstH264PPS pps = { 0, };
+  GstH264SPS sps = { 0, };
   GstH264SEIMessage sei;
   GstH264NalParser *nalparser = h264parse->nalparser;
+  GstH264ParserResult pres;
 
   /* nothing to do for broken input */
   if (G_UNLIKELY (nalu->size < 2)) {
@@ -455,8 +456,10 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
   switch (nal_type) {
     case GST_H264_NAL_SPS:
-      gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
-      /* TODO: check for failure (sps.id not set) */
+      pres = gst_h264_parser_parse_sps (nalparser, nalu, &sps, TRUE);
+      /* arranged for a fallback sps.id, so use that one and only warn */
+      if (pres != GST_H264_PARSER_OK)
+        GST_WARNING_OBJECT (h264parse, "failed to parse SPS:");
 
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
@@ -473,8 +476,11 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       gst_h264_parser_store_nal (h264parse, sps.id, nal_type, nalu);
       break;
     case GST_H264_NAL_PPS:
-      gst_h264_parser_parse_pps (nalparser, nalu, &pps);
-      /* TODO: check for failure (pps.id not set) */
+      pres = gst_h264_parser_parse_pps (nalparser, nalu, &pps);
+      /* arranged for a fallback pps.id, so use that one and only warn */
+      if (pres != GST_H264_PARSER_OK)
+        GST_WARNING_OBJECT (h264parse, "failed to parse PPS:");
+
       /* parameters might have changed, force caps check */
       GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
       h264parse->update_caps = TRUE;
