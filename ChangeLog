@@ -1,9 +1,715 @@
-=== release 0.11.92 ===
+2012-09-14 01:48:50 +0100  Tim-Philipp Müller <tim@centricular.net>
 
-2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/gst-plugins-ugly-plugins.interfaces:
+	* docs/plugins/gst-plugins-ugly-plugins.signals:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	  docs: update docs
+
+2012-09-13 13:49:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: use DTS and PTS
+	  Video uses DTS as timestamps. Set the DTS on the buffers and leave the PTS
+	  undefined to make the decoder do the right thing. We can then remove the code
+	  that tries to guess the PTS from the DTS.
+
+2012-09-10 22:30:18 -0700  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Hold ref to buffer while mapped
+	  So that the buffer still exists when we go to unmap it later,
+	  even if it got pushed in the meantime.
+
+2012-09-11 16:48:51 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/elements/x264enc.c:
+	  x264enc test: x264enc produces constrained-baseline, not the full baseline
+
+2012-09-11 17:37:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  gst: only activate in pull mode if upstream is seekable
+
+2012-09-11 11:28:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rademux.c:
+	  rademux: tags can be NULL
+
+2012-09-11 11:13:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mad/gstmad.c:
+	  mad: fix email address
+
+2012-09-11 11:12:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mad/gstmad.c:
+	  mad: init base class method only once
+
+2012-09-11 10:46:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/xingmux/gstxingmux.c:
+	  xingmux: remove defunct commented code
+
+2012-09-11 10:40:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvbsubdec: handle and send GAP event
+	  ... in stead of update newsegment event.
+
+2012-09-11 10:34:40 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvbsubdec: adjust disabled code comment style
+
+2012-09-09 15:48:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: clean up some debug statements
+
+2012-09-07 17:38:18 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: handle possibly negative DTS provided by codec
+	  ... by arranging for an offset such that DTS == PTS for keyframes,
+	  which is expected elsewhere to go along with semantics of PTS and DTS.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679443
+
+2012-09-07 13:31:15 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-ugly.spec.in:
+	  Fix spec file for ugly
+
+2012-09-06 14:42:51 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/mpeg2dec.c:
+	  tests: mpeg2dec: initialize variable
+	  ... which avoids test segfaulting.
+
+2012-08-30 16:26:00 -0700  Edward Hervey <edward@collabora.com>
+
+	* tests/check/elements/mpeg2dec.c:
+	  check: Feed parsed data to mpeg2dec
+	  And fix the expected output caps by adding colorimetry field
+
+2012-08-22 13:31:00 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 668acee to 4f962f7
+
+2012-08-22 13:19:01 +0200  Stefan Sauer <ensonic@users.sf.net>
 
 	* configure.ac:
-	  releasing 0.11.92, "Hey You"
+	  configure: bump gtk-doc req to 1.12 (mar-2009)
+	  This allows us to e.g. unconditionally use gtkdoc-rebase.
+
+2012-08-20 23:32:32 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubparse.c:
+	  video/x-dvd-subpicture -> subpicture/x-dvd
+
+2012-08-09 16:30:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Use new video encoder base class API for handling tags
+
+2012-08-08 16:27:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: Set alignment at the correct place of GstAllocationParams
+
+2012-08-08 16:26:41 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  Back to development
+
+=== release 0.11.93 ===
+
+2012-08-08 15:23:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.11.93
+
+2012-08-08 15:23:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/realmedia/rmdemux.c:
+	  gst: silence some compiler warnings with -DG_DISABLE_ASSERT
+
+2012-08-06 15:31:50 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: avoid some more invalid timestamp arithmetic
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681291
+
+2012-08-05 18:30:52 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  gst: Add stream-id to stream-start events
+
+2012-07-27 11:35:52 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Don't use NULL values for fbuf
+	  We need to make a difference between the initial dummy buffers (which
+	  have a fbuf->id of NULL) and the buffers on which we allocated
+	  video frames.
+
+2012-08-05 16:40:57 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94ccf4c to 668acee
+
+2012-08-04 16:13:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/a52dec/gsta52dec.c:
+	* ext/lame/gstlamemp3enc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmutils.c:
+	  gst_tag_list_free -> gst_tag_list_unref
+
+2012-07-28 00:28:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	* ext/x264/gstx264enc.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  tag: Update for taglist/tag event API changes
+
+2012-07-26 18:30:04 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Avoid dropping first GOP
+	  We use the mpeg2_fbuf_t id field as an integer and not as a pointer, so
+	  do not check if it is NULL or not.
+	  And cleanup a bit of debug
+
+2012-07-25 13:05:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rdtmanager.h:
+	  rdt: add on-npt-stop signal
+	  rtspsrc will look for it.
+
+2012-07-25 12:48:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/rdtmanager.c:
+	  rdt: set caps after activating the pad
+
+2012-07-25 12:48:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/realmedia/gstrdtbuffer.c:
+	  rdt: reset map info
+
+2012-07-25 09:37:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstrtpasfdepay.c:
+	  asfdepay: fix padding correction
+	  Fix padding correction. gst_buffer_copy_into() appends the memory to the already
+	  existing memory in the target buffer..
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680536
+
+2012-07-23 13:32:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: copy buffer flags when cropping
+	  When we crop a buffer, copy the flags as well.
+
+2012-07-23 11:25:34 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix GstVideoInfo pointer
+
+2012-07-23 11:13:05 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Correctly flag output buffer interlaced state
+	  If the sequence is not flagged as progressive its buffers are marked
+	  interlace mode mixed. There is an individual picture flag indicating
+	  whether picture in the sequence are interlaced or not. This is used
+	  along with the new GST_VIDEO_BUFFER_FLAG_INTERLACED to correctly and
+	  completely indicate the buffer's interlaced state.
+	  Also, TFF and RFF should only be set if the sequence is not progressive.
+
+2012-07-23 10:33:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  ext: Update for video base classes API changes
+
+2012-07-23 08:45:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 98e386f to 94ccf4c
+
+2012-07-20 16:12:45 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: make sure to avoid arithmetic with _NONE timestamp
+
+2012-07-16 17:36:19 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: convert invalid 0 payload TS into GST_CLOCK_TIME_NONE
+	  ... so it does not get used as first (valid) payload ts, whereas
+	  the first real valid payload ts may be considerably larger.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679838
+
+2012-07-20 14:41:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: slightly relax supported seek requirements
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680279
+
+2012-07-19 09:58:50 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Propagate GstFlowReturn where needed
+	  It was just ignoring the return values...
+
+2012-07-19 09:56:17 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Store temporary buffers out of the way
+	  When mpeg2dec needs to do cropping (because downstream can't handle it),
+	  we need temporary buffers to decode to.
+	  Use the user_data field to store those, and unify the rest of the code
+	  that needs to touch a buffer (regardless of how/where it was allocated).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680194
+
+2012-07-18 18:32:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Call gst_video_decoder_negotiate()
+
+2012-07-18 17:21:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: give stream tags a different event name so they don't overwrite global tags
+	  There can only be one taglist per name for sticky tag events.
+	  Needs to be fixed more properly, see
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677619
+
+2012-07-18 16:49:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rademux.c:
+	  rademux: set/send caps on pad after activating it
+
+2012-07-18 16:46:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: set/send caps after activating the source pads
+	  Makes sure the caps event isn't dropped immediately.
+
+2012-07-17 20:54:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: mustn't drop queries like caps query if not started yet
+
+2012-07-15 20:12:46 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: extract WM/Year as GstDateTime instead of GDate
+	  So we can signal that only the year field is valid.
+
+2012-07-13 15:41:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: don't leak payload if we are not pushing it
+
+2012-07-13 13:59:16 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  demuxers: Push STREAM_START when needed
+
+2012-07-13 11:36:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asf: don't push on inactive streams
+
+2012-07-12 18:05:10 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: set rank to NONE
+	  It should never be autoplugged really, for DVD
+	  playback there's rsndvd (or will be, realsoonnow).
+
+2012-07-09 16:27:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  fix for allocator API changes
+
+2012-07-06 11:50:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  update for query api changes
+
+2012-07-06 11:27:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  update for query api changes
+
+2012-07-06 11:03:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  update for allocation query changes
+
+2012-07-05 23:23:33 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* LICENSE_readme:
+	  LICENSE_readme: fix typo
+
+2012-07-05 22:48:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* LICENSE_readme:
+	  LICENSE_readme: mention x264
+	  https://bugzilla.gnome.org/show_bug.cgi?id=679472
+
+2012-07-05 13:12:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  gst: Implement segment-done event
+
+2012-06-27 11:23:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asf: fix x-wmv format in caps
+
+2012-06-27 10:24:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/asfpacket.c:
+	  asf: unmap packets
+
+2012-06-21 15:13:57 +0100  Bastien Nocera <hadess@hadess.net>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/asfpacket.h:
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Ignore parsing errors from broken packets
+	  We should instead be counting the number of errors and exiting if
+	  they're too numerous. This makes a number of broken ASF files playable.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678543
+	  Conflicts:
+	  gst/asfdemux/asfpacket.c
+	  gst/asfdemux/gstasfdemux.c
+
+2012-06-26 17:15:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  fix interlace-mode
+
+2012-06-25 09:43:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Add comment explaining why we first chain up to the parent class' decide_allocation
+
+2012-06-25 09:34:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Set allocation parameters to guarantee 16-byte aligned output buffers
+	  Fixes bug #377713.
+
+2012-06-20 13:36:25 -0400  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix unitialized variable and taglist event
+
+2012-06-20 13:23:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: fix compilation
+
+2012-06-20 10:39:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rdtmanager.c:
+	* gst/realmedia/rmdemux.c:
+	  update for task api change
+
+2012-06-20 10:39:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/x264/gstx264enc.c:
+	  fix compilation
+
+2012-06-20 09:06:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: Port to 0.11 again
+
+2012-06-19 15:19:28 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix compiler warning
+
+2012-05-30 12:50:13 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: Report PAR if not present upstream
+	  And clean up some code
+
+2012-05-04 16:09:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: use _scale_ceil to compute frame period
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675769
+
+2012-05-04 16:08:27 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: mpeg2dec actually has 3 frame latency
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675769
+
+2012-05-01 18:49:03 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix large output buffers leak
+
+2012-05-01 18:46:31 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Port to new way of handling frame reference
+
+2012-05-01 16:12:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: don't leak input_state
+
+2012-04-13 19:06:52 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/mpeg2dec/gstmpeg2dec.h:
+	  mpeg2dec: Port to GstVideoDecoder base class
+	  Conflicts:
+	  ext/mpeg2dec/gstmpeg2dec.c
+	  ext/mpeg2dec/gstmpeg2dec.h
+	  Back to 0.10 state, needs to be ported to 0.11 again.
+
+2012-06-19 09:26:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/master'
+
+2012-06-19 09:26:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Port to 0.11 again
+
+2012-05-07 11:52:40 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't set latency while holding object lock
+	  This reverts commit 30a0b50e9ca0d625e61f994d4f8acd022dcddf38.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=675762
+
+2012-05-03 18:07:24 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Use video encoder stream lock to avoid deadlock
+
+2012-05-01 18:45:33 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Port to new way of passing frame reference
+
+2012-04-30 19:00:09 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Set default stream-format to avc as it's a better format
+
+2012-04-26 22:27:55 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Fix setting latency
+	  Fixes setting latency when framerate is dynamic and round up the latency
+	  to avoid rounding issues.
+
+2012-04-30 18:59:44 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: gst_video_encoder_get_frame() is now transfer full
+
+2012-04-26 17:31:45 +0000  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: don't leak output state
+
+2012-04-18 17:09:12 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Remove x264 backward compatibility support
+
+2012-04-18 16:13:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Report latency base on x264 buffer size
+
+2012-04-17 15:44:24 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* ext/x264/gstx264enc.c:
+	* ext/x264/gstx264enc.h:
+	  x264enc: Port to GstVideoEncoder baseclass
+	  Conflicts:
+	  configure.ac
+	  ext/x264/gstx264enc.c
+	  ext/x264/gstx264enc.h
+	  Back to 0.10 state, needs to be ported to 0.11 again.
+
+2012-06-16 18:29:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* Android.mk:
+	* LICENSE_readme:
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	* gst/synaesthesia/.gitignore:
+	* gst/synaesthesia/Makefile.am:
+	* gst/synaesthesia/README:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	* gst/synaesthesia/gstsynaesthesia.h:
+	* gst/synaesthesia/synaescope.c:
+	* gst/synaesthesia/synaescope.h:
+	  synaesthesia: remove experimental GPL-ed synaesthesia plugin
+	  It never made it out of experimental, and there's a new
+	  synaescope element in gst-plugins-bad that's hopefully
+	  sufficiently similar.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=356882
+
+2012-06-16 18:13:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/mpegstream/.gitignore:
+	  mpegstream: remove leftover hidden .gitignore file
+
+2012-06-08 15:55:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/synaesthesia/gstsynaesthesia.c:
+	* tests/check/elements/amrnbenc.c:
+	* tests/check/elements/x264enc.c:
+	  elements: Use gst_pad_set_caps() instead of manual event fiddling
+
+2012-06-08 15:05:22 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 03a0e57 to 98e386f
+
+2012-06-07 16:28:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.92 ===
+
+2012-06-07 16:28:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.11.92
+
+2012-06-07 16:28:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2012-06-06 18:19:06 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
 
