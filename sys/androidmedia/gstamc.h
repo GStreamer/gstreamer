@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/audio/multichannel.h>
 #include <jni.h>
 
 G_BEGIN_DECLS
@@ -135,6 +136,9 @@ const gchar * gst_amc_mpeg4_level_to_string (gint level);
 gint gst_amc_mpeg4_level_from_string (const gchar *level);
 const gchar * gst_amc_aac_profile_to_string (gint profile);
 gint gst_amc_aac_profile_from_string (const gchar *profile);
+
+GstAudioChannelPosition* gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels);
+guint32 gst_amc_audio_channel_mask_from_positions (GstAudioChannelPosition *positions, gint channels);
 
 G_END_DECLS
 

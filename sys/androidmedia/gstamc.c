@@ -26,9 +26,11 @@
 #include "gstamc-constants.h"
 
 #include "gstamcvideodec.h"
+#include "gstamcaudiodec.h"
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 #include <jni.h>
 
@@ -2468,6 +2470,107 @@ gst_amc_aac_profile_from_string (const gchar * profile)
   return -1;
 }
 
+static const struct
+{
+  guint32 mask;
+  GstAudioChannelPosition pos;
+} channel_mapping_table[] = {
+  {
+  CHANNEL_OUT_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+  CHANNEL_OUT_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+  CHANNEL_OUT_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+  CHANNEL_OUT_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE}, {
+  CHANNEL_OUT_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
+  CHANNEL_OUT_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+  CHANNEL_OUT_FRONT_LEFT_OF_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
+  CHANNEL_OUT_FRONT_RIGHT_OF_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+  CHANNEL_OUT_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+  CHANNEL_OUT_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
+  CHANNEL_OUT_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
+  CHANNEL_OUT_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+  CHANNEL_OUT_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+  CHANNEL_OUT_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+  CHANNEL_OUT_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+  CHANNEL_OUT_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+  CHANNEL_OUT_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+  CHANNEL_OUT_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}
+};
+
+GstAudioChannelPosition *
+gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels)
+{
+  GstAudioChannelPosition *pos = g_new0 (GstAudioChannelPosition, channels);
+  gint i, j;
+
+  if (channel_mask == 0 && channels == 1) {
+    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+    return pos;
+  }
+
+  if (channel_mask == 0 && channels == 2) {
+    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+    pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    return pos;
+  }
+
+  for (i = 0, j = 0; i < G_N_ELEMENTS (channel_mapping_table); i++) {
+    if ((channel_mask & channel_mapping_table[i].mask)) {
+      pos[j++] = channel_mapping_table[i].pos;
+      if (channel_mapping_table[i].pos == GST_AUDIO_CHANNEL_POSITION_INVALID) {
+        g_free (pos);
+        GST_ERROR ("Unable to map channel mask 0x%08x",
+            channel_mapping_table[i].mask);
+        return NULL;
+      }
+      if (j == channels)
+        break;
+    }
+  }
+
+  if (j != channels) {
+    g_free (pos);
+    GST_ERROR ("Unable to map all channel positions in mask 0x%08x",
+        channel_mask);
+    return NULL;
+  }
+
+  return pos;
+}
+
+guint32
+gst_amc_audio_channel_mask_from_positions (GstAudioChannelPosition * positions,
+    gint channels)
+{
+  gint i, j;
+  guint32 channel_mask = 0;
+
+  if (channels == 1 && !positions)
+    return CHANNEL_OUT_FRONT_CENTER;
+  if (channels == 2 && !positions)
+    return CHANNEL_OUT_FRONT_LEFT | CHANNEL_OUT_FRONT_RIGHT;
+
+  for (i = 0; i < channels; i++) {
+    if (positions[i] == GST_AUDIO_CHANNEL_POSITION_INVALID)
+      return 0;
+
+    for (j = 0; j < G_N_ELEMENTS (channel_mapping_table); j++) {
+      if (channel_mapping_table[j].pos == positions[i]) {
+        channel_mask |= channel_mapping_table[j].mask;
+        break;
+      }
+    }
+
+    if (j == G_N_ELEMENTS (channel_mapping_table)) {
+      GST_ERROR ("Unable to map channel position %d", positions[i]);
+      return 0;
+    }
+  }
+
+  return channel_mask;
+}
+
 static gchar *
 create_type_name (const gchar * parent_name, const gchar * codec_name)
 {
@@ -2579,6 +2682,8 @@ register_codecs (GstPlugin * plugin)
 
       if (is_video && !codec_info->is_encoder) {
         type = gst_amc_video_dec_get_type ();
+      } else if (is_audio && !codec_info->is_encoder) {
+        type = gst_amc_audio_dec_get_type ();
       } else {
         GST_DEBUG ("Skipping unsupported codec type");
         continue;
