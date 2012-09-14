@@ -10,7 +10,7 @@ Creating example data
 =====================
 
 gst-launch videotestsrc num_buffers=300 ! \
-  video/x-raw-yuv,format=\(fourcc\)I420,width=320,height=240 ! \
+  video/x-raw,format=\(string\)I420,width=320,height=240 ! \
   filesink location=raw
 
 

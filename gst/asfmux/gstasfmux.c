@@ -36,10 +36,10 @@
  * <para>(write everything in one line, without the backslash characters)</para>
  * |[
  * gst-launch videotestsrc num-buffers=250 \
- * ! "video/x-raw-yuv,format=(fourcc)I420,framerate=(fraction)25/1" ! ffenc_wmv2 \
+ * ! "video/x-raw,format=(string)I420,framerate=(fraction)25/1" ! ffenc_wmv2 \
  * ! asfmux name=mux ! filesink location=test.asf \
  * audiotestsrc num-buffers=440 ! audioconvert \
- * ! "audio/x-raw-int,rate=44100" ! ffenc_wmav2 ! mux.
+ * ! "audio/x-raw,rate=44100" ! ffenc_wmav2 ! mux.
  * ]| This creates an ASF file containing an WMV video stream
  * with a test picture and WMA audio stream of a test sound.
  *

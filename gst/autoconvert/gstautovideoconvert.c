@@ -20,11 +20,11 @@
 /*
  * test autovideoconvert:
  * if rgb2bayer is present
- * gst-launch videotestsrc num-buffers=2 ! "video/x-raw-rgb,width=100,height=100,framerate=10/1" ! autovideoconvert ! "video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1" ! fakesink -v
+ * gst-launch videotestsrc num-buffers=2 ! "video/x-raw,width=100,height=100,framerate=10/1" ! autovideoconvert ! "video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1" ! fakesink -v
  * if bayer2rgb is present
- * gst-launch videotestsrc num-buffers=2 ! "video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1" ! autovideoconvert ! "video/x-raw-rgb,width=100,height=100,framerate=10/1" ! fakesink -v
- * test with ffmpegvideoconvert
- * gst-launch videotestsrc num-buffers=2 ! "video/x-raw-rgb,bpp=32,width=100,height=100,framerate=10/1" ! autovideoconvert ! "video/x-raw-rgb,bpp=16,width=100,height=100,framerate=10/1" ! fakesink -v
+ * gst-launch videotestsrc num-buffers=2 ! "video/x-raw-bayer,width=100,height=100,format=bggr,framerate=10/1" ! autovideoconvert ! "video/x-raw,width=100,height=100,framerate=10/1" ! fakesink -v
+ * test with videoconvert
+ * gst-launch videotestsrc num-buffers=2 ! "video/x-raw,format=RGBx,width=100,height=100,framerate=10/1" ! autovideoconvert ! "video/x-raw,format=RGB16,width=100,height=100,framerate=10/1" ! fakesink -v
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
