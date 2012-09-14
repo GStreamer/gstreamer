@@ -82,7 +82,7 @@ gst_test_trans_class_init (GstTestTransClass * klass)
   element_class = (GstElementClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "TestTrans",
+  gst_element_class_set_metadata (element_class, "TestTrans",
       "Filter/Test", "Test transform", "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,

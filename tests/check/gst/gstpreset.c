@@ -104,7 +104,7 @@ gst_preset_test_base_init (GstPresetTestClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Element for unit tests",
       "Testing", "Use in unit tests", "Stefan Kost <stefan.kost@nokia.com>");
 }

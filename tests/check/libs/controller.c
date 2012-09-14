@@ -231,7 +231,7 @@ gst_test_obj_base_init (GstTestObjClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "test object for unit tests",
       "Test", "Use in unit tests", "Stefan Sauer <ensonic@users.sf.net>");
 }
