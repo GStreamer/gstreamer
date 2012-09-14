@@ -77,7 +77,7 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
 
   s = gst_caps_get_structure (caps, 0);
   sname = gst_structure_get_name (s);
-  if (!g_str_has_prefix (sname, "video/x-raw-"))
+  if (!g_str_has_prefix (sname, "video/x-raw"))
     goto not_video;
 
   csp = create_element ("videoconvert");

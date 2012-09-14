@@ -9,7 +9,7 @@
 AOFFSET=0
 VOFFSET=0
 
-VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
+VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
 
 #DEST=192.168.1.126
 DEST=localhost

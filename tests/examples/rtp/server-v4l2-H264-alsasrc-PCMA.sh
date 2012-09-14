@@ -49,7 +49,7 @@ AOFFSET=0
 # H264 encode from the source
 VELEM="v4l2src"
 #VELEM="videotestsrc is-live=1"
-VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
+VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
 VSOURCE="$VELEM ! queue ! videorate ! videoconvert ! $VCAPS"
 VENC="x264enc tune=zerolatency byte-stream=true bitrate=300 ! rtph264pay"
 

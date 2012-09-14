@@ -146,7 +146,7 @@ main (gint argc, gchar ** argv)
   }
   caps =
       gst_caps_from_string
-      ("video/x-raw-yuv, width=640, height=480, framerate=(fraction)15/1");
+      ("video/x-raw, width=640, height=480, framerate=(fraction)15/1");
   g_object_set (fmt, "caps", caps, NULL);
 
   if (!(src = gst_element_factory_make ("v4l2src", NULL))) {

@@ -30,7 +30,7 @@ AOFFSET=0
 
 # H263+ encode from the source
 VELEM="videotestsrc is-live=1"
-VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
+VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
 VSOURCE="$VELEM ! $VCAPS"
 VENC="ffenc_h263p ! rtph263ppay"
 

@@ -148,7 +148,8 @@ main (int argc, char *argv[])
   /* Force float32 samples */
   capsfilter = gst_element_factory_make ("capsfilter", "capsfilter");
   caps =
-      gst_caps_new_simple ("audio/x-raw-float", "width", G_TYPE_INT, 32, NULL);
+      gst_caps_new_simple ("audio/x-raw", "format", G_TYPE_STRING, "F32LE",
+      NULL);
   g_object_set (capsfilter, "caps", caps, NULL);
 
   equalizer = gst_element_factory_make ("equalizer-nbands", "equalizer");

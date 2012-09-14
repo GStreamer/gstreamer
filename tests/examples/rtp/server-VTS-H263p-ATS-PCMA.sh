@@ -3,7 +3,7 @@
 # A simple RTP server 
 #
 
-VCAPS="video/x-raw-yuv,width=352,height=288,framerate=15/1"
+VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
 
 gst-launch-1.0 -v gstrtpbin name=rtpbin \
            videotestsrc ! $VCAPS ! ffenc_h263p ! rtph263ppay ! rtpbin.send_rtp_sink_0          \
