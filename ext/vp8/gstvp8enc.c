@@ -1477,7 +1477,8 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   image->stride[VPX_PLANE_U] = GST_VIDEO_INFO_COMP_STRIDE (info, 1);
   image->stride[VPX_PLANE_V] = GST_VIDEO_INFO_COMP_STRIDE (info, 2);
 
-  caps = gst_caps_new_empty_simple ("video/x-vp8");
+  caps = gst_caps_new_simple ("video/x-vp8",
+      "profile", G_TYPE_INT, encoder->profile, NULL);
   {
     GstStructure *s;
     GstBuffer *stream_hdr, *vorbiscomment;
