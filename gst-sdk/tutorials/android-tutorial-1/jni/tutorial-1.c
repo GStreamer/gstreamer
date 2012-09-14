@@ -187,14 +187,14 @@ static void *app_function (void *userdata) {
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
-  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0 name=vsink", NULL);
+//  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0 name=vsink", NULL);
 //  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280,width=(int)320,height=(int)240,framerate=(fraction)30/1", NULL);
-//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
-//  g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
+  g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
