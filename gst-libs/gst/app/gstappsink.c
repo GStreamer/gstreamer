@@ -241,7 +241,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_NEW_PREROLL] =
       g_signal_new ("new-preroll", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSinkClass, new_preroll),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, NULL, __gst_app_marshal_ENUM__VOID, GST_TYPE_FLOW_RETURN, 0,
+      G_TYPE_NONE);
   /**
    * GstAppSink::new-sample:
    * @appsink: the appsink element that emited the signal
@@ -261,7 +262,8 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   gst_app_sink_signals[SIGNAL_NEW_SAMPLE] =
       g_signal_new ("new-sample", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstAppSinkClass, new_sample),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      NULL, NULL, __gst_app_marshal_ENUM__VOID, GST_TYPE_FLOW_RETURN, 0,
+      G_TYPE_NONE);
 
   /**
    * GstAppSink::pull-preroll:
@@ -605,7 +607,7 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
 static GstFlowReturn
 gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
 {
-  GstFlowReturn res = GST_FLOW_OK;
+  GstFlowReturn res;
   GstAppSink *appsink = GST_APP_SINK_CAST (psink);
   GstAppSinkPrivate *priv = appsink->priv;
   gboolean emit;
@@ -621,10 +623,14 @@ gst_app_sink_preroll (GstBaseSink * psink, GstBuffer * buffer)
   emit = priv->emit_signals;
   g_mutex_unlock (&priv->mutex);
 
-  if (priv->callbacks.new_preroll)
+  if (priv->callbacks.new_preroll) {
     res = priv->callbacks.new_preroll (appsink, priv->user_data);
-  else if (emit)
-    g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_PREROLL], 0);
+  } else {
+    res = GST_FLOW_OK;
+    if (emit)
+      g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_PREROLL], 0,
+          &res);
+  }
 
   return res;
 
@@ -741,12 +747,14 @@ restart:
   emit = priv->emit_signals;
   g_mutex_unlock (&priv->mutex);
 
-  if (priv->callbacks.new_sample)
-    priv->callbacks.new_sample (appsink, priv->user_data);
-  else if (emit)
-    g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_SAMPLE], 0);
-
-  return GST_FLOW_OK;
+  if (priv->callbacks.new_sample) {
+    ret = priv->callbacks.new_sample (appsink, priv->user_data);
+  } else {
+    ret = GST_FLOW_OK;
+    if (emit)
+      g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_NEW_SAMPLE], 0, &ret);
+  }
+  return ret;
 
 flushing:
   {

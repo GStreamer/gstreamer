@@ -85,13 +85,13 @@ struct _GstAppSinkClass
   GstBaseSinkClass basesink_class;
 
   /* signals */
-  void        (*eos)              (GstAppSink *appsink);
-  void        (*new_preroll)      (GstAppSink *appsink);
-  void        (*new_sample)       (GstAppSink *appsink);
+  void          (*eos)              (GstAppSink *appsink);
+  GstFlowReturn (*new_preroll)      (GstAppSink *appsink);
+  GstFlowReturn (*new_sample)       (GstAppSink *appsink);
 
   /* actions */
-  GstSample     * (*pull_preroll)      (GstAppSink *appsink);
-  GstSample     * (*pull_sample)       (GstAppSink *appsink);
+  GstSample *   (*pull_preroll)      (GstAppSink *appsink);
+  GstSample *   (*pull_sample)       (GstAppSink *appsink);
 
   /*< private >*/
   gpointer     _gst_reserved[GST_PADDING];
