@@ -465,6 +465,8 @@ gst_amc_audio_dec_set_src_caps (GstAmcAudioDec * self, GstAmcFormat * format)
     gst_audio_set_channel_positions (gst_caps_get_structure (caps, 0),
         self->positions);
 
+  self->channels = channels;
+  self->rate = rate;
   gst_pad_set_caps (GST_AUDIO_DECODER_SRC_PAD (self), caps);
   gst_caps_unref (caps);
 
