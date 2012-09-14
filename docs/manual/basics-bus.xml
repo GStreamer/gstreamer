@@ -236,7 +236,7 @@ g_signal_connect (bus, "message::eos", G_CALLBACK (cb_message_eos), NULL);
           stream-information, such as samplerate and bitrate). Applications
           should cache metadata internally. <function>gst_message_parse_tag
           ()</function> should be used to parse the taglist, which should
-          be <function>gst_tag_list_free ()</function>'ed when no longer
+          be <function>gst_tag_list_unref ()</function>'ed when no longer
           needed.
         </para>
       </listitem>
