@@ -1108,8 +1108,9 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   if (G_UNLIKELY (dec->priv->error_count))
     dec->priv->error_count--;
 
-exit:
   ret = gst_audio_decoder_output (dec, buf);
+
+exit:
 
   GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
