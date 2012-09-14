@@ -1,9 +1,9 @@
 <plugin>
   <name>coreelements</name>
-  <description>standard GStreamer elements</description>
+  <description> GStreamer core elements</description>
   <filename>../../plugins/elements/.libs/libgstcoreelements.so</filename>
   <basename>libgstcoreelements.so</basename>
-  <version>0.11.92</version>
+  <version>0.11.94</version>
   <license>LGPL</license>
   <source>gstreamer</source>
   <package>GStreamer source release</package>

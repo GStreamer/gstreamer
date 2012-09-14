@@ -1,6 +1,8 @@
 GObject
   GInitiallyUnowned
     GstObject
+      GstAllocator
+        GstDefaultAllocator
       GstBus
       GstClock
       GstControlBinding

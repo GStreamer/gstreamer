@@ -952,9 +952,9 @@
 <NAME>GstQueue2::temp-location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
-<FLAGS>rw</FLAGS>
+<FLAGS>r</FLAGS>
 <NICK>Temporary File Location</NICK>
-<BLURB>Location to store temporary files in (Deprecated: Only read this property, use temp-template to configure the name template).</BLURB>
+<BLURB>Location to store temporary files in (Only read this property, use temp-template to configure the name template).</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 

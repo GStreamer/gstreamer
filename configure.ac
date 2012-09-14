@@ -8,7 +8,7 @@ dnl
 dnl ==========> REMOVE GST_USE_UNSTABLE_API when doing 1.0.0 <=============
 dnl             (also check libtool version)
 dnl
-AC_INIT(GStreamer, 0.11.93.1,
+AC_INIT(GStreamer, 0.11.94,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
 AG_GST_INIT
