@@ -1407,9 +1407,6 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     memcpy (buf->data, GST_BUFFER_DATA (frame->input_buffer) + offset,
         buffer_info.size);
 
-    if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame))
-      buffer_info.flags |= BUFFER_FLAG_SYNC_FRAME;
-
     /* Interpolate timestamps if we're passing the buffer
      * in multiple chunks */
     if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
