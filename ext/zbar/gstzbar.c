@@ -61,10 +61,10 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch -m v4l2src ! ffmpegcolorspace ! zbar ! ffmpegcolorspace ! xvimagesink
+ * gst-launch -m v4l2src ! videoconvert ! zbar ! videoconvert ! xvimagesink
  * ]| This pipeline will detect barcodes and send them as messages.
  * |[
- * gst-launch -m v4l2src ! tee name=t ! queue ! ffmpegcolorspace ! zbar ! fakesink t. ! queue ! xvimagesink
+ * gst-launch -m v4l2src ! tee name=t ! queue ! videoconvert ! zbar ! fakesink t. ! queue ! xvimagesink
  * ]| Same as above, but running the filter on a branch to keep the display in color
  * </refsect2>
  */

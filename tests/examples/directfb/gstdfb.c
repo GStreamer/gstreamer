@@ -333,7 +333,7 @@ main (int argc, char *argv[])
 
     v_queue = gst_element_factory_make ("queue", "v_queue");
     v_scale = gst_element_factory_make ("videoscale", "v_scale");
-    cs = gst_element_factory_make ("ffmpegcolorspace", "cs");
+    cs = gst_element_factory_make ("videoconvert", "cs");
     v_sink = gst_element_factory_make ("dfbvideosink", "v_sink");
     g_object_set (v_sink, "surface", window_surface3, NULL);
 

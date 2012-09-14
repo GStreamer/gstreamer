@@ -24,7 +24,7 @@
  * <title>Example launch line</title>
  * <para>
  * |[
- * gst-launch-0.10 filesrc location=gnome-home.png blocksize=4135 !  pngdec ! freeze ! ffmpegcolorspace ! xvimagesink
+ * gst-launch-0.10 filesrc location=gnome-home.png blocksize=4135 !  pngdec ! freeze ! videoconvert ! xvimagesink
  * ]| Produces a video stream from one picture.
  * </para>
  * </refsect2>

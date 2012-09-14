@@ -104,7 +104,7 @@ setProperty (GstElement * mcells, char *property, char *prop_value, GType type,
   }
 }
 
-// gst-launch v4l2src ! videoscale ! videorate ! capsfilter "caps=video/x-raw-yuv,width=320,height=240,framerate=10/1" ! ffmpegcolorspace ! motioncells ! ffmpegcolorspace ! xvimagesink
+// gst-launch v4l2src ! videoscale ! videorate ! capsfilter "caps=video/x-raw-yuv,width=320,height=240,framerate=10/1" ! videoconvert ! motioncells ! videoconvert ! xvimagesink
 int
 main (int argc, char *argv[])
 {
@@ -143,9 +143,9 @@ main (int argc, char *argv[])
     decodebin = gst_element_factory_make ("decodebin", "decode");
   else
     decodebin = NULL;
-  colorsp0 = gst_element_factory_make ("ffmpegcolorspace", "colorspace0");
+  colorsp0 = gst_element_factory_make ("videoconvert", "colorspace0");
   mcells = gst_element_factory_make ("motioncells", "mcells");
-  colorsp1 = gst_element_factory_make ("ffmpegcolorspace", "colorspace1");
+  colorsp1 = gst_element_factory_make ("videoconvert", "colorspace1");
   sink = gst_element_factory_make ("xvimagesink", "xv-image-sink");
   if (!pipeline || !source || !videor || !videos || !capsf || !colorsp0
       || !mcells || !colorsp1 || !sink) {

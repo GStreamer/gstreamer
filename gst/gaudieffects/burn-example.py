@@ -5,8 +5,7 @@ import gst
 
 p = gst.parse_launch ("""
    v4l2src !
-   ffmpegcolorspace ! queue ! video/x-raw-rgb,width=320,height=240,framerate=30/1 ! burn qos=true name=vf ! ffmpegcolorspace !
-   timeoverlay ! xvimagesink
+   videoconvert ! queue ! video/x-raw-rgb,width=320,height=240,framerate=30/1 !  burn qos=true name=vf ! videoconvert !  timeoverlay ! xvimagesink
    """)
 
 m = p.get_by_name ("vf")

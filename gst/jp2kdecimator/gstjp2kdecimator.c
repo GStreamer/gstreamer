@@ -27,7 +27,7 @@
  * |[
  * gst-launch -v videotestsrc num-buffers=1 ! jp2kenc ! \
  *   gstjp2kdecimator max-decomposition-levels=2 ! jp2kdec ! \
- *   ffmpegcolorspace ! autovideosink
+ *   videoconvert ! autovideosink
  * ]|
  * This pipelines encodes a test image to JPEG2000, only keeps 3 decomposition levels
  * decodes the decimated image again and shows it on the screen.

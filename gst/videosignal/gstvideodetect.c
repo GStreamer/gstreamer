@@ -95,7 +95,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! videodetect ! ffmpegcolorspace ! ximagesink
+ * gst-launch videotestsrc ! videodetect ! videoconvert ! ximagesink
  * ]|
  * </refsect2>
  *

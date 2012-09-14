@@ -65,9 +65,9 @@
  * <programlisting>
  * gst-launch \
  *   filesrc location=video.ogg ! oggdemux name=demux \
- *   demux. ! queue ! theoradec ! ffmpegcolorspace ! tiger name=tiger \
+ *   demux. ! queue ! theoradec ! videoconvert ! tiger name=tiger \
  *   demux. ! queue ! kateparse ! tiger. \
- *   tiger. ! ffmpegcolorspace ! autovideosink
+ *   tiger. ! videoconvert ! autovideosink
  * </programlisting>
  * </para>
  * </refsect2>

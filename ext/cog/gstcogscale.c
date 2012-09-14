@@ -20,7 +20,7 @@
 
 /**
  * SECTION:element-videoscale
- * @see_also: videorate, ffmpegcolorspace
+ * @see_also: videorate, videoconvert
  *
  * <refsect2>
  * <para>
@@ -37,7 +37,7 @@
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! ffmpegcolorspace ! videoscale ! ximagesink
+ * gst-launch -v filesrc location=videotestsrc.ogg ! oggdemux ! theoradec ! videoconvert ! videoscale ! ximagesink
  * </programlisting>
  * Decode an Ogg/Theora and display the video using ximagesink. Since
  * ximagesink cannot perform scaling, the video scaling will be performed by

@@ -119,7 +119,7 @@ enum
 static guint _signals[LAST_SIGNAL];
 
 /* Default values */
-#define DEFAULT_COLORSPACE_NAME "ffmpegcolorspace"
+#define DEFAULT_COLORSPACE_NAME "videoconvert"
 #define DEFAULT_JPEG_DECODER_NAME "jpegdec"
 #define DEFAULT_NUM_CLOCK_SAMPLES 0
 #define DEFAULT_NUM_BUFFERS -1

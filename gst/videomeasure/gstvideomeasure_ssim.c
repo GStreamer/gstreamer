@@ -38,7 +38,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch ssim name=ssim ssim.src0 ! ffmpegcolorspace ! glimagesink filesrc
+ * gst-launch ssim name=ssim ssim.src0 ! videoconvert ! glimagesink filesrc
  * location=orig.avi ! decodebin2 ! ssim.original filesrc location=compr.avi !
  * decodebin2 ! ssim.modified0
  * ]| This pipeline produces a video stream that consists of SSIM frames.

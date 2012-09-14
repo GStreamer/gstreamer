@@ -52,7 +52,7 @@ main (gint argc, gchar * argv[])
   queue = gst_element_factory_make ("queue", "queue");
   mpeg2dec = gst_element_factory_make ("mpeg2dec", "mpeg2dec");
   g_return_val_if_fail (mpeg2dec, -1);
-  colorspace = gst_element_factory_make ("ffmpegcolorspace", "colorspace");
+  colorspace = gst_element_factory_make ("videoconvert", "colorspace");
   g_return_val_if_fail (colorspace, -1);
   videosink = gst_element_factory_make (DEFAULT_VIDEOSINK, "videosink");
   g_return_val_if_fail (videosink, -1);

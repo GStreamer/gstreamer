@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch videotestsrc ! ffmpegcolorspace ! videoscale ! gsettingsvideosink
+ * gst-launch videotestsrc ! videoconvert ! videoscale ! gsettingsvideosink
  * ]| Play on configured videosink
  * </refsect2>
  */

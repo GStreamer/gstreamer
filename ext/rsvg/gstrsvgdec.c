@@ -24,7 +24,7 @@
  * <refsect2>
  * <title>Example launch lines</title>
  * |[
- * gst-launch filesrc location=image.svg ! rsvgdec ! imagefreeze ! ffmpegcolorspace ! autovideosink
+ * gst-launch filesrc location=image.svg ! rsvgdec ! imagefreeze ! videoconvert ! autovideosink
  * ]| render and show a svg image.
  * </refsect2>
  */

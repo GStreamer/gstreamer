@@ -51,7 +51,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v uridecodebin uri=/path/to/foo.bar ! fieldanalysis ! deinterlace ! ffmpegcolorspace ! autovideosink
+ * gst-launch -v uridecodebin uri=/path/to/foo.bar ! fieldanalysis ! deinterlace ! videoconvert ! autovideosink
  * ]| This pipeline will analyse a video stream with default metrics and thresholds and output progressive frames.
  * </refsect2>
  */

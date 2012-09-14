@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -v videotestsrc ! coloreffects preset=heat ! ffmpegcolorspace !
+ * gst-launch -v videotestsrc ! coloreffects preset=heat ! videoconvert !
  *     autovideosink
  * ]| This pipeline shows the effect of coloreffects on a test stream.
  * </refsect2>

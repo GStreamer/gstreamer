@@ -25,7 +25,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch filesrc location=test.pnm ! pnmdec ! ffmpegcolorspace ! autovideosink
+ * gst-launch filesrc location=test.pnm ! pnmdec ! videoconvert ! autovideosink
  * ]| The above pipeline reads a pnm file and renders it to the screen.
  * </refsect2>
  */

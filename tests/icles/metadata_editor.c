@@ -1050,7 +1050,7 @@ me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
     gst_source = gst_element_factory_make ("v4l2src", NULL);
   else
     gst_source = gst_element_factory_make ("videotestsrc", NULL);
-  gst_video_convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  gst_video_convert = gst_element_factory_make ("videoconvert", NULL);
   gst_image_enc = gst_element_factory_make ("jpegenc", NULL);
   gst_metadata_mux = gst_element_factory_make ("metadatamux", NULL);
   gst_file_sink = gst_element_factory_make ("filesink", NULL);
@@ -1238,7 +1238,7 @@ me_gst_setup_view_pipeline (const gchar * filename)
   else
     gst_image_dec = gst_element_factory_make ("jpegdec", NULL);
   gst_video_scale = gst_element_factory_make ("videoscale", NULL);
-  gst_video_convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  gst_video_convert = gst_element_factory_make ("videoconvert", NULL);
   gst_video_sink = gst_element_factory_make ("gdkpixbufsink", NULL);
 
   if (gst_video_sink == NULL) {
