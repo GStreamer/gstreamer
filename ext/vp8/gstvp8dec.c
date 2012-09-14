@@ -1,7 +1,7 @@
 /* VP8
  * Copyright (C) 2006 David Schleef <ds@schleef.org>
  * Copyright (C) 2008,2009,2010 Entropy Wave Inc
- * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2010-2012 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -183,7 +183,8 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
   gst_element_class_set_metadata (element_class,
       "On2 VP8 Decoder",
       "Codec/Decoder/Video",
-      "Decode VP8 video streams", "David Schleef <ds@entropywave.com>");
+      "Decode VP8 video streams", "David Schleef <ds@entropywave.com>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp8_dec_start);
   base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp8_dec_stop);

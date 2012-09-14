@@ -1,7 +1,7 @@
 /* VP8
  * Copyright (C) 2006 David Schleef <ds@schleef.org>
  * Copyright (C) 2010 Entropy Wave Inc
- * Copyright (C) 2010 Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2010-2012 Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -410,7 +410,8 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   gst_element_class_set_metadata (element_class,
       "On2 VP8 Encoder",
       "Codec/Encoder/Video",
-      "Encode VP8 video streams", "David Schleef <ds@entropywave.com>");
+      "Encode VP8 video streams", "David Schleef <ds@entropywave.com>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   video_encoder_class->start = gst_vp8_enc_start;
   video_encoder_class->stop = gst_vp8_enc_stop;
