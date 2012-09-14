@@ -570,7 +570,6 @@ retry:
   if (buffer_info.size > 0) {
     GstBuffer *outbuf;
     GstAmcBuffer *buf;
-    gint nframes;
 
     /* This sometimes happens at EOS or if the input is not properly framed,
      * let's handle it gracefully by allocating a new buffer for the current
@@ -589,11 +588,11 @@ retry:
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         gst_util_uint64_scale (buffer_info.presentation_time_us, GST_USECOND,
-        GST_SECOND);
-    nframes = buffer_info.size / (self->channels * 2);
+        1);
+
+    /* FIXME: Assuming we get a single frame per output buffer */
     flow_ret =
-        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf,
-        nframes);
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf, 1);
   }
 
   if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {

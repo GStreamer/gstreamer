@@ -984,7 +984,7 @@ retry:
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         gst_util_uint64_scale (buffer_info.presentation_time_us, GST_USECOND,
-        GST_SECOND);
+        1);
     flow_ret = gst_pad_push (GST_VIDEO_DECODER_SRC_PAD (self), outbuf);
   } else if (buffer_info.size > 0) {
     if ((flow_ret = gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER
