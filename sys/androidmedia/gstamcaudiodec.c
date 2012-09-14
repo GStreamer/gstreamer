@@ -574,8 +574,6 @@ retry:
      * let's handle it gracefully by allocating a new buffer for the current
      * caps and filling it
      */
-    GST_ERROR_OBJECT (self, "No corresponding frame found");
-
     if (idx >= self->n_input_buffers)
       goto invalid_buffer_index;
 
