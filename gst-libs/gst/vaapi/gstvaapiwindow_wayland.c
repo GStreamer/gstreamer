@@ -49,6 +49,7 @@ struct _GstVaapiWindowWaylandPrivate {
     struct wl_shell_surface    *shell_surface;
     struct wl_surface          *surface;
     struct wl_buffer           *buffer;
+    struct wl_region           *opaque_region;
     guint                       redraw_pending  : 1;
 };
 
@@ -161,7 +162,18 @@ gst_vaapi_window_wayland_resize(
     guint            height
 )
 {
+    GstVaapiWindowWaylandPrivate * const priv =
+        GST_VAAPI_WINDOW_WAYLAND(window)->priv;
+    GstVaapiDisplayWaylandPrivate * const priv_display =
+        GST_VAAPI_OBJECT_DISPLAY_WAYLAND(window)->priv;
+
     GST_DEBUG("resize window, new size %ux%u", width, height);
+
+    if (priv->opaque_region)
+	wl_region_destroy(priv->opaque_region);
+    priv->opaque_region = wl_compositor_create_region(priv_display->compositor);
+    wl_region_add(priv->opaque_region, 0, 0, width, height);
+
     return TRUE;
 }
 
@@ -247,6 +259,12 @@ gst_vaapi_window_wayland_render(
     /* XXX: attach to the specified target rectangle */
     wl_surface_attach(priv->surface, buffer, 0, 0);
     wl_surface_damage(priv->surface, 0, 0, width, height);
+
+    if (priv->opaque_region) {
+        wl_surface_set_opaque_region(priv->surface, priv->opaque_region);
+        wl_region_destroy(priv->opaque_region);
+        priv->opaque_region = NULL;
+    }
 
     wl_display_iterate(wl_display, WL_DISPLAY_WRITABLE);
     priv->redraw_pending = TRUE;
