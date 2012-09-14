@@ -549,7 +549,7 @@ retry:
         goto retry;
         break;
       case G_MININT:
-        GST_ERROR_OBJECT (self, "Failure dequeueing input buffer");
+        GST_ERROR_OBJECT (self, "Failure dequeueing output buffer");
         goto dequeue_error;
         break;
       default:
@@ -575,7 +575,7 @@ retry:
      * let's handle it gracefully by allocating a new buffer for the current
      * caps and filling it
      */
-    if (idx >= self->n_input_buffers)
+    if (idx >= self->n_output_buffers)
       goto invalid_buffer_index;
 
     outbuf = gst_buffer_try_new_and_alloc (buffer_info.size);
