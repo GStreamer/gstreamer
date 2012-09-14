@@ -1124,7 +1124,7 @@ gst_mio_video_src_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Video Source (MIO)", "Source/Video",
       "Reads frames from a Mac OS X MIO device",
       "Ole André Vadla Ravnås <oravnas@cisco.com>");

@@ -828,7 +828,7 @@ gst_cel_video_src_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Video Source (Celestial)", "Source/Video",
       "Reads frames from an iOS Celestial device",
       "Ole André Vadla Ravnås <oravnas@cisco.com>");

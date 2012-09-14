@@ -642,7 +642,7 @@ gst_osx_video_src_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "Video Source (OSX)",
+  gst_element_class_set_metadata (element_class, "Video Source (OSX)",
       "Source/Video",
       "Reads raw frames from a capture device on OS X",
       "Ole Andre Vadla Ravnaas <ole.andre.ravnas@tandberg.com>, "

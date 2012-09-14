@@ -585,7 +585,7 @@ gst_color_effects_class_init (GstColorEffectsClass * klass)
   vfilter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_color_effects_transform_frame_ip);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Color Look-up Table filter", "Filter/Effect/Video",
       "Color Look-up Table filter",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");

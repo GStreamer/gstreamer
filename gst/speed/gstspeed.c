@@ -387,7 +387,7 @@ gst_speed_class_init (GstSpeedClass * klass)
           0.1, 40.0, 1.0,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Speed",
+  gst_element_class_set_metadata (gstelement_class, "Speed",
       "Filter/Effect/Audio",
       "Set speed/pitch on audio/raw streams (resampler)",
       "Andy Wingo <apwingo@eos.ncsu.edu>, "

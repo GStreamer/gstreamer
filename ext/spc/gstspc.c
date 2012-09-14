@@ -76,7 +76,7 @@ gst_spc_dec_class_init (GstSpcDecClass * klass)
   GstElementClass *element_class = (GstElementClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gst_element_class_set_details_simple (element_class, "OpenSPC SPC decoder",
+  gst_element_class_set_metadata (element_class, "OpenSPC SPC decoder",
       "Codec/Audio/Decoder",
       "Uses OpenSPC to emulate an SPC processor",
       "Chris Lee <clee@kde.org>, Brian Koropoff <bkoropoff@gmail.com>");

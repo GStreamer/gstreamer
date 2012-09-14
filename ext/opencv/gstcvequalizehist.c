@@ -85,7 +85,7 @@ gst_cv_equalize_hist_class_init (GstCvEqualizeHistClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "cvequalizehist",
       "Transform/Effect/Video",
       "Applies cvEqualizeHist OpenCV function to the image",

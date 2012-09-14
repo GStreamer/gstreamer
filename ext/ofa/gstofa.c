@@ -65,7 +65,7 @@ gst_ofa_base_init (gpointer g_class)
   GstAudioFilterClass *audio_filter_class = (GstAudioFilterClass *) g_class;
   GstCaps *caps;
 
-  gst_element_class_set_details_simple (gstelement_class, "OFA",
+  gst_element_class_set_metadata (gstelement_class, "OFA",
       "MusicIP Fingerprinting element",
       "Find a music fingerprint using MusicIP's libofa",
       "Milosz Derezynski <internalerror@gmail.com>, Eric Buehl <eric.buehl@gmail.com>");

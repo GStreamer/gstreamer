@@ -79,7 +79,7 @@ gst_ivf_parse_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "IVF parser",
       "Codec/Demuxer",
       "Demuxes a IVF stream", "Philip Jägenstedt <philipj@opera.com>");

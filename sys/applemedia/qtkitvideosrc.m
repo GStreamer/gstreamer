@@ -529,7 +529,7 @@ gst_qtkit_video_src_class_init (GstQTKitVideoSrcClass * klass)
   GstBaseSrcClass *gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   GstPushSrcClass *gstpushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "Video Source (QTKit)", "Source/Video",
       "Reads frames from a Mac OS X QTKit device",
       "Ole André Vadla Ravnås <oravnas@cisco.com>");

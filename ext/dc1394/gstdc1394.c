@@ -105,7 +105,7 @@ gst_dc1394_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "1394 IIDC Video Source",
+  gst_element_class_set_metadata (element_class, "1394 IIDC Video Source",
       "Source/Video",
       "libdc1394 based source, supports 1394 IIDC cameras",
       "Antoine Tremblay <hexa00@gmail.com>");

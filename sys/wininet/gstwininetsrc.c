@@ -86,7 +86,7 @@ gst_win_inet_src_base_init (gpointer gclass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Windows Network Source", "Source/Network",
       "Receive data as a client over the network via HTTP or FTP",
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");

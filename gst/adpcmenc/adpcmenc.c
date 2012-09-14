@@ -439,7 +439,7 @@ adpcmenc_class_init (ADPCMEncClass * klass)
       gst_static_pad_template_get (&adpcmenc_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&adpcmenc_src_template));
-  gst_element_class_set_details_simple (element_class, "ADPCM encoder",
+  gst_element_class_set_metadata (element_class, "ADPCM encoder",
       "Codec/Encoder/Audio",
       "Encode ADPCM audio",
       "Pioneers of the Inevitable <songbird@songbirdnest.com>");

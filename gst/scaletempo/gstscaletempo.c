@@ -699,7 +699,7 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_details_simple (gstelement_class, "Scaletempo",
+  gst_element_class_set_metadata (gstelement_class, "Scaletempo",
       "Filter/Effect/Rate",
       "Sync audio tempo with playback rate",
       "Rov Juvano <rovjuvano@users.sourceforge.net>");

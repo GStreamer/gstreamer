@@ -212,7 +212,7 @@ gst_vt_h264_dec_bin_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "VTH264DecBin",
       "Decoder/Video",
       "VideoToolbox H.264 decoder bin",

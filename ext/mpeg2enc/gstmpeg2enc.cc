@@ -132,7 +132,7 @@ gst_mpeg2enc_class_init (GstMpeg2encClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "mpeg2enc video encoder", "Codec/Encoder/Video",
       "High-quality MPEG-1/2 video encoder",
       "Andrew Stevens <andrew.stevens@nexgo.de>\n"

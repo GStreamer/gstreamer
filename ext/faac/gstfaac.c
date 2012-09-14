@@ -202,7 +202,7 @@ gst_faac_class_init (GstFaacClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details_simple (gstelement_class, "AAC audio encoder",
+  gst_element_class_set_metadata (gstelement_class, "AAC audio encoder",
       "Codec/Encoder/Audio",
       "Free MPEG-2/4 AAC encoder",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");

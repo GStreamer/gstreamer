@@ -200,7 +200,7 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
           "Sets the width of fonts", 1.0, 5.0,
           DEFAULT_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "opencvtextoverlay",
       "Filter/Effect/Video",
       "Write text on the top of video", "sreerenj<bsreerenj@gmail.com>");

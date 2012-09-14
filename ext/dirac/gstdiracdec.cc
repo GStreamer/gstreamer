@@ -107,7 +107,7 @@ gst_diracdec_base_init (gpointer g_class)
       &gst_diracdec_src_pad_template);
   gst_element_class_add_static_pad_template (element_class,
       &gst_diracdec_sink_pad_template);
-  gst_element_class_set_details_simple (element_class, "Dirac stream decoder",
+  gst_element_class_set_metadata (element_class, "Dirac stream decoder",
       "Codec/Decoder/Video", "Decode DIRAC streams",
       "David Schleef <ds@schleef.org>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");

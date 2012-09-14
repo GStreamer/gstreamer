@@ -129,7 +129,7 @@ gst_flite_test_src_class_init (GstFliteTestSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_flite_test_src_src_template));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "Flite speech test source", "Source/Audio",
       "Creates audio test signals identifying channels",
       "David Schleef <ds@schleef.org>");

@@ -144,7 +144,7 @@ gst_pitch_class_init (GstPitchClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pitch_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "Pitch controller",
+  gst_element_class_set_metadata (element_class, "Pitch controller",
       "Filter/Effect/Audio", "Control the pitch of an audio stream",
       "Wouter Paesen <wouter@blue-gate.be>");
 }

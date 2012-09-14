@@ -228,7 +228,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "DVB bin",
+  gst_element_class_set_metadata (element_class, "DVB bin",
       "Source/Bin/Video",
       "Access descramble and split DVB streams",
       "Alessandro Decina <alessandro@nnva.org>");

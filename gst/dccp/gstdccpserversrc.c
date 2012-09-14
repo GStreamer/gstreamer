@@ -265,7 +265,7 @@ gst_dccp_server_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_details_simple (element_class, "DCCP server source",
+  gst_element_class_set_metadata (element_class, "DCCP server source",
       "Source/Network",
       "Receive data as a server over the network via DCCP",
       "E-Phone Team at Federal University of Campina Grande <leandroal@gmail.com>");

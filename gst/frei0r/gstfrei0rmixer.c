@@ -665,7 +665,7 @@ gst_frei0r_mixer_class_init (GstFrei0rMixerClass * klass,
       g_strdup_printf
       ("Sebastian Dröge <sebastian.droege@collabora.co.uk>, %s",
       class_data->info.author);
-  gst_element_class_set_details_simple (gstelement_class, class_data->info.name,
+  gst_element_class_set_metadata (gstelement_class, class_data->info.name,
       "Filter/Editor/Video", class_data->info.explanation, author);
   g_free (author);
 

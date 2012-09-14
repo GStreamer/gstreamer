@@ -165,7 +165,7 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&rtptemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "SDP session setup",
+  gst_element_class_set_metadata (gstelement_class, "SDP session setup",
       "Codec/Demuxer/Network/RTP",
       "Receive data over the network via SDP",
       "Wim Taymans <wim.taymans@gmail.com>");

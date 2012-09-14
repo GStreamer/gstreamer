@@ -183,7 +183,7 @@ gst_decklink_src_base_init (gpointer g_class)
       gst_pad_template_new ("videosrc", GST_PAD_SRC, GST_PAD_ALWAYS,
           gst_decklink_mode_get_template_caps ()));
 
-  gst_element_class_set_details_simple (element_class, "Decklink source",
+  gst_element_class_set_metadata (element_class, "Decklink source",
       "Source/Video", "DeckLink Source", "David Schleef <ds@entropywave.com>");
 }
 

@@ -88,7 +88,7 @@ gst_opus_parse_class_init (GstOpusParseClass * klass)
       gst_static_pad_template_get (&opus_parse_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&opus_parse_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Opus audio parser",
+  gst_element_class_set_metadata (element_class, "Opus audio parser",
       "Codec/Parser/Audio",
       "parses opus audio streams",
       "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");

@@ -74,7 +74,7 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details_simple (gstelement_class, "H.263 parser",
+  gst_element_class_set_metadata (gstelement_class, "H.263 parser",
       "Codec/Parser/Video",
       "Parses H.263 streams",
       "Arun Raghavan <arun.raghavan@collabora.co.uk>,"

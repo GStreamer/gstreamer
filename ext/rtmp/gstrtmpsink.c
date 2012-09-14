@@ -100,7 +100,7 @@ gst_rtmp_sink_class_init (GstRTMPSinkClass * klass)
       g_param_spec_string ("location", "RTMP Location", "RTMP url",
           DEFAULT_LOCATION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "RTMP output sink",
       "Sink/Network", "Sends FLV content to a server via RTMP",
       "Jan Schmidt <thaytan@noraisin.net>");

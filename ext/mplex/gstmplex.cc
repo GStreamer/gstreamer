@@ -142,7 +142,7 @@ gst_mplex_class_init (GstMplexClass * klass)
       GST_DEBUG_FUNCPTR (gst_mplex_request_new_pad);
   element_class->release_pad = GST_DEBUG_FUNCPTR (gst_mplex_release_pad);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "mplex video multiplexer", "Codec/Muxer",
       "High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer",
       "Andrew Stevens <andrew.stevens@nexgo.de>\n"

@@ -134,7 +134,7 @@ gst_burn_class_init (GstBurnClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
-  gst_element_class_set_details_simple (gstelement_class, "Burn",
+  gst_element_class_set_metadata (gstelement_class, "Burn",
       "Filter/Effect/Video",
       "Burn adjusts the colors in the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");

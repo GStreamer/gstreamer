@@ -125,7 +125,7 @@ gst_viewfinder_bin_class_init (GstViewfinderBinClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details_simple (element_class, "Viewfinder Bin",
+  gst_element_class_set_metadata (element_class, "Viewfinder Bin",
       "Sink/Video", "Viewfinder Bin used in camerabin2",
       "Thiago Santos <thiago.sousa.santos@collabora.com>");
 }

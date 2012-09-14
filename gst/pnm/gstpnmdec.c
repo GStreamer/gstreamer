@@ -335,7 +335,7 @@ gst_pnmdec_class_init (GstPnmdecClass * klass)
       gst_static_pad_template_get (&gst_pnmdec_sink_pad_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_pnmdec_src_pad_template));
-  gst_element_class_set_details_simple (element_class, "PNM image decoder",
+  gst_element_class_set_metadata (element_class, "PNM image decoder",
       "Codec/Decoder/Image",
       "Decodes images in portable pixmap/graymap/bitmap/anymamp (PNM) format",
       "Lutz Mueller <lutz@users.sourceforge.net>");

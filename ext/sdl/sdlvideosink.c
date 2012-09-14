@@ -152,7 +152,7 @@ gst_sdlvideosink_base_init (gpointer g_class)
       GST_PAD_SINK, GST_PAD_ALWAYS, capslist);
 
   gst_element_class_add_pad_template (element_class, sink_template);
-  gst_element_class_set_details_simple (element_class, "SDL video sink",
+  gst_element_class_set_metadata (element_class, "SDL video sink",
       "Sink/Video", "An SDL-based videosink",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
       "Edgard Lima <edgard.lima@indt.org.br>, "

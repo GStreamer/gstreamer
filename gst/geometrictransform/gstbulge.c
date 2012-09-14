@@ -176,7 +176,7 @@ gst_bulge_class_init (GstBulgeClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "bulge",
       "Transform/Effect/Video",
       "Adds a protuberance in the center point",

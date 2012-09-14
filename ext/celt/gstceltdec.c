@@ -97,7 +97,7 @@ gst_celt_dec_class_init (GstCeltDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&celt_dec_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "Celt audio decoder",
+  gst_element_class_set_metadata (gstelement_class, "Celt audio decoder",
       "Codec/Decoder/Audio",
       "decode celt streams to audio",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

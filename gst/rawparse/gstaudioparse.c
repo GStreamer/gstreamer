@@ -146,7 +146,7 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Audio Parse",
+  gst_element_class_set_metadata (gstelement_class, "Audio Parse",
       "Filter/Audio",
       "Converts stream into audio frames",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

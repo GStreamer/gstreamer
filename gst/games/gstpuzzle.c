@@ -126,7 +126,7 @@ gst_puzzle_base_init (gpointer g_class)
   int i;
   GstVideofilterFormat *f;
 
-  gst_element_class_set_details_simple (element_class, "A simple puzzle",
+  gst_element_class_set_metadata (element_class, "A simple puzzle",
       "Filter/Effect/Video/Games",
       "A simple puzzle, use arrow keys and space to restart/solve",
       "Benjamin Otte <otte@gnome.org>");

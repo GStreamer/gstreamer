@@ -127,7 +127,7 @@ rsn_dvdbin_class_init (RsnDvdBinClass * klass)
 
   element_class->change_state = GST_DEBUG_FUNCPTR (rsn_dvdbin_change_state);
 
-  gst_element_class_set_details_simple (element_class, "rsndvdbin",
+  gst_element_class_set_metadata (element_class, "rsndvdbin",
       "Generic/Bin/Player",
       "DVD playback element", "Jan Schmidt <thaytan@noraisin.net>");
 }

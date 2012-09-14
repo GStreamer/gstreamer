@@ -81,7 +81,7 @@ gst_synae_scope_class_init (GstSynaeScopeClass * g_class)
 
   gobject_class->finalize = gst_synae_scope_finalize;
 
-  gst_element_class_set_details_simple (element_class, "Synaescope",
+  gst_element_class_set_metadata (element_class, "Synaescope",
       "Visualization",
       "Creates video visualizations of audio input, using stereo and pitch information",
       "Stefan Kost <ensonic@users.sf.net>");

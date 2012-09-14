@@ -273,7 +273,7 @@ gst_uvc_h264_src_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (uvc_h264_src_debug, "uvch264_src",
       0, "UVC H264 Compliant camera bin source");
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "UVC H264 Source",
       "Source/Video",
       "UVC H264 Encoding camera source",

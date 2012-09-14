@@ -189,7 +189,7 @@ gst_celt_enc_class_init (GstCeltEncClass * klass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (gstelement_class, "Celt audio encoder",
+  gst_element_class_set_metadata (gstelement_class, "Celt audio encoder",
       "Codec/Encoder/Audio",
       "Encodes audio in Celt format",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

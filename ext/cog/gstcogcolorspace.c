@@ -131,7 +131,7 @@ gst_cogcolorspace_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_cogcolorspace_sink_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "YCbCr/RGB format conversion", "Filter/Converter/Video",
       "YCbCr/RGB format conversion", "David Schleef <ds@schleef.org>");
 }

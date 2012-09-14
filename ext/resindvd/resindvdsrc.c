@@ -231,7 +231,7 @@ rsn_dvdsrc_class_init (resinDvdSrcClass * klass)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_details_simple (gstelement_class, "Resin DVD Src",
+  gst_element_class_set_metadata (gstelement_class, "Resin DVD Src",
       "Source/DVD", "DVD source element", "Jan Schmidt <thaytan@noraisin.net>");
 }
 

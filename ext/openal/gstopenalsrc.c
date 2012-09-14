@@ -137,7 +137,7 @@ gst_openal_src_base_init (gpointer gclass)
 
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple (element_class, "OpenAL src",
+  gst_element_class_set_metadata (element_class, "OpenAL src",
       "Source/Audio",
       "OpenAL source capture audio from device",
       "Victor Lin <bornstub@gmail.com>");

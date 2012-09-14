@@ -162,7 +162,7 @@ gst_pyramid_segment_class_init (GstPyramidSegmentClass * klass)
           "Maximum level of the pyramid segmentation", 0, 4, 4,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "pyramidsegment",
       "Filter/Effect/Video",
       "Applies pyramid segmentation to a video or image.",

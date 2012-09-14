@@ -2,7 +2,7 @@
  * GStreamer
  * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
- * Copyright 2005 Sébastien Moutte <sebastien@moutte.net>
+ * Copyright 2005 Sï¿½bastien Moutte <sebastien@moutte.net>
  * Copyright 2006 Joni Valtanen <joni.valtanen@movial.fi>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -153,7 +153,7 @@ gst_directsound_src_base_init (gpointer g_class)
 
   GST_DEBUG ("initializing directsoundsrc base\n");
 
-  gst_element_class_set_details_simple (element_class, "Direct Sound Audio Src",
+  gst_element_class_set_metadata (element_class, "Direct Sound Audio Src",
       "Source/Audio",
       "Capture from a soundcard via DIRECTSOUND",
       "Joni Valtanen <joni.valtanen@movial.fi>");

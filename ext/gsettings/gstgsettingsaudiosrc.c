@@ -228,7 +228,7 @@ gst_gsettings_audio_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (eklass, "GSettings audio src",
+  gst_element_class_set_metadata (eklass, "GSettings audio src",
       "Src/Audio",
       "Audio src embedding the GSettings preferences for audio input",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

@@ -280,7 +280,7 @@ gst_face_overlay_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "faceoverlay",
       "Filter/Editor/Video",
       "Overlays SVG graphics over a detected face in a video stream",

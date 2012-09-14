@@ -71,7 +71,7 @@ gst_test_scope_class_init (GstTestScopeClass * g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "test scope",
+  gst_element_class_set_metadata (element_class, "test scope",
       "Visualization",
       "Dummy test scope", "Stefan Kost <ensonic@users.sf.net>");
 

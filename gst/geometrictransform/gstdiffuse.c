@@ -184,7 +184,7 @@ gst_diffuse_class_init (GstDiffuseClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "diffuse",
       "Transform/Effect/Video",
       "Diffuses the image by moving its pixels in random directions",

@@ -545,7 +545,7 @@ gst_asf_parse_class_init (GstAsfParseClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "ASF parser",
+  gst_element_class_set_metadata (gstelement_class, "ASF parser",
       "Parser", "Parses ASF", "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");
 
   GST_DEBUG_CATEGORY_INIT (asfparse_debug, "asfparse", 0,

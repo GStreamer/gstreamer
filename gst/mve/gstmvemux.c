@@ -1357,7 +1357,7 @@ gst_mve_mux_base_init (GstMveMuxClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
 
-  gst_element_class_set_details_simple (element_class, "MVE Multiplexer",
+  gst_element_class_set_metadata (element_class, "MVE Multiplexer",
       "Codec/Muxer",
       "Muxes audio and video into an MVE stream",
       "Jens Granseuer <jensgr@gmx.net>");

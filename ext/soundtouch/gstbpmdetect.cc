@@ -87,7 +87,7 @@ gst_bpm_detect_class_init (GstBPMDetectClass * klass)
 
   gobject_class->finalize = gst_bpm_detect_finalize;
 
-  gst_element_class_set_details_simple (element_class, "BPM Detector",
+  gst_element_class_set_metadata (element_class, "BPM Detector",
       "Filter/Analyzer/Audio", "Detect the BPM of an audio stream",
       "Sebastian Dröge <slomo@circular-chaos.org>");
 

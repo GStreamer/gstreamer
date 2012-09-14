@@ -227,7 +227,7 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&mpegtsmux_src_factory));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "MPEG Transport Stream Muxer", "Codec/Muxer",
       "Multiplexes media streams into an MPEG Transport Stream",
       "Fluendo <contact@fluendo.com>");

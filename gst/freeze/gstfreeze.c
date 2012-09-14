@@ -83,7 +83,7 @@ gst_freeze_class_init (GstFreezeClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class, "Stream freezer",
+  gst_element_class_set_metadata (element_class, "Stream freezer",
       "Generic",
       "Makes a stream from buffers of data",
       "Gergely Nagy <gergely.nagy@neteyes.hu>,"

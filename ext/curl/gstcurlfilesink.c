@@ -99,7 +99,7 @@ gst_curl_file_sink_class_init (GstCurlFileSinkClass * klass)
       "curl file sink element");
   GST_DEBUG_OBJECT (klass, "class_init");
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Curl file sink",
       "Sink/Network",
       "Upload data over FILE protocol using libcurl",

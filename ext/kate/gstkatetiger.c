@@ -225,7 +225,7 @@ gst_kate_tiger_base_init (gpointer gclass)
       gst_static_pad_template_get (&kate_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Kate stream renderer",
+  gst_element_class_set_metadata (element_class, "Kate stream renderer",
       "Mixer/Video/Overlay/Subtitle",
       "Decodes and renders Kate streams on top of a video",
       "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");

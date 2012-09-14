@@ -116,7 +116,7 @@ gst_tunnel_class_init (GstTunnelClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "tunnel",
       "Transform/Effect/Video",
       "Light tunnel effect", "Filippo Argiolas <filippo.argiolas@gmail.com>");

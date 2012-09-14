@@ -200,7 +200,7 @@ gst_uvc_h264_mjpg_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class, pt);
   gst_object_unref (pt);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "UVC H264 MJPG Demuxer",
       "Video/Demuxer",
       "Demux UVC H264 auxiliary streams from MJPG images",

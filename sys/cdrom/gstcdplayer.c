@@ -89,7 +89,7 @@ cdplayer_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "CD Player",
+  gst_element_class_set_metadata (element_class, "CD Player",
       "Generic/Bin",
       "Play CD audio through the CD Drive",
       "Charles Schmidt <cbschmid@uiuc.edu>, "

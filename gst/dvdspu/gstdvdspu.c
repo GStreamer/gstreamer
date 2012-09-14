@@ -149,7 +149,7 @@ gst_dvd_spu_class_init (GstDVDSpuClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&subpic_sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class, "Sub-picture Overlay",
+  gst_element_class_set_metadata (gstelement_class, "Sub-picture Overlay",
       "Mixer/Video/Overlay/SubPicture/DVD/Bluray",
       "Parses Sub-Picture command streams and renders the SPU overlay "
       "onto the video as it passes through",

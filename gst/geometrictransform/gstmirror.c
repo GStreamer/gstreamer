@@ -182,7 +182,7 @@ gst_mirror_class_init (GstMirrorClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "mirror",
       "Transform/Effect/Video",
       "Split the image into two halves and reflect one over each other",

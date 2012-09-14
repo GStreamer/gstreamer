@@ -228,7 +228,7 @@ gst_gsettings_video_src_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (eklass, "GSettings video src",
+  gst_element_class_set_metadata (eklass, "GSettings video src",
       "Src/Video",
       "Video src embedding the GSettings preferences for video input",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

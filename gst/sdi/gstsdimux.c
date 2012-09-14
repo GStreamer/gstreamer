@@ -113,7 +113,7 @@ gst_sdi_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_sdi_mux_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "SDI Muxer",
+  gst_element_class_set_metadata (element_class, "SDI Muxer",
       "Muxer",
       "Multiplex raw audio and video into SDI",
       "David Schleef <ds@schleef.org>");

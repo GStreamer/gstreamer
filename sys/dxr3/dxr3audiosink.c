@@ -153,7 +153,7 @@ dxr3audiosink_base_init (Dxr3AudioSinkClass * klass)
       gst_static_pad_template_get (&dxr3audiosink_pcm_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&dxr3audiosink_ac3_sink_factory));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "dxr3/Hollywood+ mpeg decoder board audio plugin", "Audio/Sink",
       "Feeds audio to Sigma Designs em8300 based boards",
       "Martin Soto <martinsoto@users.sourceforge.net>");

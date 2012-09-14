@@ -117,7 +117,7 @@ gst_trm_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "MusicBrainz TRM generator", "Filter/Analyzer/Audio",
       "Compute MusicBrainz TRM Id using libmusicbrainz",
       "Jeremy Simon <jsimon13@yahoo.fr>");

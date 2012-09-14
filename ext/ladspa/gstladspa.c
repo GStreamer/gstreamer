@@ -239,7 +239,7 @@ gst_ladspa_base_init (gpointer g_class)
   }
 #endif
   GST_INFO ("tags : %s", klass_tags);
-  gst_element_class_set_details_simple (element_class, longname,
+  gst_element_class_set_metadata (element_class, longname,
       extra_klass_tags ? extra_klass_tags : klass_tags, longname, author);
   g_free (longname);
   g_free (author);

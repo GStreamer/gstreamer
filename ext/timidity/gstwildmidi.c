@@ -128,7 +128,7 @@ gst_wildmidi_base_init (gpointer gclass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details_simple (element_class, "WildMidi",
+  gst_element_class_set_metadata (element_class, "WildMidi",
       "Codec/Decoder/Audio",
       "Midi Synthesizer Element", "Wouter Paesen <wouter@blue-gate.be>");
 }

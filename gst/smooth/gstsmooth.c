@@ -93,7 +93,7 @@ gst_smooth_class_init (GstSmoothClass * klass)
       gst_static_pad_template_get (&gst_smooth_sink_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_smooth_src_template));
-  gst_element_class_set_details_simple (gstelement_class, "Smooth effect",
+  gst_element_class_set_metadata (gstelement_class, "Smooth effect",
       "Filter/Effect/Video",
       "Apply a smooth filter to an image",
       "Wim Taymans <wim.taymans@chello.be>");

@@ -123,7 +123,7 @@ gst_id3_mux_class_init (GstId3MuxClass * klass)
   GST_TAG_MUX_CLASS (klass)->render_end_tag =
       GST_DEBUG_FUNCPTR (gst_id3_mux_render_v1_tag);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "ID3 v1 and v2 Muxer", "Formatter/Metadata",
       "Adds an ID3v2 header and ID3v1 footer to a file",
       "Michael Smith <msmith@songbirdnest.com>, "

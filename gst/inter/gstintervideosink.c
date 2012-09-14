@@ -97,7 +97,7 @@ gst_inter_video_sink_class_init (GstInterVideoSinkClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_video_sink_sink_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Internal video sink",
       "Sink/Video",
       "Virtual video sink for internal process communication",

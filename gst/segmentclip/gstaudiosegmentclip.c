@@ -61,7 +61,7 @@ gst_audio_segment_clip_class_init (GstAudioSegmentClipClass * klass)
   segment_clip_klass->clip_buffer =
       GST_DEBUG_FUNCPTR (gst_audio_segment_clip_clip_buffer);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Audio buffer segment clipper",
       "Filter/Audio",
       "Clips audio buffers to the configured segment",

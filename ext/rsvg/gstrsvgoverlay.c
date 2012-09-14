@@ -458,7 +458,7 @@ gst_rsvg_overlay_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&data_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "RSVG overlay",
+  gst_element_class_set_metadata (element_class, "RSVG overlay",
       "Filter/Editor/Video",
       "Overlays SVG graphics over a video stream",
       "Olivier Aubert <olivier.aubert@liris.cnrs.fr>");

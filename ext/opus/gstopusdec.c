@@ -121,7 +121,7 @@ gst_opus_dec_class_init (GstOpusDecClass * klass)
       gst_static_pad_template_get (&opus_dec_src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&opus_dec_sink_factory));
-  gst_element_class_set_details_simple (element_class, "Opus audio decoder",
+  gst_element_class_set_metadata (element_class, "Opus audio decoder",
       "Codec/Decoder/Audio",
       "decode opus streams to audio",
       "Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>");

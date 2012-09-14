@@ -187,7 +187,7 @@ gst_square_class_init (GstSquareClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "square",
       "Transform/Effect/Video",
       "Distort center part of the image into a square",

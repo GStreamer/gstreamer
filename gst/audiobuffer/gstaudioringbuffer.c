@@ -325,7 +325,7 @@ gst_audio_ringbuffer_class_init (GstAudioRingbufferClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "AudioRingbuffer",
+  gst_element_class_set_metadata (gstelement_class, "AudioRingbuffer",
       "Generic",
       "Asynchronous Audio ringbuffer", "Wim Taymans <wim.taymans@gmail.com>");
 

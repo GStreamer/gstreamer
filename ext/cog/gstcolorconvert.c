@@ -137,7 +137,7 @@ gst_colorconvert_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_colorconvert_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "Convert colorspace",
+  gst_element_class_set_metadata (element_class, "Convert colorspace",
       "Filter/Effect/Video",
       "Convert between SDTV and HDTV colorspace",
       "David Schleef <ds@schleef.org>");

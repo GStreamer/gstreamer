@@ -148,7 +148,7 @@ gst_cv_laplace_class_init (GstCvLaplaceClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "cvlaplace",
       "Transform/Effect/Video",
       "Applies cvLaplace OpenCV function to the image",

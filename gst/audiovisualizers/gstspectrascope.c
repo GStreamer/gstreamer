@@ -82,7 +82,7 @@ gst_spectra_scope_class_init (GstSpectraScopeClass * g_class)
 
   gobject_class->finalize = gst_spectra_scope_finalize;
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Frequency spectrum scope", "Visualization",
       "Simple frequency spectrum scope", "Stefan Kost <ensonic@users.sf.net>");
 

@@ -189,7 +189,7 @@ gst_teletextdec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Teletext decoder",
       "Decoder",
       "Decode PES or raw VBI stream containing teletext information to RGBA, HTML and text",

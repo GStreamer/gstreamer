@@ -97,7 +97,7 @@ gst_inter_sub_src_class_init (GstInterSubSrcClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_sub_src_src_template));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Internal subtitle source",
       "Source/Subtitle",
       "Virtual subtitle source for internal process communication",

@@ -118,7 +118,7 @@ gst_curl_http_sink_class_init (GstCurlHttpSinkClass * klass)
       "curl http sink element");
   GST_DEBUG_OBJECT (klass, "class_init");
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Curl http sink",
       "Sink/Network",
       "Upload data over HTTP/HTTPS protocol using libcurl",

@@ -85,7 +85,7 @@ gst_mim_dec_class_init (GstMimDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "Mimic Decoder",
       "Codec/Decoder/Video",
       "MSN Messenger compatible Mimic video decoder element",

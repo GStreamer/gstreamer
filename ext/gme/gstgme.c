@@ -86,7 +86,7 @@ gst_gme_dec_class_init (GstGmeDecClass * klass)
 
   gobject_class->dispose = gst_gme_dec_dispose;
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Gaming console music file decoder", "Codec/Audio/Decoder",
       "Uses libgme to emulate a gaming console sound processors",
       "Chris Lee <clee@kde.org>, Brian Koropoff <bkoropoff@gmail.com>, "

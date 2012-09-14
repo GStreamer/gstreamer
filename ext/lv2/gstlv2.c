@@ -366,7 +366,7 @@ gst_lv2_base_init (gpointer g_class)
     klass_tags = "Filter/Effect/Audio/LV2";
 
   GST_INFO ("tags : %s", klass_tags);
-  gst_element_class_set_details_simple (element_class, longname,
+  gst_element_class_set_metadata (element_class, longname,
       klass_tags, longname, author);
   g_free (longname);
   g_free (author);

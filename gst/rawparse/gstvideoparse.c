@@ -101,7 +101,7 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
           "True if top field is earlier than bottom field", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Video Parse",
+  gst_element_class_set_metadata (gstelement_class, "Video Parse",
       "Filter/Video",
       "Converts stream into video frames",
       "David Schleef <ds@schleef.org>, "

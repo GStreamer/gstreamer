@@ -196,7 +196,7 @@ gst_kaleidoscope_class_init (GstKaleidoscopeClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gst_element_class_set_metadata (gstelement_class,
       "kaleidoscope",
       "Transform/Effect/Video",
       "Applies 'kaleidoscope' geometric transform to the image",

@@ -68,7 +68,7 @@ gst_checksum_sink_class_init (GstChecksumSinkClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_checksum_sink_sink_template));
 
-  gst_element_class_set_details_simple (element_class, "Checksum sink",
+  gst_element_class_set_metadata (element_class, "Checksum sink",
       "Debug/Sink", "Calculates a checksum for buffers",
       "David Schleef <ds@schleef.org>");
 }

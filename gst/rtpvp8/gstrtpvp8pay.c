@@ -82,7 +82,7 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_vp8_pay_src_template));
 
-  gst_element_class_set_details_simple (element_class, "RTP VP8 payloader",
+  gst_element_class_set_metadata (element_class, "RTP VP8 payloader",
       "Codec/Payloader/Network/RTP",
       "Puts VP8 video in RTP packets)", "Sjoerd Simons <sjoerd@luon.net>");
 

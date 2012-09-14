@@ -242,7 +242,7 @@ gst_dccp_client_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (element_class, "DCCP client sink",
+  gst_element_class_set_metadata (element_class, "DCCP client sink",
       "Sink/Network",
       "Send data as a client over the network via DCCP",
       "E-Phone Team at Federal University of Campina Grande <leandroal@gmail.com>");

@@ -1179,7 +1179,7 @@ gst_vdp_vpp_base_init (gpointer gclass)
   GstCaps *src_caps, *sink_caps;
   GstPadTemplate *src_template, *sink_template;
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "VdpauVideoPostProcess",
       "Filter/Converter/Decoder/Video",
       "Post process GstVdpVideoBuffers and output GstVdpOutputBuffers",

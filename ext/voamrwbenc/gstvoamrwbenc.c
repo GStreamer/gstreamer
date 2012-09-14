@@ -167,7 +167,7 @@ gst_voamrwbenc_class_init (GstVoAmrWbEncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details_simple (element_class, "AMR-WB audio encoder",
+  gst_element_class_set_metadata (element_class, "AMR-WB audio encoder",
       "Codec/Encoder/Audio",
       "Adaptive Multi-Rate Wideband audio encoder",
       "Renato Araujo <renato.filho@indt.org.br>");

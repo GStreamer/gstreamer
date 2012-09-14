@@ -136,7 +136,7 @@ gst_kate_tag_class_init (GstKateTagClass * klass)
           "Set the height of the canvas this stream was authored for (0 is unspecified)",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (gstelement_class, "Kate stream tagger",
+  gst_element_class_set_metadata (gstelement_class, "Kate stream tagger",
       "Formatter/Metadata",
       "Retags kate streams", "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 

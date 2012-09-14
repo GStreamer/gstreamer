@@ -106,7 +106,7 @@ gst_chromaprint_class_init (GstChromaprintClass * klass)
       GST_DEBUG_FUNCPTR (gst_chromaprint_sink_event);
   gstbasetrans_class->passthrough_on_same_caps = TRUE;
 
-  gst_element_class_set_details_simple (GST_ELEMENT_CLASS (klass),
+  gst_element_class_set_metadata (GST_ELEMENT_CLASS (klass),
       "Chromaprint fingerprinting element",
       "Filter/Analyzer/Audio",
       "Find an audio fingerprint using the Chromaprint library",

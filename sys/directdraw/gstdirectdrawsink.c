@@ -382,7 +382,7 @@ gst_directdraw_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details_simple (element_class, "Direct Draw Video Sink",
+  gst_element_class_set_metadata (element_class, "Direct Draw Video Sink",
       "Sink/Video",
       "Output to a video card via Direct Draw",
       "Sebastien Moutte <sebastien@moutte.net>");
