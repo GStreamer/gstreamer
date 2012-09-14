@@ -1,9 +1,591 @@
-=== release 0.11.92 ===
+2012-09-13 09:36:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 
-2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+	* ext/libav/gstavviddec.c:
+	  viddec: Set latency base on the number of bframes
+
+2012-09-13 09:34:29 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  viddec: Cleanup unused has_b_frames flag
+
+2012-09-12 15:30:05 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  libav: Switch to non-deprecated symbols
+	  This symbols/enums will all be deprecated in the next releases
+
+2012-09-12 21:15:24 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* ext/libav/gstavmux.c:
+	  collectpads: remove gst_collect_pads_add_pad_full
+	  Rename gst_collect_pads_add_pad_full() to gst_collect_pads_add_pad() and fix all
+	  invocations.
+
+2012-09-12 10:25:24 +0200  Michael Smith <msmith@rdio.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  libav: add decode support for prores
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683840
+
+2012-09-12 10:25:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavpipe.h:
+	  avdemux: port to the new GLib thread API
+
+2012-09-11 20:40:07 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 0.11.92, "Wish You Were Here"
+	  configure.ac: handle out-of-tree build
+	  In file included from <gst-ffmpeg>/gst-libs/ext/libav/libavutil/avutil.h:318:0,
+	  from <gst-ffmpeg>/gst-libs/ext/libav/libswscale/swscale.h:30,
+	  from <gst-ffmpeg>/ext/libswscale/gstffmpegscale.c:26:
+	  <gst-ffmpeg>/gst-libs/ext/libav/libavutil/common.h:38:32: fatal error: libavutil/avconfig.h: No such file or directory
+	  compilation terminated.
+
+2012-09-11 17:52:57 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: only activate in pull mode if upstream is seekable
+
+2012-09-11 13:27:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: actually check for orc
+	  Otherwise we get a scary "orc acceleration disabled, orc
+	  not found or too old" message at the end of the configure
+	  output. It's used by libswscale.
+
+2012-09-11 13:53:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: add support for codecs that use reget_buffer
+	  Add support for codec that use reget_buffer. In this mode, it reuses the picture
+	  and we need to attach the corresponding input frame to it or else we get the
+	  timestamps wrong.
+
+2012-09-10 17:53:54 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegcfg.c:
+	* ext/ffmpeg/gstffmpegcfg.h:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegpipe.h:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	* ext/ffmpeg/gstffmpegutils.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	* ext/ffmpeg/gstffmpegviddec.c:
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	* ext/ffmpeg/gstffmpegvidenc.h:
+	* ext/libav/Makefile.am:
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavaudioresample.c:
+	* ext/libav/gstavcfg.c:
+	* ext/libav/gstavcfg.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavdec.c:
+	* ext/libav/gstavdeinterlace.c:
+	* ext/libav/gstavdemux.c:
+	* ext/libav/gstavenc.c:
+	* ext/libav/gstavenc.h:
+	* ext/libav/gstavmux.c:
+	* ext/libav/gstavpipe.h:
+	* ext/libav/gstavprotocol.c:
+	* ext/libav/gstavscale.c:
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  ext: ffmpeg/gstffmpeg*.[ch] => libav/gstav*.[ch]
+
+2012-09-10 17:29:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Fix name of binary to disable
+
+2012-09-10 17:18:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/libpostproc/Makefile.am:
+	* ext/libpostproc/gstpostproc.c:
+	* tests/check/.gitignore:
+	* tests/check/Makefile.am:
+	* tests/check/elements/postproc.c:
+	  remove postproc element
+	  libpostproc is gone from upstream libav.
+
+2012-09-10 17:08:00 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegmux.c:
+	* ext/ffmpeg/gstffmpegprotocol.c:
+	* ext/ffmpeg/gstffmpegscale.c:
+	* ext/ffmpeg/gstffmpegutils.h:
+	* ext/ffmpeg/gstffmpegviddec.c:
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	* ext/libpostproc/gstpostproc.c:
+	* ext/libswscale/gstffmpegscale.c:
+	  configure.ac: Import top-level include directory
+	  And fixup all includes
+
+2012-09-10 11:17:11 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  avdemux: Really ignore demuxers we want to ignore
+
+2012-09-07 17:56:43 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  viddec: blacklist *crystalhd* decoder wrappers
+	  There are gstreamer crystalhd elements as well,
+	  so shouldn't be a big loss.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683435
+
+2012-08-26 18:17:17 +0200  Sjoerd Simons <sjoerd@luon.net>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffmpegenc: Don't try to set caps to NULL
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=682736
+
+2012-08-22 13:31:46 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 668acee to 4f962f7
+
+2012-08-22 13:20:36 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* configure.ac:
+	  configure: bump gtk-doc req to 1.12 (mar-2009)
+	  This allows us to e.g. unconditionally use gtkdoc-rebase.
+
+2012-08-10 17:03:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  viddec: use the right pointers
+	  Use the plane pointers and strides.
+	  Improve some debug
+
+2012-08-08 16:32:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.93 ===
+
+2012-08-08 16:32:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 0.11.93
+
+2012-08-08 15:59:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  avviddec: Properly align and pad buffers for libav
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680796
+
+2012-08-08 13:11:57 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/ext/Makefile.am:
+	  Revert "ffmpeg: Fix make dist"
+	  This reverts commit 4964bd753c06dfbf252dff3f520d74e91951ee08.
+	  No idea what this fixes, for me it breaks make dist, which fails
+	  with:
+	  make[2]: Entering directory `/home/tpm/gst/0.11/gst-ffmpeg/gst-libs/ext'
+	  GIT_DIR=libav/.git git checkout-index --prefix=../libav-dist/libav/ -a
+	  touch libav-dist/libav/config.mak
+	  touch: cannot touch `libav-dist/libav/config.mak': No such file or directory
+	  after a clean build.
+
+2012-08-07 10:19:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  av: Use */x-gst-av instead of */x-gst-ff for unknown caps
+
+2012-08-06 14:35:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  avdemux: Remove unused variable
+
+2012-08-05 18:33:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  avdemux: Add stream-id to stream-start events
+
+2012-07-26 12:37:01 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Return NOT_NEGOTIATED when not configured
+
+2012-08-05 16:42:26 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94ccf4c to 668acee
+
+2012-08-04 16:19:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/.gitignore:
+	  Update .gitignore for ff->av
+
+2012-08-04 16:17:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	* tests/check/elements/avdemux_ape.c:
+	  gst_tag_list_free -> gst_tag_list_unref
+
+2012-08-03 13:38:22 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-libav.spec.in:
+	  Add spec changelog entry
+
+2012-08-03 13:37:45 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* autogen.sh:
+	* gst-libav.spec.in:
+	  Update spec file and change package name to libav in autogen.sh file
+
+2012-07-28 00:33:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  tag: Update for taglist/tag event API changes
+
+2012-07-25 11:55:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  avdec: require alignment=au for h264
+	  Because we don't use a parser anymore we need to make sure that we feed the
+	  decoder with full frames. For h264, require that we are aligned on access
+	  units.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680540
+
+2012-07-23 23:29:26 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  audio encoders: use context default bitrate if no bitrate has been set
+	  Fixes 'bitrate too low: got 0, need 24000 or higher'
+	  error when doing audiotstsrc ! avenc_wmav1 ! fakesink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680487
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680487
+
+2012-07-23 15:02:11 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpeg: avoid assertion failure on duplicate frame allocation
+
+2012-07-23 11:37:57 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Correctly flag interlaced state
+	  If the context interlaced state is indicated, the picture interlaced
+	  state can be used to correctly indicate GST_VIDEO_BUFFER_FLAG_INTERLACED
+	  on output buffers.
+
+2012-07-23 10:40:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	  ffvidenc: Allocate output buffers with the base class functions
+
+2012-07-23 10:34:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Update for video base classes API changes
+
+2012-07-23 08:47:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 98e386f to 94ccf4c
+
+2012-07-18 18:30:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  viddec: Call gst_video_decoder_negotiate()
+
+2012-07-17 12:33:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	  avdeinterlace: fix up output caps for new field as well
+	  And presumably our output is always progressive and not
+	  interlaced any more?
+
+2012-07-17 12:31:52 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c:
+	  avdeinterlace: detect interlaced input properly
+	  It's not a boolean field any more, and called "interlaced-mode" now.
+
+2012-07-13 14:01:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  demux: Push STREAM_START when needed
+
+2012-07-10 16:10:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  avdec: ignore AAC errors instead of erroring out
+	  Also ignore decode errors for AAC and carry on decoding like we do for all
+	  other formats.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679639
+
+2012-07-10 15:47:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  avcodecmap: only restrict caps on encoders
+	  We only want to restrict the channels/rate and width/height on the encoder pads.
+	  For decoders can't assume that the input caps contain channels/rate or
+	  width/height so we need to accept everything.
+
+2012-07-06 11:50:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	  update for query api changes
+
+2012-07-06 11:27:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  update for query api changes
+
+2012-07-06 11:03:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	  update for allocation query changes
+
+2012-07-06 09:49:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	  cfg: remove some deprecated properties: statsfile, mb-qmin, mb-qmax
+	  Use multipass-cache-file, qmin, qmax instead.
+
+2012-07-05 13:20:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  avdemux: Implement segment-done event
+
+2012-07-03 17:05:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  avdec: handle_frame should always unref the input frame
+	  Unref the input frame in all cases. Previously it was only unreffed when the
+	  frame was used for output.
+	  When we produce an output frame, take an extra ref because the frame is now
+	  freed elsewhere.
+
+2012-07-03 17:04:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  avdec: small cleanup
+
+2012-07-03 17:04:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  avdec: avoid some refs
+	  We can let the ffmpeg structure take ownership of the buffer.
+
+2012-07-02 21:39:02 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	  ffvidenc: Fix a format string to avoid warnings
+	  istffmpegvidenc.c:412:3: error: format '%lu' expects argument of type 'long unsigned int', but argument 8 has type 'gint' [-Werror=format]
+
+2012-07-02 15:50:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  ffaudenc: Fix format string compiler warning
+	  gstffmpegenc.c:266:3: error: format '%lu' expects argument of type 'long unsigned int', but argument 8 has type 'gint'
+
+2012-06-28 09:33:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  avdec: don't wait for keyframe
+	  Don't wait for a keyframe but try to decode as soon as possible. In most cases,
+	  the demuxer will send a keyframe first and things will work fine, in other
+	  cases, like RTP, we try to decode ASAP to provide quick feedback. Some formats
+	  also have no keyframes (h264 with intra refresh).
+
+2012-06-26 12:36:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	  avenc: don't leak frames
+
+2012-06-20 12:32:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/avdec_adpcm.c:
+	* tests/check/elements/avdemux_ape.c:
+	  update for bus api changes
+
+2012-06-20 10:36:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegdemux.c:
+	  avdemux: update for task api change
+
+2012-06-19 21:41:14 -0400  Matej Knopp <Matej@new-host-5.home>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Don't reopen decoder on same caps, fix memory leaks, only drain on EOS
+
+2012-06-19 12:23:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  viddec: avoid renegotiation
+	  Keep track of the context veriables and renegotiate when something changes. We
+	  need to use separate values for this because not all values can be copied into a
+	  GstVideoInfo.
+	  Set the output interlacing based on the libav context.
+	  Use the demuxer and decoder framerate to construct an output framerate.
+	  Use demuxer and decoder par to construct an output framerate.
+
+2012-06-15 16:37:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegvidenc: Handle allocation queries and improve the padding/direct-rendering handling
+
+2012-06-15 15:18:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Port to 0.11 again
+	  No support for video meta, cropping, etc. yet
+
+2012-06-15 12:28:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+
+2012-06-15 12:19:58 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Properly return if negotiation fails
+	  Instead of crashing ....
+
+2012-06-14 16:29:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	* ext/ffmpeg/gstffmpegvidenc.h:
+	  ffvidenc: Port to 0.11
+
+2012-06-14 15:44:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+
+2012-06-14 12:41:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	  Merge remote-tracking branch 'origin/0.10'
+	  Conflicts:
+	  common
+	  ext/ffmpeg/Makefile.am
+	  ext/ffmpeg/gstffmpegcfg.c
+	  ext/ffmpeg/gstffmpegcodecmap.c
+	  ext/ffmpeg/gstffmpegcodecmap.h
+	  ext/ffmpeg/gstffmpegdec.c
+	  ext/ffmpeg/gstffmpegenc.c
+	  ext/ffmpeg/gstffmpegenc.h
+	  tests/check/Makefile.am
+	  Porting of the new video elements to 0.11 still pending.
+
+2012-06-14 15:13:31 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Properly update the interlacing
+	  Fixes #678080
+
+2012-06-14 15:04:33 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Properly error out when codec doesn't open
+	  Avoids ending up using an un-set codec
+
+2012-05-03 19:02:09 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	  gstffmpegdec: only drain on EOS
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=675359
+
+2012-06-09 16:49:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegenc.c:
+	  avenc: make buffer-size property read-only
+	  Fixes FIXME.
+
+2012-06-09 16:41:28 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcfg.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	  avenc: change properties of type ulong to int
+
+2012-06-09 14:37:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegmux.c:
+	  avmux: blacklist "segment" muxer
+	  Causes run-time warnings.
+
+2012-06-08 15:06:23 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 03a0e57 to 98e386f
+
+2012-06-08 14:26:40 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From b811047 to 3baf58a
+
+2012-06-08 10:11:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  update for audio api changes
+
+2012-06-07 16:35:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.92 ===
+
+2012-06-07 16:35:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 0.11.92
+
+2012-06-07 12:29:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to 0.8.3 release
 
 2012-06-07 12:26:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -16,6 +598,12 @@
 	  Automatic update of common submodule
 	  From 1fab359 to 03a0e57
 
+2012-06-06 18:19:20 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From b098abb to b811047
+
 2012-06-06 13:03:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
 	* ext/ffmpeg/gstffmpegdemux.c:
@@ -26,6 +614,12 @@
 	* common:
 	  Automatic update of common submodule
 	  From f1b5a96 to 1fab359
+
+2012-06-01 10:22:26 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 96f075b to b098abb
 
 2012-05-31 13:43:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -48,11 +642,29 @@
 	  Automatic update of common submodule
 	  From ec1c4a8 to 92b7266
 
+2012-05-30 12:40:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 1e6c5ea to 96f075b
+
+2012-05-30 12:31:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From ff4cad1 to 1e6c5ea
+
 2012-05-30 11:26:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* common:
 	  Automatic update of common submodule
 	  From 3429ba6 to ec1c4a8
+
+2012-05-30 11:26:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 7604bab to ff4cad1
 
 2012-05-25 17:03:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
@@ -65,6 +677,11 @@
 	* common:
 	  Automatic update of common submodule
 	  From dc70203 to 3429ba6
+
+2012-05-22 12:57:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to 0.8.2 release
 
 2012-05-22 12:56:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -86,6 +703,11 @@
 
 	* configure.ac:
 	  configure: Require core/base 0.11.91
+
+2012-05-15 14:43:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  tests: Don't run the postproc test if compiled as an LGPL plugin
 
 2012-05-15 14:41:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
@@ -114,6 +736,78 @@
 	* common:
 	  Automatic update of common submodule
 	  From dc70203 to 3429ba6
+
+2012-04-26 15:31:41 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: correctly set height in AVCodecContext
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674899
+
+2012-04-26 18:56:35 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Always keep a reference to the frame
+	  Ensures no data gets cleared before the decoders are really done
+	  with it.
+
+2012-04-26 17:00:43 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Flush and drain when needed
+	  we need to flush avcodec internal state on hard resets
+	  we need to drain out pending buffers on EOS and soft resets
+
+2012-04-24 15:36:30 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Add video/x-raw-gray to src pad template
+
+2012-04-24 15:36:00 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	  codecmap: Add more GstVideoInfo<=>PixelFormat mappings
+
+2012-04-18 12:37:53 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegviddec.c:
+	  ffmpegviddec: Port to GstVideoDecoder
+
+2012-04-24 11:31:27 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	* ext/ffmpeg/gstffmpegvidenc.h:
+	  gstffmpegvidenc: Port to -base video classes
+
+2012-04-07 11:14:45 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpeg.c:
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegcfg.c:
+	* ext/ffmpeg/gstffmpegcfg.h:
+	* ext/ffmpeg/gstffmpegdec.c:
+	* ext/ffmpeg/gstffmpegenc.c:
+	* ext/ffmpeg/gstffmpegenc.h:
+	* ext/ffmpeg/gstffmpegviddec.c:
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	* ext/ffmpeg/gstffmpegvidenc.h:
+	  ffmpegenc/dec: Remove audio/video specific code
+	  Makes each file more manageable, second step to porting to base classes
+
+2012-04-07 10:36:04 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpegviddec.c:
+	* ext/ffmpeg/gstffmpegvidenc.c:
+	* ext/ffmpeg/gstffmpegvidenc.h:
+	  ffmpeg: Clone encoder and decoder files
+	  First step in porting to base video classes
+
+2012-04-24 11:31:44 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	* ext/ffmpeg/gstffmpegcodecmap.h:
+	  codecmap: Add utility for using with GstVideoFormat
 
 2012-04-22 11:52:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
