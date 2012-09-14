@@ -101,7 +101,7 @@ gst_data_uri_src_class_init (GstDataURISrcClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "data: URI source element", "Source", "Handles data: uris",
       "Philippe Normand <pnormand@igalia.com>, "
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
