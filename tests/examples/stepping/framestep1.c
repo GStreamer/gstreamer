@@ -72,7 +72,7 @@ event_loop (GstElement * pipe)
 }
 
 /* signalled when a new preroll buffer is available */
-static void
+static GstFlowReturn
 new_preroll (GstElement * appsink, gpointer user_data)
 {
   GstBuffer *buffer;
@@ -83,6 +83,8 @@ new_preroll (GstElement * appsink, gpointer user_data)
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   gst_buffer_unref (buffer);
+
+  return GST_FLOW_OK;
 }
 
 int
