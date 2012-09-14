@@ -39,7 +39,6 @@
   <chapter>
     <title>gstreamer Plugins</title>
     <xi:include href="xml/plugin-coreelements.xml" />
-    <xi:include href="xml/plugin-coreindexers.xml" />
   </chapter>
 </book>
 
