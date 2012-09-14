@@ -778,6 +778,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   GstEglGlesImageFmt *format;
 
   /* Init supported format/caps list */
+  g_mutex_lock (eglglessink->flow_lock);
+
   if (eglChooseConfig (eglglessink->display, eglglessink_RGB888_config,
           NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
@@ -817,6 +819,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     GST_INFO_OBJECT (eglglessink,
         "EGL display doesn't support RGBA8888 config");
 
+  g_mutex_unlock (eglglessink->flow_lock);
+
   return ret;
 }
 
@@ -825,9 +829,6 @@ gst_eglglessink_start (GstBaseSink * sink)
 {
   gboolean ret;
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
-
-  eglglessink->flow_lock = g_mutex_new ();
-  g_mutex_lock (eglglessink->flow_lock);
 
   ret = platform_wrapper_init ();
 
@@ -849,12 +850,10 @@ gst_eglglessink_start (GstBaseSink * sink)
   /* Ask for a window to render to */
   gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
 
-  g_mutex_unlock (eglglessink->flow_lock);
-
   return TRUE;
 
 HANDLE_ERROR:
-  g_mutex_unlock (eglglessink->flow_lock);
+  GST_ERROR_OBJECT (eglglessink, "Couldn't start");
   return FALSE;
 }
 
@@ -1723,6 +1722,7 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->running = FALSE; /* XXX: unused */
   eglglessink->can_create_window = TRUE;
   eglglessink->force_rendering_slow = FALSE;
+  eglglessink->flow_lock = g_mutex_new ();
 }
 
 /* Interface initializations. Used here for initializing the XOverlay
