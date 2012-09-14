@@ -1,9 +1,2345 @@
-=== release 0.11.92 ===
+2012-09-14 01:46:14 +0100  Tim-Philipp Müller <tim@centricular.net>
 
-2012-06-07  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	  docs: update docs
+
+2012-09-14 00:47:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/wavpackenc.c:
+	  tests: push stream-start and segment events in wavpackenc test
+
+2012-09-13 10:56:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	  v4l2: remove unused properties
+
+2012-09-13 10:15:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: disable reconfigure
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=683902
+
+2012-09-10 22:09:59 -0700  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Don't treat every custom-downstream event as EOS
+	  Don't fall through to the EOS handling after receiving a
+	  custom-downstream event.
+
+2012-09-12 21:05:44 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* ext/cairo/gsttextoverlay.c:
+	* gst/avi/gstavimux.c:
+	* gst/flv/gstflvmux.c:
+	* gst/interleave/interleave.c:
+	* gst/isomp4/gstqtmux.c:
+	* gst/matroska/matroska-mux.c:
+	* gst/multipart/multipartmux.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/videomixer/videomixer2.c:
+	  collectpads: remove gst_collect_pads_add_pad_full
+	  Rename gst_collect_pads_add_pad_full() to gst_collect_pads_add_pad() and fix all
+	  invocations.
+
+2012-09-12 17:14:46 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	  udp: add include for IPPROTO_*
+
+2012-09-12 16:39:08 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	  udp: properly match braces and cpp directives
+	  Fixes compilation where IPV6_TCLASS not defined.
+
+2012-09-12 14:42:07 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/shapewipe/gstshapewipe.c:
+	  shapewipe: Use default query handler where needed
+	  And clean up get_caps code while I'm at it
+
+2012-09-12 13:28:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: improve framerate transform
+	  Handle G_MAXINT in the framerates better. If we cannot double or divide the
+	  framerate, clamp to the smallest/largest possible value we can express instead
+	  of failing.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683861
+
+2012-09-12 13:17:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: small cleanup
+
+2012-09-07 17:20:57 -0400  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/videomixer/blend.c:
+	* gst/videomixer/blend.h:
+	* gst/videomixer/videomixer2.c:
+	  videomixer2: Adding nv12 and nv21 support
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683841
+
+2012-09-12 10:18:53 +0200  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_fourcc.h:
+	  qtdemux: add support for prores
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683839
+
+2012-09-12 00:16:31 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/rganalysis.c:
+	  tests: fix most of the rganalysis unit tests
+	  Before the element would post messages on the bus itself, now
+	  the sinks do that based on the tag events they receive. But
+	  since we don't have proper sink elements in these unit tests,
+	  but just dangling pads, we have to post the tag messages the
+	  test checks for ourselves.
+	  Down from 52/55 failing to 7/52 failing.
+
+2012-09-11 17:36:51 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	* gst/avi/gstavidemux.c:
+	* gst/debugutils/rndbuffersize.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/wavparse/gstwavparse.c:
+	  ext, gst: only activate in pull mode if upstream is seekable
+
+2012-09-11 15:38:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2: disable renegotiation
+	  We can't yet wait for the bufferpool to DRAIN before starting renegotiation so
+	  disable it for now.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=682770
+
+2012-09-11 12:48:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/rtpbin.c:
+	  tests: rtpbin: port to the new GLib thread API
+
+2012-09-11 12:36:56 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	* sys/directsound/gstdirectsoundsink.h:
+	  directsoundsink: port to the new GLib thread API
+
+2012-09-11 11:59:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: don't reset segment
+	  Don't reset the segment because we need the values for accumulation. the segment
+	  is reset at start and after a flushing seek. Fixes some problems with files with
+	  quicktime segments.
+
+2012-09-10 17:14:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/id3demux.c:
+	  tests: fix id3demux test
+
+2012-09-10 14:31:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/flv/amfdefs.h:
+	* gst/flv/gstflvdemux.c:
+	* gst/rtp/gstrtpqdmdepay.c:
+	* gst/rtp/gstrtpsv3vdepay.c:
+	  gst: adjust comment style
+
+2012-09-10 14:30:42 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: remove defunct commented code
+
+2012-09-10 13:35:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: consider stream alive when not connected yet
+	  When we start and renegotiate, there is a moment where the stream is created but
+	  not yet connected. Make sure all functions deal with this situation correctly
+	  instead of erroring out.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681247
+
+2012-09-10 12:15:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: don't fail when not negotiated yet
+	  When get_time is called but we are not yet negotiated, return 0 instead of
+	  posting an error. It's possible that the base class is still negotiating when
+	  our get_time is called.
+
+2012-09-10 11:32:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	* sys/oss/gstosssrc.c:
+	* sys/oss4/oss4-source.c:
+	  update for audio base src api change
+
+2012-09-10 00:42:52 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/avi/gstavimux.c:
+	* gst/isomp4/qtdemux.c:
+	  video/x-3ivx and video/x-xvid -> video/mpeg,mpegversion=4
+	  If it ever turns out that we really must use thoe specific
+	  fourccs and not the generic one, we can still add a flavor
+	  field to the caps later.
+
+2012-09-07 16:15:42 +0200  Daniela <daniela.muzzu@selexelsag.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: avoid leak
+	  When setup fails, make sure to cleanup afterwards.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=673509
+
+2012-09-07 15:23:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpamrdepay.c:
+	  rtpamrdepay: unmap rtp buffer
+	  ... thereby plugging a memleak.
+
+2012-09-07 14:13:17 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/rtp-payloading.c:
+	  tests: rtp-payloading: adjust to modified bufferlist semantics
+	  ... now implemented by buffer memory blocks.
+
+2012-09-07 14:11:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: avoid crashing on NULL access in debug message
+
+2012-09-07 14:11:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtph263ppay.c:
+	  rtph263ppay: plug caps leak
+
+2012-09-06 17:09:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: remove redundant _set_allocation call
+
+2012-09-06 17:05:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/elements/deinterlace.c:
+	  tests: deinterlace: do not leak deinterlace pads
+
+2012-09-06 17:04:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: plug some leaks
+
+2012-09-06 16:49:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: reuse core function for GCD
+
+2012-09-06 16:31:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: support filter in getcaps
+
+2012-09-06 16:30:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: do not leak getcaps result
+
+2012-09-06 16:23:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/deinterlace/gstdeinterlace.h:
+	  deinterlace: add support for bufferpool
+	  Add bufferpool support to avoid a memcpy in the videosink when actively
+	  interlacing.
+	  Remove some commented obsolete code.
+
+2012-09-06 13:38:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: proxy allocation query in passthrough
+	  We can let the allocation query pass when we are operating in passthrough mode.
+
+2012-09-06 13:23:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: use default event functions
+	  instead of blindly forwarding unknown events.
+
+2012-09-06 13:23:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: small cleanups
+
+2012-09-06 12:56:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: call default query handlers
+	  Call the default query handler instead of forwarding the query blindly. Fixes
+	  issues of strides because of proxying the allocation query wrongly.
+
+2012-09-06 10:42:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2: remove unused code.
+
+2012-09-06 10:42:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulse: improve debug
+
+2012-09-05 11:50:05 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	  dvdemux: remove obsolete update newsegment handling code
+
+2012-09-04 12:35:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videofilter/gstvideobalance.c:
+	  videobalance: avoid deadlock
+	  _update_properties takes the object lock and should not be called when the
+	  object lock is already taken.
+
+2012-09-03 12:46:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: extract interlaced-ness of video track from interlace-mode field
+	  instead of the old boolean "interlaced" field.
+
+2012-09-03 02:51:24 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/avi/gstavimux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	* gst/rtp/gstrtpmp4vpay.c:
+	* tests/check/elements/avimux.c:
+	  video/x-xvid -> video/mpeg,mpegversion=4
+
+2012-09-02 02:50:50 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	  text/plain + text/x-pango-markup -> text/x-raw
+
+2012-09-02 01:31:53 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/soup/gstsouphttpsrc.c:
+	* gst/matroska/matroska-demux.c:
+	  gst_message_new_duration -> gst_message_new_duration_changed
+
+2012-08-30 22:07:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: also stop probatation on existing sources
+	  Receiving an RTCP packet should also stop probation on sources we have seen
+	  before.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683065
+
+2012-08-22 16:36:21 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/gstrtspsrc.h:
+	  rtp: make rtp packet probation configurable (bug #682512)
+
+2012-08-30 12:21:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/gdk_pixbuf/gstgdkpixbufoverlay.c:
+	  gdkpixbuf: adjust to modified video overlay composition API
+
+2012-08-30 11:30:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: fixup 0.11 port of suspect frame checking
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=682959
+
+2012-08-28 18:56:19 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: avoid invalid H264 bytestream codec_data
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681369
+
+2012-08-28 19:00:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: port segment event creation to 0.11
+
+2012-08-28 16:28:13 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: release extra event ref when replacing pending newsegment event
+
+2012-07-03 17:50:24 +0200  David Corvoysier <david.corvoysier@orange.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_dump.c:
+	* gst/isomp4/qtdemux_dump.h:
+	* gst/isomp4/qtdemux_fourcc.h:
+	* gst/isomp4/qtdemux_types.c:
+	  isomp4: add DASH tfdt box support
+	  MPEG DASH has defined a set of new boxes to specify duration, indexes and
+	  offsets of ISOBMFF fragments.
+	  The Track Fragment Base Media Decode Time (tfdt) Box can in particular be
+	  included inside a traf box to specify the absolute decode time, measured on the
+	  media timeline, of the first sample in decode order in the track fragment.
+	  This information can be used by the isomp4 demux to find out the current position of
+	  an MP4 fragment in the timeline.
+	  This patch adds code to isomp4 to:
+	  - parse the tfdt box
+	  - adjust the time/position member of the new segment sent when playback starts
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677535
+
+2012-08-26 22:39:55 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/aalib/gstaasink.c:
+	* ext/cairo/gstcairorender.c:
+	* ext/cairo/gsttextoverlay.c:
+	* ext/cairo/gsttimeoverlay.c:
+	* ext/dv/gstdvdec.c:
+	* ext/dv/gstdvdemux.c:
+	* ext/flac/gstflacenc.c:
+	* ext/flac/gstflactag.c:
+	* ext/gdk_pixbuf/gstgdkpixbufoverlay.c:
+	* ext/gdk_pixbuf/gstgdkpixbufsink.c:
+	* ext/gdk_pixbuf/pixbufscale.c:
+	* ext/jack/gstjackaudiosink.c:
+	* ext/jack/gstjackaudiosrc.c:
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/libcaca/gstcacasink.c:
+	* ext/libpng/gstpngdec.c:
+	* ext/pulse/pulsesink.c:
+	* ext/pulse/pulsesrc.c:
+	* ext/raw1394/gstdv1394src.c:
+	* ext/raw1394/gsthdv1394src.c:
+	* ext/soup/gstsouphttpclientsink.c:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/speex/gstspeexdec.c:
+	* ext/speex/gstspeexenc.c:
+	* ext/taglib/gstapev2mux.cc:
+	* ext/taglib/gstid3v2mux.cc:
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/wavpack/gstwavpackenc.c:
+	* gst/alpha/gstalpha.c:
+	* gst/alpha/gstalphacolor.c:
+	* gst/apetag/gstapedemux.c:
+	* gst/audiofx/audioamplify.c:
+	* gst/audiofx/audiochebband.c:
+	* gst/audiofx/audiocheblimit.c:
+	* gst/audiofx/audiodynamic.c:
+	* gst/audiofx/audioecho.c:
+	* gst/audiofx/audioinvert.c:
+	* gst/audiofx/audiokaraoke.c:
+	* gst/audiofx/audiopanorama.c:
+	* gst/audiofx/audiowsincband.c:
+	* gst/audiofx/audiowsinclimit.c:
+	* gst/audioparsers/gstaacparse.c:
+	* gst/audioparsers/gstac3parse.c:
+	* gst/audioparsers/gstamrparse.c:
+	* gst/audioparsers/gstdcaparse.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstmpegaudioparse.c:
+	* gst/audioparsers/gstwavpackparse.c:
+	* gst/autodetect/gstautoaudiosink.c:
+	* gst/autodetect/gstautoaudiosrc.c:
+	* gst/autodetect/gstautovideosink.c:
+	* gst/autodetect/gstautovideosrc.c:
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavimux.c:
+	* gst/avi/gstavisubtitle.c:
+	* gst/cutter/gstcutter.c:
+	* gst/debugutils/gstpushfilesrc.c:
+	* gst/debugutils/gsttaginject.c:
+	* gst/debugutils/progressreport.c:
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/effectv/gstaging.c:
+	* gst/effectv/gstdice.c:
+	* gst/effectv/gstedge.c:
+	* gst/effectv/gstop.c:
+	* gst/effectv/gstquark.c:
+	* gst/effectv/gstradioac.c:
+	* gst/effectv/gstrev.c:
+	* gst/effectv/gstripple.c:
+	* gst/effectv/gstshagadelic.c:
+	* gst/effectv/gststreak.c:
+	* gst/effectv/gstvertigo.c:
+	* gst/effectv/gstwarp.c:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* gst/equalizer/gstiirequalizernbands.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvmux.c:
+	* gst/goom/gstgoom.c:
+	* gst/goom2k1/gstgoom.c:
+	* gst/icydemux/gsticydemux.c:
+	* gst/id3demux/gstid3demux.c:
+	* gst/imagefreeze/gstimagefreeze.c:
+	* gst/interleave/deinterleave.c:
+	* gst/interleave/interleave.c:
+	* gst/isomp4/atomsrecovery.c:
+	* gst/isomp4/gstqtmux-doc.c:
+	* gst/isomp4/gstqtmux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	* gst/matroska/matroska-parse.c:
+	* gst/matroska/webm-mux.c:
+	* gst/monoscope/gstmonoscope.c:
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesrc.c:
+	* gst/multifile/gstsplitfilesrc.c:
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartmux.c:
+	* gst/replaygain/gstrganalysis.c:
+	* gst/replaygain/gstrglimiter.c:
+	* gst/replaygain/gstrgvolume.c:
+	* gst/rtp/README:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/shapewipe/gstshapewipe.c:
+	* gst/smpte/gstsmpte.c:
+	* gst/smpte/gstsmptealpha.c:
+	* gst/udp/gstudpsink.c:
+	* gst/udp/gstudpsrc.c:
+	* gst/videobox/gstvideobox.c:
+	* gst/videocrop/gstaspectratiocrop.c:
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videofilter/gstgamma.c:
+	* gst/videofilter/gstvideobalance.c:
+	* gst/videofilter/gstvideoflip.c:
+	* gst/wavparse/gstwavparse.c:
+	* sys/directsound/gstdirectsoundsink.c:
+	* sys/oss/gstosssink.c:
+	* sys/oss/gstosssrc.c:
+	* sys/oss4/oss4-sink.c:
+	* sys/oss4/oss4-source.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosrc.c:
+	* sys/sunaudio/gstsunaudiosink.c:
+	* sys/sunaudio/gstsunaudiosrc.c:
+	* sys/v4l2/gstv4l2radio.c:
+	* sys/v4l2/gstv4l2sink.c:
+	* sys/v4l2/gstv4l2src.c:
+	* sys/waveform/gstwaveformsink.c:
+	* sys/ximage/gstximagesrc.c:
+	* tests/examples/cairo/cairo_overlay.c:
+	* tests/examples/rtp/client-H263p-AMR.sh:
+	* tests/examples/rtp/client-H263p-PCMA.sh:
+	* tests/examples/rtp/client-H263p.sh:
+	* tests/examples/rtp/client-H264-PCMA.sh:
+	* tests/examples/rtp/client-H264.sh:
+	* tests/examples/rtp/client-PCMA.sh:
+	* tests/examples/rtp/server-VTS-H263p-ATS-PCMA.sh:
+	* tests/examples/rtp/server-VTS-H263p.sh:
+	* tests/examples/rtp/server-alsasrc-PCMA.sh:
+	* tests/examples/rtp/server-decodebin-H263p-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H263p-alsasrc-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	* tests/examples/shapewipe/shapewipe-example.c:
+	* tests/icles/gdkpixbufsink-test.c:
+	* tests/icles/videocrop-test.c:
+	  docs: gst-launch -> gst-launch-1.0 and ffmpegcolorspace -> videoconvert
+
+2012-08-26 22:32:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/flac/gstflacdec.c:
+	* gst/videomixer/videomixer2.c:
+	  docs: gst-launch-0.11 -> gst-launch-1.0
+
+2012-08-26 22:08:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	* tests/check/elements/deinterlace.c:
+	  deinterlace: the field in caps is "interlace-mode" not "interlace-method"
+	  Fix deinterlace unit test. Need to set right field on output caps.
+	  Also remove right field (not old 0.10 "interlaced" boolean field)
+	  from caps in unit test before comparing old and new.
+
+2012-08-26 21:45:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/icydemux.c:
+	  tests: fix icydemux unit test
+	  Was waiting for a tag message on the bus, which would never
+	  come, because elements don't post those themselves any more
+	  but let sinks post them from tag events. Only that there are
+	  no sinks in this unit test.
+
+2012-08-26 21:27:00 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/videocrop.c:
+	  tests: fix videocrop crop_to_1x1 unit test for GRAY8 format
+	  Update table with pixel values with the value actually produced
+	  by videotestsrc.
+
+2012-08-27 09:00:45 +0200  Sjoerd Simons <sjoerd@luon.net>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Only print caps if they're provided
+
+2012-08-24 19:43:08 +0100  Michael Rubinstein <mrubinstein@rai-dev.com>
+
+	* gst/videomixer/blend.c:
+	  videomixer: fix endianness check on systems where non-glib endianness defines are not set
+	  On Windows LITTLE_ENDIAN without the G_ in was not defined,  so the
+	  test comes out wrong.
+
+2012-08-22 17:23:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	  udpsink: don't crash on NULL error
+	  Check if there is an error before retrieving its message.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=682481
+
+2012-08-22 13:30:19 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 668acee to 4f962f7
+
+2012-08-22 13:18:00 +0200  Stefan Sauer <ensonic@users.sf.net>
 
 	* configure.ac:
-	  releasing 0.11.92, "Money"
+	  configure: bump gtk-doc req to 1.12 (mar-2009)
+	  This allows us to e.g. unconditionally use gtkdoc-rebase.
+
+2012-08-22 11:21:38 +0200  Martin Ertsaas <mertsas@cisco.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: Make osxvideosink use the non-deprecated threading api from glib.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682446
+
+2012-08-14 15:40:31 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Handle negotiation events
+	  This makes sure that we:
+	  a) Destroy an existing stream if a negotiate() request comes in: this is
+	  required when receiving a downstream renegotiation request after a
+	  stream has been created.
+	  b) Create a new stream on prepare(): this is required since we do a
+	  setcaps() in negotiate(), which causes the stream to be dropped by a
+	  ringbuffer release() call (this does not happen during first negotiation
+	  since the release is only done on a running ringbuffer). The subsequent
+	  call to ringbuffer acquire() fails because the stream was lost on
+	  release().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681247
+
+2012-08-14 15:38:27 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/pulse/pulseutil.c:
+	  pulse: Clear unpositioned flag when setting positions
+	  If converting a PA channel map to gst channel positions results in a
+	  valid set of channel positions, we clear the unpositioned flag from the
+	  ringbuffer spec.
+
+2012-08-14 09:37:45 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Remove redundant channel-mask setting for stereo case
+	  The gstaudio helper libraries already take care of this case for us.
+
+2012-08-14 09:36:30 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Don't use memset to set invalid channel positions
+	  This itereates over the GstAudioInfo to set invalid channel positions
+	  rather than use memset() which works right now because it assumes that
+	  GST_AUDIO_CHANNEL_POSITION_INVALID is -1.
+
+2012-08-22 10:30:04 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/gdk_pixbuf/gstgdkpixbufsink.c:
+	  gdkpixbufsink: minor docs improvement
+
+2012-08-22 10:23:24 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/gdk_pixbuf/gstgdkpixbufplugin.c:
+	  gdkpixbuf: re-enable already-ported gdkpixbufsink
+
+2012-08-22 10:08:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/gdk_pixbuf/gstgdkpixbufoverlay.c:
+	* ext/gdk_pixbuf/gstgdkpixbufoverlay.h:
+	* ext/gdk_pixbuf/gstgdkpixbufplugin.c:
+	  gdkpixbuf: port gdkpixbufoverlay element to 0.11
+
+2012-08-22 00:00:46 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* ext/gdk_pixbuf/Makefile.am:
+	* ext/gdk_pixbuf/gstgdkpixbuf.c:
+	* ext/gdk_pixbuf/gstgdkpixbuf.h:
+	* ext/gdk_pixbuf/gstgdkpixbufdec.c:
+	* ext/gdk_pixbuf/gstgdkpixbufdec.h:
+	* ext/gdk_pixbuf/gstgdkpixbufplugin.c:
+	  gdkpixbuf: re-enable already-ported gdkpixbuf element as gdkpixbufdec
+	  Not sure why it as disabled exactly given that it had already
+	  been ported (though without metas or baseclass).
+	  Move plugin_init bits into separate source file, and rename
+	  decoder element to gdkpixbufdec.
+
+2012-08-21 23:25:47 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/gdk_pixbuf/gst_loader.c:
+	  gdkpixbuf: remove old and unused gst_loader source file
+	  Once upon a time used to load GStreamer vids via GdkPixbuf API.
+
+2012-08-16 16:51:16 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/gstrtspsrc.h:
+	  rtspsrc: make jitterbuffer drop-on-latency available (fix #682055)
+	  Conflicts:
+	  gst/rtsp/gstrtspsrc.h
+
+2012-08-21 19:47:45 +0800  Huacai Chen <chenhc@lemote.com>
+
+	* sys/v4l2/v4l2_calls.c:
+	  v4l2: make gst_v4l2_fill_lists() adapt to kernel 3.3+
+	  When do v4l2_ioctl() with VIDIOC_ENUMINPUT fails on some devices,
+	  kernels before 3.3.0 return EINVAL, but newer kernels return ENOTTY.
+	  This patch make those devices work well on kernel 3.3+.
+	  Related kernel commit:
+	  http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=07d106d0a33d6063d2061305903deb02489eba20
+	  Signed-off-by: Huacai Chen <chenhc@lemote.com>
+	  Signed-off-by: Rui Wang <wangr@lemote.com>
+	  Signed-off-by: Jie Chen <chenj@lemote.com>
+
+2012-08-20 23:30:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	  video/x-dvd-subpicture -> subpicture/x-dvd
+
+2012-08-17 20:52:42 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/multifile/gstmultifilesrc.c:
+	  multifilesrc: fix example pipeline in docs
+
+2012-08-17 14:59:57 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* tests/check/elements/equalizer.c:
+	  equalizer: enable presets for the n-band equalizer
+	  Add a test for saving and restoring the preset.
+
+2012-08-14 01:20:19 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: fix not-negotiated errors on variable or missing framerate in input caps
+	  Remove some bogus code I added during porting that would error out
+	  on missing or variable framerates in input caps. Handle this like
+	  we do in 0.10
+	  Fixes test_mode_disabled_passthrough unit test check.
+
+2012-08-12 13:16:32 +0200  Sjoerd Simons <sjoerd@luon.net>
+
+	* gst/law/alaw-decode.c:
+	* gst/law/mulaw-decode.c:
+	  law: Filter layout caps field
+	  The layout caps field shouldn't be passed through to the sink pad
+	  of {mu,a}lawdec.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681677
+
+2012-08-09 19:41:34 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: allow a TOC with single alternative top-level entry
+	  Allow a TOC that has a single alternative top-level entry
+	  with multiple sequence sub-entries
+	  https://bugzilla.gnome.org/show_bug.cgi?id=540891
+
+2012-08-09 10:31:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: And fix the GTK check to use the correct pkg-config package name
+
+2012-08-09 10:25:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  configure: Fix GTK required version variable name
+
+2012-08-09 08:35:23 +0100  Matthias Clasen <mclasen@redhat.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: fix build with recent kernels, the v4l2_buffer input field was removed
+	  This was unused apparently and removed in the kernel in commit:
+	  From 2b719d7baf490e24ce7d817c6337b7c87fda84c1 Mon Sep 17 00:00:00 2001
+	  From: Sakari Ailus <sakari.ailus@iki.fi>
+	  Date: Wed, 2 May 2012 09:40:03 -0300
+	  Subject: [PATCH] [media] v4l: drop v4l2_buffer.input and V4L2_BUF_FLAG_INPUT
+	  Remove input field in struct v4l2_buffer and flag V4L2_BUF_FLAG_INPUT which
+	  tells the former is valid. The flag is used by no driver currently.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681491
+	  Conflicts:
+	  sys/v4l2/gstv4l2bufferpool.c
+
+2012-08-08 17:25:36 -0700  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	* tests/check/elements/rtp-payloading.c:
+	  rtph264pay: Make it actually work after cleanups
+
+2012-08-08 17:39:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegenc.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/multipart/multipartmux.c:
+	* gst/videomixer/videomixer2.c:
+	  gst: Set alignment at the correct place of GstAllocationParams
+
+2012-08-08 16:25:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* win32/common/config.h:
+	  Back to development
+
+=== release 0.11.93 ===
+
+2012-08-08 15:22:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 0.11.93
+
+2012-08-08 15:17:22 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* Makefile.am:
+	* win32/MANIFEST:
+	* win32/common/tuner-enumtypes.c:
+	* win32/common/tuner-enumtypes.h:
+	* win32/common/tuner-marshal.c:
+	* win32/common/tuner-marshal.h:
+	  win32: add generated tuner-marshal/enumtypes files for v4l2src and update
+	  And gst-indent the right rtp marshal files; add missing files to MANIFEST.
+
+2012-08-08 15:10:37 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/deinterlace/tvtime-dist.c:
+	* gst/videobox/gstvideoboxorc-dist.c:
+	* gst/videomixer/blendorc-dist.c:
+	  gst: update disted orc files
+
+2012-08-08 11:31:59 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/wavpack/gstwavpackdec.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* sys/oss4/oss4-audio.c:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/v4l2/gstv4l2object.c:
+	  Silence some 'variable may be used uninitialized' compiler warnings
+	  When compiling with -DG_DISABLE_ASSERT
+
+2012-08-08 10:56:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/libpng/gstpngdec.c:
+	* gst/isomp4/gstqtmoovrecover.c:
+	* tests/icles/ximagesrc-test.c:
+	  No code with side-effects inside g_assert() please
+
+2012-08-07 11:14:21 -0700  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/udp/gstmultiudpsink.c:
+	  multiudpsink: Return FLUSHING instead of ERROR on unlock
+	  If the base class asks multiudpsink to unlock, then it should return
+	  FLUSHING, not ERROR
+
+2012-07-26 16:19:57 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* ext/flac/gstflacenc.c:
+	* ext/flac/gstflacenc.h:
+	  flacenc: add TOC support
+	  Add TOC as embedded cuesheets in flac files.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=54089
+
+2012-08-07 12:12:09 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: generate empty vorbiscomment for complete streamheaders if needed
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681335
+
+2012-08-06 18:02:50 -0700  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	  rtpssrcdemux: Block pad while it is announced.
+	  Block the RTP pad and associated RTCP pads while they are being
+	  announced. This it to prevent a race where one is announced and
+	  before the callback has connected it, the other one gets a buffer.
+	  We can't use the "padlock" of ssrcdemux because it causes deadlocks.
+
+2012-08-06 15:00:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* common:
+	  common: un-do accidental common update revert in commit 7b5925b5
+
+2012-08-06 14:50:53 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmparobustdepay.c:
+	  rtpmparobustdepay: set correct data_size for generated dummy frame
+	  ... which prevents getting stuck in a loop if such one is needed.
+
+2012-08-06 14:50:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmparobustdepay.c:
+	  rtpmparobustdepay: improve and fix debug statement
+	  ... so it really informs about next rather than past frame.
+
+2012-08-06 12:34:55 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmparobustdepay.c:
+	  rtpmparobustdepay: update available bytewriter space when repositioning
+	  ... and add some more assert to catch potential surprises early on.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680558
+
+2012-08-04 12:47:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	* ext/dv/gstdvdemux.c:
+	* gst/avi/gstavidemux.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	  gst: Add stream-id to stream-start events
+
+2012-08-04 12:54:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Chain up to the parent class' query handler if no pad is provided
+
+2012-08-02 01:48:29 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: add a better detection for the main run loop
+
+2012-07-27 16:13:49 +0200  Xavi Artigas <xartigas@fluendo.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: Do not overwrite the DS buffer when testing for AC3 support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680706
+	  Conflicts:
+	  sys/directsound/gstdirectsoundsink.c
+
+2012-08-05 16:39:23 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 94ccf4c to 668acee
+
+2012-08-03 16:13:52 +0100  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	  rtpssrcdemux: Release lock before signalling new pad
+	  This prevents a deadlock where something would try to push an event
+	  through the SSRC demux from the callback, causing the pads to be iterated
+	  and the lock taken.
+
+2012-08-04 16:10:16 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/flac/gstflacenc.c:
+	* ext/flac/gstflactag.c:
+	* ext/shout2/gstshout2.c:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/speex/gstspeexdec.c:
+	* ext/speex/gstspeexenc.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavimux.c:
+	* gst/debugutils/gsttaginject.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/icydemux/gsticydemux.c:
+	* gst/isomp4/gstqtmux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-parse.c:
+	* gst/matroska/matroska-read-common.c:
+	* gst/wavparse/gstwavparse.c:
+	* tests/check/elements/apev2mux.c:
+	* tests/check/elements/icydemux.c:
+	* tests/check/elements/id3demux.c:
+	* tests/check/elements/id3v2mux.c:
+	* tests/check/elements/qtmux.c:
+	* tests/check/elements/rganalysis.c:
+	* tests/check/pipelines/tagschecking.c:
+	  gst_tag_list_free -> gst_tag_list_unref
+
+2012-08-03 14:10:32 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: manage race between connection closing and flushing
+	  ... where the former can happen in task thread and the latter in mainloop
+	  upon downward state change.
+
+2012-08-03 14:02:23 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: improve and relax audio frame parsing
+	  ... so as to properly recognize first audio frame.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=681077
+	  Conflicts:
+	  ext/flac/gstflacdec.c
+
+2012-08-01 12:16:41 +0200  René Stadler <rene.stadler@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: fix double unref of private tag buffer
+
+2012-07-30 17:54:51 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: create TOC as needed
+	  Avoid creating the toc if the wav has no or empty cue chunk.
+	  Also a small code cleanup.
+
+2012-07-28 11:26:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: update for TOC API changes
+
+2012-07-28 11:22:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroska: update for TOC API changes
+
+2012-07-28 11:20:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: update for TOC API changes
+
+2012-07-28 00:19:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	* ext/flac/gstflactag.c:
+	* ext/soup/gstsouphttpsrc.c:
+	* ext/wavpack/gstwavpackdec.c:
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstmpegaudioparse.c:
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavisubtitle.c:
+	* gst/debugutils/gsttaginject.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/icydemux/gsticydemux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-read-common.c:
+	* gst/multipart/multipartdemux.c:
+	* gst/replaygain/gstrganalysis.c:
+	* gst/wavparse/gstwavparse.c:
+	* tests/check/elements/rganalysis.c:
+	* tests/check/elements/rgvolume.c:
+	  tag: Update for taglist/tag event API changes
+
+2012-07-27 12:05:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/isomp4/gstqtmux.c:
+	* gst/isomp4/isomp4-plugin.c:
+	* gst/isomp4/qtdemux.c:
+	  qt(de)mux: pass private blob tags in a sample
+	  ... rather than a buffer, and the detailed info in the sample info
+	  rather than caps.
+
+2012-07-27 11:31:13 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/videocrop/gstvideocrop.c:
+	  videocrop: Don't return NULL from _transform_caps
+	  If _transform_caps () returns NULL, the basetransform _transform_caps
+	  tries to call gst_caps_is_subset () with a NULL subset which hits an
+	  assertion.
+
+2012-07-27 11:26:18 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: obtain image type from the sample info
+
+2012-07-27 11:25:49 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: remove extraneous _unref
+	  ... since we did not obtain a buffer ref from the GstSample.
+
+2012-07-27 10:14:23 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: Update to use GstSample tag setting API
+
+2012-07-26 16:34:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmparobustdepay.c:
+	  rtpmparobustdepay: modify buffer data rather than buffer itself
+
+2012-07-26 16:28:33 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/rtp/gstrtpmparobustdepay.c:
+	  rtpmparobustdepay: avoid leaking bytewriter instance
+
+2012-07-26 16:04:23 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Fix timestamp adjustment and caps
+
+2012-07-26 16:03:57 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Fix/simplify telecine state checks
+
+2012-07-26 12:08:58 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Improve debug output
+
+2012-07-26 12:08:36 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Fix low-latency pattern locking
+
+2012-07-24 16:19:53 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: RFF should be ignored in deinterlace
+	  RFF only occurs on progressive frames in telecine sequences. For
+	  deinterlace, we don't want these repeated fields as we will simply be
+	  pushing the progressive frame and then moving on.
+	  However, we need to consider RFF in order to correctly identify patterns
+	  and adjust the timestamps.
+
+2012-07-24 14:59:47 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Improve process logic
+	  The logic now works better if we filter orphans, then progressive, then
+	  telecine interlaced fields which need to be woven and fall through to
+	  interlace. Telecine interlaced fields will be regularly deinterlaced if
+	  there is no pattern lock for us to be sure that we have a telecine
+	  pattern.
+	  Telecine sequences that aren't 24fps progressive with RFF flags can't
+	  really be tested until fieldanalysis is ported.
+
+2012-07-25 16:02:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: only set complete output caps once
+	  ... so as to avoid downstream complaints about missing streamheaders.
+
+2012-07-25 15:29:04 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c:
+	  flacdec: also support S24_32 output
+
+2012-07-25 15:28:14 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: pass correct parameters to encoder lib
+
+2012-07-25 14:57:13 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: adjust to modified audioencoder getcaps helper API
+
+2012-07-25 12:50:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp: go and stay in the loop function on PLAY
+	  When we have a PLAY request, go into the LOOP function next. When we are
+	  looping, keep on looping until we are told otherwise.
+	  This fixed rtsp and TCP connections.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680551
+
+2012-07-25 12:49:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp: set caps after activating the pad
+
+2012-07-25 12:49:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtph264depay.c:
+	  h264depay: small cleanups
+
+2012-07-25 10:08:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/gstrtpxqtdepay.c:
+	  xqtdepay: fix buffer refcount error
+	  After pushing the buffer into the adapter, we should not let the baseclass push
+	  it out anymore. This error was introduced while porting to 0.11.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=680540
+
+2012-07-24 21:41:53 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  level: remove obsolete liboil comment
+
+2012-07-24 21:11:18 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	  matroskademux: push mode: increase segment accuracy following seek
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+
+2012-07-24 16:41:51 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: perform proper KEY_UNIT seek also in push mode
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+
+2012-07-24 19:04:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: don't crash dereferencing NULL error when leaving multicast group on shutdown
+	  Strangely enough, if we do pass an error variable to be filled, we
+	  no longer get an error on leaving.
+
+2012-07-24 15:55:12 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: rearrange some checks to avoid NULL use
+
+2012-07-24 15:38:24 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: use same fourcc to determine caps in determining uncompressed-ness
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=673898
+	  Conflicts:
+	  gst/avi/gstavidemux.c
+
+2012-07-24 15:36:54 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  Revert "avidemux: Don't consider 0 fcc_handler as uncompressed."
+	  This reverts commit c6b9f5b25ab435669816a07049b0e5a8f01e09ca.
+	  fourcc GST_RIFF_rgb = 0 still leads to raw uncompressed rgb caps.
+	  See also https://bugzilla.gnome.org/show_bug.cgi?id=673898
+
+2012-07-24 12:10:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: fix up example pipeline some more
+	  No more ffmpegcolorspace
+
+2012-07-20 16:30:00 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Fix the example gst-launch pipeline.
+
+2012-07-24 12:33:33 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: avoid NULL access when checking subtitle
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680388
+
+2012-07-24 12:22:08 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: Reset parser when we have caps without codec_data
+	  This ensures the detection (and proper downstream caps settings) will
+	  actually happen when we have new incoming caps without codec_data.
+	  This was easily triggered by streams from matroskademux which initially
+	  provided caps with a constructed codec_data, but then pushed new caps
+	  without the codec_data once it detected the stream was adts.
+
+2012-07-24 09:17:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videomixer/blend.c:
+	* gst/videomixer/blendorc-dist.c:
+	* gst/videomixer/blendorc-dist.h:
+	* gst/videomixer/blendorc.orc:
+	  videomixer: prefix orc functions with video_mixer_orc_
+
+2012-07-24 09:13:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videobox/gstvideobox.c:
+	* gst/videobox/gstvideoboxorc-dist.c:
+	* gst/videobox/gstvideoboxorc-dist.h:
+	* gst/videobox/gstvideoboxorc.orc:
+	  videobox: prefix orc functions with video_box_orc_
+
+2012-07-23 18:51:00 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-good.spec.in:
+	  Update spec file with latest changes
+
+2012-07-23 17:37:58 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: generate correct segment stream time
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680275
+
+2012-07-23 16:42:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpj2kdepay.c:
+	* gst/rtp/gstrtpj2kdepay.h:
+	* gst/rtp/gstrtpj2kpay.c:
+	* gst/rtp/gstrtpj2kpay.h:
+	  rtp: always use buffer lists
+
+2012-07-23 15:24:17 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtp/gstrtpmp4vpay.c:
+	* gst/rtp/gstrtpmp4vpay.h:
+	  rtpmp4vpay: always enable buffer-lists
+
+2012-07-23 15:22:24 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtp/gstrtpjpegpay.c:
+	* gst/rtp/gstrtpjpegpay.h:
+	  rtpjpegpay: always enable buffer-lists
+
+2012-07-23 15:49:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: get frame flags correctly
+	  Also move the deinterlace plugin to ported status
+
+2012-07-23 15:33:54 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: proper parse recovery after seek
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680427
+
+2012-07-23 12:39:05 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: clear old segment event when requesting new one
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680283
+
+2012-07-23 10:32:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/libpng/gstpngdec.c:
+	  ext: Update for video base classes API changes
+
+2012-07-23 08:49:07 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: convert all non GST_FORMAT_BYTES to format bytes.
+	  Convert all non GST_FORMAT_BYTES to format bytes:
+	  fixes:
+	  GStreamer-CRITICAL **: gst_query_set_duration: assertion `format ==
+	  g_value_get_enum (gst_structure_id_get_value (s, GST_QUARK (FORMAT)))'
+	  failed
+	  when playing more than one wav stream.
+	  gst-plugins-base/tests/icles/playback/test7 uri1.wav uri2.wav
+
+2012-07-23 09:25:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Don't fail if more data then needed is available when parsing cue chunks
+	  Fixes bug #680328.
+
+2012-07-23 09:22:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Some minor cleanup to the cue/labl parsing
+
+2012-07-23 08:45:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 98e386f to 94ccf4c
+
+2012-07-19 14:55:45 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/deinterlace/gstdeinterlace.h:
+	* gst/deinterlace/gstdeinterlacemethod.c:
+	* gst/deinterlace/gstdeinterlacemethod.h:
+	* gst/deinterlace/tvtime/greedyh.c:
+	* gst/deinterlace/tvtime/tomsmocomp/TomsMoCompAll.inc:
+	  deinterlace: Port to 1.0
+	  This requires the additional INTERLACED buffer flag recently added to
+	  -base
+
+2012-07-20 15:18:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/interleave/interleave.c:
+	  interleave: convert the output segment to time
+	  Convert the stored input segment to time before pushing it out.
+	  Conflicts:
+	  gst/interleave/interleave.c
+
+2012-07-20 13:12:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/interleave/interleave.c:
+	* gst/interleave/interleave.h:
+	  interleave: try to fix segment handling
+	  Conflicts:
+	  gst/interleave/interleave.c
+
+2012-07-20 15:28:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Non-update seeks should still make sure that reverse playback status is reset
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+
+2012-07-20 15:18:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Properly initialize from_offset and from_time
+
+2012-07-20 14:25:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: We need an index and index entry for reverse playback
+	  Reverse playback does not work with index-less files yet.
+
+2012-07-20 14:10:41 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: clean up push mode segment handling
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680277
+
+2012-07-20 13:35:29 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: properly transform incoming segment event
+	  ... which is really useful for proper push mode seeking.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=680278
+
+2012-07-20 11:07:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	  matroskademux: Fix reverse playback for seeks without stop position
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+	  gst/matroska/matroska-demux.h
+
+2012-07-20 10:48:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Only take the stream_start_time into account for SET seeks
+	  For other seeks the stream_start_time is already added to the
+	  segment values.
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+
+2012-07-08 20:36:22 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* gst/wavparse/gstwavparse.c:
+	* gst/wavparse/gstwavparse.h:
+	  wavparse: Add TOC support
+	  Add support for:
+	  * Cue Chunk
+	  * Associated Data List Chunk
+	  * Label Chunk
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677306
+
+2012-05-09 15:58:16 +0200  Maria Giovanna Chiossa <mariagiovanna.chiossa at selexelsag.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: also set UDP buffer size in multicast
+	  Also set the UDP buffer size in multicast mode.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=675448
+
+2012-07-18 23:43:59 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: fix header parsing in push mode
+	  Fix 'break' that got warped to the wrong place,
+	  probably as part of a merge. Fixes GST_IS_BUFFER
+	  criticals in parse_idit() when being accidentally
+	  passed a NULL buffer because of the missing break.
+	  gst-launch-1.0 playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480i.avi
+
+2012-07-18 22:47:22 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* configure.ac:
+	* ext/soup/gstsouphttpsrc.c:
+	  soup: deprecated soup_message_headers _get -> _get_one
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680206
+
+2012-07-18 18:27:40 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/libpng/gstpngdec.c:
+	  jpeg/png: Call video_decoder_negotiate()
+
+2012-07-18 17:57:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/debugutils/gstpushfilesrc.c:
+	  update for ghostpad changes
+
+2012-07-18 11:36:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Pass seek rate to upstream seek events in push mode
+	  Fixes bug #679435.
+	  Conflicts:
+	  gst/matroska/matroska-demux.c
+
+2012-07-17 16:38:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/gstrtpxqtdepay.c:
+	* gst/rtp/gstasteriskh263.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtsp/gstrtpdec.c:
+	  update for RTP buffer api changes
+
+2012-07-16 11:07:44 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: use buffer lists
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679994
+
+2012-07-17 10:01:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: Fix parsing of ISRC from the cuesheets
+
+2012-07-05 14:15:25 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* gst/audioparsers/gstflacparse.c:
+	* gst/audioparsers/gstflacparse.h:
+	  flacparse: add TOC support
+	  Add support embedded cuesheets in flac files.
+	  Parsing METADATA_BLOCK_CUESHEET as TOC.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=540891
+
+2012-07-13 14:43:31 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: avoid some more frame misparsing by additional header sanity check
+	  ... using a required constant blocking_strategy bit.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=679807
+
+2012-07-13 13:51:48 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	* gst/avi/gstavidemux.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	  demux: Push STREAM_START event when needed
+
+2012-07-11 13:10:07 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: avoid warning if both ts are equal
+
+2012-07-11 12:28:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	  multiudpsink: check the right size when warning about too large udp packets
+	  What matters is the total size, not the size of any of the
+	  individual memory chunks that make up the packet.
+
+2012-07-10 14:38:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	* gst/autodetect/gstautoaudiosink.h:
+	* gst/autodetect/gstautovideosink.c:
+	* gst/autodetect/gstautovideosink.h:
+	  autodetect: proxy ts-offset properties
+	  Proxy the ts-offset property in the audio*sink elements.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679343
+
+2012-07-09 16:27:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  fix for allocator API changes
+
+2012-07-09 12:22:02 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavimux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/wavparse/gstwavparse.c:
+	  update for riff field rename
+
+2012-05-21 13:54:51 +0200  Mathias Hasselmann <mathias@openismus.com>
+
+	* tests/check/Makefile.am:
+	  tests: drop redundant elements_level_LDADD line
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676302
+
+2012-07-08 13:30:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/jpegdec.c:
+	  tests: minor jpegdec clean-ups and fixes
+	  Fix race condition in eos checking and a leak. And
+	  build pipeline without parse_launch.
+
+2012-05-21 13:53:54 +0200  Mathias Hasselmann <mathias@openismus.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/jpegdec.c:
+	* tests/files/image.jpg:
+	  tests: Add some basic tests for jpegdec
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676302
+
+2012-07-06 19:11:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: avoid some relocations
+
+2012-07-06 14:49:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtp/gstrtpmp4vpay.c:
+	  rtpmp4vpay: remove deprecated send-config property
+	  Use config-interval instead.
+
+2012-07-06 14:42:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtp/gstrtph264depay.c:
+	  rtph264depay: remove deprecated "byte-stream" and "access-unit" properties
+	  These will be picked automatically based on downstream caps now, so
+	  if you want the depayloader to output a specific format, make sure
+	  the element downstream advertises that preference or use a capsfilter
+	  after the depayloader to force it.
+
+2012-07-06 14:13:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: remove deprecated and non-functional "profile-level-id" property
+	  This is now optionally taken from downstream caps, so can be
+	  specified via a capsfilter after the payloader.
+
+2012-07-06 15:07:51 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: perform additional sanity check before confirming ADTS format
+	  ... and tweak confusing debug message.
+
+2012-07-06 15:29:14 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: remove unhelpful stray debug message
+
+2012-07-06 13:16:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: remove deprecated and unused "ntp-ns-base" property
+
+2012-07-06 12:57:20 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/isomp4/gstqtmux-doc.c:
+	  docs: update isomp4 docs for gppmux -> 3gppmux change as well
+
+2012-07-06 12:54:02 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/isomp4/gstqtmux.c:
+	* gst/isomp4/gstqtmuxmap.c:
+	* tests/check/pipelines/tagschecking.c:
+	  isomp4: remove gppmux, which was deprecated in favour of 3gppmux
+
+2012-07-06 12:49:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/smpte/gstsmpte.c:
+	  smtp: remove deprecated "fps" property
+
+2012-07-06 12:46:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/multipart/multipartdemux.c:
+	* gst/multipart/multipartdemux.h:
+	  multipartdemux: remove deprecated and unused "autoscan" property
+	  Replaced by boundary=NULL.
+
+2012-07-06 09:07:41 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtp/gstrtph263ppay.c:
+	* tests/check/elements/rtp-payloading.c:
+	  rtph263ppay: accept any h263 input unless downstream forces specific requirements
+	  rtph263ppay should accept any input compatible with its sink template
+	  caps if it just outputs to e.g. udpsink or fakesink.
+	  rtph263ppay ! rtph263pdepay should also work with any compatible input.
+	  This would fail before with not-negotiated errors because the get_caps
+	  function would see the encoding-name in the depayloader's template caps
+	  and default to baseline H.263 because there's no profile/level information
+	  in those caps, which is the right thing to do if downstream has filtercaps
+	  from an SDP, but not if those fields are absent because they can be
+	  anything like with the depayloader's template caps. Makes
+	  videotestsrc ! avenc_h263p ! rtph263ppay ! rtph263pdepay ! fakesink
+	  work.
+
+2012-07-05 22:57:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/rtp-payloading.c:
+	  tests: fix h263p payload ! depayload unit test
+	  Need to add h263version field to input caps since the
+	  payloader sink get_caps function will contain it in the
+	  the caps, and the stricter caps subset check requires
+	  this to be present in the input caps as well then.
+
+2012-07-06 11:50:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/aalib/gstaasink.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/libpng/gstpngenc.c:
+	* sys/v4l2/gstv4l2sink.c:
+	  update for query api changes
+
+2012-07-06 11:26:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/dv/gstdvdec.c:
+	* ext/jpeg/gstjpegdec.c:
+	* ext/libpng/gstpngdec.c:
+	* gst/rtp/gstrtpvrawdepay.c:
+	* sys/v4l2/gstv4l2src.c:
+	  update for query api changes
+
+2012-07-06 11:02:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/aalib/gstaasink.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/libpng/gstpngenc.c:
+	* sys/v4l2/gstv4l2sink.c:
+	  update for allocation query changes
+
+2012-07-05 15:14:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/rgvolume.c:
+	  tests: fix rgvolume unit test event handling
+	  Must flush after EOS before sending more buffers or
+	  another EOS event, or the event or buffer will be
+	  rejected. Also send a SEGMENT event at the start
+	  of each stream for good measure.
+
+2012-07-05 13:13:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	* gst/avi/gstavidemux.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/imagefreeze/gstimagefreeze.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-parse.c:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/wavparse/gstwavparse.c:
+	  gst: Implement segment-done event
+
+2012-07-05 12:35:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Remove the TOC query handling
+
+2012-07-04 19:52:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	* gst/matroska/matroska-read-common.c:
+	  matroska: Update for new GstToc API
+	  TOC support in matroskamux is disabled for now as it was broken anyway.
+
+2012-07-04 23:57:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/rganalysis.c:
+	  tests: fix rganalysis unit test event handling
+	  Must flush after EOS before sending more buffers or
+	  another EOS event, or the event or buffer will be
+	  rejected. Also send a SEGMENT event at the start
+	  of each stream for good measure.
+
+2012-07-04 18:58:46 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: clear 0 DTS on buffers output, as sinks will prefer DTS over PTS for syncing
+	  Since the initial decoded still image buffer will have dts=pts=0, and
+	  we only set PTS on buffers we push out, all buffers pushed out would
+	  have a DTS of 0. Sinks, however, will prefer DTS over PTS if both are
+	  set, and will therefore always see a timestamp of 0 no matter what
+	  the PTS is set to.
+	  Fixes unit test too.
+
+2012-07-04 20:59:03 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: Fix query function implementation; more debugging
+
+2012-07-04 19:41:52 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: Fix spec stuff in directsoundsink
+
+2012-05-31 19:22:47 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: fix access to invalid pointer in set_volume
+
+2012-06-13 12:12:39 +0200  Sebastian Dr=C3=B6ge <sebastian.droege@collabora.co.uk>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: Fix caps leaks
+
+2012-05-29 11:37:59 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: fix acceptcaps check
+
+2012-05-25 10:14:57 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: use helper function to check for spdif formats
+
+2012-05-25 10:19:09 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: add support for DTS
+
+2012-05-08 16:23:42 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: force 48000 kHz force AC-3 over spdif
+
+2012-07-04 17:42:49 +0400  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: add support for ac-3 over spdif
+
+2012-07-04 12:37:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/deinterlace.c:
+	  tests: disable deinterlace test for now, element still needs to be ported
+	  But leave it active and print a FIXME. Porting is in progress.
+
+2012-07-03 19:38:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/interleave/deinterleave.c:
+	  deinterleave; downgrade caps change failure debug message
+	  Add some more info and downgrade to warning, so
+	  it doesn't look like the unit test failed.
+
+2012-07-03 17:52:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/audiofx/audiopanorama.c:
+	  audiopanorama: fix negotiation and unit test
+	  Must remove a possibly-fixed channel-mask field if
+	  we're going to set unfixed channels on the structure,
+	  or a different channel count.
+
+2012-07-03 17:26:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Only push the TOC event, the message is handled by the sinks
+
+2012-07-03 12:47:58 +0900  Javier Jardón <jjardon@gnome.org>
+
+	* tests/examples/equalizer/demo.c:
+	* tests/examples/spectrum/demo-audiotest.c:
+	* tests/icles/gdkpixbufsink-test.c:
+	  tests: do not use deprecated gtk+ symbols
+	  https://bugzilla.gnome.org/show_bug.cgi?id=679301
+
+2012-07-03 09:27:17 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: require Gtk+ 3.0 for tests/examples
+
+2012-07-03 12:57:18 +0900  Javier Jardón <jjardon@gnome.org>
+
+	* gst/rtp/gstrtpL16depay.c:
+	* gst/rtp/gstrtpmpadepay.c:
+	* gst/rtp/gstrtpvorbispay.c:
+	* gst/rtp/gstrtpvrawdepay.c:
+	  rtp: remove some outdated comments
+	  https://bugzilla.gnome.org/show_bug.cgi?id=679301
+
+2012-06-29 11:51:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: default to force-aspect-ratio=true
+
+2012-06-28 20:03:05 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/debugutils/rndbuffersize.c:
+	  rndbuffersize: add push mode support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656317
+
+2012-06-28 11:29:55 +0200  David Corvoysier <david.corvoysier@orange.com>
+
+	* gst/isomp4/qtdemux.c:
+	  isomp4: Try to seek upstream before processing seek push event
+	  When it receives a seek in push mode, the qtdemux should first try to push the event upstream, and only if upstream fails fall back to
+	  its own seek logic.
+
+2012-06-28 11:47:20 +0200  David Corvoysier <david.corvoysier@orange.com>
+
+	* gst/isomp4/qtdemux.c:
+	  isomp4: Allow duration queries to be forwarded upstream
+	  When receiving a duration query for TIME format, try to query upstream, and only if upstream fails fall back to qtdemux duration handling.
+
+2012-06-28 11:59:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	* gst/rtp/gstrtph264pay.h:
+	  rtph264pay: cleanups
+	  Use the caps properties for alignment and format.
+	  Remove some old properties, we always want to use bufferlists when we can now.
+
+2012-06-28 11:32:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	  h264pay: prefer AVC, it's easier to parse etc
+
+2012-06-27 09:09:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/jpeg/gstjpegenc.c:
+	  jpegenc: mark all output frames as keyframes
+
+2012-06-26 18:48:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/matroska/matroska-read-common.c:
+	  matroska: update for GstToc API additions
+
+2012-06-26 17:04:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroska: set interlace-mode
+
+2012-06-26 13:19:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: improve debug
+
+2012-06-26 13:02:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  Revert "v4l2: free kernel buffers before allocating new ones"
+	  This reverts commit 1b09bc609a578e731f0dbc8f6e698e25d8f4c5f8.
+	  Seems to make libv4l2 complain, maybe because we call REQBUFS with 0 buffers
+	  before we allocated buffers.
+
+2012-06-26 12:07:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: free kernel buffers before allocating new ones
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=670257
+
+2012-06-26 12:07:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2src: improve debug
+
+2012-06-26 11:14:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2: setup strides and offsets for all planes
+
+2012-06-25 20:11:53 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/matroska/matroska-mux.c:
+	  matroska-mux: update for GstTocSetter changes
+
+2012-06-25 13:31:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Return FALSE from queries if we can't answer POSITION/DURATION queries
+
+2012-06-21 17:15:11 +0300  Anton Belka <antonbelka@gmail.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Return FALSE from TOC query if no TOC exists instead of an empty TOC
+
+2012-06-24 22:51:16 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-mux.c:
+	* gst/matroska/matroska-read-common.c:
+	  matroska: update for GstToc API changes
+
+2012-06-23 14:57:28 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: update for gst_element_make_from_uri() changes
+
+2012-06-20 12:31:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/flvdemux.c:
+	* tests/check/elements/flvmux.c:
+	* tests/check/elements/id3demux.c:
+	  update for bus api changes
+
+2012-06-20 10:33:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	* gst/avi/gstavidemux.c:
+	* gst/debugutils/rndbuffersize.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/imagefreeze/gstimagefreeze.c:
+	* gst/isomp4/gstqtmoovrecover.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/wavparse/gstwavparse.c:
+	  update for task api change
+
+2012-06-20 09:59:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* tests/examples/spectrum/demo-audiotest.c:
+	* tests/examples/spectrum/demo-osssrc.c:
+	  update for clock api changes
+
+2012-06-19 12:15:33 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxcoreaudio.h:
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  osxaudiosink: respect the prefered channel layout
+	  In OSX is allowed to configure the default audio output device,
+	  prefered channel layout and speaker positions through the tool
+	  "Audio MIDI Setup".
+
+2012-04-30 22:59:58 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroska-demux: Send gap events for subtitle streams
+
+2012-06-17 01:00:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/multifile/gstsplitfilesrc.c:
+	  splitfilesrc: fix up docs for 0.11
+
+2012-06-16 23:29:41 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/multifile/gstsplitfilesrc.c:
+	  splitfilesrc: small uri handler fixup and some more docs
+	  Get URI location using gst_uri_get_location(), so any
+	  escaped bits get unescaped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=609049
+
+2012-06-17 00:59:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/multifile/gstsplitfilesrc.c:
+	  splitfilesrc: re-port to 0.11
+
+2012-06-16 19:06:25 +0100  Bastien Nocera <hadess@hadess.net>
+
+	* gst/multifile/gstsplitfilesrc.c:
+	  splitfilesrc: Implement splitfile:// URI scheme
+	  https://bugzilla.gnome.org/show_bug.cgi?id=609049
+	  Conflicts:
+	  gst/multifile/gstsplitfilesrc.c
+
+2012-06-14 10:43:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtptheoradepay.c:
+	  theoradepay: fix buffer memory
+	  The memory was added to the input buffer instead of the output buffer.
+
+2012-06-13 13:36:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Don't reset time in flush-stop
+	  Don't reset the time in flush-stop. Live sources can do this flush in the
+	  playing state and so the pipeline will never have a chance to update the
+	  base_time of the elements, which only happens when going from paused to
+	  playing.
+
+2012-06-12 12:42:31 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudiosink.c:
+	* sys/osxaudio/gstosxaudiosink.h:
+	* sys/osxaudio/gstosxcoreaudio.h:
+	* sys/osxaudio/gstosxringbuffer.c:
+	* sys/osxaudio/gstosxringbuffer.h:
+	  osxaudiosink: Add support for SPDIF output
+	  A big refactoring to allow passthrough AC3/DTS over SPDIF.
+	  Several random cleanups and minor fixes.
+
+2011-09-01 15:41:26 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	* gst/deinterlace/gstdeinterlace.h:
+	  deinterlace: send QoS messages when dropping a frame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657941
+
+2012-06-12 16:05:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	* gst/rtsp/gstrtspsrc.h:
+	  rtspsrc: Rework the async state handling
+	  Always send the flushing events to the udp elements now that basesrc supports
+	  this. This makes sure a segment event is sent correctly after a flush.
+	  Keep track of the currently executing command and make it possible to specify
+	  what command you want to cancel when starting a new async command.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=677905
+
+2012-06-11 18:24:20 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* gst/videomixer/videomixer2.c:
+	  childproxy: update api use
+
+2012-06-11 12:54:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: always perform full seek if seek is flushing
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677838
+
+2012-06-11 11:20:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/debugutils/rndbuffersize.c:
+	  rndbuffersize: printf format fix for long -> int change
+
+2012-06-08 20:38:34 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* sys/v4l2/gstv4l2object.c:
+	  v4l2object: Don't probe UVC devices for being interlaced
+	  UVC devices are never interlaced, and doing VIDIOC_TRY_FMT on them
+	  causes expensive and slow USB IO, so don't probe them for interlaced.
+	  This shaves 2 seconds of the startup time of cheese with a Logitech
+	  Webcam Pro 9000.
+	  Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=677722
+
+2012-06-09 16:53:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/debugutils/rndbuffersize.c:
+	  debug: change rndbuffersize properties from long to int
+	  These should all be int instead of long, to avoid bugs
+	  when passing these as varargs with g_object_set(), and
+	  there was no reason to use long in the first place here.
+	  Fixes FIXME.
+
+2012-06-08 15:54:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	* gst/goom/gstgoom.c:
+	* gst/goom2k1/gstgoom.c:
+	* gst/monoscope/gstmonoscope.c:
+	* gst/rtsp/gstrtpdec.c:
+	  elements: Use gst_pad_set_caps() instead of manual event fiddling
+
+2012-06-08 15:04:59 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* common:
+	  Automatic update of common submodule
+	  From 03a0e57 to 98e386f
+
+2012-06-08 10:11:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/flac/gstflacenc.c:
+	* ext/wavpack/gstwavpackenc.c:
+	* gst/audioparsers/gstwavpackparse.c:
+	* sys/oss4/oss4-audio.c:
+	* tests/check/elements/interleave.c:
+	  update for audio api change
+
+2012-06-07 16:12:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.92 ===
+
+2012-06-07 16:12:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/gst-plugins-good-plugins.signals:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 0.11.92
+
+2012-06-07 16:11:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2012-06-07 15:03:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
 
