@@ -594,6 +594,9 @@ retry:
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf, -1);
   }
 
+  if (!gst_amc_codec_release_output_buffer (self->codec, idx))
+    goto failed_release;
+
   if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {
     GST_AUDIO_DECODER_STREAM_UNLOCK (self);
     g_mutex_lock (self->drain_lock);
@@ -610,9 +613,6 @@ retry:
   } else {
     GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
   }
-
-  if (!gst_amc_codec_release_output_buffer (self->codec, idx))
-    goto failed_release;
 
   self->downstream_flow_ret = flow_ret;
 

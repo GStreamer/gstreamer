@@ -1008,6 +1008,9 @@ retry:
     flow_ret = gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
   }
 
+  if (!gst_amc_codec_release_output_buffer (self->codec, idx))
+    goto failed_release;
+
   if (is_eos || flow_ret == GST_FLOW_UNEXPECTED) {
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     g_mutex_lock (self->drain_lock);
@@ -1024,9 +1027,6 @@ retry:
   } else {
     GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
   }
-
-  if (!gst_amc_codec_release_output_buffer (self->codec, idx))
-    goto failed_release;
 
   self->downstream_flow_ret = flow_ret;
 
