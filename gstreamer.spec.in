@@ -1,4 +1,4 @@
-%define		gstreamer	gstreamer011
+%define		gstreamer	gstreamer1
 %define		majorminor	@GST_API_VERSION@
 
 %define 	_glib2		@GLIB_REQ@
