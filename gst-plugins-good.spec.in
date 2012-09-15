@@ -1,5 +1,5 @@
 %define majorminor  @GST_API_VERSION@
-%define gstreamer   gstreamer011
+%define gstreamer   gstreamer1
 
 %define gst_minver   0.11.0
 
@@ -120,7 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstgoom2k1.so
 %{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
 %{_libdir}/gstreamer-%{majorminor}/libgstreplaygain.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstflv.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4menc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstoss4audio.so
