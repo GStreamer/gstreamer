@@ -188,7 +188,8 @@ _is_renderer (GstElementFactory * factory)
 {
   const gchar *klass, *name;
 
-  klass = gst_element_factory_get_klass (factory);
+  klass =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
   name = gst_plugin_feature_get_name (GST_PLUGIN_FEATURE_CAST (factory));
 
   if (klass != NULL) {
@@ -206,7 +207,8 @@ _is_parser (GstElementFactory * factory)
 {
   const gchar *klass;
 
-  klass = gst_element_factory_get_klass (factory);
+  klass =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
   if (klass != NULL && strstr (klass, "Parser/Subtitle") != NULL)
     return TRUE;
@@ -355,13 +357,15 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
 
   if (is_renderer && have_video_sink && templ_caps) {
     GST_DEBUG ("Found renderer element %s (%s) with caps %" GST_PTR_FORMAT,
-        gst_element_factory_get_longname (factory),
+        gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_LONGNAME),
         gst_plugin_feature_get_name (feature), templ_caps);
     *subcaps = gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else if (!is_renderer && !have_video_sink && templ_caps) {
     GST_DEBUG ("Found parser element %s (%s) with caps %" GST_PTR_FORMAT,
-        gst_element_factory_get_longname (factory),
+        gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_LONGNAME),
         gst_plugin_feature_get_name (feature), templ_caps);
     *subcaps = gst_caps_merge (*subcaps, templ_caps);
     return TRUE;

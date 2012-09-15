@@ -1483,7 +1483,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
    * we insert a capsfilter with the sorted caps of all possible next
    * elements and continue with the capsfilter srcpad */
   factory = gst_element_get_factory (src);
-  classification = gst_element_factory_get_klass (factory);
+  classification =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
   is_parser_converter = (strstr (classification, "Parser")
       && strstr (classification, "Converter"));
 
@@ -1551,7 +1552,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       GstCaps *tcaps;
 
       /* We are only interested in skipping decoders */
-      if (strstr (gst_element_factory_get_klass (factory), "Decoder")) {
+      if (strstr (gst_element_factory_get_metadata (factory,
+                  GST_ELEMENT_METADATA_KLASS), "Decoder")) {
 
         GST_DEBUG ("Trying factory %s",
             gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
@@ -1901,7 +1903,8 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
      * parser is the only one that does not change the data. A
      * valid example for this would be multiple id3demux in a row.
      */
-    if (strstr (gst_element_factory_get_klass (factory), "Parser")) {
+    if (strstr (gst_element_factory_get_metadata (factory,
+                GST_ELEMENT_METADATA_KLASS), "Parser")) {
       gboolean skip = FALSE;
       GList *l;
 
@@ -2573,7 +2576,8 @@ is_demuxer_element (GstElement * srcelement)
   gint potential_src_pads = 0;
 
   srcfactory = gst_element_get_factory (srcelement);
-  klass = gst_element_factory_get_klass (srcfactory);
+  klass =
+      gst_element_factory_get_metadata (srcfactory, GST_ELEMENT_METADATA_KLASS);
 
   /* Can't be a demuxer unless it has Demux in the klass name */
   if (!strstr (klass, "Demux"))

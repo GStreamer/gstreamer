@@ -1918,7 +1918,8 @@ filter_features (GstPluginFeature * feature, gpointer data)
   if (!GST_IS_ELEMENT_FACTORY (feature))
     return FALSE;
   f = GST_ELEMENT_FACTORY (feature);
-  if (!g_strrstr (gst_element_factory_get_klass (f), "Visualization"))
+  if (!g_strrstr (gst_element_factory_get_metadata (f,
+              GST_ELEMENT_METADATA_KLASS), "Visualization"))
     return FALSE;
 
   return TRUE;
@@ -1939,7 +1940,8 @@ init_visualization_features (void)
     const gchar *name;
 
     entry.factory = GST_ELEMENT_FACTORY (walk->data);
-    name = gst_element_factory_get_longname (entry.factory);
+    name = gst_element_factory_get_metadata (entry.factory,
+        GST_ELEMENT_METADATA_LONGNAME);
 
     g_array_append_val (vis_entries, entry);
     gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (vis_combo), name);

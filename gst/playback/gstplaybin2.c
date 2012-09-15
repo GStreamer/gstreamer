@@ -3543,7 +3543,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   /* it's a sink, see if an instance of it actually works */
   GST_DEBUG_OBJECT (playbin, "we found a sink");
 
-  klass = gst_element_factory_get_klass (factory);
+  klass =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
   /* figure out the klass */
   if (strstr (klass, "Audio")) {

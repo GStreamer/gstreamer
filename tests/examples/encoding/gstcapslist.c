@@ -248,7 +248,8 @@ gst_caps_list_compatible_codecs (const GstCaps * containerformat,
   factory = (GstElementFactory *) tmp->data;
 
   GST_DEBUG ("Trying with factory %s",
-      gst_element_factory_get_longname (factory));
+      gst_element_factory_get_metadata (factory,
+          GST_ELEMENT_METADATA_LONGNAME));
 
   /* Match all muxer sink pad templates against the available codec formats */
   templates = gst_element_factory_get_static_pad_templates (factory);
