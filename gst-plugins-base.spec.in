@@ -1,5 +1,5 @@
 %define majorminor  @GST_API_VERSION@
-%define gstreamer   gstreamer011
+%define gstreamer   gstreamer1
 
 %define gst_minver  0.11.0
 
@@ -79,9 +79,8 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-base.doap
 
 # helper programs
-%{_bindir}/gst-visualise-%{majorminor}
 %{_bindir}/gst-discoverer-%{majorminor}
-%{_mandir}/man1/gst-visualise-%{majorminor}*
+%{_mandir}/man1/gst-discoverer-%{majorminor}*
 
 # libraries
 %{_libdir}/libgstaudio-%{majorminor}.so.*
@@ -109,7 +108,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgsttcp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudioresample.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiotestsrc.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstapp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstencodebin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubparse.so
