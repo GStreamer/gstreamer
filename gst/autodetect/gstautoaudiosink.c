@@ -191,7 +191,8 @@ gst_auto_audio_sink_factory_filter (GstPluginFeature * feature, gpointer data)
     return FALSE;
 
   /* audio sinks */
-  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
+  klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY (feature),
+      GST_ELEMENT_METADATA_KLASS);
   if (!(strstr (klass, "Sink") && strstr (klass, "Audio")))
     return FALSE;
 

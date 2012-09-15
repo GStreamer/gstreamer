@@ -184,7 +184,8 @@ gst_auto_video_src_factory_filter (GstPluginFeature * feature, gpointer data)
     return FALSE;
 
   /* video sources */
-  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
+  klass = gst_element_factory_get_metadata (GST_ELEMENT_FACTORY (feature),
+      GST_ELEMENT_METADATA_KLASS);
   if (!(strstr (klass, "Source") && strstr (klass, "Video")))
     return FALSE;
 
