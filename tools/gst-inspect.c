@@ -1012,7 +1012,8 @@ print_element_list (gboolean print_all)
         else
           g_print ("%s:  %s: %s\n", gst_plugin_get_name (plugin),
               GST_OBJECT_NAME (factory),
-              gst_element_factory_get_longname (factory));
+              gst_element_factory_get_metadata (factory,
+                  GST_ELEMENT_METADATA_LONGNAME));
 #if 0
       } else if (GST_IS_INDEX_FACTORY (feature)) {
         GstIndexFactory *factory;
@@ -1213,7 +1214,8 @@ print_plugin_features (GstPlugin * plugin)
 
       factory = GST_ELEMENT_FACTORY (feature);
       n_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
-          gst_element_factory_get_longname (factory));
+          gst_element_factory_get_metadata (factory,
+              GST_ELEMENT_METADATA_LONGNAME));
       num_elements++;
 #if 0
     } else if (GST_IS_INDEX_FACTORY (feature)) {
@@ -1361,7 +1363,8 @@ print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
   GstCaps *caps = NULL;
   guint i, num;
 
-  klass = gst_element_factory_get_klass (factory);
+  klass =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
   g_return_if_fail (klass != NULL);
 
   if (strstr (klass, "Demuxer") ||
