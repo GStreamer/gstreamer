@@ -171,7 +171,8 @@ rsndec_factory_filter (GstPluginFeature * feature, RsnDecFactoryFilterCtx * ctx)
 
   factory = GST_ELEMENT_FACTORY (feature);
 
-  klass = gst_element_factory_get_klass (factory);
+  klass =
+      gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
   /* only decoders can play */
   if (strstr (klass, "Decoder") == NULL)
     return FALSE;
@@ -211,7 +212,8 @@ rsndec_factory_filter (GstPluginFeature * feature, RsnDecFactoryFilterCtx * ctx)
 
   if (can_sink) {
     GST_DEBUG ("Found decoder element %s (%s)",
-        gst_element_factory_get_longname (factory),
+        gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_LONGNAME),
         gst_plugin_feature_get_name (feature));
   }
 

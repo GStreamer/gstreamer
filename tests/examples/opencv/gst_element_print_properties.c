@@ -508,7 +508,9 @@ print_element_info (GstElement * element, guint c2w, guint c3w, guint c4w)
 
   g_print (" | %-*s", c3w,
       gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
-  g_print (" | %-*s | \n", c4w, gst_element_factory_get_longname (factory));
+  g_print (" | %-*s | \n", c4w,
+      gst_element_factory_get_metadata (factory,
+          GST_ELEMENT_METADATA_LONGNAME));
 
 // "Audio Resampler"   g_print( " | %-*s",      c3w, gst_element_factory_get_longname( gst_element_get_factory( element )) );
 
