@@ -379,7 +379,7 @@ static GstStaticPadTemplate gst_vp8_enc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-vp8, " "profile = (int) {0, 1, 2, 3}")
+    GST_STATIC_CAPS ("video/x-vp8, " "profile = (string) {0, 1, 2, 3}")
     );
 
 #define parent_class gst_vp8_enc_parent_class
@@ -1216,11 +1216,22 @@ gst_vp8_enc_get_downstream_profile (GstVP8Enc * encoder)
     s = gst_caps_get_structure (allowed, 0);
     if (gst_structure_has_field (s, "profile")) {
       const GValue *v = gst_structure_get_value (s, "profile");
+      const gchar *profile_str = NULL;
 
       if (GST_VALUE_HOLDS_LIST (v) && gst_value_list_get_size (v) > 0) {
-        profile = g_value_get_int (gst_value_list_get_value (v, 0));
-      } else if (G_VALUE_HOLDS_INT (v)) {
-        profile = g_value_get_int (v);
+        profile_str = g_value_get_string (gst_value_list_get_value (v, 0));
+      } else if (G_VALUE_HOLDS_STRING (v)) {
+        profile_str = g_value_get_string (v);
+      }
+
+      if (profile_str) {
+        gchar *endptr = NULL;
+
+        profile = g_ascii_strtoull (profile_str, &endptr, 10);
+        if (*endptr != '\0' || profile < 0 || profile > 3) {
+          GST_ERROR_OBJECT (encoder, "Invalid profile '%s'", profile_str);
+          profile = DEFAULT_PROFILE;
+        }
       }
     }
     gst_caps_unref (allowed);
@@ -1244,6 +1255,7 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   gboolean ret = TRUE;
   GstVideoInfo *info = &state->info;
   GstVideoCodecState *output_state;
+  gchar *profile_str;
 
   encoder = GST_VP8_ENC (video_encoder);
   GST_DEBUG_OBJECT (video_encoder, "set_format");
@@ -1456,8 +1468,11 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   image->stride[VPX_PLANE_U] = GST_VIDEO_INFO_COMP_STRIDE (info, 1);
   image->stride[VPX_PLANE_V] = GST_VIDEO_INFO_COMP_STRIDE (info, 2);
 
+  profile_str = g_strdup_printf ("%d", encoder->profile);
   caps = gst_caps_new_simple ("video/x-vp8",
-      "profile", G_TYPE_INT, encoder->profile, NULL);
+      "profile", G_TYPE_STRING, profile_str, NULL);
+  g_free (profile_str);
+
   {
     GstStructure *s;
     GstBuffer *stream_hdr, *vorbiscomment;
