@@ -1,5 +1,5 @@
 %define majorminor  @GST_API_VERSION@
-%define gstreamer   gstreamer011
+%define gstreamer   gstreamer1
 
 %define gst_minver  0.11.0
 
