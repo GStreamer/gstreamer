@@ -75,6 +75,12 @@ else
 check_taglib =
 endif
 
+if USE_VPX
+check_vpx=elements/vp8enc elements/vp8dec
+else
+check_vpx=
+endif
+
 if USE_WAVPACK
 check_wavpack = \
        elements/wavpackdec \
@@ -154,6 +160,7 @@ check_PROGRAMS = \
 	$(check_soup) \
 	$(check_sunaudio) \
 	$(check_taglib) \
+	$(check_vpx) \
 	$(check_wavpack) \
 	$(check_orc)
 
