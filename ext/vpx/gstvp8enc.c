@@ -29,11 +29,13 @@
  * </ulink>. It's the successor of On2 VP3, which was the base of the
  * Theora video codec.
  *
- * To control the quality of the encoding, the #GstVP8Enc::bitrate and
- * #GstVP8Enc::quality properties can be used. These two properties are
- * mutualy exclusive. Setting the bitrate property will produce a constant
- * bitrate (CBR) stream while setting the quality property will produce a
- * variable bitrate (VBR) stream.
+ * To control the quality of the encoding, the #GstVP8Enc::target-bitrate,
+ * #GstVP8Enc::min-quantizer, #GstVP8Enc::max-quantizer or #GstVP8Enc::cq-level
+ * properties can be used. Which one is used depends on the mode selected by
+ * the #GstVP8Enc::end-usage property.
+ * See <ulink url="http://www.webmproject.org/docs/encoder-parameters/">Encoder Parameters</ulink>
+ * for explanation, examples for useful encoding parameters and more details
+ * on the encoding parameters.
  *
  * <refsect2>
  * <title>Example pipeline</title>
