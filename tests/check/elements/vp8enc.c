@@ -103,7 +103,7 @@ GST_START_TEST (test_encode_simple)
       setup_vp8enc
       ("video/x-raw,format=(string)I420,width=(int)320,height=(int)240,framerate=(fraction)25/1");
 
-  g_object_set (vp8enc, "max-latency", 5, NULL);
+  g_object_set (vp8enc, "lag-in-frames", 5, NULL);
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
   seg.stop = gst_util_uint64_scale (20, GST_SECOND, 25);
