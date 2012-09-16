@@ -1,18 +1,18 @@
 %define majorminor   @GST_API_VERSION@
-%define gstreamer    gstreamer
+%define gstreamer    gstreamer1
 
 %define gst_minver   0.10.30
 %define gstpb_minver 0.10.30
 
 Summary: GStreamer streaming media framework "bad" plug-ins
-Name: gstreamer-plugins-bad011
+Name: %{gstreamer}-plugins-bad
 Version: @VERSION@
 Release: @PACKAGE_VERSION_RELEASE@.gst
 # The freeze and nfs plugins are LGPLv2 (only)
 License: LGPLv2+ and LGPLv2
 Group: Applications/Multimedia
 URL: http://gstreamer.freedesktop.org/
-Source: http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-%{version}.tar.bz2
+Source: http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-%{version}.tar.xz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Requires: %{gstreamer} >= %{gst_minver}
@@ -27,15 +27,10 @@ BuildRequires: gtk-doc
 
 BuildRequires: bzip2-devel
 BuildRequires: celt-devel
-BuildRequires: dirac-devel
 BuildRequires: exempi-devel
-BuildRequires: gmyth-devel >= 0.4
-BuildRequires: gsm-devel
-BuildRequires: jack-audio-connection-kit-devel
 BuildRequires: jasper-devel
 BuildRequires: ladspa-devel
 BuildRequires: libass-devel
-BuildRequires: libcdaudio-devel
 %ifnarch s390 s390x
 BuildRequires: libdc1394-devel
 %endif
@@ -46,7 +41,6 @@ BuildRequires: libkate-devel
 BuildRequires: libmodplug-devel
 BuildRequires: libmpcdec-devel
 BuildRequires: libofa-devel
-BuildRequires: liboil-devel
 BuildRequires: librsvg2-devel
 BuildRequires: libsndfile-devel
 BuildRequires: libtimidity-devel
@@ -185,7 +179,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 #%ifarch %{ix86} x86_64
 #%{_libdir}/gstreamer-%{majorminor}/libgstreal.so
 #%endif
-#%{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 
 # Plugins with external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
@@ -219,7 +213,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgaudieffects.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgeometrictransform.so
@@ -227,15 +221,15 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgsthdvparse.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstivfparse.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
-%{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
+%{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstmve.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstnuvdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
+%{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsegmentclip.so
@@ -244,7 +238,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstshm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsdpelem.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
+%{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
 # %{_libdir}/gstreamer-%{majorminor}/libgststereo.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 # %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
@@ -253,7 +247,9 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin2.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcurl.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcurl.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
+
 # %{_libdir}/gstreamer-%{majorminor}/libgstdecklink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvbsuboverlay.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfieldanalysis.so
@@ -270,12 +266,29 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstopenal.so
-%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24
-%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24.0.0
+# %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24
+# %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiovisualizers.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfaceoverlay.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstinter.so
+%{_libdir}/gstreamer-%{majorminor}/libgstinter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstremovesilence.so
+%{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstcoloreffects.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgaudieffects.so
+%{_libdir}/gstreamer-%{majorminor}/libgstgeometrictransform.so
+%{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
+%{_libdir}/gstreamer-%{majorminor}/libgstinterlace.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmimic.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegpsdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsoundtouch.so
+%{_libdir}/libgstbasecamerabinsrc-1.0.so.0
+%{_libdir}/libgstbasecamerabinsrc-1.0.so.0.0.0
+
+
 
 # System (Linux) specific plugins
 # %{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
@@ -292,7 +305,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 #%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 #%endif
 #%{_libdir}/gstreamer-%{majorminor}/libgstdirac.so
-%{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
+# %{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
@@ -300,7 +313,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
 #%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
-# %{_libdir}/gstreamer-%{majorminor}/libresindvd.so
+%{_libdir}/gstreamer-%{majorminor}/libgstresindvd.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstschro.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
