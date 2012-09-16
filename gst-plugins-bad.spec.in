@@ -260,7 +260,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstpatchdetect.so
-%{_libdir}/gstreamer-%{majorminor}/libgstrtpvp8.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsdi.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstvideofiltersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
