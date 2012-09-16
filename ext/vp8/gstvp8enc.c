@@ -382,31 +382,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("video/x-vp8, " "profile = (string) {0, 1, 2, 3}")
     );
 
-<<<<<<<
-static void
-do_init (GType vp8enc_type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
-  const GInterfaceInfo preset_interface_info = {
-    NULL,                       /* interface_init */
-    NULL,                       /* interface_finalize */
-    NULL                        /* interface_data */
-  };
-
-  g_type_add_interface_static (vp8enc_type, GST_TYPE_TAG_SETTER,
-      &tag_setter_info);
-  g_type_add_interface_static (vp8enc_type, GST_TYPE_PRESET,
-      &preset_interface_info);
-}
-
-GST_BOILERPLATE_FULL (GstVP8Enc, gst_vp8_enc, GstVideoEncoder,
-    GST_TYPE_VIDEO_ENCODER, do_init);
-=======
 #define parent_class gst_vp8_enc_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVP8Enc, gst_vp8_enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
     G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL););
->>>>>>>
 
 static void
 gst_vp8_enc_class_init (GstVP8EncClass * klass)
@@ -423,10 +402,10 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   gobject_class->get_property = gst_vp8_enc_get_property;
   gobject_class->finalize = gst_vp8_enc_finalize;
 
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vp8_enc_src_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vp8_enc_sink_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_vp8_enc_src_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_vp8_enc_sink_template));
 
   gst_element_class_set_metadata (element_class,
       "On2 VP8 Encoder",
