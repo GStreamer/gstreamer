@@ -3,5 +3,6 @@ version=0.10
 element-name=GstVP8Enc
 
 [Profile Realtime]
-max-latency=1
-speed=2
+deadline=1
+cpu-used=4
+lag-in-frames=0
