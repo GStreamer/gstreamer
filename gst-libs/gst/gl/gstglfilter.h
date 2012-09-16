@@ -62,12 +62,17 @@ struct _GstGLFilter
 
   GstGLDisplay *display;
 
-  gint width;
-  gint height;
+  GstVideoInfo in_info;
+  GstVideoInfo out_info;
   GLuint fbo;
   GLuint depthbuffer;
 
   GstGLShader *default_shader;
+
+  GLuint in_tex_id;
+  GLuint out_tex_id;
+  GstGLUpload *upload;
+  GstGLDownload *download;
 
   gulong external_gl_context;
 };

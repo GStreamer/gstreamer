@@ -34,14 +34,14 @@ static GstStaticPadTemplate gst_gl_filter_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
     );
 
 /* Properties */
@@ -220,8 +220,6 @@ gst_gl_filter_reset (GstGLFilter * filter)
     filter->display = NULL;
   }
 
-  filter->width = 0;
-  filter->height = 0;
   filter->fbo = 0;
   filter->depthbuffer = 0;
   filter->default_shader = NULL;
@@ -311,7 +309,6 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
   par = NULL;
   newcaps = gst_caps_new_empty ();
   n = gst_caps_get_size (caps);
-//  structure = gst_caps_get_structure (newcaps, 0);
 
   for (i = 0; i < n; i++) {
     structure = gst_caps_get_structure (caps, i);
@@ -324,6 +321,8 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
 //    gst_structure_set (structure,
 //        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
 //        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+
+    gst_structure_remove_field (structure, "format");
 
     if ((par = gst_structure_get_value (structure, "pixel-aspect-ratio"))) {
       gst_structure_set (structure,
@@ -365,22 +364,53 @@ static gboolean
 gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstVideoInfo info;
   GstGLFilter *filter;
   GstGLFilterClass *filter_class;
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (!gst_video_info_from_caps (&info, outcaps))
+  if (!gst_video_info_from_caps (&filter->in_info, incaps))
     goto wrong_caps;
-  filter->width = GST_VIDEO_INFO_WIDTH (&info);
-  filter->height = GST_VIDEO_INFO_HEIGHT (&info);
+  if (!gst_video_info_from_caps (&filter->out_info, outcaps))
+    goto wrong_caps;
 
   //blocking call, generate a FBO
-  if (!gst_gl_display_gen_fbo (filter->display, filter->width, filter->height,
+  if (!gst_gl_display_gen_fbo (filter->display,
+          GST_VIDEO_INFO_WIDTH (&filter->out_info),
+          GST_VIDEO_INFO_HEIGHT (&filter->out_info),
           &filter->fbo, &filter->depthbuffer))
     goto display_error;
+
+  gst_gl_display_gen_texture (filter->display, &filter->in_tex_id,
+      GST_VIDEO_INFO_FORMAT (&filter->out_info),
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+
+  gst_gl_display_gen_texture (filter->display, &filter->out_tex_id,
+      GST_VIDEO_INFO_FORMAT (&filter->out_info),
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+
+  filter->download = gst_gl_display_find_download (filter->display,
+      GST_VIDEO_INFO_FORMAT (&filter->out_info),
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+
+  gst_gl_download_init_format (filter->download,
+      GST_VIDEO_INFO_FORMAT (&filter->out_info),
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+
+  filter->upload = gst_gl_display_find_upload (filter->display,
+      GST_VIDEO_INFO_FORMAT (&filter->out_info),
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+
+  gst_gl_upload_init_format (filter->upload,
+      GST_VIDEO_INFO_FORMAT (&filter->out_info),
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   if (filter_class->display_init_cb != NULL) {
     gst_gl_display_thread_add (filter->display, gst_gl_filter_start_gl, filter);
@@ -396,7 +426,8 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
       goto display_error;
   }
 
-  GST_DEBUG ("set_caps %dx%d", filter->width, filter->height);
+  GST_DEBUG ("set_caps %dx%d", GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   return TRUE;
 
@@ -472,7 +503,6 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
-  gst_query_add_allocation_meta (query, GST_GL_META_API_TYPE, 0);
 
   gst_object_unref (pool);
 
@@ -562,11 +592,14 @@ void
 gst_gl_filter_render_to_target (GstGLFilter * filter,
     GLuint input, GLuint target, GLCB func, gpointer data)
 {
-  gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
+  gst_gl_display_use_fbo (filter->display,
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, target,
-      func,
-      filter->width, filter->height, input,
-      0, filter->width, 0, filter->height,
+      func, GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info), input, 0,
+      GST_VIDEO_INFO_WIDTH (&filter->out_info), 0,
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       GST_GL_DISPLAY_PROJECTION_ORTHO2D, data);
 }
 
@@ -613,11 +646,12 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture)
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, 0.0);
+  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info), 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
+  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) filter->height);
+  glTexCoord2f (0.0, (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
