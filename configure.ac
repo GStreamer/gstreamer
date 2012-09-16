@@ -1773,50 +1773,23 @@ AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
 dnl *** vp8 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_VP8, vp8)
 AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
-  PKG_CHECK_MODULES(VPX, vpx, [HAVE_VPX="yes"], [HAVE_VPX="no"])
+  PKG_CHECK_MODULES(VPX, vpx >= 1.1.0, [HAVE_VPX="yes"], [HAVE_VPX="no"])
 
   if test $HAVE_VPX = "yes"; then
-    HAVE_VP8_ENCODER=no
-    HAVE_VP8_DECODER=no
-
     OLD_LIBS="$LIBS"
+    OLD_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $VPX_CFLAGS"
     LIBS="$LIBS $VPX_LIBS"
     AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
-
-      AC_MSG_CHECKING([for VP8E_SET_TUNING presence])
-      AC_TRY_COMPILE([
-#include <vpx/vpx_encoder.h>
-#include <vpx/vp8cx.h>
-int foo=VP8E_SET_TUNING;
-      ], [
-return 0;
-      ], [
-        AC_DEFINE(HAVE_VP8ENC_TUNING, 1, [Defined if the VP8 encoder has tuning API])
-	AC_MSG_RESULT(yes)
-      ], [
-	AC_MSG_RESULT(no)
-      ])
     ])
     AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
       HAVE_VP8=yes
       AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
-      AC_MSG_CHECKING([for VP8_MFQE presence])
-      AC_TRY_COMPILE([
-#include <vpx/vpx_decoder.h>
-#include <vpx/vp8dx.h>
-int foo=VP8_MFQE;
-      ], [
-return 0;
-      ], [
-        AC_DEFINE(HAVE_VP8_MFQE, 1, [Defined if the VP8 decoder has MFQE support])
-	AC_MSG_RESULT(yes)
-      ], [
-	AC_MSG_RESULT(no)
-      ])
     ])
     LIBS="$OLD_LIBS"
+    CFLAGS="$OLD_CFLAGS"
   fi
   AC_SUBST(VPX_LIBS)
   AC_SUBST(VPX_CFLAGS)
