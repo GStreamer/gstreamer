@@ -472,13 +472,13 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_RC_UNDERSHOOT_PCT,
-      g_param_spec_int ("undershoot-pct", "Undershoot PCT",
+      g_param_spec_int ("undershoot", "Undershoot PCT",
           "Datarate undershoot (min) target (%)",
           0, 1000, DEFAULT_RC_UNDERSHOOT_PCT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_RC_OVERSHOOT_PCT,
-      g_param_spec_int ("overshoot-pct", "Overshoot PCT",
+      g_param_spec_int ("overshoot", "Overshoot PCT",
           "Datarate overshoot (max) target (%)",
           0, 1000, DEFAULT_RC_OVERSHOOT_PCT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -502,33 +502,33 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_RC_2PASS_VBR_BIAS_PCT,
-      g_param_spec_int ("twopass-vbr-bias-pct", "2-pass VBR bias",
+      g_param_spec_int ("twopass-vbr-bias", "2-pass VBR bias",
           "CBR/VBR bias (0=CBR, 100=VBR)",
           0, 100, DEFAULT_RC_2PASS_VBR_BIAS_PCT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_RC_2PASS_VBR_MINSECTION_PCT,
-      g_param_spec_int ("twopass-vbr-minsection-pct", "2-pass GOP min bitrate",
+      g_param_spec_int ("twopass-vbr-minsection", "2-pass GOP min bitrate",
           "GOP minimum bitrate (% target)", 0, G_MAXINT,
           DEFAULT_RC_2PASS_VBR_MINSECTION_PCT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class,
       PROP_RC_2PASS_VBR_MAXSECTION_PCT,
-      g_param_spec_int ("twopass-vbr-maxsection-pct", "2-pass GOP max bitrate",
+      g_param_spec_int ("twopass-vbr-maxsection", "2-pass GOP max bitrate",
           "GOP maximum bitrate (% target)", 0, G_MAXINT,
           DEFAULT_RC_2PASS_VBR_MINSECTION_PCT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_KF_MODE,
-      g_param_spec_enum ("kf-mode", "Keyframe Mode",
+      g_param_spec_enum ("keyframe-mode", "Keyframe Mode",
           "Keyframe placement",
           GST_VP8_ENC_KF_MODE_TYPE, DEFAULT_KF_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_KF_MAX_DIST,
-      g_param_spec_int ("kf-max-dist", "Keyframe max distance",
+      g_param_spec_int ("keyframe-max-dist", "Keyframe max distance",
           "Maximum distance between keyframes (number of frames)",
           0, G_MAXINT, DEFAULT_KF_MAX_DIST,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -546,13 +546,13 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_TS_NUMBER_LAYERS,
-      g_param_spec_int ("ts-number-layers", "Number of coding layers",
-          "Number of coding layers to use",
-          1, 5, DEFAULT_TS_NUMBER_LAYERS,
+      g_param_spec_int ("temporal-scalability-number-layers",
+          "Number of coding layers", "Number of coding layers to use", 1, 5,
+          DEFAULT_TS_NUMBER_LAYERS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_TS_TARGET_BITRATE,
-      g_param_spec_value_array ("ts-target-bitrate",
+      g_param_spec_value_array ("temporal-scalability-target-bitrate",
           "Coding layer target bitrates",
           "Target bitrates for coding layers (one per layer, decreasing)",
           g_param_spec_int ("target-bitrate", "Target bitrate",
@@ -561,7 +561,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TS_RATE_DECIMATOR,
-      g_param_spec_value_array ("ts-rate-decimator",
+      g_param_spec_value_array ("temporal-scalability-rate-decimator",
           "Coding layer rate decimator",
           "Rate decimation factors for each layer",
           g_param_spec_int ("rate-decimator", "Rate decimator",
@@ -570,16 +570,17 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_TS_PERIODICITY,
-      g_param_spec_int ("ts-periodicity", "Layer periodicity",
-          "Length of sequence that defines layer membership periodicity",
-          0, 16, DEFAULT_TS_PERIODICITY,
+      g_param_spec_int ("temporal-scalability-periodicity",
+          "Coding layer periodicity",
+          "Length of sequence that defines layer membership periodicity", 0, 16,
+          DEFAULT_TS_PERIODICITY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_TS_LAYER_ID,
-      g_param_spec_value_array ("ts-layer-id", "Coding layer identification",
+      g_param_spec_value_array ("temporal-scalability-layer-id",
+          "Coding layer identification",
           "Sequence defining coding layer membership",
-          g_param_spec_int ("layer-id", "Layer ID",
-              "Layer ID", 0, 4, 0,
+          g_param_spec_int ("layer-id", "Layer ID", "Layer ID", 0, 4, 0,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -608,13 +609,13 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_H_SCALING_MODE,
-      g_param_spec_enum ("h-scaling-mode", "Horizontal scaling mode",
+      g_param_spec_enum ("horizontal-scaling-mode", "Horizontal scaling mode",
           "Horizontal scaling mode",
           GST_VP8_ENC_SCALING_MODE_TYPE, DEFAULT_H_SCALING_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_V_SCALING_MODE,
-      g_param_spec_enum ("v-scaling-mode", "Vertical scaling mode",
+      g_param_spec_enum ("vertical-scaling-mode", "Vertical scaling mode",
           "Vertical scaling mode",
           GST_VP8_ENC_SCALING_MODE_TYPE, DEFAULT_V_SCALING_MODE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -627,7 +628,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ENABLE_AUTO_ALT_REF,
       g_param_spec_boolean ("auto-alt-ref", "Auto alt reference frames",
-          "Automatically generate alt reference frames",
+          "Automatically generate AltRef frames",
           DEFAULT_ENABLE_AUTO_ALT_REF,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -686,7 +687,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_MAX_INTRA_BITRATE_PCT,
-      g_param_spec_int ("max-intra-bitrate-pct", "Max Intra bitrate",
+      g_param_spec_int ("max-intra-bitrate", "Max Intra bitrate",
           "Maximum Intra frame bitrate",
           0, G_MAXINT, DEFAULT_MAX_INTRA_BITRATE_PCT,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
