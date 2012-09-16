@@ -287,6 +287,15 @@ gst_vp8_dec_stop (GstVideoDecoder * base_video_decoder)
   GstVP8Dec *gst_vp8_dec = GST_VP8_DEC (base_video_decoder);
 
   GST_DEBUG_OBJECT (gst_vp8_dec, "stop");
+
+  if (gst_vp8_dec->output_state) {
+    gst_video_codec_state_unref (gst_vp8_dec->output_state);
+    gst_vp8_dec->output_state = NULL;
+  }
+  if (gst_vp8_dec->input_state) {
+    gst_video_codec_state_unref (gst_vp8_dec->input_state);
+    gst_vp8_dec->input_state = NULL;
+  }
   if (gst_vp8_dec->decoder_inited)
     vpx_codec_destroy (&gst_vp8_dec->decoder);
   gst_vp8_dec->decoder_inited = FALSE;
