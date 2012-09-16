@@ -95,7 +95,8 @@ CRUFT_DIRS = \
 	$(top_srcdir)/ext/jack \
 	$(top_srcdir)/ext/metadata \
 	$(top_srcdir)/ext/tarkin \
-	$(top_srcdir)/ext/theora
+	$(top_srcdir)/ext/theora \
+	$(top_srcdir)/ext/vp8
 
 include $(top_srcdir)/common/cruft.mak
 

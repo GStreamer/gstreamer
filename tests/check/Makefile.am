@@ -123,12 +123,6 @@ else
 check_mimic=
 endif
 
-if USE_VP8
-check_vp8=elements/vp8enc elements/vp8dec
-else
-check_vp8=
-endif
-
 if HAVE_ORC
 check_orc = orc/cog orc/bayer
 else
@@ -229,7 +223,6 @@ check_PROGRAMS = \
 	$(check_uvch264) \
 	libs/vc1parser \
 	$(check_schro) \
-	$(check_vp8) \
 	elements/viewfinderbin \
 	$(check_zbar) \
 	$(check_orc) \

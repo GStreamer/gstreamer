@@ -1770,31 +1770,6 @@ AG_GST_CHECK_FEATURE(ZBAR, [ZBar barcode detector], zbar, [
   AG_GST_PKG_CHECK_MODULES(ZBAR, zbar >= 0.9)
 ])
 
-dnl *** vp8 ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_VP8, vp8)
-AG_GST_CHECK_FEATURE(VP8, [VP8 decoder], vp8, [
-  PKG_CHECK_MODULES(VPX, vpx >= 1.1.0, [HAVE_VPX="yes"], [HAVE_VPX="no"])
-
-  if test $HAVE_VPX = "yes"; then
-    OLD_LIBS="$LIBS"
-    OLD_CFLAGS="$CFLAGS"
-    CFLAGS="$CFLAGS $VPX_CFLAGS"
-    LIBS="$LIBS $VPX_LIBS"
-    AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
-      HAVE_VP8=yes
-      AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
-    ])
-    AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
-      HAVE_VP8=yes
-      AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
-    ])
-    LIBS="$OLD_LIBS"
-    CFLAGS="$OLD_CFLAGS"
-  fi
-  AC_SUBST(VPX_LIBS)
-  AC_SUBST(VPX_CFLAGS)
-])
-
 dnl *** rtmp ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_RTMP, true)
 AG_GST_CHECK_FEATURE(RTMP, [rtmp library], rtmp, [
@@ -1903,7 +1878,6 @@ AM_CONDITIONAL(USE_ACM, false)
 AM_CONDITIONAL(USE_VDPAU, false)
 AM_CONDITIONAL(USE_SCHRO, false)
 AM_CONDITIONAL(USE_ZBAR, false)
-AM_CONDITIONAL(USE_VP8, false)
 AM_CONDITIONAL(USE_RTMP, false)
 AM_CONDITIONAL(USE_TELETEXTDEC, false)
 AM_CONDITIONAL(USE_SNDIO, false)
@@ -2159,7 +2133,6 @@ ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
 ext/swfdec/Makefile
 ext/timidity/Makefile
-ext/vp8/Makefile
 ext/xvid/Makefile
 ext/zbar/Makefile
 po/Makefile.in

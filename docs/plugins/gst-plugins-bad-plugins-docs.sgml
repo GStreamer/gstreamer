@@ -125,8 +125,6 @@
     <xi:include href="xml/element-zbar.xml" />
     <xi:include href="xml/element-voaacenc.xml" />
     <xi:include href="xml/element-voamrwbenc.xml" />
-    <xi:include href="xml/element-vp8dec.xml" />
-    <xi:include href="xml/element-vp8enc.xml" />
     <xi:include href="xml/element-wavescope.xml" />
   </chapter>
 
@@ -215,7 +213,6 @@
     <xi:include href="xml/plugin-xvid.xml" />
     <xi:include href="xml/plugin-voaacenc.xml" />
     <xi:include href="xml/plugin-voamrwbenc.xml" />
-    <xi:include href="xml/plugin-vp8.xml" />
     <xi:include href="xml/plugin-zbar.xml" />
   </chapter>
 
