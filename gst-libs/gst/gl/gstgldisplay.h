@@ -27,6 +27,8 @@
 
 #include "gstglwindow.h"
 #include "gstglshader.h"
+#include "gstglupload.h"
+#include "gstgldownload.h"
 
 G_BEGIN_DECLS
 
@@ -125,20 +127,10 @@ struct _GstGLDisplay
   CDCB clientDrawCallback;
   gpointer client_data;
 
-  //upload
-  GLuint upload_fbo;
-  GLuint upload_depth_buffer;
-  GLuint upload_outtex;
-  GLuint upload_intex;
-  GLuint upload_intex_u;
-  GLuint upload_intex_v;
-  GLuint upload_width;
-  GLuint upload_height;
-  GstVideoFormat upload_video_format;
-  GstGLDisplayConversion upload_colorspace_conversion;
-  gint upload_data_width;
-  gint upload_data_height;
-  GstVideoFrame *upload_frame;
+  GstGLDisplayConversion colorspace_conversion;
+
+  GHashTable *uploads;
+  GHashTable *downloads;
 
   //foreign gl context
   gulong external_gl_context;
@@ -171,21 +163,6 @@ struct _GstGLDisplay
   GLuint del_fbo;
   GLuint del_depth_buffer;
 
-  //download
-  GLuint download_fbo;
-  GLuint download_depth_buffer;
-  GLuint download_texture;
-  GLuint download_texture_u;
-  GLuint download_texture_v;
-  gint download_width;
-  gint download_height;
-  GstVideoFormat download_video_format;
-  GstVideoFrame *download_frame;
-  GLenum multipleRT[3];
-  GLuint ouput_texture;
-  GLuint ouput_texture_width;
-  GLuint ouput_texture_height;
-
   //action gen and del shader
   const gchar *gen_shader_fragment_source;
   const gchar *gen_shader_vertex_source;
@@ -207,25 +184,6 @@ struct _GstGLDisplay
   gchar *text_vertex_shader_upload;
   GLint shader_upload_attr_position_loc;
   GLint shader_upload_attr_texture_loc;
-#endif
-
-  //fragement shader download
-  gchar *text_shader_download_YUY2_UYVY;
-  GstGLShader *shader_download_YUY2;
-  GstGLShader *shader_download_UYVY;
-
-  gchar *text_shader_download_I420_YV12;
-  GstGLShader *shader_download_I420_YV12;
-
-  gchar *text_shader_download_AYUV;
-  GstGLShader *shader_download_AYUV;
-
-#ifdef OPENGL_ES2
-  gchar *text_vertex_shader_download;
-  GLint shader_download_attr_position_loc;
-  GLint shader_download_attr_texture_loc;
-  gchar *text_fragment_shader_download_RGB;
-  GstGLShader *shader_download_RGB;
 #endif
 
   gchar *error_message;
@@ -266,10 +224,6 @@ gboolean gst_gl_display_init_upload (GstGLDisplay * display,
     gint video_width, gint video_height);
 gboolean gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
     GstVideoFrame * frame);
-gboolean gst_gl_display_init_download (GstGLDisplay * display,
-    GstVideoFormat video_format, gint width, gint height);
-gboolean gst_gl_display_do_download (GstGLDisplay * display, GLuint texture,
-    GstVideoFrame *frame);
 
 gboolean gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer);
@@ -301,6 +255,10 @@ void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activa
 
 /* Must be called inside a lock/unlock on display, or within the glthread */
 void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
+void gst_gl_display_check_framebuffer_status (void);
+
+void gst_gl_display_lock (GstGLDisplay * display);
+void gst_gl_display_unlock (GstGLDisplay * display);
 
 G_END_DECLS
 
