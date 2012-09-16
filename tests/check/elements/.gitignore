@@ -55,6 +55,8 @@ udpsink
 udpsrc
 videocrop
 videofilter
+vp8dec
+vp8enc
 wavpackdec
 wavpackenc
 wavpackparse
