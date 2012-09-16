@@ -1682,6 +1682,8 @@ gst_structure_get_abbrs (gint * n_abbrs)
       ,
       {"bitmask", GST_TYPE_BITMASK}
       ,
+      {"sample", GST_TYPE_SAMPLE}
+      ,
       {"taglist", GST_TYPE_TAG_LIST}
     };
     _num = G_N_ELEMENTS (dyn_abbrs);

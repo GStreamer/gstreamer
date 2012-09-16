@@ -566,6 +566,48 @@ GST_START_TEST (test_writability)
 
 GST_END_TEST;
 
+/* this tests GstSample serialisation/deserialisation, esp. with multiple
+ * samples in a tag list */
+GST_START_TEST (test_serialization)
+{
+  GstTagList *tags, *tags2;
+  GstBuffer *b1, *b2;
+  GstSample *s1, *s2;
+  GstCaps *c2;
+  gchar *s;
+
+  b1 = gst_buffer_new_allocate (NULL, 1, NULL);
+  gst_buffer_memset (b1, 0, 0xb3, -1);
+  s1 = gst_sample_new (b1, NULL, NULL, NULL);
+  gst_buffer_unref (b1);
+
+  b2 = gst_buffer_new_allocate (NULL, 8, NULL);
+  gst_buffer_memset (b2, 0, 0x2f, -1);
+  c2 = gst_caps_new_empty_simple ("foo/bar");
+  s2 = gst_sample_new (b2, c2, NULL, NULL);
+  gst_buffer_unref (b2);
+  gst_caps_unref (c2);
+  c2 = NULL;
+
+  tags = gst_tag_list_new (GST_TAG_ATTACHMENT, s1, NULL);
+  gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ATTACHMENT, s2, NULL);
+  GST_INFO ("tags: %" GST_PTR_FORMAT, tags);
+
+  s = gst_tag_list_to_string (tags);
+  GST_INFO ("taglist -> string: %s", s);
+  tags2 = gst_tag_list_new_from_string (s);
+  GST_INFO ("string -> taglist: %" GST_PTR_FORMAT, tags2);
+  fail_unless (gst_tag_list_is_equal (tags, tags2));
+  gst_tag_list_unref (tags2);
+  g_free (s);
+
+  gst_sample_unref (s1);
+  gst_sample_unref (s2);
+  gst_tag_list_unref (tags);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_tag_suite (void)
 {
@@ -585,6 +627,7 @@ gst_tag_suite (void)
   tcase_add_test (tc_chain, test_new_full);
   tcase_add_test (tc_chain, test_equal);
   tcase_add_test (tc_chain, test_writability);
+  tcase_add_test (tc_chain, test_serialization);
 
   return s;
 }

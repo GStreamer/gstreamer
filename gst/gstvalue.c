@@ -1837,8 +1837,9 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
 /**************
  * GstSegment *
  **************/
+
 static gchar *
-gst_value_serialize_segment (const GValue * value)
+gst_value_serialize_segment_internal (const GValue * value, gboolean escape)
 {
   GstSegment *seg = g_value_get_boxed (value);
   gchar *t, *res;
@@ -1857,11 +1858,21 @@ gst_value_serialize_segment (const GValue * value)
       "position", G_TYPE_UINT64, seg->position,
       "duration", G_TYPE_UINT64, seg->duration, NULL);
   t = gst_structure_to_string (s);
-  res = g_strdup_printf ("\"%s\"", t);
-  g_free (t);
+  if (escape) {
+    res = g_strdup_printf ("\"%s\"", t);
+    g_free (t);
+  } else {
+    res = t;
+  }
   gst_structure_free (s);
 
   return res;
+}
+
+static gchar *
+gst_value_serialize_segment (const GValue * value)
+{
+  return gst_value_serialize_segment_internal (value, TRUE);
 }
 
 static gboolean
@@ -2149,6 +2160,149 @@ gst_value_compare_sample (const GValue * value1, const GValue * value2)
 
   /* FIXME: should we take into account anything else such as caps? */
   return compare_buffer (buf1, buf2);
+}
+
+static gchar *
+gst_value_serialize_sample (const GValue * value)
+{
+  const GstStructure *info_structure;
+  GstSegment *segment;
+  GstBuffer *buffer;
+  GstCaps *caps;
+  GstSample *sample;
+  GValue val = { 0, };
+  gchar *info_str, *caps_str, *tmp;
+  gchar *buf_str, *seg_str, *s;
+
+  sample = g_value_get_boxed (value);
+
+  buffer = gst_sample_get_buffer (sample);
+  if (buffer) {
+    g_value_init (&val, GST_TYPE_BUFFER);
+    g_value_set_boxed (&val, buffer);
+    buf_str = gst_value_serialize_buffer (&val);
+    g_value_unset (&val);
+  } else {
+    buf_str = g_strdup ("None");
+  }
+
+  caps = gst_sample_get_caps (sample);
+  if (caps) {
+    tmp = gst_caps_to_string (caps);
+    caps_str = g_base64_encode ((guchar *) tmp, strlen (tmp) + 1);
+    g_strdelimit (caps_str, "=", '_');
+    g_free (tmp);
+  } else {
+    caps_str = g_strdup ("None");
+  }
+
+  segment = gst_sample_get_segment (sample);
+  if (segment) {
+    g_value_init (&val, GST_TYPE_SEGMENT);
+    g_value_set_boxed (&val, segment);
+    tmp = gst_value_serialize_segment_internal (&val, FALSE);
+    seg_str = g_base64_encode ((guchar *) tmp, strlen (tmp) + 1);
+    g_strdelimit (seg_str, "=", '_');
+    g_free (tmp);
+    g_value_unset (&val);
+  } else {
+    seg_str = g_strdup ("None");
+  }
+
+  info_structure = gst_sample_get_info (sample);
+  if (info_structure) {
+    tmp = gst_structure_to_string (info_structure);
+    info_str = g_base64_encode ((guchar *) tmp, strlen (tmp) + 1);
+    g_strdelimit (info_str, "=", '_');
+    g_free (tmp);
+  } else {
+    info_str = g_strdup ("None");
+  }
+
+  s = g_strconcat (buf_str, ":", caps_str, ":", seg_str, ":", info_str, NULL);
+  g_free (buf_str);
+  g_free (caps_str);
+  g_free (seg_str);
+  g_free (info_str);
+
+  return s;
+}
+
+static gboolean
+gst_value_deserialize_sample (GValue * dest, const gchar * s)
+{
+  GValue bval = G_VALUE_INIT, sval = G_VALUE_INIT;
+  GstStructure *info;
+  GstSample *sample;
+  GstCaps *caps;
+  gboolean ret = FALSE;
+  gchar **fields;
+  gsize outlen;
+  gint len;
+
+  GST_TRACE ("deserialize '%s'", s);
+
+  fields = g_strsplit (s, ":", -1);
+  len = g_strv_length (fields);
+  if (len != 4)
+    goto wrong_length;
+
+  g_value_init (&bval, GST_TYPE_BUFFER);
+  g_value_init (&sval, GST_TYPE_SEGMENT);
+
+  if (!gst_value_deserialize_buffer (&bval, fields[0]))
+    goto fail;
+
+  if (strcmp (fields[1], "None") != 0) {
+    g_strdelimit (fields[1], "_", '=');
+    g_base64_decode_inplace (fields[1], &outlen);
+    GST_TRACE ("caps    : %s", fields[1]);
+    caps = gst_caps_from_string (fields[1]);
+    if (caps == NULL)
+      goto fail;
+  } else {
+    caps = NULL;
+  }
+
+  if (strcmp (fields[2], "None") != 0) {
+    g_strdelimit (fields[2], "_", '=');
+    g_base64_decode_inplace (fields[2], &outlen);
+    GST_TRACE ("segment : %s", fields[2]);
+    if (!gst_value_deserialize_segment (&sval, fields[2]))
+      goto fail;
+  }
+
+  if (strcmp (fields[3], "None") != 0) {
+    g_strdelimit (fields[3], "_", '=');
+    g_base64_decode_inplace (fields[3], &outlen);
+    GST_TRACE ("info    : %s", fields[3]);
+    info = gst_structure_from_string (fields[3], NULL);
+    if (info == NULL)
+      goto fail;
+  } else {
+    info = NULL;
+  }
+
+  sample = gst_sample_new (gst_value_get_buffer (&bval), caps,
+      g_value_get_boxed (&sval), info);
+
+  g_value_take_boxed (dest, sample);
+
+  if (caps)
+    gst_caps_unref (caps);
+
+  ret = TRUE;
+
+fail:
+
+  g_value_unset (&bval);
+  g_value_unset (&sval);
+
+wrong_length:
+
+  g_strfreev (fields);
+
+  return ret;
 }
 
 /***********
@@ -5801,8 +5955,8 @@ _priv_gst_value_initialize (void)
     static GstValueTable gst_value = {
       0,
       gst_value_compare_sample,
-      NULL,
-      NULL,
+      gst_value_serialize_sample,
+      gst_value_deserialize_sample,
     };
 
     gst_value.type = GST_TYPE_SAMPLE;
