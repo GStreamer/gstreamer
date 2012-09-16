@@ -897,6 +897,31 @@ AG_GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
   fi
 ])
 
+dnl *** vpx ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_VPX, vpx)
+AG_GST_CHECK_FEATURE(VPX, [VPX decoder], vpx, [
+  PKG_CHECK_MODULES(VPX, vpx >= 1.1.0, [HAVE_VPX="yes"], [HAVE_VPX="no"])
+
+  if test $HAVE_VPX = "yes"; then
+    OLD_LIBS="$LIBS"
+    OLD_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $VPX_CFLAGS"
+    LIBS="$LIBS $VPX_LIBS"
+    AC_CHECK_LIB(vpx, vpx_codec_vp8_cx_algo, [
+      HAVE_VP8=yes
+      AC_DEFINE(HAVE_VP8_ENCODER, 1, [Defined if the VP8 encoder is available])
+    ])
+    AC_CHECK_LIB(vpx, vpx_codec_vp8_dx_algo, [
+      HAVE_VP8=yes
+      AC_DEFINE(HAVE_VP8_DECODER, 1, [Defined if the VP8 decoder is available])
+    ])
+    LIBS="$OLD_LIBS"
+    CFLAGS="$OLD_CFLAGS"
+  fi
+  AC_SUBST(VPX_LIBS)
+  AC_SUBST(VPX_CFLAGS)
+])
+
 dnl *** wavpack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
 AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
@@ -959,6 +984,7 @@ AM_CONDITIONAL(USE_SOUP, false)
 AM_CONDITIONAL(USE_SPEEX, false)
 AM_CONDITIONAL(USE_SUNAUDIO, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
+AM_CONDITIONAL(USE_VPX, false)
 AM_CONDITIONAL(USE_WAVEFORM, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_X, false)
@@ -1091,6 +1117,7 @@ ext/shout2/Makefile
 ext/soup/Makefile
 ext/speex/Makefile
 ext/taglib/Makefile
+ext/vpx/Makefile
 ext/wavpack/Makefile
 sys/Makefile
 sys/directsound/Makefile

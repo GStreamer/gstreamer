@@ -166,6 +166,8 @@
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
     <xi:include href="xml/element-videomixer2.xml" />
+    <xi:include href="xml/element-vp8dec.xml" />
+    <xi:include href="xml/element-vp8enc.xml" />
     <xi:include href="xml/element-warptv.xml" />
     <xi:include href="xml/element-wavenc.xml" />
     <xi:include href="xml/element-waveformsink.xml" />
@@ -243,6 +245,7 @@
     <xi:include href="xml/plugin-videocrop.xml" />
     <xi:include href="xml/plugin-videofilter.xml" />
     <xi:include href="xml/plugin-videomixer.xml" />
+    <xi:include href="xml/plugin-vpx.xml" />
     <xi:include href="xml/plugin-waveform.xml" />
     <xi:include href="xml/plugin-wavenc.xml" />
     <xi:include href="xml/plugin-wavpack.xml" />

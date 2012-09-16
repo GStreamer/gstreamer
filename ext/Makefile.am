@@ -95,6 +95,12 @@ else
 TAGLIB_DIR =
 endif
 
+if USE_VPX
+VPX_DIR=vpx
+else
+VPX_DIR=
+endif
+
 if USE_WAVPACK
 WAVPACK_DIR=wavpack
 else
@@ -119,6 +125,7 @@ SUBDIRS = \
 	$(SOUP_DIR) \
 	$(SPEEX_DIR) \
 	$(TAGLIB_DIR) \
+	$(VPX_DIR) \
 	$(WAVPACK_DIR)
 
 DIST_SUBDIRS = \
@@ -137,6 +144,7 @@ DIST_SUBDIRS = \
 	soup \
 	speex \
 	taglib \
+	vpx \
 	wavpack
 
 include $(top_srcdir)/common/parallel-subdirs.mak

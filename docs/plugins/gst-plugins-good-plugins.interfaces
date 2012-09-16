@@ -80,6 +80,7 @@ GstV4l2Sink GstImplementsInterface GstXOverlay GstNavigation GstColorBalance Gst
 GstV4l2Sink GstTuner GstVideoOverlay GstNavigation GstColorBalance GstVideoOrientation
 GstV4l2Src GstURIHandler GstImplementsInterface GstTuner GstColorBalance GstVideoOrientation GstPropertyProbe
 GstV4l2Src GstURIHandler GstTuner GstColorBalance GstVideoOrientation
+GstVP8Enc GstPreset GstTagSetter
 GstVideoBalance GstColorBalance
 GstVideoBalance GstImplementsInterface GstColorBalance
 GstVideoEncoder GstPreset

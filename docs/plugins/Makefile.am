@@ -79,6 +79,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/pulse/pulsesrc.h \
 	$(top_srcdir)/ext/speex/gstspeexenc.h \
 	$(top_srcdir)/ext/speex/gstspeexdec.h \
+	$(top_srcdir)/ext/vpx/gstvp8dec.h \
+	$(top_srcdir)/ext/vpx/gstvp8enc.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
 	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
 	$(top_srcdir)/gst/alpha/gstalpha.h \
