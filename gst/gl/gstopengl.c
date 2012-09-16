@@ -43,8 +43,6 @@
 #include "config.h"
 #endif
 
-#include "gstglupload.h"
-#include "gstgldownload.h"
 #include "gstglimagesink.h"
 
 #include "gstglfiltercube.h"
@@ -98,16 +96,6 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
-
-  if (!gst_element_register (plugin, "glupload",
-          GST_RANK_NONE, GST_TYPE_GL_UPLOAD)) {
-    return FALSE;
-  }
-
-  if (!gst_element_register (plugin, "gldownload",
-          GST_RANK_NONE, GST_TYPE_GL_DOWNLOAD)) {
-    return FALSE;
-  }
 
   if (!gst_element_register (plugin, "glimagesink",
           GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK)) {
