@@ -30,6 +30,7 @@ typedef struct _CustomData {
   gint64 position;
   gint64 duration;
   GstElement *vsink;
+  gint64 desired_position;
 } CustomData;
 
 static pthread_t gst_app_thread;
@@ -119,6 +120,13 @@ static gboolean refresh_ui (CustomData *data) {
   return TRUE;
 }
 
+static void execute_seek (gint64 desired_position, CustomData *data) {
+  gboolean res;
+  GST_DEBUG ("Setting position to %lld milliseconds", desired_position / 1000000);
+  res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
+  GST_DEBUG ("Seek returned %d", res);
+}
+
 static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   GError *err;
   gchar *debug_info;
@@ -145,6 +153,10 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     set_message (gst_element_state_get_name (new_state), data);
     data->playing = (new_state == GST_STATE_PLAYING);
+    if (data->playing && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+      execute_seek (data->desired_position, data);
+      data->desired_position = GST_CLOCK_TIME_NONE;
+    }
   }
 }
 
@@ -166,12 +178,14 @@ static void new_buffer (GstElement *sink, CustomData *data) {
 
       ANativeWindow_setBuffersGeometry(data->native_window, width, height, WINDOW_FORMAT_RGBX_8888);
 
-      ANativeWindow_lock(data->native_window, &nbuff, NULL);
-      for (i=0; i<nbuff.height; i++) {
-        memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
+      if (ANativeWindow_lock(data->native_window, &nbuff, NULL) < 0) {
+        GST_ERROR ("Unable to lock Native Window, discarding buffer.");
+      } else {
+        for (i=0; i<nbuff.height; i++) {
+          memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
+        }
+        ANativeWindow_unlockAndPost (data->native_window);
       }
-      /* FIXME: Sometimes this segfaults. Maybe the native window has been destroyed while we were copying into it? */
-      ANativeWindow_unlockAndPost (data->native_window);
     }
     gst_buffer_unref (buffer);
   }
@@ -192,6 +206,8 @@ static void *app_function (void *userdata) {
 //  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280,width=(int)320,height=(int)240,framerate=(fraction)30/1", NULL);
   data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+//  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
   g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
@@ -231,6 +247,7 @@ static void *app_function (void *userdata) {
 void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = (CustomData *)g_malloc0 (sizeof (CustomData));
   data->duration = GST_CLOCK_TIME_NONE;
+  data->desired_position = GST_CLOCK_TIME_NONE;
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
@@ -268,8 +285,13 @@ void gst_native_pause (JNIEnv* env, jobject thiz) {
 
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
-  GST_DEBUG ("Setting position to %d milliseconds", milliseconds);
-  gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT,(gint64)(milliseconds * GST_SECOND / 1000));
+  gint64 desired_position = (gint64)(milliseconds * GST_SECOND / 1000);
+  if (data->playing) {
+	  execute_seek(desired_position, data);
+  } else {
+	  GST_DEBUG ("Scheduling seek to %d milliseconds for later", milliseconds);
+	  data->desired_position = desired_position;
+  }
 }
 
 void gst_class_init (JNIEnv* env, jclass klass) {
