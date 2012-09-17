@@ -332,8 +332,9 @@ static gboolean gst_base_text_overlay_text_event (GstPad * pad,
 static GstFlowReturn gst_base_text_overlay_text_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
 static GstPadLinkReturn gst_base_text_overlay_text_pad_link (GstPad * pad,
-    GstPad * peer);
-static void gst_base_text_overlay_text_pad_unlink (GstPad * pad);
+    GstObject * parent, GstPad * peer);
+static void gst_base_text_overlay_text_pad_unlink (GstPad * pad,
+    GstObject * parent);
 static void gst_base_text_overlay_pop_text (GstBaseTextOverlay * overlay);
 static void gst_base_text_overlay_update_render_mode (GstBaseTextOverlay *
     overlay);
@@ -1680,11 +1681,12 @@ invalid_frame:
 }
 
 static GstPadLinkReturn
-gst_base_text_overlay_text_pad_link (GstPad * pad, GstPad * peer)
+gst_base_text_overlay_text_pad_link (GstPad * pad, GstObject * parent,
+    GstPad * peer)
 {
   GstBaseTextOverlay *overlay;
 
-  overlay = GST_BASE_TEXT_OVERLAY (gst_pad_get_parent (pad));
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
   if (G_UNLIKELY (!overlay))
     return GST_PAD_LINK_REFUSED;
 
@@ -1692,18 +1694,16 @@ gst_base_text_overlay_text_pad_link (GstPad * pad, GstPad * peer)
 
   overlay->text_linked = TRUE;
 
-  gst_object_unref (overlay);
-
   return GST_PAD_LINK_OK;
 }
 
 static void
-gst_base_text_overlay_text_pad_unlink (GstPad * pad)
+gst_base_text_overlay_text_pad_unlink (GstPad * pad, GstObject * parent)
 {
   GstBaseTextOverlay *overlay;
 
   /* don't use gst_pad_get_parent() here, will deadlock */
-  overlay = GST_BASE_TEXT_OVERLAY (GST_PAD_PARENT (pad));
+  overlay = GST_BASE_TEXT_OVERLAY (parent);
 
   GST_DEBUG_OBJECT (overlay, "Text pad unlinked");
 

@@ -1993,9 +1993,10 @@ out:
 }
 
 static GstPadLinkReturn
-gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
+gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstObject * parent,
+    GstPad * peer)
 {
-  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (gst_pad_get_parent (pad));
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (parent);
   GstCaps *caps;
 
   GST_DEBUG_OBJECT (pad, "Linking pad to peer %" GST_PTR_FORMAT, peer);
@@ -2022,16 +2023,13 @@ gst_subtitle_overlay_subtitle_sink_link (GstPad * pad, GstPad * peer)
     gst_caps_unref (caps);
   }
 
-  gst_object_unref (self);
-
   return GST_PAD_LINK_OK;
 }
 
 static void
-gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad)
+gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad, GstObject * parent)
 {
-  GstSubtitleOverlay *self =
-      GST_SUBTITLE_OVERLAY (gst_object_ref (GST_PAD_PARENT (pad)));
+  GstSubtitleOverlay *self = GST_SUBTITLE_OVERLAY (parent);
 
   /* FIXME: Can't use gst_pad_get_parent() here because this is called with
    * the object lock from state changes
@@ -2046,8 +2044,6 @@ gst_subtitle_overlay_subtitle_sink_unlink (GstPad * pad)
   block_subtitle (self);
   block_video (self);
   GST_SUBTITLE_OVERLAY_UNLOCK (self);
-
-  gst_object_unref (self);
 }
 
 static gboolean

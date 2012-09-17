@@ -281,15 +281,13 @@ gst_ogg_mux_ogg_pad_destroy_notify (GstCollectData * data)
 }
 
 static GstPadLinkReturn
-gst_ogg_mux_sinkconnect (GstPad * pad, GstPad * peer)
+gst_ogg_mux_sinkconnect (GstPad * pad, GstObject * parent, GstPad * peer)
 {
   GstOggMux *ogg_mux;
 
-  ogg_mux = GST_OGG_MUX (gst_pad_get_parent (pad));
+  ogg_mux = GST_OGG_MUX (parent);
 
   GST_DEBUG_OBJECT (ogg_mux, "sinkconnect triggered on %s", GST_PAD_NAME (pad));
-
-  gst_object_unref (ogg_mux);
 
   return GST_PAD_LINK_OK;
 }
