@@ -85,7 +85,6 @@
     <xi:include href="xml/plugin-tcp.xml" />
     <xi:include href="xml/plugin-theora.xml" />
     <xi:include href="xml/plugin-typefindfunctions.xml" />
-    <xi:include href="xml/plugin-uridecodebin.xml" />
     <xi:include href="xml/plugin-videorate.xml" />
     <xi:include href="xml/plugin-videoscale.xml" />
     <xi:include href="xml/plugin-videotestsrc.xml" />

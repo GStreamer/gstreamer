@@ -464,7 +464,7 @@ GstAppSink *gstappsink
 
 <SIGNAL>
 <NAME>GstAppSink::new-preroll</NAME>
-<RETURNS>void</RETURNS>
+<RETURNS>GstFlowReturn</RETURNS>
 <FLAGS>l</FLAGS>
 GstAppSink *gstappsink
 </SIGNAL>
@@ -499,7 +499,7 @@ GstAppSink *gstappsink
 
 <SIGNAL>
 <NAME>GstAppSink::new-sample</NAME>
-<RETURNS>void</RETURNS>
+<RETURNS>GstFlowReturn</RETURNS>
 <FLAGS>l</FLAGS>
 GstAppSink *gstappsink
 </SIGNAL>
