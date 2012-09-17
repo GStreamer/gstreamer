@@ -61,7 +61,6 @@
     <xi:include href="xml/element-festival.xml" />
     <xi:include href="xml/element-fisheye.xml" />
     <xi:include href="xml/element-fpsdisplaysink.xml" />
-    <xi:include href="xml/element-freeze.xml" />
     <xi:include href="xml/element-gaussianblur.xml" />
     <xi:include href="xml/element-ivfparse.xml" />
     <xi:include href="xml/element-jpegparse.xml" />
@@ -158,7 +157,6 @@
     <xi:include href="xml/plugin-fbdevsink.xml" />
     <xi:include href="xml/plugin-festival.xml" />
     <xi:include href="xml/plugin-filter.xml" />
-    <xi:include href="xml/plugin-freeze.xml" />
     <xi:include href="xml/plugin-frei0r.xml" />
     <xi:include href="xml/plugin-gaudieffects.xml" />
     <xi:include href="xml/plugin-geometrictransform.xml" />

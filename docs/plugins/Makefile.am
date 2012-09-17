@@ -132,7 +132,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/dtmf/gstrtpdtmfdepay.h \
 	$(top_srcdir)/gst/dvdspu/gstdvdspu.h \
 	$(top_srcdir)/gst/festival/gstfestival.h \
-	$(top_srcdir)/gst/freeze/gstfreeze.h \
 	$(top_srcdir)/gst/gaudieffects/gstburn.h \
 	$(top_srcdir)/gst/gaudieffects/gstchromium.h \
 	$(top_srcdir)/gst/gaudieffects/gstdilate.h \
