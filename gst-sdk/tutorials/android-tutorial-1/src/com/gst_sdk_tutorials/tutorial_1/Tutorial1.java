@@ -79,12 +79,14 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
         nativeInit();
 
-        playing = savedInstanceState==null ? false : savedInstanceState.getBoolean("playing");
-        if (playing) {
+        if (savedInstanceState != null) {
+            playing = savedInstanceState.getBoolean("playing");
             int milliseconds = savedInstanceState.getInt("position");
-            Log.i ("GStreamer", "Restoring to playing state at " + milliseconds + " ms.");
-            nativePlay();
+            Log.i ("GStreamer", "Restoring state, playing:" + playing + " position:" + milliseconds + " ms.");
             nativeSetPosition(milliseconds);
+            if (playing) {
+                nativePlay();
+            }
         }
     }
     

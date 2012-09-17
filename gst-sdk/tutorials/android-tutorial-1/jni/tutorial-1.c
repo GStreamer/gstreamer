@@ -154,7 +154,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     set_message (gst_element_state_get_name (new_state), data);
     data->state = new_state;
-    if (data->state == GST_STATE_PLAYING && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+    if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
       execute_seek (data->desired_position, data);
       data->desired_position = GST_CLOCK_TIME_NONE;
     }
@@ -239,6 +239,9 @@ static void *app_function (void *userdata) {
 
   /* Register a function that GLib will call every second */
   timeout_source_id = g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
+
+  /* Set state to PAUSE, so preroll occurrs and retrieve some information like clip length */
+  gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
