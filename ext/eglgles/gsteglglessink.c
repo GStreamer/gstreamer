@@ -1166,6 +1166,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   GLint test;
   GLuint verthandle, fraghandle, prog;
   GLboolean ret;
+  GLchar *info_log;
 
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL surface setup");
 
@@ -1221,6 +1222,11 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     GST_DEBUG_OBJECT (eglglessink, "Successfully compiled vertex shader");
   else {
     GST_ERROR_OBJECT (eglglessink, "Couldn't compile vertex shader");
+    glGetShaderiv (verthandle, GL_INFO_LOG_LENGTH, &test);
+    info_log = g_new0 (GLchar, test);
+    glGetShaderInfoLog (verthandle, test, NULL, info_log);
+    GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
+    g_free (info_log);
     goto HANDLE_ERROR;
   }
 
@@ -1238,6 +1244,11 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     GST_DEBUG_OBJECT (eglglessink, "Successfully compiled fragment shader");
   else {
     GST_ERROR_OBJECT (eglglessink, "Couldn't compile fragment shader");
+    glGetShaderiv (fraghandle, GL_INFO_LOG_LENGTH, &test);
+    info_log = g_new0 (GLchar, test);
+    glGetShaderInfoLog (fraghandle, test, NULL, info_log);
+    GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
+    g_free (info_log);
     goto HANDLE_ERROR;
   }
 
