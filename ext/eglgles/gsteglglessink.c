@@ -164,20 +164,8 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], "
-        "height = (int) [ 1, MAX ], "
-        "bpp = 24; "
-        "video/x-raw-rgb, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], "
-        "height = (int) [ 1, MAX ], "
-        "depth = (int) 24, "
-        "bpp = 32; "
-        "video/x-raw-rgb, "
-        "framerate = (fraction) [ 0, MAX ], "
-        "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], " "bpp = 16"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_RGB_16));
 
 /* Filter signals and args */
 enum
@@ -539,6 +527,11 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
     if (format) {
       if (gst_caps_can_intersect (caps, format->caps)) {
         eglglessink->selected_fmt = format;
+        GST_LOG ("Found compatible caps");
+        GST_LOG ("Sugested was %" GST_PTR_FORMAT, caps);
+        GST_LOG ("And we can do %" GST_PTR_FORMAT, format->caps);
+        GST_INFO_OBJECT (eglglessink, "Selected internal format:%d",
+            format->fmt);
         return format->fmt;
       }
     }
