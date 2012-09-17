@@ -78,6 +78,15 @@ struct _GstGLUploadClass
   GObjectClass object_class;
 };
 
+#ifndef OPENGL_ES2
+# define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
+                               "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
+#else /* OPENGL_ES2 */
+# define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, I420, YV12, YUY2, UYVY, AYUV }"
+#endif
+
+#define GST_GL_UPLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS)
+
 GstGLUpload * gst_gl_upload_new            (GstGLDisplay * display);
 
 gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoFormat v_format,

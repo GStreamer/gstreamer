@@ -34,8 +34,7 @@ struct _GstGLBufferPoolPrivate
   GstVideoInfo info;
   guint padded_width;
   guint padded_height;
-  gboolean add_metavideo;
-  gboolean add_glmeta;
+  gboolean add_videometa;
 };
 
 static void gst_gl_buffer_pool_finalize (GObject * object);
@@ -98,14 +97,10 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->caps = gst_caps_ref (caps);
   priv->info = info;
 
-  /* enable metadata based on config of the pool */
-  priv->add_metavideo =
+  priv->add_videometa = gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_GL_META) ||
       gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  /* parse extra alignment info */
-  priv->add_glmeta = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_GL_META);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 
@@ -159,21 +154,14 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
           gst_gl_memory_alloc (glpool->display, GST_VIDEO_INFO_FORMAT (info),
               GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info))))
     goto mem_create_failed;
-
   gst_buffer_append_memory (buf, gl_mem);
 
-  if (priv->add_metavideo) {
-    GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
-    /* these are just the defaults for now */
-    gst_buffer_add_video_meta (buf, 0, GST_VIDEO_INFO_FORMAT (info),
-        GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
-  }
-
-  if (priv->add_glmeta) {
-
+  if (priv->add_videometa) {
     GST_DEBUG_OBJECT (pool, "adding GstGLMeta");
     /* these are just the defaults for now */
-    gst_buffer_add_gl_meta (buf, glpool->display);
+    gst_buffer_add_video_meta (buf, glpool->display, 0,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info));
   }
 
   *buffer = buf;
