@@ -1165,7 +1165,7 @@ static gboolean
 gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
   GLint test;
-  GLuint verthandle, fraghandle, prog;
+  GLuint verthandle, fraghandle, prog, texlocation;
   GLboolean ret;
   GLchar *info_log;
 
@@ -1275,6 +1275,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glUseProgram"))
     goto HANDLE_ERROR;
 
+
   /* Generate and bind texture */
   if (!eglglessink->have_texture) {
     GST_INFO_OBJECT (eglglessink, "Doing initial texture setup");
@@ -1285,9 +1286,13 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     if (got_gl_error ("glGenTextures"))
       goto HANDLE_ERROR_LOCKED;
 
+    glActiveTexture (GL_TEXTURE0);
     glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
     if (got_gl_error ("glBindTexture"))
       goto HANDLE_ERROR_LOCKED;
+
+    texlocation = glGetUniformLocation (prog, "tex");
+    glUniform1i (texlocation, 0);
 
     eglglessink->have_texture = TRUE;
     g_mutex_unlock (eglglessink->flow_lock);
