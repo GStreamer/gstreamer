@@ -700,40 +700,53 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
 static void
 gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc)
 {
+  vpx_codec_err_t status;
 
   GST_DEBUG_OBJECT (gst_vp8_enc, "init");
 
-  gst_vp8_enc->rc_end_usage = DEFAULT_RC_END_USAGE;
-  gst_vp8_enc->rc_target_bitrate = DEFAULT_RC_TARGET_BITRATE;
+  status =
+      vpx_codec_enc_config_default (&vpx_codec_vp8_cx_algo, &gst_vp8_enc->cfg,
+      0);
+  if (status != VPX_CODEC_OK) {
+    GST_ERROR_OBJECT (gst_vp8_enc,
+        "Failed to get default encoder configuration: %s",
+        gst_vpx_error_name (status));
+    gst_vp8_enc->have_default_config = FALSE;
+  } else {
+    gst_vp8_enc->have_default_config = TRUE;
+  }
+
+  gst_vp8_enc->cfg.rc_end_usage = DEFAULT_RC_END_USAGE;
+  gst_vp8_enc->cfg.rc_target_bitrate = DEFAULT_RC_TARGET_BITRATE;
   gst_vp8_enc->rc_target_bitrate_set = FALSE;
-  gst_vp8_enc->rc_min_quantizer = DEFAULT_RC_MIN_QUANTIZER;
-  gst_vp8_enc->rc_max_quantizer = DEFAULT_RC_MAX_QUANTIZER;
-  gst_vp8_enc->rc_dropframe_thresh = DEFAULT_RC_DROPFRAME_THRESH;
-  gst_vp8_enc->rc_resize_allowed = DEFAULT_RC_RESIZE_ALLOWED;
-  gst_vp8_enc->rc_resize_up_thresh = DEFAULT_RC_RESIZE_UP_THRESH;
-  gst_vp8_enc->rc_resize_down_thresh = DEFAULT_RC_RESIZE_DOWN_THRESH;
-  gst_vp8_enc->rc_undershoot_pct = DEFAULT_RC_UNDERSHOOT_PCT;
-  gst_vp8_enc->rc_overshoot_pct = DEFAULT_RC_OVERSHOOT_PCT;
-  gst_vp8_enc->rc_buf_sz = DEFAULT_RC_BUF_SZ;
-  gst_vp8_enc->rc_buf_initial_sz = DEFAULT_RC_BUF_INITIAL_SZ;
-  gst_vp8_enc->rc_buf_optimal_sz = DEFAULT_RC_BUF_OPTIMAL_SZ;
-  gst_vp8_enc->rc_2pass_vbr_bias_pct = DEFAULT_RC_2PASS_VBR_BIAS_PCT;
-  gst_vp8_enc->rc_2pass_vbr_minsection_pct =
+  gst_vp8_enc->cfg.rc_min_quantizer = DEFAULT_RC_MIN_QUANTIZER;
+  gst_vp8_enc->cfg.rc_max_quantizer = DEFAULT_RC_MAX_QUANTIZER;
+  gst_vp8_enc->cfg.rc_dropframe_thresh = DEFAULT_RC_DROPFRAME_THRESH;
+  gst_vp8_enc->cfg.rc_resize_allowed = DEFAULT_RC_RESIZE_ALLOWED;
+  gst_vp8_enc->cfg.rc_resize_up_thresh = DEFAULT_RC_RESIZE_UP_THRESH;
+  gst_vp8_enc->cfg.rc_resize_down_thresh = DEFAULT_RC_RESIZE_DOWN_THRESH;
+  gst_vp8_enc->cfg.rc_undershoot_pct = DEFAULT_RC_UNDERSHOOT_PCT;
+  gst_vp8_enc->cfg.rc_overshoot_pct = DEFAULT_RC_OVERSHOOT_PCT;
+  gst_vp8_enc->cfg.rc_buf_sz = DEFAULT_RC_BUF_SZ;
+  gst_vp8_enc->cfg.rc_buf_initial_sz = DEFAULT_RC_BUF_INITIAL_SZ;
+  gst_vp8_enc->cfg.rc_buf_optimal_sz = DEFAULT_RC_BUF_OPTIMAL_SZ;
+  gst_vp8_enc->cfg.rc_2pass_vbr_bias_pct = DEFAULT_RC_2PASS_VBR_BIAS_PCT;
+  gst_vp8_enc->cfg.rc_2pass_vbr_minsection_pct =
       DEFAULT_RC_2PASS_VBR_MINSECTION_PCT;
-  gst_vp8_enc->rc_2pass_vbr_maxsection_pct =
+  gst_vp8_enc->cfg.rc_2pass_vbr_maxsection_pct =
       DEFAULT_RC_2PASS_VBR_MAXSECTION_PCT;
-  gst_vp8_enc->kf_mode = DEFAULT_KF_MODE;
-  gst_vp8_enc->kf_max_dist = DEFAULT_KF_MAX_DIST;
-  gst_vp8_enc->multipass_mode = DEFAULT_MULTIPASS_MODE;
+  gst_vp8_enc->cfg.kf_mode = DEFAULT_KF_MODE;
+  gst_vp8_enc->cfg.kf_max_dist = DEFAULT_KF_MAX_DIST;
+  gst_vp8_enc->cfg.g_pass = DEFAULT_MULTIPASS_MODE;
   gst_vp8_enc->multipass_cache_file = g_strdup (DEFAULT_MULTIPASS_CACHE_FILE);
-  gst_vp8_enc->ts_number_layers = DEFAULT_TS_NUMBER_LAYERS;
+  gst_vp8_enc->cfg.ts_number_layers = DEFAULT_TS_NUMBER_LAYERS;
   gst_vp8_enc->n_ts_target_bitrate = 0;
   gst_vp8_enc->n_ts_rate_decimator = 0;
-  gst_vp8_enc->ts_periodicity = DEFAULT_TS_PERIODICITY;
+  gst_vp8_enc->cfg.ts_periodicity = DEFAULT_TS_PERIODICITY;
   gst_vp8_enc->n_ts_layer_id = 0;
-  gst_vp8_enc->error_resilient = DEFAULT_ERROR_RESILIENT;
-  gst_vp8_enc->lag_in_frames = DEFAULT_LAG_IN_FRAMES;
-  gst_vp8_enc->threads = DEFAULT_THREADS;
+  gst_vp8_enc->cfg.g_error_resilient = DEFAULT_ERROR_RESILIENT;
+  gst_vp8_enc->cfg.g_lag_in_frames = DEFAULT_LAG_IN_FRAMES;
+  gst_vp8_enc->cfg.g_threads = DEFAULT_THREADS;
   gst_vp8_enc->deadline = DEFAULT_DEADLINE;
   gst_vp8_enc->h_scaling_mode = DEFAULT_H_SCALING_MODE;
   gst_vp8_enc->v_scaling_mode = DEFAULT_V_SCALING_MODE;
@@ -750,7 +763,9 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc)
   gst_vp8_enc->cq_level = DEFAULT_CQ_LEVEL;
   gst_vp8_enc->max_intra_bitrate_pct = DEFAULT_MAX_INTRA_BITRATE_PCT;
 
-  gst_vp8_enc->profile = DEFAULT_PROFILE;
+  gst_vp8_enc->cfg.g_profile = DEFAULT_PROFILE;
+
+  g_mutex_init (&gst_vp8_enc->encoder_lock);
 }
 
 static void
@@ -769,6 +784,8 @@ gst_vp8_enc_finalize (GObject * object)
   if (gst_vp8_enc->input_state)
     gst_video_codec_state_unref (gst_vp8_enc->input_state);
 
+  g_mutex_clear (&gst_vp8_enc->encoder_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 
 }
@@ -783,64 +800,65 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
   gst_vp8_enc = GST_VP8_ENC (object);
 
   GST_DEBUG_OBJECT (object, "gst_vp8_enc_set_property");
+  g_mutex_lock (&gst_vp8_enc->encoder_lock);
   switch (prop_id) {
     case PROP_RC_END_USAGE:
-      gst_vp8_enc->rc_end_usage = g_value_get_enum (value);
+      gst_vp8_enc->cfg.rc_end_usage = g_value_get_enum (value);
       break;
     case PROP_RC_TARGET_BITRATE:
-      gst_vp8_enc->rc_target_bitrate = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_target_bitrate = g_value_get_int (value) / 1000;
       gst_vp8_enc->rc_target_bitrate_set = TRUE;
       break;
     case PROP_RC_MIN_QUANTIZER:
-      gst_vp8_enc->rc_min_quantizer = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_min_quantizer = g_value_get_int (value);
       break;
     case PROP_RC_MAX_QUANTIZER:
-      gst_vp8_enc->rc_max_quantizer = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_max_quantizer = g_value_get_int (value);
       break;
     case PROP_RC_DROPFRAME_THRESH:
-      gst_vp8_enc->rc_dropframe_thresh = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_dropframe_thresh = g_value_get_int (value);
       break;
     case PROP_RC_RESIZE_ALLOWED:
-      gst_vp8_enc->rc_resize_allowed = g_value_get_boolean (value);
+      gst_vp8_enc->cfg.rc_resize_allowed = g_value_get_boolean (value);
       break;
     case PROP_RC_RESIZE_UP_THRESH:
-      gst_vp8_enc->rc_resize_up_thresh = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_resize_up_thresh = g_value_get_int (value);
       break;
     case PROP_RC_RESIZE_DOWN_THRESH:
-      gst_vp8_enc->rc_resize_down_thresh = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_resize_down_thresh = g_value_get_int (value);
       break;
     case PROP_RC_UNDERSHOOT_PCT:
-      gst_vp8_enc->rc_undershoot_pct = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_undershoot_pct = g_value_get_int (value);
       break;
     case PROP_RC_OVERSHOOT_PCT:
-      gst_vp8_enc->rc_overshoot_pct = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_overshoot_pct = g_value_get_int (value);
       break;
     case PROP_RC_BUF_SZ:
-      gst_vp8_enc->rc_buf_sz = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_buf_sz = g_value_get_int (value);
       break;
     case PROP_RC_BUF_INITIAL_SZ:
-      gst_vp8_enc->rc_buf_initial_sz = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_buf_initial_sz = g_value_get_int (value);
       break;
     case PROP_RC_BUF_OPTIMAL_SZ:
-      gst_vp8_enc->rc_buf_optimal_sz = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_buf_optimal_sz = g_value_get_int (value);
       break;
     case PROP_RC_2PASS_VBR_BIAS_PCT:
-      gst_vp8_enc->rc_2pass_vbr_bias_pct = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_2pass_vbr_bias_pct = g_value_get_int (value);
       break;
     case PROP_RC_2PASS_VBR_MINSECTION_PCT:
-      gst_vp8_enc->rc_2pass_vbr_minsection_pct = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_2pass_vbr_minsection_pct = g_value_get_int (value);
       break;
     case PROP_RC_2PASS_VBR_MAXSECTION_PCT:
-      gst_vp8_enc->rc_2pass_vbr_maxsection_pct = g_value_get_int (value);
+      gst_vp8_enc->cfg.rc_2pass_vbr_maxsection_pct = g_value_get_int (value);
       break;
     case PROP_KF_MODE:
-      gst_vp8_enc->kf_mode = g_value_get_enum (value);
+      gst_vp8_enc->cfg.kf_mode = g_value_get_enum (value);
       break;
     case PROP_KF_MAX_DIST:
-      gst_vp8_enc->kf_max_dist = g_value_get_int (value);
+      gst_vp8_enc->cfg.kf_max_dist = g_value_get_int (value);
       break;
     case PROP_MULTIPASS_MODE:
-      gst_vp8_enc->multipass_mode = g_value_get_enum (value);
+      gst_vp8_enc->cfg.g_pass = g_value_get_enum (value);
       break;
     case PROP_MULTIPASS_CACHE_FILE:
       if (gst_vp8_enc->multipass_cache_file)
@@ -848,11 +866,13 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       gst_vp8_enc->multipass_cache_file = g_value_dup_string (value);
       break;
     case PROP_TS_NUMBER_LAYERS:
-      gst_vp8_enc->ts_number_layers = g_value_get_int (value);
+      gst_vp8_enc->cfg.ts_number_layers = g_value_get_int (value);
       break;
     case PROP_TS_TARGET_BITRATE:{
       GValueArray *va = g_value_get_boxed (value);
 
+      memset (&gst_vp8_enc->cfg.ts_target_bitrate, 0,
+          sizeof (gst_vp8_enc->cfg.ts_target_bitrate));
       if (va->n_values > VPX_TS_MAX_LAYERS) {
         g_warning ("%s: Only %d layers allowed at maximum",
             GST_ELEMENT_NAME (gst_vp8_enc), VPX_TS_MAX_LAYERS);
@@ -860,7 +880,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
         gint i;
 
         for (i = 0; i < va->n_values; i++)
-          gst_vp8_enc->ts_target_bitrate[i] =
+          gst_vp8_enc->cfg.ts_target_bitrate[i] =
               g_value_get_int (g_value_array_get_nth (va, i));
         gst_vp8_enc->n_ts_target_bitrate = va->n_values;
       } else {
@@ -871,6 +891,8 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     case PROP_TS_RATE_DECIMATOR:{
       GValueArray *va = g_value_get_boxed (value);
 
+      memset (&gst_vp8_enc->cfg.ts_rate_decimator, 0,
+          sizeof (gst_vp8_enc->cfg.ts_rate_decimator));
       if (va->n_values > VPX_TS_MAX_LAYERS) {
         g_warning ("%s: Only %d layers allowed at maximum",
             GST_ELEMENT_NAME (gst_vp8_enc), VPX_TS_MAX_LAYERS);
@@ -878,7 +900,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
         gint i;
 
         for (i = 0; i < va->n_values; i++)
-          gst_vp8_enc->ts_rate_decimator[i] =
+          gst_vp8_enc->cfg.ts_rate_decimator[i] =
               g_value_get_int (g_value_array_get_nth (va, i));
         gst_vp8_enc->n_ts_rate_decimator = va->n_values;
       } else {
@@ -887,11 +909,13 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_TS_PERIODICITY:
-      gst_vp8_enc->ts_periodicity = g_value_get_int (value);
+      gst_vp8_enc->cfg.ts_periodicity = g_value_get_int (value);
       break;
     case PROP_TS_LAYER_ID:{
       GValueArray *va = g_value_get_boxed (value);
 
+      memset (&gst_vp8_enc->cfg.ts_layer_id, 0,
+          sizeof (gst_vp8_enc->cfg.ts_layer_id));
       if (va->n_values > VPX_TS_MAX_PERIODICITY) {
         g_warning ("%s: Only %d sized layer sequences allowed at maximum",
             GST_ELEMENT_NAME (gst_vp8_enc), VPX_TS_MAX_PERIODICITY);
@@ -899,7 +923,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
         gint i;
 
         for (i = 0; i < va->n_values; i++)
-          gst_vp8_enc->ts_layer_id[i] =
+          gst_vp8_enc->cfg.ts_layer_id[i] =
               g_value_get_int (g_value_array_get_nth (va, i));
         gst_vp8_enc->n_ts_layer_id = va->n_values;
       } else {
@@ -908,13 +932,13 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_ERROR_RESILIENT:
-      gst_vp8_enc->error_resilient = g_value_get_flags (value);
+      gst_vp8_enc->cfg.g_error_resilient = g_value_get_flags (value);
       break;
     case PROP_LAG_IN_FRAMES:
-      gst_vp8_enc->lag_in_frames = g_value_get_int (value);
+      gst_vp8_enc->cfg.g_lag_in_frames = g_value_get_int (value);
       break;
     case PROP_THREADS:
-      gst_vp8_enc->threads = g_value_get_int (value);
+      gst_vp8_enc->cfg.g_threads = g_value_get_int (value);
       break;
     case PROP_DEADLINE:
       gst_vp8_enc->deadline = g_value_get_int64 (value);
@@ -964,6 +988,8 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     default:
       break;
   }
+
+  g_mutex_unlock (&gst_vp8_enc->encoder_lock);
 }
 
 static void
@@ -975,69 +1001,70 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
   g_return_if_fail (GST_IS_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
 
+  g_mutex_lock (&gst_vp8_enc->encoder_lock);
   switch (prop_id) {
     case PROP_RC_END_USAGE:
-      g_value_set_enum (value, gst_vp8_enc->rc_end_usage);
+      g_value_set_enum (value, gst_vp8_enc->cfg.rc_end_usage);
       break;
     case PROP_RC_TARGET_BITRATE:
-      g_value_set_int (value, gst_vp8_enc->rc_target_bitrate);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_target_bitrate * 1000);
       break;
     case PROP_RC_MIN_QUANTIZER:
-      g_value_set_int (value, gst_vp8_enc->rc_min_quantizer);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_min_quantizer);
       break;
     case PROP_RC_MAX_QUANTIZER:
-      g_value_set_int (value, gst_vp8_enc->rc_max_quantizer);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_max_quantizer);
       break;
     case PROP_RC_DROPFRAME_THRESH:
-      g_value_set_int (value, gst_vp8_enc->rc_dropframe_thresh);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_dropframe_thresh);
       break;
     case PROP_RC_RESIZE_ALLOWED:
-      g_value_set_boolean (value, gst_vp8_enc->rc_resize_allowed);
+      g_value_set_boolean (value, gst_vp8_enc->cfg.rc_resize_allowed);
       break;
     case PROP_RC_RESIZE_UP_THRESH:
-      g_value_set_int (value, gst_vp8_enc->rc_resize_up_thresh);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_resize_up_thresh);
       break;
     case PROP_RC_RESIZE_DOWN_THRESH:
-      g_value_set_int (value, gst_vp8_enc->rc_resize_down_thresh);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_resize_down_thresh);
       break;
     case PROP_RC_UNDERSHOOT_PCT:
-      g_value_set_int (value, gst_vp8_enc->rc_undershoot_pct);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_undershoot_pct);
       break;
     case PROP_RC_OVERSHOOT_PCT:
-      g_value_set_int (value, gst_vp8_enc->rc_overshoot_pct);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_overshoot_pct);
       break;
     case PROP_RC_BUF_SZ:
-      g_value_set_int (value, gst_vp8_enc->rc_buf_sz);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_buf_sz);
       break;
     case PROP_RC_BUF_INITIAL_SZ:
-      g_value_set_int (value, gst_vp8_enc->rc_buf_initial_sz);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_buf_initial_sz);
       break;
     case PROP_RC_BUF_OPTIMAL_SZ:
-      g_value_set_int (value, gst_vp8_enc->rc_buf_optimal_sz);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_buf_optimal_sz);
       break;
     case PROP_RC_2PASS_VBR_BIAS_PCT:
-      g_value_set_int (value, gst_vp8_enc->rc_2pass_vbr_bias_pct);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_2pass_vbr_bias_pct);
       break;
     case PROP_RC_2PASS_VBR_MINSECTION_PCT:
-      g_value_set_int (value, gst_vp8_enc->rc_2pass_vbr_minsection_pct);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_2pass_vbr_minsection_pct);
       break;
     case PROP_RC_2PASS_VBR_MAXSECTION_PCT:
-      g_value_set_int (value, gst_vp8_enc->rc_2pass_vbr_maxsection_pct);
+      g_value_set_int (value, gst_vp8_enc->cfg.rc_2pass_vbr_maxsection_pct);
       break;
     case PROP_KF_MODE:
-      g_value_set_enum (value, gst_vp8_enc->kf_mode);
+      g_value_set_enum (value, gst_vp8_enc->cfg.kf_mode);
       break;
     case PROP_KF_MAX_DIST:
-      g_value_set_int (value, gst_vp8_enc->kf_max_dist);
+      g_value_set_int (value, gst_vp8_enc->cfg.kf_max_dist);
       break;
     case PROP_MULTIPASS_MODE:
-      g_value_set_enum (value, gst_vp8_enc->multipass_mode);
+      g_value_set_enum (value, gst_vp8_enc->cfg.g_pass);
       break;
     case PROP_MULTIPASS_CACHE_FILE:
       g_value_set_string (value, gst_vp8_enc->multipass_cache_file);
       break;
     case PROP_TS_NUMBER_LAYERS:
-      g_value_set_int (value, gst_vp8_enc->ts_number_layers);
+      g_value_set_int (value, gst_vp8_enc->cfg.ts_number_layers);
       break;
     case PROP_TS_TARGET_BITRATE:{
       GValueArray *va;
@@ -1052,7 +1079,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
           GValue v = { 0, };
 
           g_value_init (&v, G_TYPE_INT);
-          g_value_set_int (&v, gst_vp8_enc->ts_target_bitrate[i]);
+          g_value_set_int (&v, gst_vp8_enc->cfg.ts_target_bitrate[i]);
           g_value_array_append (va, &v);
           g_value_unset (&v);
         }
@@ -1074,7 +1101,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
           GValue v = { 0, };
 
           g_value_init (&v, G_TYPE_INT);
-          g_value_set_int (&v, gst_vp8_enc->ts_rate_decimator[i]);
+          g_value_set_int (&v, gst_vp8_enc->cfg.ts_rate_decimator[i]);
           g_value_array_append (va, &v);
           g_value_unset (&v);
         }
@@ -1084,7 +1111,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     }
     case PROP_TS_PERIODICITY:
-      g_value_set_int (value, gst_vp8_enc->ts_periodicity);
+      g_value_set_int (value, gst_vp8_enc->cfg.ts_periodicity);
       break;
     case PROP_TS_LAYER_ID:{
       GValueArray *va;
@@ -1099,7 +1126,7 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
           GValue v = { 0, };
 
           g_value_init (&v, G_TYPE_INT);
-          g_value_set_int (&v, gst_vp8_enc->ts_layer_id[i]);
+          g_value_set_int (&v, gst_vp8_enc->cfg.ts_layer_id[i]);
           g_value_array_append (va, &v);
           g_value_unset (&v);
         }
@@ -1109,13 +1136,13 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     }
     case PROP_ERROR_RESILIENT:
-      g_value_set_flags (value, gst_vp8_enc->error_resilient);
+      g_value_set_flags (value, gst_vp8_enc->cfg.g_error_resilient);
       break;
     case PROP_LAG_IN_FRAMES:
-      g_value_set_int (value, gst_vp8_enc->lag_in_frames);
+      g_value_set_int (value, gst_vp8_enc->cfg.g_lag_in_frames);
       break;
     case PROP_THREADS:
-      g_value_set_int (value, gst_vp8_enc->threads);
+      g_value_set_int (value, gst_vp8_enc->cfg.g_threads);
       break;
     case PROP_DEADLINE:
       g_value_set_int64 (value, gst_vp8_enc->deadline);
@@ -1166,12 +1193,22 @@ gst_vp8_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+
+  g_mutex_unlock (&gst_vp8_enc->encoder_lock);
 }
 
 static gboolean
 gst_vp8_enc_start (GstVideoEncoder * video_encoder)
 {
+  GstVP8Enc *encoder = GST_VP8_ENC (video_encoder);
+
   GST_DEBUG_OBJECT (video_encoder, "start");
+
+  if (!encoder->have_default_config) {
+    GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
+        ("Failed to get default encoder configuration"), (NULL));
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -1185,6 +1222,7 @@ gst_vp8_enc_stop (GstVideoEncoder * video_encoder)
 
   encoder = GST_VP8_ENC (video_encoder);
 
+  g_mutex_lock (&encoder->encoder_lock);
   if (encoder->inited) {
     vpx_codec_destroy (&encoder->encoder);
     encoder->inited = FALSE;
@@ -1195,11 +1233,12 @@ gst_vp8_enc_stop (GstVideoEncoder * video_encoder)
     encoder->first_pass_cache_content = NULL;
   }
 
-  if (encoder->last_pass_cache_content.buf) {
-    g_free (encoder->last_pass_cache_content.buf);
-    encoder->last_pass_cache_content.buf = NULL;
-    encoder->last_pass_cache_content.sz = 0;
+  if (encoder->cfg.rc_twopass_stats_in.buf) {
+    g_free (encoder->cfg.rc_twopass_stats_in.buf);
+    encoder->cfg.rc_twopass_stats_in.buf = NULL;
+    encoder->cfg.rc_twopass_stats_in.sz = 0;
   }
+  g_mutex_unlock (&encoder->encoder_lock);
 
   gst_tag_setter_reset_tags (GST_TAG_SETTER (encoder));
 
@@ -1250,7 +1289,6 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
     GstVideoCodecState * state)
 {
   GstVP8Enc *encoder;
-  vpx_codec_enc_cfg_t cfg;
   vpx_codec_err_t status;
   vpx_image_t *image;
   guint8 *data = NULL;
@@ -1268,85 +1306,50 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
     return FALSE;
   }
 
-  status = vpx_codec_enc_config_default (&vpx_codec_vp8_cx_algo, &cfg, 0);
-  if (status != VPX_CODEC_OK) {
-    GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
-        ("Failed to get default encoder configuration"), ("%s",
-            gst_vpx_error_name (status)));
-    return FALSE;
-  }
-
-  encoder->profile = gst_vp8_enc_get_downstream_profile (encoder);
+  g_mutex_lock (&encoder->encoder_lock);
+  encoder->cfg.g_profile = gst_vp8_enc_get_downstream_profile (encoder);
 
   /* Scale default bitrate to our size */
-  cfg.rc_target_bitrate = gst_util_uint64_scale (cfg.rc_target_bitrate,
-      GST_VIDEO_INFO_WIDTH (info) * GST_VIDEO_INFO_HEIGHT (info),
-      cfg.g_w * cfg.g_h);
+  if (!encoder->rc_target_bitrate_set)
+    encoder->cfg.rc_target_bitrate =
+        gst_util_uint64_scale (DEFAULT_RC_TARGET_BITRATE,
+        GST_VIDEO_INFO_WIDTH (info) * GST_VIDEO_INFO_HEIGHT (info), 320 * 240);
 
-  cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
-  cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
-  cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
-  cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
+  encoder->cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
+  encoder->cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
+  encoder->cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
+  encoder->cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
 
-  cfg.rc_end_usage = encoder->rc_end_usage;
-  if (encoder->rc_target_bitrate_set)
-    cfg.rc_target_bitrate = encoder->rc_target_bitrate / 1000;
-  cfg.rc_min_quantizer = encoder->rc_min_quantizer;
-  cfg.rc_max_quantizer = encoder->rc_max_quantizer;
-  cfg.rc_dropframe_thresh = encoder->rc_dropframe_thresh;
-  cfg.rc_resize_allowed = encoder->rc_resize_allowed;
-  cfg.rc_resize_up_thresh = encoder->rc_resize_up_thresh;
-  cfg.rc_resize_down_thresh = encoder->rc_resize_down_thresh;
-  cfg.rc_undershoot_pct = encoder->rc_undershoot_pct;
-  cfg.rc_overshoot_pct = encoder->rc_overshoot_pct;
-  cfg.rc_buf_sz = encoder->rc_buf_sz;
-  cfg.rc_buf_initial_sz = encoder->rc_buf_initial_sz;
-  cfg.rc_buf_optimal_sz = encoder->rc_buf_optimal_sz;
-  cfg.rc_2pass_vbr_bias_pct = encoder->rc_2pass_vbr_bias_pct;
-  cfg.rc_2pass_vbr_minsection_pct = encoder->rc_2pass_vbr_minsection_pct;
-  cfg.rc_2pass_vbr_maxsection_pct = encoder->rc_2pass_vbr_maxsection_pct;
-  cfg.kf_mode = encoder->kf_mode;
-  cfg.kf_max_dist = encoder->kf_max_dist;
-  cfg.ts_number_layers = encoder->ts_number_layers;
-  memcpy (cfg.ts_target_bitrate, encoder->ts_target_bitrate,
-      sizeof (encoder->ts_target_bitrate));
-  memcpy (cfg.ts_rate_decimator, encoder->ts_rate_decimator,
-      sizeof (encoder->ts_rate_decimator));
-  cfg.ts_periodicity = encoder->ts_periodicity;
-  memcpy (cfg.ts_layer_id, encoder->ts_layer_id, sizeof (encoder->ts_layer_id));
-  cfg.g_error_resilient = encoder->error_resilient;
-  cfg.g_lag_in_frames = encoder->lag_in_frames;
-  cfg.g_threads = encoder->threads;
-
-  cfg.g_pass = encoder->multipass_mode;
-  if (encoder->multipass_mode == VPX_RC_FIRST_PASS) {
+  if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS) {
     encoder->first_pass_cache_content = g_byte_array_sized_new (4096);
-  } else if (encoder->multipass_mode == VPX_RC_LAST_PASS) {
+  } else if (encoder->cfg.g_pass == VPX_RC_LAST_PASS) {
     GError *err = NULL;
 
     if (!encoder->multipass_cache_file) {
       GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
           ("No multipass cache file provided"), (NULL));
+      g_mutex_unlock (&encoder->encoder_lock);
       return FALSE;
     }
 
     if (!g_file_get_contents (encoder->multipass_cache_file,
-            (gchar **) & encoder->last_pass_cache_content.buf,
-            &encoder->last_pass_cache_content.sz, &err)) {
+            (gchar **) & encoder->cfg.rc_twopass_stats_in.buf,
+            &encoder->cfg.rc_twopass_stats_in.sz, &err)) {
       GST_ELEMENT_ERROR (encoder, RESOURCE, OPEN_READ,
           ("Failed to read multipass cache file provided"), ("%s",
               err->message));
       g_error_free (err);
+      g_mutex_unlock (&encoder->encoder_lock);
       return FALSE;
     }
-    cfg.rc_twopass_stats_in = encoder->last_pass_cache_content;
   }
 
   status = vpx_codec_enc_init (&encoder->encoder, &vpx_codec_vp8_cx_algo,
-      &cfg, 0);
+      &encoder->cfg, 0);
   if (status != VPX_CODEC_OK) {
     GST_ELEMENT_ERROR (encoder, LIBRARY, INIT,
         ("Failed to initialize encoder"), ("%s", gst_vpx_error_name (status)));
+    g_mutex_unlock (&encoder->encoder_lock);
     return FALSE;
   }
 
@@ -1447,7 +1450,7 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   }
 
   gst_video_encoder_set_latency (video_encoder, 0,
-      gst_util_uint64_scale (encoder->lag_in_frames,
+      gst_util_uint64_scale (encoder->cfg.g_lag_in_frames,
           GST_VIDEO_INFO_FPS_D (info) * GST_SECOND,
           GST_VIDEO_INFO_FPS_N (info)));
   encoder->inited = TRUE;
@@ -1471,7 +1474,7 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   image->stride[VPX_PLANE_U] = GST_VIDEO_INFO_COMP_STRIDE (info, 1);
   image->stride[VPX_PLANE_V] = GST_VIDEO_INFO_COMP_STRIDE (info, 2);
 
-  profile_str = g_strdup_printf ("%d", encoder->profile);
+  profile_str = g_strdup_printf ("%d", encoder->cfg.g_profile);
   caps = gst_caps_new_simple ("video/x-vp8",
       "profile", G_TYPE_STRING, profile_str, NULL);
   g_free (profile_str);
@@ -1534,6 +1537,8 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
     gst_structure_set_value (s, "streamheader", &array);
     g_value_unset (&array);
   }
+  g_mutex_unlock (&encoder->encoder_lock);
+
   output_state =
       gst_video_encoder_set_output_state (video_encoder, caps, state);
   gst_video_codec_state_unref (output_state);
@@ -1541,6 +1546,13 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   gst_video_encoder_negotiate (GST_VIDEO_ENCODER (encoder));
 
   return ret;
+}
+
+static void
+_gst_video_codec_frame_unref0 (GstVideoCodecFrame * frame)
+{
+  if (frame)
+    gst_video_codec_frame_unref (frame);
 }
 
 static GstFlowReturn
@@ -1552,9 +1564,11 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   GstVP8EncUserData *user_data;
   GstVideoCodecFrame *frame;
   GstFlowReturn ret = GST_FLOW_OK;
+  GList *l, *frames = NULL;
 
   video_encoder = GST_VIDEO_ENCODER (encoder);
 
+  g_mutex_lock (&encoder->encoder_lock);
   pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   while (pkt != NULL) {
     GstBuffer *buffer;
@@ -1564,7 +1578,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
         pkt->kind);
 
     if (pkt->kind == VPX_CODEC_STATS_PKT
-        && encoder->multipass_mode == VPX_RC_FIRST_PASS) {
+        && encoder->cfg.g_pass == VPX_RC_FIRST_PASS) {
       GST_LOG_OBJECT (encoder, "handling STATS packet");
 
       g_byte_array_append (encoder->first_pass_cache_content,
@@ -1575,7 +1589,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
         buffer = gst_buffer_new ();
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_LIVE);
         frame->output_buffer = buffer;
-        gst_video_encoder_finish_frame (video_encoder, frame);
+        frames = g_list_prepend (frames, frame);
       }
 
       pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
@@ -1609,11 +1623,23 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
       user_data->invisible = g_list_append (user_data->invisible, buffer);
     } else {
       frame->output_buffer = buffer;
-      ret = gst_video_encoder_finish_frame (video_encoder, frame);
+      frames = g_list_prepend (frames, frame);
     }
 
     pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
+  g_mutex_unlock (&encoder->encoder_lock);
+
+  frames = g_list_reverse (frames);
+  for (l = frames; l; l = l->next) {
+    ret = gst_video_encoder_finish_frame (video_encoder, l->data);
+    l->data = NULL;
+    if (ret != GST_FLOW_OK)
+      break;
+  }
+
+  g_list_foreach (frames, (GFunc) _gst_video_codec_frame_unref0, NULL);
+  g_list_free (frames);
 
   return ret;
 }
@@ -1629,9 +1655,11 @@ gst_vp8_enc_finish (GstVideoEncoder * video_encoder)
 
   encoder = GST_VP8_ENC (video_encoder);
 
+  g_mutex_lock (&encoder->encoder_lock);
   status =
       vpx_codec_encode (&encoder->encoder, NULL, encoder->n_frames, 1, flags,
       encoder->deadline);
+  g_mutex_unlock (&encoder->encoder_lock);
   if (status != 0) {
     GST_ERROR_OBJECT (encoder, "encode returned %d %s", status,
         gst_vpx_error_name (status));
@@ -1641,8 +1669,7 @@ gst_vp8_enc_finish (GstVideoEncoder * video_encoder)
   /* dispatch remaining frames */
   gst_vp8_enc_process (encoder);
 
-  if (encoder->multipass_mode == VPX_RC_FIRST_PASS
-      && encoder->multipass_cache_file) {
+  if (encoder->cfg.g_pass == VPX_RC_FIRST_PASS && encoder->multipass_cache_file) {
     GError *err = NULL;
 
     if (!g_file_set_contents (encoder->multipass_cache_file,
@@ -1709,8 +1736,10 @@ gst_vp8_enc_handle_frame (GstVideoEncoder * video_encoder,
     flags |= VPX_EFLAG_FORCE_KF;
   }
 
+  g_mutex_lock (&encoder->encoder_lock);
   status = vpx_codec_encode (&encoder->encoder, image,
       encoder->n_frames, 1, flags, encoder->deadline);
+  g_mutex_unlock (&encoder->encoder_lock);
   gst_video_frame_unmap (&vframe);
 
   if (status != 0) {

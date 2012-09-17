@@ -56,60 +56,18 @@ struct _GstVP8Enc
 
   /* < private > */
   vpx_codec_ctx_t encoder;
-
-  /* from downstream caps */
-  int profile;
+  GMutex encoder_lock;
 
   /* properties */
-  /* Rate control options */
-  enum vpx_rc_mode rc_end_usage;
-  unsigned int rc_target_bitrate;
+  vpx_codec_enc_cfg_t cfg;
+  gboolean have_default_config;
   gboolean rc_target_bitrate_set;
-  unsigned int rc_min_quantizer, rc_max_quantizer;
-
-  unsigned int rc_dropframe_thresh;
-  gboolean rc_resize_allowed;
-  unsigned int rc_resize_up_thresh;
-  unsigned int rc_resize_down_thresh;
-  unsigned int rc_undershoot_pct;
-  unsigned int rc_overshoot_pct;
-  unsigned int rc_buf_sz;
-  unsigned int rc_buf_initial_sz;
-  unsigned int rc_buf_optimal_sz;
-
-  unsigned int rc_2pass_vbr_bias_pct;
-  unsigned int rc_2pass_vbr_minsection_pct;
-  unsigned int rc_2pass_vbr_maxsection_pct;
-
-  /* Global keyframe options */
-  enum vpx_kf_mode kf_mode;
-  unsigned int kf_max_dist;
-
+  gint n_ts_target_bitrate;
+  gint n_ts_rate_decimator;
+  gint n_ts_layer_id;
   /* Global two-pass options */
-  enum vpx_enc_pass multipass_mode;
   gchar *multipass_cache_file;
   GByteArray *first_pass_cache_content;
-  vpx_fixed_buf_t last_pass_cache_content;
-
-  /* Global temporal scalability options */
-  unsigned int ts_number_layers;
-  unsigned int ts_target_bitrate[VPX_TS_MAX_LAYERS];
-  int n_ts_target_bitrate;
-  unsigned int ts_rate_decimator[VPX_TS_MAX_LAYERS];
-  int n_ts_rate_decimator;
-  unsigned int ts_periodicity;
-  unsigned int ts_layer_id[VPX_TS_MAX_PERIODICITY];
-  int n_ts_layer_id;
-
-  /* Global, other options */
-  vpx_codec_er_flags_t error_resilient;
-  unsigned int lag_in_frames;
-
-  int threads;
-#if 0
-  /* Only usage 0 is defined right now */
-  int usage;
-#endif
 
   /* Encode parameter */
   gint64 deadline;
