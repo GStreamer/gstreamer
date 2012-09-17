@@ -20,6 +20,8 @@ GObject
           GstTwoLame
         GstBaseSrc
           GstPushSrc
+            GstAudioCdSrc
+              GstCdioCddaSrc
             GstDvdReadSrc
             GstPNMSrc
         GstBin
