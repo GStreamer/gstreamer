@@ -159,6 +159,8 @@ struct _GstEglGlesSink
   gboolean force_rendering_slow;
   gint window_default_width;
   gint window_default_height;
+  EGLint surface_width;
+  EGLint surface_height;
 };
 
 struct _GstEglGlesSinkClass

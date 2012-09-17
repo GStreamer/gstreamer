@@ -1183,6 +1183,15 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     goto HANDLE_EGL_ERROR_LOCKED;
   }
 
+  /* Save surface dims */
+  eglQuerySurface (eglglessink->display, eglglessink->surface, EGL_WIDTH,
+      &eglglessink->surface_width);
+  eglQuerySurface (eglglessink->display, eglglessink->surface, EGL_HEIGHT,
+      &eglglessink->surface_height);
+
+  GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels",
+      eglglessink->surface_width, eglglessink->surface_height);
+
   /* We have a surface! */
   eglglessink->have_surface = TRUE;
   g_mutex_unlock (eglglessink->flow_lock);
@@ -1509,7 +1518,8 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * The way it is right now makes this happen only for the first buffer
        * though so I guess it should work */
       if (gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
-        glViewport (0, 0, w, h);
+        glViewport (0, 0, eglglessink->surface_width,
+            eglglessink->surface_height);
       } else {
         GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
         goto HANDLE_ERROR;
