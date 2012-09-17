@@ -83,7 +83,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
             playing = savedInstanceState.getBoolean("playing");
             int milliseconds = savedInstanceState.getInt("position");
             Log.i ("GStreamer", "Restoring state, playing:" + playing + " position:" + milliseconds + " ms.");
-            nativeSetPosition(milliseconds);
+            nativeSetPosition(milliseconds + 1);
             if (playing) {
                 nativePlay();
             }
