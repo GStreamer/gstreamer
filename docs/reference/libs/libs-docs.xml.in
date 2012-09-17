@@ -30,11 +30,11 @@
     <xi:include href="xml/gstvaapivideobuffer.xml"/>
     <xi:include href="xml/gstvaapicontext.xml"/>
     <xi:include href="xml/gstvaapidecoder.xml"/>
+    <xi:include href="xml/gstvaapidecoder_jpeg.xml"/>
     <xi:include href="xml/gstvaapidecoder_mpeg2.xml"/>
     <xi:include href="xml/gstvaapidecoder_mpeg4.xml"/>
     <xi:include href="xml/gstvaapidecoder_h264.xml"/>
     <xi:include href="xml/gstvaapidecoder_vc1.xml"/>
-    <xi:include href="xml/gstvaapidecoder_ffmpeg.xml"/>
     <xi:include href="xml/gstvaapisurfaceproxy.xml"/>
   </chapter>
 
