@@ -35,6 +35,17 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>0.11.99</revision>
+   <branch>0.11</branch>
+   <name>Stole Many a Mans Soul and Faith</name>
+   <created>2012-09-17</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.99.tar.xz" />
+  </Version>
+ </release>
+
+
+ <release>
+  <Version>
    <revision>0.11.94</revision>
    <branch>0.11</branch>
    <name>Rag Hummin'</name>
