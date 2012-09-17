@@ -65,7 +65,6 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		--strip-prefix=Gst \
 		--warn-all \
 		$(gir_cincludes) \
-		-DGST_USE_UNSTABLE_API \
 		-I$(top_builddir)/gst-libs \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=$(builddir)/../sdp \
