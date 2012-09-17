@@ -712,11 +712,16 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
 
   /* Same video format */
   if (buffer_info->size == GST_BUFFER_SIZE (outbuf)) {
+    GST_DEBUG_OBJECT (self, "Buffer sizes equal, doing fast copy");
     memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info->offset,
         buffer_info->size);
     ret = TRUE;
     goto done;
   }
+
+  GST_DEBUG_OBJECT (self,
+      "Sizes not equal (%d vs %d), doing slow line-by-line copying",
+      buffer_info->size, GST_BUFFER_SIZE (outbuf));
 
   /* Different video format, try to convert */
   switch (self->color_format) {
@@ -736,7 +741,6 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         } else {
           src_stride = self->stride / 2;
-          src_stride = GST_ROUND_UP_16 (src_stride);
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         }
 
