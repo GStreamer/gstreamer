@@ -160,33 +160,48 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   }
 }
 
+static void render_buffer (GstBuffer *buffer, CustomData *data) {
+  if (data->native_window) {
+    int i;
+    ANativeWindow_Buffer nbuff;
+    GstStructure *str;
+    gint width, height;
+
+    str = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
+    gst_structure_get_int (str, "width", &width);
+    gst_structure_get_int (str, "height", &height);
+
+    ANativeWindow_setBuffersGeometry(data->native_window, width, height, WINDOW_FORMAT_RGBX_8888);
+
+    if (ANativeWindow_lock(data->native_window, &nbuff, NULL) < 0) {
+      GST_ERROR ("Unable to lock Native Window, discarding buffer.");
+    } else {
+      for (i=0; i<nbuff.height; i++) {
+        memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
+      }
+      ANativeWindow_unlockAndPost (data->native_window);
+    }
+  }
+}
+
 static void new_buffer (GstElement *sink, CustomData *data) {
   GstBuffer *buffer;
    
   /* Retrieve the buffer */
   g_signal_emit_by_name (sink, "pull-buffer", &buffer);
   if (buffer) {
-    if (data->native_window) {
-      int i;
-      ANativeWindow_Buffer nbuff;
-      GstStructure *str;
-      gint width, height;
+    render_buffer (buffer, data);
+    gst_buffer_unref (buffer);
+  }
+}
 
-      str = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
-      gst_structure_get_int (str, "width", &width);
-      gst_structure_get_int (str, "height", &height);
-
-      ANativeWindow_setBuffersGeometry(data->native_window, width, height, WINDOW_FORMAT_RGBX_8888);
-
-      if (ANativeWindow_lock(data->native_window, &nbuff, NULL) < 0) {
-        GST_ERROR ("Unable to lock Native Window, discarding buffer.");
-      } else {
-        for (i=0; i<nbuff.height; i++) {
-          memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
-        }
-        ANativeWindow_unlockAndPost (data->native_window);
-      }
-    }
+static void new_preroll_buffer (GstElement *sink, CustomData *data) {
+  GstBuffer *buffer;
+   
+  /* Retrieve the preroll buffer */
+  g_signal_emit_by_name (sink, "pull-preroll", &buffer);
+  if (buffer) {
+    render_buffer (buffer, data);
     gst_buffer_unref (buffer);
   }
 }
@@ -211,6 +226,7 @@ static void *app_function (void *userdata) {
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
   g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
+  g_signal_connect (data->vsink, "new-preroll", G_CALLBACK (new_preroll_buffer), data);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
