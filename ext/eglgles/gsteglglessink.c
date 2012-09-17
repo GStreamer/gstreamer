@@ -152,7 +152,7 @@ static const char *frag_prog = {
       "uniform sampler2D tex;"
       "void main(void)"
       "{"
-      " vec4 t = texture2D(tex, opos);" " gl_FragColor = vec4(t.xyz, 0.5);" "}"
+      " vec4 t = texture2D(tex, opos);" " gl_FragColor = vec4(t.xyz, 1.0);" "}"
 };
 
 /* Input capabilities.
