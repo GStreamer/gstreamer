@@ -28,9 +28,10 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 
-public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
+public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private native void nativeInit();
     private native void nativeFinalize();
     private native void nativePlay();
@@ -72,6 +73,9 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
         SurfaceView sv = (SurfaceView) this.findViewById(R.id.surface_video);
         SurfaceHolder sh = sv.getHolder();
         sh.addCallback(this);
+
+        SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
+        sb.setOnSeekBarChangeListener(this);
 
         nativeInit();
 
@@ -142,5 +146,18 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d("GStreamer", "Surface destroyed");
         nativeSurfaceFinalize ();
+    }
+
+    public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+        if (fromUser == false) return;
+        nativeSetPosition(progress);
+    }
+
+    public void onStartTrackingTouch(SeekBar sb) {
+        nativePause();
+    }
+
+    public void onStopTrackingTouch(SeekBar sb) {
+        if (playing) nativePlay();
     }
 }

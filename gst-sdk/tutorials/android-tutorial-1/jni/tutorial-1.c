@@ -26,7 +26,7 @@ typedef struct _CustomData {
   GstElement *pipeline;
   GMainLoop *main_loop;
   ANativeWindow *native_window;
-  gboolean playing;
+  gboolean state;
   gint64 position;
   gint64 duration;
   GstElement *vsink;
@@ -103,7 +103,7 @@ static gboolean refresh_ui (CustomData *data) {
   gint64 current = -1;
 
   /* We do not want to update anything unless we have a working pipeline in the PLAYING state */
-  if (!data || !data->pipeline || !data->playing)
+  if (!data || !data->pipeline || data->state != GST_STATE_PLAYING)
     return TRUE;
 
   /* If we didn't know it yet, query the stream duration */
@@ -152,8 +152,8 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     set_message (gst_element_state_get_name (new_state), data);
-    data->playing = (new_state == GST_STATE_PLAYING);
-    if (data->playing && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+    data->state = new_state;
+    if (data->state == GST_STATE_PLAYING && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
       execute_seek (data->desired_position, data);
       data->desired_position = GST_CLOCK_TIME_NONE;
     }
@@ -205,9 +205,9 @@ static void *app_function (void *userdata) {
 //  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
 //  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280,width=(int)320,height=(int)240,framerate=(fraction)30/1", NULL);
-  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
 //  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
-//  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
   g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
@@ -286,7 +286,7 @@ void gst_native_pause (JNIEnv* env, jobject thiz) {
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   gint64 desired_position = (gint64)(milliseconds * GST_SECOND / 1000);
-  if (data->playing) {
+  if (data->state == GST_STATE_PLAYING || data->state == GST_STATE_PAUSED) {
 	  execute_seek(desired_position, data);
   } else {
 	  GST_DEBUG ("Scheduling seek to %d milliseconds for later", milliseconds);
