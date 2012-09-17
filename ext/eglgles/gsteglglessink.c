@@ -855,10 +855,11 @@ gst_eglglessink_start (GstBaseSink * sink)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
 
-  if (!egl_init (eglglessink)) {
-    GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
-    goto HANDLE_ERROR;
-  }
+  if (!eglglessink->egl_started)
+    if (!egl_init (eglglessink)) {
+      GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
+      goto HANDLE_ERROR;
+    }
 
   /* Ask for a window to render to */
   gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
