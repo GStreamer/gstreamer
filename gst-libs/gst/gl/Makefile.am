@@ -11,12 +11,13 @@ EXTRA_DIST = \
 libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstgldisplay.c \
 	gstglmemory.c \
-	gstglmeta.c \
 	gstglbufferpool.c \
 	gstglfilter.c \
 	gstglmixer.c \
         gstglshader.c \
-        gstglshadervariables.c
+        gstglshadervariables.c \
+        gstgldownload.c \
+        gstglupload.c
 
 if GL_BACKEND_WIN32
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_win32.c
@@ -36,14 +37,15 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglwindow.h \
 	gstgldisplay.h \
 	gstglmemory.h \
-	gstglmeta.h \
 	gstglbufferpool.h \
 	gstgles2.h \
 	gstglfilter.h \
 	gstglmixer.h \
 	gstglmixerpad.h \
         gstglshadervariables.h \
-	gstglshader.h
+	gstglshader.h \
+	gstgldownload.h \
+	gstglupload.h
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
