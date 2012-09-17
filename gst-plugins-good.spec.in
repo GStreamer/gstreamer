@@ -76,6 +76,7 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-good.doap
 %{_datadir}/gstreamer-%{majorminor}/presets/GstIirEqualizer10Bands.prs
 %{_datadir}/gstreamer-%{majorminor}/presets/GstIirEqualizer3Bands.prs
+%{_datadir}/gstreamer-%{majorminor}/presets/GstVP8Enc.prs
 
 # non-core plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstalaw.so
@@ -147,6 +148,8 @@ rm -rf $RPM_BUILD_ROOT
 @USE_WAVPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwavpack.so
 @USE_SOUP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsouphttpsrc.so
 @USE_PULSE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstpulse.so
+@USE_VPX_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstvpx.so
+
 
 %changelog
 * Tue Jun 12 2007 Jan Schmidt <jan at fluendo dot com>
