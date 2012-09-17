@@ -886,7 +886,7 @@ retry:
   /*} */
 
   if (idx < 0) {
-    if (self->flushing)
+    if (self->flushing || self->downstream_flow_ret == GST_FLOW_WRONG_STATE)
       goto flushing;
 
     switch (idx) {
@@ -996,7 +996,7 @@ retry:
     if ((flow_ret = gst_video_decoder_alloc_output_frame (GST_VIDEO_DECODER
                 (self), frame)) != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Failed to allocate buffer");
-      goto failed_allocate;
+      goto flow_error;
     }
 
     if (!gst_amc_video_dec_fill_buffer (self, idx, &buffer_info,
@@ -1121,17 +1121,6 @@ invalid_buffer:
     gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
     gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
     self->downstream_flow_ret = GST_FLOW_NOT_NEGOTIATED;
-    GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    return;
-  }
-
-failed_allocate:
-  {
-    GST_ELEMENT_ERROR (self, LIBRARY, SETTINGS, (NULL),
-        ("Failed to allocate output buffer"));
-    gst_pad_push_event (GST_VIDEO_DECODER_SRC_PAD (self), gst_event_new_eos ());
-    gst_pad_pause_task (GST_VIDEO_DECODER_SRC_PAD (self));
-    self->downstream_flow_ret = GST_FLOW_ERROR;
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     return;
   }
@@ -1299,10 +1288,8 @@ gst_amc_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
     return TRUE;
   }
 
-  gst_amc_video_dec_drain (self);
   self->flushing = TRUE;
   gst_amc_codec_flush (self->codec);
-  self->flushing = FALSE;
 
   /* Wait until the srcpad loop is finished,
    * unlock GST_VIDEO_DECODER_STREAM_LOCK to prevent deadlocks
@@ -1311,6 +1298,7 @@ gst_amc_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
   GST_PAD_STREAM_LOCK (GST_VIDEO_DECODER_SRC_PAD (self));
   GST_PAD_STREAM_UNLOCK (GST_VIDEO_DECODER_SRC_PAD (self));
   GST_VIDEO_DECODER_STREAM_LOCK (self);
+  self->flushing = FALSE;
 
   /* Start the srcpad loop again */
   self->last_upstream_ts = 0;
