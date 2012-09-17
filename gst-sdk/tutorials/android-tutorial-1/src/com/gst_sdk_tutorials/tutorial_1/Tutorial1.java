@@ -83,6 +83,10 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
             playing = savedInstanceState.getBoolean("playing");
             int milliseconds = savedInstanceState.getInt("position");
             Log.i ("GStreamer", "Restoring state, playing:" + playing + " position:" + milliseconds + " ms.");
+            /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
+             * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
+             * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
+             * backwards on each iteration. */
             nativeSetPosition(milliseconds + 1);
             if (playing) {
                 nativePlay();
