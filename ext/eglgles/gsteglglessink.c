@@ -1522,7 +1522,11 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       if (got_gl_error ("glDrawElements"))
         goto HANDLE_ERROR;
 
-      eglSwapBuffers (eglglessink->display, eglglessink->surface);
+      if ((eglSwapBuffers (eglglessink->display, eglglessink->surface))
+          == EGL_FALSE) {
+        show_egl_error ("eglSwapBuffers");
+        goto HANDLE_ERROR;
+      }
   }
 
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
