@@ -22,6 +22,17 @@
 #include "config.h"
 #endif
 
+#include <gst/gst.h>
+
+static gboolean plugin_init (GstPlugin * plugin);
+
+/* cdio headers redefine VERSION etc., so do this here before including them */
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    cdio,
+    "Read audio from audio CDs",
+    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+
 #include "gstcdio.h"
 #include "gstcdiocddasrc.h"
 
@@ -136,10 +147,3 @@ plugin_init (GstPlugin * plugin)
 
   return TRUE;
 }
-
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    cdio,
-    "Read audio from audio CDs",
-    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
