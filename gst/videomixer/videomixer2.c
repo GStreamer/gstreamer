@@ -325,15 +325,12 @@ beach:
 }
 
 static GstCaps *
-gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstObject * parent,
+gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstVideoMixer2 * mix,
     GstCaps * filter)
 {
-  GstVideoMixer2 *mix;
   GstCaps *srccaps;
   GstStructure *s;
   gint i, n;
-
-  mix = GST_VIDEO_MIXER2 (parent);
 
   srccaps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
   if (srccaps == NULL)
@@ -358,16 +355,14 @@ gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstObject * parent,
+gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstVideoMixer2 * mix,
     GstCaps * caps)
 {
   gboolean ret;
-  GstVideoMixer2 *mix;
   GstCaps *accepted_caps;
   gint i, n;
   GstStructure *s;
 
-  mix = GST_VIDEO_MIXER2 (parent);
   GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, caps);
 
   accepted_caps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
@@ -398,9 +393,10 @@ gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_videomixer2_pad_sink_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
+gst_videomixer2_sink_query (GstCollectPads * pads, GstCollectData * cdata,
+    GstQuery * query, GstVideoMixer2 * mix)
 {
+  GstVideoMixer2Pad *pad = GST_VIDEO_MIXER2_PAD (cdata->pad);
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -409,7 +405,7 @@ gst_videomixer2_pad_sink_query (GstPad * pad, GstObject * parent,
       GstCaps *filter, *caps;
 
       gst_query_parse_caps (query, &filter);
-      caps = gst_videomixer2_pad_sink_getcaps (pad, parent, filter);
+      caps = gst_videomixer2_pad_sink_getcaps (GST_PAD (pad), mix, filter);
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       ret = TRUE;
@@ -420,13 +416,13 @@ gst_videomixer2_pad_sink_query (GstPad * pad, GstObject * parent,
       GstCaps *caps;
 
       gst_query_parse_accept_caps (query, &caps);
-      ret = gst_videomixer2_pad_sink_acceptcaps (pad, parent, caps);
+      ret = gst_videomixer2_pad_sink_acceptcaps (GST_PAD (pad), mix, caps);
       gst_query_set_accept_caps_result (query, ret);
       ret = TRUE;
       break;
     }
     default:
-      ret = gst_pad_query_default (pad, parent, query);
+      ret = gst_pad_query_default (GST_PAD (pad), GST_OBJECT (mix), query);
       break;
   }
   return ret;
@@ -526,10 +522,6 @@ gst_videomixer2_pad_class_init (GstVideoMixer2PadClass * klass)
 static void
 gst_videomixer2_pad_init (GstVideoMixer2Pad * mixerpad)
 {
-  /* setup some pad functions */
-  gst_pad_set_query_function (GST_PAD (mixerpad),
-      gst_videomixer2_pad_sink_query);
-
   mixerpad->zorder = DEFAULT_PAD_ZORDER;
   mixerpad->xpos = DEFAULT_PAD_XPOS;
   mixerpad->ypos = DEFAULT_PAD_YPOS;
@@ -2004,6 +1996,8 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
       mix);
   gst_collect_pads_set_event_function (mix->collect,
       (GstCollectPadsEventFunction) gst_videomixer2_sink_event, mix);
+  gst_collect_pads_set_query_function (mix->collect,
+      (GstCollectPadsQueryFunction) gst_videomixer2_sink_query, mix);
   gst_collect_pads_set_clip_function (mix->collect,
       (GstCollectPadsClipFunction) gst_videomixer2_sink_clip, mix);
 
