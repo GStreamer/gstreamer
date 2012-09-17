@@ -63,10 +63,6 @@ libgstopengl_la_SOURCES = \
 	gstopengl.c \
 	gstglimagesink.c \
 	gstglimagesink.h \
-	gstglupload.c \
-	gstglupload.h \
-	gstgldownload.c \
-	gstgldownload.h \
 	gstglfiltercube.c \
 	gstglfiltercube.h \
 	gstgleffects.c \
