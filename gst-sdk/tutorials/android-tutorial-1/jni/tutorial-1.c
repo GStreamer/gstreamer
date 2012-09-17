@@ -144,7 +144,8 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   set_message (GST_MESSAGE_TYPE_NAME (msg), data);
   refresh_ui (data);
-  gst_element_set_state (data->pipeline, GST_STATE_NULL);
+  gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+  execute_seek (0, data);
 }
 
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
