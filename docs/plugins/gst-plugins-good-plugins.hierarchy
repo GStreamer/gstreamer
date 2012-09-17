@@ -161,7 +161,6 @@ GObject
         GstMatroskaMux
           GstWebMMux
         GstMatroskaParse
-        GstMonoscope
         GstMuLawDec
         GstMuLawEnc
         GstMultipartDemux

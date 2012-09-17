@@ -2,4 +2,3 @@
 
 type:GstIirEqualizer
 type:GstVideoMixerPad
-type:GstVideoMixer2Pad
