@@ -22,7 +22,7 @@
 
 #include <stdlib.h>
 
-#define CAPS "video/x-raw,format=RGB24,width=160,pixel-aspect-ratio=1/1"
+#define CAPS "video/x-raw,format=RGB,width=160,pixel-aspect-ratio=1/1"
 
 int
 main (int argc, char *argv[])
@@ -108,6 +108,7 @@ main (int argc, char *argv[])
   /* if we have a buffer now, convert it to a pixbuf. It's possible that we
    * don't have a buffer because we went EOS right away or had an error. */
   if (sample) {
+    GstBuffer *buffer;
     GstCaps *caps;
     GstStructure *s;
 
@@ -115,7 +116,7 @@ main (int argc, char *argv[])
      * that it can only be an rgb buffer. The only thing we have not specified
      * on the caps is the height, which is dependant on the pixel-aspect-ratio
      * of the source material */
-    sample_caps = gst_sample_get_caps (sample);
+    caps = gst_sample_get_caps (sample);
     if (!caps) {
       g_print ("could not get snapshot format\n");
       exit (-1);
@@ -132,6 +133,7 @@ main (int argc, char *argv[])
 
     /* create pixmap from buffer and save, gstreamer video buffers have a stride
      * that is rounded up to the nearest multiple of 4 */
+    buffer = gst_sample_get_buffer (sample);
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     pixbuf = gdk_pixbuf_new_from_data (map.data,
         GDK_COLORSPACE_RGB, FALSE, 8, width, height,
