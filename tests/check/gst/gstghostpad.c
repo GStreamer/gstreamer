@@ -802,7 +802,7 @@ static gint linked_count2;
 static gint unlinked_count2;
 
 static GstPadLinkReturn
-pad_linked1 (GstPad * pad, GstPad * peer)
+pad_linked1 (GstPad * pad, GstObject * parent, GstPad * peer)
 {
   linked_count1++;
 
@@ -810,13 +810,13 @@ pad_linked1 (GstPad * pad, GstPad * peer)
 }
 
 static void
-pad_unlinked1 (GstPad * pad)
+pad_unlinked1 (GstPad * pad, GstObject * parent)
 {
   unlinked_count1++;
 }
 
 static GstPadLinkReturn
-pad_linked2 (GstPad * pad, GstPad * peer)
+pad_linked2 (GstPad * pad, GstObject * parent, GstPad * peer)
 {
   linked_count2++;
 
@@ -824,7 +824,7 @@ pad_linked2 (GstPad * pad, GstPad * peer)
 }
 
 static void
-pad_unlinked2 (GstPad * pad)
+pad_unlinked2 (GstPad * pad, GstObject * parent)
 {
   unlinked_count2++;
 }

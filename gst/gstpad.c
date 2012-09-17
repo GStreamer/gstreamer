@@ -1836,11 +1836,23 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
     goto not_linked_together;
 
   if (GST_PAD_UNLINKFUNC (srcpad)) {
-    GST_PAD_UNLINKFUNC (srcpad) (srcpad);
+    GstObject *tmpparent;
+
+    ACQUIRE_PARENT (srcpad, tmpparent, no_src_parent);
+
+    GST_PAD_UNLINKFUNC (srcpad) (srcpad, tmpparent);
+    RELEASE_PARENT (parent);
   }
+no_src_parent:
   if (GST_PAD_UNLINKFUNC (sinkpad)) {
-    GST_PAD_UNLINKFUNC (sinkpad) (sinkpad);
+    GstObject *tmpparent;
+
+    ACQUIRE_PARENT (sinkpad, tmpparent, no_sink_parent);
+
+    GST_PAD_UNLINKFUNC (sinkpad) (sinkpad, tmpparent);
+    RELEASE_PARENT (parent);
   }
+no_sink_parent:
 
   /* first clear peers */
   GST_PAD_PEER (srcpad) = NULL;
@@ -2210,13 +2222,22 @@ gst_pad_link_full (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
     GST_OBJECT_UNLOCK (srcpad);
 
     if (srcfunc) {
+      GstObject *tmpparent;
+
+      ACQUIRE_PARENT (srcpad, tmpparent, no_parent);
       /* this one will call the peer link function */
-      result = srcfunc (srcpad, sinkpad);
+      result = srcfunc (srcpad, tmpparent, sinkpad);
+      RELEASE_PARENT (tmpparent);
     } else if (sinkfunc) {
+      GstObject *tmpparent;
+
+      ACQUIRE_PARENT (sinkpad, tmpparent, no_parent);
       /* if no source link function, we need to call the sink link
        * function ourselves. */
-      result = sinkfunc (sinkpad, srcpad);
+      result = sinkfunc (sinkpad, tmpparent, srcpad);
+      RELEASE_PARENT (tmpparent);
     }
+  no_parent:
 
     GST_OBJECT_LOCK (srcpad);
     GST_OBJECT_LOCK (sinkpad);

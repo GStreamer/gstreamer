@@ -396,20 +396,26 @@ typedef gboolean		(*GstPadQueryFunction)		(GstPad *pad, GstObject *parent,
 /**
  * GstPadLinkFunction:
  * @pad: the #GstPad that is linked.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  * @peer: the peer #GstPad of the link
  *
  * Function signature to handle a new link on the pad.
  *
  * Returns: the result of the link with the specified peer.
  */
-typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstPad *peer);
+typedef GstPadLinkReturn	(*GstPadLinkFunction)		(GstPad *pad, GstObject *parent, GstPad *peer);
 /**
  * GstPadUnlinkFunction:
  * @pad: the #GstPad that is linked.
+ * @parent: the parent of @pad. If the #GST_PAD_FLAG_NEED_PARENT flag is set,
+ *          @parent is guaranteed to be not-NULL and remain valid during the
+ *          execution of this function.
  *
  * Function signature to handle a unlinking the pad prom its peer.
  */
-typedef void			(*GstPadUnlinkFunction)		(GstPad *pad);
+typedef void			(*GstPadUnlinkFunction)		(GstPad *pad, GstObject *parent);
 
 
 /* misc */
