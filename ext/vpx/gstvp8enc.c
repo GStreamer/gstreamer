@@ -795,6 +795,8 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVP8Enc *gst_vp8_enc;
+  gboolean global = FALSE;
+  vpx_codec_err_t status;
 
   g_return_if_fail (GST_IS_VP8_ENC (object));
   gst_vp8_enc = GST_VP8_ENC (object);
@@ -804,61 +806,80 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_RC_END_USAGE:
       gst_vp8_enc->cfg.rc_end_usage = g_value_get_enum (value);
+      global = TRUE;
       break;
     case PROP_RC_TARGET_BITRATE:
       gst_vp8_enc->cfg.rc_target_bitrate = g_value_get_int (value) / 1000;
       gst_vp8_enc->rc_target_bitrate_set = TRUE;
+      global = TRUE;
       break;
     case PROP_RC_MIN_QUANTIZER:
       gst_vp8_enc->cfg.rc_min_quantizer = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_MAX_QUANTIZER:
       gst_vp8_enc->cfg.rc_max_quantizer = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_DROPFRAME_THRESH:
       gst_vp8_enc->cfg.rc_dropframe_thresh = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_RESIZE_ALLOWED:
       gst_vp8_enc->cfg.rc_resize_allowed = g_value_get_boolean (value);
+      global = TRUE;
       break;
     case PROP_RC_RESIZE_UP_THRESH:
       gst_vp8_enc->cfg.rc_resize_up_thresh = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_RESIZE_DOWN_THRESH:
       gst_vp8_enc->cfg.rc_resize_down_thresh = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_UNDERSHOOT_PCT:
       gst_vp8_enc->cfg.rc_undershoot_pct = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_OVERSHOOT_PCT:
       gst_vp8_enc->cfg.rc_overshoot_pct = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_BUF_SZ:
       gst_vp8_enc->cfg.rc_buf_sz = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_BUF_INITIAL_SZ:
       gst_vp8_enc->cfg.rc_buf_initial_sz = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_BUF_OPTIMAL_SZ:
       gst_vp8_enc->cfg.rc_buf_optimal_sz = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_2PASS_VBR_BIAS_PCT:
       gst_vp8_enc->cfg.rc_2pass_vbr_bias_pct = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_2PASS_VBR_MINSECTION_PCT:
       gst_vp8_enc->cfg.rc_2pass_vbr_minsection_pct = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_RC_2PASS_VBR_MAXSECTION_PCT:
       gst_vp8_enc->cfg.rc_2pass_vbr_maxsection_pct = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_KF_MODE:
       gst_vp8_enc->cfg.kf_mode = g_value_get_enum (value);
+      global = TRUE;
       break;
     case PROP_KF_MAX_DIST:
       gst_vp8_enc->cfg.kf_max_dist = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_MULTIPASS_MODE:
       gst_vp8_enc->cfg.g_pass = g_value_get_enum (value);
+      global = TRUE;
       break;
     case PROP_MULTIPASS_CACHE_FILE:
       if (gst_vp8_enc->multipass_cache_file)
@@ -867,6 +888,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TS_NUMBER_LAYERS:
       gst_vp8_enc->cfg.ts_number_layers = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_TS_TARGET_BITRATE:{
       GValueArray *va = g_value_get_boxed (value);
@@ -886,6 +908,7 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       } else {
         gst_vp8_enc->n_ts_target_bitrate = 0;
       }
+      global = TRUE;
       break;
     }
     case PROP_TS_RATE_DECIMATOR:{
@@ -906,10 +929,12 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       } else {
         gst_vp8_enc->n_ts_rate_decimator = 0;
       }
+      global = TRUE;
       break;
     }
     case PROP_TS_PERIODICITY:
       gst_vp8_enc->cfg.ts_periodicity = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_TS_LAYER_ID:{
       GValueArray *va = g_value_get_boxed (value);
@@ -929,67 +954,226 @@ gst_vp8_enc_set_property (GObject * object, guint prop_id,
       } else {
         gst_vp8_enc->n_ts_layer_id = 0;
       }
+      global = TRUE;
       break;
     }
     case PROP_ERROR_RESILIENT:
       gst_vp8_enc->cfg.g_error_resilient = g_value_get_flags (value);
+      global = TRUE;
       break;
     case PROP_LAG_IN_FRAMES:
       gst_vp8_enc->cfg.g_lag_in_frames = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_THREADS:
       gst_vp8_enc->cfg.g_threads = g_value_get_int (value);
+      global = TRUE;
       break;
     case PROP_DEADLINE:
       gst_vp8_enc->deadline = g_value_get_int64 (value);
       break;
     case PROP_H_SCALING_MODE:
       gst_vp8_enc->h_scaling_mode = g_value_get_enum (value);
+      if (gst_vp8_enc->inited) {
+        vpx_scaling_mode_t sm;
+
+        sm.h_scaling_mode = gst_vp8_enc->h_scaling_mode;
+        sm.v_scaling_mode = gst_vp8_enc->v_scaling_mode;
+
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_SCALEMODE, &sm);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_SCALEMODE: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_V_SCALING_MODE:
       gst_vp8_enc->v_scaling_mode = g_value_get_enum (value);
+      if (gst_vp8_enc->inited) {
+        vpx_scaling_mode_t sm;
+
+        sm.h_scaling_mode = gst_vp8_enc->h_scaling_mode;
+        sm.v_scaling_mode = gst_vp8_enc->v_scaling_mode;
+
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_SCALEMODE, &sm);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_SCALEMODE: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_CPU_USED:
       gst_vp8_enc->cpu_used = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_CPUUSED,
+            gst_vp8_enc->cpu_used);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc, "Failed to set VP8E_SET_CPUUSED: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_ENABLE_AUTO_ALT_REF:
       gst_vp8_enc->enable_auto_alt_ref = g_value_get_boolean (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_ENABLEAUTOALTREF,
+            (gst_vp8_enc->enable_auto_alt_ref ? 1 : 0));
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_ENABLEAUTOALTREF: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_NOISE_SENSITIVITY:
       gst_vp8_enc->noise_sensitivity = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder,
+            VP8E_SET_NOISE_SENSITIVITY, gst_vp8_enc->noise_sensitivity);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_NOISE_SENSITIVITY: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_SHARPNESS:
       gst_vp8_enc->sharpness = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status = vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_SHARPNESS,
+            gst_vp8_enc->sharpness);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_SHARPNESS: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_STATIC_THRESHOLD:
       gst_vp8_enc->static_threshold = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_STATIC_THRESHOLD,
+            gst_vp8_enc->static_threshold);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_STATIC_THRESHOLD: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_TOKEN_PARTITIONS:
       gst_vp8_enc->token_partitions = g_value_get_enum (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_TOKEN_PARTITIONS,
+            gst_vp8_enc->token_partitions);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_TOKEN_PARTIONS: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_ARNR_MAXFRAMES:
       gst_vp8_enc->arnr_maxframes = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_ARNR_MAXFRAMES,
+            gst_vp8_enc->arnr_maxframes);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_ARNR_MAXFRAMES: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_ARNR_STRENGTH:
       gst_vp8_enc->arnr_strength = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_ARNR_STRENGTH,
+            gst_vp8_enc->arnr_strength);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_ARNR_STRENGTH: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_ARNR_TYPE:
       gst_vp8_enc->arnr_type = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status = vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_ARNR_TYPE,
+            gst_vp8_enc->arnr_type);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_ARNR_TYPE: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_TUNING:
       gst_vp8_enc->tuning = g_value_get_enum (value);
+      if (gst_vp8_enc->inited) {
+        status = vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_TUNING,
+            gst_vp8_enc->tuning);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_TUNING: %s", gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_CQ_LEVEL:
       gst_vp8_enc->cq_level = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status = vpx_codec_control (&gst_vp8_enc->encoder, VP8E_SET_CQ_LEVEL,
+            gst_vp8_enc->cq_level);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_CQ_LEVEL: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     case PROP_MAX_INTRA_BITRATE_PCT:
       gst_vp8_enc->max_intra_bitrate_pct = g_value_get_int (value);
+      if (gst_vp8_enc->inited) {
+        status =
+            vpx_codec_control (&gst_vp8_enc->encoder,
+            VP8E_SET_MAX_INTRA_BITRATE_PCT, gst_vp8_enc->max_intra_bitrate_pct);
+        if (status != VPX_CODEC_OK) {
+          GST_WARNING_OBJECT (gst_vp8_enc,
+              "Failed to set VP8E_SET_MAX_INTRA_BITRATE_PCT: %s",
+              gst_vpx_error_name (status));
+        }
+      }
       break;
     default:
       break;
   }
 
-  g_mutex_unlock (&gst_vp8_enc->encoder_lock);
+  if (global &&gst_vp8_enc->inited) {
+    status =
+        vpx_codec_enc_config_set (&gst_vp8_enc->encoder, &gst_vp8_enc->cfg);
+    if (status != VPX_CODEC_OK) {
+      g_mutex_unlock (&gst_vp8_enc->encoder_lock);
+      GST_ELEMENT_ERROR (gst_vp8_enc, LIBRARY, INIT,
+          ("Failed to set encoder configuration"), ("%s",
+              gst_vpx_error_name (status)));
+    } else {
+      g_mutex_unlock (&gst_vp8_enc->encoder_lock);
+    }
+  } else {
+    g_mutex_unlock (&gst_vp8_enc->encoder_lock);
+  }
 }
 
 static void
