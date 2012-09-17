@@ -255,7 +255,6 @@ static void *app_function (void *userdata) {
   g_source_destroy (timeout_source);
 
   /* Free resources */
-  gst_object_unref (bus);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->vsink);
   gst_object_unref (data->pipeline);
