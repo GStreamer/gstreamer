@@ -102,8 +102,8 @@ static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
 
-  /* We do not want to update anything unless we have a working pipeline in the PLAYING state */
-  if (!data || !data->pipeline || data->state != GST_STATE_PLAYING)
+  /* We do not want to update anything unless we have a working pipeline in the PAUSED or PLAYING state */
+  if (!data || !data->pipeline || data->state < GST_STATE_PAUSED)
     return TRUE;
 
   /* If we didn't know it yet, query the stream duration */
