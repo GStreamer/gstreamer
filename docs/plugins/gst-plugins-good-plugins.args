@@ -22764,7 +22764,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Auto alt reference frames</NICK>
-<BLURB>Automatically generate alt reference frames.</BLURB>
+<BLURB>Automatically generate AltRef frames.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -23150,6 +23150,156 @@
 
 <ARG>
 <NAME>GstVP8Enc::v-scaling-mode</NAME>
+<TYPE>GstVP8EncScalingMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Vertical scaling mode</NICK>
+<BLURB>Vertical scaling mode.</BLURB>
+<DEFAULT>Normal</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::horizontal-scaling-mode</NAME>
+<TYPE>GstVP8EncScalingMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Horizontal scaling mode</NICK>
+<BLURB>Horizontal scaling mode.</BLURB>
+<DEFAULT>Normal</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::keyframe-max-dist</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe max distance</NICK>
+<BLURB>Maximum distance between keyframes (number of frames).</BLURB>
+<DEFAULT>128</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::keyframe-mode</NAME>
+<TYPE>GstVP8EncKfMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe Mode</NICK>
+<BLURB>Keyframe placement.</BLURB>
+<DEFAULT>Determine optimal placement automatically</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::max-intra-bitrate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Intra bitrate</NICK>
+<BLURB>Maximum Intra frame bitrate.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::overshoot</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overshoot PCT</NICK>
+<BLURB>Datarate overshoot (max) target (%).</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::temporal-scalability-layer-id</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Coding layer identification</NICK>
+<BLURB>Sequence defining coding layer membership.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::temporal-scalability-number-layers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,5]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of coding layers</NICK>
+<BLURB>Number of coding layers to use.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::temporal-scalability-periodicity</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Coding layer periodicity</NICK>
+<BLURB>Length of sequence that defines layer membership periodicity.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::temporal-scalability-rate-decimator</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Coding layer rate decimator</NICK>
+<BLURB>Rate decimation factors for each layer.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::temporal-scalability-target-bitrate</NAME>
+<TYPE>GValueArray*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Coding layer target bitrates</NICK>
+<BLURB>Target bitrates for coding layers (one per layer, decreasing).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::twopass-vbr-bias</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,100]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>2-pass VBR bias</NICK>
+<BLURB>CBR/VBR bias (0=CBR, 100=VBR).</BLURB>
+<DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::twopass-vbr-maxsection</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>2-pass GOP max bitrate</NICK>
+<BLURB>GOP maximum bitrate (% target).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::twopass-vbr-minsection</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>2-pass GOP min bitrate</NICK>
+<BLURB>GOP minimum bitrate (% target).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::undershoot</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,1000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Undershoot PCT</NICK>
+<BLURB>Datarate undershoot (min) target (%).</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVP8Enc::vertical-scaling-mode</NAME>
 <TYPE>GstVP8EncScalingMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
