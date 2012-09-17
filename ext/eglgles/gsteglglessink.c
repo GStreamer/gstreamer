@@ -1165,6 +1165,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
   GLint test;
   GLuint verthandle, fraghandle, prog;
+  GLboolean ret;
 
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL surface setup");
 
@@ -1194,6 +1195,16 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
    * XXX: Need to be runtime conditional or ifdefed
    */
 
+  /* Shader compiler support it's optional byt we
+   * currently rely on it.
+   */
+
+  glGetBooleanv (GL_SHADER_COMPILER, &ret);
+  if (ret == GL_FALSE) {
+    GST_ERROR_OBJECT (eglglessink, "Shader compiler support is unavailable!");
+    goto HANDLE_ERROR;
+  }
+
   verthandle = glCreateShader (GL_VERTEX_SHADER);
   GST_DEBUG_OBJECT (eglglessink, "sending %s to handle %d", vert_prog,
       verthandle);
@@ -1207,7 +1218,11 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
   glGetShaderiv (verthandle, GL_COMPILE_STATUS, &test);
   if (test != GL_FALSE)
-    GST_DEBUG_OBJECT (eglglessink, "Successfully compiled vertex program");
+    GST_DEBUG_OBJECT (eglglessink, "Successfully compiled vertex shader");
+  else {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't compile vertex shader");
+    goto HANDLE_ERROR;
+  }
 
   fraghandle = glCreateShader (GL_FRAGMENT_SHADER);
   glShaderSource (fraghandle, 1, &frag_prog, NULL);
@@ -1220,7 +1235,11 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
   glGetShaderiv (fraghandle, GL_COMPILE_STATUS, &test);
   if (test != GL_FALSE)
-    GST_DEBUG_OBJECT (eglglessink, "Successfully compiled fragment program");
+    GST_DEBUG_OBJECT (eglglessink, "Successfully compiled fragment shader");
+  else {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't compile fragment shader");
+    goto HANDLE_ERROR;
+  }
 
   prog = glCreateProgram ();
   if (got_gl_error ("glCreateProgram"))
@@ -1235,6 +1254,10 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   glGetProgramiv (prog, GL_LINK_STATUS, &test);
   if (test != GL_FALSE)
     GST_DEBUG_OBJECT (eglglessink, "GLES: Successfully linked program");
+  else {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't link program");
+    goto HANDLE_ERROR;
+  }
 
   glUseProgram (prog);
   if (got_gl_error ("glUseProgram"))
