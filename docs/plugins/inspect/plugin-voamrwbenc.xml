@@ -1,0 +1,34 @@
+<plugin>
+  <name>voamrwbenc</name>
+  <description>Adaptive Multi-Rate Wide-Band Encoder</description>
+  <filename>../../ext/voamrwbenc/.libs/libgstvoamrwbenc.so</filename>
+  <basename>libgstvoamrwbenc.so</basename>
+  <version>0.11.99</version>
+  <license>unknown</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>voamrwbenc</name>
+      <longname>AMR-WB audio encoder</longname>
+      <class>Codec/Encoder/Audio</class>
+      <description>Adaptive Multi-Rate Wideband audio encoder</description>
+      <author>Renato Araujo &lt;renato.filho@indt.org.br&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, layout=(string)interleaved, rate=(int)16000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/AMR-WB, rate=(int)16000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

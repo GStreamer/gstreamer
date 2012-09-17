@@ -1,0 +1,28 @@
+<plugin>
+  <name>waylandsink</name>
+  <description>Wayland Video Sink</description>
+  <filename>../../ext/wayland/.libs/libgstwaylandsink.so</filename>
+  <basename>libgstwaylandsink.so</basename>
+  <version>0.11.99</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>waylandsink</name>
+      <longname>wayland video sink</longname>
+      <class>Sink/Video</class>
+      <description>Output to wayland surface</description>
+      <author>Sreerenj Balachandran &lt;sreerenj.balachandran@intel.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)BGRA, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

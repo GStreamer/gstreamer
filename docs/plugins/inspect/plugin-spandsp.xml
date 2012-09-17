@@ -1,0 +1,34 @@
+<plugin>
+  <name>spandsp</name>
+  <description>libspandsp plugin</description>
+  <filename>../../ext/spandsp/.libs/libgstspandsp.so</filename>
+  <basename>libgstspandsp.so</basename>
+  <version>0.11.99</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>spanplc</name>
+      <longname>SpanDSP PLC</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Adds packet loss concealment to audio</description>
+      <author>Youness Alaoui &lt;youness.alaoui@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
