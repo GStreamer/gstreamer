@@ -5,7 +5,7 @@ libgstamrnb_la_SOURCES = \
 	amrnbdec.c \
 	amrnbenc.c
 
-libgstamrnb_la_CFLAGS = -DGST_USE_UNSTABLE_API $(GST_PLUGINS_BASE_CFLAGS) \
+libgstamrnb_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(AMRNB_CFLAGS)
 libgstamrnb_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
         -lgstaudio-@GST_API_VERSION@ \
