@@ -1732,13 +1732,6 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   return ret;
 }
 
-static void
-_gst_video_codec_frame_unref0 (GstVideoCodecFrame * frame)
-{
-  if (frame)
-    gst_video_codec_frame_unref (frame);
-}
-
 static GstFlowReturn
 gst_vp8_enc_process (GstVP8Enc * encoder)
 {
@@ -1748,7 +1741,6 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
   GstVP8EncUserData *user_data;
   GstVideoCodecFrame *frame;
   GstFlowReturn ret = GST_FLOW_OK;
-  GList *l, *frames = NULL;
 
   video_encoder = GST_VIDEO_ENCODER (encoder);
 
@@ -1773,7 +1765,9 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
         buffer = gst_buffer_new ();
         GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_LIVE);
         frame->output_buffer = buffer;
-        frames = g_list_prepend (frames, frame);
+        g_mutex_unlock (&encoder->encoder_lock);
+        ret = gst_video_encoder_finish_frame (video_encoder, frame);
+        g_mutex_lock (&encoder->encoder_lock);
       }
 
       pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
@@ -1807,23 +1801,14 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
       user_data->invisible = g_list_append (user_data->invisible, buffer);
     } else {
       frame->output_buffer = buffer;
-      frames = g_list_prepend (frames, frame);
+      g_mutex_unlock (&encoder->encoder_lock);
+      ret = gst_video_encoder_finish_frame (video_encoder, frame);
+      g_mutex_lock (&encoder->encoder_lock);
     }
 
     pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
   g_mutex_unlock (&encoder->encoder_lock);
-
-  frames = g_list_reverse (frames);
-  for (l = frames; l; l = l->next) {
-    ret = gst_video_encoder_finish_frame (video_encoder, l->data);
-    l->data = NULL;
-    if (ret != GST_FLOW_OK)
-      break;
-  }
-
-  g_list_foreach (frames, (GFunc) _gst_video_codec_frame_unref0, NULL);
-  g_list_free (frames);
 
   return ret;
 }
