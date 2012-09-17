@@ -220,7 +220,7 @@ caps_to_mime (GstCaps * caps)
   } else if (strcmp (name, "audio/x-mulaw") == 0) {
     return "audio/g711-mlaw";
   } else if (strcmp (name, "audio/x-vorbis") == 0) {
-    return "audio/x-vorbis";
+    return "audio/vorbis";
   }
 
   return NULL;
@@ -852,18 +852,27 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     gint nsheaders = gst_value_array_get_size (sh);
     GstBuffer *buf;
     const GValue *h;
-    gint i;
+    gint i, j;
     gchar *fname;
 
-    for (i = 0; i < nsheaders; i++) {
+    for (i = 0, j = 0; i < nsheaders; i++) {
       h = gst_value_array_get_value (sh, i);
       buf = gst_value_get_buffer (h);
 
-      fname = g_strdup_printf ("csd-%d", i);
+      if (strcmp (mime, "audio/vorbis") == 0) {
+        guint8 header_type = GST_BUFFER_DATA (buf)[0];
+
+        /* Only use the identification and setup packets */
+        if (header_type != 0x01 && header_type != 0x05)
+          continue;
+      }
+
+      fname = g_strdup_printf ("csd-%d", j);
       self->codec_datas =
           g_list_prepend (self->codec_datas, gst_buffer_ref (buf));
       gst_amc_format_set_buffer (format, fname, buf);
       g_free (fname);
+      j++;
     }
   }
 
