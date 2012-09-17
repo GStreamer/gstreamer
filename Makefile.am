@@ -85,7 +85,8 @@ CRUFT_FILES = \
 
 CRUFT_DIRS = \
 	$(top_srcdir)/gst/qtdemux \
-	$(top_srcdir)/gst/quicktime
+	$(top_srcdir)/gst/quicktime \
+	$(top_srcdir)/ext/annodex
 
 include $(top_srcdir)/common/cruft.mak
 
