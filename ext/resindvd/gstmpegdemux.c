@@ -826,53 +826,6 @@ gst_flups_demux_send_gap_updates (GstFluPSDemux * demux, GstClockTime new_time)
   }
 }
 
-static inline void
-gst_flups_demux_close_segment (GstFluPSDemux * demux)
-{
-  gint id;
-  GstEvent *event = NULL;
-  GstClockTime stop = demux->src_segment.stop;
-
-  if (demux->src_segment.position != -1 && demux->src_segment.position > stop)
-    stop = demux->src_segment.position;
-
-  for (id = 0; id < GST_FLUPS_DEMUX_MAX_STREAMS; id++) {
-    GstFluPSStream *stream = demux->streams[id];
-
-    if (stream) {
-      GstClockTime start = demux->src_segment.start;
-      GstSegment segment;
-
-      if (stream->last_seg_start != GST_CLOCK_TIME_NONE &&
-          stream->last_seg_start > start)
-        start = stream->last_seg_start;
-
-#if 0
-      g_print ("Segment close to pad %s start %" GST_TIME_FORMAT
-          " stop %" GST_TIME_FORMAT "\n",
-          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (start),
-          GST_TIME_ARGS (stop));
-#endif
-      if (start > stop) {
-        GST_WARNING_OBJECT (demux,
-            "Problem on pad %s with start %" GST_TIME_FORMAT " > stop %"
-            GST_TIME_FORMAT "\n",
-            gst_object_get_name (GST_OBJECT (stream->pad)),
-            GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
-      }
-      gst_segment_init (&segment, GST_FORMAT_TIME);
-      segment.rate = demux->src_segment.rate;
-      segment.applied_rate = demux->src_segment.applied_rate;
-      segment.start = start;
-      segment.stop = stop;
-      segment.time =
-          demux->src_segment.time + (start - demux->src_segment.start);
-      event = gst_event_new_segment (&segment);
-      gst_pad_push_event (stream->pad, event);
-    }
-  }
-}
-
 static gboolean
 gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -895,9 +848,6 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gint64 start, stop, time;
       gint64 base, dur;
       GstClockTimeDiff adjust;
-
-      /* Close current segment */
-      gst_flups_demux_close_segment (demux);
 
       gst_event_parse_segment (event, &segment);
 
@@ -924,6 +874,7 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           " base %" G_GINT64_FORMAT, start, stop, time, base);
 
       adjust = base - start + SCR_MUNGE;
+      base = 0;
       start = base + SCR_MUNGE;
 
       if (adjust >= 0)
