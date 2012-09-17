@@ -273,7 +273,7 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
   pthread_create (&gst_app_thread, NULL, &app_function, data);
-  /* FIXME: Wait until thread has started and the main loop is runing */
+  /* FIXME: Wait until thread has started and the main loop is running */
   usleep (100000);
 }
 
