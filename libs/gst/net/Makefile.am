@@ -52,7 +52,6 @@ GstNet-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_API_VERSIO
 		--strip-prefix=Gst \
 		--warn-all \
 		--nsversion=@GST_API_VERSION@ \
-		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \

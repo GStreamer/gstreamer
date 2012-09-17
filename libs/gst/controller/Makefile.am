@@ -54,7 +54,6 @@ GstController-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@
 		--nsversion=@GST_API_VERSION@ \
 		--warn-all \
 		--strip-prefix=Gst \
-		-DGST_USE_UNSTABLE_API \
 		-I$(top_srcdir) \
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \

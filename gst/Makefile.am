@@ -270,7 +270,6 @@ Gst-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_API_VERSIO
 		-I$(top_srcdir) \
 		-I$(top_builddir) \
 		-DIN_GOBJECT_INTROSPECTION=1 \
-		-DGST_USE_UNSTABLE_API \
 		--c-include='gst/gst.h' \
 		--library=libgstreamer-@GST_API_VERSION@.la \
 		--include=GLib-2.0 \

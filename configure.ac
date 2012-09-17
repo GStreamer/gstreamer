@@ -4,10 +4,6 @@ dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, git and prerelease does Werror too
 dnl
-dnl
-dnl ==========> REMOVE GST_USE_UNSTABLE_API when doing 1.0.0 <=============
-dnl             (also check libtool version)
-dnl
 AC_INIT(GStreamer, 0.11.94.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
@@ -677,8 +673,8 @@ dnl every flag in GST_OPTION_CFLAGS can be overridden at make time via e.g.
 dnl make DEPRECATED_CFLAGS=''
 GST_OPTION_CFLAGS="\$(WARNING_CFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
 GST_OPTION_CXXFLAGS="\$(WARNING_CXXFLAGS) \$(ERROR_CXXFLAGS) \$(DEBUG_CFLAGS) \$(PROFILE_CFLAGS) \$(GCOV_CFLAGS) \$(OPT_CFLAGS) \$(DEPRECATED_CFLAGS)"
-GST_OPTION_CFLAGS="$GST_OPTION_CFLAGS -DGST_USE_UNSTABLE_API"
-GST_OPTION_CXXFLAGS="$GST_OPTION_CXXFLAGS -DGST_USE_UNSTABLE_API"
+GST_OPTION_CFLAGS="$GST_OPTION_CFLAGS"
+GST_OPTION_CXXFLAGS="$GST_OPTION_CXXFLAGS"
 AC_SUBST(GST_OPTION_CFLAGS)
 AC_SUBST(GST_OPTION_CXXFLAGS)
 

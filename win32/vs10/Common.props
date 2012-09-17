@@ -51,7 +51,7 @@ echo ### INSTALL GLIB-DEV AND/OR MAKE SURE IT IS IN YOUR PATH!
   <ItemDefinitionGroup>
     <ClCompile />
     <ClCompile>
-      <PreprocessorDefinitions>PREFIX="$(PREFIX)";DISABLE_ORC;WIN32;_WINDOWS;HAVE_CONFIG_H;HAVE_WIN32;GST_USE_UNSTABLE_API;GST_DISABLE_XML;HAVE_SINH;HAVE_COSH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PREFIX="$(PREFIX)";DISABLE_ORC;WIN32;_WINDOWS;HAVE_CONFIG_H;HAVE_WIN32;GST_DISABLE_XML;HAVE_SINH;HAVE_COSH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4996;4244;4018;4146;4305;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <AdditionalIncludeDirectories>$(GstProjectRoot);$(GstProjectRoot)libs;$(GstProjectRoot)win32\common\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
