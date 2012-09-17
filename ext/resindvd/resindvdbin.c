@@ -353,6 +353,49 @@ _pad_block_destroy_notify (RsnDvdBinPadBlockCtx * ctx)
   g_slice_free (RsnDvdBinPadBlockCtx, ctx);
 }
 
+#if DEBUG_TIMING
+static GstPadProbeReturn
+dvdbin_dump_timing_info (GstPad * opad,
+    GstPadProbeInfo * info, gpointer userdata)
+{
+  if (GST_PAD_PROBE_INFO_TYPE (info) & (GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
+          GST_PAD_PROBE_TYPE_EVENT_FLUSH)) {
+    GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+    if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+      const GstSegment *seg;
+
+      gst_event_parse_segment (event, &seg);
+
+      g_print ("%s:%s segment: rate %g format %d, start: %"
+          GST_TIME_FORMAT ", stop: %" GST_TIME_FORMAT ", time: %"
+          GST_TIME_FORMAT " base: %" GST_TIME_FORMAT "\n",
+          GST_DEBUG_PAD_NAME (opad),
+          seg->rate, seg->format, GST_TIME_ARGS (seg->start),
+          GST_TIME_ARGS (seg->stop), GST_TIME_ARGS (seg->time),
+          GST_TIME_ARGS (seg->base));
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+      GstClockTime ts, dur, end;
+      gst_event_parse_gap (event, &ts, &dur);
+      end = ts;
+      if (ts != GST_CLOCK_TIME_NONE && dur != GST_CLOCK_TIME_NONE)
+        end += dur;
+      g_print ("%s:%s Gap TS: %" GST_TIME_FORMAT " dur %" GST_TIME_FORMAT
+          " (to %" GST_TIME_FORMAT ")\n", GST_DEBUG_PAD_NAME (opad),
+          GST_TIME_ARGS (ts), GST_TIME_ARGS (dur), GST_TIME_ARGS (end));
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+      g_print ("%s:%s FLUSHED\n", GST_DEBUG_PAD_NAME (opad));
+    }
+  }
+  if (GST_PAD_PROBE_INFO_TYPE (info) & GST_PAD_PROBE_TYPE_BUFFER) {
+    GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+    g_print ("%s:%s Buffer PTS %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT
+        "\n", GST_DEBUG_PAD_NAME (opad), GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
+  }
+  return GST_PAD_PROBE_OK;
+}
+#endif
+
 static gboolean
 try_link_pieces (GstElement * e1, const gchar * pad1, GstElement * e2,
     const gchar * pad2)
@@ -465,6 +508,13 @@ create_elements (RsnDvdBin * dvdbin)
       _pad_block_destroy_notify);
   gst_object_unref (src);
   src = NULL;
+
+#if DEBUG_TIMING
+  gst_pad_add_probe (dvdbin->video_pad,
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM | GST_PAD_PROBE_TYPE_BUFFER |
+      GST_PAD_PROBE_TYPE_EVENT_FLUSH,
+      (GstPadProbeCallback) dvdbin_dump_timing_info, NULL, NULL);
+#endif
 
   /* FIXME: Merge stream-selection logic to core and switch back */
   if (!try_create_piece (dvdbin, DVD_ELEM_SPU_SELECT, NULL,

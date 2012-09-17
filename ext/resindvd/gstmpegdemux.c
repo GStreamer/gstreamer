@@ -920,7 +920,8 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       GST_DEBUG_OBJECT (demux,
           "demux: received new segment start %" G_GINT64_FORMAT " stop %"
-          G_GINT64_FORMAT " time %" G_GINT64_FORMAT, start, stop, time);
+          G_GINT64_FORMAT " time %" G_GINT64_FORMAT
+          " base %" G_GINT64_FORMAT, start, stop, time, base);
 
       adjust = base - start + SCR_MUNGE;
       start = base + SCR_MUNGE;
@@ -937,20 +938,22 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           stop = demux->src_segment.position;
       }
 
-      GST_DEBUG_OBJECT (demux,
-          "sending new segment: rate %g format %d, start: %"
-          G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT ", time: %"
-          G_GINT64_FORMAT " scr_adjust: %" G_GINT64_FORMAT "(%" GST_TIME_FORMAT
-          ")", segment->rate, segment->format, start, stop, time,
-          demux->scr_adjust,
-          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->scr_adjust)));
-
       demux->src_segment.rate = segment->rate;
       demux->src_segment.applied_rate = segment->applied_rate;
       demux->src_segment.format = segment->format;
       demux->src_segment.start = start;
       demux->src_segment.stop = stop;
       demux->src_segment.time = time;
+      demux->src_segment.base = base;
+
+      GST_DEBUG_OBJECT (demux,
+          "sending new segment: rate %g format %d, start: %"
+          G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT ", time: %"
+          G_GINT64_FORMAT ", base: %" G_GINT64_FORMAT
+          ", scr_adjust: %" G_GINT64_FORMAT "(%" GST_TIME_FORMAT ")",
+          segment->rate, segment->format, start, stop, time, base,
+          demux->scr_adjust,
+          GST_TIME_ARGS (MPEGTIME_TO_GSTTIME (demux->scr_adjust)));
 
       if (demux->in_still && stop != -1) {
         /* Generate gap buffers, due to closing segment from a still-frame */
