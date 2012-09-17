@@ -147,7 +147,8 @@ static const char *vert_prog = {
 };
 
 static const char *frag_prog = {
-  "varying vec2 opos;"
+  "precision mediump float;"
+      "varying vec2 opos;"
       "uniform sampler2D tex;"
       "void main(void)"
       "{"
