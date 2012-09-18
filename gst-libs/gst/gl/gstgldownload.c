@@ -37,6 +37,8 @@ static void _init_download_shader (GstGLDisplay * display,
     GstGLDownload * download);
 static gboolean gst_gl_download_perform_with_data_unlocked (GstGLDownload *
     download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
+static gboolean gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload
+    * download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 /* YUY2:y2,u,y1,v
    UYVY:v,y1,u,y2 */
@@ -240,18 +242,35 @@ gst_gl_download_finalize (GObject * object)
   g_mutex_clear (&download->lock);
 }
 
+static inline gboolean
+_init_format_pre (GstGLDownload * download, GstVideoFormat v_format,
+    guint width, guint height)
+{
+  g_return_val_if_fail (download != NULL, FALSE);
+  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
+  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+
+  return TRUE;
+}
+
 gboolean
 gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
     guint width, guint height)
 {
   GstVideoInfo info;
 
-  g_return_val_if_fail (download != NULL, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+  if (!_init_format_pre (download, v_format, width, height))
+    return FALSE;
 
   g_mutex_lock (&download->lock);
+
+  if (download->initted) {
+    g_mutex_unlock (&download->lock);
+    return FALSE;
+  } else {
+    download->initted = TRUE;
+  }
 
   gst_video_info_set_format (&info, v_format, width, height);
 
@@ -266,13 +285,37 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
 }
 
 gboolean
-gst_gl_download_perform_with_memory (GstGLDownload * download,
-    GstGLMemory * gl_mem)
+gst_gl_download_init_format_thread (GstGLDownload * download,
+    GstVideoFormat v_format, guint width, guint height)
 {
-  gpointer data[GST_VIDEO_MAX_PLANES];
-  guint i;
-  gboolean ret;
+  GstVideoInfo info;
 
+  if (!_init_format_pre (download, v_format, width, height))
+    return FALSE;
+
+  g_mutex_lock (&download->lock);
+
+  if (download->initted) {
+    g_mutex_unlock (&download->lock);
+    return FALSE;
+  } else {
+    download->initted = TRUE;
+  }
+
+  gst_video_info_set_format (&info, v_format, width, height);
+
+  download->info = info;
+
+  _init_download (download->display, download);
+
+  g_mutex_unlock (&download->lock);
+
+  return TRUE;
+}
+
+static inline gboolean
+_perform_with_memory_pre (GstGLDownload * download, GstGLMemory * gl_mem)
+{
   g_return_val_if_fail (download != NULL, FALSE);
 
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED))
@@ -281,6 +324,20 @@ gst_gl_download_perform_with_memory (GstGLDownload * download,
   if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
     return FALSE;
   }
+
+  return TRUE;
+}
+
+gboolean
+gst_gl_download_perform_with_memory (GstGLDownload * download,
+    GstGLMemory * gl_mem)
+{
+  gpointer data[GST_VIDEO_MAX_PLANES];
+  guint i;
+  gboolean ret;
+
+  if (!_perform_with_memory_pre (download, gl_mem))
+    return FALSE;
 
   g_mutex_lock (&download->lock);
 
@@ -317,9 +374,9 @@ gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
   return ret;
 }
 
-static gboolean
-gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+static inline gboolean
+_perform_with_data_unlocked_pre (GstGLDownload * download, GLuint texture_id,
+    gpointer data[GST_VIDEO_MAX_PLANES])
 {
   guint i;
 
@@ -339,24 +396,96 @@ gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
     download->data[i] = data[i];
   }
 
+  return TRUE;
+}
+
+static gboolean
+gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
+    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+{
+  if (!_perform_with_data_unlocked_pre (download, texture_id, data))
+    return FALSE;
+
   gst_gl_display_thread_add (download->display,
       (GstGLDisplayThreadFunc) _do_download, download);
 
   return TRUE;
 }
 
-GstGLDownload *
-gst_gl_display_find_download (GstGLDisplay * display, GstVideoFormat v_format,
-    guint width, guint height)
+gboolean
+gst_gl_download_perform_with_memory_thread (GstGLDownload * download,
+    GstGLMemory * gl_mem)
 {
-  GstGLDownload *ret;
+  gpointer data[GST_VIDEO_MAX_PLANES];
+  guint i;
+  gboolean ret;
+
+  if (!_perform_with_memory_pre (download, gl_mem))
+    return FALSE;
+
+  g_mutex_lock (&download->lock);
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&download->info); i++) {
+    data[i] = (guint8 *) gl_mem->data +
+        GST_VIDEO_INFO_PLANE_OFFSET (&download->info, i);
+  }
+
+  ret =
+      gst_gl_download_perform_with_data_unlocked_thread (download,
+      gl_mem->tex_id, data);
+
+  GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+
+  g_mutex_unlock (&download->lock);
+
+  return ret;
+}
+
+gboolean
+gst_gl_download_perform_with_data_thread (GstGLDownload * download,
+    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+{
+  gboolean ret;
+
+  g_return_val_if_fail (download != NULL, FALSE);
+
+  g_mutex_lock (&download->lock);
+
+  ret = gst_gl_download_perform_with_data_unlocked_thread (download,
+      texture_id, data);
+
+  g_mutex_unlock (&download->lock);
+
+  return ret;
+}
+
+static gboolean
+gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload * download,
+    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+{
+  if (!_perform_with_data_unlocked_pre (download, texture_id, data))
+    return FALSE;
+
+  _do_download (download->display, download);
+
+  return TRUE;
+}
+
+static inline guint64 *
+_gen_key (GstVideoFormat v_format, guint width, guint height)
+{
   guint64 *key;
 
   /* this limits the width and the height to 2^29-1 = 536870911 */
   key = g_malloc (sizeof (guint64 *));
   *key = v_format | ((guint64) width << 6) | ((guint64) height << 35);
+  return key;
+}
 
-  gst_gl_display_lock (display);
+static inline GstGLDownload *
+_find_download (GstGLDisplay * display, guint64 * key)
+{
+  GstGLDownload *ret;
 
   ret = g_hash_table_lookup (display->downloads, key);
 
@@ -366,7 +495,37 @@ gst_gl_display_find_download (GstGLDisplay * display, GstVideoFormat v_format,
     g_hash_table_insert (display->downloads, key, ret);
   }
 
+  return ret;
+}
+
+GstGLDownload *
+gst_gl_display_find_download (GstGLDisplay * display, GstVideoFormat v_format,
+    guint width, guint height)
+{
+  GstGLDownload *ret;
+  guint64 *key;
+
+  key = _gen_key (v_format, width, height);
+
+  gst_gl_display_lock (display);
+
+  ret = _find_download (display, key);
+
   gst_gl_display_unlock (display);
+
+  return ret;
+}
+
+GstGLDownload *
+gst_gl_display_find_download_thread (GstGLDisplay * display,
+    GstVideoFormat v_format, guint width, guint height)
+{
+  GstGLDownload *ret;
+  guint64 *key;
+
+  key = _gen_key (v_format, width, height);
+
+  ret = _find_download (display, key);
 
   return ret;
 }

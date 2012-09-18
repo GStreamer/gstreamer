@@ -91,13 +91,20 @@ GstGLUpload * gst_gl_upload_new            (GstGLDisplay * display);
 
 gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoFormat v_format,
                                             guint width, guint height);
-
-gboolean gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem);
-gboolean gst_gl_upload_perform_with_data   (GstGLUpload * upload, GLuint texture_id,
-                                            gpointer data[GST_VIDEO_MAX_PLANES]);
-
-GstGLUpload * gst_gl_display_find_upload   (GstGLDisplay * display, GstVideoFormat v_format,
+gboolean gst_gl_upload_init_format_thread  (GstGLUpload * upload, GstVideoFormat v_format,
                                             guint width, guint height);
+
+gboolean gst_gl_upload_perform_with_memory        (GstGLUpload * upload, GstGLMemory * gl_mem);
+gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint texture_id,
+                                                   gpointer data[GST_VIDEO_MAX_PLANES]);
+gboolean gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload, GstGLMemory * gl_mem);
+gboolean gst_gl_upload_perform_with_data_thread   (GstGLUpload * upload, GLuint texture_id,
+                                                   gpointer data[GST_VIDEO_MAX_PLANES]);
+
+GstGLUpload * gst_gl_display_find_upload        (GstGLDisplay * display, GstVideoFormat v_format,
+                                                 guint width, guint height);
+GstGLUpload * gst_gl_display_find_upload_thread (GstGLDisplay * display, GstVideoFormat v_format,
+                                                 guint width, guint height);
 
 G_END_DECLS
 

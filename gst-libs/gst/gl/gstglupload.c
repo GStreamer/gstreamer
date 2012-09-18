@@ -35,6 +35,8 @@ static void _init_upload (GstGLDisplay * display, GstGLUpload * upload);
 static void _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload);
 static gboolean gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
+static gboolean gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload *
+    upload, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 /* YUY2:r,g,a
    UYVY:a,b,r */
@@ -249,6 +251,37 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
 }
 
 gboolean
+gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
+    guint width, guint height)
+{
+  GstVideoInfo info;
+
+  g_return_val_if_fail (upload != NULL, FALSE);
+  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
+  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+
+  g_mutex_lock (&upload->lock);
+
+  if (upload->initted) {
+    g_mutex_unlock (&upload->lock);
+    return FALSE;
+  } else {
+    upload->initted = TRUE;
+  }
+
+  gst_video_info_set_format (&info, v_format, width, height);
+
+  upload->info = info;
+
+  _init_upload (upload->display, upload);
+
+  g_mutex_unlock (&upload->lock);
+
+  return TRUE;
+}
+
+gboolean
 gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
 {
   gpointer data[GST_VIDEO_MAX_PLANES];
@@ -296,8 +329,8 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint texture_id,
   return ret;
 }
 
-static gboolean
-gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
+static inline gboolean
+_perform_with_data_unlocked_pre (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
   guint i;
@@ -318,23 +351,102 @@ gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     upload->data[i] = data[i];
   }
 
+  return TRUE;
+}
+
+static gboolean
+gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
+    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+{
+  if (!_perform_with_data_unlocked_pre (upload, texture_id, data))
+    return FALSE;
+
   gst_gl_display_thread_add (upload->display,
       (GstGLDisplayThreadFunc) _do_upload, upload);
 
   return TRUE;
 }
 
-GstGLUpload *
-gst_gl_display_find_upload (GstGLDisplay * display, GstVideoFormat v_format,
-    guint width, guint height)
+gboolean
+gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload,
+    GstGLMemory * gl_mem)
 {
-  GstGLUpload *ret;
+  gpointer data[GST_VIDEO_MAX_PLANES];
+  guint i;
+  gboolean ret;
+
+  g_return_val_if_fail (upload != NULL, FALSE);
+
+  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED))
+    return FALSE;
+
+  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD))
+    return FALSE;
+
+  g_mutex_lock (&upload->lock);
+
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
+    data[i] = (guint8 *) gl_mem->data +
+        GST_VIDEO_INFO_PLANE_OFFSET (&upload->info, i);
+  }
+
+  ret =
+      gst_gl_upload_perform_with_data_unlocked_thread (upload, gl_mem->tex_id,
+      data);
+
+  GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+
+  g_mutex_unlock (&upload->lock);
+
+  return ret;
+}
+
+gboolean
+gst_gl_upload_perform_with_data_thread (GstGLUpload * upload, GLuint texture_id,
+    gpointer data[GST_VIDEO_MAX_PLANES])
+{
+  gboolean ret;
+
+  g_return_val_if_fail (upload != NULL, FALSE);
+
+  g_mutex_lock (&upload->lock);
+
+  ret =
+      gst_gl_upload_perform_with_data_unlocked_thread (upload, texture_id,
+      data);
+
+  g_mutex_unlock (&upload->lock);
+
+  return ret;
+}
+
+static gboolean
+gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload * upload,
+    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
+{
+  if (!_perform_with_data_unlocked_pre (upload, texture_id, data))
+    return FALSE;
+
+  _do_upload (upload->display, upload);
+
+  return TRUE;
+}
+
+static inline guint64 *
+_gen_key (GstVideoFormat v_format, guint width, guint height)
+{
   guint64 *key;
 
+  /* this limits the width and the height to 2^29-1 = 536870911 */
   key = g_malloc (sizeof (guint64 *));
   *key = v_format | ((guint64) width << 6) | ((guint64) height << 35);
+  return key;
+}
 
-  gst_gl_display_lock (display);
+static inline GstGLUpload *
+_find_upload (GstGLDisplay * display, guint64 * key)
+{
+  GstGLUpload *ret;
 
   ret = g_hash_table_lookup (display->uploads, key);
 
@@ -344,7 +456,37 @@ gst_gl_display_find_upload (GstGLDisplay * display, GstVideoFormat v_format,
     g_hash_table_insert (display->uploads, key, ret);
   }
 
+  return ret;
+}
+
+GstGLUpload *
+gst_gl_display_find_upload (GstGLDisplay * display, GstVideoFormat v_format,
+    guint width, guint height)
+{
+  GstGLUpload *ret;
+  guint64 *key;
+
+  key = _gen_key (v_format, width, height);
+
+  gst_gl_display_lock (display);
+
+  ret = _find_upload (display, key);
+
   gst_gl_display_unlock (display);
+
+  return ret;
+}
+
+GstGLUpload *
+gst_gl_display_find_upload_thread (GstGLDisplay * display,
+    GstVideoFormat v_format, guint width, guint height)
+{
+  GstGLUpload *ret;
+  guint64 *key;
+
+  key = _gen_key (v_format, width, height);
+
+  ret = _find_upload (display, key);
 
   return ret;
 }
