@@ -45,6 +45,8 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     private boolean playing;
     private int position;
     private int duration;
+    
+    private Bundle initialization_data;
 
     /* Called when the activity is first created. 
     @Override */
@@ -77,21 +79,9 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
         sb.setOnSeekBarChangeListener(this);
 
-        nativeInit();
+        initialization_data = savedInstanceState;
 
-        if (savedInstanceState != null) {
-            playing = savedInstanceState.getBoolean("playing");
-            int milliseconds = savedInstanceState.getInt("position");
-            Log.i ("GStreamer", "Restoring state, playing:" + playing + " position:" + milliseconds + " ms.");
-            /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
-             * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
-             * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
-             * backwards on each iteration. */
-            nativeSetPosition(milliseconds + 1);
-            if (playing) {
-                nativePlay();
-            }
-        }
+        nativeInit();
     }
     
     protected void onSaveInstanceState (Bundle outState) {
@@ -113,6 +103,26 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
             tv.setText(message);
           }
         });
+    }
+
+    private void onGStreamerInitialized () {
+        if (initialization_data != null) {
+            playing = initialization_data.getBoolean("playing");
+            int milliseconds = initialization_data.getInt("position");
+            Log.i ("GStreamer", "Restoring state, playing:" + playing + " position:" + milliseconds + " ms.");
+            /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
+             * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
+             * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
+             * backwards on each iteration. */
+            nativeSetPosition(milliseconds + 1);
+            if (playing) {
+                nativePlay();
+            } else {
+                nativePause();
+            }
+        } else {
+            nativePause();
+        }
     }
 
     private void setCurrentPosition(final int position, final int duration) {

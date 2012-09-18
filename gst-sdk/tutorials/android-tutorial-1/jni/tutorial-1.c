@@ -39,6 +39,7 @@ static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID set_current_position_method_id;
+static jmethodID on_gstreamer_initialized_method_id;
 
 /*
  * Private methods
@@ -162,6 +163,20 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   }
 }
 
+static void check_initialization_complete (CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  /* Check if all conditions are met to report GStreamer as initialized.
+   * These conditions will change depending on the application */
+  if (data->native_window && data->main_loop) {
+    GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%d", data->native_window,data->main_loop);
+    (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
+    if ((*env)->ExceptionCheck (env)) {
+      GST_ERROR ("Failed to call Java method");
+      (*env)->ExceptionClear (env);
+    }
+  }
+}
+
 static void *app_function (void *userdata) {
   JavaVMAttachArgs args;
   GstBus *bus;
@@ -178,6 +193,10 @@ static void *app_function (void *userdata) {
 //  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
+  if (data->native_window) {
+    GST_DEBUG ("Native window already received, notifying the vsink about it.");
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)data->native_window);
+  }
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
@@ -190,15 +209,14 @@ static void *app_function (void *userdata) {
   /* Register a function that GLib will call every second */
   timeout_source_id = g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
 
-  /* Set state to PAUSE, so preroll occurrs and retrieve some information like clip length */
-  // This line is commented out until we can guarantee that the window handle is passed before the sink goes to READY
-  //gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
-
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
   data->main_loop = g_main_loop_new (NULL, FALSE);
+  check_initialization_complete (data);
   g_main_loop_run (data->main_loop);
   GST_DEBUG ("Exited main loop");
+  g_main_loop_unref (data->main_loop);
+  data->main_loop = NULL;
 
   /* Destroy the timeout source */
   timeout_source = g_main_context_find_source_by_id (NULL, timeout_source_id);
@@ -223,8 +241,6 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
   pthread_create (&gst_app_thread, NULL, &app_function, data);
-  /* FIXME: Wait until thread has started and the main loop is running */
-  usleep (100000);
 }
 
 void gst_native_finalize (JNIEnv* env, jobject thiz) {
@@ -271,7 +287,10 @@ jboolean gst_class_init (JNIEnv* env, jclass klass) {
   GST_DEBUG ("The MethodID for the setMessage method is %p", set_message_method_id);
   set_current_position_method_id = (*env)->GetMethodID (env, klass, "setCurrentPosition", "(II)V");
   GST_DEBUG ("The MethodID for the setCurrentPosition method is %p", set_current_position_method_id);
-  if (!custom_data_field_id || !set_message_method_id || !set_current_position_method_id) {
+  on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
+  GST_DEBUG ("The MethodID for the onGStreamerInitialized method is %p", on_gstreamer_initialized_method_id);
+
+  if (!custom_data_field_id || !set_message_method_id || !set_current_position_method_id || ! on_gstreamer_initialized_method_id) {
     GST_ERROR ("The calling class does not implement all necessary interface methods");
     return JNI_FALSE;
   }
@@ -288,7 +307,14 @@ void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   data->native_window = ANativeWindow_fromSurface(env, surface);
   GST_DEBUG ("Got Native Window %p", data->native_window);
 
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)data->native_window);
+  if (data->vsink) {
+    GST_DEBUG ("Pipeline already created, notifying the vsink about the native window.");
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)data->native_window);
+  } else {
+    GST_DEBUG ("Pipeline not created yet, vsink will later be notified about the native window.");
+  }
+
+  check_initialization_complete (data);
 }
 
 void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
