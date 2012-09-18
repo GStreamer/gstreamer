@@ -1420,13 +1420,6 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
     }
   }
 
-/*
-  if (!gst_eglglessink_init_egl_surface (eglglessink)) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface!");
-    goto HANDLE_ERROR;
-  }
-*/
-
   return;
 
   /* Errors */
@@ -1631,13 +1624,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
    * already if it meant to do so
    */
   if (!eglglessink->have_window) {
-/*
-    if (!eglglessink->can_create_window) {
-      GST_ERROR_OBJECT (eglglessink,
-          "Have no window and we have been told not to create one!");
-      goto HANDLE_ERROR;
-    }
-*/
     GST_INFO_OBJECT (eglglessink,
         "No window. Will attempt internal window creation");
     if (!(window = gst_eglglessink_create_window (eglglessink, width, height))) {
@@ -1653,7 +1639,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       goto HANDLE_ERROR;
     }
   }
-//  gst_eglglessink_init_egl_exts (eglglessink);
 
 SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Setcaps succeed");
