@@ -228,6 +228,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
         mix->nframes = 0;
       }
     }
+    gst_video_info_init (&info);
     gst_video_info_set_format (&info, GST_VIDEO_INFO_FORMAT (&mix->info),
         best_width, best_height);
     info.fps_n = best_fps_n;
