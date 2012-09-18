@@ -31,6 +31,7 @@ typedef struct _CustomData {
   gint64 duration;
   GstElement *vsink;
   gint64 desired_position;
+  gboolean initialized;
 } CustomData;
 
 static pthread_t gst_app_thread;
@@ -167,13 +168,14 @@ static void check_initialization_complete (CustomData *data) {
   JNIEnv *env = get_jni_env ();
   /* Check if all conditions are met to report GStreamer as initialized.
    * These conditions will change depending on the application */
-  if (data->native_window && data->main_loop) {
+  if (!data->initialized && data->native_window && data->main_loop) {
     GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%d", data->native_window,data->main_loop);
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
       GST_ERROR ("Failed to call Java method");
       (*env)->ExceptionClear (env);
     }
+    data->initialized = TRUE;
   }
 }
 
