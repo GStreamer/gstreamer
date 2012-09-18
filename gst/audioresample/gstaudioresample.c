@@ -726,7 +726,7 @@ static void
 gst_audio_resample_dump_drain (GstAudioResample * resample, guint history_len)
 {
   gint outsize;
-  guint in_len, in_processed;
+  guint in_len G_GNUC_UNUSED, in_processed;
   guint out_len, out_processed;
   guint num, den;
   gpointer buf;
