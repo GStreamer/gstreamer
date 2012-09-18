@@ -219,6 +219,7 @@ gst_vtdec_sink_setcaps (GstVTDec * self, GstCaps * caps)
   if (!gst_structure_get_int (structure, "height", &height))
     goto incomplete_caps;
 
+  gst_video_info_init (&self->vinfo);
   gst_video_info_set_format (&self->vinfo, format, width, height);
 
   if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {

@@ -109,6 +109,7 @@ gst_core_video_buffer_new (GstCoreMediaCtx * ctx, CVBufferRef cvbuf,
       stride[i] = cv->CVPixelBufferGetBytesPerRowOfPlane (pixbuf, i);
 
     /* FIXME: don't hardcode NV12 */
+    gst_video_info_init (&tmp_vinfo);
     gst_video_info_set_format (&tmp_vinfo,
         GST_VIDEO_FORMAT_NV12, stride[0], height);
     offset[1] = tmp_vinfo.offset[1];
