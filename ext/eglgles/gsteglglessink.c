@@ -185,7 +185,7 @@ enum
 };
 
 /* will probably move elsewhere */
-static EGLint eglglessink_RGBA8888_config[] = {
+static EGLint eglglessink_RGBA8888_attribs[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
@@ -193,14 +193,14 @@ static EGLint eglglessink_RGBA8888_config[] = {
   EGL_NONE
 };
 
-static EGLint eglglessink_RGB888_config[] = {
+static EGLint eglglessink_RGB888_attribs[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
   EGL_NONE
 };
 
-static EGLint eglglessink_RGB565_config[] = {
+static EGLint eglglessink_RGB565_attribs[] = {
   EGL_RED_SIZE, 5,
   EGL_GREEN_SIZE, 6,
   EGL_BLUE_SIZE, 5,
@@ -778,11 +778,11 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   /* Init supported format/caps list */
   g_mutex_lock (eglglessink->flow_lock);
 
-  if (eglChooseConfig (eglglessink->display, eglglessink_RGB888_config,
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGB888_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
-    format->eglcfg = eglglessink_RGB888_config;
+    format->attribs = eglglessink_RGB888_attribs;
     format->caps =
         gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 24, NULL);
     eglglessink->supported_fmts =
@@ -791,11 +791,11 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   } else
     GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB888 config");
 
-  if (eglChooseConfig (eglglessink->display, eglglessink_RGB565_config,
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGB565_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
-    format->eglcfg = eglglessink_RGB565_config;
+    format->attribs = eglglessink_RGB565_attribs;
     format->caps =
         gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 16, NULL);
     eglglessink->supported_fmts =
@@ -804,11 +804,11 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   } else
     GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB565 config");
 
-  if (eglChooseConfig (eglglessink->display, eglglessink_RGBA8888_config,
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGBA8888_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
-    format->eglcfg = eglglessink_RGBA8888_config;
+    format->attribs = eglglessink_RGBA8888_attribs;
     format->caps = gst_caps_new_simple ("video/x-raw-rgb", "depth", G_TYPE_INT, 24, "bpp", G_TYPE_INT, 32, NULL);       /* proly doesn't work for rgba */
     eglglessink->supported_fmts = g_list_append
         (eglglessink->supported_fmts, format);
@@ -1363,8 +1363,9 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
   EGLint con_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
   GLint egl_configs;
 
-  if ((eglChooseConfig (eglglessink->display, eglglessink->selected_fmt->eglcfg,
-              &eglglessink->config, 1, &egl_configs)) == EGL_FALSE) {
+  if ((eglChooseConfig (eglglessink->display,
+              eglglessink->selected_fmt->attribs, &eglglessink->config, 1,
+              &egl_configs)) == EGL_FALSE) {
     show_egl_error ("eglChooseConfig");
     GST_ERROR_OBJECT (eglglessink, "eglChooseConfig failed");
     goto HANDLE_EGL_ERROR;

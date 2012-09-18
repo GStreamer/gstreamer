@@ -96,9 +96,9 @@ typedef struct _coord
 
 struct _GstEglGlesImageFmt
 {
-  gint fmt;
-  const EGLint *eglcfg;
-  GstCaps *caps;
+  gint fmt;              /* Private identifier */
+  const EGLint *attribs; /* EGL Attributes */
+  GstCaps *caps;         /* Matching caps for the attribs */
 };
 
 /* XXX: Maybe use GstVideoRectangle for the image data? */
