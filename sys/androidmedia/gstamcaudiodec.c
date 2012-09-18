@@ -339,16 +339,8 @@ gst_amc_audio_dec_close (GstAudioDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Closing decoder");
 
-  if (self->codec) {
-    /* FIXME: This crashes for some reason, looks like the
-     * MediaCodec API is not threadsafe between stop() and
-     * release()
-     */
-#if 0
-    gst_amc_codec_release (self->codec);
-#endif
+  if (self->codec)
     gst_amc_codec_free (self->codec);
-  }
   self->codec = NULL;
 
   self->started = FALSE;
@@ -880,7 +872,6 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   GST_DEBUG_OBJECT (self, "Configuring codec with format: %s", format_string);
   g_free (format_string);
 
-  /* FIXME: Flags? */
   if (!gst_amc_codec_configure (self->codec, format, 0)) {
     GST_ERROR_OBJECT (self, "Failed to configure codec");
     return FALSE;

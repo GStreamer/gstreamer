@@ -181,9 +181,7 @@ initialize_java_vm (void)
     options[2].optionString = "-Xcheck:jni";
     options[3].optionString = "-Xdebug";
 
-    /* FIXME: Do we need any options here? Like exit()
-     * handler, or classpaths? */
-    vm_args.version = JNI_VERSION_1_6;
+    vm_args.version = JNI_VERSION_1_4;
     vm_args.options = options;
     vm_args.nOptions = 4;
     vm_args.ignoreUnrecognized = JNI_TRUE;
@@ -1679,7 +1677,8 @@ scan_codecs (GstPlugin * plugin)
     }
     /* FIXME: Non-Google codecs usually just don't work and hang forever
      * or crash when not used from a process that started the Java
-     * VM via the non-public AndroidRuntime class
+     * VM via the non-public AndroidRuntime class. Can we somehow
+     * initialize all this?
      */
     if (started_java_vm && !g_str_has_prefix (name_str, "OMX.google.")) {
       GST_INFO ("Skipping non-Google codec in standalone mode");
