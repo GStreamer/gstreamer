@@ -1301,6 +1301,14 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     texlocation = glGetUniformLocation (prog, "tex");
     glUniform1i (texlocation, 0);
 
+    /* Set 2D resizing params */
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    if (got_gl_error ("glTexParameteri"))
+      goto HANDLE_ERROR_LOCKED;
+
     eglglessink->have_texture = TRUE;
     g_mutex_unlock (eglglessink->flow_lock);
   }
@@ -1488,14 +1496,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * width and height values when non power of two
        * and no npot extension available.
        */
-
-      /* resizing params */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      if (got_gl_error ("glTexParameteri"))
-        goto HANDLE_ERROR;
 
       switch (eglglessink->selected_fmt->fmt) {
         case GST_EGLGLESSINK_IMAGE_RGB888:
