@@ -119,9 +119,8 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
       gst_value_list_append_value (&va, &v);
       g_value_unset (&v);
 
-      /* FIXME: Both mpegversions? */
       tmp = gst_structure_new ("audio/mpeg",
-          "mpegversion", GST_TYPE_INT_RANGE, 2, 4,
+          "mpegversion", G_TYPE_INT, 4,
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
