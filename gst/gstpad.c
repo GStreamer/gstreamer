@@ -1841,7 +1841,7 @@ gst_pad_unlink (GstPad * srcpad, GstPad * sinkpad)
     ACQUIRE_PARENT (srcpad, tmpparent, no_src_parent);
 
     GST_PAD_UNLINKFUNC (srcpad) (srcpad, tmpparent);
-    RELEASE_PARENT (parent);
+    RELEASE_PARENT (tmpparent);
   }
 no_src_parent:
   if (GST_PAD_UNLINKFUNC (sinkpad)) {
@@ -1850,7 +1850,7 @@ no_src_parent:
     ACQUIRE_PARENT (sinkpad, tmpparent, no_sink_parent);
 
     GST_PAD_UNLINKFUNC (sinkpad) (sinkpad, tmpparent);
-    RELEASE_PARENT (parent);
+    RELEASE_PARENT (tmpparent);
   }
 no_sink_parent:
 
