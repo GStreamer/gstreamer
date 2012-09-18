@@ -1257,7 +1257,6 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
 #endif
       break;
     case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
     {
       glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[0]);
@@ -1277,6 +1276,28 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
       glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
           GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
+    }
+      break;
+    case GST_VIDEO_FORMAT_YV12:
+    {
+      glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          download->data[0]);
+
+#ifndef OPENGL_ES2
+      glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
+#endif
+
+      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
+          GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          download->data[2]);
+
+#ifndef OPENGL_ES2
+      glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
+#endif
+
+      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
+          GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          download->data[1]);
     }
       break;
     default:
