@@ -161,52 +161,6 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   }
 }
 
-static void render_buffer (GstBuffer *buffer, CustomData *data) {
-  if (data->native_window) {
-    int i;
-    ANativeWindow_Buffer nbuff;
-    GstStructure *str;
-    gint width, height;
-
-    str = gst_caps_get_structure (GST_BUFFER_CAPS (buffer), 0);
-    gst_structure_get_int (str, "width", &width);
-    gst_structure_get_int (str, "height", &height);
-
-    ANativeWindow_setBuffersGeometry(data->native_window, width, height, WINDOW_FORMAT_RGBX_8888);
-
-    if (ANativeWindow_lock(data->native_window, &nbuff, NULL) < 0) {
-      GST_ERROR ("Unable to lock Native Window, discarding buffer.");
-    } else {
-      for (i=0; i<nbuff.height; i++) {
-        memcpy (nbuff.bits + nbuff.stride * 4 * i, GST_BUFFER_DATA (buffer) + width * 4 * i, width * 4);
-      }
-      ANativeWindow_unlockAndPost (data->native_window);
-    }
-  }
-}
-
-static void new_buffer (GstElement *sink, CustomData *data) {
-  GstBuffer *buffer;
-   
-  /* Retrieve the buffer */
-  g_signal_emit_by_name (sink, "pull-buffer", &buffer);
-  if (buffer) {
-    render_buffer (buffer, data);
-    gst_buffer_unref (buffer);
-  }
-}
-
-static void new_preroll_buffer (GstElement *sink, CustomData *data) {
-  GstBuffer *buffer;
-   
-  /* Retrieve the preroll buffer */
-  g_signal_emit_by_name (sink, "pull-preroll", &buffer);
-  if (buffer) {
-    render_buffer (buffer, data);
-    gst_buffer_unref (buffer);
-  }
-}
-
 static void *app_function (void *userdata) {
   JavaVMAttachArgs args;
   GstBus *bus;
@@ -218,16 +172,11 @@ static void *app_function (void *userdata) {
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
 //  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0 name=vsink", NULL);
-//  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
-//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! fakesink", NULL);
-//  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280,width=(int)320,height=(int)240,framerate=(fraction)30/1", NULL);
-//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
-//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
-  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! appsink name=vsink emit-signals=1 caps=video/x-raw-rgb,bpp=(int)32,endianness=(int)4321,depth=(int)24,red_mask=(int)-16777216,green_mask=(int)16711680,blue_mask=(int)65280", NULL);
+  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
+//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
+//  data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
-  g_signal_connect (data->vsink, "new-buffer", G_CALLBACK (new_buffer), data);
-  g_signal_connect (data->vsink, "new-preroll", G_CALLBACK (new_preroll_buffer), data);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
@@ -241,7 +190,8 @@ static void *app_function (void *userdata) {
   timeout_source_id = g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
 
   /* Set state to PAUSE, so preroll occurrs and retrieve some information like clip length */
-  gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+  // This line is commented out until we can guarantee that the window handle is passed before the sink goes to READY
+  //gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
