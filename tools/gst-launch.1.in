@@ -199,7 +199,7 @@ either be integers or strings. Boolean values are (case insensitive) \fIyes\fR,
 .br
 Ranges are in this format:  [ VALUE, VALUE ]
 .br
-Lists use this format:      ( VALUE \fI[, VALUE ...]\fR )
+Lists use this format:      { VALUE \fI[, VALUE ...]\fR }
 
 .SH "PIPELINE EXAMPLES"
 
