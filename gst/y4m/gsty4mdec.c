@@ -376,6 +376,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
     return FALSE;
   }
 
+  gst_video_info_init (&y4mdec->info);
   gst_video_info_set_format (&y4mdec->info, format, width, height);
 
   switch (interlaced_char) {
