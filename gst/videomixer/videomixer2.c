@@ -422,7 +422,7 @@ gst_videomixer2_sink_query (GstCollectPads * pads, GstCollectData * cdata,
       break;
     }
     default:
-      ret = gst_pad_query_default (GST_PAD (pad), GST_OBJECT (mix), query);
+      ret = gst_collect_pads_query_default (pads, cdata, query, FALSE);
       break;
   }
   return ret;
