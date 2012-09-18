@@ -865,7 +865,8 @@ gst_eglglessink_start (GstBaseSink * sink)
     }
 
   /* Ask for a window to render to */
-  gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
+  if (!eglglessink->have_window)
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
 
   if (!eglglessink->have_window && !eglglessink->can_create_window) {
     GST_ERROR_OBJECT (eglglessink, "Window handle unavailable and we "
