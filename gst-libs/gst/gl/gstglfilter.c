@@ -128,6 +128,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   klass->onStart = NULL;
   klass->onStop = NULL;
   klass->onReset = NULL;
+  klass->filter_texture = NULL;
 }
 
 static void
@@ -558,7 +559,6 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
   gst_buffer_pool_set_config (pool, config);
 
   if (update_pool)
@@ -571,6 +571,64 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   return TRUE;
 }
 
+static gboolean
+gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstGLFilterClass *filter_class;
+  GstVideoFrame in_frame;
+  GstVideoFrame out_frame;
+  guint in_tex, out_tex;
+  gboolean ret, out_gl_wrapped = FALSE;
+
+  filter_class = GST_GL_FILTER_GET_CLASS (filter);
+
+  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
+          GST_MAP_READ | GST_MAP_GL)) {
+    return FALSE;
+  }
+  if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
+          GST_MAP_WRITE | GST_MAP_GL)) {
+    gst_video_frame_unmap (&in_frame);
+    return FALSE;
+  }
+
+  if (gst_is_gl_memory (in_frame.map[0].memory)) {
+    in_tex = *(guint *) in_frame.data[0];
+  } else {
+    GST_INFO ("Input Buffer does not contain correct meta, "
+        "attempting to wrap for upload");
+
+    gst_gl_upload_perform_with_data (filter->upload, filter->in_tex_id,
+        in_frame.data);
+
+    in_tex = filter->in_tex_id;
+  }
+
+  if (gst_is_gl_memory (out_frame.map[0].memory)) {
+    out_tex = *(guint *) out_frame.data[0];
+  } else {
+    GST_INFO ("Output Buffer does not contain correct memory, "
+        "attempting to wrap for download");
+
+    out_tex = filter->out_tex_id;;
+
+    out_gl_wrapped = TRUE;
+  }
+
+  ret = filter_class->filter_texture (filter, in_tex, out_tex);
+
+  if (out_gl_wrapped) {
+    gst_gl_download_perform_with_data (filter->download, out_tex,
+        out_frame.data);
+  }
+
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -581,8 +639,12 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
 
+  g_assert (filter_class->filter || filter_class->filter_texture);
+
   if (filter_class->filter)
     filter_class->filter (filter, inbuf, outbuf);
+  else if (filter_class->filter_texture)
+    gst_gl_filter_filter_texture (filter, inbuf, outbuf);
 
   return GST_FLOW_OK;
 }
