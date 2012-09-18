@@ -229,6 +229,8 @@ static void *app_function (void *userdata) {
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->vsink);
   gst_object_unref (data->pipeline);
+
+  return NULL;
 }
 
 /*
