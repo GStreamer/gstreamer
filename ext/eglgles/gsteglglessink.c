@@ -772,6 +772,9 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   EGLint cfg_number;
   GstEglGlesImageFmt *format;
 
+  GST_DEBUG_OBJECT (eglglessink,
+      "Building initial list of wanted eglattribs per format");
+
   /* Init supported format/caps list */
   g_mutex_lock (eglglessink->flow_lock);
 
@@ -1360,11 +1363,17 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
   EGLint con_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
   GLint egl_configs;
 
-  if (!eglChooseConfig (eglglessink->display, eglglessink->selected_fmt->eglcfg,
-          &eglglessink->config, 1, &egl_configs)) {
+  if ((eglChooseConfig (eglglessink->display, eglglessink->selected_fmt->eglcfg,
+              &eglglessink->config, 1, &egl_configs)) == EGL_FALSE) {
     show_egl_error ("eglChooseConfig");
-    GST_ERROR_OBJECT (eglglessink, "Could not choose EGL config");
+    GST_ERROR_OBJECT (eglglessink, "eglChooseConfig failed");
     goto HANDLE_EGL_ERROR;
+  }
+
+  if (egl_configs < 1) {
+    GST_ERROR_OBJECT (eglglessink,
+        "Could not find matching framebuffer config");
+    goto HANDLE_ERROR;
   }
 
   eglglessink->context = eglCreateContext (eglglessink->display,
@@ -1382,7 +1391,8 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
   /* Errors */
 HANDLE_EGL_ERROR:
   GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
-  GST_ERROR_OBJECT (eglglessink, "Couldn't choose config");
+HANDLE_ERROR:
+  GST_ERROR_OBJECT (eglglessink, "Couldn't choose an usable config");
   return FALSE;
 }
 
