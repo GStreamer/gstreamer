@@ -1516,7 +1516,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   GstBaseTransformPrivate *priv;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
   GstBaseTransformClass *bclass;
   GstCaps *incaps, *outcaps;
   gsize insize, outsize;
@@ -1544,6 +1544,9 @@ default_prepare_output_buffer (GstBaseTransform * trans,
     }
     GST_DEBUG_OBJECT (trans, "using pool alloc");
     ret = gst_buffer_pool_acquire_buffer (priv->pool, outbuf, NULL);
+    if (ret != GST_FLOW_OK)
+      goto alloc_failed;
+
     goto copy_meta;
   }
 
@@ -1590,7 +1593,7 @@ copy_meta:
     }
 
 done:
-  return ret;
+  return GST_FLOW_OK;
 
   /* ERRORS */
   /* ERRORS */
@@ -1604,6 +1607,11 @@ unknown_size:
   {
     GST_ERROR_OBJECT (trans, "unknown output size");
     return GST_FLOW_ERROR;
+  }
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (trans, "could not allocate buffer from pool");
+    return ret;
   }
 }
 
