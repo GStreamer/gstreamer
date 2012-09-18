@@ -1494,6 +1494,15 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * width and height values when non power of two
        * and no npot extension available.
        */
+
+      /* resizing params */
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      if (got_gl_error ("glTexParameteri"))
+        goto HANDLE_ERROR;
+
       switch (eglglessink->selected_fmt->fmt) {
         case GST_EGLGLESSINK_IMAGE_RGB888:
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
@@ -1509,12 +1518,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       }
 
       if (got_gl_error ("glTexImage2D"))
-        goto HANDLE_ERROR;
-
-      /* resizing params */
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      if (got_gl_error ("glTexParameteri"))
         goto HANDLE_ERROR;
 
       /* XXX: VBO stuff this actually makes more sense on the setcaps stub?
