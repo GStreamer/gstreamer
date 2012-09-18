@@ -115,14 +115,14 @@ static gboolean refresh_ui (CustomData *data) {
 
   if (gst_element_query_position (data->pipeline, &fmt, &data->position)) {
     /* Java expects these values in milliseconds, and Gst provides nanoseconds */
-    set_current_ui_position (data->position/1000000, data->duration/1000000, data);
+    set_current_ui_position (data->position / GST_MSECOND, data->duration / GST_MSECOND, data);
   }
   return TRUE;
 }
 
 static void execute_seek (gint64 desired_position, CustomData *data) {
   gboolean res;
-  GST_DEBUG ("Setting position to %lld milliseconds", desired_position / 1000000);
+  GST_DEBUG ("Setting position to %lld milliseconds", desired_position / GST_MSECOND);
   res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
   GST_DEBUG ("Seek returned %d", res);
 }
@@ -255,7 +255,7 @@ void gst_native_pause (JNIEnv* env, jobject thiz) {
 
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
-  gint64 desired_position = (gint64)(milliseconds * GST_SECOND / 1000);
+  gint64 desired_position = (gint64)(milliseconds * GST_MSECOND);
   if (data->state == GST_STATE_PLAYING || data->state == GST_STATE_PAUSED) {
 	  execute_seek(desired_position, data);
   } else {
