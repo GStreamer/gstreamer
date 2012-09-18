@@ -26,18 +26,9 @@
 #include <gst/video/gstvideopool.h>
 
 #include "gstgldisplay.h"
-#include "gstglmeta.h"
 #include "gstglmemory.h"
 
 G_BEGIN_DECLS
-
-/**
- * GST_BUFFER_POOL_OPTION_VIDEO_META:
- *
- * An option that can be activated on bufferpool to request OpenGL metadata
- * on buffers from the pool.
- */
-#define GST_BUFFER_POOL_OPTION_GL_META "GstBufferPoolOptionGLMeta"
 
 typedef struct _GstGLBufferPool GstGLBufferPool;
 typedef struct _GstGLBufferPoolClass GstGLBufferPoolClass;

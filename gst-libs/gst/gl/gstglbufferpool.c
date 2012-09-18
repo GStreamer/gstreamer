@@ -48,8 +48,7 @@ G_DEFINE_TYPE (GstGLBufferPool, gst_gl_buffer_pool, GST_TYPE_BUFFER_POOL);
 static const gchar **
 gst_gl_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
-    GST_BUFFER_POOL_OPTION_GL_META, NULL
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
   };
 
   return options;
@@ -98,8 +97,6 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->info = info;
 
   priv->add_videometa = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_GL_META) ||
-      gst_buffer_pool_config_has_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
@@ -159,7 +156,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   if (priv->add_videometa) {
     GST_DEBUG_OBJECT (pool, "adding GstGLMeta");
     /* these are just the defaults for now */
-    gst_buffer_add_video_meta (buf, glpool->display, 0,
+    gst_buffer_add_video_meta (buf, 0,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info));
   }
