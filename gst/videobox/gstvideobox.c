@@ -680,8 +680,8 @@ fill_planar_yuv (GstVideoBoxFill fill_type, guint b_alpha,
   widthV = GST_VIDEO_FRAME_COMP_WIDTH (frame, 2);
 
   heightY = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-  heightU = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
-  heightV = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
+  heightU = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1);
+  heightV = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 2);
 
   if (strideY == widthY) {
     memset (destY, empty_pixel[0], strideY * heightY);
@@ -808,8 +808,8 @@ copy_y42b_y42b (guint i_alpha, GstVideoFrame * dest,
   dest_width = GST_VIDEO_FRAME_WIDTH (dest);
 
   dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
-  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
-  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 1);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 2);
 
   src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
   src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
@@ -953,8 +953,8 @@ copy_y41b_y41b (guint i_alpha, GstVideoFrame * dest,
   dest_width = GST_VIDEO_FRAME_WIDTH (dest);
 
   dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
-  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
-  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 1);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 2);
 
   src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
   src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
@@ -1219,8 +1219,8 @@ copy_i420_i420 (guint i_alpha, GstVideoFrame * dest,
   dest_height = GST_VIDEO_FRAME_HEIGHT (dest);
 
   dest_strideY = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
-  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
-  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
+  dest_strideU = GST_VIDEO_FRAME_COMP_STRIDE (dest, 1);
+  dest_strideV = GST_VIDEO_FRAME_COMP_STRIDE (dest, 2);
 
   src_strideY = GST_VIDEO_FRAME_COMP_STRIDE (src, 0);
   src_strideU = GST_VIDEO_FRAME_COMP_STRIDE (src, 1);
