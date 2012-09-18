@@ -1424,14 +1424,6 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   eglglessink->have_window = TRUE;
   g_mutex_unlock (eglglessink->flow_lock);
 
-  if (!eglglessink->egl_started) {
-    GST_INFO_OBJECT (eglglessink, "Got a handle, doing EGL initialization");
-    if (!egl_init (eglglessink)) {
-      GST_ERROR_OBJECT (eglglessink, "EGL Initialization failed!");
-      goto HANDLE_ERROR;
-    }
-  }
-
   return;
 
   /* Errors */
