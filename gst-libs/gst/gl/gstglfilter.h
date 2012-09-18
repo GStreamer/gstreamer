@@ -28,7 +28,6 @@
 #include <gst/video/video.h>
 
 #include "gstglbufferpool.h"
-#include "gstglmeta.h"
 
 G_BEGIN_DECLS
 
@@ -46,6 +45,8 @@ typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter,
 					GstCaps* incaps, GstCaps* outcaps);
 typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
 					    GstBuffer *inbuf, GstBuffer *outbuf);
+typedef gboolean (*GstGLFilterProcessTexture) (GstGLFilter *filter,
+					    guint in_tex, guint out_tex);
 typedef gboolean (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
 typedef void (*GstGLFilterOnReset) (GstGLFilter *filter);
 typedef void (*GstGLFilterOnStart) (GstGLFilter *filter);
@@ -82,6 +83,7 @@ struct _GstGLFilterClass
   GstBaseTransformClass base_transform_class;
   GstGLFilterSetCaps set_caps;
   GstGLFilterProcessFunc filter;
+  GstGLFilterProcessTexture filter_texture;
   GstGLFilterOnInitFBO onInitFBO;
 
   GstGLFilterOnStart onStart;
