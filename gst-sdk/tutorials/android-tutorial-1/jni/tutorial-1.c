@@ -76,7 +76,7 @@ static JNIEnv *get_jni_env (void) {
   return env;
 }
 
-static void set_message (const gchar *message, CustomData *data) {
+static void set_ui_message (const gchar *message, CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GST_DEBUG ("Setting message to: %s", message);
   jstring jmessage = (*env)->NewStringUTF(env, message);
@@ -88,7 +88,7 @@ static void set_message (const gchar *message, CustomData *data) {
   (*env)->DeleteLocalRef (env, jmessage);
 }
 
-static void set_current_position (gint position, gint duration, CustomData *data) {
+static void set_current_ui_position (gint position, gint duration, CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GST_DEBUG ("Setting current position/duration to: %d / %d (ms)", position, duration);
   (*env)->CallVoidMethod (env, data->app, set_current_position_method_id, position, duration);
@@ -115,7 +115,7 @@ static gboolean refresh_ui (CustomData *data) {
 
   if (gst_element_query_position (data->pipeline, &fmt, &data->position)) {
     /* Java expects these values in milliseconds, and Gst provides nanoseconds */
-    set_current_position (data->position/1000000, data->duration/1000000, data);
+    set_current_ui_position (data->position/1000000, data->duration/1000000, data);
   }
   return TRUE;
 }
@@ -136,13 +136,13 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   message_string = g_strdup_printf ("Error received from element %s: %s", GST_OBJECT_NAME (msg->src), err->message);
   g_clear_error (&err);
   g_free (debug_info);
-  set_message (message_string, data);
+  set_ui_message (message_string, data);
   g_free (message_string);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
 }
 
 static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  set_message (GST_MESSAGE_TYPE_NAME (msg), data);
+  set_ui_message (GST_MESSAGE_TYPE_NAME (msg), data);
   refresh_ui (data);
   gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
   execute_seek (0, data);
@@ -151,8 +151,9 @@ static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   GstState old_state, new_state, pending_state;
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
+  /* Only pay attention to messages coming from the pipeline, not its children */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
-    set_message (gst_element_state_get_name (new_state), data);
+    set_ui_message (gst_element_state_get_name (new_state), data);
     data->state = new_state;
     if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
       execute_seek (data->desired_position, data);
