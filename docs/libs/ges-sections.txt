@@ -956,6 +956,7 @@ ges_asset_request_async
 ges_asset_request_finish
 ges_asset_extract
 ges_list_assets
+ges_asset_custom_timeline_source_new
 <SUBSECTION Standard>
 GESAssetPrivate
 GES_ASSET

@@ -100,6 +100,11 @@ GESCustomTimelineSource*
 ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
 				gpointer user_data);
 
+GESAsset*
+ges_asset_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
+				gpointer user_data);
+
+
 G_END_DECLS
 
 #endif /* _GES_CUSTOM_TIMELINE_SOURCE */
