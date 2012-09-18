@@ -37,7 +37,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     private native void nativePlay();
     private native void nativePause();
     private native void nativeSetPosition(int milliseconds);
-    private static native void classInit();
+    private static native boolean classInit();
     private native void nativeSurfaceInit(Object surface);
     private native void nativeSurfaceFinalize();
     private long native_custom_data;

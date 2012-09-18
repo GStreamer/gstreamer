@@ -264,13 +264,18 @@ void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   }
 }
 
-void gst_class_init (JNIEnv* env, jclass klass) {
+jboolean gst_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   GST_DEBUG ("The FieldID for the native_custom_data field is %p", custom_data_field_id);
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   GST_DEBUG ("The MethodID for the setMessage method is %p", set_message_method_id);
   set_current_position_method_id = (*env)->GetMethodID (env, klass, "setCurrentPosition", "(II)V");
   GST_DEBUG ("The MethodID for the setCurrentPosition method is %p", set_current_position_method_id);
+  if (!custom_data_field_id || !set_message_method_id || !set_current_position_method_id) {
+    GST_ERROR ("The calling class does not implement all necessary interface methods");
+    return JNI_FALSE;
+  }
+  return JNI_TRUE;
 }
 
 void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
@@ -305,7 +310,7 @@ static JNINativeMethod native_methods[] = {
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},
   { "nativeSetPosition", "(I)V", (void*) gst_native_set_position},
-  { "classInit", "()V", (void *) gst_class_init},
+  { "classInit", "()Z", (void *) gst_class_init},
   { "nativeSurfaceInit", "(Ljava/lang/Object;)V", (void *) gst_native_surface_init},
   { "nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize}
 };
