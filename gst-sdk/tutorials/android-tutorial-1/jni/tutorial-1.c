@@ -317,7 +317,6 @@ static JNINativeMethod native_methods[] = {
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
-  int ret;
 
   GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-1", 0, "Android tutorial 1");
 
@@ -328,7 +327,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     return 0;
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
-  ret = (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
+  (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   pthread_key_create (&current_jni_env, detach_current_thread);
 
