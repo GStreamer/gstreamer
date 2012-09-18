@@ -1645,8 +1645,6 @@ SUCCEED:
   return TRUE;
 
 /* Errors */
-HANDLE_ERROR_LOCKED:
-  g_mutex_unlock (eglglessink->flow_lock);
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Setcaps failed");
   return FALSE;
