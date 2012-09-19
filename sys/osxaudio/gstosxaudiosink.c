@@ -397,9 +397,10 @@ gst_osx_audio_sink_sink_payload (GstBaseAudioSink * sink, GstBuffer * buf)
 
     out = gst_buffer_new_and_alloc (framesize);
 
+    /* FIXME: the endianness needs to be queried and then set */
     if (!gst_audio_iec61937_payload (GST_BUFFER_DATA (buf),
             GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (out),
-            GST_BUFFER_SIZE (out), &sink->ringbuffer->spec)) {
+            GST_BUFFER_SIZE (out), &sink->ringbuffer->spec, G_BYTE_ORDER)) {
       gst_buffer_unref (out);
       return NULL;
     }
