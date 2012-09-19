@@ -19,6 +19,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
+import com.gst_sdk.GStreamer;
+
 import android.app.Activity;
 import android.util.Log;
 import android.os.Bundle;
@@ -47,6 +49,11 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     private int duration;
     
     private Bundle initialization_data;
+    
+    public Tutorial1() {
+        super();
+        GStreamer.Init(this);
+    }
 
     /* Called when the activity is first created. 
     @Override */
