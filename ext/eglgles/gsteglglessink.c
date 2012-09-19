@@ -190,6 +190,7 @@ static EGLint eglglessink_RGBA8888_attribs[] = {
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
   EGL_ALPHA_SIZE, 8,
+  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
   EGL_NONE
 };
 
@@ -197,6 +198,7 @@ static EGLint eglglessink_RGB888_attribs[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
+  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
   EGL_NONE
 };
 
@@ -204,6 +206,7 @@ static EGLint eglglessink_RGB565_attribs[] = {
   EGL_RED_SIZE, 5,
   EGL_GREEN_SIZE, 6,
   EGL_BLUE_SIZE, 5,
+  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
   EGL_NONE
 };
 
