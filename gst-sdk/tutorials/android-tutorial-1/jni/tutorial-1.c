@@ -231,8 +231,6 @@ static void *app_function (void *userdata) {
   data->main_loop = NULL;
 
   /* Free resources */
-  g_source_destroy (timeout_source);
-  g_source_destroy (bus_source);
   g_main_context_unref (context);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->vsink);
