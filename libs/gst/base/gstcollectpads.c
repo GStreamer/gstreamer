@@ -288,7 +288,7 @@ gst_collect_pads_finalize (GObject * object)
 /**
  * gst_collect_pads_new:
  *
- * Create a new instance of #GstCollectsPads.
+ * Create a new instance of #GstCollectPads.
  *
  * MT safe.
  *
@@ -365,7 +365,7 @@ gst_collect_pads_set_compare_function (GstCollectPads * pads,
 
 /**
  * gst_collect_pads_set_function:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @func: the function to set
  * @user_data: user data passed to the function
  *
@@ -425,7 +425,7 @@ unref_data (GstCollectData * data)
 
 /**
  * gst_collect_pads_set_event_function:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @func: the function to set
  * @user_data: user data passed to the function
  *
@@ -453,7 +453,7 @@ gst_collect_pads_set_event_function (GstCollectPads * pads,
 
 /**
  * gst_collect_pads_set_query_function:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @func: the function to set
  * @user_data: user data passed to the function
  *
@@ -481,7 +481,7 @@ gst_collect_pads_set_query_function (GstCollectPads * pads,
 
 /**
 * gst_collect_pads_clip_running_time:
-* @pads: the collectspads to use
+* @pads: the collectpads to use
 * @cdata: collect data of corresponding pad
 * @buf: buffer being clipped
 * @outbuf: output buffer with running time, or NULL if clipped
@@ -521,7 +521,7 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
 
  /**
  * gst_collect_pads_set_clip_function:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @clipfunc: clip function to install
  * @user_data: user data to pass to @clip_func
  *
@@ -541,7 +541,7 @@ gst_collect_pads_set_clip_function (GstCollectPads * pads,
 
 /**
  * gst_collect_pads_add_pad:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @pad: (transfer none): the pad to add
  * @size: the size of the returned #GstCollectData structure
  * @destroy_notify: function to be called before the returned #GstCollectData
@@ -638,7 +638,7 @@ find_pad (GstCollectData * data, GstPad * pad)
 
 /**
  * gst_collect_pads_remove_pad:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @pad: (transfer none): the pad to remove
  *
  * Remove a pad from the collection of collect pads. This function will also
@@ -757,7 +757,7 @@ gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
 
 /**
  * gst_collect_pads_set_flushing:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @flushing: desired state of the pads
  *
  * Change the flushing state of all the pads in the collection. No pad
@@ -782,7 +782,7 @@ gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
 
 /**
  * gst_collect_pads_start:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  *
  * Starts the processing of data in the collect_pads.
  *
@@ -823,7 +823,7 @@ gst_collect_pads_start (GstCollectPads * pads)
 
 /**
  * gst_collect_pads_stop:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  *
  * Stops the processing of data in the collect_pads. this function
  * will also unblock any blocking operations.
@@ -882,7 +882,7 @@ gst_collect_pads_stop (GstCollectPads * pads)
 
 /**
  * gst_collect_pads_peek:
- * @pads: the collectspads to peek
+ * @pads: the collectpads to peek
  * @data: the data to use
  *
  * Peek at the buffer currently queued in @data. This function
@@ -914,7 +914,7 @@ gst_collect_pads_peek (GstCollectPads * pads, GstCollectData * data)
 
 /**
  * gst_collect_pads_pop:
- * @pads: the collectspads to pop
+ * @pads: the collectpads to pop
  * @data: the data to use
  *
  * Pop the buffer currently queued in @data. This function
@@ -964,7 +964,7 @@ gst_collect_pads_clear (GstCollectPads * pads, GstCollectData * data)
 
 /**
  * gst_collect_pads_available:
- * @pads: the collectspads to query
+ * @pads: the collectpads to query
  *
  * Query how much bytes can be read from each queued buffer. This means
  * that the result of this call is the maximum number of bytes that can
@@ -1033,7 +1033,7 @@ not_filled:
 
 /**
  * gst_collect_pads_flush:
- * @pads: the collectspads to query
+ * @pads: the collectpads to query
  * @data: the data to use
  * @size: the number of bytes to flush
  *
@@ -1079,7 +1079,7 @@ gst_collect_pads_flush (GstCollectPads * pads, GstCollectData * data,
 
 /**
  * gst_collect_pads_read_buffer:
- * @pads: the collectspads to query
+ * @pads: the collectpads to query
  * @data: the data to use
  * @size: the number of bytes to read
  *
@@ -1117,7 +1117,7 @@ gst_collect_pads_read_buffer (GstCollectPads * pads, GstCollectData * data,
 
 /**
  * gst_collect_pads_take_buffer:
- * @pads: the collectspads to query
+ * @pads: the collectpads to query
  * @data: the data to use
  * @size: the number of bytes to read
  *
@@ -1147,7 +1147,7 @@ gst_collect_pads_take_buffer (GstCollectPads * pads, GstCollectData * data,
 
 /**
  * gst_collect_pads_set_waiting:
- * @pads: the collectspads
+ * @pads: the collectpads
  * @data: the data to use
  * @waiting: boolean indicating whether this pad should operate
  *           in waiting or non-waiting mode
@@ -1563,7 +1563,7 @@ exit:
 
 /**
  * gst_collect_pads_event_default:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @data: collect data of corresponding pad
  * @event: event being processed
  * @discard: process but do not send event downstream
@@ -1804,7 +1804,7 @@ pad_removed:
 
 /**
  * gst_collect_pads_query_default:
- * @pads: the collectspads to use
+ * @pads: the collectpads to use
  * @data: collect data of corresponding pad
  * @query: query being processed
  * @discard: process but do not send event downstream
