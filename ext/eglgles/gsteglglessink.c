@@ -1406,7 +1406,6 @@ HANDLE_ERROR:
   return FALSE;
 }
 
-/* XXX: Never actually tested */
 static void
 gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
 {
