@@ -723,16 +723,12 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       gint src_stride, dest_stride;
       gint row_length;
 
-      /* FIXME: This doesn't look like it could work with
-       * odd widths at all. Needs testing and fixing!
-       */
-
       for (i = 0; i < 3; i++) {
         if (i == 0) {
           src_stride = self->stride;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         } else {
-          src_stride = self->stride / 2;
+          src_stride = (self->stride + 1) / 2;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         }
 
@@ -746,10 +742,10 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
           src += self->slice_height * self->stride;
           src += self->crop_top * src_stride;
           src += self->crop_left / 2;
-          row_length = self->width / 2;
+          row_length = (self->width + 1) / 2;
         }
         if (i == 2)
-          src += (self->slice_height / 2) * (self->stride / 2);
+          src += ((self->slice_height + 1) / 2) * ((self->stride + 1) / 2);
 
         dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
