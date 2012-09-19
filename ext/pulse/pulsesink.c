@@ -1753,7 +1753,7 @@ gst_pulsesink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
       gst_buffer_map (out, &outmap, GST_MAP_WRITE);
 
       res = gst_audio_iec61937_payload (inmap.data, inmap.size,
-          outmap.data, outmap.size, &sink->ringbuffer->spec);
+          outmap.data, outmap.size, &sink->ringbuffer->spec, G_BIG_ENDIAN);
 
       gst_buffer_unmap (buf, &inmap);
       gst_buffer_unmap (out, &outmap);
