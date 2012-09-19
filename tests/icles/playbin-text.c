@@ -87,17 +87,18 @@ static void
 have_subtitle (GstElement * appsink, App * app)
 {
   GstBuffer *buffer;
+  GstSample *sample;
 
   /* get the buffer, we can also wakeup the mainloop to get the subtitle from
    * appsink in the mainloop */
-  g_signal_emit_by_name (appsink, "pull-buffer", &buffer);
-
-  if (buffer) {
+  g_signal_emit_by_name (appsink, "pull-sample", &sample);
+  if (sample) {
     GstMapInfo map;
     gint64 position;
     GstClock *clock;
     GstClockTime base_time, running_time;
 
+    buffer = gst_sample_get_buffer (sample);
     gst_element_query_position (appsink, GST_FORMAT_TIME, &position);
 
     clock = gst_element_get_clock (appsink);
@@ -114,6 +115,7 @@ have_subtitle (GstElement * appsink, App * app)
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     gst_util_dump_mem (map.data, map.size);
     gst_buffer_unmap (buffer, &map);
+    gst_sample_unref (sample);
   }
 }
 
@@ -141,7 +143,7 @@ main (int argc, char *argv[])
   app->textsink = gst_element_factory_make ("appsink", "subtitle_sink");
   g_object_set (G_OBJECT (app->textsink), "emit-signals", TRUE, NULL);
   g_object_set (G_OBJECT (app->textsink), "ts-offset", 0 * GST_SECOND, NULL);
-  g_signal_connect (app->textsink, "new-buffer", G_CALLBACK (have_subtitle),
+  g_signal_connect (app->textsink, "new-sample", G_CALLBACK (have_subtitle),
       app);
   subcaps = gst_caps_from_string ("text/x-raw, format={ utf8, pango-markup }");
   g_object_set (G_OBJECT (app->textsink), "caps", subcaps, NULL);
