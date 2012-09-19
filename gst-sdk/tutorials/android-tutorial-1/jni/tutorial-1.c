@@ -184,10 +184,14 @@ static void *app_function (void *userdata) {
   GstBus *bus;
   GstMessage *msg;
   CustomData *data = (CustomData *)userdata;
-  guint timeout_source_id;
   GSource *timeout_source;
+  GSource *bus_source;
+  GMainContext *context;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
+
+  /* create our own GLib Main Context, so we do not interfere with other libraries using GLib */
+  context = g_main_context_new ();
 
 //  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0 name=vsink", NULL);
   data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
@@ -202,30 +206,34 @@ static void *app_function (void *userdata) {
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
-  gst_bus_add_signal_watch (bus);
+  bus_source = gst_bus_create_watch (bus);
+  g_source_set_callback (bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
+  g_source_attach (bus_source, context);
+  g_source_unref (bus_source);
   g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, data);
   g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, data);
   g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, data);
   gst_object_unref (bus);
 
-  /* Register a function that GLib will call every second */
-  timeout_source_id = g_timeout_add_seconds (1, (GSourceFunc)refresh_ui, data);
+  /* Register a function that GLib will call 4 times per second */
+  timeout_source = g_timeout_source_new (250);
+  g_source_attach (timeout_source, context);
+  g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, data, NULL);
+  g_source_unref (timeout_source);
 
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
-  data->main_loop = g_main_loop_new (NULL, FALSE);
+  data->main_loop = g_main_loop_new (context, FALSE);
   check_initialization_complete (data);
   g_main_loop_run (data->main_loop);
   GST_DEBUG ("Exited main loop");
   g_main_loop_unref (data->main_loop);
   data->main_loop = NULL;
 
-  /* Destroy the timeout source */
-  timeout_source = g_main_context_find_source_by_id (NULL, timeout_source_id);
-  GST_DEBUG ("timeout_source:%p", timeout_source);
-  g_source_destroy (timeout_source);
-
   /* Free resources */
+  g_source_destroy (timeout_source);
+  g_source_destroy (bus_source);
+  g_main_context_unref (context);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->vsink);
   gst_object_unref (data->pipeline);
