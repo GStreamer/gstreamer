@@ -27,6 +27,7 @@
 guint       gst_audio_iec61937_frame_size  (const GstAudioRingBufferSpec * spec);
 gboolean    gst_audio_iec61937_payload     (const guint8 * src, guint src_n,
                                             guint8 * dst, guint dst_n,
-                                            const GstAudioRingBufferSpec * spec);
+                                            const GstAudioRingBufferSpec * spec,
+                                            gint endianness);
 
 #endif /* __GST_AUDIO_IEC61937_H__ */

@@ -134,6 +134,7 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
  *       payloaded contents in. Should not overlap with @src
  * @dst_n: size of @dst in bytes
  * @spec: the ringbufer spec for @src
+ * @endianness: the expected byte order of the payloaded data
  *
  * Payloads @src in the form specified by IEC 61937 for the type from @spec and
  * stores the result in @dst. @src must contain exactly one frame of data and
@@ -144,7 +145,7 @@ gst_audio_iec61937_frame_size (const GstAudioRingBufferSpec * spec)
  */
 gboolean
 gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
-    guint dst_n, const GstAudioRingBufferSpec * spec)
+    guint dst_n, const GstAudioRingBufferSpec * spec, gint endianness)
 {
   guint i, tmp;
 #if G_BYTE_ORDER == G_BIG_ENDIAN
@@ -291,22 +292,22 @@ gst_audio_iec61937_payload (const guint8 * src, guint src_n, guint8 * dst,
   /* Copy the payload */
   i = 8;
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-  memcpy (dst + i, src, src_n);
-#else
-  /* Byte-swapped again */
-  /* FIXME: orc-ify this */
-  for (tmp = 1; tmp < src_n; tmp += 2) {
-    dst[i + tmp - 1] = src[tmp];
-    dst[i + tmp] = src[tmp - 1];
+  if (G_BYTE_ORDER == endianness) {
+    memcpy (dst + i, src, src_n);
+  } else {
+    /* Byte-swapped again */
+    /* FIXME: orc-ify this */
+    for (tmp = 1; tmp < src_n; tmp += 2) {
+      dst[i + tmp - 1] = src[tmp];
+      dst[i + tmp] = src[tmp - 1];
+    }
+    /* Do we have 1 byte remaining? */
+    if (src_n % 2) {
+      dst[i + src_n - 1] = 0;
+      dst[i + src_n] = src[src_n - 1];
+      i++;
+    }
   }
-  /* Do we have 1 byte remaining? */
-  if (src_n % 2) {
-    dst[i + src_n - 1] = 0;
-    dst[i + src_n] = src[src_n - 1];
-    i++;
-  }
-#endif
 
   i += src_n;
 
