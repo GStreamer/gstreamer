@@ -705,6 +705,10 @@ EXPORTS
 	gst_pad_peer_query_duration
 	gst_pad_peer_query_position
 	gst_pad_presence_get_type
+	gst_pad_probe_info_get_buffer
+	gst_pad_probe_info_get_buffer_list
+	gst_pad_probe_info_get_event
+	gst_pad_probe_info_get_query
 	gst_pad_probe_return_get_type
 	gst_pad_probe_type_get_type
 	gst_pad_proxy_query_accept_caps

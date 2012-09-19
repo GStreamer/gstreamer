@@ -1676,6 +1676,11 @@ GST_PAD_PROBE_INFO_BUFFER_LIST
 GST_PAD_PROBE_INFO_EVENT
 GST_PAD_PROBE_INFO_QUERY
 
+gst_pad_probe_info_get_buffer
+gst_pad_probe_info_get_buffer_list
+gst_pad_probe_info_get_event
+gst_pad_probe_info_get_query
+
 GST_PAD_PROBE_INFO_OFFSET
 GST_PAD_PROBE_INFO_SIZE
 

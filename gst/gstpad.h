@@ -547,6 +547,11 @@ struct _GstPadProbeInfo
 #define GST_PAD_PROBE_INFO_OFFSET(d)       ((d)->offset)
 #define GST_PAD_PROBE_INFO_SIZE(d)         ((d)->size)
 
+GstEvent*      gst_pad_probe_info_get_event       (GstPadProbeInfo * info);
+GstQuery*      gst_pad_probe_info_get_query       (GstPadProbeInfo * info);
+GstBuffer*     gst_pad_probe_info_get_buffer      (GstPadProbeInfo * info);
+GstBufferList* gst_pad_probe_info_get_buffer_list (GstPadProbeInfo * info);
+
 /**
  * GstPadProbeCallback:
  * @pad: the #GstPad that is blocked
