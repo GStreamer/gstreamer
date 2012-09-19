@@ -1518,8 +1518,13 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * The way it is right now makes this happen only for the first buffer
        * though so I guess it should work */
       if (gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
-        glViewport (0, 0, eglglessink->surface_width,
-            eglglessink->surface_height);
+        /* This makes the rendered fram to fill the whole
+         * surface area.
+
+         glViewport (0, 0, eglglessink->surface_width,
+         eglglessink->surface_height);
+         */
+        glViewport (0, 0, w, h);
       } else {
         GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
         goto HANDLE_ERROR;
