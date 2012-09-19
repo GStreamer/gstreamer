@@ -1681,7 +1681,19 @@ scan_codecs (GstPlugin * plugin)
      * initialize all this?
      */
     if (started_java_vm && !g_str_has_prefix (name_str, "OMX.google.")) {
-      GST_INFO ("Skipping non-Google codec in standalone mode");
+      GST_INFO ("Skipping non-Google codec '%s' in standalone mode", name_str);
+      valid_codec = FALSE;
+      goto next_codec;
+    }
+
+    /* FIXME:
+     *   - Vorbis: Generates clicks for multi-channel streams
+     *   - *Law: Generates output with too low frequencies
+     */
+    if (strcmp (name_str, "OMX.google.vorbis.decoder") == 0 ||
+        strcmp (name_str, "OMX.google.g711.alaw.decoder") == 0 ||
+        strcmp (name_str, "OMX.google.g711.mlaw.decoder") == 0) {
+      GST_INFO ("Skipping known broken codec '%s'", name_str);
       valid_codec = FALSE;
       goto next_codec;
     }
