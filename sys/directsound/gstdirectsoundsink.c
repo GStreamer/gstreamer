@@ -807,7 +807,7 @@ gst_directsound_sink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
       return NULL;
     }
     success = gst_audio_iec61937_payload (infobuf.data, infobuf.size,
-        infoout.data, infoout.size, &sink->ringbuffer->spec);
+        infoout.data, infoout.size, &sink->ringbuffer->spec, G_BYTE_ORDER);
     if (!success) {
       gst_buffer_unmap (out, &infoout);
       gst_buffer_unmap (buf, &infobuf);
