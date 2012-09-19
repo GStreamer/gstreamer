@@ -98,10 +98,12 @@ main (int   argc,
 }
     <!-- example-end bin.c c --></programlisting>
     <para>
-      There are various functions to lookup elements in a bin. You can
-      also get a list of all elements that a bin contains using the function
-      <function>gst_bin_get_list ()</function>. See the API references of
-      <ulink type="http"
+      There are various functions to lookup elements in a bin. The most
+      commonly used are <function>gst_bin_get_by_name ()</function> and
+      <function>gst_bin_get_by_interface ()</function>. You can also
+      iterate over all elements that a bin contains using the function
+      <function>gst_bin_iterate_elements ()</function>. See the API references
+      of <ulink type="http"
       url="&URLAPI;GstBin.html"><classname>GstBin</classname></ulink>
       for details.
     </para>
