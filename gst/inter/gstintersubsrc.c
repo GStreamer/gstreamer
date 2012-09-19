@@ -250,6 +250,8 @@ gst_inter_sub_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   buffer = gst_buffer_make_writable (buffer);
 
+  /* FIXME: does this make sense? Rate is always 0 */
+#if 0
   GST_BUFFER_TIMESTAMP (buffer) =
       gst_util_uint64_scale_int (GST_SECOND, intersubsrc->n_frames,
       intersubsrc->rate);
@@ -258,6 +260,7 @@ gst_inter_sub_src_create (GstBaseSrc * src, guint64 offset, guint size,
   GST_BUFFER_DURATION (buffer) =
       gst_util_uint64_scale_int (GST_SECOND, (intersubsrc->n_frames + 1),
       intersubsrc->rate) - GST_BUFFER_TIMESTAMP (buffer);
+#endif
   GST_BUFFER_OFFSET (buffer) = intersubsrc->n_frames;
   GST_BUFFER_OFFSET_END (buffer) = -1;
   GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DISCONT);
