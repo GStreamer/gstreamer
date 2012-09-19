@@ -310,6 +310,20 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     }
   }
 
+  /* also transform GAP timestamp similar to buffer timestamps */
+  if (identity->single_segment && (GST_EVENT_TYPE (event) == GST_EVENT_GAP) &&
+      trans->have_segment && trans->segment.format == GST_FORMAT_TIME) {
+    GstClockTime start, dur;
+
+    gst_event_parse_gap (event, &start, &dur);
+    if (GST_CLOCK_TIME_IS_VALID (start)) {
+      start = gst_segment_to_running_time (&trans->segment,
+          GST_FORMAT_TIME, start);
+      gst_event_unref (event);
+      event = gst_event_new_gap (start, dur);
+    }
+  }
+
   /* Reset previous timestamp, duration and offsets on NEWSEGMENT
    * to prevent false warnings when checking for perfect streams */
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
