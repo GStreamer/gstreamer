@@ -766,12 +766,14 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       gint src_stride, dest_stride;
       gint row_length;
 
+      /* FIXME: This does not work for odd widths or heights
+       * but might as well be a bug in the codec */
       for (i = 0; i < 2; i++) {
         if (i == 0) {
           src_stride = self->stride;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         } else {
-          src_stride = self->stride;
+          src_stride = GST_ROUND_UP_2 (self->stride);
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         }
 
@@ -780,7 +782,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
           row_length = self->width;
         } else if (i == 1) {
           src += (self->slice_height - self->crop_top / 2) * self->stride;
-          row_length = self->width;
+          row_length = GST_ROUND_UP_2 (self->width);
         }
 
         dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
