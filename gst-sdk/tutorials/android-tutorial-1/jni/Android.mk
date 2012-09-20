@@ -22,8 +22,10 @@ LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -landroid
 include $(BUILD_SHARED_LIBRARY)
 
-GSTREAMER_PLUGINS = coreelements audiotestsrc videotestsrc ogg theora vorbis ffmpegcolorspace playback app audioconvert audiorate audioresample adder coreindexers gdp gio uridecodebin videorate videoscale typefindfunctions libvisual pango subparse eglglessink soup amc matroska
-GSTREAMER_STATIC_PLUGINS_PATH=/home/fluendo/cerbero/dist/android_arm/lib/gstreamer-0.10/static
-GSTREAMER_MK_PATH=/home/fluendo/cerbero/data/ndk-build/
-include $(GSTREAMER_MK_PATH)/gstreamer.mk
-
+ifndef
+GSTREAMER_SDK_ROOT        := $(CERBERO_PREFIX)
+endif
+GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
+GSTREAMER_PLUGINS         := coreelements audiotestsrc videotestsrc ogg theora vorbis ffmpegcolorspace playback app audioconvert audiorate audioresample adder coreindexers gdp gio uridecodebin videorate videoscale typefindfunctions libvisual pango subparse eglglessink soup amc matroska
+G_IO_MODULES              := gnutls
+include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
