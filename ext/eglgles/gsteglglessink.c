@@ -164,8 +164,8 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_RGB_16));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
 
 /* Filter signals and args */
 enum
@@ -815,8 +815,10 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
     format->attribs = eglglessink_RGBA8888_attribs;
     format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx);
-    eglglessink->supported_fmts = g_list_append
-        (eglglessink->supported_fmts, format);
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA));
+    eglglessink->supported_fmts =
+        g_list_append (eglglessink->supported_fmts, format);
     ret++;
   } else
     GST_INFO_OBJECT (eglglessink,
