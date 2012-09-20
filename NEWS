@@ -4,9 +4,22 @@ Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
 Version 0.4.0 - DD.Aug.2012
-* Add support for Wayland
-* Add support for headless pipelines (VA/DRM API)
-* Drop FFmpeg-based decoders
+* Add support for video rotation
+* Add new video display APIs: Wayland and raw DRM for headless pipelines
+* Drop FFmpeg-based decoders, only use codecparsers-based ones
+* Only reset decoder if meaningful caps changed, e.g. size
+* Allocate the minimal number of video surfaces useful for decoding
+* Fix vaapisink to scale video down to fit the screen dimensions
+* Fix vaapidecode crash when trying to release an inexisten lock (Philip Lorenz)
+
+Version 0.3.8 - 20.Sep.2012
+* Disable FFmpeg-based decoders by default
+* Add JPEG decoder (based on codecparsers)
+* Fix crash when destroying GstVaapiDisplay objects early
+* Fix GLX rendering with FBO + texture-from-pixmap (fallback for VA/GLX)
+* Fix rendering with EMGD driver when overlay mode is used
+* Fix MPEG-2 decoding on Intel Atom platforms with EMGD driver
+* Fix release of dangling proxy surfaces when decoder is reset (Philip Lorenz)
 
 Version 0.3.7 - 26.Jun.2012
 * Fix vaapidecode to report unsupported codec profiles
