@@ -37,9 +37,10 @@ typedef struct _GstGLDeinterlaceClass GstGLDeinterlaceClass;
 
 struct _GstGLDeinterlace
 {
-  GstGLFilter filter;
-  GstGLShader *shader;
-  GstBuffer *buffer_prev;
+  GstGLFilter  filter;
+  GstGLShader  *shader;
+  GstBuffer    *prev_buffer;
+  guint         prev_tex;
 };
 
 struct _GstGLDeinterlaceClass
