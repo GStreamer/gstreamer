@@ -97,6 +97,8 @@ struct _GstGLFilterClass
 
 GType gst_gl_filter_get_type(void);
 
+gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
+                                       GstBuffer * outbuf);
 
 void
 gst_gl_filter_render_to_target (GstGLFilter *filter,

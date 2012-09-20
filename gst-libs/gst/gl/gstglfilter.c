@@ -571,7 +571,7 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   return TRUE;
 }
 
-static gboolean
+gboolean
 gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
