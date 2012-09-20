@@ -50,6 +50,8 @@ typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
 typedef void (*GstGLMixerReset) (GstGLMixer *mixer);
 typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix,
   GPtrArray *buffers, GstBuffer *outbuf);
+typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix,
+  GArray *in_textures, GPtrArray *in_frames, guint out_tex);
 
 struct _GstGLMixer
 {
@@ -72,8 +74,12 @@ struct _GstGLMixer
   gint next_sinkpad;
 
   GPtrArray *array_buffers;
+  GArray *array_textures;
+  GPtrArray *in_frames;
 
-  GstVideoInfo info;
+  GstVideoInfo out_info;
+  GLuint out_tex_id;
+  GstGLDownload *download;
 
   gboolean newseg_pending;
   gboolean flush_stop_pending;
@@ -99,9 +105,12 @@ struct _GstGLMixerClass
   GstGLMixerSetCaps set_caps;
   GstGLMixerReset reset;
   GstGLMixerProcessFunc process_buffers;
+  GstGLMixerProcessTextures process_textures;
 };
 
 GType gst_gl_mixer_get_type(void);
+
+gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_H__ */

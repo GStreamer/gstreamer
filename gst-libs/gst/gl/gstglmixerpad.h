@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstcollectpads.h>
 
-#include "gstglmeta.h"
+#include "gstgldisplay.h"
 
 G_BEGIN_DECLS
 
@@ -61,9 +61,9 @@ struct _GstGLMixerPad
   GstPad parent;                /* subclass the pad */
 
   /* <private> */
-  GstVideoInfo info;
-
-  GstGLDisplay *display;
+  GstVideoInfo in_info;
+  guint in_tex_id;
+  gboolean uploaded;
 
   GstGLMixerCollect *mixcol;
 };
