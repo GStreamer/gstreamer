@@ -90,6 +90,20 @@ gst_vc1_bitplanes_ensure_size
 </SECTION>
 
 <SECTION>
+<FILE>gstmpegvideometa</FILE>
+<INCLUDE>gst/codecparsers/gstmpegvideometa.h</INCLUDE>
+GST_MPEG_VIDEO_META_API_TYPE
+GST_MPEG_VIDEO_META_INFO
+GstMpegVideoMeta
+gst_buffer_add_mpeg_video_meta
+gst_buffer_get_mpeg_video_meta
+gst_mpeg_video_meta_get_info
+<SUBSECTION Standard>
+gst_mpeg_video_meta_api_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gstmpegvideoparser</FILE>
 <TITLE>mpegvideoparser</TITLE>
 <INCLUDE>gst/codecparsers/gstmpegvideoparser.h</INCLUDE>
