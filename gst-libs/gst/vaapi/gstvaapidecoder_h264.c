@@ -253,7 +253,6 @@ G_DEFINE_TYPE(GstVaapiDecoderH264,
 
 struct _GstVaapiDecoderH264Private {
     GstAdapter                 *adapter;
-    GstBuffer                  *sub_buffer;
     GstH264NalParser           *parser;
     GstH264SPS                 *sps;
     GstH264SPS                  last_sps;
@@ -525,11 +524,6 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     clear_references(decoder, priv->short_ref, &priv->short_ref_count);
     clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
     clear_references(decoder, priv->dpb,       &priv->dpb_count      );
-
-    if (priv->sub_buffer) {
-        gst_buffer_unref(priv->sub_buffer);
-        priv->sub_buffer = NULL;
-    }
 
     if (priv->parser) {
         gst_h264_nal_parser_free(priv->parser);
@@ -2210,6 +2204,15 @@ error:
     return status;
 }
 
+static inline gint
+scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
+{
+    return (gint)gst_adapter_masked_scan_uint32_peek(adapter,
+                                                     0xffffff00, 0x00000100,
+                                                     ofs, size,
+                                                     scp);
+}
+
 static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
 {
@@ -2217,55 +2220,80 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
     GstVaapiDecoderStatus status;
     GstH264ParserResult result;
     GstH264NalUnit nalu;
-    guchar *buf;
-    guint buf_size, ofs;
+    const guchar *buf;
+    guint i, buf_size, nalu_size, size;
+    guint32 start_code;
+    gint ofs;
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
     if (!buf && buf_size == 0)
         return decode_sequence_end(decoder);
 
-    gst_buffer_ref(buffer);
-    gst_adapter_push(priv->adapter, buffer);
+    gst_adapter_push(priv->adapter, gst_buffer_ref(buffer));
 
-    if (priv->sub_buffer) {
-        buffer = gst_buffer_merge(priv->sub_buffer, buffer);
-        if (!buffer)
-            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-        gst_buffer_unref(priv->sub_buffer);
-        priv->sub_buffer = NULL;
-    }
-
-    buf      = GST_BUFFER_DATA(buffer);
-    buf_size = GST_BUFFER_SIZE(buffer);
-    ofs      = 0;
+    size = gst_adapter_available(priv->adapter);
     do {
+        status = gst_vaapi_decoder_check_status(GST_VAAPI_DECODER(decoder));
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            break;
+
+        status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
         if (priv->is_avc) {
+            if (size < priv->nal_length_size)
+                break;
+            buf = gst_adapter_peek(priv->adapter, priv->nal_length_size);
+
+            nalu_size = 0;
+            for (i = 0; i < priv->nal_length_size; i++)
+                nalu_size = (nalu_size << 8) | buf[i];
+
+            buf_size = priv->nal_length_size + nalu_size;
+            if (size < buf_size)
+                break;
+            buffer = gst_adapter_take_buffer(priv->adapter, buf_size);
+            size -= buf_size;
+
+            buf      = GST_BUFFER_DATA(buffer);
+            buf_size = GST_BUFFER_SIZE(buffer);
+
             result = gst_h264_parser_identify_nalu_avc(
                 priv->parser,
-                buf, ofs, buf_size, priv->nal_length_size,
+                buf, 0, buf_size, priv->nal_length_size,
                 &nalu
             );
         }
         else {
-            result = gst_h264_parser_identify_nalu(
+            if (size < 8)
+                break;
+            ofs = scan_for_start_code(priv->adapter, 0, size, &start_code);
+            if (ofs < 0)
+                break;
+            gst_adapter_flush(priv->adapter, ofs);
+            size -= ofs;
+
+            if (size < 8)
+                break;
+            ofs = scan_for_start_code(priv->adapter, 4, size - 4, NULL);
+            if (ofs < 0)
+                break;
+            buffer = gst_adapter_take_buffer(priv->adapter, ofs);
+            size -= ofs;
+
+            buf      = GST_BUFFER_DATA(buffer);
+            buf_size = GST_BUFFER_SIZE(buffer);
+
+            result = gst_h264_parser_identify_nalu_unchecked(
                 priv->parser,
-                buf, ofs, buf_size,
+                buf, 0, buf_size,
                 &nalu
             );
         }
         status = get_status(result);
-
-        if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA) {
-            priv->sub_buffer = gst_buffer_create_sub(buffer, ofs, buf_size - ofs);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+            gst_buffer_unref(buffer);
             break;
         }
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            break;
-
-        ofs = nalu.offset - ofs;
-        if (gst_adapter_available(priv->adapter) >= ofs)
-            gst_adapter_flush(priv->adapter, ofs);
 
         switch (nalu.type) {
         case GST_H264_NAL_SLICE_IDR:
@@ -2298,11 +2326,8 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
             break;
         }
-
-        if (gst_adapter_available(priv->adapter) >= nalu.size)
-            gst_adapter_flush(priv->adapter, nalu.size);
-        ofs = nalu.offset + nalu.size;
-    } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS && ofs < buf_size);
+        gst_buffer_unref(buffer);
+    } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
     return status;
 }
 
@@ -2462,7 +2487,6 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->mb_width              = 0;
     priv->mb_height             = 0;
     priv->adapter               = NULL;
-    priv->sub_buffer            = NULL;
     priv->field_poc[0]          = 0;
     priv->field_poc[1]          = 0;
     priv->poc_msb               = 0;
