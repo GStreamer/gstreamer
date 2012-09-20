@@ -119,7 +119,7 @@ static GstStaticPadTemplate gst_glimage_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
     );
 
 enum
@@ -478,16 +478,16 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   width = GST_VIDEO_INFO_WIDTH (&vinfo);
   height = GST_VIDEO_INFO_HEIGHT (&vinfo);
 
-  /* FIXME: Cannot determine GL stream through caps */
-  /* init colorspace conversion if needed */
-  /*ok = gst_gl_display_init_upload (glimage_sink->display, format,
-     width, height, width, height);
+  if (glimage_sink->tex_id)
+    gst_gl_display_del_texture (glimage_sink->display, &glimage_sink->tex_id);
+  gst_gl_display_gen_texture (glimage_sink->display, &glimage_sink->tex_id,
+      GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
 
-     if (!ok) {
-     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-     GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
-     return FALSE;
-     } */
+  glimage_sink->upload = gst_gl_display_find_upload (glimage_sink->display,
+      GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
+
+  gst_gl_upload_init_format (glimage_sink->upload,
+      GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
 
   gst_gl_display_set_client_reshape_callback (glimage_sink->display,
       glimage_sink->clientReshapeCallback);
@@ -556,18 +556,35 @@ static GstFlowReturn
 gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
-  GstGLMeta *gl_meta;
-  GstVideoMeta *v_meta;
+  guint tex_id;
+  GstVideoFrame frame;
 
   GST_TRACE ("rendering buffer:%p", buf);
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  if (!(v_meta = gst_buffer_get_video_meta (buf)))
-    GST_WARNING ("Buffer %" GST_PTR_FORMAT " is missing GstVideoMeta");
+  if (GST_VIDEO_SINK_WIDTH (glimage_sink) < 1 ||
+      GST_VIDEO_SINK_HEIGHT (glimage_sink) < 1) {
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
-  if (!(gl_meta = gst_buffer_get_gl_meta (buf)))
-    GST_WARNING ("Buffer %" GST_PTR_FORMAT " is missing required GstGLMeta");
+  if (!gst_video_frame_map (&frame, &glimage_sink->info, buf,
+          GST_MAP_READ | GST_MAP_GL)) {
+    GST_WARNING ("Failed to map memory");
+    return GST_FLOW_ERROR;
+  }
+
+  if (frame.map[0].memory && gst_is_gl_memory (frame.map[0].memory)) {
+    tex_id = *(guint *) frame.data[0];
+  } else {
+    GST_INFO ("Input Buffer does not contain correct meta, "
+        "attempting to wrap for upload");
+
+    gst_gl_upload_perform_with_data (glimage_sink->upload,
+        glimage_sink->tex_id, frame.data);
+
+    tex_id = glimage_sink->tex_id;
+  }
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     glimage_sink->window_id = glimage_sink->new_window_id;
@@ -581,18 +598,16 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   //store current buffer
   glimage_sink->stored_buffer = gst_buffer_ref (buf);
 
-  GST_TRACE ("redisplay tex:%u of size:%ux%u, window size:%ux%u",
-      gl_meta->memory->tex_id, v_meta->width, v_meta->height,
+  GST_TRACE ("redisplay texture:%u of size:%ux%u, window size:%ux%u", tex_id,
+      GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
+      GST_VIDEO_INFO_HEIGHT (&glimage_sink->info),
       GST_VIDEO_SINK_WIDTH (glimage_sink),
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
-  if (GST_VIDEO_SINK_WIDTH (glimage_sink) < 1
-      || GST_VIDEO_SINK_HEIGHT (glimage_sink) < 1) {
-    goto redisplay_failed;
-  }
   //redisplay opengl scene
   if (!gst_gl_display_redisplay (glimage_sink->display,
-          gl_meta->memory->tex_id, v_meta->width, v_meta->height,
+          tex_id, GST_VIDEO_INFO_WIDTH (&glimage_sink->info),
+          GST_VIDEO_INFO_HEIGHT (&glimage_sink->info),
           GST_VIDEO_SINK_WIDTH (glimage_sink),
           GST_VIDEO_SINK_HEIGHT (glimage_sink),
           glimage_sink->keep_aspect_ratio))
@@ -600,11 +615,14 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_TRACE ("post redisplay");
 
+  gst_video_frame_unmap (&frame);
+
   return GST_FLOW_OK;
 
 /* ERRORS */
 redisplay_failed:
   {
+    gst_video_frame_unmap (&frame);
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
         GST_GL_DISPLAY_ERR_MSG (glimage_sink->display), (NULL));
     return GST_FLOW_ERROR;
@@ -709,7 +727,6 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
-  gst_query_add_allocation_meta (query, GST_GL_META_API_TYPE, 0);
 
   gst_object_unref (pool);
 

@@ -62,6 +62,8 @@ struct _GstGLImageSink
 
     GstGLDisplay *display;
     GstBuffer *stored_buffer;
+    GstGLUpload *upload;
+    GLuint     tex_id;
 
     CRCB clientReshapeCallback;
     CDCB clientDrawCallback;
