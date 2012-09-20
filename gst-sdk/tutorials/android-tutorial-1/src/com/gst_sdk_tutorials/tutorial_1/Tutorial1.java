@@ -43,13 +43,13 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     private native void nativeSurfaceInit(Object surface);
     private native void nativeSurfaceFinalize();
     private long native_custom_data;
-    
+
     private boolean playing;
     private int position;
     private int duration;
-    
+
     private Bundle initialization_data;
-    
+
     public Tutorial1() {
         super();
         GStreamer.Init(this);
