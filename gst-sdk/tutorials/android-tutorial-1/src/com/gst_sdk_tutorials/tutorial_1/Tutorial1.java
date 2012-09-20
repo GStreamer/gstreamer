@@ -52,7 +52,6 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
     public Tutorial1() {
         super();
-        GStreamer.Init(this);
     }
 
     /* Called when the activity is first created. 
@@ -60,6 +59,8 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+
+        GStreamer.Init(this);
 
         setContentView(R.layout.main);
 
