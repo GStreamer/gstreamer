@@ -64,8 +64,8 @@ static void gst_gl_mosaic_reset (GstGLMixer * mixer);
 static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
-static gboolean gst_gl_mosaic_proc (GstGLMixer * mixer,
-    GPtrArray * buffers, GstBuffer * outbuf);
+static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
+    GArray * in_textures, GPtrArray * in_frames, guint out_tex);
 static void gst_gl_mosaic_callback (gpointer stuff);
 
 //vertex source
@@ -130,14 +130,15 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
 
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_init_shader;
   GST_GL_MIXER_CLASS (klass)->reset = gst_gl_mosaic_reset;
-  GST_GL_MIXER_CLASS (klass)->process_buffers = gst_gl_mosaic_proc;
+  GST_GL_MIXER_CLASS (klass)->process_textures = gst_gl_mosaic_process_textures;
 }
 
 static void
 gst_gl_mosaic_init (GstGLMosaic * mosaic)
 {
   mosaic->shader = NULL;
-  mosaic->input_buffers = NULL;
+  mosaic->input_textures = NULL;
+  mosaic->input_frames = NULL;
 }
 
 static void
@@ -171,7 +172,8 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
-  mosaic->input_buffers = NULL;
+  mosaic->input_textures = NULL;
+  mosaic->input_frames = NULL;
 
   //blocking call, wait the opengl thread has destroyed the shader
   gst_gl_display_del_shader (mixer->display, mosaic->shader);
@@ -188,28 +190,24 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_mosaic_proc (GstGLMixer * mix, GPtrArray * buffers, GstBuffer * outbuf)
+gst_gl_mosaic_process_textures (GstGLMixer * mix, GArray * in_textures,
+    GPtrArray * in_frames, guint out_tex)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mix);
-  GstGLMeta *out_meta;
 
-  mosaic->input_buffers = buffers;
+  mosaic->input_textures = in_textures;
+  mosaic->input_frames = in_frames;
 
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-
-  if (!out_meta) {
-    GST_WARNING ("Output buffer does not have required GstGLMeta");
-    return FALSE;
-  }
   //blocking call, use a FBO
-  gst_gl_display_use_fbo_v2 (mix->display, GST_VIDEO_INFO_WIDTH (&mix->info),
-      GST_VIDEO_INFO_HEIGHT (&mix->info), mix->fbo, mix->depthbuffer,
-      out_meta->memory->tex_id, gst_gl_mosaic_callback, (gpointer) mosaic);
+  gst_gl_display_use_fbo_v2 (mix->display,
+      GST_VIDEO_INFO_WIDTH (&mix->out_info),
+      GST_VIDEO_INFO_HEIGHT (&mix->out_info), mix->fbo, mix->depthbuffer,
+      out_tex, gst_gl_mosaic_callback, (gpointer) mosaic);
 
   return TRUE;
 }
 
-//opengl scene, params: input texture (not the output mixer->texture)
+/* opengl scene, params: input texture (not the output mixer->texture) */
 static void
 gst_gl_mosaic_callback (gpointer stuff)
 {
@@ -228,14 +226,12 @@ gst_gl_mosaic_callback (gpointer stuff)
     0.0f, 0.0f, 0.5f, 0.0f,
     0.0f, 0.0f, 0.0f, 1.0f
   };
-
   const GLushort indices[] = {
     0, 1, 2,
     0, 2, 3
   };
 
   guint count = 0;
-  gboolean do_next = TRUE;
 
   gst_gl_shader_use (NULL);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
@@ -253,102 +249,106 @@ gst_gl_mosaic_callback (gpointer stuff)
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
 
-  while (do_next && count < mosaic->input_buffers->len && count < 6) {
-    GstBuffer *in_buffer;
-    GstGLMeta *in_meta;
-    GstVideoMeta *in_v_meta;
+  while (count < mosaic->input_textures->len && count < 6) {
+    GstVideoFrame *in_frame;
+    GLfloat *v_vertices;
+    guint in_tex;
+    guint width, height;
 
-    in_buffer = g_ptr_array_index (mosaic->input_buffers, count);
-    in_meta = gst_buffer_get_gl_meta (in_buffer);
-    in_v_meta = gst_buffer_get_video_meta (in_buffer);
+    in_frame = g_ptr_array_index (mosaic->input_frames, count);
+    in_tex = g_array_index (mosaic->input_textures, guint, count);
+    width = GST_VIDEO_FRAME_WIDTH (in_frame);
+    height = GST_VIDEO_FRAME_HEIGHT (in_frame);
 
-    if (in_buffer && in_meta && in_v_meta) {
-      GLuint texture = in_meta->memory->tex_id;
-      GLfloat width = (GLfloat) in_v_meta->width;
-      GLfloat height = (GLfloat) in_v_meta->height;
-
-      const GLfloat v_vertices[] = {
-
-        //front face
-        1.0f, 1.0f, -1.0f,
-        width, 0.0f,
-        1.0f, -1.0f, -1.0f,
-        width, height,
-        -1.0f, -1.0f, -1.0f,
-        0.0f, height,
-        -1.0f, 1.0f, -1.0f,
-        0.0f, 0.0f,
-        //right face
-        1.0f, 1.0f, 1.0f,
-        width, 0.0f,
-        1.0f, -1.0f, 1.0f,
-        0.0f, 0.0f,
-        1.0f, -1.0f, -1.0f,
-        0.0f, height,
-        1.0f, 1.0f, -1.0f,
-        width, height,
-        //left face
-        -1.0f, 1.0f, 1.0f,
-        width, 0.0f,
-        -1.0f, 1.0f, -1.0f,
-        width, height,
-        -1.0f, -1.0f, -1.0f,
-        0.0f, height,
-        -1.0f, -1.0f, 1.0f,
-        0.0f, 0.0f,
-        //top face
-        1.0f, -1.0f, 1.0f,
-        width, 0.0f,
-        -1.0f, -1.0f, 1.0f,
-        0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f,
-        0.0f, height,
-        1.0f, -1.0f, -1.0f,
-        width, height,
-        //bottom face
-        1.0f, 1.0f, 1.0f,
-        width, 0.0f,
-        1.0f, 1.0f, -1.0f,
-        width, height,
-        -1.0f, 1.0f, -1.0f,
-        0.0f, height,
-        -1.0f, 1.0f, 1.0f,
-        0.0f, 0.0f,
-        //back face
-        1.0f, 1.0f, 1.0f,
-        width, 0.0f,
-        -1.0f, 1.0f, 1.0f,
-        0.0f, 0.0f,
-        -1.0f, -1.0f, 1.0f,
-        0.0f, height,
-        1.0f, -1.0f, 1.0f,
-        width, height
-      };
-
-      glVertexAttribPointerARB (attr_position_loc, 3, GL_FLOAT,
-          GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count]);
-
-      glVertexAttribPointerARB (attr_texture_loc, 2, GL_FLOAT,
-          GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count + 3]);
-
-      glEnableVertexAttribArrayARB (attr_position_loc);
-      glEnableVertexAttribArrayARB (attr_texture_loc);
-
-      glActiveTextureARB (GL_TEXTURE0_ARB);
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-      gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
-      gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
-      gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
-      gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", zrot);
-      gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
-          GL_FALSE, matrix);
-
-      glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-
-      ++count;
-    } else {
-      do_next = FALSE;
+    if (!in_frame || !in_tex || width <= 0 || height <= 0) {
+      GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
+          in_tex, in_frame, width, height);
+      count++;
+      continue;
     }
+
+    GST_TRACE ("processing texture:%u dimensions:%ux%u", in_tex, width, height);
+
+    /* *INDENT-OFF* */
+    v_vertices = (GLfloat[]) {
+      /* front face */
+      1.0f, 1.0f, -1.0f,
+      width, 0.0f,
+      1.0f, -1.0f, -1.0f,
+      width, height,
+      -1.0f, -1.0f, -1.0f,
+      0.0f, height,
+      -1.0f, 1.0f, -1.0f,
+      0.0f, 0.0f,
+      /* right face */
+      1.0f, 1.0f, 1.0f,
+      width, 0.0f,
+      1.0f, -1.0f, 1.0f,
+      0.0f, 0.0f,
+      1.0f, -1.0f, -1.0f,
+      0.0f, height,
+      1.0f, 1.0f, -1.0f,
+      width, height,
+      /* left face */
+      -1.0f, 1.0f, 1.0f,
+      width, 0.0f,
+      -1.0f, 1.0f, -1.0f,
+      width, height,
+      -1.0f, -1.0f, -1.0f,
+      0.0f, height,
+      -1.0f, -1.0f, 1.0f,
+      0.0f, 0.0f,
+      /* top face */
+      1.0f, -1.0f, 1.0f,
+      width, 0.0f,
+      -1.0f, -1.0f, 1.0f,
+      0.0f, 0.0f,
+      -1.0f, -1.0f, -1.0f,
+      0.0f, height,
+      1.0f, -1.0f, -1.0f,
+      width, height,
+      /* bottom face */
+      1.0f, 1.0f, 1.0f,
+      width, 0.0f,
+      1.0f, 1.0f, -1.0f,
+      width, height,
+      -1.0f, 1.0f, -1.0f,
+      0.0f, height,
+      -1.0f, 1.0f, 1.0f,
+      0.0f, 0.0f,
+      /* back face */
+      1.0f, 1.0f, 1.0f,
+      width, 0.0f,
+      -1.0f, 1.0f, 1.0f,
+      0.0f, 0.0f,
+      -1.0f, -1.0f, 1.0f,
+      0.0f, height,
+      1.0f, -1.0f, 1.0f,
+      width, height
+    };
+    /* *INDENT-ON* */
+
+    glVertexAttribPointerARB (attr_position_loc, 3, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count]);
+
+    glVertexAttribPointerARB (attr_texture_loc, 2, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[5 * 4 * count + 3]);
+
+    glEnableVertexAttribArrayARB (attr_position_loc);
+    glEnableVertexAttribArrayARB (attr_texture_loc);
+
+    glActiveTextureARB (GL_TEXTURE0_ARB);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, in_tex);
+    gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
+    gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
+    gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
+    gst_gl_shader_set_uniform_1f (mosaic->shader, "zrot_degree", zrot);
+    gst_gl_shader_set_uniform_matrix_4fv (mosaic->shader, "u_matrix", 1,
+        GL_FALSE, matrix);
+
+    glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+    ++count;
   }
 
   glDisableVertexAttribArrayARB (attr_position_loc);
