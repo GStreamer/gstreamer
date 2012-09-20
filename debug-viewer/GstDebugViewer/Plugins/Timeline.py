@@ -411,11 +411,18 @@ class TimelineWidget (gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerTimelineWidget"
 
+    __gsignals__ = {"change-position" : (gobject.SIGNAL_RUN_LAST,
+                                         gobject.TYPE_NONE,
+                                         (gobject.TYPE_INT,),)}
+
     def __init__ (self):
 
         gtk.DrawingArea.__init__ (self)
 
         self.logger = logging.getLogger ("ui.timeline")
+
+        self.add_events (gtk.gdk.BUTTON1_MOTION_MASK |
+                         gtk.gdk.BUTTON_PRESS_MASK)
 
         self.process = UpdateProcess (None, None)
         self.process.handle_sentinel_progress = self.__handle_sentinel_progress
@@ -744,6 +751,36 @@ class TimelineWidget (gtk.DrawingArea):
         # FIXME:
         req.height = 64
 
+    def do_button_press_event (self, event):
+
+        if event.button != 1:
+            return False
+
+        # TODO: Check if clicked inside a warning/error indicator triangle and
+        # navigate there.
+
+        pos = int (event.x)
+        self.emit ("change-position", pos)
+        return True
+
+    def do_motion_notify_event (self, event):
+
+        x = event.x
+        y = event.y
+
+        if event.state & gtk.gdk.BUTTON1_MASK:
+            self.emit ("change-position", int (x))
+            return True
+        else:
+            self._handle_motion (x, y)
+            return False
+
+    def _handle_motion (self, x, y):
+
+        # TODO: Prelight warning and error indicator triangles.
+
+        pass
+
 class AttachedWindow (object):
 
     def __init__ (self, feature, window):
@@ -773,10 +810,8 @@ class AttachedWindow (object):
         box = window.get_top_attach_point ()
 
         self.timeline = TimelineWidget ()
-        self.timeline.add_events (gtk.gdk.BUTTON1_MOTION_MASK |
-                                  gtk.gdk.BUTTON_PRESS_MASK)
-        self.timeline.connect ("button-press-event", self.handle_timeline_button_press_event)
-        self.timeline.connect ("motion-notify-event", self.handle_timeline_motion_notify_event)
+        self.timeline.connect ("change-position",
+                               self.handle_timeline_change_position)
         box.pack_start (self.timeline, False, False, 0)
         self.timeline.hide ()
 
@@ -883,39 +918,9 @@ class AttachedWindow (object):
             self.timeline.hide ()
             self.vtimeline.hide ()
 
-    def handle_timeline_button_press_event (self, widget, event):
+    def handle_timeline_change_position (self, widget, pos):
 
-        if event.button != 1:
-            return False
-
-        # TODO: Check if clicked inside a warning/error indicator triangle and
-        # navigate there.
-
-        pos = int (event.x)
         self.goto_time_position (pos)
-        return False
-
-    def handle_timeline_motion_notify_event (self, widget, event):
-
-        x = event.x
-        y = event.y
-
-        if event.state & gtk.gdk.BUTTON1_MASK:
-            self.handle_timeline_motion_button1 (x, y)
-            return True
-        else:
-            self.handle_timeline_motion (x, y)
-            return False
-
-    def handle_timeline_motion (self, x, y):
-
-        # TODO: Prelight warning and error indicator triangles.
-
-        pass
-
-    def handle_timeline_motion_button1 (self, x, y):
-
-        self.goto_time_position (int (x))
 
     def goto_time_position (self, pos):
 
