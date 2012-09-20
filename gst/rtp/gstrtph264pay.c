@@ -398,6 +398,30 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
   return res;
 }
 
+static GList *
+add_sps_pps_without_duplicates (GList * list, GstBuffer * buffer)
+{
+  GList *walk;
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  for (walk = list; walk; walk = walk->next) {
+    if (gst_buffer_get_size (walk->data) == map.size &&
+        !gst_buffer_memcmp (walk->data, 0, map.data, map.size)) {
+      /* Same data */
+      gst_buffer_unmap (buffer, &map);
+      gst_buffer_unref (buffer);
+      return list;
+    }
+  }
+
+  gst_buffer_unmap (buffer, &map);
+  list = g_list_append (list, buffer);
+
+  return list;
+}
+
 static gboolean
 gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
 {
@@ -493,7 +517,8 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       /* make a buffer out of it and add to SPS list */
       sps_buf = gst_buffer_new_and_alloc (nal_size);
       gst_buffer_fill (sps_buf, 0, data, nal_size);
-      rtph264pay->sps = g_list_append (rtph264pay->sps, sps_buf);
+      rtph264pay->sps = add_sps_pps_without_duplicates (rtph264pay->sps,
+          sps_buf);
 
       data += nal_size;
       size -= nal_size;
@@ -525,7 +550,8 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       /* make a buffer out of it and add to PPS list */
       pps_buf = gst_buffer_new_and_alloc (nal_size);
       gst_buffer_fill (pps_buf, 0, data, nal_size);
-      rtph264pay->pps = g_list_append (rtph264pay->pps, pps_buf);
+      rtph264pay->pps = add_sps_pps_without_duplicates (rtph264pay->pps,
+          pps_buf);
 
       data += nal_size;
       size -= nal_size;
@@ -615,11 +641,11 @@ gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
     /* append to the right list */
     if ((nal_type & 0x1f) == 7) {
       GST_DEBUG_OBJECT (rtph264pay, "adding param %d as SPS %d", i, num_sps);
-      rtph264pay->sps = g_list_append (rtph264pay->sps, buf);
+      rtph264pay->sps = add_sps_pps_without_duplicates (rtph264pay->sps, buf);
       num_sps++;
     } else {
       GST_DEBUG_OBJECT (rtph264pay, "adding param %d as PPS %d", i, num_pps);
-      rtph264pay->pps = g_list_append (rtph264pay->pps, buf);
+      rtph264pay->pps = add_sps_pps_without_duplicates (rtph264pay->pps, buf);
       num_pps++;
     }
   }
