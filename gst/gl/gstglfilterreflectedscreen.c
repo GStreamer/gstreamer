@@ -64,8 +64,8 @@ static void gst_gl_filter_reflected_screen_set_property (GObject * object,
 static void gst_gl_filter_reflected_screen_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_gl_filter_reflected_screen_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filter_reflected_screen_filter_texture (GstGLFilter *
+    filter, guint in_tex, guint out_tex);
 
 static void gst_gl_filter_reflected_screen_draw_background ();
 static void gst_gl_filter_reflected_screen_draw_floor ();
@@ -94,7 +94,8 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
   gobject_class->set_property = gst_gl_filter_reflected_screen_set_property;
   gobject_class->get_property = gst_gl_filter_reflected_screen_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_reflected_screen_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_filter_reflected_screen_filter_texture;
 
   g_object_class_install_property (gobject_class, PROP_ACTIVE_GRAPHIC_MODE,
       g_param_spec_boolean ("active-graphic-mode",
@@ -207,32 +208,20 @@ gst_gl_filter_reflected_screen_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_gl_filter_reflected_screen_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf)
+gst_gl_filter_reflected_screen_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex)
 {
   GstGLFilterReflectedScreen *reflected_screen_filter =
       GST_GL_FILTER_REFLECTED_SCREEN (filter);
-  GstGLMeta *in_meta, *out_meta;
-  GstVideoMeta *in_v_meta;
 
-  if (reflected_screen_filter->aspect == 0.0)
-    reflected_screen_filter->aspect =
-        (gfloat) (filter->width) / (gfloat) (filter->height);
-
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-  in_v_meta = gst_buffer_get_video_meta (inbuf);
-
-  if (!in_meta || !out_meta || !in_v_meta) {
-    GST_WARNING ("A buffer does not contain required GstGLMeta or"
-        " GstVideoMeta");
-    return FALSE;
-  }
   //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
-      gst_gl_filter_reflected_screen_callback, in_v_meta->width,
-      in_v_meta->height, in_meta->memory->tex_id,
+  gst_gl_display_use_fbo (filter->display,
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+      filter->fbo, filter->depthbuffer, out_tex,
+      gst_gl_filter_reflected_screen_callback,
+      GST_VIDEO_INFO_WIDTH (&filter->in_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->in_info), in_tex,
       reflected_screen_filter->fovy, reflected_screen_filter->aspect,
       reflected_screen_filter->znear, reflected_screen_filter->zfar,
       GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,

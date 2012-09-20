@@ -68,8 +68,8 @@ static void gst_gl_bumper_get_property (GObject * object, guint prop_id,
 
 static void gst_gl_bumper_reset (GstGLFilter * filter);
 static gboolean gst_gl_bumper_init_shader (GstGLFilter * filter);
-static gboolean gst_gl_bumper_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_bumper_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 static void gst_gl_bumper_callback (gint width, gint height, guint texture,
     gpointer stuff);
 
@@ -273,7 +273,7 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
   gobject_class->set_property = gst_gl_bumper_set_property;
   gobject_class->get_property = gst_gl_bumper_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_bumper_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_bumper_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb = gst_gl_bumper_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb = gst_gl_bumper_reset_resources;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_bumper_init_shader;
@@ -355,23 +355,20 @@ gst_gl_bumper_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_bumper_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_bumper_filter_texture (GstGLFilter * filter, guint in_tex, guint out_tex)
 {
-  GstGLMeta *in_gl_meta, *out_gl_meta;
-  GstVideoMeta *in_v_meta;
   gpointer bumper_filter = GST_GL_BUMPER (filter);
 
-  in_gl_meta = gst_buffer_get_gl_meta (inbuf);
-  out_gl_meta = gst_buffer_get_gl_meta (outbuf);
-  in_v_meta = gst_buffer_get_video_meta (inbuf);
-
   //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, out_gl_meta->memory->tex_id,
-      gst_gl_bumper_callback, in_v_meta->width, in_v_meta->height,
-      in_gl_meta->memory->tex_id, 45,
-      (gdouble) filter->width / (gdouble) filter->height, 0.1, 50,
+  gst_gl_display_use_fbo (filter->display,
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+      filter->fbo, filter->depthbuffer, out_tex, gst_gl_bumper_callback,
+      GST_VIDEO_INFO_WIDTH (&filter->in_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->in_info),
+      in_tex, 45,
+      (gdouble) GST_VIDEO_INFO_WIDTH (&filter->out_info) /
+      (gdouble) GST_VIDEO_INFO_HEIGHT (&filter->out_info), 0.1, 50,
       GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, bumper_filter);
 
   return TRUE;

@@ -55,8 +55,8 @@ static void gst_gl_filterblur_get_property (GObject * object, guint prop_id,
 static void gst_gl_filter_filterblur_reset (GstGLFilter * filter);
 
 static gboolean gst_gl_filterblur_init_shader (GstGLFilter * filter);
-static gboolean gst_gl_filterblur_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filterblur_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 static void gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
     gpointer stuff);
 static void gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
@@ -71,7 +71,9 @@ gst_gl_filterblur_init_resources (GstGLFilter * filter)
   glGenTextures (1, &filterblur->midtexture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-      filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+      0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
@@ -104,7 +106,8 @@ gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
       "Filter/Effect", "Blur with 9x9 separable convolution",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filterblur_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_filterblur_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_filterblur_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -182,25 +185,16 @@ gst_gl_filterblur_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filterblur_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_filterblur_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
-  GstGLMeta *in_meta, *out_meta;
 
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-
-  if (!in_meta || !out_meta) {
-    GST_WARNING ("A buffer did not contain required GstGLMeta");
-    return FALSE;
-  }
-
-  gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
+  gst_gl_filter_render_to_target (filter, in_tex,
       filterblur->midtexture, gst_gl_filterblur_hcallback, filterblur);
 
   gst_gl_filter_render_to_target (filter, filterblur->midtexture,
-      out_meta->memory->tex_id, gst_gl_filterblur_vcallback, filterblur);
+      out_tex, gst_gl_filterblur_vcallback, filterblur);
 
   return TRUE;
 }

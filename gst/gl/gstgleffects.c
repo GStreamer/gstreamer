@@ -63,8 +63,8 @@ static gboolean gst_gl_effects_on_init_gl_context (GstGLFilter * filter);
 static void gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
     gpointer data);
 
-static gboolean gst_gl_effects_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_effects_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 
 /* dont' forget to edit the following when a new effect is added */
 typedef enum
@@ -194,7 +194,9 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
     glGenTextures (1, &effects->midtexture[i]);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->midtexture[i]);
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-        filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GST_VIDEO_INFO_WIDTH (&filter->out_info),
+        GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -235,7 +237,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
   gobject_class->set_property = gst_gl_effects_set_property;
   gobject_class->get_property = gst_gl_effects_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_effects_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_effects_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_effects_init_gl_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -278,11 +280,12 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, 0.0);
+  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info), 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
+  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) filter->height);
+  glTexCoord2f (0.0, (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
@@ -438,22 +441,13 @@ gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_effects_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLMeta *in_gl_meta, *out_gl_meta;
 
-  in_gl_meta = gst_buffer_get_gl_meta (inbuf);
-  out_gl_meta = gst_buffer_get_gl_meta (outbuf);
-
-  if (!in_gl_meta || !out_gl_meta) {
-    GST_ERROR ("buffers do not contain required GstGLMeta");
-    return FALSE;
-  }
-
-  effects->intexture = in_gl_meta->memory->tex_id;
-  effects->outtexture = out_gl_meta->memory->tex_id;
+  effects->intexture = in_tex;
+  effects->outtexture = out_tex;
 
   if (effects->horizontal_swap == TRUE)
     gst_gl_display_thread_add (filter->display, set_horizontal_swap, effects);

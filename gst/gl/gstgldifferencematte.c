@@ -63,8 +63,8 @@ static void gst_gl_differencematte_get_property (GObject * object,
 static void gst_gl_differencematte_init_resources (GstGLFilter * filter);
 static void gst_gl_differencematte_reset_resources (GstGLFilter * filter);
 
-static gboolean gst_gl_differencematte_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_differencematte_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 
 static gboolean gst_gl_differencematte_loader (GstGLFilter * filter);
 
@@ -86,7 +86,9 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
     glGenTextures (1, &differencematte->midtexture[i]);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[i]);
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-        filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GST_VIDEO_INFO_WIDTH (&filter->out_info),
+        GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -176,7 +178,8 @@ gst_gl_differencematte_class_init (GstGLDifferenceMatteClass * klass)
   gobject_class->set_property = gst_gl_differencematte_set_property;
   gobject_class->get_property = gst_gl_differencematte_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_differencematte_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_differencematte_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_differencematte_init_gl_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -211,11 +214,12 @@ gst_gl_differencematte_draw_texture (GstGLDifferenceMatte * differencematte,
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, 0.0);
+  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info), 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) filter->width, (gfloat) filter->height);
+  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) filter->height);
+  glTexCoord2f (0.0, (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
   glVertex2f (-1.0, 1.0);
 
   glEnd ();
@@ -313,7 +317,9 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
     glGenTextures (1, &differencematte->savedbgtexture);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-        filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GST_VIDEO_INFO_WIDTH (&filter->out_info),
+        GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -432,9 +438,9 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
       "base_height", (gfloat) differencematte->pbuf_height);
 
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-      "final_width", (gfloat) filter->width);
+      "final_width", (gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info));
   gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-      "final_height", (gfloat) filter->height);
+      "final_height", (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   glActiveTexture (GL_TEXTURE2);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -459,21 +465,12 @@ gst_gl_differencematte_identity (gint width, gint height, guint texture,
 }
 
 static gboolean
-gst_gl_differencematte_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_differencematte_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLDifferenceMatte *differencematte = GST_GL_DIFFERENCEMATTE (filter);
-  GstGLMeta *in_meta, *out_meta;
 
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-
-  if (!in_meta || !out_meta) {
-    GST_ERROR ("A Buffer does not contain required GstGLMeta");
-    return FALSE;
-  }
-
-  differencematte->intexture = in_meta->memory->tex_id;
+  differencematte->intexture = in_tex;
 
   if (differencematte->bg_has_changed && (differencematte->location != NULL)) {
 
@@ -486,7 +483,7 @@ gst_gl_differencematte_filter (GstGLFilter * filter, GstBuffer * inbuf,
 
     /* save current frame, needed to calculate difference between
      * this frame and next ones */
-    gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
+    gst_gl_filter_render_to_target (filter, in_tex,
         differencematte->savedbgtexture,
         gst_gl_differencematte_save_texture, differencematte);
 
@@ -499,27 +496,20 @@ gst_gl_differencematte_filter (GstGLFilter * filter, GstBuffer * inbuf,
   }
 
   if (differencematte->savedbgtexture != 0) {
-    gst_gl_filter_render_to_target (filter,
-        in_meta->memory->tex_id,
-        differencematte->midtexture[0],
-        gst_gl_differencematte_diff, differencematte);
-    gst_gl_filter_render_to_target (filter,
-        differencematte->midtexture[0],
-        differencematte->midtexture[1],
-        gst_gl_differencematte_hblur, differencematte);
-    gst_gl_filter_render_to_target (filter,
-        differencematte->midtexture[1],
-        differencematte->midtexture[2],
-        gst_gl_differencematte_vblur, differencematte);
-    gst_gl_filter_render_to_target (filter,
-        in_meta->memory->tex_id,
-        out_meta->memory->tex_id, gst_gl_differencematte_interp,
+    gst_gl_filter_render_to_target (filter, in_tex,
+        differencematte->midtexture[0], gst_gl_differencematte_diff,
         differencematte);
+    gst_gl_filter_render_to_target (filter, differencematte->midtexture[0],
+        differencematte->midtexture[1], gst_gl_differencematte_hblur,
+        differencematte);
+    gst_gl_filter_render_to_target (filter, differencematte->midtexture[1],
+        differencematte->midtexture[2], gst_gl_differencematte_vblur,
+        differencematte);
+    gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+        gst_gl_differencematte_interp, differencematte);
   } else {
-    gst_gl_filter_render_to_target (filter,
-        in_meta->memory->tex_id,
-        out_meta->memory->tex_id, gst_gl_differencematte_identity,
-        differencematte);
+    gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+        gst_gl_differencematte_identity, differencematte);
   }
 
   return TRUE;

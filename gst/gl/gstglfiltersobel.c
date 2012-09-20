@@ -61,8 +61,8 @@ static void gst_gl_filtersobel_get_property (GObject * object, guint prop_id,
 static void gst_gl_filter_filtersobel_reset (GstGLFilter * filter);
 
 static gboolean gst_gl_filtersobel_init_shader (GstGLFilter * filter);
-static gboolean gst_gl_filtersobel_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filtersobel_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 
 static void gst_gl_filtersobel_length (gint width, gint height, guint texture,
     gpointer stuff);
@@ -77,7 +77,9 @@ gst_gl_filtersobel_init_resources (GstGLFilter * filter)
     glGenTextures (1, &filtersobel->midtexture[i]);
     glBindTexture (GL_TEXTURE_RECTANGLE_ARB, filtersobel->midtexture[i]);
     glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-        filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GST_VIDEO_INFO_WIDTH (&filter->out_info),
+        GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+        0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
         GL_LINEAR);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -112,7 +114,8 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
   gobject_class->set_property = gst_gl_filtersobel_set_property;
   gobject_class->get_property = gst_gl_filtersobel_get_property;
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtersobel_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_filtersobel_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_filtersobel_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -212,20 +215,12 @@ gst_gl_filtersobel_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filtersobel_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_filtersobel_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
-  GstGLMeta *in_meta, *out_meta;
 
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-  if (!in_meta || !out_meta) {
-    GST_WARNING ("A buffer does not contain required GstGLMeta");
-    return FALSE;
-  }
-
-  gst_gl_filter_render_to_target_with_shader (filter, in_meta->memory->tex_id,
+  gst_gl_filter_render_to_target_with_shader (filter, in_tex,
       filtersobel->midtexture[0], filtersobel->desat);
   gst_gl_filter_render_to_target_with_shader (filter,
       filtersobel->midtexture[0], filtersobel->midtexture[1],
@@ -234,7 +229,7 @@ gst_gl_filtersobel_filter (GstGLFilter * filter, GstBuffer * inbuf,
       filtersobel->midtexture[1], filtersobel->midtexture[0],
       filtersobel->vconv);
   gst_gl_filter_render_to_target (filter, filtersobel->midtexture[0],
-      out_meta->memory->tex_id, gst_gl_filtersobel_length, filtersobel);
+      out_tex, gst_gl_filtersobel_length, filtersobel);
 
   return TRUE;
 }

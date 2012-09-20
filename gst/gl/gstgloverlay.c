@@ -68,8 +68,8 @@ static void gst_gl_overlay_get_property (GObject * object, guint prop_id,
 static void gst_gl_overlay_init_resources (GstGLFilter * filter);
 static void gst_gl_overlay_reset_resources (GstGLFilter * filter);
 
-static gboolean gst_gl_overlay_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_overlay_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 
 static gint gst_gl_overlay_load_png (GstGLFilter * filter);
 static gint gst_gl_overlay_load_jpeg (GstGLFilter * filter);
@@ -122,7 +122,7 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
   gobject_class->get_property = gst_gl_overlay_get_property;
 
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_overlay_set_caps;
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_overlay_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture = gst_gl_overlay_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_overlay_init_gl_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -588,19 +588,10 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
 }
 
 static gboolean
-gst_gl_overlay_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
-  GstGLMeta *in_meta, *out_meta;
-
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-
-  if (!in_meta || !out_meta) {
-    GST_ERROR ("A Buffer does not contain required GstGLMeta");
-    return FALSE;
-  }
 
   if (overlay->pbuf_has_changed && (overlay->location != NULL)) {
     if ((overlay->type_file = gst_gl_overlay_load_png (filter)) == 0)
@@ -616,8 +607,8 @@ gst_gl_overlay_filter (GstGLFilter * filter, GstBuffer * inbuf,
     overlay->pbuf_has_changed = FALSE;
   }
 
-  gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
-      out_meta->memory->tex_id, gst_gl_overlay_callback, overlay);
+  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+      gst_gl_overlay_callback, overlay);
 
   return TRUE;
 }

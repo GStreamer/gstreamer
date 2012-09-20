@@ -64,8 +64,8 @@ static void gst_gl_filter_glass_get_property (GObject * object, guint prop_id,
 
 static void gst_gl_filter_glass_reset (GstGLFilter * filter);
 static gboolean gst_gl_filter_glass_init_shader (GstGLFilter * filter);
-static gboolean gst_gl_filter_glass_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filter_glass_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 
 static void gst_gl_filter_glass_draw_background_gradient ();
 static void gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
@@ -115,7 +115,8 @@ gst_gl_filter_glass_class_init (GstGLFilterGlassClass * klass)
       "Filter/Effect", "Glass Filter",
       "Julien Isorce <julien.isorce@gmail.com>");
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_glass_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_filter_glass_filter_texture;
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_glass_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_glass_reset;
 }
@@ -173,30 +174,21 @@ gst_gl_filter_glass_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filter_glass_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_filter_glass_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   gpointer glass_filter = GST_GL_FILTER_GLASS (filter);
-  GstGLMeta *in_meta, *out_meta;
-  GstVideoMeta *in_v_meta;
 
-  GST_GL_FILTER_GLASS (glass_filter)->timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-  in_v_meta = gst_buffer_get_video_meta (inbuf);
-
-  if (!in_meta || !out_meta || !in_v_meta) {
-    GST_WARNING ("A buffer does not contain required GstGLMeta "
-        "or GstVideoMeta");
-    return FALSE;
-  }
   //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-      filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
-      gst_gl_filter_glass_callback, in_v_meta->width, in_v_meta->height,
-      in_meta->memory->tex_id, 80,
-      (gdouble) filter->width / (gdouble) filter->height, 1.0, 5000.0,
+  gst_gl_display_use_fbo (filter->display,
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+      filter->fbo, filter->depthbuffer, out_tex,
+      gst_gl_filter_glass_callback,
+      GST_VIDEO_INFO_WIDTH (&filter->in_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->in_info),
+      in_tex, 80, (gdouble) GST_VIDEO_INFO_WIDTH (&filter->out_info) /
+      (gdouble) GST_VIDEO_INFO_HEIGHT (&filter->out_info), 1.0, 5000.0,
       GST_GL_DISPLAY_PROJECTION_PERSPECTIVE, (gpointer) glass_filter);
 
   return TRUE;

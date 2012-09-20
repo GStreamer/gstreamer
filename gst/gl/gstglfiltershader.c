@@ -78,8 +78,8 @@ static void gst_gl_filter_filtershader_reset (GstGLFilter * filter);
 static void gst_gl_filtershader_load_shader (char *filename, char **storage);
 static void gst_gl_filtershader_load_variables (char *filename, char **storage);
 static gboolean gst_gl_filtershader_init_shader (GstGLFilter * filter);
-static gboolean gst_gl_filtershader_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filtershader_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 static void gst_gl_filtershader_hcallback (gint width, gint height,
     guint texture, gpointer stuff);
 
@@ -88,7 +88,9 @@ static void
 gst_gl_filtershader_init_resources (GstGLFilter * filter)
 {
   glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-      filter->width, filter->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+      GST_VIDEO_INFO_WIDTH (&filter->out_info),
+      GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+      0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
@@ -134,7 +136,8 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
       "OpenGL fragment shader filter", "Filter/Effect",
       "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
 
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filtershader_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_filtershader_filter_texture;
   GST_GL_FILTER_CLASS (klass)->display_init_cb =
       gst_gl_filtershader_init_resources;
   GST_GL_FILTER_CLASS (klass)->display_reset_cb =
@@ -294,7 +297,6 @@ gst_gl_filtershader_variables_parse (GstGLShader * shader, gchar * variables)
   gst_gl_shadervariables_parse (shader, variables, 0);
 }
 
-
 static gboolean
 gst_gl_filtershader_init_shader (GstGLFilter * filter)
 {
@@ -318,26 +320,13 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
 }
 
 static gboolean
-gst_gl_filtershader_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_filtershader_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
-  GstGLMeta *in_meta, *out_meta;
 
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-
-  if (!in_meta || !out_meta) {
-    GST_ERROR ("A buffer does not contain required GstGLMeta");
-    return FALSE;
-  }
-
-  if (!filtershader->compiled) {
-    gst_gl_filtershader_init_shader (filter);
-  }
-
-  gst_gl_filter_render_to_target (filter, in_meta->memory->tex_id,
-      out_meta->memory->tex_id, gst_gl_filtershader_hcallback, filtershader);
+  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+      gst_gl_filtershader_hcallback, filtershader);
 
   return TRUE;
 }

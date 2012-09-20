@@ -66,8 +66,8 @@ static void gst_gl_filter_app_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_app_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
-static gboolean gst_gl_filter_app_filter (GstGLFilter * filter,
-    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean gst_gl_filter_app_filter_texture (GstGLFilter * filter,
+    guint in_tex, guint out_tex);
 static void gst_gl_filter_app_callback (gint width, gint height, guint texture,
     gpointer stuff);
 
@@ -85,7 +85,8 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
   gobject_class->get_property = gst_gl_filter_app_get_property;
 
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_filter_app_set_caps;
-  GST_GL_FILTER_CLASS (klass)->filter = gst_gl_filter_app_filter;
+  GST_GL_FILTER_CLASS (klass)->filter_texture =
+      gst_gl_filter_app_filter_texture;
 
   g_object_class_install_property (gobject_class, PROP_CLIENT_RESHAPE_CALLBACK,
       g_param_spec_pointer ("client-reshape-callback",
@@ -168,40 +169,31 @@ gst_gl_filter_app_set_caps (GstGLFilter * filter, GstCaps * incaps,
 }
 
 static gboolean
-gst_gl_filter_app_filter (GstGLFilter * filter, GstBuffer * inbuf,
-    GstBuffer * outbuf)
+gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
+    guint out_tex)
 {
   GstGLFilterApp *app_filter = GST_GL_FILTER_APP (filter);
-  GstGLMeta *in_meta, *out_meta;
-  GstVideoMeta *in_v_meta;
-
-  in_meta = gst_buffer_get_gl_meta (inbuf);
-  out_meta = gst_buffer_get_gl_meta (outbuf);
-  in_v_meta = gst_buffer_get_video_meta (inbuf);
-
-  if (!in_meta || !out_meta || !in_v_meta) {
-    GST_ERROR ("A Buffer does not contain required GstGLMeta or GstVideoMeta");
-    return FALSE;
-  }
 
   if (app_filter->clientDrawCallback) {
     //blocking call, use a FBO
-    gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-        filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
-        app_filter->clientDrawCallback, in_v_meta->width, in_v_meta->height,
-        in_meta->memory->tex_id, 45,
-        (gfloat) filter->width / (gfloat) filter->height,
+    gst_gl_display_use_fbo (filter->display,
+        GST_VIDEO_INFO_WIDTH (&filter->out_info),
+        GST_VIDEO_INFO_HEIGHT (&filter->out_info),
+        filter->fbo, filter->depthbuffer, out_tex,
+        app_filter->clientDrawCallback,
+        GST_VIDEO_INFO_WIDTH (&filter->in_info),
+        GST_VIDEO_INFO_HEIGHT (&filter->in_info),
+        in_tex, 45,
+        (gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info) /
+        (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0.1, 100, GST_GL_DISPLAY_PROJECTION_PERSPECTIVE,
         app_filter->client_data);
   }
   //default
   else {
     //blocking call, use a FBO
-    gst_gl_display_use_fbo (filter->display, filter->width, filter->height,
-        filter->fbo, filter->depthbuffer, out_meta->memory->tex_id,
-        gst_gl_filter_app_callback, in_v_meta->width, in_v_meta->height,
-        in_meta->memory->tex_id, 0, filter->width, 0, filter->height,
-        GST_GL_DISPLAY_PROJECTION_ORTHO2D, NULL);
+    gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+        gst_gl_filter_app_callback, NULL);
   }
 
   return TRUE;
