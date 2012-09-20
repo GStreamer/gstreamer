@@ -1257,6 +1257,9 @@ cleanup_hook (GstPad * pad, GHook * hook)
 {
   GstPadProbeType type;
 
+  if (!G_HOOK_IS_VALID (hook))
+    return;
+
   type = (hook->flags) >> G_HOOK_FLAG_USER_SHIFT;
 
   if (type & GST_PAD_PROBE_TYPE_BLOCKING) {

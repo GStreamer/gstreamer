@@ -1073,6 +1073,53 @@ GST_START_TEST (test_pad_blocking_with_probe_type_blocking)
 
 GST_END_TEST;
 
+static gboolean pad_probe_remove_notifiy_called = FALSE;
+
+static GstPadProbeReturn
+probe_remove_self_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  gst_pad_remove_probe (pad, info->id);
+
+  fail_unless (pad->num_probes == 0);
+  fail_unless (pad->num_blocked == 0);
+
+  return GST_PAD_PROBE_REMOVE;
+}
+
+static void
+probe_remove_notify_cb (gpointer data)
+{
+  fail_unless (pad_probe_remove_notifiy_called == FALSE);
+  pad_probe_remove_notifiy_called = TRUE;
+}
+
+GST_START_TEST (test_pad_probe_remove)
+{
+  GstPad *pad;
+
+  pad = gst_pad_new ("src", GST_PAD_SRC);
+  fail_unless (pad != NULL);
+
+  gst_pad_set_active (pad, TRUE);
+  fail_unless (pad->num_probes == 0);
+  fail_unless (pad->num_blocked == 0);
+  gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      probe_remove_self_cb, NULL, probe_remove_notify_cb);
+  fail_unless (pad->num_probes == 1);
+  fail_unless (pad->num_blocked == 1);
+
+  pad_probe_remove_notifiy_called = FALSE;
+  gst_pad_push_event (pad, gst_event_new_stream_start ("asda"));
+
+  fail_unless (pad->num_probes == 0);
+  fail_unless (pad->num_blocked == 0);
+
+  gst_object_unref (pad);
+}
+
+GST_END_TEST;
+
 static gboolean got_notify;
 
 static void
@@ -1507,6 +1554,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_block_async);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_block);
   tcase_add_test (tc_chain, test_pad_blocking_with_probe_type_blocking);
+  tcase_add_test (tc_chain, test_pad_probe_remove);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_linked);
   tcase_add_test (tc_chain, test_queue_src_caps_notify_not_linked);
 #if 0
