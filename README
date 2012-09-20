@@ -40,8 +40,10 @@ Features
 --------
 
   * VA-API support from 0.29 to 0.32
-  * MPEG-2, MPEG-4, H.264 and VC-1 ad-hoc decoders
+  * JPEG, MPEG-2, MPEG-4, H.264 and VC-1 ad-hoc decoders
   * OpenGL rendering through VA/GLX or GLX texture-from-pixmap + FBO
+  * Support for the Wayland display server
+  * Support for headless decode pipelines with VA/DRM
   * Support for major HW video decoding solutions on Linux (AMD, Intel, NVIDIA)
 
 
@@ -56,11 +58,6 @@ Software requirements
   * libgstreamer-plugins-base0.10-dev >= 0.10.35
   * libgstreamer-plugins-bad0.10-dev >= 0.10.22.1
       or with GstVideoContext, GstSurfaceBuffer, codecparsers
-
-  If codecparsers-based decoders are not used:
-
-  * libavcodec-dev >= 0.6
-      or with <libavcodec/vaapi.h>
 
 Hardware requirements
 
