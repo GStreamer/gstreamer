@@ -1874,7 +1874,7 @@ eglglessink_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_eglglessink_debug, "eglglessink",
       0, "Simple EGL/GLES Sink");
 
-  return gst_element_register (plugin, "eglglessink", GST_RANK_NONE,
+  return gst_element_register (plugin, "eglglessink", GST_RANK_PRIMARY,
       GST_TYPE_EGLGLESSINK);
 }
 
