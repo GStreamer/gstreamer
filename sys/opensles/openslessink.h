@@ -40,7 +40,7 @@ struct _GstOpenSLESSink
 {
   GstBaseAudioSink sink;
 
-  double volume;
+  gfloat volume;
 };
 
 struct _GstOpenSLESSinkClass

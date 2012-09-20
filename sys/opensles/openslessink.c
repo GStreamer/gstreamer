@@ -81,10 +81,11 @@ gst_opensles_sink_base_init (gpointer g_class)
 static GstRingBuffer *
 gst_opensles_sink_create_ringbuffer (GstBaseAudioSink * base)
 {
+  GstOpenSLESSink *sink = GST_OPENSLES_SINK (base);
   GstRingBuffer *rb;
 
   rb = gst_opensles_ringbuffer_new (RB_MODE_SINK_PCM);
-
+  gst_opensles_ringbuffer_set_volume (rb, sink->volume);
   return rb;
 }
 

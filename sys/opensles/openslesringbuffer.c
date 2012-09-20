@@ -300,6 +300,29 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 }
 
 static gboolean
+_opensles_player_change_volume (GstRingBuffer * rb)
+{
+  GstOpenSLESRingBuffer *thiz;
+  SLresult result;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+
+  if (thiz->playerVolume) {
+    gint millibel = (1.0 - thiz->volume) * -5000.0;
+    result =
+        (*thiz->playerVolume)->SetVolumeLevel (thiz->playerVolume, millibel);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_ERROR_OBJECT (thiz, "player.SetVolumeLevel failed(0x%08x)",
+          (guint32) result);
+      return FALSE;
+    }
+    GST_DEBUG_OBJECT (thiz, "changed volume to %d", millibel);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
@@ -374,6 +397,9 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
         (guint32) result);
     goto failed;
   }
+
+  /* Configure the volume state */
+  _opensles_player_change_volume (rb);
 
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
   spec->segsize = (spec->rate * spec->bytes_per_sample);
@@ -462,16 +488,32 @@ gst_opensles_ringbuffer_new (RingBufferMode mode)
       thiz->start = _opensles_recorder_start;
       thiz->pause = _opensles_recorder_stop;
       thiz->stop = _opensles_recorder_stop;
+      thiz->change_volume = NULL;
     } else if (mode == RB_MODE_SINK_PCM) {
       thiz->acquire = _opensles_player_acquire;
       thiz->start = _opensles_player_start;
       thiz->pause = _opensles_player_pause;
       thiz->stop = _opensles_player_stop;
+      thiz->change_volume = _opensles_player_change_volume;
     }
   }
 
   GST_DEBUG_OBJECT (thiz, "ringbuffer created");
   return GST_RING_BUFFER (thiz);
+}
+
+void
+gst_opensles_ringbuffer_set_volume (GstRingBuffer * rb, gfloat volume)
+{
+  GstOpenSLESRingBuffer *thiz;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+
+  thiz->volume = volume;
+
+  if (thiz->change_volume) {
+    thiz->change_volume (rb);
+  }
 }
 
 static gboolean
