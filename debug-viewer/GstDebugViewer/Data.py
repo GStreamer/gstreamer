@@ -145,9 +145,9 @@ def default_log_line_regex_ ():
     CATEGORY = "([A-Za-z0-9_-]+)\s+" # "GST_REFCOUNTING ", "flacdec "
     # "  3089 "
     PID = r"(\d+)\s+"
-    FILENAME = r"([^:]+):"
+    FILENAME = r"([^:]*):"
     LINE = r"(\d+):"
-    FUNCTION = "([A-Za-z0-9_]+):"
+    FUNCTION = "([A-Za-z0-9_]*):"
     # FIXME: When non-g(st)object stuff is logged with *_OBJECT (like
     # buffers!), the address is printed *without* <> brackets!
     OBJECT = "(?:<([^>]+)> )?"
