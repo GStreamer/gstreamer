@@ -52,9 +52,7 @@ typedef enum
   RB_MODE_LAST
 } RingBufferMode;
 
-typedef gboolean (*AcquireFunc) (GstRingBuffer * rb, guint nbuffers,
-    SLDataFormat_PCM * format);
-
+typedef gboolean (*AcquireFunc) (GstRingBuffer * rb, GstRingBufferSpec * spec);
 typedef gboolean (*StateFunc) (GstRingBuffer * rb);
 
 typedef struct _GstOpenSLESRingBuffer GstOpenSLESRingBuffer;
@@ -84,7 +82,7 @@ struct _GstOpenSLESRingBuffer
 
   /* buffer queue */
   SLAndroidSimpleBufferQueueItf bufferQueue;
-  gint last_readseg;
+  gint last_clearseg;
 
   /* vmethods */
   AcquireFunc acquire;

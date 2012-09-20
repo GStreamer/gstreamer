@@ -126,11 +126,11 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 }
 
 static gboolean
-_opensles_recorder_acquire (GstRingBuffer * rb, guint nbuffers,
-    SLDataFormat_PCM * format)
+_opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
+  SLDataFormat_PCM format;
 
   /* Configure audio source */
   SLDataLocator_IODevice loc_dev =
@@ -141,12 +141,16 @@ _opensles_recorder_acquire (GstRingBuffer * rb, guint nbuffers,
 
   /* Configure audio sink */
   SLDataLocator_AndroidSimpleBufferQueue loc_bq =
-      { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, nbuffers };
-  SLDataSink audioSink = { &loc_bq, format };
+      { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
+  SLDataSink audioSink = { &loc_bq, &format };
 
   /* Create audio recorder (requires the RECORD_AUDIO permission) */
   const SLInterfaceID id[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
   const SLboolean req[1] = { SL_BOOLEAN_TRUE };
+
+  /* Define the format in OpenSL ES terms */
+  _opensles_format (spec, &format);
+
   result = (*thiz->engineEngine)->CreateAudioRecorder (thiz->engineEngine,
       &thiz->recorderObject, &audioSrc, &audioSink, 1, id, req);
   if (result != SL_RESULT_SUCCESS) {
@@ -191,6 +195,10 @@ _opensles_recorder_acquire (GstRingBuffer * rb, guint nbuffers,
         (guint32) result);
     goto failed;
   }
+
+  /* Define our ringbuffer in terms of number of buffers and buffer size. */
+  spec->segsize = (spec->rate * spec->bytes_per_sample) >> 1;
+  spec->segtotal = 3;
 
   return TRUE;
 
@@ -279,27 +287,29 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
     return;
   }
 
-  if (thiz->last_readseg >= 0) {
-    GST_LOG_OBJECT (thiz, "clear segment %d", thiz->last_readseg);
+  if (G_UNLIKELY (thiz->last_clearseg < 0)) {
+    thiz->last_clearseg++;
+  } else {
+    GST_LOG_OBJECT (thiz, "clear segment %d", thiz->last_clearseg);
     /* Clear written samples */
-    gst_ring_buffer_clear (rb, thiz->last_readseg);
+    gst_ring_buffer_clear (rb, thiz->last_clearseg);
+    thiz->last_clearseg = (thiz->last_clearseg + 1) % rb->spec.segtotal;
     /* We wrote one segment */
   }
   gst_ring_buffer_advance (rb, 1);
-  thiz->last_readseg = readseg;
 }
 
 static gboolean
-_opensles_player_acquire (GstRingBuffer * rb, guint nbuffers,
-    SLDataFormat_PCM * format)
+_opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
+  SLDataFormat_PCM format;
 
   /* Configure audio source */
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
       { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
-  SLDataSource audioSrc = { &loc_bufq, format };
+  SLDataSource audioSrc = { &loc_bufq, &format };
 
   /* Configure audio sink */
   SLDataLocator_OutputMix loc_outmix =
@@ -309,6 +319,9 @@ _opensles_player_acquire (GstRingBuffer * rb, guint nbuffers,
   /* Create an audio player */
   const SLInterfaceID ids[2] = { SL_IID_BUFFERQUEUE, SL_IID_VOLUME };
   const SLboolean req[2] = { SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
+
+  /* Define the format in OpenSL ES terms */
+  _opensles_format (spec, &format);
 
   result = (*thiz->engineEngine)->CreateAudioPlayer (thiz->engineEngine,
       &thiz->playerObject, &audioSrc, &audioSink, 2, ids, req);
@@ -362,6 +375,15 @@ _opensles_player_acquire (GstRingBuffer * rb, guint nbuffers,
     goto failed;
   }
 
+  /* Define our ringbuffer in terms of number of buffers and buffer size. */
+  spec->segsize = (spec->rate * spec->bytes_per_sample);
+  spec->segtotal = 4;
+  /* In the Nexus7 device where I'm testing seems that I need buffers of
+   * min 1 second of audio.
+   * Then here we created 4 segments of a second and a queue of 2 buffers
+   * in order to properly clear the older segment */
+  thiz->last_clearseg = -3;
+
   return TRUE;
 
 failed:
@@ -383,9 +405,9 @@ _opensles_player_start (GstRingBuffer * rb)
     return FALSE;
   }
 
-  /* Enqueue some initial data */
+  /* Fill the queue by enqueing two buffers */
   _opensles_player_cb (NULL, rb);
-
+  _opensles_player_cb (NULL, rb);
   return TRUE;
 }
 
@@ -542,22 +564,11 @@ static gboolean
 gst_opensles_ringbuffer_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz;
-  SLDataFormat_PCM format;
 
   thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
 
-  /* Define ringbuffer in terms of number of buffers and buffer size */
-  spec->segsize =
-      (spec->latency_time * spec->rate / G_USEC_PER_SEC) *
-      spec->bytes_per_sample;
-  spec->segtotal = (spec->buffer_time / spec->latency_time) << 4;
-  thiz->last_readseg = -1;
-
-  /* Define the format in OpenSL ES terms */
-  _opensles_format (spec, &format);
-
-  /* Instantiate and configure the OpenSL ES devices */
-  if (!thiz->acquire (rb, spec->segtotal, &format)) {
+  /* Instantiate and configure the OpenSL ES interfaces */
+  if (!thiz->acquire (rb, spec)) {
     return FALSE;
   }
 
