@@ -64,7 +64,9 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->download =
       gst_gl_display_find_download (display, v_format, width, height);
 
-  GST_DEBUG ("new GL texture memory");
+  GST_CAT_DEBUG (GST_CAT_GL_MEMORY,
+      "new GL texture memory:%p format:%u dimensions:%ux%u", mem, v_format,
+      width, height);
 }
 
 static GstGLMemory *
@@ -77,10 +79,11 @@ _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
 
   gst_gl_display_gen_texture (display, &tex_id, v_format, width, height);
   if (!tex_id) {
-    GST_WARNING ("Could not create GL texture with display:%p", display);
+    GST_CAT_WARNING (GST_CAT_GL_MEMORY,
+        "Could not create GL texture with display:%p", display);
   }
 
-  GST_TRACE ("created texture %u", tex_id);
+  GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", tex_id);
 
   mem = g_slice_alloc (sizeof (GstGLMemory));
   _gl_mem_init (mem, allocator, parent, display, v_format, width, height,
@@ -100,6 +103,8 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 
   if ((flags & GST_MAP_GL) == GST_MAP_GL) {
     if ((flags & GST_MAP_READ) == GST_MAP_READ) {
+      GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for reading",
+          gl_mem->tex_id);
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
@@ -110,11 +115,17 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 
         gst_gl_upload_perform_with_memory (gl_mem->upload, gl_mem);
       }
+    } else {
+      GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for writing",
+          gl_mem->tex_id);
     }
 
     data = &gl_mem->tex_id;
   } else {                      /* not GL */
     if ((flags & GST_MAP_READ) == GST_MAP_READ) {
+      GST_CAT_TRACE (GST_CAT_GL_MEMORY,
+          "mapping GL texture:%u for reading from system memory",
+          gl_mem->tex_id);
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED)) {
@@ -125,6 +136,9 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
 
         gst_gl_download_perform_with_memory (gl_mem->download, gl_mem);
       }
+    } else {
+      GST_CAT_TRACE (GST_CAT_GL_MEMORY,
+          "mapping GL texture:%u for writing to system memory", gl_mem->tex_id);
     }
 
     data = gl_mem->data;
@@ -177,10 +191,11 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   gst_gl_display_gen_texture_thread (src->display, &tex_id, v_format, width,
       height);
   if (!tex_id) {
-    GST_WARNING ("Could not create GL texture with display:%p", src->display);
+    GST_CAT_WARNING (GST_CAT_GL_MEMORY,
+        "Could not create GL texture with display:%p", src->display);
   }
 
-  GST_DEBUG ("created texture %i", tex_id);
+  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "created texture %i", tex_id);
 
   /* create a framebuffer object */
   glGenFramebuffersEXT (1, &fboId);
@@ -217,27 +232,30 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   if (status != GL_FRAMEBUFFER_COMPLETE) {
     switch (status) {
       case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-        GST_ERROR ("GL_FRAMEBUFFER_UNSUPPORTED");
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GL_FRAMEBUFFER_UNSUPPORTED");
         break;
 
       case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
-        GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY,
+            "GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT");
         break;
 
       case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
-        GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY,
+            "GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT");
         break;
 
       case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-        GST_ERROR ("GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY,
+            "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
         break;
 #ifndef OPENGL_ES2
       case GL_FRAMEBUFFER_UNDEFINED:
-        GST_ERROR ("GL_FRAMEBUFFER_UNDEFINED");
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GL_FRAMEBUFFER_UNDEFINED");
         break;
 #endif
       default:
-        GST_ERROR ("Unknown FBO error");
+        GST_CAT_ERROR (GST_CAT_GL_MEMORY, "Unknown FBO error");
     }
     goto fbo_error;
   }
@@ -283,14 +301,18 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
       src->width, src->height, NULL, NULL);
 
   if (!copy_params.tex_id)
-    GST_WARNING ("Could not copy GL Memory");
+    GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
 
   dest->tex_id = copy_params.tex_id;
   dest->data = g_malloc (src->mem.maxsize);
   if (dest->data == NULL) {
+    GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
     gst_memory_unref ((GstMemory *) dest);
     return NULL;
   }
+
+  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "copied texture:%u into texture %u",
+      src->tex_id, dest->tex_id);
 
   return (GstMemory *) dest;
 }

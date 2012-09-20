@@ -39,11 +39,16 @@ struct _GstGLBufferPoolPrivate
 
 static void gst_gl_buffer_pool_finalize (GObject * object);
 
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_BUFFER_POOL);
+#define GST_CAT_DEFAULT GST_CAT_GL_BUFFER_POOL
+
 #define GST_GL_BUFFER_POOL_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_GL_BUFFER_POOL, GstGLBufferPoolPrivate))
 
 #define gst_gl_buffer_pool_parent_class parent_class
-G_DEFINE_TYPE (GstGLBufferPool, gst_gl_buffer_pool, GST_TYPE_BUFFER_POOL);
+G_DEFINE_TYPE_WITH_CODE (GstGLBufferPool, gst_gl_buffer_pool,
+    GST_TYPE_BUFFER_POOL, GST_DEBUG_CATEGORY_INIT (GST_CAT_GL_BUFFER_POOL,
+        "glbufferpool", 0, "GL Buffer Pool"));
 
 static const gchar **
 gst_gl_buffer_pool_get_options (GstBufferPool * pool)
