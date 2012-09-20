@@ -60,7 +60,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     {
         super.onCreate(savedInstanceState);
 
-        GStreamer.Init(this);
+        GStreamer.init(this);
 
         setContentView(R.layout.main);
 
