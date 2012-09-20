@@ -224,6 +224,7 @@ static gboolean gst_eglglessink_start (GstBaseSink * sink);
 static gboolean gst_eglglessink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_eglglessink_buffer_alloc (GstBaseSink * sink,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
+static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink);
 
 /* XOverlay interface cruft */
 static gboolean gst_eglglessink_interface_supported
@@ -1586,6 +1587,36 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   return gst_eglglessink_render_and_display (eglglessink, buf);
 }
 
+static GstCaps *
+gst_eglglessink_getcaps (GstBaseSink * bsink)
+{
+  GstEglGlesSink *eglglessink;
+  GstCaps *ret = NULL;
+
+  eglglessink = GST_EGLGLESSINK (bsink);
+
+  g_mutex_lock (eglglessink->flow_lock);
+  if (eglglessink->egl_started) {
+    GList *l;
+
+    ret = gst_caps_new_empty ();
+
+    for (l = eglglessink->supported_fmts; l; l = l->next) {
+      GstEglGlesImageFmt *format = l->data;
+
+      gst_caps_append (ret, gst_caps_ref (format->caps));
+    }
+  } else {
+    ret =
+        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
+            (bsink)));
+  }
+
+  g_mutex_unlock (eglglessink->flow_lock);
+
+  return ret;
+}
+
 static gboolean
 gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
@@ -1766,6 +1797,7 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
   gstbasesink_class->start = gst_eglglessink_start;
   gstbasesink_class->stop = gst_eglglessink_stop;
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_setcaps);
+  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_getcaps);
   gstbasesink_class->buffer_alloc = GST_DEBUG_FUNCPTR
       (gst_eglglessink_buffer_alloc);
 
