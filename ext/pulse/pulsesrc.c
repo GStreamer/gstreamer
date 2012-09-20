@@ -1431,9 +1431,6 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
       PA_STREAM_NOT_MONOTONIC | PA_STREAM_ADJUST_LATENCY |
       PA_STREAM_START_CORKED;
 
-  if (pulsesrc->mute_set && pulsesrc->mute)
-    flags |= PA_STREAM_START_MUTED;
-
   if (pa_stream_connect_record (pulsesrc->stream, pulsesrc->device, &wanted,
           flags) < 0) {
     goto connect_failed;
@@ -1464,6 +1461,15 @@ gst_pulsesrc_prepare (GstAudioSrc * asrc, GstAudioRingBufferSpec * spec)
   /* store the source output index so it can be accessed via a property */
   pulsesrc->source_output_idx = pa_stream_get_index (pulsesrc->stream);
   g_object_notify (G_OBJECT (pulsesrc), "source-output-index");
+
+  /* Although source output stream muting is supported, there is a bug in
+   * PulseAudio that doesn't allow us to do this at startup, so we mute
+   * manually post-connect. This should be moved back pre-connect once things
+   * are fixed on the PulseAudio side. */
+  if (pulsesrc->mute_set && pulsesrc->mute) {
+    gst_pulsesrc_set_stream_mute (pulsesrc, pulsesrc->mute);
+    pulsesrc->mute_set = FALSE;
+  }
 
   if (pulsesrc->volume_set) {
     gst_pulsesrc_set_stream_volume (pulsesrc, pulsesrc->volume);
