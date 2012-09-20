@@ -22,6 +22,7 @@
 #define _GST_GLCOLORSCALE_H_
 
 #include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
 #include "gstglmeta.h"
@@ -41,17 +42,25 @@ typedef struct _GstGLColorscaleClass GstGLColorscaleClass;
 
 struct _GstGLColorscale
 {
-    GstBin parent;
+    GstBaseTransform base_transform;
 
     GstPad *srcpad;
     GstPad *sinkpad;
 
-    GstElement *upload, *download;
+    GstGLDisplay *display;
+
+    GstVideoFormat input_video_format;
+    gint input_video_width;
+    gint input_video_height;
+
+    GstVideoFormat output_video_format;
+    gint output_video_width;
+    gint output_video_height;  
 };
 
 struct _GstGLColorscaleClass
 {
-    GstBinClass parent_class;
+    GstBaseTransformClass base_transform_class;
 };
 
 GType gst_gl_colorscale_get_type (void);
