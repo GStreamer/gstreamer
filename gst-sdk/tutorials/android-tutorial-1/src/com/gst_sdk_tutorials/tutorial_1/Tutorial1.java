@@ -50,10 +50,6 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
     private Bundle initialization_data;
 
-    public Tutorial1() {
-        super();
-    }
-
     /* Called when the activity is first created. 
     @Override */
     public void onCreate(Bundle savedInstanceState)
