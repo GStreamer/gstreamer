@@ -137,13 +137,15 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
 #endif
 #endif
 
+/* *INDENT-OFF* */
 static const char *vert_prog = {
   "attribute vec3 position;"
       "varying vec2 opos;"
       "void main(void)"
       "{"
       " opos = vec2((position.x + 1.0)/2.0, ((-1.0 * position.y) + 1.0)/2.0);"
-      " gl_Position = vec4(position, 1.0);" "}"
+      " gl_Position = vec4(position, 1.0);"
+      "}"
 };
 
 static const char *frag_prog = {
@@ -152,8 +154,31 @@ static const char *frag_prog = {
       "uniform sampler2D tex;"
       "void main(void)"
       "{"
-      " vec4 t = texture2D(tex, opos);" " gl_FragColor = vec4(t.xyz, 1.0);" "}"
+      " vec4 t = texture2D(tex, opos);"
+      " gl_FragColor = vec4(t.xyz, 1.0);"
+      "}"
 };
+
+/* From gst-plugins-gl */
+static const char *frag_AYUV_prog = {
+      "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D tex;"
+      "void main(void) {"
+      "  float r,g,b,y,u,v;"
+      "  vec2 nxy = opos.xy;"
+      "  y=texture2D(tex,nxy).g;"
+      "  u=texture2D(tex,nxy).b;"
+      "  v=texture2D(tex,nxy).a;"
+      "  y=1.1643*(y-0.0625);"
+      "  u=u-0.5;"
+      "  v=v-0.5;"
+      "  r=y+1.5958*v;"
+      "  g=y-0.39173*u-0.81290*v;"
+      "  b=y+2.017*u;"
+      "  gl_FragColor=vec4(r,g,b,1.0);"
+      "}" };
+/* *INDENT-ON* */
 
 /* Input capabilities.
  *
@@ -164,7 +189,9 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGBx ";"
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";"
+        GST_VIDEO_CAPS_RGBx ";"
+        GST_VIDEO_CAPS_YUV ("AYUV") ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
 
 /* Filter signals and args */
@@ -793,6 +820,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA);
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_AYUV));
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -1248,7 +1277,11 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   fraghandle = glCreateShader (GL_FRAGMENT_SHADER);
-  glShaderSource (fraghandle, 1, &frag_prog, NULL);
+  if (eglglessink->format == GST_VIDEO_FORMAT_AYUV)
+    glShaderSource (fraghandle, 1, &frag_AYUV_prog, NULL);
+  else
+    glShaderSource (fraghandle, 1, &frag_prog, NULL);
+
   if (got_gl_error ("glShaderSource fragment"))
     goto HANDLE_ERROR;
 
@@ -1518,6 +1551,10 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           switch (eglglessink->format) {
             case GST_VIDEO_FORMAT_RGBA:
             case GST_VIDEO_FORMAT_RGBx:
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+              break;
+            case GST_VIDEO_FORMAT_AYUV:
               glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
