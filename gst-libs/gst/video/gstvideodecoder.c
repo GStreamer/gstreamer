@@ -957,6 +957,14 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
       ret = (flow_ret == GST_FLOW_OK);
+      /* Forward EOS immediately. This is required because no
+       * buffer or serialized event will come after EOS and
+       * nothing could trigger another _finish_frame() call.
+       *
+       * The subclass can override this behaviour by overriding
+       * the ::sink_event() vfunc and not chaining up to the
+       * parent class' ::sink_event() until a later time.
+       */
       forward_immediate = TRUE;
       break;
     }
@@ -966,6 +974,11 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
+
+      /* Forward GAP immediately. Everything is drained after
+       * the GAP event and we can forward this event immediately
+       * now without having buffers out of order.
+       */
       forward_immediate = TRUE;
       break;
     }
@@ -980,6 +993,10 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
           flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
           ret = (flow_ret == GST_FLOW_OK);
         }
+        /* Forward STILL_FRAME immediately. Everything is drained after
+         * the STILL_FRAME event and we can forward this event immediately
+         * now without having buffers out of order.
+         */
         forward_immediate = TRUE;
       }
       break;
@@ -1040,6 +1057,10 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       /* well, this is kind of worse than a DISCONT */
       gst_video_decoder_flush (decoder, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      /* Forward FLUSH_STOP immediately. This is required because it is
+       * expected to be forwarded immediately and no buffers are queued
+       * anyway.
+       */
       forward_immediate = TRUE;
       break;
     }
@@ -1061,16 +1082,10 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       break;
   }
 
-  /* Forward non-serialized events and EOS/FLUSH_STOP immediately.
-   * For EOS this is required because no buffer or serialized event
-   * will come after EOS and nothing could trigger another
-   * _finish_frame() call.   *
-   * If the subclass handles sending of EOS manually it can return
-   * _DROPPED from ::finish() and all other subclasses should have
-   * decoded/flushed all remaining data before this
-   *
-   * For FLUSH_STOP this is required because it is expected
-   * to be forwarded immediately and no buffers are queued anyway.
+  /* Forward non-serialized events immediately, and all other
+   * events which can be forwarded immediately without potentially
+   * causing the event to go out of order with other events and
+   * buffers as decided above.
    */
   if (event) {
     if (!GST_EVENT_IS_SERIALIZED (event) || forward_immediate) {
