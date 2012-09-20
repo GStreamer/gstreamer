@@ -422,7 +422,8 @@ class TimelineWidget (gtk.DrawingArea):
         self.logger = logging.getLogger ("ui.timeline")
 
         self.add_events (gtk.gdk.BUTTON1_MOTION_MASK |
-                         gtk.gdk.BUTTON_PRESS_MASK)
+                         gtk.gdk.BUTTON_PRESS_MASK |
+                         gtk.gdk.BUTTON_RELEASE_MASK)
 
         self.process = UpdateProcess (None, None)
         self.process.handle_sentinel_progress = self.__handle_sentinel_progress
@@ -759,8 +760,21 @@ class TimelineWidget (gtk.DrawingArea):
         # TODO: Check if clicked inside a warning/error indicator triangle and
         # navigate there.
 
+        if not self.has_grab ():
+            self.grab_add ()
+
         pos = int (event.x)
         self.emit ("change-position", pos)
+        return True
+
+    def do_button_release_event (self, event):
+
+        if event.button != 1:
+            return False
+
+        if self.has_grab ():
+            self.grab_remove ()
+
         return True
 
     def do_motion_notify_event (self, event):
@@ -770,9 +784,11 @@ class TimelineWidget (gtk.DrawingArea):
 
         if event.state & gtk.gdk.BUTTON1_MASK:
             self.emit ("change-position", int (x))
+            gtk.gdk.event_request_motions (event)
             return True
         else:
             self._handle_motion (x, y)
+            gtk.gdk.event_request_motions (event)
             return False
 
     def _handle_motion (self, x, y):
