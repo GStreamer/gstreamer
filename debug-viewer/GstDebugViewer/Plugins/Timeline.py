@@ -816,10 +816,10 @@ class AttachedWindow (object):
                    gtk.UI_MANAGER_POPUP, False)
         # TODO: Make hide before/after operate on the partition that the mouse
         # is pointed at instead of the currently selected line.
-        ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesBefore",
-                   "hide-before-line", gtk.UI_MANAGER_MENUITEM, False)
-        ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesAfter",
-                   "hide-after-line", gtk.UI_MANAGER_MENUITEM, False)
+        # ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesBefore",
+        #            "hide-before-line", gtk.UI_MANAGER_MENUITEM, False)
+        # ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesAfter",
+        #            "hide-after-line", gtk.UI_MANAGER_MENUITEM, False)
         ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowHiddenLines",
                    "show-hidden-lines", gtk.UI_MANAGER_MENUITEM, False)
 
