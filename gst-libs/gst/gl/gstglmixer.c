@@ -130,10 +130,10 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
     gint fps_n, fps_d;
     gint width, height;
 
-    fps_n = GST_VIDEO_INFO_FPS_N (&mpad->info);
-    fps_d = GST_VIDEO_INFO_FPS_D (&mpad->info);
-    width = GST_VIDEO_INFO_WIDTH (&mpad->info);
-    height = GST_VIDEO_INFO_HEIGHT (&mpad->info);
+    fps_n = GST_VIDEO_INFO_FPS_N (&mpad->in_info);
+    fps_d = GST_VIDEO_INFO_FPS_D (&mpad->in_info);
+    width = GST_VIDEO_INFO_WIDTH (&mpad->in_info);
+    height = GST_VIDEO_INFO_HEIGHT (&mpad->in_info);
 
     if (fps_n == 0 || fps_d == 0 || width == 0 || height == 0)
       continue;
@@ -169,66 +169,50 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
     GstStructure *s;
     GstVideoInfo info;
 
-    if (GST_VIDEO_INFO_FPS_N (&mix->info) != best_fps_n ||
-        GST_VIDEO_INFO_FPS_D (&mix->info) != best_fps_d) {
+    if (GST_VIDEO_INFO_FPS_N (&mix->out_info) != best_fps_n ||
+        GST_VIDEO_INFO_FPS_D (&mix->out_info) != best_fps_d) {
       if (mix->segment.position != -1) {
         mix->ts_offset = mix->segment.position - mix->segment.start;
         mix->nframes = 0;
       }
     }
-    gst_video_info_set_format (&info, GST_VIDEO_INFO_FORMAT (&mix->info),
-        best_width, best_height);
-    info.fps_n = best_fps_n;
-    info.fps_d = best_fps_d;
-    info.par_n = GST_VIDEO_INFO_PAR_N (&mix->info);
-    info.par_d = GST_VIDEO_INFO_PAR_D (&mix->info);
 
-    caps = gst_video_info_to_caps (&info);
+    caps = gst_caps_new_empty_simple ("video/x-raw");
 
     peercaps = gst_pad_peer_query_caps (mix->srcpad, NULL);
     if (peercaps) {
       GstCaps *tmp;
-
-      s = gst_caps_get_structure (caps, 0);
-      gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT, "height",
-          GST_TYPE_INT_RANGE, 1, G_MAXINT, "framerate", GST_TYPE_FRACTION_RANGE,
-          0, 1, G_MAXINT, 1, NULL);
-
       tmp = gst_caps_intersect (caps, peercaps);
       gst_caps_unref (caps);
       gst_caps_unref (peercaps);
       caps = tmp;
-      if (gst_caps_is_empty (caps)) {
-        GST_DEBUG_OBJECT (mix, "empty caps");
-        ret = FALSE;
-        GST_GL_MIXER_UNLOCK (mix);
-        goto done;
-      }
+    }
+
+    if (!gst_caps_is_fixed (caps)) {
+      caps = gst_caps_make_writable (caps);
 
       caps = gst_caps_truncate (caps);
+
       s = gst_caps_get_structure (caps, 0);
       gst_structure_fixate_field_nearest_int (s, "width", best_width);
       gst_structure_fixate_field_nearest_int (s, "height", best_height);
       gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
           best_fps_d);
+      gst_structure_fixate_field_string (s, "format", "RGBA");
 
       gst_structure_get_int (s, "width", &info.width);
       gst_structure_get_int (s, "height", &info.height);
       gst_structure_get_fraction (s, "fraction", &info.fps_n, &info.fps_d);
-      gst_caps_unref (caps);
+      GST_DEBUG_OBJECT (mix, "fixated caps to %" GST_PTR_FORMAT, caps);
     }
-
-    caps = gst_video_info_to_caps (&info);
 
     GST_GL_MIXER_UNLOCK (mix);
     ret = gst_gl_mixer_src_setcaps (mix->srcpad, mix, caps);
-//    ret = gst_pad_set_caps (mix->srcpad, caps);
-    gst_caps_unref (caps);
   } else {
+    GST_INFO_OBJECT (mix, "Invalid caps");
     GST_GL_MIXER_UNLOCK (mix);
   }
 
-done:
   return ret;
 }
 
@@ -238,7 +222,7 @@ gst_gl_mixer_pad_sink_setcaps (GstPad * pad, GstObject * parent, GstCaps * caps)
   GstGLMixer *mix;
   GstGLMixerPad *mixpad;
   GstVideoInfo info;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   GST_INFO_OBJECT (pad, "Setting caps %" GST_PTR_FORMAT, caps);
 
@@ -251,18 +235,9 @@ gst_gl_mixer_pad_sink_setcaps (GstPad * pad, GstObject * parent, GstCaps * caps)
   }
 
   GST_GL_MIXER_LOCK (mix);
-  if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN) {
-    if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_INFO_FORMAT (&info) ||
-        GST_VIDEO_INFO_PAR_N (&mix->info) != GST_VIDEO_INFO_PAR_N (&info) ||
-        GST_VIDEO_INFO_PAR_D (&mix->info) != GST_VIDEO_INFO_PAR_D (&info)) {
-      GST_ERROR_OBJECT (pad, "Caps not compatible with other pads' caps");
-      GST_GL_MIXER_UNLOCK (mix);
-      goto beach;
-    }
-  }
 
-  mix->info = info;
-  mixpad->info = info;
+  mix->out_info = info;
+  mixpad->in_info = info;
 
   GST_GL_MIXER_UNLOCK (mix);
 
@@ -325,6 +300,7 @@ gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
     gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+    gst_structure_remove_field (s, "format");
     if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
       gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
           NULL);
@@ -344,7 +320,6 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
     GstQuery * query, GstGLMixer * mix)
 {
   GstPad *pad = data->pad;
-  GstGLMixerPad *mixpad = GST_GL_MIXER_PAD (data->pad);
   gboolean ret = FALSE;
 
   GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
@@ -378,27 +353,8 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
       GstStructure *structure = gst_query_writable_structure (query);
 
       if (gst_structure_has_name (structure, "gstgldisplay")) {
-        gulong foreign_gl_context = 0;
-
-        foreign_gl_context =
-            gst_gl_display_get_internal_gl_context (mix->display);
-
-        g_return_val_if_fail (mixpad->display != NULL, FALSE);
-
-        gst_gl_display_activate_gl_context (mix->display, FALSE);
-
-        ret = gst_gl_display_create_context (mixpad->display,
-            foreign_gl_context);
-
-        gst_gl_display_activate_gl_context (mix->display, TRUE);
-
-        if (ret) {
-          gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-              mixpad->display, NULL);
-        } else {
-          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-              GST_GL_DISPLAY_ERR_MSG (mixpad->display), (NULL));
-        }
+        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
+            mix->display, NULL);
       } else {
         ret = gst_collect_pads_query_default (pads, data, query, FALSE);
       }
@@ -415,7 +371,6 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
 static void
 gst_gl_mixer_pad_init (GstGLMixerPad * mixerpad)
 {
-  mixerpad->display = NULL;
 }
 
 /* GLMixer signals and args */
@@ -433,13 +388,13 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS (GST_GL_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
     );
 
 static void gst_gl_mixer_finalize (GObject * object);
@@ -580,7 +535,7 @@ gst_gl_mixer_reset (GstGLMixer * mix)
   GstGLMixerPrivate *priv = mix->priv;
   GSList *l;
 
-  gst_video_info_init (&mix->info);
+  gst_video_info_init (&mix->out_info);
   mix->ts_offset = 0;
   mix->nframes = 0;
 
@@ -596,7 +551,7 @@ gst_gl_mixer_reset (GstGLMixer * mix)
     mixcol->start_time = -1;
     mixcol->end_time = -1;
 
-    gst_video_info_init (&p->info);
+    gst_video_info_init (&p->in_info);
   }
 
   mix->newseg_pending = TRUE;
@@ -740,7 +695,7 @@ gst_gl_mixer_query_caps (GstPad * pad, GstObject * parent, GstQuery * query)
 
   gst_query_parse_caps (query, &filter);
 
-  if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN) {
+  if (GST_VIDEO_INFO_FORMAT (&mix->out_info) != GST_VIDEO_FORMAT_UNKNOWN) {
     caps = gst_pad_get_current_caps (mix->srcpad);
   } else {
     caps = gst_pad_get_pad_template_caps (mix->srcpad);
@@ -753,7 +708,7 @@ gst_gl_mixer_query_caps (GstPad * pad, GstObject * parent, GstQuery * query)
     s = gst_caps_get_structure (caps, n);
     gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-    if (GST_VIDEO_INFO_FPS_D (&mix->info) != 0) {
+    if (GST_VIDEO_INFO_FPS_D (&mix->out_info) != 0) {
       gst_structure_set (s,
           "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
     }
@@ -863,7 +818,8 @@ gst_gl_mixer_update_qos (GstGLMixer * mix, gdouble proportion,
     if (G_UNLIKELY (diff > 0))
       mix->earliest_time =
           timestamp + 2 * diff + gst_util_uint64_scale_int (GST_SECOND,
-          GST_VIDEO_INFO_FPS_D (&mix->info), GST_VIDEO_INFO_FPS_N (&mix->info));
+          GST_VIDEO_INFO_FPS_D (&mix->out_info),
+          GST_VIDEO_INFO_FPS_N (&mix->out_info));
     else
       mix->earliest_time = timestamp + diff;
   } else {
@@ -1000,7 +956,6 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
-  guint idx;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -1024,13 +979,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
-  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, &idx)) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-  }
-  if (gst_query_find_allocation_meta (query, GST_GL_META_API_TYPE, &idx)) {
-    gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
-  }
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   gst_buffer_pool_set_config (pool, config);
 
@@ -1156,8 +1105,8 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 
   GST_GL_MIXER_LOCK (mix);
 
-  if (GST_VIDEO_INFO_FPS_N (&mix->info) != GST_VIDEO_INFO_FPS_N (&info) ||
-      GST_VIDEO_INFO_FPS_D (&mix->info) != GST_VIDEO_INFO_FPS_D (&info)) {
+  if (GST_VIDEO_INFO_FPS_N (&mix->out_info) != GST_VIDEO_INFO_FPS_N (&info) ||
+      GST_VIDEO_INFO_FPS_D (&mix->out_info) != GST_VIDEO_INFO_FPS_D (&info)) {
     if (mix->segment.position != -1) {
       mix->ts_offset = mix->segment.position - mix->segment.start;
       mix->nframes = 0;
@@ -1165,13 +1114,31 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
     gst_gl_mixer_reset_qos (mix);
   }
 
-  mix->info = info;
+  mix->out_info = info;
 
   GST_GL_MIXER_UNLOCK (mix);
 
-  if (!gst_gl_display_gen_fbo (mix->display, GST_VIDEO_INFO_WIDTH (&mix->info),
-          GST_VIDEO_INFO_HEIGHT (&mix->info), &mix->fbo, &mix->depthbuffer))
+  if (!gst_gl_display_gen_fbo (mix->display,
+          GST_VIDEO_INFO_WIDTH (&mix->out_info),
+          GST_VIDEO_INFO_HEIGHT (&mix->out_info), &mix->fbo, &mix->depthbuffer))
     goto display_error;
+
+  mix->download = gst_gl_display_find_download (mix->display,
+      GST_VIDEO_INFO_FORMAT (&mix->out_info),
+      GST_VIDEO_INFO_WIDTH (&mix->out_info),
+      GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+
+  gst_gl_download_init_format (mix->download,
+      GST_VIDEO_INFO_FORMAT (&mix->out_info),
+      GST_VIDEO_INFO_WIDTH (&mix->out_info),
+      GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+
+  if (mix->out_tex_id)
+    gst_gl_display_del_texture (mix->display, &mix->out_tex_id);
+  gst_gl_display_gen_texture (mix->display, &mix->out_tex_id,
+      GST_VIDEO_INFO_FORMAT (&mix->out_info),
+      GST_VIDEO_INFO_WIDTH (&mix->out_info),
+      GST_VIDEO_INFO_HEIGHT (&mix->out_info));
 
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);
@@ -1227,7 +1194,7 @@ gst_gl_mixer_request_new_pad (GstElement * element,
     g_free (name);
 
     mixcol = (GstGLMixerCollect *)
-        gst_collect_pads_add_pad_full (mix->collect, GST_PAD (mixpad),
+        gst_collect_pads_add_pad (mix->collect, GST_PAD (mixpad),
         sizeof (GstGLMixerCollect),
         (GstCollectDataDestroyNotify) gst_gl_mixer_collect_free, TRUE);
 
@@ -1278,7 +1245,8 @@ gst_gl_mixer_release_pad (GstElement * element, GstPad * pad)
       GST_OBJECT_NAME (mixpad));
   mix->numpads--;
 
-  update_caps = GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN;
+  update_caps =
+      GST_VIDEO_INFO_FORMAT (&mix->out_info) != GST_VIDEO_FORMAT_UNKNOWN;
   GST_GL_MIXER_UNLOCK (mix);
 
   gst_collect_pads_remove_pad (mix->collect, pad);
@@ -1457,14 +1425,132 @@ gst_gl_mixer_fill_queues (GstGLMixer * mix,
   return 1;
 }
 
+gboolean
+gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
+{
+  GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
+  GSList *walk = mix->sinkpads;
+  GstVideoFrame out_frame;
+  gboolean out_gl_wrapped = FALSE;
+  guint out_tex;
+  guint array_index = 0;
+  guint i;
+
+  GST_TRACE ("Processing buffers");
+
+  if (!gst_video_frame_map (&out_frame, &mix->out_info, outbuf,
+          GST_MAP_WRITE | GST_MAP_GL)) {
+    return FALSE;
+  }
+
+  if (gst_is_gl_memory (out_frame.map[0].memory)) {
+    out_tex = *(guint *) out_frame.data[0];
+  } else {
+    GST_INFO ("Output Buffer does not contain correct memory, "
+        "attempting to wrap for download");
+
+    out_tex = mix->out_tex_id;;
+
+    out_gl_wrapped = TRUE;
+  }
+
+  while (walk) {                /* We walk with this list because it's ordered */
+    GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
+    GstGLMixerCollect *mixcol = pad->mixcol;
+
+    walk = g_slist_next (walk);
+
+    if (mixcol->buffer != NULL) {
+      GstClockTime timestamp;
+      gint64 stream_time;
+      GstSegment *seg;
+      guint in_tex;
+      GstVideoFrame *in_frame;
+
+      seg = &mixcol->collect.segment;
+
+      timestamp = GST_BUFFER_TIMESTAMP (mixcol->buffer);
+
+      stream_time =
+          gst_segment_to_stream_time (seg, GST_FORMAT_TIME, timestamp);
+
+      /* sync object properties on stream time */
+      if (GST_CLOCK_TIME_IS_VALID (stream_time))
+        gst_object_sync_values (GST_OBJECT (pad), stream_time);
+
+      in_frame = g_ptr_array_index (mix->in_frames, array_index);
+
+      if (!gst_video_frame_map (in_frame, &pad->in_info, mixcol->buffer,
+              GST_MAP_READ | GST_MAP_GL)) {
+        break;
+      }
+
+      if (gst_is_gl_memory (in_frame->map[0].memory)) {
+        in_tex = *(guint *) in_frame->data[0];
+      } else {
+        GstGLUpload *upload;
+
+        GST_DEBUG ("Input buffer:%p does not contain correct memory, "
+            "attempting to wrap for upload", mixcol->buffer);
+
+        upload = gst_gl_display_find_upload (mix->display,
+            GST_VIDEO_FRAME_FORMAT (in_frame),
+            GST_VIDEO_FRAME_WIDTH (in_frame),
+            GST_VIDEO_FRAME_HEIGHT (in_frame));
+
+        gst_gl_upload_init_format (upload,
+            GST_VIDEO_FRAME_FORMAT (in_frame),
+            GST_VIDEO_FRAME_WIDTH (in_frame),
+            GST_VIDEO_FRAME_HEIGHT (in_frame));
+
+        if (!pad->in_tex_id)
+          gst_gl_display_gen_texture (mix->display, &pad->in_tex_id,
+              GST_VIDEO_INFO_FORMAT (&mix->out_info),
+              GST_VIDEO_INFO_WIDTH (&mix->out_info),
+              GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+
+        gst_gl_upload_perform_with_data (upload, pad->in_tex_id,
+            in_frame->data);
+
+        in_tex = pad->in_tex_id;
+        pad->uploaded = TRUE;
+      }
+
+      g_array_index (mix->array_textures, guint, array_index) = in_tex;
+    }
+    ++array_index;
+  }
+
+  mix_class->process_textures (mix, mix->array_textures, mix->in_frames,
+      out_tex);
+
+  if (out_gl_wrapped) {
+    gst_gl_download_perform_with_data (mix->download, out_tex, out_frame.data);
+  }
+
+  i = 0;
+  walk = mix->sinkpads;
+  while (walk) {
+    GstVideoFrame *in_frame = g_ptr_array_index (mix->in_frames, i);
+
+    if (in_frame)
+      gst_video_frame_unmap (in_frame);
+
+    walk = g_slist_next (walk);
+    i++;
+  }
+
+  gst_video_frame_unmap (&out_frame);
+
+  return TRUE;
+}
+
 static void
 gst_gl_mixer_process_buffers (GstGLMixer * mix, GstBuffer * outbuf)
 {
   GstGLMixerClass *mix_class = GST_GL_MIXER_GET_CLASS (mix);
   GSList *walk = mix->sinkpads;
-  gint array_index = 0;
-
-  GST_TRACE ("Processing buffers");
+  guint array_index = 0;
 
   while (walk) {                /* We walk with this list because it's ordered */
     GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
@@ -1490,21 +1576,6 @@ gst_gl_mixer_process_buffers (GstGLMixer * mix, GstBuffer * outbuf)
 
       /* put buffer into array */
       mix->array_buffers->pdata[array_index] = mixcol->buffer;
-
-      /*if (pad == mix->master) {
-         gint64 running_time;
-
-         running_time =
-         gst_segment_to_running_time (seg, GST_FORMAT_TIME, timestamp); */
-
-      /* outgoing buffers need the running_time */
-      /*GST_BUFFER_TIMESTAMP (outbuf) = running_time;
-         GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (mixcol->buffer);
-
-         mix->last_ts = running_time;
-         if (GST_BUFFER_DURATION_IS_VALID (outbuf))
-         mix->last_ts += GST_BUFFER_DURATION (outbuf);
-         } */
     }
     ++array_index;
   }
@@ -1557,6 +1628,7 @@ gst_gl_mixer_do_qos (GstGLMixer * mix, GstClockTime timestamp)
 static GstFlowReturn
 gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 {
+  GstGLMixerClass *mix_class;
   GstFlowReturn ret;
   GstClockTime output_start_time, output_end_time;
   GstBuffer *outbuf = NULL;
@@ -1565,9 +1637,13 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
   g_return_val_if_fail (GST_IS_GL_MIXER (mix), GST_FLOW_ERROR);
 
+  mix_class = GST_GL_MIXER_GET_CLASS (mix);
+
   /* If we're not negotiated yet... */
-  if (GST_VIDEO_INFO_FORMAT (&mix->info) == GST_VIDEO_FORMAT_UNKNOWN)
+  if (GST_VIDEO_INFO_FORMAT (&mix->out_info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ELEMENT_ERROR (mix, CORE, NEGOTIATION, ("not negotiated"), (NULL));
     return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   if (g_atomic_int_compare_and_exchange (&mix->flush_stop_pending, TRUE, FALSE)) {
     GST_DEBUG_OBJECT (mix, "pending flush stop");
@@ -1600,8 +1676,8 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
   output_end_time =
       mix->ts_offset + gst_util_uint64_scale (mix->nframes + 1,
-      GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
-      GST_VIDEO_INFO_FPS_N (&mix->info));
+      GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->out_info),
+      GST_VIDEO_INFO_FPS_N (&mix->out_info));
   if (mix->segment.stop != -1)
     output_end_time = MIN (output_end_time, mix->segment.stop);
 
@@ -1638,7 +1714,13 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
     ret = gst_buffer_pool_acquire_buffer (mix->priv->pool, &outbuf, NULL);
 
-    gst_gl_mixer_process_buffers (mix, outbuf);
+    g_assert (mix_class->process_buffers || mix_class->process_textures);
+
+    if (mix_class->process_buffers)
+      gst_gl_mixer_process_buffers (mix, outbuf);
+    else if (mix_class->process_textures)
+      gst_gl_mixer_process_textures (mix, outbuf);
+
     mix->qos_processed++;
   } else {
     GstMessage *msg;
@@ -1746,7 +1828,8 @@ gst_gl_mixer_sink_clip (GstCollectPads * pads,
   if (end_time == -1)
     end_time =
         gst_util_uint64_scale_int (GST_SECOND,
-        GST_VIDEO_INFO_FPS_D (&pad->info), GST_VIDEO_INFO_FPS_N (&pad->info));
+        GST_VIDEO_INFO_FPS_D (&pad->in_info),
+        GST_VIDEO_INFO_FPS_N (&pad->in_info));
   if (end_time == -1) {
     *outbuf = buf;
     return GST_FLOW_OK;
@@ -1967,8 +2050,6 @@ static void
 gst_gl_mixer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  //GstGLMixer *mix = GST_GL_MIXER (object);
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1980,8 +2061,6 @@ static void
 gst_gl_mixer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  //GstGLMixer *mix = GST_GL_MIXER (object);
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2004,35 +2083,40 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
-      GSList *walk = mix->sinkpads;
-      gint i = 0;
+      guint i;
 
-      /* instanciate a gldisplay for each sink pad */
-      while (walk) {
-        GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
-        walk = g_slist_next (walk);
-        sink_pad->display = gst_gl_display_new ();
+      mix->array_buffers = g_ptr_array_new_full (mix->numpads, NULL);
+      mix->in_frames = g_ptr_array_new_full (mix->numpads, NULL);
+      mix->array_textures =
+          g_array_sized_new (FALSE, TRUE, sizeof (guint), mix->numpads);
+
+      g_ptr_array_set_size (mix->array_buffers, mix->numpads);
+      g_ptr_array_set_size (mix->in_frames, mix->numpads);
+      g_array_set_size (mix->array_textures, mix->numpads);
+
+      for (i = 0; i < mix->numpads; i++) {
+        mix->in_frames->pdata[i] = g_slice_alloc (sizeof (GstVideoFrame));
       }
-      mix->array_buffers = g_ptr_array_sized_new (mix->next_sinkpad);
-      for (i = 0; i < mix->next_sinkpad; ++i) {
-        g_ptr_array_add (mix->array_buffers, NULL);
-      }
+
       GST_LOG_OBJECT (mix, "starting collectpads");
       gst_collect_pads_start (mix->collect);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
-      GSList *walk = mix->sinkpads;
+      guint i;
+
       GST_LOG_OBJECT (mix, "stopping collectpads");
       gst_collect_pads_stop (mix->collect);
-      g_ptr_array_free (mix->array_buffers, TRUE);
-      while (walk) {
-        GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
-        walk = g_slist_next (walk);
-        if (sink_pad->display)
-          gst_gl_display_activate_gl_context (sink_pad->display, FALSE);
+
+      for (i = 0; i < mix->numpads; i++) {
+        g_slice_free1 (sizeof (GstVideoFrame), mix->in_frames->pdata[i]);
       }
+
+      g_ptr_array_free (mix->array_buffers, TRUE);
+      g_ptr_array_free (mix->in_frames, TRUE);
+      g_array_free (mix->array_textures, TRUE);
+
       if (mixer_class->reset)
         mixer_class->reset (mix);
       if (mix->fbo) {
@@ -2043,16 +2127,6 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       if (mix->display) {
         g_object_unref (mix->display);
         mix->display = NULL;
-      }
-      walk = mix->sinkpads;
-      while (walk) {
-        GstGLMixerPad *sink_pad = GST_GL_MIXER_PAD (walk->data);
-        walk = g_slist_next (walk);
-        if (sink_pad->display) {
-          gst_gl_display_activate_gl_context (sink_pad->display, TRUE);
-          g_object_unref (sink_pad->display);
-          sink_pad->display = NULL;
-        }
       }
       break;
     }
