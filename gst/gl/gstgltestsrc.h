@@ -27,7 +27,6 @@
 #include <gst/base/gstpushsrc.h>
 
 #include "gstglbufferpool.h"
-#include "gstglmeta.h"
 
 G_BEGIN_DECLS
 
@@ -102,7 +101,9 @@ struct _GstGLTestSrc {
     GstBuffer* buffer;
     GstBufferPool *pool;
 
-    /* private */
+    guint out_tex_id;
+    GstGLDownload *download;
+
     GstGLDisplay *display;
     gint64 timestamp_offset;              /* base offset */
     GstClockTime running_time;            /* total running time */

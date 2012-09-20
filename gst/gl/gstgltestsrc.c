@@ -159,7 +159,7 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          gst_caps_from_string (GST_GL_VIDEO_CAPS)));
+          gst_caps_from_string (GST_GL_DOWNLOAD_VIDEO_CAPS)));
 
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
   gstbasesrc_class->is_seekable = gst_gl_test_src_is_seekable;
@@ -321,6 +321,23 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
           &gltestsrc->fbo, &gltestsrc->depthbuffer))
     goto display_error;
 
+  if (gltestsrc->out_tex_id)
+    gst_gl_display_del_texture (gltestsrc->display, &gltestsrc->out_tex_id);
+  gst_gl_display_gen_texture (gltestsrc->display, &gltestsrc->out_tex_id,
+      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info),
+      GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
+      GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info));
+
+  gltestsrc->download = gst_gl_display_find_download (gltestsrc->display,
+      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info),
+      GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
+      GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info));
+
+  gst_gl_download_init_format (gltestsrc->download,
+      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info),
+      GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
+      GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info));
+
   return TRUE;
 
 /* ERRORS */
@@ -431,10 +448,11 @@ static GstFlowReturn
 gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstGLTestSrc *src;
-  GstGLMeta *gl_meta;
-  GstVideoMeta *v_meta;
   GstClockTime next_time;
   gint width, height;
+  GstVideoFrame out_frame;
+  gboolean out_gl_wrapped = FALSE;
+  guint out_tex;
 
   src = GST_GL_TEST_SRC (psrc);
 
@@ -456,22 +474,36 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
       src->make_image = gst_gl_test_src_black;
   }
 
-  src->buffer = gst_buffer_ref (buffer);
-  gl_meta = gst_buffer_get_gl_meta (src->buffer);
-  v_meta = gst_buffer_get_video_meta (src->buffer);
-
-  if (!gl_meta || !v_meta) {
-    GST_ERROR
-        ("Output buffer does not contain required GstVideoMeta or GstGLMeta");
-    goto eos;
+  if (!gst_video_frame_map (&out_frame, &src->out_info, buffer,
+          GST_MAP_WRITE | GST_MAP_GL)) {
+    return GST_FLOW_NOT_NEGOTIATED;
   }
+
+  if (gst_is_gl_memory (out_frame.map[0].memory)) {
+    out_tex = *(guint *) out_frame.data[0];
+  } else {
+    GST_INFO ("Output Buffer does not contain correct meta, "
+        "attempting to wrap for download");
+
+    out_tex = src->out_tex_id;;
+
+    out_gl_wrapped = TRUE;
+  }
+
+  src->buffer = gst_buffer_ref (buffer);
+
   //blocking call, generate a FBO
   if (!gst_gl_display_use_fbo (src->display, width, height, src->fbo,
-          src->depthbuffer, gl_meta->memory->tex_id, gst_gl_test_src_callback,
+          src->depthbuffer, out_tex, gst_gl_test_src_callback,
           0, 0, 0, 0, width, 0, height, GST_GL_DISPLAY_PROJECTION_ORTHO2D,
           (gpointer) src)) {
-    goto eos;
+    goto not_negotiated;
   }
+
+  if (out_gl_wrapped) {
+    gst_gl_download_perform_with_data (src->download, out_tex, out_frame.data);
+  }
+  gst_video_frame_unmap (&out_frame);
 
   GST_BUFFER_TIMESTAMP (buffer) = src->timestamp_offset + src->running_time;
   GST_BUFFER_OFFSET (buffer) = src->n_frames;
@@ -589,7 +621,6 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_GL_META);
   gst_buffer_pool_set_config (pool, config);
 
   if (update_pool)
