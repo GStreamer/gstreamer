@@ -112,24 +112,10 @@ static GstFlowReturn
 gst_rtp_opus_pay_handle_buffer (GstRTPBasePayload * basepayload,
     GstBuffer * buffer)
 {
-  GstRTPBuffer rtpbuf = { NULL, };
   GstBuffer *outbuf;
-  GstMapInfo map;
 
-  /* Copy data and timestamp to a new output buffer
-   * FIXME : Don't we have a convenience function for this ? */
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  outbuf = gst_rtp_buffer_new_copy_data (map.data, map.size);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-
-  /* Unmap and free input buffer */
-  gst_buffer_unmap (buffer, &map);
-  gst_buffer_unref (buffer);
-
-  /* Remove marker from RTP buffer */
-  gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtpbuf);
-  gst_rtp_buffer_set_marker (&rtpbuf, FALSE);
-  gst_rtp_buffer_unmap (&rtpbuf);
+  outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+  outbuf = gst_buffer_append (outbuf, gst_buffer_ref (buffer));
 
   /* Push out */
   return gst_rtp_base_payload_push (basepayload, outbuf);
