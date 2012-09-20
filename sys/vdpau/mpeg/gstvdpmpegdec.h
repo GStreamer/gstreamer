@@ -24,10 +24,20 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
-#include "../gstvdp/gstvdpdecoder.h"
-#include "gstvdpmpegframe.h"
+#include "../gstvdpdecoder.h"
 
 G_BEGIN_DECLS
+typedef struct _GstVdpMpegStreamInfo GstVdpMpegStreamInfo;
+
+struct _GstVdpMpegStreamInfo
+{
+  gint width, height;
+  gint fps_n, fps_d;
+  gint par_n, par_d;
+  gboolean interlaced;
+  gint version;
+  VdpDecoderProfile profile;
+};
 
 #define GST_TYPE_VDP_MPEG_DEC            (gst_vdp_mpeg_dec_get_type())
 #define GST_VDP_MPEG_DEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VDP_MPEG_DEC,GstVdpMpegDec))
@@ -50,11 +60,13 @@ struct _GstVdpMpegDec
 
   VdpDecoder decoder;
 
-	GstVdpMpegStreamInfo stream_info;
+  GstVdpMpegStreamInfo stream_info;
 
   /* decoder state */
+  GstVideoCodecState *input_state;
+  GstVideoCodecState *output_state;
   GstVdpMpegDecState state;
-	gint prev_packet;
+  gint prev_packet;
   
   /* currently decoded frame info */
   VdpPictureInfoMPEG1Or2 vdp_info;
@@ -64,8 +76,7 @@ struct _GstVdpMpegDec
   guint64 gop_frame;
   
   /* forward and backward reference */
-  GstVideoFrame *f_frame, *b_frame;
-  
+  GstVideoCodecFrame *f_frame, *b_frame;
 };
 
 struct _GstVdpMpegDecClass 

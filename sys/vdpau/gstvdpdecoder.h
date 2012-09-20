@@ -24,8 +24,9 @@
 #include <gst/gst.h>
 #include <vdpau/vdpau.h>
 
-#include "../basevideodecoder/gstbasevideodecoder.h"
-#include "../gstvdp/gstvdpvideobuffer.h"
+#include <gst/video/gstvideodecoder.h>
+
+#include "gstvdpdevice.h"
 
 G_BEGIN_DECLS
 
@@ -41,17 +42,19 @@ typedef struct _GstVdpDecoderClass GstVdpDecoderClass;
 
 
 struct _GstVdpDecoder {
-  GstBaseVideoDecoder base_video_decoder;
+  GstVideoDecoder video_decoder;
 
   GstVdpDevice *device;
   VdpDecoder decoder;
+
+  GstVideoInfo info;
 
   /* properties */
   gchar *display;
 };
 
 struct _GstVdpDecoderClass {
-  GstBaseVideoDecoderClass base_video_decoder_class;
+  GstVideoDecoderClass video_decoder_class;
 };
 
 void
@@ -59,11 +62,12 @@ gst_vdp_decoder_post_error (GstVdpDecoder * decoder, GError * error);
 
 GstFlowReturn
 gst_vdp_decoder_render (GstVdpDecoder * vdp_decoder, VdpPictureInfo *info,
-    guint n_bufs, VdpBitstreamBuffer *bufs, GstVdpVideoBuffer **video_buf);
+    guint n_bufs, VdpBitstreamBuffer *bufs, GstVideoCodecFrame *frame);
 
 GstFlowReturn
 gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
-    VdpDecoderProfile profile, guint32 max_references);
+			      VdpDecoderProfile profile, guint32 max_references,
+			      GstVideoCodecState *output_state);
 
 GType gst_vdp_decoder_get_type (void);
 

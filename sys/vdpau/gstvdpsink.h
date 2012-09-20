@@ -29,7 +29,7 @@
 #include <string.h>
 #include <math.h>
 
-#include "gstvdp/gstvdpdevice.h"
+#include "gstvdpdevice.h"
 
 G_BEGIN_DECLS
 
@@ -99,7 +99,7 @@ struct _VdpSink {
   char *display_name;
 
   GstVdpDevice *device;
-  GstVdpBufferPool *bpool;
+  GstBufferPool *bpool;
   GstCaps *caps;
   
   GstVdpWindow *window;

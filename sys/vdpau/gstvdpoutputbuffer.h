@@ -23,18 +23,19 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpbuffer.h"
 #include "gstvdpdevice.h"
 
-typedef struct _GstVdpOutputBuffer GstVdpOutputBuffer;
+GType gst_vdpau_output_meta_api_get_type (void);
 
-#define GST_TYPE_VDP_OUTPUT_BUFFER (gst_vdp_output_buffer_get_type())
-#define GST_IS_VDP_OUTPUT_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VDP_OUTPUT_BUFFER))
-#define GST_VDP_OUTPUT_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VDP_OUTPUT_BUFFER, GstVdpOutputBuffer))
+const GstMetaInfo * gst_vdpau_output_meta_get_info (void);
 
-struct _GstVdpOutputBuffer {
-  GstVdpBuffer vdp_buffer;
+#define GST_VDPAU_OUTPUT_META_GET(buf) ((GstVdpauMeta *)gst_buffer_get_meta(buf,gst_vdpau_output_meta_api_get_type()))
+#define GST_VDPAU_OUTPUT_META_ADD(buf) ((GstVdpauMeta *)gst_buffer_add_meta(buf,gst_vdpau_output_meta_get_info(),NULL))
 
+struct _GstVdpauOutputMeta {
+  GstMeta meta;
+
+  /* FIXME : Check we actually need all of this */
   GstVdpDevice *device;
   VdpRGBAFormat rgba_format;
   gint width, height;
@@ -42,15 +43,14 @@ struct _GstVdpOutputBuffer {
   VdpOutputSurface surface;
 };
 
-GType gst_vdp_output_buffer_get_type (void);
-
-GstVdpOutputBuffer* gst_vdp_output_buffer_new (GstVdpDevice * device, VdpRGBAFormat rgba_format, gint width, gint height, GError **error);
-
+#if 0
+/* FIXME : Replace with GST_VIDEO_FORMAT... and GST_VIDEO_CHROMA_... */
 GstCaps *gst_vdp_output_buffer_get_template_caps (void);
 GstCaps *gst_vdp_output_buffer_get_allowed_caps (GstVdpDevice *device);
 gboolean gst_vdp_caps_to_rgba_format (GstCaps *caps, VdpRGBAFormat *rgba_format);
 
 gboolean gst_vdp_output_buffer_calculate_size (GstVdpOutputBuffer *output_buf, guint *size);
+/* FIXME : Replace with map/unmap  */
 gboolean gst_vdp_output_buffer_download (GstVdpOutputBuffer *output_buf, GstBuffer *outbuf, GError **error);
 
 #define GST_VDP_OUTPUT_CAPS \
@@ -58,5 +58,5 @@ gboolean gst_vdp_output_buffer_download (GstVdpOutputBuffer *output_buf, GstBuff
   "rgba-format = (int)[0,4], " \
   "width = (int)[1,8192], " \
   "height = (int)[1,8192]"
-
+#endif
 #endif

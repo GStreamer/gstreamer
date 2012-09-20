@@ -19,6 +19,7 @@
  */
 
 #include "gsth264dpb.h"
+#include "gstvdpvideomemory.h"
 
 /* Properties */
 enum
@@ -32,8 +33,8 @@ GST_DEBUG_CATEGORY_STATIC (h264dpb_debug);
 #define GST_CAT_DEFAULT h264dpb_debug
 
 #define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (h264dpb_debug, "h264dpb", 0, \
-  "H264 DPB");
+  GST_DEBUG_CATEGORY_INIT (h264dpb_debug, "vdph264dpb", 0, \
+  "VDPAU H264 DPB");
 
 G_DEFINE_TYPE_WITH_CODE (GstH264DPB, gst_h264_dpb, G_TYPE_OBJECT, DEBUG_INIT);
 
@@ -47,10 +48,11 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
   frames = dpb->frames;
   for (i = 0; i < dpb->n_frames; i++) {
     GstH264Frame *frame = frames[i];
+    GstVdpVideoMemory *vmem =
+        (GstVdpVideoMemory *) gst_buffer_get_memory (frame->frame->
+        output_buffer, 0);
 
-    reference_frames[i].surface =
-        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME_CAST (frame)->src_buffer)->
-        surface;
+    reference_frames[i].surface = vmem->surface;
 
     reference_frames[i].is_long_term = frame->is_long_term;
     reference_frames[i].top_is_reference = frame->is_reference;
@@ -62,8 +64,12 @@ gst_h264_dpb_fill_reference_frames (GstH264DPB * dpb,
 
   for (i = dpb->n_frames; i < 16; i++) {
     reference_frames[i].surface = VDP_INVALID_HANDLE;
+    reference_frames[i].is_long_term = FALSE;
     reference_frames[i].top_is_reference = VDP_FALSE;
     reference_frames[i].bottom_is_reference = VDP_FALSE;
+    reference_frames[i].field_order_cnt[0] = 0;
+    reference_frames[i].field_order_cnt[1] = 0;
+    reference_frames[i].frame_idx = 0;
   }
 }
 
@@ -74,7 +80,7 @@ gst_h264_dpb_remove (GstH264DPB * dpb, guint idx)
   guint i;
 
   frames = dpb->frames;
-  gst_video_frame_unref (GST_VIDEO_FRAME_CAST (frames[idx]));
+  gst_video_codec_frame_unref (frames[idx]->frame);
   dpb->n_frames--;
 
   for (i = idx; i < dpb->n_frames; i++)
@@ -87,7 +93,7 @@ gst_h264_dpb_output (GstH264DPB * dpb, guint idx)
   GstFlowReturn ret;
   GstH264Frame *frame = dpb->frames[idx];
 
-  gst_video_frame_ref (GST_VIDEO_FRAME_CAST (frame));
+  gst_video_codec_frame_ref (frame->frame);
   ret = dpb->output (dpb, frame, dpb->user_data);
   frame->output_needed = FALSE;
 
@@ -132,7 +138,7 @@ gst_h264_dpb_bump (GstH264DPB * dpb, guint poc, GstFlowReturn * ret)
 GstFlowReturn
 gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG ("add frame with poc: %d", h264_frame->poc);
 
@@ -141,18 +147,13 @@ gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
     h264_frame->is_reference = FALSE;
 
   if (h264_frame->is_reference) {
-
-    ret = GST_FLOW_OK;
     while (dpb->n_frames == dpb->max_frames) {
-      if (!gst_h264_dpb_bump (dpb, G_MAXUINT, &ret)) {
-        GST_ERROR_OBJECT (dpb, "Couldn't make room in DPB");
-        return GST_FLOW_OK;
-      }
+      if (!gst_h264_dpb_bump (dpb, G_MAXUINT, &ret))
+        goto no_room;
     }
+    GST_DEBUG ("Storing frame in slot %d", dpb->n_frames);
     dpb->frames[dpb->n_frames++] = h264_frame;
-  }
-
-  else {
+  } else {
     while (gst_h264_dpb_bump (dpb, h264_frame->poc, &ret)) {
       if (ret != GST_FLOW_OK)
         return ret;
@@ -162,13 +163,19 @@ gst_h264_dpb_add (GstH264DPB * dpb, GstH264Frame * h264_frame)
   }
 
   return ret;
+
+  /* ERRORS */
+no_room:
+  {
+    GST_ERROR_OBJECT (dpb, "Couldn't make room in DPB");
+    return GST_FLOW_OK;
+  }
 }
 
 void
 gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
 {
   GstFlowReturn ret;
-  GstVideoFrame **frames;
   guint i;
 
   GST_DEBUG ("flush");
@@ -176,9 +183,8 @@ gst_h264_dpb_flush (GstH264DPB * dpb, gboolean output)
   if (output)
     while (gst_h264_dpb_bump (dpb, G_MAXUINT, &ret));
 
-  frames = (GstVideoFrame **) dpb->frames;
   for (i = 0; i < dpb->n_frames; i++)
-    gst_video_frame_unref (frames[i]);
+    gst_video_codec_frame_unref (dpb->frames[i]->frame);
 
   dpb->n_frames = 0;
 
@@ -383,12 +389,10 @@ static void
 gst_h264_dpb_finalize (GObject * object)
 {
   GstH264DPB *dpb = GST_H264_DPB (object);
-  GstVideoFrame **frames;
   guint i;
 
-  frames = (GstVideoFrame **) dpb->frames;
   for (i = 0; i < dpb->n_frames; i++)
-    gst_video_frame_unref (frames[i]);
+    gst_video_codec_frame_unref (dpb->frames[i]->frame);
 
   G_OBJECT_CLASS (gst_h264_dpb_parent_class)->finalize (object);
 }

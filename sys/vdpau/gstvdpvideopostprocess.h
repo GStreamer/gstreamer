@@ -23,9 +23,8 @@
 
 #include <gst/gst.h>
 
-#include "gstvdp/gstvdpdevice.h"
-#include "gstvdp/gstvdpvideobuffer.h"
-#include "gstvdp/gstvdpvideobufferpool.h"
+#include "gstvdpdevice.h"
+#include "gstvdpvideobufferpool.h"
 
 G_BEGIN_DECLS
 
@@ -35,7 +34,7 @@ typedef struct _GstVdpPicture GstVdpPicture;
 
 struct _GstVdpPicture
 {
-  GstVdpVideoBuffer *buf;
+  GstBuffer *buf;
   VdpVideoMixerPictureStructure structure;
   GstClockTime timestamp;
 };
@@ -73,7 +72,7 @@ struct _GstVdpVideoPostProcess
   VdpChromaType chroma_type;
   gint width, height;
   guint32 fourcc;
-  GstVdpBufferPool *vpool;
+  GstBufferPool *vpool;
 
   gboolean got_par;
   gint par_n, par_d;

@@ -61,8 +61,8 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg4_dec_debug, "vdpaumpeg4dec", 0, \
     "VDPAU mpeg4 decoder");
 
-GST_BOILERPLATE_FULL (GstVdpMpeg4Dec, gst_vdp_mpeg4_dec,
-    GstVdpDecoder, GST_TYPE_VDP_DECODER, DEBUG_INIT);
+G_DEFINE_TYPE_FULL (GstVdpMpeg4Dec, gst_vdp_mpeg4_dec, GST_TYPE_VDP_DECODER,
+    DEBUG_INIT);
 
 #define SYNC_CODE_SIZE 3
 
@@ -81,8 +81,8 @@ gst_vdp_mpeg4_dec_fill_info (GstVdpMpeg4Dec * mpeg4_dec,
   /* forward reference */
   if (vop->coding_type != I_VOP && mpeg4_dec->f_frame) {
     info.forward_reference =
-        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME (mpeg4_dec->
-            f_frame)->src_buffer)->surface;
+        GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME (mpeg4_dec->f_frame)->
+        src_buffer)->surface;
   }
 
   if (vop->coding_type == B_VOP) {
@@ -100,8 +100,8 @@ gst_vdp_mpeg4_dec_fill_info (GstVdpMpeg4Dec * mpeg4_dec,
     /* backward reference */
     if (mpeg4_dec->b_frame) {
       info.backward_reference =
-          GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME (mpeg4_dec->
-              b_frame)->src_buffer)->surface;
+          GST_VDP_VIDEO_BUFFER (GST_VIDEO_FRAME (mpeg4_dec->b_frame)->
+          src_buffer)->surface;
     }
   }
 

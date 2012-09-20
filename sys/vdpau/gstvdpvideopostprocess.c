@@ -43,11 +43,8 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/video/gstvideosink.h>
 
-#include "gstvdp/gstvdputils.h"
-#include "gstvdp/gstvdpoutputbuffer.h"
-#include "gstvdp/gstvdpoutputsrcpad.h"
+#include "gstvdpoutputbuffer.h"
 
 #include "gstvdpvideopostprocess.h"
 
@@ -73,11 +70,7 @@ enum
   PROP_INVERSE_TELECINE
 };
 
-#define DEBUG_INIT(bla) \
-GST_DEBUG_CATEGORY_INIT (gst_vdp_vpp_debug, "vdpauvideopostprocess", 0, "VDPAU video surface to output surface");
-
-GST_BOILERPLATE_FULL (GstVdpVideoPostProcess, gst_vdp_vpp,
-    GstElement, GST_TYPE_ELEMENT, DEBUG_INIT);
+G_DEFINE_TYPE (GstVdpVideoPostProcess, gst_vdp_vpp, GST_TYPE_ELEMENT);
 
 static void gst_vdp_vpp_finalize (GObject * object);
 
@@ -1172,38 +1165,17 @@ gst_vdp_vpp_set_property (GObject * object, guint property_id,
 
 /* GType vmethod implementations */
 
-static void
-gst_vdp_vpp_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-  GstCaps *src_caps, *sink_caps;
-  GstPadTemplate *src_template, *sink_template;
-
-  gst_element_class_set_static_metadata (element_class,
-      "VdpauVideoPostProcess",
-      "Filter/Converter/Decoder/Video",
-      "Post process GstVdpVideoBuffers and output GstVdpOutputBuffers",
-      "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
-
-  /* SRC PAD */
-  src_caps = gst_vdp_output_buffer_get_template_caps ();
-  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-      src_caps);
-  gst_element_class_add_pad_template (element_class, src_template);
-
-  /* SINK PAD */
-  sink_caps = gst_vdp_video_buffer_get_caps (FALSE, 0);
-  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      sink_caps);
-  gst_element_class_add_pad_template (element_class, sink_template);
-}
-
 /* initialize the vdpaumpegdecoder's class */
 static void
 gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstCaps *src_caps, *sink_caps;
+  GstPadTemplate *src_template, *sink_template;
+
+  GST_DEBUG_CATEGORY_INIT (gst_vdp_vpp_debug, "vdpauvideopostprocess", 0,
+      "VDPAU video surface to output surface");
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -1249,12 +1221,29 @@ gst_vdp_vpp_class_init (GstVdpVideoPostProcessClass * klass)
           "Whether inverse telecine should be used", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_set_metadata (gstelement_class,
+      "VdpauVideoPostProcess",
+      "Filter/Converter/Decoder/Video",
+      "Post process GstVdpVideoBuffers and output GstVdpOutputBuffers",
+      "Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>");
+
   gstelement_class->change_state = gst_vdp_vpp_change_state;
+
+  /* SRC PAD */
+  src_caps = gst_vdp_output_buffer_get_template_caps ();
+  src_template = gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+      src_caps);
+  gst_element_class_add_pad_template (gstelement_class, src_template);
+
+  /* SINK PAD */
+  sink_caps = gst_vdp_video_buffer_get_caps (FALSE, 0);
+  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+      sink_caps);
+  gst_element_class_add_pad_template (gstelement_class, sink_template);
 }
 
 static void
-gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp,
-    GstVdpVideoPostProcessClass * gclass)
+gst_vdp_vpp_init (GstVdpVideoPostProcess * vpp)
 {
   GstPadTemplate *src_template, *sink_template;
 

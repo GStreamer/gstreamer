@@ -22,15 +22,14 @@
 #define _GST_H264_DPB_H_
 
 #include <glib-object.h>
+#include <vdpau/vdpau.h>
 
-#include "../gstvdp/gstvdpvideobuffer.h"
-
-#include "gsth264frame.h"
+#include <gst/video/video.h>
+#include <gst/codecparsers/gsth264meta.h>
 
 G_BEGIN_DECLS
 
 #define MAX_DPB_SIZE 16
-
 
 #define GST_TYPE_H264_DPB             (gst_h264_dpb_get_type ())
 #define GST_H264_DPB(obj)             (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_H264_DPB, GstH264DPB))
@@ -42,21 +41,33 @@ G_BEGIN_DECLS
 typedef struct _GstH264DPB GstH264DPB;
 typedef struct _GstH264DPBClass GstH264DPBClass;
 
+typedef struct _GstH264Frame
+{
+  GstVideoCodecFrame *frame;
+
+  guint poc;
+  guint16 frame_idx;
+  gboolean is_reference;
+  gboolean is_long_term;
+  gboolean output_needed;
+} GstH264Frame;
+
+
 typedef GstFlowReturn (*GstH264DPBOutputFunc) (GstH264DPB *dpb, GstH264Frame *h264_frame, gpointer user_data);
 
 struct _GstH264DPB
 {
   GObject parent_instance;
 
-	/* private */
+  /* private */
   GstH264Frame *frames[MAX_DPB_SIZE];  
   guint n_frames;
   
   guint max_frames;
   gint max_longterm_frame_idx;
 
-	GstH264DPBOutputFunc output;
-	gpointer user_data;
+  GstH264DPBOutputFunc output;
+  gpointer user_data;
 };
 
 struct _GstH264DPBClass

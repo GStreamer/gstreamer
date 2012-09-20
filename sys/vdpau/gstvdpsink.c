@@ -27,16 +27,16 @@
 #endif
 
 /* Our interfaces */
-#include <gst/interfaces/navigation.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/navigation.h>
+#include <gst/video/videooverlay.h>
 
 #include <X11/XKBlib.h>
 
 /* Debugging category */
 #include <gst/gstinfo.h>
 
-#include "gstvdp/gstvdpoutputbuffer.h"
-#include "gstvdp/gstvdpoutputbufferpool.h"
+#include "gstvdpoutputbuffer.h"
+#include "gstvdpoutputbufferpool.h"
 
 /* Object header */
 #include "gstvdpsink.h"
@@ -852,8 +852,8 @@ gst_vdp_sink_show_frame (GstBaseSink * bsink, GstBuffer * outbuf)
 
     g_mutex_lock (vdp_sink->x_lock);
     status =
-        device->vdp_presentation_queue_query_surface_status (vdp_sink->window->
-        queue, surface, &queue_status, &pres_time);
+        device->vdp_presentation_queue_query_surface_status (vdp_sink->
+        window->queue, surface, &queue_status, &pres_time);
     g_mutex_unlock (vdp_sink->x_lock);
 
     if (queue_status == VDP_PRESENTATION_QUEUE_STATUS_QUEUED) {

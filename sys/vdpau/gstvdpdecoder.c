@@ -22,54 +22,25 @@
 #include "config.h"
 #endif
 
-#include "gstvdpvideosrcpad.h"
-
 #include "gstvdpdecoder.h"
+#include "gstvdpvideomemory.h"
+#include "gstvdpvideobufferpool.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_decoder_debug);
 #define GST_CAT_DEFAULT gst_vdp_decoder_debug
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_decoder_debug, "vdpdecoder", 0, \
     "VDPAU decoder base class");
-
-GST_BOILERPLATE_FULL (GstVdpDecoder, gst_vdp_decoder, GstBaseVideoDecoder,
-    GST_TYPE_BASE_VIDEO_DECODER, DEBUG_INIT);
+#define gst_vdp_decoder_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVdpDecoder, gst_vdp_decoder, GST_TYPE_VIDEO_DECODER,
+    DEBUG_INIT);
 
 enum
 {
   PROP_0,
   PROP_DISPLAY
 };
-
-static GstFlowReturn
-gst_vdp_decoder_shape_output (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-
-  vdp_pad =
-      (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
-
-  return gst_vdp_video_src_pad_push (vdp_pad, GST_VDP_VIDEO_BUFFER (buf));
-}
-
-static GstPad *
-gst_vdp_decoder_create_srcpad (GstBaseVideoDecoder * base_video_decoder,
-    GstBaseVideoDecoderClass * base_video_decoder_class)
-{
-  GstPadTemplate *pad_template;
-  GstVdpVideoSrcPad *vdp_pad;
-
-  pad_template = gst_element_class_get_pad_template
-      (GST_ELEMENT_CLASS (base_video_decoder_class),
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
-
-  vdp_pad = gst_vdp_video_src_pad_new (pad_template,
-      GST_BASE_VIDEO_DECODER_SRC_NAME);
-
-  return GST_PAD (vdp_pad);
-}
 
 void
 gst_vdp_decoder_post_error (GstVdpDecoder * decoder, GError * error)
@@ -84,45 +55,44 @@ gst_vdp_decoder_post_error (GstVdpDecoder * decoder, GError * error)
   g_error_free (error);
 }
 
-static GstFlowReturn
-gst_vdp_decoder_alloc_buffer (GstVdpDecoder * vdp_decoder,
-    GstVdpVideoBuffer ** video_buf)
-{
-  GstVdpVideoSrcPad *vdp_pad;
-
-  GstFlowReturn ret;
-  GError *err = NULL;
-
-  vdp_pad = (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (vdp_decoder);
-
-  ret = gst_vdp_video_src_pad_alloc_buffer (vdp_pad, video_buf, &err);
-  if (ret == GST_FLOW_ERROR)
-    gst_vdp_decoder_post_error (vdp_decoder, err);
-
-  return ret;
-}
 
 GstFlowReturn
 gst_vdp_decoder_render (GstVdpDecoder * vdp_decoder, VdpPictureInfo * info,
-    guint n_bufs, VdpBitstreamBuffer * bufs, GstVdpVideoBuffer ** video_buf)
+    guint n_bufs, VdpBitstreamBuffer * bufs, GstVideoCodecFrame * frame)
 {
   GstFlowReturn ret;
 
-  GstVdpDevice *device;
-  VdpVideoSurface surface;
   VdpStatus status;
 
-  ret = gst_vdp_decoder_alloc_buffer (vdp_decoder, video_buf);
+  GstVdpVideoMemory *vmem;
+  GstClockTime before, after;
+
+  GST_DEBUG_OBJECT (vdp_decoder, "n_bufs:%d, frame:%d", n_bufs,
+      frame->system_frame_number);
+
+  ret =
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (vdp_decoder),
+      frame);
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto fail_alloc;
 
-  device = (*video_buf)->device;
-  surface = (*video_buf)->surface;
+  vmem = (GstVdpVideoMemory *) gst_buffer_get_memory (frame->output_buffer, 0);
+  if (!vmem
+      || !gst_memory_is_type ((GstMemory *) vmem,
+          GST_VDP_VIDEO_MEMORY_ALLOCATOR))
+    goto no_mem;
 
-  status = device->vdp_decoder_render (vdp_decoder->decoder, surface,
-      info, n_bufs, bufs);
+  GST_DEBUG_OBJECT (vdp_decoder, "Calling VdpDecoderRender()");
+  before = gst_util_get_timestamp ();
+  status =
+      vdp_decoder->device->vdp_decoder_render (vdp_decoder->decoder,
+      vmem->surface, info, n_bufs, bufs);
+  after = gst_util_get_timestamp ();
   if (status != VDP_STATUS_OK)
     goto decode_error;
+
+  GST_DEBUG_OBJECT (vdp_decoder, "VdpDecoderRender() took %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (after - before));
 
   return GST_FLOW_OK;
 
@@ -130,21 +100,33 @@ decode_error:
   GST_ELEMENT_ERROR (vdp_decoder, RESOURCE, READ,
       ("Could not decode"),
       ("Error returned from vdpau was: %s",
-          device->vdp_get_error_string (status)));
+          vdp_decoder->device->vdp_get_error_string (status)));
 
-  gst_buffer_unref (GST_BUFFER_CAST (*video_buf));
+  gst_video_decoder_drop_frame (GST_VIDEO_DECODER (vdp_decoder), frame);
 
   return GST_FLOW_ERROR;
+
+fail_alloc:
+  {
+    GST_WARNING_OBJECT (vdp_decoder, "Failed to get an output frame");
+    return ret;
+  }
+
+no_mem:
+  {
+    GST_ERROR_OBJECT (vdp_decoder, "Didn't get VdpVideoSurface backed buffer");
+    return GST_FLOW_ERROR;
+  }
 }
 
 GstFlowReturn
 gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
-    VdpDecoderProfile profile, guint32 max_references)
+    VdpDecoderProfile profile, guint32 max_references,
+    GstVideoCodecState * output_state)
 {
   GstVdpDevice *device;
 
   VdpStatus status;
-  GstVideoState state;
 
   device = vdp_decoder->device;
 
@@ -154,15 +136,14 @@ gst_vdp_decoder_init_decoder (GstVdpDecoder * vdp_decoder,
       goto destroy_decoder_error;
   }
 
-  if (!gst_base_video_decoder_set_src_caps (GST_BASE_VIDEO_DECODER
-          (vdp_decoder)))
-    return GST_FLOW_NOT_NEGOTIATED;
-
-  state =
-      gst_base_video_decoder_get_state (GST_BASE_VIDEO_DECODER (vdp_decoder));
+  GST_DEBUG_OBJECT (vdp_decoder,
+      "device:%p, profile:%d, width:%d, height:%d, max_references:%d",
+      device->device, profile, output_state->info.width,
+      output_state->info.height, max_references);
 
   status = device->vdp_decoder_create (device->device, profile,
-      state.width, state.height, max_references, &vdp_decoder->decoder);
+      output_state->info.width, output_state->info.height, max_references,
+      &vdp_decoder->decoder);
   if (status != VDP_STATUS_OK)
     goto create_decoder_error;
 
@@ -186,21 +167,73 @@ create_decoder_error:
 }
 
 static gboolean
-gst_vdp_decoder_start (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_decoder_decide_allocation (GstVideoDecoder * video_decoder,
+    GstQuery * query)
 {
-  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (base_video_decoder);
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (video_decoder);
+  GstCaps *outcaps;
+  GstBufferPool *pool = NULL;
+  guint size, min = 0, max = 0;
+  GstStructure *config;
+  GstVideoInfo vinfo;
+  gboolean update_pool;
 
-  GError *err;
-  GstVdpVideoSrcPad *vdp_pad;
+  gst_query_parse_allocation (query, &outcaps, NULL);
+  gst_video_info_init (&vinfo);
+  gst_video_info_from_caps (&vinfo, outcaps);
 
-  err = NULL;
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    size = MAX (size, vinfo.size);
+    update_pool = TRUE;
+  } else {
+    pool = NULL;
+    size = vinfo.size;
+    min = max = 0;
+
+    update_pool = FALSE;
+  }
+
+  if (pool == NULL
+      || !gst_buffer_pool_has_option (pool,
+          GST_BUFFER_POOL_OPTION_VDP_VIDEO_META)) {
+    /* no pool, we can make our own */
+    GST_DEBUG_OBJECT (video_decoder,
+        "no pool or doesn't support GstVdpVideoMeta, making new pool");
+    pool = gst_vdp_video_buffer_pool_new (vdp_decoder->device);
+  }
+
+  /* now configure */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VDP_VIDEO_META);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  if (pool)
+    gst_object_unref (pool);
+
+  return TRUE;
+
+}
+
+static gboolean
+gst_vdp_decoder_start (GstVideoDecoder * video_decoder)
+{
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (video_decoder);
+  GError *err = NULL;
+
+  GST_DEBUG_OBJECT (video_decoder, "Starting");
+
   vdp_decoder->device = gst_vdp_get_device (vdp_decoder->display, &err);
   if (G_UNLIKELY (!vdp_decoder->device))
     goto device_error;
-
-  vdp_pad =
-      (GstVdpVideoSrcPad *) GST_BASE_VIDEO_DECODER_SRC_PAD (base_video_decoder);
-  g_object_set (G_OBJECT (vdp_pad), "device", vdp_decoder->device, NULL);
 
   vdp_decoder->decoder = VDP_INVALID_HANDLE;
 
@@ -212,9 +245,9 @@ device_error:
 }
 
 static gboolean
-gst_vdp_decoder_stop (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_decoder_stop (GstVideoDecoder * video_decoder)
 {
-  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (base_video_decoder);
+  GstVdpDecoder *vdp_decoder = GST_VDP_DECODER (video_decoder);
 
   if (vdp_decoder->decoder != VDP_INVALID_HANDLE) {
     GstVdpDevice *device = vdp_decoder->device;
@@ -281,44 +314,39 @@ gst_vdp_decoder_finalize (GObject * object)
 }
 
 static void
-gst_vdp_decoder_base_init (gpointer g_class)
+gst_vdp_decoder_init (GstVdpDecoder * vdp_decoder)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  GstCaps *src_caps;
-  GstPadTemplate *src_template;
-
-  src_caps = gst_vdp_video_buffer_get_caps (TRUE, VDP_CHROMA_TYPE_420);
-  src_template = gst_pad_template_new (GST_BASE_VIDEO_DECODER_SRC_NAME,
-      GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
-
-  gst_element_class_add_pad_template (element_class, src_template);
-}
-
-static void
-gst_vdp_decoder_init (GstVdpDecoder * vdp_decoder, GstVdpDecoderClass * klass)
-{
-  vdp_decoder->display = NULL;
 }
 
 static void
 gst_vdp_decoder_class_init (GstVdpDecoderClass * klass)
 {
   GObjectClass *object_class;
-  GstBaseVideoDecoderClass *base_video_decoder_class;
+  GstVideoDecoderClass *video_decoder_class;
+  GstElementClass *element_class;
+
+  GstCaps *src_caps;
+  GstPadTemplate *src_template;
 
   object_class = G_OBJECT_CLASS (klass);
-  base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
+  video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
   object_class->get_property = gst_vdp_decoder_get_property;
   object_class->set_property = gst_vdp_decoder_set_property;
   object_class->finalize = gst_vdp_decoder_finalize;
 
-  base_video_decoder_class->start = gst_vdp_decoder_start;
-  base_video_decoder_class->stop = gst_vdp_decoder_stop;
+  video_decoder_class->start = gst_vdp_decoder_start;
+  video_decoder_class->stop = gst_vdp_decoder_stop;
+  video_decoder_class->decide_allocation = gst_vdp_decoder_decide_allocation;
 
-  base_video_decoder_class->create_srcpad = gst_vdp_decoder_create_srcpad;
-  base_video_decoder_class->shape_output = gst_vdp_decoder_shape_output;
+  GST_FIXME ("Actually create srcpad template from hw capabilities");
+  src_caps = gst_caps_from_string ("video/x-raw,format={ YV12 }");
+  src_template = gst_pad_template_new (GST_VIDEO_DECODER_SRC_NAME,
+      GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
+
+  gst_element_class_add_pad_template (element_class, src_template);
 
   g_object_class_install_property (object_class,
       PROP_DISPLAY, g_param_spec_string ("display", "Display", "X Display name",

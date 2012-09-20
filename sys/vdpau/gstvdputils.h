@@ -1,7 +1,7 @@
-/* 
- * GStreamer
- * Copyright (C) 2009 Carl-Anton Ingmarsson <ca.ingmarsson@gmail.com>
- *
+/*
+ * gst-plugins-bad
+ * Copyright (C) 2012 Edward Hervey <edward@collabora.com>
+ * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -18,29 +18,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef _GST_VDP_UTILS_H_
+#define _GST_VDP_UTILS_H_
+
 #include <gst/gst.h>
-
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 #include "gstvdpdevice.h"
-#include "gstvdpvideobuffer.h"
-#include "gstvdpvideosrcpad.h"
-#include "gstvdpoutputbuffer.h"
-#include "gstvdpoutputsrcpad.h"
-#include "gstvdpdecoder.h"
 
-#include "gstvdp.h"
+G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY (gst_vdp_debug);
+VdpChromaType gst_video_info_to_vdp_chroma_type (GstVideoInfo *info);
 
-void
-gst_vdp_init (void)
-{
-  /* do this so debug categories get created */
-  gst_vdp_device_get_type ();
-  gst_vdp_output_buffer_get_type ();
-  gst_vdp_video_buffer_get_type ();
-  gst_vdp_video_src_pad_get_type ();
-  gst_vdp_output_src_pad_get_type ();
-  gst_vdp_decoder_get_type ();
+VdpYCbCrFormat gst_video_format_to_vdp_ycbcr (GstVideoFormat format);
 
-  GST_DEBUG_CATEGORY_INIT (gst_vdp_debug, "vdp", 0, "GstVdp debug category");
-}
+G_END_DECLS
+
+#endif /* _GST_VDP_UTILS_H_ */

@@ -142,11 +142,11 @@ else
 VCD_DIR=
 endif
 
-#if USE_VDPAU
-#VDPAU_DIR=vdpau
-#else
-#VDPAU_DIR=
-#endif
+if USE_VDPAU
+VDPAU_DIR=vdpau
+else
+VDPAU_DIR=
+endif
 
 if USE_DIRECT3D9
 WINSCREENCAP_DIR=winscreencap

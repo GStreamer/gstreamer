@@ -36,8 +36,6 @@ enum
   PROP_DISPLAY
 };
 
-
-
 G_DEFINE_TYPE_WITH_CODE (GstVdpDevice, gst_vdp_device, G_TYPE_OBJECT,
     DEBUG_INIT ());
 
@@ -108,6 +106,9 @@ gst_vdp_device_open (GstVdpDevice * device, GError ** error)
         &device->vdp_presentation_queue_query_surface_status}
   };
 
+  GST_DEBUG_OBJECT (device, "Opening the device for display '%s'",
+      device->display_name);
+
   device->display = XOpenDisplay (device->display_name);
   if (!device->display)
     goto create_display_error;
@@ -131,6 +132,8 @@ gst_vdp_device_open (GstVdpDevice * device, GError ** error)
     if (status != VDP_STATUS_OK)
       goto function_error;
   }
+
+  GST_DEBUG_OBJECT (device, "Succesfully opened the device");
 
   return TRUE;
 
@@ -293,6 +296,8 @@ gst_vdp_get_device (const gchar * display_name, GError ** error)
   static GstVdpDeviceCache device_cache;
   GstVdpDevice *device;
 
+  GST_DEBUG ("display_name '%s'", display_name);
+
   if (g_once_init_enter (&once)) {
     device_cache.hash_table =
         g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
@@ -309,6 +314,7 @@ gst_vdp_get_device (const gchar * display_name, GError ** error)
     device = g_hash_table_lookup (device_cache.hash_table, "");
 
   if (!device) {
+    GST_DEBUG ("No cached device, creating a new one");
     device = gst_vdp_device_new (display_name, error);
     if (device) {
       g_object_weak_ref (G_OBJECT (device), device_destroyed_cb, &device_cache);
@@ -317,7 +323,8 @@ gst_vdp_get_device (const gchar * display_name, GError ** error)
             device);
       else
         g_hash_table_insert (device_cache.hash_table, g_strdup (""), device);
-    }
+    } else
+      GST_ERROR ("Could not create GstVdpDevice !");
   } else
     g_object_ref (device);
 

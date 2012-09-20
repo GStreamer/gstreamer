@@ -2401,8 +2401,6 @@ sys/shm/Makefile
 sys/uvch264/Makefile
 sys/vcd/Makefile
 sys/vdpau/Makefile
-sys/vdpau/gstvdp/Makefile
-sys/vdpau/basevideodecoder/Makefile
 sys/pvr2d/Makefile
 sys/wasapi/Makefile
 sys/wininet/Makefile

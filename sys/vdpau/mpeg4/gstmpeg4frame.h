@@ -23,24 +23,14 @@
 
 #include <gst/gst.h>
 
-#include "../basevideodecoder/gstvideoframe.h"
-
 #include "mpeg4util.h"
-
-#define GST_TYPE_MPEG4_FRAME      (gst_mpeg4_frame_get_type())
-#define GST_IS_MPEG4_FRAME(obj)   (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_MPEG4_FRAME))
-#define GST_MPEG4_FRAME(obj)      (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_MPEG4_FRAME, GstMpeg4Frame))
-#define GST_MPEG4_FRAME_CAST(obj) ((GstMpeg4Frame *)obj)
 
 #define GST_MPEG4_FRAME_GOT_PRIMARY GST_VIDEO_FRAME_FLAG_LAST
 
 typedef struct _GstMpeg4Frame GstMpeg4Frame;
-typedef struct _GstMpeg4FrameClass GstMpeg4FrameClass;
 
 struct _GstMpeg4Frame
 {
-  GstVideoFrame video_frame;
-
   GstBuffer *vos_buf;
   GstBuffer *vo_buf;
   GstBuffer *vol_buf;
@@ -50,15 +40,6 @@ struct _GstMpeg4Frame
   guint32 vop_time;
 };
 
-struct _GstMpeg4FrameClass
-{
-	GstVideoFrameClass video_frame_class;
-};
-
-
-
 GstMpeg4Frame *gst_mpeg4_frame_new (void);
-
-GType gst_mpeg4_frame_get_type (void);
 
 #endif

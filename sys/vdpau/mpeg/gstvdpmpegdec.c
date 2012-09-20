@@ -38,11 +38,12 @@
 #include <gst/gst.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/base/gstbitreader.h>
+#include <gst/codecparsers/gstmpegvideoparser.h>
+#include <gst/codecparsers/gstmpegvideometa.h>
 #include <string.h>
 
-#include "mpegutil.h"
-
 #include "gstvdpmpegdec.h"
+#include "gstvdpvideomemory.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_vdp_mpeg_dec_debug);
 #define GST_CAT_DEFAULT gst_vdp_mpeg_dec_debug
@@ -58,24 +59,24 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
         "systemstream = (boolean) false")
     );
 
-#define DEBUG_INIT(bla) \
+#define DEBUG_INIT \
     GST_DEBUG_CATEGORY_INIT (gst_vdp_mpeg_dec_debug, "vdpaumpegdec", 0, \
     "VDPAU mpeg decoder");
-
-GST_BOILERPLATE_FULL (GstVdpMpegDec, gst_vdp_mpeg_dec,
-    GstVdpDecoder, GST_TYPE_VDP_DECODER, DEBUG_INIT);
+#define gst_vdp_mpeg_dec_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstVdpMpegDec, gst_vdp_mpeg_dec, GST_TYPE_VDP_DECODER,
+    DEBUG_INIT);
 
 static void gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info);
 
 #define SYNC_CODE_SIZE 3
 
 static VdpDecoderProfile
-gst_vdp_mpeg_dec_get_profile (MPEGSeqExtHdr * hdr)
+gst_vdp_mpeg_dec_get_profile (GstMpegVideoSequenceExt * hdr)
 {
   VdpDecoderProfile profile;
 
   switch (hdr->profile) {
-    case 5:
+    case GST_MPEG_VIDEO_PROFILE_SIMPLE:
       profile = VDP_DECODER_PROFILE_MPEG2_SIMPLE;
       break;
     default:
@@ -88,86 +89,105 @@ gst_vdp_mpeg_dec_get_profile (MPEGSeqExtHdr * hdr)
 
 static gboolean
 gst_vdp_mpeg_dec_handle_picture_coding (GstVdpMpegDec * mpeg_dec,
-    GstBuffer * buffer, GstVideoFrame * frame)
+    GstMpegVideoPictureExt * pic_ext, GstVideoCodecFrame * frame)
 {
-  MPEGPictureExt pic_ext;
   VdpPictureInfoMPEG1Or2 *info;
+#if 0
   gint fields;
+#endif
+
+  GST_DEBUG_OBJECT (mpeg_dec, "Handling GstMpegVideoPictureExt");
 
   info = &mpeg_dec->vdp_info;
 
-  if (!mpeg_util_parse_picture_coding_extension (&pic_ext, buffer))
-    return FALSE;
+  /* FIXME : Set defaults when pic_ext isn't present */
 
-  memcpy (&mpeg_dec->vdp_info.f_code, &pic_ext.f_code, 4);
+  memcpy (&mpeg_dec->vdp_info.f_code, &pic_ext->f_code, 4);
 
-  info->intra_dc_precision = pic_ext.intra_dc_precision;
-  info->picture_structure = pic_ext.picture_structure;
-  info->top_field_first = pic_ext.top_field_first;
-  info->frame_pred_frame_dct = pic_ext.frame_pred_frame_dct;
-  info->concealment_motion_vectors = pic_ext.concealment_motion_vectors;
-  info->q_scale_type = pic_ext.q_scale_type;
-  info->intra_vlc_format = pic_ext.intra_vlc_format;
-  info->alternate_scan = pic_ext.alternate_scan;
+  info->intra_dc_precision = pic_ext->intra_dc_precision;
+  info->picture_structure = pic_ext->picture_structure;
+  info->top_field_first = pic_ext->top_field_first;
+  info->frame_pred_frame_dct = pic_ext->frame_pred_frame_dct;
+  info->concealment_motion_vectors = pic_ext->concealment_motion_vectors;
+  info->q_scale_type = pic_ext->q_scale_type;
+  info->intra_vlc_format = pic_ext->intra_vlc_format;
+  info->alternate_scan = pic_ext->alternate_scan;
 
+#if 0
   fields = 2;
-  if (pic_ext.picture_structure == 3) {
+  if (pic_ext->picture_structure == 3) {
     if (mpeg_dec->stream_info.interlaced) {
-      if (pic_ext.progressive_frame == 0)
+      if (pic_ext->progressive_frame == 0)
         fields = 2;
-      if (pic_ext.progressive_frame == 0 && pic_ext.repeat_first_field == 0)
+      if (pic_ext->progressive_frame == 0 && pic_ext->repeat_first_field == 0)
         fields = 2;
-      if (pic_ext.progressive_frame == 1 && pic_ext.repeat_first_field == 1)
+      if (pic_ext->progressive_frame == 1 && pic_ext->repeat_first_field == 1)
         fields = 3;
     } else {
-      if (pic_ext.repeat_first_field == 0)
+      if (pic_ext->repeat_first_field == 0)
         fields = 2;
-      if (pic_ext.repeat_first_field == 1 && pic_ext.top_field_first == 0)
+      if (pic_ext->repeat_first_field == 1 && pic_ext->top_field_first == 0)
         fields = 4;
-      if (pic_ext.repeat_first_field == 1 && pic_ext.top_field_first == 1)
+      if (pic_ext->repeat_first_field == 1 && pic_ext->top_field_first == 1)
         fields = 6;
     }
   } else
     fields = 1;
+#endif
 
-  frame->n_fields = fields;
-
-  if (pic_ext.top_field_first)
-    GST_VIDEO_FRAME_FLAG_SET (frame, GST_VIDEO_FRAME_FLAG_TFF);
+  if (pic_ext->top_field_first)
+    GST_FIXME ("Set TFF on outgoing buffer");
+#if 0
+  GST_VIDEO_FRAME_FLAG_SET (frame, GST_VIDEO_FRAME_FLAG_TFF);
+#endif
 
   return TRUE;
 }
 
 static gboolean
-gst_vdp_mpeg_dec_handle_picture (GstVdpMpegDec * mpeg_dec, GstBuffer * buffer)
+gst_vdp_mpeg_dec_handle_picture (GstVdpMpegDec * mpeg_dec,
+    GstMpegVideoPictureHdr * pic_hdr)
 {
-  MPEGPictureHdr pic_hdr;
+  GST_DEBUG_OBJECT (mpeg_dec, "Handling GstMpegVideoPictureHdr");
 
-  if (!mpeg_util_parse_picture_hdr (&pic_hdr, buffer))
-    return FALSE;
-
-  mpeg_dec->vdp_info.picture_coding_type = pic_hdr.pic_type;
+  mpeg_dec->vdp_info.picture_coding_type = pic_hdr->pic_type;
 
   if (mpeg_dec->stream_info.version == 1) {
     mpeg_dec->vdp_info.full_pel_forward_vector =
-        pic_hdr.full_pel_forward_vector;
+        pic_hdr->full_pel_forward_vector;
     mpeg_dec->vdp_info.full_pel_backward_vector =
-        pic_hdr.full_pel_backward_vector;
-    memcpy (&mpeg_dec->vdp_info.f_code, &pic_hdr.f_code, 4);
+        pic_hdr->full_pel_backward_vector;
+    memcpy (&mpeg_dec->vdp_info.f_code, &pic_hdr->f_code, 4);
   }
 
-  mpeg_dec->frame_nr = mpeg_dec->gop_frame + pic_hdr.tsn;
+  mpeg_dec->frame_nr = mpeg_dec->gop_frame + pic_hdr->tsn;
 
   return TRUE;
 }
 
 static gboolean
-gst_vdp_mpeg_dec_handle_gop (GstVdpMpegDec * mpeg_dec, GstBuffer * buffer)
+gst_vdp_mpeg_dec_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state)
 {
-  MPEGGop gop;
+  GstVdpMpegDec *mpeg_dec = (GstVdpMpegDec *) decoder;
+
+  /* FIXME : Check the hardware can handle the level/profile */
+  if (mpeg_dec->input_state)
+    gst_video_codec_state_unref (mpeg_dec->input_state);
+  mpeg_dec->input_state = gst_video_codec_state_ref (state);
+
+  return TRUE;
+}
+
+#if 0
+static gboolean
+gst_vdp_mpeg_dec_handle_gop (GstVdpMpegDec * mpeg_dec, const guint8 * data,
+    gsize size, guint offset)
+{
+  GstMpegVideoGop gop;
   GstClockTime time;
 
-  if (!mpeg_util_parse_gop (&gop, buffer))
+  if (!gst_mpeg_video_parse_gop (&gop, data, size, offset))
     return FALSE;
 
   time = GST_SECOND * (gop.hour * 3600 + gop.minute * 60 + gop.second);
@@ -183,185 +203,157 @@ gst_vdp_mpeg_dec_handle_gop (GstVdpMpegDec * mpeg_dec, GstBuffer * buffer)
 
   return TRUE;
 }
+#endif
 
 static gboolean
 gst_vdp_mpeg_dec_handle_quant_matrix (GstVdpMpegDec * mpeg_dec,
-    GstBuffer * buffer)
+    GstMpegVideoQuantMatrixExt * qm)
 {
-  MPEGQuantMatrix qm;
-
-  if (!mpeg_util_parse_quant_matrix (&qm, buffer))
-    return FALSE;
+  GST_DEBUG_OBJECT (mpeg_dec, "Handling GstMpegVideoQuantMatrixExt");
 
   memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
-      &qm.intra_quantizer_matrix, 64);
+      &qm->intra_quantiser_matrix, 64);
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
-      &qm.non_intra_quantizer_matrix, 64);
+      &qm->non_intra_quantiser_matrix, 64);
+
   return TRUE;
 }
 
 static GstFlowReturn
 gst_vdp_mpeg_dec_handle_sequence (GstVdpMpegDec * mpeg_dec,
-    GstBuffer * seq, GstBuffer * seq_ext)
+    GstMpegVideoSequenceHdr * hdr, GstMpegVideoSequenceExt * ext)
 {
-  GstBaseVideoDecoder *base_video_decoder = GST_BASE_VIDEO_DECODER (mpeg_dec);
-
-  MPEGSeqHdr hdr;
+  GstFlowReturn ret;
+  GstVideoDecoder *video_decoder = GST_VIDEO_DECODER (mpeg_dec);
   GstVdpMpegStreamInfo stream_info;
 
-  if (!mpeg_util_parse_sequence_hdr (&hdr, seq))
-    return GST_FLOW_CUSTOM_ERROR;
+  GST_DEBUG_OBJECT (mpeg_dec, "Handling GstMpegVideoSequenceHdr");
 
   memcpy (&mpeg_dec->vdp_info.intra_quantizer_matrix,
-      &hdr.intra_quantizer_matrix, 64);
+      &hdr->intra_quantizer_matrix, 64);
   memcpy (&mpeg_dec->vdp_info.non_intra_quantizer_matrix,
-      &hdr.non_intra_quantizer_matrix, 64);
+      &hdr->non_intra_quantizer_matrix, 64);
 
-  stream_info.width = hdr.width;
-  stream_info.height = hdr.height;
+  stream_info.width = hdr->width;
+  stream_info.height = hdr->height;
 
-  stream_info.fps_n = hdr.fps_n;
-  stream_info.fps_d = hdr.fps_d;
+  stream_info.fps_n = hdr->fps_n;
+  stream_info.fps_d = hdr->fps_d;
 
-  stream_info.par_n = hdr.par_w;
-  stream_info.par_d = hdr.par_h;
+  stream_info.par_n = hdr->par_w;
+  stream_info.par_d = hdr->par_h;
 
   stream_info.interlaced = FALSE;
   stream_info.version = 1;
   stream_info.profile = VDP_DECODER_PROFILE_MPEG1;
 
-  if (seq_ext) {
-    MPEGSeqExtHdr ext;
+  if (ext) {
+    GST_DEBUG_OBJECT (mpeg_dec, "Handling GstMpegVideoSequenceExt");
 
-    if (!mpeg_util_parse_sequence_extension (&ext, seq_ext))
-      return GST_FLOW_CUSTOM_ERROR;
+    /* FIXME : isn't this already processed by mpegvideoparse ? */
+    stream_info.fps_n *= (ext->fps_n_ext + 1);
+    stream_info.fps_d *= (ext->fps_d_ext + 1);
 
-    stream_info.fps_n *= (ext.fps_n_ext + 1);
-    stream_info.fps_d *= (ext.fps_d_ext + 1);
+    stream_info.width += (ext->horiz_size_ext << 12);
+    stream_info.height += (ext->vert_size_ext << 12);
 
-    stream_info.width += (ext.horiz_size_ext << 12);
-    stream_info.height += (ext.vert_size_ext << 12);
-
-    stream_info.interlaced = !ext.progressive;
+    stream_info.interlaced = !ext->progressive;
     stream_info.version = 2;
-    stream_info.profile = gst_vdp_mpeg_dec_get_profile (&ext);
+    stream_info.profile = gst_vdp_mpeg_dec_get_profile (ext);
   }
 
-  if (memcmp (&mpeg_dec->stream_info, &stream_info,
-          sizeof (GstVdpMpegStreamInfo)) != 0) {
-    GstVideoState state;
-    GstFlowReturn ret;
+  GST_DEBUG_OBJECT (mpeg_dec, "Setting output state to %dx%d",
+      stream_info.width, stream_info.height);
+  mpeg_dec->output_state =
+      gst_video_decoder_set_output_state (video_decoder, GST_VIDEO_FORMAT_YV12,
+      stream_info.width, stream_info.height, mpeg_dec->input_state);
+  if (stream_info.interlaced)
+    mpeg_dec->output_state->info.interlace_mode =
+        GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+  gst_video_decoder_negotiate (video_decoder);
 
-    state = gst_base_video_decoder_get_state (base_video_decoder);
-
-    state.width = stream_info.width;
-    state.height = stream_info.height;
-
-    state.fps_n = stream_info.fps_n;
-    state.fps_d = stream_info.fps_d;
-
-    state.par_n = stream_info.par_n;
-    state.par_d = stream_info.par_d;
-
-    state.interlaced = stream_info.interlaced;
-
-    gst_base_video_decoder_set_state (base_video_decoder, state);
-
-    ret = gst_vdp_decoder_init_decoder (GST_VDP_DECODER (mpeg_dec),
-        stream_info.profile, 2);
-    if (ret != GST_FLOW_OK)
-      return ret;
-
-    memcpy (&mpeg_dec->stream_info, &stream_info,
-        sizeof (GstVdpMpegStreamInfo));
-  }
-
+  ret = gst_vdp_decoder_init_decoder (GST_VDP_DECODER (mpeg_dec),
+      stream_info.profile, 2, mpeg_dec->output_state);
   mpeg_dec->state = GST_VDP_MPEG_DEC_STATE_NEED_DATA;
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static GstFlowReturn
-gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
-    GstVideoFrame * frame, GstClockTimeDiff deadline)
+gst_vdp_mpeg_dec_handle_frame (GstVideoDecoder * video_decoder,
+    GstVideoCodecFrame * frame)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (video_decoder);
 
   VdpPictureInfoMPEG1Or2 *info;
-  GstVdpMpegFrame *mpeg_frame;
+  GstMpegVideoMeta *mpeg_meta;
+  GstVdpVideoMemory *vmem;
 
   GstFlowReturn ret = GST_FLOW_OK;
   VdpBitstreamBuffer vbit[1];
-  GstVdpVideoBuffer *outbuf;
+  GstMapInfo mapinfo;
 
-  /* MPEG_PACKET_SEQUENCE */
-  mpeg_frame = GST_VDP_MPEG_FRAME (frame);
-  if (mpeg_frame->seq) {
-    ret = gst_vdp_mpeg_dec_handle_sequence (mpeg_dec, mpeg_frame->seq,
-        mpeg_frame->seq_ext);
-    if (ret != GST_FLOW_OK) {
-      gst_base_video_decoder_skip_frame (base_video_decoder, frame);
-      return ret;
-    }
+  /* FIXME : Specify in sink query that we need the mpeg video meta */
+
+  /* Parse all incoming data from the frame */
+  mpeg_meta = gst_buffer_get_mpeg_video_meta (frame->input_buffer);
+  if (!mpeg_meta)
+    goto no_meta;
+
+  /* GST_MPEG_VIDEO_PACKET_SEQUENCE */
+  if (mpeg_meta->sequencehdr) {
+    ret =
+        gst_vdp_mpeg_dec_handle_sequence (mpeg_dec, mpeg_meta->sequencehdr,
+        mpeg_meta->sequenceext);
+    if (ret != GST_FLOW_OK)
+      goto sequence_parse_fail;
   }
 
-  if (mpeg_dec->state == GST_VDP_MPEG_DEC_STATE_NEED_SEQUENCE) {
-    GST_DEBUG_OBJECT (mpeg_dec, "Drop frame since we haven't found a "
-        "MPEG_PACKET_SEQUENCE yet");
+  if (mpeg_dec->state == GST_VDP_MPEG_DEC_STATE_NEED_SEQUENCE)
+    goto need_sequence;
 
-    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
-    return GST_FLOW_OK;
-  }
+  /* GST_MPEG_VIDEO_PACKET_PICTURE */
+  if (mpeg_meta->pichdr)
+    gst_vdp_mpeg_dec_handle_picture (mpeg_dec, mpeg_meta->pichdr);
 
-  /* MPEG_PACKET_PICTURE */
-  if (mpeg_frame->pic)
-    gst_vdp_mpeg_dec_handle_picture (mpeg_dec, mpeg_frame->pic);
+  /* GST_MPEG_VIDEO_PACKET_EXT_PICTURE_CODING */
+  if (mpeg_meta->picext)
+    gst_vdp_mpeg_dec_handle_picture_coding (mpeg_dec, mpeg_meta->picext, frame);
 
-  /* MPEG_PACKET_EXT_PICTURE_CODING */
-  if (mpeg_frame->pic_ext)
-    gst_vdp_mpeg_dec_handle_picture_coding (mpeg_dec, mpeg_frame->pic_ext,
-        frame);
+  /* GST_MPEG_VIDEO_PACKET_GOP */
+  /* if (mpeg_meta->gop) */
+  /*   GST_FIXME_OBJECT (mpeg_dec, "Handle GOP !"); */
+  /*   gst_vdp_mpeg_dec_handle_gop (mpeg_dec, mpeg_frame.gop); */
 
-  /* MPEG_PACKET_GOP */
-  if (mpeg_frame->gop)
-    gst_vdp_mpeg_dec_handle_gop (mpeg_dec, mpeg_frame->gop);
-
-  /* MPEG_PACKET_EXT_QUANT_MATRIX */
-  if (mpeg_frame->qm_ext)
-    gst_vdp_mpeg_dec_handle_quant_matrix (mpeg_dec, mpeg_frame->qm_ext);
-
+  /* GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX */
+  if (mpeg_meta->quantext)
+    gst_vdp_mpeg_dec_handle_quant_matrix (mpeg_dec, mpeg_meta->quantext);
 
   info = &mpeg_dec->vdp_info;
 
-  info->slice_count = mpeg_frame->n_slices;
+  info->slice_count = mpeg_meta->num_slices;
+
+  GST_DEBUG_OBJECT (mpeg_dec, "picture coding type %d",
+      info->picture_coding_type);
 
   /* check if we can decode the frame */
-  if (info->picture_coding_type != I_FRAME
-      && info->backward_reference == VDP_INVALID_HANDLE) {
-    GST_DEBUG_OBJECT (mpeg_dec,
-        "Drop frame since we haven't got an I_FRAME yet");
+  if (info->picture_coding_type != GST_MPEG_VIDEO_PICTURE_TYPE_I
+      && info->backward_reference == VDP_INVALID_HANDLE)
+    goto need_i_frame;
 
-    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
-    return GST_FLOW_OK;
-  }
-  if (info->picture_coding_type == B_FRAME
-      && info->forward_reference == VDP_INVALID_HANDLE) {
-    GST_DEBUG_OBJECT (mpeg_dec,
-        "Drop frame since we haven't got two non B_FRAMES yet");
+  if (info->picture_coding_type == GST_MPEG_VIDEO_PICTURE_TYPE_B
+      && info->forward_reference == VDP_INVALID_HANDLE)
+    goto need_non_b_frame;
 
-    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
-    return GST_FLOW_OK;
-  }
-
-
-  if (info->picture_coding_type != B_FRAME) {
+  if (info->picture_coding_type != GST_MPEG_VIDEO_PICTURE_TYPE_B) {
     if (info->backward_reference != VDP_INVALID_HANDLE) {
-      ret = gst_base_video_decoder_finish_frame (base_video_decoder,
-          mpeg_dec->b_frame);
+      GST_DEBUG_OBJECT (mpeg_dec, "Pushing B frame");
+      ret = gst_video_decoder_finish_frame (video_decoder, mpeg_dec->b_frame);
     }
 
     if (info->forward_reference != VDP_INVALID_HANDLE) {
-      gst_video_frame_unref (mpeg_dec->f_frame);
+      GST_DEBUG_OBJECT (mpeg_dec, "Releasing no-longer needed forward frame");
+      gst_video_codec_frame_unref (mpeg_dec->f_frame);
       info->forward_reference = VDP_INVALID_HANDLE;
     }
 
@@ -371,211 +363,112 @@ gst_vdp_mpeg_dec_handle_frame (GstBaseVideoDecoder * base_video_decoder,
     info->backward_reference = VDP_INVALID_HANDLE;
   }
 
-  if (ret != GST_FLOW_OK) {
-    gst_base_video_decoder_skip_frame (base_video_decoder, frame);
-    return ret;
-  }
+  if (ret != GST_FLOW_OK)
+    goto exit_after_b_frame;
 
   /* decode */
+  if (!gst_buffer_map (frame->input_buffer, &mapinfo, GST_MAP_READ))
+    goto map_fail;
+
   vbit[0].struct_version = VDP_BITSTREAM_BUFFER_VERSION;
-  vbit[0].bitstream = GST_BUFFER_DATA (mpeg_frame->slices);
-  vbit[0].bitstream_bytes = GST_BUFFER_SIZE (mpeg_frame->slices);
+  vbit[0].bitstream = mapinfo.data + mpeg_meta->slice_offset;
+  vbit[0].bitstream_bytes = mapinfo.size - mpeg_meta->slice_offset;
 
   ret = gst_vdp_decoder_render (GST_VDP_DECODER (mpeg_dec),
-      (VdpPictureInfo *) info, 1, vbit, &outbuf);
+      (VdpPictureInfo *) info, 1, vbit, frame);
+
+  gst_buffer_unmap (frame->input_buffer, &mapinfo);
+
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto render_fail;
 
-  frame->src_buffer = GST_BUFFER_CAST (outbuf);
+  vmem = (GstVdpVideoMemory *) gst_buffer_get_memory (frame->output_buffer, 0);
 
-  if (info->picture_coding_type == B_FRAME) {
-    ret = gst_base_video_decoder_finish_frame (base_video_decoder, frame);
+  if (info->picture_coding_type == GST_MPEG_VIDEO_PICTURE_TYPE_B) {
+    ret = gst_video_decoder_finish_frame (video_decoder, frame);
   } else {
-    info->backward_reference = GST_VDP_VIDEO_BUFFER (outbuf)->surface;
-    mpeg_dec->b_frame = gst_video_frame_ref (frame);
+    info->backward_reference = vmem->surface;
+    mpeg_dec->b_frame = gst_video_codec_frame_ref (frame);
   }
 
   return ret;
-}
 
-static GstVideoFrame *
-gst_vdp_mpeg_dec_create_frame (GstBaseVideoDecoder * base_video_decoder)
-{
-  return GST_VIDEO_FRAME (gst_vdp_mpeg_frame_new ());
-}
+  /* EARLY EXIT */
+need_sequence:
+  {
+    GST_DEBUG_OBJECT (mpeg_dec, "Drop frame since we haven't found a "
+        "GST_MPEG_VIDEO_PACKET_SEQUENCE yet");
 
-static GstFlowReturn
-gst_vdp_mpeg_dec_parse_data (GstBaseVideoDecoder * base_video_decoder,
-    GstBuffer * buf, gboolean at_eos, GstVideoFrame * frame)
-{
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
+    gst_video_decoder_finish_frame (video_decoder, frame);
+    return GST_FLOW_OK;
+  }
 
-  GstVdpMpegFrame *mpeg_frame;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstBitReader b_reader = GST_BIT_READER_INIT_FROM_BUFFER (buf);
-  guint8 start_code;
+need_i_frame:
+  {
+    GST_DEBUG_OBJECT (mpeg_dec,
+        "Drop frame since we haven't got an I_FRAME yet");
 
-  if (gst_bit_reader_get_remaining (&b_reader) < 8 * 3 + 8)
+    gst_video_decoder_finish_frame (video_decoder, frame);
+    return GST_FLOW_OK;
+  }
+
+need_non_b_frame:
+  {
+    GST_DEBUG_OBJECT (mpeg_dec,
+        "Drop frame since we haven't got two non B_FRAME yet");
+
+    gst_video_decoder_finish_frame (video_decoder, frame);
+    return GST_FLOW_OK;
+  }
+
+
+  /* ERRORS */
+no_meta:
+  {
+    GST_ERROR_OBJECT (video_decoder,
+        "Input buffer does not have MpegVideo GstMeta");
+    gst_video_decoder_drop_frame (video_decoder, frame);
     return GST_FLOW_ERROR;
-
-  /* skip sync_code */
-  gst_bit_reader_skip_unchecked (&b_reader, 8 * 3);
-
-  /* start_code */
-  start_code = gst_bit_reader_get_bits_uint8_unchecked (&b_reader, 8);
-
-  mpeg_frame = GST_VDP_MPEG_FRAME_CAST (frame);
-
-  if (start_code >= MPEG_PACKET_SLICE_MIN
-      && start_code <= MPEG_PACKET_SLICE_MAX) {
-    GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SLICE");
-
-    gst_vdp_mpeg_frame_add_slice (mpeg_frame, buf);
-    goto done;
   }
 
-  switch (start_code) {
-    case MPEG_PACKET_SEQUENCE:
-      GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_SEQUENCE");
-
-      if (mpeg_dec->prev_packet != -1)
-        ret = gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
-            (GstVideoFrame **) & mpeg_frame);
-
-      mpeg_frame->seq = buf;
-      break;
-
-    case MPEG_PACKET_PICTURE:
-      GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_PICTURE");
-
-      if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE &&
-          mpeg_dec->prev_packet != MPEG_PACKET_GOP)
-        ret = gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
-            (GstVideoFrame **) & mpeg_frame);
-
-      mpeg_frame->pic = buf;
-      break;
-
-    case MPEG_PACKET_GOP:
-      GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_GOP");
-
-      if (mpeg_dec->prev_packet != MPEG_PACKET_SEQUENCE)
-        ret = gst_base_video_decoder_have_frame (base_video_decoder, FALSE,
-            (GstVideoFrame **) & mpeg_frame);
-
-      mpeg_frame->gop = buf;
-      break;
-
-    case MPEG_PACKET_EXTENSION:
-    {
-      guint8 ext_code;
-
-      /* ext_code */
-      if (!gst_bit_reader_get_bits_uint8 (&b_reader, &ext_code, 4)) {
-        ret = GST_FLOW_ERROR;
-        gst_buffer_unref (buf);
-        goto done;
-      }
-
-      GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXTENSION: %d", ext_code);
-
-      switch (ext_code) {
-        case MPEG_PACKET_EXT_SEQUENCE:
-          GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_SEQUENCE");
-
-
-          mpeg_frame->seq_ext = buf;
-
-          /* so that we don't finish the frame if we get a MPEG_PACKET_PICTURE
-           * or MPEG_PACKET_GOP after this */
-          start_code = MPEG_PACKET_SEQUENCE;
-          break;
-
-        case MPEG_PACKET_EXT_SEQUENCE_DISPLAY:
-          GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_SEQUENCE_DISPLAY");
-
-          /* so that we don't finish the frame if we get a MPEG_PACKET_PICTURE
-           * or MPEG_PACKET_GOP after this */
-          start_code = MPEG_PACKET_SEQUENCE;
-          break;
-
-        case MPEG_PACKET_EXT_PICTURE_CODING:
-          GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_PICTURE_CODING");
-
-          mpeg_frame->pic_ext = buf;
-          break;
-
-        case MPEG_PACKET_EXT_QUANT_MATRIX:
-          GST_DEBUG_OBJECT (mpeg_dec, "MPEG_PACKET_EXT_QUANT_MATRIX");
-
-          mpeg_frame->qm_ext = buf;
-          break;
-
-        default:
-          gst_buffer_unref (buf);
-      }
-      break;
-    }
-
-    default:
-      gst_buffer_unref (buf);
+sequence_parse_fail:
+  {
+    GST_ERROR_OBJECT (video_decoder, "Failed to handle sequence header");
+    gst_video_decoder_finish_frame (video_decoder, frame);
+    return ret;
   }
 
-  if (at_eos && mpeg_frame->slices)
-    ret = gst_base_video_decoder_have_frame (base_video_decoder, TRUE, NULL);
+exit_after_b_frame:
+  {
+    GST_WARNING_OBJECT (video_decoder, "Leaving after pushing B frame");
+    gst_video_decoder_finish_frame (video_decoder, frame);
+    return ret;
+  }
 
-done:
-  mpeg_dec->prev_packet = start_code;
+map_fail:
+  {
+    GST_ERROR_OBJECT (video_decoder, "Failed to map input buffer");
+    gst_video_decoder_drop_frame (video_decoder, frame);
+    return GST_FLOW_ERROR;
+  }
 
-  return ret;
-}
-
-static gint
-gst_vdp_mpeg_dec_scan_for_sync (GstBaseVideoDecoder * base_video_decoder,
-    GstAdapter * adapter)
-{
-  gint m;
-
-  m = gst_adapter_masked_scan_uint32 (adapter, 0xffffff00, 0x00000100, 0,
-      gst_adapter_available (adapter));
-  if (m == -1)
-    return gst_adapter_available (adapter) - SYNC_CODE_SIZE;
-
-  return m;
-}
-
-static GstBaseVideoDecoderScanResult
-gst_vdp_mpeg_dec_scan_for_packet_end (GstBaseVideoDecoder * base_video_decoder,
-    GstAdapter * adapter, guint * size, gboolean at_eos)
-{
-  guint8 *data;
-  guint32 sync_code;
-
-  data = g_slice_alloc (SYNC_CODE_SIZE);
-  gst_adapter_copy (adapter, data, 0, SYNC_CODE_SIZE);
-  sync_code = ((data[0] << 16) | (data[1] << 8) | data[2]);
-
-  if (sync_code != 0x000001)
-    return GST_BASE_VIDEO_DECODER_SCAN_RESULT_LOST_SYNC;
-
-  *size = gst_adapter_masked_scan_uint32 (adapter, 0xffffff00, 0x00000100,
-      SYNC_CODE_SIZE, gst_adapter_available (adapter) - SYNC_CODE_SIZE);
-
-  if (*size == -1)
-    return GST_BASE_VIDEO_DECODER_SCAN_RESULT_NEED_DATA;
-
-  return GST_BASE_VIDEO_DECODER_SCAN_RESULT_OK;
+render_fail:
+  {
+    GST_ERROR_OBJECT (video_decoder, "Error when rendering the frame");
+    gst_video_decoder_drop_frame (video_decoder, frame);
+    return ret;
+  }
 }
 
 static gboolean
-gst_vdp_mpeg_dec_flush (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_mpeg_dec_reset (GstVideoDecoder * video_decoder, gboolean hard)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (video_decoder);
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
-    gst_video_frame_unref (mpeg_dec->f_frame);
+    gst_video_codec_frame_unref (mpeg_dec->f_frame);
   if (mpeg_dec->vdp_info.backward_reference != VDP_INVALID_HANDLE)
-    gst_video_frame_unref (mpeg_dec->b_frame);
+    gst_video_codec_frame_unref (mpeg_dec->b_frame);
 
   gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
 
@@ -585,9 +478,11 @@ gst_vdp_mpeg_dec_flush (GstBaseVideoDecoder * base_video_decoder)
 }
 
 static gboolean
-gst_vdp_mpeg_dec_start (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_mpeg_dec_start (GstVideoDecoder * video_decoder)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (video_decoder);
+
+  GST_DEBUG_OBJECT (video_decoder, "Starting");
 
   gst_vdp_mpeg_dec_init_info (&mpeg_dec->vdp_info);
 
@@ -596,14 +491,13 @@ gst_vdp_mpeg_dec_start (GstBaseVideoDecoder * base_video_decoder)
 
   memset (&mpeg_dec->stream_info, 0, sizeof (GstVdpMpegStreamInfo));
 
-  return GST_BASE_VIDEO_DECODER_CLASS
-      (parent_class)->start (base_video_decoder);
+  return GST_VIDEO_DECODER_CLASS (parent_class)->start (video_decoder);
 }
 
 static gboolean
-gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
+gst_vdp_mpeg_dec_stop (GstVideoDecoder * video_decoder)
 {
-  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (base_video_decoder);
+  GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (video_decoder);
 
   if (mpeg_dec->vdp_info.forward_reference != VDP_INVALID_HANDLE)
     mpeg_dec->vdp_info.forward_reference = VDP_INVALID_HANDLE;
@@ -612,13 +506,18 @@ gst_vdp_mpeg_dec_stop (GstBaseVideoDecoder * base_video_decoder)
 
   mpeg_dec->state = GST_VDP_MPEG_DEC_STATE_NEED_SEQUENCE;
 
-  return GST_BASE_VIDEO_DECODER_CLASS (parent_class)->stop (base_video_decoder);
+  return GST_VIDEO_DECODER_CLASS (parent_class)->stop (video_decoder);
 }
 
+/* initialize the vdpaumpegdecoder's class */
 static void
-gst_vdp_mpeg_dec_base_init (gpointer gclass)
+gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  GstElementClass *element_class;
+  GstVideoDecoderClass *video_decoder_class;
+
+  element_class = GST_ELEMENT_CLASS (klass);
+  video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
   gst_element_class_set_static_metadata (element_class,
       "VDPAU Mpeg Decoder",
@@ -628,27 +527,13 @@ gst_vdp_mpeg_dec_base_init (gpointer gclass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-}
 
-/* initialize the vdpaumpegdecoder's class */
-static void
-gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
-{
-  GstBaseVideoDecoderClass *base_video_decoder_class;
+  video_decoder_class->start = gst_vdp_mpeg_dec_start;
+  video_decoder_class->stop = gst_vdp_mpeg_dec_stop;
+  video_decoder_class->reset = gst_vdp_mpeg_dec_reset;
 
-  base_video_decoder_class = GST_BASE_VIDEO_DECODER_CLASS (klass);
-
-  base_video_decoder_class->start = gst_vdp_mpeg_dec_start;
-  base_video_decoder_class->stop = gst_vdp_mpeg_dec_stop;
-  base_video_decoder_class->flush = gst_vdp_mpeg_dec_flush;
-
-  base_video_decoder_class->scan_for_sync = gst_vdp_mpeg_dec_scan_for_sync;
-  base_video_decoder_class->scan_for_packet_end =
-      gst_vdp_mpeg_dec_scan_for_packet_end;
-  base_video_decoder_class->parse_data = gst_vdp_mpeg_dec_parse_data;
-
-  base_video_decoder_class->handle_frame = gst_vdp_mpeg_dec_handle_frame;
-  base_video_decoder_class->create_frame = gst_vdp_mpeg_dec_create_frame;
+  video_decoder_class->handle_frame = gst_vdp_mpeg_dec_handle_frame;
+  video_decoder_class->set_format = gst_vdp_mpeg_dec_set_format;
 }
 
 static void
@@ -669,6 +554,6 @@ gst_vdp_mpeg_dec_init_info (VdpPictureInfoMPEG1Or2 * vdp_info)
 }
 
 static void
-gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec, GstVdpMpegDecClass * gclass)
+gst_vdp_mpeg_dec_init (GstVdpMpegDec * mpeg_dec)
 {
 }

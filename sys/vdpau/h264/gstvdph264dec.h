@@ -22,10 +22,9 @@
 #define __GST_VDP_H264_DEC_H__
 
 #include <gst/gst.h>
+#include <gst/codecparsers/gsth264parser.h>
 
-#include "../gstvdp/gstvdpdecoder.h"
-
-#include "gsth264parser.h"
+#include "../gstvdpdecoder.h"
 #include "gsth264dpb.h"
 
 G_BEGIN_DECLS
@@ -45,16 +44,17 @@ typedef struct _GstVdpH264DecClass GstVdpH264DecClass;
 struct _GstVdpH264Dec {
   GstVdpDecoder vdp_decoder;
 
-  gboolean packetized;
-  guint8 nal_length_size;
-
-  GstH264Parser *parser;
   GstH264DPB *dpb;
+  GstH264SPS *sps[GST_H264_MAX_SPS_COUNT];
+  GstH264PPS *pps[GST_H264_MAX_PPS_COUNT];
 
-  GstH264Sequence *sequence;
+  /* Current SPS being used. Default:-1 */
+  gint current_sps;
+
   gboolean got_idr;
-  VdpDecoder decoder;
   
+  GstVideoCodecState *input_state;
+
   guint poc_msb;
   guint prev_poc_lsb;
 };

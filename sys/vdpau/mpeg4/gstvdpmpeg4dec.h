@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include "../gstvdp/gstvdpdecoder.h"
+#include "../gstvdpdecoder.h"
 
 #include "mpeg4util.h"
 #include "gstmpeg4frame.h"

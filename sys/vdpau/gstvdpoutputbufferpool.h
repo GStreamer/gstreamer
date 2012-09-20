@@ -24,8 +24,6 @@
 
 #include <gst/gst.h>
 
-#include "gstvdpbufferpool.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_VDP_OUTPUT_BUFFER_POOL             (gst_vdp_output_buffer_pool_get_type ())
