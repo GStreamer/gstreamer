@@ -138,7 +138,7 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
 #endif
 
 /* *INDENT-OFF* */
-static const char *vert_prog = {
+static const char *vert_COPY_prog = {
   "attribute vec3 position;"
       "varying vec2 opos;"
       "void main(void)"
@@ -148,7 +148,7 @@ static const char *vert_prog = {
       "}"
 };
 
-static const char *frag_prog = {
+static const char *frag_COPY_prog = {
   "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D tex;"
@@ -177,7 +177,8 @@ static const char *frag_AYUV_prog = {
       "  g=y-0.39173*u-0.81290*v;"
       "  b=y+2.017*u;"
       "  gl_FragColor=vec4(r,g,b,1.0);"
-      "}" };
+      "}"
+};
 /* *INDENT-ON* */
 
 /* Input capabilities.
@@ -1253,9 +1254,9 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   verthandle = glCreateShader (GL_VERTEX_SHADER);
-  GST_DEBUG_OBJECT (eglglessink, "sending %s to handle %d", vert_prog,
+  GST_DEBUG_OBJECT (eglglessink, "sending %s to handle %d", vert_COPY_prog,
       verthandle);
-  glShaderSource (verthandle, 1, &vert_prog, NULL);
+  glShaderSource (verthandle, 1, &vert_COPY_prog, NULL);
   if (got_gl_error ("glShaderSource vertex"))
     goto HANDLE_ERROR;
 
@@ -1280,7 +1281,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (eglglessink->format == GST_VIDEO_FORMAT_AYUV)
     glShaderSource (fraghandle, 1, &frag_AYUV_prog, NULL);
   else
-    glShaderSource (fraghandle, 1, &frag_prog, NULL);
+    glShaderSource (fraghandle, 1, &frag_COPY_prog, NULL);
 
   if (got_gl_error ("glShaderSource fragment"))
     goto HANDLE_ERROR;
