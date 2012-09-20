@@ -323,6 +323,27 @@ _opensles_player_change_volume (GstRingBuffer * rb)
 }
 
 static gboolean
+_opensles_player_change_mute (GstRingBuffer * rb)
+{
+  GstOpenSLESRingBuffer *thiz;
+  SLresult result;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+
+  if (thiz->playerVolume) {
+    result = (*thiz->playerVolume)->SetMute (thiz->playerVolume, thiz->mute);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_ERROR_OBJECT (thiz, "player.SetMute failed(0x%08x)",
+          (guint32) result);
+      return FALSE;
+    }
+    GST_DEBUG_OBJECT (thiz, "changed mute to %d", thiz->mute);
+  }
+
+  return TRUE;
+}
+
+static gboolean
 _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
@@ -398,8 +419,9 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Configure the volume state */
+  /* Configure the volume and mute state */
   _opensles_player_change_volume (rb);
+  _opensles_player_change_mute (rb);
 
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
   spec->segsize = (spec->rate * spec->bytes_per_sample);
@@ -513,6 +535,20 @@ gst_opensles_ringbuffer_set_volume (GstRingBuffer * rb, gfloat volume)
 
   if (thiz->change_volume) {
     thiz->change_volume (rb);
+  }
+}
+
+void
+gst_opensles_ringbuffer_set_mute (GstRingBuffer * rb, gboolean mute)
+{
+  GstOpenSLESRingBuffer *thiz;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+
+  thiz->mute = mute;
+
+  if (thiz->change_mute) {
+    thiz->change_mute (rb);
   }
 }
 

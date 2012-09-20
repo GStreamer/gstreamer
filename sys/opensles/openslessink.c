@@ -30,10 +30,12 @@ enum
 {
   PROP_0,
   PROP_VOLUME,
+  PROP_MUTE,
   PROP_LAST
 };
 
 #define DEFAULT_VOLUME 1.0
+#define DEFAULT_MUTE   FALSE
 
 #define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000"
 
@@ -86,6 +88,7 @@ gst_opensles_sink_create_ringbuffer (GstBaseAudioSink * base)
 
   rb = gst_opensles_ringbuffer_new (RB_MODE_SINK_PCM);
   gst_opensles_ringbuffer_set_volume (rb, sink->volume);
+  gst_opensles_ringbuffer_set_mute (rb, sink->mute);
   return rb;
 }
 
@@ -94,10 +97,20 @@ gst_opensles_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstOpenSLESSink *sink = GST_OPENSLES_SINK (object);
+  GstRingBuffer *rb = GST_BASE_AUDIO_SINK (sink)->ringbuffer;
 
   switch (prop_id) {
     case PROP_VOLUME:
       sink->volume = g_value_get_double (value);
+      if (rb && GST_IS_OPENSLES_RING_BUFFER (rb)) {
+        gst_opensles_ringbuffer_set_volume (rb, sink->volume);
+      }
+      break;
+    case PROP_MUTE:
+      sink->mute = g_value_get_boolean (value);
+      if (rb && GST_IS_OPENSLES_RING_BUFFER (rb)) {
+        gst_opensles_ringbuffer_set_mute (rb, sink->mute);
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -113,6 +126,9 @@ gst_opensles_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_VOLUME:
       g_value_set_double (value, sink->volume);
+      break;
+    case PROP_MUTE:
+      g_value_set_boolean (value, sink->mute);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -138,6 +154,10 @@ gst_opensles_sink_class_init (GstOpenSLESSinkClass * klass)
       g_param_spec_double ("volume", "Volume", "Volume of this stream",
           0, 1.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MUTE,
+      g_param_spec_boolean ("mute", "Mute", "Mute state of this stream",
+          DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstbaseaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_opensles_sink_create_ringbuffer);
 }
@@ -146,4 +166,5 @@ static void
 gst_opensles_sink_init (GstOpenSLESSink * sink, GstOpenSLESSinkClass * gclass)
 {
   sink->volume = DEFAULT_VOLUME;
+  sink->mute = DEFAULT_MUTE;
 }

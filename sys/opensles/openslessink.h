@@ -41,6 +41,7 @@ struct _GstOpenSLESSink
   GstBaseAudioSink sink;
 
   gfloat volume;
+  gboolean mute;
 };
 
 struct _GstOpenSLESSinkClass

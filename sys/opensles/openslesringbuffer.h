@@ -76,6 +76,7 @@ struct _GstOpenSLESRingBuffer
   SLPlayItf playerPlay;
   SLVolumeItf playerVolume;
   gfloat volume;
+  gboolean mute;
 
   /* recorder interfaces */
   SLObjectItf recorderObject;
@@ -91,6 +92,7 @@ struct _GstOpenSLESRingBuffer
   StateFunc pause;
   StateFunc stop;
   StateFunc change_volume;
+  StateFunc change_mute;
 };
 
 struct _GstOpenSLESRingBufferClass
@@ -101,6 +103,7 @@ struct _GstOpenSLESRingBufferClass
 GType gst_opensles_ringbuffer_get_type (void);
 GstRingBuffer *gst_opensles_ringbuffer_new (RingBufferMode mode);
 void gst_opensles_ringbuffer_set_volume (GstRingBuffer * rb, gfloat volume);
+void gst_opensles_ringbuffer_set_mute (GstRingBuffer * rb, gboolean mute);
 
 G_END_DECLS
 #endif /* __OPENSLESRINGBUFFER_H__ */

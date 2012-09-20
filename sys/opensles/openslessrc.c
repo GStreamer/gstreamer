@@ -26,8 +26,6 @@
 GST_DEBUG_CATEGORY_STATIC (opensles_src_debug);
 #define GST_CAT_DEFAULT opensles_src_debug
 
-#define DEFAULT_VOLUME 1.0
-
 #define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
