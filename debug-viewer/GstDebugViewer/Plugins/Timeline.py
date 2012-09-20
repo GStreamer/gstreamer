@@ -271,10 +271,6 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         self.thread_colors = {}
         self.next_thread_color = 0
 
-        self.connect ("expose-event", self.__handle_expose_event)
-        self.connect ("configure-event", self.__handle_configure_event)
-        self.connect ("size-request", self.__handle_size_request)
-
         try:
             self.set_tooltip_text (_("Vertical timeline\n"
                                      "Different colors represent different threads"))
@@ -282,14 +278,18 @@ class VerticalTimelineWidget (gtk.DrawingArea):
             # Compatibility.
             pass
 
-    def __handle_expose_event (self, self_, event):
+    def do_expose_event (self, event):
 
         self.__draw (self.window)
 
-    def __handle_configure_event (self, self_, event):
+        return True
+
+    def do_configure_event (self, event):
 
         self.params = None
         self.queue_draw ()
+
+        return False
 
     def __draw (self, drawable):
 
@@ -346,7 +346,7 @@ class VerticalTimelineWidget (gtk.DrawingArea):
             ctx.line_to (w + .5, row_offset + half_height)
             ctx.fill ()
 
-    def __handle_size_request (self, self_, req):
+    def do_size_request (self, req):
 
         req.width = 64 # FIXME
 
@@ -418,9 +418,6 @@ class TimelineWidget (gtk.DrawingArea):
         self.logger = logging.getLogger ("ui.timeline")
 
         self.process = UpdateProcess (None, None)
-        self.connect ("expose-event", self.__handle_expose_event)
-        self.connect ("configure-event", self.__handle_configure_event)
-        self.connect ("size-request", self.__handle_size_request)
         self.process.handle_sentinel_progress = self.__handle_sentinel_progress
         self.process.handle_sentinel_finished = self.__handle_sentinel_finished
         self.process.handle_process_finished = self.__handle_process_finished
@@ -722,7 +719,7 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.rectangle (position1, 0, line_width, h)
             ctx.fill ()
 
-    def __handle_expose_event (self, self_, event):
+    def do_expose_event (self, event):
 
         if self.__offscreen:
             self.__update_from_offscreen (event.area)
@@ -730,7 +727,7 @@ class TimelineWidget (gtk.DrawingArea):
             self.__redraw ()
         return True
 
-    def __handle_configure_event (self, self_, event):
+    def do_configure_event (self, event):
 
         self.logger.debug ("widget size configured to %ix%i",
                            event.width, event.height)
@@ -742,7 +739,7 @@ class TimelineWidget (gtk.DrawingArea):
 
         return False
 
-    def __handle_size_request (self, self_, req):
+    def do_size_request (self, req):
 
         # FIXME:
         req.height = 64
