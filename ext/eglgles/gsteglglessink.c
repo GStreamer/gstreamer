@@ -369,7 +369,7 @@ gst_eglglesbuffer_new (GstEglGlesSink * eglglessink, GstCaps * caps)
       (eglglessink->window, eglglessink->config, eglglessink->display, NULL);
   if (!eglglesbuffer->image) {
     GST_ERROR_OBJECT (eglglessink,
-        "Failed to create native %sx%d image buffer", eglglesbuffer->width,
+        "Failed to create native %dx%d image buffer", eglglesbuffer->width,
         eglglesbuffer->height);
     goto BEACH_UNLOCKED;
   }
@@ -971,7 +971,8 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
     GST_ERROR_OBJECT (eglglessink, "Could not create window");
     return window;
   }
-  gst_x_overlay_got_window_handle (GST_X_OVERLAY (eglglessink), window);
+  gst_x_overlay_got_window_handle (GST_X_OVERLAY (eglglessink),
+      (guintptr) window);
   return window;
 }
 
@@ -1397,7 +1398,7 @@ gst_eglglessink_choose_config (GstEglGlesSink * eglglessink)
     goto HANDLE_EGL_ERROR;
   }
 
-  GST_DEBUG_OBJECT (eglglessink, "EGL Context: %x", eglglessink->context);
+  GST_DEBUG_OBJECT (eglglessink, "EGL Context: %p", eglglessink->context);
 
   return TRUE;
 
@@ -1463,7 +1464,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
   GST_DEBUG_OBJECT (eglglessink,
-      "Got good buffer %x. Sink geometry is %dx%d size %d", buf, w, h,
+      "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
       GST_BUFFER_SIZE (buf));
 
   /* Make sure we stay on our context to avoid threading nightmares */
@@ -1644,7 +1645,8 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_ERROR_OBJECT (eglglessink, "Internal window creation failed!");
       goto HANDLE_ERROR;
     }
-    gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink), window);
+    gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink),
+        (guintptr) window);
   }
 
   if (!eglglessink->have_surface) {
