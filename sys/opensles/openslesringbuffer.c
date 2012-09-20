@@ -297,7 +297,8 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   }
 
   /* Enqueue a buffer */
-  GST_LOG_OBJECT (thiz, "enqueue: %p size %d", readptr, len);
+  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d",
+      readptr, len, readseg);
   result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, readptr, len);
 
   if (result != SL_RESULT_SUCCESS) {
@@ -306,15 +307,14 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
     return;
   }
 
-  if (thiz->last_readseg != readseg) {
-    if (thiz->last_readseg >= 0) {
-      /* Clear written samples */
-      gst_ring_buffer_clear (rb, readseg);
-      /* We wrote one segment */
-      gst_ring_buffer_advance (rb, 1);
-    }
-    thiz->last_readseg = readseg;
+  if (thiz->last_readseg >= 0) {
+    GST_LOG_OBJECT (thiz, "clear segment %d", thiz->last_readseg);
+    /* Clear written samples */
+    gst_ring_buffer_clear (rb, thiz->last_readseg);
+    /* We wrote one segment */
   }
+  gst_ring_buffer_advance (rb, 1);
+  thiz->last_readseg = readseg;
 }
 
 static gboolean
@@ -326,7 +326,7 @@ _opensles_player_acquire (GstRingBuffer * rb, guint nbuffers,
 
   /* Configure audio source */
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-      { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, nbuffers };
+      { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
   SLDataSource audioSrc = { &loc_bufq, format };
 
   /* Configure audio sink */
@@ -578,7 +578,7 @@ gst_opensles_ringbuffer_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   spec->segsize =
       (spec->latency_time * spec->rate / G_USEC_PER_SEC) *
       spec->bytes_per_sample;
-  spec->segtotal = MAX (2, spec->buffer_time / spec->latency_time);
+  spec->segtotal = (spec->buffer_time / spec->latency_time) << 4;
   thiz->last_readseg = -1;
 
   /* Define the format in OpenSL ES terms */
