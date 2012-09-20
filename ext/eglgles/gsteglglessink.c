@@ -164,7 +164,7 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_RGBA ";"
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_RGBx ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
 
 /* Filter signals and args */
@@ -785,6 +785,22 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   /* Init supported format/caps list */
   g_mutex_lock (eglglessink->flow_lock);
 
+  if (eglChooseConfig (eglglessink->display, eglglessink_RGBA8888_attribs,
+          NULL, 1, &cfg_number) != EGL_FALSE) {
+    format = g_new0 (GstEglGlesImageFmt, 1);
+    format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
+    format->attribs = eglglessink_RGBA8888_attribs;
+    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA);
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx));
+    eglglessink->supported_fmts =
+        g_list_append (eglglessink->supported_fmts, format);
+    ret++;
+
+  } else
+    GST_INFO_OBJECT (eglglessink,
+        "EGL display doesn't support RGBA8888 config");
+
   if (eglChooseConfig (eglglessink->display, eglglessink_RGB888_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
     format = g_new0 (GstEglGlesImageFmt, 1);
@@ -808,21 +824,6 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     ret++;
   } else
     GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB565 config");
-
-  if (eglChooseConfig (eglglessink->display, eglglessink_RGBA8888_attribs,
-          NULL, 1, &cfg_number) != EGL_FALSE) {
-    format = g_new0 (GstEglGlesImageFmt, 1);
-    format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
-    format->attribs = eglglessink_RGBA8888_attribs;
-    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx);
-    gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA));
-    eglglessink->supported_fmts =
-        g_list_append (eglglessink->supported_fmts, format);
-    ret++;
-  } else
-    GST_INFO_OBJECT (eglglessink,
-        "EGL display doesn't support RGBA8888 config");
 
   g_mutex_unlock (eglglessink->flow_lock);
 
@@ -1514,8 +1515,16 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
           break;
         case GST_EGLGLESSINK_IMAGE_RGBA8888:
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-              GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+          switch (eglglessink->format) {
+            case GST_VIDEO_FORMAT_RGBA:
+            case GST_VIDEO_FORMAT_RGBx:
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+              break;
+            default:
+              g_assert_not_reached ();
+              break;
+          }
       }
 
       if (got_gl_error ("glTexImage2D"))
