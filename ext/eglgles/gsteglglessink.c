@@ -790,8 +790,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
     format->attribs = eglglessink_RGB888_attribs;
-    format->caps =
-        gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 24, NULL);
+    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB);
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -803,8 +802,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
     format->attribs = eglglessink_RGB565_attribs;
-    format->caps =
-        gst_caps_new_simple ("video/x-raw-rgb", "bpp", G_TYPE_INT, 16, NULL);
+    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB16);
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -816,7 +814,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
     format->attribs = eglglessink_RGBA8888_attribs;
-    format->caps = gst_caps_new_simple ("video/x-raw-rgb", "depth", G_TYPE_INT, 24, "bpp", G_TYPE_INT, 32, NULL);       /* proly doesn't work for rgba */
+    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx);
     eglglessink->supported_fmts = g_list_append
         (eglglessink->supported_fmts, format);
     ret++;
