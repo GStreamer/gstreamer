@@ -266,7 +266,7 @@ static void gst_eglglessink_init_interfaces (GType type);
 static void gst_eglglessink_expose (GstXOverlay * overlay);
 static void gst_eglglessink_set_window_handle (GstXOverlay * overlay,
     guintptr id);
-static void gst_eglglessink_set_render_rectangle (GstXOverlay *overlay, gint x,
+static void gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x,
     gint y, gint width, gint height);
 
 /* Custom Buffer funcs */
@@ -1135,25 +1135,25 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
 
   if (!eglglessink->have_vbo || reset) {
     GST_DEBUG_OBJECT (eglglessink, "Performing VBO setup");
-    eglglessink->coordarray[0].x = -1;
+    eglglessink->coordarray[0].x = 1;
     eglglessink->coordarray[0].y = 1;
     eglglessink->coordarray[0].z = 0;
 
     eglglessink->coordarray[1].x = 1;
-    eglglessink->coordarray[1].y = 1;
+    eglglessink->coordarray[1].y = -1;
     eglglessink->coordarray[1].z = 0;
 
-    eglglessink->coordarray[2].x = 1;
-    eglglessink->coordarray[2].y = -1;
+    eglglessink->coordarray[2].x = -1;
+    eglglessink->coordarray[2].y = 1;
     eglglessink->coordarray[2].z = 0;
 
     eglglessink->coordarray[3].x = -1;
     eglglessink->coordarray[3].y = -1;
     eglglessink->coordarray[3].z = 0;
 
-    eglglessink->indexarray[0] = 1;
-    eglglessink->indexarray[1] = 2;
-    eglglessink->indexarray[2] = 0;
+    eglglessink->indexarray[0] = 0;
+    eglglessink->indexarray[1] = 1;
+    eglglessink->indexarray[2] = 2;
     eglglessink->indexarray[3] = 3;
 
     glGenBuffers (1, &eglglessink->vdata);
@@ -1487,7 +1487,7 @@ HANDLE_ERROR:
 
 /* Drafted */
 static void
-gst_eglglessink_set_render_rectangle (GstXOverlay *overlay, gint x, gint y,
+gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
     gint width, gint height)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (overlay);
@@ -1497,9 +1497,9 @@ gst_eglglessink_set_render_rectangle (GstXOverlay *overlay, gint x, gint y,
   g_mutex_lock (eglglessink->flow_lock);
 
   if (width == -1 && height == -1) {
-  /* This is the set_defaults condition according to
-   * the xOverlay interface docs
-   */
+    /* This is the set_defaults condition according to
+     * the xOverlay interface docs
+     */
     eglglessink->display_region.w = 0;
     eglglessink->display_region.h = 0;
   } else {
@@ -1600,8 +1600,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * a sane default. According to the docs on the xOverlay
        * interface we are supposed to fill the overlay 100%
        */
-      if (!eglglessink->display_region.w || !eglglessink->display_region.h)
-      {
+      if (!eglglessink->display_region.w || !eglglessink->display_region.h) {
         /* XXX: Do we really want to lock here? */
         if (!eglglessink->keep_aspect_ratio) {
           eglglessink->display_region.x = 0;
@@ -1618,8 +1617,9 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               &eglglessink->display_region, TRUE);
         }
 
-        glViewport (eglglessink->display_region.x, eglglessink->display_region.y,
-            eglglessink->display_region.w, eglglessink->display_region.h);
+        glViewport (eglglessink->display_region.x,
+            eglglessink->display_region.y, eglglessink->display_region.w,
+            eglglessink->display_region.h);
       }
 
       glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
