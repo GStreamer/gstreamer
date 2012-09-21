@@ -71,7 +71,6 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         play.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 nativePlay();
-                playing = true;
             }
         });
 
@@ -79,7 +78,6 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         pause.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 nativePause();
-                playing = false;
             }
         });
 
@@ -107,6 +105,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         super.onDestroy();
     }
 
+    /* Called from native code */
     private void setMessage(final String message) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_message);
         runOnUiThread (new Runnable() {
@@ -116,17 +115,18 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         });
     }
 
+    /* Called from native code */
     private void onGStreamerInitialized () {
         if (initialization_data != null) {
-            playing = initialization_data.getBoolean("playing");
+            boolean should_play = initialization_data.getBoolean("playing");
             int milliseconds = initialization_data.getInt("position");
-            Log.i ("GStreamer", "Restoring state, playing:" + playing + " position:" + milliseconds + " ms.");
+            Log.i ("GStreamer", "Restoring state, playing:" + should_play + " position:" + milliseconds + " ms.");
             /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
              * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
              * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
              * backwards on each iteration. */
             nativeSetPosition(milliseconds + 1);
-            if (playing) {
+            if (should_play) {
                 nativePlay();
             } else {
                 nativePause();
@@ -136,6 +136,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         }
     }
 
+    /* Called from native code */
     private void setCurrentPosition(final int position, final int duration) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_time);
         final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
@@ -151,6 +152,26 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         });
         this.position = position;
         this.duration = duration;
+    }
+
+    /* Called from native code */
+    private void setCurrentState (int state) {
+        Log.d ("GStreamer", "State has changed to " + state);
+        switch (state) {
+        case 1:
+            setMessage ("NULL");
+            break;
+        case 2:
+            setMessage ("READY");
+            break;
+        case 3:
+            setMessage ("PAUSED");
+            break;
+        case 4:
+            setMessage ("PLAYING");
+            break;
+        }
+        playing = (state == 4);
     }
 
     static {

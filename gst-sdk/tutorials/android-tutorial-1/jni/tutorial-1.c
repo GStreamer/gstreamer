@@ -40,6 +40,7 @@ static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID set_current_position_method_id;
+static jmethodID set_current_state_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
 
 /*
@@ -92,7 +93,7 @@ static void set_ui_message (const gchar *message, CustomData *data) {
 
 static void set_current_ui_position (gint position, gint duration, CustomData *data) {
   JNIEnv *env = get_jni_env ();
-  GST_DEBUG ("Setting current position/duration to: %d / %d (ms)", position, duration);
+//  GST_DEBUG ("Setting current position/duration to: %d / %d (ms)", position, duration);
   (*env)->CallVoidMethod (env, data->app, set_current_position_method_id, position, duration);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to call Java method");
@@ -151,15 +152,21 @@ static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
 }
 
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  JNIEnv *env = get_jni_env ();
   GstState old_state, new_state, pending_state;
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
   /* Only pay attention to messages coming from the pipeline, not its children */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
-    set_ui_message (gst_element_state_get_name (new_state), data);
     data->state = new_state;
     if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
       execute_seek (data->desired_position, data);
       data->desired_position = GST_CLOCK_TIME_NONE;
+    }
+    GST_DEBUG ("State changed to %s, notifying application", gst_element_state_get_name(new_state));
+    (*env)->CallVoidMethod (env, data->app, set_current_state_method_id, new_state);
+    if ((*env)->ExceptionCheck (env)) {
+      GST_ERROR ("Failed to call Java method");
+      (*env)->ExceptionClear (env);
     }
   }
 }
@@ -303,8 +310,11 @@ jboolean gst_class_init (JNIEnv* env, jclass klass) {
   GST_DEBUG ("The MethodID for the setCurrentPosition method is %p", set_current_position_method_id);
   on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
   GST_DEBUG ("The MethodID for the onGStreamerInitialized method is %p", on_gstreamer_initialized_method_id);
+  set_current_state_method_id = (*env)->GetMethodID (env, klass, "setCurrentState", "(I)V");
+  GST_DEBUG ("The MethodID for the setCurrentState method is %p", set_current_state_method_id);
 
-  if (!custom_data_field_id || !set_message_method_id || !set_current_position_method_id || ! on_gstreamer_initialized_method_id) {
+  if (!custom_data_field_id || !set_message_method_id || !set_current_position_method_id ||
+      !on_gstreamer_initialized_method_id || !set_current_state_method_id) {
     GST_ERROR ("The calling class does not implement all necessary interface methods");
     return JNI_FALSE;
   }
