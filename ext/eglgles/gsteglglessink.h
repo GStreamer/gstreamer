@@ -158,6 +158,7 @@ struct _GstEglGlesSink
   gboolean silent;
   gboolean can_create_window;
   gboolean force_rendering_slow;
+  gboolean keep_aspect_ratio;
   gint window_default_width;
   gint window_default_height;
   EGLint surface_width;

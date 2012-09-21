@@ -206,6 +206,7 @@ enum
   PROP_0,
   PROP_SILENT,
   PROP_CAN_CREATE_WINDOW,
+  PROP_KEEP_ASPECT_RATIO,
   PROP_DEFAULT_HEIGHT,
   PROP_DEFAULT_WIDTH,
   PROP_FORCE_RENDERING_SLOW
@@ -1519,7 +1520,9 @@ static GstFlowReturn
 gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstBuffer * buf)
 {
+  GstVideoRectangle frame, surface;
   gint w, h;
+
 #ifdef EGL_FAST_RENDERING_POSSIBLE
   EGLImageKHR img = EGL_NO_IMAGE_KHR;
   EGLint attrs[] = { EGL_IMAGE_PRESERVED_KHR,
@@ -1534,6 +1537,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
+
   GST_DEBUG_OBJECT (eglglessink,
       "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
       GST_BUFFER_SIZE (buf));
@@ -1595,20 +1599,28 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       /* If no one has set a display rectangle on us initialize
        * a sane default. According to the docs on the xOverlay
        * interface we are supposed to fill the overlay 100%
-       *
-       * XXX: If this is not desired just use calculated pos with
-       * lower left corner as 0,0 and w,h from the decoded frame.
        */
       if (!eglglessink->display_region.w || !eglglessink->display_region.h)
       {
-        eglglessink->display_region.x = 0;
-        eglglessink->display_region.y = 0;
-        eglglessink->display_region.w = eglglessink->surface_width;
-        eglglessink->display_region.h = eglglessink->surface_height;
-      }
+        /* XXX: Do we really want to lock here? */
+        if (!eglglessink->keep_aspect_ratio) {
+          eglglessink->display_region.x = 0;
+          eglglessink->display_region.y = 0;
+          eglglessink->display_region.w = eglglessink->surface_width;
+          eglglessink->display_region.h = eglglessink->surface_height;
+        } else {
+          /* XXX: Proly consider display pixel aspect ratio too? */
+          frame.w = w;
+          frame.h = h;
+          surface.w = eglglessink->surface_width;
+          surface.h = eglglessink->surface_height;
+          gst_video_sink_center_rect (frame, surface,
+              &eglglessink->display_region, TRUE);
+        }
 
-      glViewport (eglglessink->display_region.x, eglglessink->display_region.y,
-          eglglessink->display_region.w, eglglessink->display_region.h);
+        glViewport (eglglessink->display_region.x, eglglessink->display_region.y,
+            eglglessink->display_region.w, eglglessink->display_region.h);
+      }
 
       glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
       if (got_gl_error ("glDrawElements"))
@@ -1804,6 +1816,9 @@ gst_eglglessink_set_property (GObject * object, guint prop_id,
     case PROP_FORCE_RENDERING_SLOW:
       eglglessink->force_rendering_slow = g_value_get_boolean (value);
       break;
+    case PROP_KEEP_ASPECT_RATIO:
+      eglglessink->keep_aspect_ratio = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1835,6 +1850,9 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FORCE_RENDERING_SLOW:
       g_value_set_boolean (value, eglglessink->force_rendering_slow);
+      break;
+    case PROP_KEEP_ASPECT_RATIO:
+      g_value_set_boolean (value, eglglessink->keep_aspect_ratio);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1891,6 +1909,9 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_FORCE_RENDERING_SLOW,
       g_param_spec_boolean ("force_rendering_slow", "ForceRenderingSlow",
           "Force slow rendering path?", FALSE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_KEEP_ASPECT_RATIO,
+      g_param_spec_boolean ("keep_aspect_ratio", "KeepAspectRatio",
+          "Keep aspect ratio while scaling?", TRUE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_DEFAULT_WIDTH,
       g_param_spec_int ("window_default_width", "DefaultWidth",
@@ -1918,6 +1939,7 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->running = FALSE; /* XXX: unused */
   eglglessink->can_create_window = TRUE;
   eglglessink->force_rendering_slow = FALSE;
+  eglglessink->keep_aspect_ratio = TRUE;
   eglglessink->flow_lock = g_mutex_new ();
 }
 
