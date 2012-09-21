@@ -180,6 +180,7 @@ static const char *frag_AYUV_prog = {
       "  gl_FragColor=vec4(r,g,b,1.0);"
       "}"
 };
+
 static const char *frag_I420_YV12_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
@@ -200,6 +201,48 @@ static const char *frag_I420_YV12_prog = {
       "}"
 };
 
+static const char *frag_NV12_NV21_prog = {
+      "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D Ytex,UVtex;"
+      "void main(void) {"
+      "  float r,g,b,y,u,v;"
+      "  vec2 nxy = opos.xy;"
+      "  y=texture2D(Ytex,nxy).r;"
+      "  u=texture2D(UVtex,nxy).%c;"
+      "  v=texture2D(UVtex,nxy).%c;"
+      "  y=1.1643*(y-0.0625);"
+      "  u=u-0.5;"
+      "  v=v-0.5;"
+      "  r=y+1.5958*v;"
+      "  g=y-0.39173*u-0.81290*v;"
+      "  b=y+2.017*u;"
+      "  gl_FragColor=vec4(r,g,b,1.0);"
+      "}"
+};
+
+static const char *frag_YUY2_UYVY_prog = {
+      "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D Ytex, UVtex;"
+      "void main(void) {"
+      "  float fx, fy, y, u, v, r, g, b;"
+      "  fx = opos.x;"
+      "  fy = opos.y;"
+      "  y = texture2D(Ytex,vec2(fx,fy)).%c;"
+      "  u = texture2D(UVtex,vec2(fx*0.5,fy)).%c;"
+      "  v = texture2D(UVtex,vec2(fx*0.5,fy)).%c;"
+      "  y=1.1643*(y-0.0625);"
+      "  u=u-0.5;"
+      "  v=v-0.5;"
+      "  r=y+1.5958*v;"
+      "  g=y-0.39173*u-0.81290*v;"
+      "  b=y+2.017*u;"
+      "  gl_FragColor=vec4(r,g,b,1.0);"
+      "}"
+};
+
+
 /* *INDENT-ON* */
 
 /* Input capabilities.
@@ -212,8 +255,10 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_YUV ("{ AYUV, I420, YV12 }") ";"
+        GST_VIDEO_CAPS_YUV ("{ AYUV, I420, YV12, NV12, NV21 }") ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
+
+/* FIXME: YUY2 and UYVY don't work completely yet, there are issues with the chroma */
 
 /* Filter signals and args */
 enum
@@ -850,6 +895,14 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_I420));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YV12));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV12));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -1265,6 +1318,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   GLchar *info_log;
   gint n_textures = 0;
   const gchar *texnames[3] = { NULL, };
+  gchar *tmp_prog = NULL;
 
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL surface setup");
 
@@ -1351,6 +1405,34 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[0] = "Ytex";
       texnames[1] = "Utex";
       texnames[2] = "Vtex";
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'r', 'g', 'a');
+      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
+      n_textures = 2;
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'a', 'r', 'b');
+      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
+      n_textures = 2;
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'r', 'a');
+      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
+      n_textures = 2;
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      break;
+    case GST_VIDEO_FORMAT_NV21:
+      tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'a', 'r');
+      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
+      n_textures = 2;
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_RGBx:
@@ -1450,6 +1532,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     g_mutex_unlock (eglglessink->flow_lock);
   }
 
+  g_free (tmp_prog);
+
   return TRUE;
 
   /* Errors */
@@ -1459,6 +1543,7 @@ HANDLE_ERROR_LOCKED:
   g_mutex_unlock (eglglessink->flow_lock);
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Couldn't setup EGL surface");
+  g_free (tmp_prog);
   return FALSE;
 }
 
@@ -1725,6 +1810,51 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               glBindTexture (GL_TEXTURE_2D, eglglessink->texture[2]);
               glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
                   cw, ch, 0, GL_LUMINANCE,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+              break;
+            }
+            case GST_VIDEO_FORMAT_YUY2:
+            case GST_VIDEO_FORMAT_UYVY:{
+              glActiveTexture (GL_TEXTURE0);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                  w, h, 0, GL_LUMINANCE_ALPHA,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+              glActiveTexture (GL_TEXTURE1);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
+                  GST_ROUND_UP_2 (w) / 2, h, 0, GL_RGBA,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+              break;
+            }
+            case GST_VIDEO_FORMAT_NV12:
+            case GST_VIDEO_FORMAT_NV21:{
+              gint coffset, cw, ch;
+
+              coffset =
+                  gst_video_format_get_component_offset (eglglessink->format, 0,
+                  w, h);
+              cw = gst_video_format_get_component_width (eglglessink->format, 0,
+                  w);
+              ch = gst_video_format_get_component_height (eglglessink->format,
+                  0, h);
+              glActiveTexture (GL_TEXTURE0);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                  cw, ch, 0, GL_LUMINANCE,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+
+              coffset =
+                  gst_video_format_get_component_offset (eglglessink->format,
+                  (eglglessink->format == GST_VIDEO_FORMAT_NV12 ? 1 : 2), w, h);
+              cw = gst_video_format_get_component_width (eglglessink->format, 1,
+                  w);
+              ch = gst_video_format_get_component_height (eglglessink->format,
+                  1, h);
+              glActiveTexture (GL_TEXTURE1);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                  cw, ch, 0, GL_LUMINANCE_ALPHA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
               break;
             }
