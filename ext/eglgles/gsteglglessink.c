@@ -183,8 +183,7 @@ static const char *frag_AYUV_prog = {
 
 /* Input capabilities.
  *
- * OpenGL ES Standard does not mandate YUV support
- * so we are going to stick to RGB for the time being
+ * Note: OpenGL ES Standard does not mandate YUV support.
  */
 static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -266,6 +265,8 @@ static void gst_eglglessink_init_interfaces (GType type);
 static void gst_eglglessink_expose (GstXOverlay * overlay);
 static void gst_eglglessink_set_window_handle (GstXOverlay * overlay,
     guintptr id);
+static void gst_eglglessink_set_render_rectangle (GstXOverlay *overlay, gint x,
+    gint y, gint width, gint height);
 
 /* Custom Buffer funcs */
 static void gst_eglglesbuffer_destroy (GstEglGlesBuffer * eglglessink);
@@ -949,6 +950,7 @@ gst_eglglessink_xoverlay_init (GstXOverlayClass * iface)
 {
   iface->set_window_handle = gst_eglglessink_set_window_handle;
   iface->expose = gst_eglglessink_expose;
+  iface->set_render_rectangle = gst_eglglessink_set_render_rectangle;
 }
 
 static gboolean
@@ -1482,6 +1484,36 @@ HANDLE_ERROR:
   return;
 }
 
+/* Drafted */
+static void
+gst_eglglessink_set_render_rectangle (GstXOverlay *overlay, gint x, gint y,
+    gint width, gint height)
+{
+  GstEglGlesSink *eglglessink = GST_EGLGLESSINK (overlay);
+
+  g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
+
+  g_mutex_lock (eglglessink->flow_lock);
+
+  if (width == -1 && height == -1) {
+  /* This is the set_defaults condition according to
+   * the xOverlay interface docs
+   */
+    eglglessink->display_region.w = 0;
+    eglglessink->display_region.h = 0;
+  } else {
+    g_mutex_lock (eglglessink->flow_lock);
+    eglglessink->display_region.x = x;
+    eglglessink->display_region.y = y;
+    eglglessink->display_region.w = width;
+    eglglessink->display_region.h = height;
+  }
+
+  g_mutex_unlock (eglglessink->flow_lock);
+
+  return;
+}
+
 /* Rendering and display */
 static GstFlowReturn
 gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
@@ -1560,7 +1592,23 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       if (got_gl_error ("glTexImage2D"))
         goto HANDLE_ERROR;
 
-      glViewport (0, 0, w, h);
+      /* If no one has set a display rectangle on us initialize
+       * a sane default. According to the docs on the xOverlay
+       * interface we are supposed to fill the overlay 100%
+       *
+       * XXX: If this is not desired just use calculated pos with
+       * lower left corner as 0,0 and w,h from the decoded frame.
+       */
+      if (!eglglessink->display_region.w || !eglglessink->display_region.h)
+      {
+        eglglessink->display_region.x = 0;
+        eglglessink->display_region.y = 0;
+        eglglessink->display_region.w = eglglessink->surface_width;
+        eglglessink->display_region.h = eglglessink->surface_height;
+      }
+
+      glViewport (eglglessink->display_region.x, eglglessink->display_region.y,
+          eglglessink->display_region.w, eglglessink->display_region.h);
 
       glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
       if (got_gl_error ("glDrawElements"))

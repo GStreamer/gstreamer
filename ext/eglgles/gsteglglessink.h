@@ -126,6 +126,7 @@ struct _GstEglGlesSink
    * the platform supported fmts. Right now we just add one
    * format/caps at init.
    */
+  GstVideoRectangle display_region;
   GList *supported_fmts;
   GstEglGlesImageFmt *selected_fmt;
 
