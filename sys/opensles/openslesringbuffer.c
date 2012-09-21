@@ -435,13 +435,9 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   _opensles_player_change_mute (rb);
 
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
-  spec->segsize = (spec->rate * spec->bytes_per_sample);
-  spec->segtotal = 4;
-  /* In the Nexus7 device where I'm testing seems that I need buffers of
-   * min 1 second of audio.
-   * Then here we created 4 segments of a second and a queue of 2 buffers
-   * in order to properly clear the older segment */
-  thiz->last_clearseg = -3;
+  spec->segsize = (spec->rate * spec->bytes_per_sample) >> 2;
+  spec->segtotal = 16;
+  thiz->last_clearseg = 1 - spec->segtotal;
 
   return TRUE;
 
