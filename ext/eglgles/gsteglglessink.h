@@ -143,10 +143,12 @@ struct _GstEglGlesSink
   EGLDisplay display;
   EGLNativeWindowType window;
   EGLSurface surface;
-
+  GLuint fragshader, vertshader, program;
   GLuint texture[3];
+  gint n_textures;
 
   gboolean have_window;
+  gboolean using_own_window;
   gboolean have_surface;;
   gboolean have_vbo;
   gboolean have_texture;

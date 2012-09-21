@@ -1007,16 +1007,31 @@ gst_eglglessink_wipe_fmt (gpointer data)
   g_free (format);
 }
 
-/* XXX: Should implement */
+/* Drafted */
 gboolean
 gst_eglglessink_stop (GstBaseSink * sink)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
 
-  platform_destroy_native_window (eglglessink->display, eglglessink->window);
-
   eglglessink->selected_fmt = NULL;
   g_list_free_full (eglglessink->supported_fmts, gst_eglglessink_wipe_fmt);
+
+  /* EGL/GLES2 cleanup */
+
+  if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
+    glDeleteBuffers (1, &eglglessink->vdata);
+    glDeleteBuffers (1, &eglglessink->tdata);
+    glDeleteBuffers (1, &eglglessink->idata);
+
+    glDeleteShader (eglglessink->fragshader);
+    glDeleteShader (eglglessink->vertshader);
+
+    glDeleteTextures (eglglessink->n_textures, eglglessink->texture);
+    glDeleteProgram (eglglessink->program);
+  }
+
+  if (eglglessink->using_own_window)
+    platform_destroy_native_window (eglglessink->display, eglglessink->window);
 
   g_mutex_free (eglglessink->flow_lock);
   eglglessink->flow_lock = NULL;
@@ -1313,10 +1328,8 @@ static gboolean
 gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
   GLint test;
-  GLuint verthandle, fraghandle, prog;
   GLboolean ret;
   GLchar *info_log;
-  gint n_textures = 0;
   const gchar *texnames[3] = { NULL, };
   gchar *tmp_prog = NULL;
 
@@ -1367,70 +1380,70 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;
   }
 
-  verthandle = glCreateShader (GL_VERTEX_SHADER);
+  eglglessink->vertshader = glCreateShader (GL_VERTEX_SHADER);
   GST_DEBUG_OBJECT (eglglessink, "sending %s to handle %d", vert_COPY_prog,
-      verthandle);
-  glShaderSource (verthandle, 1, &vert_COPY_prog, NULL);
+      eglglessink->vertshader);
+  glShaderSource (eglglessink->vertshader, 1, &vert_COPY_prog, NULL);
   if (got_gl_error ("glShaderSource vertex"))
     goto HANDLE_ERROR;
 
-  glCompileShader (verthandle);
+  glCompileShader (eglglessink->vertshader);
   if (got_gl_error ("glCompileShader vertex"))
     goto HANDLE_ERROR;
 
-  glGetShaderiv (verthandle, GL_COMPILE_STATUS, &test);
+  glGetShaderiv (eglglessink->vertshader, GL_COMPILE_STATUS, &test);
   if (test != GL_FALSE)
     GST_DEBUG_OBJECT (eglglessink, "Successfully compiled vertex shader");
   else {
     GST_ERROR_OBJECT (eglglessink, "Couldn't compile vertex shader");
-    glGetShaderiv (verthandle, GL_INFO_LOG_LENGTH, &test);
+    glGetShaderiv (eglglessink->vertshader, GL_INFO_LOG_LENGTH, &test);
     info_log = g_new0 (GLchar, test);
-    glGetShaderInfoLog (verthandle, test, NULL, info_log);
+    glGetShaderInfoLog (eglglessink->vertshader, test, NULL, info_log);
     GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
     g_free (info_log);
     goto HANDLE_ERROR;
   }
 
-  fraghandle = glCreateShader (GL_FRAGMENT_SHADER);
+  eglglessink->fragshader = glCreateShader (GL_FRAGMENT_SHADER);
   switch (eglglessink->format) {
     case GST_VIDEO_FORMAT_AYUV:
-      glShaderSource (fraghandle, 1, &frag_AYUV_prog, NULL);
-      n_textures = 1;
+      glShaderSource (eglglessink->fragshader, 1, &frag_AYUV_prog, NULL);
+      eglglessink->n_textures = 1;
       texnames[0] = "tex";
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      glShaderSource (fraghandle, 1, &frag_I420_YV12_prog, NULL);
-      n_textures = 3;
+      glShaderSource (eglglessink->fragshader, 1, &frag_I420_YV12_prog, NULL);
+      eglglessink->n_textures = 3;
       texnames[0] = "Ytex";
       texnames[1] = "Utex";
       texnames[2] = "Vtex";
       break;
     case GST_VIDEO_FORMAT_YUY2:
       tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'r', 'g', 'a');
-      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
-      n_textures = 2;
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_UYVY:
       tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'a', 'r', 'b');
-      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
-      n_textures = 2;
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV12:
       tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'r', 'a');
-      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
-      n_textures = 2;
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV21:
       tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'a', 'r');
-      glShaderSource (fraghandle, 1, (const GLchar **) &tmp_prog, NULL);
-      n_textures = 2;
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
@@ -1438,8 +1451,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGB16:
-      glShaderSource (fraghandle, 1, &frag_COPY_prog, NULL);
-      n_textures = 1;
+      glShaderSource (eglglessink->fragshader, 1, &frag_COPY_prog, NULL);
+      eglglessink->n_textures = 1;
       texnames[0] = "tex";
       break;
     default:
@@ -1450,34 +1463,34 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glShaderSource fragment"))
     goto HANDLE_ERROR;
 
-  glCompileShader (fraghandle);
+  glCompileShader (eglglessink->fragshader);
   if (got_gl_error ("glCompileShader fragment"))
     goto HANDLE_ERROR;
 
-  glGetShaderiv (fraghandle, GL_COMPILE_STATUS, &test);
+  glGetShaderiv (eglglessink->fragshader, GL_COMPILE_STATUS, &test);
   if (test != GL_FALSE)
     GST_DEBUG_OBJECT (eglglessink, "Successfully compiled fragment shader");
   else {
     GST_ERROR_OBJECT (eglglessink, "Couldn't compile fragment shader");
-    glGetShaderiv (fraghandle, GL_INFO_LOG_LENGTH, &test);
+    glGetShaderiv (eglglessink->fragshader, GL_INFO_LOG_LENGTH, &test);
     info_log = g_new0 (GLchar, test);
-    glGetShaderInfoLog (fraghandle, test, NULL, info_log);
+    glGetShaderInfoLog (eglglessink->fragshader, test, NULL, info_log);
     GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
     g_free (info_log);
     goto HANDLE_ERROR;
   }
 
-  prog = glCreateProgram ();
+  eglglessink->program = glCreateProgram ();
   if (got_gl_error ("glCreateProgram"))
     goto HANDLE_ERROR;
-  glAttachShader (prog, verthandle);
+  glAttachShader (eglglessink->program, eglglessink->vertshader);
   if (got_gl_error ("glAttachShader vertices"))
     goto HANDLE_ERROR;
-  glAttachShader (prog, fraghandle);
+  glAttachShader (eglglessink->program, eglglessink->fragshader);
   if (got_gl_error ("glAttachShader fragments"))
     goto HANDLE_ERROR;
-  glLinkProgram (prog);
-  glGetProgramiv (prog, GL_LINK_STATUS, &test);
+  glLinkProgram (eglglessink->program);
+  glGetProgramiv (eglglessink->program, GL_LINK_STATUS, &test);
   if (test != GL_FALSE)
     GST_DEBUG_OBJECT (eglglessink, "GLES: Successfully linked program");
   else {
@@ -1485,12 +1498,12 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;
   }
 
-  glUseProgram (prog);
+  glUseProgram (eglglessink->program);
   if (got_gl_error ("glUseProgram"))
     goto HANDLE_ERROR;
 
-  eglglessink->coord_pos = glGetAttribLocation (prog, "position");
-  eglglessink->tex_pos = glGetAttribLocation (prog, "texpos");
+  eglglessink->coord_pos = glGetAttribLocation (eglglessink->program, "position");
+  eglglessink->tex_pos = glGetAttribLocation (eglglessink->program, "texpos");
 
   /* Generate and bind texture */
   if (!eglglessink->have_texture) {
@@ -1500,7 +1513,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
     g_mutex_lock (eglglessink->flow_lock);
 
-    for (i = 0; i < n_textures; i++) {
+    for (i = 0; i < eglglessink->n_textures; i++) {
       if (i == 0)
         glActiveTexture (GL_TEXTURE0);
       else if (i == 1)
@@ -1516,7 +1529,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       if (got_gl_error ("glBindTexture"))
         goto HANDLE_ERROR_LOCKED;
 
-      eglglessink->tex_uniform[i] = glGetUniformLocation (prog, texnames[i]);
+      eglglessink->tex_uniform[i] = glGetUniformLocation (eglglessink->program,
+          texnames[i]);
       glUniform1i (eglglessink->tex_uniform[i], i);
 
       /* Set 2D resizing params */
@@ -2033,6 +2047,9 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       GST_ERROR_OBJECT (eglglessink, "Internal window creation failed!");
       goto HANDLE_ERROR;
     }
+    g_mutex_lock (eglglessink->flow_lock);
+    eglglessink->using_own_window = TRUE;
+    g_mutex_unlock (eglglessink->flow_lock);
     gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink),
         (guintptr) window);
   }
@@ -2211,6 +2228,7 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->can_create_window = TRUE;
   eglglessink->force_rendering_slow = FALSE;
   eglglessink->keep_aspect_ratio = TRUE;
+  eglglessink->using_own_window = FALSE;
   eglglessink->flow_lock = g_mutex_new ();
 }
 
