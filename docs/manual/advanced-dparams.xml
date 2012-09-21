@@ -44,27 +44,18 @@
   <sect1 id="section-dparams-parameters">
     <title>Setting up parameter control</title>
     <para>
-      The first step is to select the parameters that should be controlled.
-      This returns a controller object that is needed to further adjust the
-      behaviour.      
-    </para>
-    <programlisting>
-  controller = gst_object_control_properties(object, "prop1", "prop2",...);
-    </programlisting>
-    <para>
-      Next we attach a control-source to each parameter. Lets use an 
-      interpolation control-source:
+      Create a control-source. Lets use an interpolation control-source:
     </para>
     <programlisting>
   csource = gst_interpolation_control_source_new ();
-  gst_interpolation_control_source_set_interpolation_mode(csource, GST_INTERPOLATE_LINEAR);
+  g_object_set (csource, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
     </programlisting>
     <para>
-      Now we need to assign the control-source to the gobject property. One 
+      Now we need to assign the control-source to the gobject property. One
       control source can only be assigned to one property.
     </para>
     <programlisting>
-      gst_controller_set_control_source (controller, "prop1", csource);
+      gst_object_add_control_binding (object, gst_direct_control_binding_new (object, "prop1", csource));
     </programlisting>
     <para>
       This control-source takes new property values from a list of time-stamped
@@ -80,8 +71,8 @@
       different functions to specify the control-changes over time.
     </para>
     <programlisting>
-  gst_interpolation_control_source_set (csource, 0 * GST_SECOND, value1);
-  gst_interpolation_control_source_set (csource, 1 * GST_SECOND, value2);
+  gst_timed_value_control_source_set ((GstTimedValueControlSource *)csource,0 * GST_SECOND, value1);
+  gst_timed_value_control_source_set ((GstTimedValueControlSource *)csource,1 * GST_SECOND, value2);
     </programlisting>
     <para>
       Now everything is ready to play. One final note - the controller subsystem
