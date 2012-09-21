@@ -107,22 +107,30 @@ _opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
 static void
 _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
-#if 0
   GstRingBuffer *rb = GST_RING_BUFFER_CAST (context);
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
-  assert (bq == bqRecorderBufferQueue);
-  assert (NULL == context);
-  // for streaming recording, here we would call Enqueue to give recorder the next buffer to fill
-  // but instead, this is a one-time buffer so we stop recording
   SLresult result;
-  result =
-      (*recorderRecord)->SetRecordState (recorderRecord,
-      SL_RECORDSTATE_STOPPED);
-  if (SL_RESULT_SUCCESS == result) {
-    recorderSize = RECORDER_FRAMES * sizeof (short);
-    recorderSR = SL_SAMPLINGRATE_16;
+  guint8 *writeptr;
+  gint writeseg;
+  gint len;
+
+  if (!gst_ring_buffer_prepare_read (rb, &writeseg, &writeptr, &len)) {
+    GST_WARNING_OBJECT (rb, "No segment available");
+    return;
   }
-#endif
+
+  /* Enqueue a buffer */
+  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d",
+      writeptr, len, writeseg);
+  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, writeptr, len);
+
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "bufferQueue.Enqueue failed(0x%08x)",
+        (guint32) result);
+    return;
+  }
+
+  gst_ring_buffer_advance (rb, 1);
 }
 
 static gboolean
@@ -133,24 +141,25 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   SLDataFormat_PCM format;
 
   /* Configure audio source */
-  SLDataLocator_IODevice loc_dev =
-      { SL_DATALOCATOR_IODEVICE, SL_IODEVICE_AUDIOINPUT,
+  SLDataLocator_IODevice loc_dev = {
+    SL_DATALOCATOR_IODEVICE, SL_IODEVICE_AUDIOINPUT,
     SL_DEFAULTDEVICEID_AUDIOINPUT, NULL
   };
   SLDataSource audioSrc = { &loc_dev, NULL };
 
   /* Configure audio sink */
-  SLDataLocator_AndroidSimpleBufferQueue loc_bq =
-      { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
+  SLDataLocator_AndroidSimpleBufferQueue loc_bq = {
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+  };
   SLDataSink audioSink = { &loc_bq, &format };
 
-  /* Create audio recorder (requires the RECORD_AUDIO permission) */
   const SLInterfaceID id[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
   const SLboolean req[1] = { SL_BOOLEAN_TRUE };
 
   /* Define the format in OpenSL ES terms */
   _opensles_format (spec, &format);
 
+  /* Create audio recorder (requires the RECORD_AUDIO permission) */
   result = (*thiz->engineEngine)->CreateAudioRecorder (thiz->engineEngine,
       &thiz->recorderObject, &audioSrc, &audioSink, 1, id, req);
   if (result != SL_RESULT_SUCCESS) {
@@ -197,8 +206,8 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   }
 
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
-  spec->segsize = (spec->rate * spec->bytes_per_sample) >> 1;
-  spec->segtotal = 3;
+  spec->segsize = (spec->rate * spec->bytes_per_sample) >> 2;
+  spec->segtotal = 16;
 
   return TRUE;
 
@@ -227,8 +236,8 @@ _opensles_recorder_start (GstRingBuffer * rb)
     return FALSE;
   }
 
-  /* FIXME: Maybe we should enqueue some buffers here first by calling
-   * _opensles_recorder_cb */
+  _opensles_recorder_cb (NULL, rb);
+  _opensles_recorder_cb (NULL, rb);
 
   /* start recording */
   result =
@@ -351,13 +360,15 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   SLDataFormat_PCM format;
 
   /* Configure audio source */
-  SLDataLocator_AndroidSimpleBufferQueue loc_bufq =
-      { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
+  SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+  };
   SLDataSource audioSrc = { &loc_bufq, &format };
 
   /* Configure audio sink */
-  SLDataLocator_OutputMix loc_outmix =
-      { SL_DATALOCATOR_OUTPUTMIX, thiz->outputMixObject };
+  SLDataLocator_OutputMix loc_outmix = {
+    SL_DATALOCATOR_OUTPUTMIX, thiz->outputMixObject
+  };
   SLDataSink audioSink = { &loc_outmix, NULL };
 
   /* Create an audio player */

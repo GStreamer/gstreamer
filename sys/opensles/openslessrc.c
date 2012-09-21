@@ -26,8 +26,7 @@
 GST_DEBUG_CATEGORY_STATIC (opensles_src_debug);
 #define GST_CAT_DEFAULT opensles_src_debug
 
-#define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000"
-
+/* *INDENT-OFF* */
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -36,15 +35,10 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "signed = (boolean) { TRUE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
-        "rate = (int) { " RATES "}, "
-        "channels = (int) [1, 2];"
-        "audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "rate = (int) { " RATES "}, " "channels = (int) [1, 2]")
+        "rate = (int) 16000, "
+        "channels = (int) 1")
     );
+/* *INDENT-ON* */
 
 static void
 _do_init (GType type)
