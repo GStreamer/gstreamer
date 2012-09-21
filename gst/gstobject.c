@@ -66,12 +66,8 @@
  * </orderedlist>
  *
  * What needs to be done in applications?
- * Again its not a lot to change.
+ * Again it's not a lot to change.
  * <orderedlist>
- *   <listitem><para>
- *     first put some properties under control, by calling
- *     gst_object_control_properties (object, "prop1", "prop2",...);
- *   </para></listitem>
  *   <listitem><para>
  *     create a #GstControlSource.
  *     csource = gst_interpolation_control_source_new ();
@@ -79,7 +75,7 @@
  *   </para></listitem>
  *   <listitem><para>
  *     Attach the #GstControlSource on the controller to a property.
- *     gst_object_add_control_binding (object, gst_direct_control_binding_new (objetct, "prop1", csource));
+ *     gst_object_add_control_binding (object, gst_direct_control_binding_new (object, "prop1", csource));
  *   </para></listitem>
  *   <listitem><para>
  *     Set the control values
