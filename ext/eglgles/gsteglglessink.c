@@ -139,7 +139,8 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
 
 /* *INDENT-OFF* */
 static const char *vert_COPY_prog = {
-  "attribute vec3 position;"
+      "attribute vec3 position;"
+      "attribute vec2 texpos;"
       "varying vec2 opos;"
       "void main(void)"
       "{"
@@ -1151,12 +1152,25 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     eglglessink->coordarray[3].y = -1;
     eglglessink->coordarray[3].z = 0;
 
+    eglglessink->texarray[0].x = 1;
+    eglglessink->texarray[0].y = 1;
+
+    eglglessink->texarray[1].x = 1;
+    eglglessink->texarray[1].y = -1;
+
+    eglglessink->texarray[2].x = -1;
+    eglglessink->texarray[2].y = 1;
+
+    eglglessink->texarray[3].x = -1;
+    eglglessink->texarray[3].y = -1;
+
     eglglessink->indexarray[0] = 0;
     eglglessink->indexarray[1] = 1;
     eglglessink->indexarray[2] = 2;
     eglglessink->indexarray[3] = 3;
 
     glGenBuffers (1, &eglglessink->vdata);
+    glGenBuffers (1, &eglglessink->tdata);
     glGenBuffers (1, &eglglessink->idata);
     if (got_gl_error ("glGenBuffers"))
       goto HANDLE_ERROR_LOCKED;
@@ -1175,6 +1189,23 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
       goto HANDLE_ERROR_LOCKED;
 
     glEnableVertexAttribArray (0);
+    if (got_gl_error ("glEnableVertexAttribArray"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->tdata);
+    if (got_gl_error ("glBindBuffer tdata"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->texarray),
+        eglglessink->texarray, GL_STATIC_DRAW);
+    if (got_gl_error ("glBufferData tdata"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR_LOCKED;
+
+    glEnableVertexAttribArray (1);
     if (got_gl_error ("glEnableVertexAttribArray"))
       goto HANDLE_ERROR_LOCKED;
 

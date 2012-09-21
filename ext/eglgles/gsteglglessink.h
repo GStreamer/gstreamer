@@ -87,12 +87,18 @@ typedef enum {
     GST_EGLGLESSINK_RENDER_FAST
 } GstEglGlesSinkRenderingPath;
 
-typedef struct _coord
+typedef struct _coord2
+{
+  float x;
+  float y;
+} coord2;
+
+typedef struct _coord3
 {
   float x;
   float y;
   float z;
-} coord;
+} coord3;
 
 struct _GstEglGlesImageFmt
 {
@@ -150,9 +156,10 @@ struct _GstEglGlesSink
   GstEglGlesSinkRenderingPath rendering_path;
 
   /* shader vars */
-  coord coordarray[4];
+  coord3 coordarray[4];
+  coord2 texarray[4];
   unsigned short indexarray[4];
-  unsigned int vdata, idata;
+  unsigned int vdata, tdata, idata;
 
   /* props */
   gboolean silent;
