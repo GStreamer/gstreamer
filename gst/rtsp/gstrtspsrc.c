@@ -265,6 +265,7 @@ static GstRTSPResult gst_rtspsrc_close (GstRTSPSrc * src, gboolean async,
 
 static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
     const gchar * uri, GError ** error);
+static gchar *gst_rtspsrc_uri_get_uri (GstURIHandler * handler);
 
 static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_loop (GstRTSPSrc * src);
@@ -2096,6 +2097,18 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstObject * parent,
         /* FIXME ?? should we have 0 and segment.duration here; see demuxers */
         gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
             src->segment.start, src->segment.stop);
+        res = TRUE;
+      }
+      break;
+    }
+    case GST_QUERY_URI:
+    {
+      gchar *uri;
+
+      uri = gst_rtspsrc_uri_get_uri (GST_URI_HANDLER (src));
+      if (uri != NULL) {
+        gst_query_set_uri (query, uri);
+        g_free (uri);
         res = TRUE;
       }
       break;
