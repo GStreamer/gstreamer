@@ -1615,7 +1615,7 @@ init_picture(
 
     init_picture_poc(decoder, picture, slice_hdr);
     if (!init_picture_refs(decoder, picture, slice_hdr)) {
-        GST_DEBUG("failed to initialize references");
+        GST_ERROR("failed to initialize references");
         return FALSE;
     }
     return TRUE;
@@ -1921,7 +1921,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu, GstH264SliceH
 
     status = ensure_context(decoder, sps);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-        GST_DEBUG("failed to reset context");
+        GST_ERROR("failed to reset context");
         return status;
     }
 
@@ -1930,20 +1930,20 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu, GstH264SliceH
 
     picture = gst_vaapi_picture_h264_new(decoder);
     if (!picture) {
-        GST_DEBUG("failed to allocate picture");
+        GST_ERROR("failed to allocate picture");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
     priv->current_picture = picture;
 
     picture->base.iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(H264, decoder);
     if (!picture->base.iq_matrix) {
-        GST_DEBUG("failed to allocate IQ matrix");
+        GST_ERROR("failed to allocate IQ matrix");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
 
     status = ensure_quant_matrix(decoder, pps);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-        GST_DEBUG("failed to reset quantizer matrix");
+        GST_ERROR("failed to reset quantizer matrix");
         return status;
     }
 
@@ -2157,7 +2157,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
         nalu->size
     );
     if (!slice) {
-        GST_DEBUG("failed to allocate slice");
+        GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
 
@@ -2322,7 +2322,7 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             break;
         default:
-            GST_DEBUG("unsupported NAL unit type %d", nalu.type);
+            GST_WARNING("unsupported NAL unit type %d", nalu.type);
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
             break;
         }
@@ -2351,7 +2351,7 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
     if (buf[0] != 1) {
-        GST_DEBUG("failed to decode codec-data, not in avcC format");
+        GST_ERROR("failed to decode codec-data, not in avcC format");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
 
