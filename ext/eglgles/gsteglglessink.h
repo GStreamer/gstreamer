@@ -156,6 +156,7 @@ struct _GstEglGlesSink
   GstEglGlesSinkRenderingPath rendering_path;
 
   /* shader vars */
+  GLuint coord_pos, tex_pos;
   coord3 coordarray[4];
   coord2 texarray[4];
   unsigned short indexarray[4];

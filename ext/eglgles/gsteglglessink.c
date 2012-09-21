@@ -1184,11 +1184,11 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     if (got_gl_error ("glBufferData vdata"))
       goto HANDLE_ERROR_LOCKED;
 
-    glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer (eglglessink->coord_pos, 3, GL_FLOAT, GL_FALSE, 0, 0);
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glEnableVertexAttribArray (0);
+    glEnableVertexAttribArray (eglglessink->coord_pos);
     if (got_gl_error ("glEnableVertexAttribArray"))
       goto HANDLE_ERROR_LOCKED;
 
@@ -1201,11 +1201,11 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     if (got_gl_error ("glBufferData tdata"))
       goto HANDLE_ERROR_LOCKED;
 
-    glVertexAttribPointer (1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer (eglglessink->tex_pos, 2, GL_FLOAT, GL_FALSE, 0, 0);
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glEnableVertexAttribArray (1);
+    glEnableVertexAttribArray (eglglessink->tex_pos);
     if (got_gl_error ("glEnableVertexAttribArray"))
       goto HANDLE_ERROR_LOCKED;
 
@@ -1359,6 +1359,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glUseProgram"))
     goto HANDLE_ERROR;
 
+  eglglessink->coord_pos = glGetAttribLocation (prog, "position");
+  eglglessink->tex_pos = glGetAttribLocation (prog, "texpos");
 
   /* Generate and bind texture */
   if (!eglglessink->have_texture) {
