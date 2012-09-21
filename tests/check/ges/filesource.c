@@ -18,61 +18,97 @@
  */
 
 #include "test-utils.h"
-
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
 /* This test uri will eventually have to be fixed */
 #define TEST_URI "http://nowhere/blahblahblah"
 
+
+static gchar *av_uri;
+GMainLoop *mainloop;
+
+static void
+asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
+{
+  GList *tracks, *tmp;
+  GESAsset *asset;
+  GESTimelineLayer *layer;
+  GESTimelineFileSource *tlfs;
+
+  GError *error = NULL;
+
+  asset = ges_asset_request_finish (res, &error);
+  fail_unless (error == NULL);
+  fail_if (asset == NULL);
+  fail_if (g_strcmp0 (ges_asset_get_id (asset), av_uri));
+
+  layer = GES_TIMELINE_LAYER (g_async_result_get_user_data (res));
+  tlfs = GES_TIMELINE_FILE_SOURCE (ges_timeline_layer_add_asset (layer,
+          asset, 0, 0, GST_CLOCK_TIME_NONE, 1, GES_TRACK_TYPE_UNKNOWN));
+  fail_unless (GES_IS_TIMELINE_FILE_SOURCE (tlfs));
+  fail_if (g_strcmp0 (ges_timeline_filesource_get_uri (tlfs), av_uri));
+  assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (tlfs), GST_SECOND);
+
+  fail_unless (ges_timeline_object_get_supported_formats
+      (GES_TIMELINE_OBJECT (tlfs)) & GES_TRACK_TYPE_VIDEO);
+  fail_unless (ges_timeline_object_get_supported_formats
+      (GES_TIMELINE_OBJECT (tlfs)) & GES_TRACK_TYPE_AUDIO);
+
+  tracks = ges_timeline_get_tracks (ges_timeline_layer_get_timeline (layer));
+  for (tmp = tracks; tmp; tmp = tmp->next) {
+    GList *tckobjs = ges_track_get_objects (GES_TRACK (tmp->data));
+
+    assert_equals_int (g_list_length (tckobjs), 1);
+    fail_unless (GES_IS_TRACK_FILESOURCE (tckobjs->data));
+    g_list_free_full (tckobjs, gst_object_unref);
+  }
+  g_list_free_full (tracks, gst_object_unref);
+
+  gst_object_unref (asset);
+  g_main_loop_quit (mainloop);
+}
+
 GST_START_TEST (test_filesource_basic)
 {
-  GESTrack *track;
-  GESTrackObject *trackobject;
-  GESTimelineFileSource *source;
-  gchar *uri;
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
 
-  ges_init ();
+  fail_unless (ges_init ());
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, GST_CAPS_ANY);
-  fail_unless (track != NULL);
+  mainloop = g_main_loop_new (NULL, FALSE);
 
-  source = ges_timeline_filesource_new ((gchar *) TEST_URI);
-  fail_unless (source != NULL);
+  timeline = ges_timeline_new_audio_video ();
+  fail_unless (timeline != NULL);
 
-  /* Make sure the object was properly set */
-  g_object_get (source, "uri", &uri, NULL);
-  fail_unless (g_ascii_strcasecmp (uri, TEST_URI) == 0);
-  g_free (uri);
+  layer = ges_timeline_layer_new ();
+  fail_unless (layer != NULL);
+  fail_unless (ges_timeline_add_layer (timeline, layer));
 
-  /* Make sure no track object is created for an incompatible
-   * track. */
-  trackobject =
-      ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (source),
-      track);
-  fail_unless (trackobject == NULL);
+  ges_asset_request_async (GES_TYPE_TIMELINE_FILE_SOURCE,
+      av_uri, NULL, asset_created_cb, layer);
 
-  /* Make sure the track object is created for a compatible track. */
-  g_object_set (source, "supported-formats", GES_TRACK_TYPE_CUSTOM, NULL);
-  trackobject =
-      ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (source),
-      track);
-  ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT (source),
-      trackobject);
-  fail_unless (trackobject != NULL);
-
-  /* The track holds a reference to the object
-   * and the timelineobject holds a reference on the object */
-  ASSERT_OBJECT_REFCOUNT (trackobject, "Track Object", 2);
-
-  fail_unless (ges_timeline_object_release_track_object (GES_TIMELINE_OBJECT
-          (source), trackobject) == TRUE);
-
-  g_object_unref (source);
-  g_object_unref (track);
+  g_main_loop_run (mainloop);
+  g_main_loop_unref (mainloop);
+  g_object_unref (timeline);
 }
 
 GST_END_TEST;
+
+#define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
+  guint64 pstart, pdur, pmstart, pmdur, pprio, pact;			\
+  g_object_get (gnlobj, "start", &pstart, "duration", &pdur,		\
+		"media-start", &pmstart, "media-duration", &pmdur,	\
+		"priority", &pprio, "active", &pact,			\
+		NULL);							\
+  assert_equals_uint64 (pstart, start);					\
+  assert_equals_uint64 (pdur, duration);					\
+  assert_equals_uint64 (pmstart, mstart);					\
+  assert_equals_uint64 (pmdur, mduration);					\
+  assert_equals_int (pprio, priority);					\
+  assert_equals_int (pact, active);					\
+  }
+
 
 GST_START_TEST (test_filesource_properties)
 {
@@ -211,9 +247,13 @@ main (int argc, char **argv)
 
   gst_check_init (&argc, &argv);
 
+  av_uri = ges_test_get_audio_video_uri ();
+
   srunner_run_all (sr, CK_NORMAL);
   nf = srunner_ntests_failed (sr);
   srunner_free (sr);
+
+  g_free (av_uri);
 
   return nf;
 }
