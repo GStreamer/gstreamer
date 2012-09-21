@@ -196,6 +196,7 @@ static void *app_function (void *userdata) {
 //  data->pipeline = gst_parse_launch ("videotestsrc ! eglglessink force_rendering_slow=1 can_create_window=0 name=vsink", NULL);
 //  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! queue ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
   data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! queue ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
+//  data->pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm name=vsink", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
   if (data->native_window) {
@@ -254,6 +255,7 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
 
 void gst_native_finalize (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
   GST_DEBUG ("Quitting main loop...");
   g_main_loop_quit (data->main_loop);
   GST_DEBUG ("Waiting for thread to finish...");
@@ -268,18 +270,21 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
 
 void gst_native_play (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
   GST_DEBUG ("Setting state to PLAYING");
   gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
 }
 
 void gst_native_pause (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
   GST_DEBUG ("Setting state to PAUSED");
   gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
 }
 
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
   gint64 desired_position = (gint64)(milliseconds * GST_MSECOND);
   if (data->state == GST_STATE_PLAYING || data->state == GST_STATE_PAUSED) {
 	  execute_seek(desired_position, data);
@@ -308,6 +313,7 @@ jboolean gst_class_init (JNIEnv* env, jclass klass) {
 
 void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
   GST_DEBUG ("Received surface %p", surface);
   if (data->native_window) {
     GST_DEBUG ("Releasing previous native window %p", data->native_window);
