@@ -180,6 +180,26 @@ static const char *frag_AYUV_prog = {
       "  gl_FragColor=vec4(r,g,b,1.0);"
       "}"
 };
+static const char *frag_I420_YV12_prog = {
+      "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D Ytex,Utex,Vtex;"
+      "void main(void) {"
+      "  float r,g,b,y,u,v;"
+      "  vec2 nxy = opos.xy;"
+      "  y=texture2D(Ytex,nxy).r;"
+      "  u=texture2D(Utex,nxy).r;"
+      "  v=texture2D(Vtex,nxy).r;"
+      "  y=1.1643*(y-0.0625);"
+      "  u=u-0.5;"
+      "  v=v-0.5;"
+      "  r=y+1.5958*v;"
+      "  g=y-0.39173*u-0.81290*v;"
+      "  b=y+2.017*u;"
+      "  gl_FragColor=vec4(r,g,b,1.0);"
+      "}"
+};
+
 /* *INDENT-ON* */
 
 /* Input capabilities.
@@ -192,7 +212,7 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_YUV ("AYUV") ";"
+        GST_VIDEO_CAPS_YUV ("{ AYUV, I420, YV12 }") ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
 
 /* Filter signals and args */
@@ -826,6 +846,10 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_AYUV));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_I420));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YV12));
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -1236,9 +1260,11 @@ static gboolean
 gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
   GLint test;
-  GLuint verthandle, fraghandle, prog, texlocation;
+  GLuint verthandle, fraghandle, prog;
   GLboolean ret;
   GLchar *info_log;
+  gint n_textures = 0;
+  const gchar *texnames[3] = { NULL, };
 
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL surface setup");
 
@@ -1315,12 +1341,24 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   switch (eglglessink->format) {
     case GST_VIDEO_FORMAT_AYUV:
       glShaderSource (fraghandle, 1, &frag_AYUV_prog, NULL);
+      n_textures = 1;
+      texnames[0] = "tex";
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      glShaderSource (fraghandle, 1, &frag_I420_YV12_prog, NULL);
+      n_textures = 3;
+      texnames[0] = "Ytex";
+      texnames[1] = "Utex";
+      texnames[2] = "Vtex";
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGB16:
       glShaderSource (fraghandle, 1, &frag_COPY_prog, NULL);
+      n_textures = 1;
+      texnames[0] = "tex";
       break;
     default:
       g_assert_not_reached ();
@@ -1374,31 +1412,13 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
   /* Generate and bind texture */
   if (!eglglessink->have_texture) {
-    gint i, n_textures;
-    const gchar *texnames[3] = { NULL, };
+    gint i;
 
     GST_INFO_OBJECT (eglglessink, "Doing initial texture setup");
-    switch (eglglessink->format) {
-      case GST_VIDEO_FORMAT_RGB:
-      case GST_VIDEO_FORMAT_RGBx:
-      case GST_VIDEO_FORMAT_RGBA:
-      case GST_VIDEO_FORMAT_RGB16:
-      case GST_VIDEO_FORMAT_AYUV:
-        n_textures = 1;
-        texnames[0] = "tex";
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
-    }
 
     g_mutex_lock (eglglessink->flow_lock);
 
     for (i = 0; i < n_textures; i++) {
-      glGenTextures (1, &eglglessink->texture[i]);
-      if (got_gl_error ("glGenTextures"))
-        goto HANDLE_ERROR_LOCKED;
-
       if (i == 0)
         glActiveTexture (GL_TEXTURE0);
       else if (i == 1)
@@ -1406,12 +1426,16 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       else if (i == 2)
         glActiveTexture (GL_TEXTURE2);
 
+      glGenTextures (1, &eglglessink->texture[i]);
+      if (got_gl_error ("glGenTextures"))
+        goto HANDLE_ERROR_LOCKED;
+
       glBindTexture (GL_TEXTURE_2D, eglglessink->texture[i]);
       if (got_gl_error ("glBindTexture"))
         goto HANDLE_ERROR_LOCKED;
 
-      texlocation = glGetUniformLocation (prog, texnames[i]);
-      glUniform1i (texlocation, 0);
+      eglglessink->tex_uniform[i] = glGetUniformLocation (prog, texnames[i]);
+      glUniform1i (eglglessink->tex_uniform[i], i);
 
       /* Set 2D resizing params */
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1637,11 +1661,13 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       switch (eglglessink->selected_fmt->fmt) {
         case GST_EGLGLESSINK_IMAGE_RGB888:
           glActiveTexture (GL_TEXTURE0);
+          glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
               GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
           break;
         case GST_EGLGLESSINK_IMAGE_RGB565:
           glActiveTexture (GL_TEXTURE0);
+          glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
               GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
           break;
@@ -1650,14 +1676,58 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
             case GST_VIDEO_FORMAT_RGBA:
             case GST_VIDEO_FORMAT_RGBx:
               glActiveTexture (GL_TEXTURE0);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
               glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
             case GST_VIDEO_FORMAT_AYUV:
               glActiveTexture (GL_TEXTURE0);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
               glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
+            case GST_VIDEO_FORMAT_I420:
+            case GST_VIDEO_FORMAT_YV12:{
+              gint coffset, cw, ch;
+
+              coffset =
+                  gst_video_format_get_component_offset (eglglessink->format, 0,
+                  w, h);
+              cw = gst_video_format_get_component_width (eglglessink->format, 0,
+                  w);
+              ch = gst_video_format_get_component_height (eglglessink->format,
+                  0, h);
+              glActiveTexture (GL_TEXTURE0);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                  cw, ch, 0, GL_LUMINANCE,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+              coffset =
+                  gst_video_format_get_component_offset (eglglessink->format, 1,
+                  w, h);
+              cw = gst_video_format_get_component_width (eglglessink->format, 1,
+                  w);
+              ch = gst_video_format_get_component_height (eglglessink->format,
+                  1, h);
+              glActiveTexture (GL_TEXTURE1);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                  cw, ch, 0, GL_LUMINANCE,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+              coffset =
+                  gst_video_format_get_component_offset (eglglessink->format, 2,
+                  w, h);
+              cw = gst_video_format_get_component_width (eglglessink->format, 2,
+                  w);
+              ch = gst_video_format_get_component_height (eglglessink->format,
+                  2, h);
+              glActiveTexture (GL_TEXTURE2);
+              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[2]);
+              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                  cw, ch, 0, GL_LUMINANCE,
+                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+              break;
+            }
             default:
               g_assert_not_reached ();
               break;

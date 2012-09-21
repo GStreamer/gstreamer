@@ -144,7 +144,7 @@ struct _GstEglGlesSink
   EGLNativeWindowType window;
   EGLSurface surface;
 
-  GLuint texture[1];
+  GLuint texture[3];
 
   gboolean have_window;
   gboolean have_surface;;
@@ -157,6 +157,7 @@ struct _GstEglGlesSink
 
   /* shader vars */
   GLuint coord_pos, tex_pos;
+  GLuint tex_uniform[3];
   coord3 coordarray[4];
   coord2 texarray[4];
   unsigned short indexarray[4];
