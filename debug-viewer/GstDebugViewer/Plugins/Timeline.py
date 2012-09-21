@@ -552,15 +552,23 @@ class TimelineWidget (gtk.DrawingArea):
 
     def update_position (self, start_ts, end_ts):
 
-        self.__position_ts_range = (start_ts, end_ts,)
-
         if not self.process.freq_sentinel:
             return
 
         if not self.process.freq_sentinel.data:
             return
 
-        self.queue_draw ()
+        x, y, width, height = self.get_allocation ()
+
+        # Queue old position rectangle for redraw:
+        if self.__position_ts_range is not None:
+            start, stop = self.ts_range_to_position (*self.__position_ts_range)
+            self.queue_draw_area (start - 1, 0, stop - start + 2, height)
+        # And the new one:
+        start, stop = self.ts_range_to_position (start_ts, end_ts)
+        self.queue_draw_area (start - 1, 0, stop - start + 2, height)
+
+        self.__position_ts_range = (start_ts, end_ts,)
 
     def find_indicative_time_step (self):
 
@@ -700,19 +708,28 @@ class TimelineWidget (gtk.DrawingArea):
         else:
             return False
 
+    def ts_range_to_position (self, start_ts, end_ts):
+
+        if not self.__have_position ():
+            return (0, 0)
+
+        first_ts, last_ts = self.process.freq_sentinel.ts_range
+        step = self.process.freq_sentinel.step
+        if step == 0:
+            return (0, 0)
+
+        position1 = int (float (start_ts - first_ts) / step)
+        position2 = int (float (end_ts - first_ts) / step)
+
+        return (position1, position2)
+
     def __draw_position (self, drawable, clip = None):
 
         if not self.__have_position ():
             return
 
         start_ts, end_ts = self.__position_ts_range
-        first_ts, last_ts = self.process.freq_sentinel.ts_range
-        step = self.process.freq_sentinel.step
-        if step == 0:
-            return
-
-        position1 = int (float (start_ts - first_ts) / step)
-        position2 = int (float (end_ts - first_ts) / step)
+        position1, position2 = self.ts_range_to_position (start_ts, end_ts)
 
         if clip:
             clip_x, clip_y, clip_w, clip_h = clip
@@ -743,7 +760,7 @@ class TimelineWidget (gtk.DrawingArea):
         if self.__offscreen is None:
             self.__update_offscreen ()
 
-        self.__draw_from_offscreen ()
+        self.__draw_from_offscreen (event.area)
 
         return True
 
