@@ -118,6 +118,7 @@ struct _GstOggMux
 
   /* need_headers */
   gboolean need_headers;
+  gboolean need_start_events;
 
   guint64 max_delay;
   guint64 max_page_delay;
