@@ -26,6 +26,6 @@ ifndef
 GSTREAMER_SDK_ROOT        := $(CERBERO_PREFIX)
 endif
 GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
-GSTREAMER_PLUGINS         := coreelements audiotestsrc videotestsrc ogg theora vorbis ffmpegcolorspace playback app audioconvert audiorate audioresample adder coreindexers gdp gio uridecodebin videorate videoscale typefindfunctions libvisual pango subparse eglglessink soup amc matroska
+GSTREAMER_PLUGINS         := coreelements ogg theora vorbis ffmpegcolorspace playback audioconvert audiorate audioresample coreindexers gio uridecodebin videorate videoscale typefindfunctions eglglessink soup amc matroska autodetect
 G_IO_MODULES              := gnutls
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
