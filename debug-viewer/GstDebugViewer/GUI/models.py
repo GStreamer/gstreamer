@@ -404,7 +404,16 @@ class SubRange (object):
 
     def __getitem__ (self, i):
 
-        return self.l[i + self.start]
+        if isinstance (i, slice):
+            stop = i.stop
+            if stop >= 0:
+                stop += self.start
+            else:
+                stop += self.stop
+
+            return self.l[i.start + self.start:stop]
+        else:
+            return self.l[i + self.start]
 
     def __len__ (self):
 
