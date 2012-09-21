@@ -144,18 +144,21 @@ def default_log_line_regex_ ():
     TIME = r"(\d+:\d\d:\d\d\.\d+)\s+"
     CATEGORY = "([A-Za-z0-9_-]+)\s+" # "GST_REFCOUNTING ", "flacdec "
     # "  3089 "
-    PID = r"(\d+)\s+"
+    PID = r"(\d+)\s*"
     FILENAME = r"([^:]*):"
     LINE = r"(\d+):"
     FUNCTION = "([A-Za-z0-9_]*):"
     # FIXME: When non-g(st)object stuff is logged with *_OBJECT (like
     # buffers!), the address is printed *without* <> brackets!
-    OBJECT = "(?:<([^>]+)> )?"
+    OBJECT = "(?:<([^>]+)>)?"
     MESSAGE = "(.+)"
 
+    ANSI = "(?:\x1b\\[[0-9;]*m\\s*)*\\s*"
+
     # New log format:
-    expressions = [TIME, PID, THREAD, LEVEL, CATEGORY, FILENAME, LINE, FUNCTION,
-                   OBJECT, MESSAGE]
+    expressions = [TIME, ANSI, PID, ANSI, THREAD, ANSI, LEVEL, ANSI,
+                   CATEGORY, FILENAME, LINE, FUNCTION, ANSI,
+                   OBJECT, ANSI, MESSAGE]
     # Old log format:
     ## expressions = [LEVEL, THREAD, TIME, CATEGORY, PID, FILENAME, LINE,
     ##                FUNCTION, OBJECT, MESSAGE]
@@ -290,7 +293,11 @@ class LineCache (Producer):
                        "L" : debug_level_log, "D" : debug_level_debug,
                        "I" : debug_level_info, "W" : debug_level_warning,
                        "E" : debug_level_error, " " : debug_level_none}
-        rexp = re.compile (r"\d:\d\d:\d\d\.\d+\s+\d+\s+0x[0-9a-f]+\s+([TFLDIEW ])")
+        ANSI = "(?:\x1b\\[[0-9;]*m)?"
+        rexp = re.compile (r"\d:\d\d:\d\d\.\d+ " + ANSI +
+                           r" *\d+" + ANSI +
+                           r" +0x[0-9a-f]+ +" + ANSI +
+                           r"([TFLDIEW ])")
 
         # Moving attribute lookups out of the loop:
         readline = self.__fileobj.readline
