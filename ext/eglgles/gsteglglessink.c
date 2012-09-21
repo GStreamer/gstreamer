@@ -1506,14 +1506,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
       GST_BUFFER_SIZE (buf));
 
-  /* Make sure we stay on our context to avoid threading nightmares */
-  if (!eglMakeCurrent (eglglessink->display, eglglessink->surface,
-          eglglessink->surface, eglglessink->context)) {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't bind surface/context, "
-        "eglMakeCurrent");
-    goto HANDLE_ERROR;
-  }
-
   switch (eglglessink->rendering_path) {
 #ifdef EGL_FAST_RENDERING_POSSIBLE
     case GST_EGLGLESSINK_RENDER_FAST:
