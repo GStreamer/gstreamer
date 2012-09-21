@@ -210,6 +210,7 @@ gst_ogg_mux_clear (GstOggMux * ogg_mux)
 {
   ogg_mux->pulling = NULL;
   ogg_mux->need_headers = TRUE;
+  ogg_mux->need_start_events = TRUE;
   ogg_mux->delta_pad = NULL;
   ogg_mux->offset = 0;
   ogg_mux->next_ts = 0;
@@ -1913,6 +1914,17 @@ all_pads_eos (GstCollectPads * pads)
   return TRUE;
 }
 
+static void
+gst_ogg_mux_send_start_events (GstOggMux * ogg_mux, GstCollectPads * pads)
+{
+  GstSegment segment;
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_push_event (ogg_mux->srcpad, gst_event_new_segment (&segment));
+
+  /* we'll send caps later, need to collect all headers first */
+}
+
 /* This function is called when there is data on all pads.
  * 
  * It finds a pad to pull on, this is done by looking at the buffers
@@ -1931,6 +1943,11 @@ gst_ogg_mux_collected (GstCollectPads * pads, GstOggMux * ogg_mux)
   gboolean popped;
 
   GST_LOG_OBJECT (ogg_mux, "collected");
+
+  if (ogg_mux->need_start_events) {
+    gst_ogg_mux_send_start_events (ogg_mux, pads);
+    ogg_mux->need_start_events = FALSE;
+  }
 
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_ogg_mux_queue_pads (ogg_mux, &popped);
