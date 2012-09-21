@@ -7171,7 +7171,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         if (enda) {
           gst_caps_set_simple (stream->caps,
-              "format", G_TYPE_STRING, "S24_3LE", NULL);
+              "format", G_TYPE_STRING, "S24LE", NULL);
         }
         break;
       }
