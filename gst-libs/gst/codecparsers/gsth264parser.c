@@ -1555,7 +1555,7 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
       * subhc[sps->chroma_format_idc] * (2 - sps->frame_mbs_only_flag));
   if (width < 0 || height < 0) {
     GST_WARNING ("invalid width/height in SPS");
-    return FALSE;
+    goto error;
   }
   GST_LOG ("final width=%u, height=%u", width, height);
   sps->width = width;
