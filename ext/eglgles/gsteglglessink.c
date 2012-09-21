@@ -144,7 +144,7 @@ static const char *vert_COPY_prog = {
       "varying vec2 opos;"
       "void main(void)"
       "{"
-      " opos = vec2((position.x + 1.0)/2.0, ((-1.0 * position.y) + 1.0)/2.0);"
+      " opos = texpos;"
       " gl_Position = vec4(position, 1.0);"
       "}"
 };
@@ -1153,16 +1153,16 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
     eglglessink->coordarray[3].z = 0;
 
     eglglessink->texarray[0].x = 1;
-    eglglessink->texarray[0].y = 1;
+    eglglessink->texarray[0].y = 0;
 
     eglglessink->texarray[1].x = 1;
-    eglglessink->texarray[1].y = -1;
+    eglglessink->texarray[1].y = 1;
 
-    eglglessink->texarray[2].x = -1;
-    eglglessink->texarray[2].y = 1;
+    eglglessink->texarray[2].x = 0;
+    eglglessink->texarray[2].y = 0;
 
-    eglglessink->texarray[3].x = -1;
-    eglglessink->texarray[3].y = -1;
+    eglglessink->texarray[3].x = 0;
+    eglglessink->texarray[3].y = 1;
 
     eglglessink->indexarray[0] = 0;
     eglglessink->indexarray[1] = 1;
