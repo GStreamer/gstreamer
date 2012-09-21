@@ -1584,8 +1584,10 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
         goto HANDLE_ERROR;
       }
 
-      glClearColor (0.0, 0.0, 0.0, 0.0);
-      glClear (GL_COLOR_BUFFER_BIT);
+      /* Don't really need to clear surface color
+       * glClearColor (0.0, 0.0, 0.0, 0.0);
+       * glClear (GL_COLOR_BUFFER_BIT);
+       */
       glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
       if (got_gl_error ("glDrawElements"))
         goto HANDLE_ERROR;
