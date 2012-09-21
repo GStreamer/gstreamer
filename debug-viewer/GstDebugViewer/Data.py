@@ -314,6 +314,11 @@ class LineCache (Producer):
         sort_helper = SortHelper (self.__fileobj, offsets)
         find_insert_position = sort_helper.find_insert_position
         while True:
+            i += 1
+            if i >= limit:
+                i = 0
+                yield True
+
             offset = tell ()
             line = readline ()
             if not line:
@@ -336,10 +341,6 @@ class LineCache (Producer):
                 pos = find_insert_position (line)
                 levels.insert (pos, dict_levels_get (match.group (1), debug_level_none))
                 offsets.insert (pos, offset)
-            i += 1
-            if i >= limit:
-                i = 0
-                yield True
 
         self.have_load_finished ()
         yield False
