@@ -37,7 +37,9 @@ enum
 #define DEFAULT_VOLUME 1.0
 #define DEFAULT_MUTE   FALSE
 
-#define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000, 64000, 88200, 96000, 192000"
+
+/* According to Android's NDK doc the following are the supported rates */
+#define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -90,6 +92,102 @@ gst_opensles_sink_create_ringbuffer (GstBaseAudioSink * base)
   gst_opensles_ringbuffer_set_volume (rb, sink->volume);
   gst_opensles_ringbuffer_set_mute (rb, sink->mute);
   return rb;
+}
+
+#define AUDIO_OUTPUT_DESC_FORMAT                                              \
+    "deviceName: %s deviceConnection: %d deviceScope: %d deviceLocation: %d " \
+    "isForTelephony: %d minSampleRate: %d maxSampleRate: %d "                 \
+    "isFreqRangeContinuous: %d maxChannels: %d"
+
+#define AUDIO_OUTPUT_DESC_ARGS(aod)                                           \
+    (gchar*) (aod)->pDeviceName, (gint) (aod)->deviceConnection,              \
+    (gint) (aod)->deviceScope, (gint) (aod)->deviceLocation,                  \
+    (gint) (aod)->isForTelephony, (gint) (aod)->minSampleRate,                \
+    (gint) (aod)->maxSampleRate, (gint) (aod)->isFreqRangeContinuous,         \
+    (gint) (aod)->maxChannels
+
+/* Next it's not defined in Android */
+#ifndef MAX_NUMBER_OUTPUT_DEVICES
+#define MAX_NUMBER_OUTPUT_DEVICES 16
+#endif
+
+static gboolean
+_opensles_query_capabilities (GstOpenSLESSink * sink)
+{
+  gboolean res = FALSE;
+  SLresult result;
+  SLObjectItf engineObject = NULL;
+  SLAudioIODeviceCapabilitiesItf audioIODeviceCapabilities;
+  SLint32 i, j, numOutputs = MAX_NUMBER_OUTPUT_DEVICES;
+  SLuint32 outputDeviceIDs[MAX_NUMBER_OUTPUT_DEVICES];
+  SLAudioOutputDescriptor audioOutputDescriptor;
+
+  /* Create engine */
+  result = slCreateEngine (&engineObject, 0, NULL, 0, NULL, NULL);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (sink, "slCreateEngine failed(0x%08x)", (guint32) result);
+    goto beach;
+  }
+
+  /* Realize the engine */
+  result = (*engineObject)->Realize (engineObject, SL_BOOLEAN_FALSE);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (sink, "engine.Realize failed(0x%08x)", (guint32) result);
+    goto beach;
+  }
+
+  /* Get the engine interface, which is needed in order to
+   * create other objects */
+  result = (*engineObject)->GetInterface (engineObject,
+      SL_IID_AUDIOIODEVICECAPABILITIES, &audioIODeviceCapabilities);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (sink,
+        "engine.GetInterface(IODeviceCapabilities) failed(0x%08x)",
+        (guint32) result);
+    goto beach;
+  }
+
+  result = (*audioIODeviceCapabilities)->GetAvailableAudioOutputs
+      (audioIODeviceCapabilities, &numOutputs, outputDeviceIDs);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (sink,
+        "IODeviceCapabilities.GetAvailableAudioOutputs failed(0x%08x)",
+        (guint32) result);
+    goto beach;
+  }
+
+  GST_DEBUG_OBJECT (sink, "Found %d output devices", (gint32) numOutputs);
+
+  for (i = 0; i < numOutputs; i++) {
+    result = (*audioIODeviceCapabilities)->QueryAudioOutputCapabilities
+        (audioIODeviceCapabilities, outputDeviceIDs[i], &audioOutputDescriptor);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_ERROR_OBJECT (sink,
+          "IODeviceCapabilities.QueryAudioOutputCapabilities failed(0x%08x)",
+          (guint32) result);
+      continue;
+    }
+
+    GST_DEBUG_OBJECT (sink, "  ID: %08x " AUDIO_OUTPUT_DESC_FORMAT,
+        (guint) outputDeviceIDs[i],
+        AUDIO_OUTPUT_DESC_ARGS (&audioOutputDescriptor));
+    GST_DEBUG_OBJECT (sink, "  Found %d supported sample rated",
+        audioOutputDescriptor.numOfSamplingRatesSupported);
+
+    for (j = 0; j < audioOutputDescriptor.numOfSamplingRatesSupported; j++) {
+      GST_DEBUG_OBJECT (sink, "    %d Hz",
+          (gint) audioOutputDescriptor.samplingRatesSupported[j]);
+    }
+  }
+
+  res = TRUE;
+beach:
+  /* Destroy engine object */
+  if (engineObject) {
+    (*engineObject)->Destroy (engineObject);
+  }
+
+  return res;
 }
 
 static void
@@ -167,4 +265,6 @@ gst_opensles_sink_init (GstOpenSLESSink * sink, GstOpenSLESSinkClass * gclass)
 {
   sink->volume = DEFAULT_VOLUME;
   sink->mute = DEFAULT_MUTE;
+
+  _opensles_query_capabilities (sink);
 }
