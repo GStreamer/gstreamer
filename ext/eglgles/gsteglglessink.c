@@ -1312,10 +1312,20 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   fraghandle = glCreateShader (GL_FRAGMENT_SHADER);
-  if (eglglessink->format == GST_VIDEO_FORMAT_AYUV)
-    glShaderSource (fraghandle, 1, &frag_AYUV_prog, NULL);
-  else
-    glShaderSource (fraghandle, 1, &frag_COPY_prog, NULL);
+  switch (eglglessink->format) {
+    case GST_VIDEO_FORMAT_AYUV:
+      glShaderSource (fraghandle, 1, &frag_AYUV_prog, NULL);
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGB16:
+      glShaderSource (fraghandle, 1, &frag_COPY_prog, NULL);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   if (got_gl_error ("glShaderSource fragment"))
     goto HANDLE_ERROR;
@@ -1364,29 +1374,53 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
   /* Generate and bind texture */
   if (!eglglessink->have_texture) {
+    gint i, n_textures;
+    const gchar *texnames[3] = { NULL, };
+
     GST_INFO_OBJECT (eglglessink, "Doing initial texture setup");
+    switch (eglglessink->format) {
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_RGBx:
+      case GST_VIDEO_FORMAT_RGBA:
+      case GST_VIDEO_FORMAT_RGB16:
+      case GST_VIDEO_FORMAT_AYUV:
+        n_textures = 1;
+        texnames[0] = "tex";
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
 
     g_mutex_lock (eglglessink->flow_lock);
 
-    glGenTextures (1, &eglglessink->texture[0]);
-    if (got_gl_error ("glGenTextures"))
-      goto HANDLE_ERROR_LOCKED;
+    for (i = 0; i < n_textures; i++) {
+      glGenTextures (1, &eglglessink->texture[i]);
+      if (got_gl_error ("glGenTextures"))
+        goto HANDLE_ERROR_LOCKED;
 
-    glActiveTexture (GL_TEXTURE0);
-    glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-    if (got_gl_error ("glBindTexture"))
-      goto HANDLE_ERROR_LOCKED;
+      if (i == 0)
+        glActiveTexture (GL_TEXTURE0);
+      else if (i == 1)
+        glActiveTexture (GL_TEXTURE1);
+      else if (i == 2)
+        glActiveTexture (GL_TEXTURE2);
 
-    texlocation = glGetUniformLocation (prog, "tex");
-    glUniform1i (texlocation, 0);
+      glBindTexture (GL_TEXTURE_2D, eglglessink->texture[i]);
+      if (got_gl_error ("glBindTexture"))
+        goto HANDLE_ERROR_LOCKED;
 
-    /* Set 2D resizing params */
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    if (got_gl_error ("glTexParameteri"))
-      goto HANDLE_ERROR_LOCKED;
+      texlocation = glGetUniformLocation (prog, texnames[i]);
+      glUniform1i (texlocation, 0);
+
+      /* Set 2D resizing params */
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      if (got_gl_error ("glTexParameteri"))
+        goto HANDLE_ERROR_LOCKED;
+    }
 
     eglglessink->have_texture = TRUE;
     g_mutex_unlock (eglglessink->flow_lock);
@@ -1602,10 +1636,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 
       switch (eglglessink->selected_fmt->fmt) {
         case GST_EGLGLESSINK_IMAGE_RGB888:
+          glActiveTexture (GL_TEXTURE0);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
               GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
           break;
         case GST_EGLGLESSINK_IMAGE_RGB565:
+          glActiveTexture (GL_TEXTURE0);
           glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
               GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
           break;
@@ -1613,10 +1649,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           switch (eglglessink->format) {
             case GST_VIDEO_FORMAT_RGBA:
             case GST_VIDEO_FORMAT_RGBx:
+              glActiveTexture (GL_TEXTURE0);
               glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
             case GST_VIDEO_FORMAT_AYUV:
+              glActiveTexture (GL_TEXTURE0);
               glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
