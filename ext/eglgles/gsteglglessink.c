@@ -1560,22 +1560,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       if (got_gl_error ("glTexImage2D"))
         goto HANDLE_ERROR;
 
-      /* XXX: VBO stuff this actually makes more sense on the setcaps stub?
-       * The way it is right now makes this happen only for the first buffer
-       * though so I guess it should work */
-      if (gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
-        /* This makes the rendered fram to fill the whole
-         * surface area.
-
-         glViewport (0, 0, eglglessink->surface_width,
-         eglglessink->surface_height);
-         */
-        glViewport (0, 0, w, h);
-      } else {
-        GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
-        goto HANDLE_ERROR;
-      }
-
+      glViewport (0, 0, w, h);
       /* Don't really need to clear surface color
        * glClearColor (0.0, 0.0, 0.0, 0.0);
        * glClear (GL_COLOR_BUFFER_BIT);
@@ -1727,6 +1712,13 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!eglglessink->have_surface) {
     if (!gst_eglglessink_init_egl_surface (eglglessink)) {
       GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface from window");
+      goto HANDLE_ERROR;
+    }
+  }
+
+  if (!eglglessink->have_vbo) {
+    if (!gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
+      GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
       goto HANDLE_ERROR;
     }
   }
