@@ -171,13 +171,26 @@ class LevelDistributionSentinel (object):
         if not partitions:
             return
 
+        level_index = 0
+        level_iter = None
+
         finished = False
         while tree_iter:
             y -= 1
             if y == 0:
                 y = YIELD_LIMIT
                 yield True
-            level = model_get (tree_iter, id_level)
+            if level_iter is None:
+                stop_index = level_index + 512
+                levels = self.model.get_value_range (id_level,
+                                                     level_index, stop_index)
+                level_index = stop_index
+                level_iter = iter (levels)
+            try:
+                level = level_iter.next ()
+            except StopIteration:
+                level_iter = None
+                continue
             while i > partitions[partitions_i]:
                 data.append (tuple (counts))
                 counts = [0] * MAX_LEVELS
@@ -189,7 +202,6 @@ class LevelDistributionSentinel (object):
                 break
             counts[level] += 1
             i += 1
-            tree_iter = model_next (tree_iter)
 
         # Now handle the last one:
         data.append (tuple (counts))

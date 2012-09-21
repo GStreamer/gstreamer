@@ -129,6 +129,13 @@ class LogModelBase (gtk.GenericTreeModel):
 
         return value
 
+    def get_value_range (self, col_id, start, stop):
+
+        if col_id != self.COL_LEVEL:
+            raise NotImplementedError ("XXX FIXME")
+
+        return self.line_levels[start:stop]
+
     def on_iter_next (self, line_index):
 
         last_index = len (self.line_offsets) - 1
