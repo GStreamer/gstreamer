@@ -32,6 +32,7 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private native void nativeInit();
@@ -56,7 +57,13 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     {
         super.onCreate(savedInstanceState);
 
+        try {
         GStreamer.init(this);
+        } catch (Exception e) {
+            Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+            finish(); 
+            return;
+        }
 
         setContentView(R.layout.main);
 
