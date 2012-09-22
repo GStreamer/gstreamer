@@ -269,6 +269,8 @@ ges_timeline_dispose (GObject * object)
   g_hash_table_unref (priv->by_object);
   g_sequence_free (priv->starts_ends);
   g_sequence_free (priv->tracksources);
+  g_list_free (priv->movecontext.moving_tckobjs);
+  g_hash_table_unref (priv->movecontext.moving_tlobjs);
 
   G_OBJECT_CLASS (ges_timeline_parent_class)->dispose (object);
 }
