@@ -308,19 +308,23 @@ gst_rtp_dtmf_depay_get_property (GObject * object, guint prop_id,
 gboolean
 gst_rtp_dtmf_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
 {
-  GstCaps *srccaps;
+  GstCaps *filtercaps, *srccaps;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint clock_rate = 8000;       /* default */
 
   gst_structure_get_int (structure, "clock-rate", &clock_rate);
   filter->clock_rate = clock_rate;
 
-  srccaps = gst_caps_new_simple ("audio/x-raw-int",
-      "width", G_TYPE_INT, 16,
-      "depth", G_TYPE_INT, 16,
-      "endianness", G_TYPE_INT, G_BYTE_ORDER,
-      "signed", G_TYPE_BOOLEAN, TRUE,
-      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, clock_rate, NULL);
+  filtercaps =
+      gst_pad_get_pad_template_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter));
+
+  filtercaps = gst_caps_make_writable (filtercaps);
+  gst_caps_set_simple (filtercaps, "rate", G_TYPE_INT, clock_rate, NULL);
+
+  srccaps = gst_pad_peer_query_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter),
+      filtercaps);
+  gst_caps_unref (filtercaps);
+
   gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
