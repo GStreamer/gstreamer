@@ -53,6 +53,13 @@ GST_DEBUG_CATEGORY (gst_decklink_src_debug_category);
 
 /* prototypes */
 
+typedef struct _VideoFrame VideoFrame;
+struct _VideoFrame
+{
+  IDeckLinkVideoInputFrame *frame;
+  IDeckLinkInput *input;
+};
+
 
 static void gst_decklink_src_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
@@ -589,6 +596,7 @@ gst_decklink_src_start (GstElement * element)
   switch (decklinksrc->audio_connection) {
     default:
     case GST_DECKLINK_AUDIO_CONNECTION_AUTO:
+      /* set above */
       break;
     case GST_DECKLINK_AUDIO_CONNECTION_EMBEDDED:
       aconn = bmdAudioConnectionEmbedded;
@@ -1218,13 +1226,14 @@ gst_decklink_src_video_src_iterintlink (GstPad * pad)
   return iter;
 }
 
-
 static void
 video_frame_free (void *data)
 {
-  IDeckLinkVideoInputFrame *video_frame = (IDeckLinkVideoInputFrame *) data;
+  VideoFrame *video_frame = (VideoFrame *) data;
 
-  video_frame->Release ();
+  video_frame->frame->Release ();
+  video_frame->input->Release ();
+  g_free (video_frame);
 }
 
 static void
@@ -1253,6 +1262,10 @@ gst_decklink_src_task (void *priv)
   g_mutex_unlock (decklinksrc->mutex);
 
   if (decklinksrc->stop) {
+    if (video_frame)
+      video_frame->Release ();
+    if (audio_frame)
+      audio_frame->Release ();
     GST_DEBUG ("stopping task");
     return;
   }
@@ -1291,13 +1304,19 @@ gst_decklink_src_task (void *priv)
 
     video_frame->Release ();
   } else {
+    VideoFrame *vf;
+
+    vf = (VideoFrame *) g_malloc0 (sizeof (VideoFrame));
     buffer = gst_buffer_new ();
     GST_BUFFER_SIZE (buffer) = mode->width * mode->height * 2;
 
     GST_BUFFER_DATA (buffer) = (guint8 *) data;
 
     GST_BUFFER_FREE_FUNC (buffer) = video_frame_free;
-    GST_BUFFER_MALLOCDATA (buffer) = (guint8 *) video_frame;
+    GST_BUFFER_MALLOCDATA (buffer) = (guint8 *) vf;
+    vf->frame = video_frame;
+    vf->input = decklinksrc->input;
+    vf->input->AddRef ();
   }
 
   GST_BUFFER_TIMESTAMP (buffer) =
@@ -1400,7 +1419,8 @@ gst_decklink_src_task (void *priv)
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
     }
   }
-  audio_frame->Release ();
+  if (audio_frame)
+    audio_frame->Release ();
 }
 
 
