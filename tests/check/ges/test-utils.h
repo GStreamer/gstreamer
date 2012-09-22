@@ -42,4 +42,18 @@ gchar * ges_test_file_uri (const gchar *filename);
   assert_equals_int (pact, active);					\
   }
 
+#define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
+  guint64 pstart, pdur, pmstart, pmdur, pprio, pact;			\
+  g_object_get (gnlobj, "start", &pstart, "duration", &pdur,		\
+		"media-start", &pmstart, "media-duration", &pmdur,	\
+		"priority", &pprio, "active", &pact,			\
+		NULL);							\
+  assert_equals_uint64 (pstart, start);					\
+  assert_equals_uint64 (pdur, duration);					\
+  assert_equals_uint64 (pmstart, mstart);					\
+  assert_equals_uint64 (pmdur, mduration);					\
+  assert_equals_int (pprio, priority);					\
+  assert_equals_int (pact, active);					\
+  }
+
 #endif /* _GES_TEST_UTILS */

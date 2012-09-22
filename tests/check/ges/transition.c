@@ -18,6 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "test-utils.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
@@ -64,21 +65,6 @@ GST_START_TEST (test_transition_basic)
 }
 
 GST_END_TEST;
-
-#define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
-  guint64 pstart, pdur, pmstart, pmdur, pprio, pact;			\
-  g_object_get (gnlobj, "start", &pstart, "duration", &pdur,		\
-		"media-start", &pmstart, "media-duration", &pmdur,	\
-		"priority", &pprio, "active", &pact,			\
-		NULL);							\
-  assert_equals_uint64 (pstart, start);					\
-  assert_equals_uint64 (pdur, duration);					\
-  assert_equals_uint64 (pmstart, mstart);					\
-  assert_equals_uint64 (pmdur, mduration);					\
-  assert_equals_int (pprio, priority);					\
-  assert_equals_int (pact, active);					\
-  }
-
 
 GST_START_TEST (test_transition_properties)
 {
