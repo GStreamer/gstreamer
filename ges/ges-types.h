@@ -22,7 +22,10 @@
 #define __GES_TYPES_H__
 
 /* Padding */
-#define GES_PADDING		4
+#define GES_PADDING         4
+
+/* padding for very extensible base classes */
+#define GES_PADDING_LARGE   20
 
 /* Type definitions */
 

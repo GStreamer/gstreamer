@@ -90,7 +90,7 @@ struct _GESTrackObject {
   GESTrackObjectPrivate *priv;
 
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
 /**
@@ -141,7 +141,7 @@ struct _GESTrackObjectClass {
               guint *n_properties);
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING - 2];
+  gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
 GType ges_track_object_get_type               (void);

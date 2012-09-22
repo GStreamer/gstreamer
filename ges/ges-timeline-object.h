@@ -172,7 +172,7 @@ struct _GESTimelineObject {
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
 
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING];
+  gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
 /**
@@ -216,7 +216,7 @@ struct _GESTimelineObjectClass {
 
   /*< private >*/
   /* Padding for API extension */
-  gpointer _ges_reserved[GES_PADDING - 4];
+  gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
 GType ges_timeline_object_get_type          (void);
