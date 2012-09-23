@@ -1918,7 +1918,13 @@ static void
 gst_ogg_mux_send_start_events (GstOggMux * ogg_mux, GstCollectPads * pads)
 {
   GstSegment segment;
+  gchar s_id[32];
 
+  /* stream-start (FIXME: create id based on input ids) */
+  g_snprintf (s_id, sizeof (s_id), "oggmux-%08x", g_random_int ());
+  gst_pad_push_event (ogg_mux->srcpad, gst_event_new_stream_start (s_id));
+
+  /* segment */
   gst_segment_init (&segment, GST_FORMAT_BYTES);
   gst_pad_push_event (ogg_mux->srcpad, gst_event_new_segment (&segment));
 
