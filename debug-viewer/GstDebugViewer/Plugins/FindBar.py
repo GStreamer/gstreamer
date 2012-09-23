@@ -43,9 +43,15 @@ class SearchOperation (object):
 
             message = model_row[col_id]
             if search_text in message:
-                # TODO: Return all match ranges here.
-                pos = message.find (search_text)
-                return ((pos, pos + len_search_text,),)
+                ranges = []
+                start = 0
+                while True:
+                    pos = message.find (search_text, start)
+                    if pos == -1:
+                        break
+                    ranges.append ((pos, pos + len_search_text,))
+                    start = pos + len_search_text
+                return ranges
             else:
                 return ()
 
