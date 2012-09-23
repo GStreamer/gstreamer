@@ -1464,6 +1464,7 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
 
   if (mux->state == GST_FLV_MUX_STATE_HEADER) {
     GstSegment segment;
+    gchar s_id[32];
 
     if (mux->collect->data == NULL) {
       GST_ELEMENT_ERROR (mux, STREAM, MUX, (NULL),
@@ -1471,6 +1472,11 @@ gst_flv_mux_handle_buffer (GstCollectPads * pads, GstCollectData * cdata,
       return GST_FLOW_ERROR;
     }
 
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "flvmux-%08x", g_random_int ());
+    gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
+
+    /* segment */
     gst_segment_init (&segment, GST_FORMAT_BYTES);
     if (gst_pad_push_event (mux->srcpad, gst_event_new_segment (&segment)))
       ret = gst_flv_mux_write_header (mux);
