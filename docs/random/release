@@ -71,15 +71,15 @@ RELEASE PROCEDURE:
   - Update the doap file to insert the new release info
   - Prepare the following in a text file for copy'n'paste purposes:
     - list of noteworthy changes / new features, check changelog or shortlog:
-        - git log RELEASE-0.10.98..
-        - git shortlog RELEASE-0.10.98..
+        - git log 1.0.98..
+        - git shortlog 1.0.98..
         - wrap like this:
          <feature>added this and that</feature>
          <feature>foodemux now supports seek in twilight mode</feature>
     - list of API additions, two useful sources:
-        - git diff RELEASE-0.10.98.. win32/common/*.def \
+        - git diff 1.0.98.. win32/common/*.def \
             | grep "^+[^+]" | sed -e 's/[^a-z_]*/    <item>/' -e 's%$%</item>%'
-        - git log RELEASE-0.10.98.. --grep=API
+        - git log 1.0.98.. --grep=API
         - wrap like this:
              <item>gst_new_func()</item>
              <item>gst_new_func_full()</item>
@@ -107,10 +107,10 @@ RELEASE PROCEDURE:
 - release:
   - 'git commit -a' in the tree
   - tag tree
-    for example for 0.10.42 :
-           git tag -a -m 'Release 0.10.42' RELEASE-0.10.42
+    for example for 1.0.42 :
+           git tag -a -m 'Release 1.0.42' 1.0.42
     Make sure to use the -a option to create an *annotated* tag: 'git describe'
-    should show 'RELEASE-0.10.42'
+    should show '1.0.42'
   - bump nano number in configure.ac, commit
   - sync source and packages to website
     + run /bin/data-put in www
@@ -127,9 +127,9 @@ RELEASE PROCEDURE:
   - add versions and milestones in bugzilla
   - upload new core, -base and -good tarballs to gnome ftp
     + e.g:
-       scp gstreamer-0.10.42.tar.gz master.gnome.org:
+       scp gstreamer-1.0.42.tar.xz master.gnome.org:
        ssh master.gnome.org
-       ftpadmin install gstreamer-0.10.42.tar.gz
+       ftpadmin install gstreamer-1.0.42.tar.xz
 
   - Send release announcements to:
     gstreamer-devel@lists.freedesktop.org
@@ -139,5 +139,5 @@ RELEASE PROCEDURE:
   - Update freshmeat with new releases (get Uraeus to do it)
 
   - push release commit(s) to git repo
-  - push new tag to git repo: git push origin tag RELEASE-0.10.42
+  - push new tag to git repo: git push origin tag 1.0.42
 
