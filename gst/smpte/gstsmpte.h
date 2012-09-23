@@ -51,6 +51,7 @@ struct _GstSMPTE {
                 *sinkpad1,
                 *sinkpad2;
   GstCollectPads *collect;
+  gboolean        send_stream_start;
 
   /* properties */
   gint           type;

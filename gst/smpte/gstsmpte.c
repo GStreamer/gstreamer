@@ -98,6 +98,7 @@ enum
   PROP_LAST,
 };
 
+/* FIXME: should use video meta etc. */
 #define I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
 #define I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
 #define I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(I420_Y_ROWSTRIDE(width)))/2)
@@ -386,6 +387,7 @@ gst_smpte_reset (GstSMPTE * smpte)
   smpte->height = -1;
   smpte->position = 0;
   smpte->end_position = 0;
+  smpte->send_stream_start = TRUE;
 }
 
 static void
@@ -466,6 +468,15 @@ gst_smpte_collected (GstCollectPads * pads, GstSMPTE * smpte)
   if (!gst_pad_has_current_caps (smpte->sinkpad1) ||
       !gst_pad_has_current_caps (smpte->sinkpad2))
     goto not_negotiated;
+
+  if (smpte->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "smpte-%08x", g_random_int ());
+    gst_pad_push_event (smpte->srcpad, gst_event_new_stream_start (s_id));
+    smpte->send_stream_start = FALSE;
+  }
 
   ts = gst_util_uint64_scale_int (smpte->position * GST_SECOND,
       smpte->fps_denom, smpte->fps_num);
