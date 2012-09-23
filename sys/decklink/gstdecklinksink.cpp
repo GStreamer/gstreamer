@@ -469,12 +469,7 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
     return FALSE;
   }
 
-  ret = decklinksink->decklink->QueryInterface (IID_IDeckLinkOutput,
-      (void **) &decklinksink->output);
-  if (ret != S_OK) {
-    GST_WARNING ("selected device does not have output interface");
-    return FALSE;
-  }
+  decklinksink->output = gst_decklink_get_nth_output (decklinksink->device);
 
   decklinksink->output->SetAudioCallback (decklinksink->callback);
 
@@ -526,11 +521,6 @@ gst_decklink_sink_stop (GstDecklinkSink * decklinksink)
   decklinksink->output->StopScheduledPlayback (0, NULL, 0);
   decklinksink->output->DisableAudioOutput ();
   decklinksink->output->DisableVideoOutput ();
-
-  decklinksink->output->Release ();
-  decklinksink->output = NULL;
-  decklinksink->decklink->Release ();
-  decklinksink->decklink = NULL;
 
   return TRUE;
 }

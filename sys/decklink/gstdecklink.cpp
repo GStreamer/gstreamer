@@ -190,34 +190,96 @@ gst_decklink_mode_get_template_caps (void)
   return caps;
 }
 
-IDeckLink *
-gst_decklink_get_nth_device (int n)
+typedef struct _Device Device;
+struct _Device {
+  IDeckLink *decklink;
+  IDeckLinkInput *input;
+  IDeckLinkOutput *output;
+  IDeckLinkConfiguration *config;
+};
+
+static int n_devices;
+static Device devices[10];
+
+static void
+init_devices (void)
 {
   IDeckLinkIterator *iterator;
   IDeckLink *decklink = NULL;
   HRESULT ret;
   int i;
+  static gboolean inited = FALSE;
+
+  if (inited) return;
+  inited = TRUE;
 
   iterator = CreateDeckLinkIteratorInstance ();
   if (iterator == NULL) {
     GST_ERROR ("no driver");
-    return NULL;
+    return;
   }
 
+  i = 0;
   ret = iterator->Next (&decklink);
-  if (ret != S_OK) {
-    GST_ERROR ("no card");
-    return NULL;
-  }
-  for (i = 0; i < n; i++) {
-    ret = iterator->Next (&decklink);
+  while (ret == S_OK) {
+    devices[i].decklink = decklink;
+
+    ret = decklink->QueryInterface (IID_IDeckLinkInput,
+        (void **) &devices[i].input);
     if (ret != S_OK) {
-      GST_ERROR ("no card");
-      return NULL;
+      GST_WARNING ("selected device does not have input interface");
+      return;
     }
+
+    ret = decklink->QueryInterface (IID_IDeckLinkOutput,
+        (void **) &devices[i].output);
+    if (ret != S_OK) {
+      GST_WARNING ("selected device does not have output interface");
+      return;
+    }
+
+    ret = decklink->QueryInterface (IID_IDeckLinkConfiguration,
+        (void **) &devices[i].config);
+    if (ret != S_OK) {
+      GST_WARNING ("selected device does not have config interface");
+      return;
+    }
+
+    ret = iterator->Next (&decklink);
+    i++;
   }
 
-  return decklink;
+  n_devices = i;
+
+  iterator->Release();
+}
+
+IDeckLink *
+gst_decklink_get_nth_device (int n)
+{
+  init_devices ();
+  return devices[n].decklink;
+}
+
+IDeckLinkInput *
+gst_decklink_get_nth_input (int n)
+{
+  init_devices ();
+  return devices[n].input;
+}
+
+IDeckLinkOutput *
+gst_decklink_get_nth_output (int n)
+{
+  init_devices ();
+  return devices[n].output;
+}
+
+IDeckLinkConfiguration *
+gst_decklink_get_nth_config (int n)
+{
+  init_devices ();
+  return devices[n].config;
 }
 
 static gboolean

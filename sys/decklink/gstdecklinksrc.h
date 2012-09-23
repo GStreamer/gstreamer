@@ -45,6 +45,7 @@ struct _GstDecklinkSrc
 
   IDeckLink *decklink;
   IDeckLinkInput *input;
+  IDeckLinkConfiguration *config;
 
   GMutex *mutex;
   GCond *cond;

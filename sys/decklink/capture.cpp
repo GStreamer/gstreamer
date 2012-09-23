@@ -84,59 +84,80 @@ HRESULT
     videoFrame, IDeckLinkAudioInputPacket * audioFrame)
 {
   GstDecklinkSrc *decklinksrc;
+  const char *timecodeString = NULL;
 
   g_return_val_if_fail (priv != NULL, S_OK);
   g_return_val_if_fail (GST_IS_DECKLINK_SRC (priv), S_OK);
 
   decklinksrc = GST_DECKLINK_SRC (priv);
 
-  // Handle Video Frame
-  if (videoFrame) {
-    if (videoFrame->GetFlags () & bmdFrameHasNoInputSource) {
-      GST_DEBUG ("Frame received - No input signal detected");
-    } else {
-      const char *timecodeString = NULL;
-      if (g_timecodeFormat != 0) {
-        IDeckLinkTimecode *timecode;
-        if (videoFrame->GetTimecode (g_timecodeFormat, &timecode) == S_OK) {
-          timecode->GetString (&timecodeString);
-          CONVERT_COM_STRING (timecodeString);
-        }
-      }
+  if (videoFrame == NULL) {
+    GST_WARNING_OBJECT (decklinksrc, "video frame is NULL");
+    return S_OK;
+  }
 
-      GST_DEBUG ("Frame received [%s] - %s - Size: %li bytes",
-          timecodeString != NULL ? timecodeString : "No timecode",
-          "Valid Frame", videoFrame->GetRowBytes () * videoFrame->GetHeight ());
+  if (audioFrame == NULL) {
+    GST_WARNING_OBJECT (decklinksrc, "audio frame is NULL");
+    return S_OK;
+  }
 
-      if (timecodeString)
-        FREE_COM_STRING (timecodeString);
+  if (videoFrame->GetFlags () & bmdFrameHasNoInputSource) {
+    GST_DEBUG_OBJECT (decklinksrc, "Frame received - No input signal detected");
+    return S_OK;
+  }
 
-      g_mutex_lock (decklinksrc->mutex);
-      if (decklinksrc->video_frame != NULL) {
-        decklinksrc->dropped_frames++;
-      } else {
-        videoFrame->AddRef ();
-        decklinksrc->video_frame = videoFrame;
-        if (audioFrame) {
-          audioFrame->AddRef ();
-          decklinksrc->audio_frame = audioFrame;
-        }
-      }
-
-      /* increment regardless whether frame was dropped or not */
-      decklinksrc->frame_num++;
-
-      g_cond_signal (decklinksrc->cond);
-      g_mutex_unlock (decklinksrc->mutex);
+  if (g_timecodeFormat != 0) {
+    IDeckLinkTimecode *timecode;
+    if (videoFrame->GetTimecode (g_timecodeFormat, &timecode) == S_OK) {
+      timecode->GetString (&timecodeString);
+      CONVERT_COM_STRING (timecodeString);
     }
   }
+
+  GST_DEBUG_OBJECT (decklinksrc, "Frame received [%s] - %s - Size: %li bytes",
+      timecodeString != NULL ? timecodeString : "No timecode",
+      "Valid Frame", videoFrame->GetRowBytes () * videoFrame->GetHeight ());
+
+  if (timecodeString)
+    FREE_COM_STRING (timecodeString);
+
+  g_mutex_lock (decklinksrc->mutex);
+  if (decklinksrc->video_frame != NULL) {
+    decklinksrc->dropped_frames++;
+    decklinksrc->video_frame->Release();
+    if (decklinksrc->audio_frame) {
+      decklinksrc->audio_frame->Release();
+    }
+  }
+  videoFrame->AddRef ();
+  decklinksrc->video_frame = videoFrame;
+  if (audioFrame) {
+    audioFrame->AddRef ();
+    decklinksrc->audio_frame = audioFrame;
+  }
+
+  /* increment regardless whether frame was dropped or not */
+  decklinksrc->frame_num++;
+
+  g_cond_signal (decklinksrc->cond);
+  g_mutex_unlock (decklinksrc->mutex);
+
   return S_OK;
 }
 
 HRESULT
-    DeckLinkCaptureDelegate::VideoInputFormatChanged
-    (BMDVideoInputFormatChangedEvents events, IDeckLinkDisplayMode * mode,
-    BMDDetectedVideoInputFormatFlags) {
-  GST_ERROR ("moo");
+DeckLinkCaptureDelegate::VideoInputFormatChanged (
+    BMDVideoInputFormatChangedEvents events, IDeckLinkDisplayMode * mode,
+    BMDDetectedVideoInputFormatFlags)
+{
+  GstDecklinkSrc *decklinksrc;
+
+  g_return_val_if_fail (priv != NULL, S_OK);
+  g_return_val_if_fail (GST_IS_DECKLINK_SRC (priv), S_OK);
+
+  decklinksrc = GST_DECKLINK_SRC (priv);
+
+  GST_ERROR_OBJECT (decklinksrc, "unimplemented: video input format changed");
+
   return S_OK;
 }

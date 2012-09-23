@@ -108,6 +108,8 @@ GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e);
 GstCaps * gst_decklink_mode_get_template_caps (void);
 
 IDeckLink * gst_decklink_get_nth_device (int n);
-
+IDeckLinkInput * gst_decklink_get_nth_input (int n);
+IDeckLinkOutput * gst_decklink_get_nth_output (int n);
+IDeckLinkConfiguration * gst_decklink_get_nth_config (int n);
 
 #endif
