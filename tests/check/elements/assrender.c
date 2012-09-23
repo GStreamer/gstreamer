@@ -289,8 +289,8 @@ assrender_suite (void)
   tcase_set_timeout (tc_chain, 120);
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_assrender_basic_xRGB);
-  tcase_add_test (tc_chain, test_assrender_basic_I420);
+  tcase_skip_broken_test (tc_chain, test_assrender_basic_xRGB);
+  tcase_skip_broken_test (tc_chain, test_assrender_basic_I420);
 
   return s;
 }
