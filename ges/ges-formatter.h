@@ -62,8 +62,8 @@ struct _GESFormatter {
   gpointer _ges_reserved[GES_PADDING - 1];
 };
 
-typedef gboolean (*GESFormatterCanLoadURIMethod) (const gchar * uri);
-typedef gboolean (*GESFormatterCanSaveURIMethod) (const gchar * uri);
+typedef gboolean (*GESFormatterCanLoadURIMethod) (const gchar * uri, GError **error);
+typedef gboolean (*GESFormatterCanSaveURIMethod) (const gchar * uri, GError **error);
 
 /**
  * GESFormatterLoadFromURIMethod:
@@ -79,8 +79,9 @@ typedef gboolean (*GESFormatterCanSaveURIMethod) (const gchar * uri);
  * else FALSE.
  **/
 typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
-						     GESTimeline *timeline,
-						     const gchar * uri);
+                  GESTimeline *timeline,
+                  const gchar * uri,
+                  GError **error);
 
 /**
  * GESFormatterSaveToURIMethod:
@@ -96,12 +97,12 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  * else FALSE.
  */
 typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
-						   GESTimeline *timeline,
-						   const gchar * uri);
+               GESTimeline *timeline,
+               const gchar * uri, GError **error);
 typedef gboolean (*GESFormatterSaveMethod) (GESFormatter * formatter,
-					      GESTimeline * timeline);
+                GESTimeline * timeline);
 typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
-					      GESTimeline * timeline);
+                GESTimeline * timeline);
 
 /**
  * GESFormatterSourceMovedMethod:
@@ -118,7 +119,7 @@ typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
  * Returns: %TRUE if the source URI could be modified properly, %FALSE otherwize.
  */
 typedef gboolean (*GESFormatterSourceMovedMethod)        (GESFormatter *formatter,
-					   GESTimelineFileSource *tfs, gchar *new_uri);
+             GESTimelineFileSource *tfs, gchar *new_uri);
 
 /**
  * GESFormatterLoadedMethod:
@@ -171,20 +172,23 @@ GType ges_formatter_get_type (void);
 GESFormatter *ges_formatter_new_for_uri (const gchar *uri);
 GESFormatter *ges_default_formatter_new (void);
 
-gboolean ges_formatter_can_load_uri     (const gchar * uri);
-gboolean ges_formatter_can_save_uri     (const gchar * uri);
+gboolean ges_formatter_can_load_uri     (const gchar * uri, GError **error);
+gboolean ges_formatter_can_save_uri     (const gchar * uri, GError **error);
 
 gboolean ges_formatter_load_from_uri    (GESFormatter * formatter,
-					 GESTimeline  *timeline,
-					 const gchar *uri);
+                                         GESTimeline  *timeline,
+                                         const gchar *uri,
+                                         GError **error);
 
 gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
-					 GESTimeline *timeline,
-					 const gchar *uri);
+                                         GESTimeline *timeline,
+                                         const gchar *uri,
+                                         GError **error);
 
 gboolean
 ges_formatter_update_source_uri         (GESFormatter * formatter,
-    GESTimelineFileSource * source, gchar * new_uri);
+                                         GESTimelineFileSource * source,
+                                         gchar * new_uri);
 
 /*< protected >*/
 gboolean
@@ -192,14 +196,14 @@ ges_formatter_emit_loaded       (GESFormatter * formatter);
 
 /* Non-standard methods. WILL BE DEPRECATED */
 gboolean ges_formatter_load             (GESFormatter * formatter,
-					 GESTimeline * timeline);
+           GESTimeline * timeline);
 gboolean ges_formatter_save             (GESFormatter * formatter,
-					 GESTimeline * timeline);
+           GESTimeline * timeline);
 
 void ges_formatter_set_data             (GESFormatter * formatter,
-					 void *data, gsize length);
+           void *data, gsize length);
 void *ges_formatter_get_data            (GESFormatter *formatter,
-					 gsize *length);
+           gsize *length);
 void ges_formatter_clear_data           (GESFormatter *formatter);
 
 

@@ -43,10 +43,12 @@ GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 /* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
 #define VERSION "0.2"
 
+
+/* FIXME Properly set the GError when needed */
 static gboolean save_pitivi_timeline_to_uri (GESFormatter * formatter,
-    GESTimeline * timeline, const gchar * uri);
+    GESTimeline * timeline, const gchar * uri, GError ** error);
 static gboolean load_pitivi_file_from_uri (GESFormatter * self,
-    GESTimeline * timeline, const gchar * uri);
+    GESTimeline * timeline, const gchar * uri, GError ** error);
 static void ges_pitivi_formatter_finalize (GObject * object);
 static gboolean pitivi_formatter_update_source_uri (GESFormatter * formatter,
     GESTimelineFileSource * tfs, gchar * new_uri);
@@ -120,6 +122,10 @@ ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
 {
   GESFormatterClass *formatter_klass;
   GObjectClass *object_class;
+
+  GST_DEBUG_CATEGORY_INIT (ges_pitivi_formatter_debug, "ges_pitivi_formatter",
+      GST_DEBUG_FG_YELLOW, "ges pitivi formatter");
+
   object_class = G_OBJECT_CLASS (klass);
   formatter_klass = GES_FORMATTER_CLASS (klass);
   g_type_class_add_private (klass, sizeof (GESPitiviFormatterPrivate));
@@ -134,9 +140,6 @@ static void
 ges_pitivi_formatter_init (GESPitiviFormatter * self)
 {
   GESPitiviFormatterPrivate *priv;
-
-  GST_DEBUG_CATEGORY_INIT (ges_pitivi_formatter_debug, "ges_pitivi_formatter",
-      GST_DEBUG_FG_YELLOW, "ges pitivi formatter");
 
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_PITIVI_FORMATTER, GESPitiviFormatterPrivate);
@@ -497,7 +500,7 @@ save_timeline_objects (xmlTextWriterPtr writer, GList * list)
 
 static gboolean
 save_pitivi_timeline_to_uri (GESFormatter * formatter,
-    GESTimeline * timeline, const gchar * uri)
+    GESTimeline * timeline, const gchar * uri, GError ** error)
 {
   xmlTextWriterPtr writer;
   GList *list = NULL, *layers = NULL;
@@ -1050,7 +1053,7 @@ make_timeline_objects (GESFormatter * self)
 
 static gboolean
 load_pitivi_file_from_uri (GESFormatter * self,
-    GESTimeline * timeline, const gchar * uri)
+    GESTimeline * timeline, const gchar * uri, GError ** error)
 {
   xmlDocPtr doc;
   GESTimelineLayer *layer;

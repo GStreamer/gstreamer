@@ -70,6 +70,10 @@ ges_init (void)
   GES_TYPE_TIMELINE_STANDARD_TRANSITION;
   GES_TYPE_TIMELINE_OVERLAY;
 
+  /* register formatter types with the system */
+  GES_TYPE_PITIVI_FORMATTER;
+  GES_TYPE_KEYFILE_FORMATTER;
+
   /* check the gnonlin elements are available */
   if (!ges_check_gnonlin_availability ())
     return FALSE;

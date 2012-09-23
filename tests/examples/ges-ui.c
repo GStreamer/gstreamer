@@ -1184,7 +1184,7 @@ app_launch_project (App * app, gchar * uri)
   mainloop = g_main_loop_new (NULL, FALSE);
 
   ges_timeline_pipeline_add_timeline (pipeline, timeline);
-  ges_formatter_load_from_uri (formatter, timeline, uri);
+  ges_formatter_load_from_uri (formatter, timeline, uri, NULL);
   ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bus_add_signal_watch (bus);
@@ -1239,7 +1239,7 @@ app_add_transition (App * app)
 static void
 app_save_to_uri (App * app, gchar * uri)
 {
-  ges_timeline_save_to_uri (app->timeline, uri);
+  ges_timeline_save_to_uri (app->timeline, uri, NULL);
 }
 
 static void
@@ -1381,7 +1381,8 @@ load_file_async (App * app)
   g_printf ("%s\n", app->pending_uri);
 
   formatter = ges_formatter_new_for_uri (app->pending_uri);
-  ges_formatter_load_from_uri (formatter, app->timeline, app->pending_uri);
+  ges_formatter_load_from_uri (formatter, app->timeline, app->pending_uri,
+      NULL);
 
   g_free (app->pending_uri);
   app->pending_uri = NULL;

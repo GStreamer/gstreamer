@@ -1951,7 +1951,7 @@ ges_timeline_new (void)
  */
 
 GESTimeline *
-ges_timeline_new_from_uri (const gchar * uri)
+ges_timeline_new_from_uri (const gchar * uri, GError ** error)
 {
   GESTimeline *ret;
 
@@ -1961,7 +1961,7 @@ ges_timeline_new_from_uri (const gchar * uri)
 
   ret = ges_timeline_new ();
 
-  if (!ges_timeline_load_from_uri (ret, uri)) {
+  if (!ges_timeline_load_from_uri (ret, uri, error)) {
     g_object_unref (ret);
     return NULL;
   }
@@ -1982,7 +1982,8 @@ ges_timeline_new_from_uri (const gchar * uri)
  */
 
 gboolean
-ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri)
+ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri,
+    GError ** error)
 {
   GESFormatter *p = NULL;
   gboolean ret = FALSE;
@@ -1996,7 +1997,7 @@ ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri)
     goto fail;
   }
 
-  if (!ges_formatter_load_from_uri (p, timeline, uri)) {
+  if (!ges_formatter_load_from_uri (p, timeline, uri, error)) {
     GST_ERROR ("error deserializing formatter");
     goto fail;
   }
@@ -2021,7 +2022,8 @@ fail:
  */
 
 gboolean
-ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri)
+ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
+    GError ** error)
 {
   GESFormatter *p = NULL;
   gboolean ret = FALSE;
@@ -2033,16 +2035,12 @@ ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri)
    * will be saved with the same one by default ? We need to make this
    * easy from an API perspective */
 
-  /* FIXME : we should have a GError** argument so the user can know why
-   * it wasn't able to save
-   */
-
   if (!(p = ges_formatter_new_for_uri (uri))) {
     GST_ERROR ("unsupported uri '%s'", uri);
     goto fail;
   }
 
-  if (!ges_formatter_save_to_uri (p, timeline, uri)) {
+  if (!ges_formatter_save_to_uri (p, timeline, uri, error)) {
     GST_ERROR ("error serializing formatter");
     goto fail;
   }

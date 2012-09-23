@@ -660,14 +660,14 @@ GST_START_TEST (test_pitivi_file_load)
     return;
   }
 
-  ges_formatter_load_from_uri (formatter, timeline, uri);
+  ges_formatter_load_from_uri (formatter, timeline, uri, NULL);
   g_timeout_add (1000, (GSourceFunc) g_main_loop_quit, mainloop);
   g_main_loop_run (mainloop);
 
   formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
-  ges_formatter_save_to_uri (formatter, timeline, save_uri);
+  ges_formatter_save_to_uri (formatter, timeline, save_uri, NULL);
   formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
-  ges_formatter_load_from_uri (formatter, expected, uri);
+  ges_formatter_load_from_uri (formatter, expected, uri, NULL);
   g_timeout_add (1000, (GSourceFunc) g_main_loop_quit, mainloop);
   g_main_loop_run (mainloop);
 

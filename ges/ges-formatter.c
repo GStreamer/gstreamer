@@ -67,11 +67,11 @@ struct _GESFormatterPrivate
 
 static void ges_formatter_dispose (GObject * object);
 static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
-    timeline, const gchar * uri);
+    timeline, const gchar * uri, GError ** error);
 static gboolean save_to_uri (GESFormatter * formatter, GESTimeline *
-    timeline, const gchar * uri);
-static gboolean default_can_load_uri (const gchar * uri);
-static gboolean default_can_save_uri (const gchar * uri);
+    timeline, const gchar * uri, GError ** error);
+static gboolean default_can_load_uri (const gchar * uri, GError ** error);
+static gboolean default_can_save_uri (const gchar * uri, GError ** error);
 static void discovery_error_cb (GESTimeline * timeline,
     GESTimelineFileSource * tfs, GError * error, GESFormatter * formatter);
 
@@ -158,7 +158,7 @@ ges_formatter_dispose (GObject * object)
 GESFormatter *
 ges_formatter_new_for_uri (const gchar * uri)
 {
-  if (ges_formatter_can_load_uri (uri))
+  if (ges_formatter_can_load_uri (uri, NULL))
     return GES_FORMATTER (ges_keyfile_formatter_new ());
   return NULL;
 }
@@ -179,14 +179,14 @@ ges_default_formatter_new (void)
 }
 
 static gboolean
-default_can_load_uri (const gchar * uri)
+default_can_load_uri (const gchar * uri, GError ** error)
 {
   GST_ERROR ("No 'can_load_uri' vmethod implementation");
   return FALSE;
 }
 
 static gboolean
-default_can_save_uri (const gchar * uri)
+default_can_save_uri (const gchar * uri, GError ** error)
 {
   GST_ERROR ("No 'can_save_uri' vmethod implementation");
   return FALSE;
@@ -195,6 +195,7 @@ default_can_save_uri (const gchar * uri)
 /**
  * ges_formatter_can_load_uri:
  * @uri: a #gchar * pointing to the URI
+ * @error: A #GError that will be set in case of error
  *
  * Checks if there is a #GESFormatter available which can load a #GESTimeline
  * from the given URI.
@@ -204,7 +205,7 @@ default_can_save_uri (const gchar * uri)
  */
 
 gboolean
-ges_formatter_can_load_uri (const gchar * uri)
+ges_formatter_can_load_uri (const gchar * uri, GError ** error)
 {
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("Invalid uri!");
@@ -228,6 +229,7 @@ ges_formatter_can_load_uri (const gchar * uri)
 /**
  * ges_formatter_can_save_uri:
  * @uri: a #gchar * pointing to a URI
+ * @error: A #GError that will be set in case of error
  *
  * Returns TRUE if there is a #GESFormatter available which can save a
  * #GESTimeline to the given URI.
@@ -236,7 +238,7 @@ ges_formatter_can_load_uri (const gchar * uri)
  */
 
 gboolean
-ges_formatter_can_save_uri (const gchar * uri)
+ges_formatter_can_save_uri (const gchar * uri, GError ** error)
 {
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("%s invalid uri!", uri);
@@ -386,6 +388,7 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
  * @formatter: a #GESFormatter
  * @timeline: a #GESTimeline
  * @uri: a #gchar * pointing to a URI
+ * @error: A #GError that will be set in case of error
  *
  * Load data from the given URI into timeline.
  *
@@ -395,7 +398,7 @@ ges_formatter_save (GESFormatter * formatter, GESTimeline * timeline)
 
 gboolean
 ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
-    const gchar * uri)
+    const gchar * uri, GError ** error)
 {
   gboolean ret = FALSE;
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
@@ -408,7 +411,7 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
   if (klass->load_from_uri) {
     ges_timeline_enable_update (timeline, FALSE);
     formatter->timeline = timeline;
-    ret = klass->load_from_uri (formatter, timeline, uri);
+    ret = klass->load_from_uri (formatter, timeline, uri, error);
     ges_timeline_enable_update (timeline, TRUE);
   }
 
@@ -417,7 +420,7 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
 
 static gboolean
 load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
-    const gchar * uri)
+    const gchar * uri, GError ** error)
 {
   gchar *location;
   GError *e = NULL;
@@ -455,6 +458,7 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
  * @formatter: a #GESFormatter
  * @timeline: a #GESTimeline
  * @uri: a #gchar * pointing to a URI
+ * @error: A #GError that will be set in case of error
  *
  * Save data from timeline to the given URI.
  *
@@ -464,12 +468,12 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
 
 gboolean
 ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
-    timeline, const gchar * uri)
+    timeline, const gchar * uri, GError ** error)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
 
   if (klass->save_to_uri)
-    return klass->save_to_uri (formatter, timeline, uri);
+    return klass->save_to_uri (formatter, timeline, uri, error);
 
   GST_ERROR ("not implemented!");
 
@@ -478,7 +482,7 @@ ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
 
 static gboolean
 save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
-    const gchar * uri)
+    const gchar * uri, GError ** error)
 {
   gchar *location;
   GError *e = NULL;

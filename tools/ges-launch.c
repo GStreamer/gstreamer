@@ -256,7 +256,7 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
       goto failure;
     }
     g_printf ("reading from '%s' (arguments ignored)\n", load_path);
-    if (!(timeline = ges_timeline_new_from_uri (uri))) {
+    if (!(timeline = ges_timeline_new_from_uri (uri, NULL))) {
       g_error ("failed to create timeline from file '%s'", load_path);
       goto failure;
     }
@@ -275,7 +275,7 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
       g_error ("couldn't create uri for '%s", save_path);
       goto failure;
     }
-    ges_timeline_save_to_uri (timeline, uri);
+    ges_timeline_save_to_uri (timeline, uri, NULL);
     g_free (uri);
   }
 
@@ -381,7 +381,7 @@ load_project (gchar * uri)
   mainloop = g_main_loop_new (NULL, FALSE);
 
   ges_timeline_pipeline_add_timeline (pipeline, timeline);
-  ges_formatter_load_from_uri (formatter, timeline, uri);
+  ges_formatter_load_from_uri (formatter, timeline, uri, NULL);
   ges_timeline_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
