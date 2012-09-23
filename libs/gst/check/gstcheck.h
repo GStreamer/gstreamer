@@ -446,7 +446,7 @@ __gst_tcase_add_test (TCase * tc, TFun tf, const char * fname, int signal,
 /* add define to skip broken tests */
 #define tcase_skip_broken_test(chain,test_func) \
   if (0) { tcase_add_test(chain,test_func); } else { \
-    GST_ERROR ("FIXME: skipping test %s because it's broken.", G_STRINGIFY (test_func)); \
+    g_printerr ("FIXME: skipping test %s because it's broken\n", G_STRINGIFY (test_func)); \
   }
 
 G_END_DECLS
