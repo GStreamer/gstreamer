@@ -81,6 +81,9 @@ struct _GstAdder {
   GList *pending_events;
   
   gboolean in_setcaps;
+
+  gboolean send_stream_start;
+  gboolean send_caps;
 };
 
 struct _GstAdderClass {
