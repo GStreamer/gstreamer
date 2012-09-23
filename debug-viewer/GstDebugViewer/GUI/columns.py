@@ -24,6 +24,7 @@ def _ (s):
 
 import logging
 
+import glib
 import gtk
 
 from GstDebugViewer import Common, Data
@@ -328,30 +329,38 @@ class MessageColumn (TextColumn):
 
     def get_row_data_func (self):
 
-        from pango import AttrList, AttrBackground, AttrForeground
         highlighters = self.highlighters
         id_ = self.id
 
-        # FIXME: This should be none; need to investigate
-        # `cellrenderertext.props.attributes = None' failure (param conversion
-        # error like `treeview.props.model = None').
-        no_attrs = AttrList ()
-
         def message_data_func (props, row):
 
-            props.text = row[id_]
+            msg = row[id_]
+
             if not highlighters:
-                props.attributes = no_attrs
-            for highlighter in highlighters.values ():
-                ranges = highlighter (row)
-                if not ranges:
-                    props.attributes = no_attrs
-                else:
-                    attrlist = AttrList ()
-                    for start, end in ranges:
-                        attrlist.insert (AttrBackground (0, 0, 65535, start, end))
-                        attrlist.insert (AttrForeground (65535, 65535, 65535, start, end))
-                    props.attributes = attrlist
+                props.text = msg
+                return
+
+            if len (highlighters) > 1:
+                raise NotImplementedError ("FIXME: Support more than one...")
+
+            highlighter = highlighters.values ()[0]
+            ranges = highlighter (row)
+            if not ranges:
+                props.text = msg
+            else:
+                tags = []
+                prev_end = 0
+                end = None
+                for start, end in ranges:
+                    if prev_end < start:
+                        tags.append (glib.markup_escape_text (msg[prev_end:start]))
+                    msg_escape = glib.markup_escape_text (msg[start:end])
+                    tags.append ("<span foreground=\'#FFFFFF\'"
+                                 " background=\'#0000FF\'>%s</span>" % (msg_escape,))
+                    prev_end = end
+                if end is not None:
+                    tags.append (glib.markup_escape_text (msg[end:]))
+                props.markup = "".join (tags)
 
         return message_data_func
 

@@ -28,7 +28,7 @@ import os.path
 from bisect import bisect_right, bisect_left
 import logging
 
-import pango
+import glib
 import gobject
 import gtk
 
@@ -846,11 +846,11 @@ class Window (object):
         bar.props.message_type = gtk.MESSAGE_ERROR
         box = bar.get_content_area ()
 
-        attrs = pango.AttrList ()
-        attrs.insert (pango.AttrWeight (pango.WEIGHT_BOLD, 0, len (message1)))
+        markup = "<b>%s</b> %s" % (glib.markup_escape_text (message1),
+                                   glib.markup_escape_text (message2),)
         label = gtk.Label ()
-        label.props.label = "%s %s" % (message1, message2)
-        label.props.attributes = attrs
+        label.props.use_markup = True
+        label.props.label = markup
         label.props.selectable = True
         box.pack_start (label, False, False, 0)
 
