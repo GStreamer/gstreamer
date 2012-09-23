@@ -511,6 +511,7 @@ gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
     gst_structure_set (s, "channels", G_TYPE_INT, self->channels, NULL);
     gst_interleave_set_channel_positions (self, s);
 
+    /* FIXME: send caps event after stream-start event */
     gst_pad_set_active (self->src, TRUE);
     gst_pad_set_caps (self->src, srccaps);
     gst_caps_unref (srccaps);
@@ -603,6 +604,7 @@ gst_interleave_change_state (GstElement * element, GstStateChange transition)
       self->timestamp = 0;
       self->offset = 0;
       gst_event_replace (&self->pending_segment, NULL);
+      self->send_stream_start = TRUE;
       gst_collect_pads_start (self->collect);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -849,6 +851,9 @@ gst_interleave_sink_event (GstCollectPads * pads, GstCollectData * data,
       event = NULL;
       break;
     }
+    case GST_EVENT_TAG:
+      GST_FIXME_OBJECT (self, "FIXME: merge tags and send after stream-start");
+      break;
     default:
       break;
   }
@@ -1177,6 +1182,18 @@ gst_interleave_collected (GstCollectPads * pads, GstInterleave * self)
   gint width = self->width / 8;
   GstMapInfo write_info;
   GstClockTime timestamp = -1;
+
+  /* FIXME: send caps and tags after stream-start */
+#if 0
+  if (self->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "interleave-%08x", g_random_int ());
+    gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
+    self->send_stream_start = FALSE;
+  }
+#endif
 
   size = gst_collect_pads_available (pads);
   if (size == 0)

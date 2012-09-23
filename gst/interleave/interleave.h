@@ -72,6 +72,8 @@ struct _GstInterleave
   GstInterleaveFunc func;
 
   GstPad *src;
+
+  gboolean send_stream_start;
 };
 
 struct _GstInterleaveClass
