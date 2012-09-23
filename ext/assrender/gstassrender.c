@@ -1613,8 +1613,9 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_ass_render_lib_debug, "assrender_library",
       0, "ASS/SSA subtitle renderer library");
 
+  /* FIXME: fix unit tests before upping rank again */
   return gst_element_register (plugin, "assrender",
-      GST_RANK_PRIMARY, GST_TYPE_ASS_RENDER);
+      GST_RANK_NONE, GST_TYPE_ASS_RENDER);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
