@@ -1711,6 +1711,14 @@ gst_avi_mux_start_file (GstAviMux * avimux)
     }
   }
 
+  /* stream-start (FIXME: create id based on input ids) */
+  {
+    gchar s_id[32];
+
+    g_snprintf (s_id, sizeof (s_id), "avimux-%08x", g_random_int ());
+    gst_pad_push_event (avimux->srcpad, gst_event_new_stream_start (s_id));
+  }
+
   caps = gst_pad_get_pad_template_caps (avimux->srcpad);
   gst_pad_set_caps (avimux->srcpad, caps);
   gst_caps_unref (caps);
