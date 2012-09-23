@@ -33,6 +33,7 @@
  * </refsect2>
  */
 
+/* FIXME: drop/merge tag events, or at least send them delayed after stream-start */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -398,6 +399,16 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
 
   GST_DEBUG_OBJECT (mux, "all pads are collected");
 
+  if (mux->need_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "multipartmux-%08x", g_random_int ());
+    gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
+
+    mux->need_stream_start = FALSE;
+  }
+
   /* queue buffers on all pads; find a buffer with the lowest timestamp */
   best = gst_multipart_mux_queue_pads (mux);
   if (!best)
@@ -604,6 +615,7 @@ gst_multipart_mux_change_state (GstElement * element, GstStateChange transition)
       multipart_mux->offset = 0;
       multipart_mux->negotiated = FALSE;
       multipart_mux->need_segment = TRUE;
+      multipart_mux->need_stream_start = TRUE;
       GST_DEBUG_OBJECT (multipart_mux, "starting collect pads");
       gst_collect_pads_start (multipart_mux->collect);
       break;

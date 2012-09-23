@@ -76,6 +76,7 @@ struct _GstMultipartMux
 
   gboolean negotiated;
   gboolean need_segment;
+  gboolean need_stream_start;
 };
 
 struct _GstMultipartMuxClass
