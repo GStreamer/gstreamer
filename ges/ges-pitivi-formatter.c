@@ -52,6 +52,7 @@ static gboolean load_pitivi_file_from_uri (GESFormatter * self,
 static void ges_pitivi_formatter_finalize (GObject * object);
 static gboolean pitivi_formatter_update_source_uri (GESFormatter * formatter,
     GESTimelineFileSource * tfs, gchar * new_uri);
+static gboolean pitivi_can_load_uri (const gchar * uri, GError ** error);
 
 typedef struct SrcMapping
 {
@@ -116,6 +117,32 @@ list_table_destroyer (gpointer key, gpointer value, void *unused)
   g_list_free (value);
 }
 
+static gboolean
+pitivi_can_load_uri (const gchar * uri, GError ** error)
+{
+  xmlDocPtr doc;
+  gboolean ret = TRUE;
+  xmlXPathObjectPtr xpathObj;
+  xmlXPathContextPtr xpathCtx;
+
+  if (!(doc = xmlParseFile (uri))) {
+    GST_ERROR ("The xptv file for uri %s was badly formed or did not exist",
+        uri);
+    return FALSE;
+  }
+
+  xpathCtx = xmlXPathNewContext (doc);
+  xpathObj = xmlXPathEvalExpression ((const xmlChar *) "/pitivi", xpathCtx);
+  if (!xpathObj || !xpathObj->nodesetval || xpathObj->nodesetval->nodeNr == 0)
+    ret = FALSE;
+
+  xmlFreeDoc (doc);
+  xmlXPathFreeObject (xpathObj);
+  xmlXPathFreeContext (xpathCtx);
+
+  return ret;
+}
+
 /* Object functions */
 static void
 ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
@@ -130,6 +157,7 @@ ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
   formatter_klass = GES_FORMATTER_CLASS (klass);
   g_type_class_add_private (klass, sizeof (GESPitiviFormatterPrivate));
 
+  formatter_klass->can_load_uri = pitivi_can_load_uri;
   formatter_klass->save_to_uri = save_pitivi_timeline_to_uri;
   formatter_klass->load_from_uri = load_pitivi_file_from_uri;
   formatter_klass->update_source_uri = pitivi_formatter_update_source_uri;
