@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include "test-utils.h"
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 #include <string.h>
@@ -55,6 +56,22 @@ compare (GKeyFile * cmp, GESFormatter * formatter, GESTimeline * timeline)
   g_free (data);
   return result;
 }
+
+GST_START_TEST (test_simple)
+{
+  gchar *uri = ges_test_file_uri ("test.xptv");
+
+  ges_init ();
+
+  fail_unless (ges_formatter_can_load_uri (uri, NULL));
+  g_free (uri);
+
+  uri = ges_test_file_uri ("wrong_test.xptv");
+  fail_if (ges_formatter_can_load_uri (uri, NULL));
+  g_free (uri);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_keyfile_save)
 {
@@ -764,6 +781,7 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
+  tcase_add_test (tc_chain, test_simple);
   tcase_add_test (tc_chain, test_keyfile_save);
   tcase_add_test (tc_chain, test_keyfile_load);
   tcase_add_test (tc_chain, test_keyfile_identity);

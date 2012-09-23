@@ -1,0 +1,50 @@
+<pitivi formatter="GES" version="0.2">
+ <factories>
+  <sources>
+   <source filename="file://./audio_video.ogg" id="1"/>
+  </sources>
+ </factories>
+ <timeline>
+  <tracks>
+   <track>
+    <stream caps="video/x-raw-yuv; video/x-raw-rgb" type="pitivi.stream.VideoStream"/>
+    <track-objects>
+     <track-object active="(bool)True" locked="(bool)True" priority="(int)0" duration="(gint64)14400000000" start="(gint64)14400000000" in_point="(gint64)0" id="0" type="pitivi.timeline.track.SourceTrackObject">
+      <factory-ref id="1"/>
+     </track-object>
+     <track-object active="(bool)True" locked="(bool)True" priority="(int)0" duration="(gint64)14400000000" start="(gint64)0" in_point="(gint64)0" id="1" type="pitivi.timeline.track.SourceTrackObject">
+      <factory-ref id="1"/>
+     </track-object>
+    </track-objects>
+   </track>
+   <track>
+    <stream caps="audio/x-raw-int; audio/x-raw-float" type="pitivi.stream.AudioStream"/>
+    <track-objects>
+     <track-object active="(bool)True" locked="(bool)True" priority="(int)0" duration="(gint64)14400000000" start="(gint64)14400000000" in_point="(gint64)0" id="2" type="pitivi.timeline.track.SourceTrackObject">
+      <factory-ref id="1"/>
+     </track-object>
+     <track-object active="(bool)True" locked="(bool)True" priority="(int)0" duration="(gint64)14400000000" start="(gint64)0" in_point="(gint64)0" id="3" type="pitivi.timeline.track.SourceTrackObject">
+      <factory-ref id="1"/>
+     </track-object>
+    </track-objects>
+   </track>
+  </tracks>
+  <timeline-objects>
+   <timeline-object>
+    <factory-ref id="1"/>
+    <track-object-refs>
+     <track-object-ref id="2"/>
+     <track-object-ref id="0"/>
+    </track-object-refs>
+   </timeline-object>
+   <timeline-object>
+    <factory-ref id="1"/>
+    <track-object-refs>
+     <track-object-ref id="3"/>
+     <track-object-ref id="1"/>
+    </track-object-refs>
+   </timeline-object>
+  </timeline-objects>
+ </timeline>
+</pitivi>
+
