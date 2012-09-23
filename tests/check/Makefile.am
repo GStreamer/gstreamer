@@ -39,7 +39,8 @@ check_PROGRAMS = \
 	ges/titles\
 	ges/transition	\
 	ges/overlays\
-	ges/text_properties
+	ges/text_properties\
+	ges/project
 
 noinst_LTLIBRARIES=$(testutils_noisnt_libraries)
 noinst_HEADERS=$(testutils_noinst_headers)
@@ -49,4 +50,7 @@ TESTS = $(check_PROGRAMS)
 AM_CFLAGS =  $(common_cflags) -UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(common_ldadd) libtestutils.la
 
-EXTRA_DIST = #gst-plugins-bad.supp
+EXTRA_DIST = \
+	ges/test-project.xges \
+	ges/audio_only.ogg \
+	ges/audio_video.ogg
