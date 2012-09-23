@@ -19,6 +19,7 @@
 
 """GStreamer Debug Viewer GUI module."""
 
+from array import array
 from bisect import bisect_left
 import logging
 
@@ -48,7 +49,7 @@ class LogModelBase (gtk.GenericTreeModel):
 
         ##self.props.leak_references = False
 
-        self.line_offsets = []
+        self.line_offsets = array ("I")
         self.line_levels = [] # FIXME: Not so nice!
         self.line_cache = {}
 
@@ -266,11 +267,9 @@ class FilteredLogModel (FilteredLogModelBase):
         YIELD_LIMIT = 10000
 
         self.logger.debug ("preparing new filter")
-        ## del self.line_offsets[:]
-        ## del self.line_levels[:]
-        new_line_offsets = []
+        new_line_offsets = array ("I")
         new_line_levels = []
-        new_super_index = []
+        new_super_index = array ("I")
         level_id = self.COL_LEVEL
         func = filter.filter_func
         def enum ():
