@@ -1619,8 +1619,13 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps;
   GstSegment segment;
+  gchar s_id[32];
 
   GST_DEBUG_OBJECT (qtmux, "starting file");
+
+  /* stream-start (FIXME: create id based on input ids) */
+  g_snprintf (s_id, sizeof (s_id), "qtmux-%08x", g_random_int ());
+  gst_pad_push_event (qtmux->srcpad, gst_event_new_stream_start (s_id));
 
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (qtmux->srcpad));
   /* qtmux has structure with and without variant, remove all but the first */
