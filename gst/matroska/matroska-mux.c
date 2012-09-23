@@ -2467,6 +2467,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   GstClockTime duration = 0;
   guint32 segment_uid[4];
   GTimeVal time = { 0, 0 };
+  gchar s_id[32];
 #if 0
   GstToc *toc;
 #endif
@@ -2495,6 +2496,11 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
     gst_query_unref (query);
   }
 
+  /* stream-start (FIXME: create id based on input ids) */
+  g_snprintf (s_id, sizeof (s_id), "matroskamux-%08x", g_random_int ());
+  gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
+
+  /* output caps */
   audio_only = mux->num_v_streams == 0 && mux->num_a_streams > 0;
   if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
     media_type = (audio_only) ? "audio/webm" : "video/webm";
