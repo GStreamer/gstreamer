@@ -145,6 +145,29 @@ ges_formatter_dispose (GObject * object)
   g_hash_table_destroy (priv->parent_newparent_table);
 }
 
+static GESFormatterClass *
+ges_formatter_find_for_uri (const gchar * uri)
+{
+  GType *formatters;
+  guint n_formatters, i;
+  GESFormatterClass *class, *ret = NULL;
+
+  formatters = g_type_children (GES_TYPE_FORMATTER, &n_formatters);
+  for (i = 0; i < n_formatters; i++) {
+    class = g_type_class_ref (formatters[i]);
+
+    if (class->can_load_uri (uri, NULL)) {
+      ret = class;
+      break;
+    }
+    g_type_class_unref (class);
+  }
+
+  g_free (formatters);
+
+  return ret;
+}
+
 /**
  * ges_formatter_new_for_uri:
  * @uri: a #gchar * pointing to the uri
@@ -207,6 +230,8 @@ default_can_save_uri (const gchar * uri, GError ** error)
 gboolean
 ges_formatter_can_load_uri (const gchar * uri, GError ** error)
 {
+  GESFormatterClass *class = NULL;
+
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("Invalid uri!");
     return FALSE;
@@ -219,11 +244,14 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
     return FALSE;
   }
 
-  /* TODO: implement file format registry */
-  /* TODO: search through the registry and chose a GESFormatter class that can
-   * handle the URI.*/
+  class = ges_formatter_find_for_uri (uri);
+  if (class) {
+    g_type_class_unref (class);
 
-  return TRUE;
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 /**
