@@ -3,6 +3,7 @@ libgstrtpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtp
 libgstrtpinclude_HEADERS = gstrtpbuffer.h \
 			   gstrtcpbuffer.h \
 			   gstrtppayloads.h \
+			   gstrtphdrext.h \
 			gstrtpbaseaudiopayload.h \
 			gstrtpbasepayload.h \
 			gstrtpbasedepayload.h
@@ -12,6 +13,7 @@ lib_LTLIBRARIES = libgstrtp-@GST_API_VERSION@.la
 libgstrtp_@GST_API_VERSION@_la_SOURCES = gstrtpbuffer.c \
 			        gstrtcpbuffer.c \
 			        gstrtppayloads.c \
+			   	gstrtphdrext.c \
 			        gstrtpbaseaudiopayload.c \
 				gstrtpbasepayload.c \
 				gstrtpbasedepayload.c

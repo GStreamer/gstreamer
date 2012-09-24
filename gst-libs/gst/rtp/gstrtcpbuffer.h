@@ -66,6 +66,8 @@ typedef enum
  * @GST_RTCP_RTPFB_TYPE_TMMBR: Temporary Maximum Media Stream Bit Rate Request
  * @GST_RTCP_RTPFB_TYPE_TMMBN: Temporary Maximum Media Stream Bit Rate
  *    Notification
+ * @GST_RTCP_RTPFB_TYPE_RTCP_SR_SEQ: Request an SR packet for early
+ *    synchronization
  * @GST_RTCP_PSFB_TYPE_PLI: Picture Loss Indication
  * @GST_RTCP_PSFB_TYPE_SLI: Slice Loss Indication
  * @GST_RTCP_PSFB_TYPE_RPSI: Reference Picture Selection Indication
@@ -80,22 +82,24 @@ typedef enum
 typedef enum
 {
   /* generic */
-  GST_RTCP_FB_TYPE_INVALID    = 0,
+  GST_RTCP_FB_TYPE_INVALID        = 0,
   /* RTPFB types */
-  GST_RTCP_RTPFB_TYPE_NACK    = 1,
+  GST_RTCP_RTPFB_TYPE_NACK        = 1,
   /* RTPFB types assigned in RFC 5104 */
-  GST_RTCP_RTPFB_TYPE_TMMBR   = 3,
-  GST_RTCP_RTPFB_TYPE_TMMBN   = 4,
+  GST_RTCP_RTPFB_TYPE_TMMBR       = 3,
+  GST_RTCP_RTPFB_TYPE_TMMBN       = 4,
+  /* RTPFB types assigned in RFC 6051 */
+  GST_RTCP_RTPFB_TYPE_RCTP_SR_REQ = 5,
   /* PSFB types */
-  GST_RTCP_PSFB_TYPE_PLI      = 1,
-  GST_RTCP_PSFB_TYPE_SLI      = 2,
-  GST_RTCP_PSFB_TYPE_RPSI     = 3,
-  GST_RTCP_PSFB_TYPE_AFB      = 15,
+  GST_RTCP_PSFB_TYPE_PLI          = 1,
+  GST_RTCP_PSFB_TYPE_SLI          = 2,
+  GST_RTCP_PSFB_TYPE_RPSI         = 3,
+  GST_RTCP_PSFB_TYPE_AFB          = 15,
   /* PSFB types assigned in RFC 5104 */
-  GST_RTCP_PSFB_TYPE_FIR      = 4,
-  GST_RTCP_PSFB_TYPE_TSTR     = 5,
-  GST_RTCP_PSFB_TYPE_TSTN     = 6,
-  GST_RTCP_PSFB_TYPE_VBCN     = 7,
+  GST_RTCP_PSFB_TYPE_FIR          = 4,
+  GST_RTCP_PSFB_TYPE_TSTR         = 5,
+  GST_RTCP_PSFB_TYPE_TSTN         = 6,
+  GST_RTCP_PSFB_TYPE_VBCN         = 7,
 } GstRTCPFBType;
 
 /**
