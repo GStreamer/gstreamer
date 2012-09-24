@@ -322,10 +322,13 @@ static const EGLint eglglessink_RGB565_attribs[] = {
   EGL_NONE
 };
 
+static void gst_eglglessink_finalize (GObject * object);
 static void gst_eglglessink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_eglglessink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static GstStateChangeReturn gst_eglglessink_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
     GstBuffer * buf);
 static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
@@ -1018,11 +1021,10 @@ gst_eglglessink_start (GstBaseSink * sink)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
 
-  if (!eglglessink->egl_started)
-    if (!egl_init (eglglessink)) {
-      GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
-      goto HANDLE_ERROR;
-    }
+  if (!eglglessink->egl_started) {
+    GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
+    goto HANDLE_ERROR;
+  }
 
   /* Ask for a window to render to */
   if (!eglglessink->have_window)
@@ -1041,22 +1043,11 @@ HANDLE_ERROR:
   return FALSE;
 }
 
-static void
-gst_eglglessink_wipe_fmt (gpointer data)
-{
-  GstEglGlesImageFmt *format = data;
-  gst_caps_unref (format->caps);
-  g_free (format);
-}
-
 /* Drafted */
 gboolean
 gst_eglglessink_stop (GstBaseSink * sink)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
-
-  eglglessink->selected_fmt = NULL;
-  g_list_free_full (eglglessink->supported_fmts, gst_eglglessink_wipe_fmt);
 
   /* EGL/GLES2 cleanup */
 
@@ -1074,12 +1065,6 @@ gst_eglglessink_stop (GstBaseSink * sink)
 
   if (eglglessink->using_own_window)
     platform_destroy_native_window (eglglessink->display, eglglessink->window);
-
-  gst_caps_unref (eglglessink->sinkcaps);
-  eglglessink->sinkcaps = NULL;
-
-  g_mutex_free (eglglessink->flow_lock);
-  eglglessink->flow_lock = NULL;
 
   return TRUE;
 }
@@ -2163,6 +2148,76 @@ HANDLE_ERROR:
 }
 
 static void
+gst_eglglessink_wipe_fmt (gpointer data)
+{
+  GstEglGlesImageFmt *format = data;
+  gst_caps_unref (format->caps);
+  g_free (format);
+}
+
+static GstStateChangeReturn
+gst_eglglessink_change_state (GstElement * element, GstStateChange transition)
+{
+  GstEglGlesSink *eglglessink;
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+
+  eglglessink = GST_EGLGLESSINK (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (!egl_init (eglglessink)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto done;
+      }
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      g_mutex_lock (eglglessink->flow_lock);
+      if (eglglessink->display) {
+        eglTerminate (eglglessink->display);
+        eglglessink->display = NULL;
+      }
+
+      eglglessink->selected_fmt = NULL;
+      g_list_free_full (eglglessink->supported_fmts, gst_eglglessink_wipe_fmt);
+      eglglessink->supported_fmts = NULL;
+      gst_caps_unref (eglglessink->sinkcaps);
+      eglglessink->sinkcaps = NULL;
+      eglglessink->egl_started = FALSE;
+      g_mutex_unlock (eglglessink->flow_lock);
+      break;
+    default:
+      break;
+  }
+
+done:
+  return ret;
+}
+
+static void
+gst_eglglessink_finalize (GObject * object)
+{
+  GstEglGlesSink *eglglessink;
+
+  g_return_if_fail (GST_IS_EGLGLESSINK (object));
+
+  eglglessink = GST_EGLGLESSINK (object);
+
+  g_mutex_free (eglglessink->flow_lock);
+  eglglessink->flow_lock = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_eglglessink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -2252,15 +2307,20 @@ static void
 gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstVideoSinkClass *gstvideosink_class;
 
   gobject_class = (GObjectClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstvideosink_class = (GstVideoSinkClass *) klass;
 
   gobject_class->set_property = gst_eglglessink_set_property;
   gobject_class->get_property = gst_eglglessink_get_property;
+  gobject_class->finalize = gst_eglglessink_finalize;
+
+  gstelement_class->change_state = gst_eglglessink_change_state;
 
   gstbasesink_class->start = gst_eglglessink_start;
   gstbasesink_class->stop = gst_eglglessink_stop;
