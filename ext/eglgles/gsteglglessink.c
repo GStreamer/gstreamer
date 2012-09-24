@@ -340,7 +340,7 @@ static void gst_eglglesbuffer_destroy (GstEglGlesBuffer * eglglessink);
 static void gst_eglglesbuffer_init (GstEglGlesBuffer * eglglessink,
     gpointer g_class);
 static GType gst_eglglesbuffer_get_type (void);
-static gint gst_eglglessink_get_compat_format_from_caps
+static GstEglGlesImageFmt *gst_eglglessink_get_compat_format_from_caps
     (GstEglGlesSink * eglglessink, GstCaps * caps);
 static void gst_eglglesbuffer_finalize (GstEglGlesBuffer * eglglessink);
 static void gst_eglglesbuffer_class_init (gpointer g_class,
@@ -433,6 +433,7 @@ gst_eglglesbuffer_new (GstEglGlesSink * eglglessink, GstCaps * caps)
 {
   GstEglGlesBuffer *eglglesbuffer = NULL;
   GstStructure *structure = NULL;
+  GstEglGlesImageFmt *format;
 
   g_return_val_if_fail (GST_IS_EGLGLESSINK (eglglessink), NULL);
   g_return_val_if_fail (caps, NULL);
@@ -451,10 +452,9 @@ gst_eglglesbuffer_new (GstEglGlesSink * eglglessink, GstCaps * caps)
   GST_LOG_OBJECT (eglglessink, "creating %dx%d", eglglesbuffer->width,
       eglglesbuffer->height);
 
-  eglglesbuffer->format =
-      gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
+  format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
 
-  if (eglglesbuffer->format == GST_EGLGLESSINK_IMAGE_NOFMT) {
+  if (!format) {
     GST_WARNING_OBJECT (eglglessink,
         "Failed to get format from caps %" GST_PTR_FORMAT, caps);
     GST_ERROR_OBJECT (eglglessink,
@@ -463,6 +463,7 @@ gst_eglglesbuffer_new (GstEglGlesSink * eglglessink, GstCaps * caps)
     goto BEACH_UNLOCKED;
   }
 
+  eglglesbuffer->format = format->fmt;
   eglglesbuffer->eglglessink = gst_object_ref (eglglessink);
 
   eglglesbuffer->image = gst_eglglesbuffer_create_native
@@ -609,8 +610,7 @@ gst_eglglesbuffer_get_type (void)
   return _gst_eglglessink_buffer_type;
 }
 
-
-static gint
+static GstEglGlesImageFmt *
 gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
     GstCaps * caps)
 {
@@ -629,20 +629,16 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
         GST_PTR_FORMAT " and %" GST_PTR_FORMAT, format->caps, caps);
     if (format) {
       if (gst_caps_can_intersect (caps, format->caps)) {
-        eglglessink->selected_fmt = format;
-        GST_LOG ("Found compatible caps");
-        GST_LOG ("Sugested was %" GST_PTR_FORMAT, caps);
-        GST_LOG ("And we can do %" GST_PTR_FORMAT, format->caps);
-        GST_INFO_OBJECT (eglglessink, "Selected internal format:%d",
-            format->fmt);
-        return format->fmt;
+        GST_INFO_OBJECT (eglglessink, "Found compatible format %d", format->fmt);
+        GST_DEBUG_OBJECT (eglglessink, "Got caps %" GST_PTR_FORMAT
+            " and this format can do %" GST_PTR_FORMAT, caps, format->caps);
+        return format;
       }
     }
     list = g_list_next (list);
   }
 
-  eglglessink->selected_fmt = NULL;
-  return GST_EGLGLESSINK_IMAGE_NOFMT;
+  return NULL;
 }
 
 static GstCaps *
@@ -705,8 +701,8 @@ gst_eglglessink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
   GstEglGlesBuffer *eglglesbuffer = NULL;
   GstCaps *intersection = NULL;
   GstStructure *structure = NULL;
-  GstVideoFormat image_format;
   gint width, height;
+  GstEglGlesImageFmt *format;
 
   eglglessink = GST_EGLGLESSINK (bsink);
 
@@ -724,7 +720,6 @@ gst_eglglessink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
     GST_LOG_OBJECT (eglglessink,
         "Buffer alloc for same last_caps, reusing caps");
     intersection = gst_caps_ref (caps);
-    image_format = eglglessink->format;
     width = GST_VIDEO_SINK_WIDTH (eglglessink);
     height = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
@@ -803,17 +798,17 @@ gst_eglglessink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
   }
 
   /* Get image format from caps */
-  image_format = gst_eglglessink_get_compat_format_from_caps (eglglessink,
+  format = gst_eglglessink_get_compat_format_from_caps (eglglessink,
       intersection);
 
-  if (image_format == GST_EGLGLESSINK_IMAGE_NOFMT)
+  if (!format)
     GST_WARNING_OBJECT (eglglessink, "Can't get a compatible format from caps");
 
   /* Get geometry from caps */
   structure = gst_caps_get_structure (intersection, 0);
   if (!gst_structure_get_int (structure, "width", &width) ||
       !gst_structure_get_int (structure, "height", &height) ||
-      image_format == GST_EGLGLESSINK_IMAGE_NOFMT)
+      !format)
     goto INVALID_CAPS;
 
 REUSE_LAST_CAPS:
@@ -1993,6 +1988,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   gboolean ret = TRUE;
   gint width, height;
   EGLNativeWindowType window;
+  GstEglGlesImageFmt *format;
 
   eglglessink = GST_EGLGLESSINK (bsink);
 
@@ -2006,11 +2002,20 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto HANDLE_ERROR;
   }
 
-  if (gst_eglglessink_get_compat_format_from_caps (eglglessink, caps) ==
-      GST_EGLGLESSINK_IMAGE_NOFMT) {
-    GST_ERROR_OBJECT (eglglessink, "Unsupported format");
+  format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
+  if (!format) {
+    GST_ERROR_OBJECT (eglglessink, "No supported and compatible egl/gles format "
+        "found for given caps");
     goto HANDLE_ERROR;
-  }
+  } else
+    GST_INFO_OBJECT (eglglessink, "Selected compatible egl/gles format %d",
+        format->fmt);
+
+  g_mutex_lock (eglglessink->flow_lock);
+  eglglessink->selected_fmt = format;
+  GST_VIDEO_SINK_WIDTH (eglglessink) = width;
+  GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
+  g_mutex_unlock (eglglessink->flow_lock);
 
   /* XXX: Renegotiation not implemented yet */
   if (eglglessink->current_caps) {
@@ -2033,8 +2038,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   g_mutex_lock (eglglessink->flow_lock);
-  GST_VIDEO_SINK_WIDTH (eglglessink) = width;
-  GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
   eglglessink->current_caps = gst_caps_ref (caps);
   g_mutex_unlock (eglglessink->flow_lock);
 
