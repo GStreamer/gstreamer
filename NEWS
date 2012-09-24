@@ -1,38 +1,6 @@
-This is GStreamer libav Plug-ins 0.11.92 "Wish You Were Here"
+This is GStreamer Libav Plugins 1.0.0
 
-New in 0.11.92:
-
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-
-New in 0.11.91:
-
-      * Lots of bugfixes and other improvements
-
-New in 0.11.90:
-
-      * Lots of bugfixes, cleanup and other improvements
-      * Renamed from gst-ffmpeg to libav, also all element factory names now start with an 'av' prefix instead of 'ff'
-      * Handle difference between DTS/PTS properly
-
-New in 0.11.2:
-
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * Disable ffmpeg multithreading
-      * Add support for the VOC format
-      * Improve memory allocation
-      * Optimize for 0-padded input buffers
-
-Bugs fixed in this release
-
-      * 664687 : CPU count detection fails on OS X
-
-New in 0.11.1:
+New features in 1.0.0:
 
       * Parallel installability with 0.10.x series
-      * Threadsafe design and API
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-
+      * See release notes for more details

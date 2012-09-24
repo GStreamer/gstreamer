@@ -1,77 +1,100 @@
-
-Release notes for GStreamer libav Plug-ins 0.11.92 "Wish You Were Here"
+Release notes for GStreamer Libav Plugins 1.0.0
         
+The GStreamer project is pleased to announce the very first release of the
+new API and ABI-stable 1.x series of the GStreamer multimedia framework.
 
-The GStreamer team is proud to announce a new release
-in the 0.11.x unstable series of the
-GStreamer libav Plug-ins.
+The 1.x series is a stable series targeted at end users. It is not API or ABI
+compatible with the 0.10.x series. It can, however, be installed in parallel
+with the 0.10.x series and will not affect an existing 0.10.x installation.
 
+Major improvements include: more flexible memory handling; extensible and
+negotiable metadata for buffers; caps negotiation and renegotiation mechanisms,
+decoupled from buffer allocation; improved caps renegotiation; automatic
+re-sending of state for dynamic pipelines; reworked and more fine-grained pad
+probing; simpler and more descriptive audio and video caps; more efficient
+allocation of buffers, events and other mini objects; improved timestamp
+handling; support for gobject-inspection-based language bindings; countless
+other improvements.
 
+Most of these changes involve the GStreamer plugin API. The application API
+has changed comparatively little, and most applications should be fairly easy
+to port to the new API. There is a porting guide available.
 
-The 0.11.x series is an unstable series targeted at developers and will
-eventually lead up to the stable 1.0 series.
-It is not API or ABI compatible with the stable 0.10.x series.
-It is, however, parallel installable with the 0.10.x series.
+The GStreamer team would like to thank everyone who helped bring this release
+about, whether by submitting patches, reporting bugs, testing, sponsoring
+development, attending hackfests, or simply supplying moral support.
 
+This is the end of a long development process, but also the beginning of
+one. This release does not mark the pinnacle of perfection, but the point
+where the team is content with the API and stability and quality of the code
+base in general, especially compared to the old 0.10 series.
 
-This module contains plug-ins using libraries from the libav project.
+There will be bugs to fix, and starting from this release there will be
+distinct bug-fixing and feature development cycles, with the goal of getting
+bug-fixes out quicker and unencumbered by other more risky changes. See
 
+  http://gstreamer.freedesktop.org/wiki/ReleasePlanning/RoadMap
 
+for a tentative road map and possible schedule.
 
-Other modules containing plug-ins are:
+=== Module
 
+This module contains plugins using libraries from the libav project.
 
-gst-plugins-base
-contains a basic set of well-supported plug-ins
-gst-plugins-ugly
-contains a set of well-supported plug-ins, but might pose problems for
-    distributors
-gst-plugins-bad
-contains a set of less supported plug-ins that haven't passed the
-    rigorous quality testing we expect
+It replaces the gst-ffmpeg module from the 0.10.x series.
 
+Other modules containing plugins are:
 
+ gst-plugins-base : a basic set of well-supported plugins
+ gst-plugins-good : a set of well-supported plugins under our preferred license
+ gst-plugins-ugly : a set of well-supported plugins, but might pose problems
+                        for distributors
+ gst-plugins-bad  : a set of less supported plugins that haven't passed the
+                        rigorous quality testing we expect
 
-  
+==== Download
 
-Features of this release
-    
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-There were no bugs fixed in this release
-    
+You can find source releases of gstreamer in the download directory:
 
-Download
+  http://gstreamer.freedesktop.org/src/gstreamer/
 
-You can find source releases of gst-libav in the download directory:
-http://gstreamer.freedesktop.org/src/gst-libav/
-
-GStreamer Homepage
+==== GStreamer Homepage
 
 More details can be found on the project's website:
-http://gstreamer.freedesktop.org/
 
-Support and Bugs
+  http://gstreamer.freedesktop.org/
+
+==== Support and Bugs
 
 We use GNOME's bugzilla for bug reports and feature requests:
-http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
-Developers
+  http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+ or
+  http://gstreamer.freedesktop.org/bugs/
 
-GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
-Interested developers of the core library, plug-ins, and applications should
-subscribe to the gstreamer-devel list. If there is sufficient interest we
-will create more lists as necessary.
+==== Developers
 
-        
-Applications
-  
-Contributors to this release
-    
-      * Edward Hervey
-      * Matej Knopp
-      * Sebastian Dröge
-      * Tim-Philipp Müller
-      * Wim Taymans
- 
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be
+cloned from there. Interested developers of the core library, plugins, and
+applications should subscribe to the gstreamer-devel list and/or pop into
+our #gstreamer IRC channel on Freenode.
+
+==== Contributors to this release
+
+  Alessandro Decina
+  Christian Fredrik Kalager Schaller
+  Edward Hervey
+  Mark Nauwelaerts
+  Martin Storsjo
+  Matej Knopp
+  Michael Smith
+  Nicolas Dufresne
+  Robert Swain
+  Sebastian Dröge
+  Sjoerd Simons
+  Stefan Sauer
+  Thomas Vander Stichele
+  Tim-Philipp Müller
+  Vincent Penquerc'h
+  Wim Taymans
+  Руслан Ижбулатов
