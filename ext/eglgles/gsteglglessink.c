@@ -1163,9 +1163,6 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
   return window;
 }
 
-/* XXX: Should implement (redisplay)
- * We need at least the last buffer stored for this to work
- */
 static void
 gst_eglglessink_expose (GstXOverlay * overlay)
 {
@@ -1178,7 +1175,6 @@ gst_eglglessink_expose (GstXOverlay * overlay)
   /* Logic would be to get _render_and_display() to use
    * last seen buffer to render from when NULL it's
    * passed on */
-  GST_WARNING_OBJECT (eglglessink, "_expose() not implemented");
   ret = gst_eglglessink_render_and_display (eglglessink, NULL);
   if (ret == GST_FLOW_ERROR)
     GST_ERROR_OBJECT (eglglessink, "Redisplay failed");
@@ -1814,17 +1810,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   };
 #endif
 
-  if (!buf) {
-    GST_ERROR_OBJECT (eglglessink, "Null buffer, no past queue implemented");
-    goto HANDLE_ERROR;
-  }
-
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
   GST_DEBUG_OBJECT (eglglessink,
       "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
-      GST_BUFFER_SIZE (buf));
+      buf ? GST_BUFFER_SIZE (buf) : -1);
 
   switch (eglglessink->rendering_path) {
 #ifdef EGL_FAST_RENDERING_POSSIBLE
@@ -1845,137 +1836,140 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 #endif
     default:                   /* case GST_EGLGLESSINK_RENDER_SLOW */
 
-      switch (eglglessink->selected_fmt->fmt) {
-        case GST_EGLGLESSINK_IMAGE_RGB888:
-          glActiveTexture (GL_TEXTURE0);
-          glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-              GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-          break;
-        case GST_EGLGLESSINK_IMAGE_RGB565:
-          glActiveTexture (GL_TEXTURE0);
-          glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-          glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-              GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
-          break;
-        case GST_EGLGLESSINK_IMAGE_RGBA8888:
-          switch (eglglessink->format) {
-            case GST_VIDEO_FORMAT_RGBA:
-            case GST_VIDEO_FORMAT_BGRA:
-            case GST_VIDEO_FORMAT_ARGB:
-            case GST_VIDEO_FORMAT_ABGR:
-            case GST_VIDEO_FORMAT_RGBx:
-            case GST_VIDEO_FORMAT_BGRx:
-            case GST_VIDEO_FORMAT_xRGB:
-            case GST_VIDEO_FORMAT_xBGR:
-              glActiveTexture (GL_TEXTURE0);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-              break;
-            case GST_VIDEO_FORMAT_AYUV:
-              glActiveTexture (GL_TEXTURE0);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-              break;
-            case GST_VIDEO_FORMAT_Y444:
-            case GST_VIDEO_FORMAT_I420:
-            case GST_VIDEO_FORMAT_YV12:
-            case GST_VIDEO_FORMAT_Y42B:
-            case GST_VIDEO_FORMAT_Y41B:{
-              gint coffset, cw, ch;
+      if (buf) {
+        switch (eglglessink->selected_fmt->fmt) {
+          case GST_EGLGLESSINK_IMAGE_RGB888:
+            glActiveTexture (GL_TEXTURE0);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+                GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+            break;
+          case GST_EGLGLESSINK_IMAGE_RGB565:
+            glActiveTexture (GL_TEXTURE0);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+                GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+            break;
+          case GST_EGLGLESSINK_IMAGE_RGBA8888:
+            switch (eglglessink->format) {
+              case GST_VIDEO_FORMAT_RGBA:
+              case GST_VIDEO_FORMAT_BGRA:
+              case GST_VIDEO_FORMAT_ARGB:
+              case GST_VIDEO_FORMAT_ABGR:
+              case GST_VIDEO_FORMAT_RGBx:
+              case GST_VIDEO_FORMAT_BGRx:
+              case GST_VIDEO_FORMAT_xRGB:
+              case GST_VIDEO_FORMAT_xBGR:
+                glActiveTexture (GL_TEXTURE0);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                break;
+              case GST_VIDEO_FORMAT_AYUV:
+                glActiveTexture (GL_TEXTURE0);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                break;
+              case GST_VIDEO_FORMAT_Y444:
+              case GST_VIDEO_FORMAT_I420:
+              case GST_VIDEO_FORMAT_YV12:
+              case GST_VIDEO_FORMAT_Y42B:
+              case GST_VIDEO_FORMAT_Y41B:{
+                gint coffset, cw, ch;
 
-              coffset =
-                  gst_video_format_get_component_offset (eglglessink->format, 0,
-                  w, h);
-              cw = gst_video_format_get_component_width (eglglessink->format, 0,
-                  w);
-              ch = gst_video_format_get_component_height (eglglessink->format,
-                  0, h);
-              glActiveTexture (GL_TEXTURE0);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                  cw, ch, 0, GL_LUMINANCE,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
-              coffset =
-                  gst_video_format_get_component_offset (eglglessink->format, 1,
-                  w, h);
-              cw = gst_video_format_get_component_width (eglglessink->format, 1,
-                  w);
-              ch = gst_video_format_get_component_height (eglglessink->format,
-                  1, h);
-              glActiveTexture (GL_TEXTURE1);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                  cw, ch, 0, GL_LUMINANCE,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
-              coffset =
-                  gst_video_format_get_component_offset (eglglessink->format, 2,
-                  w, h);
-              cw = gst_video_format_get_component_width (eglglessink->format, 2,
-                  w);
-              ch = gst_video_format_get_component_height (eglglessink->format,
-                  2, h);
-              glActiveTexture (GL_TEXTURE2);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[2]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                  cw, ch, 0, GL_LUMINANCE,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
-              break;
+                coffset =
+                    gst_video_format_get_component_offset (eglglessink->format,
+                    0, w, h);
+                cw = gst_video_format_get_component_width (eglglessink->format,
+                    0, w);
+                ch = gst_video_format_get_component_height (eglglessink->format,
+                    0, h);
+                glActiveTexture (GL_TEXTURE0);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                    cw, ch, 0, GL_LUMINANCE,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+                coffset =
+                    gst_video_format_get_component_offset (eglglessink->format,
+                    1, w, h);
+                cw = gst_video_format_get_component_width (eglglessink->format,
+                    1, w);
+                ch = gst_video_format_get_component_height (eglglessink->format,
+                    1, h);
+                glActiveTexture (GL_TEXTURE1);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                    cw, ch, 0, GL_LUMINANCE,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+                coffset =
+                    gst_video_format_get_component_offset (eglglessink->format,
+                    2, w, h);
+                cw = gst_video_format_get_component_width (eglglessink->format,
+                    2, w);
+                ch = gst_video_format_get_component_height (eglglessink->format,
+                    2, h);
+                glActiveTexture (GL_TEXTURE2);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[2]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                    cw, ch, 0, GL_LUMINANCE,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+                break;
+              }
+              case GST_VIDEO_FORMAT_YUY2:
+              case GST_VIDEO_FORMAT_UYVY:
+                glActiveTexture (GL_TEXTURE0);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                    w, h, 0, GL_LUMINANCE_ALPHA,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                glActiveTexture (GL_TEXTURE1);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
+                    GST_ROUND_UP_2 (w) / 2, h, 0, GL_RGBA,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                break;
+              case GST_VIDEO_FORMAT_NV12:
+              case GST_VIDEO_FORMAT_NV21:{
+                gint coffset, cw, ch;
+
+                coffset =
+                    gst_video_format_get_component_offset (eglglessink->format,
+                    0, w, h);
+                cw = gst_video_format_get_component_width (eglglessink->format,
+                    0, w);
+                ch = gst_video_format_get_component_height (eglglessink->format,
+                    0, h);
+                glActiveTexture (GL_TEXTURE0);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                    cw, ch, 0, GL_LUMINANCE,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+
+                coffset =
+                    gst_video_format_get_component_offset (eglglessink->format,
+                    (eglglessink->format == GST_VIDEO_FORMAT_NV12 ? 1 : 2), w,
+                    h);
+                cw = gst_video_format_get_component_width (eglglessink->format,
+                    1, w);
+                ch = gst_video_format_get_component_height (eglglessink->format,
+                    1, h);
+                glActiveTexture (GL_TEXTURE1);
+                glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
+                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                    cw, ch, 0, GL_LUMINANCE_ALPHA,
+                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
+                break;
+              }
+              default:
+                g_assert_not_reached ();
+                break;
             }
-            case GST_VIDEO_FORMAT_YUY2:
-            case GST_VIDEO_FORMAT_UYVY:
-              glActiveTexture (GL_TEXTURE0);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                  w, h, 0, GL_LUMINANCE_ALPHA,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-              glActiveTexture (GL_TEXTURE1);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
-                  GST_ROUND_UP_2 (w) / 2, h, 0, GL_RGBA,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-              break;
-            case GST_VIDEO_FORMAT_NV12:
-            case GST_VIDEO_FORMAT_NV21:{
-              gint coffset, cw, ch;
+        }
 
-              coffset =
-                  gst_video_format_get_component_offset (eglglessink->format, 0,
-                  w, h);
-              cw = gst_video_format_get_component_width (eglglessink->format, 0,
-                  w);
-              ch = gst_video_format_get_component_height (eglglessink->format,
-                  0, h);
-              glActiveTexture (GL_TEXTURE0);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
-                  cw, ch, 0, GL_LUMINANCE,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
-
-              coffset =
-                  gst_video_format_get_component_offset (eglglessink->format,
-                  (eglglessink->format == GST_VIDEO_FORMAT_NV12 ? 1 : 2), w, h);
-              cw = gst_video_format_get_component_width (eglglessink->format, 1,
-                  w);
-              ch = gst_video_format_get_component_height (eglglessink->format,
-                  1, h);
-              glActiveTexture (GL_TEXTURE1);
-              glBindTexture (GL_TEXTURE_2D, eglglessink->texture[1]);
-              glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
-                  cw, ch, 0, GL_LUMINANCE_ALPHA,
-                  GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf) + coffset);
-              break;
-            }
-            default:
-              g_assert_not_reached ();
-              break;
-          }
+        if (got_gl_error ("glTexImage2D"))
+          goto HANDLE_ERROR;
       }
-
-      if (got_gl_error ("glTexImage2D"))
-        goto HANDLE_ERROR;
 
       /* If no one has set a display rectangle on us initialize
        * a sane default. According to the docs on the xOverlay
