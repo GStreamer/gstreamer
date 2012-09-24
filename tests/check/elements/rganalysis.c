@@ -1858,7 +1858,6 @@ rganalysis_suite (void)
 
   tcase_add_test (tc_chain, test_gain_album);
 
-  g_printerr ("FIXME: fix test_forced_* tests");
   tcase_skip_broken_test (tc_chain, test_forced);
   tcase_skip_broken_test (tc_chain, test_forced_separate);
   tcase_skip_broken_test (tc_chain, test_forced_after_data);
