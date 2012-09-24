@@ -50,7 +50,7 @@ typedef struct _GESFormatterPrivate GESFormatterPrivate;
  */
 
 struct _GESFormatter {
-  GObject parent;
+  GInitiallyUnowned parent;
 
   /*< private >*/
   GESFormatterPrivate *priv;
@@ -114,7 +114,7 @@ typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
  */
 
 struct _GESFormatterClass {
-  GObjectClass parent_class;
+  GInitiallyUnownedClass parent_class;
 
   GESFormatterCanLoadURIMethod can_load_uri;
   GESFormatterCanSaveURIMethod can_save_uri;
