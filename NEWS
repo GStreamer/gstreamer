@@ -1,51 +1,6 @@
-This is GStreamer Good Plug-ins 0.11.92 "Money"
+This is GStreamer Good Plugins 1.0.0
 
-New features in 0.11.92:
+New features in 1.0.0:
 
       * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-
-New features in 0.11.91:
-
-      * Ported flx, dv1394, oss and oss4 plugins
-      * Lots of bugfixes and other improvements
-
-New features in 0.11.90:
-
-      * Lots of bugfixes, cleanup and other improvements
-      * The interleave/deinterleave plugin was ported to 0.11
-
-New features in 0.11.2:
-
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * flacenc: various fixes
-      * gdkpixbuf: port to 0.11 
-      * wavpack: port to 0.11
-      * rtpbin: many fixes 
-      * qtdemux: use PTS and DTS
-      * imagefreeze: port to 0.11
-      * qtdemux: negotiate allocators
-
-Bugs fixed in this release
-
-      * 670623 : [0.11] flacenc not working
-      * 628773 : [0.11] rtp -- match properties and caps fields
-      * 658357 : [0.11] pulse: build fails with recent pulseaudio
-      * 662615 : [0.11] build failure due to printf format compiler warnings on OSX 64 bit
-      * 667085 : [0.11] dcaparse: uses uninitialized variable
-      * 669607 : [0.11] directsoundsink: Fix compiling
-      * 669612 : [0.11] waveformsink: Port to 0.11
-      * 669643 : [0.11] interleave port
-      * 670320 : gst-plugins-good 0.11.1 fails to build due to missing gstsmokedec.h
-      * 671534 : [0.11] qtmux: cover art tag is GstSample now
-      * 670303 : [0.11] Can't access " rms " , " peak " and " decay " keys from GstLevel bus message trough PyGI
-      
-New features in 0.11.1:
-
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * v4l2 major improvements
-      * Ported network elements to GIO
-
+      * See release notes for more details

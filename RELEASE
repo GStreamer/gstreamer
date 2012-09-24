@@ -1,115 +1,180 @@
+Release notes for GStreamer Good Plugins 1.0.0
 
-Release notes for GStreamer Good Plug-ins 0.11.92 "Money"
-        
+The GStreamer project is pleased to announce the very first release of the
+new API and ABI-stable 1.x series of the GStreamer multimedia framework.
 
+The 1.x series is a stable series targeted at end users. It is not API or ABI
+compatible with the 0.10.x series. It can, however, be installed in parallel
+with the 0.10.x series and will not affect an existing 0.10.x installation.
 
-The GStreamer team is proud to announce a new release
-in the 0.11.x unstable series of the
-GStreamer Good Plug-ins.
+Major improvements include: more flexible memory handling; extensible and
+negotiable metadata for buffers; caps negotiation and renegotiation mechanisms,
+decoupled from buffer allocation; improved caps renegotiation; automatic
+re-sending of state for dynamic pipelines; reworked and more fine-grained pad
+probing; simpler and more descriptive audio and video caps; more efficient
+allocation of buffers, events and other mini objects; improved timestamp
+handling; support for gobject-inspection-based language bindings; countless
+other improvements.
 
+Most of these changes involve the GStreamer plugin API. The application API
+has changed comparatively little, and most applications should be fairly easy
+to port to the new API. There is a porting guide available.
 
+The GStreamer team would like to thank everyone who helped bring this release
+about, whether by submitting patches, reporting bugs, testing, sponsoring
+development, attending hackfests, or simply supplying moral support.
 
-The 0.11.x series is an unstable series targeted at developers and will
-eventually lead up to the stable 1.0 series.
-It is not API or ABI compatible with the stable 0.10.x series.
-It is, however, parallel installable with the 0.10.x series.
+This is the end of a long development process, but also the beginning of
+one. This release does not mark the pinnacle of perfection, but the point
+where the team is content with the API and stability and quality of the code
+base in general, especially compared to the old 0.10 series.
 
+There will be bugs to fix, and starting from this release there will be
+distinct bug-fixing and feature development cycles, with the goal of getting
+bug-fixes out quicker and unencumbered by other more risky changes. See
 
+  http://gstreamer.freedesktop.org/wiki/ReleasePlanning/RoadMap
+
+for a tentative road map and possible schedule.
+
+=== Module
 
 "Such ingratitude.  After all the times I've saved your life."
 
-
-A collection of plug-ins you'd want to have right next to you on the
-battlefield.  Shooting sharp and making no mistakes, these plug-ins have it
-all: good looks, good code, and good licensing.  Documented and dressed up
-in tests.  If you're looking for a role model to base your own plug-in on,
+A collection of plugins you'd want to have right next to you on the
+battlefield.  Shooting sharp and making no mistakes, these plugins have it
+all: good looks, good code, and good licensing. Documented and dressed up
+in tests. If you're looking for a role model to base your own plugin on,
 here it is.
-
 
 If you find a plot hole or a badly lip-synced line of code in them,
 let us know - it is a matter of honour for us to ensure Blondie doesn't look
 like he's been walking 100 miles through the desert without water.
 
+This module contains a set of plugins that we consider to have good quality
+code, correct functionality, our preferred license (LGPL for the plugin code,
+LGPL or LGPL-compatible for the supporting library).
 
-This module contains a set of plug-ins that we consider to have good quality
-  code, correct functionality, our preferred license (LGPL for the plug-in
-  code, LGPL or LGPL-compatible for the supporting library).
-We believe distributors can safely ship these plug-ins.
+We believe distributors can safely ship these plugins.
+
 People writing elements should base their code on these elements.
 
+Other modules containing plugins are:
 
-Other modules containing plug-ins are:
+ gst-plugins-base : a basic set of well-supported plugins
+ gst-plugins-ugly : a set of well-supported plugins, but might pose problems
+                        for distributors
+ gst-plugins-bad  : a set of less supported plugins that haven't passed the
+                        rigorous quality testing we expect
+ gst-libav        : a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
+==== Download
 
-gst-plugins-base
-contains a basic set of well-supported plug-ins
-gst-plugins-ugly
-contains a set of well-supported plug-ins, but might pose problems for
-    distributors
-gst-plugins-bad
-contains a set of less supported plug-ins that haven't passed the
-    rigorous quality testing we expect
+You can find source releases of gstreamer in the download directory:
 
+  http://gstreamer.freedesktop.org/src/gstreamer/
 
-
-  
-
-Features of this release
-    
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-There were no bugs fixed in this release
-    
-
-Download
-
-You can find source releases of gst-plugins-good in the download directory:
-http://gstreamer.freedesktop.org/src/gst-plugins-good/
-
-GStreamer Homepage
+==== GStreamer Homepage
 
 More details can be found on the project's website:
-http://gstreamer.freedesktop.org/
 
-Support and Bugs
+  http://gstreamer.freedesktop.org/
+
+==== Support and Bugs
 
 We use GNOME's bugzilla for bug reports and feature requests:
-http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
-Developers
+  http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+ or
+  http://gstreamer.freedesktop.org/bugs/
 
-GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
-Interested developers of the core library, plug-ins, and applications should
-subscribe to the gstreamer-devel list. If there is sufficient interest we
-will create more lists as necessary.
+==== Developers
 
-        
-Applications
-  
-Contributors to this release
-    
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Anton Novikov
-      * Edward Hervey
-      * Jens Georg
-      * Jonas Holmberg
-      * Josep Torra
-      * Luis de Bethencourt
-      * Maria Giovanna Chiossa
-      * Mark Nauwelaerts
-      * Matej Knopp
-      * Mathias Hasselmann
-      * Michael Jones
-      * Mohammed Sameer
-      * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Sjoerd Simons
-      * Sreerenj Balachandran
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Wim Taymans
-      * Youness Alaoui
- 
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be
+cloned from there. Interested developers of the core library, plugins, and
+applications should subscribe to the gstreamer-devel list and/or pop into
+our #gstreamer IRC channel on Freenode.
+
+==== Contributors to this release
+
+  Alban Browaeys
+  Aleix Conchillo Flaque
+  Alessandro Decina
+  Alexander Saprykin
+  Alexey Fisher
+  Andoni Morales Alastruey
+  Andrej Gelenberg
+  Antoine Tremblay
+  Anton Belka
+  Anton Novikov
+  Arun Raghavan
+  Bastien Nocera
+  Branko Subasic
+  Chris Pankow
+  Christian Fredrik Kalager Schaller
+  Daniela
+  David Corvoysier
+  David Schleef
+  Dominique Leuenberger
+  Edward Hervey
+  Gary Ching-Pang Lin
+  Hans de Goede
+  Havard Graff
+  Huacai Chen
+  idc-dragon
+  Jan Schmidt
+  Javier Jardón
+  Jayakrishnan M
+  Jens Georg
+  John Ogness
+  Jonas Holmberg
+  Josep Torra
+  Leo Singer
+  Luis de Bethencourt
+  Marc Leeman
+  Maria Giovanna Chiossa
+  Mark Nauwelaerts
+  Martin Ertsaas
+  Mart Raudsepp
+  Matej Knopp
+  Mathias Hasselmann
+  Matthias Clasen
+  Michael Jones
+  Michael Rubinstein
+  Michael Smith
+  Mohammed Sameer
+  Nicola Murino
+  Nicolas Dufresne
+  Oleksij Rempel (Alexey Fisher)
+  Olivier Crête
+  Pascal Buhler
+  Patricia Muscalu
+  Peteris Krisjanis
+  Peter Seiderer
+  Philip Jägenstedt
+  Philippe Normand
+  Raimo Järvi
+  Ralph Giles
+  René Stadler
+  Reynaldo H. Verdejo Pinochet
+  Robert Swain
+  Ross Burton
+  Sebastian Dröge
+  Sebastian Rasmussen
+  Sjoerd Simons
+  Sreerenj Balachandran
+  Stefan Sauer
+  Stig Sandnes
+  Thiago Santos
+  Thomas Vander Stichele
+  Tim-Philipp Müller
+  Tuukka Pasanen
+  uraeus
+  Víctor Manuel Jáquez Leal
+  Vincent Penquerc'h
+  Vincent Untz
+  Wim Taymans
+  Xavi Artigas
+  Yaakov Selkowitz
+  Youness Alaoui
+  Руслан Ижбулатов
