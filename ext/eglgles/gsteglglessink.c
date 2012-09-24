@@ -1882,7 +1882,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * interface we are supposed to fill the overlay 100%
        */
       if (!eglglessink->display_region.w || !eglglessink->display_region.h) {
-        /* XXX: Do we really want to lock here? */
+        g_mutex_lock (eglglessink->flow_lock);
         if (!eglglessink->keep_aspect_ratio) {
           eglglessink->display_region.x = 0;
           eglglessink->display_region.y = 0;
@@ -1897,7 +1897,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           gst_video_sink_center_rect (frame, surface,
               &eglglessink->display_region, TRUE);
         }
-
+        g_mutex_unlock (eglglessink->flow_lock);
         glViewport (eglglessink->display_region.x,
             eglglessink->display_region.y, eglglessink->display_region.w,
             eglglessink->display_region.h);
