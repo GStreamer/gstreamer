@@ -1055,16 +1055,34 @@ gst_eglglessink_stop (GstBaseSink * sink)
     glDeleteBuffers (1, &eglglessink->vdata);
     glDeleteBuffers (1, &eglglessink->tdata);
     glDeleteBuffers (1, &eglglessink->idata);
+    eglglessink->have_vbo = FALSE;
 
     glDeleteShader (eglglessink->fragshader);
     glDeleteShader (eglglessink->vertshader);
 
     glDeleteTextures (eglglessink->n_textures, eglglessink->texture);
+    eglglessink->have_texture = FALSE;
+    eglglessink->n_textures = 0;
+
     glDeleteProgram (eglglessink->program);
   }
 
-  if (eglglessink->using_own_window)
+  if (eglglessink->surface) {
+    eglDestroySurface (eglglessink->display, eglglessink->surface);
+    eglglessink->surface = NULL;
+    eglglessink->have_surface = FALSE;
+  }
+
+  if (eglglessink->context) {
+    eglDestroyContext (eglglessink->display, eglglessink->context);
+    eglglessink->context = NULL;
+  }
+
+  if (eglglessink->using_own_window) {
     platform_destroy_native_window (eglglessink->display, eglglessink->window);
+    eglglessink->window = NULL;
+    eglglessink->have_window = FALSE;
+  }
 
   return TRUE;
 }
@@ -1256,7 +1274,14 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
   GST_INFO_OBJECT (eglglessink, "VBO setup. have_vbo:%d, should reset %d",
       eglglessink->have_vbo, reset);
 
-  if (!eglglessink->have_vbo || reset) {
+  if (eglglessink->have_vbo && reset) {
+    glDeleteBuffers (1, &eglglessink->vdata);
+    glDeleteBuffers (1, &eglglessink->tdata);
+    glDeleteBuffers (1, &eglglessink->idata);
+    eglglessink->have_vbo = FALSE;
+  }
+
+  if (!eglglessink->have_vbo) {
     GST_DEBUG_OBJECT (eglglessink, "Performing VBO setup");
     eglglessink->coordarray[0].x = 1;
     eglglessink->coordarray[0].y = 1;
@@ -2370,7 +2395,6 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->have_vbo = FALSE;
   eglglessink->have_texture = FALSE;
   eglglessink->egl_started = FALSE;
-  eglglessink->running = FALSE; /* XXX: unused */
   eglglessink->can_create_window = TRUE;
   eglglessink->force_rendering_slow = FALSE;
   eglglessink->keep_aspect_ratio = TRUE;

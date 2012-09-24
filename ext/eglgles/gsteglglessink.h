@@ -149,7 +149,6 @@ struct _GstEglGlesSink
   gboolean have_vbo;
   gboolean have_texture;
   gboolean egl_started;
-  gboolean running;
 
   GstEglGlesSinkRenderingPath rendering_path;
 
