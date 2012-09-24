@@ -89,7 +89,7 @@
         <listitem><para>gst-plugins-good: a set of good-quality plug-ins under LGPL</para></listitem>
         <listitem><para>gst-plugins-ugly: a set of good-quality plug-ins that might pose distribution problems</para></listitem>
         <listitem><para>gst-plugins-bad: a set of plug-ins that need more quality</para></listitem>
-        <listitem><para>gst-python: the python bindings</para></listitem>
+        <listitem><para>gst-libav: a set of plug-ins that wrap libav for decoding and encoding</para></listitem>
         <listitem><para>a few others packages</para></listitem>
       </itemizedlist>
     </para> 
