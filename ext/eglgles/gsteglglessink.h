@@ -125,7 +125,6 @@ struct _GstEglGlesSink
   GstVideoSink videosink;
   GstVideoFormat format;
   GstCaps *current_caps;
-  GstPad *sink;
 
   GstVideoRectangle display_region;
   GList *supported_fmts;

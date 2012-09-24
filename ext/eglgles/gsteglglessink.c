@@ -1084,6 +1084,11 @@ gst_eglglessink_stop (GstBaseSink * sink)
     eglglessink->have_window = FALSE;
   }
 
+  if (eglglessink->current_caps) {
+    gst_caps_unref (eglglessink->current_caps);
+    eglglessink->current_caps = NULL;
+  }
+
   return TRUE;
 }
 
@@ -2112,35 +2117,40 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     if (gst_caps_can_intersect (caps, eglglessink->current_caps)) {
       GST_INFO_OBJECT (eglglessink, "Caps are compatible anyway");
       goto SUCCEED;
-    } else {
-      GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
-      if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-        glDeleteBuffers (1, &eglglessink->vdata);
-        glDeleteBuffers (1, &eglglessink->tdata);
-        glDeleteBuffers (1, &eglglessink->idata);
-        eglglessink->have_vbo = FALSE;
-
-        glDeleteShader (eglglessink->fragshader);
-        glDeleteShader (eglglessink->vertshader);
-
-        glDeleteTextures (eglglessink->n_textures, eglglessink->texture);
-        eglglessink->have_texture = FALSE;
-        eglglessink->n_textures = 0;
-
-        glDeleteProgram (eglglessink->program);
-      }
-
-      if (eglglessink->surface) {
-        eglDestroySurface (eglglessink->display, eglglessink->surface);
-        eglglessink->surface = NULL;
-        eglglessink->have_surface = FALSE;
-      }
-
-      if (eglglessink->context) {
-        eglDestroyContext (eglglessink->display, eglglessink->context);
-        eglglessink->context = NULL;
-      }
     }
+
+    GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
+    if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
+      glDeleteBuffers (1, &eglglessink->vdata);
+      glDeleteBuffers (1, &eglglessink->tdata);
+      glDeleteBuffers (1, &eglglessink->idata);
+      eglglessink->have_vbo = FALSE;
+
+      glDeleteShader (eglglessink->fragshader);
+      glDeleteShader (eglglessink->vertshader);
+
+      glDeleteTextures (eglglessink->n_textures, eglglessink->texture);
+      eglglessink->have_texture = FALSE;
+      eglglessink->n_textures = 0;
+
+      glDeleteProgram (eglglessink->program);
+    }
+
+    if (eglglessink->surface) {
+      eglDestroySurface (eglglessink->display, eglglessink->surface);
+      eglglessink->surface = NULL;
+      eglglessink->have_surface = FALSE;
+    }
+
+    if (eglglessink->context) {
+      eglDestroyContext (eglglessink->display, eglglessink->context);
+      eglglessink->context = NULL;
+    }
+
+    g_mutex_lock (eglglessink->flow_lock);
+    gst_caps_unref (eglglessink->current_caps);
+    eglglessink->current_caps = NULL;
+    g_mutex_unlock (eglglessink->flow_lock);
   }
 
   if (!gst_eglglessink_choose_config (eglglessink)) {
