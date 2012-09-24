@@ -35,6 +35,16 @@ might be widely known to present patent problems.
 
  <release>
   <Version>
+   <revision>1.0.0</revision>
+   <branch>1.0</branch>
+   <name></name>
+   <created>2012-09-24</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-1.0.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.11.99</revision>
    <branch>0.11</branch>
    <name>Stole Many a Mans Soul and Faith</name>
@@ -42,7 +52,6 @@ might be widely known to present patent problems.
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-ugly/gst-plugins-ugly-0.11.99.tar.xz" />
   </Version>
  </release>
-
 
  <release>
   <Version>

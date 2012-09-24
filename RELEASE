@@ -1,101 +1,123 @@
+Release notes for GStreamer Ugly Plugins 1.0.0
 
-Release notes for GStreamer Ugly Plug-ins 0.11.92 "Hey You"
-        
+The GStreamer project is pleased to announce the very first release of the
+new API and ABI-stable 1.x series of the GStreamer multimedia framework.
 
-The GStreamer team is proud to announce a new release
-in the 0.11.x unstable series of the
-GStreamer Ugly Plug-ins.
+The 1.x series is a stable series targeted at end users. It is not API or ABI
+compatible with the 0.10.x series. It can, however, be installed in parallel
+with the 0.10.x series and will not affect an existing 0.10.x installation.
 
+Major improvements include: more flexible memory handling; extensible and
+negotiable metadata for buffers; caps negotiation and renegotiation mechanisms,
+decoupled from buffer allocation; improved caps renegotiation; automatic
+re-sending of state for dynamic pipelines; reworked and more fine-grained pad
+probing; simpler and more descriptive audio and video caps; more efficient
+allocation of buffers, events and other mini objects; improved timestamp
+handling; support for gobject-inspection-based language bindings; countless
+other improvements.
 
+Most of these changes involve the GStreamer plugin API. The application API
+has changed comparatively little, and most applications should be fairly easy
+to port to the new API. There is a porting guide available.
 
-The 0.11.x series is an unstable series targeted at developers and will
-eventually lead up to the stable 1.0 series.
-It is not API or ABI compatible with the stable 0.10.x series.
-It is, however, parallel installable with the 0.10.x series.
+The GStreamer team would like to thank everyone who helped bring this release
+about, whether by submitting patches, reporting bugs, testing, sponsoring
+development, attending hackfests, or simply supplying moral support.
 
+This is the end of a long development process, but also the beginning of
+one. This release does not mark the pinnacle of perfection, but the point
+where the team is content with the API and stability and quality of the code
+base in general, especially compared to the old 0.10 series.
 
+There will be bugs to fix, and starting from this release there will be
+distinct bug-fixing and feature development cycles, with the goal of getting
+bug-fixes out quicker and unencumbered by other more risky changes. See
 
-"When you have to shoot, shoot.  Don't talk."
+  http://gstreamer.freedesktop.org/wiki/ReleasePlanning/RoadMap
 
+for a tentative road map and possible schedule.
+
+=== Module
+
+"When you have to shoot, shoot. Don't talk."
 
 There are times when the world needs a color between black and white.
 Quality code to match the good's, but two-timing, backstabbing and ready to
-sell your freedom down the river.  These plug-ins might have a patent noose
+sell your freedom down the river.  These plugins might have a patent noose
 around their neck, or a lock-up license, or any other problem that makes you
 think twice about shipping them.
 
-
 We don't call them ugly because we like them less.  Does a mother love her
 son less because he's not as pretty as the other ones ? No  - she commends
-him on his great personality.  These plug-ins are the life of the party.
+him on his great personality.  These plugins are the life of the party.
 And we'll still step in and set them straight if you report any unacceptable
 behaviour - because there are two kinds of people in the world, my friend:
 those with a rope around their neck and the people who do the cutting.
 
-
-This module contains a set of plug-ins that have good quality and correct
+This module contains a set of plugins that have good quality and correct
 functionality, but distributing them might pose problems.  The license
-on either the plug-ins or the supporting libraries might not be how we'd
+on either the plugins or the supporting libraries might not be how we'd
 like. The code might be widely known to present patent problems.
-Distributors should check if they want/can ship these plug-ins.
+Distributors should check if they want/can ship these plugins.
 
+Other modules containing plugins are:
 
-Other modules containing plug-ins are:
+ gst-plugins-base : a basic set of well-supported plugins
+ gst-plugins-good : a set of well-supported plugins under our preferred license
+ gst-plugins-bad  : a set of less supported plugins that haven't passed the
+                        rigorous quality testing we expect
+ gst-libav        : a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
+==== Download
 
-gst-plugins-base
-contains a basic set of well-supported plug-ins
-gst-plugins-good
-contains a set of well-supported plug-ins under our preferred license
-gst-plugins-bad
-contains a set of less supported plug-ins that haven't passed the
-    rigorous quality testing we expect
+You can find source releases of gstreamer in the download directory:
 
+  http://gstreamer.freedesktop.org/src/gstreamer/
 
-
-  
-
-Features of this release
-    
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-There were no bugs fixed in this release
-    
-
-Download
-
-You can find source releases of gst-plugins-ugly in the download directory:
-http://gstreamer.freedesktop.org/src/gst-plugins-ugly/
-
-GStreamer Homepage
+==== GStreamer Homepage
 
 More details can be found on the project's website:
-http://gstreamer.freedesktop.org/
 
-Support and Bugs
+  http://gstreamer.freedesktop.org/
+
+==== Support and Bugs
 
 We use GNOME's bugzilla for bug reports and feature requests:
-http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
 
-Developers
+  http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer
+ or
+  http://gstreamer.freedesktop.org/bugs/
 
-GStreamer is stored in Git, hosted at git.freedesktop.org, and can be cloned from there.
-Interested developers of the core library, plug-ins, and applications should
-subscribe to the gstreamer-devel list. If there is sufficient interest we
-will create more lists as necessary.
+==== Developers
 
-        
-Applications
-  
-Contributors to this release
-    
-      * Edward Hervey
-      * Julien Isorce
-      * Mark Nauwelaerts
-      * Matej Knopp
-      * Sebastian Dröge
-      * Tim-Philipp Müller
-      * Wim Taymans
-      * Руслан Ижбулатов
- 
+GStreamer is stored in Git, hosted at git.freedesktop.org, and can be
+cloned from there. Interested developers of the core library, plugins, and
+applications should subscribe to the gstreamer-devel list and/or pop into
+our #gstreamer IRC channel on Freenode.
+
+==== Contributors to this release
+
+  Alban Browaeys
+  Alessandro Decina
+  Bastien Nocera
+  Christian Fredrik Kalager Schaller
+  David Schleef
+  Edward Hervey
+  Jan Schmidt
+  Julien Isorce
+  Leon Merten Lohse
+  Mark Nauwelaerts
+  Matej Knopp
+  Nicolas Dufresne
+  Olivier Crête
+  René Stadler
+  Robert Swain
+  Sebastian Dröge
+  Sreerenj Balachandran
+  Stefan Sauer
+  Thiago Santos
+  Thomas Vander Stichele
+  Tim-Philipp Müller
+  Vincent Penquerc'h
+  Wim Taymans
+  Руслан Ижбулатов

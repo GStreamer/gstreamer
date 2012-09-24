@@ -1,36 +1,6 @@
-This is GStreamer Ugly Plug-ins 0.11.92 "Hey You"
+This is GStreamer Ugly Plugins 1.0.0
 
-New in 0.11.92:
-
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-
-New in 0.11.91:
-
-      * Lots of bugfixes and other improvements
-
-New in 0.11.90:
-
-      * Lots of bugfixes, cleanup and other improvements
-
-New in 0.11.2:
-
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * xingmux: port to 0.11
-      * synaesthesia: port to 0.11
-      * x264enc: handle PTS and DTS
-
-Bugs fixed in this release
-
-      * 662617 : compiler warnings due to printf format mismatches
-      * 669863 : [0.11] [x264enc] X264 encoder doesn't unmap input frame
-
-
-New in 0.11.1:
+New features in 1.0.0:
 
       * Parallel installability with 0.10.x series
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-
+      * See release notes for more details
