@@ -615,7 +615,7 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
     GstCaps * caps)
 {
 
-  GList *list = NULL;
+  GList *list;
   GstEglGlesImageFmt *format;
 
   g_return_val_if_fail (GST_IS_EGLGLESSINK (eglglessink), 0);
