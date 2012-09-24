@@ -4,7 +4,7 @@ dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, git and prerelease does Werror too
 dnl
-AC_INIT(GStreamer, 1.0.0,
+AC_INIT(GStreamer, 1.0.0.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
 AG_GST_INIT
@@ -36,15 +36,10 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
 dnl GStreamer versioning, this is mostly informational
-dnl GST_VERSION_MAJOR=$PACKAGE_VERSION_MAJOR
-dnl GST_VERSION_MINOR=$PACKAGE_VERSION_MINOR
-dnl GST_VERSION_MICRO=$PACKAGE_VERSION_MICRO
-dnl GST_VERSION_NANO=$PACKAGE_VERSION_NANO
-dnl Change this to the above for non-pre
-GST_VERSION_MAJOR=1
-GST_VERSION_MINOR=0
-GST_VERSION_MICRO=0
-GST_VERSION_NANO=0
+GST_VERSION_MAJOR=$PACKAGE_VERSION_MAJOR
+GST_VERSION_MINOR=$PACKAGE_VERSION_MINOR
+GST_VERSION_MICRO=$PACKAGE_VERSION_MICRO
+GST_VERSION_NANO=$PACKAGE_VERSION_NANO
 AC_SUBST(GST_VERSION_MAJOR)
 AC_SUBST(GST_VERSION_MINOR)
 AC_SUBST(GST_VERSION_MICRO)
