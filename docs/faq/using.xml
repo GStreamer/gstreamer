@@ -12,7 +12,7 @@
 First of all, verify that you have a working registry and that you can
 inspect them by typing
 <programlisting>
-$ gst-inspect fakesrc
+$ gst-inspect-1.0 fakesrc
 </programlisting>
 This should print out a bunch of information about this particular element.
 If this tells you that there is "no such element or plugin", you haven't
@@ -26,7 +26,7 @@ It's time to try out a few things.  Start with gst-launch and two plug-ins
 that you really should have : fakesrc and fakesink.  They do nothing except
 pass empty buffers. Type this at the command-line :
 <programlisting>
-$ gst-launch -v fakesrc num-buffers=3 ! fakesink
+$ gst-launch-1.0 -v fakesrc silent=0 num-buffers=3 ! fakesink silent=0
 </programlisting>
 This will print out output that looks similar to this :
 <programlisting>
@@ -56,24 +56,24 @@ You can test this by trying to play a sine tone.  For this, you need to
 link the audiotestsrc element to an output element that matches your hardware.
 A (non-complete) list of output plug-ins for audio is
 <itemizedlist>
+<listitem><para>pulsesink for Pulseaudio output</para></listitem>
 <listitem><para>osssink for OSS output</para></listitem>
 <listitem><para>esdsink for ESound output</para></listitem>
-<listitem><para>artsdsink for aRTs output (not ported to 0.10 yet)</para></listitem>
 <listitem><para>alsasink for ALSA output</para></listitem>
 <listitem><para>alsaspdifsink for ALSA S/PDIF output</para></listitem>
 <listitem><para>jackaudiosink for JACK output</para></listitem>
 </itemizedlist>
-First of all, run gst-inspect on the output plug-in you want to use to
-make sure you have it installed.  For example, if you use OSS, run
+First of all, run gst-inspect-1.0 on the output plug-in you want to use to
+make sure you have it installed.  For example, if you use Pulseaudio, run
 <programlisting>
-$ gst-inspect osssink
+$ gst-inspect-1.0 pulsesink
 </programlisting>
 and see if that prints out a bunch of properties for the plug-in.
         </para>
         <para>
 Then try to play the sine tone by running
 <programlisting>
-$ gst-launch audiotestsrc ! audioconvert ! audioresample ! osssink
+$ gst-launch-1.0 audiotestsrc ! audioconvert ! audioresample ! pulsesink
 </programlisting>
 and see if you hear something.  Make sure your volume is turned up,
 but also make sure it is not too loud and you are not wearing your headphones.
@@ -102,19 +102,15 @@ To do this you use the gst-inspect
 command-line tool, which comes standard with GStreamer.
 Invoked without any arguments,
 <programlisting>
-$ gst-inspect
+$ gst-inspect-1.0
 </programlisting>
 will print out a listing of installed plugins.
 To learn more about a particular plugin, pass its name on the command line. 
 For example,
 <programlisting>
-$ gst-inspect volume
+$ gst-inspect-1.0 volume
 </programlisting>
 will give you information about the volume plugin.
-        </para>
-        <para>
-Also, if you install the gst-editor package, you will have a graphical 
-plugin browser available, gst-inspect-gui.
         </para>
       </answer>
     </qandaentry>
@@ -168,27 +164,26 @@ provide us with the necessary gdb output.  See
       <answer>
         <para>
 You access the GStreamer command line interface using the command gst-launch.
-To decode an mp3 and play it through OSS, you could use
+To decode an mp3 and play it through Pulseaudio, you could use
 <programlisting>
-gst-launch filesrc location=thesong.mp3 ! mad ! audioconvert !
-audioresample ! osssink
+gst-launch-1.0 filesrc location=thesong.mp3 ! mad ! pulsesink
 </programlisting>.
 More examples can be found in the gst-launch man page.
         </para>
         <para>
 To automatically detect the right codec in a pipeline, try 
 <programlisting>
-gst-launch filesrc location=my-random-media-file.mpeg ! decodebin !
- audioconvert ! pulsesink
+gst-launch-1.0 filesrc location=my-random-media-file.mpeg ! decodebin !
+ pulsesink
 </programlisting>.
 or
 <programlisting>
-gst-launch filesrc location=my-random-media-file.mpeg ! decodebin !
+gst-launch-1.0 filesrc location=my-random-media-file.mpeg ! decodebin !
  videoconvert ! xvimagesink
 </programlisting>
 Something more complicated:
 <programlisting>
-gst-launch filesrc location=my-random-media-file.mpeg ! decodebin name=decoder
+gst-launch-1.0 filesrc location=my-random-media-file.mpeg ! decodebin name=decoder
    decoder. ! videoconvert ! xvimagesink
    decoder. ! audioconvert ! pulsesink
 </programlisting>
@@ -197,7 +192,7 @@ gst-launch filesrc location=my-random-media-file.mpeg ! decodebin name=decoder
 We also have a basic media playing plugin that will take care of most things
 for you. This plugin is called playbin. Try this:
 <programlisting>
-gst-launch playbin uri=file:///home/joe/my-random-media-file.mpeg
+gst-launch-1.0 playbin uri=file:///home/joe/my-random-media-file.mpeg
 </programlisting>
 This should play the file if the format is supported, ie. you have all the
 necessary demuxing and decoding and some output plugins installed.

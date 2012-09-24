@@ -13,7 +13,7 @@ Some application is telling me that I am missing a plug-in.  What do I do ?
         <para>
 Well, start by checking if you really are missing the plug-in.
   <programlisting>
-gst-inspect (plug-in)
+gst-inspect-1.0 (plug-in)
   </programlisting>
 and replace (plug-in) with the plug-in you think is missing.
 If this doesn't return any result, then you either don't have it or your
@@ -156,12 +156,12 @@ On my system there is no gst-register command.
 
       <answer>
         <para>
-GStreamer version 0.10 does not need this anymore. The registry will
+Since GStreamer version 0.10 this is not needed anymore. The registry will
 be rebuilt automatically. If you suspect the registry is broken, just delete the
-<filename>registry.*.xml</filename> files under <filename>$HOME/.gstreamer-0.X/</filename>
+<filename>registry.*.xml</filename> files under <filename>$HOME/.gstreamer-1.X/</filename>
 and run
 <programlisting>
-  gst-inspect
+  gst-inspect-1.0
 </programlisting>
 to rebuild the registry.
         </para>
