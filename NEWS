@@ -1,61 +1,7 @@
-This is GStreamer 0.11.92 "High Hopes"
+This is GStreamer 1.0.0
 
-New features in 0.11.92:
-
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * GstTagList is a refcounted type now
-      * Lots of bugfixes, cleanup and other improvements
-
-New features in 0.11.91:
-
-      * API cleanup and minor improvements
-      * More hiding of structs that don't need to be public
-      * Addition of SNAP flag for seek events
-
-New features in 0.11.90:
-
-      * Lots of bugfixes, cleanup and other improvements
-      * Improvements to the buffer and memory managment API
-      * A new GstTOC interface, e.g. for handling chapters
-      * The GstChildProxy interface works with any GObject now
-
-New features in 0.11.3:
-
-      * Various bug fixes and improvements
-      * Input-selector defaults to sync-streams=true
-      * Queue don't just start the thread on linking
-      * Add user_data and notify to gst_memory_new_wrapped()
-      * Rework caps function for performance
-      * Improve basetransform allocator handling
-      * Implement metadata transforms
-      * Metadata registration improvements
-      * Use generic marshallers everywhere
-      * Push Sticky events in more cases
-      * Register queries like events
-      * Add DRAIN serialized query
-      * Add 0-padding and prefix to GstMemory
-      * Rework the ALLOCATION query
-      * Allow setting the allocator in a bufferpool
-      * Improve pull/get_range
-
-New features in 0.11.2:
+New features in 1.0.0:
 
       * Parallel installability with 0.10.x series
-      * Added pts/dts to buffers
-      * Moved controller into core
-      * Pad probe rewrite
-      * AcceptCaps and GetCaps made as queries
-      * Added parent to pad functions
-      * Sticky events rewrite
-      * New GstSample object
-      * Asynchronous state change support for basesrc
-      * Added new bitmask type
-      * GstMemory updates
-      * Port to gio
-      * Port to newest glib
-      * Add stepped ranges
-      * Do typefind in separate thread
-      * Rework alloc tracing
-      * Added STREAM_CONFIG, GAP and STREAM_START events
-      * Various cleanups and leak fixes
+      * See release notes for more details
+
