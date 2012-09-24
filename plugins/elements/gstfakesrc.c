@@ -449,7 +449,7 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
       g_warning ("not yet implemented");
       break;
     case PROP_DATA:
-      src->data = g_value_get_enum (value);
+      src->data = (GstFakeSrcDataType) g_value_get_enum (value);
 
       if (src->data == FAKE_SRC_DATA_SUBBUFFER) {
         if (!src->parent)
@@ -462,7 +462,7 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_SIZETYPE:
-      src->sizetype = g_value_get_enum (value);
+      src->sizetype = (GstFakeSrcSizeType) g_value_get_enum (value);
       break;
     case PROP_SIZEMIN:
       src->sizemin = g_value_get_int (value);
@@ -474,7 +474,7 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
       src->parentsize = g_value_get_int (value);
       break;
     case PROP_FILLTYPE:
-      src->filltype = g_value_get_enum (value);
+      src->filltype = (GstFakeSrcFillType) g_value_get_enum (value);
       break;
     case PROP_DATARATE:
       src->datarate = g_value_get_int (value);
@@ -507,7 +507,7 @@ gst_fake_src_set_property (GObject * object, guint prop_id,
       gst_base_src_set_live (basesrc, g_value_get_boolean (value));
       break;
     case PROP_FORMAT:
-      src->format = g_value_get_enum (value);
+      src->format = (GstFormat) g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

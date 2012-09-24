@@ -48,7 +48,7 @@ gst_tools_print_version (void)
     gchar *version_str;
 
     version_str = gst_version_string ();
-    g_print ("%s version %u.%u.%u\n", g_get_prgname (),
+    g_print ("%s version %d.%d.%d\n", g_get_prgname (),
         GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO);
     g_print ("%s\n", version_str);
     g_print ("%s\n", GST_PACKAGE_ORIGIN);

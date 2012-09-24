@@ -1149,7 +1149,7 @@ main (int argc, char *argv[])
 
       diff = GST_CLOCK_DIFF (tfthen, tfnow);
 
-      PRINT (_("Execution ended after %" G_GUINT64_FORMAT " ns.\n"), diff);
+      PRINT (_("Execution ended after %" G_GINT64_FORMAT " ns.\n"), diff);
     }
 
     PRINT (_("Setting pipeline to PAUSED ...\n"));

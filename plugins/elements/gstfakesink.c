@@ -262,7 +262,7 @@ gst_fake_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_STATE_ERROR:
-      sink->state_error = g_value_get_enum (value);
+      sink->state_error = (GstFakeSinkStateError) g_value_get_enum (value);
       break;
     case PROP_SILENT:
       sink->silent = g_value_get_boolean (value);

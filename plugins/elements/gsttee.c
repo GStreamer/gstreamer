@@ -443,7 +443,7 @@ gst_tee_set_property (GObject * object, guint prop_id, const GValue * value,
       tee->silent = g_value_get_boolean (value);
       break;
     case PROP_PULL_MODE:
-      tee->pull_mode = g_value_get_enum (value);
+      tee->pull_mode = (GstTeePullMode) g_value_get_enum (value);
       break;
     case PROP_ALLOC_PAD:
     {

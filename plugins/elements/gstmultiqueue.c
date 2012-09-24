@@ -1091,7 +1091,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     g_cond_signal (&sq->query_handled);
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   } else {
-    g_warning ("Unexpected object in singlequeue %d (refcounting problem?)",
+    g_warning ("Unexpected object in singlequeue %u (refcounting problem?)",
         sq->id);
   }
   return result;

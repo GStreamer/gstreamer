@@ -114,8 +114,9 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     for (walk = helper->buffers; walk; walk = walk->next) {
       GstMappedBuffer *bmp = (GstMappedBuffer *) walk->data;
       GstBuffer *buf = GST_BUFFER_CAST (bmp->buffer);
-      guint64 buf_offset = GST_BUFFER_OFFSET (buf);
-      guint buf_size = gst_buffer_get_size (buf);
+
+      buf_offset = GST_BUFFER_OFFSET (buf);
+      buf_size = gst_buffer_get_size (buf);
 
       /* buffers are kept sorted by end offset (highest first) in the list, so
        * at this point we save the current position and stop searching if 
