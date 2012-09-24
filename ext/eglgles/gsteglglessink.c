@@ -392,11 +392,12 @@ static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 
 
 GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK, gst_eglglessink_init_interfaces)
+    GST_TYPE_VIDEO_SINK, gst_eglglessink_init_interfaces);
 
 /* Custom Buffer Funcs */
 /* XXX: Drafted implementation */
-     static EGLint *gst_eglglesbuffer_create_native (EGLNativeWindowType win,
+static EGLint *
+gst_eglglesbuffer_create_native (EGLNativeWindowType win,
     EGLConfig config, EGLNativeDisplayType display, const EGLint * egl_attribs)
 {
   EGLNativePixmapType pix = 0;
