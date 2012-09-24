@@ -127,11 +127,6 @@ struct _GstEglGlesSink
   GstCaps *current_caps;
   GstPad *sink;
 
-  /* XXX: The supported format list should likely be part
-   * of a local EGL/GLES context and built at runtime from
-   * the platform supported fmts. Right now we just add one
-   * format/caps at init.
-   */
   GstVideoRectangle display_region;
   GList *supported_fmts;
   GstEglGlesImageFmt *selected_fmt;

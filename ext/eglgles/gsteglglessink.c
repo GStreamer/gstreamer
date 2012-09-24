@@ -867,7 +867,6 @@ NO_CAPS:
   }
 }
 
-/* This one needs refactoring like a LOT */
 static inline gint
 gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
 {
@@ -1381,7 +1380,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   eglglessink->vertshader = glCreateShader (GL_VERTEX_SHADER);
-  GST_DEBUG_OBJECT (eglglessink, "sending %s to handle %d", vert_COPY_prog,
+  GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d", vert_COPY_prog,
       eglglessink->vertshader);
   glShaderSource (eglglessink->vertshader, 1, &vert_COPY_prog, NULL);
   if (got_gl_error ("glShaderSource vertex"))
@@ -1421,28 +1420,32 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       break;
     case GST_VIDEO_FORMAT_YUY2:
       tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'r', 'g', 'a');
-      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog,
+          NULL);
       eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_UYVY:
       tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'a', 'r', 'b');
-      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog,
+          NULL);
       eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV12:
       tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'r', 'a');
-      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog,
+          NULL);
       eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_NV21:
       tmp_prog = g_strdup_printf (frag_NV12_NV21_prog, 'a', 'r');
-      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog, NULL);
+      glShaderSource (eglglessink->fragshader, 1, (const GLchar **) &tmp_prog,
+          NULL);
       eglglessink->n_textures = 2;
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
@@ -1509,7 +1512,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (!eglglessink->have_texture) {
     gint i;
 
-    GST_INFO_OBJECT (eglglessink, "Doing initial texture setup");
+    GST_INFO_OBJECT (eglglessink, "Performing initial texture setup");
 
     g_mutex_lock (eglglessink->flow_lock);
 
@@ -1536,6 +1539,10 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       /* Set 2D resizing params */
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      /* The following two calls are for non-POT width/height cases. If these
+       * are not set the texture image unit returns (R, G, B, A) = black
+       * on glTexImage2D. For a deeper explanation take a look at
+       * the OpenGl ES docs for glTexParameter */
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       if (got_gl_error ("glTexParameteri"))
@@ -1750,12 +1757,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       break;
 #endif
     default:                   /* case GST_EGLGLESSINK_RENDER_SLOW */
-      /* XXX: This should actually happen each time
-       * frame/window dimension changes.
-       * Also might want to find a way to pass buffer's
-       * width and height values when non power of two
-       * and no npot extension available.
-       */
 
       switch (eglglessink->selected_fmt->fmt) {
         case GST_EGLGLESSINK_IMAGE_RGB888:
