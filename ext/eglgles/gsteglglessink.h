@@ -136,7 +136,7 @@ struct _GstEglGlesSink
   EGLConfig config;
   EGLContext context;
   EGLDisplay display;
-  EGLNativeWindowType window;
+  EGLNativeWindowType window, used_window;
   EGLSurface surface;
   GLuint fragshader, vertshader, program;
   GLuint texture[3];

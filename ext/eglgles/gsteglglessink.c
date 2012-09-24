@@ -486,7 +486,8 @@ gst_eglglesbuffer_new (GstEglGlesSink * eglglessink, GstCaps * caps)
   eglglesbuffer->eglglessink = gst_object_ref (eglglessink);
 
   eglglesbuffer->image = gst_eglglesbuffer_create_native
-      (eglglessink->window, eglglessink->config, eglglessink->display, NULL);
+      (eglglessink->used_window, eglglessink->config, eglglessink->display,
+      NULL);
   if (!eglglesbuffer->image) {
     GST_ERROR_OBJECT (eglglessink,
         "Failed to create native %dx%d image buffer", eglglesbuffer->width,
@@ -1079,10 +1080,12 @@ gst_eglglessink_stop (GstBaseSink * sink)
   }
 
   if (eglglessink->using_own_window) {
-    platform_destroy_native_window (eglglessink->display, eglglessink->window);
-    eglglessink->window = NULL;
+    platform_destroy_native_window (eglglessink->display,
+        eglglessink->used_window);
+    eglglessink->used_window = NULL;
     eglglessink->have_window = FALSE;
   }
+  eglglessink->used_window = NULL;
 
   if (eglglessink->current_caps) {
     gst_caps_unref (eglglessink->current_caps);
@@ -1398,7 +1401,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   g_mutex_lock (eglglessink->flow_lock);
 
   eglglessink->surface = eglCreateWindowSurface (eglglessink->display,
-      eglglessink->config, eglglessink->window, NULL);
+      eglglessink->config, eglglessink->used_window, NULL);
 
   if (eglglessink->surface == EGL_NO_SURFACE) {
     show_egl_error ("eglCreateWindowSurface");
@@ -1746,12 +1749,6 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
 
   g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
   GST_DEBUG_OBJECT (eglglessink, "We got a window handle!");
-
-  if (eglglessink->have_window) {
-    GST_WARNING_OBJECT (eglglessink,
-        "We already have a window. Ignoring request");
-    return;
-  }
 
   if (!id) {
     GST_ERROR_OBJECT (eglglessink, "Window handle is invalid");
@@ -2178,6 +2175,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink),
         (guintptr) window);
   }
+  eglglessink->used_window = eglglessink->window;
 
   if (!eglglessink->have_surface) {
     if (!gst_eglglessink_init_egl_surface (eglglessink)) {
