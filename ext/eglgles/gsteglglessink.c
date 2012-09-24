@@ -181,7 +181,7 @@ static const char *frag_AYUV_prog = {
       "}"
 };
 
-static const char *frag_I420_YV12_prog = {
+static const char *frag_PLANAR_YUV_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D Ytex,Utex,Vtex;"
@@ -255,12 +255,12 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";"
         GST_VIDEO_CAPS_RGBx ";"
-        GST_VIDEO_CAPS_YUV ("{ AYUV, I420, YV12, NV12, NV21 }") ";"
+        GST_VIDEO_CAPS_YUV
+        ("{ AYUV, Y444, I420, YV12, NV12, NV21, Y42B, Y41B }") ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
 
-/* FIXME: YUY2 and UYVY don't work completely yet, there are issues with the chroma */
-/* TODO: Add support for other (A)RGB variants, just needs pixel reordering in fragment shader
- *       Add support for Y444, Y42B and Y41B, can use I420 shader and just different width/heights
+/* FIXME: YUY2 and UYVY don't work completely yet, there are issues with the chroma 
+   TODO: Add support for other (A)RGB variants, just needs pixel reordering in fragment shader
  */
 
 /* Filter signals and args */
@@ -890,6 +890,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_AYUV));
     gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y444));
+    gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_I420));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YV12));
@@ -898,9 +900,9 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y42B));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y41B));
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -1409,9 +1411,12 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       eglglessink->n_textures = 1;
       texnames[0] = "tex";
       break;
+    case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-      glShaderSource (eglglessink->fragshader, 1, &frag_I420_YV12_prog, NULL);
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      glShaderSource (eglglessink->fragshader, 1, &frag_PLANAR_YUV_prog, NULL);
       eglglessink->n_textures = 3;
       texnames[0] = "Ytex";
       texnames[1] = "Utex";
@@ -1786,8 +1791,11 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
+            case GST_VIDEO_FORMAT_Y444:
             case GST_VIDEO_FORMAT_I420:
-            case GST_VIDEO_FORMAT_YV12:{
+            case GST_VIDEO_FORMAT_YV12:
+            case GST_VIDEO_FORMAT_Y42B:
+            case GST_VIDEO_FORMAT_Y41B:{
               gint coffset, cw, ch;
 
               coffset =
