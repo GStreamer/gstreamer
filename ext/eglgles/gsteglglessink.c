@@ -289,8 +289,8 @@ enum
 {
   PROP_0,
   PROP_SILENT,
-  PROP_CAN_CREATE_WINDOW,
-  PROP_KEEP_ASPECT_RATIO,
+  PROP_CREATE_WINDOW,
+  PROP_FORCE_ASPECT_RATIO,
   PROP_DEFAULT_HEIGHT,
   PROP_DEFAULT_WIDTH,
   PROP_FORCE_RENDERING_SLOW
@@ -2169,7 +2169,7 @@ gst_eglglessink_set_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       eglglessink->silent = g_value_get_boolean (value);
       break;
-    case PROP_CAN_CREATE_WINDOW:
+    case PROP_CREATE_WINDOW:
       eglglessink->can_create_window = g_value_get_boolean (value);
       break;
     case PROP_DEFAULT_HEIGHT:
@@ -2181,7 +2181,7 @@ gst_eglglessink_set_property (GObject * object, guint prop_id,
     case PROP_FORCE_RENDERING_SLOW:
       eglglessink->force_rendering_slow = g_value_get_boolean (value);
       break;
-    case PROP_KEEP_ASPECT_RATIO:
+    case PROP_FORCE_ASPECT_RATIO:
       eglglessink->keep_aspect_ratio = g_value_get_boolean (value);
       break;
     default:
@@ -2204,7 +2204,7 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       g_value_set_boolean (value, eglglessink->silent);
       break;
-    case PROP_CAN_CREATE_WINDOW:
+    case PROP_CREATE_WINDOW:
       g_value_set_boolean (value, eglglessink->can_create_window);
       break;
     case PROP_DEFAULT_HEIGHT:
@@ -2216,7 +2216,7 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
     case PROP_FORCE_RENDERING_SLOW:
       g_value_set_boolean (value, eglglessink->force_rendering_slow);
       break;
-    case PROP_KEEP_ASPECT_RATIO:
+    case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, eglglessink->keep_aspect_ratio);
       break;
     default:
@@ -2266,28 +2266,30 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_eglglessink_show_frame);
 
   g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
-          FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_CAN_CREATE_WINDOW,
-      g_param_spec_boolean ("can_create_window", "CanCreateWindow",
-          "Attempt to create a window?", TRUE, G_PARAM_READWRITE));
+      g_param_spec_boolean ("silent", "Silent", "Produce no output",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CREATE_WINDOW,
+      g_param_spec_boolean ("create-window", "Create Window",
+          "Attempt to create a window if none is provided",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_RENDERING_SLOW,
-      g_param_spec_boolean ("force_rendering_slow", "ForceRenderingSlow",
-          "Force slow rendering path?", FALSE, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_KEEP_ASPECT_RATIO,
-      g_param_spec_boolean ("keep_aspect_ratio", "KeepAspectRatio",
-          "Keep aspect ratio while scaling?", TRUE, G_PARAM_READWRITE));
-
+      g_param_spec_boolean ("force-rendering-slow", "Force Slow Rendering",
+          "Force slow rendering path", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
+      g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
+          "When enabled, scaling will respect original aspect ratio",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEFAULT_WIDTH,
-      g_param_spec_int ("window_default_width", "DefaultWidth",
+      g_param_spec_int ("window-default-width", "Default Width",
           "Default width for self created windows", 0,
           EGLGLESSINK_MAX_FRAME_WIDTH, EGLGLESSINK_MAX_FRAME_WIDTH,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_DEFAULT_HEIGHT,
-      g_param_spec_int ("window_default_height", "CanCreateWindow",
+      g_param_spec_int ("window-default-height", "Default Height",
           "Default height for self created windows", 0,
           EGLGLESSINK_MAX_FRAME_HEIGHT, EGLGLESSINK_MAX_FRAME_HEIGHT,
-          G_PARAM_READWRITE));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 
