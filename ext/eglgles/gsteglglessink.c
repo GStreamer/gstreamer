@@ -259,6 +259,9 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_RGB_16));
 
 /* FIXME: YUY2 and UYVY don't work completely yet, there are issues with the chroma */
+/* TODO: Add support for other (A)RGB variants, just needs pixel reordering in fragment shader
+ *       Add support for Y444, Y42B and Y41B, can use I420 shader and just different width/heights
+ */
 
 /* Filter signals and args */
 enum
@@ -629,9 +632,11 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
         GST_PTR_FORMAT " and %" GST_PTR_FORMAT, format->caps, caps);
     if (format) {
       if (gst_caps_can_intersect (caps, format->caps)) {
-        GST_INFO_OBJECT (eglglessink, "Found compatible format %d", format->fmt);
-        GST_DEBUG_OBJECT (eglglessink, "Got caps %" GST_PTR_FORMAT
-            " and this format can do %" GST_PTR_FORMAT, caps, format->caps);
+        GST_INFO_OBJECT (eglglessink, "Found compatible format %d",
+            format->fmt);
+        GST_DEBUG_OBJECT (eglglessink,
+            "Got caps %" GST_PTR_FORMAT " and this format can do %"
+            GST_PTR_FORMAT, caps, format->caps);
         return format;
       }
     }
@@ -807,8 +812,7 @@ gst_eglglessink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
   /* Get geometry from caps */
   structure = gst_caps_get_structure (intersection, 0);
   if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) ||
-      !format)
+      !gst_structure_get_int (structure, "height", &height) || !format)
     goto INVALID_CAPS;
 
 REUSE_LAST_CAPS:
@@ -1500,7 +1504,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glUseProgram"))
     goto HANDLE_ERROR;
 
-  eglglessink->coord_pos = glGetAttribLocation (eglglessink->program, "position");
+  eglglessink->coord_pos =
+      glGetAttribLocation (eglglessink->program, "position");
   eglglessink->tex_pos = glGetAttribLocation (eglglessink->program, "texpos");
 
   /* Generate and bind texture */
@@ -2004,8 +2009,8 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
   if (!format) {
-    GST_ERROR_OBJECT (eglglessink, "No supported and compatible egl/gles format "
-        "found for given caps");
+    GST_ERROR_OBJECT (eglglessink,
+        "No supported and compatible egl/gles format " "found for given caps");
     goto HANDLE_ERROR;
   } else
     GST_INFO_OBJECT (eglglessink, "Selected compatible egl/gles format %d",
