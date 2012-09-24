@@ -440,11 +440,11 @@ class TimelineWidget (gtk.DrawingArea):
         self.process = UpdateProcess (None, None)
         self.process.handle_sentinel_progress = self.__handle_sentinel_progress
         self.process.handle_sentinel_finished = self.__handle_sentinel_finished
-        self.process.handle_process_finished = self.__handle_process_finished
 
         self.model = None
         self.__offscreen = None
         self.__offscreen_size = (0, 0)
+        self.__offscreen_dirty = (0, 0)
 
         self.__position_ts_range = None
 
@@ -457,41 +457,52 @@ class TimelineWidget (gtk.DrawingArea):
 
     def __handle_sentinel_progress (self, sentinel):
 
-        self.__invalidate_offscreen ()
+        if sentinel == self.process.dist_sentinel:
+            old_progress = self.__dist_sentinel_progress
+            new_progress = len (sentinel.data)
+            if new_progress - old_progress >= 32:
+                self.__invalidate_offscreen (old_progress, new_progress)
+                self.__dist_sentinel_progress = new_progress
 
     def __handle_sentinel_finished (self, sentinel):
 
         if sentinel == self.process.freq_sentinel:
-            self.__invalidate_offscreen ()
-
-    def __handle_process_finished (self):
-
-        self.__invalidate_offscreen ()
+            self.__invalidate_offscreen (0, -1)
+        else:
+            self.__invalidate_offscreen (self.__dist_sentinel_progress, -1)
 
     def __ensure_offscreen (self):
 
         x, y, width, height = self.get_allocation ()
+        if self.__offscreen_size == (width, height):
+            return
+
         self.__offscreen = gtk.gdk.Pixmap (self.window, width, height, -1)
         self.__offscreen_size = (width, height)
+        self.__offscreen_dirty = (0, width)
         if not self.__offscreen:
             self.__offscreen_size = (0, 0)
             raise ValueError ("could not obtain pixmap")
 
-    def __invalidate_offscreen (self):
+    def __invalidate_offscreen (self, start, stop):
 
-        if self.__offscreen is None:
-            return
+        x, y, width, height = self.get_allocation ()
+        if stop < 0:
+            stop += width
 
-        self.__offscreen = None
-        self.queue_draw ()
+        dirty_start, dirty_stop = self.__offscreen_dirty
+        if dirty_start != dirty_stop:
+            dirty_start = min (dirty_start, start)
+            dirty_stop = max (dirty_stop, stop)
+        else:
+            dirty_start = start
+            dirty_stop = stop
+        self.__offscreen_dirty = (dirty_start, dirty_stop)
 
-    def __update_offscreen (self):
-
-        if not self.props.visible:
-            return
-
-        self.__ensure_offscreen ()
-        self.__draw_offscreen ()
+        # Just like in __draw_offscreen. FIXME: Need this in one place!
+        start -= 8
+        stop += 8
+        self.queue_draw_area (start, 0, stop - start, height)
 
     def __draw_from_offscreen (self, rect = None):
 
@@ -536,6 +547,7 @@ class TimelineWidget (gtk.DrawingArea):
         self.model = model
 
         if model is not None:
+            self.__dist_sentinel_progress = 0
             self.process.freq_sentinel = LineFrequencySentinel (model)
             self.process.dist_sentinel = LevelDistributionSentinel (self.process.freq_sentinel, model)
             width = self.get_allocation ()[2]
@@ -548,7 +560,7 @@ class TimelineWidget (gtk.DrawingArea):
         self.process.abort ()
         self.process.freq_sentinel = None
         self.process.dist_sentinel = None
-        self.__invalidate_offscreen ()
+        self.__invalidate_offscreen (0, -1)
 
     def update_position (self, start_ts, end_ts):
 
@@ -578,10 +590,26 @@ class TimelineWidget (gtk.DrawingArea):
 
     def __draw_offscreen (self):
 
+        dirty_start, dirty_stop = self.__offscreen_dirty
+        if dirty_start == dirty_stop:
+            return
+
+        self.__offscreen_dirty = (0, 0)
+
         drawable = self.__offscreen
         width, height = self.__offscreen_size
 
         ctx = drawable.cairo_create ()
+
+        # Indicator (triangle) size is 8, so we need to draw surrounding areas
+        # a bit:
+        dirty_start -= 8
+        dirty_stop += 8
+        dirty_start = max (dirty_start, 0)
+        dirty_stop = min (dirty_stop, width)
+
+        ctx.rectangle (dirty_start, 0., dirty_stop, height)
+        ctx.clip ()
 
         # White background rectangle.
         ctx.set_line_width (0.)
@@ -605,28 +633,30 @@ class TimelineWidget (gtk.DrawingArea):
         # Vertical reference lines.
         pixel_step = self.find_indicative_time_step ()
         ctx.set_source_rgb (.9, .9, .9)
-        for i in range (1, width // pixel_step + 1):
-            x = i * pixel_step - .5
-            ctx.move_to (x, 0)
-            ctx.line_to (x, height)
+        start = dirty_start - dirty_start % pixel_step
+        for x in xrange (start + pixel_step, dirty_stop, pixel_step):
+            ctx.move_to (x - .5, 0)
+            ctx.line_to (x - .5, height)
             ctx.stroke ()
 
         if not self.process.freq_sentinel.data:
             self.logger.debug ("frequency sentinel has no data yet")
             return
 
+        ctx.translate (dirty_start, 0.)
+
         maximum = max (self.process.freq_sentinel.data)
 
         ctx.set_source_rgb (0., 0., 0.)
-        self.__draw_graph (ctx, width, height, maximum,
-                           self.process.freq_sentinel.data)
+        data = self.process.freq_sentinel.data[dirty_start:dirty_stop]
+        self.__draw_graph (ctx, height, maximum, data)
 
         if not self.process.dist_sentinel.data:
             self.logger.debug ("level distribution sentinel has no data yet")
             return
 
         colors = LevelColorThemeTango ().colors
-        dist_data = self.process.dist_sentinel.data
+        dist_data = self.process.dist_sentinel.data[dirty_start:dirty_stop]
 
         def cumulative_level_counts (*levels):
             for level_counts in dist_data:
@@ -638,7 +668,7 @@ class TimelineWidget (gtk.DrawingArea):
                        Data.debug_level_log,
                        Data.debug_level_debug,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
-        self.__draw_graph (ctx, width, height, maximum,
+        self.__draw_graph (ctx, height, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_debug
@@ -646,24 +676,24 @@ class TimelineWidget (gtk.DrawingArea):
                        Data.debug_level_fixme,
                        Data.debug_level_log,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
-        self.__draw_graph (ctx, width, height, maximum,
+        self.__draw_graph (ctx, height, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_log
         levels_prev = (Data.debug_level_trace,Data.debug_level_fixme,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
-        self.__draw_graph (ctx, width, height, maximum,
+        self.__draw_graph (ctx, height, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_fixme
         levels_prev = (Data.debug_level_trace,)
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
-        self.__draw_graph (ctx, width, height, maximum,
+        self.__draw_graph (ctx, height, maximum,
                            list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_trace
         ctx.set_source_rgb (*(colors[level][1].float_tuple ()))
-        self.__draw_graph (ctx, width, height, maximum, [counts[level] for counts in dist_data])
+        self.__draw_graph (ctx, height, maximum, [counts[level] for counts in dist_data])
 
         # Draw error and warning triangle indicators:
 
@@ -678,12 +708,12 @@ class TimelineWidget (gtk.DrawingArea):
             for i, counts in enumerate (dist_data):
                 if counts[level] == 0:
                     continue
-                ctx.identity_matrix ()
-                ctx.translate (i, 0)
+                ctx.translate (i, 0.)
                 triangle (ctx)
                 ctx.fill ()
+                ctx.translate (-i, 0.)
 
-    def __draw_graph (self, ctx, width, height, maximum, data):
+    def __draw_graph (self, ctx, height, maximum, data):
 
         if not data:
             return
@@ -756,9 +786,8 @@ class TimelineWidget (gtk.DrawingArea):
 
     def do_expose_event (self, event):
 
-        if self.__offscreen is None:
-            self.__update_offscreen ()
-
+        self.__ensure_offscreen ()
+        self.__draw_offscreen ()
         self.__draw_from_offscreen (event.area)
 
         return True
