@@ -2107,18 +2107,39 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
   g_mutex_unlock (eglglessink->flow_lock);
 
-  /* XXX: Renegotiation not implemented yet */
   if (eglglessink->current_caps) {
     GST_ERROR_OBJECT (eglglessink, "Caps already set. Won't do it again");
-    if (gst_caps_is_always_compatible (caps, eglglessink->current_caps)) {
+    if (gst_caps_can_intersect (caps, eglglessink->current_caps)) {
       GST_INFO_OBJECT (eglglessink, "Caps are compatible anyway");
       goto SUCCEED;
     } else {
-      GST_INFO_OBJECT (eglglessink,
-          "Caps %" GST_PTR_FORMAT "Not always compatible with current-caps %"
-          GST_PTR_FORMAT, caps, eglglessink->current_caps);
-      GST_WARNING_OBJECT (eglglessink, "Renegotiation not implemented");
-      goto HANDLE_ERROR;
+      GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
+      if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
+        glDeleteBuffers (1, &eglglessink->vdata);
+        glDeleteBuffers (1, &eglglessink->tdata);
+        glDeleteBuffers (1, &eglglessink->idata);
+        eglglessink->have_vbo = FALSE;
+
+        glDeleteShader (eglglessink->fragshader);
+        glDeleteShader (eglglessink->vertshader);
+
+        glDeleteTextures (eglglessink->n_textures, eglglessink->texture);
+        eglglessink->have_texture = FALSE;
+        eglglessink->n_textures = 0;
+
+        glDeleteProgram (eglglessink->program);
+      }
+
+      if (eglglessink->surface) {
+        eglDestroySurface (eglglessink->display, eglglessink->surface);
+        eglglessink->surface = NULL;
+        eglglessink->have_surface = FALSE;
+      }
+
+      if (eglglessink->context) {
+        eglDestroyContext (eglglessink->display, eglglessink->context);
+        eglglessink->context = NULL;
+      }
     }
   }
 
