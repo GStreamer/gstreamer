@@ -287,6 +287,19 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
       gst_caps_append_structure (ret, tmp);
+    } else if (strcmp (type->mime, "video/mpeg2") == 0) {
+      GstStructure *tmp;
+
+      tmp = gst_structure_new ("video/mpeg",
+          "width", GST_TYPE_INT_RANGE, 16, 4096,
+          "height", GST_TYPE_INT_RANGE, 16, 4096,
+          "framerate", GST_TYPE_FRACTION_RANGE,
+          0, 1, G_MAXINT, 1,
+          "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
+          "systemstream", G_TYPE_BOOLEAN, FALSE,
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+      gst_caps_append_structure (ret, tmp);
     } else {
       GST_WARNING ("Unsupported mimetype '%s'", type->mime);
     }
@@ -315,6 +328,8 @@ caps_to_mime (GstCaps * caps)
 
     if (mpegversion == 4)
       return "video/mp4v-es";
+    else if (mpegversion == 1 || mpegversion == 2)
+      return "video/mpeg2";
   } else if (strcmp (name, "video/x-h263") == 0) {
     return "video/3gpp";
   } else if (strcmp (name, "video/x-h264") == 0) {
