@@ -1,45 +1,6 @@
-This is GStreamer Bad Plug-ins 0.11.92 "Shine On You Crazy Diamond"
+This is GStreamer Bad Plugins 1.0.0
 
-New in 0.11.92:
+New features in 1.0.0:
 
       * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Lots of bugfixes, cleanup and other improvements
-
-New in 0.11.91:
-
-      * Ported asfmux, camerabin, coloreffects, gaudieffects, geometrictransform, hls plugins
-      * Lots of bugfixes and other improvements
-
-New in 0.11.90:
-
-      * Lots of bugfixes, cleanup and other improvements
-
-New in 0.11.2:
-
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-      * schro: Ported to 0.11
-      * qtkitvideosrc: Ported to 0.11
-      * vtdec: Ported to 0.11
-      * celt: Ported to 0.11
-      * removesilence: Ported to 0.11
-      * bz2: Ported to 0.11
-      * segmentclip: Ported to 0.11
-      * smooth: Ported to 0.11
-      * scaletempo: Ported to 0.11
-      * rawparse: Ported to 0.11
-      * shm: Ported to 0.11
-
-Bugs fixed in this release
-
-      * 658438 : [0.11][h263parse] Make h263 profiles/levels string fields in the caps
-      * 662618 : [gst-plugins-bad]compiler warnings due to printf format mismatch
-      * 665355 : [basevideodecoder] deletes frame but keeps it in list
-      * 670367 : Build failures for gst-plugins-bad
-
-New in 0.11.1:
-
-      * Many cleanups
-      * Ported to new 0.11 core API changes
-
+      * See release notes for more details
