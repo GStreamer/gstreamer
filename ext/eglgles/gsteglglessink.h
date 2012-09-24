@@ -130,6 +130,7 @@ struct _GstEglGlesSink
   GstVideoRectangle display_region;
   GList *supported_fmts;
   GstEglGlesImageFmt *selected_fmt;
+  GstCaps *sinkcaps;
 
   GMutex *flow_lock;
 

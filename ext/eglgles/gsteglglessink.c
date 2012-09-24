@@ -294,7 +294,7 @@ enum
 };
 
 /* will probably move elsewhere */
-static EGLint eglglessink_RGBA8888_attribs[] = {
+static const EGLint eglglessink_RGBA8888_attribs[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
@@ -304,7 +304,7 @@ static EGLint eglglessink_RGBA8888_attribs[] = {
   EGL_NONE
 };
 
-static EGLint eglglessink_RGB888_attribs[] = {
+static const EGLint eglglessink_RGB888_attribs[] = {
   EGL_RED_SIZE, 8,
   EGL_GREEN_SIZE, 8,
   EGL_BLUE_SIZE, 8,
@@ -313,7 +313,7 @@ static EGLint eglglessink_RGB888_attribs[] = {
   EGL_NONE
 };
 
-static EGLint eglglessink_RGB565_attribs[] = {
+static const EGLint eglglessink_RGB565_attribs[] = {
   EGL_RED_SIZE, 5,
   EGL_GREEN_SIZE, 6,
   EGL_BLUE_SIZE, 5,
@@ -885,12 +885,15 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
   gint ret = 0;
   EGLint cfg_number;
   GstEglGlesImageFmt *format;
+  GstCaps *caps;
 
   GST_DEBUG_OBJECT (eglglessink,
       "Building initial list of wanted eglattribs per format");
 
   /* Init supported format/caps list */
   g_mutex_lock (eglglessink->flow_lock);
+
+  caps = gst_caps_new_empty ();
 
   if (eglChooseConfig (eglglessink->display, eglglessink_RGBA8888_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
@@ -935,10 +938,11 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
-
-  } else
+    gst_caps_append (caps, gst_caps_ref (format->caps));
+  } else {
     GST_INFO_OBJECT (eglglessink,
         "EGL display doesn't support RGBA8888 config");
+  }
 
   if (eglChooseConfig (eglglessink->display, eglglessink_RGB888_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
@@ -951,8 +955,10 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
-  } else
+    gst_caps_append (caps, gst_caps_ref (format->caps));
+  } else {
     GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB888 config");
+  }
 
   if (eglChooseConfig (eglglessink->display, eglglessink_RGB565_attribs,
           NULL, 1, &cfg_number) != EGL_FALSE) {
@@ -963,8 +969,13 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
-  } else
+    gst_caps_append (caps, gst_caps_ref (format->caps));
+  } else {
     GST_INFO_OBJECT (eglglessink, "EGL display doesn't support RGB565 config");
+  }
+
+  gst_caps_replace (&eglglessink->sinkcaps, caps);
+  gst_caps_unref (caps);
 
   g_mutex_unlock (eglglessink->flow_lock);
 
@@ -1063,6 +1074,9 @@ gst_eglglessink_stop (GstBaseSink * sink)
 
   if (eglglessink->using_own_window)
     platform_destroy_native_window (eglglessink->display, eglglessink->window);
+
+  gst_caps_unref (eglglessink->sinkcaps);
+  eglglessink->sinkcaps = NULL;
 
   g_mutex_free (eglglessink->flow_lock);
   eglglessink->flow_lock = NULL;
@@ -2034,16 +2048,8 @@ gst_eglglessink_getcaps (GstBaseSink * bsink)
   eglglessink = GST_EGLGLESSINK (bsink);
 
   g_mutex_lock (eglglessink->flow_lock);
-  if (eglglessink->egl_started) {
-    GList *l;
-
-    ret = gst_caps_new_empty ();
-
-    for (l = eglglessink->supported_fmts; l; l = l->next) {
-      GstEglGlesImageFmt *format = l->data;
-
-      gst_caps_append (ret, gst_caps_ref (format->caps));
-    }
+  if (eglglessink->sinkcaps) {
+    ret = gst_caps_ref (eglglessink->sinkcaps);
   } else {
     ret =
         gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
