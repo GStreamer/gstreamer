@@ -836,8 +836,7 @@ class TimelineWidget (gtk.DrawingArea):
 
     def do_motion_notify_event (self, event):
 
-        x = event.x
-        y = event.y
+        x, y, mod = self.window.get_pointer ()
 
         if event.state & gtk.gdk.BUTTON1_MASK:
             self.emit ("change-position", int (x))
