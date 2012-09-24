@@ -151,6 +151,10 @@ static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   execute_seek (0, data);
 }
 
+static void duration_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  data->duration = GST_CLOCK_TIME_NONE;
+}
+
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GstState old_state, new_state, pending_state;
@@ -222,6 +226,7 @@ static void *app_function (void *userdata) {
   g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, data);
   g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, data);
   g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::duration", (GCallback)duration_cb, data);
   gst_object_unref (bus);
 
   /* Register a function that GLib will call 4 times per second */
