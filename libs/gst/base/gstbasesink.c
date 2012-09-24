@@ -20,7 +20,7 @@
  */
 
 /**
- * SECTION:gstbasesink:
+ * SECTION:gstbasesink
  * @short_description: Base class for sink elements
  * @see_also: #GstBaseTransform, #GstBaseSrc
  *
