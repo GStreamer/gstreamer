@@ -57,6 +57,14 @@
 #define GST_PROXY_PAD_TARGET(pad)       (GST_PAD_PEER (GST_PROXY_PAD_INTERNAL (pad)))
 #define GST_PROXY_PAD_INTERNAL(pad)     (GST_PROXY_PAD_PRIVATE (pad)->internal)
 
+#define GST_PROXY_PAD_ACQUIRE_INTERNAL(pad, internal, retval)           \
+  internal =                                                            \
+      GST_PAD_CAST (gst_proxy_pad_get_internal (GST_PROXY_PAD_CAST (pad))); \
+  if (internal == NULL)                                                 \
+    return retval;
+
+#define GST_PROXY_PAD_RELEASE_INTERNAL(internal) gst_object_unref (internal);
+
 struct _GstProxyPadPrivate
 {
   GstPad *internal;
@@ -85,9 +93,10 @@ gst_proxy_pad_iterate_internal_links_default (GstPad * pad, GstObject * parent)
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), NULL);
 
-  internal = GST_PROXY_PAD_INTERNAL (pad);
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, internal, NULL);
+
   g_value_init (&v, GST_TYPE_PAD);
-  g_value_set_object (&v, internal);
+  g_value_take_object (&v, internal);
   res = gst_iterator_new_single (GST_TYPE_PAD, &v);
   g_value_unset (&v);
 
@@ -115,8 +124,9 @@ gst_proxy_pad_chain_default (GstPad * pad, GstObject * parent,
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  internal = GST_PROXY_PAD_INTERNAL (pad);
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, internal, GST_FLOW_NOT_LINKED);
   res = gst_pad_push (internal, buffer);
+  GST_PROXY_PAD_RELEASE_INTERNAL (internal);
 
   return res;
 }
@@ -142,8 +152,9 @@ gst_proxy_pad_chain_list_default (GstPad * pad, GstObject * parent,
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  internal = GST_PROXY_PAD_INTERNAL (pad);
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, internal, GST_FLOW_NOT_LINKED);
   res = gst_pad_push_list (internal, list);
+  GST_PROXY_PAD_RELEASE_INTERNAL (internal);
 
   return res;
 }
@@ -171,8 +182,9 @@ gst_proxy_pad_getrange_default (GstPad * pad, GstObject * parent,
   g_return_val_if_fail (GST_IS_PROXY_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
 
-  internal = GST_PROXY_PAD_INTERNAL (pad);
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, internal, GST_FLOW_NOT_LINKED);
   res = gst_pad_pull_range (internal, offset, size, buffer);
+  GST_PROXY_PAD_RELEASE_INTERNAL (internal);
 
   return res;
 }
@@ -811,8 +823,7 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   g_return_val_if_fail (GST_PAD_CAST (gpad) != newtarget, FALSE);
   g_return_val_if_fail (newtarget != GST_PROXY_PAD_INTERNAL (gpad), FALSE);
 
-  /* no need for locking, the internal pad's lifecycle is directly linked to the
-   * ghostpad's */
+  GST_OBJECT_LOCK (gpad);
   internal = GST_PROXY_PAD_INTERNAL (gpad);
 
   if (newtarget)
@@ -821,7 +832,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
     GST_DEBUG_OBJECT (gpad, "clearing target");
 
   /* clear old target */
-  GST_OBJECT_LOCK (gpad);
   if ((oldtarget = GST_PROXY_PAD_TARGET (gpad))) {
     GST_OBJECT_UNLOCK (gpad);
 
