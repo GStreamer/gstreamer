@@ -1,45 +1,6 @@
-This is GStreamer Base Plug-ins 0.11.92 "Comfortably Numb"
+This is GStreamer Base Plugins 1.0.0
 
-New in 0.11.92:
-
-      * Parallel installability with 0.10.x series
-      * API cleanup and minor API improvements
-      * Major cleanup of video/audio libraries
-      * Lots of bugfixes, cleanup and other improvements
-
-New in 0.11.91:
-
-      * Compressed audio passthrough support in alsasink
-      * Removal of interfaces library, mixer and tuner interface
-      * Addition of video encoder and decoder base classes
-      * Improvements/cleanup for the video library API
-
-New in 0.11.90:
-
-      * Lots of bugfixes, cleanup and other improvements
-      * API cleanup in the audio base classes
-      * Improvements to the RTP buffer
-
-New in 0.11.3:
-
-      * Many fixes and improvements
-      * video: Improve video frame map/unmap
-      * theora: Improve video negotiation
-      * Various performance improvements
-
-Bugs fixed in this release
-
-      * 668343 : [0.11] - segfault when using missing plugin support in 0.11
-      * 668542 : [0.11] EncodingProfileClass is missing from GstPbutils-0.11.gir
-
-
-New in 0.11.2:
+New features in 1.0.0:
 
       * Parallel installability with 0.10.x series
-      * Many API cleanups
-      * Ported to new 0.11 core API changes
-      * Use new GstSample for snapshots
-      * Improved video filter base class
-      * New multichannel caps with mask
-      * Port network elements to GIO
-      * Many fixes and improvements
+      * See release notes for more details
