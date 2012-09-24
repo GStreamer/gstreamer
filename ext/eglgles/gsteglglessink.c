@@ -244,8 +244,8 @@ static const char *frag_YUY2_UYVY_prog = {
       "  fx = opos.x;"
       "  fy = opos.y;"
       "  y = texture2D(Ytex,vec2(fx,fy)).%c;"
-      "  u = texture2D(UVtex,vec2(fx*0.5,fy)).%c;"
-      "  v = texture2D(UVtex,vec2(fx*0.5,fy)).%c;"
+      "  u = texture2D(UVtex,vec2(fx,fy)).%c;"
+      "  v = texture2D(UVtex,vec2(fx,fy)).%c;"
       "  y=1.1643*(y-0.0625);"
       "  u=u-0.5;"
       "  v=v-0.5;"
@@ -272,11 +272,8 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
         GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
         GST_VIDEO_CAPS_YUV
-        ("{ AYUV, Y444, I420, YV12, NV12, NV21, Y42B, Y41B }") ";"
+        ("{ AYUV, Y444, I420, YV12, NV12, NV21, YUY2, UYVY, Y42B, Y41B }") ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";" GST_VIDEO_CAPS_RGB_16));
-
-/* FIXME: YUY2 and UYVY don't work completely yet, there are issues with the chroma 
- */
 
 /* Filter signals and args */
 enum
@@ -926,6 +923,10 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV12));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y42B));
     gst_caps_append (format->caps,
@@ -1897,7 +1898,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               break;
             }
             case GST_VIDEO_FORMAT_YUY2:
-            case GST_VIDEO_FORMAT_UYVY:{
+            case GST_VIDEO_FORMAT_UYVY:
               glActiveTexture (GL_TEXTURE0);
               glBindTexture (GL_TEXTURE_2D, eglglessink->texture[0]);
               glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
@@ -1909,7 +1910,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
                   GST_ROUND_UP_2 (w) / 2, h, 0, GL_RGBA,
                   GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
               break;
-            }
             case GST_VIDEO_FORMAT_NV12:
             case GST_VIDEO_FORMAT_NV21:{
               gint coffset, cw, ch;
