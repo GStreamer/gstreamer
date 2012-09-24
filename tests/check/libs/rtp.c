@@ -25,6 +25,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtphdrext.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 #include <string.h>
 
@@ -758,6 +759,85 @@ GST_START_TEST (test_rtcp_buffer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtp_ntp64_extension)
+{
+  GstBuffer *buf;
+  gpointer data;
+  guint size;
+  GstRTPBuffer rtp = { NULL, };
+  guint8 bytes[] = { 0x01, 0x23, 0x45, 0x67, 0x89, 0x01, 0x23, 0x45 };
+  guint64 ntptime;
+  guint8 hdrext_ntp64[GST_RTP_HDREXT_NTP_64_SIZE];
+
+  buf = gst_rtp_buffer_new_allocate (0, 0, 0);
+
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
+
+  /* format extension data */
+  gst_rtp_hdrext_set_ntp_64 (hdrext_ntp64, GST_RTP_HDREXT_NTP_64_SIZE,
+      0x0123456789012345LL);
+  fail_unless (memcmp (bytes, hdrext_ntp64, sizeof (bytes)) == 0);
+
+  /* add as 1byte header */
+  gst_rtp_buffer_add_extension_onebyte_header (&rtp, 1, hdrext_ntp64,
+      GST_RTP_HDREXT_NTP_64_SIZE);
+
+  /* get extension again */
+  gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0, &data, &size);
+
+  /* and check */
+  fail_unless (size == GST_RTP_HDREXT_NTP_64_SIZE);
+  fail_unless (memcmp (data, hdrext_ntp64, size) == 0);
+
+  gst_rtp_hdrext_get_ntp_64 (data, size, &ntptime);
+  fail_unless (ntptime == 0x0123456789012345LL);
+
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtp_ntp56_extension)
+{
+  GstBuffer *buf;
+  gpointer data;
+  guint size;
+  GstRTPBuffer rtp = { NULL, };
+  guint8 bytes[] = { 0x23, 0x45, 0x67, 0x89, 0x01, 0x23, 0x45 };
+  guint64 ntptime;
+  guint8 hdrext_ntp56[GST_RTP_HDREXT_NTP_56_SIZE];
+
+  buf = gst_rtp_buffer_new_allocate (0, 0, 0);
+
+  gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
+
+  /* format extension data */
+  gst_rtp_hdrext_set_ntp_56 (hdrext_ntp56, GST_RTP_HDREXT_NTP_56_SIZE,
+      0x0123456789012345LL);
+  /* truncates top bits */
+  fail_unless (memcmp (bytes, hdrext_ntp56, sizeof (bytes)) == 0);
+
+  /* add as 1byte header */
+  gst_rtp_buffer_add_extension_onebyte_header (&rtp, 1, hdrext_ntp56,
+      GST_RTP_HDREXT_NTP_56_SIZE);
+
+  /* get extension again */
+  gst_rtp_buffer_get_extension_onebyte_header (&rtp, 1, 0, &data, &size);
+
+  /* and check */
+  fail_unless (size == GST_RTP_HDREXT_NTP_56_SIZE);
+  fail_unless (memcmp (data, hdrext_ntp56, size) == 0);
+
+  gst_rtp_hdrext_get_ntp_56 (data, size, &ntptime);
+  fail_unless (ntptime == 0x23456789012345LL);
+
+  gst_rtp_buffer_unmap (&rtp);
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -772,6 +852,8 @@ rtp_suite (void)
   tcase_add_test (tc_chain, test_rtp_seqnum_compare);
 
   tcase_add_test (tc_chain, test_rtcp_buffer);
+  tcase_add_test (tc_chain, test_rtp_ntp64_extension);
+  tcase_add_test (tc_chain, test_rtp_ntp56_extension);
 
   //tcase_add_test (tc_chain, test_rtp_buffer_list);
 
