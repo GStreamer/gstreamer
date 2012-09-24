@@ -101,46 +101,29 @@ enum
 
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{YUY2,UYVY,I420,YV12}")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,I420,YV12}")));
 
 static GstStaticPadTemplate src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{YUY2,UYVY,I420,YV12}")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{YUY2,UYVY,I420,YV12}")));
 
-GST_BOILERPLATE (GstFieldAnalysis, gst_field_analysis, GstElement,
-    GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstFieldAnalysis, gst_field_analysis, GST_TYPE_ELEMENT);
+#define parent_class gst_field_analysis_parent_class
 
 static void gst_field_analysis_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_field_analysis_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_field_analysis_set_caps (GstPad * pad, GstCaps * caps);
-static gboolean gst_field_analysis_sink_event (GstPad * pad, GstEvent * event);
-static GstFlowReturn gst_field_analysis_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_field_analysis_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static GstFlowReturn gst_field_analysis_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buf);
 static GstStateChangeReturn gst_field_analysis_change_state (GstElement *
     element, GstStateChange transition);
 static void gst_field_analysis_finalize (GObject * self);
 
-static GQueue *gst_field_analysis_flush_queue (GstFieldAnalysis * filter,
-    GQueue * queue);
-
-static void
-gst_field_analysis_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_metadata (element_class,
-      "Video field analysis",
-      "Filter/Analysis/Video",
-      "Analyse fields from video frames to identify if they are progressive/telecined/interlaced",
-      "Robert Swain <robert.swain@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
-}
+static GQueue *gst_field_analysis_flush_frames (GstFieldAnalysis * filter);
 
 typedef enum
 {
@@ -294,49 +277,56 @@ gst_field_analysis_class_init (GstFieldAnalysisClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_field_analysis_change_state);
+
+  gst_element_class_set_metadata (gstelement_class,
+      "Video field analysis",
+      "Filter/Analysis/Video",
+      "Analyse fields from video frames to identify if they are progressive/telecined/interlaced",
+      "Robert Swain <robert.swain@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
 }
 
 static gfloat same_parity_sad (GstFieldAnalysis * filter,
-    FieldAnalysisFields * fields);
+    FieldAnalysisFields (*history)[2]);
 static gfloat same_parity_ssd (GstFieldAnalysis * filter,
-    FieldAnalysisFields * fields);
+    FieldAnalysisFields (*history)[2]);
 static gfloat same_parity_3_tap (GstFieldAnalysis * filter,
-    FieldAnalysisFields * fields);
+    FieldAnalysisFields (*history)[2]);
 static gfloat opposite_parity_5_tap (GstFieldAnalysis * filter,
-    FieldAnalysisFields * fields);
+    FieldAnalysisFields (*history)[2]);
 static guint64 block_score_for_row_32detect (GstFieldAnalysis * filter,
-    guint8 * base_fj, guint8 * base_fjp1);
+    FieldAnalysisFields (*history)[2], guint8 * base_fj, guint8 * base_fjp1);
 static guint64 block_score_for_row_iscombed (GstFieldAnalysis * filter,
-    guint8 * base_fj, guint8 * base_fjp1);
+    FieldAnalysisFields (*history)[2], guint8 * base_fj, guint8 * base_fjp1);
 static guint64 block_score_for_row_5_tap (GstFieldAnalysis * filter,
-    guint8 * base_fj, guint8 * base_fjp1);
+    FieldAnalysisFields (*history)[2], guint8 * base_fj, guint8 * base_fjp1);
 static gfloat opposite_parity_windowed_comb (GstFieldAnalysis * filter,
-    FieldAnalysisFields * fields);
+    FieldAnalysisFields (*history)[2]);
 
 static void
-gst_field_analysis_empty_queue (GstFieldAnalysis * filter)
+gst_field_analysis_clear_frames (GstFieldAnalysis * filter)
 {
-  if (filter->frames) {
-    guint length = g_queue_get_length (filter->frames);
-    GST_DEBUG_OBJECT (filter, "Clearing queue (size %u)", length);
-    while (length) {
-      /* each buffer in the queue should have a ref on it and so to clear the
-       * queue we must pop and unref each buffer here */
-      gst_buffer_unref (g_queue_pop_head (filter->frames));
-      length--;
-    }
+  GST_DEBUG_OBJECT (filter, "Clearing %d frames", filter->nframes);
+  while (filter->nframes) {
+    gst_video_frame_unmap (&filter->frames[filter->nframes - 1].frame);
+    filter->nframes--;
   }
 }
 
 static void
 gst_field_analysis_reset (GstFieldAnalysis * filter)
 {
-  gst_field_analysis_empty_queue (filter);
+  gst_field_analysis_clear_frames (filter);
   GST_DEBUG_OBJECT (filter, "Resetting context");
-  memset (filter->results, 0, 2 * sizeof (FieldAnalysis));
+  memset (filter->frames, 0, 2 * sizeof (FieldAnalysisHistory));
   filter->is_telecine = FALSE;
   filter->first_buffer = TRUE;
-  filter->width = 0;
+  gst_video_info_init (&filter->vinfo);
   g_free (filter->comb_mask);
   filter->comb_mask = NULL;
   g_free (filter->block_scores);
@@ -344,27 +334,20 @@ gst_field_analysis_reset (GstFieldAnalysis * filter)
 }
 
 static void
-gst_field_analysis_init (GstFieldAnalysis * filter,
-    GstFieldAnalysisClass * gclass)
+gst_field_analysis_init (GstFieldAnalysis * filter)
 {
   filter->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_field_analysis_set_caps));
-  gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_event_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_field_analysis_sink_event));
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_field_analysis_chain));
 
   filter->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  filter->frames = g_queue_new ();
+  filter->nframes = 0;
   gst_field_analysis_reset (filter);
   filter->same_field = &same_parity_ssd;
   filter->field_thresh = DEFAULT_FIELD_THRESH;
@@ -442,15 +425,16 @@ gst_field_analysis_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BLOCK_WIDTH:
       filter->block_width = g_value_get_uint64 (value);
-      if (filter->width) {
+      if (GST_VIDEO_FRAME_WIDTH (&filter->frames[0].frame)) {
+        const gint frame_width =
+            GST_VIDEO_FRAME_WIDTH (&filter->frames[0].frame);
         if (filter->block_scores) {
-          gsize nbytes = (filter->width / filter->block_width) * sizeof (guint);
+          gsize nbytes = (frame_width / filter->block_width) * sizeof (guint);
           filter->block_scores = g_realloc (filter->block_scores, nbytes);
           memset (filter->block_scores, 0, nbytes);
         } else {
           filter->block_scores =
-              g_malloc0 ((filter->width / filter->block_width) *
-              sizeof (guint));
+              g_malloc0 ((frame_width / filter->block_width) * sizeof (guint));
         }
       }
       break;
@@ -546,36 +530,32 @@ gst_field_analysis_get_property (GObject * object, guint prop_id,
 static void
 gst_field_analysis_update_format (GstFieldAnalysis * filter, GstCaps * caps)
 {
-  GstStructure *struc;
-  guint32 fourcc;
-  GstVideoFormat vformat;
-  gint width, height, data_offset, sample_incr, line_stride;
+  gint width;
   GQueue *outbufs;
+  GstVideoInfo vinfo;
 
-  struc = gst_caps_get_structure (caps, 0);
-  gst_structure_get_fourcc (struc, "format", &fourcc);
-  vformat = gst_video_format_from_fourcc (fourcc);
-
-  gst_structure_get_int (struc, "width", &width);
-  gst_structure_get_int (struc, "height", &height);
-
-  data_offset =
-      gst_video_format_get_component_offset (vformat, 0, width, height);
-  sample_incr = gst_video_format_get_pixel_stride (vformat, 0);
-  line_stride = gst_video_format_get_row_stride (vformat, 0, width);
+  if (!gst_video_info_from_caps (&vinfo, caps)) {
+    GST_ERROR_OBJECT (filter, "Invalid caps: %" GST_PTR_FORMAT, caps);
+    return;
+  }
 
   /* if format is unchanged in our eyes, don't update the context */
-  if ((filter->width == width) && (filter->height == height)
-      && (filter->data_offset == data_offset)
-      && (filter->sample_incr == sample_incr)
-      && (filter->line_stride == line_stride))
+  if ((GST_VIDEO_INFO_WIDTH (&filter->vinfo) == GST_VIDEO_INFO_WIDTH (&vinfo))
+      && (GST_VIDEO_INFO_HEIGHT (&filter->vinfo) ==
+          GST_VIDEO_INFO_HEIGHT (&vinfo))
+      && (GST_VIDEO_INFO_COMP_OFFSET (&filter->vinfo, 0) ==
+          GST_VIDEO_INFO_COMP_OFFSET (&vinfo, 0))
+      && (GST_VIDEO_INFO_COMP_PSTRIDE (&filter->vinfo, 0) ==
+          GST_VIDEO_INFO_COMP_PSTRIDE (&vinfo, 0))
+      && (GST_VIDEO_INFO_COMP_STRIDE (&filter->vinfo, 0) ==
+          GST_VIDEO_INFO_COMP_STRIDE (&vinfo, 0)))
     return;
 
   /* format changed - process and push buffers before updating context */
 
   GST_OBJECT_LOCK (filter);
   filter->flushing = TRUE;
-  outbufs = gst_field_analysis_flush_queue (filter, filter->frames);
+  outbufs = gst_field_analysis_flush_frames (filter);
   GST_OBJECT_UNLOCK (filter);
 
   if (outbufs) {
@@ -586,11 +566,8 @@ gst_field_analysis_update_format (GstFieldAnalysis * filter, GstCaps * caps)
   GST_OBJECT_LOCK (filter);
   filter->flushing = FALSE;
 
-  filter->width = width;
-  filter->height = height;
-  filter->data_offset = data_offset;
-  filter->sample_incr = sample_incr;
-  filter->line_stride = line_stride;
+  filter->vinfo = vinfo;
+  width = GST_VIDEO_INFO_WIDTH (&filter->vinfo);
 
   /* update allocations for metric scores */
   if (filter->comb_mask) {
@@ -611,21 +588,6 @@ gst_field_analysis_update_format (GstFieldAnalysis * filter, GstCaps * caps)
   return;
 }
 
-static gboolean
-gst_field_analysis_set_caps (GstPad * pad, GstCaps * caps)
-{
-  gboolean ret = TRUE;
-  GstFieldAnalysis *filter = GST_FIELDANALYSIS (gst_pad_get_parent (pad));
-
-  gst_field_analysis_update_format (filter, caps);
-
-  ret = gst_pad_set_caps (filter->srcpad, caps);
-
-  gst_object_unref (filter);
-
-  return ret;
-}
-
 #define FIELD_ANALYSIS_TOP_BOTTOM   (1 << 0)
 #define FIELD_ANALYSIS_BOTTOM_TOP   (1 << 1)
 #define FIELD_ANALYSIS_TOP_MATCH    (1 << 2)
@@ -641,83 +603,79 @@ gst_field_analysis_decorate (GstFieldAnalysis * filter, gboolean tff,
 {
   GstBuffer *buf = NULL;
   GstCaps *caps;
-
-  caps = gst_caps_copy (GST_PAD_CAPS (filter->srcpad));
+  GstVideoInfo srcpadvinfo, vinfo = filter->vinfo;
 
   /* deal with incoming buffer */
   if (conclusion > FIELD_ANALYSIS_PROGRESSIVE || filter->is_telecine == TRUE) {
-    gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, TRUE, NULL);
     filter->is_telecine = conclusion != FIELD_ANALYSIS_INTERLACED;
     if (conclusion >= FIELD_ANALYSIS_TELECINE_PROGRESSIVE
         || filter->is_telecine == TRUE) {
-      gst_caps_set_simple (caps, "interlacing-method", G_TYPE_STRING,
-          "telecine", NULL);
+      GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) = GST_VIDEO_INTERLACE_MODE_MIXED;
     } else {
-      gst_caps_set_simple (caps, "interlacing-method", G_TYPE_STRING, "unknown",
-          NULL);
+      GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) =
+          GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
     }
   } else {
-    gst_structure_remove_field (gst_caps_get_structure (caps, 0),
-        "interlacing-method");
-    gst_caps_set_simple (caps, "interlaced", G_TYPE_BOOLEAN, FALSE, NULL);
+    GST_VIDEO_INFO_INTERLACE_MODE (&vinfo) =
+        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
   }
 
-  /* get buffer from queue
-   * this takes our ref on the buf that was in the queue and gives us a buf
-   * on which we have a refi (could be the same buffer, but need not be) */
-  buf = gst_buffer_make_metadata_writable (g_queue_pop_head (filter->frames));
-
-  /* set buffer flags */
-  if (!tff) {
-    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_TFF);
-  } else if (tff == 1 || (tff == -1
-          && GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_TFF))) {
-    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_TFF);
-  }
-
-  if (onefield) {
-    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_ONEFIELD);
-  } else {
-    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_ONEFIELD);
-  }
-
-  if (drop) {
-    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_RFF);
-  } else {
-    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_RFF);
-  }
-
-  if (conclusion == FIELD_ANALYSIS_TELECINE_PROGRESSIVE || (filter->is_telecine
-          && conclusion == FIELD_ANALYSIS_PROGRESSIVE))
-    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_PROGRESSIVE);
-
-  /* set the caps on the src pad and buffer before pushing */
-  if (gst_caps_is_equal (caps, GST_PAD_CAPS (filter->srcpad))) {
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
-  } else {
+  caps = gst_pad_get_current_caps (filter->srcpad);
+  gst_video_info_from_caps (&srcpadvinfo, caps);
+  gst_caps_unref (caps);
+  /* push a caps event on the src pad before pushing the buffer */
+  if (!gst_video_info_is_equal (&vinfo, &srcpadvinfo)) {
     gboolean ret = TRUE;
 
+    caps = gst_video_info_to_caps (&vinfo);
     GST_OBJECT_UNLOCK (filter);
     ret = gst_pad_set_caps (filter->srcpad, caps);
     GST_OBJECT_LOCK (filter);
+    gst_caps_unref (caps);
 
     if (!ret) {
       GST_ERROR_OBJECT (filter, "Could not set pad caps");
-      gst_buffer_unref (buf);
       return NULL;
     }
-    gst_buffer_set_caps (buf, caps);
   }
-  /* drop our ref to the caps as the buffer and pad have their own */
-  gst_caps_unref (caps);
+
+  buf = filter->frames[filter->nframes - 1].frame.buffer;
+  gst_video_frame_unmap (&filter->frames[filter->nframes - 1].frame);
+  filter->nframes--;
+
+  /* set buffer flags */
+  if (!tff) {
+    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_FLAG_TFF);
+  } else if (tff == 1 || (tff == -1
+          && GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF))) {
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF);
+  }
+
+  if (onefield) {
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD);
+  }
+
+  if (drop) {
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_RFF);
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_FLAG_RFF);
+  }
+
+  if (conclusion == FIELD_ANALYSIS_PROGRESSIVE
+      || conclusion == FIELD_ANALYSIS_TELECINE_PROGRESSIVE) {
+    GST_BUFFER_FLAG_UNSET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  } else {
+    GST_BUFFER_FLAG_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED);
+  }
 
   GST_DEBUG_OBJECT (filter,
-      "Pushing buffer with flags: %p (%p), p %d, tff %d, 1f %d, drop %d; conc %d",
-      GST_BUFFER_DATA (buf), buf,
-      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_PROGRESSIVE),
-      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_TFF),
-      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_ONEFIELD),
-      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_RFF), conclusion);
+      "Pushing buffer with flags: %p, i %d, tff %d, 1f %d, drop %d; conc %d",
+      buf, GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_INTERLACED),
+      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF),
+      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_ONEFIELD),
+      GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_RFF), conclusion);
 
   return buf;
 }
@@ -728,27 +686,27 @@ static GstBuffer *
 gst_field_analysis_flush_one (GstFieldAnalysis * filter, GQueue * outbufs)
 {
   GstBuffer *buf = NULL;
-  guint n_queued = g_queue_get_length (filter->frames);
-  guint idx = n_queued - 1;
+  FieldAnalysis results;
 
-  if (!n_queued || n_queued > 2)
-    return buf;
+  if (!filter->nframes)
+    return NULL;
 
-  GST_DEBUG_OBJECT (filter, "Flushing last buffer (queue length %d)", n_queued);
-  if (filter->results[idx].holding == 1 + TOP_FIELD
-      || filter->results[idx].holding == 1 + BOTTOM_FIELD) {
+  GST_DEBUG_OBJECT (filter, "Flushing last frame (nframes %d)",
+      filter->nframes);
+  results = filter->frames[filter->nframes - 1].results;
+  if (results.holding == 1 + TOP_FIELD || results.holding == 1 + BOTTOM_FIELD) {
     /* should be only one field needed */
     buf =
-        gst_field_analysis_decorate (filter,
-        filter->results[idx].holding == 1 + TOP_FIELD, TRUE,
-        filter->results[idx].conclusion, FALSE);
+        gst_field_analysis_decorate (filter, results.holding == 1 + TOP_FIELD,
+        TRUE, results.conclusion, FALSE);
   } else {
     /* possibility that both fields are needed */
     buf =
-        gst_field_analysis_decorate (filter, -1, FALSE,
-        filter->results[idx].conclusion, !filter->results[idx].holding);
+        gst_field_analysis_decorate (filter, -1, FALSE, results.conclusion,
+        !results.holding);
   }
   if (buf) {
+    filter->nframes--;
     if (outbufs)
       g_queue_push_tail (outbufs, buf);
   } else {
@@ -757,49 +715,48 @@ gst_field_analysis_flush_one (GstFieldAnalysis * filter, GQueue * outbufs)
   return buf;
 }
 
-/* _flush_queue () has no direct influence on refcounts and nor does _flush_one,
+/* _flush_frames () has no direct influence on refcounts and nor does _flush_one,
  * but _decorate () does and so this function does indirectly */
 static GQueue *
-gst_field_analysis_flush_queue (GstFieldAnalysis * filter, GQueue * queue)
+gst_field_analysis_flush_frames (GstFieldAnalysis * filter)
 {
   GQueue *outbufs;
-  guint length = 0;
 
-  if (queue)
-    length = g_queue_get_length (queue);
-
-  if (length < 2)
+  if (filter->nframes < 2)
     return NULL;
 
   outbufs = g_queue_new ();
 
-  while (length) {
+  while (filter->nframes)
     gst_field_analysis_flush_one (filter, outbufs);
-    length--;
-  }
 
   return outbufs;
 }
 
 static gboolean
-gst_field_analysis_sink_event (GstPad * pad, GstEvent * event)
+gst_field_analysis_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
-  GstFieldAnalysis *filter = GST_FIELDANALYSIS (gst_pad_get_parent (pad));
+  GstFieldAnalysis *filter = GST_FIELDANALYSIS (parent);
+  gboolean forward;             /* should we forward the event? */
+  gboolean ret = TRUE;
 
   GST_LOG_OBJECT (pad, "received %s event: %" GST_PTR_FORMAT,
       GST_EVENT_TYPE_NAME (event), event);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_SEGMENT:
     case GST_EVENT_EOS:
     {
-      /* for both NEWSEGMENT and EOS it is safest to process and push queued
+      /* for both SEGMENT and EOS it is safest to process and push queued
        * buffers */
       GQueue *outbufs;
 
+      forward = TRUE;
+
       GST_OBJECT_LOCK (filter);
       filter->flushing = TRUE;
-      outbufs = gst_field_analysis_flush_queue (filter, filter->frames);
+      outbufs = gst_field_analysis_flush_frames (filter);
       GST_OBJECT_UNLOCK (filter);
 
       if (outbufs) {
@@ -815,97 +772,152 @@ gst_field_analysis_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       /* if we have any buffers left in the queue, unref them until the queue
        * is empty */
+
+      forward = TRUE;
+
       GST_OBJECT_LOCK (filter);
       gst_field_analysis_reset (filter);
       GST_OBJECT_UNLOCK (filter);
       break;
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      forward = FALSE;
+
+      gst_event_parse_caps (event, &caps);
+      gst_field_analysis_update_format (filter, caps);
+      ret = gst_pad_set_caps (filter->srcpad, caps);
+      gst_event_unref (event);
+      break;
+    }
     default:
       break;
   }
 
-  /* NOTE: we always forward the event currently, change this as necessary */
-  return gst_pad_push_event (filter->srcpad, event);
-}
-
-
-static gfloat
-same_parity_sad (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
-{
-  gint j;
-  gfloat sum;
-  guint8 *f1j, *f2j;
-
-  const gint y_offset = filter->data_offset;
-  const gint stride = filter->line_stride;
-  const gint stridex2 = stride << 1;
-  const guint32 noise_floor = filter->noise_floor;
-
-  f1j = GST_BUFFER_DATA (fields[0].buf) + y_offset + fields[0].parity * stride;
-  f2j = GST_BUFFER_DATA (fields[1].buf) + y_offset + fields[1].parity * stride;
-
-  sum = 0.0f;
-  for (j = 0; j < (filter->height >> 1); j++) {
-    guint32 tempsum = 0;
-    fieldanalysis_orc_same_parity_sad_planar_yuv (&tempsum, f1j, f2j,
-        noise_floor, filter->width);
-    sum += tempsum;
-    f1j += stridex2;
-    f2j += stridex2;
+  if (forward) {
+    ret = gst_pad_push_event (filter->srcpad, event);
   }
 
-  return sum / (0.5f * filter->width * filter->height);
+  return ret;
 }
 
+
 static gfloat
-same_parity_ssd (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
+same_parity_sad (GstFieldAnalysis * filter, FieldAnalysisFields (*history)[2])
 {
   gint j;
   gfloat sum;
   guint8 *f1j, *f2j;
 
-  const gint y_offset = filter->data_offset;
-  const gint stride = filter->line_stride;
-  const gint stridex2 = stride << 1;
+  const gint width = GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame);
+  const gint height = GST_VIDEO_FRAME_HEIGHT (&(*history)[0].frame);
+  const gint stride0x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
+  const gint stride1x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame, 0) << 1;
+  const guint32 noise_floor = filter->noise_floor;
+
+  f1j =
+      GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame,
+      0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame,
+      0) +
+      (*history)[0].parity * GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame,
+      0);
+  f2j =
+      GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+      0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame,
+      0) +
+      (*history)[1].parity * GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame,
+      0);
+
+  sum = 0.0f;
+  for (j = 0; j < (height >> 1); j++) {
+    guint32 tempsum = 0;
+    fieldanalysis_orc_same_parity_sad_planar_yuv (&tempsum, f1j, f2j,
+        noise_floor, width);
+    sum += tempsum;
+    f1j += stride0x2;
+    f2j += stride1x2;
+  }
+
+  return sum / (0.5f * width * height);
+}
+
+static gfloat
+same_parity_ssd (GstFieldAnalysis * filter, FieldAnalysisFields (*history)[2])
+{
+  gint j;
+  gfloat sum;
+  guint8 *f1j, *f2j;
+
+  const gint width = GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame);
+  const gint height = GST_VIDEO_FRAME_HEIGHT (&(*history)[0].frame);
+  const gint stride0x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
+  const gint stride1x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame, 0) << 1;
   /* noise floor needs to be squared for SSD */
   const guint32 noise_floor = filter->noise_floor * filter->noise_floor;
 
-  f1j = GST_BUFFER_DATA (fields[0].buf) + y_offset + fields[0].parity * stride;
-  f2j = GST_BUFFER_DATA (fields[1].buf) + y_offset + fields[1].parity * stride;
+  f1j =
+      GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame,
+      0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame,
+      0) +
+      (*history)[0].parity * GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame,
+      0);
+  f2j =
+      GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+      0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame,
+      0) +
+      (*history)[1].parity * GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame,
+      0);
 
   sum = 0.0f;
-  for (j = 0; j < (filter->height >> 1); j++) {
+  for (j = 0; j < (height >> 1); j++) {
     guint32 tempsum = 0;
     fieldanalysis_orc_same_parity_ssd_planar_yuv (&tempsum, f1j, f2j,
-        noise_floor, filter->width);
+        noise_floor, width);
     sum += tempsum;
-    f1j += stridex2;
-    f2j += stridex2;
+    f1j += stride0x2;
+    f2j += stride1x2;
   }
 
-  return sum / (0.5f * filter->width * filter->height); /* field is half height */
+  return sum / (0.5f * width * height); /* field is half height */
 }
 
 /* horizontal [1,4,1] diff between fields - is this a good idea or should the
  * current sample be emphasised more or less? */
 static gfloat
-same_parity_3_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
+same_parity_3_tap (GstFieldAnalysis * filter, FieldAnalysisFields (*history)[2])
 {
   gint i, j;
   gfloat sum;
   guint8 *f1j, *f2j;
 
-  const gint y_offset = filter->data_offset;
-  const gint stride = filter->line_stride;
-  const gint stridex2 = stride << 1;
-  const gint incr = filter->sample_incr;
-  /* noise floor needs to be squared for [1,4,1] */
+  const gint width = GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame);
+  const gint height = GST_VIDEO_FRAME_HEIGHT (&(*history)[0].frame);
+  const gint stride0x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
+  const gint stride1x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame, 0) << 1;
+  const gint incr = GST_VIDEO_FRAME_COMP_PSTRIDE (&(*history)[0].frame, 0);
+  /* noise floor needs to be *6 for [1,4,1] */
   const guint32 noise_floor = filter->noise_floor * 6;
 
-  f1j = GST_BUFFER_DATA (fields[0].buf) + y_offset + fields[0].parity * stride;
-  f2j = GST_BUFFER_DATA (fields[1].buf) + y_offset + fields[1].parity * stride;
+  f1j = GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame, 0) +
+      GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame, 0) +
+      (*history)[0].parity * GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame,
+      0);
+  f2j =
+      GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+      0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame,
+      0) +
+      (*history)[1].parity * GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame,
+      0);
 
   sum = 0.0f;
-  for (j = 0; j < (filter->height >> 1); j++) {
+  for (j = 0; j < (height >> 1); j++) {
     guint32 tempsum = 0;
     guint32 diff;
 
@@ -917,37 +929,41 @@ same_parity_3_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
 
     fieldanalysis_orc_same_parity_3_tap_planar_yuv (&tempsum, f1j, &f1j[incr],
         &f1j[incr << 1], f2j, &f2j[incr], &f2j[incr << 1], noise_floor,
-        filter->width - 1);
+        width - 1);
     sum += tempsum;
 
     /* unroll last as it is a special case */
-    i = filter->width - 1;
+    i = width - 1;
     diff = abs (((f1j[i - incr] << 1) + (f1j[i] << 2))
         - ((f2j[i - incr] << 1) + (f2j[i] << 2)));
     if (diff > noise_floor)
       sum += diff;
 
-    f1j += stridex2;
-    f2j += stridex2;
+    f1j += stride0x2;
+    f2j += stride1x2;
   }
 
-  return sum / ((6.0f / 2.0f) * filter->width * filter->height);        /* 1 + 4 + 1 = 6; field is half height */
+  return sum / ((6.0f / 2.0f) * width * height);        /* 1 + 4 + 1 = 6; field is half height */
 }
 
 /* vertical [1,-3,4,-3,1] - same as is used in FieldDiff from TIVTC,
  * tritical's AVISynth IVTC filter */
 /* 0th field's parity defines operation */
 static gfloat
-opposite_parity_5_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
+opposite_parity_5_tap (GstFieldAnalysis * filter,
+    FieldAnalysisFields (*history)[2])
 {
   gint j;
   gfloat sum;
   guint8 *fjm2, *fjm1, *fj, *fjp1, *fjp2;
   guint32 tempsum;
 
-  const gint y_offset = filter->data_offset;
-  const gint stride = filter->line_stride;
-  const gint stridex2 = stride << 1;
+  const gint width = GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame);
+  const gint height = GST_VIDEO_FRAME_HEIGHT (&(*history)[0].frame);
+  const gint stride0x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
+  const gint stride1x2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame, 0) << 1;
   /* noise floor needs to be *6 for [1,-3,4,-3,1] */
   const guint32 noise_floor = filter->noise_floor * 6;
 
@@ -962,31 +978,45 @@ opposite_parity_5_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
    *   the frame*/
 
   /* unroll first line as it is a special case */
-  if (fields[0].parity == TOP_FIELD) {
-    fj = GST_BUFFER_DATA (fields[0].buf) + y_offset;
-    fjp1 = GST_BUFFER_DATA (fields[1].buf) + y_offset + stride;
+  if ((*history)[0].parity == TOP_FIELD) {
+    fj = GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame, 0);
+    fjp1 =
+        GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame,
+        0) + GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame, 0);
+    fjp2 = fj + stride0x2;
   } else {
-    fj = GST_BUFFER_DATA (fields[1].buf) + y_offset;
-    fjp1 = GST_BUFFER_DATA (fields[0].buf) + y_offset + stride;
+    fj = GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame, 0);
+    fjp1 =
+        GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame,
+        0) + GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0);
+    fjp2 = fj + stride1x2;
   }
-  fjp2 = fj + stridex2;
 
   tempsum = 0;
   fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjp2, fjp1, fj,
-      fjp1, fjp2, noise_floor, filter->width);
+      fjp1, fjp2, noise_floor, width);
   sum += tempsum;
 
-  for (j = 1; j < (filter->height >> 1) - 1; j++) {
+  for (j = 1; j < (height >> 1) - 1; j++) {
     /* shift everything down a line in the field of interest (means += stridex2) */
     fjm2 = fj;
     fjm1 = fjp1;
     fj = fjp2;
-    fjp1 += stridex2;
-    fjp2 += stridex2;
+    if ((*history)[0].parity == TOP_FIELD) {
+      fjp1 += stride1x2;
+      fjp2 += stride0x2;
+    } else {
+      fjp1 += stride0x2;
+      fjp2 += stride1x2;
+    }
 
     tempsum = 0;
     fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjm2, fjm1,
-        fj, fjp1, fjp2, noise_floor, filter->width);
+        fj, fjp1, fjp2, noise_floor, width);
     sum += tempsum;
   }
 
@@ -998,29 +1028,32 @@ opposite_parity_5_tap (GstFieldAnalysis * filter, FieldAnalysisFields * fields)
 
   tempsum = 0;
   fieldanalysis_orc_opposite_parity_5_tap_planar_yuv (&tempsum, fjm2, fjm1, fj,
-      fjm1, fjm2, noise_floor, filter->width);
+      fjm1, fjm2, noise_floor, width);
   sum += tempsum;
 
-  return sum / ((6.0f / 2.0f) * filter->width * filter->height);        /* 1 + 4 + 1 == 3 + 3 == 6; field is half height */
+  return sum / ((6.0f / 2.0f) * width * height);        /* 1 + 4 + 1 == 3 + 3 == 6; field is half height */
 }
 
 /* this metric was sourced from HandBrake but originally from transcode
  * the return value is the highest block score for the row of blocks */
 static inline guint64
-block_score_for_row_32detect (GstFieldAnalysis * filter, guint8 * base_fj,
-    guint8 * base_fjp1)
+block_score_for_row_32detect (GstFieldAnalysis * filter,
+    FieldAnalysisFields (*history)[2], guint8 * base_fj, guint8 * base_fjp1)
 {
   guint64 i, j;
   guint8 *comb_mask = filter->comb_mask;
   guint *block_scores = filter->block_scores;
   guint64 block_score;
   guint8 *fjm2, *fjm1, *fj, *fjp1;
-  const gint incr = filter->sample_incr;
-  const gint stridex2 = filter->line_stride << 1;
+  const gint incr = GST_VIDEO_FRAME_COMP_PSTRIDE (&(*history)[0].frame, 0);
+  const gint stridex2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
   const guint64 block_width = filter->block_width;
   const guint64 block_height = filter->block_height;
   const gint64 spatial_thresh = filter->spatial_thresh;
-  const gint width = filter->width - (filter->width % block_width);
+  const gint width =
+      GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame) -
+      (GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame) % block_width);
 
   fjm2 = base_fj - stridex2;
   fjm1 = base_fjp1 - stridex2;
@@ -1091,21 +1124,24 @@ block_score_for_row_32detect (GstFieldAnalysis * filter, guint8 * base_fj,
  * tritical's isCombedT Avisynth function
  * the return value is the highest block score for the row of blocks */
 static inline guint64
-block_score_for_row_iscombed (GstFieldAnalysis * filter, guint8 * base_fj,
-    guint8 * base_fjp1)
+block_score_for_row_iscombed (GstFieldAnalysis * filter,
+    FieldAnalysisFields (*history)[2], guint8 * base_fj, guint8 * base_fjp1)
 {
   guint64 i, j;
   guint8 *comb_mask = filter->comb_mask;
   guint *block_scores = filter->block_scores;
   guint64 block_score;
   guint8 *fjm1, *fj, *fjp1;
-  const gint incr = filter->sample_incr;
-  const gint stridex2 = filter->line_stride << 1;
+  const gint incr = GST_VIDEO_FRAME_COMP_PSTRIDE (&(*history)[0].frame, 0);
+  const gint stridex2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
   const guint64 block_width = filter->block_width;
   const guint64 block_height = filter->block_height;
   const gint64 spatial_thresh = filter->spatial_thresh;
   const gint64 spatial_thresh_squared = spatial_thresh * spatial_thresh;
-  const gint width = filter->width - (filter->width % block_width);
+  const gint width =
+      GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame) -
+      (GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame) % block_width);
 
   fjm1 = base_fjp1 - stridex2;
   fj = base_fj;
@@ -1176,21 +1212,25 @@ block_score_for_row_iscombed (GstFieldAnalysis * filter, guint8 * base_fj,
  * tritical's isCombedT Avisynth function
  * the return value is the highest block score for the row of blocks */
 static inline guint64
-block_score_for_row_5_tap (GstFieldAnalysis * filter, guint8 * base_fj,
-    guint8 * base_fjp1)
+block_score_for_row_5_tap (GstFieldAnalysis * filter,
+    FieldAnalysisFields (*history)[2], guint8 * base_fj, guint8 * base_fjp1)
 {
   guint64 i, j;
   guint8 *comb_mask = filter->comb_mask;
   guint *block_scores = filter->block_scores;
   guint64 block_score;
   guint8 *fjm2, *fjm1, *fj, *fjp1, *fjp2;
-  const gint incr = filter->sample_incr;
-  const gint stridex2 = filter->line_stride << 1;
+  const gint incr = GST_VIDEO_FRAME_COMP_PSTRIDE (&(*history)[0].frame, 0);
+  const gint stridex2 =
+      GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0) << 1;
   const guint64 block_width = filter->block_width;
   const guint64 block_height = filter->block_height;
   const gint64 spatial_thresh = filter->spatial_thresh;
   const gint64 spatial_threshx6 = 6 * spatial_thresh;
-  const gint width = filter->width - (filter->width % block_width);
+  const gint width =
+      GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame) -
+      (GST_VIDEO_FRAME_WIDTH (&(*history)[0].frame) % block_width);
+
 
   fjm2 = base_fj - stridex2;
   fjm1 = base_fjp1 - stridex2;
@@ -1290,32 +1330,42 @@ block_score_for_row_5_tap (GstFieldAnalysis * filter, guint8 * base_fj,
 /* 0th field's parity defines operation */
 static gfloat
 opposite_parity_windowed_comb (GstFieldAnalysis * filter,
-    FieldAnalysisFields * fields)
+    FieldAnalysisFields (*history)[2])
 {
   gint j;
   gboolean slightly_combed;
 
-  const gint y_offset = filter->data_offset;
-  const gint stride = filter->line_stride;
+  const gint height = GST_VIDEO_FRAME_HEIGHT (&(*history)[0].frame);
+  const gint stride = GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0);
   const guint64 block_thresh = filter->block_thresh;
   const guint64 block_height = filter->block_height;
   guint8 *base_fj, *base_fjp1;
 
-  if (fields[0].parity == TOP_FIELD) {
-    base_fj = GST_BUFFER_DATA (fields[0].buf) + y_offset;
-    base_fjp1 = GST_BUFFER_DATA (fields[1].buf) + y_offset + stride;
+  if ((*history)[0].parity == TOP_FIELD) {
+    base_fj =
+        GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame, 0);
+    base_fjp1 =
+        GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame,
+        0) + GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[1].frame, 0);
   } else {
-    base_fj = GST_BUFFER_DATA (fields[1].buf) + y_offset;
-    base_fjp1 = GST_BUFFER_DATA (fields[0].buf) + y_offset + stride;
+    base_fj =
+        GST_VIDEO_FRAME_COMP_DATA (&(*history)[1].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[1].frame, 0);
+    base_fjp1 =
+        GST_VIDEO_FRAME_COMP_DATA (&(*history)[0].frame,
+        0) + GST_VIDEO_FRAME_COMP_OFFSET (&(*history)[0].frame,
+        0) + GST_VIDEO_FRAME_COMP_STRIDE (&(*history)[0].frame, 0);
   }
 
   /* we operate on a row of blocks of height block_height through each iteration */
   slightly_combed = FALSE;
-  for (j = 0; j <= filter->height - filter->ignored_lines - block_height;
+  for (j = 0; j <= height - filter->ignored_lines - block_height;
       j += block_height) {
     guint64 line_offset = (filter->ignored_lines + j) * stride;
     guint block_score =
-        filter->block_score_for_row (filter, base_fj + line_offset,
+        filter->block_score_for_row (filter, history, base_fj + line_offset,
         base_fjp1 + line_offset);
 
     if (block_score > (block_thresh >> 1)
@@ -1323,11 +1373,8 @@ opposite_parity_windowed_comb (GstFieldAnalysis * filter,
       /* blend if nothing more combed comes along */
       slightly_combed = TRUE;
     } else if (block_score > block_thresh) {
-      GstCaps *caps = GST_BUFFER_CAPS (fields[0].buf);
-      GstStructure *struc = gst_caps_get_structure (caps, 0);
-      gboolean interlaced;
-      if (gst_structure_get_boolean (struc, "interlaced", &interlaced)
-          && interlaced == TRUE) {
+      if (GST_VIDEO_INFO_INTERLACE_MODE (&(*history)[0].frame.info) ==
+          GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
         return 1.0f;            /* blend */
       } else {
         return 2.0f;            /* deinterlace */
@@ -1365,39 +1412,39 @@ static GstBuffer *
 gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
     GstBuffer ** buf_to_queue)
 {
-  GQueue *queue;
-  guint n_queued;
   /* res0/1 correspond to f0/1 */
   FieldAnalysis *res0, *res1;
-  FieldAnalysisFields fields[2];
+  FieldAnalysisFields history[2];
   GstBuffer *outbuf = NULL;
 
-  queue = filter->frames;
+  /* move previous result to index 1 */
+  filter->frames[1] = filter->frames[0];
 
-  /* move previous result to res1 */
-  filter->results[1] = filter->results[0];
+  if (!gst_video_frame_map (&filter->frames[0].frame, &filter->vinfo,
+          *buf_to_queue, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (filter, "Failed to map buffer: %" GST_PTR_FORMAT,
+        *buf_to_queue);
+    return NULL;
+  }
+  filter->nframes++;
+  /* note that we have a ref and mapping the buffer takes a ref so to destroy a
+   * buffer we need to unmap it and unref it */
 
-  res0 = &filter->results[0];   /* results for current frame */
-  res1 = &filter->results[1];   /* results for previous frame */
+  res0 = &filter->frames[0].results;    /* results for current frame */
+  res1 = &filter->frames[1].results;    /* results for previous frame */
 
-  /* we have a ref on buf_to_queue when it is added to the queue */
-  g_queue_push_tail (queue, (gpointer) * buf_to_queue);
-  /* WARNING: buf_to_queue must not be used again!!! */
-  *buf_to_queue = NULL;
-
-  n_queued = g_queue_get_length (queue);
-
+  history[0].frame = filter->frames[0].frame;
   /* we do it like this because the first frame has no predecessor so this is
    * the only result we can get for it */
-  if (n_queued >= 1) {
+  if (filter->nframes >= 1) {
+    history[1].frame = filter->frames[0].frame;
+    history[0].parity = TOP_FIELD;
+    history[1].parity = BOTTOM_FIELD;
     /* compare the fields within the buffer, if the buffer exhibits combing it
      * could be interlaced or a mixed telecine frame */
-    fields[0].buf = fields[1].buf = g_queue_peek_tail (queue);
-    fields[0].parity = TOP_FIELD;
-    fields[1].parity = BOTTOM_FIELD;
-    res0->f = filter->same_frame (filter, fields);
+    res0->f = filter->same_frame (filter, &history);
     res0->t = res0->b = res0->t_b = res0->b_t = G_MAXINT64;
-    if (n_queued == 1)
+    if (filter->nframes == 1)
       GST_DEBUG_OBJECT (filter, "Scores: f %f, t , b , t_b , b_t ", res0->f);
     if (res0->f <= filter->frame_thresh) {
       res0->conclusion = FIELD_ANALYSIS_PROGRESSIVE;
@@ -1407,31 +1454,30 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
     res0->holding = -1;         /* needed fields unknown */
     res0->drop = FALSE;
   }
-
-  if (n_queued >= 2) {
+  if (filter->nframes >= 2) {
     guint telecine_matches;
     gboolean first_buffer = filter->first_buffer;
 
     filter->first_buffer = FALSE;
 
-    fields[1].buf = g_queue_peek_nth (queue, n_queued - 2);
+    history[1].frame = filter->frames[1].frame;
 
     /* compare the top and bottom fields to the previous frame */
-    fields[0].parity = TOP_FIELD;
-    fields[1].parity = TOP_FIELD;
-    res0->t = filter->same_field (filter, fields);
-    fields[0].parity = BOTTOM_FIELD;
-    fields[1].parity = BOTTOM_FIELD;
-    res0->b = filter->same_field (filter, fields);
+    history[0].parity = TOP_FIELD;
+    history[1].parity = TOP_FIELD;
+    res0->t = filter->same_field (filter, &history);
+    history[0].parity = BOTTOM_FIELD;
+    history[1].parity = BOTTOM_FIELD;
+    res0->b = filter->same_field (filter, &history);
 
     /* compare the top field from this frame to the bottom of the previous for
      * for combing (and vice versa) */
-    fields[0].parity = TOP_FIELD;
-    fields[1].parity = BOTTOM_FIELD;
-    res0->t_b = filter->same_frame (filter, fields);
-    fields[0].parity = BOTTOM_FIELD;
-    fields[1].parity = TOP_FIELD;
-    res0->b_t = filter->same_frame (filter, fields);
+    history[0].parity = TOP_FIELD;
+    history[1].parity = BOTTOM_FIELD;
+    res0->t_b = filter->same_frame (filter, &history);
+    history[0].parity = BOTTOM_FIELD;
+    history[1].parity = TOP_FIELD;
+    res0->b_t = filter->same_frame (filter, &history);
 
     GST_DEBUG_OBJECT (filter,
         "Scores: f %f, t %f, b %f, t_b %f, b_t %f", res0->f,
@@ -1673,21 +1719,18 @@ gst_field_analysis_process_buffer (GstFieldAnalysis * filter,
       break;
   }
 
-  GST_DEBUG_OBJECT (filter, "Items remaining in the queue: %d",
-      g_queue_get_length (queue));
-
   return outbuf;
 }
 
 /* we have a ref on buf when it comes into chain */
 static GstFlowReturn
-gst_field_analysis_chain (GstPad * pad, GstBuffer * buf)
+gst_field_analysis_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstFieldAnalysis *filter;
   GstBuffer *outbuf = NULL;
 
-  filter = GST_FIELDANALYSIS (GST_OBJECT_PARENT (pad));
+  filter = GST_FIELDANALYSIS (parent);
 
   GST_OBJECT_LOCK (filter);
   if (filter->flushing) {
@@ -1716,7 +1759,7 @@ gst_field_analysis_chain (GstPad * pad, GstBuffer * buf)
       }
     }
 
-    gst_field_analysis_empty_queue (filter);
+    gst_field_analysis_clear_frames (filter);
 
     if (ret != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (filter,
@@ -1789,7 +1832,6 @@ gst_field_analysis_finalize (GObject * object)
   GstFieldAnalysis *filter = GST_FIELDANALYSIS (object);
 
   gst_field_analysis_reset (filter);
-  g_queue_free (filter->frames);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

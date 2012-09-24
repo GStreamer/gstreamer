@@ -61,6 +61,7 @@ G_BEGIN_DECLS
 typedef struct _GstFieldAnalysis GstFieldAnalysis;
 typedef struct _GstFieldAnalysisClass GstFieldAnalysisClass;
 typedef struct _FieldAnalysisFields FieldAnalysisFields;
+typedef struct _FieldAnalysisHistory FieldAnalysisHistory;
 typedef struct _FieldAnalysis FieldAnalysis;
 
 typedef enum
@@ -78,12 +79,6 @@ enum FieldParity
   BOTH_FIELDS
 };
 
-struct _FieldAnalysisFields
-{
-  GstBuffer *buf;
-  gboolean parity;
-};
-
 struct _FieldAnalysis
 {
   /* frame, top, bottom, top with prev bottom, bottom with prev top */
@@ -92,6 +87,18 @@ struct _FieldAnalysis
   /* -1 - unknown; 0 - holding none; 1 - top field; 2 - bottom field; 3 - both */
   gint holding;
   gboolean drop;
+};
+
+struct _FieldAnalysisFields
+{
+  GstVideoFrame frame;
+  gboolean parity;
+};
+
+struct _FieldAnalysisHistory
+{
+  GstVideoFrame frame;
+  FieldAnalysis results;
 };
 
 typedef enum
@@ -107,15 +114,12 @@ struct _GstFieldAnalysis
 
   GstPad *sinkpad, *srcpad;
 
-  GQueue *frames;
-  gint width, height;
-  gint data_offset;
-  gint line_stride; /* step size in bytes from the 0th sample of one line to the next */
-  gint sample_incr; /* step size in bytes from one sample to the next */
-  FieldAnalysis results[2];
-  gfloat (*same_field) (GstFieldAnalysis *, FieldAnalysisFields *);
-  gfloat (*same_frame) (GstFieldAnalysis *, FieldAnalysisFields *);
-  guint64 (*block_score_for_row) (GstFieldAnalysis *, guint8 *, guint8 *);
+  guint nframes;
+  FieldAnalysisHistory frames[2];
+  GstVideoInfo vinfo;
+  gfloat (*same_field) (GstFieldAnalysis *, FieldAnalysisFields (*)[2]);
+  gfloat (*same_frame) (GstFieldAnalysis *, FieldAnalysisFields (*)[2]);
+  guint64 (*block_score_for_row) (GstFieldAnalysis *, FieldAnalysisFields (*)[2], guint8 *, guint8 *);
   gboolean is_telecine;
   gboolean first_buffer; /* indicates the first buffer for which a buffer will be output
                           * after a discont or flushing seek */
