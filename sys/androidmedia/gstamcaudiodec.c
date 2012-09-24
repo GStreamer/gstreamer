@@ -180,6 +180,16 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
       gst_caps_append_structure (ret, tmp);
+    } else if (strcmp (type->mime, "audio/mpeg-L2") == 0) {
+      GstStructure *tmp;
+
+      tmp = gst_structure_new ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 1,
+          "layer", G_TYPE_INT, 2,
+          "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_caps_append_structure (ret, tmp);
     } else {
       GST_WARNING ("Unsupported mimetype '%s'", type->mime);
     }
@@ -206,10 +216,16 @@ caps_to_mime (GstCaps * caps)
     if (!gst_structure_get_int (s, "mpegversion", &mpegversion))
       return NULL;
 
-    if (mpegversion == 1)
-      return "audio/mpeg";
-    else if (mpegversion == 2 || mpegversion == 4)
+    if (mpegversion == 1) {
+      gint layer;
+
+      if (!gst_structure_get_int (s, "layer", &layer) || layer == 3)
+        return "audio/mpeg";
+      else if (layer == 2)
+        return "audio/mpeg-L2";
+    } else if (mpegversion == 2 || mpegversion == 4) {
       return "audio/mp4a-latm";
+    }
   } else if (strcmp (name, "audio/AMR") == 0) {
     return "audio/3gpp";
   } else if (strcmp (name, "audio/AMR-WB") == 0) {
