@@ -700,8 +700,7 @@ class TimelineWidget (gtk.DrawingArea):
 
     def __have_position (self):
 
-        if ((self.__position_ts_range is not None) and
-            (self.process is not None) and
+        if ((self.process is not None) and
             (self.process.freq_sentinel is not None) and
             (self.process.freq_sentinel.ts_range is not None)):
             return True
@@ -725,7 +724,7 @@ class TimelineWidget (gtk.DrawingArea):
 
     def __draw_position (self, drawable, clip = None):
 
-        if not self.__have_position ():
+        if not self.__have_position () or self.__position_ts_range is None:
             return
 
         start_ts, end_ts = self.__position_ts_range
