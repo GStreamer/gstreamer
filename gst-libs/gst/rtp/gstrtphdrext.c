@@ -131,8 +131,8 @@ gst_rtp_hdrext_get_ntp_56 (gpointer data, guint size, guint64 * ntptime)
 
     *ntptime = 0;
     for (i = 0; i < 7; i++) {
-      *ntptime |= d[6 - i];
       *ntptime <<= 8;
+      *ntptime |= d[i];
     }
   }
   return TRUE;
