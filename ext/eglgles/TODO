@@ -1,7 +1,7 @@
-- Correctly handle upstream surface region size changes
+- Correctly handle upstream surface region size changes. Test and debug
+  set_render_rect
 - Make sure we are considering DAR on all scaling/rendering cases
 - Test and debug caps renegotiation
-- Test and debug set_render_rect
 - Drop android specifics like the default window h/w
 - Move EGL/GLES context to it's own struct. Proly move GLSL stuff to it's
   own header too
