@@ -836,10 +836,17 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
       mix->fill_color (&outframe, 240, 128, 128);
       break;
     case VIDEO_MIXER2_BACKGROUND_TRANSPARENT:
-      gst_buffer_memset (*outbuf, 0, 0, outsize);
+    {
+      guint i, num_maps;
+
+      num_maps = (outframe.meta) ? GST_VIDEO_FRAME_N_PLANES (&outframe) : 1;
+      for (i = 0; i < num_maps; ++i)
+        memset (outframe.map[i].data, 0, outframe.map[i].size);
+
       /* use overlay to keep background transparent */
       composite = mix->overlay;
       break;
+    }
   }
 
   for (l = mix->sinkpads; l; l = l->next) {

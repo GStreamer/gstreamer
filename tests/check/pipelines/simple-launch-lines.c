@@ -220,7 +220,8 @@ GST_START_TEST (test_rtp_payloaders)
   /*s = FAKESRC " ! ! rtpsv3vdepay ! " FAKESINK; */
 }
 
-GST_END_TEST
+GST_END_TEST;
+
 GST_START_TEST (test_video_encoders_decoders)
 {
   const gchar *s;
@@ -253,7 +254,26 @@ GST_START_TEST (test_video_encoders_decoders)
   }
 }
 
-GST_END_TEST
+GST_END_TEST;
+
+#define VIDEOMIXER_PIPELINE \
+    "videomixer name=mix  background=transparent ! fakesink " \
+    "videotestsrc num-buffers=50 ! " \
+    "  video/x-raw,format=RGBA, width=200,height=200,framerate=10/1  ! " \
+    "  videoconvert ! mix.sink_1 " \
+    "videotestsrc num-buffers=50 pattern=smpte ! " \
+    "  video/x-raw,format=RGBA, width=720,height=480,framerate=10/1  ! " \
+    "  videoconvert ! mix.sink_0 "
+
+GST_START_TEST (test_videomixer)
+{
+  run_pipeline (setup_pipeline (VIDEOMIXER_PIPELINE), VIDEOMIXER_PIPELINE,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, GST_STATE_PLAYING);
+}
+
+GST_END_TEST;
+
 #endif /* #ifndef GST_DISABLE_PARSE */
 static Suite *
 simple_launch_lines_suite (void)
@@ -268,6 +288,8 @@ simple_launch_lines_suite (void)
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_rtp_payloaders);
   tcase_add_test (tc_chain, test_video_encoders_decoders);
+  /* FIXME: very rarely fails, maybe because of negotiation issues? */
+  tcase_skip_broken_test (tc_chain, test_videomixer);
 #endif
   return s;
 }
