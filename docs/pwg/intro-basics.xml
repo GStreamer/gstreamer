@@ -39,7 +39,7 @@
       processes a stream of data. Producers and consumers of data are called
       <emphasis>source</emphasis> and <emphasis>sink</emphasis> elements,
       respectively. <emphasis>Bin</emphasis> elements contain other elements.
-      One type of bin is responsible for scheduling the elements that they
+      One type of bin is responsible for synchronization of the elements that they
       contain so that data flows smoothly. Another type of bin, called
       <emphasis>autoplugger</emphasis> elements, automatically add other
       elements to the bin and links them together so that they act as a
@@ -49,10 +49,10 @@
       The plugin mechanism is used everywhere in &GStreamer;, even if only the
       standard packages are being used. A few very basic functions reside in the
       core library, and all others are implemented in plugins. A plugin registry
-      is used to store the details of the plugins in an XML file. This way, a
-      program using &GStreamer; does not have to load all plugins to determine
-      which are needed. Plugins are only loaded when their provided elements are
-      requested.
+      is used to store the details of the plugins in an binary registry file.
+      This way, a program using &GStreamer; does not have to load all plugins to
+      determine which are needed. Plugins are only loaded when their provided
+      elements are requested.
     </para>
     <para>
       See the &GstLibRef; for the current implementation details of <ulink
@@ -105,35 +105,35 @@
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-basics-data" xreflabel="Data, Buffers and Events">
-    <title>Data, Buffers and Events</title>
+    <title>GstMiniObject, Buffers and Events</title>
     <para>
       All streams of data in &GStreamer; are chopped up into chunks that are
       passed from a source pad on one element to a sink pad on another element.
-      <emphasis>Data</emphasis> are structures used to hold these chunks of
-      data.
+      <emphasis>GstMiniObject</emphasis> is the structure used to hold these
+      chunks of data.
     </para>
     <para>
-      Data contains the following important types:
+      GstMiniObject contains the following important types:
       <itemizedlist>
         <listitem>
           <para>
-            An exact type indicating what type of data (control, content, ...)
-            this Data is.
+            An exact type indicating what type of data (event, buffer, ...)
+            this GstMiniObject is.
           </para>
         </listitem>
         <listitem>
           <para>
             A reference count indicating the number of elements currently
-            holding a reference to the buffer. When the buffer reference count
-            falls to zero, the buffer will be unlinked, and its memory will be
+            holding a reference to the miniobject. When the reference count
+            falls to zero, the miniobject will be disposed, and its memory will be
             freed in some sense (see below for more details).
           </para>
         </listitem>
       </itemizedlist>
     </para>
     <para>
-      There are two types of data defined: events (control) and buffers
-      (content).
+      For data transport, there are two types of GstMiniObject defined:
+      events (control) and buffers (content).
     </para>
     <para>
       Buffers may contain any sort of data that the two linked pads
@@ -146,12 +146,8 @@
       <itemizedlist>
         <listitem>
           <para>
-            A pointer to the buffer's data.
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-            An integer indicating the size of the buffer's data.
+            Pointers to one or more GstMemory objects. GstMemory objects are
+            refcounted objects that encapsulate a region of memory.
           </para>
         </listitem>
         <listitem>
@@ -167,7 +163,7 @@
       contain information on the state of the stream flowing between the two
       linked pads. Events will only be sent if the element explicitly supports
       them, else the core will (try to) handle the events automatically. Events
-      are used to indicate, for example, a clock discontinuity, the end of a
+      are used to indicate, for example, a media type, the end of a
       media stream or that the cache should be flushed.
     </para>
     <para>
@@ -220,21 +216,16 @@
       </para>
       <para>
         Another way an element might get specialized buffers is to
-	request them from a downstream peer.  These are called
-	downstream-allocated buffers.  Elements can ask a
-	peer connected to a source pad to create an empty buffer of
-	a given size.  If a downstream element is able to create a
-	special buffer of the correct size, it will do so.  Otherwise
-	&GStreamer; will automatically create a generic buffer instead.
-	The element that requested the buffer can then copy data into
-	the buffer, and push the buffer to the source pad it was
-	allocated from.
+        request them from a downstream peer through a GstBufferPool or
+        GstAllocator.  Elements can ask a GstBufferPool or GstAllocator
+        from the downstream peer element. If downstream is able to provide
+        these objects, upstream can use them to allocate buffers.
       </para>
       <para>
         Many sink elements have accelerated methods for copying data
 	to hardware, or have direct access to hardware.  It is common
-	for these elements to be able to create downstream-allocated
-	buffers for their upstream peers.  One such example is
+        for these elements to be able to create a GstBufferPool or 
+        GstAllocator for their upstream peers.  One such example is
 	ximagesink.  It creates buffers that contain XImages.  Thus,
 	when an upstream peer copies data into the buffer, it is copying
 	directly into the XImage, enabling ximagesink to draw the
@@ -256,7 +247,7 @@
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-basics-types" xreflabel="Types and Properties">
-    <title>Mimetypes and Properties</title>
+    <title>Media types and Properties</title>
     <para>
       &GStreamer; uses a type system to ensure that the data passed between
       elements is in a recognized format. The type system is also important
@@ -273,7 +264,7 @@
       <para>
         &GStreamer; already supports many basic media types. Following is a
         table of a few of the basic types used for buffers in
-        &GStreamer;. The table contains the name ("mime type") and a
+        &GStreamer;. The table contains the name ("media type") and a
         description of the type, the properties associated with the type, and
         the meaning of each property. A full list of supported types is
         included in <xref linkend="section-types-definitions"/>.
@@ -285,7 +276,7 @@
 
         <thead>
           <row>
-            <entry>Mime Type</entry>
+            <entry>Media Type</entry>
             <entry>Description</entry>
             <entry>Property</entry>
             <entry>Property Type</entry>

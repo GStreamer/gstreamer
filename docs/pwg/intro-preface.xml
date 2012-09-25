@@ -23,7 +23,7 @@
       The pipeline design is made to have little overhead above what the
       applied filters induce. This makes &GStreamer; a good framework for
       designing even high-end audio applications which put high demands on
-      latency. 
+      latency or performance. 
     </para> 
 
     <para>
@@ -40,15 +40,13 @@
     <para>
       The framework is based on plugins that will provide the various codec 
       and other functionality. The plugins can be linked and arranged in
-      a pipeline. This pipeline defines the flow of the data. Pipelines can 
-      also be edited with a GUI editor and saved as XML so that pipeline
-      libraries can be made with a minimum of effort.
+      a pipeline. This pipeline defines the flow of the data.
     </para> 
 
     <para>
       The &GStreamer; core function is to provide a framework for plugins,
-      data flow and media type handling/negotiation. It also provides an
-      API to write applications using the various plugins.
+      data flow, synchronization and media type handling/negotiation. It
+      also provides an API to write applications using the various plugins.
     </para> 
   </sect1>
 
@@ -289,7 +287,7 @@
       </listitem>
       <listitem>
         <para>
-          Adding new mime-types to the registry along with typedetect functions.
+          Adding new media types to the registry along with typedetect functions.
           This will allow your plugin to operate on a completely new media type.
         </para>
       </listitem>
