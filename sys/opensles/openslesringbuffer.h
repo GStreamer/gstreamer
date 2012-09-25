@@ -84,7 +84,6 @@ struct _GstOpenSLESRingBuffer
 
   /* buffer queue */
   SLAndroidSimpleBufferQueueItf bufferQueue;
-  gint last_clearseg;
 
   /* vmethods */
   AcquireFunc acquire;

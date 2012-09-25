@@ -102,27 +102,24 @@ _opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
       (spec->bigend ? SL_BYTEORDER_BIGENDIAN : SL_BYTEORDER_LITTLEENDIAN);
 }
 
-/* Recorder related functions */
-
 static void
-_opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
+_opensles_enqueue_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
   GstRingBuffer *rb = GST_RING_BUFFER_CAST (context);
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
-  guint8 *writeptr;
-  gint writeseg;
+  guint8 *ptr;
+  gint seg;
   gint len;
 
-  if (!gst_ring_buffer_prepare_read (rb, &writeseg, &writeptr, &len)) {
+  if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
     return;
   }
 
   /* Enqueue a buffer */
-  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d",
-      writeptr, len, writeseg);
-  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, writeptr, len);
+  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d", ptr, len, seg);
+  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, ptr, len);
 
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "bufferQueue.Enqueue failed(0x%08x)",
@@ -132,6 +129,8 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 
   gst_ring_buffer_advance (rb, 1);
 }
+
+/* Recorder related functions */
 
 static gboolean
 _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
@@ -198,7 +197,7 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Register callback on the buffer queue */
   result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
-      _opensles_recorder_cb, rb);
+      _opensles_enqueue_cb, rb);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
         (guint32) result);
@@ -236,8 +235,8 @@ _opensles_recorder_start (GstRingBuffer * rb)
     return FALSE;
   }
 
-  _opensles_recorder_cb (NULL, rb);
-  _opensles_recorder_cb (NULL, rb);
+  _opensles_enqueue_cb (NULL, rb);
+  _opensles_enqueue_cb (NULL, rb);
 
   /* start recording */
   result =
@@ -269,44 +268,6 @@ _opensles_recorder_stop (GstRingBuffer * rb)
 }
 
 /* Player related functions */
-
-static void
-_opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
-{
-  GstRingBuffer *rb = GST_RING_BUFFER_CAST (context);
-  GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
-  SLresult result;
-  guint8 *readptr;
-  gint readseg;
-  gint len;
-
-  if (!gst_ring_buffer_prepare_read (rb, &readseg, &readptr, &len)) {
-    GST_WARNING_OBJECT (rb, "The sink is starving");
-    return;
-  }
-
-  /* Enqueue a buffer */
-  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d",
-      readptr, len, readseg);
-  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, readptr, len);
-
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "bufferQueue.Enqueue failed(0x%08x)",
-        (guint32) result);
-    return;
-  }
-
-  if (G_UNLIKELY (thiz->last_clearseg < 0)) {
-    thiz->last_clearseg++;
-  } else {
-    GST_LOG_OBJECT (thiz, "clear segment %d", thiz->last_clearseg);
-    /* Clear written samples */
-    gst_ring_buffer_clear (rb, thiz->last_clearseg);
-    thiz->last_clearseg = (thiz->last_clearseg + 1) % rb->spec.segtotal;
-    /* We wrote one segment */
-  }
-  gst_ring_buffer_advance (rb, 1);
-}
 
 static gboolean
 _opensles_player_change_volume (GstRingBuffer * rb)
@@ -414,7 +375,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Register callback on the buffer queue */
   result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
-      _opensles_player_cb, rb);
+      _opensles_enqueue_cb, rb);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
         (guint32) result);
@@ -437,7 +398,6 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
   spec->segsize = (spec->rate * spec->bytes_per_sample) >> 2;
   spec->segtotal = 16;
-  thiz->last_clearseg = 1 - spec->segtotal;
 
   return TRUE;
 
@@ -461,8 +421,8 @@ _opensles_player_start (GstRingBuffer * rb)
   }
 
   /* Fill the queue by enqueing two buffers */
-  _opensles_player_cb (NULL, rb);
-  _opensles_player_cb (NULL, rb);
+  _opensles_enqueue_cb (NULL, rb);
+  _opensles_enqueue_cb (NULL, rb);
   return TRUE;
 }
 
