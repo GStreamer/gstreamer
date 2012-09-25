@@ -38,6 +38,9 @@ _do_init (GType type)
 GST_BOILERPLATE_FULL (GstOpenSLESRingBuffer, gst_opensles_ringbuffer,
     GstRingBuffer, GST_TYPE_RING_BUFFER, _do_init);
 
+#define PLAYER_QUEUE_SIZE 2
+#define RECORDER_QUEUE_SIZE 2
+
 /* Some generic helper functions */
 
 static inline SLuint32
@@ -148,7 +151,7 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Configure audio sink */
   SLDataLocator_AndroidSimpleBufferQueue loc_bq = {
-    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, RECORDER_QUEUE_SIZE
   };
   SLDataSink audioSink = { &loc_bq, &format };
 
@@ -219,6 +222,7 @@ _opensles_recorder_start (GstRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
+  gint i;
 
   /* in case already recording, stop recording and clear buffer queue */
   result =
@@ -235,8 +239,10 @@ _opensles_recorder_start (GstRingBuffer * rb)
     return FALSE;
   }
 
-  _opensles_enqueue_cb (NULL, rb);
-  _opensles_enqueue_cb (NULL, rb);
+  /* Fill the queue by enqueing buffers */
+  for (i = 0; i < RECORDER_QUEUE_SIZE; i++) {
+    _opensles_enqueue_cb (NULL, rb);
+  }
 
   /* start recording */
   result =
@@ -322,7 +328,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Configure audio source */
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
-    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, PLAYER_QUEUE_SIZE
   };
   SLDataSource audioSrc = { &loc_bufq, &format };
 
@@ -396,8 +402,8 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   _opensles_player_change_mute (rb);
 
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
-  spec->segsize = (spec->rate * spec->bytes_per_sample) >> 2;
-  spec->segtotal = 16;
+  spec->segsize = (spec->rate >> 4) * spec->bytes_per_sample;
+  spec->segtotal = 2 << 4;
 
   return TRUE;
 
@@ -410,6 +416,12 @@ _opensles_player_start (GstRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
+  gint i;
+
+  /* Fill the queue by enqueing buffers */
+  for (i = 0; i < PLAYER_QUEUE_SIZE; i++) {
+    _opensles_enqueue_cb (NULL, rb);
+  }
 
   result =
       (*thiz->playerPlay)->SetPlayState (thiz->playerPlay,
@@ -420,9 +432,6 @@ _opensles_player_start (GstRingBuffer * rb)
     return FALSE;
   }
 
-  /* Fill the queue by enqueing two buffers */
-  _opensles_enqueue_cb (NULL, rb);
-  _opensles_enqueue_cb (NULL, rb);
   return TRUE;
 }
 
