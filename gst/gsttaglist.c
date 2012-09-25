@@ -316,7 +316,7 @@ _priv_gst_tag_initialize (void)
           "or produced"), NULL);
   gst_tag_register_static (GST_TAG_GEO_LOCATION_SUBLOCATION, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("geo location sublocation"),
-      _("a location whithin a city where the media has been produced "
+      _("a location within a city where the media has been produced "
           "or created (e.g. the neighborhood)"), NULL);
   gst_tag_register_static (GST_TAG_GEO_LOCATION_HORIZONTAL_ERROR,
       GST_TAG_FLAG_META, G_TYPE_DOUBLE, _("geo location horizontal error"),
