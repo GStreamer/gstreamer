@@ -60,13 +60,15 @@ struct _GstGLUpload
   GLuint           depth_buffer;
   GLuint           out_texture;
   GLuint           in_texture[GST_VIDEO_MAX_PLANES];
+  guint            in_width;
+  guint            in_height;
   GstGLShader     *shader;
 #ifdef OPENGL_ES2
   GLint            shader_attr_position_loc;
   GLint            shader_attr_texture_loc;
 #endif
 
-  /* output data */
+  /* input data */
   GstVideoInfo    info;
 
   /* <private> */
@@ -90,9 +92,11 @@ struct _GstGLUploadClass
 GstGLUpload * gst_gl_upload_new            (GstGLDisplay * display);
 
 gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoFormat v_format,
-                                            guint width, guint height);
+                                            guint in_width, guint in_height,
+                                            guint out_width, guint out_height);
 gboolean gst_gl_upload_init_format_thread  (GstGLUpload * upload, GstVideoFormat v_format,
-                                            guint width, guint height);
+                                            guint in_width, guint in_height,
+                                            guint out_width, guint out_height);
 
 gboolean gst_gl_upload_perform_with_memory        (GstGLUpload * upload, GstGLMemory * gl_mem);
 gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint texture_id,
@@ -101,10 +105,12 @@ gboolean gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload, GstGLMe
 gboolean gst_gl_upload_perform_with_data_thread   (GstGLUpload * upload, GLuint texture_id,
                                                    gpointer data[GST_VIDEO_MAX_PLANES]);
 
-GstGLUpload * gst_gl_display_find_upload        (GstGLDisplay * display, GstVideoFormat v_format,
-                                                 guint width, guint height);
-GstGLUpload * gst_gl_display_find_upload_thread (GstGLDisplay * display, GstVideoFormat v_format,
-                                                 guint width, guint height);
+GstGLUpload * gst_gl_display_find_upload          (GstGLDisplay * display, GstVideoFormat v_format,
+                                                   guint in_width, guint in_height,
+                                                   guint out_width, guint out_height);
+GstGLUpload * gst_gl_display_find_upload_unlocked (GstGLDisplay * display, GstVideoFormat v_format,
+                                                   guint in_width, guint in_height,
+                                                   guint out_width, guint out_height);
 
 G_END_DECLS
 
