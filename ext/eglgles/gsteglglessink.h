@@ -63,28 +63,27 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_EGLGLESSINK))
 #define GST_IS_EGLGLESSINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_EGLGLESSINK))
-
 #define GST_EGLGLESSINK_IMAGE_NOFMT 0
 #define GST_EGLGLESSINK_IMAGE_RGB888 1
 #define GST_EGLGLESSINK_IMAGE_RGB565 2
-#define GST_EGLGLESSINK_IMAGE_RGBA8888 3 
-
+#define GST_EGLGLESSINK_IMAGE_RGBA8888 3
 #define GST_EGLGLESSINK_EGL_MIN_VERSION 1
-
 typedef struct _GstEglGlesBuffer GstEglGlesBuffer;
 typedef struct _GstEglGlesBufferClass GstEglGlesBufferClass;
 
 typedef struct _GstEglGlesSink GstEglGlesSink;
 typedef struct _GstEglGlesSinkClass GstEglGlesSinkClass;
+typedef struct _GstEglGlesRenderContext GstEglGlesRenderContext;
 
 typedef struct _GstEglGlesImageFmt GstEglGlesImageFmt;
 
 /* Should be extended when new rendering methods
  *   get implemented.
  */
-typedef enum {
-    GST_EGLGLESSINK_RENDER_SLOW,
-    GST_EGLGLESSINK_RENDER_FAST
+typedef enum
+{
+  GST_EGLGLESSINK_RENDER_SLOW,
+  GST_EGLGLESSINK_RENDER_FAST
 } GstEglGlesSinkRenderingPath;
 
 typedef struct _coord2
@@ -100,11 +99,33 @@ typedef struct _coord3
   float z;
 } coord3;
 
+struct _GstEglGlesRenderContext
+{
+  EGLConfig config;
+  EGLContext eglcontext;
+  EGLDisplay display;
+  EGLNativeWindowType window, used_window;
+  EGLSurface surface;
+  GLuint fragshader, vertshader, glslprogram;
+  GLuint texture[3];
+  EGLint surface_width;
+  EGLint surface_height;
+  gint n_textures;
+
+  /* shader vars */
+  GLuint coord_pos, tex_pos;
+  GLuint tex_uniform[3];
+  coord3 coordarray[4];
+  coord2 texarray[4];
+  unsigned short indexarray[4];
+  unsigned int vdata, tdata, idata;
+};
+
 struct _GstEglGlesImageFmt
 {
-  gint fmt;              /* Private identifier */
-  const EGLint *attribs; /* EGL Attributes */
-  GstCaps *caps;         /* Matching caps for the attribs */
+  gint fmt;                     /* Private identifier */
+  const EGLint *attribs;        /* EGL Attributes */
+  GstCaps *caps;                /* Matching caps for the attribs */
 };
 
 /* XXX: Maybe use GstVideoRectangle for the image data? */
@@ -126,21 +147,14 @@ struct _GstEglGlesSink
   GstVideoFormat format;
   GstCaps *current_caps;
 
+  GstEglGlesRenderContext *eglglesctx;
+
   GstVideoRectangle display_region;
   GList *supported_fmts;
   GstEglGlesImageFmt *selected_fmt;
   GstCaps *sinkcaps;
 
   GMutex *flow_lock;
-
-  EGLConfig config;
-  EGLContext context;
-  EGLDisplay display;
-  EGLNativeWindowType window, used_window;
-  EGLSurface surface;
-  GLuint fragshader, vertshader, program;
-  GLuint texture[3];
-  gint n_textures;
 
   gboolean have_window;
   gboolean using_own_window;
@@ -151,14 +165,6 @@ struct _GstEglGlesSink
 
   GstEglGlesSinkRenderingPath rendering_path;
 
-  /* shader vars */
-  GLuint coord_pos, tex_pos;
-  GLuint tex_uniform[3];
-  coord3 coordarray[4];
-  coord2 texarray[4];
-  unsigned short indexarray[4];
-  unsigned int vdata, tdata, idata;
-
   /* props */
   gboolean silent;
   gboolean can_create_window;
@@ -166,8 +172,6 @@ struct _GstEglGlesSink
   gboolean keep_aspect_ratio;
   gint window_default_width;
   gint window_default_height;
-  EGLint surface_width;
-  EGLint surface_height;
 };
 
 struct _GstEglGlesSinkClass
