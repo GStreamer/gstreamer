@@ -307,6 +307,9 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
       news = gst_event_new_segment (&segment);
 
       gst_pad_event_default (trans->sinkpad, GST_OBJECT_CAST (trans), news);
+    } else {
+      /* need to track segment for proper running time */
+      gst_event_copy_segment (event, &trans->segment);
     }
   }
 
