@@ -1259,7 +1259,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_LOG_OBJECT (encoder,
       "received buffer of size %" G_GSIZE_FORMAT " with PTS %" GST_TIME_FORMAT
-      ", PTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      ", DTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
       gst_buffer_get_size (buf), GST_TIME_ARGS (pts), GST_TIME_ARGS (dts),
       GST_TIME_ARGS (duration));
 
@@ -1275,7 +1275,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     stop = GST_CLOCK_TIME_NONE;
 
   /* Drop buffers outside of segment */
-  if (!gst_segment_clip (&encoder->output_segment,
+  if (!gst_segment_clip (&encoder->input_segment,
           GST_FORMAT_TIME, start, stop, &cstart, &cstop)) {
     GST_DEBUG_OBJECT (encoder, "clipping to segment dropped frame");
     gst_buffer_unref (buf);
