@@ -1439,6 +1439,15 @@ gst_deinterlace_get_pattern_lock (GstDeinterlace * self, gboolean * flush_one)
   self->output_count = 0;
   self->pattern_lock = TRUE;
 
+  for (i = 0; i < telecine_patterns[pattern].length; i++) {
+    gint state_idx =
+        self->low_latency ? (self->history_count - 1) >> 1 : self->state_count -
+        1;
+    state_idx -= i;
+    GST_LOG_OBJECT (self, "buf[%d] %s", i,
+        STATE_TO_STRING (self->buf_states[state_idx].state));
+  }
+
   /* check for the case that the first field of the pattern is an orphan */
   if (pattern > 1
       && telecine_patterns[pattern].states[phase] & (GST_ONE | GST_INT)) {
