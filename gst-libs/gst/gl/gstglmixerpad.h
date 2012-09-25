@@ -61,9 +61,10 @@ struct _GstGLMixerPad
   GstPad parent;                /* subclass the pad */
 
   /* <private> */
+  GstGLUpload *upload;
   GstVideoInfo in_info;
   guint in_tex_id;
-  gboolean uploaded;
+  gboolean mapped;
 
   GstGLMixerCollect *mixcol;
 };
