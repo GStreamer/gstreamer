@@ -1094,6 +1094,8 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
   GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
   GstGLMixerPrivate *priv = mix->priv;
   GstVideoInfo info;
+  guint out_width, out_height;
+  GstVideoFormat out_format;
   gboolean ret = TRUE;
 
   GST_INFO_OBJECT (mix, "set src caps: %" GST_PTR_FORMAT, caps);
@@ -1116,29 +1118,26 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 
   mix->out_info = info;
 
-  GST_GL_MIXER_UNLOCK (mix);
+  out_format = GST_VIDEO_INFO_FORMAT (&mix->out_info);
+  out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
-  if (!gst_gl_display_gen_fbo (mix->display,
-          GST_VIDEO_INFO_WIDTH (&mix->out_info),
-          GST_VIDEO_INFO_HEIGHT (&mix->out_info), &mix->fbo, &mix->depthbuffer))
+  if (!gst_gl_display_gen_fbo (mix->display, out_width, out_height,
+          &mix->fbo, &mix->depthbuffer))
     goto display_error;
 
   mix->download = gst_gl_display_find_download (mix->display,
-      GST_VIDEO_INFO_FORMAT (&mix->out_info),
-      GST_VIDEO_INFO_WIDTH (&mix->out_info),
-      GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+      out_format, out_width, out_height);
 
-  gst_gl_download_init_format (mix->download,
-      GST_VIDEO_INFO_FORMAT (&mix->out_info),
-      GST_VIDEO_INFO_WIDTH (&mix->out_info),
-      GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+  gst_gl_download_init_format (mix->download, out_format, out_width,
+      out_height);
 
   if (mix->out_tex_id)
     gst_gl_display_del_texture (mix->display, &mix->out_tex_id);
   gst_gl_display_gen_texture (mix->display, &mix->out_tex_id,
-      GST_VIDEO_INFO_FORMAT (&mix->out_info),
-      GST_VIDEO_INFO_WIDTH (&mix->out_info),
-      GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
+
+  GST_GL_MIXER_UNLOCK (mix);
 
   if (mixer_class->set_caps)
     mixer_class->set_caps (mix, caps);
@@ -1482,38 +1481,42 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
       if (!gst_video_frame_map (in_frame, &pad->in_info, mixcol->buffer,
               GST_MAP_READ | GST_MAP_GL)) {
-        break;
+        ++array_index;
+        continue;
       }
 
       if (gst_is_gl_memory (in_frame->map[0].memory)) {
         in_tex = *(guint *) in_frame->data[0];
       } else {
-        GstGLUpload *upload;
+        GstVideoFormat in_format;
+        guint in_width, in_height, out_width, out_height;
 
         GST_DEBUG ("Input buffer:%p does not contain correct memory, "
             "attempting to wrap for upload", mixcol->buffer);
 
-        upload = gst_gl_display_find_upload (mix->display,
-            GST_VIDEO_FRAME_FORMAT (in_frame),
-            GST_VIDEO_FRAME_WIDTH (in_frame),
-            GST_VIDEO_FRAME_HEIGHT (in_frame));
+        in_format = GST_VIDEO_INFO_FORMAT (&pad->in_info);
+        in_width = GST_VIDEO_INFO_WIDTH (&pad->in_info);
+        in_height = GST_VIDEO_INFO_HEIGHT (&pad->in_info);
+        out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
+        out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
-        gst_gl_upload_init_format (upload,
-            GST_VIDEO_FRAME_FORMAT (in_frame),
-            GST_VIDEO_FRAME_WIDTH (in_frame),
-            GST_VIDEO_FRAME_HEIGHT (in_frame));
+        if (!pad->upload) {
+          pad->upload = gst_gl_display_find_upload (mix->display,
+              in_format, in_width, in_height, in_width, in_height);
 
-        if (!pad->in_tex_id)
-          gst_gl_display_gen_texture (mix->display, &pad->in_tex_id,
-              GST_VIDEO_INFO_FORMAT (&mix->out_info),
-              GST_VIDEO_INFO_WIDTH (&mix->out_info),
-              GST_VIDEO_INFO_HEIGHT (&mix->out_info));
+          gst_gl_upload_init_format (pad->upload, in_format,
+              in_width, in_height, in_width, in_height);
 
-        gst_gl_upload_perform_with_data (upload, pad->in_tex_id,
+          if (!pad->in_tex_id)
+            gst_gl_display_gen_texture (mix->display, &pad->in_tex_id,
+                GST_VIDEO_FORMAT_RGBA, out_width, out_height);
+        }
+
+        gst_gl_upload_perform_with_data (pad->upload, pad->in_tex_id,
             in_frame->data);
 
         in_tex = pad->in_tex_id;
-        pad->uploaded = TRUE;
+        pad->mapped = TRUE;
       }
 
       g_array_index (mix->array_textures, guint, array_index) = in_tex;
@@ -1531,11 +1534,13 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
   i = 0;
   walk = mix->sinkpads;
   while (walk) {
+    GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
     GstVideoFrame *in_frame = g_ptr_array_index (mix->in_frames, i);
 
-    if (in_frame)
+    if (in_frame && pad->mapped)
       gst_video_frame_unmap (in_frame);
 
+    pad->mapped = FALSE;
     walk = g_slist_next (walk);
     i++;
   }
