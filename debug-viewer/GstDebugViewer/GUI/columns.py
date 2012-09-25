@@ -41,7 +41,6 @@ class Column (object):
     label_header = None
     get_modify_func = None
     get_data_func = None
-    get_row_data_func = None
     get_sort_func = None
 
     def __init__ (self):
@@ -85,15 +84,9 @@ class TextColumn (SizedColumn):
             id_ = self.id
             if id_ is not None:
                 def cell_data_func (column, cell, model, tree_iter):
-                    data_func (cell.props, model.get_value (tree_iter, id_), model.get_path (tree_iter))
+                    data_func (cell.props, model.get_value (tree_iter, id_))
             else:
                 cell_data_func = data_func
-            column.set_cell_data_func (cell, cell_data_func)
-        elif self.get_row_data_func:
-            data_func = self.get_row_data_func ()
-            assert data_func
-            def cell_data_func (column, cell, model, tree_iter):
-                data_func (cell.props, model[tree_iter])
             column.set_cell_data_func (cell, cell_data_func)
         elif not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
@@ -107,7 +100,7 @@ class TextColumn (SizedColumn):
         modify_func = self.get_modify_func ()
         id_ = self.id
         def cell_data_func (column, cell, model, tree_iter):
-            cell.props.text = modify_func (model.get (tree_iter, id_)[0])
+            cell.props.text = modify_func (model.get_value (tree_iter, id_))
         column.set_cell_data_func (cell, cell_data_func)
 
     def compute_default_size (self):
@@ -210,7 +203,7 @@ class LevelColumn (TextColumn):
                                        for c in theme.colors[level])),)
                        for level in Data.debug_levels
                        if level != Data.debug_level_none)
-        def level_data_func (cell_props, level, path):
+        def level_data_func (cell_props, level):
             cell_props.text = level.name[0]
             if level in colors:
                 cell_colors = colors[level]
@@ -319,7 +312,7 @@ class MessageColumn (TextColumn):
 
     name = "message"
     label_header = _("Message")
-    id = LazyLogModel.COL_MESSAGE
+    id = None
 
     def __init__ (self, *a, **kw):
 
@@ -327,26 +320,27 @@ class MessageColumn (TextColumn):
 
         TextColumn.__init__ (self, *a, **kw)
 
-    def get_row_data_func (self):
+    def get_data_func (self):
 
         highlighters = self.highlighters
-        id_ = self.id
+        id_ = LazyLogModel.COL_MESSAGE
 
-        def message_data_func (props, row):
+        def message_data_func (column, cell, model, tree_iter):
 
-            msg = row[id_]
+            msg = model.get_value (tree_iter, id_)
 
             if not highlighters:
-                props.text = msg
+                cell.props.text = msg
                 return
 
             if len (highlighters) > 1:
                 raise NotImplementedError ("FIXME: Support more than one...")
 
             highlighter = highlighters.values ()[0]
+            row = model[tree_iter]
             ranges = highlighter (row)
             if not ranges:
-                props.text = msg
+                cell.props.text = msg
             else:
                 tags = []
                 prev_end = 0
@@ -360,7 +354,7 @@ class MessageColumn (TextColumn):
                     prev_end = end
                 if end is not None:
                     tags.append (glib.markup_escape_text (msg[end:]))
-                props.markup = "".join (tags)
+                cell.props.markup = "".join (tags)
 
         return message_data_func
 
