@@ -325,7 +325,7 @@ gst_gl_filtershader_filter_texture (GstGLFilter * filter, guint in_tex,
 {
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
 
-  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
       gst_gl_filtershader_hcallback, filtershader);
 
   return TRUE;
@@ -364,6 +364,6 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
     hfilter_fragment_variables[1] = 0;
   }
 
-  gst_gl_filter_draw_texture (filter, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 
 }

@@ -483,7 +483,7 @@ gst_gl_differencematte_filter_texture (GstGLFilter * filter, guint in_tex,
 
     /* save current frame, needed to calculate difference between
      * this frame and next ones */
-    gst_gl_filter_render_to_target (filter, in_tex,
+    gst_gl_filter_render_to_target (filter, TRUE, in_tex,
         differencematte->savedbgtexture,
         gst_gl_differencematte_save_texture, differencematte);
 
@@ -496,19 +496,19 @@ gst_gl_differencematte_filter_texture (GstGLFilter * filter, guint in_tex,
   }
 
   if (differencematte->savedbgtexture != 0) {
-    gst_gl_filter_render_to_target (filter, in_tex,
+    gst_gl_filter_render_to_target (filter, TRUE, in_tex,
         differencematte->midtexture[0], gst_gl_differencematte_diff,
         differencematte);
-    gst_gl_filter_render_to_target (filter, differencematte->midtexture[0],
-        differencematte->midtexture[1], gst_gl_differencematte_hblur,
-        differencematte);
-    gst_gl_filter_render_to_target (filter, differencematte->midtexture[1],
-        differencematte->midtexture[2], gst_gl_differencematte_vblur,
-        differencematte);
-    gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+    gst_gl_filter_render_to_target (filter, FALSE,
+        differencematte->midtexture[0], differencematte->midtexture[1],
+        gst_gl_differencematte_hblur, differencematte);
+    gst_gl_filter_render_to_target (filter, FALSE,
+        differencematte->midtexture[1], differencematte->midtexture[2],
+        gst_gl_differencematte_vblur, differencematte);
+    gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
         gst_gl_differencematte_interp, differencematte);
   } else {
-    gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+    gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
         gst_gl_differencematte_identity, differencematte);
   }
 

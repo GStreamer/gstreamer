@@ -163,7 +163,7 @@ gst_gl_deinterlace_filter_texture (GstGLFilter * filter, guint in_tex,
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
 
   //blocking call, use a FBO
-  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
       gst_gl_deinterlace_callback, deinterlace_filter);
 
   return TRUE;

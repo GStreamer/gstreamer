@@ -81,7 +81,7 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
 
   glDisable (GL_TEXTURE_1D);
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 static void
@@ -99,6 +99,6 @@ gst_gl_effects_xpro (GstGLEffects * effects)
 {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-  gst_gl_filter_render_to_target (filter, effects->intexture,
+  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
       effects->outtexture, gst_gl_effects_xpro_callback, effects);
 }

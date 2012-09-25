@@ -30,7 +30,8 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
   glMatrixMode (GL_PROJECTION);
   glLoadIdentity ();
 #else
-  GstGLShader *shader = g_hash_table_lookup (effects->shaderstable, "identity0");
+  GstGLShader *shader =
+      g_hash_table_lookup (effects->shaderstable, "identity0");
 
   if (!shader) {
     shader = gst_gl_shader_new ();
@@ -66,7 +67,7 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 #endif
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 void
@@ -74,6 +75,6 @@ gst_gl_effects_identity (GstGLEffects * effects)
 {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-  gst_gl_filter_render_to_target (filter, effects->intexture,
+  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
       effects->outtexture, gst_gl_effects_identity_callback, effects);
 }

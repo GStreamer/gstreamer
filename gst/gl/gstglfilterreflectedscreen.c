@@ -121,13 +121,13 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
 
   g_object_class_install_property (gobject_class, PROP_ASPECT,
       g_param_spec_double ("aspect", "Aspect",
-          "Field of view in the x direction", 0.0, 100, 0.0,
+          "Field of view in the x direction", 1.0, 100, 1.0,
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZNEAR,
       g_param_spec_double ("znear", "Znear",
           "Specifies the distance from the viewer to the near clipping plane",
-          0.0, 100.0, 0.1, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          0.0000000001, 100.0, 0.1, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZFAR,
       g_param_spec_double ("zfar", "Zfar",
@@ -145,8 +145,8 @@ gst_gl_filter_reflected_screen_init (GstGLFilterReflectedScreen * filter)
   filter->active_graphic_mode = TRUE;
   filter->separated_screen = FALSE;
   filter->show_floor = TRUE;
-  filter->fovy = 80;
-  filter->aspect = 0;
+  filter->fovy = 90;
+  filter->aspect = 1.0;
   filter->znear = 0.1;
   filter->zfar = 1000;
 }

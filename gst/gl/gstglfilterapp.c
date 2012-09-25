@@ -192,7 +192,7 @@ gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
   //default
   else {
     //blocking call, use a FBO
-    gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+    gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
         gst_gl_filter_app_callback, NULL);
   }
 

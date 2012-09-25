@@ -220,15 +220,15 @@ gst_gl_filtersobel_filter_texture (GstGLFilter * filter, guint in_tex,
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
-  gst_gl_filter_render_to_target_with_shader (filter, in_tex,
+  gst_gl_filter_render_to_target_with_shader (filter, TRUE, in_tex,
       filtersobel->midtexture[0], filtersobel->desat);
-  gst_gl_filter_render_to_target_with_shader (filter,
+  gst_gl_filter_render_to_target_with_shader (filter, FALSE,
       filtersobel->midtexture[0], filtersobel->midtexture[1],
       filtersobel->hconv);
-  gst_gl_filter_render_to_target_with_shader (filter,
+  gst_gl_filter_render_to_target_with_shader (filter, FALSE,
       filtersobel->midtexture[1], filtersobel->midtexture[0],
       filtersobel->vconv);
-  gst_gl_filter_render_to_target (filter, filtersobel->midtexture[0],
+  gst_gl_filter_render_to_target (filter, FALSE, filtersobel->midtexture[0],
       out_tex, gst_gl_filtersobel_length, filtersobel);
 
   return TRUE;
@@ -255,5 +255,5 @@ gst_gl_filtersobel_length (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (filtersobel->len, "invert",
       filtersobel->invert);
 
-  gst_gl_filter_draw_texture (filter, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }

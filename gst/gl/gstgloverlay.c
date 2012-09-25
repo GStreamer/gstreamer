@@ -607,7 +607,7 @@ gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
     overlay->pbuf_has_changed = FALSE;
   }
 
-  gst_gl_filter_render_to_target (filter, in_tex, out_tex,
+  gst_gl_filter_render_to_target (filter, TRUE, in_tex, out_tex,
       gst_gl_overlay_callback, overlay);
 
   return TRUE;

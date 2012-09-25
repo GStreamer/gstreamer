@@ -92,7 +92,7 @@ enum
 
 GType gst_gl_effects_get_type (void);
 
-void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex);
+void gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width, guint height);
 
 void gst_gl_effects_identity (GstGLEffects *effects);
 void gst_gl_effects_mirror (GstGLEffects *effects);

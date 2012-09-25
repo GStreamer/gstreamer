@@ -85,7 +85,7 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
 #endif
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 void
@@ -93,6 +93,6 @@ gst_gl_effects_mirror (GstGLEffects * effects)
 {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-  gst_gl_filter_render_to_target (filter, effects->intexture,
+  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
       effects->outtexture, gst_gl_effects_mirror_callback, effects);
 }

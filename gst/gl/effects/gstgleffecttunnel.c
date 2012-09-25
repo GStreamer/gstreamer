@@ -58,7 +58,7 @@ gst_gl_effects_tunnel_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
   gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 void
@@ -66,6 +66,6 @@ gst_gl_effects_tunnel (GstGLEffects * effects)
 {
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
-  gst_gl_filter_render_to_target (filter, effects->intexture,
+  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
       effects->outtexture, gst_gl_effects_tunnel_callback, effects);
 }

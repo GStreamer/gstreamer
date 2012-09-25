@@ -267,11 +267,10 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
 }
 
 void
-gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
+gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
+    guint height)
 {
 #ifndef OPENGL_ES2
-  GstGLFilter *filter = GST_GL_FILTER (effects);
-
   glActiveTexture (GL_TEXTURE0);
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
@@ -280,12 +279,11 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex)
 
   glTexCoord2f (0.0, 0.0);
   glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info), 0.0);
+  glTexCoord2f ((gfloat) width, 0.0);
   glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info),
-      (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+  glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
+  glTexCoord2f (0.0, (gfloat) height);
   glVertex2f (-1.0, 1.0);
 
   glEnd ();

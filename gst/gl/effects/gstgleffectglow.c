@@ -58,7 +58,7 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 static void
@@ -102,7 +102,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 void
@@ -141,7 +141,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 void
@@ -188,7 +188,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1 / 3.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);
 
-  gst_gl_effects_draw_texture (effects, texture);
+  gst_gl_effects_draw_texture (effects, texture, width, height);
 }
 
 void
@@ -197,14 +197,14 @@ gst_gl_effects_glow (GstGLEffects * effects)
   GstGLFilter *filter = GST_GL_FILTER (effects);
 
   /* threshold */
-  gst_gl_filter_render_to_target (filter, effects->intexture,
+  gst_gl_filter_render_to_target (filter, TRUE, effects->intexture,
       effects->midtexture[0], gst_gl_effects_glow_step_one, effects);
   /* blur */
-  gst_gl_filter_render_to_target (filter, effects->midtexture[0],
+  gst_gl_filter_render_to_target (filter, FALSE, effects->midtexture[0],
       effects->midtexture[1], gst_gl_effects_glow_step_two, effects);
-  gst_gl_filter_render_to_target (filter, effects->midtexture[1],
+  gst_gl_filter_render_to_target (filter, FALSE, effects->midtexture[1],
       effects->midtexture[2], gst_gl_effects_glow_step_three, effects);
   /* add blurred luma to intexture */
-  gst_gl_filter_render_to_target (filter, effects->midtexture[2],
+  gst_gl_filter_render_to_target (filter, FALSE, effects->midtexture[2],
       effects->outtexture, gst_gl_effects_glow_step_four, effects);
 }

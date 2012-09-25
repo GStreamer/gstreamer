@@ -190,10 +190,10 @@ gst_gl_filterblur_filter_texture (GstGLFilter * filter, guint in_tex,
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
-  gst_gl_filter_render_to_target (filter, in_tex,
+  gst_gl_filter_render_to_target (filter, TRUE, in_tex,
       filterblur->midtexture, gst_gl_filterblur_hcallback, filterblur);
 
-  gst_gl_filter_render_to_target (filter, filterblur->midtexture,
+  gst_gl_filter_render_to_target (filter, FALSE, filterblur->midtexture,
       out_tex, gst_gl_filterblur_vcallback, filterblur);
 
   return TRUE;
@@ -220,7 +220,7 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 7,
       filterblur->gauss_kernel);
 
-  gst_gl_filter_draw_texture (filter, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
 
 
@@ -245,5 +245,5 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 7,
       filterblur->gauss_kernel);
 
-  gst_gl_filter_draw_texture (filter, texture);
+  gst_gl_filter_draw_texture (filter, texture, width, height);
 }
