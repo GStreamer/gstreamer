@@ -30,6 +30,12 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#else
+#define orc_memcpy memcpy
+#endif
+
 #include "gstamcvideodec.h"
 #include "gstamc-constants.h"
 
@@ -720,7 +726,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
   /* Same video format */
   if (buffer_info->size == GST_BUFFER_SIZE (outbuf)) {
     GST_DEBUG_OBJECT (self, "Buffer sizes equal, doing fast copy");
-    memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info->offset,
+    orc_memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info->offset,
         buffer_info->size);
     ret = TRUE;
     goto done;
@@ -766,7 +772,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, row_length);
+          orc_memcpy (dest, src, row_length);
           src += src_stride;
           dest += dest_stride;
         }
@@ -804,7 +810,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, row_length);
+          orc_memcpy (dest, src, row_length);
           src += src_stride;
           dest += dest_stride;
         }
@@ -846,7 +852,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
         for (j = 0; j < height; j++) {
-          memcpy (dest, src, row_length);
+          orc_memcpy (dest, src, row_length);
           src += src_stride;
           dest += dest_stride;
         }
@@ -1404,7 +1410,7 @@ gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     buffer_info.size =
         MIN (GST_BUFFER_SIZE (frame->input_buffer) - offset, buf->size);
 
-    memcpy (buf->data, GST_BUFFER_DATA (frame->input_buffer) + offset,
+    orc_memcpy (buf->data, GST_BUFFER_DATA (frame->input_buffer) + offset,
         buffer_info.size);
 
     /* Interpolate timestamps if we're passing the buffer

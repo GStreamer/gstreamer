@@ -31,6 +31,12 @@
 #include <gst/audio/multichannel.h>
 #include <string.h>
 
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#else
+#define orc_memcpy memcpy
+#endif
+
 #include "gstamcaudiodec.h"
 #include "gstamc-constants.h"
 
@@ -592,7 +598,7 @@ retry:
       goto failed_allocate;
 
     buf = &self->output_buffers[idx];
-    memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info.offset,
+    orc_memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info.offset,
         buffer_info.size);
 
     GST_BUFFER_TIMESTAMP (outbuf) =
@@ -1053,7 +1059,7 @@ gst_amc_audio_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     buffer_info.offset = 0;
     buffer_info.size = MIN (GST_BUFFER_SIZE (inbuf) - offset, buf->size);
 
-    memcpy (buf->data, GST_BUFFER_DATA (inbuf) + offset, buffer_info.size);
+    orc_memcpy (buf->data, GST_BUFFER_DATA (inbuf) + offset, buffer_info.size);
 
     /* Interpolate timestamps if we're passing the buffer
      * in multiple chunks */
