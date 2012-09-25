@@ -484,10 +484,10 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
 
   glimage_sink->upload = gst_gl_display_find_upload (glimage_sink->display,
-      GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
+      GST_VIDEO_INFO_FORMAT (&vinfo), width, height, width, height);
 
   gst_gl_upload_init_format (glimage_sink->upload,
-      GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
+      GST_VIDEO_INFO_FORMAT (&vinfo), width, height, width, height);
 
   gst_gl_display_set_client_reshape_callback (glimage_sink->display,
       glimage_sink->clientReshapeCallback);

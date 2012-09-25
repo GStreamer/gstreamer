@@ -306,6 +306,7 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstVideoInfo vinfo;
   GstGLTestSrc *gltestsrc = GST_GL_TEST_SRC (bsrc);
+  guint out_width, out_height;
 
   GST_DEBUG ("setcaps");
 
@@ -314,29 +315,23 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 
   gltestsrc->out_info = vinfo;
   gltestsrc->negotiated = TRUE;
+  out_width = GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info);
 
-  if (!gst_gl_display_gen_fbo (gltestsrc->display,
-          GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
-          GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info),
+  if (!gst_gl_display_gen_fbo (gltestsrc->display, out_width, out_height,
           &gltestsrc->fbo, &gltestsrc->depthbuffer))
     goto display_error;
 
   if (gltestsrc->out_tex_id)
     gst_gl_display_del_texture (gltestsrc->display, &gltestsrc->out_tex_id);
   gst_gl_display_gen_texture (gltestsrc->display, &gltestsrc->out_tex_id,
-      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info),
-      GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
-      GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info));
+      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
 
   gltestsrc->download = gst_gl_display_find_download (gltestsrc->display,
-      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info),
-      GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
-      GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info));
+      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info), out_width, out_height);
 
   gst_gl_download_init_format (gltestsrc->download,
-      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info),
-      GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info),
-      GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info));
+      GST_VIDEO_INFO_FORMAT (&gltestsrc->out_info), out_width, out_height);
 
   return TRUE;
 
