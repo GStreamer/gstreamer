@@ -69,10 +69,10 @@
 
 G_BEGIN_DECLS
 
-#define GES_VERSION_MAJOR (0)
-#define GES_VERSION_MINOR (10)
-#define GES_VERSION_MICRO (1)
-#define GES_VERSION_NANO (1)
+#define GES_VERSION_MAJOR (1)
+#define GES_VERSION_MINOR (0)
+#define GES_VERSION_MICRO (0)
+#define GES_VERSION_NANO  (0)
 
 gboolean ges_init    (void);
 
