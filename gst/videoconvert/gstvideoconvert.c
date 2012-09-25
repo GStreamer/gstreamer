@@ -290,7 +290,7 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
       gst_static_pad_template_get (&gst_video_convert_sink_template));
 
   gst_element_class_set_static_metadata (gstelement_class,
-      " Colorspace converter", "Filter/Converter/Video",
+      "Colorspace converter", "Filter/Converter/Video",
       "Converts video from one colorspace to another",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>");
 
@@ -391,4 +391,5 @@ plugin_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    videoconvert, "Colorspace conversion", plugin_init, VERSION, "LGPL", "", "")
+    videoconvert, "Colorspace conversion", plugin_init, VERSION, GST_LICENSE,
+    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
