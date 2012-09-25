@@ -1107,6 +1107,60 @@ GST_START_TEST (test_ghost_pads_internal_link)
 
 GST_END_TEST;
 
+/* Test that remove a ghostpad that has something flowing through it does not
+ * crash the program
+ */
+
+GstElement *bin;
+GstPad *ghostsink;
+GstPad *ghostsrc;
+
+static GstPadProbeReturn
+remove_ghostpad_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer data)
+{
+  gst_pad_set_active (ghostsrc, FALSE);
+  gst_pad_set_active (ghostsink, FALSE);
+  gst_element_remove_pad (bin, ghostsrc);
+  gst_element_remove_pad (bin, ghostsink);
+
+  return GST_PAD_PROBE_DROP;
+}
+
+GST_START_TEST (test_ghost_pads_remove_while_playing)
+{
+  GstPad *sinkpad;
+  GstPad *srcpad;
+
+  bin = gst_bin_new (NULL);
+  gst_element_set_state (bin, GST_STATE_PLAYING);
+  sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
+
+  ghostsrc = gst_ghost_pad_new_no_target ("ghostsrc", GST_PAD_SRC);
+  sinkpad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (ghostsrc)));
+  ghostsink = gst_ghost_pad_new ("ghostsink", sinkpad);
+  gst_object_unref (sinkpad);
+  gst_pad_set_active (ghostsrc, TRUE);
+  gst_pad_set_active (ghostsink, TRUE);
+  gst_element_add_pad (bin, ghostsrc);
+  gst_element_add_pad (bin, ghostsink);
+
+  srcpad = gst_pad_new ("srcpad", GST_PAD_SRC);
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_link (srcpad, ghostsink);
+
+  gst_pad_add_probe (ghostsrc, GST_PAD_PROBE_TYPE_BUFFER,
+      remove_ghostpad_probe_cb, NULL, NULL);
+
+  g_assert (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
+
+  gst_pad_set_active (srcpad, FALSE);
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+  gst_object_unref (srcpad);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_ghost_pad_suite (void)
 {
@@ -1131,6 +1185,7 @@ gst_ghost_pad_suite (void)
   tcase_add_test (tc_chain, test_ghost_pads_src_link_unlink);
   tcase_add_test (tc_chain, test_ghost_pads_change_when_linked);
   tcase_add_test (tc_chain, test_ghost_pads_internal_link);
+  tcase_add_test (tc_chain, test_ghost_pads_remove_while_playing);
 
   return s;
 }
