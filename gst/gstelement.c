@@ -1283,6 +1283,10 @@ gst_element_class_set_metadata (GstElementClass * klass,
     const gchar * description, const gchar * author)
 {
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (longname != NULL && *longname != '\0');
+  g_return_if_fail (classification != NULL && *classification != '\0');
+  g_return_if_fail (description != NULL && *description != '\0');
+  g_return_if_fail (author != NULL && *author != '\0');
 
   gst_structure_id_set ((GstStructure *) klass->metadata,
       GST_QUARK (ELEMENT_METADATA_LONGNAME), G_TYPE_STRING, longname,
@@ -1320,6 +1324,10 @@ gst_element_class_set_static_metadata (GstElementClass * klass,
   GValue val = G_VALUE_INIT;
 
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+  g_return_if_fail (longname != NULL && *longname != '\0');
+  g_return_if_fail (classification != NULL && *classification != '\0');
+  g_return_if_fail (description != NULL && *description != '\0');
+  g_return_if_fail (author != NULL && *author != '\0');
 
   g_value_init (&val, G_TYPE_STRING);
 

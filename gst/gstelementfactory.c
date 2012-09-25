@@ -177,6 +177,15 @@ gst_element_factory_cleanup (GstElementFactory * factory)
   factory->interfaces = NULL;
 }
 
+#define CHECK_METADATA_FIELD(klass, name, key)                                 \
+  G_STMT_START {                                                               \
+    const gchar *metafield = gst_element_class_get_metadata (klass, key);      \
+    if (G_UNLIKELY (metafield == NULL || *metafield == '\0')) {                \
+      g_warning ("Element factory metadata for '%s' has no valid %s field", name, key);    \
+      goto detailserror;                                                       \
+    } \
+  } G_STMT_END;
+
 /**
  * gst_element_register:
  * @plugin: (allow-none): #GstPlugin to register the element with, or NULL for
@@ -233,12 +242,11 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
   /* provide info needed during class structure setup */
   g_type_set_qdata (type, __gst_elementclass_factory, factory);
   klass = GST_ELEMENT_CLASS (g_type_class_ref (type));
-#if 0
-  /* FIXME */
-  if ((klass->details.longname == NULL) ||
-      (klass->details.klass == NULL) || (klass->details.author == NULL))
-    goto detailserror;
-#endif
+
+  CHECK_METADATA_FIELD (klass, name, GST_ELEMENT_METADATA_LONGNAME);
+  CHECK_METADATA_FIELD (klass, name, GST_ELEMENT_METADATA_KLASS);
+  CHECK_METADATA_FIELD (klass, name, GST_ELEMENT_METADATA_DESCRIPTION);
+  CHECK_METADATA_FIELD (klass, name, GST_ELEMENT_METADATA_AUTHOR);
 
   factory->type = type;
   factory->metadata = gst_structure_copy ((GstStructure *) klass->metadata);
@@ -312,15 +320,11 @@ urierror:
     return FALSE;
   }
 
-#if 0
 detailserror:
   {
-    GST_WARNING_OBJECT (factory,
-        "The GstElementDetails don't seem to have been set properly");
     gst_element_factory_cleanup (factory);
     return FALSE;
   }
-#endif
 }
 
 /**
