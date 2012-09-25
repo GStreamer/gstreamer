@@ -103,19 +103,212 @@ done:
   gst_object_unref (bus);
 }
 
-GST_START_TEST (test_something)
+GST_START_TEST (test_glimagesink)
 {
   gchar *s;
   GstState target_state = GST_STATE_PLAYING;
 
-  s = "fakesrc num-buffers=10 ! fakesink";
+  s = "videotestsrc num-buffers=10 ! glimagesink";
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
       GST_MESSAGE_UNKNOWN, target_state);
 }
 
 GST_END_TEST
-#endif /* #ifndef GST_DISABLE_PARSE */
+GST_START_TEST (test_glfiltercube)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glfiltercube ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+#ifdef OPENGL_ES2
+# define N_EFFECTS 3
+#else
+# define N_EFFECTS 16
+#endif
+GST_START_TEST (test_gleffects)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+  guint i;
+
+  for (i = 0; i < N_EFFECTS; i++) {
+    s = g_strdup_printf ("videotestsrc num-buffers=10 ! gleffects effect=%i"
+        " ! fakesink", i);
+    run_pipeline (setup_pipeline (s), s,
+        GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+        GST_MESSAGE_UNKNOWN, target_state);
+    g_free (s);
+  }
+}
+
+GST_END_TEST
+#undef N_EFFECTS
+#ifndef OPENGL_ES2
+#define N_SRCS 13
+GST_START_TEST (test_gltestsrc)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+  guint i;
+
+  for (i = 0; i < N_SRCS; i++) {
+    s = g_strdup_printf ("gltestsrc pattern=%i num-buffers=10 ! fakesink", i);
+    run_pipeline (setup_pipeline (s), s,
+        GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+        GST_MESSAGE_UNKNOWN, target_state);
+    g_free (s);
+  }
+}
+
+GST_END_TEST
+#undef N_SRCS
+GST_START_TEST (test_glfilterblur)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glfilterblur ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glfilterblur ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+GST_START_TEST (test_glfiltersobel)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glfiltersobel ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glfiltersobel ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+GST_START_TEST (test_glfilterglass)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glfilterglass ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glfilterglass ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+GST_START_TEST (test_glfilterreflectedscreen)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glfilterreflectedscreen ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glfilterreflectedscreen ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+GST_START_TEST (test_gldeinterlace)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! gldeinterlace ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! gldeinterlace ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+GST_START_TEST (test_glmosaic)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glmosaic ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glmosaic ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+#if 0
+GST_START_TEST (test_glshader)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glshader ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glshader ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+GST_START_TEST (test_glfilterapp)
+{
+  gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
+
+  s = "videotestsrc num-buffers=10 ! glfilterapp ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+
+  s = "gltestsrc num-buffers=10 ! glfilterapp ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN, target_state);
+}
+
+GST_END_TEST
+#endif /* 0 */
+#endif /* !OPENGL_ES2 */
+#endif /* !GST_DISABLE_PARSE */
     Suite * simple_launch_lines_suite (void)
 {
   Suite *s = suite_create ("Pipelines");
@@ -126,8 +319,30 @@ GST_END_TEST
 
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
-  tcase_add_test (tc_chain, test_something);
+  tcase_add_test (tc_chain, test_glimagesink);
+  tcase_add_test (tc_chain, test_glfiltercube);
+  tcase_add_test (tc_chain, test_gleffects);
+#ifndef OPENGL_ES2
+  tcase_add_test (tc_chain, test_gltestsrc);
+  tcase_add_test (tc_chain, test_glfilterblur);
+  tcase_add_test (tc_chain, test_glfiltersobel);
+  tcase_add_test (tc_chain, test_glfilterglass);
+  tcase_add_test (tc_chain, test_glfilterreflectedscreen);
+  tcase_add_test (tc_chain, test_gldeinterlace);
+  tcase_add_test (tc_chain, test_glmosaic);
+#if 0
+  tcase_add_test (tc_chain, test_glshader);
+  tcase_add_test (tc_chain, test_glfilterapp);
+#ifdef HAVE_PNG
+  tcase_add_test (tc_chain, test_gldifferencematte);
+  tcase_add_test (tc_chain, test_glbumper);
+#ifdef HAVE_JPEG
+  tcase_add_test (tc_chain, test_gloverlay);
+#endif /* HAVE_JPEG */
+#endif /* HAVE_PNG */
 #endif
+#endif /* !OPENGL_ES2 */
+#endif /* !GST_DISABLE_PARSE */
   return s;
 }
 
