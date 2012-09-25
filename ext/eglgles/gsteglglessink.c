@@ -1095,8 +1095,6 @@ gst_eglglessink_stop (GstBaseSink * sink)
     eglglessink->current_caps = NULL;
   }
 
-  g_free (eglglessink->eglglesctx);
-
   return TRUE;
 }
 
