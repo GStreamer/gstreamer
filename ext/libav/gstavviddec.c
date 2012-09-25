@@ -502,7 +502,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 done:
   GST_OBJECT_UNLOCK (ffmpegdec);
 
-  gst_video_decoder_set_latency (decoder, latency, latency);
+  if (GST_CLOCK_TIME_IS_VALID (latency))
+    gst_video_decoder_set_latency (decoder, latency, latency);
 
   return ret;
 
