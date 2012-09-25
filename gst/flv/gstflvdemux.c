@@ -39,6 +39,7 @@
 
 #include <string.h>
 #include <gst/base/gstbytereader.h>
+#include <gst/base/gstbytewriter.h>
 #include <gst/pbutils/descriptions.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/audio/audio.h>
@@ -717,72 +718,56 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     {
       GValue streamheader = G_VALUE_INIT;
       GValue value = G_VALUE_INIT;
+      GstByteWriter w;
       GstStructure *structure;
       GstBuffer *buf;
-      guint8 *data, *mallocdata;
-
-      g_value_init (&streamheader, GST_TYPE_ARRAY);
 
       caps = gst_caps_new_empty_simple ("audio/x-speex");
       structure = gst_caps_get_structure (caps, 0);
 
-      data = mallocdata = g_malloc (80);
-
       GST_DEBUG_OBJECT (demux, "generating speex header");
 
-      memcpy (data, "Speex   ", 8);
-      data += 8;
-      memcpy (data, "1.1.12", 7);
-      data += 20;
-      GST_WRITE_UINT32_LE (data, 1);    /* version */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 80);   /* header_size */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 16000);        /* rate */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 1);    /* mode: Wideband */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 4);    /* mode_bitstream_version */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 1);    /* nb_channels: 1 */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, -1);   /* bitrate */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 0x50); /* frame_size */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 0);    /* VBR */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 1);    /* frames_per_packet */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 0);    /* extra_headers */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 0);    /* reserved1 */
-      data += 4;
-      GST_WRITE_UINT32_LE (data, 0);    /* reserved2 */
+      /* Speex decoder expects streamheader to be { [header], [comment] } */
+      g_value_init (&streamheader, GST_TYPE_ARRAY);
 
-      buf = gst_buffer_new_wrapped (mallocdata, 80);
-      g_value_init (&value, GST_TYPE_BUFFER);   /* Speex decoder expects it to be { [header], [comment] } */
-      gst_value_set_buffer (&value, buf);       /* setting header part */
-      gst_value_array_append_value (&streamheader, &value);
-
-      g_value_unset (&value);
-      gst_buffer_unref (buf);
-
-      data = mallocdata = g_malloc (12);        /* setting comment part */
-      memcpy (data, "No comments", 12);
+      /* header part */
+      gst_byte_writer_init_with_size (&w, 80, TRUE);
+      gst_byte_writer_put_data (&w, (guint8 *) "Speex   ", 8);
+      gst_byte_writer_put_data (&w, (guint8 *) "1.1.12", 7);
+      gst_byte_writer_fill (&w, 0, 13);
+      gst_byte_writer_put_uint32_le (&w, 1);    /* version */
+      gst_byte_writer_put_uint32_le (&w, 80);   /* header_size */
+      gst_byte_writer_put_uint32_le (&w, 16000);        /* rate */
+      gst_byte_writer_put_uint32_le (&w, 1);    /* mode: Wideband */
+      gst_byte_writer_put_uint32_le (&w, 4);    /* mode_bitstream_version */
+      gst_byte_writer_put_uint32_le (&w, 1);    /* nb_channels: 1 */
+      gst_byte_writer_put_uint32_le (&w, -1);   /* bitrate */
+      gst_byte_writer_put_uint32_le (&w, 0x50); /* frame_size */
+      gst_byte_writer_put_uint32_le (&w, 0);    /* VBR */
+      gst_byte_writer_put_uint32_le (&w, 1);    /* frames_per_packet */
+      gst_byte_writer_put_uint32_le (&w, 0);    /* extra_headers */
+      gst_byte_writer_put_uint32_le (&w, 0);    /* reserved1 */
+      gst_byte_writer_put_uint32_le (&w, 0);    /* reserved2 */
+      g_assert (gst_byte_writer_get_size (&w) == 80);
 
       g_value_init (&value, GST_TYPE_BUFFER);
-      buf = gst_buffer_new_wrapped (mallocdata, 12);
-      gst_value_set_buffer (&value, buf);
+      g_value_take_boxed (&value, gst_byte_writer_reset_and_get_buffer (&w));
       gst_value_array_append_value (&streamheader, &value);
-
       g_value_unset (&value);
-      gst_buffer_unref (buf);
-      gst_structure_set_value (structure, "streamheader", &streamheader);
-    }
+
+      /* comment part */
+      g_value_init (&value, GST_TYPE_BUFFER);
+      buf = gst_buffer_new_wrapped (g_memdup ("No comments", 12), 12);
+      g_value_take_boxed (&value, buf);
+      gst_value_array_append_value (&streamheader, &value);
+      g_value_unset (&value);
+
+      gst_structure_take_value (structure, "streamheader", &streamheader);
       break;
+    }
     default:
       GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
+      break;
   }
 
   if (G_UNLIKELY (!caps)) {
