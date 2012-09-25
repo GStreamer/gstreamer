@@ -244,23 +244,23 @@ gst_gl_download_finalize (GObject * object)
 
 static inline gboolean
 _init_format_pre (GstGLDownload * download, GstVideoFormat v_format,
-    guint width, guint height)
+    guint out_width, guint out_height)
 {
   g_return_val_if_fail (download != NULL, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
 
   return TRUE;
 }
 
 gboolean
 gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
-    guint width, guint height)
+    guint out_width, guint out_height)
 {
   GstVideoInfo info;
 
-  if (!_init_format_pre (download, v_format, width, height))
+  if (!_init_format_pre (download, v_format, out_width, out_height))
     return FALSE;
 
   g_mutex_lock (&download->lock);
@@ -272,7 +272,7 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
     download->initted = TRUE;
   }
 
-  gst_video_info_set_format (&info, v_format, width, height);
+  gst_video_info_set_format (&info, v_format, out_width, out_height);
 
   download->info = info;
 
@@ -286,11 +286,11 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
 
 gboolean
 gst_gl_download_init_format_thread (GstGLDownload * download,
-    GstVideoFormat v_format, guint width, guint height)
+    GstVideoFormat v_format, guint out_width, guint out_height)
 {
   GstVideoInfo info;
 
-  if (!_init_format_pre (download, v_format, width, height))
+  if (!_init_format_pre (download, v_format, out_width, out_height))
     return FALSE;
 
   g_mutex_lock (&download->lock);
@@ -302,7 +302,7 @@ gst_gl_download_init_format_thread (GstGLDownload * download,
     download->initted = TRUE;
   }
 
-  gst_video_info_set_format (&info, v_format, width, height);
+  gst_video_info_set_format (&info, v_format, out_width, out_height);
 
   download->info = info;
 
@@ -471,28 +471,31 @@ gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload * download,
   return TRUE;
 }
 
-static inline guint64 *
-_gen_key (GstVideoFormat v_format, guint width, guint height)
-{
-  guint64 *key;
-
-  /* this limits the width and the height to 2^29-1 = 536870911 */
-  key = g_malloc (sizeof (guint64 *));
-  *key = v_format | ((guint64) width << 6) | ((guint64) height << 35);
-  return key;
-}
-
-static inline GstGLDownload *
-_find_download (GstGLDisplay * display, guint64 * key)
+GstGLDownload *
+gst_gl_display_find_download_unlocked (GstGLDisplay * display,
+    GstVideoFormat v_format, guint out_width, guint out_height)
 {
   GstGLDownload *ret;
+  GSList *walk;
 
-  ret = g_hash_table_lookup (display->downloads, key);
+  walk = display->downloads;
+
+  while (walk) {
+    ret = walk->data;
+
+    if (ret && v_format == GST_VIDEO_INFO_FORMAT (&ret->info) &&
+        out_width == GST_VIDEO_INFO_WIDTH (&ret->info) &&
+        out_height == GST_VIDEO_INFO_HEIGHT (&ret->info))
+      break;
+
+    ret = NULL;
+    walk = g_slist_next (walk);
+  }
 
   if (!ret) {
     ret = gst_gl_download_new (display);
 
-    g_hash_table_insert (display->downloads, key, ret);
+    display->downloads = g_slist_prepend (display->downloads, ret);
   }
 
   return ret;
@@ -500,32 +503,16 @@ _find_download (GstGLDisplay * display, guint64 * key)
 
 GstGLDownload *
 gst_gl_display_find_download (GstGLDisplay * display, GstVideoFormat v_format,
-    guint width, guint height)
+    guint out_width, guint out_height)
 {
   GstGLDownload *ret;
-  guint64 *key;
-
-  key = _gen_key (v_format, width, height);
 
   gst_gl_display_lock (display);
 
-  ret = _find_download (display, key);
+  ret = gst_gl_display_find_download_unlocked (display, v_format,
+      out_width, out_height);
 
   gst_gl_display_unlock (display);
-
-  return ret;
-}
-
-GstGLDownload *
-gst_gl_display_find_download_thread (GstGLDisplay * display,
-    GstVideoFormat v_format, guint width, guint height)
-{
-  GstGLDownload *ret;
-  guint64 *key;
-
-  key = _gen_key (v_format, width, height);
-
-  ret = _find_download (display, key);
 
   return ret;
 }
@@ -534,11 +521,11 @@ static void
 _init_download (GstGLDisplay * display, GstGLDownload * download)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint out_width, out_height;
 
-  width = GST_VIDEO_INFO_WIDTH (&download->info);
-  height = GST_VIDEO_INFO_HEIGHT (&download->info);
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
   GST_TRACE ("initializing texture download for format %d", v_format);
 
@@ -569,33 +556,32 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
          */
         gst_gl_display_set_error (display,
             "Context, EXT_framebuffer_object supported: no");
+        return;
       }
       GST_INFO ("Context, EXT_framebuffer_object supported: yes");
 
       /* setup FBO */
-      if (!download->fbo && !download->depth_buffer) {
-        glGenFramebuffersEXT (1, &download->fbo);
-        glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
+      glGenFramebuffersEXT (1, &download->fbo);
+      glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
 
-        /* setup the render buffer for depth */
-        glGenRenderbuffersEXT (1, &download->depth_buffer);
-        glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, download->depth_buffer);
+      /* setup the render buffer for depth */
+      glGenRenderbuffersEXT (1, &download->depth_buffer);
+      glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, download->depth_buffer);
 #ifndef OPENGL_ES2
-        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-            width, height);
-        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
-            width, height);
+      glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+          out_width, out_height);
+      glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+          out_width, out_height);
 #else
-        glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
-            width, height);
+      glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+          out_width, out_height);
 #endif
-      }
 
       /* setup a first texture to render to */
       glGenTextures (1, &download->out_texture[0]);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[0]);
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+          out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
           GL_LINEAR);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -615,7 +601,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
         glGenTextures (1, &download->out_texture[1]);
         glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[1]);
         glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-            width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
             GL_LINEAR);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -634,7 +620,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
         glGenTextures (1, &download->out_texture[2]);
         glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[2]);
         glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-            width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
             GL_LINEAR);
         glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
@@ -901,14 +887,14 @@ static void
 _do_download (GstGLDisplay * display, GstGLDownload * download)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint out_width, out_height;
 
-  width = GST_VIDEO_INFO_WIDTH (&download->info);
-  height = GST_VIDEO_INFO_HEIGHT (&download->info);
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
   GST_TRACE ("downloading texture:%u format:%d, dimensions:%ux%u",
-      download->in_texture, v_format, width, height);
+      download->in_texture, v_format, out_width, out_height);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBx:
@@ -953,10 +939,10 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
 #else
-  guint width, height;
+  guint out_width, out_height;
 
-  width = GST_VIDEO_INFO_WIDTH (&download->info);
-  height = GST_VIDEO_INFO_HEIGHT (&download->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
     1.0f, 0.0f,
@@ -970,7 +956,7 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-  glViewport (0, 0, width, height);
+  glViewport (0, 0, out_width, out_height);
 
   glClearColor (0.0, 0.0, 0.0, 0.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1003,7 +989,7 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
           GL_UNSIGNED_BYTE, download->data[0]);
 #else
-      glReadPixels (0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, out_width, out_height, GL_RGBA, GL_UNSIGNED_BYTE,
           download->data[0]);
 #endif
       break;
@@ -1019,10 +1005,10 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
 #endif /* G_BYTE_ORDER */
 #else /* OPENGL_ES2 */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8,
-          download->data[0]);
+      glReadPixels (0, 0, out_width, out_eight, GL_BGRA,
+          GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      glReadPixels (0, 0, out_width, out_eight, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif /* G_BYTE_ORDER */
 #endif /* !OPENGL_ES2 */
@@ -1051,7 +1037,7 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
       glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
           GL_UNSIGNED_BYTE, download->data[0]);
 #else
-      glReadPixels (0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, out_width, out_height, GL_RGB, GL_UNSIGNED_BYTE,
           download->data[0]);
 #endif
       break;
@@ -1080,7 +1066,7 @@ static void
 _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint out_width, out_height;
 
   GLenum multipleRT[] = {
     GL_COLOR_ATTACHMENT0_EXT,
@@ -1104,9 +1090,12 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 #endif
 
-  width = GST_VIDEO_INFO_WIDTH (&download->info);
-  height = GST_VIDEO_INFO_HEIGHT (&download->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
+
+  GST_TRACE ("doing YUV download of texture:%u (%ux%u) using fbo:%u",
+      download->in_texture, out_width, out_height, download->fbo);
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
 
@@ -1116,7 +1105,7 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
   glLoadIdentity ();
-  gluOrtho2D (0.0, width, 0.0, height);
+  gluOrtho2D (0.0, out_width, 0.0, out_height);
 
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix ();
@@ -1125,7 +1114,7 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
   glGetIntegerv (GL_VIEWPORT, viewport_dim);
 #endif
 
-  glViewport (0, 0, width, height);
+  glViewport (0, 0, out_width, out_height);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_YUY2:
@@ -1179,8 +1168,8 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
 
       glActiveTextureARB (GL_TEXTURE0_ARB);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
-      gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) width);
-      gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) height);
+      gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) out_width);
+      gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) out_height);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
     }
       break;
@@ -1196,11 +1185,11 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
   glBegin (GL_QUADS);
   glTexCoord2i (0, 0);
   glVertex2f (-1.0f, -1.0f);
-  glTexCoord2i (width, 0);
+  glTexCoord2i (out_width, 0);
   glVertex2f (1.0f, -1.0f);
-  glTexCoord2i (width, height);
+  glTexCoord2i (out_width, out_height);
   glVertex2f (1.0f, 1.0f);
-  glTexCoord2i (0, height);
+  glTexCoord2i (0, out_height);
   glVertex2f (-1.0f, 1.0f);
   glEnd ();
 
@@ -1229,8 +1218,6 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
 
   gst_gl_display_check_framebuffer_status ();
 
-  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
 #ifndef OPENGL_ES2
   glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
@@ -1239,64 +1226,64 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
   switch (v_format) {
     case GST_VIDEO_FORMAT_AYUV:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, width, height, GL_BGRA,
+      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glReadPixels (0, 0, width, height, GL_BGRA,
+      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, height, GL_BGRA,
+      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #else
-      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2, height, GL_BGRA,
+      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #endif
       break;
     case GST_VIDEO_FORMAT_I420:
     {
-      glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, out_width, out_height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[0]);
 
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
 #endif
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
-          GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[1]);
 
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
 #endif
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
-          GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_YV12:
     {
-      glReadPixels (0, 0, width, height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, out_width, out_height, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[0]);
 
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT1_EXT);
 #endif
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
-          GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[2]);
 
 #ifndef OPENGL_ES2
       glReadBuffer (GL_COLOR_ATTACHMENT2_EXT);
 #endif
 
-      glReadPixels (0, 0, GST_ROUND_UP_2 (width) / 2,
-          GST_ROUND_UP_2 (height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+      glReadPixels (0, 0, GST_ROUND_UP_2 (out_width) / 2,
+          GST_ROUND_UP_2 (out_height) / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE,
           download->data[1]);
     }
       break;

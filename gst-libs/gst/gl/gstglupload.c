@@ -220,14 +220,15 @@ gst_gl_upload_finalize (GObject * object)
 
 gboolean
 gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
-    guint width, guint height)
+    guint in_width, guint in_height, guint out_width, guint out_height)
 {
   GstVideoInfo info;
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+  g_return_val_if_fail (in_width > 0 && in_height > 0, FALSE);
+  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
 
   g_mutex_lock (&upload->lock);
 
@@ -238,9 +239,11 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
     upload->initted = TRUE;
   }
 
-  gst_video_info_set_format (&info, v_format, width, height);
+  gst_video_info_set_format (&info, v_format, out_width, out_height);
 
   upload->info = info;
+  upload->in_width = in_width;
+  upload->in_height = in_height;
 
   gst_gl_display_thread_add (upload->display,
       (GstGLDisplayThreadFunc) _init_upload, upload);
@@ -252,14 +255,15 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
 
 gboolean
 gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
-    guint width, guint height)
+    guint in_width, guint in_height, guint out_width, guint out_height)
 {
   GstVideoInfo info;
 
   g_return_val_if_fail (upload != NULL, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (width > 0 && height > 0, FALSE);
+  g_return_val_if_fail (in_width > 0 && in_height > 0, FALSE);
+  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
 
   g_mutex_lock (&upload->lock);
 
@@ -270,9 +274,11 @@ gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
     upload->initted = TRUE;
   }
 
-  gst_video_info_set_format (&info, v_format, width, height);
+  gst_video_info_set_format (&info, v_format, out_width, out_height);
 
   upload->info = info;
+  upload->in_width = in_width;
+  upload->in_height = in_height;
 
   _init_upload (upload->display, upload);
 
@@ -297,6 +303,9 @@ gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
     return FALSE;
 
   g_mutex_lock (&upload->lock);
+
+  upload->in_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  upload->in_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
 
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
     data[i] = (guint8 *) gl_mem->data +
@@ -341,10 +350,6 @@ _perform_with_data_unlocked_pre (GstGLUpload * upload,
       GST_VIDEO_FORMAT_UNKNOWN
       && GST_VIDEO_INFO_FORMAT (&upload->info) != GST_VIDEO_FORMAT_ENCODED,
       FALSE);
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
-    g_return_val_if_fail (data[i] != NULL, FALSE);
-  }
 
   upload->out_texture = texture_id;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
@@ -432,28 +437,33 @@ gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload * upload,
   return TRUE;
 }
 
-static inline guint64 *
-_gen_key (GstVideoFormat v_format, guint width, guint height)
-{
-  guint64 *key;
-
-  /* this limits the width and the height to 2^29-1 = 536870911 */
-  key = g_malloc (sizeof (guint64 *));
-  *key = v_format | ((guint64) width << 6) | ((guint64) height << 35);
-  return key;
-}
-
-static inline GstGLUpload *
-_find_upload (GstGLDisplay * display, guint64 * key)
+GstGLUpload *
+gst_gl_display_find_upload_unlocked (GstGLDisplay * display,
+    GstVideoFormat v_format, guint in_width, guint in_height,
+    guint out_width, guint out_height)
 {
   GstGLUpload *ret;
+  GSList *walk;
 
-  ret = g_hash_table_lookup (display->uploads, key);
+  walk = display->uploads;
+
+  while (walk) {
+    ret = walk->data;
+
+    if (ret && v_format == GST_VIDEO_INFO_FORMAT (&ret->info) &&
+        out_width == GST_VIDEO_INFO_WIDTH (&ret->info) &&
+        out_height == GST_VIDEO_INFO_HEIGHT (&ret->info) &&
+        in_width == ret->in_width && in_height == ret->in_height)
+      break;
+
+    ret = NULL;
+    walk = g_slist_next (walk);
+  }
 
   if (!ret) {
     ret = gst_gl_upload_new (display);
 
-    g_hash_table_insert (display->uploads, key, ret);
+    display->uploads = g_slist_prepend (display->uploads, ret);
   }
 
   return ret;
@@ -461,32 +471,17 @@ _find_upload (GstGLDisplay * display, guint64 * key)
 
 GstGLUpload *
 gst_gl_display_find_upload (GstGLDisplay * display, GstVideoFormat v_format,
-    guint width, guint height)
+    guint in_width, guint in_height, guint out_width, guint out_height)
 {
   GstGLUpload *ret;
-  guint64 *key;
-
-  key = _gen_key (v_format, width, height);
 
   gst_gl_display_lock (display);
 
-  ret = _find_upload (display, key);
+  ret =
+      gst_gl_display_find_upload_unlocked (display, v_format, in_width,
+      in_height, out_width, out_height);
 
   gst_gl_display_unlock (display);
-
-  return ret;
-}
-
-GstGLUpload *
-gst_gl_display_find_upload_thread (GstGLDisplay * display,
-    GstVideoFormat v_format, guint width, guint height)
-{
-  GstGLUpload *ret;
-  guint64 *key;
-
-  key = _gen_key (v_format, width, height);
-
-  ret = _find_upload (display, key);
 
   return ret;
 }
@@ -496,8 +491,13 @@ void
 _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
+  guint in_width, in_height, out_width, out_height;
 
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  in_width = upload->in_width;
+  in_height = upload->in_height;
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
 
   GST_TRACE ("initializing texture upload for format:%d", v_format);
 
@@ -512,6 +512,8 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+      if (in_width != out_width || in_height != out_height)
+        _init_upload_fbo (display, upload);
       /* color space conversion is not needed */
       break;
     case GST_VIDEO_FORMAT_YUY2:
@@ -771,11 +773,11 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 void
 _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
 {
-  guint width, height;
+  guint out_width, out_height;
   GLuint fake_texture = 0;      /* a FBO must hava texture to init */
 
-  width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
 
   if (!GLEW_EXT_framebuffer_object) {
     /* turn off the pipeline because Frame buffer object is a not present */
@@ -795,18 +797,18 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, upload->depth_buffer);
 #ifndef OPENGL_ES2
   glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-      width, height);
+      out_width, out_height);
   glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
-      width, height);
+      out_width, out_height);
 #else
   glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
-      width, height);
+      out_width, out_height);
 #endif
 
   /* a fake texture is attached to the upload FBO (cannot init without it) */
   glGenTextures (1, &fake_texture);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, width, height, 0,
+  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, out_width, out_height, 0,
       GL_RGBA, GL_UNSIGNED_BYTE, NULL);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -847,14 +849,16 @@ void
 _do_upload (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint in_width, in_height, out_width, out_height;
 
-  width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+  in_width = upload->in_width;
+  in_height = upload->in_height;
 
   GST_TRACE ("uploading texture:%u dimensions: %ux%u", upload->out_texture,
-      width, height);
+      out_width, out_height);
 
   _do_upload_fill (display, upload);
 
@@ -869,6 +873,8 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+      if (in_width != out_width || in_height != out_height)
+        _do_upload_draw (display, upload);
       /* color space conversion is not needed */
       break;
     case GST_VIDEO_FORMAT_YUY2:
@@ -887,6 +893,8 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
           /* not yet supported */
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
+          if (in_width != out_width || in_height != out_height)
+            _do_upload_draw (display, upload);
           /* color space conversion is not needed */
           break;
         default:
@@ -910,10 +918,10 @@ void
 _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint in_width, in_height;
 
-  width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  in_width = upload->in_width;
+  in_height = upload->in_height;
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
   glGenTextures (1, &upload->in_texture[0]);
@@ -929,31 +937,33 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+          in_width, in_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-          width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+          in_width, in_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
       break;
     case GST_VIDEO_FORMAT_AYUV:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, NULL);
+          in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, NULL);
       break;
     case GST_VIDEO_FORMAT_YUY2:
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-              width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+              in_width, in_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+              NULL);
           glGenTextures (1, &upload->in_texture[1]);
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-              width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+              in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+              NULL);
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
-              height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, in_width,
+              in_height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
         default:
           gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
@@ -967,15 +977,17 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-              width, height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, NULL);
+              in_width, in_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+              NULL);
           glGenTextures (1, &upload->in_texture[1]);
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
           glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-              width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, NULL);
+              in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
+              NULL);
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
-              height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
+          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, in_width,
+              in_height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
           break;
         default:
           gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
@@ -987,19 +999,21 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+          in_width, in_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 
       glGenTextures (1, &upload->in_texture[1]);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          GST_ROUND_UP_2 (width) / 2,
-          GST_ROUND_UP_2 (height) / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+          GST_ROUND_UP_2 (in_width) / 2,
+          GST_ROUND_UP_2 (in_height) / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          NULL);
 
       glGenTextures (1, &upload->in_texture[2]);
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          GST_ROUND_UP_2 (width) / 2,
-          GST_ROUND_UP_2 (height) / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
+          GST_ROUND_UP_2 (in_width) / 2,
+          GST_ROUND_UP_2 (in_height) / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+          NULL);
       break;
 
     default:
@@ -1016,10 +1030,12 @@ void
 _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint in_width, in_height, out_width, out_height;
 
-  width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  in_width = upload->in_width;
+  in_height = upload->in_height;
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
   switch (v_format) {
@@ -1034,7 +1050,10 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
       /* color space conversion is not needed */
-      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
+      if (in_width != out_width || in_height != out_height)
+        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+      else
+        glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
@@ -1047,7 +1066,10 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
-          glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
+          if (in_width != out_width || in_height != out_height)
+            glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+          else
+            glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
           break;
         default:
           gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
@@ -1065,49 +1087,50 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGB:
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_RGB, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_BGR:
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_BGR, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_RGBA, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_BGRA, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_YUY2:
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
-          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
-              GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
+          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+              in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
           glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-              GST_ROUND_UP_2 (width) / 2, height,
+              GST_ROUND_UP_2 (in_width) / 2, in_height,
               GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
-          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
-              GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, upload->data[0]);
+          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+              in_height, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA,
+              upload->data[0]);
           break;
         default:
           gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
@@ -1120,17 +1143,18 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
-          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
-              GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
+          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+              in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
           glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-              GST_ROUND_UP_2 (width) / 2, height,
+              GST_ROUND_UP_2 (in_width) / 2, in_height,
               GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
-          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
-              GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, upload->data[0]);
+          glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+              in_height, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA,
+              upload->data[0]);
           break;
         default:
           gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
@@ -1141,33 +1165,33 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
       break;
     case GST_VIDEO_FORMAT_I420:
     {
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-          GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
+          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-          GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
+          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_YV12:        /* same as I420 except plane 1+2 swapped */
     {
-      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
+      glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-          GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
+          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-          GST_ROUND_UP_2 (width) / 2, GST_ROUND_UP_2 (height) / 2,
+          GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
@@ -1190,7 +1214,7 @@ void
 _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
-  guint width, height;
+  guint in_width, in_height, out_width, out_height;
 
 #ifdef OPENGL_ES2
   GLint viewport_dim[4];
@@ -1208,8 +1232,10 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 #endif
 
-  width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  in_width = upload->in_width;
+  in_height = upload->in_height;
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, upload->fbo);
@@ -1233,7 +1259,7 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   glMatrixMode (GL_PROJECTION);
   glPushMatrix ();
   glLoadIdentity ();
-  gluOrtho2D (0.0, width, 0.0, height);
+  gluOrtho2D (0.0, out_width, 0.0, out_height);
 
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix ();
@@ -1242,7 +1268,7 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   glGetIntegerv (GL_VIEWPORT, viewport_dim);
 #endif
 
-  glViewport (0, 0, width, height);
+  glViewport (0, 0, out_width, out_height);
 
 #ifndef OPENGL_ES2
   glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
@@ -1469,13 +1495,13 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
 
 #ifndef OPENGL_ES2
   glBegin (GL_QUADS);
-  glTexCoord2i (width, 0);
+  glTexCoord2i (in_width, 0);
   glVertex2f (1.0f, -1.0f);
   glTexCoord2i (0, 0);
   glVertex2f (-1.0f, -1.0f);
-  glTexCoord2i (0, height);
+  glTexCoord2i (0, in_height);
   glVertex2f (-1.0f, 1.0f);
-  glTexCoord2i (width, height);
+  glTexCoord2i (in_width, in_height);
   glVertex2f (1.0f, 1.0f);
   glEnd ();
 

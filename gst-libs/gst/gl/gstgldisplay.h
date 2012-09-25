@@ -129,8 +129,8 @@ struct _GstGLDisplay
 
   GstGLDisplayConversion colorspace_conversion;
 
-  GHashTable *uploads;
-  GHashTable *downloads;
+  GSList *uploads;
+  GSList *downloads;
 
   //foreign gl context
   gulong external_gl_context;

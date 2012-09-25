@@ -90,9 +90,9 @@ struct _GstGLDownloadClass
 GstGLDownload * gst_gl_download_new          (GstGLDisplay * display);
 
 gboolean gst_gl_download_init_format                (GstGLDownload * download, GstVideoFormat v_format,
-                                                     guint width, guint height);
+                                                     guint out_width, guint out_height);
 gboolean gst_gl_download_init_format_thread         (GstGLDownload * download, GstVideoFormat v_format,
-                                                     guint width, guint height);
+                                                     guint out_width, guint out_height);
 
 gboolean gst_gl_download_perform_with_memory_thread (GstGLDownload * download, GstGLMemory * gl_mem);
 gboolean gst_gl_download_perform_with_data_thread   (GstGLDownload * download, GLuint texture_id,
@@ -102,10 +102,10 @@ gboolean gst_gl_download_perform_with_memory        (GstGLDownload * download, G
 gboolean gst_gl_download_perform_with_data          (GstGLDownload * download, GLuint texture_id,
                                                      gpointer data[GST_VIDEO_MAX_PLANES]);
 
-GstGLDownload * gst_gl_display_find_download_thread (GstGLDisplay * display, GstVideoFormat v_format,
-                                                     guint width, guint height);
-GstGLDownload * gst_gl_display_find_download        (GstGLDisplay * display, GstVideoFormat v_format,
-                                                     guint width, guint height);
+GstGLDownload * gst_gl_display_find_download_unlocked (GstGLDisplay * display, GstVideoFormat v_format,
+                                                       guint out_width, guint out_height);
+GstGLDownload * gst_gl_display_find_download          (GstGLDisplay * display, GstVideoFormat v_format,
+                                                       guint out_width, guint out_height);
 
 G_END_DECLS
 

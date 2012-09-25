@@ -174,11 +174,8 @@ gst_gl_display_init (GstGLDisplay * display)
   display->gen_shader = NULL;
   display->del_shader = NULL;
 
-  display->uploads = g_hash_table_new_full (g_int64_hash, g_int64_equal, g_free,
-      g_object_unref);
-  display->downloads =
-      g_hash_table_new_full (g_int64_hash, g_int64_equal, g_free,
-      g_object_unref);
+  display->uploads = NULL;
+  display->downloads = NULL;
 
 #ifdef OPENGL_ES2
   display->redisplay_vertex_shader_str =
@@ -267,11 +264,11 @@ gst_gl_display_finalize (GObject * object)
     display->error_message = NULL;
   }
   if (display->uploads) {
-    g_hash_table_destroy (display->uploads);
+    g_slist_free_full (display->uploads, g_object_unref);
     display->uploads = NULL;
   }
   if (display->downloads) {
-    g_hash_table_destroy (display->downloads);
+    g_slist_free_full (display->downloads, g_object_unref);
     display->downloads = NULL;
   }
 }
