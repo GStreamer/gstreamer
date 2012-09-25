@@ -2308,6 +2308,9 @@ gst_eglglessink_finalize (GObject * object)
   g_mutex_free (eglglessink->flow_lock);
   eglglessink->flow_lock = NULL;
 
+  g_free (eglglessink->eglglesctx);
+  eglglessink->eglglesctx = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
