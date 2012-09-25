@@ -59,10 +59,10 @@
       through one or more <emphasis>sink pads</emphasis>. Source and sink
       elements have only source and sink pads, respectively. Data usually
       means buffers (described by the <ulink type="http"
-      url="&URLAPI;gstreamer-GstBuffer.html"><classname>GstBuffer
-      </classname></ulink> object) and events (described by the <ulink
-      type="http" url="&URLAPI;gstreamer-GstEvent.html"><classname>
-      GstEvent</classname></ulink> object).
+        url="&URLAPI;gstreamer-GstBuffer.html">
+      <classname>GstBuffer</classname></ulink> object) and events (described
+      by the <ulink type="http" url="&URLAPI;gstreamer-GstEvent.html">
+      <classname>GstEvent</classname></ulink> object).
     </para>
   </sect1>
 
@@ -71,8 +71,7 @@
 
     <para>
       A <emphasis>bin</emphasis> is a container for a collection of elements.
-      A <emphasis>pipeline</emphasis> is a special subtype of a bin that allows execution of all
-      of its contained child elements. Since bins are subclasses of elements
+      Since bins are subclasses of elements
       themselves, you can mostly control a bin as if it were an element,
       thereby abstracting away a lot of complexity for your application. You
       can, for example change state on all elements in a bin by changing the
@@ -80,9 +79,11 @@
       contained children (such as error messages, tag messages or EOS messages).
     </para>
     <para>
-      A <emphasis>pipeline</emphasis> is a top-level bin. As you set it to PAUSED or PLAYING state,
-      data flow will start and media processing will take place. Once started,
-      pipelines will run in a separate thread until you stop them or the end
+      A <emphasis>pipeline</emphasis> is a top-level bin. It provides a bus for
+      the application and manages the synchronization for its children. 
+      As you set it to PAUSED or PLAYING state, data flow will start and media
+      processing will take place. Once started, pipelines will run in a
+      separate thread until you stop them or the end
       of the data stream is reached.
     </para>
 

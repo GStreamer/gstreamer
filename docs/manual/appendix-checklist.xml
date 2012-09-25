@@ -74,7 +74,7 @@
       For example, <option>--gst-debug=oggdemux:5</option> would turn
       on debugging for the Ogg demuxer element. You can use wildcards as
       well. A debugging level of 0 will turn off all debugging, and a level
-      of 5 will turn on all debugging. Intermediate values only turn on
+      of 9 will turn on all debugging. Intermediate values only turn on
       some debugging (based on message severity; 2, for example, will only
       display errors and warnings). Here's a list of all available options:
     </para>
@@ -185,14 +185,6 @@
         of what it does. See the manual page of <command>gst-inspect</command>
         for more information.
       </para>
-    </sect2>
-
-    <sect2 id="section-applications-gst-editor">
-      <title>GstEditor</title>
-      <para> 
-        GstEditor is a set of widgets to display a graphical representation of a 
-        pipeline.
-      </para> 
     </sect2>
 
   </sect1>

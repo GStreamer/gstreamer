@@ -20,32 +20,32 @@
     without needing any adaptations to its autopluggers.
   </para>
   <para>
-    We will first introduce the concept of MIME types as a dynamic and
+    We will first introduce the concept of Media types as a dynamic and
     extendible way of identifying media streams. After that, we will introduce
     the concept of typefinding to find the type of a media stream. Lastly,
     we will explain how autoplugging and the &GStreamer; registry can be
-    used to setup a pipeline that will convert media from one mimetype to
+    used to setup a pipeline that will convert media from one mediatype to
     another, for example for media decoding.
   </para>
 
-  <sect1 id="section-mime">
-    <title>MIME-types as a way to identify streams</title>
+  <sect1 id="section-media">
+    <title>Media types as a way to identify streams</title>
     <para>
       We have previously introduced the concept of capabilities as a way
       for elements (or, rather, pads) to agree on a media type when
       streaming data from one element to the next (see <xref
       linkend="section-caps"/>). We have explained that a capability is
-      a combination of a mimetype and a set of properties. For most
+      a combination of a media type and a set of properties. For most
       container formats (those are the files that you will find on your
       hard disk; Ogg, for example, is a container format), no properties
-      are needed to describe the stream. Only a MIME-type is needed. A
-      full list of MIME-types and accompanying properties can be found
+      are needed to describe the stream. Only a media type is needed. A
+      full list of media types and accompanying properties can be found
       in <ulink type="http"
       url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/section-types-definitions.html">the
       Plugin Writer's Guide</ulink>.
     </para> 
     <para>
-      An element must associate a MIME-type to its source and sink pads
+      An element must associate a media type to its source and sink pads
       when it is loaded into the system. &GStreamer; knows about the
       different elements and what type of data they expect and emit through
       the &GStreamer; registry. This allows for very dynamic and extensible
@@ -54,14 +54,14 @@
 
     <para>
       In <xref linkend="chapter-helloworld"/>, we've learned to build a
-      music player for Ogg/Vorbis files. Let's look at the MIME-types
+      music player for Ogg/Vorbis files. Let's look at the media types
       associated with each pad in this pipeline. <xref
-      linkend="section-mime-img"/> shows what MIME-type belongs to each
+      linkend="section-mime-img"/> shows what media type belongs to each
       pad in this pipeline.
     </para>
 
     <figure float="1" id="section-mime-img">
-      <title>The Hello world pipeline with MIME types</title>
+      <title>The Hello world pipeline with media types</title>
       <mediaobject>
         <imageobject>
           <imagedata scale="75" fileref="images/mime-world.&image;" format="&IMAGE;"/>
@@ -98,11 +98,11 @@
     <para>
       Plugins in &GStreamer; can, as mentioned before, implement typefinder
       functionality. A plugin implementing this functionality will submit
-      a mimetype, optionally a set of file extensions commonly used for this
+      a media type, optionally a set of file extensions commonly used for this
       media type, and a typefind function. Once this typefind function inside
       the plugin is called, the plugin will see if the data in this media
       stream matches a specific pattern that marks the media type identified
-      by that mimetype. If it does, it will notify the typefind element of
+      by that media type. If it does, it will notify the typefind element of
       this fact, telling which mediatype was recognized and how certain we
       are that this stream is indeed that mediatype. Once this run has been
       completed for all plugins implementing a typefind functionality, the
@@ -257,7 +257,7 @@ GstElement *pipeline;
       the registry that can decode this streamtype. For this, we will get
       all element factories (which we've seen before in <xref
       linkend="section-elements-create"/>) and find the ones with the
-      given MIME-type and capabilities on their sinkpad. Note that we will
+      given media type and capabilities on their sinkpad. Note that we will
       only use parsers, demuxers and decoders. We will not use factories for
       any other element types, or we might get into a loop of encoders and
       decoders. For this, we will want to build a list of <quote>allowed</quote>
@@ -416,7 +416,7 @@ try_to_plug (GstPad        *pad,
 	     GstCaps       *caps)
 {
   GstObject *parent = GST_OBJECT (GST_OBJECT_PARENT (pad));
-  const gchar *mime;
+  const gchar *media;
   const GList *item;
   GstCaps *res, *audiocaps;
 
@@ -428,10 +428,10 @@ try_to_plug (GstPad        *pad,
   }
 
   /* as said above, we only try to plug audio... Omit video */
-  mime = gst_structure_get_name (gst_caps_get_structure (caps, 0));
-  if (g_strrstr (mime, "video")) {
-    g_print ("Omitting link for pad %s:%s because mimetype %s is non-audio\n",
-	     GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad), mime);
+  media = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  if (g_strrstr (media, "video")) {
+    g_print ("Omitting link for pad %s:%s because media type %s is non-audio\n",
+	     GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad), media);
     return;
   }
 
@@ -489,7 +489,7 @@ try_to_plug (GstPad        *pad,
 
   /* if we get here, no item was found */
   g_print ("No compatible pad found to decode %s on %s:%s\n",
-	   mime, GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad));
+	   media, GST_OBJECT_NAME (parent), GST_OBJECT_NAME (pad));
 }
 
 static void

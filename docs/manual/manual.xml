@@ -47,7 +47,6 @@
 <!ENTITY DATAACCESS           SYSTEM "advanced-dataaccess.xml">
 
 <!-- Part 4: Higher-level interfaces -->
-<!ENTITY XML                  SYSTEM "highlevel-xml.xml">
 <!ENTITY COMPONENTS           SYSTEM "highlevel-components.xml">
 
 <!-- Appendices -->
@@ -191,8 +190,8 @@
         much control (and as much code), but will prefer to use a standard
         playback interface that does most of the difficult internals for
         them. In this chapter, we will introduce you into the concept of
-        autopluggers, playback managing elements, XML-based pipelines and
-        other such things. Those higher-level interfaces are intended to
+        autopluggers, playback managing elements and other such things.
+        Those higher-level interfaces are intended to
         simplify &GStreamer;-based application programming. They do, however,
         also reduce the flexibility. It is up to the application developer
         to choose which interface he will want to use.
@@ -200,7 +199,6 @@
     </partintro>
 
     &COMPONENTS;
-    &XML;
 
   </part>
 
@@ -221,7 +219,7 @@
       </para>
       <para>
         In addition, we also provide a porting guide which will explain
-        easily how to port &GStreamer;-0.8 applications to &GStreamer;-0.10.
+        easily how to port &GStreamer;-0.10 applications to &GStreamer;-1.0.
       </para>
     </partintro>
 

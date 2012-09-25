@@ -17,18 +17,11 @@
     <title>Data probing</title>
     <para>
       Probing is best envisioned as a pad listener. Technically, a probe is
-      nothing more than a signal callback that can be attached to a pad.
-      Those signals are by default not fired at all (since that may have a
-      negative impact on performance), but can be enabled by attaching a
-      probe using <function>gst_pad_add_buffer_probe ()</function>,
-      <function>gst_pad_add_event_probe ()</function>, or
-      <function>gst_pad_add_data_probe ()</function>.
-      Those functions attach the signal handler and
-      enable the actual signal emission. Similarly, one can use the
-      <function>gst_pad_remove_buffer_probe ()</function>,
-      <function>gst_pad_remove_event_probe ()</function>, or
-      <function>gst_pad_remove_data_probe ()</function>
-      to remove the signal handlers again.
+      nothing more than a callback that can be attached to a pad.
+      You can attach a probe using <function>gst_pad_add_probe ()</function>.
+      Similarly, one can use the
+      <function>gst_pad_remove_probe ()</function>
+      to remove the callback again.
     </para>
     <para>
       Probes run in pipeline threading context, so callbacks should try to
@@ -50,18 +43,21 @@
     <programlisting><!-- example-begin probe.c -->
 #include &lt;gst/gst.h&gt;
 
-static gboolean
-cb_have_data (GstPad    *pad,
-	      GstBuffer *buffer,
-	      gpointer   u_data)
+static GstPadProbeReturn
+cb_have_data (GstPad          *pad,
+              GstPadProbeInfo *info,
+              gpointer         user_data)
 {
   gint x, y;
-  GstMapInfo info;
+  GstMapInfo map;
   guint16 *ptr, t;
-  
-  gst_buffer_map (buffer, &amp;info, GST_MAP_WRITE);
+  GstBuffer *buffer;
 
-  ptr = info.data;
+  buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  
+  gst_buffer_map (buffer, &amp;map, GST_MAP_WRITE);
+
+  ptr = (guint16 *) map.data;
   /* invert data */
   for (y = 0; y &lt; 288; y++) {
     for (x = 0; x &lt; 384 / 2; x++) {
@@ -71,7 +67,7 @@ cb_have_data (GstPad    *pad,
     }
     ptr += 384;
   }
-  gst_buffer_unmap (buffer, &amp;info);
+  gst_buffer_unmap (buffer, &amp;map);
 
   return TRUE;
 }
@@ -120,8 +116,9 @@ main (gint   argc,
   g_object_set (G_OBJECT (filter), "caps", filtercaps, NULL);
   gst_caps_unref (filtercaps);
 
-  pad = gst_element_get_pad (src, "src");
-  gst_pad_add_buffer_probe (pad, G_CALLBACK (cb_have_data), NULL);
+  pad = gst_element_get_static_pad (src, "src");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) cb_have_data, NULL, NULL);
   gst_object_unref (pad);
 
   /* run */
@@ -150,17 +147,14 @@ main (gint   argc,
     <para>
       The above example is not really correct though.  Strictly speaking, a
       pad probe callback is only allowed to modify the buffer content if the
-      buffer is writable, and it is only allowed to modify buffer metadata like
-      timestamps, caps, etc. if the buffer metadata is writable.  Whether this
-      is the case or not depends a lot on the pipeline and the elements
-      involved.  Often enough, this is the case, but sometimes it is not,
-      and if it is not then unexpected modification of the data or metadata
-      can introduce bugs that are very hard to debug and track down. You can
-      check if a buffer and its metadata are writable with
-      <function>gst_buffer_is_writable ()</function> and
-      <function>gst_buffer_is_metadata_writable ()</function>.  Since you
-      can't pass back a different buffer than the one passed in, there is no
-      point of making a buffer writable in the callback function.
+      buffer is writable.  Whether this is the case or not depends a lot on
+      the pipeline and the elements involved.  Often enough, this is the case,
+      but sometimes it is not, and if it is not then unexpected modification
+      of the data or metadata can introduce bugs that are very hard to debug
+      and track down. You can check if a buffer is writable with
+      <function>gst_buffer_is_writable ()</function>.  Since you
+      can pass back a different buffer than the one passed in, it is a good
+      idea to make the buffer writable in the callback function.
     </para>
     <para>
       Pad probes are suited best for looking at data as it passes through
@@ -364,11 +358,12 @@ main (gint   argc,
       contains an initialization function (usually called
       <function>plugin_init</function>) that will be called right after that.
       It's purpose is to register the elements provided by the plugin with
-      the &GStreamer; framework. If you want to embed elements directly in
+      the &GStreamer; framework. 
+      If you want to embed elements directly in
       your application, the only thing you need to do is to replace
-	  <function>GST_PLUGIN_DEFINE ()</function> with
-	  <function>GST_PLUGIN_DEFINE_STATIC ()</function>. This will cause the
-      elements to be registered when your application loads, and the elements
+	  <function>GST_PLUGIN_DEFINE ()</function> with a call to
+          <function>gst_plugin_register_static ()</function>. As soon as you
+      call <function>gst_plugin_register_static ()</function>, the elements
       will from then on be available like any other element, without them
       having to be dynamically loadable libraries. In the example below, you
       would be able to call <function>gst_element_factory_make
@@ -390,17 +385,25 @@ register_elements (GstPlugin *plugin)
 			       GST_RANK_NONE, MY_PLUGIN_TYPE);
 }
 
-GST_PLUGIN_DEFINE_STATIC (
-  GST_VERSION_MAJOR,
-  GST_VERSION_MINOR,
-  "my-private-plugins",
-  "Private elements of my application",
-  register_elements,
-  VERSION,
-  "LGPL",
-  "my-application",
-  "http://www.my-application.net/"
-)
+static
+my_code_init (void)
+{
+  ...
+
+  gst_plugin_register_static (
+    GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "my-private-plugins",
+    "Private elements of my application",
+    register_elements,
+    VERSION,
+    "LGPL",
+    "my-application-source",
+    "my-application",
+    "http://www.my-application.net/")
+
+  ...
+}
     </programlisting>
   </sect1>
 </chapter>

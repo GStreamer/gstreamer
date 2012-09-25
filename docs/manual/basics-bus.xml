@@ -97,6 +97,7 @@ main (gint   argc,
 {
   GstElement *pipeline;
   GstBus *bus;
+  guint bus_watch_id;
 
   /* init */
   gst_init (&amp;argc, &amp;argv);
@@ -109,7 +110,7 @@ main (gint   argc,
    * GLib main loop is attached to below
    */
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_watch (bus, my_bus_callback, NULL);
+  bus_watch_id = gst_bus_add_watch (bus, my_bus_callback, NULL);
   gst_object_unref (bus);
 <!-- example-end bus.c a -->
 [..]<!-- example-begin bus.c b -->
@@ -127,6 +128,7 @@ main (gint   argc,
   /* clean up */
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
+  g_source_remove (bus_watch_id);
   g_main_loop_unref (loop);
 
   return 0;

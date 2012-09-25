@@ -80,16 +80,14 @@
     <title>Scheduling in &GStreamer;</title>
 
     <para>
-      Scheduling of pipelines in &GStreamer; is done by using a thread for
-      each <quote>group</quote>, where a group is a set of elements separated
-      by <quote>queue</quote> elements. Within such a group, scheduling is
-      either push-based or pull-based, depending on which mode is supported
-      by the particular element. If elements support random access to data,
-      such as file sources, then elements downstream in the pipeline become
-      the entry point of this group (i.e. the element controlling the
-      scheduling of other elements). The entry point pulls data from upstream
-      and pushes data downstream, thereby calling data handling functions on
-      either type of element.
+      Each element in the &GStreamer; pipeline decides how it is going to
+      be scheduled. Elements can choose to be scheduled push-based or
+      pull-based. 
+      If elements support random access to data, such as file sources,
+      then elements downstream in the pipeline can ask to schedule the random
+      access elements in pull-based mode. Data is pulled from upstream
+      and pushed downstream. If pull-mode is not supported, the element can
+      decide to operate in push-mode.
     </para>
     <para>
       In practice, most elements in &GStreamer;, such as decoders, encoders,

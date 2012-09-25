@@ -172,11 +172,8 @@ main (gint   argc,
     </itemizedlist>
     <para>
       For convenience, it is possible to test <quote>playbin</quote> on
-      the commandline, using the command <quote>gst-launch-0.10 playbin
+      the commandline, using the command <quote>gst-launch-1.0 playbin
       uri=file:///path/to/file</quote>.
-    </para>
-    <para>
-      New applications should use playbin2 instead of the old playbin.
     </para>
   </sect1>
 
@@ -189,7 +186,7 @@ main (gint   argc,
       input from a source that is linked to its sinkpad and will try to
       detect the media type contained in the stream, and set up decoder
       routines for each of those. It will automatically select decoders.
-      For each decoded stream, it will emit the <quote>new-decoded-pad</quote>
+      For each decoded stream, it will emit the <quote>pad-added</quote>
       signal, to let the client know about the newly found decoded stream.
       For unknown streams (which might be the whole stream), it will emit
       the <quote>unknown-type</quote> signal. The application is then
@@ -238,7 +235,6 @@ GstElement *pipeline, *audio;
 static void
 cb_newpad (GstElement *decodebin,
 	   GstPad     *pad,
-	   gboolean    last,
 	   gpointer    data)
 {
   GstCaps *caps;
@@ -297,7 +293,7 @@ main (gint   argc,
   src = gst_element_factory_make ("filesrc", "source");
   g_object_set (G_OBJECT (src), "location", argv[1], NULL);
   dec = gst_element_factory_make ("decodebin", "decoder");
-  g_signal_connect (dec, "new-decoded-pad", G_CALLBACK (cb_newpad), NULL);
+  g_signal_connect (dec, "pad-added", G_CALLBACK (cb_newpad), NULL);
   gst_bin_add_many (GST_BIN (pipeline), src, dec, NULL);
   gst_element_link (src, dec);
 
@@ -367,14 +363,11 @@ main (gint   argc,
     </itemizedlist>
     <para>
       Decodebin can be easily tested on the commandline, e.g. by using the
-      command <command>gst-launch-0.10 filesrc location=file.ogg ! decodebin
+      command <command>gst-launch-1.0 filesrc location=file.ogg ! decodebin
       ! audioconvert ! audioresample ! autoaudiosink</command>.
     </para>
     <para>
-      New applications should use decodebin2 instead of the old decodebin.
-    </para>
-    <para>
-      The uridecodebin element is very similar to decodebin2, only that it
+      The uridecodebin element is very similar to decodebin, only that it
       automatically plugs a source plugin based on the protocol of the URI
       given.
     </para>

@@ -289,7 +289,7 @@ main (int   argc,
 	The Glib Object system</ulink>.
     </para>
     <para>
-      A <ulink type="http" url="&URLAPI;GstElementFactory.html">
+      A <ulink type="http" url="&URLAPI;GstElement.html">
       <classname>GstElement</classname></ulink> also provides various 
       <classname>GObject</classname> signals that can be used as a flexible
       callback mechanism. Here, too, you can use <command>gst-inspect</command>
@@ -303,17 +303,14 @@ main (int   argc,
     <title>More about element factories</title>
     <para>
       In the previous section, we briefly introduced the <ulink type="http"
-      url="&URLAPI;GstElement.html"><classname>GstElementFactory</classname></ulink>
+      url="&URLAPI;GstElementFactory.html"><classname>GstElementFactory</classname></ulink>
       object already as a way to create instances of an element. Element
       factories, however, are much more than just that. Element factories
       are the basic types retrieved from the &GStreamer; registry, they
       describe all plugins and elements that &GStreamer; can create. This
       means that element factories are useful for automated element
       instancing, such as what autopluggers do, and for creating lists
-      of available elements, such as what pipeline editing applications
-      (e.g. <ulink type="http"
-      url="http://gstreamer.freedesktop.org/modules/gst-editor.html">&GStreamer;
-      Editor</ulink>) do.
+      of available elements.
     </para>
     
     <sect2 id="section-elements-factories-details">

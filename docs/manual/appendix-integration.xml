@@ -23,16 +23,15 @@
         <para>
           For audio input and output, &GStreamer; provides input and
           output elements for several audio subsystems. Amongst others,
-          &GStreamer; includes elements for ALSA (alsasrc, alsamixer,
-          alsasink), OSS (osssrc, ossmixer, osssink) and Sun audio
-          (sunaudiosrc, sunaudiomixer, sunaudiosink).
+          &GStreamer; includes elements for ALSA (alsasrc,
+          alsasink), OSS (osssrc, osssink) Pulesaudio (pulsesrc, pulsesink)
+          and Sun audio (sunaudiosrc, sunaudiomixer, sunaudiosink).
         </para>
       </listitem>
       <listitem>
         <para>
           For video input, &GStreamer; contains source elements for
-          Video4linux (v4lsrc, v4lmjpegsrc, v4lelement and v4lmjpegisnk)
-          and Video4linux2 (v4l2src, v4l2element).
+          Video4linux2 (v4l2src, v4l2element, v4l2sink).
         </para>
       </listitem>
       <listitem>

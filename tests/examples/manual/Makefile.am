@@ -35,6 +35,7 @@ EXAMPLES = \
 	init \
 	query \
 	typefind \
+	probe \
 	fakesrc \
 	playbin \
 	decodebin
@@ -48,6 +49,7 @@ BUILT_SOURCES = \
 	init.c \
 	query.c \
 	typefind.c dynamic.c \
+	probe.c \
 	fakesrc.c \
 	playbin.c decodebin.c
 
@@ -79,6 +81,9 @@ query.c: $(top_srcdir)/docs/manual/advanced-position.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+probe.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 fakesrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml

@@ -19,11 +19,8 @@
     </para>
     <para> 
       The bin will also manage the elements contained in it. It will
-      figure out how the data will flow in the bin and generate an
-      optimal plan for that data flow. Plan generation is one of the
-      most complicated procedures in &GStreamer;. You will learn more
-      about this process, called scheduling, in <xref
-      linkend="section-threads-scheduling"/>.
+      perform state changes on the elements as well as collect and
+      forward bus messages.
     </para>
 
     <figure float="1" id="section-bin-img">
@@ -42,10 +39,10 @@
     <itemizedlist>
       <listitem>
         <para>
-          A pipeline: a generic container that allows scheduling of the
-          containing elements.  The toplevel bin has to be a pipeline,
-          every application thus needs at least one of these. Pipelines will
-          automatically run themselves in a background thread when started.
+          A pipeline: a generic container that manages the synchronization
+          and bus messages of the contained elements. The toplevel bin has
+          to be a pipeline, every application thus needs at least one of
+          these.
         </para>
       </listitem>
     </itemizedlist>
@@ -139,17 +136,17 @@ main (int   argc,
     </programlisting>
     <para>
       (This is a silly example of course, there already exists a much more
-      powerful and versatile custom bin like this: the playbin2 element.)
+      powerful and versatile custom bin like this: the playbin element.)
     </para>
     <para>
-      Custom bins can be created with a plugin or an XML description. You
+      Custom bins can be created with a plugin or from the application. You
       will find more information about creating custom bin in the <ulink
       type="http"
       url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/pwg/html/index.html">Plugin
       Writers Guide</ulink>.
     </para>
     <para>
-      Examples of such custom bins are the playbin2 and uridecodebin elements from<ulink
+      Examples of such custom bins are the playbin and uridecodebin elements from<ulink
       type="http"
       url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-plugins/html/index.html">
       gst-plugins-base</ulink>.
