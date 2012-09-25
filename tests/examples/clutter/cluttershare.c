@@ -33,7 +33,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/gl/gstglmeta.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/gl/gstglmemory.h>
 
 /* This example shows how to use textures that come from a
  * gst-plugins-gl pipeline, into the clutter framework
@@ -110,22 +111,43 @@ update_texture_actor (gpointer data)
   ClutterActor *stage = g_object_get_data (G_OBJECT (texture_actor), "stage");
   CoglHandle cogl_texture = 0;
   GstVideoMeta *v_meta;
-  GstGLMeta *gl_meta;
+  GstVideoInfo info;
+  GstVideoFrame frame;
+  guint tex_id;
 
   v_meta = gst_buffer_get_video_meta (inbuf);
-  gl_meta = gst_buffer_get_gl_meta (inbuf);
-  if (!v_meta || !gl_meta)
+  if (!v_meta) {
     g_warning ("Required Meta was not found on buffers");
+    return FALSE;
+  }
+
+  gst_video_info_set_format (&info, v_meta->format, v_meta->width,
+      v_meta->height);
+
+  if (!gst_video_frame_map (&frame, &info, inbuf, GST_MAP_READ | GST_MAP_GL)) {
+    g_warning ("Failed to map video frame");
+    return FALSE;
+  }
+
+  if (!gst_is_gl_memory (frame.map[0].memory)) {
+    g_warning ("Input buffer does not have GLMemory");
+    gst_video_frame_unmap (&frame);
+    return FALSE;
+  }
+
+  tex_id = *(guint *) frame.data[0];
 
   /* Create a cogl texture from the gst gl texture */
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_meta->memory->tex_id);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex_id);
   if (glGetError () != GL_NO_ERROR)
     g_debug ("failed to bind texture that comes from gst-gl\n");
-  cogl_texture = cogl_texture_new_from_foreign (gl_meta->memory->tex_id,
+  cogl_texture = cogl_texture_new_from_foreign (tex_id,
       GL_TEXTURE_RECTANGLE_ARB, v_meta->width, v_meta->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+
+  gst_video_frame_unmap (&frame);
 
   /* Previous cogl texture is replaced and so its ref counter discreases to 0.
    * According to the source code, glDeleteTexture is not called when the previous
