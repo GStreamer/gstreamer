@@ -60,9 +60,10 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->notify = notify;
   mem->user_data = user_data;
   mem->wrapped = FALSE;
-  mem->upload = gst_gl_display_find_upload (display, v_format, width, height);
-  mem->download =
-      gst_gl_display_find_download (display, v_format, width, height);
+  mem->upload = gst_gl_display_find_upload (display, v_format,
+      width, height, width, height);
+  mem->download = gst_gl_display_find_download (display, v_format,
+      width, height);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY,
       "new GL texture memory:%p format:%u dimensions:%ux%u", mem, v_format,
@@ -109,7 +110,7 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
           gst_gl_upload_init_format (gl_mem->upload, gl_mem->v_format,
-              gl_mem->width, gl_mem->height);
+              gl_mem->width, gl_mem->height, gl_mem->width, gl_mem->height);
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED);
         }
 
