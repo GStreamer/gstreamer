@@ -270,6 +270,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
       gst_structure_get_fraction (s, "fraction", &info.fps_n, &info.fps_d);
     }
 
+    gst_caps_unref (caps);
     caps = gst_video_info_to_caps (&info);
 
     GST_VIDEO_MIXER2_UNLOCK (mix);
