@@ -52,6 +52,13 @@
 
 #ifdef HAVE_VP8_ENCODER
 
+/* glib decided in 2.32 it would be a great idea to deprecated GValueArray without
+ * providing an alternative
+ *
+ * See https://bugzilla.gnome.org/show_bug.cgi?id=667228
+ * */
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/tag/tag.h>
 #include <string.h>
 
