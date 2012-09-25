@@ -653,8 +653,9 @@ check_release_datetime (const gchar * date_time)
 static GMutex gst_plugin_loading_mutex;
 
 #define CHECK_PLUGIN_DESC_FIELD(desc,field,fn)                               \
-  if (G_UNLIKELY ((desc)->field == NULL)) {                                  \
-    GST_ERROR ("GstPluginDesc for '%s' has no %s", fn, G_STRINGIFY (field)); \
+  if (G_UNLIKELY ((desc)->field == NULL || *(desc)->field == '\0')) {        \
+    g_warning ("Plugin description for '%s' has no valid %s field", fn, G_STRINGIFY (field)); \
+    goto return_error;                                                       \
   }
 
 /**
@@ -776,8 +777,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   plugin->orig_desc = desc;
 
   if (new_plugin) {
-    /* check plugin description: complain about bad values but accept them, to
-     * maintain backwards compatibility (FIXME: 0.11) */
+    /* check plugin description: complain about bad values and fail */
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, name, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, description, filename);
     CHECK_PLUGIN_DESC_FIELD (plugin->orig_desc, version, filename);
