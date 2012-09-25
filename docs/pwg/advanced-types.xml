@@ -60,13 +60,14 @@
     <para>
       If you need a new format that has not yet been defined in our <xref
       linkend="section-types-definitions"/>, you will want to have some general
-      guidelines on mimetype naming, properties and such. A mimetype would
-      ideally be one defined by IANA; else, it should be in the form
-      type/x-name, where type is the sort of data this mimetype handles (audio,
-      video, ...) and name should be something specific for this specific type.
-      Audio and video mimetypes should try to support the general audio/video
-      properties (see the list), and can use their own properties, too. To get
-      an idea of what properties we think are useful, see (again) the list.
+      guidelines on media type naming, properties and such. A media type would
+      ideally be equivalent to the Mime-type defined by IANA; else, it should
+      be in the form type/x-name, where type is the sort of data this media type
+      handles (audio, video, ...) and name should be something specific for
+      this specific type.  Audio and video media types should try to support the
+      general audio/video properties (see the list), and can use their own
+      properties, too. To get an idea of what properties we think are useful,
+      see (again) the list.
     </para>
     <para>
       Take your time to find the right set of properties for your type. There
@@ -206,7 +207,7 @@ plugin_init (GstPlugin *plugin)
 
         <thead>
           <row>
-            <entry>Mime Type</entry>
+            <entry>Media Type</entry>
             <entry>Description</entry>
             <entry>Property</entry>
             <entry>Property Type</entry>
@@ -634,7 +635,7 @@ plugin_init (GstPlugin *plugin)
 
         <thead>
           <row>
-            <entry>Mime Type</entry>
+            <entry>Media Type</entry>
             <entry>Description</entry>
             <entry>Property</entry>
             <entry>Property Type</entry>
@@ -878,7 +879,7 @@ plugin_init (GstPlugin *plugin)
             <entry>1, 2 or 4</entry>
             <entry>
               Version of the MPEG codec that this stream was encoded with.
-              Note that we have different mimetypes for 3ivx, XviD, DivX and
+              Note that we have different media types for 3ivx, XviD, DivX and
               "standard" ISO MPEG-4. This is <emphasis>not</emphasis> a good
               thing and we're fully aware of this. However, we do not have a
               solution yet.
@@ -1021,7 +1022,7 @@ plugin_init (GstPlugin *plugin)
             <entry></entry>
             <entry>
               There are currently no specific properties defined or needed for
-              this type. Note that we have different mimetypes for VP-3 and
+              this type. Note that we have different media types for VP-3 and
               Theora, which is not necessarily a good idea. This could probably
               be improved.
             </entry>
@@ -1132,7 +1133,7 @@ plugin_init (GstPlugin *plugin)
 
         <thead>
           <row>
-            <entry>Mime Type</entry>
+            <entry>Media Type</entry>
             <entry>Description</entry>
             <entry>Property</entry>
             <entry>Property Type</entry>
@@ -1281,7 +1282,7 @@ plugin_init (GstPlugin *plugin)
 
         <thead>
           <row>
-            <entry>Mime Type</entry>
+            <entry>Media Type</entry>
             <entry>Description</entry>
             <entry>Property</entry>
             <entry>Property Type</entry>
@@ -1317,7 +1318,7 @@ plugin_init (GstPlugin *plugin)
 
         <thead>
           <row>
-            <entry>Mime Type</entry>
+            <entry>Media Type</entry>
             <entry>Description</entry>
             <entry>Property</entry>
             <entry>Property Type</entry>

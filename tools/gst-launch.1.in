@@ -163,10 +163,10 @@ the left of it to the element right of it.
 
 .B Caps
 
-MIMETYPE \fI[, PROPERTY[, PROPERTY ...]]]\fR \fI[; CAPS[; CAPS ...]]\fR
+MEDIATYPE \fI[, PROPERTY[, PROPERTY ...]]]\fR \fI[; CAPS[; CAPS ...]]\fR
 
-Creates a capability with the given mimetype and optionally with given
-properties. The mimetype can be escaped using " or '.
+Creates a capability with the given media type and optionally with given
+properties. The media type can be escaped using " or '.
 If you want to chain caps, you can add more caps in the same format afterwards.
 
 .B Properties

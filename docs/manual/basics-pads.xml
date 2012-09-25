@@ -241,10 +241,10 @@ link_to_multiplexer (GstPad     *tolink_pad,
         <command>gst-inspect vorbisdec</command>. You will see two pads:
         a source and a sink pad. Both of these pads are always available,
         and both have capabilities attached to them. The sink pad will
-        accept vorbis-encoded audio data, with the mime-type
+        accept vorbis-encoded audio data, with the media type
         <quote>audio/x-vorbis</quote>. The source pad will be used
         to send raw (decoded) audio samples to the next element, with
-        a raw audio mime-type (in this case,
+        a raw audio media type (in this case,
 	<quote>audio/x-raw</quote>).  The source pad will also
         contain properties for the audio samplerate and the amount of
         channels, plus some more that you don't need to worry about

@@ -139,15 +139,15 @@ gst_my_filter_setcaps (GstPad  *pad,
 {
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
-  const gchar *mime;
+  const gchar *media;
 
   /* Since we're an audio filter, we want to handle raw audio
    * and from that audio type, we need to get the samplerate and
    * number of channels. */
-  mime = gst_structure_get_name (structure);
-  if (strcmp (mime, "audio/x-raw") != 0) {
-    GST_WARNING ("Wrong mimetype %s provided, we only support %s",
-		 mime, "audio/x-raw");
+  media = gst_structure_get_name (structure);
+  if (strcmp (media, "audio/x-raw") != 0) {
+    GST_WARNING ("Wrong media type %s provided, we only support %s",
+		 media, "audio/x-raw");
     return FALSE;
   }
 
@@ -181,9 +181,9 @@ gst_my_filter_getcaps (GstPad * pad)
 }
   --><!-- example-end caps.func b --></programlisting>
   <para>
-    In here, we check the mimetype of the provided caps. Normally, you don't
+    In here, we check the media type of the provided caps. Normally, you don't
     need to do that in your own plugin/element, because the core does that
-    for you. We simply use it to show how to retrieve the mimetype from a
+    for you. We simply use it to show how to retrieve the media type from a
     provided set of caps. Types are stored in <ulink type="http"
     url="../../gstreamer/html/gstreamer-GstStructure.html"><classname>GstStructure
     </classname></ulink> internally. A <ulink

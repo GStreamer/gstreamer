@@ -360,9 +360,9 @@ gst_my_filter_init (GstMyFilter * filter)
       The last argument in a template is its type
       or list of supported types. In this example, we use 'ANY', which means
       that this element will accept all input. In real-life situations, you
-      would set a mimetype and optionally a set of properties to make sure
+      would set a media type and optionally a set of properties to make sure
       that only supported input will come in. This representation should be
-      a string that starts with a mimetype, then a set of comma-separates
+      a string that starts with a media type, then a set of comma-separates
       properties with their supported values. In case of an audio filter that
       supports raw integer 16-bit audio, mono or stereo at any samplerate, the
       correct template would look like this:

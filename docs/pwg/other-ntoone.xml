@@ -72,7 +72,7 @@ gst_avi_mux_audio_link (GstPad        *pad,
 {
   GstAviMux *mux = GST_AVI_MUX (gst_pad_get_parent (pad));
   GstStructure *str = gst_caps_get_structure (caps, 0);
-  const gchar *mime = gst_structure_get_name (str);
+  const gchar *media = gst_structure_get_name (str);
 
   if (!strcmp (str, "audio/mpeg")) {
     /* get version, make sure it's 1, get layer, make sure it's 1-3,

@@ -1,13 +1,13 @@
 .TH GStreamer 1 "May 2003"
 .SH "NAME"
-gst\-typefind - print MIME type of file
+gst\-typefind - print Media type of file
 .SH "SYNOPSIS"
 .B  gst\-typefind <file>
 .SH "DESCRIPTION"
 .PP
 \fIgst\-typefind\fP uses the GStreamer type finding system to
 determine the relevant GStreamer plugin to parse or decode \fBfile\fP,
-and the corresponding MIME type.
+and the corresponding media type.
 .
 .SH "OPTIONS"
 .l

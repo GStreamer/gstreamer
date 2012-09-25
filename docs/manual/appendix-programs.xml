@@ -194,75 +194,137 @@ gst-inspect mad
 
     <screen>
 Factory Details:
-  Long name:	Audio Sink (OSS)
-  Class:	Sink/Audio
-  Description:	Output to a sound card via OSS
-  Version:	0.3.3.1
-  Author(s):	Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;
-  Copyright:	(C) 1999
+  Rank:         secondary (128)
+  Long-name:            Audio Sink (OSS)
+  Klass:                Sink/Audio
+  Description:          Output to a sound card via OSS
+  Author:               Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim.taymans@chello.be>
+
+Plugin Details:
+  Name:                 ossaudio
+  Description:          OSS (Open Sound System) support for GStreamer
+  Filename:             /home/wim/gst/head/gst-plugins-good/sys/oss/.libs/libgstossaudio.so
+  Version:              1.0.0.1
+  License:              LGPL
+  Source module:        gst-plugins-good
+  Source release date:  2012-09-25 12:52 (UTC)
+  Binary package:       GStreamer Good Plug-ins git
+  Origin URL:           Unknown package origin
 
 GObject
- +----GstObject
-       +----GstElement
-             +----GstOssSink
+ +----GInitiallyUnowned
+       +----GstObject
+             +----GstElement
+                   +----GstBaseSink
+                         +----GstAudioBaseSink
+                               +----GstAudioSink
+                                     +----GstOssSink
 
 Pad Templates:
   SINK template: 'sink'
     Availability: Always
     Capabilities:
-      'osssink_sink':
-        MIME type: 'audio/raw':
-        format: String: int
-        endianness: Integer: 1234
-        width: List:
-          Integer: 8
-          Integer: 16
-        depth: List:
-          Integer: 8
-          Integer: 16
-        channels: Integer range: 1 - 2
-        law: Integer: 0
-        signed: List:
-          Boolean: FALSE
-          Boolean: TRUE
-        rate: Integer range: 1000 - 48000
+      audio/x-raw
+                 format: { S16LE, U16LE, S8, U8 }
+                 layout: interleaved
+                   rate: [ 1, 2147483647 ]
+               channels: 1
+      audio/x-raw
+                 format: { S16LE, U16LE, S8, U8 }
+                 layout: interleaved
+                   rate: [ 1, 2147483647 ]
+               channels: 2
+           channel-mask: 0x0000000000000003
 
 
 Element Flags:
-  GST_ELEMENT_THREADSUGGESTED
+  no flags set
 
 Element Implementation:
-  No loopfunc(), must be chain-based or not configured yet
-  Has change_state() function: gst_osssink_change_state
-  Has custom save_thyself() function: gst_element_save_thyself
-  Has custom restore_thyself() function: gst_element_restore_thyself
+  Has change_state() function: gst_audio_base_sink_change_state
 
 Clocking Interaction:
-  element requires a clock
-  element provides a clock: GstOssClock
+  element is supposed to provide a clock but returned NULL
+
+Element has no indexing capabilities.
+Element has no URI handling capabilities.
 
 Pads:
   SINK: 'sink'
     Implementation:
-      Has chainfunc(): 0x40056fc0
+      Has chainfunc(): gst_base_sink_chain
+      Has custom eventfunc(): gst_base_sink_event
+      Has custom queryfunc(): gst_base_sink_sink_query
+      Has custom iterintlinkfunc(): gst_pad_iterate_internal_links_default
     Pad Template: 'sink'
 
-Element Arguments:
-  name                                    : String (Default "element")
-  device                                  : String (Default "/dev/dsp")
-  mute                                    : Boolean (Default false)
-  format                                  : Integer (Default 16)
-  channels                                : Enum "GstAudiosinkChannels" (default 1)
-    (0): 	Silence
-    (1): 	Mono
-    (2): 	Stereo
-  frequency                               : Integer (Default 11025)
-  fragment                                : Integer (Default 6)
-  buffer-size                             : Integer (Default 4096)
-
-Element Signals:
-  "handoff" :	 void user_function (GstOssSink* object, 
-    				gpointer user_data);
+Element Properties:
+  name                : The name of the object
+                        flags: readable, writable
+                        String. Default: "osssink0"
+  parent              : The parent of the object
+                        flags: readable, writable
+                        Object of type "GstObject"
+  sync                : Sync on the clock
+                        flags: readable, writable
+                        Boolean. Default: true
+  max-lateness        : Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)
+                        flags: readable, writable
+                        Integer64. Range: -1 - 9223372036854775807 Default: -1 
+  qos                 : Generate Quality-of-Service events upstream
+                        flags: readable, writable
+                        Boolean. Default: false
+  async               : Go asynchronously to PAUSED
+                        flags: readable, writable
+                        Boolean. Default: true
+  ts-offset           : Timestamp offset in nanoseconds
+                        flags: readable, writable
+                        Integer64. Range: -9223372036854775808 - 9223372036854775807 Default: 0 
+  enable-last-sample  : Enable the last-sample property
+                        flags: readable, writable
+                        Boolean. Default: false
+  last-sample         : The last sample received in the sink
+                        flags: readable
+                        Boxed pointer of type "GstSample"
+  blocksize           : Size in bytes to pull per buffer (0 = default)
+                        flags: readable, writable
+                        Unsigned Integer. Range: 0 - 4294967295 Default: 4096 
+  render-delay        : Additional render delay of the sink in nanoseconds
+                        flags: readable, writable
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  throttle-time       : The time to keep between rendered buffers
+                        flags: readable, writable
+                        Unsigned Integer64. Range: 0 - 18446744073709551615 Default: 0 
+  buffer-time         : Size of audio buffer in microseconds, this is the minimum latency that the sink reports
+                        flags: readable, writable
+                        Integer64. Range: 1 - 9223372036854775807 Default: 200000 
+  latency-time        : The minimum amount of data to write in each iteration in microseconds
+                        flags: readable, writable
+                        Integer64. Range: 1 - 9223372036854775807 Default: 10000 
+  provide-clock       : Provide a clock to be used as the global pipeline clock
+                        flags: readable, writable
+                        Boolean. Default: true
+  slave-method        : Algorithm to use to match the rate of the masterclock
+                        flags: readable, writable
+                        Enum "GstAudioBaseSinkSlaveMethod" Default: 1, "skew"
+                           (0): resample         - GST_AUDIO_BASE_SINK_SLAVE_RESAMPLE
+                           (1): skew             - GST_AUDIO_BASE_SINK_SLAVE_SKEW
+                           (2): none             - GST_AUDIO_BASE_SINK_SLAVE_NONE
+  can-activate-pull   : Allow pull-based scheduling
+                        flags: readable, writable
+                        Boolean. Default: false
+  alignment-threshold : Timestamp alignment threshold in nanoseconds
+                        flags: readable, writable
+                        Unsigned Integer64. Range: 1 - 18446744073709551614 Default: 40000000 
+  drift-tolerance     : Tolerance for clock drift in microseconds
+                        flags: readable, writable
+                        Integer64. Range: 1 - 9223372036854775807 Default: 40000 
+  discont-wait        : Window of time in nanoseconds to wait before creating a discontinuity
+                        flags: readable, writable
+                        Unsigned Integer64. Range: 0 - 18446744073709551614 Default: 1000000000 
+  device              : OSS device (usually /dev/dspN)
+                        flags: readable, writable
+                        String. Default: "/dev/dsp"
     </screen>
 
     <para> 
