@@ -90,7 +90,7 @@ main (gint argc, gchar * argv[])
   g_slist_free (new_src_list);
 
   end = gst_util_get_timestamp ();
-  g_print ("%" GST_TIME_FORMAT " - creating and linking %d elements\n",
+  g_print ("%" GST_TIME_FORMAT " - creating and linking %u elements\n",
       GST_TIME_ARGS (end - start), i);
 
   start = gst_util_get_timestamp ();
@@ -109,7 +109,7 @@ main (gint argc, gchar * argv[])
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   end = gst_util_get_timestamp ();
   gst_message_unref (msg);
-  g_print ("%" GST_TIME_FORMAT " - putting %u buffers through\n",
+  g_print ("%" GST_TIME_FORMAT " - putting %d buffers through\n",
       GST_TIME_ARGS (end - start), BUFFER_COUNT);
 
   start = gst_util_get_timestamp ();

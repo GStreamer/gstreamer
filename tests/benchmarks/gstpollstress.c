@@ -125,7 +125,7 @@ run_test (void *threadid)
       mess_some_more ();
       if (g_timer_elapsed (timer, NULL) > 0.5) {
         g_mutex_lock (&fdlock);
-        g_print ("active fds :%d\n", g_list_length (fds));
+        g_print ("active fds :%u\n", g_list_length (fds));
         g_timer_start (timer);
         g_mutex_unlock (&fdlock);
       }
