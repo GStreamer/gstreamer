@@ -53,7 +53,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [1, 2];"
         "audio/x-raw-int, "
         "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
+        "signed = (boolean) { FALSE }, "
         "width = (int) 8, "
         "depth = (int) 8, "
         "rate = (int) { " RATES "}, " "channels = (int) [1, 2]")
