@@ -1397,7 +1397,7 @@ gst_x264_enc_set_latency (GstX264Enc * encoder)
   } else {
     /* We can't do live as we don't know our latency */
     gst_video_encoder_set_latency (GST_VIDEO_ENCODER (encoder),
-        GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE);
+        0, GST_CLOCK_TIME_NONE);
   }
 }
 
