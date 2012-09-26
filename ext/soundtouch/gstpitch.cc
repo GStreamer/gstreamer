@@ -88,13 +88,17 @@ static void gst_pitch_get_property (GObject * object,
 
 
 static gboolean gst_pitch_setcaps (GstPitch * pitch, GstCaps * caps);
-static GstFlowReturn gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer);
+static GstFlowReturn gst_pitch_chain (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer);
 static GstStateChangeReturn gst_pitch_change_state (GstElement * element,
     GstStateChange transition);
-static gboolean gst_pitch_sink_event (GstPad * pad, GstObject * parent, GstEvent * event);
-static gboolean gst_pitch_src_event (GstPad * pad, GstObject * parent, GstEvent * event);
+static gboolean gst_pitch_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
+static gboolean gst_pitch_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 
-static gboolean gst_pitch_src_query (GstPad * pad, GstObject * parent, GstQuery * query);
+static gboolean gst_pitch_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 
 #define gst_pitch_parent_class parent_class
 G_DEFINE_TYPE (GstPitch, gst_pitch, GST_TYPE_ELEMENT);
@@ -120,22 +124,26 @@ gst_pitch_class_init (GstPitchClass * klass)
   g_object_class_install_property (gobject_class, ARG_PITCH,
       g_param_spec_float ("pitch", "Pitch",
           "Audio stream pitch", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, ARG_TEMPO,
       g_param_spec_float ("tempo", "Tempo",
           "Audio stream tempo", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, ARG_RATE,
       g_param_spec_float ("rate", "Rate",
           "Audio stream rate", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, ARG_OUT_RATE,
       g_param_spec_float ("output-rate", "Output Rate",
           "Output rate on downstream segment events", 0.1, 10.0, 1.0,
-          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
+              G_PARAM_STATIC_STRINGS)));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_pitch_change_state);
 
@@ -225,14 +233,16 @@ gst_pitch_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_TEMPO:
       pitch->tempo = g_value_get_float (value);
-      pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
+      pitch->priv->stream_time_ratio =
+          pitch->tempo * pitch->rate * pitch->seg_arate;
       pitch->priv->st->setTempo (pitch->tempo * pitch->seg_arate);
       GST_OBJECT_UNLOCK (pitch);
       gst_pitch_update_duration (pitch);
       break;
     case ARG_RATE:
       pitch->rate = g_value_get_float (value);
-      pitch->priv->stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
+      pitch->priv->stream_time_ratio =
+          pitch->tempo * pitch->rate * pitch->seg_arate;
       pitch->priv->st->setRate (pitch->rate);
       GST_OBJECT_UNLOCK (pitch);
       gst_pitch_update_duration (pitch);
@@ -354,8 +364,7 @@ gst_pitch_prepare_buffer (GstPitch * pitch)
   buffer = gst_buffer_new_and_alloc (samples * pitch->sample_size);
 
   gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE);
-  samples =
-      priv->st->receiveSamples ((gfloat *) info.data, samples);
+  samples = priv->st->receiveSamples ((gfloat *) info.data, samples);
   gst_buffer_unmap (buffer, &info);
 
   if (samples <= 0) {
@@ -694,9 +703,7 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   seg.rate = out_seg_rate;
   seg.applied_rate *= our_arate;
 
-  GST_LOG_OBJECT (pitch->sinkpad,
-      "segment %" G_GINT64_FORMAT " - %" G_GINT64_FORMAT " (%d)", seg.start,
-      seg.stop, seg.format);
+  GST_LOG_OBJECT (pitch->sinkpad, "in segment %" GST_SEGMENT_FORMAT, &seg);
 
   stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
 
@@ -713,9 +720,12 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
   GST_OBJECT_UNLOCK (pitch);
 
   seg.start = (gint64) (seg.start / stream_time_ratio);
+  seg.position = (gint64) (seg.position / stream_time_ratio);
   if (seg.stop != (guint64) - 1)
     seg.stop = (gint64) (seg.stop / stream_time_ratio);
   seg.time = (gint64) (seg.time / stream_time_ratio);
+
+  GST_LOG_OBJECT (pitch->sinkpad, "out segment %" GST_SEGMENT_FORMAT, &seg);
 
   gst_event_unref (*event);
   *event = gst_event_new_segment (&seg);
@@ -759,7 +769,7 @@ gst_pitch_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_CAPS:
     {
-      GstCaps * caps;
+      GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
       res = gst_pitch_setcaps (pitch, caps);
@@ -821,8 +831,14 @@ gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   // Remember the first time and corresponding offset
   if (!GST_CLOCK_TIME_IS_VALID (pitch->next_buffer_time)) {
+    gfloat stream_time_ratio;
     GstFormat out_format = GST_FORMAT_DEFAULT;
-    pitch->next_buffer_time = timestamp;
+
+    GST_OBJECT_LOCK (pitch);
+    stream_time_ratio = priv->stream_time_ratio;
+    GST_OBJECT_UNLOCK (pitch);
+
+    pitch->next_buffer_time = timestamp / stream_time_ratio;
     gst_pitch_convert (pitch, GST_FORMAT_TIME, timestamp, &out_format,
         &pitch->next_buffer_offset);
   }
