@@ -565,7 +565,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
               error = NULL;
               gst_gl_shader_use (NULL);
               g_object_unref (G_OBJECT (upload->shader));
-              display->shader = NULL;
+              upload->shader = NULL;
             } else {
               upload->shader_attr_position_loc =
                   gst_gl_shader_get_attribute_location
@@ -609,13 +609,13 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
               g_error_free (error);
               error = NULL;
               gst_gl_shader_use (NULL);
-              g_object_unref (G_OBJECT (display->shader));
-              display->shader = NULL;
+              g_object_unref (G_OBJECT (upload->shader));
+              upload->shader = NULL;
             } else {
-              display->shader_attr_position_loc =
+              upload->shader_attr_position_loc =
                   gst_gl_shader_get_attribute_location
                   (upload->shader, "a_position");
-              display->shader_upload_attr_texture_loc =
+              upload->shader_attr_texture_loc =
                   gst_gl_shader_get_attribute_location
                   (upload->shader, "a_texCoord");
             }
@@ -642,7 +642,8 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 
 #ifndef OPENGL_ES2
             if (!gst_gl_shader_compile_and_check
-                (upload->shader, text_shader, GST_GL_SHADER_FRAGMENT_SOURCE)) {
+                (upload->shader, text_shader_I420_YV12,
+                    GST_GL_SHADER_FRAGMENT_SOURCE)) {
               gst_gl_display_set_error (display,
                   "Failed to initialize shader for uploading I420 or YV12");
               g_object_unref (G_OBJECT (upload->shader));
@@ -651,7 +652,8 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 #else
             gst_gl_shader_set_vertex_source (upload->shader,
                 text_vertex_shader);
-            gst_gl_shader_set_fragment_source (upload->shader, text_shader);
+            gst_gl_shader_set_fragment_source (upload->shader,
+                text_shader_I420_YV12);
 
             gst_gl_shader_compile (upload->shader, &error);
             if (error) {
@@ -660,12 +662,12 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
               error = NULL;
               gst_gl_shader_use (NULL);
               g_object_unref (G_OBJECT (upload->shader));
-              display->shader = NULL;
+              upload->shader = NULL;
             } else {
-              display->shader_attr_position_loc =
+              upload->shader_attr_position_loc =
                   gst_gl_shader_get_attribute_location
                   (upload->shader, "a_position");
-              display->shader_attr_texture_loc =
+              upload->shader_attr_texture_loc =
                   gst_gl_shader_get_attribute_location
                   (upload->shader, "a_texCoord");
             }
@@ -702,7 +704,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
               upload->shader_attr_position_loc =
                   gst_gl_shader_get_attribute_location
                   (upload->shader, "a_position");
-              upload->shader_upload_attr_texture_loc =
+              upload->shader_attr_texture_loc =
                   gst_gl_shader_get_attribute_location
                   (upload->shader, "a_texCoord");
             }
@@ -1214,9 +1216,11 @@ void
 _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
-  guint in_width, in_height, out_width, out_height;
+  guint out_width, out_height;
 
-#ifdef OPENGL_ES2
+#ifndef OPENGL_ES2
+  guint in_width, in_height;
+#else
   GLint viewport_dim[4];
 
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
@@ -1232,8 +1236,6 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 #endif
 
-  in_width = upload->in_width;
-  in_height = upload->in_height;
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
@@ -1242,6 +1244,9 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
 
   /* setup a texture to render to */
 #ifndef OPENGL_ES2
+  in_width = upload->in_width;
+  in_height = upload->in_height;
+
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
 #endif
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
