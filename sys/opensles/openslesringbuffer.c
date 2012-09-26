@@ -105,6 +105,16 @@ _opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
       (spec->bigend ? SL_BYTEORDER_BIGENDIAN : SL_BYTEORDER_LITTLEENDIAN);
 }
 
+static inline void
+_opensles_player_read_position (GstOpenSLESRingBuffer * thiz)
+{
+  if (thiz->playerPlay) {
+    SLmillisecond position;
+    (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
+    GST_LOG_OBJECT (thiz, "position %u ms", (guint) position);
+  }
+}
+
 static void
 _opensles_enqueue_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
@@ -114,6 +124,8 @@ _opensles_enqueue_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   guint8 *ptr;
   gint seg;
   gint len;
+
+  _opensles_player_read_position (thiz);
 
   if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
@@ -728,11 +740,27 @@ gst_opensles_ringbuffer_stop (GstRingBuffer * rb)
   return res;
 }
 
-
 static guint
 gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
 {
   return 0;
+}
+
+static guint
+gst_opensles_ringbuffer_commit (GstRingBuffer * rb, guint64 * sample,
+    guchar * data, gint in_samples, gint out_samples, gint * accum)
+{
+  GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+  guint result;
+
+  _opensles_player_read_position (thiz);
+
+  result =
+      GST_CALL_PARENT_WITH_DEFAULT (GST_RING_BUFFER_CLASS, commit, (rb, sample,
+          data, in_samples, out_samples, accum), 0);
+  GST_LOG_OBJECT (thiz, "wrote %d samples", result);
+
+  return result;
 }
 
 static void
@@ -784,6 +812,9 @@ gst_opensles_ringbuffer_class_init (GstOpenSLESRingBufferClass * klass)
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_opensles_ringbuffer_stop);
   gstringbuffer_class->delay =
       GST_DEBUG_FUNCPTR (gst_opensles_ringbuffer_delay);
+  gstringbuffer_class->commit =
+      GST_DEBUG_FUNCPTR (gst_opensles_ringbuffer_commit);
+
 }
 
 static void
