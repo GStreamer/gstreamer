@@ -1757,6 +1757,17 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
   }
 
+  /* DTS is expected monotone ascending, so a good guess is the lowest PTS
+   * of all pending frames, i.e. the oldest frame's PTS (all being OK) */
+  if (!GST_CLOCK_TIME_IS_VALID (frame->dts) && encoder->priv->frames) {
+    GstVideoCodecFrame *oframe = encoder->priv->frames->data;
+
+    frame->dts = oframe->pts;
+    GST_DEBUG_OBJECT (encoder,
+        "no valid DTS, using oldest frame's PTS %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (frame->pts));
+  }
+
   frame->distance_from_sync = priv->distance_from_sync;
   priv->distance_from_sync++;
 
