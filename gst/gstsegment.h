@@ -131,7 +131,7 @@ typedef enum {
  * values of the seek flags.
  */
 /* Note: update gst_segment_do_seek() when adding new flags here */
-typedef enum {
+typedef enum { /*< flags >*/
   GST_SEGMENT_FLAG_NONE            = GST_SEEK_FLAG_NONE,
   GST_SEGMENT_FLAG_RESET           = GST_SEEK_FLAG_FLUSH,
   GST_SEGMENT_FLAG_SKIP            = GST_SEEK_FLAG_SKIP,
