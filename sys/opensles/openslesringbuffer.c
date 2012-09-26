@@ -198,15 +198,6 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Register callback on the buffer queue */
-  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
-      _opensles_enqueue_cb, rb);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
-        (guint32) result);
-    goto failed;
-  }
-
   /* Define our ringbuffer in terms of number of buffers and buffer size. */
   spec->segsize = (spec->rate * spec->bytes_per_sample) >> 2;
   spec->segtotal = 16;
@@ -224,18 +215,12 @@ _opensles_recorder_start (GstRingBuffer * rb)
   SLresult result;
   gint i;
 
-  /* in case already recording, stop recording and clear buffer queue */
-  result =
-      (*thiz->recorderRecord)->SetRecordState (thiz->recorderRecord,
-      SL_RECORDSTATE_STOPPED);
+  /* Register callback on the buffer queue */
+  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
+      _opensles_enqueue_cb, rb);
   if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "recorder.SetRecordState failed(0x%08x)",
+    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
         (guint32) result);
-    return FALSE;
-  }
-  result = (*thiz->bufferQueue)->Clear (thiz->bufferQueue);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "bq.Clear failed(0x%08x)", (guint32) result);
     return FALSE;
   }
 
@@ -244,7 +229,7 @@ _opensles_recorder_start (GstRingBuffer * rb)
     _opensles_enqueue_cb (NULL, rb);
   }
 
-  /* start recording */
+  /* Start recording */
   result =
       (*thiz->recorderRecord)->SetRecordState (thiz->recorderRecord,
       SL_RECORDSTATE_RECORDING);
@@ -262,6 +247,7 @@ _opensles_recorder_stop (GstRingBuffer * rb)
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
 
+  /* Stop recording */
   result =
       (*thiz->recorderRecord)->SetRecordState (thiz->recorderRecord,
       SL_RECORDSTATE_STOPPED);
@@ -270,6 +256,24 @@ _opensles_recorder_stop (GstRingBuffer * rb)
         (guint32) result);
     return FALSE;
   }
+
+  /* Unregister callback on the buffer queue */
+  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
+      NULL, NULL);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
+        (guint32) result);
+    return FALSE;
+  }
+
+  /* Reset the queue */
+  result = (*thiz->bufferQueue)->Clear (thiz->bufferQueue);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "bufferQueue.Clear failed(0x%08x)",
+        (guint32) result);
+    return FALSE;
+  }
+
   return TRUE;
 }
 
@@ -379,15 +383,6 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Register callback on the buffer queue */
-  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
-      _opensles_enqueue_cb, rb);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
-        (guint32) result);
-    goto failed;
-  }
-
   /* Get the volume interface */
   result = (*thiz->playerObject)->GetInterface (thiz->playerObject,
       SL_IID_VOLUME, &thiz->playerVolume);
@@ -418,11 +413,21 @@ _opensles_player_start (GstRingBuffer * rb)
   SLresult result;
   gint i;
 
+  /* Register callback on the buffer queue */
+  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
+      _opensles_enqueue_cb, rb);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
+        (guint32) result);
+    return FALSE;
+  }
+
   /* Fill the queue by enqueing buffers */
   for (i = 0; i < PLAYER_QUEUE_SIZE; i++) {
     _opensles_enqueue_cb (NULL, rb);
   }
 
+  /* Change player state into PLAYING */
   result =
       (*thiz->playerPlay)->SetPlayState (thiz->playerPlay,
       SL_PLAYSTATE_PLAYING);
@@ -457,14 +462,34 @@ _opensles_player_stop (GstRingBuffer * rb)
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
 
+  /* Change player state into STOPPED */
   result =
       (*thiz->playerPlay)->SetPlayState (thiz->playerPlay,
       SL_PLAYSTATE_STOPPED);
+
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "player.SetPlayState failed(0x%08x)",
         (guint32) result);
     return FALSE;
   }
+
+  /* Unregister callback on the buffer queue */
+  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
+      NULL, NULL);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
+        (guint32) result);
+    return FALSE;
+  }
+
+  /* Reset the queue */
+  result = (*thiz->bufferQueue)->Clear (thiz->bufferQueue);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "bufferQueue.Clear failed(0x%08x)",
+        (guint32) result);
+    return FALSE;
+  }
+
   return TRUE;
 }
 
