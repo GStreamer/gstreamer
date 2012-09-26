@@ -43,16 +43,16 @@ m4_define([gst_plugins_bad_version],
 
 # VA-API minimum version number
 m4_define([va_api_version],     [0.30.4])
-m4_define([va_api_drm_version], [0.34.0])
+m4_define([va_api_drm_version], [0.33.0])
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_glx_version], [0.32.0])
-m4_define([va_api_wld_version], [0.34.0])
+m4_define([va_api_wld_version], [0.33.0])
 
 # libva package version number
-m4_define([libva_drm_package_version], [1.2.0])
+m4_define([libva_drm_package_version], [1.1.0])
 m4_define([libva_x11_package_version], [1.0.3])
 m4_define([libva_glx_package_version], [1.0.9])
-m4_define([libva_wld_package_version], [1.2.0])
+m4_define([libva_wld_package_version], [1.1.0])
 
 # gtk-doc version number
 # XXX: introspection annotations require gtk-doc >= 1.12
