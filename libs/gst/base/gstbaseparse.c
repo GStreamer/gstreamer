@@ -921,7 +921,7 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
     {
       const GstSegment *in_segment;
       GstSegment out_segment;
-      gint64 offset = 0, next_pts;
+      gint64 offset = 0, next_dts;
 
       gst_event_parse_segment (event, &in_segment);
       gst_segment_init (&out_segment, GST_FORMAT_TIME);
@@ -957,7 +957,7 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
           out_segment.stop = seek->segment.stop;
           out_segment.time = seek->segment.start;
 
-          next_pts = seek->start_ts;
+          next_dts = seek->start_ts;
           parse->priv->exact_position = seek->accurate;
           g_free (seek);
         } else {
@@ -965,11 +965,11 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
           /* as these are only estimates, stop is kept open-ended to avoid
            * premature cutting */
           gst_base_parse_convert (parse, GST_FORMAT_BYTES, in_segment->start,
-              GST_FORMAT_TIME, (gint64 *) & next_pts);
+              GST_FORMAT_TIME, (gint64 *) & next_dts);
 
-          out_segment.start = next_pts;
+          out_segment.start = next_dts;
           out_segment.stop = GST_CLOCK_TIME_NONE;
-          out_segment.time = next_pts;
+          out_segment.time = next_dts;
 
           parse->priv->exact_position = (in_segment->start == 0);
         }
@@ -992,12 +992,12 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
 
         event = gst_event_new_segment (&out_segment);
 
-        next_pts = 0;
+        next_dts = 0;
       } else {
         /* not considered BYTE seekable if it is talking to us in TIME,
          * whatever else it might claim */
         parse->priv->upstream_seekable = FALSE;
-        next_pts = in_segment->start;
+        next_dts = in_segment->start;
       }
 
       memcpy (&parse->segment, &out_segment, sizeof (GstSegment));
@@ -1023,7 +1023,9 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
 
       parse->priv->offset = offset;
       parse->priv->sync_offset = offset;
-      parse->priv->next_pts = next_pts;
+      parse->priv->next_dts = next_dts;
+      if (parse->priv->pts_interpolate)
+        parse->priv->next_pts = next_dts;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->discont = TRUE;
@@ -4007,8 +4009,9 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       parse->priv->last_offset = seekpos;
       parse->priv->seen_keyframe = FALSE;
       parse->priv->discont = TRUE;
-      parse->priv->next_pts = start_ts;
-      parse->priv->next_dts = GST_CLOCK_TIME_NONE;
+      parse->priv->next_dts = start_ts;
+      if (parse->priv->pts_interpolate)
+        parse->priv->next_pts = start_ts;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->sync_offset = seekpos;
