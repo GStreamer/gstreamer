@@ -40,6 +40,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SHM_SINK))
 typedef struct _GstShmSink GstShmSink;
 typedef struct _GstShmSinkClass GstShmSinkClass;
+typedef struct _GstShmSinkAllocator GstShmSinkAllocator;
 
 struct _GstShmSink
 {
@@ -64,6 +65,10 @@ struct _GstShmSink
   GstClockTimeDiff buffer_time;
 
   GCond cond;
+
+  GstShmSinkAllocator *allocator;
+
+  GstAllocationParams params;
 };
 
 struct _GstShmSinkClass

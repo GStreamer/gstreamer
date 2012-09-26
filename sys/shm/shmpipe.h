@@ -78,9 +78,12 @@ typedef struct _ShmPipe ShmPipe;
 typedef struct _ShmBlock ShmBlock;
 typedef struct _ShmBuffer ShmBuffer;
 
+typedef void (*sp_buffer_free_callback) (void * tag, void * user_data);
+
 ShmPipe *sp_writer_create (const char *path, size_t size, mode_t perms);
 const char *sp_writer_get_path (ShmPipe *pipe);
-void sp_close (ShmPipe * self);
+void sp_writer_close (ShmPipe * self, sp_buffer_free_callback callback,
+    void * user_data);
 void *sp_get_data (ShmPipe * self);
 void sp_set_data (ShmPipe * self, void *data);
 
@@ -92,24 +95,26 @@ int sp_writer_get_client_fd (ShmClient * client);
 
 ShmBlock *sp_writer_alloc_block (ShmPipe * self, size_t size);
 void sp_writer_free_block (ShmBlock *block);
-int sp_writer_send_buf (ShmPipe * self, char *buf, size_t size, uint64_t tag);
+int sp_writer_send_buf (ShmPipe * self, char *buf, size_t size, void * tag);
 char *sp_writer_block_get_buf (ShmBlock *block);
 ShmPipe *sp_writer_block_get_pipe (ShmBlock *block);
 size_t sp_writer_get_max_buf_size (ShmPipe * self);
 
 ShmClient * sp_writer_accept_client (ShmPipe * self);
-void sp_writer_close_client (ShmPipe *self, ShmClient * client);
-int sp_writer_recv (ShmPipe * self, ShmClient * client);
+void sp_writer_close_client (ShmPipe *self, ShmClient * client,
+    sp_buffer_free_callback callback, void * user_data);
+int sp_writer_recv (ShmPipe * self, ShmClient * client, void ** tag);
 
 int sp_writer_pending_writes (ShmPipe * self);
+
+ShmBuffer *sp_writer_get_pending_buffers (ShmPipe * self);
+ShmBuffer *sp_writer_get_next_buffer (ShmBuffer * buffer);
+void *sp_writer_buf_get_tag (ShmBuffer * buffer);
 
 ShmPipe *sp_client_open (const char *path);
 long int sp_client_recv (ShmPipe * self, char **buf);
 int sp_client_recv_finish (ShmPipe * self, char *buf);
-
-ShmBuffer *sp_writer_get_pending_buffers (ShmPipe * self);
-ShmBuffer *sp_writer_get_next_buffer (ShmBuffer * buffer);
-uint64_t sp_writer_buf_get_tag (ShmBuffer * buffer);
+void sp_client_close (ShmPipe * self);
 
 #ifdef __cplusplus
 }
