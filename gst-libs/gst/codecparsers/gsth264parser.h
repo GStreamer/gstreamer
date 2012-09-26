@@ -48,6 +48,9 @@ G_BEGIN_DECLS
 #define GST_H264_IS_SP_SLICE(slice) (((slice)->type % 5) == GST_H264_SP_SLICE)
 #define GST_H264_IS_SI_SLICE(slice) (((slice)->type % 5) == GST_H264_SI_SLICE)
 
+#define GST_H264_IS_MVC_NALU(nalu) \
+  ((nalu)->extension_type == GST_H264_NAL_EXTENSION_MVC)
+
 /**
  * GstH264Profile:
  * @GST_H264_PROFILE_BASELINE: Baseline profile (A.2.1)
@@ -130,6 +133,19 @@ typedef enum
   GST_H264_NAL_SLICE_AUX    = 19,
   GST_H264_NAL_SLICE_EXT    = 20
 } GstH264NalUnitType;
+
+/**
+ * GstH264NalUnitExtensionType:
+ * @GST_H264_NAL_EXTENSION_NONE: No NAL unit header extension is available
+ * @GST_H264_NAL_EXTENSION_MVC: NAL unit header extension for MVC (Annex H)
+ *
+ * Indicates the type of H.264 NAL unit extension.
+ */
+typedef enum
+{
+  GST_H264_NAL_EXTENSION_NONE = 0,
+  GST_H264_NAL_EXTENSION_MVC,
+} GstH264NalUnitExtensionType;
 
 /**
  * GstH264ParserResult:
@@ -221,6 +237,7 @@ typedef enum
 typedef struct _GstH264NalParser              GstH264NalParser;
 
 typedef struct _GstH264NalUnit                GstH264NalUnit;
+typedef struct _GstH264NalUnitExtensionMVC    GstH264NalUnitExtensionMVC;
 
 typedef struct _GstH264SPS                    GstH264SPS;
 typedef struct _GstH264PPS                    GstH264PPS;
@@ -240,6 +257,29 @@ typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264SEIMessage             GstH264SEIMessage;
 
 /**
+ * GstH264NalUnitExtensionMVC:
+ * @non_idr_flag: If equal to 0, it specifies that the current access
+ *   unit is an IDR access unit
+ * @priority_id: The priority identifier for the NAL unit
+ * @view_id: The view identifier for the NAL unit
+ * @temporal_id: The temporal identifier for the NAL unit
+ * @anchor_pic_flag: If equal to 1, it specifies that the current
+ *   access unit is an anchor access unit
+ * @inter_view_flag: If equal to 0, it specifies that the current view
+ *   component is not used for inter-view prediction by any other view
+ *   component in the current access unit
+ */
+struct _GstH264NalUnitExtensionMVC
+{
+  guint8 non_idr_flag;
+  guint8 priority_id;
+  guint16 view_id;
+  guint8 temporal_id;
+  guint8 anchor_pic_flag;
+  guint8 inter_view_flag;
+};
+
+/**
  * GstH264NalUnit:
  * @ref_idc: not equal to 0 specifies that the content of the NAL unit
  *  contains a sequence parameter set, a sequence parameter set
@@ -257,6 +297,7 @@ typedef struct _GstH264SEIMessage             GstH264SEIMessage;
  * @valid: If the nal unit is valid, which means it has
  * already been parsed
  * @data: The data from which the Nalu has been parsed
+ * @header_bytes: The size of the NALU header in bytes
  *
  * Structure defining the Nal unit headers
  */
@@ -273,6 +314,12 @@ struct _GstH264NalUnit
   gboolean valid;
 
   guint8 *data;
+
+  guint8 header_bytes;
+  guint8 extension_type;
+  union {
+    GstH264NalUnitExtensionMVC mvc;
+  } extension;
 };
 
 /**
@@ -439,6 +486,8 @@ struct _GstH264SPS
   guint8 constraint_set1_flag;
   guint8 constraint_set2_flag;
   guint8 constraint_set3_flag;
+  guint8 constraint_set4_flag;
+  guint8 constraint_set5_flag;
   guint8 level_idc;
 
   guint8 chroma_format_idc;
@@ -556,6 +605,8 @@ struct _GstH264RefPicListModification
     guint32 abs_diff_pic_num_minus1;
     /* if modification_of_pic_nums_idc == 2 */
     guint32 long_term_pic_num;
+    /* if modification_of_pic_nums_idc == 4 || 5 */
+    guint32 abs_diff_view_idx_minus1;
   } value;
 };
 
@@ -768,6 +819,9 @@ GstH264ParserResult gst_h264_parser_parse_slice_hdr   (GstH264NalParser *nalpars
                                                        GstH264SliceHdr *slice, gboolean parse_pred_weight_table,
                                                        gboolean parse_dec_ref_pic_marking);
 
+GstH264ParserResult gst_h264_parser_parse_subset_sps  (GstH264NalParser *nalparser, GstH264NalUnit *nalu,
+                                                       GstH264SPS *sps, gboolean parse_vui_params);
+
 GstH264ParserResult gst_h264_parser_parse_sps         (GstH264NalParser *nalparser, GstH264NalUnit *nalu,
                                                        GstH264SPS *sps, gboolean parse_vui_params);
 
@@ -778,6 +832,9 @@ GstH264ParserResult gst_h264_parser_parse_sei         (GstH264NalParser *nalpars
                                                        GstH264NalUnit *nalu, GArray ** messages);
 
 void gst_h264_nal_parser_free                         (GstH264NalParser *nalparser);
+
+GstH264ParserResult gst_h264_parse_subset_sps         (GstH264NalUnit *nalu,
+                                                       GstH264SPS *sps, gboolean parse_vui_params);
 
 GstH264ParserResult gst_h264_parse_sps                (GstH264NalUnit *nalu,
                                                        GstH264SPS *sps, gboolean parse_vui_params);

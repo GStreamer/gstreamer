@@ -204,6 +204,8 @@ static gboolean
 gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
 {
   guint8 *data = nalu->data + nalu->offset;
+  guint8 svc_extension_flag;
+  GstBitReader br;
 
   if (nalu->size < 1)
     return FALSE;
@@ -211,6 +213,37 @@ gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
   nalu->type = (data[0] & 0x1f);
   nalu->ref_idc = (data[0] & 0x60) >> 5;
   nalu->idr_pic_flag = (nalu->type == 5 ? 1 : 0);
+  nalu->header_bytes = 1;
+
+  switch (nalu->type) {
+    case GST_H264_NAL_PREFIX_UNIT:
+    case GST_H264_NAL_SLICE_EXT:
+      if (nalu->size < 4)
+        return FALSE;
+      gst_bit_reader_init (&br, nalu->data + nalu->offset + nalu->header_bytes,
+          nalu->size - nalu->header_bytes);
+
+      svc_extension_flag = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+      if (!svc_extension_flag) {        /* MVC */
+        GstH264NalUnitExtensionMVC *const mvc = &nalu->extension.mvc;
+
+        nalu->extension_type = GST_H264_NAL_EXTENSION_MVC;
+        mvc->non_idr_flag = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+        mvc->priority_id = gst_bit_reader_get_bits_uint8_unchecked (&br, 6);
+        mvc->view_id = gst_bit_reader_get_bits_uint16_unchecked (&br, 10);
+        mvc->temporal_id = gst_bit_reader_get_bits_uint8_unchecked (&br, 3);
+        mvc->anchor_pic_flag = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+        mvc->inter_view_flag = gst_bit_reader_get_bits_uint8_unchecked (&br, 1);
+
+        /* Update IdrPicFlag (H.7.4.1.1) */
+        nalu->idr_pic_flag = !mvc->non_idr_flag;
+      }
+      nalu->header_bytes += 3;
+      break;
+    default:
+      nalu->extension_type = GST_H264_NAL_EXTENSION_NONE;
+      break;
+  }
 
   GST_DEBUG ("Nal type %u, ref_idc %u", nalu->type, nalu->ref_idc);
   return TRUE;
@@ -497,7 +530,7 @@ error:
 
 static gboolean
 slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
-    NalReader * nr, guint list)
+    NalReader * nr, guint list, gboolean is_mvc)
 {
   GstH264RefPicListModification *entries;
   guint8 *ref_pic_list_modification_flag, *n_ref_pic_list_modification;
@@ -526,7 +559,11 @@ slice_parse_ref_pic_list_modification_1 (GstH264SliceHdr * slice,
             slice->max_pic_num - 1);
       } else if (modification_of_pic_nums_idc == 2) {
         READ_UE (nr, entries[i].value.long_term_pic_num);
-      }
+      } else if (is_mvc && (modification_of_pic_nums_idc == 4 ||
+              modification_of_pic_nums_idc == 5)) {
+        READ_UE (nr, entries[i].value.abs_diff_view_idx_minus1);
+      } else
+        continue;
       entries[i++].modification_of_pic_nums_idc = modification_of_pic_nums_idc;
     }
   }
@@ -540,15 +577,16 @@ error:
 }
 
 static gboolean
-slice_parse_ref_pic_list_modification (GstH264SliceHdr * slice, NalReader * nr)
+slice_parse_ref_pic_list_modification (GstH264SliceHdr * slice, NalReader * nr,
+    gboolean is_mvc)
 {
   if (!GST_H264_IS_I_SLICE (slice) && !GST_H264_IS_SI_SLICE (slice)) {
-    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 0))
+    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 0, is_mvc))
       return FALSE;
   }
 
   if (GST_H264_IS_B_SLICE (slice)) {
-    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 1))
+    if (!slice_parse_ref_pic_list_modification_1 (slice, nr, 1, is_mvc))
       return FALSE;
   }
   return TRUE;
@@ -1288,9 +1326,11 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
   READ_UINT8 (nr, sps->constraint_set1_flag, 1);
   READ_UINT8 (nr, sps->constraint_set2_flag, 1);
   READ_UINT8 (nr, sps->constraint_set3_flag, 1);
+  READ_UINT8 (nr, sps->constraint_set4_flag, 1);
+  READ_UINT8 (nr, sps->constraint_set5_flag, 1);
 
-  /* skip reserved_zero_4bits */
-  if (!nal_reader_skip (nr, 4))
+  /* skip reserved_zero_2bits */
+  if (!nal_reader_skip (nr, 2))
     goto error;
 
   READ_UINT8 (nr, sps->level_idc, 8);
@@ -1300,7 +1340,8 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
   if (sps->profile_idc == 100 || sps->profile_idc == 110 ||
       sps->profile_idc == 122 || sps->profile_idc == 244 ||
       sps->profile_idc == 44 || sps->profile_idc == 83 ||
-      sps->profile_idc == 86) {
+      sps->profile_idc == 86 || sps->profile_idc == 118 ||
+      sps->profile_idc == 128) {
     READ_UE_ALLOWED (nr, sps->chroma_format_idc, 0, 3);
     if (sps->chroma_format_idc == 3)
       READ_UINT8 (nr, sps->separate_colour_plane_flag, 1);
@@ -1449,7 +1490,8 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing SPS");
 
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+  nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
+      nalu->size - nalu->header_bytes);
 
   if (!gst_h264_parse_sps_data (&nr, sps, parse_vui_params))
     goto error;
@@ -1460,6 +1502,67 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
 
 error:
   GST_WARNING ("error parsing \"Sequence parameter set\"");
+  sps->valid = FALSE;
+  return GST_H264_PARSER_ERROR;
+}
+
+/**
+ * gst_h264_parser_parse_subset_sps:
+ * @nalparser: a #GstH264NalParser
+ * @nalu: The #GST_H264_NAL_SUBSET_SPS #GstH264NalUnit to parse
+ * @sps: The #GstH264SPS to fill.
+ * @parse_vui_params: Whether to parse the vui_params or not
+ *
+ * Parses @data, and fills in the @sps structure.
+ *
+ * Returns: a #GstH264ParserResult
+ */
+GstH264ParserResult
+gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
+    GstH264NalUnit * nalu, GstH264SPS * sps, gboolean parse_vui_params)
+{
+  GstH264ParserResult res;
+
+  res = gst_h264_parse_subset_sps (nalu, sps, parse_vui_params);
+  if (res == GST_H264_PARSER_OK) {
+    GST_DEBUG ("adding sequence parameter set with id: %d to array", sps->id);
+
+    nalparser->sps[sps->id] = *sps;
+    nalparser->last_sps = &nalparser->sps[sps->id];
+  }
+  return res;
+}
+
+/**
+ * gst_h264_parse_subset_sps:
+ * @nalu: The #GST_H264_NAL_SUBSET_SPS #GstH264NalUnit to parse
+ * @sps: The #GstH264SPS to fill.
+ * @parse_vui_params: Whether to parse the vui_params or not
+ *
+ * Parses @data, and fills in the @sps structure.
+ *
+ * Returns: a #GstH264ParserResult
+ */
+GstH264ParserResult
+gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
+    gboolean parse_vui_params)
+{
+  NalReader nr;
+
+  INITIALIZE_DEBUG_CATEGORY;
+  GST_DEBUG ("parsing Subset SPS");
+
+  nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
+      nalu->size - nalu->header_bytes);
+
+  if (!gst_h264_parse_sps_data (&nr, sps, parse_vui_params))
+    goto error;
+
+  sps->valid = TRUE;
+  return GST_H264_PARSER_OK;
+
+error:
+  GST_WARNING ("error parsing \"Subset sequence parameter set\"");
   sps->valid = FALSE;
   return GST_H264_PARSER_ERROR;
 }
@@ -1491,7 +1594,8 @@ gst_h264_parse_pps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("parsing PPS");
 
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+  nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
+      nalu->size - nalu->header_bytes);
 
   READ_UE_ALLOWED (&nr, pps->id, 0, GST_H264_MAX_PPS_COUNT - 1);
   READ_UE_ALLOWED (&nr, sps_id, 0, GST_H264_MAX_SPS_COUNT - 1);
@@ -1676,7 +1780,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
   }
 
 
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+  nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
+      nalu->size - nalu->header_bytes);
 
   READ_UE (&nr, slice->first_mb_in_slice);
   READ_UE (&nr, slice->type);
@@ -1768,7 +1873,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     }
   }
 
-  if (!slice_parse_ref_pic_list_modification (slice, &nr))
+  if (!slice_parse_ref_pic_list_modification (slice, &nr,
+          GST_H264_IS_MVC_NALU (nalu)))
     goto error;
 
   if ((pps->weighted_pred_flag && (GST_H264_IS_P_SLICE (slice)
@@ -1846,7 +1952,8 @@ gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   GstH264ParserResult res;
 
   GST_DEBUG ("parsing SEI nal");
-  nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+  nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
+      nalu->size - nalu->header_bytes);
   *messages = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
 
   do {
