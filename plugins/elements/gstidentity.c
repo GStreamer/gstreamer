@@ -554,7 +554,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     GstClockTime time = gst_util_uint64_scale_int (identity->offset,
         GST_SECOND, identity->datarate);
 
-    GST_BUFFER_TIMESTAMP (buf) = time;
+    GST_BUFFER_PTS (buf) = GST_BUFFER_DTS (buf) = time;
     GST_BUFFER_DURATION (buf) = size * GST_SECOND / identity->datarate;
   }
 
@@ -599,7 +599,7 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 
   if (identity->single_segment && (trans->segment.format == GST_FORMAT_TIME)
       && (ret == GST_FLOW_OK)) {
-    GST_BUFFER_TIMESTAMP (buf) = runtimestamp;
+    GST_BUFFER_PTS (buf) = GST_BUFFER_DTS (buf) = runtimestamp;
     GST_BUFFER_OFFSET (buf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_OFFSET_END (buf) = GST_CLOCK_TIME_NONE;
   }
