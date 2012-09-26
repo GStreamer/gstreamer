@@ -819,6 +819,7 @@ class TimelineWidget (gtk.DrawingArea):
 
         if not self.has_grab ():
             self.grab_add ()
+            self.props.has_tooltip = False
 
         pos = int (event.x)
         self.emit ("change-position", pos)
@@ -831,6 +832,7 @@ class TimelineWidget (gtk.DrawingArea):
 
         if self.has_grab ():
             self.grab_remove ()
+            self.props.has_tooltip = True
 
         return True
 
