@@ -1574,7 +1574,7 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
     if (GST_CLOCK_TIME_IS_VALID (parse->priv->index_last_ts) &&
         GST_CLOCK_DIFF (parse->priv->index_last_ts, ts) <
         parse->priv->idx_interval) {
-      GST_DEBUG_OBJECT (parse, "entry too close to last time %" GST_TIME_FORMAT,
+      GST_LOG_OBJECT (parse, "entry too close to last time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (parse->priv->index_last_ts));
       goto exit;
     }
@@ -1585,7 +1585,7 @@ gst_base_parse_add_index_entry (GstBaseParse * parse, guint64 offset,
 
       gst_base_parse_find_offset (parse, ts, TRUE, &prev_ts);
       if (GST_CLOCK_DIFF (prev_ts, ts) < parse->priv->idx_interval) {
-        GST_DEBUG_OBJECT (parse,
+        GST_LOG_OBJECT (parse,
             "entry too close to existing entry %" GST_TIME_FORMAT,
             GST_TIME_ARGS (prev_ts));
         parse->priv->index_last_offset = offset;
@@ -2910,7 +2910,7 @@ gst_base_parse_loop (GstPad * pad)
   parse = GST_BASE_PARSE (gst_pad_get_parent (pad));
   klass = GST_BASE_PARSE_GET_CLASS (parse);
 
-  GST_DEBUG_OBJECT (parse, "hello");
+  GST_LOG_OBJECT (parse, "Entering parse loop");
 
   if (G_UNLIKELY (parse->priv->push_stream_start)) {
     gchar *stream_id;
