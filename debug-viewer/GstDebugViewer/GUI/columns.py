@@ -573,6 +573,9 @@ class ViewColumnManager (ColumnManager):
     column_classes = (TimeColumn, LevelColumn, PidColumn, ThreadColumn, CategoryColumn,
                       CodeColumn, FunctionColumn, ObjectColumn, MessageColumn,)
 
+    default_column_classes = (TimeColumn, LevelColumn, CategoryColumn, CodeColumn,
+                              FunctionColumn, ObjectColumn, MessageColumn,)
+
     def __init__ (self, state):
 
         ColumnManager.__init__ (self)
@@ -592,7 +595,7 @@ class ViewColumnManager (ColumnManager):
 
         visible = self.state.columns_visible
         if not visible:
-            visible = self.column_classes
+            visible = self.default_column_classes
         for col_class in self.column_classes:
             action = self.get_toggle_action (col_class)
             action.props.active = (col_class in visible)
