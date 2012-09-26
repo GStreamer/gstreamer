@@ -1055,6 +1055,21 @@ gst_type_find_element_loop (GstPad * pad)
   } else if (typefind->mode == MODE_NORMAL) {
     GstBuffer *outbuf = NULL;
 
+    if (typefind->need_stream_start) {
+      gchar *stream_id;
+
+      stream_id =
+          gst_pad_create_stream_id (typefind->src, GST_ELEMENT_CAST (typefind),
+          NULL);
+
+      GST_DEBUG_OBJECT (typefind, "Pushing STREAM_START");
+      gst_pad_push_event (typefind->src,
+          gst_event_new_stream_start (stream_id));
+
+      typefind->need_stream_start = FALSE;
+      g_free (stream_id);
+    }
+
     if (typefind->need_segment) {
       typefind->need_segment = FALSE;
       gst_pad_push_event (typefind->src,
@@ -1136,6 +1151,7 @@ gst_type_find_element_activate_sink_mode (GstPad * pad, GstObject * parent,
       if (active) {
         gst_segment_init (&typefind->segment, GST_FORMAT_BYTES);
         typefind->need_segment = TRUE;
+        typefind->need_stream_start = TRUE;
         typefind->offset = 0;
         res = TRUE;
       } else {

@@ -61,6 +61,7 @@ struct _GstTypeFindElement {
 
   /* Only used when driving the pipeline */
   gboolean need_segment;
+  gboolean need_stream_start;
   GstSegment segment;
   guint64 offset;
 };
