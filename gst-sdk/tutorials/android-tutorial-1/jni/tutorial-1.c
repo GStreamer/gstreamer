@@ -26,7 +26,7 @@ typedef struct _CustomData {
   GstElement *pipeline;
   GMainLoop *main_loop;
   ANativeWindow *native_window;
-  gboolean state;
+  GstState state, target_state;
   gint64 position;
   gint64 duration;
   GstElement *vsink;
@@ -142,12 +142,14 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_free (debug_info);
   set_ui_message (message_string, data);
   g_free (message_string);
+  data->target_state = GST_STATE_NULL;
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
 }
 
 static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   set_ui_message (GST_MESSAGE_TYPE_NAME (msg), data);
   refresh_ui (data);
+  data->target_state = GST_STATE_PAUSED;
   data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
   execute_seek (0, data);
 }
@@ -163,15 +165,17 @@ static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
     return;
 
   gst_message_parse_buffering (msg, &percent);
-  if (percent < 100)
+  if (percent < 100 && data->target_state >= GST_STATE_PAUSED)
     gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
-  else
+  else if (data->target_state >= GST_STATE_PLAYING)
     gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
 }
 
 static void clock_lost_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
-  gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+  if (data->target_state >= GST_STATE_PLAYING) {
+    gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+    gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+  }
 }
 
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
@@ -267,6 +271,7 @@ static void *app_function (void *userdata) {
 
   /* Free resources */
   g_main_context_unref (context);
+  data->target_state = GST_STATE_NULL;
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->vsink);
   gst_object_unref (data->pipeline);
@@ -307,6 +312,7 @@ void gst_native_play (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Setting state to PLAYING");
+  data->target_state = GST_STATE_PLAYING;
   data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
@@ -314,6 +320,7 @@ void gst_native_pause (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Setting state to PAUSED");
+  data->target_state = GST_STATE_PAUSED;
   data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
