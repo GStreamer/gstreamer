@@ -47,8 +47,12 @@
  *   // #GST_PAD_SINK and name "sink"
  *   gst_element_class_add_pad_template (gstelement_class,
  *       gst_static_pad_template_get (&amp;sinktemplate));
- *   // see #GstElementDetails
- *   gst_element_class_set_details (gstelement_class, &amp;details);
+ *
+ *   gst_element_class_set_static_metadata (gstelement_class,
+ *       "Sink name",
+ *       "Sink",
+ *       "My Sink element",
+ *       "The author <my.sink@my.email>");
  * }
  * ]|
  *
