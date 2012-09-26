@@ -84,6 +84,8 @@ sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
     GstBuffer *output;
     int consumed;
 
+    sbc_init (&parse->new_sbc, 0);
+
     consumed = sbc_parse (&parse->new_sbc, data + offset, size - offset);
     if (consumed <= 0)
       break;
@@ -99,6 +101,8 @@ sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
 
       parse->first_parsing = FALSE;
     }
+
+    sbc_finish (&parse->new_sbc);
 
     res = gst_pad_alloc_buffer_and_set_caps (parse->srcpad,
         GST_BUFFER_OFFSET_NONE, consumed, parse->outcaps, &output);
