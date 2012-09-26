@@ -541,7 +541,9 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       /* color space conversion is not needed */
+#ifndef OPENGL_ES2
       break;
+#endif
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_I420:
@@ -699,7 +701,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
 
       gst_gl_shader_compile (download->shader, &error);
       if (error) {
-        gst_gl_display_set_error (download, "%s", error->message);
+        gst_gl_display_set_error (display, "%s", error->message);
         g_error_free (error);
         error = NULL;
         gst_gl_shader_use (NULL);
@@ -723,8 +725,11 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_AYUV:
       /* color space conversion is needed */
     {
+#ifdef OPENGL_ES2
+      GError *error = NULL;
+#endif
       /* check if fragment shader is available, then load them
-       * GLSL is a requirement for donwload
+       * GLSL is a requirement for download
        */
       if (!GLEW_ARB_fragment_shader) {
         /* colorspace conversion is not possible */
@@ -732,9 +737,6 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
             "Context, ARB_fragment_shader supported: no");
         return;
       }
-#ifdef OPENGL_ES2
-      GError *error = NULL;
-#endif
 
       switch (v_format) {
         case GST_VIDEO_FORMAT_YUY2:
@@ -941,9 +943,6 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
 #else
   guint out_width, out_height;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
-
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
     1.0f, 0.0f,
     -1.0f, -1.0f, 0.0f,
@@ -955,6 +954,11 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
   };
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+  out_width = GST_VIDEO_INFO_WIDTH (&download->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, download->fbo);
 
   glViewport (0, 0, out_width, out_height);
 
@@ -1005,7 +1009,7 @@ _do_download_draw_rgb (GstGLDisplay * display, GstGLDownload * download)
 #endif /* G_BYTE_ORDER */
 #else /* OPENGL_ES2 */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      glReadPixels (0, 0, out_width, out_eight, GL_BGRA,
+      glReadPixels (0, 0, out_width, out_height, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
       glReadPixels (0, 0, out_width, out_eight, GL_BGRA,
@@ -1068,13 +1072,13 @@ _do_download_draw_yuv (GstGLDisplay * display, GstGLDownload * download)
   GstVideoFormat v_format;
   guint out_width, out_height;
 
+#ifndef OPENGL_ES2
   GLenum multipleRT[] = {
     GL_COLOR_ATTACHMENT0_EXT,
     GL_COLOR_ATTACHMENT1_EXT,
     GL_COLOR_ATTACHMENT2_EXT
   };
-
-#ifdef OPENGL_ES2
+#else
   GLint viewport_dim[4];
 
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
