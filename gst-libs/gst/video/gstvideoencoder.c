@@ -1229,7 +1229,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstVideoEncoderPrivate *priv;
   GstVideoEncoderClass *klass;
   GstVideoCodecFrame *frame;
-  GstClockTime pts, dts, duration;
+  GstClockTime pts, duration;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 start, stop, cstart, cstop;
 
@@ -1254,14 +1254,13 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   pts = GST_BUFFER_PTS (buf);
-  dts = GST_BUFFER_DTS (buf);
   duration = GST_BUFFER_DURATION (buf);
 
   GST_LOG_OBJECT (encoder,
       "received buffer of size %" G_GSIZE_FORMAT " with PTS %" GST_TIME_FORMAT
       ", DTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-      gst_buffer_get_size (buf), GST_TIME_ARGS (pts), GST_TIME_ARGS (dts),
-      GST_TIME_ARGS (duration));
+      gst_buffer_get_size (buf), GST_TIME_ARGS (pts),
+      GST_TIME_ARGS (GST_BUFFER_DTS (buf)), GST_TIME_ARGS (duration));
 
   if (priv->at_eos) {
     ret = GST_FLOW_EOS;
@@ -1282,8 +1281,10 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     goto done;
   }
 
-  frame =
-      gst_video_encoder_new_frame (encoder, buf, cstart, dts, cstop - cstart);
+  /* incoming DTS is not really relevant and does not make sense anyway,
+   * so pass along _NONE and maybe come up with something better later on */
+  frame = gst_video_encoder_new_frame (encoder, buf, cstart,
+      GST_CLOCK_TIME_NONE, cstop - cstart);
 
   GST_OBJECT_LOCK (encoder);
   if (priv->force_key_unit) {
