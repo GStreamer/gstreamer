@@ -83,7 +83,7 @@ bus_message (GstBus * bus, GstMessage * message, App * app)
   return TRUE;
 }
 
-static void
+static GstFlowReturn
 have_subtitle (GstElement * appsink, App * app)
 {
   GstBuffer *buffer;
@@ -117,6 +117,7 @@ have_subtitle (GstElement * appsink, App * app)
     gst_buffer_unmap (buffer, &map);
     gst_sample_unref (sample);
   }
+  return GST_FLOW_OK;
 }
 
 int
@@ -129,7 +130,7 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   if (argc < 2) {
-    g_print ("usage: %s <filename>\n", argv[0]);
+    g_print ("usage: %s <uri> [<suburi>]\n", argv[0]);
     return -1;
   }
 
@@ -158,6 +159,9 @@ main (int argc, char *argv[])
 
   /* set to read from appsrc */
   g_object_set (app->playbin, "uri", argv[1], NULL);
+
+  if (argc > 2)
+    g_object_set (app->playbin, "suburi", argv[2], NULL);
 
   /* go to playing and wait in a mainloop. */
   gst_element_set_state (app->playbin, GST_STATE_PLAYING);
