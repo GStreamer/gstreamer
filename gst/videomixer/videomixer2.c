@@ -837,11 +837,23 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
       break;
     case VIDEO_MIXER2_BACKGROUND_TRANSPARENT:
     {
-      guint i, num_maps;
+      guint i, plane, num_planes, height;
 
-      num_maps = (outframe.meta) ? GST_VIDEO_FRAME_N_PLANES (&outframe) : 1;
-      for (i = 0; i < num_maps; ++i)
-        memset (outframe.map[i].data, 0, outframe.map[i].size);
+      num_planes = GST_VIDEO_FRAME_N_PLANES (&outframe);
+      for (plane = 0; plane < num_planes; ++plane) {
+        guint8 *pdata;
+        gsize rowsize, plane_stride;
+
+        pdata = GST_VIDEO_FRAME_PLANE_DATA (&outframe, plane);
+        plane_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&outframe, plane);
+        rowsize = GST_VIDEO_FRAME_COMP_WIDTH (&outframe, plane)
+            * GST_VIDEO_FRAME_COMP_PSTRIDE (&outframe, plane);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&outframe, plane);
+        for (i = 0; i < height; ++i) {
+          memset (pdata, 0, rowsize);
+          pdata += plane_stride;
+        }
+      }
 
       /* use overlay to keep background transparent */
       composite = mix->overlay;
