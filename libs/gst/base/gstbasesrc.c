@@ -123,10 +123,10 @@
  *       gst_static_pad_template_get (&amp;srctemplate));
  *
  *   gst_element_class_set_static_metadata (gstelement_class,
- *      "Sink name",
- *      "Sink",
- *      "My Sink element",
- *      "The author <my.sink@my.email>");
+ *      "Source name",
+ *      "Source",
+ *      "My Source element",
+ *      "The author &lt;my.sink@my.email&gt;");
  * }
  * ]|
  *
