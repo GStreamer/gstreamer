@@ -46,12 +46,20 @@
 #include <string.h>
 #include <stdio.h>
 
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
 #include <sys/types.h>
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
 #include <unistd.h>
+#if HAVE_NETINET_IP_H
 #include <netinet/ip.h>
+#endif
+#if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 

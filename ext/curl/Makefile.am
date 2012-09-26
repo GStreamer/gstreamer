@@ -16,6 +16,7 @@ libgstcurl_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
+	$(WINSOCK2_LIBS) \
 	$(CURL_LIBS)
 libgstcurl_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcurl_la_LIBTOOLFLAGS = --tag=disable-static
