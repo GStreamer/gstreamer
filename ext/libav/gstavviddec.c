@@ -1340,8 +1340,8 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   bdata = minfo.data;
   bsize = minfo.size;
 
-  if (!GST_MEMORY_IS_ZERO_PADDED (minfo.memory)
-      || (minfo.maxsize - minfo.size) < FF_INPUT_BUFFER_PADDING_SIZE) {
+  if (bsize > 0 && (!GST_MEMORY_IS_ZERO_PADDED (minfo.memory)
+          || (minfo.maxsize - minfo.size) < FF_INPUT_BUFFER_PADDING_SIZE)) {
     /* add padding */
     if (ffmpegdec->padded_size < bsize + FF_INPUT_BUFFER_PADDING_SIZE) {
       ffmpegdec->padded_size = bsize + FF_INPUT_BUFFER_PADDING_SIZE;
