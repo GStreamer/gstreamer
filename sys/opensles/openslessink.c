@@ -268,5 +268,5 @@ gst_opensles_sink_init (GstOpenSLESSink * sink, GstOpenSLESSinkClass * gclass)
 
   _opensles_query_capabilities (sink);
 
-  gst_base_audio_sink_set_provide_clock (GST_BASE_AUDIO_SINK (sink), FALSE);
+  gst_base_audio_sink_set_provide_clock (GST_BASE_AUDIO_SINK (sink), TRUE);
 }
