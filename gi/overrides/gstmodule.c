@@ -39,6 +39,10 @@ DL_EXPORT(void) init##symbol(void)          \
     module = Py_InitModule(modname, symbol##_functions);
 #define PYGLIB_MODULE_END }
 
+GST_DEBUG_CATEGORY_STATIC (python_debug);
+GST_DEBUG_CATEGORY_STATIC (pygst_debug);
+#define GST_CAT_DEFAULT pygst_debug
+
 static PyObject *
 gi_gst_fraction_from_value (const GValue * value)
 {
@@ -188,11 +192,112 @@ _pygst_element_init (gpointer gclass, PyTypeObject * pyclass)
   return 0;
 }
 
-static PyMethodDef _gi_gst_functions[] = { {0,} };
+#include <frameobject.h>
+
+static PyObject *
+pygst_debug_log (PyObject * pyobject, PyObject * string, GstDebugLevel level,
+    gboolean isgstobject)
+{
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar *str;
+  gchar *function;
+  gchar *filename;
+  int lineno;
+  PyFrameObject *frame;
+  GObject *object = NULL;
+
+  if (!PyArg_ParseTuple (string, "s:gst.debug_log", &str)) {
+    PyErr_SetString (PyExc_TypeError, "Need a string!");
+    return NULL;
+  }
+
+  frame = PyEval_GetFrame ();
+  function = PyString_AsString (frame->f_code->co_name);
+  filename =
+      g_path_get_basename (PyString_AsString (frame->f_code->co_filename));
+  lineno = PyCode_Addr2Line (frame->f_code, frame->f_lasti);
+  /* gst_debug_log : category, level, file, function, line, object, format, va_list */
+  if (isgstobject)
+    object = G_OBJECT (pygobject_get (pyobject));
+  gst_debug_log (python_debug, level, filename, function, lineno, object,
+      "%s", str);
+  if (filename)
+    g_free (filename);
+#endif
+  Py_INCREF (Py_None);
+  return Py_None;
+}
+
+static PyObject *
+_wrap_gst_log (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_LOG, FALSE);
+}
+
+static PyObject *
+_wrap_gst_debug (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_DEBUG, FALSE);
+}
+
+static PyObject *
+_wrap_gst_info (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_INFO, FALSE);
+}
+
+static PyObject *
+_wrap_gst_warning (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_WARNING, FALSE);
+}
+
+static PyObject *
+_wrap_gst_error (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_ERROR, FALSE);
+}
+
+static PyObject *
+_wrap_gst_fixme (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_FIXME, FALSE);
+}
+
+static PyObject *
+_wrap_gst_memdump (PyObject * whatever, PyObject * string)
+{
+  return pygst_debug_log (whatever, string, GST_LEVEL_MEMDUMP, FALSE);
+}
+
+static PyMethodDef _gi_gst_functions[] = {
+  {"log", (PyCFunction) _wrap_gst_log, METH_VARARGS,
+      NULL},
+  {"debug", (PyCFunction) _wrap_gst_debug, METH_VARARGS,
+      NULL},
+  {"info", (PyCFunction) _wrap_gst_info, METH_VARARGS,
+      NULL},
+  {"warning", (PyCFunction) _wrap_gst_warning, METH_VARARGS,
+      NULL},
+  {"error", (PyCFunction) _wrap_gst_error, METH_VARARGS,
+      NULL},
+  {"fixme", (PyCFunction) _wrap_gst_fixme, METH_VARARGS,
+      NULL},
+  {"memdump", (PyCFunction) _wrap_gst_memdump, METH_VARARGS,
+      NULL}
+};
 
 PYGLIB_MODULE_START (_gi_gst, "_gi_gst")
 {
   PyObject *d;
+
+  /* gst should have been initialized already */
+
+  /* Initialize debugging category */
+  GST_DEBUG_CATEGORY_INIT (pygst_debug, "pygst", 0,
+      "GStreamer python bindings");
+  GST_DEBUG_CATEGORY_INIT (python_debug, "python", GST_DEBUG_FG_GREEN,
+      "python code using gst-python");
 
   pygobject_init (3, 0, 0);
 

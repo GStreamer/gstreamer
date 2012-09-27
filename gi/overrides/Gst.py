@@ -168,3 +168,12 @@ sys.argv = list(argv)
 if not initialized:
     raise RuntimeError("Gst couldn't be initialized")
 
+# maybe more python and less C some day if core turns a bit more introspection
+# and binding friendly in the debug area
+Gst.log = _gi_gst.log
+Gst.debug = _gi_gst.debug
+Gst.info = _gi_gst.info
+Gst.warning = _gi_gst.warning
+Gst.error = _gi_gst.error
+Gst.fixme = _gi_gst.fixme
+Gst.memdump = _gi_gst.memdump
