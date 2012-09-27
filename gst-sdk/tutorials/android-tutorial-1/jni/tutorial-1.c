@@ -165,10 +165,17 @@ static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
     return;
 
   gst_message_parse_buffering (msg, &percent);
-  if (percent < 100 && data->target_state >= GST_STATE_PAUSED)
+  if (percent < 100 && data->target_state >= GST_STATE_PAUSED) {
+    gchar * message_string = g_strdup_printf ("Buffering %d %%", percent);
     gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
-  else if (data->target_state >= GST_STATE_PLAYING)
+    set_ui_message (message_string, data);
+    g_free (message_string);
+  } else if (data->target_state >= GST_STATE_PLAYING) {
     gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+    set_ui_message ("PLAYING", data);
+  } else if (data->target_state >= GST_STATE_PAUSED) {
+    set_ui_message ("PAUSED", data);
+  }
 }
 
 static void clock_lost_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
