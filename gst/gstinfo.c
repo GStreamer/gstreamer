@@ -219,7 +219,7 @@ dladdr (void *address, Dl_info * dl)
 static void gst_debug_reset_threshold (gpointer category, gpointer unused);
 static void gst_debug_reset_all_thresholds (void);
 
-#ifdef HAVE_PRINTF_EXTENSION
+#ifdef GST_USING_PRINTF_EXTENSION
 static int _gst_info_printf_extension_ptr (FILE * stream,
     const struct printf_info *info, const void *const *args);
 static int _gst_info_printf_extension_segment (FILE * stream,
@@ -331,7 +331,7 @@ _priv_gst_debug_init (void)
   /* get time we started for debugging messages */
   _priv_gst_info_start_time = gst_util_get_timestamp ();
 
-#ifdef HAVE_PRINTF_EXTENSION
+#ifdef GST_USING_PRINTF_EXTENSION
 #ifdef HAVE_REGISTER_PRINTF_SPECIFIER
   register_printf_specifier (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
       _gst_info_printf_extension_arginfo);
@@ -720,7 +720,7 @@ gst_debug_print_object (gpointer ptr)
   return g_strdup_printf ("%p", ptr);
 }
 
-#ifdef HAVE_PRINTF_EXTENSION
+#ifdef GST_USING_PRINTF_EXTENSION
 
 static gchar *
 gst_debug_print_segment (gpointer ptr)
@@ -763,7 +763,7 @@ gst_debug_print_segment (gpointer ptr)
   }
 }
 
-#endif /* HAVE_PRINTF_EXTENSION */
+#endif /* GST_USING_PRINTF_EXTENSION */
 
 /**
  * gst_debug_construct_term_color:
@@ -1655,7 +1655,7 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
 
 /*** PRINTF EXTENSIONS ********************************************************/
 
-#ifdef HAVE_PRINTF_EXTENSION
+#ifdef GST_USING_PRINTF_EXTENSION
 static int
 _gst_info_printf_extension_ptr (FILE * stream, const struct printf_info *info,
     const void *const *args)
@@ -1712,7 +1712,7 @@ _gst_info_printf_extension_arginfo (const struct printf_info *info, size_t n,
   }
   return 1;
 }
-#endif /* HAVE_PRINTF_EXTENSION */
+#endif /* GST_USING_PRINTF_EXTENSION */
 
 static void
 gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
