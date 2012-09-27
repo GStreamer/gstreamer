@@ -728,54 +728,6 @@ gl_init_vtable(void)
             return NULL;
         gl_vtable->has_framebuffer_object = TRUE;
     }
-
-    /* GL_ARB_fragment_program */
-    has_extension = (
-        find_string("GL_ARB_fragment_program", gl_extensions, " ")
-    );
-    if (has_extension) {
-        gl_vtable->gl_gen_programs = (PFNGLGENPROGRAMSARBPROC)
-            get_proc_address("glGenProgramsARB");
-        if (!gl_vtable->gl_gen_programs)
-            return NULL;
-        gl_vtable->gl_delete_programs = (PFNGLDELETEPROGRAMSARBPROC)
-            get_proc_address("glDeleteProgramsARB");
-        if (!gl_vtable->gl_delete_programs)
-            return NULL;
-        gl_vtable->gl_bind_program = (PFNGLBINDPROGRAMARBPROC)
-            get_proc_address("glBindProgramARB");
-        if (!gl_vtable->gl_bind_program)
-            return NULL;
-        gl_vtable->gl_program_string = (PFNGLPROGRAMSTRINGARBPROC)
-            get_proc_address("glProgramStringARB");
-        if (!gl_vtable->gl_program_string)
-            return NULL;
-        gl_vtable->gl_get_program_iv = (PFNGLGETPROGRAMIVARBPROC)
-            get_proc_address("glGetProgramivARB");
-        if (!gl_vtable->gl_get_program_iv)
-            return NULL;
-        gl_vtable->gl_program_local_parameter_4fv = (PFNGLPROGRAMLOCALPARAMETER4FVARBPROC)
-            get_proc_address("glProgramLocalParameter4fvARB");
-        if (!gl_vtable->gl_program_local_parameter_4fv)
-            return NULL;
-        gl_vtable->has_fragment_program = TRUE;
-    }
-
-    /* GL_ARB_multitexture */
-    has_extension = (
-        find_string("GL_ARB_multitexture", gl_extensions, " ")
-    );
-    if (has_extension) {
-        gl_vtable->gl_active_texture = (PFNGLACTIVETEXTUREPROC)
-            get_proc_address("glActiveTextureARB");
-        if (!gl_vtable->gl_active_texture)
-            return NULL;
-        gl_vtable->gl_multi_tex_coord_2f = (PFNGLMULTITEXCOORD2FPROC)
-            get_proc_address("glMultiTexCoord2fARB");
-        if (!gl_vtable->gl_multi_tex_coord_2f)
-            return NULL;
-        gl_vtable->has_multitexture = TRUE;
-    }
     return gl_vtable;
 }
 

@@ -41,13 +41,6 @@ typedef GLXPixmap (*PFNGLXCREATEPIXMAPPROC)(Display *, GLXFBConfig, Pixmap, cons
 typedef void (*PFNGLXDESTROYPIXMAPPROC)(Display *, GLXPixmap);
 #endif
 
-#if GL_GLEXT_VERSION >= 85
-/* XXX: PFNGLMULTITEXCOORD2FPROC got out of the GL_VERSION_1_3_DEPRECATED
-   block and is not defined if GL_VERSION_1_3 is defined in <GL/gl.h>
-   Redefine the type here as an interim solution */
-typedef void (*PFNGLMULTITEXCOORD2FPROC) (GLenum target, GLfloat s, GLfloat t);
-#endif
-
 #ifndef GL_FRAMEBUFFER_BINDING
 #define GL_FRAMEBUFFER_BINDING GL_FRAMEBUFFER_BINDING_EXT
 #endif
@@ -145,18 +138,8 @@ struct _GLVTable {
     PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC gl_framebuffer_renderbuffer;
     PFNGLFRAMEBUFFERTEXTURE2DEXTPROC    gl_framebuffer_texture_2d;
     PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC  gl_check_framebuffer_status;
-    PFNGLGENPROGRAMSARBPROC             gl_gen_programs;
-    PFNGLDELETEPROGRAMSARBPROC          gl_delete_programs;
-    PFNGLBINDPROGRAMARBPROC             gl_bind_program;
-    PFNGLPROGRAMSTRINGARBPROC           gl_program_string;
-    PFNGLGETPROGRAMIVARBPROC            gl_get_program_iv;
-    PFNGLPROGRAMLOCALPARAMETER4FVARBPROC gl_program_local_parameter_4fv;
-    PFNGLACTIVETEXTUREPROC              gl_active_texture;
-    PFNGLMULTITEXCOORD2FPROC            gl_multi_tex_coord_2f;
     guint                               has_texture_from_pixmap : 1;
     guint                               has_framebuffer_object  : 1;
-    guint                               has_fragment_program    : 1;
-    guint                               has_multitexture        : 1;
 };
 
 G_GNUC_INTERNAL
