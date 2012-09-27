@@ -74,7 +74,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
-            "ARGB, BGRA, ABGR, RGBA, ABGR, RGBA, Y444, "
+            "ARGB, BGRA, ABGR, RGBA, Y444, "
             "xRGB, RGBx, xBGR, BGRx, RGB, BGR, Y42B, NV12, "
             "NV21, YUY2, UYVY, YVYU, I420, YV12, IYUV, Y41B }"))
     );
@@ -84,7 +84,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
-            "ARGB, BGRA, ABGR, RGBA, ABGR, RGBA, Y444, "
+            "ARGB, BGRA, ABGR, RGBA, Y444, "
             "xRGB, RGBx, xBGR, BGRx, RGB, BGR, Y42B, NV12, "
             "NV21, YUY2, UYVY, YVYU, I420, YV12, IYUV, Y41B }"))
     );
