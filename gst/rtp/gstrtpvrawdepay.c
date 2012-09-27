@@ -252,7 +252,7 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       xinc, yinc, pgroup);
 
   /* negotiate a bufferpool */
-  if ((ret = gst_rtp_vraw_depay_negotiate_pool (rtpvrawdepay, caps,
+  if ((ret = gst_rtp_vraw_depay_negotiate_pool (rtpvrawdepay, srccaps,
               &rtpvrawdepay->vinfo)) != GST_FLOW_OK)
     goto no_bufferpool;
 
