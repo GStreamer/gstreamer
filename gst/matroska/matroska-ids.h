@@ -518,20 +518,9 @@ struct _GstMatroskaTrackContext {
 
   gboolean      set_discont; /* TRUE = set DISCONT flag on next buffer */
 
-  /* Special flag for Vorbis and Theora, for which we need to send
-   * codec_priv first before sending any data, and just testing
-   * for time == 0 is not enough to detect that. Used by demuxer */
-  gboolean      send_xiph_headers;
-
-  /* Special flag for Flac, for which we need to reconstruct the header
-   * buffer from the codec_priv data before sending any data, and just
-   * testing for time == 0 is not enough to detect that. Used by demuxer */
-  gboolean      send_flac_headers;
-
-  /* Special flag for Speex, for which we need to reconstruct the header
-   * buffer from the codec_priv data before sending any data, and just
-   * testing for time == 0 is not enough to detect that. Used by demuxer */
-  gboolean      send_speex_headers;
+  /* Stream header buffer, to put into caps and send before any other buffers */
+  GstBufferList * stream_headers;
+  gboolean        send_stream_headers;
 
   /* Special flag for VobSub, for which we have to send colour table info
    * (if available) first before sending any data, and just testing
@@ -641,5 +630,14 @@ gboolean gst_matroska_track_init_audio_context    (GstMatroskaTrackContext ** p_
 gboolean gst_matroska_track_init_subtitle_context (GstMatroskaTrackContext ** p_context);
 
 void gst_matroska_register_tags (void);
+
+GstBufferList * gst_matroska_parse_xiph_stream_headers  (gpointer codec_data,
+                                                         gsize codec_data_size);
+
+GstBufferList * gst_matroska_parse_speex_stream_headers (gpointer codec_data,
+                                                         gsize codec_data_size);
+
+GstBufferList * gst_matroska_parse_flac_stream_headers  (gpointer codec_data,
+                                                         gsize codec_data_size);
 
 #endif /* __GST_MATROSKA_IDS_H__ */

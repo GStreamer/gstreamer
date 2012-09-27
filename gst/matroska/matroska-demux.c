@@ -314,6 +314,9 @@ gst_matroska_track_free (GstMatroskaTrackContext * track)
   if (track->index_table)
     g_array_free (track->index_table, TRUE);
 
+  if (track->stream_headers)
+    gst_buffer_list_unref (track->stream_headers);
+
   g_free (track);
 }
 
@@ -520,6 +523,31 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
     gst_buffer_unref (buf);
     return NULL;
   }
+}
+
+static void
+gst_matroska_demux_add_stream_headers_to_caps (GstMatroskaDemux * demux,
+    GstBufferList * list, GstCaps * caps)
+{
+  GstStructure *s;
+  GValue arr_val = G_VALUE_INIT;
+  GValue buf_val = G_VALUE_INIT;
+  gint i, num;
+
+  g_assert (gst_caps_is_writable (caps));
+
+  g_value_init (&arr_val, GST_TYPE_ARRAY);
+  g_value_init (&buf_val, GST_TYPE_BUFFER);
+
+  num = gst_buffer_list_length (list);
+  for (i = 0; i < num; ++i) {
+    g_value_set_boxed (&buf_val, gst_buffer_list_get (list, i));
+    gst_value_array_append_value (&arr_val, &buf_val);
+  }
+
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_take_value (s, "streamheader", &arr_val);
+  g_value_unset (&buf_val);
 }
 
 static GstFlowReturn
@@ -1316,6 +1344,9 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
       gst_caps_set_simple (caps, "fourcc", G_TYPE_STRING, fstr, NULL);
       g_free (fstr);
     }
+  } else if (context->stream_headers != NULL) {
+    gst_matroska_demux_add_stream_headers_to_caps (demux,
+        context->stream_headers, caps);
   }
 
   /* the pad in here */
@@ -2553,161 +2584,38 @@ gst_matroska_demux_sync_streams (GstMatroskaDemux * demux)
 }
 
 static GstFlowReturn
-gst_matroska_demux_push_hdr_buf (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream, guint8 * data, guint len)
+gst_matroska_demux_push_stream_headers (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * stream)
 {
-  GstFlowReturn ret, cret;
-  GstBuffer *header_buf;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint i, num;
 
-  header_buf = gst_buffer_new_wrapped (g_memdup (data, len), len);
+  num = gst_buffer_list_length (stream->stream_headers);
+  for (i = 0; i < num; ++i) {
+    GstBuffer *buf;
 
-  if (stream->set_discont) {
-    GST_BUFFER_FLAG_SET (header_buf, GST_BUFFER_FLAG_DISCONT);
-    stream->set_discont = FALSE;
+    buf = gst_buffer_list_get (stream->stream_headers, i);
+    buf = gst_buffer_copy (buf);
+
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+
+    if (stream->set_discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      stream->set_discont = FALSE;
+    }
+
+    /* push out all headers in one go and use last flow return */
+    ret = gst_pad_push (stream->pad, buf);
   }
 
-  ret = gst_pad_push (stream->pad, header_buf);
+  /* don't need these any  longer */
+  gst_buffer_list_unref (stream->stream_headers);
+  stream->stream_headers = NULL;
 
   /* combine flows */
-  cret = gst_matroska_demux_combine_flows (demux, stream, ret);
+  ret = gst_matroska_demux_combine_flows (demux, stream, ret);
 
-  return cret;
-}
-
-static GstFlowReturn
-gst_matroska_demux_push_flac_codec_priv_data (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream)
-{
-  GstFlowReturn ret;
-  guint8 *pdata;
-  guint off, len;
-
-  GST_LOG_OBJECT (demux, "priv data size = %" G_GSIZE_FORMAT,
-      stream->codec_priv_size);
-
-  pdata = (guint8 *) stream->codec_priv;
-
-  /* need at least 'fLaC' marker + STREAMINFO metadata block */
-  if (stream->codec_priv_size < ((4) + (4 + 34))) {
-    GST_WARNING_OBJECT (demux, "not enough codec priv data for flac headers");
-    return GST_FLOW_ERROR;
-  }
-
-  if (memcmp (pdata, "fLaC", 4) != 0) {
-    GST_WARNING_OBJECT (demux, "no flac marker at start of stream headers");
-    return GST_FLOW_ERROR;
-  }
-
-  ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata, 4);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  off = 4;                      /* skip fLaC marker */
-  while (off < stream->codec_priv_size) {
-    len = GST_READ_UINT8 (pdata + off + 1) << 16;
-    len |= GST_READ_UINT8 (pdata + off + 2) << 8;
-    len |= GST_READ_UINT8 (pdata + off + 3);
-
-    GST_DEBUG_OBJECT (demux, "header packet: len=%u bytes, flags=0x%02x",
-        len, (guint) pdata[off]);
-
-    ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata + off, len + 4);
-    if (ret != GST_FLOW_OK)
-      return ret;
-
-    off += 4 + len;
-  }
-  return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_matroska_demux_push_speex_codec_priv_data (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream)
-{
-  GstFlowReturn ret;
-  guint8 *pdata = stream->codec_priv;
-
-  GST_LOG_OBJECT (demux, "priv data size = %" G_GSIZE_FORMAT,
-      stream->codec_priv_size);
-
-  /* need at least 'fLaC' marker + STREAMINFO metadata block */
-  if (stream->codec_priv_size < 80) {
-    GST_WARNING_OBJECT (demux, "not enough codec priv data for speex headers");
-    return GST_FLOW_ERROR;
-  }
-
-  if (memcmp (pdata, "Speex   ", 8) != 0) {
-    GST_WARNING_OBJECT (demux, "no Speex marker at start of stream headers");
-    return GST_FLOW_ERROR;
-  }
-
-  ret = gst_matroska_demux_push_hdr_buf (demux, stream, pdata, 80);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  if (stream->codec_priv_size == 80)
-    return ret;
-  else
-    return gst_matroska_demux_push_hdr_buf (demux, stream, pdata + 80,
-        stream->codec_priv_size - 80);
-}
-
-static GstFlowReturn
-gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
-    GstMatroskaTrackContext * stream)
-{
-  GstFlowReturn ret;
-  guint8 *p = stream->codec_priv;
-  gint i, offset, num_packets;
-  guint *length, last;
-
-  if (stream->codec_priv == NULL || stream->codec_priv_size == 0) {
-    GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-        ("Missing codec private data for xiph headers, broken file"));
-    return GST_FLOW_ERROR;
-  }
-
-  /* start of the stream and vorbis audio or theora video, need to
-   * send the codec_priv data as first three packets */
-  num_packets = p[0] + 1;
-  GST_DEBUG_OBJECT (demux,
-      "%u stream headers, total length=%" G_GSIZE_FORMAT " bytes",
-      (guint) num_packets, stream->codec_priv_size);
-
-  length = g_alloca (num_packets * sizeof (guint));
-  last = 0;
-  offset = 1;
-
-  /* first packets, read length values */
-  for (i = 0; i < num_packets - 1; i++) {
-    length[i] = 0;
-    while (offset < stream->codec_priv_size) {
-      length[i] += p[offset];
-      if (p[offset++] != 0xff)
-        break;
-    }
-    last += length[i];
-  }
-  if (offset + last > stream->codec_priv_size)
-    return GST_FLOW_ERROR;
-
-  /* last packet is the remaining size */
-  length[i] = stream->codec_priv_size - offset - last;
-
-  for (i = 0; i < num_packets; i++) {
-    GST_DEBUG_OBJECT (demux, "buffer %d: length=%u bytes", i,
-        (guint) length[i]);
-    if (offset + length[i] > stream->codec_priv_size)
-      return GST_FLOW_ERROR;
-
-    ret =
-        gst_matroska_demux_push_hdr_buf (demux, stream, p + offset, length[i]);
-    if (ret != GST_FLOW_OK)
-      return ret;
-
-    offset += length[i];
-  }
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static void
@@ -3330,19 +3238,15 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             break;
         }
 
-        if (stream->send_xiph_headers) {
-          ret = gst_matroska_demux_push_xiph_codec_priv_data (demux, stream);
-          stream->send_xiph_headers = FALSE;
-        }
-
-        if (stream->send_flac_headers) {
-          ret = gst_matroska_demux_push_flac_codec_priv_data (demux, stream);
-          stream->send_flac_headers = FALSE;
-        }
-
-        if (stream->send_speex_headers) {
-          ret = gst_matroska_demux_push_speex_codec_priv_data (demux, stream);
-          stream->send_speex_headers = FALSE;
+        if (stream->send_stream_headers) {
+          if (stream->stream_headers != NULL) {
+            ret = gst_matroska_demux_push_stream_headers (demux, stream);
+          } else {
+            /* FIXME: perhaps we can just disable and skip this stream then */
+            GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
+                ("Failed to extract stream headers from codec private data"));
+          }
+          stream->send_stream_headers = FALSE;
         }
 
         if (stream->send_dvd_event) {
@@ -4931,10 +4835,6 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
   g_assert (videocontext != NULL);
   g_assert (codec_name != NULL);
 
-  context->send_xiph_headers = FALSE;
-  context->send_flac_headers = FALSE;
-  context->send_speex_headers = FALSE;
-
   if (riff_fourcc)
     *riff_fourcc = 0;
 
@@ -5143,7 +5043,11 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
     *codec_name = g_strdup_printf ("RealVideo %d.0", rmversion);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_THEORA)) {
     caps = gst_caps_new_empty_simple ("video/x-theora");
-    context->send_xiph_headers = TRUE;
+    context->stream_headers =
+        gst_matroska_parse_xiph_stream_headers (context->codec_priv,
+        context->codec_priv_size);
+    /* FIXME: mark stream as broken and skip if there are no stream headers */
+    context->send_stream_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_DIRAC)) {
     caps = gst_caps_new_empty_simple ("video/x-dirac");
     *codec_name = g_strdup_printf ("Dirac");
@@ -5307,10 +5211,6 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
   if (riff_audio_fmt)
     *riff_audio_fmt = 0;
 
-  context->send_xiph_headers = FALSE;
-  context->send_flac_headers = FALSE;
-  context->send_speex_headers = FALSE;
-
   /* TODO: check if we have all codec types from matroska-ids.h
    *       check if we have to do more special things with codec_private
    *       check if we need bitdepth in different places too
@@ -5388,14 +5288,25 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
     *codec_name = g_strdup ("DTS audio");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_VORBIS)) {
     caps = gst_caps_new_empty_simple ("audio/x-vorbis");
-    context->send_xiph_headers = TRUE;
-    /* vorbis decoder does tags */
+    context->stream_headers =
+        gst_matroska_parse_xiph_stream_headers (context->codec_priv,
+        context->codec_priv_size);
+    /* FIXME: mark stream as broken and skip if there are no stream headers */
+    context->send_stream_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_FLAC)) {
     caps = gst_caps_new_empty_simple ("audio/x-flac");
-    context->send_flac_headers = TRUE;
+    context->stream_headers =
+        gst_matroska_parse_flac_stream_headers (context->codec_priv,
+        context->codec_priv_size);
+    /* FIXME: mark stream as broken and skip if there are no stream headers */
+    context->send_stream_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_SPEEX)) {
     caps = gst_caps_new_empty_simple ("audio/x-speex");
-    context->send_speex_headers = TRUE;
+    context->stream_headers =
+        gst_matroska_parse_speex_stream_headers (context->codec_priv,
+        context->codec_priv_size);
+    /* FIXME: mark stream as broken and skip if there are no stream headers */
+    context->send_stream_headers = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds auds;
 
@@ -5652,7 +5563,11 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     caps = gst_caps_new_empty_simple ("subpicture/x-pgs");
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_KATE)) {
     caps = gst_caps_new_empty_simple ("subtitle/x-kate");
-    context->send_xiph_headers = TRUE;
+    context->stream_headers =
+        gst_matroska_parse_xiph_stream_headers (context->codec_priv,
+        context->codec_priv_size);
+    /* FIXME: mark stream as broken and skip if there are no stream headers */
+    context->send_stream_headers = TRUE;
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
     caps = gst_caps_new_empty_simple ("application/x-subtitle-unknown");
