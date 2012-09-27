@@ -84,6 +84,9 @@ struct _GstOpenSLESRingBuffer
 
   /* buffer queue */
   SLAndroidSimpleBufferQueueItf bufferQueue;
+  guint data_segtotal;
+  guint8 * data;
+  guint cursor;
 
   /* vmethods */
   AcquireFunc acquire;
