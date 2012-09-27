@@ -322,6 +322,23 @@ _opensles_player_change_mute (GstRingBuffer * rb)
   return TRUE;
 }
 
+static void
+_opensles_player_event_cb (SLPlayItf caller, void *context, SLuint32 event)
+{
+  GstOpenSLESRingBuffer *thiz;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (context);
+
+  if (event & SL_PLAYEVENT_HEADATNEWPOS) {
+    SLmillisecond position;
+
+    (*caller)->GetPosition (caller, &position);
+    GST_LOG_OBJECT (thiz, "at position=%u ms", (guint) position);
+  } else if (event & SL_PLAYEVENT_HEADSTALLED) {
+    GST_WARNING_OBJECT (thiz, "head stalled");
+  }
+}
+
 static gboolean
 _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 {
@@ -391,6 +408,32 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
+  /* Request position update events at each 10 ms */
+  result = (*thiz->playerPlay)->SetPositionUpdatePeriod (thiz->playerPlay, 10);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "player.SetPositionUpdatePeriod failed(0x%08x)",
+        (guint32) result);
+    goto failed;
+  }
+
+  /* Define the event mask to be monitorized */
+  result = (*thiz->playerPlay)->SetCallbackEventsMask (thiz->playerPlay,
+      SL_PLAYEVENT_HEADATNEWPOS | SL_PLAYEVENT_HEADSTALLED);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "player.SetCallbackEventsMask failed(0x%08x)",
+        (guint32) result);
+    goto failed;
+  }
+
+  /* Register a callback to process the events */
+  result = (*thiz->playerPlay)->RegisterCallback (thiz->playerPlay,
+      _opensles_player_event_cb, thiz);
+  if (result != SL_RESULT_SUCCESS) {
+    GST_ERROR_OBJECT (thiz, "player.RegisterCallback(event_cb) failed(0x%08x)",
+        (guint32) result);
+    goto failed;
+  }
+
   /* Configure the volume and mute state */
   _opensles_player_change_volume (rb);
   _opensles_player_change_mute (rb);
@@ -423,13 +466,14 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 
   /* copy data to our queue ringbuffer */
   cur = thiz->data + (thiz->cursor * rb->spec.segsize);
-  thiz->cursor = (thiz->cursor + 1) % thiz->data_segtotal;
   memcpy (cur, ptr, len);
   g_atomic_int_inc (&thiz->segqueued);
 
   /* Enqueue a buffer */
-  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d", cur, len, seg);
+  GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d in queue[%d]",
+      cur, len, seg, thiz->cursor);
   result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, cur, len);
+  thiz->cursor = (thiz->cursor + 1) % thiz->data_segtotal;
 
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "bufferQueue.Enqueue failed(0x%08x)",
