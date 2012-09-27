@@ -135,7 +135,7 @@ Resolving deltas: 100% (240/240), done.
         Be aware that by default <filename>autogen.sh</filename> and 
         <filename>configure</filename> would choose <filename class="directory">/usr/local</filename>
         as a default location. One would need to add
-        <filename class="directory">/usr/local/lib/gstreamer-0.10</filename>
+        <filename class="directory">/usr/local/lib/gstreamer-1.0</filename>
         to <symbol>GST_PLUGIN_PATH</symbol> in order to make the new plugin
         show up in gstreamer.
       </para>
@@ -206,17 +206,19 @@ GType gst_my_filter_get_type (void);
     <programlisting><!-- example-begin boilerplate.c a -->
 #include "filter.h"
 
-GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
     <!-- example-end boilerplate.c a --></programlisting>
   </sect1>
 
   <!-- ############ sect1 ############# -->
 
   <sect1 id="section-boiler-details">
-    <title>GstElementDetails</title>
+    <title>Element metadata</title>
     <para>
-      The GstElementDetails structure provides a hierarchical type for element
-      information. The entries are:
+      The Element metadata provides extra element information. It is configured
+      with <function>gst_element_class_set_metadata</function> or
+      <function>gst_element_class_set_static_metadata</function> which takes the
+      following parameters:
     </para>
     <itemizedlist>
       <listitem><para>
@@ -234,33 +236,32 @@ GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
     <para>
       For example:
     </para>
-    <programlisting><!-- example-begin boilerplate.c b -->
-static const GstElementDetails my_filter_details = {
+    <programlisting>
+gst_element_class_set_static_metadata (klass,
   "An example plugin",
   "Example/FirstExample",
   "Shows the basic structure of a plugin",
-  "your name &lt;your.name@your.isp&gt;"
-};
-    <!-- example-end boilerplate.c b --></programlisting>
+  "your name &lt;your.name@your.isp&gt;");
+    </programlisting>
     <para>
       The element details are registered with the plugin during
-      the <function>_base_init ()</function> function, which is part of
-      the GObject system. The <function>_base_init ()</function> function
+      the <function>_class_init ()</function> function, which is part of
+      the GObject system. The <function>_class_init ()</function> function
       should be set for this GObject in the function where you register
       the type with GLib.
     </para>
     <programlisting><!-- example-begin boilerplate.c c -->
 static void
-gst_my_filter_base_init (gpointer klass)
+gst_my_filter_class_init (GstMyFilterClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 <!-- example-end boilerplate.c c -->
-  static const GstElementDetails my_filter_details = {
-[..]
-  };
-
 [..]<!-- example-begin boilerplate.c d -->
-  gst_element_class_set_details (element_class, &amp;my_filter_details);
+  gst_element_class_set_static_metadata (element_klass,
+    "An example plugin",
+    "Example/FirstExample",
+    "Shows the basic structure of a plugin",
+    "your name &lt;your.name@your.isp&gt;");
 <!-- example-end boilerplate.c d -->
 }
     </programlisting>
@@ -317,13 +318,19 @@ GST_STATIC_PAD_TEMPLATE (
       </programlisting>
     <para>
       Those pad templates are registered during the
-      <function>_base_init ()</function> function. Pads are created from these
-      templates in the element's <function>_init ()</function> function using
-      <function>gst_pad_new_from_template ()</function>. The template can be
-      retrieved from the element class using
-      <function>gst_element_class_get_pad_template ()</function>. See below
-      for more details on this. In order to create a new pad from this
-      template using <function>gst_pad_new_from_template ()</function>, you
+      <function>_class_init ()</function> function with the
+      <function>gst_element_class_add_pad_template ()</function>. For this
+      function you need a handle the the <classname>GstPadTemplate</classname>
+      which you can create from the static pad template with
+      <function>gst_static_pad_template_get ()</function>. See below for more
+      details on this.
+    </para>
+    <para>
+      Pads are created from these static templates in the element's 
+      <function>_init ()</function> function using
+      <function>gst_pad_new_from_static_template ()</function>.
+      In order to create a new pad from this
+      template using <function>gst_pad_new_from_static_template ()</function>, you
       will need to declare the pad template as a global variable. More on
       this subject in <xref linkend="chapter-building-pads"/>.
     </para>
@@ -332,7 +339,7 @@ static GstStaticPadTemplate sink_factory = [..],
     src_factory = [..];
 
 static void
-gst_my_filter_base_init (gpointer klass)
+gst_my_filter_class_init (GstMyFilterClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 [..]
@@ -344,11 +351,6 @@ gst_my_filter_base_init (gpointer klass)
 }
 <!-- example-end boilerplate.c g -->
 <!-- example-begin boilerplate.c h --><!--
-static void
-gst_my_filter_class_init (GstMyFilterClass * klass)
-{
-}
-
 static void
 gst_my_filter_init (GstMyFilter * filter)
 {
@@ -397,10 +399,8 @@ GST_STATIC_PAD_TEMPLATE (
   <sect1 id="section-boiler-constructors">
     <title>Constructor Functions</title>
     <para>
-      Each element has three functions which are used for construction of an
-      element. These are the <function>_base_init()</function> function which
-      is meant to initialize class and child class properties during each new
-      child class creation; the <function>_class_init()</function> function,
+      Each element has two functions which are used for construction of an
+      element. The <function>_class_init()</function> function,
       which is used to initialise the class only once (specifying what signals,
       arguments and virtual functions the class has and setting up global
       state); and the <function>_init()</function> function, which is used to
