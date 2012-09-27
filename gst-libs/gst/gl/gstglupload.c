@@ -27,6 +27,22 @@
 #include "gstglupload.h"
 #include "gstglmemory.h"
 
+/**
+ * SECTION:gstglupload
+ * @short_description: an object that uploads to GL textures
+ * @see_also: #GstGLDownload, #GstGLMemory
+ *
+ * #GstGLUpload is an object that uploads data from system memory into GL textures.
+ *
+ * A #GstGLUpload can be created with gst_gl_upload_new() or found with
+ * gst_gl_display_find_upload().
+ *
+ * All of the _thread() variants should only be called within the GL thread
+ * they don't try to take a lock on the associated #GstGLDisplay and
+ * don't dispatch to the GL thread. Rather they run the required code in the
+ * calling thread.
+ */
+
 static void _do_upload (GstGLDisplay * display, GstGLUpload * upload);
 static void _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload);
 static void _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload);
@@ -170,6 +186,12 @@ gst_gl_upload_init (GstGLUpload * upload)
   gst_video_info_init (&upload->info);
 }
 
+/**
+ * gst_gl_upload_new:
+ * @display: a #GstGLDisplay
+ *
+ * Returns: a new #GstGLUpload object
+ */
 GstGLUpload *
 gst_gl_upload_new (GstGLDisplay * display)
 {
@@ -218,6 +240,19 @@ gst_gl_upload_finalize (GObject * object)
   }
 }
 
+/**
+ * gst_gl_upload_init_format:
+ * @upload: a #GstGLUpload
+ * @v_format: a #GstVideoFormat
+ * @in_width: the width of the data to upload
+ * @in_height: the height of the data to upload
+ * @out_width: the width to upload to
+ * @out_height: the height to upload to
+ *
+ * Initializes @upload with the information required for upload.
+ *
+ * Returns: whether the initialization was successful
+ */
 gboolean
 gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
     guint in_width, guint in_height, guint out_width, guint out_height)
@@ -253,6 +288,19 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
   return TRUE;
 }
 
+/**
+ * gst_gl_upload_init_format:
+ * @upload: a #GstGLUpload
+ * @v_format: a #GstVideoFormat
+ * @in_width: the width of the data to upload
+ * @in_height: the height of the data to upload
+ * @out_width: the width to upload to
+ * @out_height: the height to upload to
+ *
+ * Initializes @upload with the information required for upload.
+ *
+ * Returns: whether the initialization was successful
+ */
 gboolean
 gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
     guint in_width, guint in_height, guint out_width, guint out_height)
@@ -287,6 +335,15 @@ gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
   return TRUE;
 }
 
+/**
+ * gst_gl_upload_perform_with_memory:
+ * @upload: a #GstGLUpload
+ * @gl_mem: a #GstGLMemory
+ *
+ * Uploads the texture in @gl_mem
+ *
+ * Returns: whether the upload was successful
+ */
 gboolean
 gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
 {
@@ -321,6 +378,17 @@ gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
   return ret;
 }
 
+/**
+ * gst_gl_upload_perform_with_data:
+ * @upload: a #GstGLUpload
+ * @texture_id: the texture id to download
+ * @data: where the downloaded data should go
+ *
+ * Uploads @data into @texture_id. @data size and format is specified by
+ * the #GstVideoFormat passed to gst_gl_upload_init_format() 
+ *
+ * Returns: whether the upload was successful
+ */
 gboolean
 gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint texture_id,
     gpointer data[GST_VIDEO_MAX_PLANES])
@@ -372,6 +440,15 @@ gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
   return TRUE;
 }
 
+/**
+ * gst_gl_upload_perform_with_memory_thread:
+ * @upload: a #GstGLUpload
+ * @gl_mem: a #GstGLMemory
+ *
+ * Uploads the texture in @gl_mem
+ *
+ * Returns: whether the upload was successful
+ */
 gboolean
 gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload,
     GstGLMemory * gl_mem)
@@ -406,6 +483,17 @@ gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload,
   return ret;
 }
 
+/**
+ * gst_gl_upload_perform_with_data_thread:
+ * @upload: a #GstGLUpload
+ * @texture_id: the texture id to download
+ * @data: where the downloaded data should go
+ *
+ * Uploads @data into @texture_id. @data size and format is specified by
+ * the #GstVideoFormat passed to gst_gl_upload_init_format() 
+ *
+ * Returns: whether the upload was successful
+ */
 gboolean
 gst_gl_upload_perform_with_data_thread (GstGLUpload * upload, GLuint texture_id,
     gpointer data[GST_VIDEO_MAX_PLANES])
@@ -437,6 +525,23 @@ gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload * upload,
   return TRUE;
 }
 
+/**
+ * gst_gl_display_find_upload_unlocked:
+ * @display: a #GstGLDisplay
+ * @v_format: a #GstVideoFormat
+ * @in_width: the width of the data to upload
+ * @in_height: the height of the data to upload
+ * @out_width: the width to upload to
+ * @out_height: the height to upload to
+ *
+ * Finds a #GstGLDownload with the required upload settings, creating one
+ * if needed.  The returned object may not be initialized so you still
+ * have to call gst_gl_upload_init_format.
+ *
+ * This function is safe to be called in the GL thread
+ *
+ * Returns: a #GstGLUpload object with the required settings
+ */
 GstGLUpload *
 gst_gl_display_find_upload_unlocked (GstGLDisplay * display,
     GstVideoFormat v_format, guint in_width, guint in_height,
@@ -469,6 +574,21 @@ gst_gl_display_find_upload_unlocked (GstGLDisplay * display,
   return ret;
 }
 
+/**
+ * gst_gl_display_find_upload:
+ * @display: a #GstGLDisplay
+ * @v_format: a #GstVideoFormat
+ * @in_width: the width of the data to upload
+ * @in_height: the height of the data to upload
+ * @out_width: the width to upload to
+ * @out_height: the height to upload to
+ *
+ * Finds a #GstGLDownload with the required upload settings, creating one
+ * if needed.  The returned object may not be initialized so you still
+ * have to call gst_gl_upload_init_format.
+ *
+ * Returns: a #GstGLUpload object with the required settings
+ */
 GstGLUpload *
 gst_gl_display_find_upload (GstGLDisplay * display, GstVideoFormat v_format,
     guint in_width, guint in_height, guint out_width, guint out_height)

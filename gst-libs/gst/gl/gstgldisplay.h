@@ -32,162 +32,187 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GL_DISPLAY			\
-  (gst_gl_display_get_type())
-#define GST_GL_DISPLAY(obj)						\
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY,GstGLDisplay))
-#define GST_GL_DISPLAY_CLASS(klass)					\
+GType gst_gl_display_get_type (void);
+#define GST_TYPE_GL_DISPLAY (gst_gl_display_get_type())
+#define GST_GL_DISPLAY(obj)	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY,GstGLDisplay))
+#define GST_GL_DISPLAY_CLASS(klass)	\
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_DISPLAY,GstGLDisplayClass))
-#define GST_IS_GL_DISPLAY(obj)					\
+#define GST_IS_GL_DISPLAY(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
-#define GST_IS_GL_DISPLAY_CLASS(klass)				\
+#define GST_IS_GL_DISPLAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_DISPLAY))
 #define GST_GL_DISPLAY_CAST(obj) ((GstGLDisplay*)(obj))
 
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
 
-//Color space conversion method
+/**
+ * GstGLDisplayConversion:
+ *
+ * %GST_GL_DISPLAY_CONVERSION_GLSL: Convert using GLSL (shaders)
+ * %GST_GL_DISPLAY_CONVERSION_MATRIX: Convert using the ARB_imaging extension (not implemented)
+ * %GST_GL_DISPLAY_CONVERSION_MESA: Convert using support in MESA
+ */
 typedef enum
 {
-  GST_GL_DISPLAY_CONVERSION_GLSL,       //ARB_fragment_shade
-  GST_GL_DISPLAY_CONVERSION_MATRIX,     //ARB_imaging
-  GST_GL_DISPLAY_CONVERSION_MESA,       //MESA_ycbcr_texture
+  GST_GL_DISPLAY_CONVERSION_GLSL,
+  GST_GL_DISPLAY_CONVERSION_MATRIX,
+  GST_GL_DISPLAY_CONVERSION_MESA,
 } GstGLDisplayConversion;
 
-
-//Projection type
+/**
+ * GstGLDisplayProjection:
+ *
+ * %GST_GL_DISPLAY_PROJECTION_ORTHO2D: Orthogonal projection
+ * %GST_GL_DISPLAY_CONVERSION_MATRIX: Perspective projection 
+ */
 typedef enum
 {
   GST_GL_DISPLAY_PROJECTION_ORTHO2D,
   GST_GL_DISPLAY_PROJECTION_PERSPECTIVE
 } GstGLDisplayProjection;
 
-//Texture pool elements
-typedef struct _GstGLDisplayTex
-{
-  GLuint texture;
-} GstGLDisplayTex;
-
-
-//Client callbacks
-typedef void (*CRCB) (GLuint, GLuint, gpointer);
-typedef gboolean (*CDCB) (GLuint, GLuint, GLuint, gpointer);
-
+/**
+ * CRCB:
+ * @width: new width
+ * @height: new height:
+ * @data: user data
+ *
+ * client reshape callback
+ */
+typedef void (*CRCB) (GLuint width, GLuint height, gpointer data);
+/**
+ * CDCB:
+ * @texture: texture to draw
+ * @width: new width
+ * @height: new height:
+ * @data: user data
+ *
+ * client draw callback
+ */
+typedef gboolean (*CDCB) (GLuint texture, GLuint width, GLuint height, gpointer data);
+/**
+ * GstGLDisplayThreadFunc:
+ * @display: a #GstGLDisplay
+ * @data: user data
+ *
+ * Represents a function to run in the GL thread
+ */
 typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
 
-//opengl scene callback
+/**
+ * GLCB:
+ * @width: the width
+ * @height: the height
+ * @texture: texture
+ * @stuff: user data
+ *
+ * callback definition for operating on textures
+ */
 typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
+/**
+ * GLCB_V2:
+ * @stuff: user data
+ *
+ * callback definition for operating through a Framebuffer object
+ */
 typedef void (*GLCB_V2) (gpointer stuff);
 
 #define GST_GL_DISPLAY_ERR_MSG(obj) ("%s", GST_GL_DISPLAY_CAST(obj)->error_message)
 
+/**
+ * GstGLDisplay:
+ *
+ * the contents of a #GstGLDisplay are private and should only be accessed
+ * through the provided API
+ */
 struct _GstGLDisplay
 {
-  GObject object;
+  GObject        object;
 
-  //thread safe
-  GMutex *mutex;
+  /* thread safe */
+  GMutex        *mutex;
 
-  //gl context
-  GThread *gl_thread;
-  GstGLWindow *gl_window;
-  gboolean isAlive;
-  GHashTable *texture_pool;
+  /* gl context */
+  GThread       *gl_thread;
+  GstGLWindow   *gl_window;
+  gboolean       isAlive;
 
-  //conditions
-  GCond *cond_create_context;
-  GCond *cond_destroy_context;
+  /* conditions */
+  GCond         *cond_create_context;
+  GCond         *cond_destroy_context;
 
-  //generic gl code
-  GstGLDisplayThreadFunc generic_callback;
-  gpointer data;
+  /* generic gl code */
+  GstGLDisplayThreadFunc   generic_callback;
+  gpointer                 data;
 
-  //action redisplay
-  GLuint redisplay_texture;
-  GLuint redisplay_texture_width;
-  GLuint redisplay_texture_height;
-  gboolean keep_aspect_ratio;
+  /* action redisplay */
+  GLuint         redisplay_texture;
+  GLuint         redisplay_texture_width;
+  GLuint         redisplay_texture_height;
+  gboolean       keep_aspect_ratio;
 #ifdef OPENGL_ES2
-  GstGLShader *redisplay_shader;
-  gchar *redisplay_vertex_shader_str;
-  gchar *redisplay_fragment_shader_str;
-  GLint redisplay_attr_position_loc;
-  GLint redisplay_attr_texture_loc;
+  GstGLShader   *redisplay_shader;
+  gchar         *redisplay_vertex_shader_str;
+  gchar         *redisplay_fragment_shader_str;
+  GLint          redisplay_attr_position_loc;
+  GLint          redisplay_attr_texture_loc;
 #endif
 
-  //action gen and del texture
-  GLuint gen_texture;
-  GLuint gen_texture_width;
-  GLuint gen_texture_height;
+  /* action gen and del texture */
+  GLuint         gen_texture;
+  GLuint         gen_texture_width;
+  GLuint         gen_texture_height;
   GstVideoFormat gen_texture_video_format;
 
-  //client callbacks
-  CRCB clientReshapeCallback;
-  CDCB clientDrawCallback;
-  gpointer client_data;
+  /* client callbacks */
+  CRCB           clientReshapeCallback;
+  CDCB           clientDrawCallback;
+  gpointer       client_data;
 
   GstGLDisplayConversion colorspace_conversion;
 
-  GSList *uploads;
-  GSList *downloads;
+  GSList        *uploads;
+  GSList        *downloads;
 
-  //foreign gl context
-  gulong external_gl_context;
+  /* foreign gl context */
+  gulong         external_gl_context;
 
-  //filter gen fbo
-  GLuint gen_fbo_width;
-  GLuint gen_fbo_height;
-  GLuint generated_fbo;
-  GLuint generated_depth_buffer;
+  /* filter gen fbo */
+  GLuint         gen_fbo_width;
+  GLuint         gen_fbo_height;
+  GLuint         generated_fbo;
+  GLuint         generated_depth_buffer;
 
-  //filter use fbo
-  GLuint use_fbo;
-  GLuint use_depth_buffer;
-  GLuint use_fbo_texture;
-  GLuint use_fbo_width;
-  GLuint use_fbo_height;
-  GLCB use_fbo_scene_cb;
-  GLCB_V2 use_fbo_scene_cb_v2;
-  gdouble use_fbo_proj_param1;
-  gdouble use_fbo_proj_param2;
-  gdouble use_fbo_proj_param3;
-  gdouble use_fbo_proj_param4;
+  /* filter use fbo */
+  GLuint         use_fbo;
+  GLuint         use_depth_buffer;
+  GLuint         use_fbo_texture;
+  GLuint         use_fbo_width;
+  GLuint         use_fbo_height;
+  GLCB           use_fbo_scene_cb;
+  GLCB_V2        use_fbo_scene_cb_v2;
+  gdouble        use_fbo_proj_param1;
+  gdouble        use_fbo_proj_param2;
+  gdouble        use_fbo_proj_param3;
+  gdouble        use_fbo_proj_param4;
   GstGLDisplayProjection use_fbo_projection;
-  gpointer *use_fbo_stuff;
-  GLuint input_texture_width;
-  GLuint input_texture_height;
-  GLuint input_texture;
+  gpointer      *use_fbo_stuff;
+  GLuint         input_texture_width;
+  GLuint         input_texture_height;
+  GLuint         input_texture;
 
-  //filter del fbo
-  GLuint del_fbo;
-  GLuint del_depth_buffer;
+  /* filter del fbo */
+  GLuint         del_fbo;
+  GLuint         del_depth_buffer;
 
-  //action gen and del shader
-  const gchar *gen_shader_fragment_source;
-  const gchar *gen_shader_vertex_source;
-  GstGLShader *gen_shader;
-  GstGLShader *del_shader;
-
-  //fragement shader upload
-  gchar *text_shader_upload_YUY2_UYVY;
-  GstGLShader *shader_upload_YUY2;
-  GstGLShader *shader_upload_UYVY;
-
-  gchar *text_shader_upload_I420_YV12;
-  GstGLShader *shader_upload_I420_YV12;
-
-  gchar *text_shader_upload_AYUV;
-  GstGLShader *shader_upload_AYUV;
-
-#ifdef OPENGL_ES2
-  gchar *text_vertex_shader_upload;
-  GLint shader_upload_attr_position_loc;
-  GLint shader_upload_attr_texture_loc;
-#endif
+  /* action gen and del shader */
+  const gchar   *gen_shader_fragment_source;
+  const gchar   *gen_shader_vertex_source;
+  GstGLShader   *gen_shader;
+  GstGLShader   *del_shader;
 
   gchar *error_message;
-
 };
 
 
@@ -196,12 +221,10 @@ struct _GstGLDisplayClass
   GObjectClass object_class;
 };
 
-GType gst_gl_display_get_type (void);
 
-
-//------------------------------------------------------------
-//-------------------- Public declarations ------------------
-//------------------------------------------------------------
+/*-----------------------------------------------------------*\
+ -------------------- Public declarations -------------------
+\*-----------------------------------------------------------*/
 GstGLDisplay *gst_gl_display_new (void);
 
 gboolean gst_gl_display_create_context (GstGLDisplay * display,
@@ -218,12 +241,6 @@ void gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
 void gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height);
 void gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture);
-
-gboolean gst_gl_display_init_upload (GstGLDisplay * display,
-    GstVideoFormat video_format, guint gl_width, guint gl_height,
-    gint video_width, gint video_height);
-gboolean gst_gl_display_do_upload (GstGLDisplay * display, GLuint texture,
-    GstVideoFrame * frame);
 
 gboolean gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer);

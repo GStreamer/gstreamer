@@ -26,6 +26,20 @@
 
 #include "gstglmemory.h"
 
+/**
+ * SECTION:gstglmemory
+ * @short_description: memory subclass for GL textures
+ * @see_also: #GstMemory, #GstAllocator, #GstGLBufferPool
+ *
+ * GstGLMemory is a #GstMemory subclass providing support for the mapping of
+ * GL textures.  
+ *
+ * #GstGLMemory is created through gst_gl_memory_alloc() or system memory can
+ * be wrapped through gst_gl_memory_wrapped().
+ *
+ * Data is uploaded or downloaded from the GPU as is necessary.
+ */
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFUALT GST_CAT_GL_MEMORY
 
@@ -367,8 +381,8 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
  * @format: the format for the texture
  * @width: width of the texture
  * @height: height of the texture
- * 
- * Returns: a GstMemory object with a GL texture specified by @format, @width and @height
+ *
+ * Returns: a #GstMemory object with a GL texture specified by @format, @width and @height
  *          from @display
  */
 GstMemory *
@@ -399,7 +413,7 @@ gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
  * @user_data: data called with for @notify
  * @notify: function called with @user_data when @data needs to be freed
  * 
- * Returns: a GstMemory object with a GL texture specified by @format, @width and @height
+ * Returns: a #GstGLMemory object with a GL texture specified by @format, @width and @height
  *          from @display and contents specified by @data
  */
 GstGLMemory *
@@ -472,7 +486,7 @@ gst_gl_memory_init (void)
  * gst_is_gl_memory:
  * @mem:a #GstMemory
  * 
- * Returns: whether the memory in @mem is a #GstGLMemory
+ * Returns: whether the memory at @mem is a #GstGLMemory
  */
 gboolean
 gst_is_gl_memory (GstMemory * mem)

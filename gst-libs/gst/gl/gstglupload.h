@@ -44,6 +44,15 @@ GType gst_gl_upload_get_type (void);
 typedef struct _GstGLUpload GstGLUpload;
 typedef struct _GstGLUploadClass GstGLUploadClass;
 
+/**
+ * GstGLUpload
+ * @parent: the parent object
+ * @lock: thread safety
+ * @display: a #GstGLDisplay
+ * @info: the output video info
+ *
+ * Upload information for GL textures
+ */
 struct _GstGLUpload
 {
   GObject          parent;
@@ -52,6 +61,10 @@ struct _GstGLUpload
 
   GstGLDisplay    *display;
 
+  /* input data */
+  GstVideoInfo    info;
+
+  /* <private> */
   gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
 
@@ -68,18 +81,25 @@ struct _GstGLUpload
   GLint            shader_attr_texture_loc;
 #endif
 
-  /* input data */
-  GstVideoInfo    info;
-
   /* <private> */
   gpointer _reserved[GST_PADDING];
 };
 
+/**
+ * GstGLUploadClass:
+ *
+ * The #GstGLUploadClass struct only contains private data
+ */
 struct _GstGLUploadClass
 {
   GObjectClass object_class;
 };
 
+/**
+ * GST_GL_UPLOAD_FORMATS:
+ *
+ * The currently supported formats that can be uploaded
+ */
 #ifndef OPENGL_ES2
 # define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
@@ -87,6 +107,11 @@ struct _GstGLUploadClass
 # define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, I420, YV12, YUY2, UYVY, AYUV }"
 #endif
 
+/**
+ * GST_GL_UPLOAD_VIDEO_CAPS:
+ *
+ * The currently supported #GstCaps that can be uploaded
+ */
 #define GST_GL_UPLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS)
 
 GstGLUpload * gst_gl_upload_new            (GstGLDisplay * display);
