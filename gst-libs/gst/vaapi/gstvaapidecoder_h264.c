@@ -689,6 +689,7 @@ end:
 static GstVaapiDecoderStatus
 decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
 {
+    GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstH264SPS * const sps = &priv->last_sps;
     GstH264ParserResult result;
@@ -703,6 +704,11 @@ decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
+    gst_vaapi_decoder_set_pixel_aspect_ratio(
+        base_decoder,
+        sps->vui_parameters.par_n,
+        sps->vui_parameters.par_d
+    );
     return ensure_context(decoder, sps);
 }
 
