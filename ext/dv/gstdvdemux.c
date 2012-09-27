@@ -143,10 +143,10 @@ static gboolean gst_dvdemux_sink_query (GstPad * pad, GstObject * parent,
 
 /* convert functions */
 static gboolean gst_dvdemux_sink_convert (GstDVDemux * demux,
-    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
     gint64 * dest_value);
 static gboolean gst_dvdemux_src_convert (GstDVDemux * demux, GstPad * pad,
-    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
     gint64 * dest_value);
 
 /* event functions */
@@ -326,12 +326,12 @@ gst_dvdemux_remove_pads (GstDVDemux * dvdemux)
 
 static gboolean
 gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
-    GstFormat src_format, gint64 src_value, GstFormat * dest_format,
+    GstFormat src_format, gint64 src_value, GstFormat dest_format,
     gint64 * dest_value)
 {
   gboolean res = TRUE;
 
-  if (*dest_format == src_format || src_value == -1) {
+  if (dest_format == src_format || src_value == -1) {
     *dest_value = src_value;
     goto done;
   }
@@ -344,11 +344,11 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
 
   GST_INFO_OBJECT (pad,
       "src_value:%" G_GINT64_FORMAT ", src_format:%d, dest_format:%d",
-      src_value, src_format, *dest_format);
+      src_value, src_format, dest_format);
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_DEFAULT:
           if (pad == dvdemux->videosrcpad)
             *dest_value = src_value / dvdemux->frame_len;
@@ -356,7 +356,6 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
             *dest_value = src_value / (2 * dvdemux->channels);
           break;
         case GST_FORMAT_TIME:
-          *dest_format = GST_FORMAT_TIME;
           if (pad == dvdemux->videosrcpad)
             *dest_value = gst_util_uint64_scale (src_value,
                 GST_SECOND * dvdemux->framerate_denominator,
@@ -370,7 +369,7 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
       }
       break;
     case GST_FORMAT_TIME:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_BYTES:
           if (pad == dvdemux->videosrcpad)
             *dest_value = gst_util_uint64_scale (src_value,
@@ -398,7 +397,7 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
       }
       break;
     case GST_FORMAT_DEFAULT:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_TIME:
           if (pad == dvdemux->videosrcpad) {
             *dest_value = gst_util_uint64_scale (src_value,
@@ -430,7 +429,7 @@ gst_dvdemux_src_convert (GstDVDemux * dvdemux, GstPad * pad,
 done:
   GST_INFO_OBJECT (pad,
       "Result : dest_format:%d, dest_value:%" G_GINT64_FORMAT ", res:%d",
-      *dest_format, *dest_value, res);
+      dest_format, *dest_value, res);
   return res;
 
   /* ERRORS */
@@ -443,19 +442,16 @@ error:
 
 static gboolean
 gst_dvdemux_sink_convert (GstDVDemux * dvdemux, GstFormat src_format,
-    gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
+    gint64 src_value, GstFormat dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
 
-  GST_DEBUG_OBJECT (dvdemux, "%d -> %d", src_format, *dest_format);
+  GST_DEBUG_OBJECT (dvdemux, "%d -> %d", src_format, dest_format);
   GST_INFO_OBJECT (dvdemux,
       "src_value:%" G_GINT64_FORMAT ", src_format:%d, dest_format:%d",
-      src_value, src_format, *dest_format);
+      src_value, src_format, dest_format);
 
-  if (*dest_format == GST_FORMAT_DEFAULT)
-    *dest_format = GST_FORMAT_TIME;
-
-  if (*dest_format == src_format || src_value == -1) {
+  if (dest_format == src_format || src_value == -1) {
     *dest_value = src_value;
     goto done;
   }
@@ -465,7 +461,7 @@ gst_dvdemux_sink_convert (GstDVDemux * dvdemux, GstFormat src_format,
 
   switch (src_format) {
     case GST_FORMAT_BYTES:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_TIME:
         {
           guint64 frame;
@@ -484,7 +480,7 @@ gst_dvdemux_sink_convert (GstDVDemux * dvdemux, GstFormat src_format,
       }
       break;
     case GST_FORMAT_TIME:
-      switch (*dest_format) {
+      switch (dest_format) {
         case GST_FORMAT_BYTES:
         {
           guint64 frame;
@@ -507,7 +503,7 @@ gst_dvdemux_sink_convert (GstDVDemux * dvdemux, GstFormat src_format,
   }
   GST_INFO_OBJECT (dvdemux,
       "Result : dest_format:%d, dest_value:%" G_GINT64_FORMAT ", res:%d",
-      *dest_format, *dest_value, res);
+      dest_format, *dest_value, res);
 
 done:
   return res;
@@ -539,7 +535,7 @@ gst_dvdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       /* bring the position to the requested format. */
       if (!(res = gst_dvdemux_src_convert (dvdemux, pad,
                   GST_FORMAT_TIME, dvdemux->time_segment.position,
-                  &format, &cur)))
+                  format, &cur)))
         goto error;
       gst_query_set_position (query, format, cur);
       break;
@@ -547,30 +543,29 @@ gst_dvdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_DURATION:
     {
       GstFormat format;
-      GstFormat format2;
       gint64 end;
+      GstQuery *pquery;
 
       /* First ask the peer in the original format */
       if (!gst_pad_peer_query (dvdemux->sinkpad, query)) {
         /* get target format */
         gst_query_parse_duration (query, &format, NULL);
 
-        /* change query to bytes to perform on peer */
-        gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
-
         /* Now ask the peer in BYTES format and try to convert */
-        if (!gst_pad_peer_query (dvdemux->sinkpad, query)) {
+        pquery = gst_query_new_duration (GST_FORMAT_BYTES);
+        if (!gst_pad_peer_query (dvdemux->sinkpad, pquery)) {
+          gst_query_unref (pquery);
           goto error;
         }
 
         /* get peer total length */
-        gst_query_parse_duration (query, NULL, &end);
+        gst_query_parse_duration (pquery, NULL, &end);
+        gst_query_unref (pquery);
 
         /* convert end to requested format */
         if (end != -1) {
-          format2 = format;
           if (!(res = gst_dvdemux_sink_convert (dvdemux,
-                      GST_FORMAT_BYTES, end, &format2, &end))) {
+                      GST_FORMAT_BYTES, end, format, &end))) {
             goto error;
           }
           gst_query_set_duration (query, format, end);
@@ -586,7 +581,7 @@ gst_dvdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
               gst_dvdemux_src_convert (dvdemux, pad, src_fmt, src_val,
-                  &dest_fmt, &dest_val)))
+                  dest_fmt, &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
@@ -622,7 +617,7 @@ gst_dvdemux_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       if (!(res =
-              gst_dvdemux_sink_convert (dvdemux, src_fmt, src_val, &dest_fmt,
+              gst_dvdemux_sink_convert (dvdemux, src_fmt, src_val, dest_fmt,
                   &dest_val)))
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -738,7 +733,7 @@ gst_dvdemux_convert_src_pair (GstDVDemux * dvdemux, GstPad * pad,
   GST_INFO ("starting conversion of start");
   /* bring the format to time on srcpad. */
   if (!(res = gst_dvdemux_src_convert (dvdemux, pad,
-              src_format, src_start, &dst_format, dst_start))) {
+              src_format, src_start, dst_format, dst_start))) {
     goto done;
   }
   GST_INFO ("Finished conversion of start: %" G_GINT64_FORMAT, *dst_start);
@@ -746,7 +741,7 @@ gst_dvdemux_convert_src_pair (GstDVDemux * dvdemux, GstPad * pad,
   GST_INFO ("starting conversion of stop");
   /* bring the format to time on srcpad. */
   if (!(res = gst_dvdemux_src_convert (dvdemux, pad,
-              src_format, src_stop, &dst_format, dst_stop))) {
+              src_format, src_stop, dst_format, dst_stop))) {
     /* could not convert seek format to time offset */
     goto done;
   }
@@ -766,7 +761,7 @@ gst_dvdemux_convert_sink_pair (GstDVDemux * dvdemux,
   GST_INFO ("starting conversion of start");
   /* bring the format to time on srcpad. */
   if (!(res = gst_dvdemux_sink_convert (dvdemux,
-              src_format, src_start, &dst_format, dst_start))) {
+              src_format, src_start, dst_format, dst_start))) {
     goto done;
   }
   GST_INFO ("Finished conversion of start: %" G_GINT64_FORMAT, *dst_start);
@@ -774,7 +769,7 @@ gst_dvdemux_convert_sink_pair (GstDVDemux * dvdemux,
   GST_INFO ("starting conversion of stop");
   /* bring the format to time on srcpad. */
   if (!(res = gst_dvdemux_sink_convert (dvdemux,
-              src_format, src_stop, &dst_format, dst_stop))) {
+              src_format, src_stop, dst_format, dst_stop))) {
     /* could not convert seek format to time offset */
     goto done;
   }
@@ -885,34 +880,34 @@ gst_dvdemux_do_seek (GstDVDemux * demux, GstSegment * segment)
   format = GST_FORMAT_BYTES;
   res = gst_dvdemux_sink_convert (demux,
       segment->format, segment->position,
-      &format, (gint64 *) & demux->byte_segment.position);
+      format, (gint64 *) & demux->byte_segment.position);
   if (!res)
     goto done;
 
   /* update byte segment start */
   gst_dvdemux_sink_convert (demux,
-      segment->format, segment->start, &format,
+      segment->format, segment->start, format,
       (gint64 *) & demux->byte_segment.start);
 
   /* update byte segment stop */
   gst_dvdemux_sink_convert (demux,
-      segment->format, segment->stop, &format,
+      segment->format, segment->stop, format,
       (gint64 *) & demux->byte_segment.stop);
 
   /* update byte segment time */
   gst_dvdemux_sink_convert (demux,
-      segment->format, segment->time, &format,
+      segment->format, segment->time, format,
       (gint64 *) & demux->byte_segment.time);
 
   /* calculate current frame number */
   format = GST_FORMAT_DEFAULT;
   gst_dvdemux_src_convert (demux, demux->videosrcpad,
-      segment->format, segment->start, &format, &demux->video_offset);
+      segment->format, segment->start, format, &demux->video_offset);
 
   /* calculate current audio number */
   format = GST_FORMAT_DEFAULT;
   gst_dvdemux_src_convert (demux, demux->audiosrcpad,
-      segment->format, segment->start, &format, &demux->audio_offset);
+      segment->format, segment->start, format, &demux->audio_offset);
 
   /* every DV frame corresponts with one video frame */
   demux->frame_offset = demux->video_offset;
@@ -1404,7 +1399,7 @@ gst_dvdemux_demux_frame (GstDVDemux * dvdemux, GstBuffer * buffer)
     format = GST_FORMAT_DEFAULT;
     if (!(gst_dvdemux_src_convert (dvdemux, dvdemux->videosrcpad,
                 GST_FORMAT_TIME, dvdemux->time_segment.start,
-                &format, &dvdemux->frame_offset)))
+                format, &dvdemux->frame_offset)))
       goto segment_error;
 
     GST_DEBUG_OBJECT (dvdemux, "sending segment start: %" GST_TIME_FORMAT
