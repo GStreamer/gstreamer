@@ -1050,9 +1050,9 @@ gst_eglglessink_stop (GstBaseSink * sink)
   /* EGL/GLES2 cleanup */
 
   if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-    glDeleteBuffers (1, &eglglessink->eglglesctx->vdata);
-    glDeleteBuffers (1, &eglglessink->eglglesctx->tdata);
-    glDeleteBuffers (1, &eglglessink->eglglesctx->idata);
+    glDeleteBuffers (1, &eglglessink->eglglesctx->position_buffer);
+    glDeleteBuffers (1, &eglglessink->eglglesctx->texpos_buffer);
+    glDeleteBuffers (1, &eglglessink->eglglesctx->index_buffer);
     eglglessink->have_vbo = FALSE;
 
     glDeleteShader (eglglessink->eglglesctx->fragshader);
@@ -1274,97 +1274,100 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
       eglglessink->have_vbo, reset);
 
   if (eglglessink->have_vbo && reset) {
-    glDeleteBuffers (1, &eglglessink->eglglesctx->vdata);
-    glDeleteBuffers (1, &eglglessink->eglglesctx->tdata);
-    glDeleteBuffers (1, &eglglessink->eglglesctx->idata);
+    glDeleteBuffers (1, &eglglessink->eglglesctx->position_buffer);
+    glDeleteBuffers (1, &eglglessink->eglglesctx->texpos_buffer);
+    glDeleteBuffers (1, &eglglessink->eglglesctx->index_buffer);
     eglglessink->have_vbo = FALSE;
   }
 
   if (!eglglessink->have_vbo) {
     GST_DEBUG_OBJECT (eglglessink, "Performing VBO setup");
-    eglglessink->eglglesctx->coordarray[0].x = 1;
-    eglglessink->eglglesctx->coordarray[0].y = 1;
-    eglglessink->eglglesctx->coordarray[0].z = 0;
+    eglglessink->eglglesctx->position_array[0].x = 1;
+    eglglessink->eglglesctx->position_array[0].y = 1;
+    eglglessink->eglglesctx->position_array[0].z = 0;
 
-    eglglessink->eglglesctx->coordarray[1].x = 1;
-    eglglessink->eglglesctx->coordarray[1].y = -1;
-    eglglessink->eglglesctx->coordarray[1].z = 0;
+    eglglessink->eglglesctx->position_array[1].x = 1;
+    eglglessink->eglglesctx->position_array[1].y = -1;
+    eglglessink->eglglesctx->position_array[1].z = 0;
 
-    eglglessink->eglglesctx->coordarray[2].x = -1;
-    eglglessink->eglglesctx->coordarray[2].y = 1;
-    eglglessink->eglglesctx->coordarray[2].z = 0;
+    eglglessink->eglglesctx->position_array[2].x = -1;
+    eglglessink->eglglesctx->position_array[2].y = 1;
+    eglglessink->eglglesctx->position_array[2].z = 0;
 
-    eglglessink->eglglesctx->coordarray[3].x = -1;
-    eglglessink->eglglesctx->coordarray[3].y = -1;
-    eglglessink->eglglesctx->coordarray[3].z = 0;
+    eglglessink->eglglesctx->position_array[3].x = -1;
+    eglglessink->eglglesctx->position_array[3].y = -1;
+    eglglessink->eglglesctx->position_array[3].z = 0;
 
-    eglglessink->eglglesctx->texarray[0].x = 1;
-    eglglessink->eglglesctx->texarray[0].y = 0;
+    eglglessink->eglglesctx->texpos_array[0].x = 1;
+    eglglessink->eglglesctx->texpos_array[0].y = 0;
 
-    eglglessink->eglglesctx->texarray[1].x = 1;
-    eglglessink->eglglesctx->texarray[1].y = 1;
+    eglglessink->eglglesctx->texpos_array[1].x = 1;
+    eglglessink->eglglesctx->texpos_array[1].y = 1;
 
-    eglglessink->eglglesctx->texarray[2].x = 0;
-    eglglessink->eglglesctx->texarray[2].y = 0;
+    eglglessink->eglglesctx->texpos_array[2].x = 0;
+    eglglessink->eglglesctx->texpos_array[2].y = 0;
 
-    eglglessink->eglglesctx->texarray[3].x = 0;
-    eglglessink->eglglesctx->texarray[3].y = 1;
+    eglglessink->eglglesctx->texpos_array[3].x = 0;
+    eglglessink->eglglesctx->texpos_array[3].y = 1;
 
-    eglglessink->eglglesctx->indexarray[0] = 0;
-    eglglessink->eglglesctx->indexarray[1] = 1;
-    eglglessink->eglglesctx->indexarray[2] = 2;
-    eglglessink->eglglesctx->indexarray[3] = 3;
+    eglglessink->eglglesctx->index_array[0] = 0;
+    eglglessink->eglglesctx->index_array[1] = 1;
+    eglglessink->eglglesctx->index_array[2] = 2;
+    eglglessink->eglglesctx->index_array[3] = 3;
 
-    glGenBuffers (1, &eglglessink->eglglesctx->vdata);
-    glGenBuffers (1, &eglglessink->eglglesctx->tdata);
-    glGenBuffers (1, &eglglessink->eglglesctx->idata);
+    glGenBuffers (1, &eglglessink->eglglesctx->position_buffer);
+    glGenBuffers (1, &eglglessink->eglglesctx->texpos_buffer);
+    glGenBuffers (1, &eglglessink->eglglesctx->index_buffer);
     if (got_gl_error ("glGenBuffers"))
       goto HANDLE_ERROR_LOCKED;
 
-    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->eglglesctx->vdata);
-    if (got_gl_error ("glBindBuffer vdata"))
+    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->eglglesctx->position_buffer);
+    if (got_gl_error ("glBindBuffer position_buffer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->eglglesctx->coordarray),
-        eglglessink->eglglesctx->coordarray, GL_STATIC_DRAW);
-    if (got_gl_error ("glBufferData vdata"))
+    glBufferData (GL_ARRAY_BUFFER,
+        sizeof (eglglessink->eglglesctx->position_array),
+        eglglessink->eglglesctx->position_array, GL_STATIC_DRAW);
+    if (got_gl_error ("glBufferData position_buffer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glVertexAttribPointer (eglglessink->eglglesctx->coord_pos, 3, GL_FLOAT,
+    glVertexAttribPointer (eglglessink->eglglesctx->position_loc, 3, GL_FLOAT,
         GL_FALSE, 0, 0);
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glEnableVertexAttribArray (eglglessink->eglglesctx->coord_pos);
+    glEnableVertexAttribArray (eglglessink->eglglesctx->position_loc);
     if (got_gl_error ("glEnableVertexAttribArray"))
       goto HANDLE_ERROR_LOCKED;
 
-    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->eglglesctx->tdata);
-    if (got_gl_error ("glBindBuffer tdata"))
+    glBindBuffer (GL_ARRAY_BUFFER, eglglessink->eglglesctx->texpos_buffer);
+    if (got_gl_error ("glBindBuffer texpos_buffer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glBufferData (GL_ARRAY_BUFFER, sizeof (eglglessink->eglglesctx->texarray),
-        eglglessink->eglglesctx->texarray, GL_STATIC_DRAW);
-    if (got_gl_error ("glBufferData tdata"))
+    glBufferData (GL_ARRAY_BUFFER,
+        sizeof (eglglessink->eglglesctx->texpos_array),
+        eglglessink->eglglesctx->texpos_array, GL_STATIC_DRAW);
+    if (got_gl_error ("glBufferData texpos_buffer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glVertexAttribPointer (eglglessink->eglglesctx->tex_pos, 2, GL_FLOAT,
+    glVertexAttribPointer (eglglessink->eglglesctx->texpos_loc, 2, GL_FLOAT,
         GL_FALSE, 0, 0);
     if (got_gl_error ("glVertexAttribPointer"))
       goto HANDLE_ERROR_LOCKED;
 
-    glEnableVertexAttribArray (eglglessink->eglglesctx->tex_pos);
+    glEnableVertexAttribArray (eglglessink->eglglesctx->texpos_loc);
     if (got_gl_error ("glEnableVertexAttribArray"))
       goto HANDLE_ERROR_LOCKED;
 
-    glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->eglglesctx->idata);
-    if (got_gl_error ("glBindBuffer idata"))
+    glBindBuffer (GL_ELEMENT_ARRAY_BUFFER,
+        eglglessink->eglglesctx->index_buffer);
+    if (got_gl_error ("glBindBuffer index_buffer"))
       goto HANDLE_ERROR_LOCKED;
 
     glBufferData (GL_ELEMENT_ARRAY_BUFFER,
-        sizeof (eglglessink->eglglesctx->indexarray),
-        eglglessink->eglglesctx->indexarray, GL_STATIC_DRAW);
-    if (got_gl_error ("glBufferData idata"))
+        sizeof (eglglessink->eglglesctx->index_array),
+        eglglessink->eglglesctx->index_array, GL_STATIC_DRAW);
+    if (got_gl_error ("glBufferData index_buffer"))
       goto HANDLE_ERROR_LOCKED;
 
     eglglessink->have_vbo = TRUE;
@@ -1607,9 +1610,9 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glUseProgram"))
     goto HANDLE_ERROR;
 
-  eglglessink->eglglesctx->coord_pos =
+  eglglessink->eglglesctx->position_loc =
       glGetAttribLocation (eglglessink->eglglesctx->glslprogram, "position");
-  eglglessink->eglglesctx->tex_pos =
+  eglglessink->eglglesctx->texpos_loc =
       glGetAttribLocation (eglglessink->eglglesctx->glslprogram, "texpos");
 
   /* Generate and bind texture */
@@ -1636,10 +1639,10 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       if (got_gl_error ("glBindTexture"))
         goto HANDLE_ERROR_LOCKED;
 
-      eglglessink->eglglesctx->tex_uniform[i] =
+      eglglessink->eglglesctx->tex_loc[i] =
           glGetUniformLocation (eglglessink->eglglesctx->glslprogram,
           texnames[i]);
-      glUniform1i (eglglessink->eglglesctx->tex_uniform[i], i);
+      glUniform1i (eglglessink->eglglesctx->tex_loc[i], i);
 
       /* Set 2D resizing params */
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -2143,9 +2146,9 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
     if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-      glDeleteBuffers (1, &eglglessink->eglglesctx->vdata);
-      glDeleteBuffers (1, &eglglessink->eglglesctx->tdata);
-      glDeleteBuffers (1, &eglglessink->eglglesctx->idata);
+      glDeleteBuffers (1, &eglglessink->eglglesctx->position_buffer);
+      glDeleteBuffers (1, &eglglessink->eglglesctx->texpos_buffer);
+      glDeleteBuffers (1, &eglglessink->eglglesctx->index_buffer);
       eglglessink->have_vbo = FALSE;
 
       glDeleteShader (eglglessink->eglglesctx->fragshader);

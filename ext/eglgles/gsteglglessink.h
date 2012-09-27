@@ -113,12 +113,12 @@ struct _GstEglGlesRenderContext
   gint n_textures;
 
   /* shader vars */
-  GLuint coord_pos, tex_pos;
-  GLuint tex_uniform[3];
-  coord3 coordarray[4];
-  coord2 texarray[4];
-  unsigned short indexarray[4];
-  unsigned int vdata, tdata, idata;
+  GLuint position_loc, texpos_loc;
+  GLuint tex_loc[3];
+  coord3 position_array[4];
+  coord2 texpos_array[4];
+  unsigned short index_array[4];
+  unsigned int position_buffer, texpos_buffer, index_buffer;
 };
 
 struct _GstEglGlesImageFmt
