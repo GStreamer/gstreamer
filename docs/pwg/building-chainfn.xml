@@ -14,20 +14,39 @@
 #include "init.func"
 #include "caps.func"
 static gboolean
-gst_my_filter_event (GstPad * pad, GstEvent * event)
+gst_my_filter_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 --><!-- example-end chain.c a -->
 <!-- example-begin chain.c b -->
+static GstFlowReturn gst_my_filter_chain (GstPad    *pad,
+                                          GstObject *parent,
+                                          GstBuffer *buf);
+
+[..]
+
+static void
+gst_my_filter_init (GstMyFilter * filter)
+{
+[..]
+  /* configure chain function on the pad before adding
+   * the pad to the element */
+  gst_pad_set_chain_function (filter-&gt;sinkpad,
+      gst_my_filter_chain);
+[..]
+}
+
 static GstFlowReturn
 gst_my_filter_chain (GstPad    *pad,
+                     GstObject *parent,
 		     GstBuffer *buf)
 {
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+  GstMyFilter *filter = GST_MY_FILTER (parent);
 
   if (!filter->silent)
-    g_print ("Have data of size %u bytes!\n", GST_BUFFER_SIZE (buf));
+    g_print ("Have data of size %" G_GSIZE_FORMAT" bytes!\n",
+        gst_buffer_get_size (buf));
 
   return gst_pad_push (filter->srcpad, buf);
 }
@@ -44,10 +63,12 @@ gst_my_filter_change_state (GstElement * element, GstStateChange transition)
   <para>
     Obviously, the above doesn't do much useful. Instead of printing that the
     data is in, you would normally process the data there. Remember, however,
-    that buffers are not always writeable. In more advanced elements (the ones
-    that do event processing), you may want to additionally specify an event
-    handling function, which will be called when stream-events are sent (such
-    as end-of-stream, newsegment, tags, etc.).
+    that buffers are not always writeable.
+  </para>
+  <para>
+    In more advanced elements (the ones that do event processing), you may want
+    to additionally specify an event handling function, which will be called
+    when stream-events are sent (such as caps, end-of-stream, newsegment, tags, etc.).
   </para>
   <programlisting>
 static void
@@ -55,7 +76,7 @@ gst_my_filter_init (GstMyFilter * filter)
 {
 [..]
   gst_pad_set_event_function (filter-&gt;sinkpad,
-      gst_my_filter_event);
+      gst_my_filter_sink_event);
 [..]
 }
 <!-- example-begin chain2.c a --><!--
@@ -77,12 +98,16 @@ gst_my_filter_process_data (GstMyFilter * filter, const GstBuffer * buf)
 --><!-- example-end chain.func a -->
 <!-- example-begin chain.func b -->
 static gboolean
-gst_my_filter_event (GstPad   *pad,
-		     GstEvent *event)
+gst_my_filter_sink_event (GstPad    *pad,
+		          GstObject *parent,
+		          GstEvent  *event)
 {
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+  GstMyFilter *filter = GST_MY_FILTER (parent);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      /* we should handle the format here */
+      break;
     case GST_EVENT_EOS:
       /* end-of-stream, we should close down all stream leftovers here */
       gst_my_filter_stop_processing (filter);
@@ -91,14 +116,15 @@ gst_my_filter_event (GstPad   *pad,
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstFlowReturn
 gst_my_filter_chain (GstPad    *pad,
+		     GstObject *parent,
 		     GstBuffer *buf)
 {
-  GstMyFilter *filter = GST_MY_FILTER (gst_pad_get_parent (pad));
+  GstMyFilter *filter = GST_MY_FILTER (parent);
   GstBuffer *outbuf;
 
   outbuf = gst_my_filter_process_data (filter, buf);

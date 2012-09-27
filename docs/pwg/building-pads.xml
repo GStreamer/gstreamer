@@ -8,17 +8,18 @@
     of your element, and that makes them a very important item in the process
     of element creation. In the boilerplate code, we have seen how static pad
     templates take care of registering pad templates with the element class.
-    Here, we will see how to create actual elements, use a <function>_setcaps
-    ()</function>-functions to configure for a particular format and how to
+    Here, we will see how to create actual elements, use an <function>_event
+    ()</function>-function to configure for a particular format and how to
     register functions to let data flow through the element.
   </para>
   <para>
     In the element <function>_init ()</function> function, you create the pad
     from the pad template that has been registered with the element class in
-    the <function>_base_init ()</function> function. After creating the pad,
-    you have to set a <function>_setcaps ()</function> function pointer and
-    optionally a <function>_getcaps ()</function> function pointer. Also, you
-    have to set a <function>_chain ()</function> function pointer.
+    the <function>_class_init ()</function> function. After creating the pad,
+    you have to set a <function>_chain ()</function> function pointer that will
+    receive and process the input data on the sinkpad.
+    You can optionally also set an <function>_event ()</function> function
+    pointer and a <function>_query ()</function> function pointer.
     Alternatively, pads can also operate in looping mode, which means that they
     can pull data themselves. More on this topic later. After that, you have
     to register the pad with the element. This happens like this:
@@ -30,26 +31,20 @@
 static GstStateChangeReturn
 gst_my_filter_change_state (GstElement * element, GstStateChange transition);
 
-GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
 
 static void
-gst_my_filter_base_init (gpointer klass)
+gst_my_filter_class_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  static GstElementDetails my_filter_details = {
-    "An example plugin",
-    "Example/FirstExample",
-    "Shows the basic structure of a plugin",
-    "your name <your.name@your.isp>"
-  };
-  static GstStaticPadTemplate sink_factory =
+  static GstStaticPadTemplate sink_template =
   GST_STATIC_PAD_TEMPLATE (
     "sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("ANY")
   );
-  static GstStaticPadTemplate src_factory =
+  static GstStaticPadTemplate src_template =
   GST_STATIC_PAD_TEMPLATE (
     "src",
     GST_PAD_SRC,
@@ -57,11 +52,16 @@ gst_my_filter_base_init (gpointer klass)
     GST_STATIC_CAPS ("ANY")
   );
 
-  gst_element_class_set_details (element_class, &my_filter_details);
+  gst_element_class_set_static_metadata (element_class,
+    "An example plugin",
+    "Example/FirstExample",
+    "Shows the basic structure of a plugin",
+    "your name <your.name@your.isp>");
+
   gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&src_factory));
+        gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
-        gst_static_pad_template_get (&sink_factory));
+        gst_static_pad_template_get (&sink_template));
 }
 
 static void
@@ -70,43 +70,45 @@ gst_my_filter_class_init (GstMyFilterClass * klass)
   GST_ELEMENT_CLASS (klass)->change_state = gst_my_filter_change_state;
 }
 --><!-- example-end init.func a -->
-<!-- example-begin init.func b -->
-static gboolean		gst_my_filter_setcaps	(GstPad        *pad,
-						 GstCaps       *caps);
-static GstFlowReturn	gst_my_filter_chain	(GstPad        *pad,
-						 GstBuffer     *buf);
-<!-- example-end init.func b -->
 <!-- example-begin init.func c --><!--
-static GstCaps *	gst_my_filter_getcaps	(GstPad        *pad);
-static gboolean		gst_my_filter_event	(GstPad        *pad,
-						 GstEvent      *event);
+static GstFlowReturn	gst_my_filter_chain	 (GstPad        *pad,
+                                                  GstObject     *parent,
+						  GstBuffer     *buf);
+static gboolean		gst_my_filter_sink_event (GstPad        *pad,
+                                                  GstObject     *parent,
+						  GstEvent      *event);
+static gboolean 	gst_my_filter_src_query  (GstPad        *pad,
+                                                  GstObject     *parent,
+                                                  GstQuery      *query);
+static gboolean 	gst_my_filter_sink_query (GstPad        *pad,
+                                                  GstObject     *parent,
+                                                  GstQuery      *query);
 --><!-- example-end init.func c -->
 <!-- example-begin init.func d -->
 
 static void
-gst_my_filter_init (GstMyFilter *filter, GstMyFilterClass *filter_klass)
+gst_my_filter_init (GstMyFilter *filter)
 {
-  GstElementClass *klass = GST_ELEMENT_CLASS (filter_klass);
-
   /* pad through which data comes in to the element */
-  filter-&gt;sinkpad = gst_pad_new_from_template (
-	gst_element_class_get_pad_template (klass, "sink"), "sink");
-  gst_pad_set_setcaps_function (filter-&gt;sinkpad, gst_my_filter_setcaps);
-  gst_pad_set_chain_function (filter-&gt;sinkpad, gst_my_filter_chain);
+  filter-&gt;sinkpad = gst_pad_new_from_static_template (
+	&amp;sink_template, "sink");
+  /* pads are configured here with gst_pad_set_*_function () */
 <!-- example-end init.func d -->
 <!-- example-begin init.func e --><!--
-  gst_pad_set_getcaps_function (filter-&gt;sinkpad, gst_my_filter_getcaps);
-  gst_pad_set_event_function (filter-&gt;sinkpad, gst_my_filter_event);
+  gst_pad_set_chain_function (filter-&gt;sinkpad, gst_my_filter_chain);
+  gst_pad_set_event_function (filter-&gt;sinkpad, gst_my_filter_sink_event);
+  gst_pad_set_query_function (filter-&gt;sinkpad, gst_my_filter_sink_query);
 --><!-- example-end init.func e -->
 <!-- example-begin init.func f -->
   gst_element_add_pad (GST_ELEMENT (filter), filter-&gt;sinkpad);
 
   /* pad through which data goes out of the element */
-  filter-&gt;srcpad = gst_pad_new_from_template (
-	gst_element_class_get_pad_template (klass, "src"), "src");
+  filter-&gt;srcpad = gst_pad_new_from_static_template (
+	&amp;src_template, "src");
+  /* pads are configured here with gst_pad_set_*_function () */
 <!-- example-end init.func f -->
 <!-- example-begin init.func g --><!--
-  gst_pad_set_getcaps_function (filter-&gt;srcpad, gst_my_filter_getcaps);
+  gst_pad_set_query_function (filter-&gt;srcpad, gst_my_filter_src_query);
 --><!-- example-end init.func g -->
 <!-- example-begin init.func h -->
   gst_element_add_pad (GST_ELEMENT (filter), filter-&gt;srcpad);
@@ -116,105 +118,19 @@ gst_my_filter_init (GstMyFilter *filter, GstMyFilterClass *filter_klass)
 }
   <!-- example-end init.func h --></programlisting>
 
-  <sect1 id="section-pads-linkfn" xreflabel="The link function">
-  <title>The setcaps-function</title>
-  <para>
-    The <function>_setcaps ()</function>-function is called during caps
-    negotiation, which is discussed in great detail in <xref
-    linkend="chapter-negotiation"/>. This is the process where the linked
-    pads decide on the streamtype that will transfer between them. A full
-    list of type-definitions can be found in <xref
-    linkend="chapter-building-types"/>. A <function>_link ()</function>
-    receives a pointer to a <ulink type="http"
-    url="../../gstreamer/html/gstreamer-GstCaps.html"><classname>GstCaps</classname></ulink>
-    struct that defines the proposed streamtype, and can respond with
-    either <quote>yes</quote> (<symbol>TRUE</symbol>) or <quote>no</quote>
-    (<symbol>FALSE</symbol>). If the element responds positively towards
-    the streamtype, that type will be used on the pad. An example:
-  </para>
-  <programlisting><!-- example-begin caps.func a -->
-static gboolean
-gst_my_filter_setcaps (GstPad  *pad,
-		       GstCaps *caps)
-{
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
-  const gchar *media;
-
-  /* Since we're an audio filter, we want to handle raw audio
-   * and from that audio type, we need to get the samplerate and
-   * number of channels. */
-  media = gst_structure_get_name (structure);
-  if (strcmp (media, "audio/x-raw") != 0) {
-    GST_WARNING ("Wrong media type %s provided, we only support %s",
-		 media, "audio/x-raw");
-    return FALSE;
-  }
-
-  /* we're a filter and don't touch the properties of the data.
-   * That means we can set the given caps unmodified on the next
-   * element, and use that negotiation return value as ours. */
-  if (!gst_pad_set_caps (filter-&gt;srcpad, caps))
-    return FALSE;
-
-  /* Capsnego succeeded, get the stream properties for internal
-   * usage and return success. */
-  gst_structure_get_int (structure, "rate", &amp;filter-&gt;samplerate);
-  gst_structure_get_int (structure, "channels", &amp;filter-&gt;channels);
-
-  g_print ("Caps negotiation succeeded with %d Hz @ %d channels\n",
-	   filter-&gt;samplerate, filter-&gt;channels);
-
-  return TRUE;
-}
-<!-- example-end caps.func a -->
-<!-- example-begin caps.func b --><!--
-static GstCaps *
-gst_my_filter_getcaps (GstPad * pad)
-{
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
-  GstPad *otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
-						  filter-&gt;srcpad;
-  GstCaps *othercaps = gst_pad_get_allowed_caps (otherpad);
-
-  return othercaps;
-}
-  --><!-- example-end caps.func b --></programlisting>
-  <para>
-    In here, we check the media type of the provided caps. Normally, you don't
-    need to do that in your own plugin/element, because the core does that
-    for you. We simply use it to show how to retrieve the media type from a
-    provided set of caps. Types are stored in <ulink type="http"
-    url="../../gstreamer/html/gstreamer-GstStructure.html"><classname>GstStructure
-    </classname></ulink> internally. A <ulink
-    type="http" url="../../gstreamer/html/gstreamer-GstCaps.html"><classname>GstCaps
-    </classname></ulink> is nothing more than a small
-    wrapper for 0 or more structures/types. From the structure, you can also
-    retrieve properties, as is shown above with the function
-    <function>gst_structure_get_int ()</function>.
-  </para>
-  <para>
-    If your <function>_link ()</function> function does not need to perform
-    any specific operation (i.e. it will only forward caps), you can set it
-    to <function>gst_pad_proxy_link ()</function>. This is a link forwarding
-    function implementation provided by the core. It is useful for elements
-    such as <classname>identity</classname>.
-  </para>
-  </sect1>
 <!-- example-begin pads.c --><!--
 #include "init.func"
-#include "caps.func"
 
 static gboolean
-gst_my_filter_event (GstPad * pad, GstEvent * event)
+gst_my_filter_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstFlowReturn
-gst_my_filter_chain (GstPad * pad, GstBuffer * buf)
+gst_my_filter_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  return gst_pad_push (GST_MY_FILTER (GST_OBJECT_PARENT (pad))->srcpad, buf);
+  return gst_pad_push (GST_MY_FILTER (parent)->srcpad, buf);
 }
 
 static GstStateChangeReturn
