@@ -519,6 +519,12 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     pts_set_framerate(&priv->tsg, priv->fps_n, priv->fps_d);
     gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
 
+    gst_vaapi_decoder_set_pixel_aspect_ratio(
+        base_decoder,
+        seq_hdr->par_w,
+        seq_hdr->par_h
+    );
+
     priv->width                 = seq_hdr->width;
     priv->height                = seq_hdr->height;
     priv->has_seq_ext           = FALSE;
