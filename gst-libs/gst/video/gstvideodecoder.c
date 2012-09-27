@@ -350,6 +350,8 @@ struct _GstVideoDecoderPrivate
 
   /* last outgoing ts */
   GstClockTime last_timestamp_out;
+  /* incoming pts - dts */
+  GstClockTime pts_delta;
 
   /* reverse playback */
   /* collect input */
@@ -1624,6 +1626,7 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 
   priv->base_timestamp = GST_CLOCK_TIME_NONE;
   priv->last_timestamp_out = GST_CLOCK_TIME_NONE;
+  priv->pts_delta = GST_CLOCK_TIME_NONE;
 
   priv->input_offset = 0;
   priv->frame_offset = 0;
@@ -2144,6 +2147,21 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
         GST_TIME_ARGS (frame->duration));
   }
 
+  if (frame->pts == GST_CLOCK_TIME_NONE &&
+      GST_CLOCK_TIME_IS_VALID (priv->pts_delta) && priv->frames) {
+    GstVideoCodecFrame *oframe = priv->frames->data;
+
+    /* valid delta, so we have some reasonable DTS input,
+     * then outgoing PTS = smallest DTS = DTS of oldest frame */
+    if (GST_CLOCK_TIME_IS_VALID (oframe->dts)) {
+      frame->pts = oframe->dts + priv->pts_delta;
+      GST_LOG_OBJECT (decoder,
+          "Guessing timestamp %" GST_TIME_FORMAT
+          " from DTS %" GST_TIME_FORMAT " for frame...",
+          GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (oframe->dts));
+    }
+  }
+
   if (frame->pts == GST_CLOCK_TIME_NONE) {
     /* Last ditch timestamp guess: Just add the duration to the previous
      * frame */
@@ -2553,8 +2571,15 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
 
   /* For keyframes, PTS = DTS */
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
-    if (!GST_CLOCK_TIME_IS_VALID (frame->pts))
+    if (!GST_CLOCK_TIME_IS_VALID (frame->pts)) {
       frame->pts = frame->dts;
+    } else if (GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+      /* just in case they are not equal as might ideally be,
+       * e.g. quicktime has a (positive) delta approach */
+      priv->pts_delta = frame->pts - frame->dts;
+      GST_DEBUG_OBJECT (decoder, "PTS delta %d ms",
+          (gint) (priv->pts_delta / GST_MSECOND));
+    }
   }
 
   GST_LOG_OBJECT (decoder, "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT,
