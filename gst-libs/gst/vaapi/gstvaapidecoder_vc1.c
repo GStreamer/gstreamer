@@ -248,7 +248,7 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
     GstVC1SeqStructC * const structc = &seq_hdr->struct_c;
     GstVC1ParserResult result;
     GstVaapiProfile profile;
-    guint width, height, fps_n, fps_d;
+    guint width, height, fps_n, fps_d, par_n, par_d;
 
     result = gst_vc1_parse_sequence_header(
         rbdu->data + rbdu->offset,
@@ -275,6 +275,8 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
 
     fps_n = 0;
     fps_d = 0;
+    par_n = 0;
+    par_d = 0;
     switch (seq_hdr->profile) {
     case GST_VC1_PROFILE_SIMPLE:
     case GST_VC1_PROFILE_MAIN:
@@ -321,6 +323,8 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
                 fps_d = frameratedr_table[adv_hdr->frameratedr];
             }
         }
+        par_n = adv_hdr->par_n;
+        par_d = adv_hdr->par_d;
         break;
     default:
         g_assert(0 && "XXX: we already validated the profile above");
@@ -331,6 +335,9 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
         priv->fps_d = fps_d;
         gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
     }
+
+    if (par_n > 0 && par_d > 0)
+        gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder, par_n, par_d);
 
     switch (seq_hdr->profile) {
     case GST_VC1_PROFILE_SIMPLE:
