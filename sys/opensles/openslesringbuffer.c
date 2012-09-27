@@ -104,16 +104,6 @@ _opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
       (spec->bigend ? SL_BYTEORDER_BIGENDIAN : SL_BYTEORDER_LITTLEENDIAN);
 }
 
-static inline void
-_opensles_player_read_position (GstOpenSLESRingBuffer * thiz)
-{
-  if (thiz->playerPlay) {
-    SLmillisecond position;
-    (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
-    GST_LOG_OBJECT (thiz, "position %u ms", (guint) position);
-  }
-}
-
 /* Recorder related functions */
 
 static gboolean
@@ -198,8 +188,6 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   guint8 *ptr;
   gint seg;
   gint len;
-
-  _opensles_player_read_position (thiz);
 
   if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
@@ -428,8 +416,6 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   gint seg;
   gint len;
 
-  _opensles_player_read_position (thiz);
-
   if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
     return;
@@ -439,6 +425,7 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   cur = thiz->data + (thiz->cursor * rb->spec.segsize);
   thiz->cursor = (thiz->cursor + 1) % thiz->data_segtotal;
   memcpy (cur, ptr, len);
+  thiz->queued_samples += len / rb->spec.bytes_per_sample;
 
   /* Enqueue a buffer */
   GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d", cur, len, seg);
@@ -537,6 +524,8 @@ _opensles_player_stop (GstRingBuffer * rb)
         (guint32) result);
     return FALSE;
   }
+
+  thiz->queued_samples = 0;
 
   return TRUE;
 }
@@ -784,7 +773,25 @@ gst_opensles_ringbuffer_stop (GstRingBuffer * rb)
 static guint
 gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
 {
-  return 0;
+  GstOpenSLESRingBuffer *thiz;
+  SLmillisecond position;
+  guint64 samplepos;
+  guint res = 0;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+
+  if (thiz->playerPlay) {
+    (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
+
+    samplepos = gst_util_uint64_scale_round (position, rb->spec.rate, 1000);
+    res = thiz->queued_samples - samplepos;
+
+    GST_LOG_OBJECT (thiz, "queued samples %" G_GUINT64_FORMAT " position %u ms "
+        "(%" G_GUINT64_FORMAT " samples) delay %u samples",
+        thiz->queued_samples, (guint) position, samplepos, res);
+  }
+
+  return res;
 }
 
 static void

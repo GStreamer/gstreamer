@@ -87,6 +87,7 @@ struct _GstOpenSLESRingBuffer
   guint data_segtotal;
   guint8 * data;
   guint cursor;
+  guint64 queued_samples;
 
   /* vmethods */
   AcquireFunc acquire;
