@@ -425,7 +425,7 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   cur = thiz->data + (thiz->cursor * rb->spec.segsize);
   thiz->cursor = (thiz->cursor + 1) % thiz->data_segtotal;
   memcpy (cur, ptr, len);
-  thiz->queued_samples += len / rb->spec.bytes_per_sample;
+  g_atomic_int_inc (&thiz->segqueued);
 
   /* Enqueue a buffer */
   GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d", cur, len, seg);
@@ -525,7 +525,7 @@ _opensles_player_stop (GstRingBuffer * rb)
     return FALSE;
   }
 
-  thiz->queued_samples = 0;
+  g_atomic_int_set (&thiz->segqueued, 0);
 
   return TRUE;
 }
@@ -774,21 +774,22 @@ static guint
 gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
-  SLmillisecond position;
-  guint64 samplepos;
   guint res = 0;
 
   thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
 
   if (thiz->playerPlay) {
-    (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
+    SLmillisecond position;
+    guint64 playedpos, queuedpos;
 
-    samplepos = gst_util_uint64_scale_round (position, rb->spec.rate, 1000);
-    res = thiz->queued_samples - samplepos;
+    (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
+    playedpos = gst_util_uint64_scale_round (position, rb->spec.rate, 1000);
+    queuedpos = g_atomic_int_get (&thiz->segqueued) * rb->samples_per_seg;
+    res = queuedpos - playedpos;
 
     GST_LOG_OBJECT (thiz, "queued samples %" G_GUINT64_FORMAT " position %u ms "
         "(%" G_GUINT64_FORMAT " samples) delay %u samples",
-        thiz->queued_samples, (guint) position, samplepos, res);
+        queuedpos, (guint) position, playedpos, res);
   }
 
   return res;
