@@ -1384,6 +1384,22 @@ HANDLE_ERROR_LOCKED:
   return FALSE;
 }
 
+static void
+gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
+{
+  /* Save surface dims */
+  eglQuerySurface (eglglessink->eglglesctx->display,
+      eglglessink->eglglesctx->surface, EGL_WIDTH,
+      &eglglessink->eglglesctx->surface_width);
+  eglQuerySurface (eglglessink->eglglesctx->display,
+      eglglessink->eglglesctx->surface, EGL_HEIGHT,
+      &eglglessink->eglglesctx->surface_height);
+
+  GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels",
+      eglglessink->eglglesctx->surface_width,
+      eglglessink->eglglesctx->surface_height);
+}
+
 static gboolean
 gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
@@ -1417,16 +1433,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   /* Save surface dims */
-  eglQuerySurface (eglglessink->eglglesctx->display,
-      eglglessink->eglglesctx->surface, EGL_WIDTH,
-      &eglglessink->eglglesctx->surface_width);
-  eglQuerySurface (eglglessink->eglglesctx->display,
-      eglglessink->eglglesctx->surface, EGL_HEIGHT,
-      &eglglessink->eglglesctx->surface_height);
-
-  GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels",
-      eglglessink->eglglesctx->surface_width,
-      eglglessink->eglglesctx->surface_height);
+  gst_eglglessink_update_surface_dimensions (eglglessink);
 
   /* We have a surface! */
   eglglessink->have_surface = TRUE;
@@ -2001,6 +2008,9 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
         if (got_gl_error ("glTexImage2D"))
           goto HANDLE_ERROR;
       }
+
+      /* Update surface dims */
+      gst_eglglessink_update_surface_dimensions (eglglessink);
 
       /* If no one has set a display rectangle on us initialize
        * a sane default. According to the docs on the xOverlay
