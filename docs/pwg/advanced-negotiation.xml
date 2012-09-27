@@ -57,22 +57,18 @@
     </para>
     <para>
       In order for caps negotiation on non-fixed links to work correctly,
-      pads can optionally implement a function that tells peer elements what
-      formats it supports and/or prefers. When upstream renegotiation is
+      pads can optionally implement a query function that tells peer elements
+      what formats it supports and/or prefers. When upstream renegotiation is
       triggered, this becomes important.
     </para>
     <para>
-      Downstream elements are notified of a newly set caps only when data
-      is actually passing their pad. This is because caps is attached to
-      buffers during data flow. So when the vorbis decoder sets a caps on
+      Downstream elements are notified of a newly set caps with a
+      GST_EVENT_CAPS on the sinkpad. So when the vorbis decoder sets a caps on
       its source pad (to configure the output format), the converter will
-      not yet be notified. Instead, the converter will only be notified
-      when the decoder pushes a buffer over its source pad to the converter.
-      Right before calling the chain-function in the converter, &GStreamer;
-      will check whether the format that was previously negotiated still
-      applies to this buffer. If not, it first calls the setcaps-function
-      of the converter to configure it for the new format. Only after that
-      will it call the chain function of the converter.
+      receive a caps event. 
+      When an element receives a buffer, it should check if it has received
+      all needed format information in a CAPS event previously. If it hasn't,
+      it should return an error from the chain function.
     </para>
   </sect1>
 
@@ -87,7 +83,7 @@
     </para>
     <programlisting>
 [..]
-  pad = gst_pad_new_from_template (..);
+  pad = gst_pad_new_from_static_template (..);
   gst_pad_use_fixed_caps (pad);
 [..]
     </programlisting>
@@ -99,7 +95,6 @@
 [..]
   caps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE(F32),
-      "buffer-frames", G_TYPE_INT, &lt;bytes-per-frame&gt;,
       "rate", G_TYPE_INT, &lt;samplerate&gt;,
       "channels", G_TYPE_INT, &lt;num-channels&gt;, NULL);
   if (!gst_pad_set_caps (pad, caps)) {
@@ -158,18 +153,17 @@
       <para>
         Many elements, particularly effects and converters, will be able
         to parse the format of the stream from their input caps, and decide
-        the output format right at that time already. When renegotiation
-        takes place, some may merely need to "forward" the renegotiation
-        backwards upstream (more on that later). For those elements, all
-        (downstream) caps negotiation can be done in something that we
-        call the <function>_setcaps ()</function> function. This function is
-        called when a buffer is pushed over a pad, but the format on this
-        buffer is not the same as the format that was previously negotiated
-        (or, similarly, no format was negotiated yet so far).
+        the output format right at that time already. For those elements, all
+        (downstream) caps negotiation can be done from the 
+        <function>_event ()</function> function when a GST_EVENT_CAPS is
+        received on the sinkpad. This CAPS event is received whenever the
+        format changes or when no format was negotiated yet. It will always
+        be called before you receive the buffer in the format specified in
+        the CAPS event.
       </para>
       <para>
-        In the <function>_setcaps ()</function>-function, the element can
-        forward the caps to the next element and, if that pad accepts the
+        In the <function>_event ()</function>-function, the element can
+        forward the CAPS event to the next element and, if that pad accepts the
         format too, the element can parse the relevant parameters from the
         caps and configure itself internally. The caps passed to this function
         is <emphasis>always</emphasis> a subset of the template caps, so
@@ -187,22 +181,37 @@ gst_my_filter_getcaps (GstPad * pad)
 --><!-- example-end forwardcaps.c a -->
 <!-- example-begin forwardcaps.c b -->
 static gboolean
-gst_my_filter_setcaps (GstPad  *pad,
-		       GstCaps *caps)
+gst_my_filter_sink_event (GstPad    *pad,
+		          GstObject *parent,
+		          GstEvent  *event)
 {
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
-  GstStructure *s;
+  gboolean ret;
+  GstMyFilter *filter = GST_MY_FILTER (parent);
 
-  /* forward-negotiate */
-  if (!gst_pad_set_caps (filter-&gt;srcpad, caps))
-    return FALSE;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstStructure *s;
 
-  /* negotiation succeeded, so now configure ourselves */
-  s = gst_caps_get_structure (caps, 0);
-  gst_structure_get_int (s, "rate", &amp;filter-&gt;samplerate);
-  gst_structure_get_int (s, "channels", &amp;filter-&gt;channels);
+      gst_event_parse_caps (event, &amp;caps);
 
-  return TRUE;
+      /* forward-negotiate */
+      ret = gst_pad_set_caps (filter-&gt;srcpad, caps);
+      if (!ret)
+        return FALSE;
+
+      /* negotiation succeeded, so now configure ourselves */
+      s = gst_caps_get_structure (caps, 0);
+      gst_structure_get_int (s, "rate", &amp;filter-&gt;samplerate);
+      gst_structure_get_int (s, "channels", &amp;filter-&gt;channels);
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+  return ret;
 }
 <!-- example-end forwardcaps.c b -->
 <!-- example-begin forwardcaps.c c --><!--
@@ -219,7 +228,7 @@ gst_my_filter_setcaps (GstPad  *pad,
         then it should call <function>gst_pad_get_allowed_caps ()</function>
         on its sourcepad to get a list of supported formats on the outputs,
         and pick the first. The return value of that function is guaranteed
-        to be a subset of the template caps.
+        to be a subset of the template caps or NULL when there is no peer.
       </para>
       <para>
         Let's look at the example of an element that can convert between
@@ -246,11 +255,9 @@ gst_my_filter_event (GstPad * pad, GstEvent * event)
 --><!-- example-end convertcaps.c a -->
 <!-- example-begin convertcaps.c b -->
 static gboolean
-gst_my_filter_setcaps (GstPad  *pad,
+gst_my_filter_setcaps (GstMyFilter *filter,
 		       GstCaps *caps)
 {
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
-
   if (gst_pad_set_caps (filter-&gt;sinkpad, caps)) {
     filter-&gt;passthrough = TRUE;
   } else {
@@ -282,11 +289,36 @@ gst_my_filter_setcaps (GstPad  *pad,
   return TRUE;
 }
 
+static gboolean
+gst_my_filter_sink_event (GstPad    *pad,
+		          GstObject *parent,
+		          GstEvent  *event)
+{
+  gboolean ret;
+  GstMyFilter *filter = GST_MY_FILTER (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &amp;caps);
+      ret = gst_my_filter_setcaps (filter, caps);
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+  return ret;
+}
+
 static GstFlowReturn
 gst_my_filter_chain (GstPad    *pad,
+		     GstObject *parent,
 		     GstBuffer *buf)
 {
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
+  GstMyFilter *filter = GST_MY_FILTER (parent);
   GstBuffer *out;
 
   /* push on if in passthrough mode */
@@ -322,7 +354,7 @@ gst_my_filter_chain (GstPad    *pad,
         Fortunately, the code required to do so is very similar to the last
         code example in <xref linkend="section-nego-downstream-embed"/>, with
         the difference being that the caps is selected in the <function>_chain
-        ()</function>-function rather than in the <function>_setcaps
+        ()</function>-function rather than in the <function>_event
         ()</function>-function. The rest, as for getting all allowed caps from
         the source pad, fixating and such, is all the same. Re-negotiation,
         which will be handled in the next section, is very different for such
@@ -341,13 +373,14 @@ gst_my_filter_chain (GstPad    *pad,
       or because the audio channel configuration changed.
     </para>
     <para>
-      Upstream caps renegotiation is done in the <function>gst_pad_alloc_buffer
-      ()</function>-function. The idea here is that an element requesting a
-      buffer from downstream, has to specify the type of that buffer. If
-      renegotiation is to take place, this type will no longer apply, and the
-      downstream element will set a new caps on the provided buffer. The element
-      should then reconfigure itself to push buffers with the returned caps. The
-      source pad's setcaps will be called once the buffer is pushed.
+      Upstream caps renegotiation is requested by sending a GST_EVENT_RECONFIGURE
+      event upstream. The idea is that it will instruct the upstream element
+      to reconfigure its caps by doing a new query for the allowed caps and then
+      choosing a new caps. The element that sends out the RECONFIGURE event
+      would influence the selection of the new caps by returning the new
+      prefered caps from its GST_QUERY_CAPS query function. The RECONFIGURE
+      event will set the GST_PAD_FLAG_NEED_RECONFIGURE on all pads that it
+      travels over.
     </para>
     <para>
       It is important to note here that different elements actually have
@@ -356,39 +389,33 @@ gst_my_filter_chain (GstPad    *pad,
     <itemizedlist>
       <listitem>
         <para>
-          Elements should implement a <quote>padalloc</quote>-function in
-          order to be able to change format on renegotiation. This is also
-          true for filters and converters.
+          Elements that can be reconfigured on the srcpad should check its
+          NEED_RECONFIGURE flag with
+          <function>gst_pad_check_reconfigure ()</function> and it should
+          start renegotiation when the function returns TRUE.
         </para>
       </listitem>
       <listitem>
         <para>
-          Elements should allocate new buffers using
-          <function>gst_pad_alloc_buffer ()</function>.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Elements that are renegotiable should implement a
-          <quote>setcaps</quote>-function on their sourcepad as well.
+          Elements that want to propose a new format upstream need to send
+          a RECONFIGURE event and be prepared to answer the CAPS query with
+          the new prefered format. It should be noted that when there is no
+          upstream element that can (or wants) to renegotiate, the element
+          needs to deal with the currently configured format.
         </para>
       </listitem>
     </itemizedlist>
-    <para>
-      Unfortunately, not all details here have been worked out yet, so this
-      documentation is incomplete. FIXME.
-    </para>
   </sect1>
 
-  <sect1 id="section-nego-getcaps" xreflabel="Implementing a getcaps function">
-    <title>Implementing a getcaps function</title>
+  <sect1 id="section-nego-getcaps" xreflabel="Implementing a CAPS query function">
+    <title>Implementing a CAPS query function</title>
     <para>
-      A <function>_getcaps ()</function>-function is called when a peer
-      element would like to know which formats this element supports, and
-      in what order of preference. The return value should be all formats
-      that this elements supports, taking into account limitations of peer
-      elements further downstream or upstream, sorted by order of preference,
-      highest preference first.
+      A <function>_query ()</function>-function with the GST_QUERY_CAPS query
+      type is called when a peer element would like to know which formats
+      this pad supports, and in what order of preference. The return value
+      should be all formats that this elements supports, taking into account
+      limitations of peer elements further downstream or upstream, sorted by
+      order of preference, highest preference first.
     </para>
     <para>
     </para>
