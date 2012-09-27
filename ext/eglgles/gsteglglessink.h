@@ -166,10 +166,9 @@ struct _GstEglGlesSink
   GstEglGlesSinkRenderingPath rendering_path;
 
   /* props */
-  gboolean silent;
-  gboolean can_create_window;
+  gboolean create_window;
   gboolean force_rendering_slow;
-  gboolean keep_aspect_ratio;
+  gboolean force_aspect_ratio;
 };
 
 struct _GstEglGlesSinkClass

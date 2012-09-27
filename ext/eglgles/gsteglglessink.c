@@ -285,7 +285,6 @@ enum
 enum
 {
   PROP_0,
-  PROP_SILENT,
   PROP_CREATE_WINDOW,
   PROP_FORCE_ASPECT_RATIO,
   PROP_FORCE_RENDERING_SLOW
@@ -1029,7 +1028,7 @@ gst_eglglessink_start (GstBaseSink * sink)
   if (!eglglessink->have_window)
     gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
 
-  if (!eglglessink->have_window && !eglglessink->can_create_window) {
+  if (!eglglessink->have_window && !eglglessink->create_window) {
     GST_ERROR_OBJECT (eglglessink, "Window handle unavailable and we "
         "were instructed not to create an internal one. Bailing out.");
     goto HANDLE_ERROR;
@@ -1143,7 +1142,7 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
 {
   EGLNativeWindowType window = 0;
 
-  if (!eglglessink->can_create_window) {
+  if (!eglglessink->create_window) {
     GST_ERROR_OBJECT (eglglessink, "This sink can't create a window by itself");
     return window;
   } else
@@ -2006,7 +2005,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        */
       if (!eglglessink->display_region.w || !eglglessink->display_region.h) {
         g_mutex_lock (eglglessink->flow_lock);
-        if (!eglglessink->keep_aspect_ratio) {
+        if (!eglglessink->force_aspect_ratio) {
           eglglessink->display_region.x = 0;
           eglglessink->display_region.y = 0;
           eglglessink->display_region.w =
@@ -2314,17 +2313,14 @@ gst_eglglessink_set_property (GObject * object, guint prop_id,
   eglglessink = GST_EGLGLESSINK (object);
 
   switch (prop_id) {
-    case PROP_SILENT:
-      eglglessink->silent = g_value_get_boolean (value);
-      break;
     case PROP_CREATE_WINDOW:
-      eglglessink->can_create_window = g_value_get_boolean (value);
+      eglglessink->create_window = g_value_get_boolean (value);
       break;
     case PROP_FORCE_RENDERING_SLOW:
       eglglessink->force_rendering_slow = g_value_get_boolean (value);
       break;
     case PROP_FORCE_ASPECT_RATIO:
-      eglglessink->keep_aspect_ratio = g_value_get_boolean (value);
+      eglglessink->force_aspect_ratio = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2343,17 +2339,14 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
   eglglessink = GST_EGLGLESSINK (object);
 
   switch (prop_id) {
-    case PROP_SILENT:
-      g_value_set_boolean (value, eglglessink->silent);
-      break;
     case PROP_CREATE_WINDOW:
-      g_value_set_boolean (value, eglglessink->can_create_window);
+      g_value_set_boolean (value, eglglessink->create_window);
       break;
     case PROP_FORCE_RENDERING_SLOW:
       g_value_set_boolean (value, eglglessink->force_rendering_slow);
       break;
     case PROP_FORCE_ASPECT_RATIO:
-      g_value_set_boolean (value, eglglessink->keep_aspect_ratio);
+      g_value_set_boolean (value, eglglessink->force_aspect_ratio);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2406,9 +2399,6 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_eglglessink_show_frame);
 
-  g_object_class_install_property (gobject_class, PROP_SILENT,
-      g_param_spec_boolean ("silent", "Silent", "Produce no output",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CREATE_WINDOW,
       g_param_spec_boolean ("create-window", "Create Window",
           "Attempt to create a window if none is provided",
@@ -2434,9 +2424,9 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->have_vbo = FALSE;
   eglglessink->have_texture = FALSE;
   eglglessink->egl_started = FALSE;
-  eglglessink->can_create_window = TRUE;
+  eglglessink->create_window = TRUE;
   eglglessink->force_rendering_slow = FALSE;
-  eglglessink->keep_aspect_ratio = TRUE;
+  eglglessink->force_aspect_ratio = TRUE;
   eglglessink->using_own_window = FALSE;
   eglglessink->eglglesctx = g_new0 (GstEglGlesRenderContext, 1);
   eglglessink->flow_lock = g_mutex_new ();
