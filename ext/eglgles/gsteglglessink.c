@@ -288,8 +288,6 @@ enum
   PROP_SILENT,
   PROP_CREATE_WINDOW,
   PROP_FORCE_ASPECT_RATIO,
-  PROP_DEFAULT_HEIGHT,
-  PROP_DEFAULT_WIDTH,
   PROP_FORCE_RENDERING_SLOW
 };
 
@@ -1151,11 +1149,6 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
   } else
     GST_INFO_OBJECT (eglglessink, "Attempting internal window creation");
 
-  if (!width && !height) {      /* Create a default size window */
-    width = eglglessink->window_default_width;
-    height = eglglessink->window_default_height;
-  }
-
   window = platform_create_native_window (width, height);
   if (!window) {
     GST_ERROR_OBJECT (eglglessink, "Could not create window");
@@ -2011,8 +2004,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * a sane default. According to the docs on the xOverlay
        * interface we are supposed to fill the overlay 100%
        */
-      if (!eglglessink->display_region.w
-          || !eglglessink->display_region.h) {
+      if (!eglglessink->display_region.w || !eglglessink->display_region.h) {
         g_mutex_lock (eglglessink->flow_lock);
         if (!eglglessink->keep_aspect_ratio) {
           eglglessink->display_region.x = 0;
@@ -2033,8 +2025,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
         g_mutex_unlock (eglglessink->flow_lock);
         glViewport (eglglessink->display_region.x,
             eglglessink->display_region.y,
-            eglglessink->display_region.w,
-            eglglessink->display_region.h);
+            eglglessink->display_region.w, eglglessink->display_region.h);
       }
 
       glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
@@ -2329,12 +2320,6 @@ gst_eglglessink_set_property (GObject * object, guint prop_id,
     case PROP_CREATE_WINDOW:
       eglglessink->can_create_window = g_value_get_boolean (value);
       break;
-    case PROP_DEFAULT_HEIGHT:
-      eglglessink->window_default_height = g_value_get_int (value);
-      break;
-    case PROP_DEFAULT_WIDTH:
-      eglglessink->window_default_width = g_value_get_int (value);
-      break;
     case PROP_FORCE_RENDERING_SLOW:
       eglglessink->force_rendering_slow = g_value_get_boolean (value);
       break;
@@ -2363,12 +2348,6 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CREATE_WINDOW:
       g_value_set_boolean (value, eglglessink->can_create_window);
-      break;
-    case PROP_DEFAULT_HEIGHT:
-      g_value_set_int (value, eglglessink->window_default_height);
-      break;
-    case PROP_DEFAULT_WIDTH:
-      g_value_set_int (value, eglglessink->window_default_width);
       break;
     case PROP_FORCE_RENDERING_SLOW:
       g_value_set_boolean (value, eglglessink->force_rendering_slow);
@@ -2442,16 +2421,6 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
       g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
           "When enabled, scaling will respect original aspect ratio",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_DEFAULT_WIDTH,
-      g_param_spec_int ("window-default-width", "Default Width",
-          "Default width for self created windows", 0,
-          EGLGLESSINK_MAX_FRAME_WIDTH, EGLGLESSINK_MAX_FRAME_WIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_DEFAULT_HEIGHT,
-      g_param_spec_int ("window-default-height", "Default Height",
-          "Default height for self created windows", 0,
-          EGLGLESSINK_MAX_FRAME_HEIGHT, EGLGLESSINK_MAX_FRAME_HEIGHT,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 

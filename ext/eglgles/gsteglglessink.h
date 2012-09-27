@@ -170,8 +170,6 @@ struct _GstEglGlesSink
   gboolean can_create_window;
   gboolean force_rendering_slow;
   gboolean keep_aspect_ratio;
-  gint window_default_width;
-  gint window_default_height;
 };
 
 struct _GstEglGlesSinkClass
