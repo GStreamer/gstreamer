@@ -289,8 +289,9 @@ gst_ghost_pad_internal_activate_push_default (GstPad * pad, GstObject * parent,
 
   /* in both cases (SRC and SINK) we activate just the internal pad. The targets
    * will be activated later (or already in case of a ghost sinkpad). */
-  other = GST_PROXY_PAD_INTERNAL (pad);
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, other, FALSE);
   ret = gst_pad_activate_mode (other, GST_PAD_MODE_PUSH, active);
+  GST_PROXY_PAD_RELEASE_INTERNAL (other);
 
   return ret;
 }
@@ -312,8 +313,9 @@ gst_ghost_pad_internal_activate_pull_default (GstPad * pad, GstObject * parent,
      * which will trigger gst_ghost_pad_activate_pull_default, which propagates even
      * further upstream */
     GST_LOG_OBJECT (pad, "pad is src, activate internal");
-    other = GST_PROXY_PAD_INTERNAL (pad);
+    GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, other, FALSE);
     ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
+    GST_PROXY_PAD_RELEASE_INTERNAL (other);
   } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
     /* We are SINK, the ghostpad is SRC, we propagate the activation upstream
      * since we hold a pointer to the upstream peer. */
@@ -377,8 +379,9 @@ gst_ghost_pad_activate_push_default (GstPad * pad, GstObject * parent,
       (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
 
   /* just activate the internal pad */
-  other = GST_PROXY_PAD_INTERNAL (pad);
+  GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, other, FALSE);
   ret = gst_pad_activate_mode (other, GST_PAD_MODE_PUSH, active);
+  GST_PROXY_PAD_RELEASE_INTERNAL (other);
 
   return ret;
 }
@@ -398,8 +401,9 @@ gst_ghost_pad_activate_pull_default (GstPad * pad, GstObject * parent,
      * activation function of the internal pad to propagate the activation
      * upstream */
     GST_LOG_OBJECT (pad, "pad is src, activate internal");
-    other = GST_PROXY_PAD_INTERNAL (pad);
+    GST_PROXY_PAD_ACQUIRE_INTERNAL (pad, other, FALSE);
     ret = gst_pad_activate_mode (other, GST_PAD_MODE_PULL, active);
+    GST_PROXY_PAD_RELEASE_INTERNAL (other);
   } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
     /* We are SINK and activated by the internal pad, propagate activation
      * upstream because we hold a ref to the upstream peer */
