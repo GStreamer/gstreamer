@@ -44,9 +44,7 @@ ABI_CHECKS = gst/gstabi
 endif
 endif
 
-if FALSE
 LIBSABI_CHECKS = libs/libsabi
-endif
 
 if HAVE_CXX
 CXX_CHECKS = gst/gstcpp libs/gstlibscpp

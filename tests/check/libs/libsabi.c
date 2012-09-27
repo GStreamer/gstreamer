@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2005 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2012 Wim Taymans <wim.taymans@gmail.com>
  *
  * libsabi.c: Unit test for ABI compatibility
  *
@@ -23,6 +23,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/base/gstadapter.h>
+#include <gst/base/gstbaseparse.h>
 #include <gst/base/gstbasesink.h>
 #include <gst/base/gstbasesrc.h>
 #include <gst/base/gstbasetransform.h>
@@ -32,9 +33,12 @@
 #include <gst/base/gstcollectpads.h>
 #include <gst/base/gstpushsrc.h>
 #include <gst/base/gsttypefindhelper.h>
-#include <gst/controller/gstcontrolsource.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
 #include <gst/controller/gstlfocontrolsource.h>
+#include <gst/controller/gsttriggercontrolsource.h>
+#include <gst/controller/gstargbcontrolbinding.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
+#include <gst/controller/gsttimedvaluecontrolsource.h>
 #include <gst/net/gstnet.h>
 #include <gst/net/gstnetclientclock.h>
 #include <gst/net/gstnettimepacket.h>
