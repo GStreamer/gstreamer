@@ -215,12 +215,15 @@ _opensles_recorder_start (GstRingBuffer * rb)
   gint i;
 
   /* Register callback on the buffer queue */
-  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
-      _opensles_recorder_cb, rb);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
-        (guint32) result);
-    return FALSE;
+  if (!thiz->is_queue_callback_registered) {
+    result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
+        _opensles_recorder_cb, rb);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
+          (guint32) result);
+      return FALSE;
+    }
+    thiz->is_queue_callback_registered = TRUE;
   }
 
   /* Fill the queue by enqueing buffers */
@@ -264,6 +267,7 @@ _opensles_recorder_stop (GstRingBuffer * rb)
         (guint32) result);
     return FALSE;
   }
+  thiz->is_queue_callback_registered = FALSE;
 
   /* Reset the queue */
   result = (*thiz->bufferQueue)->Clear (thiz->bufferQueue);
@@ -494,12 +498,15 @@ _opensles_player_start (GstRingBuffer * rb)
   gint i;
 
   /* Register callback on the buffer queue */
-  result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
-      _opensles_player_cb, rb);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
-        (guint32) result);
-    return FALSE;
+  if (!thiz->is_queue_callback_registered) {
+    result = (*thiz->bufferQueue)->RegisterCallback (thiz->bufferQueue,
+        _opensles_player_cb, rb);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_ERROR_OBJECT (thiz, "bufferQueue.RegisterCallback failed(0x%08x)",
+          (guint32) result);
+      return FALSE;
+    }
+    thiz->is_queue_callback_registered = TRUE;
   }
 
   /* Fill the queue by enqueing buffers */
@@ -561,6 +568,7 @@ _opensles_player_stop (GstRingBuffer * rb)
         (guint32) result);
     return FALSE;
   }
+  thiz->is_queue_callback_registered = FALSE;
 
   /* Reset the queue */
   result = (*thiz->bufferQueue)->Clear (thiz->bufferQueue);
@@ -571,6 +579,7 @@ _opensles_player_stop (GstRingBuffer * rb)
   }
 
   g_atomic_int_set (&thiz->segqueued, 0);
+  thiz->cursor = 0;
 
   return TRUE;
 }
@@ -900,4 +909,5 @@ gst_opensles_ringbuffer_init (GstOpenSLESRingBuffer * thiz,
   thiz->outputMixObject = NULL;
   thiz->playerObject = NULL;
   thiz->recorderObject = NULL;
+  thiz->is_queue_callback_registered = FALSE;
 }

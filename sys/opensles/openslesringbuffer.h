@@ -88,6 +88,7 @@ struct _GstOpenSLESRingBuffer
   guint8 * data;
   guint cursor;
   gint segqueued; /* ATOMIC */
+  gboolean is_queue_callback_registered;
 
   /* vmethods */
   AcquireFunc acquire;
