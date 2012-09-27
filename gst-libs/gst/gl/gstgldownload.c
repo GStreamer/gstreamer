@@ -27,6 +27,22 @@
 #include "gstgldownload.h"
 #include "gstglmemory.h"
 
+/**
+ * SECTION:gstgldownload
+ * @short_description: an object that downloads GL textures
+ * @see_also: #GstGLUpload, #GstGLMemory
+ *
+ * #GstGLDownload is an object that downloads GL textures into system memory.
+ *
+ * A #GstGLDownload can be created with gst_gl_download_new() or found with
+ * gst_gl_display_find_download().
+ *
+ * All of the _thread() variants should only be called within the GL thread
+ * they don't try to take a lock on the associated #GstGLDisplay and
+ * don't dispatch to the GL thread. Rather they run the required code in the
+ * calling thread.
+ */
+
 static void _do_download (GstGLDisplay * display, GstGLDownload * download);
 static void _do_download_draw_rgb (GstGLDisplay * display,
     GstGLDownload * download);
@@ -193,6 +209,12 @@ gst_gl_download_init (GstGLDownload * download)
   gst_video_info_init (&download->info);
 }
 
+/**
+ * gst_gl_download_new:
+ * @display: a #GstGLDisplay
+ *
+ * Returns: a new #GstGLDownload object
+ */
 GstGLDownload *
 gst_gl_download_new (GstGLDisplay * display)
 {
@@ -254,6 +276,17 @@ _init_format_pre (GstGLDownload * download, GstVideoFormat v_format,
   return TRUE;
 }
 
+/**
+ * gst_gl_download_init_format:
+ * @download: a #GstGLDownload
+ * @v_format: a #GstVideoFormat
+ * @out_width: the width to download to
+ * @out_height: the height to download to
+ *
+ * Initializes @download with the information required for download.
+ *
+ * Returns: whether the initialization was successful
+ */
 gboolean
 gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
     guint out_width, guint out_height)
@@ -284,6 +317,17 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
   return TRUE;
 }
 
+/**
+ * gst_gl_download_init_format_thread:
+ * @download: a #GstGLDownload
+ * @v_format: a #GstVideoFormat
+ * @out_width: the width to download to
+ * @out_height: the height to download to
+ *
+ * Initializes @download with the information required for download.
+ *
+ * Returns: whether the initialization was successful
+ */
 gboolean
 gst_gl_download_init_format_thread (GstGLDownload * download,
     GstVideoFormat v_format, guint out_width, guint out_height)
@@ -328,6 +372,15 @@ _perform_with_memory_pre (GstGLDownload * download, GstGLMemory * gl_mem)
   return TRUE;
 }
 
+/**
+ * gst_gl_download_perform_with_memory:
+ * @download: a #GstGLDownload
+ * @gl_mem: a #GstGLMemory
+ *
+ * Downloads the texture in @gl_mem
+ *
+ * Returns: whether the download was successful
+ */
 gboolean
 gst_gl_download_perform_with_memory (GstGLDownload * download,
     GstGLMemory * gl_mem)
@@ -357,6 +410,17 @@ gst_gl_download_perform_with_memory (GstGLDownload * download,
   return ret;
 }
 
+/**
+ * gst_gl_download_perform_with_data:
+ * @download: a #GstGLDownload
+ * @texture_id: the texture id to download
+ * @data: (out): where the downloaded data should go
+ *
+ * Downloads @texture_id into @data. @data size and format is specified by
+ * the #GstVideoFormat passed to gst_gl_download_init_format() 
+ *
+ * Returns: whether the download was successful
+ */
 gboolean
 gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
     gpointer data[GST_VIDEO_MAX_PLANES])
@@ -412,6 +476,15 @@ gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
   return TRUE;
 }
 
+/**
+ * gst_gl_download_perform_with_memory_thread:
+ * @download: a #GstGLDownload
+ * @gl_mem: a #GstGLMemory
+ *
+ * Downloads the texture in @gl_mem
+ *
+ * Returns: whether the download was successful
+ */
 gboolean
 gst_gl_download_perform_with_memory_thread (GstGLDownload * download,
     GstGLMemory * gl_mem)
@@ -441,6 +514,17 @@ gst_gl_download_perform_with_memory_thread (GstGLDownload * download,
   return ret;
 }
 
+/**
+ * gst_gl_download_perform_with_data_thread:
+ * @download: a #GstGLDownload
+ * @texture_id: the texture id to download
+ * @data: (out): where the downloaded data should go
+ *
+ * Downloads @texture_id into @data. @data size and format is specified by
+ * the #GstVideoFormat passed to gst_gl_download_init_format() 
+ *
+ * Returns: whether the download was successful
+ */
 gboolean
 gst_gl_download_perform_with_data_thread (GstGLDownload * download,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
@@ -471,6 +555,21 @@ gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload * download,
   return TRUE;
 }
 
+/**
+ * gst_gl_display_find_download_unlocked:
+ * @display: a #GstGLDisplay
+ * @v_format: a #GstVideoFormat
+ * @out_width: the width to download to
+ * @out_height: the height to download to
+ *
+ * Finds a #GstGLDownload with the required download settings, creating one
+ * if needed.  The returned object may not be initialized so you still
+ * have to call gst_gl_download_init_format.
+ *
+ * This function is safe to be called in the GL thread
+ *
+ * Returns: a #GstGLDownload object with the required settings
+ */
 GstGLDownload *
 gst_gl_display_find_download_unlocked (GstGLDisplay * display,
     GstVideoFormat v_format, guint out_width, guint out_height)
@@ -501,6 +600,19 @@ gst_gl_display_find_download_unlocked (GstGLDisplay * display,
   return ret;
 }
 
+/**
+ * gst_gl_display_find_download:
+ * @display: a #GstGLDisplay
+ * @v_format: a #GstVideoFormat
+ * @out_width: the width to download to
+ * @out_height: the height to download to
+ *
+ * Finds a #GstGLDownload with the required download settings, creating one
+ * if needed.  The returned object may not be initialized so you still
+ * have to call gst_gl_download_init_format.
+ *
+ * Returns: a #GstGLDownload object with the required settings
+ */
 GstGLDownload *
 gst_gl_display_find_download (GstGLDisplay * display, GstVideoFormat v_format,
     guint out_width, guint out_height)

@@ -882,6 +882,17 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   return TRUE;
 }
 
+/**
+ * gst_gl_filter_filter_texture:
+ * @filter: a #GstGLFilter
+ * @inbuf: an input buffer
+ * @outbuf: an output buffer
+ *
+ * Perform automatic upload if needed, call filter_texture vfunc and then an
+ * automatic download if needed.
+ *
+ * Returns: whether the transformation succeeded
+ */
 gboolean
 gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -1094,10 +1105,10 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
  * @target: the output texture
  * @shader: the shader to use.
  *
- * Transforms @input into @output using @shader on through FBO.  @resize should
+ * Transforms @input into @output using @shader on FBO.  @resize should
  * only ever be %TRUE whenever @input is the input texture of @filter.
  *
- * See also: #gst_gl_filter_render_to_target()
+ * See also: gst_gl_filter_render_to_target()
  */
 /* attach target to a FBO, use shader, pass input as "tex" uniform to
  * the shader, render input to a quad */

@@ -31,88 +31,106 @@
 
 G_BEGIN_DECLS
 
+GType gst_gl_filter_get_type(void);
 #define GST_TYPE_GL_FILTER            (gst_gl_filter_get_type())
 #define GST_GL_FILTER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTER,GstGLFilter))
 #define GST_IS_GL_FILTER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_FILTER))
 #define GST_GL_FILTER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
 #define GST_IS_GL_FILTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass) ,GST_TYPE_GL_FILTER))
 #define GST_GL_FILTER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_FILTER,GstGLFilterClass))
+
 typedef struct _GstGLFilter GstGLFilter;
 typedef struct _GstGLFilterClass GstGLFilterClass;
 
-
-typedef gboolean (*GstGLFilterSetCaps) (GstGLFilter* filter,
-					GstCaps* incaps, GstCaps* outcaps);
-typedef gboolean (*GstGLFilterProcessFunc) (GstGLFilter *filter,
-					    GstBuffer *inbuf, GstBuffer *outbuf);
-typedef gboolean (*GstGLFilterProcessTexture) (GstGLFilter *filter,
-					    guint in_tex, guint out_tex);
-typedef gboolean (*GstGLFilterOnInitFBO) (GstGLFilter *filter);
-typedef void (*GstGLFilterOnReset) (GstGLFilter *filter);
-typedef void (*GstGLFilterOnStart) (GstGLFilter *filter);
-typedef void (*GstGLFilterOnStop) (GstGLFilter *filter);
-
-typedef void (*GstGLFilterGLStartFunc) (GstGLFilter *filter);
-typedef void (*GstGLFilterGLStopFunc) (GstGLFilter *filter);
-
+/**
+ * GstGLFilter:
+ * @base_transform: parent #GstBaseTransform
+ * @pool: the currently configured #GstBufferPool
+ * @display: the currently configured #GstGLDisplay
+ * @in_info: the video info for input buffers
+ * @out_info: the video info for output buffers
+ * @fbo: GL Framebuffer object used for transformations
+ * @depthbuffer: GL renderbuffer attached to @fbo
+ * @upload: the object used for uploading data, if needed
+ * @download: the object used for downloading data, if needed
+ *
+ * #GstGLFilter is a base class that provides the logic of getting the GL context
+ * from downstream and automatic upload/download for non-#GstGLMemory
+ * #GstBuffer<!--  -->s.
+ */
 struct _GstGLFilter
 {
-  GstBaseTransform base_transform;
+  GstBaseTransform   base_transform;
 
-  GstBufferPool *pool;
+  GstBufferPool     *pool;
 
-  GstGLDisplay *display;
+  GstGLDisplay      *display;
 
-  GstVideoInfo in_info;
-  GstVideoInfo out_info;
-  GLuint fbo;
-  GLuint depthbuffer;
+  GstVideoInfo       in_info;
+  GstVideoInfo       out_info;
+  GLuint             fbo;
+  GLuint             depthbuffer;
 
-  GstGLShader *default_shader;
+  GstGLUpload       *upload;
+  GstGLDownload     *download;
 
-  GLuint in_tex_id;
-  GLuint out_tex_id;
-  GstGLUpload *upload;
-  GstGLDownload *download;
+  /* <private> */
+  GLuint             in_tex_id;
+  GLuint             out_tex_id;
 
-  gulong external_gl_context;
+  GstGLShader       *default_shader;
+
+  gulong             external_gl_context;
 };
 
+/**
+ * GstGLFilterClass:
+ * @base_transform_class: parent class
+ * @set_caps: mirror from #GstBaseTransform
+ * @filter: perform operations on the input and output buffers.  In general,
+ *          you should avoid using this method if at all possible. One valid
+ *          use-case for using this is keeping previous buffers for future calculations.
+ *          Note: If @filter exists, then @filter_texture is not run
+ * @filter_texture: given @in_tex, transform it into @out_tex.  Not used
+ *                  if @filter exists
+ * @onInitFBO: perform initialization when the Framebuffer object is created
+ * @onStart: called when element activates see also #GstBaseTransform
+ * @onStop: called when the element deactivates e also #GstBaseTransform
+ * @onReset: called on inizialation and after @onStop
+ * @display_init_cb: execute arbitrary gl code on start
+ * @display_reset_cb: execute arbitrary gl code at stop
+ */
 struct _GstGLFilterClass
 {
   GstBaseTransformClass base_transform_class;
-  GstGLFilterSetCaps set_caps;
-  GstGLFilterProcessFunc filter;
-  GstGLFilterProcessTexture filter_texture;
-  GstGLFilterOnInitFBO onInitFBO;
 
-  GstGLFilterOnStart onStart;
-  GstGLFilterOnStop onStop;
-  GstGLFilterOnReset onReset;
+  gboolean (*set_caps)          (GstGLFilter* filter, GstCaps* incaps, GstCaps* outcaps);
+  gboolean (*filter)            (GstGLFilter *filter, GstBuffer *inbuf, GstBuffer *outbuf);
+  gboolean (*filter_texture)    (GstGLFilter *filter, guint in_tex, guint out_tex);
+  gboolean (*onInitFBO)         (GstGLFilter *filter);
+
+  void (*onStart)               (GstGLFilter *filter);
+  void (*onStop)                (GstGLFilter *filter);
+  void (*onReset)               (GstGLFilter *filter);
 
   /* useful to init and cleanup custom gl resources */
-  GstGLFilterGLStartFunc display_init_cb; /* run arbitrary gl code at start */
-  GstGLFilterGLStopFunc display_reset_cb; /* run arbitrary gl code at stop */
+  void (*display_init_cb)       (GstGLFilter *filter);
+  void (*display_reset_cb)      (GstGLFilter *filter);
 };
-
-GType gst_gl_filter_get_type(void);
 
 gboolean gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
                                        GstBuffer * outbuf);
 
-void
-gst_gl_filter_render_to_target (GstGLFilter *filter, gboolean resize, GLuint input,
-                                GLuint target, GLCB func, gpointer data);
+void gst_gl_filter_render_to_target (GstGLFilter *filter, gboolean resize, GLuint input,
+                                     GLuint target, GLCB func, gpointer data);
 
 #ifndef OPENGL_ES2
-void
-gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter, gboolean resize,
-                                            GLuint input, GLuint target, GstGLShader *shader);
+void gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter, gboolean resize,
+                                                 GLuint input, GLuint target, GstGLShader *shader);
 
 void gst_gl_filter_draw_texture (GstGLFilter *filter, GLuint texture, guint width, guint height);
-#endif
+#endif /* !OPENGL_ES2 */
 
 G_END_DECLS
 
-#endif
-
+#endif /* _GST_GL_FILTER_H_ */

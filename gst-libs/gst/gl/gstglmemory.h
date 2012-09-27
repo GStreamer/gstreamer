@@ -31,9 +31,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstGLUpload GstGLUpload;
-typedef struct _GstGLDownload GstGLDownload;
-
 #define GST_TYPE_GL_ALLOCATOR (gst_gl_allocator_get_type())
 GType gst_gl_allocator_get_type(void);
 
@@ -48,6 +45,11 @@ typedef struct _GstGLMemory GstGLMemory;
 typedef struct _GstGLAllocator GstGLAllocator;
 typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
 
+/**
+ * GstGLMemoryFlags:
+ *
+ * Flags indicating the current state of a #GstGLMemory
+ */
 typedef enum
 {
   GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED = (GST_MEMORY_FLAG_LAST << 0),
@@ -70,11 +72,14 @@ typedef enum
 /**
  * GstGLMemory:
  * @mem: the parent object
- * @display: the #GstGLDisplay to use
- * @tex_id: the texture id
+ * @display: the #GstGLDisplay to use for GL operations
+ * @tex_id: the texture id for this memory
+ * @v_format: the video format of this texture
  * @gl_format: the format of the texture
  * @width: width of the texture
  * @height: height of the texture
+ * @download: the object used to download this texture into @v_format
+ * @upload: the object used to upload this texture from @v_format
  *
  * Represents information about a GL texture
  */
@@ -90,9 +95,9 @@ struct _GstGLMemory
   GLuint             height;
 
   GstGLDownload     *download;
-  GLenum             render_target;
   GstGLUpload       *upload;
 
+  /* <private> */
   GstMapFlags        map_flags;
   gpointer           data;
 
@@ -101,11 +106,46 @@ struct _GstGLMemory
   gpointer           user_data;
 };
 
+/**
+ * GST_GL_MEMORY_ALLOCATOR:
+ *
+ * The name of the GL memore allocator
+ */
 #define GST_GL_MEMORY_ALLOCATOR   "GLMemory"
 
+/**
+ * GST_GL_MEMORY_FLAGS:
+ * @mem: a #GstGLMemory
+ *
+ * Get the currently set flags on @mem
+ */
 #define GST_GL_MEMORY_FLAGS(mem) GST_MEMORY_FLAGS(mem)
+
+/**
+ * GST_GL_MEMORY_FLAG_IS_SET:
+ * @mem: a #GstGLMemory
+ * @flag: a flag
+ *
+ * Returns: Whether @flag is set on @mem
+ */
 #define GST_GL_MEMORY_FLAG_IS_SET(mem,flag) GST_MEMORY_FLAG_IS_SET(mem,flag)
+
+/**
+ * GST_GL_MEMORY_FLAG_SET:
+ * @mem: a #GstGLMemory
+ * @flag: a flag
+ *
+ * Set @flag on @mem
+ */
 #define GST_GL_MEMORY_FLAG_SET(mem,flag) GST_MINI_OBJECT_FLAG_SET(mem,flag)
+
+/**
+ * GST_GL_MEMORY_FLAG_UNSET:
+ * @mem: a #GstGLMemory
+ * @flag: a flag
+ *
+ * Unset @flag on @mem
+ */
 #define GST_GL_MEMORY_FLAG_UNSET(mem,flag) GST_MEMORY_FLAG_UNSET(mem,flag)
 
 void gst_gl_memory_init (void);
@@ -119,11 +159,21 @@ GstGLMemory * gst_gl_memory_wrapped (GstGLDisplay * display, GstVideoFormat form
 
 gboolean gst_is_gl_memory (GstMemory * mem);
 
+/**
+ * GstGLAllocator
+ *
+ * Opaque #GstGLAllocator struct
+ */
 struct _GstGLAllocator
 {
   GstAllocator parent;
 };
 
+/**
+ * GstGLAllocatorClass:
+ *
+ * The #GstGLAllocatorClass only contains private data
+ */
 struct _GstGLAllocatorClass
 {
   GstAllocatorClass parent_class;

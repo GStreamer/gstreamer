@@ -44,6 +44,15 @@ GType gst_gl_download_get_type (void);
 typedef struct _GstGLDownload GstGLDownload;
 typedef struct _GstGLDownloadClass GstGLDownloadClass;
 
+/**
+ * GstGLDownload
+ * @parent: the parent object
+ * @lock: thread safety
+ * @display: a #GstGLDisplay
+ * @info: the output video info
+ *
+ * Download information about GL textures
+ */
 struct _GstGLDownload
 {
   GObject          parent;
@@ -52,6 +61,10 @@ struct _GstGLDownload
 
   GstGLDisplay     *display;
 
+  /* output data */
+  GstVideoInfo     info;
+
+  /* <private> */
   gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
 
@@ -66,18 +79,24 @@ struct _GstGLDownload
   GLint            shader_attr_texture_loc;
 #endif
 
-  /* output data */
-  GstVideoInfo     info;
-
-  /* <private> */
   gpointer _reserved[GST_PADDING];
 };
 
+/**
+ * GstGLDownloadClass:
+ *
+ * The #GstGLDownloadClass struct only contains private data
+ */
 struct _GstGLDownloadClass
 {
   GObjectClass object_class;
 };
 
+/**
+ * GST_GL_DOWNLOAD_FORMATS:
+ *
+ * The currently supported formats that can be downloaded
+ */
 #ifndef OPENGL_ES2
 # define GST_GL_DOWNLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
                                  "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
@@ -85,6 +104,11 @@ struct _GstGLDownloadClass
 # define GST_GL_DOWNLOAD_FORMATS "{ RGB, RGBx, RGBA, I420, YV12, YUY2, UYVY, AYUV }"
 #endif /* !OPENGL_ES2 */
 
+/**
+ * GST_GL_DOWNLOAD_VIDEO_CAPS:
+ *
+ * The currently supported #GstCaps that can be downloaded
+ */
 #define GST_GL_DOWNLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS)
 
 GstGLDownload * gst_gl_download_new          (GstGLDisplay * display);

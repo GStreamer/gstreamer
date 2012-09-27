@@ -24,6 +24,19 @@
 
 #include "gstglbufferpool.h"
 
+/**
+ * SECTION:gstglbufferpool
+ * @short_description: buffer pool for #GstGLMemory objects
+ * @see_also: #GstBufferPool, #GstGLMemory
+ *
+ * a #GstGLBufferPool is an object that allocates buffers with #GstGLMemory
+ *
+ * A #GstGLBufferPool is created with gst_gl_buffer_pool_new()
+ *
+ * #GstGLBufferPool implements the VideoMeta buffer pool option 
+ * #GST_BUFFER_POOL_OPTION_VIDEO_META
+ */
+
 /* bufferpool */
 struct _GstGLBufferPoolPrivate
 {
@@ -159,7 +172,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   gst_buffer_append_memory (buf, gl_mem);
 
   if (priv->add_videometa) {
-    GST_DEBUG_OBJECT (pool, "adding GstGLMeta");
+    GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
     /* these are just the defaults for now */
     gst_buffer_add_video_meta (buf, 0,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
@@ -179,11 +192,17 @@ no_buffer:
 
 mem_create_failed:
   {
-    GST_WARNING_OBJECT (pool, "Could create GL Memory");
+    GST_WARNING_OBJECT (pool, "Could not create GL Memory");
     return GST_FLOW_ERROR;
   }
 }
 
+/**
+ * gst_gl_buffer_pool_new:
+ * @display: the #GstGLDisplay to use
+ *
+ * Returns: a #GstBufferPool that allocates buffers with #GstGLMemory
+ */
 GstBufferPool *
 gst_gl_buffer_pool_new (GstGLDisplay * display)
 {
