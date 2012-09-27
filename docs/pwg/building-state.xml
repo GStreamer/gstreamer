@@ -86,8 +86,8 @@
     GstElement or some other class not built on top of a base class, you 
     will most likely have to implement your own state change function to
     be notified of state changes. This is definitively necessary if your
-    plugin is a decoder or an encoder, as there are no base classes for
-    decoders or encoders yet.
+    plugin is a demuxer or a muxer, as there are no base classes for
+    muxers or demuxers yet.
   </para>
   <para>
     An element can be notified of state changes through a virtual function

@@ -4,7 +4,7 @@
   <title>Building a Test Application</title>
   <para>
     Often, you will want to test your newly written plugin in an as small
-    setting as possible. Usually, <filename>gst-launch</filename> is a
+    setting as possible. Usually, <filename>gst-launch-1.0</filename> is a
     good first step at testing a plugin. If you have not installed your
     plugin in a directory that GStreamer searches, then you will need to
     set the plugin path. Either set GST_PLUGIN_PATH to the directory
@@ -12,10 +12,10 @@
     If you based your plugin off of the gst-plugin template, then this
     will look something like
     <command>
-    gst-launch --gst-plugin-path=$HOME/gst-template/gst-plugin/src/.libs TESTPIPELINE
+    gst-launch-1.0 --gst-plugin-path=$HOME/gst-template/gst-plugin/src/.libs TESTPIPELINE
     </command>
     However, you will often need more
-    testing features than gst-launch can provide, such as seeking, events,
+    testing features than gst-launch-1.0 can provide, such as seeking, events,
     interactivity and more. Writing your own small testing program is the
     easiest way to accomplish this. This section explains - in a few words
     - how to do that. For a complete application development guide, see the
@@ -26,9 +26,9 @@
     <para>
       At the start, you need to initialize the &GStreamer; core library by
       calling <function>gst_init ()</function>. You can alternatively call
-      <function>gst_init_with_popt_tables ()</function>, which will return
-      a pointer to popt tables. You can then use libpopt to handle the
-      given argument table, and this will finish the &GStreamer; initialization.
+      <function>gst_init_get_option_group ()</function>, which will return
+      a pointer to GOptionGroup. You can then use GOption to handle the
+      initialization, and this will finish the &GStreamer; initialization.
     </para>
 
     <para>
@@ -43,22 +43,19 @@
       application. Also, you can use a <classname>fakesink</classname>
       element at the end of the pipeline to dump your data to the stdout
       (in order to do this, set the <function>dump</function> property to
-      TRUE). Lastly, you can use the <classname>efence</classname> element
-      (indeed, an eletric fence memory debugger wrapper element) to check
-      for memory errors.
+      TRUE). Lastly, you can use valgrind to check for memory errors.
     </para>
 
     <para>
-      During linking, your test application can use fixation or filtered caps
+      During linking, your test application can use filtered caps
       as a way to drive a specific type of data to or from your element. This
       is a very simple and effective way of checking multiple types of input
       and output in your element.
     </para>
 
     <para>
-      Running the pipeline happens through the <function>gst_bin_iterate ()</function>
-      function. Note that during running, you should connect to at least the
-      <quote>error</quote> and <quote>eos</quote> signals on the pipeline
+      Note that during running, you should listen for at least the
+      <quote>error</quote> and <quote>eos</quote> messages on the bus
       and/or your plugin/element to check for correct handling of this. Also,
       you should add events into the pipeline and make sure your plugin handles
       these correctly (with respect to clocking, internal caching, etc.).
@@ -120,6 +117,7 @@ main (gint   argc,
   GstElement *convert1, *convert2, *resample;
   GMainLoop *loop;
   GstBus *bus;
+  guint watch_id;
 
   /* initialization */
   gst_init (&amp;argc, &amp;argv);
@@ -135,7 +133,7 @@ main (gint   argc,
   /* watch for messages on the pipeline's bus (note that this will only
    * work like this when a GLib main loop is running) */
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
-  gst_bus_add_watch (bus, bus_call, loop);
+  watch_id = gst_bus_add_watch (bus, bus_call, loop);
   gst_object_unref (bus);
 
   filesrc  = gst_element_factory_make ("filesrc", "my_filesource");
@@ -154,7 +152,7 @@ main (gint   argc,
    * depending on the environment (output used, sound card, driver etc.) */
   convert2 = gst_element_factory_make ("audioconvert", "audioconvert2");
   resample = gst_element_factory_make ("audioresample", "audioresample");
-  sink     = gst_element_factory_make ("osssink", "audiosink");
+  sink     = gst_element_factory_make ("pulsesink", "audiosink");
 
   if (!sink || !decoder) {
     g_print ("Decoder or output could not be found - check your install\n");
@@ -165,9 +163,9 @@ main (gint   argc,
     return -1;
   } else if (!filter) {
     g_print ("Your self-written filter could not be found. Make sure it "
-             "is installed correctly in $(libdir)/gstreamer-0.10/ or "
-             "~/.gstreamer-0.10/plugins/ and that gst-inspect-0.10 lists it. "
-             "If it doesn't, check with 'GST_DEBUG=*:2 gst-inspect-0.10' for "
+             "is installed correctly in $(libdir)/gstreamer-1.0/ or "
+             "~/.gstreamer-1.0/plugins/ and that gst-inspect-1.0 lists it. "
+             "If it doesn't, check with 'GST_DEBUG=*:2 gst-inspect-1.0' for "
              "the reason why it is not being loaded.");
     return -1;
   }
@@ -209,6 +207,8 @@ main (gint   argc,
   /* clean up */
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
+  g_source_remove (watch_id);
+  g_main_loop_unref (loop);
 
   return 0;
 }

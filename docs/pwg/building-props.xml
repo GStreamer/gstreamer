@@ -1,7 +1,7 @@
 <!-- ############ chapter ############# -->
 
-<chapter id="chapter-building-args" xreflabel="Adding Arguments">
-  <title>Adding Arguments</title>
+<chapter id="chapter-building-args" xreflabel="Adding Properties">
+  <title>Adding Properties</title>
   <para>
     The primary and most important way of controlling how an element behaves,
     is through GObject properties. GObject properties are defined in the
@@ -11,6 +11,14 @@
     notified if an application changes or requests the value of a property,
     and can then fill in the value or take action required for that property
     to change value internally.
+  </para>
+  <para>
+    You probably also want to keep an instance variable around
+    with the currently configured value of the property that you use in the
+    get and set functions. 
+    Note that <classname>GObject</classname> will not automatically set your
+    instance variable to the default value, you will have to do that in the
+    <function>_init ()</function> function of your element.
   </para>
   <programlisting><!-- example-begin properties.c a --><!--
 #include "filter.h"
@@ -27,8 +35,8 @@ gst_my_filter_init (GstMyFilter * filter)
 <!-- example-begin properties.c b -->
 /* properties */
 enum {
-  ARG_0,
-  ARG_SILENT
+  PROP_0,
+  PROP_SILENT
   /* FILL ME */
 };
 
@@ -46,15 +54,15 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  /* define properties */
-  g_object_class_install_property (object_class, ARG_SILENT,
-    g_param_spec_boolean ("silent", "Silent",
-			  "Whether to be very verbose or not",
-			  FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   /* define virtual function pointers */
   object_class->set_property = gst_my_filter_set_property;
   object_class->get_property = gst_my_filter_get_property;
+
+  /* define properties */
+  g_object_class_install_property (object_class, PROP_SILENT,
+    g_param_spec_boolean ("silent", "Silent",
+			  "Whether to be very verbose or not",
+			  FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -66,7 +74,7 @@ gst_my_filter_set_property (GObject      *object,
   GstMyFilter *filter = GST_MY_FILTER (object);
 
   switch (prop_id) {
-    case ARG_SILENT:
+    case PROP_SILENT:
       filter->silent = g_value_get_boolean (value);
       g_print ("Silent argument was changed to %s\n",
 	       filter->silent ? "true" : "false");
@@ -86,7 +94,7 @@ gst_my_filter_get_property (GObject    *object,
   GstMyFilter *filter = GST_MY_FILTER (object);
                                                                                 
   switch (prop_id) {
-    case ARG_SILENT:
+    case PROP_SILENT:
       g_value_set_boolean (value, filter->silent);
       break;
     default:
@@ -99,10 +107,10 @@ gst_my_filter_get_property (GObject    *object,
 #include "register.func"
   --><!-- example-end properties.c c --></programlisting>
   <para>
-    The above is a very simple example of how arguments are used. Graphical
-    applications - for example GStreamer Editor - will use these properties
-    and will display a user-controllable widget with which these properties
-    can be changed. This means that - for the property to be as user-friendly
+    The above is a very simple example of how properties are used. Graphical
+    applications will use these properties and will display a
+    user-controllable widget with which these properties can be changed.
+    This means that - for the property to be as user-friendly
     as possible - you should be as exact as possible in the definition of the
     property. Not only in defining ranges in between which valid properties
     can be located (for integers, floats, etc.), but also in using very
@@ -150,11 +158,11 @@ static void
 gst_videotestsrc_class_init (GstvideotestsrcClass *klass)
 {
 [..]
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_TYPE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PATTERN,
     g_param_spec_enum ("pattern", "Pattern",
 		       "Type of test pattern to generate",
-		       GST_TYPE_VIDEOTESTSRC_PATTERN, 1, G_PARAM_READWRITE |
-                           G_PARAM_STATIC_STRINGS));
+                       GST_TYPE_VIDEOTESTSRC_PATTERN, GST_VIDEOTESTSRC_SMPTE,
+                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 [..]
 }
   </programlisting>
