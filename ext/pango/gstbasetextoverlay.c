@@ -2210,40 +2210,45 @@ wait_for_text_buf:
         in_text = (gchar *) map.data;
         in_size = map.size;
 
-        /* g_markup_escape_text() absolutely requires valid UTF8 input, it
-         * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
-         * here on purpose, this is something that needs fixing upstream */
-        if (!g_utf8_validate (in_text, in_size, NULL)) {
-          const gchar *end = NULL;
+        if (in_size > 0) {
+          /* g_markup_escape_text() absolutely requires valid UTF8 input, it
+           * might crash otherwise. We don't fall back on GST_SUBTITLE_ENCODING
+           * here on purpose, this is something that needs fixing upstream */
+          if (!g_utf8_validate (in_text, in_size, NULL)) {
+            const gchar *end = NULL;
 
-          GST_WARNING_OBJECT (overlay, "received invalid UTF-8");
-          in_text = g_strndup (in_text, in_size);
-          while (!g_utf8_validate (in_text, in_size, &end) && end)
-            *((gchar *) end) = '*';
-        }
-
-        /* Get the string */
-        if (overlay->have_pango_markup) {
-          text = g_strndup (in_text, in_size);
-        } else {
-          text = g_markup_escape_text (in_text, in_size);
-        }
-
-        if (text != NULL && *text != '\0') {
-          gint text_len = strlen (text);
-
-          while (text_len > 0 && (text[text_len - 1] == '\n' ||
-                  text[text_len - 1] == '\r')) {
-            --text_len;
+            GST_WARNING_OBJECT (overlay, "received invalid UTF-8");
+            in_text = g_strndup (in_text, in_size);
+            while (!g_utf8_validate (in_text, in_size, &end) && end)
+              *((gchar *) end) = '*';
           }
-          GST_DEBUG_OBJECT (overlay, "Rendering text '%*s'", text_len, text);
-          gst_base_text_overlay_render_text (overlay, text, text_len);
+
+          /* Get the string */
+          if (overlay->have_pango_markup) {
+            text = g_strndup (in_text, in_size);
+          } else {
+            text = g_markup_escape_text (in_text, in_size);
+          }
+
+          if (text != NULL && *text != '\0') {
+            gint text_len = strlen (text);
+
+            while (text_len > 0 && (text[text_len - 1] == '\n' ||
+                    text[text_len - 1] == '\r')) {
+              --text_len;
+            }
+            GST_DEBUG_OBJECT (overlay, "Rendering text '%*s'", text_len, text);
+            gst_base_text_overlay_render_text (overlay, text, text_len);
+          } else {
+            GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
+            gst_base_text_overlay_render_text (overlay, " ", 1);
+          }
+          if (in_text != (gchar *) map.data)
+            g_free (in_text);
         } else {
           GST_DEBUG_OBJECT (overlay, "No text to render (empty buffer)");
           gst_base_text_overlay_render_text (overlay, " ", 1);
         }
-        if (in_text != (gchar *) map.data)
-          g_free (in_text);
 
         gst_buffer_unmap (overlay->text_buffer, &map);
 
