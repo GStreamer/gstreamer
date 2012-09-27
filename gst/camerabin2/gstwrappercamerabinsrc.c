@@ -596,7 +596,7 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
       gst_bin_remove (cbin, self->video_filter);
       gst_object_unref (self->video_filter);
       self->video_filter = NULL;
-      filter_csp = gst_bin_get_by_name (cbin, "filter-colorspace");
+      filter_csp = gst_bin_get_by_name (cbin, "filter-videoconvert");
       gst_bin_remove (cbin, filter_csp);
       gst_object_unref (filter_csp);
       filter_csp = NULL;
