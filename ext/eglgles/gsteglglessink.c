@@ -1384,6 +1384,7 @@ HANDLE_ERROR_LOCKED:
   return FALSE;
 }
 
+/* XXX: Lock eglgles context? */
 static gboolean
 gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
 {
@@ -1394,6 +1395,29 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
       eglglessink->eglglesctx->surface, EGL_WIDTH, &width);
   eglQuerySurface (eglglessink->eglglesctx->display,
       eglglessink->eglglesctx->surface, EGL_HEIGHT, &height);
+
+  /* Save Pixel Aspect Ratio
+   *
+   * PAR is reported as w/h * EGL_DISPLAY_SCALING wich is
+   * a constant with value 10000. This attribute is only
+   * supported if the EGL version is >= 1.2
+   * XXX: Setup this as a property.
+   */
+  if (eglglessink->eglglesctx->egl_minor > 1) {
+    eglQuerySurface (eglglessink->eglglesctx->display,
+        eglglessink->eglglesctx->surface, EGL_PIXEL_ASPECT_RATIO,
+        &eglglessink->eglglesctx->pixel_aspect_ratio);
+  } else {
+    GST_WARNING_OBJECT (eglglessink, "Can't query PAR. Using default: %dx%d",
+        EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
+    eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
+  }
+
+  if (eglglessink->eglglesctx->pixel_aspect_ratio == EGL_UNKNOWN) {
+    GST_WARNING_OBJECT (eglglessink, "PAR value returned doesn't make sense. "
+        "Will use default: %d/%d", EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
+    eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
+  }
 
   if (width != eglglessink->eglglesctx->surface_width ||
       height != eglglessink->eglglesctx->surface_height) {
@@ -1694,8 +1718,6 @@ HANDLE_ERROR:
 static gboolean
 gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
 {
-  EGLint egl_major, egl_minor;
-
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL initial configuration");
 
   eglglessink->eglglesctx->display = eglGetDisplay (EGL_DEFAULT_DISPLAY);
@@ -1704,21 +1726,25 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;          /* No EGL error is set by eglGetDisplay() */
   }
 
-  if (!eglInitialize (eglglessink->eglglesctx->display, &egl_major, &egl_minor)) {
+  if (!eglInitialize (eglglessink->eglglesctx->display,
+      &eglglessink->eglglesctx->egl_major, &eglglessink->eglglesctx->egl_minor)) {
     show_egl_error ("eglInitialize");
     GST_ERROR_OBJECT (eglglessink, "Could not init EGL display connection");
     goto HANDLE_EGL_ERROR;
   }
 
-  /* Check against required EGL version */
-  if (egl_major < GST_EGLGLESSINK_EGL_MIN_VERSION) {
-    GST_ERROR_OBJECT (eglglessink, "EGL v%d\n needed, but you only have v%d.%d",
-        GST_EGLGLESSINK_EGL_MIN_VERSION, egl_major, egl_minor);
+  /* Check against required EGL version
+   * XXX: Need to review the version requirement in terms of the needed API
+   */
+  if (eglglessink->eglglesctx->egl_major < GST_EGLGLESSINK_EGL_MIN_VERSION) {
+    GST_ERROR_OBJECT (eglglessink, "EGL v%d needed, but you only have v%d.%d",
+        GST_EGLGLESSINK_EGL_MIN_VERSION, eglglessink->eglglesctx->egl_major,
+        eglglessink->eglglesctx->egl_minor);
     goto HANDLE_ERROR;
   }
 
   GST_INFO_OBJECT (eglglessink, "System reports supported EGL version v%d.%d",
-      egl_major, egl_minor);
+      eglglessink->eglglesctx->egl_major, eglglessink->eglglesctx->egl_minor);
 
   eglBindAPI (EGL_OPENGL_ES_API);
 
@@ -1839,6 +1865,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 {
   GstVideoRectangle frame, surface;
   gint w, h;
+  guint dar_n, dar_d;
 
 #ifdef EGL_FAST_RENDERING_POSSIBLE
   EGLImageKHR img = EGL_NO_IMAGE_KHR;
@@ -2032,9 +2059,26 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           eglglessink->display_region.h =
               eglglessink->eglglesctx->surface_height;
         } else {
-          /* XXX: Proly consider display pixel aspect ratio too? */
-          frame.w = w;
-          frame.h = h;
+          if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, w, h,
+              eglglessink->par_n, eglglessink->par_d,
+              eglglessink->eglglesctx->pixel_aspect_ratio, EGL_DISPLAY_SCALING)) {
+            GST_WARNING_OBJECT (eglglessink, "Could not compute resulting DAR");
+            frame.w = w;
+            frame.h = h;
+          } else {
+           /* Find suitable matching new size acording to dar & par
+            * XXX: Move this to gstutils?
+            */
+            frame.w = w;
+            frame.h = h;
+            if (!(h % dar_d))
+              frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
+            else if (!(w % dar_n))
+              frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
+            else /* need aprox */
+              frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
+          }
+
           surface.w = eglglessink->eglglesctx->surface_width;
           surface.h = eglglessink->eglglesctx->surface_height;
           gst_video_sink_center_rect (frame, surface,
@@ -2123,6 +2167,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GstEglGlesSink *eglglessink;
   gboolean ret = TRUE;
   gint width, height;
+  int par_n, par_d;
   EGLNativeWindowType window;
   GstEglGlesImageFmt *format;
 
@@ -2138,6 +2183,12 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto HANDLE_ERROR;
   }
 
+  if (!(ret = gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d))) {
+    par_n = 1;
+    par_d = 1;
+    GST_WARNING_OBJECT (eglglessink, "Can't parse PAR from caps. Using default: 1");
+  }
+
   format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
   if (!format) {
     GST_ERROR_OBJECT (eglglessink,
@@ -2149,6 +2200,8 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   g_mutex_lock (eglglessink->flow_lock);
   eglglessink->selected_fmt = format;
+  eglglessink->par_n = par_n;
+  eglglessink->par_d = par_d;
   GST_VIDEO_SINK_WIDTH (eglglessink) = width;
   GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
   g_mutex_unlock (eglglessink->flow_lock);
@@ -2448,6 +2501,8 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   eglglessink->force_aspect_ratio = TRUE;
   eglglessink->using_own_window = FALSE;
   eglglessink->eglglesctx = g_new0 (GstEglGlesRenderContext, 1);
+  eglglessink->par_n = 1;
+  eglglessink->par_d = 1;
   eglglessink->flow_lock = g_mutex_new ();
 }
 

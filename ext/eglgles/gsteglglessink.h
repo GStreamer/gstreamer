@@ -110,6 +110,8 @@ struct _GstEglGlesRenderContext
   GLuint texture[3];
   EGLint surface_width;
   EGLint surface_height;
+  EGLint pixel_aspect_ratio;
+  EGLint egl_minor, egl_major;
   gint n_textures;
 
   /* shader vars */
@@ -146,6 +148,8 @@ struct _GstEglGlesSink
   GstVideoSink videosink;
   GstVideoFormat format;
   GstCaps *current_caps;
+
+  int par_n, par_d;                     /* Aspect ratio from caps */
 
   GstEglGlesRenderContext *eglglesctx;
 
