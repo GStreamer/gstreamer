@@ -348,7 +348,8 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Configure audio source */
   SLDataLocator_AndroidSimpleBufferQueue loc_bufq = {
-    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, (spec->segtotal >> 1)
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE,
+    MIN (32, (spec->segtotal >> 1))
   };
   SLDataSource audioSrc = { &loc_bufq, &format };
 
@@ -439,7 +440,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   _opensles_player_change_mute (rb);
 
   /* Define our queue data buffer */
-  thiz->data_segtotal = loc_bufq.numBuffers + 1;
+  thiz->data_segtotal = loc_bufq.numBuffers;
   thiz->data = g_malloc (spec->segsize * thiz->data_segtotal);
   thiz->cursor = 0;
 
@@ -502,7 +503,7 @@ _opensles_player_start (GstRingBuffer * rb)
   }
 
   /* Fill the queue by enqueing buffers */
-  for (i = 0; i < (rb->spec.segtotal >> 1); i++) {
+  for (i = 0; i < thiz->data_segtotal; i++) {
     _opensles_player_cb (NULL, rb);
   }
 
