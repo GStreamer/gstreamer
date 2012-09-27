@@ -1384,20 +1384,28 @@ HANDLE_ERROR_LOCKED:
   return FALSE;
 }
 
-static void
+static gboolean
 gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
 {
+  gint width, height;
+
   /* Save surface dims */
   eglQuerySurface (eglglessink->eglglesctx->display,
-      eglglessink->eglglesctx->surface, EGL_WIDTH,
-      &eglglessink->eglglesctx->surface_width);
+      eglglessink->eglglesctx->surface, EGL_WIDTH, &width);
   eglQuerySurface (eglglessink->eglglesctx->display,
-      eglglessink->eglglesctx->surface, EGL_HEIGHT,
-      &eglglessink->eglglesctx->surface_height);
+      eglglessink->eglglesctx->surface, EGL_HEIGHT, &height);
 
-  GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels",
-      eglglessink->eglglesctx->surface_width,
-      eglglessink->eglglesctx->surface_height);
+  if (width != eglglessink->eglglesctx->surface_width ||
+      height != eglglessink->eglglesctx->surface_height) {
+    eglglessink->eglglesctx->surface_width = width;
+    eglglessink->eglglesctx->surface_height = height;
+    GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels",
+        eglglessink->eglglesctx->surface_width,
+        eglglessink->eglglesctx->surface_height);
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static gboolean
@@ -2009,14 +2017,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
           goto HANDLE_ERROR;
       }
 
-      /* Update surface dims */
-      gst_eglglessink_update_surface_dimensions (eglglessink);
-
       /* If no one has set a display rectangle on us initialize
        * a sane default. According to the docs on the xOverlay
        * interface we are supposed to fill the overlay 100%
        */
-      if (!eglglessink->display_region.w || !eglglessink->display_region.h) {
+      if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
+          !eglglessink->display_region.w || !eglglessink->display_region.h) {
         g_mutex_lock (eglglessink->flow_lock);
         if (!eglglessink->force_aspect_ratio) {
           eglglessink->display_region.x = 0;
