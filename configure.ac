@@ -41,6 +41,9 @@ m4_define([gst_plugins_bad_micro_version], [22])
 m4_define([gst_plugins_bad_version],
           [gst_plugins_bad_major_version.gst_plugins_bad_minor_version.gst_plugins_bad_micro_version])
 
+# Wayland minimum version number
+m4_define([wayland_api_version], [0.95.0])
+
 # VA-API minimum version number
 m4_define([va_api_version],     [0.30.4])
 m4_define([va_api_drm_version], [0.33.0])
@@ -82,6 +85,9 @@ AC_SUBST(GST_VAAPI_MAJOR_VERSION)
 
 LIBVA_PACKAGE_VERSION=libva_x11_package_version
 AC_SUBST(LIBVA_PACKAGE_VERSION)
+
+WAYLAND_API_VERSION=wayland_api_version
+AC_SUBST(WAYLAND_API_VERSION)
 
 dnl Versions for GStreamer and plugins-base
 GST_MAJORMINOR=gst_major_minor_version
@@ -370,7 +376,7 @@ fi
 dnl Check for Wayland
 USE_WAYLAND=0
 if test "$enable_wayland" = "yes"; then
-    PKG_CHECK_MODULES(WAYLAND, [wayland-client],
+    PKG_CHECK_MODULES(WAYLAND, [wayland-client >= wayland_api_version],
         [USE_WAYLAND=1], [USE_WAYLAND=0])
 
     if test $USE_WAYLAND -eq 1; then
