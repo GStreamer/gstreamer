@@ -37,6 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_hls_sink_debug);
 #define DEFAULT_PLAYLIST_ROOT NULL
 #define DEFAULT_MAX_FILES 10
 #define DEFAULT_TARGET_DURATION 15
+#define DEFAULT_PLAYLIST_LENGTH 5
 
 enum
 {
@@ -45,7 +46,8 @@ enum
   PROP_PLAYLIST_LOCATION,
   PROP_PLAYLIST_ROOT,
   PROP_MAX_FILES,
-  PROP_TARGET_DURATION
+  PROP_TARGET_DURATION,
+  PROP_PLAYLIST_LENGTH
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -149,6 +151,12 @@ gst_hls_sink_class_init (GstHlsSinkClass * klass)
           "streaming server)",
           0, G_MAXUINT, DEFAULT_TARGET_DURATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PLAYLIST_LENGTH,
+      g_param_spec_uint ("playlist-length", "Playlist length",
+          "Length of HLS playlist. To allow players to conform to section 6.3.3 "
+          "of the HLS specification, this should be at least 3.",
+          1, G_MAXUINT, DEFAULT_PLAYLIST_LENGTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -158,7 +166,7 @@ gst_hls_sink_reset (GstHlsSink * sink)
   sink->multifilesink = NULL;
   sink->last_stream_time = 0;
 
-  sink->playlist = gst_m3u8_playlist_new (6, 5, FALSE);
+  sink->playlist = gst_m3u8_playlist_new (6, sink->playlist_length, FALSE);
 }
 
 static void
@@ -174,6 +182,7 @@ gst_hls_sink_init (GstHlsSink * sink, GstHlsSinkClass * sink_class)
   sink->location = g_strdup (DEFAULT_LOCATION);
   sink->playlist_location = g_strdup (DEFAULT_PLAYLIST_LOCATION);
   sink->playlist_root = g_strdup (DEFAULT_PLAYLIST_ROOT);
+  sink->playlist_length = DEFAULT_PLAYLIST_LENGTH;
   sink->max_files = DEFAULT_MAX_FILES;
   sink->target_duration = DEFAULT_TARGET_DURATION;
   sink->count = 0;
@@ -368,6 +377,10 @@ gst_hls_sink_set_property (GObject * object, guint prop_id,
     case PROP_TARGET_DURATION:
       sink->target_duration = g_value_get_uint (value);
       break;
+    case PROP_PLAYLIST_LENGTH:
+      sink->playlist_length = g_value_get_uint (value);
+      sink->playlist->window_size = sink->playlist_length;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -395,6 +408,9 @@ gst_hls_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TARGET_DURATION:
       g_value_set_uint (value, sink->target_duration);
+      break;
+    case PROP_PLAYLIST_LENGTH:
+      g_value_set_uint (value, sink->playlist_length);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -47,6 +47,7 @@ struct _GstHlsSink
   gchar *location;
   gchar *playlist_location;
   gchar *playlist_root;
+  guint playlist_length;
   GstM3U8Playlist *playlist;
   guint index;
   gint max_files;
