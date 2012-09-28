@@ -2147,20 +2147,43 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
         GST_TIME_ARGS (frame->duration));
   }
 
-  if (frame->pts == GST_CLOCK_TIME_NONE &&
-      GST_CLOCK_TIME_IS_VALID (priv->pts_delta) && priv->frames) {
-    GstVideoCodecFrame *oframe = priv->frames->data;
+  /* PTS is expected montone ascending,
+   * so a good guess is lowest unsent DTS */
+  {
+    GstClockTime min_ts = GST_CLOCK_TIME_NONE;
+    GstVideoCodecFrame *oframe = NULL;
+    gboolean seen_none = FALSE;
 
-    /* valid delta, so we have some reasonable DTS input,
-     * then outgoing PTS = smallest DTS = DTS of oldest frame */
-    if (GST_CLOCK_TIME_IS_VALID (oframe->dts)) {
-      frame->pts = oframe->dts + priv->pts_delta;
-      GST_LOG_OBJECT (decoder,
-          "Guessing timestamp %" GST_TIME_FORMAT
-          " from DTS %" GST_TIME_FORMAT " for frame...",
-          GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (oframe->dts));
+    /* some maintenance regardless */
+    for (l = priv->frames; l; l = l->next) {
+      GstVideoCodecFrame *tmp = l->data;
+
+      if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts)) {
+        seen_none = TRUE;
+        continue;
+      }
+
+      if (!GST_CLOCK_TIME_IS_VALID (min_ts) || tmp->abidata.ABI.ts < min_ts) {
+        min_ts = tmp->abidata.ABI.ts;
+        oframe = tmp;
+      }
+    }
+    /* save a ts if needed */
+    if (oframe && oframe != frame) {
+      oframe->abidata.ABI.ts = frame->abidata.ABI.ts;
+    }
+
+    /* and set if needed;
+     * valid delta means we have reasonable DTS input */
+    if (!GST_CLOCK_TIME_IS_VALID (frame->pts) && !seen_none &&
+        GST_CLOCK_TIME_IS_VALID (priv->pts_delta)) {
+      frame->pts = min_ts + priv->pts_delta;
+      GST_DEBUG_OBJECT (decoder,
+          "no valid PTS, using oldest DTS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (frame->pts));
     }
   }
+
 
   if (frame->pts == GST_CLOCK_TIME_NONE) {
     /* Last ditch timestamp guess: Just add the duration to the previous
@@ -2568,6 +2591,7 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
   frame->pts = GST_BUFFER_PTS (frame->input_buffer);
   frame->dts = GST_BUFFER_DTS (frame->input_buffer);
   frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
+  frame->abidata.ABI.ts = frame->dts;
 
   /* For keyframes, PTS = DTS */
   if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
