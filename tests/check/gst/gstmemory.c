@@ -149,6 +149,12 @@ GST_START_TEST (test_writable)
 
   fail_if (gst_memory_map (mem, &info, GST_MAP_WRITE));
 
+  /* Make sure mapping anxd unmapping it doesn't change it's locking state */
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  gst_memory_unmap (mem, &info);
+
+  fail_if (gst_memory_map (mem, &info, GST_MAP_WRITE));
+
   mem2 = gst_memory_copy (mem, 0, -1);
   fail_unless (GST_MEMORY_IS_READONLY (mem));
   fail_if (GST_MEMORY_IS_READONLY (mem2));

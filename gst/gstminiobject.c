@@ -121,8 +121,7 @@ gst_mini_object_init (GstMiniObject * mini_object, guint flags, GType type,
 {
   mini_object->type = type;
   mini_object->refcount = 1;
-  mini_object->lockstate =
-      (flags & GST_MINI_OBJECT_FLAG_LOCK_READONLY ? GST_LOCK_FLAG_READ : 0);
+  mini_object->lockstate = 0;
   mini_object->flags = flags;
 
   mini_object->copy = copy_func;
@@ -178,6 +177,10 @@ gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
 
   g_return_val_if_fail (object != NULL, FALSE);
   g_return_val_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object), FALSE);
+
+  if (G_UNLIKELY (object->flags & GST_MINI_OBJECT_FLAG_LOCK_READONLY &&
+          flags & GST_LOCK_FLAG_WRITE))
+    return FALSE;
 
   do {
     access_mode = flags & FLAG_MASK;
