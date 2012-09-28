@@ -767,7 +767,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
             k = i;
           }
           /* exact match needs no further searching */
-          if (stream->index[index].offset == segment.start)
+          if (stream->index[index].offset == boffset)
             break;
         } while (++i < avi->num_streams);
         boffset -= 8;
