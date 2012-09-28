@@ -2067,16 +2067,21 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
             frame.h = h;
           } else {
            /* Find suitable matching new size acording to dar & par
+            * rationale for prefering leaving the height untouched
+            * comes from interlacing considerations.
             * XXX: Move this to gstutils?
             */
-            frame.w = w;
-            frame.h = h;
             if (!(h % dar_d))
               frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
+              frame.h = h;
             else if (!(w % dar_n))
               frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
-            else /* need aprox */
+              frame.w = w;
+            else /* Neither width nor height can be precisely scaled.
+                  * Preffer to leave height untouched. See comment above.
+                  */
               frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
+              frame.h = h;
           }
 
           surface.w = eglglessink->eglglesctx->surface_width;
