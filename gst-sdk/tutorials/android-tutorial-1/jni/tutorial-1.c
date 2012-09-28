@@ -236,8 +236,8 @@ static void *app_function (void *userdata) {
 
 //  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! queue ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
 //  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! video/x-raw-yuv,format=(fourcc)Y444 ! eglglessink name=vsink", NULL);
-  //data->pipeline = gst_parse_launch ("souphttpsrc location=http://docs.gstreamer.com/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! queue ! ffmpegcolorspace ! eglglessink name=vsink", NULL);
-  data->pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  //data->pipeline = gst_parse_launch ("souphttpsrc location=http://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! queue ! ffmpegcolorspace ! eglglessink name=vsink", NULL);
+  data->pipeline = gst_parse_launch ("playbin2 uri=http://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
   if (!data->vsink)
