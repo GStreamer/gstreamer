@@ -4,6 +4,9 @@
 <chapter id="chapter-dparams">
   <title>Supporting Dynamic Parameters</title>
   <para>
+    Warning, this part describes 0.10 and is outdated.
+  </para>
+  <para>
     Sometimes object properties are not powerful enough to control the
     parameters that affect the behaviour of your element.
     When this is the case you can mark these parameters as being Controllable.
