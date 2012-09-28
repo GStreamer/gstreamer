@@ -83,7 +83,7 @@ struct _GstWrapperCameraBinSrc
 
   gboolean elements_created;
 
-  guint src_event_probe_id;
+  gulong src_event_probe_id;
 
   GstPad *outsel_imgpad;
   GstPad *outsel_vidpad;
