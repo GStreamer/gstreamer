@@ -678,6 +678,8 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
   }
 
   if (thiz->mode == RB_MODE_SINK_PCM) {
+    SLOutputMixItf outputMix;
+
     /* Create an output mixer */
     result = (*thiz->engineEngine)->CreateOutputMix (thiz->engineEngine,
         &thiz->outputMixObject, 0, NULL, NULL);
@@ -694,6 +696,24 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
       GST_ERROR_OBJECT (thiz, "outputMix.Realize failed(0x%08x)",
           (guint32) result);
       goto failed;
+    }
+
+    /* Check for output device options */
+    result = (*thiz->outputMixObject)->GetInterface (thiz->outputMixObject,
+        SL_IID_OUTPUTMIX, &outputMix);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_WARNING_OBJECT (thiz, "outputMix.GetInterface failed(0x%08x)",
+          (guint32) result);
+    } else {
+      SLint32 numDevices;
+      SLuint32 deviceIDs[16];
+      gint i;
+      (*outputMix)->GetDestinationOutputDeviceIDs (outputMix, &numDevices,
+          deviceIDs);
+      GST_DEBUG_OBJECT (thiz, "Found %d output devices", (gint) numDevices);
+      for (i = 0; i < numDevices; i++) {
+        GST_DEBUG_OBJECT (thiz, "  DeviceID: %08x", (guint) deviceIDs[i]);
+      }
     }
   }
 
