@@ -27,20 +27,17 @@
 #include "gstfrei0rmixer.h"
 
 #include <string.h>
+#include <gmodule.h>
 
 GST_DEBUG_CATEGORY (frei0r_debug);
 #define GST_CAT_DEFAULT frei0r_debug
 
-static GstStaticCaps bgra8888_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA);
-static GstStaticCaps rgba8888_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA);
-static GstStaticCaps packed32_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_BGRA " ; "
-    GST_VIDEO_CAPS_RGBA " ; "
-    GST_VIDEO_CAPS_ABGR " ; "
-    GST_VIDEO_CAPS_ARGB " ; "
-    GST_VIDEO_CAPS_BGRx " ; "
-    GST_VIDEO_CAPS_RGBx " ; "
-    GST_VIDEO_CAPS_xBGR " ; "
-    GST_VIDEO_CAPS_xRGB " ; " GST_VIDEO_CAPS_YUV ("AYUV"));
+static GstStaticCaps bgra8888_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+    ("BGRA"));
+static GstStaticCaps rgba8888_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+    ("RGBA"));
+static GstStaticCaps packed32_caps = GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
+    ("{ BGRA, RGBA, ABGR, ARGB, BGRx, RGBx, xBGR, xRGB, AYUV }"));
 
 GstCaps *
 gst_frei0r_caps_from_color_model (gint color_model)

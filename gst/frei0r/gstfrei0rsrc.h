@@ -45,9 +45,7 @@ struct _GstFrei0rSrc {
   f0r_instance_t *f0r_instance;
   GstFrei0rPropertyValue *property_cache;
 
-  GstVideoFormat fmt;
-  gint width, height;
-  gint fps_n, fps_d;
+  GstVideoInfo info;
 
   guint64 n_frames;
 };

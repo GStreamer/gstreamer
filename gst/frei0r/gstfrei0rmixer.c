@@ -26,8 +26,6 @@
 #include "gstfrei0r.h"
 #include "gstfrei0rmixer.h"
 
-#include <gst/controller/gstcontroller.h>
-
 GST_DEBUG_CATEGORY_EXTERN (frei0r_debug);
 #define GST_CAT_DEFAULT frei0r_debug
 
@@ -54,11 +52,10 @@ gst_frei0r_mixer_reset (GstFrei0rMixer * self)
   self->property_cache = NULL;
 
   gst_caps_replace (&self->caps, NULL);
-  p_ev = &self->newseg_event;
+  p_ev = &self->segment_event;
   gst_event_replace (p_ev, NULL);
 
-  self->fmt = GST_VIDEO_FORMAT_UNKNOWN;
-  self->width = self->height = 0;
+  gst_video_info_init (&self->info);
 }
 
 static void
@@ -155,85 +152,74 @@ gst_frei0r_mixer_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstCaps *
-gst_frei0r_mixer_get_caps (GstPad * pad)
+gst_frei0r_mixer_query_pad_caps (GstPad * pad, GstPad * skip, GstCaps * filter)
 {
-  GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
+  GstCaps *caps;
+
+  if (pad == skip)
+    return filter;
+
+  caps = gst_pad_peer_query_caps (pad, filter);
+
+  if (caps)
+    gst_caps_unref (filter);
+  else
+    caps = filter;
+
+  return caps;
+}
+
+static GstCaps *
+gst_frei0r_mixer_get_caps (GstFrei0rMixer * self, GstPad * pad,
+    GstCaps * filter)
+{
   GstCaps *caps = NULL;
 
   if (self->caps) {
     caps = gst_caps_ref (self->caps);
   } else {
-    GstCaps *tmp, *tmp1;
+    GstCaps *tmp;
 
-    tmp = gst_caps_copy (gst_pad_get_pad_template_caps (self->src));
-    tmp1 = gst_pad_peer_get_caps (pad);
-    if (tmp1) {
-      caps = gst_caps_intersect (tmp, tmp1);
-      gst_caps_unref (tmp1);
-      gst_caps_unref (tmp);
-    } else {
-      caps = tmp;
-    }
-
-    tmp = caps;
-    tmp1 = gst_pad_peer_get_caps (self->sink0);
-    if (tmp1) {
-      caps = gst_caps_intersect (tmp, tmp1);
-      gst_caps_unref (tmp);
-      gst_caps_unref (tmp1);
-    }
-
-    tmp = caps;
-    tmp1 = gst_pad_peer_get_caps (self->sink1);
-    if (tmp1) {
-      caps = gst_caps_intersect (tmp, tmp1);
-      gst_caps_unref (tmp);
-      gst_caps_unref (tmp1);
-    }
-
-    if (self->sink2) {
+    caps = gst_pad_get_pad_template_caps (self->src);
+    if (filter) {
       tmp = caps;
-      tmp1 = gst_pad_peer_get_caps (self->sink2);
-      if (tmp1) {
-        caps = gst_caps_intersect (tmp, tmp1);
-        gst_caps_unref (tmp);
-        gst_caps_unref (tmp1);
-      }
+      caps = gst_caps_intersect_full (tmp, filter, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (tmp);
     }
-  }
 
-  gst_object_unref (self);
+    caps = gst_frei0r_mixer_query_pad_caps (self->src, pad, caps);
+    caps = gst_frei0r_mixer_query_pad_caps (self->sink0, pad, caps);
+    caps = gst_frei0r_mixer_query_pad_caps (self->sink1, pad, caps);
+    if (self->sink2)
+      caps = gst_frei0r_mixer_query_pad_caps (self->sink2, pad, caps);
+  }
 
   return caps;
 }
 
 static gboolean
-gst_frei0r_mixer_set_caps (GstPad * pad, GstCaps * caps)
+gst_frei0r_mixer_set_caps (GstFrei0rMixer * self, GstPad * pad, GstCaps * caps)
 {
-  GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
   gboolean ret = TRUE;
 
-  gst_caps_replace (&self->caps, caps);
+  if (!self->caps) {
+    gst_caps_replace (&self->caps, caps);
 
-  if (pad != self->src)
-    ret &= gst_pad_set_caps (self->src, caps);
-  if (pad != self->sink0)
-    ret &= gst_pad_set_caps (self->sink0, caps);
-  if (pad != self->sink1)
-    ret &= gst_pad_set_caps (self->sink1, caps);
-  if (pad != self->sink2 && self->sink2)
-    ret &= gst_pad_set_caps (self->sink2, caps);
+    ret = gst_pad_set_caps (self->src, caps);
 
-  if (ret) {
-    if (!gst_video_format_parse_caps (caps, &self->fmt, &self->width,
-            &self->height)) {
-      ret = FALSE;
-      goto out;
+    if (ret) {
+      GstVideoInfo info;
+
+      gst_video_info_init (&info);
+      if (!gst_video_info_from_caps (&self->info, caps)) {
+        ret = FALSE;
+      }
     }
+  } else if (!gst_caps_is_equal (caps, self->caps)) {
+    if (gst_pad_peer_query_accept_caps (pad, self->caps))
+      gst_pad_push_event (pad, gst_event_new_reconfigure ());
+    ret = FALSE;
   }
-out:
-
-  gst_object_unref (self);
 
   return ret;
 }
@@ -258,7 +244,7 @@ gst_frei0r_mixer_src_query_duration (GstFrei0rMixer * self, GstQuery * query)
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (self));
   while (!done) {
     GstIteratorResult ires;
-    gpointer item;
+    GValue item = { 0 };
 
     ires = gst_iterator_next (it, &item);
     switch (ires) {
@@ -267,11 +253,11 @@ gst_frei0r_mixer_src_query_duration (GstFrei0rMixer * self, GstQuery * query)
         break;
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (item);
+        GstPad *pad = g_value_get_object (&item);
         gint64 duration;
 
         /* ask sink peer for duration */
-        res &= gst_pad_query_peer_duration (pad, &format, &duration);
+        res &= gst_pad_peer_query_duration (pad, format, &duration);
         /* take min from all valid return values */
         if (res) {
           /* valid unknown length, stop searching */
@@ -283,7 +269,7 @@ gst_frei0r_mixer_src_query_duration (GstFrei0rMixer * self, GstQuery * query)
           else if (duration < min)
             min = duration;
         }
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -296,6 +282,8 @@ gst_frei0r_mixer_src_query_duration (GstFrei0rMixer * self, GstQuery * query)
         done = TRUE;
         break;
     }
+
+    g_value_unset (&item);
   }
   gst_iterator_free (it);
 
@@ -329,7 +317,7 @@ gst_frei0r_mixer_src_query_latency (GstFrei0rMixer * self, GstQuery * query)
   it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (self));
   while (!done) {
     GstIteratorResult ires;
-    gpointer item;
+    GValue item = { 0 };
 
     ires = gst_iterator_next (it, &item);
     switch (ires) {
@@ -338,7 +326,7 @@ gst_frei0r_mixer_src_query_latency (GstFrei0rMixer * self, GstQuery * query)
         break;
       case GST_ITERATOR_OK:
       {
-        GstPad *pad = GST_PAD_CAST (item);
+        GstPad *pad = g_value_get_object (&item);
         GstQuery *peerquery;
         GstClockTime min_cur, max_cur;
         gboolean live_cur;
@@ -364,7 +352,7 @@ gst_frei0r_mixer_src_query_latency (GstFrei0rMixer * self, GstQuery * query)
         }
 
         gst_query_unref (peerquery);
-        gst_object_unref (pad);
+        g_value_reset (&item);
         break;
       }
       case GST_ITERATOR_RESYNC:
@@ -379,6 +367,8 @@ gst_frei0r_mixer_src_query_latency (GstFrei0rMixer * self, GstQuery * query)
         done = TRUE;
         break;
     }
+
+    g_value_unset (&item);
   }
   gst_iterator_free (it);
 
@@ -394,9 +384,9 @@ gst_frei0r_mixer_src_query_latency (GstFrei0rMixer * self, GstQuery * query)
 }
 
 static gboolean
-gst_frei0r_mixer_src_query (GstPad * pad, GstQuery * query)
+gst_frei0r_mixer_src_query (GstPad * pad, GstObject * object, GstQuery * query)
 {
-  GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
+  GstFrei0rMixer *self = GST_FREI0R_MIXER (object);
   gboolean ret = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
@@ -409,68 +399,50 @@ gst_frei0r_mixer_src_query (GstPad * pad, GstQuery * query)
     case GST_QUERY_LATENCY:
       ret = gst_frei0r_mixer_src_query_latency (self, query);
       break;
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+      gst_query_parse_caps (query, &filter);
+      caps = gst_frei0r_mixer_get_caps (self, pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      break;
+    }
     default:
-      ret = gst_pad_query_default (pad, query);
+      ret = gst_pad_query_default (pad, GST_OBJECT (self), query);
       break;
   }
 
-  gst_object_unref (self);
-
   return ret;
 }
 
 static gboolean
-gst_frei0r_mixer_sink_query (GstPad * pad, GstQuery * query)
+gst_frei0r_mixer_sink_query (GstCollectPads * pads, GstCollectData * cdata,
+    GstQuery * query, GstFrei0rMixer * self)
 {
-  GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
-  gboolean ret = gst_pad_query (self->src, query);
+  gboolean ret = TRUE;
 
-  gst_object_unref (self);
-
-  return ret;
-}
-
-static gboolean
-forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
-{
-  gst_event_ref (event);
-  GST_LOG_OBJECT (pad, "About to send event %s", GST_EVENT_TYPE_NAME (event));
-  if (!gst_pad_push_event (pad, event)) {
-    g_value_set_boolean (ret, FALSE);
-    GST_WARNING_OBJECT (pad, "Sending event  %p (%s) failed.",
-        event, GST_EVENT_TYPE_NAME (event));
-  } else {
-    GST_LOG_OBJECT (pad, "Sent event  %p (%s).",
-        event, GST_EVENT_TYPE_NAME (event));
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:
+    {
+      GstCaps *filter, *caps;
+      gst_query_parse_caps (query, &filter);
+      caps = gst_frei0r_mixer_get_caps (self, cdata->pad, filter);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      break;
+    }
+    default:
+      ret = gst_collect_pads_query_default (pads, cdata, query, FALSE);
+      break;
   }
-  gst_object_unref (pad);
-  return TRUE;
+  return ret;
 }
 
 static gboolean
-forward_event (GstFrei0rMixer * self, GstEvent * event)
+gst_frei0r_mixer_src_event (GstPad * pad, GstObject * object, GstEvent * event)
 {
-  GstIterator *it;
-  GValue vret = { 0 };
-
-  GST_LOG_OBJECT (self, "Forwarding event %p (%s)", event,
-      GST_EVENT_TYPE_NAME (event));
-
-  g_value_init (&vret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&vret, TRUE);
-  it = gst_element_iterate_sink_pads (GST_ELEMENT_CAST (self));
-  gst_iterator_fold (it, (GstIteratorFoldFunction) forward_event_func, &vret,
-      event);
-  gst_iterator_free (it);
-  gst_event_unref (event);
-
-  return g_value_get_boolean (&vret);
-}
-
-static gboolean
-gst_frei0r_mixer_src_event (GstPad * pad, GstEvent * event)
-{
-  GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
+  GstFrei0rMixer *self = GST_FREI0R_MIXER (object);
   gboolean ret = FALSE;
 
   switch (GST_EVENT_TYPE (event)) {
@@ -495,48 +467,36 @@ gst_frei0r_mixer_src_event (GstPad * pad, GstEvent * event)
         gst_pad_push_event (self->src, gst_event_new_flush_start ());
       }
 
-      ret = forward_event (self, event);
+      ret = gst_pad_event_default (pad, GST_OBJECT (self), event);
       break;
     }
-    case GST_EVENT_NAVIGATION:
-      /* navigation is rather pointless. */
-      ret = FALSE;
-      break;
     default:
-      /* just forward the rest for now */
-      ret = forward_event (self, event);
+      ret = gst_pad_event_default (pad, GST_OBJECT (self), event);
       break;
   }
-
-  gst_object_unref (self);
 
   return ret;
 }
 
 static gboolean
-gst_frei0r_mixer_sink0_event (GstPad * pad, GstEvent * event)
+gst_frei0r_mixer_sink_event (GstCollectPads * pads, GstCollectData * cdata,
+    GstEvent * event, GstFrei0rMixer * self)
 {
-  GstFrei0rMixer *self = GST_FREI0R_MIXER (gst_pad_get_parent (pad));
-  gboolean ret = FALSE;
-  GstEvent **p_ev;
-
-  GST_DEBUG ("Got %s event on pad %s:%s", GST_EVENT_TYPE_NAME (event),
-      GST_DEBUG_PAD_NAME (pad));
+  gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      p_ev = &self->newseg_event;
-      gst_event_replace (p_ev, event);
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      gst_event_parse_caps (event, &caps);
+      ret = gst_frei0r_mixer_set_caps (self, cdata->pad, caps);
+      gst_event_unref (event);
       break;
+    }
     default:
+      ret = gst_collect_pads_event_default (pads, cdata, event, FALSE);
       break;
   }
-
-  /* now GstCollectPads can take care of the rest, e.g. EOS */
-  ret = self->collect_event (pad, event);
-
-  gst_object_unref (self);
-
   return ret;
 }
 
@@ -551,28 +511,27 @@ gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
   GstClockTime timestamp;
   gdouble time;
   GstSegment *segment = NULL;
+  GstAllocationParams alloc_params = { 0, 31, 0, 0 };
+  GstMapInfo outmap, inmap0, inmap1, inmap2;
 
-  if (G_UNLIKELY (self->width <= 0 || self->height <= 0))
+  if (G_UNLIKELY (self->info.width <= 0 || self->info.height <= 0))
     return GST_FLOW_NOT_NEGOTIATED;
 
   if (G_UNLIKELY (!self->f0r_instance)) {
-    self->f0r_instance =
-        gst_frei0r_instance_construct (klass->ftable, klass->properties,
-        klass->n_properties, self->property_cache, self->width, self->height);
+    self->f0r_instance = gst_frei0r_instance_construct (klass->ftable,
+        klass->properties, klass->n_properties, self->property_cache,
+        self->info.width, self->info.height);
     if (G_UNLIKELY (!self->f0r_instance))
       return GST_FLOW_ERROR;
   }
 
-  if (self->newseg_event) {
-    gst_pad_push_event (self->src, self->newseg_event);
-    self->newseg_event = NULL;
+  if (self->segment_event) {
+    gst_pad_push_event (self->src, self->segment_event);
+    self->segment_event = NULL;
   }
 
-  if ((ret =
-          gst_pad_alloc_buffer_and_set_caps (self->src, GST_BUFFER_OFFSET_NONE,
-              gst_video_format_get_size (self->fmt, self->width, self->height),
-              GST_PAD_CAPS (self->src), &outbuf)) != GST_FLOW_OK)
-    return ret;
+  /* FIXME Request an allocator and/or pool */
+  outbuf = gst_buffer_new_allocate (NULL, self->info.size, &alloc_params);
 
   for (l = pads->data; l; l = l->next) {
     GstCollectData *cdata = l->data;
@@ -590,8 +549,14 @@ gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
   if (!inbuf0 || !inbuf1 || (!inbuf2 && self->sink2))
     goto eos;
 
+  gst_buffer_map (outbuf, &outmap, GST_MAP_READWRITE);
+  gst_buffer_map (inbuf0, &inmap0, GST_MAP_READ);
+  gst_buffer_map (inbuf1, &inmap1, GST_MAP_READ);
+  if (inbuf2)
+    gst_buffer_map (inbuf2, &inmap2, GST_MAP_READ);
+
   g_assert (segment != NULL);
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf0);
+  timestamp = GST_BUFFER_PTS (inbuf0);
   timestamp = gst_segment_to_stream_time (segment, GST_FORMAT_TIME, timestamp);
 
   GST_DEBUG_OBJECT (self, "sync to %" GST_TIME_FORMAT,
@@ -600,22 +565,25 @@ gst_frei0r_mixer_collected (GstCollectPads * pads, GstFrei0rMixer * self)
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (GST_OBJECT (self), timestamp);
 
-  gst_buffer_copy_metadata (outbuf, inbuf0,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
-  time = ((gdouble) GST_BUFFER_TIMESTAMP (outbuf)) / GST_SECOND;
+  gst_buffer_copy_into (outbuf, inbuf0,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+  time = ((gdouble) GST_BUFFER_PTS (outbuf)) / GST_SECOND;
 
   GST_OBJECT_LOCK (self);
   klass->ftable->update2 (self->f0r_instance, time,
-      (const guint32 *) GST_BUFFER_DATA (inbuf0),
-      (const guint32 *) GST_BUFFER_DATA (inbuf1),
-      (inbuf2) ? (const guint32 *) GST_BUFFER_DATA (inbuf2) : NULL,
-      (guint32 *) GST_BUFFER_DATA (outbuf));
+      (const guint32 *) inmap0.data, (const guint32 *) inmap1.data,
+      (inbuf2) ? (const guint32 *) inmap2.data : NULL, (guint32 *) outmap.data);
   GST_OBJECT_UNLOCK (self);
 
+  gst_buffer_unmap (outbuf, &outmap);
   gst_buffer_unref (inbuf0);
+  gst_buffer_unmap (inbuf0, &inmap0);
   gst_buffer_unref (inbuf1);
-  if (inbuf2)
+  gst_buffer_unmap (inbuf1, &inmap1);
+  if (inbuf2) {
+    gst_buffer_unmap (inbuf2, &inmap2);
     gst_buffer_unref (inbuf2);
+  }
 
   ret = gst_pad_push (self->src, outbuf);
 
@@ -634,7 +602,7 @@ eos:
       gst_buffer_unref (inbuf2);
 
     gst_pad_push_event (self->src, gst_event_new_eos ());
-    return GST_FLOW_UNEXPECTED;
+    return GST_FLOW_EOS;
   }
 }
 
@@ -675,26 +643,22 @@ gst_frei0r_mixer_class_init (GstFrei0rMixerClass * klass,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
-  gst_object_unref (templ);
 
   templ =
       gst_pad_template_new ("sink_0", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
-  gst_object_unref (templ);
 
   templ =
       gst_pad_template_new ("sink_1", GST_PAD_SINK, GST_PAD_ALWAYS,
       gst_caps_ref (caps));
   gst_element_class_add_pad_template (gstelement_class, templ);
-  gst_object_unref (templ);
 
   if (klass->info->plugin_type == F0R_PLUGIN_TYPE_MIXER3) {
     templ =
         gst_pad_template_new ("sink_2", GST_PAD_SINK, GST_PAD_ALWAYS,
         gst_caps_ref (caps));
     gst_element_class_add_pad_template (gstelement_class, templ);
-    gst_object_unref (templ);
   }
   gst_caps_unref (caps);
 
@@ -707,18 +671,19 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
 {
   self->property_cache =
       gst_frei0r_property_cache_init (klass->properties, klass->n_properties);
+  gst_video_info_init (&self->info);
 
   self->collect = gst_collect_pads_new ();
   gst_collect_pads_set_function (self->collect,
       (GstCollectPadsFunction) gst_frei0r_mixer_collected, self);
+  gst_collect_pads_set_event_function (self->collect,
+      (GstCollectPadsEventFunction) gst_frei0r_mixer_sink_event, self);
+  gst_collect_pads_set_query_function (self->collect,
+      (GstCollectPadsQueryFunction) gst_frei0r_mixer_sink_query, self);
 
   self->src =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (klass), "src"), "src");
-  gst_pad_set_getcaps_function (self->src,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_get_caps));
-  gst_pad_set_setcaps_function (self->src,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
   gst_pad_set_query_function (self->src,
       GST_DEBUG_FUNCPTR (gst_frei0r_mixer_src_query));
   gst_pad_set_event_function (self->src,
@@ -728,28 +693,14 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
   self->sink0 =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (klass), "sink_0"), "sink_0");
-  gst_pad_set_getcaps_function (self->sink0,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_get_caps));
-  gst_pad_set_setcaps_function (self->sink0,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
-  gst_pad_set_query_function (self->sink0,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
   gst_collect_pads_add_pad (self->collect, self->sink0,
       sizeof (GstCollectData), NULL, TRUE);
   self->collect_event = (GstPadEventFunction) GST_PAD_EVENTFUNC (self->sink0);
-  gst_pad_set_event_function (self->sink0,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink0_event));
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink0);
 
   self->sink1 =
       gst_pad_new_from_template (gst_element_class_get_pad_template
       (GST_ELEMENT_CLASS (klass), "sink_1"), "sink_1");
-  gst_pad_set_getcaps_function (self->sink1,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_get_caps));
-  gst_pad_set_setcaps_function (self->sink1,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
-  gst_pad_set_query_function (self->sink0,
-      GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
   gst_collect_pads_add_pad (self->collect, self->sink1,
       sizeof (GstCollectData), NULL, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink1);
@@ -758,12 +709,6 @@ gst_frei0r_mixer_init (GstFrei0rMixer * self, GstFrei0rMixerClass * klass)
     self->sink2 =
         gst_pad_new_from_template (gst_element_class_get_pad_template
         (GST_ELEMENT_CLASS (klass), "sink_2"), "sink_2");
-    gst_pad_set_getcaps_function (self->sink2,
-        GST_DEBUG_FUNCPTR (gst_frei0r_mixer_get_caps));
-    gst_pad_set_setcaps_function (self->sink2,
-        GST_DEBUG_FUNCPTR (gst_frei0r_mixer_set_caps));
-    gst_pad_set_query_function (self->sink0,
-        GST_DEBUG_FUNCPTR (gst_frei0r_mixer_sink_query));
     gst_collect_pads_add_pad (self->collect, self->sink2,
         sizeof (GstCollectData), NULL, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (self), self->sink2);

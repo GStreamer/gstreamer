@@ -47,10 +47,9 @@ struct _GstFrei0rMixer {
   GstPad *sink0, *sink1, *sink2;
 
   GstCaps *caps;
-  GstVideoFormat fmt;
-  gint width, height;
+  GstVideoInfo info;
 
-  GstEvent *newseg_event;
+  GstEvent *segment_event;
 
   GstPadEventFunction collect_event;
 
