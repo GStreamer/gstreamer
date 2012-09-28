@@ -91,6 +91,7 @@ of our sample applications. Other applications use the Qt toolkit, or are
 written for Mac OS/X or Windows. We aim to provide API that is toolkit
 agnostic and can be used from any toolkit, desktop environment or operating
 system.
+        </para>
       </answer>
     </qandaentry>
   </qandaset>
