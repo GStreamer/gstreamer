@@ -49,6 +49,7 @@ typedef struct _gst_riff_avih {
 /* vprp (video properties) ODML header */
 /* see ODML spec for some/more explanation */
 #define GST_RIFF_TAG_vprp GST_MAKE_FOURCC ('v','p','r','p')
+#define GST_RIFF_DXSB GST_MAKE_FOURCC ('D','X','S','B')
 #define GST_RIFF_VPRP_VIDEO_FIELDS        (2)
 
 typedef struct _gst_riff_vprp_video_field_desc {

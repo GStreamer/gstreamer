@@ -2656,6 +2656,9 @@ gst_avi_demux_parse_index (GstAviDemux * avi, GstBuffer * buf)
     if (stream->strh->type == GST_RIFF_FCC_auds) {
       /* all audio frames are keyframes */
       ENTRY_SET_KEYFRAME (&entry);
+    } else if (stream->strf.vids->compression == GST_RIFF_DXSB) {
+      /* all xsub frames are keyframes */
+      ENTRY_SET_KEYFRAME (&entry);
     } else {
       guint32 flags;
       /* else read flags */
