@@ -113,8 +113,8 @@ Resolving deltas: 100% (240/240), done.
     </note>
     <para>
       The last command creates two files:
-      <filename>gstexamplefilter.c</filename> and
-      <filename>gstexamplefilter.h</filename>.
+      <filename>gstmyfilter.c</filename> and
+      <filename>gstmyfilter.h</filename>.
     </para>
     <note>
       <para>
@@ -137,7 +137,15 @@ Resolving deltas: 100% (240/240), done.
         as a default location. One would need to add
         <filename class="directory">/usr/local/lib/gstreamer-1.0</filename>
         to <symbol>GST_PLUGIN_PATH</symbol> in order to make the new plugin
-        show up in gstreamer.
+        show up in a gstreamer that's been installed from packages.
+      </para>
+    </note>
+    <note>
+      <para>
+        FIXME: this section is slightly outdated. gst-template is still useful
+        as an example for a minimal plugin build system skeleton. However, for
+        creating elements the tool gst-element-maker from gst-plugins-bad is
+        recommended these days.
       </para>
     </note>
   </sect1>
