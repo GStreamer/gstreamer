@@ -909,9 +909,8 @@ post_activate (GstPad * pad, GstPadMode new_mode)
  * push or pull mode, just return. Otherwise dispatches to the pad's activate
  * function to perform the actual activation.
  *
- * If not @active, checks the pad's current mode and calls
- * gst_pad_activate_push() or gst_pad_activate_pull(), as appropriate, with a
- * FALSE argument.
+ * If not @active, calls gst_pad_activate_mode() with the pad's current mode
+ * and a FALSE argument.
  *
  * Returns: #TRUE if the operation was successful.
  *
@@ -1449,8 +1448,8 @@ gst_pad_mark_reconfigure (GstPad * pad)
  * @notify: notify called when @activate will not be used anymore.
  *
  * Sets the given activate function for @pad. The activate function will
- * dispatch to gst_pad_activate_push() or gst_pad_activate_pull() to perform
- * the actual activation. Only makes sense to set on sink pads.
+ * dispatch to gst_pad_activate_mode() to perform the actual activation.
+ * Only makes sense to set on sink pads.
  *
  * Call this function if your sink pad can start a pull-based task.
  */

@@ -309,7 +309,8 @@ typedef GstFlowReturn		(*GstPadChainListFunction)	(GstPad *pad, GstObject *paren
  *
  * This function is installed on a source pad with
  * gst_pad_set_getrange_function() and can only be called on source pads after
- * they are successfully activated with gst_pad_activate_pull().
+ * they are successfully activated with gst_pad_activate_mode() with the
+ * #GST_PAD_MODE_PULL.
  *
  * @offset and @length are always given in byte units. @offset must normally be a value
  * between 0 and the length in bytes of the data available on @pad. The
