@@ -423,26 +423,58 @@ gst_my_filter_chain (GstPad    *pad,
 #include "init.func"
 --><!-- example-end getcaps.c a -->
 <!-- example-begin getcaps.c b -->
-static GstCaps *
-gst_my_filter_getcaps (GstPad *pad)
+static gboolean
+gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
 {
-  GstMyFilter *filter = GST_MY_FILTER (GST_OBJECT_PARENT (pad));
-  GstPad *otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
-						  filter-&gt;srcpad;
-  GstCaps *othercaps = gst_pad_get_allowed_caps (otherpad), *caps;
-  gint i;
+  gboolean ret;
+  GstMyFilter *filter = GST_MY_FILTER (parent);
 
-  /* We support *any* samplerate, indifferent from the samplerate
-   * supported by the linked elements on both sides. */
-  for (i = 0; i &lt; gst_caps_get_size (othercaps); i++) {
-    GstStructure *structure = gst_caps_get_structure (othercaps, i);
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS
+    {
+      GstPad *otherpad;
+      GstCaps *temp, *caps, *filter, *tcaps;
+      gint i;
 
-    gst_structure_remove_field (structure, "rate");
+      otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
+                                              filter-&gt;srcpad;
+      caps = gst_pad_get_allowed_caps (otherpad);
+
+      gst_query_parse_caps (query, &amp;filter);
+
+      /* We support *any* samplerate, indifferent from the samplerate
+       * supported by the linked elements on both sides. */
+      for (i = 0; i &lt; gst_caps_get_size (caps); i++) {
+        GstStructure *structure = gst_caps_get_structure (caps, i);
+
+        gst_structure_remove_field (structure, "rate");
+      }
+
+      /* make sure we only return results that intersect our
+       * padtemplate */
+      tcaps = gst_pad_get_pad_template_caps (pad);
+      if (tcaps) {
+        temp = gst_caps_intersect (caps, tcaps);
+        gst_caps_unref (caps);
+        gst_caps_unref (tcaps);
+        caps = temp;
+      }
+      /* filter against the query filter when needed */
+      if (filter) {
+        temp = gst_caps_intersect (caps, filter);
+        gst_caps_unref (caps);
+        caps = temp;
+      }
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_query_default (pad, parent, query);
+      break;
   }
-  caps = gst_caps_intersect (othercaps, gst_pad_get_pad_template_caps (pad));
-  gst_caps_unref (othercaps);
-
-  return caps;
+  return ret;
 }
 <!-- example-end getcaps.c b -->
 <!-- example-begin getcaps.c c --><!--
