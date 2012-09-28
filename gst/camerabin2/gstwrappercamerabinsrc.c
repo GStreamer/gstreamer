@@ -432,6 +432,89 @@ gst_wrapper_camera_bin_src_src_event (GstPad * pad, GstObject * parent,
 }
 
 /**
+ * check_and_replace_src
+ * @self: #GstWrapperCamerabinSrcCameraSrc object
+ *
+ * Checks if the current videosrc needs to be replaced
+ */
+static gboolean
+check_and_replace_src (GstWrapperCameraBinSrc * self)
+{
+  GstBin *cbin = GST_BIN_CAST (self);
+  GstBaseCameraSrc *bcamsrc = GST_BASE_CAMERA_SRC_CAST (self);
+
+  if (self->src_vid_src && self->src_vid_src == self->app_vid_src) {
+    GST_DEBUG_OBJECT (self, "No need to change current videosrc");
+    return TRUE;
+  }
+
+  if (self->src_vid_src) {
+    GST_DEBUG_OBJECT (self, "Removing old video source");
+    if (self->src_max_zoom_signal_id) {
+      g_signal_handler_disconnect (self->src_vid_src,
+          self->src_max_zoom_signal_id);
+      self->src_max_zoom_signal_id = 0;
+    }
+    if (self->src_event_probe_id) {
+      GstPad *pad;
+      pad = gst_element_get_static_pad (self->src_vid_src, "src");
+      gst_pad_remove_probe (pad, self->src_event_probe_id);
+      gst_object_unref (pad);
+      self->src_event_probe_id = 0;
+    }
+    gst_bin_remove (GST_BIN_CAST (self), self->src_vid_src);
+    self->src_vid_src = NULL;
+  }
+
+  GST_DEBUG_OBJECT (self, "Adding new video source");
+
+  /* Add application set or default video src element */
+  if (!(self->src_vid_src = gst_camerabin_setup_default_element (cbin,
+              self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC,
+              "camerasrc-real-src"))) {
+    self->src_vid_src = NULL;
+    return FALSE;
+  } else {
+    GstElement *videoconvert;
+    if (!gst_bin_add (cbin, self->src_vid_src)) {
+      return FALSE;
+    }
+
+    /* check if we already have the next element to link to */
+    videoconvert = gst_bin_get_by_name (cbin, "src-videoconvert");
+    if (videoconvert) {
+      if (!gst_element_link_pads (self->src_vid_src, "src", videoconvert,
+              "sink")) {
+        return FALSE;
+      }
+    }
+  }
+  /* we lost the reference */
+  self->app_vid_src = NULL;
+
+  /* we listen for changes to max-zoom in the video src so that
+   * we can proxy them to the basecamerasrc property */
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (bcamsrc), "max-zoom")) {
+    self->src_max_zoom_signal_id =
+        g_signal_connect (G_OBJECT (self->src_vid_src), "notify::max-zoom",
+        (GCallback) gst_wrapper_camera_bin_src_max_zoom_cb, bcamsrc);
+  }
+
+  /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
+  {
+    GstPad *pad;
+    pad = gst_element_get_static_pad (self->src_vid_src, "src");
+
+    self->src_event_probe_id =
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        gst_wrapper_camera_src_src_event_probe, gst_object_ref (self),
+        gst_object_unref);
+    gst_object_unref (pad);
+  }
+  return TRUE;
+}
+
+/**
  * gst_wrapper_camera_bin_src_construct_pipeline:
  * @bcamsrc: camerasrc object
  *
@@ -459,42 +542,13 @@ gst_wrapper_camera_bin_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   GstPad *tee_capture_pad;
   GstPad *src_caps_src_pad;
 
+  /* checks and adds a new video src if needed */
+  if (!check_and_replace_src (self))
+    goto done;
+
   if (!self->elements_created) {
 
     GST_DEBUG_OBJECT (self, "constructing pipeline");
-
-    /* Add application set or default video src element */
-    if (!(self->src_vid_src = gst_camerabin_setup_default_element (cbin,
-                self->app_vid_src, "autovideosrc", DEFAULT_VIDEOSRC,
-                "camerasrc-real-src"))) {
-      self->src_vid_src = NULL;
-      goto done;
-    } else {
-      if (!gst_camerabin_add_element (cbin, self->src_vid_src)) {
-        goto done;
-      }
-    }
-    /* we lost the reference */
-    self->app_vid_src = NULL;
-
-    /* we listen for changes to max-zoom in the video src so that
-     * we can proxy them to the basecamerasrc property */
-    if (g_object_class_find_property (G_OBJECT_GET_CLASS (bcamsrc), "max-zoom")) {
-      g_signal_connect (G_OBJECT (self->src_vid_src), "notify::max-zoom",
-          (GCallback) gst_wrapper_camera_bin_src_max_zoom_cb, bcamsrc);
-    }
-
-    /* add a buffer probe to the src elemento to drop EOS from READY->NULL */
-    {
-      GstPad *pad;
-      pad = gst_element_get_static_pad (self->src_vid_src, "src");
-
-      self->src_event_probe_id =
-          gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-          gst_wrapper_camera_src_src_event_probe, gst_object_ref (self),
-          gst_object_unref);
-      gst_object_unref (pad);
-    }
 
     if (!gst_camerabin_create_and_add_element (cbin, "videoconvert",
             "src-videoconvert"))

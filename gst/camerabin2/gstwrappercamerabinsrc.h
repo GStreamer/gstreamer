@@ -84,6 +84,7 @@ struct _GstWrapperCameraBinSrc
   gboolean elements_created;
 
   gulong src_event_probe_id;
+  gulong src_max_zoom_signal_id;
 
   GstPad *outsel_imgpad;
   GstPad *outsel_vidpad;
