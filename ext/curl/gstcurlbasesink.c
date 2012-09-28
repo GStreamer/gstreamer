@@ -1172,11 +1172,12 @@ gst_curl_base_sink_setup_dscp_unlocked (GstCurlBaseSink * sink)
 
   switch (af) {
     case AF_INET:
-      ret = setsockopt (sink->fd.fd, IPPROTO_IP, IP_TOS, &tos, sizeof (tos));
+      ret = setsockopt (sink->fd.fd, IPPROTO_IP, IP_TOS, (void *) &tos,
+          sizeof (tos));
       break;
     case AF_INET6:
 #ifdef IPV6_TCLASS
-      ret = setsockopt (sink->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, &tos,
+      ret = setsockopt (sink->fd.fd, IPPROTO_IPV6, IPV6_TCLASS, (void *) &tos,
           sizeof (tos));
       break;
 #endif
