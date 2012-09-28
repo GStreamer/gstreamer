@@ -210,7 +210,7 @@ static void check_initialization_complete (CustomData *data) {
   /* Check if all conditions are met to report GStreamer as initialized.
    * These conditions will change depending on the application */
   if (!data->initialized && data->native_window && data->main_loop) {
-    GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%d", data->native_window,data->main_loop);
+    GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%p", data->native_window,data->main_loop);
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
       GST_ERROR ("Failed to call Java method");
@@ -307,7 +307,7 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
   g_main_loop_quit (data->main_loop);
   GST_DEBUG ("Waiting for thread to finish...");
   pthread_join (gst_app_thread, NULL);
-  GST_DEBUG ("Deleting GlobalRef at %p", data->app);
+  GST_DEBUG ("Deleting GlobalRef for app object at %p", data->app);
   (*env)->DeleteGlobalRef (env, data->app);
   GST_DEBUG ("Freeing CustomData at %p", data);
   g_free (data);
