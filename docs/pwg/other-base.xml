@@ -67,11 +67,11 @@
     </itemizedlist>
     <para>
       Sink elements can derive from <classname>GstBaseSink</classname> using
-      the usual <classname>GObject</classname> type creation voodoo, or by
-      using the convenience macro <function>GST_BOILERPLATE ()</function>:
+      the usual <classname>GObject</classname> convenience macro
+      <function>G_DEFINE_TYPE ()</function>:
     </para>
     <programlisting>
-GST_BOILERPLATE_FULL (GstMySink, gst_my_sink, GstBaseSink, GST_TYPE_BASE_SINK);
+G_DEFINE_TYPE (GstMySink, gst_my_sink, GST_TYPE_BASE_SINK);
 
 [..]
 

@@ -22,9 +22,9 @@
   </para>
   <programlisting><!-- example-begin properties.c a --><!--
 #include "filter.h"
-GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
+G_DEFINE_TYPE (GstMyFilter, gst_my_filter, GST_TYPE_ELEMENT);
 static void
-gst_my_filter_base_init (gpointer klass)
+gst_my_filter_class_init (gpointer klass)
 {
 }
 static void
