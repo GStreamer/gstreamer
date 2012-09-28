@@ -84,7 +84,7 @@ CHECKLIST
   sys/: plug-ins that include system headers/link to system libraries;
     usually platform-dependent as well
     name after whatever system "thing" they use (oss, v4l, ...)
-  gst/: plug-ins with no external dependencies, only GLib/GStreamer/liboil
+  gst/: plug-ins with no external dependencies, only GLib/GStreamer/liborc
   ext/: plug-ins with external dependencies
 
 - The plug-in is documented:

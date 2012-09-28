@@ -39,15 +39,15 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_DEP, true)
     first column when running gst-inspect
 
   - For the checks, in the simplest case, use something like:
-    GST_PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2)
+    GST_PKG_CHECK_MODULES(FOO, foo-0.3 >= 0.3.2)
     This will:
     - do the check
     - show a decent message if it can't find it, without failing
-    - set HAVE_LIBOIL to yes or no
-    - set LIBOIL_CFLAGS and LBOIL_LIBS
+    - set HAVE_FOO to yes or no
+    - set FOO_CFLAGS and FOO_LIBS
   - if you want to make sure configure fails when this dependency is missing,
     use:
-    GST_PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, yes)
+    GST_PKG_CHECK_MODULES(FOO, libfoo-0.3 >= 0.3.2, yes)
 
   - if your library does not come with a .pc file, you have to roll your own
     check

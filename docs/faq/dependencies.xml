@@ -18,7 +18,7 @@ the code others have written.
         <para>
 However, do realize that in no way you are forced to have all dependencies
 installed.  None of the core developers has all of them installed.  GStreamer
-has only a few obligate dependencies : GLib 2.0, liboil, and very
+has only a few obligate dependencies : GLib 2.0, liborc, and very
 common stuff like glibc, a C compiler, and so on.  All of the other
 dependencies are optional.
         </para>
@@ -30,39 +30,6 @@ So, in closing, let's rephrase the question to
       </answer>
     </qandaentry>
 
-<qandaentry>
-      <question id="dependencies-glib">
-        <para>
-Does GStreamer use GTK+ 1.2/GLib 1.2 or GLib 2.0 ?
-        </para>
-      </question>
-
-      <answer>
-        <para>
-Since the 0.3.3 release of GStreamer, we use GLib 2.0 as the core library 
-for GStreamer, which features a move of GObject from GTK+ 2.0 to GLib 2.0.
-If you want to compile using GTK+ 1.2/GLib 1.2,  you need to get the 
-0.3.1 or earlier release.   It is of course not supported.
-        </para>
-      </answer>
-    </qandaentry>
-
-    <qandaentry>
-      <question id="dependencies-dxr">
-        <para>
-Does GStreamer offer support for DVD decoder cards like dxr2/3 ?
-        </para>
-      </question>
-
-      <answer>
-        <para>
-We do have support for the dxr3, although dxr2 support is unknown. 
-GStreamer can easily accommodate hardware acceleration by writing new
-device-specific elements.
-        </para>
-      </answer>
-    </qandaentry>
-
     <qandaentry>
       <question id="dependencies-x">
         <para>Is GStreamer X independent ?</para>
@@ -70,11 +37,11 @@ device-specific elements.
 
       <answer>
         <para>
-Yes, we have no X dependency in any of our core modules. There are GStreamer
-applications that run fine without any need for X.  However, until our Linux 
-Framebuffer or libsvga plugin is ready, you will not be able to play videos 
-without X. In the future, there will probably be lots of different output 
-plugins for video available.
+Yes, we have no hard X dependency in any of our modules. There are many
+GStreamer applications that run fine without any need for X, for example
+streaming servers, transcoding applications, or audio applications that
+don't output any video. Other applications output video to a framebuffer,
+custom-made hardware sinks, or via wayland.
         </para>
       </answer>
     </qandaentry>
@@ -106,24 +73,24 @@ MIDI applications very well however. If you are a developer interested in
 adding MIDI support to GStreamer we are very interested in getting in touch 
 with you.
         </para>
+        <para>
+MIDI playback is provided by plugins such as wildmidi and timidity.
+        </para>
       </answer>
     </qandaentry>
 
     <qandaentry>
       <question id="dependencies-gnome">
-        <para>Does GStreamer depend on GNOME ?</para>
+        <para>Does GStreamer depend on GNOME or GTK+ ?</para>
       </question>
 
       <answer>
         <para>
-No. But many of the applications developed for GStreamer do, including our 
-sample applications. There is nothing hindering people from developing 
-applications using other toolkits however and we would happily help promote 
-such efforts. A good example of an application using GStreamer, but which is 
-not using GNOME is the 
-<ulink url="http://mozstreamer.mozdev.org"><citetitle>
-Mozstreamer</citetitle></ulink> which uses Mozilla XUL.
-        </para>
+No. But many of the applications developed for GStreamer do, including some
+of our sample applications. Other applications use the Qt toolkit, or are
+written for Mac OS/X or Windows. We aim to provide API that is toolkit
+agnostic and can be used from any toolkit, desktop environment or operating
+system.
       </answer>
     </qandaentry>
   </qandaset>
