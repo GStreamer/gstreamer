@@ -19,8 +19,8 @@ Overview
 gstreamer-vaapi consists in a collection of VA-API based plugins for
 GStreamer and helper libraries.
 
-  * `vaapidecode' is used to decode MPEG-2, MPEG-4, H.264, VC-1, WMV3
-    videos to video/x-vaapi-surfaces surfaces, depending on the
+  * `vaapidecode' is used to decode JPEG, MPEG-2, MPEG-4, H.264, VC-1,
+    WMV3 videos to video/x-vaapi-surfaces surfaces, depending on the
     underlying HW capabilities.
 
   * `vaapiupload' is used to convert from video/x-raw-yuv pixels to
@@ -52,12 +52,19 @@ Requirements
 
 Software requirements
 
-  * libva-dev >= 1.0.3 (VA/GLX)
-  * libgstreamer0.10-dev >= 0.10.35.1
-      or with GstBaseSink::query()
-  * libgstreamer-plugins-base0.10-dev >= 0.10.35
-  * libgstreamer-plugins-bad0.10-dev >= 0.10.22.1
-      or with GstVideoContext, GstSurfaceBuffer, codecparsers
+  * GStreamer 0.10.x:
+      libglib2.0-dev (>= 2.28)
+      libgstreamer0.10-dev (>= 0.10.36)
+        or with GstBaseSink::query()
+      libgstreamer-plugins-base0.10-dev (>= 0.10.36)
+      libgstreamer-plugins-bad0.10-dev (>= 0.10.22.1)
+        or with GstVideoContext, GstSurfaceBuffer, codecparsers
+
+  * Renderers:
+      DRM: libva-dev (>= 1.1.0), libdrm-dev, libudev-dev
+      X11: libva-dev (>= 1.0.1)
+      GLX: libva-dev (>= 1.0.3)
+      Wayland: libva-dev (>= 1.1.0), libwayland-dev (>= 0.95.0)
 
 Hardware requirements
 
