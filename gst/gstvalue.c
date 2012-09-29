@@ -3498,7 +3498,7 @@ gst_value_intersect_list (GValue * dest, const GValue * value1,
 
         gst_value_init_and_copy (&temp, dest);
         g_value_unset (dest);
-        gst_value_list_concat (dest, &temp, &intersection);
+        gst_value_list_merge (dest, &temp, &intersection);
         g_value_unset (&temp);
       }
       g_value_unset (&intersection);

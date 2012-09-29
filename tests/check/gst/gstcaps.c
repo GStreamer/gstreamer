@@ -714,6 +714,70 @@ GST_START_TEST (test_intersect2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_intersect_list_duplicate)
+{
+  GstCaps *caps1, *caps2, *icaps;
+
+  /* make sure we don't take too long to intersect these.. */
+  caps1 = gst_caps_from_string ("video/x-raw, format=(string)YV12; "
+      "video/x-raw, format=(string)I420; video/x-raw, format=(string)YUY2; "
+      "video/x-raw, format=(string)UYVY; "
+      "video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx,"
+      " xRGB, xBGR, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } } } } }, BGRA, ARGB, { ABGR, ABGR, "
+      "{ ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } } } } }, "
+      "RGB, BGR, Y41B, Y42B, YVYU, Y444 }; "
+      "video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, BGRx, "
+      "xRGB, xBGR, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } } } } }, BGRA, ARGB, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } } } } }, "
+      "RGB, BGR, Y41B, Y42B, YVYU, Y444, NV12, NV21 }; "
+      "video/x-raw, format=(string){ I420, YV12, YUY2, UYVY, AYUV, RGBx, "
+      "BGRx, xRGB, xBGR, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } }, { RGBA, RGBA, { RGBA, RGBA }, "
+      "{ RGBA, RGBA, { RGBA, RGBA } } } }, BGRA, ARGB, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } }, "
+      "{ ABGR, ABGR, { ABGR, ABGR }, { ABGR, ABGR, { ABGR, ABGR } } } }, "
+      "RGB, BGR, Y41B, Y42B, YVYU, Y444, NV12, NV21 }");
+
+  caps2 = gst_caps_copy (caps1);
+
+  icaps = gst_caps_intersect (caps1, caps2);
+
+  gst_caps_unref (caps1);
+  gst_caps_unref (caps2);
+  gst_caps_unref (icaps);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_intersect_zigzag)
 {
@@ -919,6 +983,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_merge_subset);
   tcase_add_test (tc_chain, test_intersect);
   tcase_add_test (tc_chain, test_intersect2);
+  tcase_add_test (tc_chain, test_intersect_list_duplicate);
   tcase_add_test (tc_chain, test_intersect_zigzag);
   tcase_add_test (tc_chain, test_intersect_first);
   tcase_add_test (tc_chain, test_intersect_first2);
