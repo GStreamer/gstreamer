@@ -2562,7 +2562,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client, GstActiveStream *str
 
 gboolean
 gst_mpd_client_setup_streaming (GstMpdClient * client,
-    GstStreamMimeType mimeType)
+    GstStreamMimeType mimeType, gchar* lang)
 {
   GstActiveStream *stream;
   GstAdaptationSetNode *adapt_set;
@@ -2607,7 +2607,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 #endif
       adapt_set =
           gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (client->
-          cur_period->AdaptationSets, "audio", "en");
+          cur_period->AdaptationSets, "audio", lang);
       /* if we did not found the requested audio language, get the first one */
       if (!adapt_set)
         adapt_set =
@@ -2632,7 +2632,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 #endif
       adapt_set =
           gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (client->
-          cur_period->AdaptationSets, "application", "en");
+          cur_period->AdaptationSets, "application", lang);
       /* if we did not found the requested subtitles language, get the first one */
       if (!adapt_set)
         adapt_set =
@@ -2877,6 +2877,7 @@ guint gst_mpd_client_get_width_of_video_current_stream (GstMpdClient *client, Gs
  g_return_val_if_fail (stream != NULL, FALSE);
  return stream->cur_representation->RepresentationBase->width;
 }
+
 guint gst_mpd_client_get_height_of_video_current_stream (GstMpdClient *client, GstActiveStream *stream){
 
  g_return_val_if_fail (stream != NULL, FALSE);
@@ -2886,8 +2887,9 @@ guint gst_mpd_client_get_height_of_video_current_stream (GstMpdClient *client, G
 guint gst_mpd_client_get_rate_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream){
 
  g_return_val_if_fail (stream != NULL, FALSE);
- return stream->cur_representation->RepresentationBase->audioSamplingRate;
+ return (guint) stream->cur_representation->RepresentationBase->audioSamplingRate;
 }
+
 guint gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream){
 
  g_return_val_if_fail (stream != NULL, FALSE);
@@ -2895,3 +2897,62 @@ guint gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *cli
  return 1;
 }
 
+guint
+gst_mpdparser_get_nb_audio_adapt_set(GList *  AdaptationSets)
+{
+ GList *list;
+ GstAdaptationSetNode *adapt_set;
+ guint nb_adapatation_set = 0;
+ gchar *this_mimeType = "audio";
+ gchar *mimeType = NULL;
+ if (AdaptationSets == NULL)
+	return 0;
+
+ for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
+	 adapt_set = (GstAdaptationSetNode *) list->data;
+	 if (adapt_set) {
+		 GstRepresentationNode *rep;
+		 rep =
+				gst_mpdparser_get_lowest_representation (adapt_set->Representations);
+		 if (rep->RepresentationBase)
+			 mimeType = rep->RepresentationBase->mimeType;
+		 if (!mimeType && adapt_set->RepresentationBase) {
+			 mimeType = adapt_set->RepresentationBase->mimeType;
+		 }
+		 if (strncmp_ext (mimeType, this_mimeType) == 0)
+			 nb_adapatation_set++;
+	 }
+ }
+ return nb_adapatation_set;
+}
+
+void gst_mpdparser_get_list_of_audio_language(GList** lang, GList *  AdaptationSets)
+{
+ GList *list;
+ GstAdaptationSetNode *adapt_set;
+ gchar *this_mimeType = "audio";
+ gchar *mimeType = NULL;
+ if (AdaptationSets == NULL)
+	 return ;
+
+ for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
+	 adapt_set = (GstAdaptationSetNode *) list->data;
+	 if (adapt_set) {
+		 gchar *this_lang = adapt_set->lang;
+		 GstRepresentationNode *rep;
+		 rep =
+			 	gst_mpdparser_get_lowest_representation (adapt_set->Representations);
+		 if (rep->RepresentationBase)
+		 	mimeType = rep->RepresentationBase->mimeType;
+		 if (!mimeType && adapt_set->RepresentationBase) {
+			 mimeType = adapt_set->RepresentationBase->mimeType;
+		 }
+
+		 if (strncmp_ext (mimeType, this_mimeType) == 0){
+		  if(this_lang){
+			  *lang = g_list_append (*lang, this_lang);
+		  }
+	 	}
+ 	}
+ }
+}

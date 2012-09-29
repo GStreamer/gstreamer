@@ -452,7 +452,7 @@ void gst_mpd_client_free (GstMpdClient * client);
 
 /* Basic parsing */
 gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
-gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType);
+gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, gchar* lang);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
 void gst_mpd_client_get_current_position (GstMpdClient *client, GstClockTime * timestamp);
 GstClockTime gst_mpd_client_get_duration (GstMpdClient *client);
@@ -483,6 +483,9 @@ guint  gst_mpd_client_get_height_of_video_current_stream (GstMpdClient *client, 
 guint  gst_mpd_client_get_rate_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream);
 guint  gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream);
 
+/* To support multi language */
+guint gst_mpdparser_get_nb_audio_adapt_set(GList *AdaptationSets);
+void gst_mpdparser_get_list_of_audio_language(GList** lang, GList *  AdaptationSets);
 G_END_DECLS
 
 #endif /* __GST_MPDPARSER_H__ */

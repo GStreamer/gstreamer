@@ -50,6 +50,7 @@ G_BEGIN_DECLS
 //
 typedef struct _GstDashDemux GstDashDemux;
 typedef struct _GstDashDemuxClass GstDashDemuxClass;
+#define MAX_LANGUAGES 20
 /**
  * GstDashDemux:
  *
@@ -59,9 +60,9 @@ struct _GstDashDemux
 {
   GstElement parent;
   GstPad *sinkpad;
-  GstPad *srcpad[3];   /*Video/Audio/Application src pad*/
-  GstCaps *output_caps[3]; /*Video/Audio/Application output buf caps*/
-  GstCaps *input_caps[3]; /*Video/Audio/Application input caps*/
+  GstPad *srcpad[MAX_LANGUAGES];   /*Video/Audio/Application src pad*/
+  GstCaps *output_caps[MAX_LANGUAGES]; /*Video/Audio/Application output buf caps*/
+  GstCaps *input_caps[MAX_LANGUAGES]; /*Video/Audio/Application input caps*/
 
   GstBuffer *playlist;
   GstUriDownloader *downloader;
