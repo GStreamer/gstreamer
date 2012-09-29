@@ -613,6 +613,7 @@ gst_frei0r_mixer_class_init (GstFrei0rMixerClass * klass,
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstPadTemplate *templ;
+  const gchar *desc;
   GstCaps *caps;
   gchar *author;
 
@@ -633,8 +634,11 @@ gst_frei0r_mixer_class_init (GstFrei0rMixerClass * klass,
       g_strdup_printf
       ("Sebastian Dröge <sebastian.droege@collabora.co.uk>, %s",
       class_data->info.author);
+  desc = class_data->info.explanation;
+  if (desc == NULL || *desc == '\0')
+    desc = "No details";
   gst_element_class_set_metadata (gstelement_class, class_data->info.name,
-      "Filter/Editor/Video", class_data->info.explanation, author);
+      "Filter/Editor/Video", desc, author);
   g_free (author);
 
   caps = gst_frei0r_caps_from_color_model (class_data->info.color_model);
