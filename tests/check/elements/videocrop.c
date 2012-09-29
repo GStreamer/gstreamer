@@ -786,14 +786,6 @@ main (int argc, char **argv)
   Suite *s = videocrop_suite ();
   SRunner *sr = srunner_create (s);
 
-#ifdef HAVE_VALGRIND
-  if (RUNNING_ON_VALGRIND) {
-    /* otherwise valgrind errors out when liboil probes CPU extensions
-     * in oil_init() during which it causes SIGILLs etc. to be fired */
-    g_setenv ("OIL_CPU_FLAGS", "0", 0);
-  }
-#endif
-
   gst_check_init (&argc, &argv);
 
   srunner_run_all (sr, CK_NORMAL);

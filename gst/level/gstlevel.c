@@ -361,6 +361,7 @@ DEFINE_INT_LEVEL_CALCULATOR (gint32, 31);
 DEFINE_INT_LEVEL_CALCULATOR (gint16, 15);
 DEFINE_INT_LEVEL_CALCULATOR (gint8, 7);
 
+/* FIXME: use orc to calculate squaresums? */
 #define DEFINE_FLOAT_LEVEL_CALCULATOR(TYPE)                                   \
 static void inline                                                            \
 gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
@@ -375,7 +376,7 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
   /* *NCS = 0.0; Normalized Cumulative Square */                              \
   /* *NPS = 0.0; Normalized Peask Square */                                   \
                                                                               \
-  /* oil_squaresum_f64(&squaresum,in,num); */                                 \
+  /* orc_level_squaresum_f64(&squaresum,in,num); */                           \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
     square = ((gdouble) in[j]) * in[j];                                       \
@@ -395,7 +396,7 @@ static void inline
 gst_level_calculate_gdouble (gpointer data, guint num, guint channels,
                             gdouble *NCS, gdouble *NPS)
 {
-  oil_squaresum_f64(NCS,(gdouble *)data,num);
+  orc_level_squaresum_f64(NCS,(gdouble *)data,num);
   *NPS = 0.0;
 }
 */
@@ -702,8 +703,6 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /*oil_init (); */
-
   return gst_element_register (plugin, "level", GST_RANK_NONE, GST_TYPE_LEVEL);
 }
 
