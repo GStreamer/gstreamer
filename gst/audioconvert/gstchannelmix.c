@@ -683,7 +683,7 @@ gst_channel_mix_mix_int (AudioConvertCtx * this,
   outchannels = this->out.channels;
   backwards = outchannels > inchannels;
 
-  /* FIXME: use liboil here? */
+  /* FIXME: use orc here? */
   for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
       backwards ? n-- : n++) {
     for (out = 0; out < outchannels; out++) {

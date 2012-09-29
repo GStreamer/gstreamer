@@ -2899,7 +2899,7 @@ no_audioconvert:
     post_missing_element_message (playsink, "audioconvert");
     GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-            "audioconvert"), ("possibly a liboil version mismatch?"));
+            "audioconvert"), ("make sure audioconvert isn't blacklisted"));
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }
