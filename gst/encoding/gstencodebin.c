@@ -1793,7 +1793,9 @@ stream_group_free (GstEncodeBin * ebin, StreamGroup * sgroup)
 
     /* Remove muxer request sink pad */
     gst_pad_unlink (tmppad, pad);
-    gst_element_release_request_pad (ebin->muxer, pad);
+    if (GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
+        GST_PAD_REQUEST)
+      gst_element_release_request_pad (ebin->muxer, pad);
     gst_object_unref (tmppad);
     gst_object_unref (pad);
   }
