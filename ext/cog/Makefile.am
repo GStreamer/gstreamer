@@ -29,14 +29,11 @@ libgstcog_la_SOURCES = \
 	cogvirtframe.c \
 	cogvirtframe.h \
 	gstcog.c \
-	gstcogcolorspace.c \
 	gstcogdownsample.c \
 	gstcogmse.c \
 	gstcogscale.c \
 	gstcogutils.c \
 	gstcogutils.h \
-	gstcolorconvert.c \
-	gstlogoinsert.c \
 	gstcms.h \
 	gstcms.c
 nodist_libgstcog_la_SOURCES = $(ORC_NODIST_SOURCES)
