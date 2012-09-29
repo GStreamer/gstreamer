@@ -863,7 +863,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     buffer_list = gst_fragment_get_buffer_list (fragment);
     g_object_unref (fragment);
     ret = gst_pad_push_list (demux->srcpad[i], buffer_list);
-    if ((ret != GST_FLOW_OK)&& (stream->mimeType == GST_STREAM_VIDEO))
+    if ((ret != GST_FLOW_OK) && (stream->mimeType == GST_STREAM_VIDEO))
       goto error_pushing;
   }
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
@@ -1261,6 +1261,28 @@ gst_dash_demux_get_input_caps (GstDashDemux * demux, GstActiveStream * stream)
 }
 
 static gboolean
+need_add_header (GstDashDemux * demux)
+{
+  GstActiveStream *stream;
+  guint stream_idx = 0;
+  gboolean switch_caps = FALSE;
+  while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
+    stream =
+        gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
+    if (stream == NULL)
+      return FALSE;
+    GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
+    if (!demux->input_caps[stream_idx]
+        || !gst_caps_is_equal (caps, demux->input_caps[stream_idx])) {
+      switch_caps = TRUE;
+      break;
+    }
+    stream_idx++;
+  }
+  return switch_caps;
+}
+
+static gboolean
 gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
 {
   GstActiveStream *stream;
@@ -1274,10 +1296,10 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
   GTimeVal start;
   GstClockTime diff;
   guint64 size_buffer = 0;
-  gboolean switch_pad = FALSE;
 
   g_get_current_time (&start);
   /* support multiple streams */
+  gboolean need_header = need_add_header (demux);
   int stream_idx = 0;
   list_fragment = NULL;
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
@@ -1308,14 +1330,11 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
 
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
 
-    if (!demux->input_caps[stream_idx]
-        || !gst_caps_is_equal (caps, demux->input_caps[stream_idx])
-        || switch_pad) {
+    if (need_header) {
       /* We changed spatial representation */
       gst_caps_replace (&demux->input_caps[stream_idx], caps);
       GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
           demux->input_caps[stream_idx]);
-      switch_pad = TRUE;
       /* We need to fetch a new header */
       if ((header = gst_dash_demux_get_next_header (demux, stream_idx)) == NULL) {
         GST_INFO_OBJECT (demux, "Unable to fetch header");
