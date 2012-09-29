@@ -1690,10 +1690,9 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     gchar *type_name;
     gchar *plugin_name;
 
-    /* only decoders */
-    if (!in_plugin->decode) {
+    /* only video decoders */
+    if (!in_plugin->decode || in_plugin->type != AVMEDIA_TYPE_VIDEO)
       goto next;
-    }
 
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
