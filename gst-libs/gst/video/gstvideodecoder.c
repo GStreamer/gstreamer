@@ -380,7 +380,7 @@ struct _GstVideoDecoderPrivate
 
   GList *frames;                /* Protected with OBJECT_LOCK */
   GstVideoCodecState *input_state;
-  GstVideoCodecState *output_state;
+  GstVideoCodecState *output_state;     /* OBJECT_LOCK and STREAM_LOCK */
   gboolean output_state_changed;
 
   /* QoS properties */
@@ -1395,13 +1395,13 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GST_DEBUG_OBJECT (dec, "convert query");
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-      GST_VIDEO_DECODER_STREAM_LOCK (dec);
+      GST_OBJECT_LOCK (dec);
       if (dec->priv->output_state != NULL)
         res = gst_video_rawvideo_convert (dec->priv->output_state,
             src_fmt, src_val, &dest_fmt, &dest_val);
       else
         res = FALSE;
-      GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
+      GST_OBJECT_UNLOCK (dec);
       if (!res)
         goto error;
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
@@ -1605,11 +1605,11 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
     if (priv->input_state)
       gst_video_codec_state_unref (priv->input_state);
     priv->input_state = NULL;
+    GST_OBJECT_LOCK (decoder);
     if (priv->output_state)
       gst_video_codec_state_unref (priv->output_state);
     priv->output_state = NULL;
 
-    GST_OBJECT_LOCK (decoder);
     priv->qos_frame_duration = 0;
     GST_OBJECT_UNLOCK (decoder);
 
@@ -2640,10 +2640,10 @@ gst_video_decoder_get_output_state (GstVideoDecoder * decoder)
 {
   GstVideoCodecState *state = NULL;
 
-  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  GST_OBJECT_LOCK (decoder);
   if (decoder->priv->output_state)
     state = gst_video_codec_state_ref (decoder->priv->output_state);
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  GST_OBJECT_UNLOCK (decoder);
 
   return state;
 }
@@ -2680,7 +2680,6 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
   GstVideoCodecState *state;
-  GstClockTime qos_frame_duration;
 
   GST_DEBUG_OBJECT (decoder, "fmt:%d, width:%d, height:%d, reference:%p",
       fmt, width, height, reference);
@@ -2689,24 +2688,24 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
   state = _new_output_state (fmt, width, height, reference);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+
+  GST_OBJECT_LOCK (decoder);
   /* Replace existing output state by new one */
   if (priv->output_state)
     gst_video_codec_state_unref (priv->output_state);
   priv->output_state = gst_video_codec_state_ref (state);
 
   if (priv->output_state != NULL && priv->output_state->info.fps_n > 0) {
-    qos_frame_duration =
+    priv->qos_frame_duration =
         gst_util_uint64_scale (GST_SECOND, priv->output_state->info.fps_d,
         priv->output_state->info.fps_n);
   } else {
-    qos_frame_duration = 0;
+    priv->qos_frame_duration = 0;
   }
   priv->output_state_changed = TRUE;
-  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
-  GST_OBJECT_LOCK (decoder);
-  priv->qos_frame_duration = qos_frame_duration;
   GST_OBJECT_UNLOCK (decoder);
+
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   return state;
 }
