@@ -17,6 +17,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-openslessink
+ * @see_also: openslessrc
+ *
+ * This element renders raw audio samples using the OpenSL ES API in Android OS.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch -v filesrc location=music.ogg ! oggdemux ! vorbisdec ! audioconvert ! audioresample ! opeslessink
+ * ]| Play an Ogg/Vorbis file.
+ * </refsect2>
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -40,6 +55,9 @@ enum
 
 /* According to Android's NDK doc the following are the supported rates */
 #define RATES "8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100"
+/* 48000 Hz is also claimed to be supported but the AudioFlinger downsampling
+ * doesn't seems to work properly so we relay GStreamer audioresample element
+ * to cope with this samplerate. */
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -106,11 +124,6 @@ gst_opensles_sink_create_ringbuffer (GstBaseAudioSink * base)
     (gint) (aod)->maxSampleRate, (gint) (aod)->isFreqRangeContinuous,         \
     (gint) (aod)->maxChannels
 
-/* Next it's not defined in Android */
-#ifndef MAX_NUMBER_OUTPUT_DEVICES
-#define MAX_NUMBER_OUTPUT_DEVICES 16
-#endif
-
 static gboolean
 _opensles_query_capabilities (GstOpenSLESSink * sink)
 {
@@ -136,8 +149,7 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
     goto beach;
   }
 
-  /* Get the engine interface, which is needed in order to
-   * create other objects */
+  /* Get the engine interface, which is needed in order to create other objects */
   result = (*engineObject)->GetInterface (engineObject,
       SL_IID_AUDIOIODEVICECAPABILITIES, &audioIODeviceCapabilities);
   if (result != SL_RESULT_SUCCESS) {
@@ -147,6 +159,7 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
     goto beach;
   }
 
+  /* Query the list of available audio outputs */
   result = (*audioIODeviceCapabilities)->GetAvailableAudioOutputs
       (audioIODeviceCapabilities, &numOutputs, outputDeviceIDs);
   if (result != SL_RESULT_SUCCESS) {
@@ -182,7 +195,7 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
 
   res = TRUE;
 beach:
-  /* Destroy engine object */
+  /* Destroy the engine object */
   if (engineObject) {
     (*engineObject)->Destroy (engineObject);
   }
@@ -269,6 +282,8 @@ gst_opensles_sink_init (GstOpenSLESSink * sink, GstOpenSLESSinkClass * gclass)
   _opensles_query_capabilities (sink);
 
   gst_base_audio_sink_set_provide_clock (GST_BASE_AUDIO_SINK (sink), TRUE);
+  /* Override some default values to fit on the AudioFlinger behaviour of
+   * processing 20ms buffers as minimum buffer size. */
   GST_BASE_AUDIO_SINK (sink)->buffer_time = 400000;
   GST_BASE_AUDIO_SINK (sink)->latency_time = 20000;
 }

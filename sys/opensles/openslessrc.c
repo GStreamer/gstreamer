@@ -17,6 +17,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-openslessrc
+ * @see_also: openslessink
+ *
+ * This element reads data from default audio input using the OpenSL ES API in Android OS.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch -v openslessrc ! audioconvert ! vorbisenc ! oggmux ! filesink location=recorded.ogg
+ * ]| Record from default audio input and encode to Ogg/Vorbis.
+ * </refsect2>
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif

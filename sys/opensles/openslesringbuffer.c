@@ -40,7 +40,9 @@ GST_BOILERPLATE_FULL (GstOpenSLESRingBuffer, gst_opensles_ringbuffer,
 
 #define RECORDER_QUEUE_SIZE 2
 
-/* Some generic helper functions */
+/*
+ * Some generic helper functions
+ */
 
 static inline SLuint32
 _opensles_sample_rate (guint rate)
@@ -80,7 +82,6 @@ _opensles_sample_rate (guint rate)
 static inline SLuint32
 _opensles_channel_mask (GstRingBufferSpec * spec)
 {
-  /* FIXME: handle more than two channels */
   switch (spec->channels) {
     case 1:
       return (SL_SPEAKER_FRONT_CENTER);
@@ -104,7 +105,9 @@ _opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
       (spec->bigend ? SL_BYTEORDER_BIGENDIAN : SL_BYTEORDER_LITTLEENDIAN);
 }
 
-/* Recorder related functions */
+/* 
+ * Recorder related functions
+ */
 
 static gboolean
 _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
@@ -126,13 +129,14 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   };
   SLDataSink audioSink = { &loc_bq, &format };
 
+  /* Required optional interfaces */
   const SLInterfaceID id[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
   const SLboolean req[1] = { SL_BOOLEAN_TRUE };
 
-  /* Define the format in OpenSL ES terms */
+  /* Define the audio format in OpenSL ES terminology */
   _opensles_format (spec, &format);
 
-  /* Create audio recorder (requires the RECORD_AUDIO permission) */
+  /* Create the audio recorder object (requires the RECORD_AUDIO permission) */
   result = (*thiz->engineEngine)->CreateAudioRecorder (thiz->engineEngine,
       &thiz->recorderObject, &audioSrc, &audioSink, 1, id, req);
   if (result != SL_RESULT_SUCCESS) {
@@ -141,7 +145,7 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Realize the audio recorder */
+  /* Realize the audio recorder object */
   result =
       (*thiz->recorderObject)->Realize (thiz->recorderObject, SL_BOOLEAN_FALSE);
   if (result != SL_RESULT_SUCCESS) {
@@ -179,6 +183,11 @@ failed:
   return FALSE;
 }
 
+/* This callback function is executed when the ringbuffer is started to preroll
+ * the output buffer queue with empty buffers, from app thread, and each time
+ * there's a filled buffer, from audio device processing thread,
+ * the callback behaviour.
+ */
 static void
 _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
@@ -189,21 +198,24 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   gint seg;
   gint len;
 
+  /* Get a segment form the GStreamer ringbuffer to write in */
   if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
     return;
   }
 
-  /* Enqueue a buffer */
   GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d", ptr, len, seg);
-  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, ptr, len);
 
+  /* Enqueue the sefment as buffer to be written */
+  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, ptr, len);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "bufferQueue.Enqueue failed(0x%08x)",
         (guint32) result);
     return;
   }
 
+  /* FIXME: we advance here and behaviour might be racy with the reading
+   * thread */
   gst_ring_buffer_advance (rb, 1);
 }
 
@@ -226,7 +238,7 @@ _opensles_recorder_start (GstRingBuffer * rb)
     thiz->is_queue_callback_registered = TRUE;
   }
 
-  /* Fill the queue by enqueing buffers */
+  /* Preroll the buffer queue by enqueing segments */
   for (i = 0; i < RECORDER_QUEUE_SIZE; i++) {
     _opensles_recorder_cb (NULL, rb);
   }
@@ -240,6 +252,7 @@ _opensles_recorder_start (GstRingBuffer * rb)
         (guint32) result);
     return FALSE;
   }
+
   return TRUE;
 }
 
@@ -280,7 +293,9 @@ _opensles_recorder_stop (GstRingBuffer * rb)
   return TRUE;
 }
 
-/* Player related functions */
+/*
+ * Player related functions
+ */
 
 static gboolean
 _opensles_player_change_volume (GstRingBuffer * rb)
@@ -326,6 +341,8 @@ _opensles_player_change_mute (GstRingBuffer * rb)
   return TRUE;
 }
 
+/* This is a callback function invoked by the playback device thread and
+ * it's used to monitor position changes */
 static void
 _opensles_player_event_cb (SLPlayItf caller, void *context, SLuint32 event)
 {
@@ -338,8 +355,6 @@ _opensles_player_event_cb (SLPlayItf caller, void *context, SLuint32 event)
 
     (*caller)->GetPosition (caller, &position);
     GST_LOG_OBJECT (thiz, "at position=%u ms", (guint) position);
-  } else if (event & SL_PLAYEVENT_HEADSTALLED) {
-    GST_WARNING_OBJECT (thiz, "head stalled");
   }
 }
 
@@ -363,13 +378,14 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   };
   SLDataSink audioSink = { &loc_outmix, NULL };
 
-  /* Create an audio player */
+  /* Define the required interfaces */
   const SLInterfaceID ids[2] = { SL_IID_BUFFERQUEUE, SL_IID_VOLUME };
   const SLboolean req[2] = { SL_BOOLEAN_TRUE, SL_BOOLEAN_TRUE };
 
-  /* Define the format in OpenSL ES terms */
+  /* Define the format in OpenSL ES terminology */
   _opensles_format (spec, &format);
 
+  /* Create the player object */
   result = (*thiz->engineEngine)->CreateAudioPlayer (thiz->engineEngine,
       &thiz->playerObject, &audioSrc, &audioSink, 2, ids, req);
   if (result != SL_RESULT_SUCCESS) {
@@ -378,7 +394,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Realize the player */
+  /* Realize the player object */
   result =
       (*thiz->playerObject)->Realize (thiz->playerObject, SL_BOOLEAN_FALSE);
   if (result != SL_RESULT_SUCCESS) {
@@ -413,8 +429,8 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Request position update events at each 10 ms */
-  result = (*thiz->playerPlay)->SetPositionUpdatePeriod (thiz->playerPlay, 10);
+  /* Request position update events at each 20 ms */
+  result = (*thiz->playerPlay)->SetPositionUpdatePeriod (thiz->playerPlay, 20);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "player.SetPositionUpdatePeriod failed(0x%08x)",
         (guint32) result);
@@ -423,7 +439,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Define the event mask to be monitorized */
   result = (*thiz->playerPlay)->SetCallbackEventsMask (thiz->playerPlay,
-      SL_PLAYEVENT_HEADATNEWPOS | SL_PLAYEVENT_HEADSTALLED);
+      SL_PLAYEVENT_HEADATNEWPOS);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "player.SetCallbackEventsMask failed(0x%08x)",
         (guint32) result);
@@ -443,7 +459,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   _opensles_player_change_volume (rb);
   _opensles_player_change_mute (rb);
 
-  /* Define our queue data buffer */
+  /* Allocate the queue associated ringbuffer memory */
   thiz->data_segtotal = loc_bufq.numBuffers;
   thiz->data = g_malloc (spec->segsize * thiz->data_segtotal);
   thiz->cursor = 0;
@@ -454,6 +470,16 @@ failed:
   return FALSE;
 }
 
+/* This callback function is executed when the ringbuffer is started to preroll
+ * the input buffer queue with few buffers, from app thread, and each time
+ * that rendering of one buffer finishes, from audio device processing thread,
+ * the callback behaviour.
+ *
+ * We wrap the queue behaviour with an appropriate chunk of memory (queue len *
+ * ringbuffer segment size) which is used to hold the audio data while it's 
+ * being processed in the queue. The memory region is used whit a ringbuffer
+ * behaviour.
+ */
 static void
 _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
@@ -464,29 +490,33 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   gint seg;
   gint len;
 
+  /* Get a segment form the GStreamer ringbuffer to read some samples */
   if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
     return;
   }
 
-  /* copy data to our queue ringbuffer */
+  /* copy the segment data to our queue associated ringbuffer memory */
   cur = thiz->data + (thiz->cursor * rb->spec.segsize);
   memcpy (cur, ptr, len);
   g_atomic_int_inc (&thiz->segqueued);
 
-  /* Enqueue a buffer */
   GST_LOG_OBJECT (thiz, "enqueue: %p size %d segment: %d in queue[%d]",
       cur, len, seg, thiz->cursor);
-  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, cur, len);
+  /* advance the cursor in our queue associated ringbuffer */
   thiz->cursor = (thiz->cursor + 1) % thiz->data_segtotal;
 
+  /* Enqueue the buffer to be rendered */
+  result = (*thiz->bufferQueue)->Enqueue (thiz->bufferQueue, cur, len);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "bufferQueue.Enqueue failed(0x%08x)",
         (guint32) result);
     return;
   }
 
+  /* Fill with silence samples the segment of the GStreamer ringbuffer */
   gst_ring_buffer_clear (rb, seg);
+  /* Make the segment reusable */
   gst_ring_buffer_advance (rb, 1);
 }
 
@@ -540,6 +570,7 @@ _opensles_player_pause (GstRingBuffer * rb)
         (guint32) result);
     return FALSE;
   }
+
   return TRUE;
 }
 
@@ -553,7 +584,6 @@ _opensles_player_stop (GstRingBuffer * rb)
   result =
       (*thiz->playerPlay)->SetPlayState (thiz->playerPlay,
       SL_PLAYSTATE_STOPPED);
-
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "player.SetPlayState failed(0x%08x)",
         (guint32) result);
@@ -578,13 +608,17 @@ _opensles_player_stop (GstRingBuffer * rb)
     return FALSE;
   }
 
+  /* Reset our state */
   g_atomic_int_set (&thiz->segqueued, 0);
   thiz->cursor = 0;
 
   return TRUE;
 }
 
-/* OpenSL ES ring buffer wrapper */
+/*
+ * OpenSL ES ringbuffer wrapper
+ */
+
 
 GstRingBuffer *
 gst_opensles_ringbuffer_new (RingBufferMode mode)
@@ -613,6 +647,7 @@ gst_opensles_ringbuffer_new (RingBufferMode mode)
   }
 
   GST_DEBUG_OBJECT (thiz, "ringbuffer created");
+
   return GST_RING_BUFFER (thiz);
 }
 
@@ -652,14 +687,14 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
 
   thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
 
-  /* Create engine */
+  /* Create the engine object */
   result = slCreateEngine (&thiz->engineObject, 0, NULL, 0, NULL, NULL);
   if (result != SL_RESULT_SUCCESS) {
     GST_ERROR_OBJECT (thiz, "slCreateEngine failed(0x%08x)", (guint32) result);
     goto failed;
   }
 
-  /* Realize the engine */
+  /* Realize the engine object */
   result = (*thiz->engineObject)->Realize (thiz->engineObject,
       SL_BOOLEAN_FALSE);
   if (result != SL_RESULT_SUCCESS) {
@@ -667,8 +702,7 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
     goto failed;
   }
 
-  /* Get the engine interface, which is needed in order to
-   * create other objects */
+  /* Get the engine interface, which is needed in order to create other objects */
   result = (*thiz->engineObject)->GetInterface (thiz->engineObject,
       SL_IID_ENGINE, &thiz->engineEngine);
   if (result != SL_RESULT_SUCCESS) {
@@ -680,7 +714,7 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
   if (thiz->mode == RB_MODE_SINK_PCM) {
     SLOutputMixItf outputMix;
 
-    /* Create an output mixer */
+    /* Create an output mixer object */
     result = (*thiz->engineEngine)->CreateOutputMix (thiz->engineEngine,
         &thiz->outputMixObject, 0, NULL, NULL);
     if (result != SL_RESULT_SUCCESS) {
@@ -689,7 +723,7 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
       goto failed;
     }
 
-    /* Realize the output mixer */
+    /* Realize the output mixer object */
     result = (*thiz->outputMixObject)->Realize (thiz->outputMixObject,
         SL_BOOLEAN_FALSE);
     if (result != SL_RESULT_SUCCESS) {
@@ -698,16 +732,18 @@ gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
       goto failed;
     }
 
-    /* Check for output device options */
+    /* Get the mixer interface */
     result = (*thiz->outputMixObject)->GetInterface (thiz->outputMixObject,
         SL_IID_OUTPUTMIX, &outputMix);
     if (result != SL_RESULT_SUCCESS) {
       GST_WARNING_OBJECT (thiz, "outputMix.GetInterface failed(0x%08x)",
           (guint32) result);
     } else {
-      SLint32 numDevices;
-      SLuint32 deviceIDs[16];
+      SLint32 numDevices = 0;
+      SLuint32 deviceIDs[MAX_NUMBER_OUTPUT_DEVICES];
       gint i;
+
+      /* Query the list of output devices */
       (*outputMix)->GetDestinationOutputDeviceIDs (outputMix, &numDevices,
           deviceIDs);
       GST_DEBUG_OBJECT (thiz, "Found %d output devices", (gint) numDevices);
@@ -731,13 +767,13 @@ gst_opensles_ringbuffer_close_device (GstRingBuffer * rb)
 
   thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
 
-  /* Destroy output mix object */
+  /* Destroy the output mix object */
   if (thiz->outputMixObject) {
     (*thiz->outputMixObject)->Destroy (thiz->outputMixObject);
     thiz->outputMixObject = NULL;
   }
 
-  /* Destroy engine object, and invalidate all associated interfaces */
+  /* Destroy the engine object and invalidate all associated interfaces */
   if (thiz->engineObject) {
     (*thiz->engineObject)->Destroy (thiz->engineObject);
     thiz->engineObject = NULL;
@@ -801,6 +837,7 @@ gst_opensles_ringbuffer_release (GstRingBuffer * rb)
     gst_buffer_unref (rb->data);
     rb->data = NULL;
   }
+
   GST_DEBUG_OBJECT (thiz, "ringbuffer released");
   return TRUE;
 }

@@ -28,6 +28,8 @@
 
 G_BEGIN_DECLS
 
+#define MAX_NUMBER_OUTPUT_DEVICES 16
+
 #define GST_TYPE_OPENSLES_RING_BUFFER \
   (gst_opensles_ringbuffer_get_type())
 #define GST_OPENSLES_RING_BUFFER(obj) \
