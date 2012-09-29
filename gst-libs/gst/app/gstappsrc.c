@@ -667,7 +667,7 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
     {
       guint64 max;
 
-      gst_app_src_get_latency (appsrc, &max, NULL);
+      gst_app_src_get_latency (appsrc, NULL, &max);
       g_value_set_int64 (value, max);
       break;
     }
