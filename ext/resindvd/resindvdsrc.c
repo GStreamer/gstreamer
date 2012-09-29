@@ -631,6 +631,8 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     still_event = gst_video_event_new_still_frame (TRUE);
 
     segment->stop = segment->position = src->cur_end_ts;
+    GST_LOG_OBJECT (src, "Segment position now %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment->position));
 
     seg_event = gst_event_new_segment (segment);
 
@@ -748,8 +750,14 @@ rsn_dvdsrc_do_still (resinDvdSrc * src, int duration)
     still_event = gst_video_event_new_still_frame (FALSE);
 
     /* If the segment was too short in a timed still, it may need extending */
-    if (segment->position < segment->start + GST_SECOND * duration)
+    if (segment->position < segment->start + GST_SECOND * duration) {
       segment->position = segment->start + (GST_SECOND * duration);
+      if (segment->stop != -1 && segment->position > segment->stop)
+        segment->stop = segment->position;
+
+      GST_LOG_OBJECT (src, "Extended segment position to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (segment->position));
+    }
 
     g_mutex_unlock (src->dvd_lock);
     gst_pad_push_event (GST_BASE_SRC_PAD (src), still_event);
@@ -1365,27 +1373,33 @@ rsn_dvdsrc_create (GstBaseSrc * bsrc, guint64 offset,
 
   if (src->need_segment) {
     /* Seamless segment update */
-    GstClockTime position = 0;
+    GstClockTime elapsed_time = 0;
 
     if (src->cur_position != GST_CLOCK_TIME_NONE)
-      position += src->cur_position;
+      elapsed_time += src->cur_position;
     if (src->cur_vobu_base_ts != GST_CLOCK_TIME_NONE)
-      position += src->cur_vobu_base_ts;
+      elapsed_time += src->cur_vobu_base_ts;
 
     GST_DEBUG_OBJECT (src,
         "Starting seamless segment update to %" GST_TIME_FORMAT " -> %"
-        GST_TIME_FORMAT " VOBU %" GST_TIME_FORMAT " position %" GST_TIME_FORMAT,
+        GST_TIME_FORMAT " VOBU %" GST_TIME_FORMAT " time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (src->cur_start_ts), GST_TIME_ARGS (src->cur_end_ts),
-        GST_TIME_ARGS (src->cur_vobu_base_ts), GST_TIME_ARGS (position));
+        GST_TIME_ARGS (src->cur_vobu_base_ts), GST_TIME_ARGS (elapsed_time));
 
     gst_base_src_new_seamless_segment (GST_BASE_SRC (src),
-        src->cur_start_ts, -1, position);
+        src->cur_start_ts, -1, elapsed_time);
 
     src->need_segment = FALSE;
   }
 
-  if (src->cur_end_ts != GST_CLOCK_TIME_NONE)
+  if (src->cur_end_ts != GST_CLOCK_TIME_NONE) {
     segment->position = src->cur_end_ts;
+    if (segment->stop != -1 && segment->position > segment->stop)
+      segment->stop = segment->position;
+
+    GST_LOG_OBJECT (src, "Segment position now %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment->position));
+  }
 
   if (tags) {
     GstEvent *tag_event = gst_event_new_tag (tags);
@@ -2907,6 +2921,8 @@ rsn_dvdsrc_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
     segment->format = GST_FORMAT_TIME;
     /* The first TS output: */
     segment->position = segment->start = src->cur_start_ts;
+    GST_LOG_OBJECT (src, "Segment position now %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment->position));
 
     /* time field = position is the 'logical' stream time here: */
     segment->time = 0;
