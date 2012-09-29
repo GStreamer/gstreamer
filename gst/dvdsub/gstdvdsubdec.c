@@ -18,8 +18,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* TODO: liboil-ise code, esp. use _splat() family of functions */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

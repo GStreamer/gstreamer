@@ -30,97 +30,25 @@ This file lists supporting libraries for which gst-plugins contains plugins,
 as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
-dirac		(Dirac video codec)
-			http://www.bbc.co.uk/rd/projects/dirac/index.shtml
-libaudiofile    (for afsrc/afsink
-			http://oss.sgi.com/projects/audiofile/
-libmad          (for the mad mp3 decoder plugin)
+a52dec		(for the a52dec AC-3 decoder)
+			http://liba52.sourceforge.net/
+opencore-amr (for the AMR-NB decoder and encoder and the AMR-WB decoder)
+			http://sourceforge.net/projects/opencore-amr/
+libmad      (for the mad mp3 decoder plugin)
 			http://www.mars.org/home/rob/proj/mpeg/
-libjpeg         (for jpegenc/jpegdec)
-			http://www.ijg.org/
-libopenquicktime (for the QT plugin)
-			http://sourceforge.net/projects/openquicktime/
-libXv		(for videosink)
-libxaudio	(for xa mp3 decoder)
-			http://www.xaudio.com/
-libvorbis	(for vorbisenc, vorbisdec)
-			http://www.xiph.org/ogg/vorbis/index.html
-libcdparanoia	(for cdparanoia ripper)
-			http://www.xiph.org/paranoia/index.html
 liblame		(for lame mp3 encoder)
 			http://www.mp3dev.org/mp3/
-libshout	(for the shoutcast plugin)
-			http://www.icecast.org
-libasound	(for the alsa src/sink plugin)
-			http://alsa-project.org/
-librtp		(for the rtp sink plugin)
-			http://www.linphone.org/ortp/
-aalib		(for the aa sink plugin)
-			http://aa-project.sourceforge.net/aalib/
-libcaca		(for the color aa sink plugin)
-			http://sam.zoy.org/projects/libcaca/
-aRts		(for the arts plugin wrapper, and the artsd sink)
-			http://www.arts-project.org
-raw1394/linux1394	(for the dv plugin)
-			http://linux1394.sourceforge.net
-libdvdread	(for the dvdsrc)
+libdvdread	(for the dvdreadsrc)
 			http://www.dtek.chalmers.se/groups/dvd/
 			(optional: libcss for encrypted DVDs)
-libesound	(for the esd sink 
-			ftp.gnome.org/pub/GNOME/stable/sources/esound)
-gnome-vfs	(for the gnome-vfs src)
-		>= 2.4.0
-libgsm		(for the gsm plugin)
-			http://kbs.cs.tu-berlin.de/~jutta/toast.html
-sdl		(for the sdl sink)
-			http://www.libsdl.org
-xmms		(for the xmms plugins wrapper)
-			http://www.xmms.org
-mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
+mpeg2dec	(for mpeg2 related plugins and dvd playback)
 			http://libmpeg2.sourceforge.net/
-			and http://liba52.sourceforge.net/
-		>=	v0.3.1/v0.7.2
-swfdec		(for the swfdec (flash) plugin)
-			http://www.schleef.org/swfdec/
-liboil		(for the liboil optimization library)
-			http://www.schleef.org/liboil/
-		>=	0.2.0
-flac		(for the FLAC lossless audio format)
-			http://flac.sourceforge.net
-                >= 1.0.3 preferred, 1.0.2 should work
-gtk		(for the gdk_pixbuf plugin)
-			http://www.gtk.org/
-		>= 2.2.1 preferred, 2.0 ok
-pango		(for the textoverlay plugins)
-			http://www.pango.org/
-librfb		(for capturing of VNC output into a videostream)
-			http://www.schleef.org/
-libHermes       (for colorspace conversions (should not be needed anymore))
-                        http://www.clanlib.org/hermes/
-dtsdec		(for DTS audio decoding)
-			http://www.videolan.org/libdca.html
-divx		(for divx decoding)
-			http://www.divx.com/divx/linux/
-libmng		(for mng animated image format encoding/decoding)
-			http://gjuyn.xs4all.nl/libmng
-libvisual	(for audio visualisations)
-			http://libvisual.sourceforge.net/v2/
-musepack	(for musepack audio codec/format)
-			(http://www.musepack.net/)
-nas		(for the NAS sound server sink)
-			(http://radscan.com/nas.html)
-libtheora	(for Ogg Theora video support)
-			(http://www.theora.org)
-libmms		(for MMS protocol support)
-			(http://www.sf.net/projects/libmms)
-libamrnb	(for AMR-NB support)
-			(http://www.penguin.cz/~utx/amr)
-libamrwb	(for AMR-WB support)
-			(http://www.penguin.cz/~utx/amr)
-
-
-Optional (debian) packages:
-===========================
-
-gtk-doc-tools 1.6  -- needed to build documentation
-python-xml  -- needed to build plugin documentation
+liborc		(for the liborc optimization library)
+			http://code.entropywave.com/download/orc/
+cdio		(for the cdio CDDA CD audio source)
+			http://savannah.gnu.org/projects/libcdio/
+x264		(for the x264enc H.264 encoder)
+			http://www.videolan.org/developers/x264.html
+twolame		(for the twolame mp2 encoder)
+			http://www.twolame.org/
+sidplay		FIXME
