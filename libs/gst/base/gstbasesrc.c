@@ -781,7 +781,7 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
  * @src: The source
  * @start: The new start value for the segment
  * @stop: Stop value for the new segment
- * @position: The position value for the new segent
+ * @time: The new time value for the start of the new segent
  *
  * Prepare a new seamless segment for emission downstream. This function must
  * only be called by derived sub-classes, and only from the create() function,
@@ -794,25 +794,27 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
  */
 gboolean
 gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
-    gint64 position)
+    gint64 time)
 {
   gboolean res = TRUE;
-
-  GST_DEBUG_OBJECT (src,
-      "Starting new seamless segment. Start %" GST_TIME_FORMAT " stop %"
-      GST_TIME_FORMAT " position %" GST_TIME_FORMAT, GST_TIME_ARGS (start),
-      GST_TIME_ARGS (stop), GST_TIME_ARGS (position));
 
   GST_OBJECT_LOCK (src);
 
   src->segment.base = gst_segment_to_running_time (&src->segment,
       src->segment.format, src->segment.position);
-  src->segment.start = start;
+  src->segment.position = src->segment.start = start;
   src->segment.stop = stop;
-  src->segment.position = position;
+  src->segment.time = time;
 
-  /* forward, we send data from position to stop */
+  /* Mark pending segment. Will be sent before next data */
   src->priv->segment_pending = TRUE;
+
+  GST_DEBUG_OBJECT (src,
+      "Starting new seamless segment. Start %" GST_TIME_FORMAT " stop %"
+      GST_TIME_FORMAT " time %" GST_TIME_FORMAT " base %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (stop), GST_TIME_ARGS (time),
+      GST_TIME_ARGS (src->segment.base));
+
   GST_OBJECT_UNLOCK (src);
 
   src->priv->discont = TRUE;
