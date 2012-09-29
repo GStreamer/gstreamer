@@ -392,7 +392,6 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (stop));
 
       GST_MPD_CLIENT_LOCK (demux->client);
-      /* select stream TODO: support multiple streams */
       stream =
           g_list_nth_data (demux->client->active_streams,
           demux->client->stream_idx);
@@ -535,8 +534,6 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_buffer_unref (demux->playlist);
       demux->playlist = NULL;
 
-      /* Select first adaptation set, first representation and first fragment
-       * TODO: support for multiple adaptation sets */
       if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_VIDEO)) {
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
             ("Incompatible manifest file."), (NULL));
@@ -1059,13 +1056,11 @@ gst_dash_demux_schedule (GstDashDemux * demux)
 static gboolean
 gst_dash_demux_switch_playlist (GstDashDemux * demux, guint64 bitrate)
 {
-  /* TODO: support multiple streams */
   GstActiveStream *stream = NULL;
   GList *rep_list;
   gint new_index;
   gboolean ret = FALSE;
 
-  /* select stream TODO: support multiple streams */
   guint i = 0;
   while (i < gst_mpdparser_get_nb_active_stream (demux->client)) {
     if (demux->client->active_streams)
