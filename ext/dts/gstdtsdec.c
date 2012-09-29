@@ -200,7 +200,7 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
   klass->dts_cpuflags = 0;
 #endif
 
-  GST_LOG ("CPU flags: dts=%08x, liboil=%08x", klass->dts_cpuflags, cpuflags);
+  GST_LOG ("CPU flags: dts=%08x, orc=%08x", klass->dts_cpuflags, cpuflags);
 }
 
 static void
