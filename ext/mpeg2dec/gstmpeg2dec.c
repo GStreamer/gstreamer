@@ -933,10 +933,9 @@ beach:
 
 no_frame:
   {
-    GST_WARNING ("display buffer does not have a valid frame");
-    return GST_FLOW_ERROR;
+    GST_DEBUG ("display buffer does not have a valid frame");
+    return GST_FLOW_OK;
   }
-
 }
 
 static GstFlowReturn
