@@ -970,10 +970,9 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* only encoders */
-    if (!in_plugin->encode) {
+    /* only video encoders */
+    if (!in_plugin->encode || in_plugin->type != AVMEDIA_TYPE_VIDEO)
       goto next;
-    }
 
     /* FIXME : We should have a method to know cheaply whether we have a mapping
      * for the given plugin or not */
