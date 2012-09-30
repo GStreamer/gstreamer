@@ -209,7 +209,7 @@ gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   nsamples = map_info.size / (channels * 2);
 
   if (nsamples == 0)
-    return GST_FLOW_OK;
+    goto end;
 
   if (chromaprint->nsamples == 0) {
     chromaprint_start (chromaprint->context, rate, channels);
@@ -225,6 +225,7 @@ gst_chromaprint_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     gst_chromaprint_create_fingerprint (chromaprint);
   }
 
+end:
   gst_buffer_unmap (buf, &map_info);
 
   return GST_FLOW_OK;
