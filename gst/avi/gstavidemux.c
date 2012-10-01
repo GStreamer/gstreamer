@@ -3209,6 +3209,7 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
 
   switch (avi->header_state) {
     case GST_AVI_DEMUX_HEADER_TAG_LIST:
+    again:
       if (gst_avi_demux_peek_chunk (avi, &tag, &size)) {
         avi->offset += 8 + GST_ROUND_UP_2 (size);
         if (tag != GST_RIFF_TAG_LIST)
@@ -3221,8 +3222,12 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
 
         gst_buffer_extract (buf, 0, fourcc, 4);
 
-        if (GST_READ_UINT32_LE (fourcc) != GST_RIFF_LIST_hdrl)
-          goto header_no_hdrl;
+        if (GST_READ_UINT32_LE (fourcc) != GST_RIFF_LIST_hdrl) {
+          GST_WARNING_OBJECT (avi, "Invalid AVI header (no hdrl at start): %"
+              GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag));
+          gst_buffer_unref (buf);
+          goto again;
+        }
 
         /* mind padding */
         if (size & 1)
@@ -3439,14 +3444,6 @@ header_no_list:
     GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
         ("Invalid AVI header (no LIST at start): %"
             GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
-    return GST_FLOW_ERROR;
-  }
-header_no_hdrl:
-  {
-    GST_ELEMENT_ERROR (avi, STREAM, DEMUX, (NULL),
-        ("Invalid AVI header (no hdrl at start): %"
-            GST_FOURCC_FORMAT, GST_FOURCC_ARGS (tag)));
-    gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
 header_no_avih:
