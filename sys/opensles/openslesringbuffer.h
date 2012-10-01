@@ -79,6 +79,7 @@ struct _GstOpenSLESRingBuffer
   SLVolumeItf playerVolume;
   gfloat volume;
   gboolean mute;
+  gint is_prerolled; /* ATOMIC */
 
   /* recorder interfaces */
   SLObjectItf recorderObject;

@@ -456,6 +456,7 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   thiz->data_size = spec->segsize * thiz->data_segtotal;
   thiz->data = g_malloc0 (thiz->data_size);
   g_atomic_int_set (&thiz->segqueued, 0);
+  g_atomic_int_set (&thiz->is_prerolled, 0);
   thiz->cursor = 0;
 
   return TRUE;
@@ -534,8 +535,11 @@ _opensles_player_start (GstRingBuffer * rb)
   }
 
   /* Fill the queue by enqueing buffers */
-  for (i = 0; i < thiz->data_segtotal; i++) {
-    _opensles_player_cb (NULL, rb);
+  if (!g_atomic_int_get (&thiz->is_prerolled)) {
+    for (i = 0; i < thiz->data_segtotal; i++) {
+      _opensles_player_cb (NULL, rb);
+    }
+    g_atomic_int_set (&thiz->is_prerolled, 1);
   }
 
   /* Change player state into PLAYING */
@@ -907,9 +911,18 @@ gst_opensles_ringbuffer_clear_all (GstRingBuffer * rb)
   thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
 
   if (thiz->data) {
+    SLresult result;
+
     memset (thiz->data, 0, thiz->data_size);
     g_atomic_int_set (&thiz->segqueued, 0);
     thiz->cursor = 0;
+    /* Reset the queue */
+    result = (*thiz->bufferQueue)->Clear (thiz->bufferQueue);
+    if (result != SL_RESULT_SUCCESS) {
+      GST_WARNING_OBJECT (thiz, "bufferQueue.Clear failed(0x%08x)",
+          (guint32) result);
+    }
+    g_atomic_int_set (&thiz->is_prerolled, 0);
   }
 
   GST_CALL_PARENT (GST_RING_BUFFER_CLASS, clear_all, (rb));
