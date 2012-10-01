@@ -202,6 +202,9 @@ gst_rtsp_client_finalize (GObject * obj)
 
   GST_INFO ("finalize client %p", client);
 
+  if (client->watchid)
+    g_source_destroy ((GSource *) client->watch);
+
   client_cleanup_sessions (client);
 
   gst_rtsp_connection_free (client->connection);
@@ -536,11 +539,6 @@ close_connection (GstRTSPClient * client)
   }
 
   gst_rtsp_connection_close (client->connection);
-  if (client->watchid) {
-    g_source_destroy ((GSource *) client->watch);
-    client->watchid = 0;
-    client->watch = NULL;
-  }
 }
 
 static gboolean
@@ -1941,11 +1939,6 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   gst_rtsp_connection_do_tunnel (oclient->connection, client->connection);
   gst_rtsp_watch_reset (oclient->watch);
   g_object_unref (oclient);
-
-  /* we don't need this watch anymore */
-  g_source_destroy ((GSource *) client->watch);
-  client->watchid = 0;
-  client->watch = NULL;
 
   return GST_RTSP_OK;
 
