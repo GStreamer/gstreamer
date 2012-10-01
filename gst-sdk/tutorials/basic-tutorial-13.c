@@ -25,7 +25,7 @@ static void send_seek_event (CustomData *data) {
   /* Create the seek event */
   if (data->rate > 0) {
     seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
-        GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_NONE, 0);
+        GST_SEEK_TYPE_SET, position, GST_SEEK_TYPE_SET, -1);
   } else {
     seek_event = gst_event_new_seek (data->rate, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
         GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, position);
