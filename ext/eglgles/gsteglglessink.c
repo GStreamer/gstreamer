@@ -108,13 +108,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);
 #define GST_CAT_DEFAULT gst_eglglessink_debug
 
-/* XXX: These should be defined per model someway
- * but the Galaxy Nexus's were taken as a reference
- * for now on:
- */
-#define EGLGLESSINK_MAX_FRAME_WIDTH 1280
-#define EGLGLESSINK_MAX_FRAME_HEIGHT 720
-
 /* These are only needed for the fast rendering path */
 #ifdef EGL_KHR_image
 static PFNEGLCREATEIMAGEKHRPROC my_eglCreateImageKHR;
