@@ -41,6 +41,8 @@ G_BEGIN_DECLS
 
 #define GST_H264_MAX_SPS_COUNT   32
 #define GST_H264_MAX_PPS_COUNT   256
+#define GST_H264_MAX_VIEW_COUNT  1024
+#define GST_H264_MAX_VIEW_ID     (GST_H264_MAX_VIEW_COUNT - 1)
 
 #define GST_H264_IS_P_SLICE(slice)  (((slice)->type % 5) == GST_H264_P_SLICE)
 #define GST_H264_IS_B_SLICE(slice)  (((slice)->type % 5) == GST_H264_B_SLICE)
@@ -238,6 +240,11 @@ typedef struct _GstH264NalParser              GstH264NalParser;
 
 typedef struct _GstH264NalUnit                GstH264NalUnit;
 typedef struct _GstH264NalUnitExtensionMVC    GstH264NalUnitExtensionMVC;
+
+typedef struct _GstH264SPSExtMVCView          GstH264SPSExtMVCView;
+typedef struct _GstH264SPSExtMVCLevelValue    GstH264SPSExtMVCLevelValue;
+typedef struct _GstH264SPSExtMVCLevelValueOp  GstH264SPSExtMVCLevelValueOp;
+typedef struct _GstH264SPSExtMVC              GstH264SPSExtMVC;
 
 typedef struct _GstH264SPS                    GstH264SPS;
 typedef struct _GstH264PPS                    GstH264PPS;
@@ -471,6 +478,97 @@ struct _GstH264VUIParams
 };
 
 /**
+ * GstH264SPSExtMVCView:
+ * @num_anchor_refs_l0: specifies the number of view components for
+ *   inter-view prediction in the initialized RefPicList0 in decoding
+ *   anchor view components.
+ * @anchor_ref_l0: specifies the view_id for inter-view prediction in
+ *   the initialized RefPicList0 in decoding anchor view components.
+ * @num_anchor_refs_l1: specifies the number of view components for
+ *   inter-view prediction in the initialized RefPicList1 in decoding
+ *   anchor view components.
+ * @anchor_ref_l1: specifies the view_id for inter-view prediction in
+ *   the initialized RefPicList1 in decoding anchor view components.
+ * @num_non_anchor_refs_l0: specifies the number of view components
+ *   for inter-view prediction in the initialized RefPicList0 in
+ *   decoding non-anchor view components.
+ * @non_anchor_ref_l0: specifies the view_id for inter-view prediction
+ *   in the initialized RefPicList0 in decoding non-anchor view
+ *   components.
+ * @num_non_anchor_refs_l1: specifies the number of view components
+ *   for inter-view prediction in the initialized RefPicList1 in
+ *   decoding non-anchor view components.
+ * @non_anchor_ref_l1: specifies the view_id for inter-view prediction
+ *   in the initialized RefPicList1 in decoding non-anchor view
+ *   components.
+ *
+ * Represents inter-view dependency relationships for the coded video
+ * sequence.
+ */
+struct _GstH264SPSExtMVCView
+{
+  guint16 view_id;
+  guint8 num_anchor_refs_l0;
+  guint16 anchor_ref_l0[15];
+  guint8 num_anchor_refs_l1;
+  guint16 anchor_ref_l1[15];
+  guint8 num_non_anchor_refs_l0;
+  guint16 non_anchor_ref_l0[15];
+  guint8 num_non_anchor_refs_l1;
+  guint16 non_anchor_ref_l1[15];
+};
+
+/**
+ * GstH264SPSExtMVCLevelValueOp:
+ *
+ * Represents an operation point for the coded video sequence.
+ */
+struct _GstH264SPSExtMVCLevelValueOp
+{
+  guint8 temporal_id;
+  guint16 num_target_views_minus1;
+  guint16 *target_view_id;
+  guint16 num_views_minus1;
+};
+
+/**
+ * GstH264SPSExtMVCLevelValue:
+ * @level_idc: specifies the level value signalled for the coded video
+ *   sequence
+ * @num_applicable_ops_minus1: plus 1 specifies the number of
+ *   operation points to which the level indicated by level_idc applies
+ * @applicable_op: specifies the applicable operation point
+ *
+ * Represents level values for a subset of the operation points for
+ * the coded video sequence.
+ */
+struct _GstH264SPSExtMVCLevelValue
+{
+  guint8 level_idc;
+  guint16 num_applicable_ops_minus1;
+  GstH264SPSExtMVCLevelValueOp *applicable_op;
+};
+
+/**
+ * GstH264SPSExtMVC:
+ * @num_views_minus1: plus 1 specifies the maximum number of coded
+ *   views in the coded video sequence
+ * @view: array of #GstH264SPSExtMVCView
+ * @num_level_values_signalled_minus1: plus 1 specifies the number of
+ *   level values signalled for the coded video sequence.
+ * @level_value: array of #GstH264SPSExtMVCLevelValue
+ *
+ * Represents the parsed seq_parameter_set_mvc_extension().
+ */
+struct _GstH264SPSExtMVC
+{
+  guint16 num_views_minus1;
+  GstH264SPSExtMVCView *view;
+  guint8 num_level_values_signalled_minus1;
+  GstH264SPSExtMVCLevelValue *level_value;
+};
+
+/**
  * GstH264SPS:
  * @id: The ID of the sequence parameter set
  * @profile_idc: indicate the profile to which the coded video sequence conforms
@@ -543,6 +641,12 @@ struct _GstH264SPS
   gint crop_rect_x, crop_rect_y;
   gint fps_num, fps_den;
   gboolean valid;
+
+  /* Subset SPS extensions */
+  guint8 extension_type;
+  union {
+    GstH264SPSExtMVC mvc;
+  } extension;
 };
 
 /**
@@ -842,6 +946,7 @@ GstH264ParserResult gst_h264_parse_sps                (GstH264NalUnit *nalu,
 GstH264ParserResult gst_h264_parse_pps                (GstH264NalParser *nalparser,
                                                        GstH264NalUnit *nalu, GstH264PPS *pps);
 
+void                gst_h264_sps_clear                (GstH264SPS *sps);
 void                gst_h264_pps_clear                (GstH264PPS *pps);
 
 void    gst_h264_quant_matrix_8x8_get_zigzag_from_raster (guint8 out_quant[64],

@@ -275,6 +275,114 @@ gst_h264_pps_copy (GstH264PPS * dst_pps, const GstH264PPS * src_pps)
   return TRUE;
 }
 
+/* Copy MVC-specific data for subset SPS header */
+static gboolean
+gst_h264_sps_mvc_copy (GstH264SPS * dst_sps, const GstH264SPS * src_sps)
+{
+  GstH264SPSExtMVC *const dst_mvc = &dst_sps->extension.mvc;
+  const GstH264SPSExtMVC *const src_mvc = &src_sps->extension.mvc;
+  guint i, j, k;
+
+  g_assert (dst_sps->extension_type == GST_H264_NAL_EXTENSION_MVC);
+
+  dst_mvc->num_views_minus1 = src_mvc->num_views_minus1;
+  dst_mvc->view = g_new0 (GstH264SPSExtMVCView, dst_mvc->num_views_minus1 + 1);
+  if (!dst_mvc->view)
+    return FALSE;
+
+  dst_mvc->view[0].view_id = src_mvc->view[0].view_id;
+
+  for (i = 1; i <= dst_mvc->num_views_minus1; i++) {
+    GstH264SPSExtMVCView *const dst_view = &dst_mvc->view[i];
+    const GstH264SPSExtMVCView *const src_view = &src_mvc->view[i];
+
+    dst_view->view_id = src_view->view_id;
+
+    dst_view->num_anchor_refs_l0 = src_view->num_anchor_refs_l1;
+    for (j = 0; j < dst_view->num_anchor_refs_l0; j++)
+      dst_view->anchor_ref_l0[j] = src_view->anchor_ref_l0[j];
+
+    dst_view->num_anchor_refs_l1 = src_view->num_anchor_refs_l1;
+    for (j = 0; j < dst_view->num_anchor_refs_l1; j++)
+      dst_view->anchor_ref_l1[j] = src_view->anchor_ref_l1[j];
+
+    dst_view->num_non_anchor_refs_l0 = src_view->num_non_anchor_refs_l1;
+    for (j = 0; j < dst_view->num_non_anchor_refs_l0; j++)
+      dst_view->non_anchor_ref_l0[j] = src_view->non_anchor_ref_l0[j];
+
+    dst_view->num_non_anchor_refs_l1 = src_view->num_non_anchor_refs_l1;
+    for (j = 0; j < dst_view->num_non_anchor_refs_l1; j++)
+      dst_view->non_anchor_ref_l1[j] = src_view->non_anchor_ref_l1[j];
+  }
+
+  dst_mvc->num_level_values_signalled_minus1 =
+      src_mvc->num_level_values_signalled_minus1;
+  dst_mvc->level_value = g_new0 (GstH264SPSExtMVCLevelValue,
+      dst_mvc->num_level_values_signalled_minus1 + 1);
+  if (!dst_mvc->level_value)
+    return FALSE;
+
+  for (i = 0; i <= dst_mvc->num_level_values_signalled_minus1; i++) {
+    GstH264SPSExtMVCLevelValue *const dst_value = &dst_mvc->level_value[i];
+    const GstH264SPSExtMVCLevelValue *const src_value =
+        &src_mvc->level_value[i];
+
+    dst_value->level_idc = src_value->level_idc;
+
+    dst_value->num_applicable_ops_minus1 = src_value->num_applicable_ops_minus1;
+    dst_value->applicable_op = g_new0 (GstH264SPSExtMVCLevelValueOp,
+        dst_value->num_applicable_ops_minus1 + 1);
+    if (!dst_value->applicable_op)
+      return FALSE;
+
+    for (j = 0; j <= dst_value->num_applicable_ops_minus1; j++) {
+      GstH264SPSExtMVCLevelValueOp *const dst_op = &dst_value->applicable_op[j];
+      const GstH264SPSExtMVCLevelValueOp *const src_op =
+          &src_value->applicable_op[j];
+
+      dst_op->temporal_id = src_op->temporal_id;
+      dst_op->num_target_views_minus1 = src_op->num_target_views_minus1;
+      dst_op->target_view_id =
+          g_new (guint16, dst_op->num_target_views_minus1 + 1);
+      if (!dst_op->target_view_id)
+        return FALSE;
+
+      for (k = 0; k <= dst_op->num_target_views_minus1; k++)
+        dst_op->target_view_id[k] = src_op->target_view_id[k];
+      dst_op->num_views_minus1 = src_op->num_views_minus1;
+    }
+  }
+  return TRUE;
+}
+
+/*
+ * gst_h264_sps_copy:
+ * @dst_sps: The destination #GstH264SPS to copy into
+ * @src_sps: The source #GstH264SPS to copy from
+ *
+ * Copies @src_sps into @dst_sps.
+ *
+ * Returns: %TRUE if everything went fine, %FALSE otherwise
+ */
+static gboolean
+gst_h264_sps_copy (GstH264SPS * dst_sps, const GstH264SPS * src_sps)
+{
+  g_return_val_if_fail (dst_sps != NULL, FALSE);
+  g_return_val_if_fail (src_sps != NULL, FALSE);
+
+  gst_h264_sps_clear (dst_sps);
+
+  *dst_sps = *src_sps;
+
+  switch (dst_sps->extension_type) {
+    case GST_H264_NAL_EXTENSION_MVC:
+      if (!gst_h264_sps_mvc_copy (dst_sps, src_sps))
+        return FALSE;
+      break;
+  }
+  return TRUE;
+}
+
 /****** Parsing functions *****/
 
 static gboolean
@@ -1054,6 +1162,8 @@ gst_h264_nal_parser_free (GstH264NalParser * nalparser)
 {
   guint i;
 
+  for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++)
+    gst_h264_sps_clear (&nalparser->sps[i]);
   for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++)
     gst_h264_pps_clear (&nalparser->pps[i]);
   g_slice_free (GstH264NalParser, nalparser);
@@ -1286,12 +1396,10 @@ gst_h264_parser_parse_sps (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
   if (res == GST_H264_PARSER_OK) {
     GST_DEBUG ("adding sequence parameter set with id: %d to array", sps->id);
 
-    nalparser->sps[sps->id] = *sps;
+    if (!gst_h264_sps_copy (&nalparser->sps[sps->id], sps))
+      return GST_H264_PARSER_ERROR;
     nalparser->last_sps = &nalparser->sps[sps->id];
   }
-
-
-
   return res;
 }
 
@@ -1307,6 +1415,7 @@ gst_h264_parse_sps_data (NalReader * nr, GstH264SPS * sps,
 
   /* set default values for fields that might not be present in the bitstream
      and have valid defaults */
+  sps->extension_type = GST_H264_NAL_EXTENSION_NONE;
   sps->chroma_format_idc = 1;
   sps->separate_colour_plane_flag = 0;
   sps->bit_depth_luma_minus8 = 0;
@@ -1471,6 +1580,109 @@ error:
   return FALSE;
 }
 
+/* Parse subset_seq_parameter_set() data for MVC */
+static gboolean
+gst_h264_parse_sps_mvc_data (NalReader * nr, GstH264SPS * sps,
+    gboolean parse_vui_params)
+{
+  GstH264SPSExtMVC *const mvc = &sps->extension.mvc;
+  guint8 bit_equal_to_one;
+  guint i, j, k;
+
+  READ_UINT8 (nr, bit_equal_to_one, 1);
+  if (!bit_equal_to_one)
+    return FALSE;
+
+  sps->extension_type = GST_H264_NAL_EXTENSION_MVC;
+
+  READ_UE_ALLOWED (nr, mvc->num_views_minus1, 0, GST_H264_MAX_VIEW_COUNT - 1);
+
+  mvc->view = g_new0 (GstH264SPSExtMVCView, mvc->num_views_minus1 + 1);
+  if (!mvc->view)
+    goto error_allocation_failed;
+
+  for (i = 0; i <= mvc->num_views_minus1; i++)
+    READ_UE_ALLOWED (nr, mvc->view[i].view_id, 0, GST_H264_MAX_VIEW_ID);
+
+  for (i = 1; i <= mvc->num_views_minus1; i++) {
+    /* for RefPicList0 */
+    READ_UE_ALLOWED (nr, mvc->view[i].num_anchor_refs_l0, 0, 15);
+    for (j = 0; j < mvc->view[i].num_anchor_refs_l0; j++) {
+      READ_UE_ALLOWED (nr, mvc->view[i].anchor_ref_l0[j], 0,
+          GST_H264_MAX_VIEW_ID);
+    }
+
+    /* for RefPicList1 */
+    READ_UE_ALLOWED (nr, mvc->view[i].num_anchor_refs_l1, 0, 15);
+    for (j = 0; j < mvc->view[i].num_anchor_refs_l1; j++) {
+      READ_UE_ALLOWED (nr, mvc->view[i].anchor_ref_l1[j], 0,
+          GST_H264_MAX_VIEW_ID);
+    }
+  }
+
+  for (i = 1; i <= mvc->num_views_minus1; i++) {
+    /* for RefPicList0 */
+    READ_UE_ALLOWED (nr, mvc->view[i].num_non_anchor_refs_l0, 0, 15);
+    for (j = 0; j < mvc->view[i].num_non_anchor_refs_l0; j++) {
+      READ_UE_ALLOWED (nr, mvc->view[i].non_anchor_ref_l0[j], 0,
+          GST_H264_MAX_VIEW_ID);
+    }
+
+    /* for RefPicList1 */
+    READ_UE_ALLOWED (nr, mvc->view[i].num_non_anchor_refs_l1, 0, 15);
+    for (j = 0; j < mvc->view[i].num_non_anchor_refs_l1; j++) {
+      READ_UE_ALLOWED (nr, mvc->view[i].non_anchor_ref_l1[j], 0,
+          GST_H264_MAX_VIEW_ID);
+    }
+  }
+
+  READ_UE_ALLOWED (nr, mvc->num_level_values_signalled_minus1, 0, 63);
+
+  mvc->level_value =
+      g_new0 (GstH264SPSExtMVCLevelValue,
+      mvc->num_level_values_signalled_minus1 + 1);
+  if (!mvc->level_value)
+    goto error_allocation_failed;
+
+  for (i = 0; i <= mvc->num_level_values_signalled_minus1; i++) {
+    GstH264SPSExtMVCLevelValue *const level_value = &mvc->level_value[i];
+
+    READ_UINT8 (nr, level_value->level_idc, 8);
+
+    READ_UE_ALLOWED (nr, level_value->num_applicable_ops_minus1, 0, 1023);
+    level_value->applicable_op =
+        g_new0 (GstH264SPSExtMVCLevelValueOp,
+        level_value->num_applicable_ops_minus1 + 1);
+    if (!level_value->applicable_op)
+      goto error_allocation_failed;
+
+    for (j = 0; j <= level_value->num_applicable_ops_minus1; j++) {
+      GstH264SPSExtMVCLevelValueOp *const op = &level_value->applicable_op[j];
+
+      READ_UINT8 (nr, op->temporal_id, 3);
+
+      READ_UE_ALLOWED (nr, op->num_target_views_minus1, 0, 1023);
+      op->target_view_id = g_new (guint16, op->num_target_views_minus1 + 1);
+      if (!op->target_view_id)
+        goto error_allocation_failed;
+
+      for (k = 0; k <= op->num_target_views_minus1; k++)
+        READ_UE_ALLOWED (nr, op->target_view_id[k], 0, GST_H264_MAX_VIEW_ID);
+      READ_UE_ALLOWED (nr, op->num_views_minus1, 0, 1023);
+    }
+  }
+  return TRUE;
+
+error_allocation_failed:
+  GST_WARNING ("failed to allocate memory");
+  gst_h264_sps_clear (sps);
+  return FALSE;
+
+error:
+  gst_h264_sps_clear (sps);
+  return FALSE;
+}
+
 /**
  * gst_h264_parse_sps:
  * @nalu: The #GST_H264_NAL_SPS #GstH264NalUnit to parse
@@ -1515,6 +1727,15 @@ error:
  *
  * Parses @data, and fills in the @sps structure.
  *
+ * This function fully parses @data and allocates all the necessary
+ * data structures needed for MVC extensions. The resulting @sps
+ * structure shall be deallocated with gst_h264_sps_clear() when it is
+ * no longer needed.
+ *
+ * Note: if the caller doesn't need any of the MVC-specific data, then
+ * gst_h264_parser_parse_sps() is more efficient because those extra
+ * syntax elements are not parsed and no extra memory is allocated.
+ *
  * Returns: a #GstH264ParserResult
  */
 GstH264ParserResult
@@ -1527,7 +1748,8 @@ gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
   if (res == GST_H264_PARSER_OK) {
     GST_DEBUG ("adding sequence parameter set with id: %d to array", sps->id);
 
-    nalparser->sps[sps->id] = *sps;
+    if (!gst_h264_sps_copy (&nalparser->sps[sps->id], sps))
+      return GST_H264_PARSER_ERROR;
     nalparser->last_sps = &nalparser->sps[sps->id];
   }
   return res;
@@ -1540,6 +1762,15 @@ gst_h264_parser_parse_subset_sps (GstH264NalParser * nalparser,
  * @parse_vui_params: Whether to parse the vui_params or not
  *
  * Parses @data, and fills in the @sps structure.
+ *
+ * This function fully parses @data and allocates all the necessary
+ * data structures needed for MVC extensions. The resulting @sps
+ * structure shall be deallocated with gst_h264_sps_clear() when it is
+ * no longer needed.
+ *
+ * Note: if the caller doesn't need any of the MVC-specific data, then
+ * gst_h264_parser_parse_sps() is more efficient because those extra
+ * syntax elements are not parsed and no extra memory is allocated.
  *
  * Returns: a #GstH264ParserResult
  */
@@ -1555,8 +1786,14 @@ gst_h264_parse_subset_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
 
-  if (!gst_h264_parse_sps_data (&nr, sps, parse_vui_params))
+  if (!gst_h264_parse_sps_data (&nr, sps, TRUE))
     goto error;
+
+  if (sps->profile_idc == GST_H264_PROFILE_MULTIVIEW_HIGH ||
+      sps->profile_idc == GST_H264_PROFILE_STEREO_HIGH) {
+    if (!gst_h264_parse_sps_mvc_data (&nr, sps, parse_vui_params))
+      goto error;
+  }
 
   sps->valid = TRUE;
   return GST_H264_PARSER_OK;
@@ -1931,6 +2168,54 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
 error:
   GST_WARNING ("error parsing \"Slice header\"");
   return GST_H264_PARSER_ERROR;
+}
+
+/* Free MVC-specific data from subset SPS header */
+static void
+gst_h264_sps_mvc_clear (GstH264SPS * sps)
+{
+  GstH264SPSExtMVC *const mvc = &sps->extension.mvc;
+  guint i, j;
+
+  g_assert (sps->extension_type == GST_H264_NAL_EXTENSION_MVC);
+
+  g_free (mvc->view);
+  mvc->view = NULL;
+
+  for (i = 0; i <= mvc->num_level_values_signalled_minus1; i++) {
+    GstH264SPSExtMVCLevelValue *const level_value = &mvc->level_value[i];
+
+    for (j = 0; j <= level_value->num_applicable_ops_minus1; j++) {
+      g_free (level_value->applicable_op[j].target_view_id);
+      level_value->applicable_op[j].target_view_id = NULL;
+    }
+    g_free (level_value->applicable_op);
+    level_value->applicable_op = NULL;
+  }
+  g_free (mvc->level_value);
+  mvc->level_value = NULL;
+
+  /* All meaningful MVC info are now gone, just pretend to be a
+   * standard AVC struct now */
+  sps->extension_type = GST_H264_NAL_EXTENSION_NONE;
+}
+
+/**
+ * gst_h264_sps_clear:
+ * @sps: The #GstH264SPS to free
+ *
+ * Clears all @sps internal resources.
+ */
+void
+gst_h264_sps_clear (GstH264SPS * sps)
+{
+  g_return_if_fail (sps != NULL);
+
+  switch (sps->extension_type) {
+    case GST_H264_NAL_EXTENSION_MVC:
+      gst_h264_sps_mvc_clear (sps);
+      break;
+  }
 }
 
 /**
