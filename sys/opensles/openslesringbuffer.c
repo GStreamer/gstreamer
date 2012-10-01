@@ -911,6 +911,8 @@ gst_opensles_ringbuffer_clear_all (GstRingBuffer * rb)
     g_atomic_int_set (&thiz->segqueued, 0);
     thiz->cursor = 0;
   }
+
+  GST_CALL_PARENT (GST_RING_BUFFER_CLASS, clear_all, (rb));
 }
 
 static void
