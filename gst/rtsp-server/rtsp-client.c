@@ -1629,7 +1629,7 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
  *
  * Get the #GstRTSPSessionPool object that @client uses to manage its sessions.
  *
- * Returns: a #GstRTSPSessionPool, unref after usage.
+ * Returns: (transfer full): a #GstRTSPSessionPool, unref after usage.
  */
 GstRTSPSessionPool *
 gst_rtsp_client_get_session_pool (GstRTSPClient * client)
@@ -1670,7 +1670,7 @@ gst_rtsp_client_set_server (GstRTSPClient * client, GstRTSPServer * server)
  *
  * Get the #GstRTSPServer object that @client was created from.
  *
- * Returns: a #GstRTSPServer, unref after usage.
+ * Returns: (transfer full): a #GstRTSPServer, unref after usage.
  */
 GstRTSPServer *
 gst_rtsp_client_get_server (GstRTSPClient * client)
@@ -1715,7 +1715,7 @@ gst_rtsp_client_set_media_mapping (GstRTSPClient * client,
  *
  * Get the #GstRTSPMediaMapping object that @client uses to manage its sessions.
  *
- * Returns: a #GstRTSPMediaMapping, unref after usage.
+ * Returns: (transfer full): a #GstRTSPMediaMapping, unref after usage.
  */
 GstRTSPMediaMapping *
 gst_rtsp_client_get_media_mapping (GstRTSPClient * client)
@@ -1789,7 +1789,7 @@ gst_rtsp_client_set_auth (GstRTSPClient * client, GstRTSPAuth * auth)
  *
  * Get the #GstRTSPAuth used as the authentication manager of @client.
  *
- * Returns: the #GstRTSPAuth of @client. g_object_unref() after
+ * Returns: (transfer full): the #GstRTSPAuth of @client. g_object_unref() after
  * usage.
  */
 GstRTSPAuth *

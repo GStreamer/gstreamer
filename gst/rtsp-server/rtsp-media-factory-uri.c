@@ -86,7 +86,7 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
   gobject_class->finalize = gst_rtsp_media_factory_uri_finalize;
 
   /**
-   * GstRTSPMediaFactoryURI::uri
+   * GstRTSPMediaFactoryURI::uri:
    *
    * The uri of the resource that will be served by this factory.
    */
@@ -95,7 +95,7 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
           "The URI of the resource to stream", DEFAULT_URI,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPMediaFactoryURI::use-gstpay
+   * GstRTSPMediaFactoryURI::use-gstpay:
    *
    * Allow the usage of gstpay in order to avoid decoding of compressed formats
    * without a payloader.

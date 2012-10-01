@@ -100,7 +100,7 @@ find_media (GstRTSPMediaMapping * mapping, const GstRTSPUrl * url)
  * Find the #GstRTSPMediaFactory for @url. The default implementation of this object 
  * will use the mappings added with gst_rtsp_media_mapping_add_factory ().
  *
- * Returns: the #GstRTSPMediaFactory for @url. g_object_unref() after usage.
+ * Returns: (transfer full): the #GstRTSPMediaFactory for @url. g_object_unref() after usage.
  */
 GstRTSPMediaFactory *
 gst_rtsp_media_mapping_find_factory (GstRTSPMediaMapping * mapping,

@@ -81,7 +81,7 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
   gobject_class->finalize = gst_rtsp_media_factory_finalize;
 
   /**
-   * GstRTSPMediaFactory::launch
+   * GstRTSPMediaFactory::launch:
    *
    * The gst_parse_launch() line to use for constructing the pipeline in the
    * default prepare vmethod.
@@ -510,7 +510,7 @@ gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
  *
  * Get the #GstRTSPAuth used as the authentication manager of @factory.
  *
- * Returns: the #GstRTSPAuth of @factory. g_object_unref() after
+ * Returns: (transfer full): the #GstRTSPAuth of @factory. g_object_unref() after
  * usage.
  */
 GstRTSPAuth *
@@ -586,7 +586,7 @@ media_unprepared (GstRTSPMedia * media, GstRTSPMediaFactory * factory)
  * the srcpad member set to a source pad that produces buffer of type 
  * application/x-rtp.
  *
- * Returns: a new #GstRTSPMedia if the media could be prepared.
+ * Returns: (transfer full): a new #GstRTSPMedia if the media could be prepared.
  */
 GstRTSPMedia *
 gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,

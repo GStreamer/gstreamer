@@ -182,7 +182,7 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
  * gst_rtsp_session_manage_media:
  * @sess: a #GstRTSPSession
  * @uri: the uri for the media
- * @media: a #GstRTSPMedia
+ * @media: (transfer full): a #GstRTSPMedia
  *
  * Manage the media object @obj in @sess. @uri will be used to retrieve this
  * media from the session with gst_rtsp_session_get_media().
@@ -551,10 +551,8 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream * stream,
 /**
  * gst_rtsp_session_stream_set_callbacks:
  * @stream: a #GstRTSPSessionStream
- * @send_rtp: a callback called when RTP should be sent
- * @send_rtcp: a callback called when RTCP should be sent
- * @send_rtp_list: a callback called when RTP should be sent
- * @send_rtcp_list: a callback called when RTCP should be sent
+ * @send_rtp: (scope notified): a callback called when RTP should be sent
+ * @send_rtcp: (scope notified): a callback called when RTCP should be sent
  * @user_data: user data passed to callbacks
  * @notify: called with the user_data when no longer needed.
  *

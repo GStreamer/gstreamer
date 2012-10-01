@@ -608,7 +608,7 @@ gst_rtsp_media_set_auth (GstRTSPMedia * media, GstRTSPAuth * auth)
  *
  * Get the #GstRTSPAuth used as the authentication manager of @media.
  *
- * Returns: the #GstRTSPAuth of @media. g_object_unref() after
+ * Returns: (transfer full): the #GstRTSPAuth of @media. g_object_unref() after
  * usage.
  */
 GstRTSPAuth *

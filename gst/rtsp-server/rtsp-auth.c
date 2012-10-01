@@ -152,10 +152,8 @@ default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
  * gst_rtsp_auth_setup_auth:
  * @auth: a #GstRTSPAuth
  * @client: the client
- * @uri: the requested uri
- * @session: the session
- * @request: the request
- * @response: the response
+ * @hint: TODO
+ * @state: TODO
  *
  * Add authentication tokens to @response.
  *

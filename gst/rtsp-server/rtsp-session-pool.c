@@ -214,7 +214,7 @@ gst_rtsp_session_pool_get_n_sessions (GstRTSPSessionPool * pool)
  * Find the session with @sessionid in @pool. The access time of the session
  * will be updated with gst_rtsp_session_touch().
  *
- * Returns: the #GstRTSPSession with @sessionid or %NULL when the session did
+ * Returns: (transfer full): the #GstRTSPSession with @sessionid or %NULL when the session did
  * not exist. g_object_unref() after usage.
  */
 GstRTSPSession *
@@ -257,7 +257,7 @@ create_session_id (GstRTSPSessionPool * pool)
  *
  * Create a new #GstRTSPSession object in @pool.
  *
- * Returns: a new #GstRTSPSession.
+ * Returns: (transfer none): a new #GstRTSPSession.
  */
 GstRTSPSession *
 gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)
@@ -423,7 +423,7 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
 /**
  * gst_rtsp_session_pool_filter:
  * @pool: a #GstRTSPSessionPool
- * @func: a callback
+ * @func: (scope call): a callback
  * @user_data: user data passed to @func
  *
  * Call @func for each session in @pool. The result value of @func determines
@@ -439,9 +439,9 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
  * will also be added with an additional ref to the result GList of this
  * function..
  *
- * Returns: a GList with all sessions for which @func returned
- * #GST_RTSP_FILTER_REF. After usage, each element in the GList should be unreffed
- * before the list is freed.
+ * Returns: (element-type GstRTSPSession) (transfer full): a GList with all
+ * sessions for which @func returned #GST_RTSP_FILTER_REF. After usage, each
+ * element in the GList should be unreffed before the list is freed.
  */
 GList *
 gst_rtsp_session_pool_filter (GstRTSPSessionPool * pool,
