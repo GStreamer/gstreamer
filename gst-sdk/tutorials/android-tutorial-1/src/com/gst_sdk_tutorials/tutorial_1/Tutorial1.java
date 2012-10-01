@@ -46,13 +46,15 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     private native void nativeSurfaceFinalize();
     private long native_custom_data;
 
-    private boolean playing;
+    private boolean is_playing_desired;
     private int position;
     private int duration;
+    private boolean is_local_media;
+    private int desired_position;
 
     private Bundle initialization_data;
     
-    private final String mediaUri = "http://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv";
+    private final String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
 
     /* Called when the activity is first created. 
     @Override */
@@ -73,6 +75,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         ImageButton play = (ImageButton) this.findViewById(R.id.button_play);
         play.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
+                is_playing_desired = true;
                 nativePlay();
             }
         });
@@ -80,6 +83,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         ImageButton pause = (ImageButton) this.findViewById(R.id.button_stop);
         pause.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
+                is_playing_desired = false;
                 nativePause();
             }
         });
@@ -92,13 +96,16 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         sb.setOnSeekBarChangeListener(this);
 
         initialization_data = savedInstanceState;
+        
+        is_local_media = false;
+        is_playing_desired = false;
 
         nativeInit();
     }
     
     protected void onSaveInstanceState (Bundle outState) {
-        Log.d ("GStreamer", "Saving state, playing:" + playing + " position:" + position);
-        outState.putBoolean("playing", playing);
+        Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired + " position:" + position);
+        outState.putBoolean("playing", is_playing_desired);
         outState.putInt("position", position);
         outState.putInt("duration", duration);
     }
@@ -121,6 +128,8 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     /* Called from native code */
     private void onGStreamerInitialized () {
         nativeSetUri (mediaUri);
+        if (mediaUri.startsWith("file://")) is_local_media = true;
+
         if (initialization_data != null) {
             boolean should_play = initialization_data.getBoolean("playing");
             int milliseconds = initialization_data.getInt("position");
@@ -128,7 +137,8 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
             /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
              * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
              * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
-             * backwards on each iteration. */
+             * backwards on each iteration.
+             */
             nativeSetPosition(milliseconds + 1);
             if (should_play) {
                 nativePlay();
@@ -140,18 +150,32 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         }
     }
 
-    /* Called from native code */
-    private void setCurrentPosition(final int position, final int duration) {
+    /* The text widget acts as an slave for the seek bar, so it reflects what the seek bar shows, whether
+     * it is an actual pipeline position or the position the user is currently dragging to.
+     */
+    private void updateTimeWidget () {
         final TextView tv = (TextView) this.findViewById(R.id.textview_time);
         final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
+        final int pos = sb.getProgress();
+
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final String message = df.format(new Date (position)) + " / " + df.format(new Date (duration));
+        final String message = df.format(new Date (pos)) + " / " + df.format(new Date (duration));
+        tv.setText(message);        
+    }
+
+    /* Called from native code */
+    private void setCurrentPosition(final int position, final int duration) {
+        final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
+        
+        /* Ignore position messages from the pipeline if the seek bar is being dragged */
+        if (sb.isPressed()) return;
+
         runOnUiThread (new Runnable() {
           public void run() {
-            tv.setText(message);
             sb.setMax(duration);
             sb.setProgress(position);
+            updateTimeWidget();
           }
         });
         this.position = position;
@@ -175,7 +199,6 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
             setMessage ("PLAYING");
             break;
         }
-        playing = (state == 4);
     }
 
     static {
@@ -202,7 +225,12 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
     public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
         if (fromUser == false) return;
-        nativeSetPosition(progress);
+        desired_position = progress;
+        /* If this is a local file, allow scrub seeking, this is, seek soon as the slider
+         * is moved.
+         */
+        if (is_local_media) nativeSetPosition(desired_position);
+        updateTimeWidget();
     }
 
     public void onStartTrackingTouch(SeekBar sb) {
@@ -210,6 +238,10 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     }
 
     public void onStopTrackingTouch(SeekBar sb) {
-        if (playing) nativePlay();
+        /* If this is a remote file, scrub seeking is probably not going to work smoothly enough.
+         * Therefore, perform only the seek when the slider is released.
+         */
+        if (!is_local_media) nativeSetPosition(desired_position);
+        if (is_playing_desired) nativePlay();
     }
 }
