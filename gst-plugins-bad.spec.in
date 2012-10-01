@@ -213,7 +213,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdtmf.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
-%{_libdir}/gstreamer-%{majorminor}/libgstfreeze.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgaudieffects.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstgeometrictransform.so
@@ -316,8 +315,12 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstschro.so
 # %{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvp8.so
-%{_datadir}/gstreamer-%{majorminor}/presets/GstVP8Enc.prs
+%{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtpvp8.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvoamrwbenc.so
+%{_datadir}/gstreamer-%{majorminor}/presets/*.prs
+
 
 #debugging plugin
 %{_libdir}/gstreamer-%{majorminor}/libgstdebugutilsbad.so
