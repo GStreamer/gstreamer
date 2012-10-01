@@ -54,7 +54,7 @@ struct _GstRTSPMediaMapping {
 
 /**
  * GstRTSPMediaMappingClass:
- * @find_media: Create or return a previously cached #GstRTSPMediaFactory object
+ * @find_factory: Create or return a previously cached #GstRTSPMediaFactory object
  *        for the given url. the default implementation will use the mappings
  *        added with gst_rtsp_media_mapping_add_factory().
  *
@@ -63,7 +63,7 @@ struct _GstRTSPMediaMapping {
 struct _GstRTSPMediaMappingClass {
   GObjectClass  parent_class;
 
-  GstRTSPMediaFactory * (*find_media)  (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url);
+  GstRTSPMediaFactory * (*find_factory)  (GstRTSPMediaMapping *mapping, const GstRTSPUrl *url);
 };
 
 GType                 gst_rtsp_media_mapping_get_type     (void);

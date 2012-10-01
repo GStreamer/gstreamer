@@ -26,7 +26,7 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 
 static void gst_rtsp_media_mapping_finalize (GObject * obj);
 
-static GstRTSPMediaFactory *find_media (GstRTSPMediaMapping * mapping,
+static GstRTSPMediaFactory *find_factory (GstRTSPMediaMapping * mapping,
     const GstRTSPUrl * url);
 
 static void
@@ -38,7 +38,7 @@ gst_rtsp_media_mapping_class_init (GstRTSPMediaMappingClass * klass)
 
   gobject_class->finalize = gst_rtsp_media_mapping_finalize;
 
-  klass->find_media = find_media;
+  klass->find_factory = find_factory;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmediamapping", 0,
       "GstRTSPMediaMapping");
@@ -76,7 +76,7 @@ gst_rtsp_media_mapping_new (void)
 }
 
 static GstRTSPMediaFactory *
-find_media (GstRTSPMediaMapping * mapping, const GstRTSPUrl * url)
+find_factory (GstRTSPMediaMapping * mapping, const GstRTSPUrl * url)
 {
   GstRTSPMediaFactory *result;
 
@@ -111,8 +111,8 @@ gst_rtsp_media_mapping_find_factory (GstRTSPMediaMapping * mapping,
 
   klass = GST_RTSP_MEDIA_MAPPING_GET_CLASS (mapping);
 
-  if (klass->find_media)
-    result = klass->find_media (mapping, url);
+  if (klass->find_factory)
+    result = klass->find_factory (mapping, url);
   else
     result = NULL;
 
