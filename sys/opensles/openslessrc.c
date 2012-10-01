@@ -104,4 +104,8 @@ gst_opensles_src_class_init (GstOpenSLESSrcClass * klass)
 static void
 gst_opensles_src_init (GstOpenSLESSrc * src, GstOpenSLESSrcClass * gclass)
 {
+  /* Override some default values to fit on the AudioFlinger behaviour of
+   * processing 20ms buffers as minimum buffer size. */
+  GST_BASE_AUDIO_SRC (src)->buffer_time = 400000;
+  GST_BASE_AUDIO_SRC (src)->latency_time = 20000;
 }

@@ -38,8 +38,6 @@ _do_init (GType type)
 GST_BOILERPLATE_FULL (GstOpenSLESRingBuffer, gst_opensles_ringbuffer,
     GstRingBuffer, GST_TYPE_RING_BUFFER, _do_init);
 
-#define RECORDER_QUEUE_SIZE 2
-
 /*
  * Some generic helper functions
  */
@@ -125,7 +123,7 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Configure audio sink */
   SLDataLocator_AndroidSimpleBufferQueue loc_bq = {
-    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, RECORDER_QUEUE_SIZE
+    SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2
   };
   SLDataSink audioSink = { &loc_bq, &format };
 
@@ -173,10 +171,6 @@ _opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
     goto failed;
   }
 
-  /* Define our ringbuffer in terms of number of buffers and buffer size. */
-  spec->segsize = (spec->rate * spec->bytes_per_sample) >> 2;
-  spec->segtotal = 16;
-
   return TRUE;
 
 failed:
@@ -198,6 +192,11 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   gint seg;
   gint len;
 
+  /* Advance only when we are called by the callback function */
+  if (bufferQueue) {
+    gst_ring_buffer_advance (rb, 1);
+  }
+
   /* Get a segment form the GStreamer ringbuffer to write in */
   if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
@@ -213,10 +212,6 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
         (guint32) result);
     return;
   }
-
-  /* FIXME: we advance here and behaviour might be racy with the reading
-   * thread */
-  gst_ring_buffer_advance (rb, 1);
 }
 
 static gboolean
@@ -224,7 +219,6 @@ _opensles_recorder_start (GstRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
-  gint i;
 
   /* Register callback on the buffer queue */
   if (!thiz->is_queue_callback_registered) {
@@ -238,10 +232,8 @@ _opensles_recorder_start (GstRingBuffer * rb)
     thiz->is_queue_callback_registered = TRUE;
   }
 
-  /* Preroll the buffer queue by enqueing segments */
-  for (i = 0; i < RECORDER_QUEUE_SIZE; i++) {
-    _opensles_recorder_cb (NULL, rb);
-  }
+  /* Preroll one buffer */
+  _opensles_recorder_cb (NULL, rb);
 
   /* Start recording */
   result =
