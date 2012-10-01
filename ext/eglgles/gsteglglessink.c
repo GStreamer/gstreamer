@@ -1404,7 +1404,7 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
   }
 
   if (eglglessink->eglglesctx->pixel_aspect_ratio == EGL_UNKNOWN) {
-    GST_WARNING_OBJECT (eglglessink, "PAR value returned doesn't make sense. "
+    GST_DEBUG_OBJECT (eglglessink, "PAR value returned doesn't make sense. "
         "Will use default: %d/%d", EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
     eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
   }
