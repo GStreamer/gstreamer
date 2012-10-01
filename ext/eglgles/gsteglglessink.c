@@ -1398,7 +1398,7 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
         eglglessink->eglglesctx->surface, EGL_PIXEL_ASPECT_RATIO,
         &eglglessink->eglglesctx->pixel_aspect_ratio);
   } else {
-    GST_WARNING_OBJECT (eglglessink, "Can't query PAR. Using default: %dx%d",
+    GST_DEBUG_OBJECT (eglglessink, "Can't query PAR. Using default: %dx%d",
         EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
     eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
   }
