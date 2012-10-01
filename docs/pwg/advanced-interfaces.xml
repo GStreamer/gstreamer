@@ -56,10 +56,7 @@
       If it does, you need to register support for <emphasis>that</emphasis>
       interface before registering support for the interface that you're
       wanting to support. The example below explains how to add support for a
-      simple interface with no further dependencies. For a small explanation
-      on <ulink type="http" url="../../gstreamer/html/GstImplementsInterface.html">
-      <classname>GstImplementsInterface</classname></ulink>, see the next section
-      about the mixer interface: <xref linkend="section-iface-mixer"/>.
+      simple interface with no further dependencies.
     </para>
     <programlisting>
 static void	gst_my_filter_some_interface_init	(GstSomeInterface *iface);
@@ -72,7 +69,7 @@ gst_my_filter_get_type (void)
   if (!my_filter_type) {
     static const GTypeInfo my_filter_info = {
       sizeof (GstMyFilterClass),
-      (GBaseInitFunc) gst_my_filter_base_init,
+      NULL,
       NULL,
       (GClassInitFunc) gst_my_filter_class_init,
       NULL,
@@ -88,7 +85,7 @@ gst_my_filter_get_type (void)
     };
 
     my_filter_type =
-	g_type_register_static (GST_TYPE_MY_FILTER,
+	g_type_register_static (GST_TYPE_ELEMENT,
 				"GstMyFilter",
 				&amp;my_filter_info, 0);
     g_type_add_interface_static (my_filter_type,
@@ -105,333 +102,23 @@ gst_my_filter_some_interface_init (GstSomeInterface *iface)
   /* here, you would set virtual function pointers in the interface */
 }
     </programlisting>
+    <para>
+      Or more conveniently:
+    </para>
+    <programlisting>
+static void	gst_my_filter_some_interface_init	(GstSomeInterface *iface);
+
+G_DEFINE_TYPE_WITH_CODE (GstMyFilter, gst_my_filter,GST_TYPE_ELEMENT,
+     G_IMPLEMENT_INTERFACE (GST_TYPE_SOME_INTERFACE,
+            gst_my_filter_some_interface_init));
+
+    </programlisting>
   </sect1>
 
   <sect1 id="section-iface-uri" xreflabel="URI interface">
     <title>URI interface</title>
     <para>
       WRITEME
-    </para>
-  </sect1>
-
-  <sect1 id="section-iface-mixer" xreflabel="Mixer Interface">
-    <title>Mixer Interface</title>
-    <para>
-      The goal of the mixer interface is to provide a simple yet powerful API
-      to applications for audio hardware mixer/volume control. Most soundcards
-      have hardware mixers, where volume can be changed, they can be muted,
-      inputs can be modified to mix their content into what will be read from
-      the device by applications (in our case: audio source plugins). The
-      mixer interface is the way to control those. The mixer interface can
-      also be used for volume control in software (e.g. the <quote>volume</quote>
-      element). The end goal of this interface is to allow development of
-      hardware volume control applications and for the control of audio volume
-      and input/output settings.
-    </para>
-    <para>
-      The mixer interface requires the <ulink type="http"
-      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
-      GstImplementsInterface</classname></ulink>
-      interface to be implemented by the element. The example below will
-      feature both, so it serves as an example for the <ulink type="http"
-      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
-      GstImplementsInterface</classname></ulink>, too. In this
-      interface, it is required to set a function pointer for the <function>
-      supported ()</function> function.
-      If you don't, this function will always return FALSE (default
-      implementation) and the mixer interface implementation will not work. For
-      the mixer interface, the only required function is
-      <function>list_tracks ()</function>. All other function pointers in the
-      mixer interface are optional, although it is strongly recommended to set
-      function pointers for at least the <function>get_volume ()</function> and
-      <function>set_volume ()</function> functions. The API reference for this
-      interface documents the goal of each function, so we will limit ourselves
-      to the implementation here.
-    </para>
-    <para>
-      The following example shows a mixer implementation for a software N-to-1
-      element. It does not show the actual process of stream mixing, that is
-      far too complicated for this guide.
-    </para>
-    <programlisting>
-#include &lt;gst/mixer/mixer.h&gt;
-
-typedef struct _GstMyFilter {
-[..]
-  gint volume;
-  GList *tracks;
-} GstMyFilter;
-
-static void	gst_my_filter_implements_interface_init	(GstImplementsInterfaceClass *iface);
-static void	gst_my_filter_mixer_interface_init	(GstMixerClass *iface);
-
-GType
-gst_my_filter_get_type (void)
-{
-[..]
-    static const GInterfaceInfo implements_interface_info = {
-      (GInterfaceInitFunc) gst_my_filter_implements_interface_init,
-      NULL,
-      NULL
-    };
-    static const GInterfaceInfo mixer_interface_info = {
-      (GInterfaceInitFunc) gst_my_filter_mixer_interface_init,
-      NULL,
-      NULL
-    };
-[..]
-    g_type_add_interface_static (my_filter_type,
-				 GST_TYPE_IMPLEMENTS_INTERFACE,
-				 &amp;implements_interface_info);
-    g_type_add_interface_static (my_filter_type,
-				 GST_TYPE_MIXER,
-				 &amp;mixer_interface_info);
-[..]
-}
-
-static void
-gst_my_filter_init (GstMyFilter *filter)
-{
-  GstMixerTrack *track = NULL;
-[..]
-  filter->volume = 100;
-  filter->tracks = NULL;
-  track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
-  track->label = g_strdup ("MyTrack");
-  track->num_channels = 1;
-  track->min_volume = 0;
-  track->max_volume = 100;
-  track->flags = GST_MIXER_TRACK_SOFTWARE;
-  filter->tracks = g_list_append (filter->tracks, track);
-}
-
-static gboolean
-gst_my_filter_interface_supported (GstImplementsInterface *iface,
-				   GType                   iface_type)
-{
-  g_return_val_if_fail (iface_type == GST_TYPE_MIXER, FALSE);
-
-  /* for the sake of this example, we'll always support it. However, normally,
-   * you would check whether the device you've opened supports mixers. */
-  return TRUE;
-}
-
-static void
-gst_my_filter_implements_interface_init (GstImplementsInterfaceClass *iface)
-{
-  iface->supported = gst_my_filter_interface_supported;
-}
-
-/*
- * This function returns the list of support tracks (inputs, outputs)
- * on this element instance. Elements usually build this list during
- * _init () or when going from NULL to READY.
- */
-
-static const GList *
-gst_my_filter_mixer_list_tracks (GstMixer *mixer)
-{
-  GstMyFilter *filter = GST_MY_FILTER (mixer);
-
-  return filter->tracks;
-}
-
-/*
- * Set volume. volumes is an array of size track->num_channels, and
- * each value in the array gives the wanted volume for one channel
- * on the track.
- */
-
-static void
-gst_my_filter_mixer_set_volume (GstMixer      *mixer,
-				GstMixerTrack *track,
-				gint          *volumes)
-{
-  GstMyFilter *filter = GST_MY_FILTER (mixer);
-
-  filter->volume = volumes[0];
-
-  g_print ("Volume set to %d\n", filter->volume);
-}
-
-static void
-gst_my_filter_mixer_get_volume (GstMixer      *mixer,
-				GstMixerTrack *track,
-				gint          *volumes)
-{
-  GstMyFilter *filter = GST_MY_FILTER (mixer);
-
-  volumes[0] = filter->volume;
-}
-
-static void
-gst_my_filter_mixer_interface_init (GstMixerClass *iface)
-{
-  /* the mixer interface requires a definition of the mixer type:
-   * hardware or software? */
-  GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
-
-  /* virtual function pointers */
-  iface->list_tracks = gst_my_filter_mixer_list_tracks;
-  iface->set_volume  = gst_my_filter_mixer_set_volume;
-  iface->get_volume  = gst_my_filter_mixer_get_volume;
-}
-    </programlisting>
-    <para>
-      The mixer interface is very audio-centric. However, with the software
-      flag set, the mixer can be used to mix any kind of stream in a N-to-1
-      element to join (not aggregate!) streams together into one output stream.
-      Conceptually, that's called mixing too. You can always use the element
-      factory's <quote>category</quote> to indicate type of your element. In
-      a software element that mixes random streams, you would not be required
-      to implement the <function>_get_volume ()</function> or
-      <function>_set_volume ()</function> functions. Rather, you would only
-      implement the <function>_set_record ()</function> to enable or disable
-      tracks in the output stream. to make sure that a mixer-implementing
-      element is of a certain type, check the element factory's category.
-    </para>
-  </sect1>
-
-  <sect1 id="section-iface-tuner" xreflabel="Tuner Interface">
-    <title>Tuner Interface</title>
-    <para>
-      As opposed to the mixer interface, that's used to join together N streams
-      into one output stream by mixing all streams together, the tuner
-      interface is used in N-to-1 elements too, but instead of mixing the input
-      streams, it will select one stream and push the data of that stream to
-      the output stream. It will discard the data of all other streams. There
-      is a flag that indicates whether this is a software-tuner (in which case
-      it is a pure software implementation, with N sink pads and 1 source pad)
-      or a hardware-tuner, in which case it only has one source pad, and the
-      whole stream selection process is done in hardware. The software case can
-      be used in elements such as <emphasis>switch</emphasis>. The hardware
-      case can be used in elements with channel selection, such as video source
-      elements (v4lsrc, v4l2src, etc.). If you need a specific element type,
-      use the element factory's <quote>category</quote> to make sure that the
-      element is of the type that you need. Note that the interface itself is
-      highly analog-video-centric.
-    </para>
-    <para>
-      This interface requires the <ulink type="http"
-      url="../../gstreamer/html/GstImplementsInterface.html"><classname>
-      GstImplementsInterface</classname></ulink>
-      interface to work correctly.
-    </para>
-    <para>
-      The following example shows how to implement the tuner interface in an
-      element. It does not show the actual process of stream selection, that
-      is irrelevant for this section.
-    </para>
-    <programlisting>
-#include &lt;gst/tuner/tuner.h&gt;
-
-typedef struct _GstMyFilter {
-[..]
-  gint active_input;
-  GList *channels;
-} GstMyFilter;
-
-static void	gst_my_filter_implements_interface_init	(GstImplementsInterfaceClass *iface);
-static void	gst_my_filter_tuner_interface_init	(GstTunerClass *iface);
-
-GType
-gst_my_filter_get_type (void)
-{
-[..]
-    static const GInterfaceInfo implements_interface_info = {
-      (GInterfaceInitFunc) gst_my_filter_implements_interface_init,
-      NULL,
-      NULL
-    };
-    static const GInterfaceInfo tuner_interface_info = {
-      (GInterfaceInitFunc) gst_my_filter_tuner_interface_init,
-      NULL,
-      NULL
-    };
-[..]
-    g_type_add_interface_static (my_filter_type,
-				 GST_TYPE_IMPLEMENTS_INTERFACE,
-				 &amp;implements_interface_info);
-    g_type_add_interface_static (my_filter_type,
-				 GST_TYPE_TUNER,
-				 &amp;tuner_interface_info);
-[..]
-}
-
-static void
-gst_my_filter_init (GstMyFilter *filter)
-{
-  GstTunerChannel *channel = NULL;
-[..]
-  filter->active_input = 0;
-  filter->channels = NULL;
-  channel = g_object_new (GST_TYPE_TUNER_CHANNEL, NULL);
-  channel->label = g_strdup ("MyChannel");
-  channel->flags = GST_TUNER_CHANNEL_INPUT;
-  filter->channels = g_list_append (filter->channels, channel);
-}
-
-static gboolean
-gst_my_filter_interface_supported (GstImplementsInterface *iface,
-				   GType                   iface_type)
-{
-  g_return_val_if_fail (iface_type == GST_TYPE_TUNER, FALSE);
-
-  /* for the sake of this example, we'll always support it. However, normally,
-   * you would check whether the device you've opened supports tuning. */
-  return TRUE;
-}
-
-static void
-gst_my_filter_implements_interface_init (GstImplementsInterfaceClass *iface)
-{
-  iface->supported = gst_my_filter_interface_supported;
-}
-
-static const GList *
-gst_my_filter_tuner_list_channels (GstTuner *tuner)
-{
-  GstMyFilter *filter = GST_MY_FILTER (tuner);
-
-  return filter->channels;
-}
-
-static GstTunerChannel *
-gst_my_filter_tuner_get_channel (GstTuner *tuner)
-{
-  GstMyFilter *filter = GST_MY_FILTER (tuner);
-
-  return g_list_nth_data (filter->channels,
-			  filter->active_input);
-}
-
-static void
-gst_my_filter_tuner_set_channel (GstTuner        *tuner,
-				 GstTunerChannel *channel)
-{
-  GstMyFilter *filter = GST_MY_FILTER (tuner);
-
-  filter->active_input = g_list_index (filter->channels, channel);
-  g_assert (filter->active_input >= 0);
-}
-
-static void
-gst_my_filter_tuner_interface_init (GstTunerClass *iface)
-{
-  iface->list_channels = gst_my_filter_tuner_list_channels;
-  iface->get_channel   = gst_my_filter_tuner_get_channel;
-  iface->set_channel   = gst_my_filter_tuner_set_channel;
-}
-    </programlisting>
-    <para>
-      As said, the tuner interface is very analog video-centric. It features
-      functions for selecting an input or output, and on inputs, it features
-      selection of a tuning frequency if the channel supports frequency-tuning
-      on that input. Likewise, it allows signal-strength-acquiring if the input
-      supports that. Frequency tuning can be used for radio or cable-TV tuning.
-      Signal-strength is an indication of the signal and can be used for
-      visual feedback to the user or for autodetection. Next to that, it also
-      features norm selection, which is only useful for analog video elements.
     </para>
   </sect1>
 
@@ -442,198 +129,45 @@ gst_my_filter_tuner_interface_init (GstTunerClass *iface)
     </para>
   </sect1>
 
-  <sect1 id="section-iface-propprobe" xreflabel="Property Probe Interface">
-    <title>Property Probe Interface</title>
+  <sect1 id="section-iface-xoverlay" xreflabel="Video Overlay Interface">
+    <title>Video Overlay Interface</title>
     <para>
-      Property probing is a generic solution to the problem that properties'
-      value lists in an enumeration are static. We've shown enumerations in
-      <xref linkend="chapter-building-args"/>. Property probing tries to accomplish
-      a goal similar to enumeration lists: to have a limited, explicit list of
-      allowed values for a property. There are two differences between
-      enumeration lists and probing. Firstly, enumerations only allow strings
-      as values; property probing works for any value type. Secondly, the
-      contents of a probed list of allowed values may change during the life
-      of an element. The contents of an enumeration list are static. Currently,
-      property probing is being used for detection of devices (e.g. for OSS
-      elements, Video4linux elements, etc.). It could - in theory - be used
-      for any property, though.
+      The #GstVideoOverlay interface is used for 2 main purposes :
+      <itemizedlist>
+        <listitem>
+          <para>
+      To get a grab on the Window where the video sink element is going to render.
+      This is achieved by either being informed about the Window identifier that
+      the video sink element generated, or by forcing the video sink element to use
+      a specific Window identifier for rendering.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+      To force a redrawing of the latest video frame the video sink element
+      displayed on the Window. Indeed if the #GstPipeline is in #GST_STATE_PAUSED
+      state, moving the Window around will damage its content. Application
+      developers will want to handle the Expose events themselves and force the
+      video sink element to refresh the Window's content.
+          </para>
+        </listitem>
+      </itemizedlist>
     </para>
     <para>
-      Property probing stores the list of allowed (or recommended) values in a
-      <classname>GValueArray</classname> and returns that to the user.
-      <symbol>NULL</symbol> is a valid return value, too. The process of
-      property probing is separated over two virtual functions: one for probing
-      the property to create a <classname>GValueArray</classname>, and one to
-      retrieve the current <classname>GValueArray</classname>. Those two are
-      separated because probing might take a long time (several seconds). Also,
-      this simplifies interface implementation in elements. For the application,
-      there are functions that wrap those two. For more information on this,
-      have a look at the API reference for the
-      <!-- FIXME: add link, but this is in ./gst-plugins/gst-libs/gst/propertyprobe/propertyprobe.c-->
-      <classname>GstPropertyProbe</classname> interface.
-    </para>
-    <para>
-      Below is a example of property probing for the audio filter element; it
-      will probe for allowed values for the <quote>silent</quote> property.
-      Indeed, this value is a <type>gboolean</type> so it doesn't
-      make much sense. Then again, it's only an example.
-    </para>
-    <programlisting>
-#include &lt;gst/propertyprobe/propertyprobe.h&gt;
-
-static void	gst_my_filter_probe_interface_init	(GstPropertyProbeInterface *iface);
-
-GType
-gst_my_filter_get_type (void)
-{
-[..]
-    static const GInterfaceInfo probe_interface_info = {
-      (GInterfaceInitFunc) gst_my_filter_probe_interface_init,
-      NULL,
-      NULL
-    };
-[..]
-    g_type_add_interface_static (my_filter_type,
-				 GST_TYPE_PROPERTY_PROBE,
-				 &amp;probe_interface_info);
-[..]
-}
-
-static const GList *
-gst_my_filter_probe_get_properties (GstPropertyProbe *probe)
-{
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
-  static GList *props = NULL;
-
-  if (!props) {
-    GParamSpec *pspec;
-
-    pspec = g_object_class_find_property (klass, "silent");
-    props = g_list_append (props, pspec);
-  }
-
-  return props;
-}
-
-static gboolean
-gst_my_filter_probe_needs_probe (GstPropertyProbe *probe,
-				 guint             prop_id,
-				 const GParamSpec *pspec)
-{
-  gboolean res = FALSE;
-
-  switch (prop_id) {
-    case ARG_SILENT:
-      res = FALSE;
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-
-  return res;
-}
-
-static void
-gst_my_filter_probe_probe_property (GstPropertyProbe *probe,
-				    guint             prop_id,
-				    const GParamSpec *pspec)
-{
-  switch (prop_id) {
-    case ARG_SILENT:
-      /* don't need to do much here... */
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-}
-
-static GValueArray *
-gst_my_filter_get_silent_values (GstMyFilter *filter)
-{
-  GValueArray *array = g_value_array_new (2);
-  GValue value = { 0 };
-
-  g_value_init (&amp;value, G_TYPE_BOOLEAN);
-
-  /* add TRUE */
-  g_value_set_boolean (&amp;value, TRUE);
-  g_value_array_append (array, &amp;value);
-
-  /* add FALSE */
-  g_value_set_boolean (&amp;value, FALSE);
-  g_value_array_append (array, &amp;value);
-
-  g_value_unset (&amp;value);
-
-  return array;
-}
-
-static GValueArray *
-gst_my_filter_probe_get_values (GstPropertyProbe *probe,
-				guint             prop_id,
-				const GParamSpec *pspec)
-{
-  GstMyFilter *filter = GST_MY_FILTER (probe);
-  GValueArray *array = NULL;
-
-  switch (prop_id) {
-    case ARG_SILENT:
-      array = gst_my_filter_get_silent_values (filter);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
-      break;
-  }
-
-  return array;
-}
-
-static void
-gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
-{
-  iface->get_properties = gst_my_filter_probe_get_properties;
-  iface->needs_probe    = gst_my_filter_probe_needs_probe;
-  iface->probe_property = gst_my_filter_probe_probe_property;
-  iface->get_values     = gst_my_filter_probe_get_values;
-}
-    </programlisting>
-    <para>
-      You don't need to support any functions for getting or setting values.
-      All that is handled via the standard <classname>GObject</classname>
-      <function>_set_property ()</function> and <function>_get_property ()</function>
-      functions.
-    </para>
-  </sect1>
-
-  <sect1 id="section-iface-xoverlay" xreflabel="X Overlay Interface">
-    <title>X Overlay Interface</title>
-    <para>
-      An X Overlay is basically a video output in a XFree86 drawable. Elements
-      implementing this interface will draw video in a X11 window. Through this
-      interface, applications will be proposed 2 different modes to work with
-      a plugin implementing it. The first mode is a passive mode where the plugin
-      owns, creates and destroys the X11 window. The second mode is an active
-      mode where the application handles the X11 window creation and then tell
-      the plugin where it should output video. Let's get a bit deeper in those
-      modes...
-    </para>
-    <para>
-      A plugin drawing video output in a X11 window will need to have that
+      A plugin drawing video output in a video window will need to have that
       window at one stage or another. Passive mode simply means that no window
       has been given to the plugin before that stage, so the plugin created the
       window by itself. In that case the plugin is responsible of destroying
       that window when it's not needed any more and it has to tell the
       applications that a window has been created so that the application can
-      use it. This is done using the <classname>have_xwindow_id</classname>
-      signal that can be emitted from the plugin with the
-      <function>gst_x_overlay_got_xwindow_id</function> method.
+      use it. This is done using the <classname>have-window-handle</classname>
+      message that can be posted from the plugin with the
+      <function>gst_video_overlay_got_window_handle</function> method.
     </para>
     <para>
-      As you probably guessed already active mode just means sending a X11
+      As you probably guessed already active mode just means sending a video
       window to the plugin so that video output goes there. This is done using
-      the <function>gst_x_overlay_set_xwindow_id</function> method.
+      the <function>gst_video_overlay_set_window_handle</function> method.
     </para>
     <para>
       It is possible to switch from one mode to another at any moment, so the
@@ -643,36 +177,25 @@ gst_my_filter_probe_interface_init (GstPropertyProbeInterface *iface)
     </para>
     <programlisting><![CDATA[
 static void
-gst_my_filter_set_xwindow_id (GstXOverlay *overlay, XID xwindow_id)
+gst_my_filter_set_window_handle (GstVideoOverlay *overlay, guintptr handle)
 {
   GstMyFilter *my_filter = GST_MY_FILTER (overlay);
 
   if (my_filter->window)
     gst_my_filter_destroy_window (my_filter->window);
     
-  my_filter->window = xwindow_id;
+  my_filter->window = handle;
 }
 
 static void
-gst_my_filter_get_desired_size (GstXOverlay *overlay,
-                                guint *width, guint *height)
+gst_my_filter_xoverlay_init (GstVideoOverlayClass *iface)
 {
-  GstMyFilter *my_filter = GST_MY_FILTER (overlay);
-
-  *width = my_filter->width;
-  *height = my_filter->height;
-}
-
-static void
-gst_my_filter_xoverlay_init (GstXOverlayClass *iface)
-{
-  iface->set_xwindow_id = gst_my_filter_set_xwindow_id;
-  iface->get_desired_size = gst_my_filter_get_desired_size;
+  iface->set_window_handle = gst_my_filter_set_window_handle;
 }
     ]]></programlisting>
     <para>
-      You will also need to use the interface methods to fire signals when 
-      needed such as in the pad link function where you will know the video
+      You will also need to use the interface methods to post messages when 
+      needed such as when receiving a CAPS event where you will know the video
       geometry and maybe create the window.
     </para>
     <programlisting><![CDATA[
@@ -681,25 +204,25 @@ gst_my_filter_window_create (GstMyFilter *my_filter, gint width, gint height)
 {
   MyFilterWindow *window = g_new (MyFilterWindow, 1);
   ...
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (my_filter), window->win);
+  gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (my_filter), window->win);
 }
 
-static GstPadLinkReturn
-gst_my_filter_sink_link (GstPad *pad, const GstCaps *caps)
+/* called from the event handler for CAPS events */
+static gboolean
+gst_my_filter_sink_set_caps (GstMyFilter *my_filter, GstCaps *caps)
 {
-  GstMyFilter *my_filter = GST_MY_FILTER (overlay);
   gint width, height;
   gboolean ret;
   ...
   ret = gst_structure_get_int (structure, "width", &width);
   ret &= gst_structure_get_int (structure, "height", &height);
-  if (!ret) return GST_PAD_LINK_REFUSED;
+  if (!ret) return FALSE;
+
+  gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (my_filter));
   
   if (!my_filter->window)
     my_filter->window = gst_my_filter_create_window (my_filter, width, height);
 
-  gst_x_overlay_got_desired_size (GST_X_OVERLAY (my_filter),
-                                  width, height);
   ...
 }
     ]]></programlisting>
