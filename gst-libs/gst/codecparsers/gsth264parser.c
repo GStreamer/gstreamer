@@ -200,16 +200,20 @@ gst_h264_parser_get_pps (GstH264NalParser * nalparser, guint8 pps_id)
   return NULL;
 }
 
-static inline void
-set_nalu_datas (GstH264NalUnit * nalu)
+static gboolean
+gst_h264_parse_nalu_header (GstH264NalUnit * nalu)
 {
   guint8 *data = nalu->data + nalu->offset;
+
+  if (nalu->size < 1)
+    return FALSE;
 
   nalu->type = (data[0] & 0x1f);
   nalu->ref_idc = (data[0] & 0x60) >> 5;
   nalu->idr_pic_flag = (nalu->type == 5 ? 1 : 0);
 
   GST_DEBUG ("Nal type %u, ref_idc %u", nalu->type, nalu->ref_idc);
+  return TRUE;
 }
 
 /****** Parsing functions *****/
@@ -996,14 +1000,20 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
     return GST_H264_PARSER_ERROR;
   }
 
-  nalu->valid = TRUE;
   nalu->sc_offset = offset + off1;
 
 
   nalu->offset = offset + off1 + 3;
   nalu->data = (guint8 *) data;
+  nalu->size = size - nalu->offset;
 
-  set_nalu_datas (nalu);
+  if (!gst_h264_parse_nalu_header (nalu)) {
+    GST_WARNING ("error parsing \"NAL unit header\"");
+    nalu->size = 0;
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
+
+  nalu->valid = TRUE;
 
   /* sc might have 2 or 3 0-bytes */
   if (nalu->sc_offset > 0 && data[nalu->sc_offset - 1] == 00
@@ -1017,8 +1027,6 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
     nalu->size = 0;
     return GST_H264_PARSER_OK;
   }
-
-  nalu->size = size - nalu->offset;
 
   return GST_H264_PARSER_OK;
 }
@@ -1115,10 +1123,11 @@ gst_h264_parser_identify_nalu_avc (GstH264NalParser * nalparser,
 
   nalu->data = (guint8 *) data;
 
-  set_nalu_datas (nalu);
-
-  if (nalu->size < 2)
+  if (!gst_h264_parse_nalu_header (nalu)) {
+    GST_WARNING ("error parsing \"NAL unit header\"");
+    nalu->size = 0;
     return GST_H264_PARSER_BROKEN_DATA;
+  }
 
   nalu->valid = TRUE;
 
