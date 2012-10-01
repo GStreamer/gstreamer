@@ -51,25 +51,25 @@ void
 GstMpeg2EncStreamWriter::WriteOutBufferUpto (const guint8 * buffer,
     const guint32 flush_upto)
 {
-  GstBuffer *buf, *inbuf;
-  GstMpeg2enc *enc = GST_MPEG2ENC (GST_PAD_PARENT (pad));
+  GstVideoCodecFrame *frame;
+  GstBuffer *buf;
+  GstVideoEncoder *video_encoder = GST_VIDEO_ENCODER (GST_PAD_PARENT (pad));
+  GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
+
+  frame = gst_video_encoder_get_oldest_frame (video_encoder);
+  g_assert (frame != NULL);
 
   buf = gst_buffer_new_and_alloc (flush_upto);
   gst_buffer_fill (buf, 0, buffer, flush_upto);
   flushed += flush_upto;
+  frame->output_buffer = buf;
 
-  /* this should not block anything else (e.g. chain), but if it does,
+
+  /* this should not block anything else (e.g. handle_frame), but if it does,
    * it's ok as mpeg2enc is not really a loop-based element, but push-based */
   GST_MPEG2ENC_MUTEX_LOCK (enc);
-  /* best effort at giving output some meaningful time metadata
-   * no mpeg2enc specs on this though, but it might help getting the output
-   * into container formats that really do like timestamps (unlike mplex) */
-  if ((inbuf = (GstBuffer *) g_queue_pop_head (enc->time))) {
-    GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (inbuf);
-    GST_BUFFER_DURATION (buf) = GST_BUFFER_DURATION (inbuf);
-    gst_buffer_unref (inbuf);
-  }
-  enc->srcresult = gst_pad_push (pad, buf);
+  enc->srcresult = gst_video_encoder_finish_frame (video_encoder, frame);
+  gst_buffer_unref (buf);
   GST_MPEG2ENC_MUTEX_UNLOCK (enc);
 }
 
@@ -147,14 +147,20 @@ GstMpeg2EncStreamWriter::FrameBegin ()
 void
 GstMpeg2EncStreamWriter::FrameFlush ()
 {
-  GstMpeg2enc *enc = GST_MPEG2ENC (GST_PAD_PARENT (pad));
+  GstVideoCodecFrame *frame;
+  GstVideoEncoder *video_encoder = GST_VIDEO_ENCODER (GST_PAD_PARENT (pad));
+  GstMpeg2enc *enc = GST_MPEG2ENC (video_encoder);
+
+  frame = gst_video_encoder_get_oldest_frame (video_encoder);
+  g_assert (frame != NULL);
 
   if (buf) {
+    frame->output_buffer = buf;
     /* this should not block anything else (e.g. chain), but if it does,
      * it's ok as mpeg2enc is not really a loop-based element, but push-based */
     GST_MPEG2ENC_MUTEX_LOCK (enc);
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (pad));
-    enc->srcresult = gst_pad_push (pad, buf);
+    gst_buffer_set_caps (buf, pad->get_current_caps());
+    enc->srcresult = gst_video_encoder_finish_frame (video_encoder, frame);
     GST_MPEG2ENC_MUTEX_UNLOCK (enc);
     buf = NULL;
   }

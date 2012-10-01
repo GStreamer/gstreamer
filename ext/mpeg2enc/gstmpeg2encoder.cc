@@ -66,10 +66,10 @@ gboolean GstMpeg2Encoder::setup ()
 {
   MPEG2EncInVidParams
       strm;
-  GstMpeg2enc *
-      enc;
+  GstVideoEncoder *
+      video_encoder;
 
-  enc = GST_MPEG2ENC (element);
+  video_encoder = GST_VIDEO_ENCODER (element);
 
   /* I/O */
   reader = new GstMpeg2EncPictureReader (element, caps, &parms);
@@ -79,9 +79,31 @@ gboolean GstMpeg2Encoder::setup ()
   options.allow_parallel_read = FALSE;
 #endif
   if (options.SetFormatPresets (strm)) {
+    delete reader;
+    reader = NULL;
+    writer = NULL;
+    quantizer = NULL;
+#if GST_MJPEGTOOLS_API < 10900
+    bitrate_controller = NULL;
+#else
+    pass1ratectl = NULL;
+    pass2ratectl = NULL;
+#endif
+#if GST_MJPEGTOOLS_API >= 10900
+    /* sequencer */
+    seqencoder = NULL;
+#elif GST_MJPEGTOOLS_API >= 10800
+    /* sequencer */
+    seqencoder = NULL;
+#else
+    coder = NULL;
+    /* sequencer */
+    seqencoder = NULL;
+#endif
+
     return FALSE;
   }
-  writer = new GstMpeg2EncStreamWriter (enc->srcpad, &parms);
+  writer = new GstMpeg2EncStreamWriter (video_encoder->srcpad, &parms);
 
   /* encoding internals */
   quantizer = new Quantizer (parms);
