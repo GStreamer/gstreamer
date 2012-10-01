@@ -7,3 +7,11 @@ ipch
 *.suo
 *.opensdf
 vs/2010/libs
+bin
+gen
+libs
+obj
+.classpath
+.project
+.settings
+.libs
