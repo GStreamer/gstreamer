@@ -2053,6 +2053,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   /* Some drivers are buggy and will modify the currently set format
      when processing VIDIOC_TRY_FMT, so we remember what is set at the
      minute, and will reset it when done. */
+  prevfmt.type = v4l2object->type;
   prevfmt_valid = (v4l2_ioctl (fd, VIDIOC_G_FMT, &prevfmt) >= 0);
 
   /* get size delimiters */
