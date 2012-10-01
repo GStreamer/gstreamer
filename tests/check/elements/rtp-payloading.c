@@ -552,6 +552,30 @@ GST_START_TEST (rtp_h264_list_lt_mtu)
 }
 
 GST_END_TEST;
+static const guint8 rtp_h264_list_lt_mtu_frame_data_avc[] =
+    /* packetized data */
+{ 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00,
+  0xad, 0x80, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x0d, 0x00
+};
+
+/* NAL = 4 bytes */
+static int rtp_h264_list_lt_mtu_bytes_sent_avc = 2 * (16 - 2 * 4);
+
+//static int rtp_h264_list_lt_mtu_mtu_size = 1024;
+
+GST_START_TEST (rtp_h264_list_lt_mtu_avc)
+{
+  /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
+  rtp_pipeline_test (rtp_h264_list_lt_mtu_frame_data_avc,
+      rtp_h264_list_lt_mtu_frame_data_size, rtp_h264_list_lt_mtu_frame_count,
+      "video/x-h264,stream-format=(string)avc,alignment=(string)au,"
+      "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c",
+      "rtph264pay", "rtph264depay",
+      rtp_h264_list_lt_mtu_bytes_sent_avc, rtp_h264_list_lt_mtu_mtu_size, TRUE);
+}
+
+GST_END_TEST;
 static const guint8 rtp_h264_list_gt_mtu_frame_data[] =
     /* not packetized, next NAL starts with 0001 */
 { 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -582,6 +606,32 @@ GST_START_TEST (rtp_h264_list_gt_mtu)
 }
 
 GST_END_TEST;
+static const guint8 rtp_h264_list_gt_mtu_frame_data_avc[] =
+    /* packetized data */
+{ 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+/* NAL = 4 bytes. When data does not fit into 1 mtu, 1 byte will be skipped */
+static int rtp_h264_list_gt_mtu_bytes_sent_avc = 1 * (64 - 2 * 4 - 2 * 1);
+
+GST_START_TEST (rtp_h264_list_gt_mtu_avc)
+{
+  /* FIXME 0.11: fully specify h264 caps (and make payloader check) */
+  rtp_pipeline_test (rtp_h264_list_gt_mtu_frame_data_avc,
+      rtp_h264_list_gt_mtu_frame_data_size, rtp_h264_list_gt_mtu_frame_count,
+      "video/x-h264,stream-format=(string)avc,alignment=(string)au,"
+      "codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c",
+      "rtph264pay", "rtph264depay",
+      rtp_h264_list_gt_mtu_bytes_sent_avc, rtp_h264_list_gt_mtu_mty_size, TRUE);
+}
+
+GST_END_TEST;
+
 static const guint8 rtp_L16_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -806,7 +856,9 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_h263p);
   tcase_add_test (tc_chain, rtp_h264);
   tcase_add_test (tc_chain, rtp_h264_list_lt_mtu);
+  tcase_add_test (tc_chain, rtp_h264_list_lt_mtu_avc);
   tcase_add_test (tc_chain, rtp_h264_list_gt_mtu);
+  tcase_add_test (tc_chain, rtp_h264_list_gt_mtu_avc);
   tcase_add_test (tc_chain, rtp_L16);
   tcase_add_test (tc_chain, rtp_mp2t);
   tcase_add_test (tc_chain, rtp_mp4v);
