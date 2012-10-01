@@ -145,11 +145,13 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
   if (GST_CLOCK_TIME_IS_VALID (data->last_seek_time) && diff < 500 * GST_MSECOND) {
     GSource *timeout_source;
     
+    if (!GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+      timeout_source = g_timeout_source_new (diff / GST_MSECOND);
+      g_source_attach (timeout_source, data->context);
+      g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
+      g_source_unref (timeout_source);
+    }
     data->desired_position = desired_position;
-    timeout_source = g_timeout_source_new (diff / GST_MSECOND);
-    g_source_attach (timeout_source, data->context);
-    g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
-    g_source_unref (timeout_source);
     GST_DEBUG ("Throttling seek to %" GST_TIME_FORMAT ", will be in %" GST_TIME_FORMAT,
         GST_TIME_ARGS (desired_position), GST_TIME_ARGS (500 * GST_MSECOND - diff));
   } else {
