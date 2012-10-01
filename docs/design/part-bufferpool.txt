@@ -132,11 +132,19 @@ Allocation query
 
       It is also possible to configure the allocator in a provided pool.
 
-  (out) "metadata", G_TYPE_ARRAY of GType
-        - an array of metadata API types that can be accepted.
+  (out) "metadata", G_TYPE_ARRAY of structure
+        - an array of metadata params that can be accepted.
+
+      struct {
+        GType api;
+        GstStructure *params;
+      }
+
+      Use gst_query_parse_nth_allocation_meta() to get the values.
 
       These metadata items can be accepted by the downstream element when
-      placed on buffers. 
+      placed on buffers. There is also an arbitrary GstStructure associated
+      with the metadata that contains metadata specific options.
 
       Some bufferpools have options to enable metadata on the buffers
       allocated by the pool.

@@ -29,7 +29,7 @@ When a Buffers is writable as returned from gst_buffer_is_writable():
  - metadata can be added/removed and the metadata can be changed
  - GstMemory blocks can be added/removed
 
-The individual memory blocks have their own refcounting and READONLY flags
+The individual memory blocks have their own locking and READONLY flags
 that might influence their writability.
 
 Buffers can be made writable with gst_buffer_make_writable(). This will copy the

@@ -9,8 +9,6 @@ negotiated in the bufferpools.
 
 Some examples of metadata:
 
- - timestamp, duration
- - offset, offset_end
  - interlacing information
  - video alignment, cropping, panning information
  - extra container information such as granulepos, ...
