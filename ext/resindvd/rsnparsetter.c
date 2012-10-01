@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "rsnparsetter.h"
-#include "rsnwrappedbuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (rsn_parsetter_debug);
 #define GST_CAT_DEFAULT rsn_parsetter_debug
@@ -20,50 +19,47 @@ GST_DEBUG_CATEGORY_STATIC (rsn_parsetter_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb; video/x-raw-yuv")
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL))
     );
 
-static void rsn_parsetter_register_extra (GType rsn_parsetter_type);
-
-GST_BOILERPLATE_FULL (RsnParSetter, rsn_parsetter, GstElement,
-    GST_TYPE_ELEMENT, rsn_parsetter_register_extra);
+#define rsn_parsetter_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (RsnParSetter, rsn_parsetter, GST_TYPE_ELEMENT,
+    GST_DEBUG_CATEGORY_INIT (rsn_parsetter_debug, "rsnparsetter", 0,
+        "Resin DVD aspect ratio adjuster"));
 
 static void rsn_parsetter_finalize (GObject * object);
-static GstFlowReturn rsn_parsetter_chain (GstPad * pad, GstBuffer * buf);
-static gboolean rsn_parsetter_sink_event (GstPad * pad, GstEvent * event);
-static gboolean rsn_parsetter_sink_setcaps (GstPad * pad, GstCaps * caps);
-static GstFlowReturn rsn_parsetter_sink_bufferalloc (GstPad * pad,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
+static GstFlowReturn rsn_parsetter_chain (GstPad * pad,
+    RsnParSetter * parset, GstBuffer * buf);
+static gboolean rsn_parsetter_sink_event (GstPad * pad,
+    RsnParSetter * parset, GstEvent * event);
 
-static GstCaps *rsn_parsetter_src_getcaps (GstPad * pad);
+static gboolean rsn_parsetter_src_query (GstPad * pad, RsnParSetter * parset,
+    GstQuery * query);
 static GstCaps *rsn_parsetter_convert_caps (RsnParSetter * parset,
     GstCaps * caps, gboolean widescreen);
 static gboolean rsn_parsetter_check_caps (RsnParSetter * parset,
     GstCaps * caps);
+static void rsn_parsetter_update_caps (RsnParSetter * parset, GstCaps * caps);
 
 static void
-rsn_parsetter_register_extra (GType rsn_parsetter_type)
+rsn_parsetter_class_init (RsnParSetterClass * klass)
 {
-  GST_DEBUG_CATEGORY_INIT (rsn_parsetter_debug, "rsnparsetter", 0,
-      "Resin DVD aspect ratio adjuster");
-}
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-static void
-rsn_parsetter_base_init (gpointer gclass)
-{
-
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
+  gobject_class->finalize = rsn_parsetter_finalize;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
+
   gst_element_class_set_metadata (element_class,
       "Resin Aspect Ratio Setter", "Filter/Video",
       "Overrides caps on video buffers to force a particular display ratio",
@@ -71,34 +67,21 @@ rsn_parsetter_base_init (gpointer gclass)
 }
 
 static void
-rsn_parsetter_class_init (RsnParSetterClass * klass)
-{
-  GObjectClass *gobject_class;
-
-  gobject_class = (GObjectClass *) klass;
-
-  gobject_class->finalize = rsn_parsetter_finalize;
-}
-
-static void
-rsn_parsetter_init (RsnParSetter * parset, RsnParSetterClass * gclass)
+rsn_parsetter_init (RsnParSetter * parset)
 {
   parset->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
-  gst_pad_set_getcaps_function (parset->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
   gst_pad_set_chain_function (parset->sinkpad,
-      GST_DEBUG_FUNCPTR (rsn_parsetter_chain));
+      (GstPadChainFunction) GST_DEBUG_FUNCPTR (rsn_parsetter_chain));
   gst_pad_set_event_function (parset->sinkpad,
-      GST_DEBUG_FUNCPTR (rsn_parsetter_sink_event));
-  gst_pad_set_setcaps_function (parset->sinkpad,
-      GST_DEBUG_FUNCPTR (rsn_parsetter_sink_setcaps));
-  gst_pad_set_bufferalloc_function (parset->sinkpad,
-      GST_DEBUG_FUNCPTR (rsn_parsetter_sink_bufferalloc));
+      (GstPadEventFunction) GST_DEBUG_FUNCPTR (rsn_parsetter_sink_event));
+  GST_PAD_SET_PROXY_CAPS (parset->sinkpad);
+  GST_PAD_SET_PROXY_ALLOCATION (parset->sinkpad);
   gst_element_add_pad (GST_ELEMENT (parset), parset->sinkpad);
 
   parset->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
-  gst_pad_set_getcaps_function (parset->srcpad,
-      GST_DEBUG_FUNCPTR (rsn_parsetter_src_getcaps));
+  gst_pad_set_query_function (parset->srcpad,
+      (GstPadQueryFunction) GST_DEBUG_FUNCPTR (rsn_parsetter_src_query));
+  GST_PAD_SET_PROXY_CAPS (parset->srcpad);
   gst_element_add_pad (GST_ELEMENT (parset), parset->srcpad);
 
   parset->caps_lock = g_mutex_new ();
@@ -119,107 +102,105 @@ rsn_parsetter_finalize (GObject * object)
 }
 
 static GstFlowReturn
-rsn_parsetter_chain (GstPad * pad, GstBuffer * buf)
+rsn_parsetter_chain (GstPad * pad, RsnParSetter * parset, GstBuffer * buf)
 {
-  RsnParSetter *parset = RSN_PARSETTER (GST_OBJECT_PARENT (pad));
-  RsnMetaWrapped *meta;
-
-  meta = RSN_META_WRAPPED_GET (buf);
-
-  /* If this is a buffer we wrapped up earlier, unwrap it now */
-  if (meta != NULL) {
-    GstBuffer *wrap_buf = buf;
-
-    if (meta->owner == GST_ELEMENT (parset)) {
-      buf = rsn_meta_wrapped_unwrap_and_unref (wrap_buf, meta);
-      GST_DEBUG_OBJECT (parset, "Unwrapping %p yields buffer %p with caps %"
-          GST_PTR_FORMAT, wrap_buf, buf, GST_BUFFER_CAPS (buf));
-    }
-  }
-
-  if (parset->outcaps != GST_BUFFER_CAPS (buf)) {
-    if (parset->override_outcaps == FALSE &&
-        gst_caps_is_equal (parset->outcaps, GST_BUFFER_CAPS (buf))) {
-      /* Just update our output caps var */
-      gst_caps_replace (&parset->outcaps, GST_BUFFER_CAPS (buf));
-      goto out;
-    }
-
-    /* Replace the caps on the output buffer */
-    buf = gst_buffer_make_metadata_writable (buf);
-    gst_buffer_set_caps (buf, parset->outcaps);
-
-    GST_DEBUG_OBJECT (parset,
-        "Replacing caps on buffer %p with caps %" GST_PTR_FORMAT,
-        buf, parset->outcaps);
-  }
-
-out:
   return gst_pad_push (parset->srcpad, buf);
 }
 
 static gboolean
-rsn_parsetter_sink_event (GstPad * pad, GstEvent * event)
+rsn_parsetter_sink_event (GstPad * pad, RsnParSetter * parset, GstEvent * event)
 {
-  RsnParSetter *parset = RSN_PARSETTER (gst_pad_get_parent (pad));
-  const GstStructure *structure = gst_event_get_structure (event);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_DOWNSTREAM:{
+      const GstStructure *structure = gst_event_get_structure (event);
 
-  if (structure != NULL &&
-      gst_structure_has_name (structure, "application/x-gst-dvd")) {
-    const char *type = gst_structure_get_string (structure, "event");
-    if (type == NULL)
-      goto out;
+      if (structure != NULL &&
+          gst_structure_has_name (structure, "application/x-gst-dvd")) {
+        const char *type = gst_structure_get_string (structure, "event");
+        if (type == NULL)
+          goto out;
 
-    if (strcmp (type, "dvd-video-format") == 0) {
-      gboolean is_widescreen;
+        if (strcmp (type, "dvd-video-format") == 0) {
+          gboolean is_widescreen;
 
-      gst_structure_get_boolean (structure, "video-widescreen", &is_widescreen);
+          gst_structure_get_boolean (structure, "video-widescreen",
+              &is_widescreen);
 
-      GST_DEBUG_OBJECT (parset, "Video is %s",
-          parset->is_widescreen ? "16:9" : "4:3");
+          GST_DEBUG_OBJECT (parset, "Video is %s",
+              parset->is_widescreen ? "16:9" : "4:3");
 
-      g_mutex_lock (parset->caps_lock);
-      if (parset->is_widescreen != is_widescreen) {
-        /* Force caps check */
-        gst_caps_replace (&parset->in_caps_last, NULL);
-        gst_caps_replace (&parset->in_caps_converted, NULL);
+          g_mutex_lock (parset->caps_lock);
+          if (parset->is_widescreen != is_widescreen) {
+            /* Force caps check */
+            gst_caps_replace (&parset->in_caps_last, NULL);
+            gst_caps_replace (&parset->in_caps_converted, NULL);
+          }
+          parset->is_widescreen = is_widescreen;
+
+          /* FIXME: Added for testing: */
+          // parset->is_widescreen = FALSE;
+
+          g_mutex_unlock (parset->caps_lock);
+        }
       }
-      parset->is_widescreen = is_widescreen;
-
-      /* FIXME: Added for testing: */
-      // parset->is_widescreen = FALSE;
-
-      g_mutex_unlock (parset->caps_lock);
+      break;
     }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps = NULL;
+      gst_event_parse_caps (event, &caps);
+      rsn_parsetter_update_caps (parset, caps);
+      if (parset->override_outcaps) {
+        gst_event_unref (event);
+        GST_DEBUG_OBJECT (parset,
+            "Handling caps event. Overriding upstream caps"
+            " with %" GST_PTR_FORMAT, parset->outcaps);
+        event = gst_event_new_caps (parset->outcaps);
+      } else {
+        GST_DEBUG_OBJECT (parset,
+            "Handling caps event. Upstream caps %" GST_PTR_FORMAT
+            " acceptable", caps);
+      }
+      break;
+    }
+    default:
+      break;
   }
 
 out:
-  gst_object_unref (GST_OBJECT (parset));
-  return gst_pad_event_default (pad, event);
+  return gst_pad_event_default (pad, (GstObject *) (parset), event);
 }
 
-static GstCaps *
-rsn_parsetter_src_getcaps (GstPad * pad)
+static gboolean
+rsn_parsetter_src_query (GstPad * pad, RsnParSetter * parset, GstQuery * query)
 {
-  RsnParSetter *parset = RSN_PARSETTER (gst_pad_get_parent (pad));
-  GstCaps *ret;
-  const GstCaps *templ_caps = gst_pad_get_pad_template_caps (pad);
+  GstCaps *caps = NULL;
 
-  ret = gst_pad_peer_get_caps (parset->sinkpad);
-  if (ret == NULL)
-    ret = gst_caps_copy (templ_caps);
-  else {
-    GstCaps *temp;
-    temp = gst_caps_intersect (templ_caps, ret);
-    gst_caps_unref (ret);
-    ret = rsn_parsetter_convert_caps (parset, temp, parset->is_widescreen);
-    gst_caps_unref (temp);
+  if (!gst_pad_peer_query (parset->sinkpad, query))
+    return FALSE;
+
+  if (GST_QUERY_TYPE (query) != GST_QUERY_CAPS)
+    return TRUE;
+
+  gst_query_parse_caps_result (query, &caps);
+
+  GST_DEBUG_OBJECT (parset, "Handling caps query. Upstream caps %"
+      GST_PTR_FORMAT, caps);
+
+  if (caps == NULL) {
+    GstCaps *templ_caps = gst_pad_get_pad_template_caps (pad);
+    gst_query_set_caps_result (query, templ_caps);
+    gst_caps_unref (templ_caps);
+  } else {
+    caps = rsn_parsetter_convert_caps (parset, caps, parset->is_widescreen);
+    gst_query_set_caps_result (query, caps);
+    gst_caps_unref (caps);
   }
 
-  gst_object_unref (parset);
-  return ret;
+  return TRUE;
 }
 
+/* Check if the DAR of the passed matches the required DAR */
 static gboolean
 rsn_parsetter_check_caps (RsnParSetter * parset, GstCaps * caps)
 {
@@ -231,8 +212,9 @@ rsn_parsetter_check_caps (RsnParSetter * parset, GstCaps * caps)
 
   g_mutex_lock (parset->caps_lock);
 
-  if (caps == parset->in_caps_last ||
-      gst_caps_is_equal (caps, parset->in_caps_last)) {
+  if (parset->in_caps_last &&
+      (caps == parset->in_caps_last ||
+          gst_caps_is_equal (caps, parset->in_caps_last))) {
     ret = parset->in_caps_was_ok;
     goto out;
   }
@@ -327,13 +309,11 @@ out:
   return outcaps;
 }
 
-static gboolean
-rsn_parsetter_sink_setcaps (GstPad * pad, GstCaps * caps)
+static void
+rsn_parsetter_update_caps (RsnParSetter * parset, GstCaps * caps)
 {
   /* Check the new incoming caps against our current DAR, and mark
-   * whether the buffers will need adjusting */
-  RsnParSetter *parset = RSN_PARSETTER (gst_pad_get_parent (pad));
-
+   * whether the caps need adjusting */
   if (rsn_parsetter_check_caps (parset, caps)) {
     parset->override_outcaps = FALSE;
     gst_caps_replace (&parset->outcaps, caps);
@@ -349,54 +329,4 @@ rsn_parsetter_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   GST_DEBUG_OBJECT (parset, "caps changed: need_override now = %d",
       parset->override_outcaps);
-
-  gst_object_unref (parset);
-  return TRUE;
-}
-
-static GstFlowReturn
-rsn_parsetter_sink_bufferalloc (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buf)
-{
-  RsnParSetter *parset = RSN_PARSETTER (gst_pad_get_parent (pad));
-  GstFlowReturn ret;
-
-  GST_LOG_OBJECT (parset, "Entering bufferalloc");
-
-  if (rsn_parsetter_check_caps (parset, caps)) {
-    ret = gst_pad_alloc_buffer (parset->srcpad, offset, size, caps, buf);
-    GST_LOG_OBJECT (parset, "Not wrapping buf %p", *buf);
-  } else {
-    /* Allocate and wrap a downstream buffer */
-    GstBuffer *orig_buf;
-    GstBuffer *outbuf;
-    GstCaps *override_caps = rsn_parsetter_convert_caps (parset, caps,
-        parset->is_widescreen);
-
-    ret = gst_pad_alloc_buffer (parset->srcpad, offset, size,
-        override_caps, &orig_buf);
-    gst_caps_unref (override_caps);
-
-    if (ret != GST_FLOW_OK)
-      return ret;
-
-    outbuf = rsn_wrapped_buffer_new (orig_buf, GST_ELEMENT_CAST (parset));
-    if (!outbuf) {
-      /* FIXME: Throw error */
-      return GST_FLOW_ERROR;
-    }
-
-    gst_buffer_set_caps (outbuf, caps);
-
-    GST_LOG_OBJECT (parset,
-        "Wrapped ds buf %p with caps %" GST_PTR_FORMAT
-        " into new buf %p with caps %" GST_PTR_FORMAT,
-        orig_buf, GST_BUFFER_CAPS (orig_buf), outbuf, GST_BUFFER_CAPS (outbuf));
-
-    *buf = outbuf;
-  }
-
-  gst_object_unref (GST_OBJECT (parset));
-
-  return ret;
 }

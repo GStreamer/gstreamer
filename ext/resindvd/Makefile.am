@@ -11,8 +11,7 @@ libgstresindvd_la_SOURCES = \
         gstmpegdemux.c  \
         gstpesfilter.c \
 	rsninputselector.c \
-	# rsnparsetter.c \
-	# rsnwrappedbuffer.c
+	rsnparsetter.c
 
 libgstresindvd_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
@@ -31,8 +30,7 @@ noinst_HEADERS = resindvdbin.h \
         gstmpegdesc.h \
         gstmpegdemux.h \
         gstpesfilter.h \
-	rsnparsetter.h \
-	rsnwrappedbuffer.h
+	rsnparsetter.h
 
 EXTRA_DIST = resin-play resin-play2
 

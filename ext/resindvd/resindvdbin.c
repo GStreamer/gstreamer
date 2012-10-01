@@ -34,7 +34,7 @@
 #include "rsninputselector.h"
 // #include "rsnaudiomunge.h"
 #include "rsndec.h"
-// #include "rsnparsetter.h"
+#include "rsnparsetter.h"
 
 #include "gstmpegdemux.h"
 
@@ -472,7 +472,7 @@ create_elements (RsnDvdBin * dvdbin)
     return FALSE;
 
   /* FIXME: Replace identity */
-  if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, "identity", 0,        //RSN_TYPE_RSNPARSETTER,
+  if (!try_create_piece (dvdbin, DVD_ELEM_PARSET, NULL, RSN_TYPE_RSNPARSETTER,
           "rsnparsetter", "Aspect ratio adjustment"))
     return FALSE;
 

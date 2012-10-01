@@ -7,8 +7,6 @@
 
 #include <gst/gst.h>
 
-#include "rsnwrappedbuffer.h"
-
 G_BEGIN_DECLS
 
 #define RSN_TYPE_RSNPARSETTER \
