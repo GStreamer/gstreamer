@@ -129,6 +129,8 @@ static void execute_seek (gint64 desired_position, CustomData *data);
 static gboolean
 delayed_seek_cb (CustomData *data)
 {
+  GST_DEBUG ("Doing delayed seek %" GST_TIME_FORMAT, GST_TIME_ARGS (data->desired_position));
+  data->last_seek_time = GST_CLOCK_TIME_NONE;
   execute_seek (data->desired_position, data);
   return FALSE;
 }
@@ -224,10 +226,8 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   /* Only pay attention to messages coming from the pipeline, not its children */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     data->state = new_state;
-    if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+    if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position))
       execute_seek (data->desired_position, data);
-      data->desired_position = GST_CLOCK_TIME_NONE;
-    }
     GST_DEBUG ("State changed to %s, notifying application", gst_element_state_get_name(new_state));
     (*env)->CallVoidMethod (env, data->app, set_current_state_method_id, new_state);
     if ((*env)->ExceptionCheck (env)) {
