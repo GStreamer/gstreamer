@@ -79,7 +79,7 @@ static const struct
 /**
  * gst_rtsp_url_parse:
  * @urlstr: the url string to parse
- * @url: location to hold the result.
+ * @url: (out): location to hold the result.
  *
  * Parse the RTSP @urlstr into a newly allocated #GstRTSPUrl. Free after usage
  * with gst_rtsp_url_free().
