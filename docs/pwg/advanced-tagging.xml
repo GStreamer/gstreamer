@@ -65,13 +65,10 @@
       of the type the tag was registered as (the API documentation for each
       predefined tag should contain the type). Be sure to use functions like
       <function>gst_value_transform ()</function>
-      to make sure that your data is of the right type. After data reading, the
-      application can be notified of the new taglist by calling
-      <function>gst_element_found_tags ()</function> or
-      <function>gst_element_found_tags_for_pad ()</function> (if they only
-      refer to a specific sub-stream). These functions will post a tag message
-      on the pipeline's GstBus for the application to pick up, but also send
-      tag events downstream, either over all source pad or the pad specified.
+      to make sure that your data is of the right type.
+      After data reading, you can send the tags downstream with the TAG event.
+      When the TAG event reaches the sink, it will post the TAG message on
+      the pipeline's GstBus for the application to pick up.
     </para>
     <para>
       We currently require the core to know the GType of tags before they are
@@ -112,7 +109,7 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
       TagSetter interface (which is just a layer). Pipeline tags are tags
       provided to the element from within the pipeline. The element receives
       such tags via the <symbol>GST_EVENT_TAG</symbol> event, which means
-      that tags writers should automatically be event aware. The tag writer is
+      that tags writers should implment an event handler. The tag writer is
       responsible for combining all these three into one list and writing them
       to the output stream.
     </para>
@@ -121,6 +118,10 @@ gst_my_filter_class_init (GstMyFilterClass *klass)
       combine them and write them to the output stream. It implements the tag
       setter so applications can set tags, and retrieves pipeline tags from
       incoming events.
+    </para>
+    <para>
+      Warning, this example is outdated and doesn't work with the 1.0 version
+      of &GStreamer; anymore.
     </para>
     <programlisting>
 <![CDATA[
@@ -143,7 +144,6 @@ gst_my_filter_get_type (void)
 static void
 gst_my_filter_init (GstMyFilter *filter)
 {
-  GST_FLAG_SET (filter, GST_ELEMENT_EVENT_AWARE);
 [..]
 }
 
@@ -165,14 +165,18 @@ gst_my_filter_write_tag (const GstTagList *taglist,
   g_value_init (&to, G_TYPE_STRING);
 
   for (n = 0; n < num_values; n++) {
+    guint8 * data;
+    gsize size;
+
     from = gst_tag_list_get_value_index (taglist, tagname, n);
     g_value_transform (from, &to);
 
-    buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = g_strdup_printf ("%s:%s", tagname,
-					     g_value_get_string (&to));
-    GST_BUFFER_SIZE (buf) = strlen (GST_BUFFER_DATA (buf));
-    gst_pad_push (filter->srcpad, GST_DATA (buf));
+    data = g_strdup_printf ("%s:%s", tagname,
+		g_value_get_string (&to));
+    size = strlen (data);
+
+    buf = gst_buffer_new_wrapped (data, size);
+    gst_pad_push (filter->srcpad, buf);
   }
 
   g_value_unset (&to);
@@ -223,8 +227,7 @@ gst_my_filter_task_func (GstElement *element)
   gst_tag_list_foreach (taglist, gst_my_filter_write_tag, filter);
 
   /* signal EOS */
-  gst_pad_push (filter->srcpad, GST_DATA (gst_event_new (GST_EVENT_EOS)));
-  gst_element_set_eos (element);
+  gst_pad_push (filter->srcpad, gst_event_new (GST_EVENT_EOS));
 }
 ]]>
     </programlisting>
