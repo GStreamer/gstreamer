@@ -234,10 +234,7 @@ static void *app_function (void *userdata) {
   /* create our own GLib Main Context, so we do not interfere with other libraries using GLib */
   context = g_main_context_new ();
 
-//  data->pipeline = gst_parse_launch ("filesrc location=/sdcard/Movies/sintel_trailer-480p.ogv ! oggdemux ! theoradec ! queue ! ffmpegcolorspace ! eglglessink name=vsink force_rendering_slow=1 can_create_window=0", NULL);
-//  data->pipeline = gst_parse_launch ("videotestsrc ! ffmpegcolorspace ! video/x-raw-yuv,format=(fourcc)Y444 ! eglglessink name=vsink", NULL);
-  //data->pipeline = gst_parse_launch ("souphttpsrc location=http://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux ! amcviddec-omxgooglevpxdecoder ! queue ! ffmpegcolorspace ! eglglessink name=vsink", NULL);
-  data->pipeline = gst_parse_launch ("playbin2 uri=http://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv", NULL);
+  data->pipeline = gst_parse_launch ("playbin2", NULL);
 
   data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
   if (!data->vsink)
@@ -313,6 +310,15 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
   g_free (data);
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, NULL);
   GST_DEBUG ("Done finalizing");
+}
+
+void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
+  const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
+  GST_DEBUG ("Setting URI to %s", char_uri);
+  g_object_set(data->pipeline, "uri", char_uri);
+  (*env)->ReleaseStringUTFChars (env, uri, char_uri);
 }
 
 void gst_native_play (JNIEnv* env, jobject thiz) {
@@ -400,6 +406,7 @@ void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
 static JNINativeMethod native_methods[] = {
   { "nativeInit", "()V", (void *) gst_native_init},
   { "nativeFinalize", "()V", (void *) gst_native_finalize},
+  { "nativeSetUri", "(Ljava/lang/String;)V", (void *) gst_native_set_uri},
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},
   { "nativeSetPosition", "(I)V", (void*) gst_native_set_position},

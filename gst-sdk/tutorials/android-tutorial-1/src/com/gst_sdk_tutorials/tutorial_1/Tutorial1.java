@@ -37,6 +37,7 @@ import android.widget.Toast;
 public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private native void nativeInit();
     private native void nativeFinalize();
+    private native void nativeSetUri(String uri);
     private native void nativePlay();
     private native void nativePause();
     private native void nativeSetPosition(int milliseconds);
@@ -50,6 +51,8 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     private int duration;
 
     private Bundle initialization_data;
+    
+    private final String mediaUri = "http://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv";
 
     /* Called when the activity is first created. 
     @Override */
@@ -117,6 +120,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
     /* Called from native code */
     private void onGStreamerInitialized () {
+        nativeSetUri (mediaUri);
         if (initialization_data != null) {
             boolean should_play = initialization_data.getBoolean("playing");
             int milliseconds = initialization_data.getInt("position");
