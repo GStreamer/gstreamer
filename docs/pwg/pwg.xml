@@ -25,6 +25,7 @@
 
 <!-- Part 3: Advanced Filter Concepts -->
 <!ENTITY ADVANCED_NEGOTIATION SYSTEM "advanced-negotiation.xml">
+<!ENTITY ADVANCED_ALLOCATION  SYSTEM "advanced-allocation.xml">
 <!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
 <!ENTITY ADVANCED_TYPES       SYSTEM "advanced-types.xml">
 <!ENTITY ADVANCED_REQUEST     SYSTEM "advanced-request.xml">
@@ -140,6 +141,7 @@
     </partintro>
 
     &ADVANCED_NEGOTIATION;
+    &ADVANCED_ALLOCATION;
     &ADVANCED_SCHEDULING;
     &ADVANCED_TYPES;
     &ADVANCED_REQUEST;

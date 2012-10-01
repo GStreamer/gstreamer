@@ -1,0 +1,64 @@
+<chapter id="chapter-allocation" xreflabel="Memory allocation">
+  <title>Memory allocation</title>
+  <para>
+    Memory allocation and management is a very important topic in
+    multimedia. High definition video uses many magabytes to store
+    one single frame of video. It is important to reuse the memory
+    when possible instead of constantly allocating and freeing
+    the memory.
+  </para>
+  <para>
+    Multimedia systems usually use special purpose chips, such as
+    DSPs or GPUs to perform the heavy lifting (especially for video).
+    These special purpose chips have usually strict requirements
+    for the memory that they can operate on and how the memory
+    is accessed.
+  </para>
+  <para>
+    This chapter talks about the memory management features that
+    &GStreamer; plugins can use. We will first talk about the
+    lowlevel <classname>GstMemory</classname> object that manages
+    access to a piece of memory. We then continue with
+    <classname>GstBuffer</classname> that is used to exchange data
+    between plugins (and the application) and that uses
+    <classname>GstMemory</classname>. We talk about
+    <classname>GstMeta</classname> that can be placed on buffers to
+    give extra info about the buffer and its memory.
+    For efficiently managing buffers of the same size, we take a
+    look at <classname>GstBufferPool</classname>. To conclude this
+    chapter we take a look at the GST_QUERY_ALLOCATION query that
+    is used to negotiate memory management options between elements.
+  </para>
+
+  <sect1 id="section-allocation-memory" xreflabel="GstMemory">
+    <title>GstMemory</title>
+    <para>
+      
+    </para>
+  </sect1>
+
+  <sect1 id="section-allocation-buffer" xreflabel="GstBuffer">
+    <title>GstBuffer</title>
+    <para>
+    </para>
+  </sect1>
+
+  <sect1 id="section-allocation-meta" xreflabel="GstMeta">
+    <title>GstMeta</title>
+    <para>
+    </para>
+  </sect1>
+
+  <sect1 id="section-allocation-bufferpool" xreflabel="GstBufferPool">
+    <title>GstBufferPool</title>
+    <para>
+    </para>
+  </sect1>
+
+  <sect1 id="section-allocation-query" xreflabel="GST_QUERY_ALLOCATION">
+    <title>GST_QUERY_ALLOCATION</title>
+    <para>
+    </para>
+  </sect1>
+
+</chapter>

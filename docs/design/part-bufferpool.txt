@@ -74,7 +74,7 @@ Negotiation
  Buffers are then allocated by the srcpad from the negotiated pool and pushed to
  the peer pad as usual.
 
- The allocation query can also return an allocator name when the buffers are of
+ The allocation query can also return an allocator object when the buffers are of
  different sizes and can't be allocated from a pool.
 
 

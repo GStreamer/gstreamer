@@ -44,22 +44,33 @@ Memory layout
 Allocators
 ~~~~~~~~~~
 
- GstMemory objects are created by allocators. Allocators are created from
- a GstMemoryInfo structure.
+ GstMemory objects are created by allocators. Allocators are a subclass
+ of GstObject and can be subclassed to make custom allocators.
 
-  struct _GstMemoryInfo {
+  struct _GstAllocator {
+    GstObject                 object;
+
     const gchar              *mem_type;
-
-    GstAllocatorAllocFunction alloc;
 
     GstMemoryMapFunction      mem_map;
     GstMemoryUnmapFunction    mem_unmap;
-    GstMemoryFreeFunction     mem_free;
 
     GstMemoryCopyFunction     mem_copy;
     GstMemoryShareFunction    mem_share;
     GstMemoryIsSpanFunction   mem_is_span;
   };
+
+ The allocator class has 2 virtual methods. One to create a GstMemory,
+ another to free it again.
+
+  struct _GstAllocatorClass {
+    GstObjectClass object_class;
+
+    GstMemory *  (*alloc)      (GstAllocator *allocator, gsize size,
+                                GstAllocationParams *params);
+    void         (*free)       (GstAllocator *allocator, GstMemory *memory);
+  };
+
 
  Allocators are refcounted. It is also possible to register the allocator to the
  GStreamer system. This way, the allocator can be retrieved by name.
@@ -75,6 +86,11 @@ Allocators
 
  The GstMemory object is a refcounted object that must be freed with
  gst_memory_unref ().
+
+ The GstMemory keeps a ref to the allocator that allocated it. Inside the
+ allocator are the most common GstMemory operations listed. Custom
+ GstAllocator implementations must implement the various operations on
+ the memory they allocate.
 
  It is also possible to create a new GstMemory object that wraps existing
  memory with:
