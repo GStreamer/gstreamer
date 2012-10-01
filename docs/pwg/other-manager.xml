@@ -30,7 +30,9 @@
     <listitem>
       <para>
         To embed an element, or a series of elements, into something that
-        looks and works like a simple element to the outside world.
+        looks and works like a simple element to the outside world. This
+        is particular handy for implementing sources and sink elements with
+        multiple pads.
       </para>
     </listitem>
   </itemizedlist>

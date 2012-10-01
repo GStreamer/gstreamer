@@ -186,3 +186,11 @@
     </itemizedlist>
   </sect1>
 </chapter>
+
+<chapter id="chapter-porting-1_0">
+  <title>Porting 0.10 plug-ins to 1.0</title>
+  <para>
+    You can find the list of changes in the
+    <ulink url="http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/random/porting-to-1.0.txt">Porting to 1.0</ulink> document.
+  </para>
+</chapter>

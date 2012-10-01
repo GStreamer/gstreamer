@@ -133,7 +133,7 @@ gst_pad_set_event_func (myelement->srcpad,
       <listitem>
         <para>
           Elements should make sure they forward events they do not
-          handle with gst_pad_event_default (pad, event) instead of
+          handle with gst_pad_event_default (pad, parent, event) instead of
           just dropping them. Events should never be dropped unless
           specifically intended.
         </para>
@@ -141,18 +141,8 @@ gst_pad_set_event_func (myelement->srcpad,
       <listitem>
         <para>
           Elements should make sure they forward queries they do not
-          handle with gst_pad_query_default (pad, query) instead of
+          handle with gst_pad_query_default (pad, parent, query) instead of
           just dropping them.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Elements should use gst_pad_get_parent() in event and query
-          functions, so that they hold a reference to the element while they
-          are operating. Note that gst_pad_get_parent() increases the
-          reference count of the element, so you must be very careful to call
-          gst_object_unref (element) before returning from your query or
-          event function, otherwise you will leak memory.
         </para>
       </listitem>
     </itemizedlist>
@@ -168,8 +158,8 @@ gst_pad_set_event_func (myelement->srcpad,
           tool to show that your element is finished. Applications such as
           Rhythmbox and Totem (for GNOME) or AmaroK (for KDE)
           <emphasis>are</emphasis>. <command>gst-launch</command> will not
-          test various things such as proper clean-up on reset, interrupt
-          event handling, querying and so on.
+          test various things such as proper clean-up on reset, event
+          handling, querying and so on.
         </para>
       </listitem>
       <listitem>
