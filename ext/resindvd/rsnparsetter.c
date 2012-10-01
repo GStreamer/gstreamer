@@ -117,6 +117,8 @@ rsn_parsetter_sink_event (GstPad * pad, RsnParSetter * parset, GstEvent * event)
       if (structure != NULL &&
           gst_structure_has_name (structure, "application/x-gst-dvd")) {
         const char *type = gst_structure_get_string (structure, "event");
+        GstEvent *caps_event = NULL;
+
         if (type == NULL)
           goto out;
 
@@ -130,10 +132,12 @@ rsn_parsetter_sink_event (GstPad * pad, RsnParSetter * parset, GstEvent * event)
               parset->is_widescreen ? "16:9" : "4:3");
 
           g_mutex_lock (parset->caps_lock);
-          if (parset->is_widescreen != is_widescreen) {
+          if (parset->in_caps_last && parset->is_widescreen != is_widescreen) {
             /* Force caps check */
-            gst_caps_replace (&parset->in_caps_last, NULL);
             gst_caps_replace (&parset->in_caps_converted, NULL);
+            rsn_parsetter_update_caps (parset, parset->in_caps_last);
+            if (parset->override_outcaps)
+              caps_event = gst_event_new_caps (parset->outcaps);
           }
           parset->is_widescreen = is_widescreen;
 
@@ -141,6 +145,9 @@ rsn_parsetter_sink_event (GstPad * pad, RsnParSetter * parset, GstEvent * event)
           // parset->is_widescreen = FALSE;
 
           g_mutex_unlock (parset->caps_lock);
+
+          if (caps_event)
+            gst_pad_push_event (parset->srcpad, caps_event);
         }
       }
       break;
