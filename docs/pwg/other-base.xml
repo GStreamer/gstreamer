@@ -35,6 +35,10 @@
       automatically.
     </para>
     <para>
+      The base class implement much of the synchronization logic that a
+      sink has to perform.
+    </para>
+    <para>
       The <classname>GstBaseSink</classname> base-class specifies some
       limitations on elements, though:
     </para>
@@ -42,26 +46,8 @@
       <listitem>
         <para>
           It requires that the sink only has one sinkpad. Sink elements that
-          need more than one sinkpad, cannot use this base-class.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          The base-class owns the pad, and specifies caps negotiation, data
-          handling, pad allocation and such functions. If you need more than
-          the ones provided as virtual functions, then you cannot use this
-          base-class.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          By implementing the <function>pad_allocate ()</function> function,
-          it is possible for upstream elements to use special memory, such
-          as memory on the X server side that only the sink can allocate, or
-          even hardware memory <function>mmap ()</function>'ed from the kernel.
-          Note that in almost all cases, you will want to subclass the
-          <classname>GstBuffer</classname> object, so that your own set of
-          functions will be called when the buffer loses its last reference.
+          need more than one sinkpad, must make a manager element with
+          multiple GstBaseSink elements inside.
         </para>
       </listitem>
     </itemizedlist>
@@ -109,13 +95,19 @@ gst_my_sink_class_init (GstMySinkClass * klass)
       <title>Writing an audio sink</title>
       <para>
         Essentially, audio sink implementations are just a special case of a
-        general sink. There are two audio base classes that you can choose to
+        general sink. An audio sink has the added complexity that it needs to
+        schedule playback of samples. It must match the clock selected in the
+        pipeline against the clock of the audio device and calculate and
+        compensate for drift and jitter.
+      </para>
+      <para>
+        There are two audio base classes that you can choose to
         derive from, depending on your needs:
-        <classname>GstBaseAudiosink</classname> and
-        <classname>GstAudioSink</classname>. The baseaudiosink provides full
+        <classname>GstAudioBasesink</classname> and
+        <classname>GstAudioSink</classname>. The audiobasesink provides full
         control over how synchronization and scheduling is handled, by using
         a ringbuffer that the derived class controls and provides. The
-        audiosink base-class is a derived class of the baseaudiosink,
+        audiosink base-class is a derived class of the audiobasesink,
         implementing a standard ringbuffer implementing default
         synchronization and providing a standard audio-sample clock. Derived
         classes of this base class merely need to provide a <function>_open
@@ -123,7 +115,7 @@ gst_my_sink_class_init (GstMySinkClass * klass)
         ()</function> function implementation, and some optional functions.
         This should suffice for many sound-server output elements and even
         most interfaces. More demanding audio systems, such as Jack, would
-        want to implement the <classname>GstBaseAudioSink</classname>
+        want to implement the <classname>GstAudioBaseSink</classname>
         base-class.
       </para>
       <para>
@@ -243,15 +235,9 @@ gst_my_sink_class_init (GstMySinkClass * klass)
       <listitem>
         <para>
           There is one and only one sourcepad. Source elements requiring
-          multiple sourcepads cannot use this base-class.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Since the base-class owns the pad and derived classes can only
-          control it as far as the virtual functions allow, you are limited
-          to the functionality provided by the virtual functions. If you need
-          more, you cannot use this base-class.
+          multiple sourcepads must implement a manager bin and use multiple
+          source elements internally or make a manager element that uses
+          a source element and a demuxer inside.
         </para>
       </listitem>
     </itemizedlist>
@@ -259,9 +245,6 @@ gst_my_sink_class_init (GstMySinkClass * klass)
       It is possible to use special memory, such as X server memory pointers
       or <function>mmap ()</function>'ed memory areas, as data pointers in
       buffers returned from the <function>create()</function> virtual function.
-      In almost all cases, you will want to subclass
-      <classname>GstBuffer</classname> so that your own set of functions can
-      be called when the buffer is destroyed.
     </para>
 
     <sect2 id="section-base-audiosrc" xreflabel="Writing an audio source">
@@ -275,7 +258,7 @@ gst_my_sink_class_init (GstMySinkClass * klass)
         linkend="section-base-audiosink"/>; one is ringbuffer-based, and
         requires the derived class to take care of its own scheduling,
         synchronization and such. The other is based on this
-        <classname>GstBaseAudioSrc</classname> and is called
+        <classname>GstAudioBaseSrc</classname> and is called
         <classname>GstAudioSrc</classname>, and provides a simple
         <function>open ()</function>, <function>close ()</function> and
         <function>read ()</function> interface, which is rather simple to
