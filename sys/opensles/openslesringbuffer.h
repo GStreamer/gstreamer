@@ -88,6 +88,7 @@ struct _GstOpenSLESRingBuffer
   SLAndroidSimpleBufferQueueItf bufferQueue;
   guint data_segtotal;
   guint8 * data;
+  guint data_size;
   guint cursor;
   gint segqueued; /* ATOMIC */
   gboolean is_queue_callback_registered;

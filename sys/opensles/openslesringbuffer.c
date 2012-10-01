@@ -453,7 +453,9 @@ _opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
 
   /* Allocate the queue associated ringbuffer memory */
   thiz->data_segtotal = loc_bufq.numBuffers;
-  thiz->data = g_malloc (spec->segsize * thiz->data_segtotal);
+  thiz->data_size = spec->segsize * thiz->data_segtotal;
+  thiz->data = g_malloc0 (thiz->data_size);
+  g_atomic_int_set (&thiz->segqueued, 0);
   thiz->cursor = 0;
 
   return TRUE;
@@ -610,7 +612,6 @@ _opensles_player_stop (GstRingBuffer * rb)
 /*
  * OpenSL ES ringbuffer wrapper
  */
-
 
 GstRingBuffer *
 gst_opensles_ringbuffer_new (RingBufferMode mode)
@@ -899,6 +900,20 @@ gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
 }
 
 static void
+gst_opensles_ringbuffer_clear_all (GstRingBuffer * rb)
+{
+  GstOpenSLESRingBuffer *thiz;
+
+  thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
+
+  if (thiz->data) {
+    memset (thiz->data, 0, thiz->data_size);
+    g_atomic_int_set (&thiz->segqueued, 0);
+    thiz->cursor = 0;
+  }
+}
+
+static void
 gst_opensles_ringbuffer_dispose (GObject * object)
 {
   G_OBJECT_CLASS (ring_parent_class)->dispose (object);
@@ -947,6 +962,8 @@ gst_opensles_ringbuffer_class_init (GstOpenSLESRingBufferClass * klass)
   gstringbuffer_class->stop = GST_DEBUG_FUNCPTR (gst_opensles_ringbuffer_stop);
   gstringbuffer_class->delay =
       GST_DEBUG_FUNCPTR (gst_opensles_ringbuffer_delay);
+  gstringbuffer_class->clear_all =
+      GST_DEBUG_FUNCPTR (gst_opensles_ringbuffer_clear_all);
 }
 
 static void
