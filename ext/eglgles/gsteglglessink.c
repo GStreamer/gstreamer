@@ -1041,7 +1041,6 @@ HANDLE_ERROR:
   return FALSE;
 }
 
-/* Drafted */
 gboolean
 gst_eglglessink_stop (GstBaseSink * sink)
 {
@@ -1167,15 +1166,13 @@ gst_eglglessink_expose (GstXOverlay * overlay)
   eglglessink = GST_EGLGLESSINK (overlay);
   GST_DEBUG_OBJECT (eglglessink, "Expose catched, redisplay");
 
-  /* Logic would be to get _render_and_display() to use
-   * last seen buffer to render from when NULL it's
-   * passed on */
+  /* Render from last seen buffer */
   ret = gst_eglglessink_render_and_display (eglglessink, NULL);
   if (ret == GST_FLOW_ERROR)
     GST_ERROR_OBJECT (eglglessink, "Redisplay failed");
 }
 
-/* Checks available egl/gles extensions and chooses
+/* Checks available EGL/GLES extensions and chooses
  * a suitable rendering path from GstEglGlesSinkRenderingPath
  * accordingly. This function can only be called after an
  * EGL context has been made current.
@@ -1475,7 +1472,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
    * XXX: Need to be runtime conditional or ifdefed
    */
 
-  /* Shader compiler support it's optional byt we
+  /* Shader compiler support is optional but we
    * currently rely on it.
    */
 
@@ -1828,7 +1825,6 @@ HANDLE_ERROR:
   return;
 }
 
-/* Drafted */
 static void
 gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
     gint width, gint height)
@@ -2046,7 +2042,9 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
 
       /* If no one has set a display rectangle on us initialize
        * a sane default. According to the docs on the xOverlay
-       * interface we are supposed to fill the overlay 100%
+       * interface we are supposed to fill the overlay 100%. We
+       * do this trying to take PAR/DAR into account unless the
+       * calling party explicitly ask us not to.
        */
       if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
           !eglglessink->display_region.w || !eglglessink->display_region.h) {
@@ -2078,7 +2076,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
               frame.w = w;
             else /* Neither width nor height can be precisely scaled.
-                  * Preffer to leave height untouched. See comment above.
+                  * Prefer to leave height untouched. See comment above.
                   */
               frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
               frame.h = h;
@@ -2191,16 +2189,17 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   if (!(ret = gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d))) {
     par_n = 1;
     par_d = 1;
-    GST_WARNING_OBJECT (eglglessink, "Can't parse PAR from caps. Using default: 1");
+    GST_WARNING_OBJECT (eglglessink,
+        "Can't parse PAR from caps. Using default: 1");
   }
 
   format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
   if (!format) {
     GST_ERROR_OBJECT (eglglessink,
-        "No supported and compatible egl/gles format " "found for given caps");
+        "No supported and compatible EGL/GLES format found for given caps");
     goto HANDLE_ERROR;
   } else
-    GST_INFO_OBJECT (eglglessink, "Selected compatible egl/gles format %d",
+    GST_INFO_OBJECT (eglglessink, "Selected compatible EGL/GLES format %d",
         format->fmt);
 
   g_mutex_lock (eglglessink->flow_lock);
@@ -2265,7 +2264,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   g_mutex_unlock (eglglessink->flow_lock);
 
   /* By now the application should have set a window
-   * already if it meant to do so
+   * if it meant to do so
    */
   if (!eglglessink->have_window) {
     GST_INFO_OBJECT (eglglessink,
