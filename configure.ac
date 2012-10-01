@@ -1,6 +1,6 @@
 # gstreamer-vaapi package version number
 m4_define([gst_vaapi_major_version], [0])
-m4_define([gst_vaapi_minor_version], [4])
+m4_define([gst_vaapi_minor_version], [5])
 m4_define([gst_vaapi_micro_version], [0])
 m4_define([gst_vaapi_pre_version],   [1])
 m4_define([gst_vaapi_version],
