@@ -1,4 +1,4 @@
-playbin2
+playbin
 --------
 
 The purpose of this element is to decode and render the media contained in a
@@ -48,7 +48,7 @@ Components
  - allows for configuration of visualisation element.
  - allows for enable/disable of visualisation, audio and video.
 
-* playbin2
+* playbin
 
  - combination of one or more uridecodebin elements to read the uri and subtitle
    uri.
@@ -61,7 +61,7 @@ Components
 Gapless playback
 ----------------
 
-playbin2 has an "about-to-finish" signal. The application should configure a new
+playbin has an "about-to-finish" signal. The application should configure a new
 uri (and optional suburi) in the callback. When the current media finishes, this
 new media will be played next.
 

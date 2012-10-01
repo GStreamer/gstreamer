@@ -1,10 +1,8 @@
 ===============================================================
- Subtitle overlays, hardware-accelerated decoding and playbin2
+ Subtitle overlays, hardware-accelerated decoding and playbin
 ===============================================================
 
 Status: EARLY DRAFT / BRAINSTORMING
-
-The following text will use "playbin" synonymous with "playbin2".
 
  === 1. Background ===
 
@@ -30,7 +28,7 @@ us to allocate and blend whole pictures (1920x1080 AYUV = 8MB,
 is only a small rectangle at the bottom. This wastes memory and CPU.
 We could do something better by introducing a new format that only
 encodes the region(s) of interest, but we don't have such a format yet, and
-are not necessarily keen to rewrite this part of the logic in playbin2
+are not necessarily keen to rewrite this part of the logic in playbin
 at this point - and we can't change existing elements' behaviour, so would
 need to introduce new elements for this.
 
@@ -58,7 +56,7 @@ map the data back into system memory (and then later back to the GPU).
 It's much better to upload the much smaller encoded data to the GPU/DSP
 and then leave it there until rendered.
 
-Currently playbin2 only supports subtitles on top of raw decoded video.
+Currently playbin only supports subtitles on top of raw decoded video.
 It will try to find a suitable overlay element from the plugin registry
 based on the input subtitle caps and the rank. (It is assumed that we
 will be able to convert any raw video format into any format required
@@ -66,7 +64,7 @@ by the overlay using a converter such as videoconvert.)
 
 It will not render subtitles if the video sent to the sink is not
 raw YUV or RGB or if conversions have been disabled by setting the
-native-video flag on playbin2.
+native-video flag on playbin.
 
 Subtitle rendering is considered an important feature. Enabling
 hardware-accelerated decoding by default should not lead to a major
@@ -174,7 +172,7 @@ Multiple possible solutions come to mind:
       to buffers seems more intuitive than sending it interleaved as
       events. And buffers stored or passed around (e.g. via the
       "last-buffer" property in the sink when doing screenshots via
-      playbin2) always contain all the information needed.
+      playbin) always contain all the information needed.
 
 
   (d) create a video/x-raw-*-delta format and use a backend-specific videomixer
@@ -185,7 +183,7 @@ Multiple possible solutions come to mind:
       in the video backend plugin. It would also add a concept that
       might be generally useful (think ximagesrc capture with xdamage).
       However, it would require adding foorender variants of all the
-      existing overlay elements, and changing playbin2 to that new
+      existing overlay elements, and changing playbin to that new
       design, which is somewhat intrusive. And given the general
       nature of such a new format/API, we would need to take a lot
       of care to be able to accommodate all possible use cases when
