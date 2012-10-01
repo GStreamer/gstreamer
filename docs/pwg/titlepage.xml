@@ -72,6 +72,15 @@
         </para>
       </authorblurb>
     </author>
+    <author>
+      <firstname>Wim</firstname>
+      <surname>Taymans</surname>
+      <authorblurb>
+        <para>
+	      <email>wim.taymans@gmail.com</email>
+        </para>
+      </authorblurb>
+    </author>
   </authorgroup>
 
   <legalnotice id="misc-legalnotice">
