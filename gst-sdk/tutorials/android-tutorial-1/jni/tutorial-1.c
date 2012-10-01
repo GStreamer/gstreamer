@@ -24,12 +24,14 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 typedef struct _CustomData {
   jobject app;
   GstElement *pipeline;
+  GMainContext *context;
   GMainLoop *main_loop;
   ANativeWindow *native_window;
   GstState state, target_state;
   gint64 position;
   gint64 duration;
   gint64 desired_position;
+  GstClockTime last_seek_time;
   gboolean initialized;
   gboolean is_live;
 } CustomData;
@@ -123,11 +125,40 @@ static gboolean refresh_ui (CustomData *data) {
   return TRUE;
 }
 
+static void execute_seek (gint64 desired_position, CustomData *data);
+static gboolean
+delayed_seek_cb (CustomData *data)
+{
+  execute_seek (data->desired_position, data);
+  return FALSE;
+}
+
 static void execute_seek (gint64 desired_position, CustomData *data) {
   gboolean res;
-  GST_DEBUG ("Setting position to %lld milliseconds", desired_position / GST_MSECOND);
-  res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
-  GST_DEBUG ("Seek returned %d", res);
+  gint64 diff;
+
+  if (desired_position == GST_CLOCK_TIME_NONE)
+    return;
+
+  diff = gst_util_get_timestamp () - data->last_seek_time;
+
+  if (GST_CLOCK_TIME_IS_VALID (data->last_seek_time) && diff < 500 * GST_MSECOND) {
+    GSource *timeout_source;
+    
+    data->desired_position = desired_position;
+    timeout_source = g_timeout_source_new (diff / GST_MSECOND);
+    g_source_attach (timeout_source, data->context);
+    g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
+    g_source_unref (timeout_source);
+    GST_DEBUG ("Throttling seek to %" GST_TIME_FORMAT ", will be in %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (desired_position), GST_TIME_ARGS (500 * GST_MSECOND - diff));
+  } else {
+    GST_DEBUG ("Setting position to %lld milliseconds", desired_position / GST_MSECOND);
+    res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
+    data->last_seek_time = gst_util_get_timestamp ();
+    data->desired_position = GST_CLOCK_TIME_NONE;
+    GST_DEBUG ("Seek returned %d", res);
+  }
 }
 
 static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
@@ -226,12 +257,11 @@ static void *app_function (void *userdata) {
   CustomData *data = (CustomData *)userdata;
   GSource *timeout_source;
   GSource *bus_source;
-  GMainContext *context;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
   /* create our own GLib Main Context, so we do not interfere with other libraries using GLib */
-  context = g_main_context_new ();
+  data->context = g_main_context_new ();
 
   data->pipeline = gst_element_factory_make ("playbin2", NULL);
 
@@ -244,7 +274,7 @@ static void *app_function (void *userdata) {
   bus = gst_element_get_bus (data->pipeline);
   bus_source = gst_bus_create_watch (bus);
   g_source_set_callback (bus_source, (GSourceFunc) gst_bus_async_signal_func, NULL, NULL);
-  g_source_attach (bus_source, context);
+  g_source_attach (bus_source, data->context);
   g_source_unref (bus_source);
   g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, data);
   g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, data);
@@ -256,13 +286,13 @@ static void *app_function (void *userdata) {
 
   /* Register a function that GLib will call 4 times per second */
   timeout_source = g_timeout_source_new (250);
-  g_source_attach (timeout_source, context);
+  g_source_attach (timeout_source, data->context);
   g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, data, NULL);
   g_source_unref (timeout_source);
 
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
-  data->main_loop = g_main_loop_new (context, FALSE);
+  data->main_loop = g_main_loop_new (data->context, FALSE);
   check_initialization_complete (data);
   g_main_loop_run (data->main_loop);
   GST_DEBUG ("Exited main loop");
@@ -270,7 +300,7 @@ static void *app_function (void *userdata) {
   data->main_loop = NULL;
 
   /* Free resources */
-  g_main_context_unref (context);
+  g_main_context_unref (data->context);
   data->target_state = GST_STATE_NULL;
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->pipeline);
@@ -282,9 +312,10 @@ static void *app_function (void *userdata) {
  * Java Bindings
  */
 void gst_native_init (JNIEnv* env, jobject thiz) {
-  CustomData *data = (CustomData *)g_malloc0 (sizeof (CustomData));
+  CustomData *data = g_new0 (CustomData, 1);
   data->duration = GST_CLOCK_TIME_NONE;
   data->desired_position = GST_CLOCK_TIME_NONE;
+  data->last_seek_time = GST_CLOCK_TIME_NONE;
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
