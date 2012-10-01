@@ -57,8 +57,7 @@ create_element (const gchar * factory_name)
 }
 
 static void
-new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
-    AppInfo * info)
+new_decoded_pad (GstElement * dec, GstPad * new_pad, AppInfo * info)
 {
   const gchar *sname;
   GstElement *csp, *scale, *filter;
@@ -70,7 +69,7 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
   if (info->got_video)
     return;
 
-  /* FIXME: is this racy or does decodebin2 make sure caps are always
+  /* FIXME: is this racy or does decodebin make sure caps are always
    * negotiated at this point? */
   caps = gst_pad_query_caps (new_pad, NULL);
   g_return_if_fail (caps != NULL);
@@ -109,11 +108,15 @@ new_decoded_pad (GstElement * dec, GstPad * new_pad, gboolean last,
   return;
 
 not_video:
-  {
-    if (last) {
-      g_error ("This file does not contain a video track, or you do not have "
-          "the necessary decoder(s) installed");
-    }
+  return;
+}
+
+static void
+no_more_pads (GstElement * decodebin, AppInfo * info)
+{
+  if (!info->got_video) {
+    g_error ("This file does not contain a video track, or you do not have "
+        "the necessary decoder(s) installed");
   }
 }
 
@@ -191,13 +194,15 @@ create_pipeline (AppInfo * info, const gchar * filename)
   src = create_element ("filesrc");
   g_object_set (src, "location", filename, NULL);
 
-  dec = create_element ("decodebin2");
+  dec = create_element ("decodebin");
 
   gst_bin_add_many (GST_BIN (info->pipe), src, dec, NULL);
   if (!gst_element_link (src, dec))
-    g_error ("Can't link filesrc to decodebin2");
+    g_error ("Can't link filesrc to decodebin");
 
-  g_signal_connect (dec, "new-decoded-pad", G_CALLBACK (new_decoded_pad), info);
+  g_signal_connect (dec, "pad-added", G_CALLBACK (new_decoded_pad), info);
+
+  g_signal_connect (dec, "no-more-pads", G_CALLBACK (no_more_pads), info);
 
   /* set up bus */
   bus = gst_element_get_bus (info->pipe);
