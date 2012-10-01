@@ -2062,17 +2062,19 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
             * comes from interlacing considerations.
             * XXX: Move this to gstutils?
             */
-            if (!(h % dar_d))
+            if (h % dar_d == 0) {
               frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
               frame.h = h;
-            else if (!(w % dar_n))
+            } else if (w % dar_n == 0) {
               frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
               frame.w = w;
-            else /* Neither width nor height can be precisely scaled.
-                  * Prefer to leave height untouched. See comment above.
-                  */
+            } else {
+              /* Neither width nor height can be precisely scaled.
+               * Prefer to leave height untouched. See comment above.
+               */
               frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
               frame.h = h;
+            }
           }
 
           surface.w = eglglessink->eglglesctx->surface_width;
