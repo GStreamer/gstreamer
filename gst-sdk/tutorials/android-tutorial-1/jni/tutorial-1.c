@@ -342,10 +342,10 @@ void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   if (!data) return;
   gint64 desired_position = (gint64)(milliseconds * GST_MSECOND);
   if (data->state == GST_STATE_PLAYING || data->state == GST_STATE_PAUSED) {
-	  execute_seek(desired_position, data);
+    execute_seek(desired_position, data);
   } else {
-	  GST_DEBUG ("Scheduling seek to %d milliseconds for later", milliseconds);
-	  data->desired_position = desired_position;
+    GST_DEBUG ("Scheduling seek to %d milliseconds for later", milliseconds);
+    data->desired_position = desired_position;
   }
 }
 
