@@ -29,7 +29,6 @@ typedef struct _CustomData {
   GstState state, target_state;
   gint64 position;
   gint64 duration;
-  GstElement *vsink;
   gint64 desired_position;
   gboolean initialized;
   gboolean is_live;
@@ -234,14 +233,11 @@ static void *app_function (void *userdata) {
   /* create our own GLib Main Context, so we do not interfere with other libraries using GLib */
   context = g_main_context_new ();
 
-  data->pipeline = gst_parse_launch ("playbin2", NULL);
+  data->pipeline = gst_element_factory_make ("playbin2", NULL);
 
-  data->vsink = gst_bin_get_by_name (GST_BIN (data->pipeline), "vsink");
-  if (!data->vsink)
-    data->vsink = gst_object_ref (data->pipeline);
   if (data->native_window) {
-    GST_DEBUG ("Native window already received, notifying the vsink about it.");
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)data->native_window);
+    GST_DEBUG ("Native window already received, notifying the pipeline about it.");
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
   }
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
@@ -277,7 +273,6 @@ static void *app_function (void *userdata) {
   g_main_context_unref (context);
   data->target_state = GST_STATE_NULL;
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
-  gst_object_unref (data->vsink);
   gst_object_unref (data->pipeline);
 
   return NULL;
@@ -380,11 +375,11 @@ void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   data->native_window = ANativeWindow_fromSurface(env, surface);
   GST_DEBUG ("Got Native Window %p", data->native_window);
 
-  if (data->vsink) {
-    GST_DEBUG ("Pipeline already created, notifying the vsink about the native window.");
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)data->native_window);
+  if (data->pipeline) {
+    GST_DEBUG ("Pipeline already created, notifying the it about the native window.");
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
   } else {
-    GST_DEBUG ("Pipeline not created yet, vsink will later be notified about the native window.");
+    GST_DEBUG ("Pipeline not created yet, it will later be notified about the native window.");
   }
 
   check_initialization_complete (data);
@@ -400,7 +395,9 @@ void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   ANativeWindow_release (data->native_window);
   data->native_window = NULL;
 
-  gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->vsink), (guintptr)NULL);
+  if (data->pipeline) {
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
+  }
 }
 
 static JNINativeMethod native_methods[] = {
