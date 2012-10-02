@@ -267,6 +267,13 @@ static void *app_function (void *userdata) {
 
   data->pipeline = gst_element_factory_make ("playbin2", NULL);
 
+  if (0) {
+	  GstElement *fakesink;
+	  fakesink = gst_element_factory_make ("fakesink", NULL);
+	  g_object_set (fakesink, "sync", TRUE, NULL);
+	  g_object_set (data->pipeline, "video-sink", fakesink, NULL);
+  }
+
   if (data->native_window) {
     GST_DEBUG ("Native window already received, notifying the pipeline about it.");
     gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
@@ -342,12 +349,12 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
 
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
-  if (!data) return;
+  if (!data || !data->pipeline) return;
   const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
   GST_DEBUG ("Setting URI to %s", char_uri);
   if (data->target_state >= GST_STATE_READY)
 	gst_element_set_state (data->pipeline, GST_STATE_READY);
-  g_object_set(data->pipeline, "uri", char_uri);
+  g_object_set(data->pipeline, "uri", char_uri, NULL);
   (*env)->ReleaseStringUTFChars (env, uri, char_uri);
   data->is_live = (gst_element_set_state (data->pipeline, data->target_state) == GST_STATE_CHANGE_NO_PREROLL);
 }
@@ -428,12 +435,14 @@ void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
     return;
   }
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
-  ANativeWindow_release (data->native_window);
-  data->native_window = NULL;
 
   if (data->pipeline) {
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
+	gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
+	gst_element_set_state (data->pipeline, GST_STATE_NULL);
   }
+
+  ANativeWindow_release (data->native_window);
+  data->native_window = NULL;
 }
 
 static JNINativeMethod native_methods[] = {

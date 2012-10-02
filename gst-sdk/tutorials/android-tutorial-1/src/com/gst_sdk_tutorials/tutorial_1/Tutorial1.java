@@ -20,15 +20,14 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import com.gst_sdk.GStreamer;
+import com.lamerman.FileDialog;
+import com.lamerman.SelectionMode;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.util.Log;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -97,8 +96,9 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         ImageButton select = (ImageButton) this.findViewById(R.id.button_select);
         select.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-            	Intent i = new Intent(Intent.ACTION_PICK);
-            	i.setDataAndType(Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)), "video/*;audio/*");
+            	Intent i = new Intent(getBaseContext(), FileDialog.class);
+            	i.putExtra(FileDialog.START_PATH, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
+            	i.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
             	startActivityForResult(i, PICK_FILE_CODE);
             }
         });
@@ -268,11 +268,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
     	if (resultCode == RESULT_OK && requestCode == PICK_FILE_CODE) {
-    		String[] proj = { MediaStore.Video.Media.DATA };
-    		Cursor c = managedQuery(data.getData(), proj, null, null, null);
-      		int column_index = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
-    		c.moveToFirst();
-    		mediaUri = "file://" + c.getString(column_index);
+    		mediaUri = "file://" + data.getStringExtra(FileDialog.RESULT_PATH);
     		setMediaUri();
     	}
     } 

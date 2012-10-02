@@ -4,4 +4,15 @@
     <string name="button_play">Play</string>
     <string name="button_stop">Stop</string>
     <string name="button_select">Select</string>
+    <string name="filechooser_name">Android tutorial 1</string>
+    <string name="location">Location</string>
+    <string name="cant_read_folder">folder can\'t be read!</string>
+    <string name="nnew">New</string>
+    <string name="select">Select</string>
+    <string name="file_name">File name:</string>
+    <string name="cancel">Cancel</string>
+    <string name="create">Save</string>
+    <string name="no_data">No Data</string>
+    <color name="gray">#ffff0000</color>
+    <string name="err">Error</string>
 </resources>
