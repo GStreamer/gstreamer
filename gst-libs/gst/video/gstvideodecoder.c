@@ -1736,12 +1736,11 @@ gst_video_decoder_flush_decode (GstVideoDecoder * dec)
   while (walk) {
     GList *next;
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) (walk->data);
-    GstBuffer *buf = frame->input_buffer;
 
     GST_DEBUG_OBJECT (dec, "decoding frame %p buffer %p, PTS %" GST_TIME_FORMAT
-        ", DTS %" GST_TIME_FORMAT, frame, buf,
-        GST_TIME_ARGS (GST_BUFFER_PTS (buf)),
-        GST_TIME_ARGS (GST_BUFFER_DTS (buf)));
+        ", DTS %" GST_TIME_FORMAT, frame, frame->input_buffer,
+        GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)),
+        GST_TIME_ARGS (GST_BUFFER_DTS (frame->input_buffer)));
 
     next = walk->next;
 
