@@ -2285,32 +2285,32 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
 
     if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-    glUseProgram (0);
+      glUseProgram (0);
 
-    if (eglglessink->have_vbo) {
-      glDeleteBuffers (1, &eglglessink->eglglesctx->position_buffer);
-      glDeleteBuffers (1, &eglglessink->eglglesctx->texpos_buffer);
-      glDeleteBuffers (1, &eglglessink->eglglesctx->index_buffer);
-      eglglessink->have_vbo = FALSE;
-    }
+      if (eglglessink->have_vbo) {
+        glDeleteBuffers (1, &eglglessink->eglglesctx->position_buffer);
+        glDeleteBuffers (1, &eglglessink->eglglesctx->texpos_buffer);
+        glDeleteBuffers (1, &eglglessink->eglglesctx->index_buffer);
+        eglglessink->have_vbo = FALSE;
+      }
 
-    if (eglglessink->have_texture) {
-      glDeleteTextures (eglglessink->eglglesctx->n_textures,
-          eglglessink->eglglesctx->texture);
-      eglglessink->have_texture = FALSE;
-      eglglessink->eglglesctx->n_textures = 0;
-    }
+      if (eglglessink->have_texture) {
+        glDeleteTextures (eglglessink->eglglesctx->n_textures,
+            eglglessink->eglglesctx->texture);
+        eglglessink->have_texture = FALSE;
+        eglglessink->eglglesctx->n_textures = 0;
+      }
 
-    if (eglglessink->eglglesctx->glslprogram) {
-      glDetachShader (eglglessink->eglglesctx->glslprogram,
-          eglglessink->eglglesctx->fragshader);
-      glDetachShader (eglglessink->eglglesctx->glslprogram,
-          eglglessink->eglglesctx->vertshader);
-      glDeleteProgram (eglglessink->eglglesctx->glslprogram);
-      glDeleteShader (eglglessink->eglglesctx->fragshader);
-      glDeleteShader (eglglessink->eglglesctx->vertshader);
-      eglglessink->eglglesctx->glslprogram = 0;
-    }
+      if (eglglessink->eglglesctx->glslprogram) {
+        glDetachShader (eglglessink->eglglesctx->glslprogram,
+            eglglessink->eglglesctx->fragshader);
+        glDetachShader (eglglessink->eglglesctx->glslprogram,
+            eglglessink->eglglesctx->vertshader);
+        glDeleteProgram (eglglessink->eglglesctx->glslprogram);
+        glDeleteShader (eglglessink->eglglesctx->fragshader);
+        glDeleteShader (eglglessink->eglglesctx->vertshader);
+        eglglessink->eglglesctx->glslprogram = 0;
+      }
     }
 
     if (eglglessink->eglglesctx->surface) {
