@@ -49,6 +49,43 @@ G_BEGIN_DECLS
 #define GST_H264_IS_SI_SLICE(slice) (((slice)->type % 5) == GST_H264_SI_SLICE)
 
 /**
+ * @GST_H264_PROFILE_BASELINE: Baseline profile (A.2.1)
+ * @GST_H264_PROFILE_MAIN: Main profile (A.2.2)
+ * @GST_H264_PROFILE_EXTENDED: Extended profile (A.2.3)
+ * @GST_H264_PROFILE_HIGH: High profile (A.2.4)
+ * @GST_H264_PROFILE_HIGH10: High 10 profile (A.2.5) or High 10 Intra
+ *   profile (A.2.8), depending on constraint_set3_flag
+ * @GST_H264_PROFILE_HIGH_422: High 4:2:2 profile (A.2.6) or High
+ *   4:2:2 Intra profile (A.2.9), depending on constraint_set3_flag
+ * @GST_H264_PROFILE_HIGH_444: High 4:4:4 Predictive profile (A.2.7)
+ *   or High 4:4:4 Intra profile (A.2.10), depending on the value of
+ *   constraint_set3_flag
+ * @GST_H264_PROFILE_MULTIVIEW_HIGH: Multiview High profile (H.10.1.1)
+ * @GST_H264_PROFILE_STEREO_HIGH: Stereo High profile (H.10.1.2)
+ * @GST_H264_PROFILE_SCALABLE_BASELINE: Scalable Baseline profile (G.10.1.1)
+ * @GST_H264_PROFILE_SCALABLE_HIGH: Scalable High profile (G.10.1.2)
+ *   or Scalable High Intra profile (G.10.1.3), depending on the value
+ *   of constraint_set3_flag
+ *
+ * H.264 Profiles.
+ *
+ * Since: 1.2
+ */
+typedef enum {
+  GST_H264_PROFILE_BASELINE             = 66,
+  GST_H264_PROFILE_MAIN                 = 77,
+  GST_H264_PROFILE_EXTENDED             = 88,
+  GST_H264_PROFILE_HIGH                 = 100,
+  GST_H264_PROFILE_HIGH10               = 110,
+  GST_H264_PROFILE_HIGH_422             = 122,
+  GST_H264_PROFILE_HIGH_444             = 244,
+  GST_H264_PROFILE_MULTIVIEW_HIGH       = 118,
+  GST_H264_PROFILE_STEREO_HIGH          = 128,
+  GST_H264_PROFILE_SCALABLE_BASELINE    = 83,
+  GST_H264_PROFILE_SCALABLE_HIGH        = 86
+} GstH264Profile;
+
+/**
  * GstH264NalUnitType:
  * @GST_H264_NAL_UNKNOWN: Unknown nal type
  * @GST_H264_NAL_SLICE: Slice nal
