@@ -345,8 +345,11 @@ void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   if (!data) return;
   const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
   GST_DEBUG ("Setting URI to %s", char_uri);
+  if (data->target_state >= GST_STATE_READY)
+	gst_element_set_state (data->pipeline, GST_STATE_READY);
   g_object_set(data->pipeline, "uri", char_uri);
   (*env)->ReleaseStringUTFChars (env, uri, char_uri);
+  data->is_live = (gst_element_set_state (data->pipeline, data->target_state) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 void gst_native_play (JNIEnv* env, jobject thiz) {

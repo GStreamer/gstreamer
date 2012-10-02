@@ -22,8 +22,13 @@ import java.util.TimeZone;
 import com.gst_sdk.GStreamer;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.database.Cursor;
 import android.util.Log;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -54,10 +59,11 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
     private Bundle initialization_data;
     
-    private final String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
-
-    /* Called when the activity is first created. 
-    @Override */
+    private String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
+    static private final int PICK_FILE_CODE = 1;
+    
+    /* Called when the activity is first created. */
+    @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
@@ -87,6 +93,15 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
                 nativePause();
             }
         });
+        
+        ImageButton select = (ImageButton) this.findViewById(R.id.button_select);
+        select.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+            	Intent i = new Intent(Intent.ACTION_PICK);
+            	i.setDataAndType(Uri.fromFile(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)), "video/*;audio/*");
+            	startActivityForResult(i, PICK_FILE_CODE);
+            }
+        });
 
         SurfaceView sv = (SurfaceView) this.findViewById(R.id.surface_video);
         SurfaceHolder sh = sv.getHolder();
@@ -104,10 +119,11 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
     }
     
     protected void onSaveInstanceState (Bundle outState) {
-        Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired + " position:" + position);
+        Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired + " position:" + position + " uri: " + mediaUri);
         outState.putBoolean("playing", is_playing_desired);
         outState.putInt("position", position);
         outState.putInt("duration", duration);
+        outState.putString("mediaUri", mediaUri);
     }
 
     protected void onDestroy() {
@@ -124,27 +140,30 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
           }
         });
     }
-
-    /* Called from native code */
-    private void onGStreamerInitialized () {
+    
+    private void setMediaUri() {
         nativeSetUri (mediaUri);
         if (mediaUri.startsWith("file://")) is_local_media = true;
+    }
 
+    /* Called from native code */
+    private void onGStreamerInitialized () {    	
         if (initialization_data != null) {
             is_playing_desired = initialization_data.getBoolean("playing");
             int milliseconds = initialization_data.getInt("position");
             Log.i ("GStreamer", "Restoring state, playing:" + is_playing_desired + " position:" + milliseconds + " ms.");
+            mediaUri = initialization_data.getString ("mediaUri");
             /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
              * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
              * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
              * backwards on each iteration.
              */
             nativeSetPosition(milliseconds + 1);
-            if (is_playing_desired) {
-                nativePlay();
-            } else {
-                nativePause();
-            }
+        }
+        
+        setMediaUri ();
+        if (is_playing_desired) {
+            nativePlay();
         } else {
             nativePause();
         }
@@ -244,4 +263,17 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
         if (!is_local_media) nativeSetPosition(desired_position);
         if (is_playing_desired) nativePlay();
     }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+    	if (resultCode == RESULT_OK && requestCode == PICK_FILE_CODE) {
+    		String[] proj = { MediaStore.Video.Media.DATA };
+    		Cursor c = managedQuery(data.getData(), proj, null, null, null);
+      		int column_index = c.getColumnIndexOrThrow(MediaStore.Video.Media.DATA);
+    		c.moveToFirst();
+    		mediaUri = "file://" + c.getString(column_index);
+    		setMediaUri();
+    	}
+    } 
 }

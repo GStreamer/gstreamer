@@ -3,4 +3,5 @@
     <string name="app_name">Android tutorial 1</string>
     <string name="button_play">Play</string>
     <string name="button_stop">Stop</string>
+    <string name="button_select">Select</string>
 </resources>
