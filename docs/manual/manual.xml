@@ -50,6 +50,7 @@
 <!ENTITY COMPONENTS           SYSTEM "highlevel-components.xml">
 
 <!-- Appendices -->
+<!ENTITY PROGRAMS             SYSTEM "appendix-programs.xml">
 <!ENTITY CHECKLIST            SYSTEM "appendix-checklist.xml">
 <!ENTITY PORTING              SYSTEM "appendix-porting.xml">
 <!ENTITY INTEGRATION          SYSTEM "appendix-integration.xml">
@@ -253,6 +254,7 @@
      - table please...
     -->
 
+    &PROGRAMS;
     &CHECKLIST;
     &PORTING;
     &INTEGRATION;

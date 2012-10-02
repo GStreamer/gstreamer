@@ -79,7 +79,7 @@ main (int argc, char *argv[])
       GError *err = NULL; /* error to show to users                 */
       gchar *dbg = NULL;  /* additional debug string for developers */
 
-      gst_message_parse_error (msg, &err, &dbg);
+      gst_message_parse_error (msg, &amp;err, &amp;dbg);
       if (err) {
         g_printerr ("ERROR: %s\n", err-&gt;message);
         g_error_free (err);
@@ -193,6 +193,7 @@ gst-inspect mad
     </para> 
 
     <screen>
+<![CDATA[
 Factory Details:
   Rank:         secondary (128)
   Long-name:            Audio Sink (OSS)
@@ -325,6 +326,7 @@ Element Properties:
   device              : OSS device (usually /dev/dspN)
                         flags: readable, writable
                         String. Default: "/dev/dsp"
+]]>
     </screen>
 
     <para> 
