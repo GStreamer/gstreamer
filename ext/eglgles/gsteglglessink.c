@@ -1404,7 +1404,7 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
   }
 
   if (eglglessink->eglglesctx->pixel_aspect_ratio == EGL_UNKNOWN) {
-    GST_DEBUG_OBJECT (eglglessink, "PAR value returned doesn't make sense. "
+    GST_WARNING_OBJECT (eglglessink, "PAR value returned doesn't make sense. "
         "Will use default: %d/%d", EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
     eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
   }
@@ -2039,8 +2039,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * do this trying to take PAR/DAR into account unless the
        * calling party explicitly ask us not to.
        */
-      if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
-          !eglglessink->display_region.w || !eglglessink->display_region.h) {
+      if (!eglglessink->display_region.w || !eglglessink->display_region.h) {
         g_mutex_lock (eglglessink->flow_lock);
         if (!eglglessink->force_aspect_ratio) {
           eglglessink->display_region.x = 0;
