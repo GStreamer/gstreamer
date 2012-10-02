@@ -720,7 +720,63 @@ gst_buffer_add_my_example_meta (GstBuffer   *buffer,
     <sect2 id="section-allocation-query-ex" xreflabel="Allocation-ex">
       <title>ALLOCATION query example</title>
       <para>
-        WRITEME
+        Below is an example of the ALLOCATION query.
+      </para>
+      <programlisting>
+<![CDATA[
+#include <gst/video/video.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
+
+  GstCaps *caps;
+  GstQuery *query;
+  GstStructure *structure;
+  GstBufferPool *pool;
+  GstStructure *config;
+  guint size, min, max;
+
+[...]
+
+  /* find a pool for the negotiated caps now */
+  query = gst_query_new_allocation (caps, TRUE);
+
+  if (!gst_pad_peer_query (scope->srcpad, query)) {
+    /* query failed, not a problem, we use the query defaults */
+  }
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    /* we got configuration from our peer, parse them */
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  } else {
+    pool = NULL;
+    size = 0;
+    min = max = 0;
+  }
+
+  if (pool == NULL) {
+    /* we did not get a pool, make one ourselves then */
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_set_config (pool, config);
+
+  /* and activate */
+  gst_buffer_pool_set_active (pool, TRUE);
+
+[...]
+]]>
+      </programlisting>
+      <para>
+        This particular implementation will make a custom
+        <classname>GstVideoBufferPool</classname> object that is specialized
+        in allocating video buffers. You can also enable the pool to
+        put <classname>GstVideoMeta</classname> metadata on the buffers from
+        the pool doing
+        <function>gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META)</function>.
       </para>
     </sect2>
 
@@ -745,6 +801,11 @@ gst_buffer_add_my_example_meta (GstBuffer   *buffer,
           </para>
         </listitem>
       </itemizedlist>
+      <para>
+        Implementors of these methods should modify the given
+        <classname>GstQuery</classname> object by updating the pool options
+        and allocation options.
+      </para>
     </sect2>
   </sect1>
 </chapter>
