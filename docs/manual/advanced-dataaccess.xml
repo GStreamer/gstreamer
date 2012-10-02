@@ -672,22 +672,22 @@ main (int argc, char *argv[])
 <!-- example-end appsink.c --></programlisting>
       </sect3>
     </sect2>
+  </sect1>
 
-    <sect2 id="section-spoof-format">
-      <title>Forcing a format</title>
-      <para>
-        Sometimes you'll want to set a specific format, for example a video
-        size and format or an audio bitsize and number of channels. You can
-        do this by forcing a specific <classname>GstCaps</classname> on
-        the pipeline, which is possible by using
-        <emphasis>filtered caps</emphasis>. You can set a filtered caps on
-        a link by using the <quote>capsfilter</quote> element in between the
-        two elements, and specifying a <classname>GstCaps</classname> as
-        <quote>caps</quote> property on this element. It will then
-        only allow types matching that specified capability set for
-	negotiation.  See also <xref linkend="section-caps-filter"/>.
-      </para>
-    </sect2>
+  <sect1 id="section-spoof-format">
+    <title>Forcing a format</title>
+    <para>
+      Sometimes you'll want to set a specific format, for example a video
+      size and format or an audio bitsize and number of channels. You can
+      do this by forcing a specific <classname>GstCaps</classname> on
+      the pipeline, which is possible by using
+      <emphasis>filtered caps</emphasis>. You can set a filtered caps on
+      a link by using the <quote>capsfilter</quote> element in between the
+      two elements, and specifying a <classname>GstCaps</classname> as
+      <quote>caps</quote> property on this element. It will then
+      only allow types matching that specified capability set for
+      negotiation.  See also <xref linkend="section-caps-filter"/>.
+    </para>
   </sect1>
 
   <sect1 id="section-data-manager">
