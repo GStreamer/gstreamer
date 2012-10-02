@@ -83,8 +83,6 @@ rsn_parsetter_init (RsnParSetter * parset)
       (GstPadQueryFunction) GST_DEBUG_FUNCPTR (rsn_parsetter_src_query));
   GST_PAD_SET_PROXY_CAPS (parset->srcpad);
   gst_element_add_pad (GST_ELEMENT (parset), parset->srcpad);
-
-  parset->caps_lock = g_mutex_new ();
 }
 
 static void
@@ -95,8 +93,6 @@ rsn_parsetter_finalize (GObject * object)
   gst_caps_replace (&parset->outcaps, NULL);
   gst_caps_replace (&parset->in_caps_last, NULL);
   gst_caps_replace (&parset->in_caps_converted, NULL);
-
-  g_mutex_free (parset->caps_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -131,7 +127,6 @@ rsn_parsetter_sink_event (GstPad * pad, RsnParSetter * parset, GstEvent * event)
           GST_DEBUG_OBJECT (parset, "Video is %s",
               parset->is_widescreen ? "16:9" : "4:3");
 
-          g_mutex_lock (parset->caps_lock);
           if (parset->in_caps_last && parset->is_widescreen != is_widescreen) {
             /* Force caps check */
             gst_caps_replace (&parset->in_caps_converted, NULL);
@@ -143,8 +138,6 @@ rsn_parsetter_sink_event (GstPad * pad, RsnParSetter * parset, GstEvent * event)
 
           /* FIXME: Added for testing: */
           // parset->is_widescreen = FALSE;
-
-          g_mutex_unlock (parset->caps_lock);
 
           if (caps_event)
             gst_pad_push_event (parset->srcpad, caps_event);
@@ -217,8 +210,6 @@ rsn_parsetter_check_caps (RsnParSetter * parset, GstCaps * caps)
   guint dar_n, dar_d;
   gboolean ret = FALSE;
 
-  g_mutex_lock (parset->caps_lock);
-
   if (parset->in_caps_last &&
       (caps == parset->in_caps_last ||
           gst_caps_is_equal (caps, parset->in_caps_last))) {
@@ -260,7 +251,6 @@ rsn_parsetter_check_caps (RsnParSetter * parset, GstCaps * caps)
   parset->in_caps_was_ok = ret;
 
 out:
-  g_mutex_unlock (parset->caps_lock);
   return ret;
 }
 
@@ -276,7 +266,6 @@ rsn_parsetter_convert_caps (RsnParSetter * parset, GstCaps * caps,
   guint dar_n, dar_d;
   GValue par = { 0, };
 
-  g_mutex_lock (parset->caps_lock);
   if (caps == parset->in_caps_last && parset->in_caps_converted) {
     outcaps = gst_caps_ref (parset->in_caps_converted);
     goto out;
@@ -312,7 +301,6 @@ rsn_parsetter_convert_caps (RsnParSetter * parset, GstCaps * caps,
 
   gst_caps_replace (&parset->in_caps_converted, outcaps);
 out:
-  g_mutex_unlock (parset->caps_lock);
   return outcaps;
 }
 
