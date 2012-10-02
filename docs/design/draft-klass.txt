@@ -14,7 +14,7 @@ all video effect filters.
 The topic of defining the klass of elements should be based on use cases.
 
 A list of classes that are used in a installation can be generated using:
-gst-inspect-0.10 -a | grep -ho Class:.* | cut -c8- | sed "s/\//\\n/g" | sort | uniq
+gst-inspect-1.0 -a | grep -ho Class:.* | cut -c8- | sed "s/\//\\n/g" | sort | uniq
 
 Proposal
 ~~~~~~~~

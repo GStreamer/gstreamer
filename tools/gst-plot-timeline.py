@@ -2,7 +2,7 @@
 #
 # based on plot-timeline.py by Federico Mena-Quintero <federico at ximian dotcom>
 # example:
-#   GST_DEBUG_NO_COLOR=1 GST_DEBUG="*:3" gst-launch-0.10 2>debug.log audiotestsrc num-buffers=10 ! audioconvert ! alsasink
+#   GST_DEBUG_NO_COLOR=1 GST_DEBUG="*:3" gst-launch-1.0 2>debug.log audiotestsrc num-buffers=10 ! audioconvert ! alsasink
 #   gst-plot-timeline.py debug.log --output=debug.png
 
 import math

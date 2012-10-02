@@ -47,7 +47,7 @@
     </para>
     <programlisting>
 /* compile with:
- * gcc -o tags tags.c `pkg-config --cflags --libs gstreamer-0.10` */
+ * gcc -o tags tags.c `pkg-config --cflags --libs gstreamer-1.0` */
 #include &lt;gst/gst.h&gt;
 
 static void

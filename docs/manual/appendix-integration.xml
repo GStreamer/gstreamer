@@ -235,7 +235,7 @@ main (gint argc, gchar **argv)
 
     <warning>
 <para>
-Note: this section is out of date. GStreamer-0.10 has much better
+Note: this section is out of date. GStreamer-1.0 has much better
 support for win32 than previous versions though and should usually compile
 and work out-of-the-box both using MSYS/MinGW or Microsoft compilers. The
 <ulink url="http://gstreamer.freedesktop.org">GStreamer web site</ulink> and the
@@ -272,7 +272,7 @@ available in your system PATH.</para>
 <listitem><para>libiconv</para></listitem>
 </itemizedlist>
 
-<para>Work is being done to provide pre-compiled GStreamer-0.10 libraries as
+<para>Work is being done to provide pre-compiled GStreamer-1.0 libraries as
 a packages for win32. Check the <ulink url="http://gstreamer.freedesktop.org">
 GStreamer web site</ulink> and check our
 <ulink url="http://news.gmane.org/gmane.comp.video.gstreamer.devel">mailing list
@@ -300,7 +300,7 @@ for convenience (people who don't want to install GNU tools).</para>
   <sect2 id="section-win32-install">
 <title>Installation on the system</title>
 
-<para>FIXME: This section needs be updated for GStreamer-0.10.</para>
+<para>FIXME: This section needs be updated for GStreamer-1.0.</para>
 
 <!--
 <para>By default, GStreamer needs a registry. You have to generate it using "gst-register.exe". It will create

@@ -140,7 +140,7 @@ main (gint   argc,
 }
     <!-- example-end probe.c --></programlisting>
     <para>
-      Compare that output with the output of <quote>gst-launch-0.10
+      Compare that output with the output of <quote>gst-launch-1.0
       videotestsrc ! xvimagesink</quote>, just so you know what you're
       looking for.
     </para>
