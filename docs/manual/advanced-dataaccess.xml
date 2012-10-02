@@ -54,6 +54,8 @@ cb_have_data (GstPad          *pad,
   GstBuffer *buffer;
 
   buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+
+  buffer = gst_buffer_make_writable (buffer);
   
   gst_buffer_map (buffer, &amp;map, GST_MAP_WRITE);
 
@@ -68,6 +70,8 @@ cb_have_data (GstPad          *pad,
     ptr += 384;
   }
   gst_buffer_unmap (buffer, &amp;map);
+
+  GST_PAD_PROBE_INFO_DATA (info) = buffer;
 
   return TRUE;
 }
@@ -145,21 +149,21 @@ main (gint   argc,
       looking for.
     </para>
     <para>
-      The above example is not really correct though.  Strictly speaking, a
-      pad probe callback is only allowed to modify the buffer content if the
-      buffer is writable.  Whether this is the case or not depends a lot on
-      the pipeline and the elements involved.  Often enough, this is the case,
-      but sometimes it is not, and if it is not then unexpected modification
-      of the data or metadata can introduce bugs that are very hard to debug
-      and track down. You can check if a buffer is writable with
-      <function>gst_buffer_is_writable ()</function>.  Since you
-      can pass back a different buffer than the one passed in, it is a good
-      idea to make the buffer writable in the callback function.
+      Strictly speaking, a pad probe callback is only allowed to modify the
+      buffer content if the buffer is writable.  Whether this is the case or
+      not depends a lot on the pipeline and the elements involved.  Often
+      enough, this is the case, but sometimes it is not, and if it is not
+      then unexpected modification of the data or metadata can introduce
+      bugs that are very hard to debug and track down. You can check if a
+      buffer is writable with <function>gst_buffer_is_writable ()</function>.
+      Since you can pass back a different buffer than the one passed in,
+      it is a good idea to make the buffer writable in the callback function
+      with <function>gst_buffer_make_writable ()</function>.
     </para>
     <para>
       Pad probes are suited best for looking at data as it passes through
-      the pipeline. If you need to modify data, you should write your own
-      GStreamer element. Base classes like GstAudioFilter, GstVideoFilter or
+      the pipeline. If you need to modify data, you should better write your
+      own GStreamer element. Base classes like GstAudioFilter, GstVideoFilter or
       GstBaseTransform make this fairly easy.
     </para>
     <para>
@@ -168,7 +172,8 @@ main (gint   argc,
       an identity element into the pipeline and connect to its "handoff"
       signal. The identity element also provides a few useful debugging tools
       like the "dump" property or the "last-message" property (the latter is
-      enabled by passing the '-v' switch to gst-launch).
+      enabled by passing the '-v' switch to gst-launch and by setting the
+      silent property on the identity to FALSE).
     </para>
   </sect1>
 
@@ -178,49 +183,272 @@ main (gint   argc,
       Many people have expressed the wish to use their own sources to inject
       data into a pipeline. Some people have also expressed the wish to grab
       the output in a pipeline and take care of the actual output inside
-      their application. While either of these methods are stongly
-      discouraged, &GStreamer; offers hacks to do this. <emphasis>However,
-      there is no support for those methods.</emphasis> If it doesn't work,
-      you're on your own. Also, synchronization, thread-safety and other
-      things that you've been able to take for granted so far are no longer
-      guaranteed if you use any of those methods. It's always better to
-      simply write a plugin and have the pipeline schedule and manage it.
+      their application. While either of these methods are strongly
+      discouraged, &GStreamer; offers support for this.
+      <emphasis>Beware! You need to know what you are doing.</emphasis> Since
+      you don't have any support from a base class you need to thoroughly
+      understand state changes and synchronization. If it doesn't work,
+      there are a million ways to shoot yourself in the foot.  It's always
+      better to simply write a plugin and have the base class manage it.
       See the Plugin Writer's Guide for more information on this topic. Also
       see the next section, which will explain how to embed plugins statically
       in your application.
     </para>
-    <note><para>
-	<ulink type="http"
-	  url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/gstreamer-app.html">New
-	  API</ulink> was developed to make data insertion and extraction easy
-	for applications. It can be found as GstAppSrc and GstAppSink in the
-	<ulink type="http"
-	  url="http://gstreamer.freedesktop.org/modules/gst-plugins-base.html">
-	  gst-plugins-base</ulink> module.
-    </para></note>
     <para>
-      After all those disclaimers, let's start. There's three possible
-      elements that you can use for the above-mentioned purposes. Those are
-      called <quote>fakesrc</quote> (an imaginary source),
-      <quote>fakesink</quote> (an imaginary sink) and <quote>identity</quote>
-      (an imaginary filter). The same method applies to each of those
-      elements. Here, we will discuss how to use those elements to insert
-      (using fakesrc) or grab (using fakesink or identity) data from a
+      There's two possible elements that you can use for the above-mentioned
+      purposes. Those are called <quote>appsrc</quote> (an imaginary source)
+      and <quote>appsink</quote> (an imaginary sink). The same method applies
+      to each of those elements. Here, we will discuss how to use those
+      elements to insert (using appsrc) or grab (using appsink) data from a
       pipeline, and how to set negotiation.
     </para>
     <para>
-      Those who're paying close attention will notice that the purpose
-      of identity is almost identical to that of probes. Indeed, this is
-      true. Probes allow for the same purpose, and a bunch more, and
-      with less overhead plus dynamic removing/adding of handlers, but
-      apart from those, probes and identity have the same purpose, just
-      in a completely different implementation type.
+      Both appsrc and appsink provide 2 sets of API. One API uses standard
+      GObject (action) signals and properties. The same API is also
+      available as a regular C api. The C api is more performant but
+      requires you to link to the app library in order to use the elements.
     </para>
 
-    <sect2 id="section-spoof-handoff">
-      <title>Inserting or grabbing data</title>
+    <sect2 id="section-spoof-appsrc">
+      <title>Inserting data with appsrc</title>
       <para>
-        The three before-mentioned elements (fakesrc, fakesink and identity)
+        First we look at some examples for appsrc, which lets you insert data
+        into the pipeline from the application. Appsrc has some configuration
+        options that define how it will operate. You should decide about the
+        following configurations:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            Will the appsrc operate in push or pull mode. The stream-type
+            property can be used to control this. stream-type of
+            <quote>random-access</quote> will activate pull mode scheduling
+            while the other stream-types activate push mode.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The caps of the buffers that appsrc will push out. This needs to
+            be configured with the caps property. The caps must be set to a
+            fixed caps and will be used to negotiate a format downstream.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            It the appsrc operates in live mode or not. This can be configured
+            with the is-live property. When operating in live-mode it is
+            important to configure the min-latency and max-latency in appsrc.
+            The min-latency should be set to the amount of time it takes between
+            capturing a buffer and when it is pushed inside appsrc.
+            In live mode, you should timestamp the buffers with the pipeline
+            running-time when the first byte of the buffer was captured before
+            feeding them to appsrc. You can let appsrc do the timestaping with
+            the do-timestamp property (but then the min-latency must be set
+            to 0 because it timestamps based on the running-time when the buffer
+            entered appsrc).
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The format of the SEGMENT event that appsrc will push. The format
+            has implications for how the running-time of the buffers will
+            be calculated so you must be sure you understand this. For
+            live sources you probably want to set the format property to
+            GST_FORMAT_TIME. For non-live source it depends on the media type
+            that you are handling. If you plan to timestamp the buffers, you
+            should probably put a GST_FORMAT_TIME format, otherwise
+            GST_FORMAT_BYTES might be appropriate.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            If appsrc operates in random-access mode, it is important to configure
+            the size property of appsrc with the number of bytes in the stream.
+            This will allow downstream elements to know the size of the media and
+            alows them to seek to the end of the stream when needed.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        The main way of handling data to appsrc is by using the function
+        <function>gst_app_src_push_buffer ()</function> or by emiting the
+        push-buffer action signal.  This will put the buffer onto a queue from
+        which appsrc will read from in its streaming thread. It is important
+        to note that data transport will not happen from the thread that
+        performed the push-buffer call.
+      </para>
+      <para>
+        The <quote>max-bytes</quote> property controls how much data can be
+        queued in appsrc before appsrc considers the queue full. A filled
+        internal queue will always signal the <quote>enough-data</quote>
+        signal, which signals the application that it should stop pushing
+        data into appsrc. The <quote>block</quote> property will cause appsrc to
+        block the push-buffer method until free data becomes available again.
+      </para>
+      <para>
+        When the internal queue is running out of data, the
+        <quote>need-data</quote> signal is emitted, which signals the application
+        that it should start pushing more data into appsrc.
+      </para>
+      <para>
+        In addition to the <quote>need-data</quote> and <quote>enough-data</quote>
+        signals, appsrc can emit the <quote>seek-data</quote> signal when the
+        <quote>stream-mode</quote> property is set to <quote>seekable</quote>
+        or <quote>random-access</quote>. The signal argument will contain the
+        new desired position in the stream expressed in the unit set with the
+        <quote>format</quote> property. After receiving the seek-data signal,
+        the application should push-buffers from the new position.
+      </para>
+      <para>
+        When the last byte is pushed into appsrc, you must call
+        <function>gst_app_src_end_of_stream ()</function> to make it send
+        an EOS downstream.
+      </para>
+      <para>
+        These signals allow the application to operate appsrc in push and
+        pull mode as will be explained next.
+      </para>
+
+      <sect3 id="section-spoof-appsrc-push">
+        <title>Using appsrc in push mode</title>
+        <para>
+          When appsrc is configured in push mode (stream-type is stream or
+          seekable), the application repeatedly calls the push-buffer method
+          with a new buffer. Optionally, the queue size in the appsrc can be
+          controlled with the enough-data and need-data signals by respectively
+          stopping/starting the push-buffer calls. The value of the
+          min-percent property defines how empty the internal appsrc queue
+          needs to be before the need-data signal will be fired. You can set
+          this to some value >0 to avoid completely draining the queue.
+        </para>
+        <para>
+          When the stream-type is set to seekable, don't forget to implement
+          a seek-data callback.
+        </para>
+        <para>
+          Use this model when implementing various network protocols or
+          hardware devices.
+        </para>
+      </sect3>
+
+      <sect3 id="section-spoof-appsrc-pull">
+        <title>Using appsrc in pull mode</title>
+        <para>
+          In the pull model, data is fed to appsrc from the need-data signal
+          handler. You should push exactly the amount of bytes requested in the
+          need-data signal. You are only allowed to push less bytes when you are
+          at the end of the stream.
+        </para>
+        <para>
+          Use this model for file access or other randomly accessable sources.
+        </para>
+      </sect3>
+
+      <sect3 id="section-spoof-appsrc-ex">
+        <title>Appsrc example</title>
+        <para>
+          This example application will generate black/white (it switches
+          every second) video to an Xv-window output by using appsrc as a
+          source with caps to force a format. We use a colorspace
+          conversion element to make sure that we feed the right format to
+          your X server. We configure a video stream with a variable framerate
+          (0/1) and we set the timestamps on the outgoing buffers in such
+          a way that we play 2 frames per second.
+        </para>
+        <para>
+          Note how we use the pull mode method of pushing new buffers into
+          appsrc although appsrc is running in push mode. 
+        </para>
+        <programlisting><!-- example-begin appsrc.c -->
+#include &lt;gst/gst.h&gt;
+
+static GMainLoop *loop;
+
+static void
+cb_need_data (GstElement *appsrc,
+	      guint       unused_size,
+	      gpointer    user_data)
+{
+  static gboolean white = FALSE;
+  static GstClockTime timestamp = 0;
+  GstBuffer *buffer;
+  guint size;
+  GstFlowReturn ret;
+
+  size = 385 * 288 * 2;
+
+  buffer = gst_buffer_new_allocate (NULL, size, NULL);
+
+  /* this makes the image black/white */
+  gst_buffer_memset (buffer, 0, white ? 0xff : 0x0, size);
+  
+  white = !white;
+
+  GST_BUFFER_PTS (buffer) = timestamp;
+  GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale_int (1, GST_SECOND, 2);
+
+  timestamp += GST_BUFFER_DURATION (buffer);
+
+  g_signal_emit_by_name (appsrc, "push-buffer", buffer, &amp;ret);
+
+  if (ret != GST_FLOW_OK) {
+    /* something wrong, stop pushing */
+    g_main_loop_quit (loop);
+  }
+}
+
+gint
+main (gint   argc,
+      gchar *argv[])
+{
+  GstElement *pipeline, *appsrc, *conv, *videosink;
+
+  /* init GStreamer */
+  gst_init (&amp;argc, &amp;argv);
+  loop = g_main_loop_new (NULL, FALSE);
+
+  /* setup pipeline */
+  pipeline = gst_pipeline_new ("pipeline");
+  appsrc = gst_element_factory_make ("appsrc", "source");
+  conv = gst_element_factory_make ("videoconvert", "conv");
+  videosink = gst_element_factory_make ("xvimagesink", "videosink");
+
+  /* setup */
+  g_object_set (G_OBJECT (appsrc), "caps",
+  		gst_caps_new_simple ("video/x-raw",
+				     "format", G_TYPE_STRING, "RGB16",
+				     "width", G_TYPE_INT, 384,
+				     "height", G_TYPE_INT, 288,
+				     "framerate", GST_TYPE_FRACTION, 0, 1,
+				     NULL), NULL);
+  gst_bin_add_many (GST_BIN (pipeline), appsrc, conv, videosink, NULL);
+  gst_element_link_many (appsrc, conv, videosink, NULL);
+
+  /* setup appsrc */
+  g_object_set (G_OBJECT (appsrc),
+		"stream-type", 0,
+		"format", GST_FORMAT_TIME, NULL);
+  g_signal_connect (appsrc, "need-data", G_CALLBACK (cb_need_data), NULL);
+
+  /* play */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  g_main_loop_run (loop);
+
+  /* clean up */
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (GST_OBJECT (pipeline));
+  g_main_loop_unref (loop);
+
+  return 0;
+}
+      <!-- example-end appsrc.c --></programlisting>
+      </sect3>
+    </sect2>
+
+    <sect2 id="section-spoof-appsink">
+      <title>Grabbing data with appsink</title>
+      <para>
+        The two before-mentioned elements (fakesrc, fakesink and identity)
         each have a <quote>handoff</quote> signal that will be called in
         the <function>_get ()</function>- (fakesrc) or <function>_chain
         ()</function>-function (identity, fakesink). In the signal handler,
@@ -243,100 +471,17 @@ main (gint   argc,
     <sect2 id="section-spoof-format">
       <title>Forcing a format</title>
       <para>
-        Sometimes, when using fakesrc as a source in your pipeline, you'll
-        want to set a specific format, for example a video size and format
-        or an audio bitsize and number of channels. You can do this by
-        forcing a specific <classname>GstCaps</classname> on the pipeline,
-        which is possible by using <emphasis>filtered caps</emphasis>. You
-        can set a filtered caps on a link by using the
-        <quote>capsfilter</quote> element in between the two elements, and
-        specifying a <classname>GstCaps</classname> as
+        Sometimes you'll want to set a specific format, for example a video
+        size and format or an audio bitsize and number of channels. You can
+        do this by forcing a specific <classname>GstCaps</classname> on
+        the pipeline, which is possible by using
+        <emphasis>filtered caps</emphasis>. You can set a filtered caps on
+        a link by using the <quote>capsfilter</quote> element in between the
+        two elements, and specifying a <classname>GstCaps</classname> as
         <quote>caps</quote> property on this element. It will then
         only allow types matching that specified capability set for
 	negotiation.  See also <xref linkend="section-caps-filter"/>.
       </para>
-    </sect2>
-
-    <sect2 id="section-spoof-example">
-      <title>Example application</title>
-      <para>
-        This example application will generate black/white (it switches
-        every second) video to an X-window output by using fakesrc as a
-        source and using filtered caps to force a format. Since the depth
-        of the image depends on your X-server settings, we use a colorspace
-        conversion element to make sure that the output to your X server
-        will have the correct bitdepth. You can also set timestamps on the
-        provided buffers to override the fixed framerate.
-      </para>
-      <programlisting><!-- example-begin fakesrc.c -->
-#include &lt;string.h&gt; /* for memset () */
-#include &lt;gst/gst.h&gt;
-
-static void
-cb_handoff (GstElement *fakesrc,
-	    GstBuffer  *buffer,
-	    GstPad     *pad,
-	    gpointer    user_data)
-{
-  static gboolean white = FALSE;
-  GstMapInfo info;
-  
-  gst_buffer_map (buffer, &amp;info, GST_MAP_WRITE);
-
-  /* this makes the image black/white */
-  memset (info.data, white ? 0xff : 0x0, info.size);
-  white = !white;
-
-  gst_buffer_unmap (buffer, &amp;info);
-}
-
-gint
-main (gint   argc,
-      gchar *argv[])
-{
-  GstElement *pipeline, *fakesrc, *flt, *conv, *videosink;
-  GMainLoop *loop;
-
-  /* init GStreamer */
-  gst_init (&amp;argc, &amp;argv);
-  loop = g_main_loop_new (NULL, FALSE);
-
-  /* setup pipeline */
-  pipeline = gst_pipeline_new ("pipeline");
-  fakesrc = gst_element_factory_make ("fakesrc", "source");
-  flt = gst_element_factory_make ("capsfilter", "flt");
-  conv = gst_element_factory_make ("videoconvert", "conv");
-  videosink = gst_element_factory_make ("xvimagesink", "videosink");
-
-  /* setup */
-  g_object_set (G_OBJECT (flt), "caps",
-  		gst_caps_new_simple ("video/x-raw",
-				     "format", G_TYPE_STRING, "RGB16",
-				     "width", G_TYPE_INT, 384,
-				     "height", G_TYPE_INT, 288,
-				     "framerate", GST_TYPE_FRACTION, 1, 1,
-				     NULL), NULL);
-  gst_bin_add_many (GST_BIN (pipeline), fakesrc, flt, conv, videosink, NULL);
-  gst_element_link_many (fakesrc, flt, conv, videosink, NULL);
-
-  /* setup fake source */
-  g_object_set (G_OBJECT (fakesrc),
-		"signal-handoffs", TRUE,
-		"sizemax", 384 * 288 * 2,
-		"sizetype", 2, NULL);
-  g_signal_connect (fakesrc, "handoff", G_CALLBACK (cb_handoff), NULL);
-
-  /* play */
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  g_main_loop_run (loop);
-
-  /* clean up */
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (GST_OBJECT (pipeline));
-
-  return 0;
-}
-      <!-- example-end fakesrc.c --></programlisting>
     </sect2>
   </sect1>
 

@@ -36,7 +36,7 @@ EXAMPLES = \
 	query \
 	typefind \
 	probe \
-	fakesrc \
+	appsrc \
 	playbin \
 	decodebin
 
@@ -50,7 +50,7 @@ BUILT_SOURCES = \
 	query.c \
 	typefind.c dynamic.c \
 	probe.c \
-	fakesrc.c \
+	appsrc.c \
 	playbin.c decodebin.c
 
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
@@ -86,7 +86,7 @@ typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
 probe.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
-fakesrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
+appsrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
