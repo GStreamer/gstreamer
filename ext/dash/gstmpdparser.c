@@ -2898,61 +2898,38 @@ guint gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *cli
 }
 
 guint
-gst_mpdparser_get_nb_audio_adapt_set(GList *  AdaptationSets)
+gst_mpdparser_get_list_and_nb_of_audio_language (GList **lang,
+    GList *AdaptationSets)
 {
- GList *list;
- GstAdaptationSetNode *adapt_set;
- guint nb_adapatation_set = 0;
- gchar *this_mimeType = "audio";
- gchar *mimeType = NULL;
- if (AdaptationSets == NULL)
-	return 0;
+  GList *list;
+  GstAdaptationSetNode *adapt_set;
+  gchar *this_mimeType = "audio";
+  gchar *mimeType = NULL;
+  guint nb_adapatation_set = 0;
+  if (AdaptationSets == NULL)
+    return;
 
- for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
-	 adapt_set = (GstAdaptationSetNode *) list->data;
-	 if (adapt_set) {
-		 GstRepresentationNode *rep;
-		 rep =
-				gst_mpdparser_get_lowest_representation (adapt_set->Representations);
-		 if (rep->RepresentationBase)
-			 mimeType = rep->RepresentationBase->mimeType;
-		 if (!mimeType && adapt_set->RepresentationBase) {
-			 mimeType = adapt_set->RepresentationBase->mimeType;
-		 }
-		 if (strncmp_ext (mimeType, this_mimeType) == 0)
-			 nb_adapatation_set++;
-	 }
- }
- return nb_adapatation_set;
+  for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
+    adapt_set = (GstAdaptationSetNode *) list->data;
+    if (adapt_set) {
+      gchar *this_lang = adapt_set->lang;
+      GstRepresentationNode *rep;
+      rep =
+          gst_mpdparser_get_lowest_representation (adapt_set->Representations);
+      if (rep->RepresentationBase)
+        mimeType = rep->RepresentationBase->mimeType;
+      if (!mimeType && adapt_set->RepresentationBase) {
+        mimeType = adapt_set->RepresentationBase->mimeType;
+      }
+
+      if (strncmp_ext (mimeType, this_mimeType) == 0) {
+        if (this_lang) {
+           nb_adapatation_set++;
+          *lang = g_list_append (*lang, this_lang);
+        }
+      }
+    }
+  }
+  return nb_adapatation_set;
 }
 
-void gst_mpdparser_get_list_of_audio_language(GList** lang, GList *  AdaptationSets)
-{
- GList *list;
- GstAdaptationSetNode *adapt_set;
- gchar *this_mimeType = "audio";
- gchar *mimeType = NULL;
- if (AdaptationSets == NULL)
-	 return ;
-
- for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
-	 adapt_set = (GstAdaptationSetNode *) list->data;
-	 if (adapt_set) {
-		 gchar *this_lang = adapt_set->lang;
-		 GstRepresentationNode *rep;
-		 rep =
-			 	gst_mpdparser_get_lowest_representation (adapt_set->Representations);
-		 if (rep->RepresentationBase)
-		 	mimeType = rep->RepresentationBase->mimeType;
-		 if (!mimeType && adapt_set->RepresentationBase) {
-			 mimeType = adapt_set->RepresentationBase->mimeType;
-		 }
-
-		 if (strncmp_ext (mimeType, this_mimeType) == 0){
-		  if(this_lang){
-			  *lang = g_list_append (*lang, this_lang);
-		  }
-	 	}
- 	}
- }
-}

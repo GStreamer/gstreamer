@@ -540,15 +540,13 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
         return FALSE;
       }
 
+      GList *listLang = NULL;
       guint nb_audio =
-          gst_mpdparser_get_nb_audio_adapt_set (demux->client->
-          cur_period->AdaptationSets);
-      GST_INFO_OBJECT (demux, "Number of language is=%d", nb_audio);
+          gst_mpdparser_get_list_and_nb_of_audio_language (&listLang,
+          demux->client->cur_period->AdaptationSets);
       if (nb_audio == 0)
         nb_audio = 1;
-      GList *listLang = NULL;
-      gst_mpdparser_get_list_of_audio_language (&listLang,
-          demux->client->cur_period->AdaptationSets);
+      GST_INFO_OBJECT (demux, "Number of language is=%d", nb_audio);
       guint i = 0;
       for (i = 0; i < nb_audio; i++) {
         gchar *lang = (gchar *) g_list_nth_data (listLang, i);

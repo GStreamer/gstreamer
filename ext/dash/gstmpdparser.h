@@ -483,9 +483,8 @@ guint  gst_mpd_client_get_height_of_video_current_stream (GstMpdClient *client, 
 guint  gst_mpd_client_get_rate_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream);
 guint  gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream);
 
-/* To support multi language */
-guint gst_mpdparser_get_nb_audio_adapt_set(GList *AdaptationSets);
-void gst_mpdparser_get_list_of_audio_language(GList** lang, GList *  AdaptationSets);
+/* Support multi language */
+guint gst_mpdparser_get_list_and_nb_of_audio_language(GList **lang, GList *AdaptationSets);
 G_END_DECLS
 
 #endif /* __GST_MPDPARSER_H__ */
