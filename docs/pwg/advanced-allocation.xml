@@ -518,15 +518,148 @@ gst_buffer_add_my_example_meta (GstBuffer   *buffer,
       to the buffers in the pool or such as enabling specific padding on
       the memory in the buffers.
     </para>
+    <para>
+      A Bufferpool can be inactivate and active. In the inactive state,
+      you can configure the pool. In the active state, you can't change
+      the configuration anymore but you can acquire and release buffers
+      from/to the pool.
+    </para>
+    <para>
+      In the following sections we take a look at how you can use
+      a bufferpool. 
+    </para>
 
     <sect2 id="section-allocation-pool-ex" xreflabel="GstBufferPool-ex">
       <title>GstBufferPool API example</title>
       <para>
-        WRITEME
+        Many different bufferpool implementations can exist; they are all
+        subclasses of the base class <classname>GstBufferPool</classname>.
+        For this example, we will assume we somehow have access to a
+        bufferpool, either because we created it ourselves or because
+        we were given one as a result of the ALLOCATION query as we will
+        see below.
+      </para>
+      <para>
+        The bufferpool is initially in the inactive state so that we can
+        configure it. Trying to configure a bufferpool that is not in the
+        inactive state will fail. Likewise, trying to activate a bufferpool
+        that is not configured will fail.
+      </para>
+      <programlisting>
+<![CDATA[
+  GstStructure *config;
+
+[...]
+
+  /* get config structure */
+  config = gst_buffer_pool_get_config (pool);
+
+  /* set caps, size, minimum and maximum buffers in the pool */
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
+  /* configure allocator and parameters */
+  gst_buffer_pool_config_set_allocator (config, allocator, &params);
+
+  /* store the updated configuration again */
+  gst_buffer_pool_set_config (pool, config);
+
+[...]
+]]>
+      </programlisting>
+      <para>
+        The configuration of the bufferpool is maintained in a generic
+        <classname>GstStructure</classname> that can be obtained with
+        <function>gst_buffer_pool_get_config()</function>. Convenience
+        methods exist to get and set the configuration options in this
+        structure. After updating the structure, it is set as the current
+        configuration in the bufferpool again with
+        <function>gst_buffer_pool_set_config()</function>.
+      </para>
+      <para>
+        The following options can be configured on a bufferpool:
+      </para>
+      <itemizedlist mark="opencircle">
+        <listitem>
+          <para>
+            The caps of the buffers to allocate.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The size of the buffers. This is the suggested size of the
+            buffers in the pool. The pool might decide to allocate larger
+            buffers to add padding.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The minimum and maximum amount of buffers in the pool. When
+            minimum is set to > 0, the bufferpool will pre-allocate this
+            amount of buffers. When maximum is not 0, the bufferpool
+            will allocate up to maximum amount of buffers.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            The allocator and parameters to use. Some bufferpools might
+            ignore the allocator and use its internal one.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Other arbitrary bufferpool options identified with a string.
+            a bufferpool lists the supported options with
+            <function>gst_buffer_pool_get_options()</function> and you 
+            can ask if an option is supported with
+            <function>gst_buffer_pool_has_option()</function>. The option
+            can be enabled by adding it to the configuration structure
+            with <function>gst_buffer_pool_config_add_option ()</function>.
+            These options are used to enable things like letting the
+            pool set metadata on the buffers or to add extra configuration
+            options for padding, for example.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        After the configuration is set on the bufferpool, the pool can
+        be activated with
+        <function>gst_buffer_pool_set_active (pool, TRUE)</function>. From
+        that point on you can use
+        <function>gst_buffer_pool_acquire_buffer ()</function> to retrieve
+        a buffer from the pool, like this:
+      </para>
+      <programlisting>
+<![CDATA[
+  [...]
+
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
+  if (G_UNLIKELY (ret != GST_FLOW_OK))
+    goto pool_failed;
+
+  [...]
+]]>
+      </programlisting>
+      <para>
+        It is important to check the return value of the acquire function
+        because it is possible that it fails: When your
+        element shuts down, it will deactivate the bufferpool and then
+        all calls to acquire will return GST_FLOW_FLUSHNG.
+      </para>
+      <para>
+        All buffers that are acquired from the pool will have their pool
+        member set to the original pool. When the last ref is decremented
+        on the buffer, &GStreamer; will automatically call
+        <function>gst_buffer_pool_release_buffer()</function> to release
+        the buffer back to the pool. You (or any other downstream element)
+        don't need to know if a buffer came from a pool, you can just
+        unref it.
       </para>
     </sect2>
 
-    <sect2 id="section-allocation-pool-new" xreflabel="GstBufferPool-new">
+    <sect2 id="section-allocation-pool-impl" xreflabel="GstBufferPool-impl">
       <title>Implementing a new GstBufferPool</title>
       <para>
         WRITEME
