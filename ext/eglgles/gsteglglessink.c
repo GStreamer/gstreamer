@@ -1806,11 +1806,6 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   g_mutex_unlock (eglglessink->flow_lock);
 
   return;
-
-  /* Errors */
-HANDLE_ERROR:
-  GST_ERROR_OBJECT (eglglessink, "Couldn't setup window/surface from handle");
-  return;
 }
 
 static void
