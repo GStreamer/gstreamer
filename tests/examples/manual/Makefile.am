@@ -37,6 +37,7 @@ EXAMPLES = \
 	typefind \
 	probe \
 	appsrc \
+	appsink \
 	playbin \
 	decodebin
 
@@ -51,6 +52,7 @@ BUILT_SOURCES = \
 	typefind.c dynamic.c \
 	probe.c \
 	appsrc.c \
+	appsink.c \
 	playbin.c decodebin.c
 
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
@@ -87,6 +89,9 @@ probe.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 appsrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+appsink.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
