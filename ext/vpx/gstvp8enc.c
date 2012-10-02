@@ -1975,6 +1975,7 @@ gst_vp8_enc_pre_push (GstVideoEncoder * video_encoder,
       encoder->keyframe_distance++;
     }
 
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
     GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_TIMESTAMP (frame->output_buffer);
     GST_BUFFER_DURATION (buf) = 0;
     GST_BUFFER_OFFSET_END (buf) =
