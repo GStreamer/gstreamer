@@ -1799,11 +1799,6 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
   GST_DEBUG_OBJECT (eglglessink, "We got a window handle!");
 
-  if (!id) {
-    GST_ERROR_OBJECT (eglglessink, "Window handle is invalid");
-    goto HANDLE_ERROR;
-  }
-
   /* OK, we have a new window */
   g_mutex_lock (eglglessink->flow_lock);
   eglglessink->eglglesctx->window = (EGLNativeWindowType) id;
