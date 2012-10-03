@@ -10,9 +10,9 @@ noinst_HEADERS = gstrtpvp8depay.h \
   dboolhuff.h
 
 libgstrtpvp8_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
-libgstrtpvp8_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
+	$(GST_BASE_CFLAGS) $(GST_CFLAGS) \
 	-Dvp8_norm=gst_rtpvp8_vp8_norm
+libgstrtpvp8_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrtpvp8_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtpvp8_la_LIBTOOLFLAGS = --tag=disable-static
