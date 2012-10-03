@@ -102,7 +102,7 @@
           dataflow is not blocked, the pipeline would go into an error
           state if data is pushed on an unlinked pad. We will se how
           to use blocking probes to partially preroll a pipeline.
-          See <xref linkend="section-preroll-probes"/>.
+          See also <xref linkend="section-preroll-probes"/>.
         </para>
       </listitem>
       <listitem>
@@ -118,7 +118,7 @@
         <para>
           You can use idle probes to dynamically relink a pad.  We will see
           how to use idle probes to replace an element in the pipeline.
-          See <xref linkend="section-dynamic-pipelines"/>.
+          See also <xref linkend="section-dynamic-pipelines"/>.
         </para>
       </listitem>
     </itemizedlist>
@@ -146,8 +146,10 @@
         be done in probe callbacks as well. The example below gives a short
         impression on how to use them.
       </para>
-      <programlisting><!-- example-begin probe.c -->
-#include &lt;gst/gst.h&gt;
+      <programlisting>
+<!-- example-begin probe.c -->
+<![CDATA[
+#include <gst/gst.h>
 
 static GstPadProbeReturn
 cb_have_data (GstPad          *pad,
@@ -163,23 +165,23 @@ cb_have_data (GstPad          *pad,
 
   buffer = gst_buffer_make_writable (buffer);
   
-  gst_buffer_map (buffer, &amp;map, GST_MAP_WRITE);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
 
   ptr = (guint16 *) map.data;
   /* invert data */
-  for (y = 0; y &lt; 288; y++) {
-    for (x = 0; x &lt; 384 / 2; x++) {
+  for (y = 0; y < 288; y++) {
+    for (x = 0; x < 384 / 2; x++) {
       t = ptr[384 - 1 - x];
       ptr[384 - 1 - x] = ptr[x];
       ptr[x] = t;
     }
     ptr += 384;
   }
-  gst_buffer_unmap (buffer, &amp;map);
+  gst_buffer_unmap (buffer, &map);
 
   GST_PAD_PROBE_INFO_DATA (info) = buffer;
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
 gint
@@ -192,7 +194,7 @@ main (gint   argc,
   GstPad *pad;
 
   /* init GStreamer */
-  gst_init (&amp;argc, &amp;argv);
+  gst_init (&argc, &argv);
   loop = g_main_loop_new (NULL, FALSE);
 
   /* build */
@@ -248,7 +250,9 @@ main (gint   argc,
 
   return 0;
 }
-      <!-- example-end probe.c --></programlisting>
+]]>
+<!-- example-end probe.c -->
+      </programlisting>
       <para>
         Compare that output with the output of <quote>gst-launch-1.0
         videotestsrc ! xvimagesink</quote>, just so you know what you're
@@ -284,9 +288,235 @@ main (gint   argc,
     </sect2>
 
     <sect2 id="section-preroll-probes">
-      <title>Preroll a partial pipeline</title>
+      <title>Play a region of a media file</title>
       <para>
-        WRITEME
+        In this example we will show you how to play back a region of
+        a media file. The goal is to only play the part of a file
+        from 2 seconds to 5 seconds and then EOS.
+      </para>
+      <para>
+        In a first step we will set a uridecodebin element to the PAUSED
+        state and make sure that we block all the source pads that are
+        created. When all the source pads are blocked, we have data on
+        all source pads and we say that the uridecodebin is prerolled.
+      </para>
+      <para>
+        In a prerolled pipeline we can ask for the duration of the media
+        and we can also perform seeks. We are interested in performing a
+        seek operation on the pipeline to select the range of media
+        that we are interested in.
+      </para>
+      <para>
+        After we configure the region we are interested in, we can link
+        the sink element, unblock the source pads and set the pipeline to
+        the playing state. You will see that exactly the requested
+        region is played by the sink before it goes to EOS.
+        What follows
+      </para>
+      <para>
+        What follows is an example application that loosly follows this
+        algorithm.
+      </para>
+      <programlisting>
+<!-- example-begin blockprobe.c -->
+<![CDATA[
+#include <gst/gst.h>
+
+static GMainLoop *loop;
+static volatile gint counter;
+static GstBus *bus;
+static gboolean prerolled = FALSE;
+static GstPad *sinkpad;
+
+static void
+dec_counter (GstElement * pipeline)
+{
+  if (prerolled)
+    return;
+
+  if (g_atomic_int_dec_and_test (&counter)) {
+    /* all probes blocked and no-more-pads signaled, post
+     * message on the bus. */
+    prerolled = TRUE;
+
+    gst_bus_post (bus, gst_message_new_application (
+          GST_OBJECT_CAST (pipeline),
+          gst_structure_new_empty ("ExPrerolled")));
+  }
+}
+
+/* called when a source pad of uridecodebin is blocked */
+static GstPadProbeReturn
+cb_blocked (GstPad          *pad,
+            GstPadProbeInfo *info,
+            gpointer         user_data)
+{
+  GstElement *pipeline = GST_ELEMENT (user_data);
+
+  if (prerolled)
+    return GST_PAD_PROBE_REMOVE;
+
+  dec_counter (pipeline);
+
+  return GST_PAD_PROBE_OK;
+}
+
+/* called when uridecodebin has a new pad */
+static void
+cb_pad_added (GstElement *element,
+              GstPad     *pad,
+              gpointer    user_data)
+{
+  GstElement *pipeline = GST_ELEMENT (user_data);
+
+  if (prerolled)
+    return;
+
+  g_atomic_int_inc (&counter);
+
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      (GstPadProbeCallback) cb_blocked, pipeline, NULL);
+
+  /* try to link to the video pad */
+  gst_pad_link (pad, sinkpad);
+}
+
+/* called when uridecodebin has created all pads */
+static void
+cb_no_more_pads (GstElement *element,
+                 gpointer    user_data)
+{
+  GstElement *pipeline = GST_ELEMENT (user_data);
+
+  if (prerolled)
+    return;
+
+  dec_counter (pipeline);
+}
+
+/* called when a new message is posted on the bus */
+static void
+cb_message (GstBus     *bus,
+            GstMessage *message,
+            gpointer    user_data)
+{
+  GstElement *pipeline = GST_ELEMENT (user_data);
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+      g_print ("we received an error!\n");
+      g_main_loop_quit (loop);
+      break;
+    case GST_MESSAGE_EOS:
+      g_print ("we reached EOS\n");
+      g_main_loop_quit (loop);
+      break;
+    case GST_MESSAGE_APPLICATION:
+    {
+      if (gst_message_has_name (message, "ExPrerolled")) {
+        /* it's our message */
+        g_print ("we are all prerolled, do seek\n");
+        gst_element_seek (pipeline,
+            1.0, GST_FORMAT_TIME,
+            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE,
+            GST_SEEK_TYPE_SET, 2 * GST_SECOND,
+            GST_SEEK_TYPE_SET, 5 * GST_SECOND);
+
+        gst_element_set_state (pipeline, GST_STATE_PLAYING);
+      }
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+gint
+main (gint   argc,
+      gchar *argv[])
+{
+  GstElement *pipeline, *src, *csp, *vs, *sink;
+
+  /* init GStreamer */
+  gst_init (&argc, &argv);
+  loop = g_main_loop_new (NULL, FALSE);
+
+  if (argc < 2) {
+    g_print ("usage: %s <uri>", argv[0]);
+    return -1;
+  }
+
+  /* build */
+  pipeline = gst_pipeline_new ("my-pipeline");
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", (GCallback) cb_message,
+      pipeline);
+
+  src = gst_element_factory_make ("uridecodebin", "src");
+  if (src == NULL)
+    g_error ("Could not create 'uridecodebin' element");
+
+  g_object_set (src, "uri", argv[1], NULL);
+
+  csp = gst_element_factory_make ("videoconvert", "csp");
+  if (csp == NULL)
+    g_error ("Could not create 'videoconvert' element");
+
+  vs = gst_element_factory_make ("videoscale", "vs");
+  if (csp == NULL)
+    g_error ("Could not create 'videoscale' element");
+
+  sink = gst_element_factory_make ("autovideosink", "sink");
+  if (sink == NULL)
+    g_error ("Could not create 'autovideosink' element");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, csp, vs, sink, NULL);
+
+  /* can't link src yet, it has no pads */
+  gst_element_link_many (csp, vs, sink, NULL);
+
+  sinkpad = gst_element_get_static_pad (csp, "sink");
+
+  /* for each pad block that is installed, we will increment
+   * the counter. for each pad block that is signaled, we
+   * decrement the counter. When the counter is 0 we post
+   * an app message to tell the app that all pads are
+   * blocked. Start with 1 that is decremented when no-more-pads
+   * is signaled to make sure that we only post the message
+   * after no-more-pads */
+  g_atomic_int_set (&counter, 1);
+
+  g_signal_connect (src, "pad-added",
+      (GCallback) cb_pad_added, pipeline);
+  g_signal_connect (src, "no-more-pads",
+      (GCallback) cb_no_more_pads, pipeline);
+
+  gst_element_set_state (pipeline, GST_STATE_PAUSED);
+
+  g_main_loop_run (loop);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (bus);
+  gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
+
+  return 0;
+}
+]]>
+<!-- example-end blockprobe.c -->
+</programlisting>
+      <para>
+        Note that we use a custom application message to signal the
+        main thread that the uridecidebin is prerolled. The main thread
+        will then issue a flushing seek to the requested region. The
+        flush will temporarily unblock the pad and reblock them when
+        new data arrives again. We detect this second block to remove
+        the probes. Then we set the pipeline to PLAYING and it should
+        play from 2 to 5 seconds, then EOS and exit the application.
       </para>
     </sect2>
   </sect1>
@@ -642,8 +872,8 @@ main (gint   argc,
           stream using appsink.
         </para>
         <programlisting>
-<![CDATA[
 <!-- example-begin appsink.c -->
+<![CDATA[
 #include <gst/gst.h>
 #ifdef HAVE_GTK
 #include <gtk/gtk.h>
@@ -783,7 +1013,8 @@ main (int argc, char *argv[])
   exit (0);
 }
 ]]>
-<!-- example-end appsink.c --></programlisting>
+<!-- example-end appsink.c -->
+</programlisting>
       </sect3>
     </sect2>
   </sect1>

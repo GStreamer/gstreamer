@@ -35,6 +35,7 @@ EXAMPLES = \
 	init \
 	query \
 	typefind \
+	blockprobe \
 	probe \
 	appsrc \
 	appsink \
@@ -50,6 +51,7 @@ BUILT_SOURCES = \
 	init.c \
 	query.c \
 	typefind.c dynamic.c \
+	blockprobe.c \
 	probe.c \
 	appsrc.c \
 	appsink.c \
@@ -83,6 +85,9 @@ query.c: $(top_srcdir)/docs/manual/advanced-position.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+blockprobe.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 probe.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
