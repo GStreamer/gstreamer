@@ -71,12 +71,13 @@ gst_pvr_meta_get_info (void)
 {
   static const GstMetaInfo *pvr_meta_info = NULL;
 
-  if (pvr_meta_info == NULL) {
-    pvr_meta_info = gst_meta_register ("GstPVRMeta", "GstPVRMeta",
+  if (g_once_init_enter (&pvr_meta_info)) {
+    const GstMetaInfo *meta = gst_meta_register ("GstPVRMeta", "GstPVRMeta",
         sizeof (GstPVRMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_pvr_meta_free,
         (GstMetaCopyFunction) NULL, (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&pvr_meta_info, meta);
   }
   return pvr_meta_info;
 

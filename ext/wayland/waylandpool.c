@@ -61,12 +61,13 @@ gst_wl_meta_get_info (void)
 {
   static const GstMetaInfo *wl_meta_info = NULL;
 
-  if (wl_meta_info == NULL) {
-    wl_meta_info =
+  if (g_once_init_enter (&wl_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_WL_META_API_TYPE, "GstWlMeta",
         sizeof (GstWlMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_wl_meta_free,
         (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&wl_meta_info, meta);
   }
   return wl_meta_info;
 }

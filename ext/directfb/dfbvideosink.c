@@ -383,8 +383,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
 
   while (dfbvideosink->running) {
     /* Wait for an event with a 50 ms timeout */
-    dfbvideosink->event_buffer->WaitForEventWithTimeout (dfbvideosink->
-        event_buffer, 0, 50);
+    dfbvideosink->event_buffer->
+        WaitForEventWithTimeout (dfbvideosink->event_buffer, 0, 50);
 
     /* Do we have an event ? */
     ret = dfbvideosink->event_buffer->HasEvent (dfbvideosink->event_buffer);
@@ -1898,13 +1898,15 @@ gst_meta_dfbsurface_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (meta_info == NULL) {
-    meta_info = gst_meta_register ("GstMetaDfbSurface", "GstMetaDfbSurface",
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *meta =
+        gst_meta_register ("GstMetaDfbSurface", "GstMetaDfbSurface",
         sizeof (GstMetaDfbSurface),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL,
         (GstMetaTransformFunction) NULL,
         (GstMetaSerializeFunction) NULL, (GstMetaDeserializeFunction) NULL);
+    g_once_init_leave (&meta_info, meta);
   }
   return meta_info;
 }

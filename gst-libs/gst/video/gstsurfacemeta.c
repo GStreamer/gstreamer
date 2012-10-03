@@ -62,11 +62,13 @@ gst_surface_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (meta_info == NULL) {
-    meta_info = gst_meta_register (GST_SURFACE_META_API_TYPE, "GstSurfaceMeta",
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *meta =
+        gst_meta_register (GST_SURFACE_META_API_TYPE, "GstSurfaceMeta",
         sizeof (GstSurfaceMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&meta_info, meta);
   }
   return meta_info;
 }

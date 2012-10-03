@@ -51,12 +51,13 @@ gst_core_video_meta_get_info (void)
 {
   static const GstMetaInfo *core_video_meta_info = NULL;
 
-  if (core_video_meta_info == NULL) {
-    core_video_meta_info = gst_meta_register (GST_CORE_VIDEO_META_API_TYPE,
+  if (g_once_init_enter (&core_video_meta_info)) {
+    const GstMetaInfo *meta = gst_meta_register (GST_CORE_VIDEO_META_API_TYPE,
         "GstCoreVideoMeta", sizeof (GstCoreVideoMeta),
         (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_core_video_meta_free,
         (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&core_video_meta_info, meta);
   }
   return core_video_meta_info;
 }
