@@ -376,6 +376,7 @@ static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
+static gboolean gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -1041,6 +1042,9 @@ gst_eglglessink_stop (GstBaseSink * sink)
 
   /* EGL/GLES2 cleanup */
 
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
+    return FALSE;
+
   if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
     glUseProgram (0);
 
@@ -1069,6 +1073,9 @@ gst_eglglessink_stop (GstBaseSink * sink)
       eglglessink->eglglesctx->glslprogram = 0;
     }
   }
+
+  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
+    return FALSE;
 
   if (eglglessink->eglglesctx->surface) {
     eglDestroySurface (eglglessink->eglglesctx->display,
@@ -1434,6 +1441,32 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
 }
 
 static gboolean
+gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind)
+{
+  g_assert (eglglessink->eglglesctx->display != NULL);
+
+  if (bind && eglglessink->eglglesctx->surface && eglglessink->eglglesctx->eglcontext) {
+    if (!eglMakeCurrent (eglglessink->eglglesctx->display,
+            eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
+            eglglessink->eglglesctx->eglcontext)) {
+      show_egl_error ("eglMakeCurrent");
+      GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
+      return FALSE;
+    }
+  } else {
+    if (!eglMakeCurrent (eglglessink->eglglesctx->display,
+            EGL_NO_SURFACE, EGL_NO_SURFACE,
+            EGL_NO_CONTEXT)) {
+      show_egl_error ("eglMakeCurrent");
+      GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 {
   GLint test;
@@ -1457,13 +1490,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     goto HANDLE_EGL_ERROR_LOCKED;
   }
 
-  if (!eglMakeCurrent (eglglessink->eglglesctx->display,
-          eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
-          eglglessink->eglglesctx->eglcontext)) {
-    show_egl_error ("eglCreateWindowSurface");
-    GST_ERROR_OBJECT (eglglessink, "Couldn't bind surface/context");
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
     goto HANDLE_EGL_ERROR_LOCKED;
-  }
 
   /* Save surface dims */
   gst_eglglessink_update_surface_dimensions (eglglessink);
@@ -1864,6 +1892,9 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   };
 #endif
 
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
+    goto HANDLE_EGL_ERROR;
+
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
@@ -2101,6 +2132,9 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       }
   }
 
+  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
+    goto HANDLE_EGL_ERROR;
+
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
   return GST_FLOW_OK;
 
@@ -2108,6 +2142,8 @@ HANDLE_EGL_ERROR:
   GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Rendering disabled for this frame");
+
+  gst_eglglessink_context_make_current (eglglessink, FALSE);
   return GST_FLOW_ERROR;
 }
 
@@ -2304,6 +2340,9 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     }
   }
 
+  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
+    return FALSE;
+
 SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Setcaps succeed");
   return TRUE;
@@ -2311,6 +2350,7 @@ SUCCEED:
 /* Errors */
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Setcaps failed");
+  gst_eglglessink_context_make_current (eglglessink, FALSE);
   return FALSE;
 }
 
