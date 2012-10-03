@@ -16,8 +16,8 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE    := tutorial-1
-LOCAL_SRC_FILES := tutorial-1.c
+LOCAL_MODULE    := tutorial-5
+LOCAL_SRC_FILES := tutorial-5.c
 LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -landroid
 include $(BUILD_SHARED_LIBRARY)

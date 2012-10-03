@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
-import com.gst_sdk_tutorials.tutorial_1.R;
+import com.gst_sdk_tutorials.tutorial_5.R;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;

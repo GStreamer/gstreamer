@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Android tutorial 1</string>
+    <string name="app_name">Android tutorial 5</string>
     <string name="button_play">Play</string>
     <string name="button_stop">Stop</string>
     <string name="button_select">Select</string>
-    <string name="filechooser_name">Android tutorial 1</string>
+    <string name="filechooser_name">Android tutorial 5</string>
     <string name="location">Location</string>
     <string name="cant_read_folder">folder can\'t be read!</string>
     <string name="nnew">New</string>

@@ -460,7 +460,7 @@ static JNINativeMethod native_methods[] = {
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
 
-  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-1", 0, "Android tutorial 1");
+  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-5", 0, "Android tutorial 5");
 
   java_vm = vm;
 
@@ -468,7 +468,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
     GST_ERROR ("Could not retrieve JNIEnv");
     return 0;
   }
-  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");
+  jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_5/Tutorial5");
   (*env)->RegisterNatives (env, klass, native_methods, G_N_ELEMENTS(native_methods));
 
   pthread_key_create (&current_jni_env, detach_current_thread);

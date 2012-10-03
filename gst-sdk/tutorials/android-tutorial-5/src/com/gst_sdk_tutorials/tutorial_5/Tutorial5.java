@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gst_sdk_tutorials.tutorial_1;
+package com.gst_sdk_tutorials.tutorial_5;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -38,7 +38,7 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
+public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private native void nativeInit();
     private native void nativeFinalize();
     private native void nativeSetUri(String uri);
@@ -222,7 +222,7 @@ public class Tutorial1 extends Activity implements SurfaceHolder.Callback, OnSee
 
     static {
         System.loadLibrary("gstreamer_android");
-        System.loadLibrary("tutorial-1");
+        System.loadLibrary("tutorial-5");
         classInit();
     }
 
