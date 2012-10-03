@@ -142,14 +142,20 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
     GstMetaTransformFunction transform_func)
 {
   GstMetaInfo *info;
+  GType type;
 
   g_return_val_if_fail (api != 0, NULL);
   g_return_val_if_fail (impl != NULL, NULL);
   g_return_val_if_fail (size != 0, NULL);
 
+  /* first try to register the implementation name. It's possible
+   * that this fails because it was already registered. */
+  type = g_pointer_type_register_static (impl);
+  g_return_val_if_fail (type != 0, NULL);
+
   info = g_slice_new (GstMetaInfo);
   info->api = api;
-  info->type = g_pointer_type_register_static (impl);
+  info->type = type;
   info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
