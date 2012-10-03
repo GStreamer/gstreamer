@@ -29,6 +29,7 @@ endif
 GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
 endif
 GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
-GSTREAMER_PLUGINS         := coreelements ogg theora vorbis ffmpegcolorspace playback audioconvert audiorate audioresample coreindexers gio uridecodebin videorate videoscale typefindfunctions eglglessink soup amc matroska autodetect videofilter videotestsrc opensles volume
+include $(GSTREAMER_NDK_BUILD_PATH)/plugins.mk
+GSTREAMER_PLUGINS         := $(GSTREAMER_PLUGINS_CORE) $(GSTREAMER_PLUGINS_PLAYBACK) $(GSTREAMER_PLUGINS_CODECS) $(GSTREAMER_PLUGINS_NET) $(GSTREAMER_PLUGINS_SYS)
 G_IO_MODULES              := gnutls
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
