@@ -627,6 +627,9 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   _playsink_reset_segment_event_marker_id =
       g_quark_from_static_string ("gst-playsink-reset-segment-event-marker");
+
+  g_type_class_ref (GST_TYPE_STREAM_SYNCHRONIZER);
+  g_type_class_ref (GST_TYPE_COLOR_BALANCE_CHANNEL);
 }
 
 static void
