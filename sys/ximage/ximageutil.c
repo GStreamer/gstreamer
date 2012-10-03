@@ -41,11 +41,12 @@ gst_meta_ximage_get_info (void)
 {
   static const GstMetaInfo *meta_ximage_info = NULL;
 
-  if (meta_ximage_info == NULL) {
-    meta_ximage_info =
+  if (g_once_init_enter (&meta_ximage_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (gst_meta_ximage_api_get_type (), "GstMetaXImageSrc",
         sizeof (GstMetaXImage), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&meta_ximage_info, meta);
   }
   return meta_ximage_info;
 }

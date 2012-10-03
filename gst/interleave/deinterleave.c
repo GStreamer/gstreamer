@@ -759,6 +759,8 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
   if (!pads_pushed)
     ret = GST_FLOW_NOT_LINKED;
 
+  GST_DEBUG_OBJECT (self, "Pushed on %d pads", pads_pushed);
+
 done:
   gst_buffer_unmap (buf, &read_info);
   gst_buffer_unref (buf);

@@ -75,11 +75,12 @@ gst_v4l2_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (meta_info == NULL) {
-    meta_info =
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (gst_v4l2_meta_api_get_type (), "GstV4l2Meta",
         sizeof (GstV4l2Meta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&meta_info, meta);
   }
   return meta_info;
 }
