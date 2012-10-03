@@ -259,6 +259,7 @@ static void *app_function (void *userdata) {
   CustomData *data = (CustomData *)userdata;
   GSource *timeout_source;
   GSource *bus_source;
+  guint flags;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
@@ -266,13 +267,10 @@ static void *app_function (void *userdata) {
   data->context = g_main_context_new ();
 
   data->pipeline = gst_element_factory_make ("playbin2", NULL);
-
-  if (0) {
-	  GstElement *fakesink;
-	  fakesink = gst_element_factory_make ("fakesink", NULL);
-	  g_object_set (fakesink, "sync", TRUE, NULL);
-	  g_object_set (data->pipeline, "video-sink", fakesink, NULL);
-  }
+  g_object_get (data->pipeline, "flags", &flags, NULL);
+  /* Disable subtitles for now */
+  flags &= ~0x00000004;
+  g_object_set (data->pipeline, "flags", flags, NULL);
 
   if (data->native_window) {
     GST_DEBUG ("Native window already received, notifying the pipeline about it.");
