@@ -13,34 +13,140 @@
     to listen to a pipeline's data processing.
   </para>
 
-  <sect1 id="section-data-probe">
-    <title>Data probing</title>
+  <sect1 id="section-using-probes">
+    <title>Using probes</title>
     <para>
       Probing is best envisioned as a pad listener. Technically, a probe is
       nothing more than a callback that can be attached to a pad.
       You can attach a probe using <function>gst_pad_add_probe ()</function>.
       Similarly, one can use the
       <function>gst_pad_remove_probe ()</function>
-      to remove the callback again.
+      to remove the callback again. The probe notifies you of any activity
+      that happens on the pad, like buffers, events and queries. You can
+      define what kind of notifications you are interested in when you
+      add the probe.
     </para>
     <para>
-      Probes run in pipeline threading context, so callbacks should try to
-      not block and generally not do any weird stuff, since this could
-      have a negative impact on pipeline performance or, in case of bugs,
-      cause deadlocks or crashes. More precisely, one should usually not
-      call any GUI-related functions from within a probe callback, nor try
-      to change the state of the pipeline.  An application may post custom
-      messages on the pipeline's bus though to communicate with the main
-      application thread and have it do things like stop the pipeline.
+      The probe can notify you of the following activity on pads:
     </para>
-    <para>
-      In any case, most common buffer operations
-      that elements can do in <function>_chain ()</function> functions, can
-      be done in probe callbacks as well. The example below gives a short
-      impression on how to use them (even if this usage is not entirely
-      correct, but more on that below):
-    </para>
-    <programlisting><!-- example-begin probe.c -->
+    <itemizedlist>
+      <listitem>
+        <para>
+          A buffer is pushed or pulled. You want to specify the
+          GST_PAD_PROBE_TYPE_BUFFER when registering the probe. Because the
+          pad can be scheduled in different ways, it is possible to also
+          specify in what scheduling mode you are interested with the
+          optional GST_PAD_PROBE_TYPE_PUSH and GST_PAD_PROBE_TYPE_PULL
+          flags.
+        </para>
+        <para>
+          You can use this probe to inspect, modify or drop the buffer.
+          See <xref linkend="section-data-probes"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A bufferlist is pushed. Use the GST_PAD_PROBE_TYPE_BUFFER_LIST
+          when registering the probe.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          An event travels over a pad. Use the GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM
+          and GST_PAD_PROBE_TYPE_EVENT_UPSTREAM flags to select downstream
+          and upstream events. There is also a convenience
+          GST_PAD_PROBE_TYPE_EVENT_BOTH to be notified of events going both
+          upstream and downstream. By default, flush events do not cause
+          a notification. You need to explicitly enable GST_PAD_PROBE_TYPE_EVENT_FLUSH
+          to receive callbacks from flushing events. Events are always
+          only notified in push mode.
+        </para>
+        <para>
+          You can use this probe to inspect, modify or drop the event.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A query travels over a pad. Use the GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM
+          and GST_PAD_PROBE_TYPE_QUERY_UPSTREAM flags to select downstream
+          and upstream queries. The convenience GST_PAD_PROBE_TYPE_QUERY_BOTH
+          can also be used to select both directions. Query probes will be
+          notified twice, once when the query travels upstream/downstream and
+          once when the query result is returned. You can select in what stage
+          the callback will be called with the GST_PAD_PROBE_TYPE_PUSH and
+          GST_PAD_PROBE_TYPE_PULL, respectively when the query is performed
+          and when the query result is returned.
+        </para>
+        <para>
+          You can use this probe to inspect or modify the query. You can also
+          answer the query in the probe callback by placing the result value
+          in the query and by returning GST_PAD_PROBE_DROP from the 
+          callback.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          In addition to notifying you of dataflow, you can also ask the
+          probe to block the dataflow when the callback returns. This is
+          called a blocking probe and is activated by specifying the
+          GST_PAD_PROBE_TYPE_BLOCK flag. You can use this flag with the
+          other flags to only block dataflow on selected activity. A pad
+          becomes unblocked again if you remove the probe or when you return
+          GST_PAD_PROBE_REMOVE from the callback. You can let only the
+          currently blocked item pass by returning GST_PAD_PROBE_PASS
+          from the callback, it will block again on the next item.
+        </para>
+        <para>
+          Blocking probes are used to temporarily block pads because they
+          are unlinked or because you are going to unlink them. If the
+          dataflow is not blocked, the pipeline would go into an error
+          state if data is pushed on an unlinked pad. We will se how
+          to use blocking probes to partially preroll a pipeline.
+          See <xref linkend="section-preroll-probes"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Be notified when no activity is happening on a pad. You install
+          this probe with the GST_PAD_PROBE_TYPE_IDLE flag. You can specify
+          GST_PAD_PROBE_TYPE_PUSH and/or GST_PAD_PROBE_TYPE_PULL to 
+          only be notified depending on the pad scheduling mode.
+          The IDLE probe is also a blocking probe in that it will not let
+          any data pass on the pad for as long as the IDLE probe is
+          installed.
+        </para>
+        <para>
+          You can use idle probes to dynamically relink a pad.  We will see
+          how to use idle probes to replace an element in the pipeline.
+          See <xref linkend="section-dynamic-pipelines"/>.
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <sect2 id="section-data-probes">
+      <title>Data probes</title>
+      <para>
+        Data probes allow you to be notified when there is data passing
+        on a pad. When adding the probe, specify the GST_PAD_PROBE_TYPE_BUFFER
+        and/or GST_PAD_PROBE_TYPE_BUFFER_LIST. 
+      </para>
+      <para>
+        Data probes run in pipeline streaming thread context, so callbacks
+        should try to not block and generally not do any weird stuff, since
+        this could have a negative impact on pipeline performance or, in case
+        of bugs, cause deadlocks or crashes. More precisely, one should usually
+        not call any GUI-related functions from within a probe callback, nor try
+        to change the state of the pipeline.  An application may post custom
+        messages on the pipeline's bus though to communicate with the main
+        application thread and have it do things like stop the pipeline.
+      </para>
+      <para>
+        In any case, most common buffer operations
+        that elements can do in <function>_chain ()</function> functions, can
+        be done in probe callbacks as well. The example below gives a short
+        impression on how to use them.
+      </para>
+      <programlisting><!-- example-begin probe.c -->
 #include &lt;gst/gst.h&gt;
 
 static GstPadProbeReturn
@@ -142,39 +248,47 @@ main (gint   argc,
 
   return 0;
 }
-    <!-- example-end probe.c --></programlisting>
-    <para>
-      Compare that output with the output of <quote>gst-launch-1.0
-      videotestsrc ! xvimagesink</quote>, just so you know what you're
-      looking for.
-    </para>
-    <para>
-      Strictly speaking, a pad probe callback is only allowed to modify the
-      buffer content if the buffer is writable.  Whether this is the case or
-      not depends a lot on the pipeline and the elements involved.  Often
-      enough, this is the case, but sometimes it is not, and if it is not
-      then unexpected modification of the data or metadata can introduce
-      bugs that are very hard to debug and track down. You can check if a
-      buffer is writable with <function>gst_buffer_is_writable ()</function>.
-      Since you can pass back a different buffer than the one passed in,
-      it is a good idea to make the buffer writable in the callback function
-      with <function>gst_buffer_make_writable ()</function>.
-    </para>
-    <para>
-      Pad probes are suited best for looking at data as it passes through
-      the pipeline. If you need to modify data, you should better write your
-      own GStreamer element. Base classes like GstAudioFilter, GstVideoFilter or
-      GstBaseTransform make this fairly easy.
-    </para>
-    <para>
-      If you just want to inspect buffers as they pass through the pipeline,
-      you don't even need to set up pad probes. You could also just insert
-      an identity element into the pipeline and connect to its "handoff"
-      signal. The identity element also provides a few useful debugging tools
-      like the "dump" property or the "last-message" property (the latter is
-      enabled by passing the '-v' switch to gst-launch and by setting the
-      silent property on the identity to FALSE).
-    </para>
+      <!-- example-end probe.c --></programlisting>
+      <para>
+        Compare that output with the output of <quote>gst-launch-1.0
+        videotestsrc ! xvimagesink</quote>, just so you know what you're
+        looking for.
+      </para>
+      <para>
+        Strictly speaking, a pad probe callback is only allowed to modify the
+        buffer content if the buffer is writable.  Whether this is the case or
+        not depends a lot on the pipeline and the elements involved.  Often
+        enough, this is the case, but sometimes it is not, and if it is not
+        then unexpected modification of the data or metadata can introduce
+        bugs that are very hard to debug and track down. You can check if a
+        buffer is writable with <function>gst_buffer_is_writable ()</function>.
+        Since you can pass back a different buffer than the one passed in,
+        it is a good idea to make the buffer writable in the callback function
+        with <function>gst_buffer_make_writable ()</function>.
+      </para>
+      <para>
+        Pad probes are suited best for looking at data as it passes through
+        the pipeline. If you need to modify data, you should better write your
+        own GStreamer element. Base classes like GstAudioFilter, GstVideoFilter or
+        GstBaseTransform make this fairly easy.
+      </para>
+      <para>
+        If you just want to inspect buffers as they pass through the pipeline,
+        you don't even need to set up pad probes. You could also just insert
+        an identity element into the pipeline and connect to its "handoff"
+        signal. The identity element also provides a few useful debugging tools
+        like the "dump" property or the "last-message" property (the latter is
+        enabled by passing the '-v' switch to gst-launch and by setting the
+        silent property on the identity to FALSE).
+      </para>
+    </sect2>
+
+    <sect2 id="section-preroll-probes">
+      <title>Preroll a partial pipeline</title>
+      <para>
+        WRITEME
+      </para>
+    </sect2>
   </sect1>
 
   <sect1 id="section-data-spoof">
@@ -690,11 +804,18 @@ main (int argc, char *argv[])
     </para>
   </sect1>
 
-  <sect1 id="section-spoof-probes">
+  <sect1 id="section-dynamic-pipelines">
     <title>Dynamically changing the pipeline</title>
     <para>
-      WRITEME
+      In this section we talk about some techniques for dynamically
+      modifying the pipeline
     </para>
+    <sect2 id="section-dynamic-adding">
+      <title>Adding new elements to a pipeline</title>
+      <para>
+        WRITEME
+      </para>
+    </sect2>
   </sect1>
 
   <sect1 id="section-data-manager">
