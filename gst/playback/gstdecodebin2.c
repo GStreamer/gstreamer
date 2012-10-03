@@ -929,6 +929,8 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_decode_bin_handle_message);
+
+  g_type_class_ref (GST_TYPE_DECODE_PAD);
 }
 
 gint

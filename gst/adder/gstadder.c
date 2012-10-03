@@ -296,7 +296,7 @@ gst_adder_setcaps (GstAdder * adder, GstPad * pad, GstCaps * caps)
   GST_INFO_OBJECT (pad, "setting caps to %" GST_PTR_FORMAT, caps);
 
   adder->current_caps = gst_caps_ref (caps);
-  gst_pad_push_event (adder->srcpad, gst_event_new_caps (adder->current_caps));
+  /* send caps event later, after stream-start event */
 
   it = gst_element_iterate_pads (GST_ELEMENT_CAST (adder));
 
@@ -1114,6 +1114,24 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->func == NULL))
     goto not_negotiated;
 
+  if (adder->send_stream_start) {
+    gchar s_id[32];
+
+    /* stream-start (FIXME: create id based on input ids) */
+    g_snprintf (s_id, sizeof (s_id), "adder-%08x", g_random_int ());
+    gst_pad_push_event (adder->srcpad, gst_event_new_stream_start (s_id));
+    adder->send_stream_start = FALSE;
+  }
+
+  if (adder->send_caps) {
+    GstEvent *caps_event;
+
+    caps_event = gst_event_new_caps (adder->current_caps);
+    GST_INFO_OBJECT (adder, "caps event %" GST_PTR_FORMAT, caps_event);
+    gst_pad_push_event (adder->srcpad, caps_event);
+    adder->send_caps = FALSE;
+  }
+
   if (g_atomic_int_compare_and_exchange (&adder->flush_stop_pending,
           TRUE, FALSE)) {
     GST_DEBUG_OBJECT (adder, "pending flush stop");
@@ -1339,6 +1357,8 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       adder->flush_stop_pending = FALSE;
       adder->new_segment_pending = TRUE;
       adder->wait_for_new_segment = FALSE;
+      adder->send_stream_start = TRUE;
+      adder->send_caps = TRUE;
       gst_caps_replace (&adder->current_caps, NULL);
       gst_segment_init (&adder->segment, GST_FORMAT_TIME);
       gst_collect_pads_start (adder->collect);

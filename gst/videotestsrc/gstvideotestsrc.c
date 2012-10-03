@@ -704,6 +704,12 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   videotestsrc->tmpline2 = g_malloc ((info.width + 8) * 4);
   videotestsrc->tmpline_u16 = g_malloc ((info.width + 16) * 8);
 
+  videotestsrc->accum_rtime += videotestsrc->running_time;
+  videotestsrc->accum_frames += videotestsrc->n_frames;
+
+  videotestsrc->running_time = 0;
+  videotestsrc->n_frames = 0;
+
   return TRUE;
 
   /* ERRORS */
@@ -783,6 +789,8 @@ gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
   } else {
     src->n_frames = 0;
   }
+  src->accum_frames = 0;
+  src->accum_rtime = 0;
   if (src->info.fps_n) {
     src->running_time = gst_util_uint64_scale (src->n_frames,
         src->info.fps_d * GST_SECOND, src->info.fps_n);
@@ -830,11 +838,19 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
   gst_video_frame_unmap (&frame);
 
-  GST_BUFFER_DTS (buffer) = src->timestamp_offset + src->running_time;
+  GST_BUFFER_DTS (buffer) =
+      src->accum_rtime + src->timestamp_offset + src->running_time;
   GST_BUFFER_PTS (buffer) = GST_BUFFER_DTS (buffer);
-  GST_BUFFER_OFFSET (buffer) = src->n_frames;
+
+  GST_DEBUG_OBJECT (src, "Timestamp: %" GST_TIME_FORMAT " = accumulated %"
+      GST_TIME_FORMAT " + offset: %"
+      GST_TIME_FORMAT " + running time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)), GST_TIME_ARGS (src->accum_rtime),
+      GST_TIME_ARGS (src->timestamp_offset), GST_TIME_ARGS (src->running_time));
+
+  GST_BUFFER_OFFSET (buffer) = src->accum_frames + src->n_frames;
   src->n_frames++;
-  GST_BUFFER_OFFSET_END (buffer) = src->n_frames;
+  GST_BUFFER_OFFSET_END (buffer) = GST_BUFFER_OFFSET (buffer) + 1;
   if (src->info.fps_n) {
     next_time = gst_util_uint64_scale_int (src->n_frames * GST_SECOND,
         src->info.fps_d, src->info.fps_n);
@@ -874,6 +890,8 @@ gst_video_test_src_start (GstBaseSrc * basesrc)
 
   src->running_time = 0;
   src->n_frames = 0;
+  src->accum_frames = 0;
+  src->accum_rtime = 0;
 
   return TRUE;
 }

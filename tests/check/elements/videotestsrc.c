@@ -379,9 +379,6 @@ videotestsrc_suite (void)
 
 #ifdef HAVE_VALGRIND
   if (RUNNING_ON_VALGRIND) {
-    /* otherwise valgrind errors out when liboil probes CPU extensions
-     * during which it causes SIGILLs etc. to be fired */
-    g_setenv ("OIL_CPU_FLAGS", "0", 0);
     /* test_rgb_formats takes a bit longer, so increase timeout */
     tcase_set_timeout (tc_chain, 5 * 60);
   }

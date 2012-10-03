@@ -3,7 +3,9 @@ Video Acceleration
 
 Status:
 
-  DRAFT.
+  DRAFT. Outdated for 1.0, we want to use video/x-raw in order to
+  interoperate with all elements that handle video. Optimized handling of
+  the VA surfaces can be done with the metadata.
   
 Purpose:
 

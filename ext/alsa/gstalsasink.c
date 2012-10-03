@@ -1113,7 +1113,7 @@ gst_alsasink_payload (GstAudioBaseSink * sink, GstBuffer * buf)
     gst_buffer_map (out, &oinfo, GST_MAP_WRITE);
 
     if (!gst_audio_iec61937_payload (iinfo.data, iinfo.size,
-            oinfo.data, oinfo.size, &sink->ringbuffer->spec)) {
+            oinfo.data, oinfo.size, &sink->ringbuffer->spec, G_BIG_ENDIAN)) {
       gst_buffer_unref (out);
       return NULL;
     }

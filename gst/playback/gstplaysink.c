@@ -627,6 +627,9 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
 
   _playsink_reset_segment_event_marker_id =
       g_quark_from_static_string ("gst-playsink-reset-segment-event-marker");
+
+  g_type_class_ref (GST_TYPE_STREAM_SYNCHRONIZER);
+  g_type_class_ref (GST_TYPE_COLOR_BALANCE_CHANNEL);
 }
 
 static void
@@ -2899,7 +2902,7 @@ no_audioconvert:
     post_missing_element_message (playsink, "audioconvert");
     GST_ELEMENT_ERROR (playsink, CORE, MISSING_PLUGIN,
         (_("Missing element '%s' - check your GStreamer installation."),
-            "audioconvert"), ("possibly a liboil version mismatch?"));
+            "audioconvert"), ("make sure audioconvert isn't blacklisted"));
     free_chain ((GstPlayChain *) chain);
     return NULL;
   }

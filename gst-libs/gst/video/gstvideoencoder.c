@@ -1217,6 +1217,7 @@ gst_video_encoder_new_frame (GstVideoEncoder * encoder, GstBuffer * buf,
   frame->pts = pts;
   frame->dts = dts;
   frame->duration = duration;
+  frame->abidata.ABI.ts = pts;
 
   return frame;
 }
@@ -1229,7 +1230,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstVideoEncoderPrivate *priv;
   GstVideoEncoderClass *klass;
   GstVideoCodecFrame *frame;
-  GstClockTime pts, dts, duration;
+  GstClockTime pts, duration;
   GstFlowReturn ret = GST_FLOW_OK;
   guint64 start, stop, cstart, cstop;
 
@@ -1254,14 +1255,13 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   pts = GST_BUFFER_PTS (buf);
-  dts = GST_BUFFER_DTS (buf);
   duration = GST_BUFFER_DURATION (buf);
 
   GST_LOG_OBJECT (encoder,
       "received buffer of size %" G_GSIZE_FORMAT " with PTS %" GST_TIME_FORMAT
-      ", PTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-      gst_buffer_get_size (buf), GST_TIME_ARGS (pts), GST_TIME_ARGS (dts),
-      GST_TIME_ARGS (duration));
+      ", DTS %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      gst_buffer_get_size (buf), GST_TIME_ARGS (pts),
+      GST_TIME_ARGS (GST_BUFFER_DTS (buf)), GST_TIME_ARGS (duration));
 
   if (priv->at_eos) {
     ret = GST_FLOW_EOS;
@@ -1275,15 +1275,17 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     stop = GST_CLOCK_TIME_NONE;
 
   /* Drop buffers outside of segment */
-  if (!gst_segment_clip (&encoder->output_segment,
+  if (!gst_segment_clip (&encoder->input_segment,
           GST_FORMAT_TIME, start, stop, &cstart, &cstop)) {
     GST_DEBUG_OBJECT (encoder, "clipping to segment dropped frame");
     gst_buffer_unref (buf);
     goto done;
   }
 
-  frame =
-      gst_video_encoder_new_frame (encoder, buf, cstart, dts, cstop - cstart);
+  /* incoming DTS is not really relevant and does not make sense anyway,
+   * so pass along _NONE and maybe come up with something better later on */
+  frame = gst_video_encoder_new_frame (encoder, buf, cstart,
+      GST_CLOCK_TIME_NONE, cstop - cstart);
 
   GST_OBJECT_LOCK (encoder);
   if (priv->force_key_unit) {
@@ -1754,6 +1756,41 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
     }
   } else {
     GST_BUFFER_FLAG_SET (frame->output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
+  /* DTS is expected monotone ascending,
+   * so a good guess is the lowest unsent PTS (all being OK) */
+  {
+    GstClockTime min_ts = GST_CLOCK_TIME_NONE;
+    GstVideoCodecFrame *oframe = NULL;
+    gboolean seen_none = FALSE;
+
+    /* some maintenance regardless */
+    for (l = priv->frames; l; l = l->next) {
+      GstVideoCodecFrame *tmp = l->data;
+
+      if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts)) {
+        seen_none = TRUE;
+        continue;
+      }
+
+      if (!GST_CLOCK_TIME_IS_VALID (min_ts) || tmp->abidata.ABI.ts < min_ts) {
+        min_ts = tmp->abidata.ABI.ts;
+        oframe = tmp;
+      }
+    }
+    /* save a ts if needed */
+    if (oframe && oframe != frame) {
+      oframe->abidata.ABI.ts = frame->abidata.ABI.ts;
+    }
+
+    /* and set if needed */
+    if (!GST_CLOCK_TIME_IS_VALID (frame->dts) && !seen_none) {
+      frame->dts = min_ts;
+      GST_DEBUG_OBJECT (encoder,
+          "no valid DTS, using oldest PTS %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (frame->pts));
+    }
   }
 
   frame->distance_from_sync = priv->distance_from_sync;
