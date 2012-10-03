@@ -156,12 +156,12 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
         gst_structure_set_value (tmp2, "level", &va);
         g_value_unset (&va);
         g_value_unset (&v);
-        gst_caps_append_structure (ret, tmp2);
+        gst_caps_merge_structure (ret, tmp2);
         have_profile_level = TRUE;
       }
 
       if (!have_profile_level) {
-        gst_caps_append_structure (ret, tmp);
+        gst_caps_merge_structure (ret, tmp);
       } else {
         gst_structure_free (tmp);
       }
@@ -210,12 +210,12 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
         gst_structure_set_value (tmp2, "level", &va);
         g_value_unset (&va);
         g_value_unset (&v);
-        gst_caps_append_structure (ret, tmp2);
+        gst_caps_merge_structure (ret, tmp2);
         have_profile_level = TRUE;
       }
 
       if (!have_profile_level) {
-        gst_caps_append_structure (ret, tmp);
+        gst_caps_merge_structure (ret, tmp);
       } else {
         gst_structure_free (tmp);
       }
@@ -267,20 +267,20 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
         if (!alternative)
           g_value_unset (&va);
         g_value_unset (&v);
-        gst_caps_append_structure (ret, tmp2);
+        gst_caps_merge_structure (ret, tmp2);
 
         if (alternative) {
           tmp2 = gst_structure_copy (tmp);
           gst_structure_set (tmp2, "profile", G_TYPE_STRING, alternative, NULL);
           gst_structure_set_value (tmp2, "level", &va);
           g_value_unset (&va);
-          gst_caps_append_structure (ret, tmp2);
+          gst_caps_merge_structure (ret, tmp2);
         }
         have_profile_level = TRUE;
       }
 
       if (!have_profile_level) {
-        gst_caps_append_structure (ret, tmp);
+        gst_caps_merge_structure (ret, tmp);
       } else {
         gst_structure_free (tmp);
       }
@@ -292,7 +292,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "height", GST_TYPE_INT_RANGE, 16, 4096,
           "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "video/mpeg2") == 0) {
       GstStructure *tmp;
 
@@ -305,7 +305,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "systemstream", G_TYPE_BOOLEAN, FALSE,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else {
       GST_WARNING ("Unsupported mimetype '%s'", type->mime);
     }
@@ -369,7 +369,7 @@ create_src_caps (const GstAmcCodecInfo * codec_info)
         continue;
       }
       tmp = gst_video_format_new_template_caps (format);
-      gst_caps_append (ret, tmp);
+      gst_caps_merge (ret, tmp);
     }
   }
 

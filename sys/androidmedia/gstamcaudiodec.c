@@ -95,21 +95,21 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/3gpp") == 0) {
       GstStructure *tmp;
 
       tmp = gst_structure_new ("audio/AMR",
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/amr-wb") == 0) {
       GstStructure *tmp;
 
       tmp = gst_structure_new ("audio/AMR-WB",
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/mp4a-latm") == 0) {
       gint j;
       GstStructure *tmp, *tmp2;
@@ -147,13 +147,13 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
         tmp2 = gst_structure_copy (tmp);
         gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
-        gst_caps_append_structure (ret, tmp2);
+        gst_caps_merge_structure (ret, tmp2);
 
         have_profile = TRUE;
       }
 
       if (!have_profile) {
-        gst_caps_append_structure (ret, tmp);
+        gst_caps_merge_structure (ret, tmp);
       } else {
         gst_structure_free (tmp);
       }
@@ -163,21 +163,21 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
       tmp = gst_structure_new ("audio/x-alaw",
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/g711-mlaw") == 0) {
       GstStructure *tmp;
 
       tmp = gst_structure_new ("audio/x-mulaw",
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/vorbis") == 0) {
       GstStructure *tmp;
 
       tmp = gst_structure_new ("audio/x-vorbis",
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/flac") == 0) {
       GstStructure *tmp;
 
@@ -185,7 +185,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "audio/mpeg-L2") == 0) {
       GstStructure *tmp;
 
@@ -195,7 +195,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
-      gst_caps_append_structure (ret, tmp);
+      gst_caps_merge_structure (ret, tmp);
     } else {
       GST_WARNING ("Unsupported mimetype '%s'", type->mime);
     }
