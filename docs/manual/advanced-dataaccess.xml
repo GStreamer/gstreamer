@@ -2,9 +2,9 @@
   <title>Pipeline manipulation</title>
   <para>
     This chapter will discuss how you can manipulate your pipeline in several
-    ways from your application on. Parts of this chapter are downright
-    hackish, so be assured that you'll need some programming knowledge
-    before you start reading this.
+    ways from your application on. Parts of this chapter are very
+    lowlevel, so be assured that you'll need some programming knowledge
+    and a good understanding of &GStreamer; before you start reading this.
   </para>
   <para>
     Topics that will be discussed here include how you can insert data into
@@ -1037,16 +1037,145 @@ main (int argc, char *argv[])
       only allow types matching that specified capability set for
       negotiation.  See also <xref linkend="section-caps-filter"/>.
     </para>
+
+    <sect2 id="section-dynamic-format">
+      <title>Changing format in a PLAYING pipeline</title>
+      <para>
+        It is also possible to dynamically change the format in a pipeline
+        while PLAYING. This can simply be done by changing the caps 
+        property on a capsfilter. The capsfilter will send a RECONFIGURE
+        event upstream that will make the upstream element attempt to
+        renegotiate a new format and allocator. This only works if
+        the upstream element is not using fixed caps on the source pad.
+      </para>
+      <para>
+        Below is an example of how you can change the caps of a pipeline
+        while in the PLAYING state.
+      </para>
+      <programlisting>
+<!-- example-begin dynformat.c -->
+<![CDATA[
+]]>
+<!-- example-end dynformat.c -->
+      </programlisting>
+    </sect2>
   </sect1>
 
   <sect1 id="section-dynamic-pipelines">
     <title>Dynamically changing the pipeline</title>
     <para>
       In this section we talk about some techniques for dynamically
-      modifying the pipeline
+      modifying the pipeline. We are talking specifically about changing
+      the pipeline while it is in the PLAYING state without interrupting
+      the flow.
     </para>
-    <sect2 id="section-dynamic-adding">
-      <title>Adding new elements to a pipeline</title>
+    <para>
+      There are some important things to consider when building dynamic
+      pipelines:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          When removing elements from the pipeline, make sure that there
+          is no dataflow on unlinked pads because that will cause a fatal
+          pipeline error. Always block source pads (in push mode) or
+          sink pads (in pull mode) before unlinking pads.
+          See also <xref linkend="section-dynamic-changing"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          When adding elements to a pipeline, make sure to put the element
+          into the right state, usually the same state as the parent, before
+          allowing dataflow the element. When an element is newly created,
+          it is in the NULL state and will return an error when it
+          receives data.
+          See also <xref linkend="section-dynamic-changing"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          When adding elements to a pipeline, &GStreamer; will by default
+          set the clock and base-time on the element to the current values
+          of the pipeline. This means that the element will be able to
+          construct the same pipeline running-time as the other elements
+          in the pipeline. This means that sinks will synchronize buffers
+          like the other sinks in the pipeline and that sources produce
+          buffers with a running-time that matches the other sources.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          When unlinking elements from an upstream chain, always make sure
+          to flush any queued data in the element by sending an EOS event
+          down the element sink pad(s) and by waiting that the EOS leaves
+          the elements (with an event probe).
+          See also <xref linkend="section-dynamic-changing"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          A live source will produce buffers with a running-time of the
+          current running-time in the pipeline.
+        </para>
+        <para>
+          A pipeline without a live source produces buffers with a
+          running-time starting from 0. Likewise, after a flushing seek,
+          those pipelines reset the running-time back to 0.
+        </para>
+        <para>
+          The running-time can be changed with
+          <function>gst_pad_set_offset ()</function>. It is important to
+          know the running-time of the elements in the pipeline in order
+          to maintain synchronization.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Adding elements might change the state of the pipeline. Adding a
+          non-prerolled sink, for example, brings the pipeline back to the
+          prerolling state. Removing a non-prerolled sink, for example, might
+          change the pipeline to PAUSED and PLAYING state.
+        </para>
+        <para>
+          Adding a live source cancels the preroll stage and put the pipeline
+          to the playing state. Adding a live source or other live elements
+          might also change the latency of a pipeline.
+        </para>
+        <para>
+          Adding or removing elements to the pipeline might change the clock
+          selection of the pipeline. If the newly added element provides a clock,
+          it might be worth changing the clock in the pipeline to the new
+          clock. If, on the other hand, the element that provides the clock
+          for the pipeline is removed, a new clock has to be selected.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Adding and removing elements might cause upstream or downstream
+          elements to renegotiate caps and or allocators. You don't really
+          need to do anything from the application, plugins largely
+          adapt themself to the new pipeline topology in order to optimize
+          their formats and allocation strategy.
+        </para>
+        <para>
+          What is important is that when you add, remove or change elements
+          in the pipeline, it is possible that the pipeline needs to
+          negotiate a new format and this can fail. Usually you can fix this
+          by inserting the right converter elements where needed.
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      &GStreamer; offers support for doing about any dynamic pipeline
+      modification but it requires you to know a bit of details before
+      you can do this without causing pipeline errors. In the following
+      sections we will demonstrate a couple of typical use-cases.
+    </para>
+
+    <sect2 id="section-dynamic-changing">
+      <title>Changing elements in a pipeline</title>
       <para>
         WRITEME
       </para>

@@ -233,7 +233,7 @@ main (gint   argc,
   </sect1>
 
   <sect1 id="section-dynamic">
-    <title>Plugging together dynamic pipelines</title>
+    <title>Dynamically autoplugging a pipeline</title>
     <warning><para>
       The code in this section is broken, outdated and overly complicated.
       Also, you should use decodebin, playbin or uridecodebin to get
