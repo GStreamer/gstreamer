@@ -171,12 +171,13 @@ gst_audio_downmix_meta_get_info (void)
 {
   static const GstMetaInfo *audio_downmix_meta_info = NULL;
 
-  if (audio_downmix_meta_info == NULL) {
-    audio_downmix_meta_info =
+  if (g_once_init_enter (&audio_downmix_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_AUDIO_DOWNMIX_META_API_TYPE,
         "GstAudioDownmixMeta", sizeof (GstAudioDownmixMeta),
         gst_audio_downmix_meta_init, gst_audio_downmix_meta_free,
         gst_audio_downmix_meta_transform);
+    g_once_init_leave (&audio_downmix_meta_info, meta);
   }
   return audio_downmix_meta_info;
 }

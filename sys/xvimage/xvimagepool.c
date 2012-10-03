@@ -71,12 +71,13 @@ gst_xvimage_meta_get_info (void)
 {
   static const GstMetaInfo *xvimage_meta_info = NULL;
 
-  if (xvimage_meta_info == NULL) {
-    xvimage_meta_info =
+  if (g_once_init_enter (&xvimage_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_XVIMAGE_META_API_TYPE, "GstXvImageMeta",
         sizeof (GstXvImageMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_xvimage_meta_free,
         (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&xvimage_meta_info, meta);
   }
   return xvimage_meta_info;
 }

@@ -76,11 +76,12 @@ gst_video_meta_get_info (void)
 {
   static const GstMetaInfo *video_meta_info = NULL;
 
-  if (video_meta_info == NULL) {
-    video_meta_info =
+  if (g_once_init_enter (&video_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_META_API_TYPE, "GstVideoMeta",
         sizeof (GstVideoMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, gst_video_meta_transform);
+    g_once_init_leave (&video_meta_info, meta);
   }
   return video_meta_info;
 }
@@ -349,11 +350,12 @@ gst_video_crop_meta_get_info (void)
 {
   static const GstMetaInfo *video_crop_meta_info = NULL;
 
-  if (video_crop_meta_info == NULL) {
-    video_crop_meta_info =
+  if (g_once_init_enter (&video_crop_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_CROP_META_API_TYPE, "GstVideoCropMeta",
         sizeof (GstVideoCropMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) NULL, gst_video_crop_meta_transform);
+    g_once_init_leave (&video_crop_meta_info, meta);
   }
   return video_crop_meta_info;
 }

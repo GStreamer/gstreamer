@@ -68,12 +68,13 @@ gst_ximage_meta_get_info (void)
 {
   static const GstMetaInfo *ximage_meta_info = NULL;
 
-  if (ximage_meta_info == NULL) {
-    ximage_meta_info =
+  if (g_once_init_enter (&ximage_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_XIMAGE_META_API_TYPE, "GstXImageMeta",
         sizeof (GstXImageMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_ximage_meta_free,
         (GstMetaTransformFunction) NULL);
+    g_once_init_leave (&ximage_meta_info, meta);
   }
   return ximage_meta_info;
 }

@@ -241,14 +241,15 @@ gst_video_overlay_composition_meta_get_info (void)
 {
   static const GstMetaInfo *video_overlay_composition_meta_info = NULL;
 
-  if (video_overlay_composition_meta_info == NULL) {
-    video_overlay_composition_meta_info =
+  if (g_once_init_enter (&video_overlay_composition_meta_info)) {
+    const GstMetaInfo *meta =
         gst_meta_register (GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE,
         "GstVideoOverlayCompositionMeta",
         sizeof (GstVideoOverlayCompositionMeta), (GstMetaInitFunction) NULL,
         (GstMetaFreeFunction) gst_video_overlay_composition_meta_free,
         (GstMetaTransformFunction)
         gst_video_overlay_composition_meta_transform);
+    g_once_init_leave (&video_overlay_composition_meta_info, meta);
   }
   return video_overlay_composition_meta_info;
 }
