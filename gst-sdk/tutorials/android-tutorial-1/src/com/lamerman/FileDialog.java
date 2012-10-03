@@ -206,6 +206,9 @@ public class FileDialog extends ListActivity {
 			selectButton.setEnabled(true);
 		}
 		getDir(startPath);
+
+		ListView lv = (ListView) findViewById (android.R.id.list);
+		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
 	}
 
 	private void getDir(String dirPath) {
@@ -355,7 +358,7 @@ public class FileDialog extends ListActivity {
 			}
 		} else {
 			selectedFile = file;
-			v.setSelected(true);
+			l.setItemChecked(position, true);
 			selectButton.setEnabled(true);
 		}
 	}
