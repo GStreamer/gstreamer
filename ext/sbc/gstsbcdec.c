@@ -112,8 +112,7 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
 
     gst_buffer_set_caps (output, dec->outcaps);
 
-    /* FIXME get a real timestamp */
-    GST_BUFFER_TIMESTAMP (output) = GST_CLOCK_TIME_NONE;
+    gst_buffer_copy_metadata (output, buffer, GST_BUFFER_COPY_TIMESTAMPS);
 
     res = gst_pad_push (dec->srcpad, output);
     if (res != GST_FLOW_OK)
