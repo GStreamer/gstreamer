@@ -703,8 +703,10 @@ main (gint   argc,
           Note how we use the pull mode method of pushing new buffers into
           appsrc although appsrc is running in push mode. 
         </para>
-        <programlisting><!-- example-begin appsrc.c -->
-#include &lt;gst/gst.h&gt;
+        <programlisting>
+<!-- example-begin appsrc.c -->
+<![CDATA[
+#include <gst/gst.h>
 
 static GMainLoop *loop;
 
@@ -733,7 +735,7 @@ cb_need_data (GstElement *appsrc,
 
   timestamp += GST_BUFFER_DURATION (buffer);
 
-  g_signal_emit_by_name (appsrc, "push-buffer", buffer, &amp;ret);
+  g_signal_emit_by_name (appsrc, "push-buffer", buffer, &ret);
 
   if (ret != GST_FLOW_OK) {
     /* something wrong, stop pushing */
@@ -748,7 +750,7 @@ main (gint   argc,
   GstElement *pipeline, *appsrc, *conv, *videosink;
 
   /* init GStreamer */
-  gst_init (&amp;argc, &amp;argv);
+  gst_init (&argc, &argv);
   loop = g_main_loop_new (NULL, FALSE);
 
   /* setup pipeline */
@@ -784,8 +786,10 @@ main (gint   argc,
   g_main_loop_unref (loop);
 
   return 0;
-}
-      <!-- example-end appsrc.c --></programlisting>
+  }
+]]>
+<!-- example-end appsrc.c -->
+        </programlisting>
       </sect3>
     </sect2>
 
@@ -1081,6 +1085,7 @@ main (int argc, char *argv[])
     </para>
 
     <programlisting>
+<![CDATA[
 /*
  * Here, you would write the actual plugin code.
  */
@@ -1113,6 +1118,7 @@ my_code_init (void)
 
   ...
 }
+]]>
     </programlisting>
   </sect1>
 </chapter>
