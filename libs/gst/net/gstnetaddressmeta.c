@@ -82,12 +82,13 @@ gst_net_address_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (meta_info == NULL) {
-    meta_info = gst_meta_register (GST_NET_ADDRESS_META_API_TYPE,
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *mi = gst_meta_register (GST_NET_ADDRESS_META_API_TYPE,
         "GstNetAddressMeta",
         sizeof (GstNetAddressMeta),
         net_address_meta_init,
         net_address_meta_free, net_address_meta_transform);
+    g_once_init_leave (&meta_info, mi);
   }
   return meta_info;
 }

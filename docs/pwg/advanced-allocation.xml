@@ -453,13 +453,14 @@ my_example_meta_get_info (void)
 {
   static const GstMetaInfo *meta_info = NULL;
 
-  if (meta_info == NULL) {
-    meta_info = gst_meta_register (MY_EXAMPLE_META_API_TYPE,
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *mi = gst_meta_register (MY_EXAMPLE_META_API_TYPE,
         "MyExampleMeta",
         sizeof (MyExampleMeta),
         my_example_meta_init,
         my_example_meta_free,
         my_example_meta_transform);
+    g_once_init_leave (&meta_info, mi);
   }
   return meta_info;
 }
