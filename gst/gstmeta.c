@@ -149,9 +149,11 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
   g_return_val_if_fail (size != 0, NULL);
 
   /* first try to register the implementation name. It's possible
-   * that this fails because it was already registered. */
+   * that this fails because it was already registered. Don't warn,
+   * glib did this for us already. */
   type = g_pointer_type_register_static (impl);
-  g_return_val_if_fail (type != 0, NULL);
+  if (type == 0)
+    return NULL;
 
   info = g_slice_new (GstMetaInfo);
   info->api = api;
