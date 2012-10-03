@@ -101,6 +101,8 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
+#include <pthread.h>
+
 #include "video_platform_wrapper.h"
 
 #include "gsteglglessink.h"
@@ -376,7 +378,7 @@ static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
-static gboolean gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind);
+static gboolean gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind, gboolean streaming_thread);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -1041,8 +1043,7 @@ gst_eglglessink_stop (GstBaseSink * sink)
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
 
   /* EGL/GLES2 cleanup */
-
-  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE, FALSE))
     return FALSE;
 
   if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
@@ -1074,7 +1075,7 @@ gst_eglglessink_stop (GstBaseSink * sink)
     }
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
+  if (!gst_eglglessink_context_make_current (eglglessink, FALSE, FALSE))
     return FALSE;
 
   if (eglglessink->eglglesctx->surface) {
@@ -1440,20 +1441,56 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
   return FALSE;
 }
 
+static pthread_key_t context_key;
+
+static void
+detach_context (void *data)
+{
+  GstEglGlesSink * eglglessink = data;
+
+  GST_DEBUG_OBJECT (eglglessink, "Detaching current context from streaming thread");
+  gst_eglglessink_context_make_current (eglglessink, FALSE, TRUE);
+  gst_object_unref (eglglessink);
+}
+
 static gboolean
-gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind)
+gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind, gboolean streaming_thread)
 {
   g_assert (eglglessink->eglglesctx->display != NULL);
 
   if (bind && eglglessink->eglglesctx->surface && eglglessink->eglglesctx->eglcontext) {
-    if (!eglMakeCurrent (eglglessink->eglglesctx->display,
-            eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
-            eglglessink->eglglesctx->eglcontext)) {
-      show_egl_error ("eglMakeCurrent");
-      GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
-      return FALSE;
+    if (streaming_thread) {
+      EGLContext *ctx = eglGetCurrentContext ();
+      
+      if (ctx == eglglessink->eglglesctx->eglcontext) {
+        GST_DEBUG_OBJECT (eglglessink, "Already attached the context");
+        return TRUE;
+      }
+
+      GST_DEBUG_OBJECT (eglglessink, "Attaching context to streaming thread");
+      if (!eglMakeCurrent (eglglessink->eglglesctx->display,
+              eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
+              eglglessink->eglglesctx->eglcontext)) {
+        show_egl_error ("eglMakeCurrent");
+        GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
+        return FALSE;
+      }
+
+      if (!pthread_getspecific (context_key)) {
+        pthread_setspecific (context_key, gst_object_ref (eglglessink));
+      }
+    } else {
+      GST_DEBUG_OBJECT (eglglessink, "Attaching context");
+      if (!eglMakeCurrent (eglglessink->eglglesctx->display,
+              eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
+              eglglessink->eglglesctx->eglcontext)) {
+        show_egl_error ("eglMakeCurrent");
+        GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
+        return FALSE;
+      }
     }
   } else {
+    GST_DEBUG_OBJECT (eglglessink, "Detaching context");
     if (!eglMakeCurrent (eglglessink->eglglesctx->display,
             EGL_NO_SURFACE, EGL_NO_SURFACE,
             EGL_NO_CONTEXT)) {
@@ -1490,7 +1527,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     goto HANDLE_EGL_ERROR_LOCKED;
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE, TRUE))
     goto HANDLE_EGL_ERROR_LOCKED;
 
   /* Save surface dims */
@@ -1892,7 +1929,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   };
 #endif
 
-  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE, TRUE))
     goto HANDLE_EGL_ERROR;
 
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
@@ -2132,9 +2169,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       }
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
-    goto HANDLE_EGL_ERROR;
-
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
   return GST_FLOW_OK;
 
@@ -2143,7 +2177,6 @@ HANDLE_EGL_ERROR:
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Rendering disabled for this frame");
 
-  gst_eglglessink_context_make_current (eglglessink, FALSE);
   return GST_FLOW_ERROR;
 }
 
@@ -2340,9 +2373,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     }
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
-    return FALSE;
-
 SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Setcaps succeed");
   return TRUE;
@@ -2350,7 +2380,6 @@ SUCCEED:
 /* Errors */
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Setcaps failed");
-  gst_eglglessink_context_make_current (eglglessink, FALSE);
   return FALSE;
 }
 
@@ -2589,6 +2618,8 @@ eglglessink_plugin_init (GstPlugin * plugin)
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_eglglessink_debug, "eglglessink",
       0, "Simple EGL/GLES Sink");
+
+  pthread_key_create (&context_key, detach_context);
 
   return gst_element_register (plugin, "eglglessink", GST_RANK_PRIMARY,
       GST_TYPE_EGLGLESSINK);
