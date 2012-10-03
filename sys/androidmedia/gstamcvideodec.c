@@ -141,7 +141,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           continue;
         }
 
-        for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
+        for (k = type->profile_levels[j].level; k > 0; k >>= 1) {
           level = gst_amc_mpeg4_level_to_string (k);
           if (!level)
             continue;
@@ -196,7 +196,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           continue;
         }
 
-        for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
+        for (k = type->profile_levels[j].level; k > 0; k >>= 1) {
           level = gst_amc_h263_level_to_gst_id (k);
           if (level == -1)
             continue;
@@ -252,7 +252,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
           continue;
         }
 
-        for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
+        for (k = type->profile_levels[j].level; k > 0; k >>= 1) {
           level = gst_amc_avc_level_to_string (k);
           if (!level)
             continue;
