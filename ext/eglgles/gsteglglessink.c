@@ -1446,7 +1446,8 @@ detach_context (void *data)
 {
   GstEglGlesSink * eglglessink = data;
 
-  GST_DEBUG_OBJECT (eglglessink, "Detaching current context from streaming thread");
+  GST_DEBUG_OBJECT (eglglessink,
+      "Detaching current context from streaming thread");
   gst_eglglessink_context_make_current (eglglessink, FALSE, TRUE);
   gst_object_unref (eglglessink);
 }
@@ -1456,7 +1457,8 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bin
 {
   g_assert (eglglessink->eglglesctx->display != NULL);
 
-  if (bind && eglglessink->eglglesctx->surface && eglglessink->eglglesctx->eglcontext) {
+  if (bind && eglglessink->eglglesctx->surface &&
+      eglglessink->eglglesctx->eglcontext) {
     if (streaming_thread) {
       EGLContext *ctx = eglGetCurrentContext ();
 
