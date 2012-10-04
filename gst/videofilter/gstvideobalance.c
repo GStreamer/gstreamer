@@ -76,7 +76,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
             "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, "
             "xBGR, BGRx, RGB, BGR, Y42B, YUY2, UYVY, YVYU, "
-            "I420, YV12, IYUV, Y41B }"))
+            "I420, YV12, IYUV, Y41B, NV12, NV21 }"))
     );
 
 static GstStaticPadTemplate gst_video_balance_sink_template =
@@ -86,7 +86,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
             "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, "
             "xBGR, BGRx, RGB, BGR, Y42B, YUY2, UYVY, YVYU, "
-            "I420, YV12, IYUV, Y41B }"))
+            "I420, YV12, IYUV, Y41B, NV12, NV21 }"))
     );
 
 static void gst_video_balance_colorbalance_init (GstColorBalanceInterface *
@@ -219,6 +219,63 @@ gst_video_balance_planar_yuv (GstVideoBalance * videobalance,
 
       *uptr++ = tableu[u1][v1];
       *vptr++ = tablev[u1][v1];
+    }
+  }
+}
+
+static void
+gst_video_balance_semiplanar_yuv (GstVideoBalance * videobalance,
+    GstVideoFrame * frame)
+{
+  gint x, y;
+  guint8 *ydata;
+  guint8 *uvdata;
+  gint ystride, uvstride;
+  gint width, height;
+  gint width2, height2;
+  guint8 *tabley = videobalance->tabley;
+  guint8 **tableu = videobalance->tableu;
+  guint8 **tablev = videobalance->tablev;
+  gint upos, vpos;
+
+  width = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
+
+  ydata = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  ystride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  for (y = 0; y < height; y++) {
+    guint8 *yptr;
+
+    yptr = ydata + y * ystride;
+    for (x = 0; x < width; x++) {
+      *yptr = tabley[*yptr];
+      yptr++;
+    }
+  }
+
+  width2 = GST_VIDEO_FRAME_COMP_WIDTH (frame, 1);
+  height2 = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 1);
+
+  uvdata = GST_VIDEO_FRAME_PLANE_DATA (frame, 1);
+  uvstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 1);
+
+  upos = GST_VIDEO_INFO_FORMAT (&frame->info) == GST_VIDEO_FORMAT_NV12 ? 0 : 1;
+  vpos = GST_VIDEO_INFO_FORMAT (&frame->info) == GST_VIDEO_FORMAT_NV12 ? 1 : 0;
+
+  for (y = 0; y < height2; y++) {
+    guint8 *uvptr;
+    guint8 u1, v1;
+
+    uvptr = uvdata + y * uvstride;
+
+    for (x = 0; x < width2; x++) {
+      u1 = uvptr[upos];
+      v1 = uvptr[vpos];
+
+      uvptr[upos] = tableu[u1][v1];
+      uvptr[vpos] = tablev[u1][v1];
+      uvptr += 2;
     }
   }
 }
@@ -380,6 +437,10 @@ gst_video_balance_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_YVYU:
       videobalance->process = gst_video_balance_packed_yuv;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      videobalance->process = gst_video_balance_semiplanar_yuv;
       break;
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
