@@ -39,6 +39,7 @@ EXAMPLES = \
 	probe \
 	appsrc \
 	appsink \
+	dynformat \
 	playbin \
 	decodebin
 
@@ -55,6 +56,7 @@ BUILT_SOURCES = \
 	probe.c \
 	appsrc.c \
 	appsink.c \
+	dynformat.c \
 	playbin.c decodebin.c
 
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
@@ -97,6 +99,9 @@ appsrc.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 appsink.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+dynformat.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
