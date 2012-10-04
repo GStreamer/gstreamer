@@ -32,7 +32,7 @@ public class Tutorial1 extends Activity {
         super.onCreate(savedInstanceState);
 
         try {
-        GStreamer.init(this);
+            GStreamer.init(this);
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             finish(); 
@@ -40,7 +40,7 @@ public class Tutorial1 extends Activity {
         }
 
         setContentView(R.layout.main);
-        
+
         TextView tv = (TextView)findViewById(R.id.textview_info);
         tv.setText("Welcome to " + nativeGetGStreamerInfo() + " !");
     }
