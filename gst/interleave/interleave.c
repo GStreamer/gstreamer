@@ -254,7 +254,8 @@ gst_interleave_finalize (GObject * object)
 }
 
 static gboolean
-gst_interleave_check_channel_positions (GValueArray * positions)
+gst_interleave_channel_positions_to_mask (GValueArray * positions,
+    guint64 * mask)
 {
   gint i;
   guint channels;
@@ -271,7 +272,7 @@ gst_interleave_check_channel_positions (GValueArray * positions)
     pos[i] = g_value_get_enum (val);
   }
 
-  ret = gst_audio_check_valid_channel_positions (pos, channels, FALSE);
+  ret = gst_audio_channel_positions_to_mask (pos, channels, FALSE, mask);
   g_free (pos);
 
   return ret;
@@ -280,18 +281,14 @@ gst_interleave_check_channel_positions (GValueArray * positions)
 static void
 gst_interleave_set_channel_positions (GstInterleave * self, GstStructure * s)
 {
-  gint i;
   guint64 channel_mask = 0;
 
   if (self->channel_positions != NULL &&
-      self->channels == self->channel_positions->n_values
-      && gst_interleave_check_channel_positions (self->channel_positions)) {
-    GST_DEBUG_OBJECT (self, "Using provided channel positions");
-    for (i = 0; i < self->channels; i++) {
-      GValue *val;
-
-      val = g_value_array_get_nth (self->channel_positions, i);
-      channel_mask |= G_GUINT64_CONSTANT (1) << g_value_get_enum (val);
+      self->channels == self->channel_positions->n_values) {
+    if (!gst_interleave_channel_positions_to_mask (self->channel_positions,
+            &channel_mask)) {
+      GST_WARNING_OBJECT (self, "Invalid channel positions, using NONE");
+      channel_mask = 0;
     }
   } else {
     GST_WARNING_OBJECT (self, "Using NONE channel positions");
