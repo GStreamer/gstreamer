@@ -1461,7 +1461,7 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bin
   if (bind && eglglessink->eglglesctx->surface && eglglessink->eglglesctx->eglcontext) {
     if (streaming_thread) {
       EGLContext *ctx = eglGetCurrentContext ();
-      
+
       if (ctx == eglglessink->eglglesctx->eglcontext) {
         GST_DEBUG_OBJECT (eglglessink, "Already attached the context");
         return TRUE;
@@ -2276,7 +2276,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   g_mutex_unlock (eglglessink->flow_lock);
 
   if (eglglessink->current_caps) {
-    GST_ERROR_OBJECT (eglglessink, "Caps already set. Won't do it again");
+    GST_ERROR_OBJECT (eglglessink, "Caps were already set");
     if (gst_caps_can_intersect (caps, eglglessink->current_caps)) {
       GST_INFO_OBJECT (eglglessink, "Caps are compatible anyway");
       goto SUCCEED;
@@ -2284,6 +2284,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
 
+    /* Cleanup */
     if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
       glUseProgram (0);
 
@@ -2324,6 +2325,25 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       eglDestroyContext (eglglessink->eglglesctx->display,
           eglglessink->eglglesctx->eglcontext);
       eglglessink->eglglesctx->eglcontext = NULL;
+    }
+
+    /* Terminate display connection */
+    if (eglMakeCurrent (eglglessink->eglglesctx->display, EGL_NO_SURFACE,
+        EGL_NO_SURFACE, EGL_NO_CONTEXT) == EGL_FALSE) {
+      show_egl_error ("eglMakeCurrent");
+      goto HANDLE_ERROR;
+    }
+
+    if (eglTerminate (eglglessink->eglglesctx->display) == EGL_FALSE) {
+      show_egl_error ("eglTerminate");
+      goto HANDLE_ERROR;
+    }
+
+    eglglessink->eglglesctx->display = NULL;
+
+    if (!gst_eglglessink_init_egl_display (eglglessink)) {
+      GST_ERROR_OBJECT (eglglessink, "Could not reinit display connection");
+      goto HANDLE_ERROR;
     }
 
     g_mutex_lock (eglglessink->flow_lock);
