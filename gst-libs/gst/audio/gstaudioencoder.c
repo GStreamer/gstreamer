@@ -1956,7 +1956,7 @@ static gboolean
 gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
 {
   GstAudioEncoderClass *klass;
-  gboolean result = FALSE;
+  gboolean result = TRUE;
 
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
@@ -1971,12 +1971,8 @@ gst_audio_encoder_activate (GstAudioEncoder * enc, gboolean active)
     enc->priv->tags = gst_tag_list_new_empty ();
     enc->priv->tags_changed = FALSE;
 
-    if (!enc->priv->active) {
-      if (klass->start)
-        result = klass->start (enc);
-      else
-        result = TRUE;
-    }
+    if (!enc->priv->active && klass->start)
+      result = klass->start (enc);
   } else {
     /* We must make sure streaming has finished before resetting things
      * and calling the ::stop vfunc */
