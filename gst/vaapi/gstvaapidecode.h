@@ -67,8 +67,8 @@ struct _GstVaapiDecode {
     GstCaps            *srcpad_caps;
     GstVaapiDisplay    *display;
     GstVaapiDecoder    *decoder;
-    GMutex             *decoder_mutex;
-    GCond              *decoder_ready;
+    GMutex              decoder_mutex;
+    GCond               decoder_ready;
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
     GstEvent           *delayed_new_seg;

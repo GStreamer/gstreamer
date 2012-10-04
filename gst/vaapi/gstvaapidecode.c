@@ -173,12 +173,9 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
 static void
 gst_vaapidecode_release(GstVaapiDecode *decode, GObject *dead_object)
 {
-    if (!decode->decoder_mutex || !decode->decoder_ready)
-        return;
-
-    g_mutex_lock(decode->decoder_mutex);
-    g_cond_signal(decode->decoder_ready);
-    g_mutex_unlock(decode->decoder_mutex);
+    g_mutex_lock(&decode->decoder_mutex);
+    g_cond_signal(&decode->decoder_ready);
+    g_mutex_unlock(&decode->decoder_mutex);
 }
 
 static GstFlowReturn
@@ -202,13 +199,13 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
         if (!proxy) {
             if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
                 gboolean was_signalled;
-                g_mutex_lock(decode->decoder_mutex);
+                g_mutex_lock(&decode->decoder_mutex);
                 was_signalled = g_cond_wait_until(
-                    decode->decoder_ready,
-                    decode->decoder_mutex,
+                    &decode->decoder_ready,
+                    &decode->decoder_mutex,
                     end_time
                 );
-                g_mutex_unlock(decode->decoder_mutex);
+                g_mutex_unlock(&decode->decoder_mutex);
                 if (was_signalled)
                     continue;
                 goto error_decode_timeout;
@@ -317,14 +314,6 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         return FALSE;
     dpy = decode->display;
 
-    decode->decoder_mutex = g_mutex_new();
-    if (!decode->decoder_mutex)
-        return FALSE;
-
-    decode->decoder_ready = g_cond_new();
-    if (!decode->decoder_ready)
-        return FALSE;
-
     switch (gst_vaapi_codec_from_caps(caps)) {
     case GST_VAAPI_CODEC_MPEG2:
         decode->decoder = gst_vaapi_decoder_mpeg2_new(dpy, caps);
@@ -377,16 +366,7 @@ gst_vaapidecode_destroy(GstVaapiDecode *decode)
         decode->decoder_caps = NULL;
     }
 
-    if (decode->decoder_ready) {
-        gst_vaapidecode_release(decode, NULL);
-        g_cond_free(decode->decoder_ready);
-        decode->decoder_ready = NULL;
-    }
-
-    if (decode->decoder_mutex) {
-        g_mutex_free(decode->decoder_mutex);
-        decode->decoder_mutex = NULL;
-    }
+    gst_vaapidecode_release(decode, NULL);
 }
 
 static gboolean
@@ -480,6 +460,9 @@ gst_vaapidecode_finalize(GObject *object)
         gst_event_unref(decode->delayed_new_seg);
         decode->delayed_new_seg = NULL;
     }
+
+    g_cond_clear(&decode->decoder_ready);
+    g_mutex_clear(&decode->decoder_mutex);
 
     G_OBJECT_CLASS(gst_vaapidecode_parent_class)->finalize(object);
 }
@@ -738,14 +721,15 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
 
     decode->display             = NULL;
     decode->decoder             = NULL;
-    decode->decoder_mutex       = NULL;
-    decode->decoder_ready       = NULL;
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
     decode->delayed_new_seg     = NULL;
     decode->render_time_base    = 0;
     decode->last_buffer_time    = 0;
     decode->is_ready            = FALSE;
+
+    g_mutex_init(&decode->decoder_mutex);
+    g_cond_init(&decode->decoder_ready);
 
     /* Pad through which data comes in to the element */
     decode->sinkpad = gst_pad_new_from_template(
