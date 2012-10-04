@@ -283,6 +283,9 @@ gboolean	gst_base_transform_is_qos_enabled   (GstBaseTransform *trans);
 void            gst_base_transform_set_gap_aware    (GstBaseTransform *trans,
                                                      gboolean gap_aware);
 
+void            gst_base_transform_set_prefer_passthrough (GstBaseTransform *trans,
+                                                           gboolean prefer_passthrough);
+
 GstBufferPool * gst_base_transform_get_buffer_pool  (GstBaseTransform *trans);
 void            gst_base_transform_get_allocator    (GstBaseTransform *trans,
                                                      GstAllocator **allocator,

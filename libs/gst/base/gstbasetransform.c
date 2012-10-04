@@ -255,6 +255,7 @@ struct _GstBaseTransformPrivate
   GstPadMode pad_mode;
 
   gboolean gap_aware;
+  gboolean prefer_passthrough;
 
   /* QoS stats */
   guint64 processed;
@@ -459,6 +460,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   priv->cache_caps2 = NULL;
   priv->pad_mode = GST_PAD_MODE_NONE;
   priv->gap_aware = FALSE;
+  priv->prefer_passthrough = TRUE;
 
   priv->passthrough = FALSE;
   if (bclass->transform == NULL) {
@@ -724,12 +726,14 @@ gst_base_transform_query_caps (GstBaseTransform * trans, GstPad * pad,
     gst_caps_unref (caps);
     caps = temp;
 
-    /* Now try if we can put the untransformed downstream caps first */
-    temp = gst_caps_intersect_full (peercaps, caps, GST_CAPS_INTERSECT_FIRST);
-    if (!gst_caps_is_empty (temp)) {
-      caps = gst_caps_merge (temp, caps);
-    } else {
-      gst_caps_unref (temp);
+    if (trans->priv->prefer_passthrough) {
+      /* Now try if we can put the untransformed downstream caps first */
+      temp = gst_caps_intersect_full (peercaps, caps, GST_CAPS_INTERSECT_FIRST);
+      if (!gst_caps_is_empty (temp)) {
+        caps = gst_caps_merge (temp, caps);
+      } else {
+        gst_caps_unref (temp);
+      }
     }
   } else {
     gst_caps_unref (caps);
@@ -2591,6 +2595,35 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
   GST_OBJECT_LOCK (trans);
   trans->priv->gap_aware = gap_aware;
   GST_DEBUG_OBJECT (trans, "set gap aware %d", trans->priv->gap_aware);
+  GST_OBJECT_UNLOCK (trans);
+}
+
+/**
+ * gst_base_transform_set_prefer_passthrough:
+ * @trans: a #GstBaseTransform
+ * @prefer_passthrough: New state
+ *
+ * If @prefer_passthrough is %TRUE (the default), @trans will check and
+ * prefer passthrough caps from the list of caps returned by the
+ * transform_caps vmethod.
+ *
+ * If set to %FALSE, the element must order the caps returned from the
+ * transform_caps function in such a way that the prefered format is
+ * first in the list. This can be interesting for transforms that can do
+ * passthrough transforms but prefer to do something else, like a
+ * capsfilter.
+ *
+ * MT safe.
+ */
+void
+gst_base_transform_set_prefer_passthrough (GstBaseTransform * trans,
+    gboolean prefer_passthrough)
+{
+  g_return_if_fail (GST_IS_BASE_TRANSFORM (trans));
+
+  GST_OBJECT_LOCK (trans);
+  trans->priv->prefer_passthrough = prefer_passthrough;
+  GST_DEBUG_OBJECT (trans, "prefer passthrough %d", prefer_passthrough);
   GST_OBJECT_UNLOCK (trans);
 }
 
