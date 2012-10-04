@@ -1432,9 +1432,7 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
       height != eglglessink->eglglesctx->surface_height) {
     eglglessink->eglglesctx->surface_width = width;
     eglglessink->eglglesctx->surface_height = height;
-    GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels",
-        eglglessink->eglglesctx->surface_width,
-        eglglessink->eglglesctx->surface_height);
+    GST_INFO_OBJECT (eglglessink, "Got surface of %dx%d pixels", width, height);
     return TRUE;
   }
 
