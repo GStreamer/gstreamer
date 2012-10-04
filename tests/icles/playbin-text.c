@@ -69,8 +69,6 @@ bus_message (GstBus * bus, GstMessage * message, App * app)
       gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
       g_error_free (gerror);
       g_free (debug);
-
-      g_main_loop_quit (app->loop);
       break;
     }
     case GST_MESSAGE_EOS:
