@@ -291,6 +291,7 @@ gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     }
   }
+  gst_rtp_buffer_unmap (&rtp);
   return outbuf;
 
   /* ERRORS */
