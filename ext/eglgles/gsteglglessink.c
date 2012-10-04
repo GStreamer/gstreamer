@@ -378,7 +378,8 @@ static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
-static gboolean gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind, gboolean streaming_thread);
+static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
+    eglglessink, gboolean bind, gboolean streaming_thread);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -1444,7 +1445,7 @@ static pthread_key_t context_key;
 static void
 detach_context (void *data)
 {
-  GstEglGlesSink * eglglessink = data;
+  GstEglGlesSink *eglglessink = data;
 
   GST_DEBUG_OBJECT (eglglessink,
       "Detaching current context from streaming thread");
@@ -1453,7 +1454,8 @@ detach_context (void *data)
 }
 
 static gboolean
-gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bind, gboolean streaming_thread)
+gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink,
+    gboolean bind, gboolean streaming_thread)
 {
   g_assert (eglglessink->eglglesctx->display != NULL);
 
@@ -1469,7 +1471,8 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bin
 
       GST_DEBUG_OBJECT (eglglessink, "Attaching context to streaming thread");
       if (!eglMakeCurrent (eglglessink->eglglesctx->display,
-              eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
+              eglglessink->eglglesctx->surface,
+              eglglessink->eglglesctx->surface,
               eglglessink->eglglesctx->eglcontext)) {
         show_egl_error ("eglMakeCurrent");
         GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
@@ -1482,7 +1485,8 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bin
     } else {
       GST_DEBUG_OBJECT (eglglessink, "Attaching context");
       if (!eglMakeCurrent (eglglessink->eglglesctx->display,
-              eglglessink->eglglesctx->surface, eglglessink->eglglesctx->surface,
+              eglglessink->eglglesctx->surface,
+              eglglessink->eglglesctx->surface,
               eglglessink->eglglesctx->eglcontext)) {
         show_egl_error ("eglMakeCurrent");
         GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
@@ -1492,8 +1496,7 @@ gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink, gboolean bin
   } else {
     GST_DEBUG_OBJECT (eglglessink, "Detaching context");
     if (!eglMakeCurrent (eglglessink->eglglesctx->display,
-            EGL_NO_SURFACE, EGL_NO_SURFACE,
-            EGL_NO_CONTEXT)) {
+            EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
       show_egl_error ("eglMakeCurrent");
       GST_ERROR_OBJECT (eglglessink, "Couldn't unbind context");
       return FALSE;
@@ -1793,7 +1796,8 @@ gst_eglglessink_init_egl_display (GstEglGlesSink * eglglessink)
   }
 
   if (!eglInitialize (eglglessink->eglglesctx->display,
-      &eglglessink->eglglesctx->egl_major, &eglglessink->eglglesctx->egl_minor)) {
+          &eglglessink->eglglesctx->egl_major,
+          &eglglessink->eglglesctx->egl_minor)) {
     show_egl_error ("eglInitialize");
     GST_ERROR_OBJECT (eglglessink, "Could not init EGL display connection");
     goto HANDLE_EGL_ERROR;
@@ -2120,17 +2124,18 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
               eglglessink->eglglesctx->surface_height;
         } else {
           if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, w, h,
-              eglglessink->par_n, eglglessink->par_d,
-              eglglessink->eglglesctx->pixel_aspect_ratio, EGL_DISPLAY_SCALING)) {
+                  eglglessink->par_n, eglglessink->par_d,
+                  eglglessink->eglglesctx->pixel_aspect_ratio,
+                  EGL_DISPLAY_SCALING)) {
             GST_WARNING_OBJECT (eglglessink, "Could not compute resulting DAR");
             frame.w = w;
             frame.h = h;
           } else {
-           /* Find suitable matching new size acording to dar & par
-            * rationale for prefering leaving the height untouched
-            * comes from interlacing considerations.
-            * XXX: Move this to gstutils?
-            */
+            /* Find suitable matching new size acording to dar & par
+             * rationale for prefering leaving the height untouched
+             * comes from interlacing considerations.
+             * XXX: Move this to gstutils?
+             */
             if (h % dar_d == 0) {
               frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
               frame.h = h;
@@ -2286,6 +2291,10 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
 
     /* Cleanup */
+
+    if (!gst_eglglessink_context_make_current (eglglessink, TRUE, TRUE))
+      return FALSE;
+
     if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
       glUseProgram (0);
 
@@ -2315,6 +2324,9 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       }
     }
 
+    if (!gst_eglglessink_context_make_current (eglglessink, FALSE, TRUE))
+      return FALSE;
+
     if (eglglessink->eglglesctx->surface) {
       eglDestroySurface (eglglessink->eglglesctx->display,
           eglglessink->eglglesctx->surface);
@@ -2326,25 +2338,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       eglDestroyContext (eglglessink->eglglesctx->display,
           eglglessink->eglglesctx->eglcontext);
       eglglessink->eglglesctx->eglcontext = NULL;
-    }
-
-    /* Terminate display connection */
-    if (eglMakeCurrent (eglglessink->eglglesctx->display, EGL_NO_SURFACE,
-        EGL_NO_SURFACE, EGL_NO_CONTEXT) == EGL_FALSE) {
-      show_egl_error ("eglMakeCurrent");
-      goto HANDLE_ERROR;
-    }
-
-    if (eglTerminate (eglglessink->eglglesctx->display) == EGL_FALSE) {
-      show_egl_error ("eglTerminate");
-      goto HANDLE_ERROR;
-    }
-
-    eglglessink->eglglesctx->display = NULL;
-
-    if (!gst_eglglessink_init_egl_display (eglglessink)) {
-      GST_ERROR_OBJECT (eglglessink, "Could not reinit display connection");
-      goto HANDLE_ERROR;
     }
 
     g_mutex_lock (eglglessink->flow_lock);
