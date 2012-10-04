@@ -2342,6 +2342,12 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
     eglglessink->eglglesctx->display = NULL;
 
+    if (!gst_eglglessink_init_egl_display (eglglessink)) {
+      GST_ERROR_OBJECT (eglglessink, "Could not reinit display connection");
+      goto HANDLE_ERROR;
+    }
+
+    g_mutex_lock (eglglessink->flow_lock);
     /* Reset display region
      * XXX: Should probably keep old ones if set_render_rect()
      * has been called.
@@ -2349,12 +2355,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     eglglessink->display_region.w = 0;
     eglglessink->display_region.h = 0;
 
-    if (!gst_eglglessink_init_egl_display (eglglessink)) {
-      GST_ERROR_OBJECT (eglglessink, "Could not reinit display connection");
-      goto HANDLE_ERROR;
-    }
-
-    g_mutex_lock (eglglessink->flow_lock);
     gst_caps_unref (eglglessink->current_caps);
     eglglessink->current_caps = NULL;
     g_mutex_unlock (eglglessink->flow_lock);
