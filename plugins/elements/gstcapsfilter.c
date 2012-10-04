@@ -128,6 +128,7 @@ gst_capsfilter_init (GstCapsFilter * filter)
 {
   GstBaseTransform *trans = GST_BASE_TRANSFORM (filter);
   gst_base_transform_set_gap_aware (trans, TRUE);
+  gst_base_transform_set_prefer_passthrough (trans, FALSE);
   filter->filter_caps = gst_caps_new_any ();
 }
 
