@@ -354,6 +354,7 @@ void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
 	gst_element_set_state (data->pipeline, GST_STATE_READY);
   g_object_set(data->pipeline, "uri", char_uri, NULL);
   (*env)->ReleaseStringUTFChars (env, uri, char_uri);
+  data->duration = GST_CLOCK_TIME_NONE;
   data->is_live = (gst_element_set_state (data->pipeline, data->target_state) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
