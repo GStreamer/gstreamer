@@ -50,7 +50,9 @@ struct _GstVaapiWindowWaylandPrivate {
     struct wl_surface          *surface;
     struct wl_buffer           *buffer;
     struct wl_region           *opaque_region;
-    guint                       redraw_pending  : 1;
+    guint                       redraw_pending          : 1;
+    guint                       is_shown                : 1;
+    guint                       fullscreen_on_show      : 1;
 };
 
 static gboolean
@@ -94,6 +96,31 @@ static const struct wl_shell_surface_listener shell_surface_listener = {
 };
 
 static gboolean
+gst_vaapi_window_wayland_set_fullscreen(GstVaapiWindow *window, gboolean fullscreen)
+{
+    GstVaapiWindowWaylandPrivate * const priv =
+        GST_VAAPI_WINDOW_WAYLAND(window)->priv;
+
+    if (!priv->is_shown) {
+        priv->fullscreen_on_show = fullscreen;
+        return TRUE;
+    }
+
+    if (!fullscreen)
+        wl_shell_surface_set_toplevel(priv->shell_surface);
+    else {
+        wl_shell_surface_set_fullscreen(
+            priv->shell_surface,
+            WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE,
+            0,
+            NULL
+        );
+    }
+
+    return TRUE;
+}
+
+static gboolean
 gst_vaapi_window_wayland_create(
     GstVaapiWindow *window,
     guint          *width,
@@ -122,14 +149,13 @@ gst_vaapi_window_wayland_create(
     wl_shell_surface_add_listener(priv->shell_surface,
                                   &shell_surface_listener, priv);
     wl_shell_surface_set_toplevel(priv->shell_surface);
-    wl_shell_surface_set_fullscreen(
-        priv->shell_surface,
-        WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE,
-        0,
-        NULL
-    );
+
+    if (priv->fullscreen_on_show)
+        gst_vaapi_window_wayland_set_fullscreen(window, TRUE);
 
     priv->redraw_pending = FALSE;
+    priv->is_shown = TRUE;
+
     return TRUE;
 }
 
@@ -300,15 +326,16 @@ gst_vaapi_window_wayland_class_init(GstVaapiWindowWaylandClass * klass)
 
     g_type_class_add_private(klass, sizeof(GstVaapiWindowWaylandPrivate));
 
-    object_class->finalize      = gst_vaapi_window_wayland_finalize;
-    object_class->constructed   = gst_vaapi_window_wayland_constructed;
+    object_class->finalize       = gst_vaapi_window_wayland_finalize;
+    object_class->constructed    = gst_vaapi_window_wayland_constructed;
 
-    window_class->create        = gst_vaapi_window_wayland_create;
-    window_class->destroy       = gst_vaapi_window_wayland_destroy;
-    window_class->show          = gst_vaapi_window_wayland_show;
-    window_class->hide          = gst_vaapi_window_wayland_hide;
-    window_class->render        = gst_vaapi_window_wayland_render;
-    window_class->resize        = gst_vaapi_window_wayland_resize;
+    window_class->create         = gst_vaapi_window_wayland_create;
+    window_class->destroy        = gst_vaapi_window_wayland_destroy;
+    window_class->show           = gst_vaapi_window_wayland_show;
+    window_class->hide           = gst_vaapi_window_wayland_hide;
+    window_class->render         = gst_vaapi_window_wayland_render;
+    window_class->resize         = gst_vaapi_window_wayland_resize;
+    window_class->set_fullscreen = gst_vaapi_window_wayland_set_fullscreen;
 }
 
 static void
