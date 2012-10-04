@@ -2614,6 +2614,8 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
  * capsfilter.
  *
  * MT safe.
+ *
+ * Since: 1.0.1
  */
 void
 gst_base_transform_set_prefer_passthrough (GstBaseTransform * trans,

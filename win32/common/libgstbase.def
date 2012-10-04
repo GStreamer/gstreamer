@@ -90,6 +90,7 @@ EXPORTS
 	gst_base_transform_set_gap_aware
 	gst_base_transform_set_in_place
 	gst_base_transform_set_passthrough
+	gst_base_transform_set_prefer_passthrough
 	gst_base_transform_set_qos_enabled
 	gst_base_transform_update_qos
 	gst_bit_reader_free
