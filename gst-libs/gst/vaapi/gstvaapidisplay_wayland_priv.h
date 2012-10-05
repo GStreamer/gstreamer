@@ -28,7 +28,7 @@ G_BEGIN_DECLS
 
 #define GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(obj)                      \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                                 \
-                                 GST_VAAPI_TYPE_DISPLAY_WAYLAND,	\
+                                 GST_VAAPI_TYPE_DISPLAY_WAYLAND,        \
                                  GstVaapiDisplayWaylandPrivate))
 
 #define GST_VAAPI_DISPLAY_WAYLAND_CAST(display) \

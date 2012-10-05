@@ -166,7 +166,7 @@ gst_vaapi_window_wayland_destroy(GstVaapiWindow * window)
         GST_VAAPI_WINDOW_WAYLAND(window)->priv;
 
     if (priv->shell_surface) {
-  	wl_shell_surface_destroy(priv->shell_surface);
+        wl_shell_surface_destroy(priv->shell_surface);
         priv->shell_surface = NULL;
     }
 
@@ -176,7 +176,7 @@ gst_vaapi_window_wayland_destroy(GstVaapiWindow * window)
     }
 
     if (priv->buffer) {
-   	wl_buffer_destroy(priv->buffer);
+        wl_buffer_destroy(priv->buffer);
         priv->buffer = NULL;
     }
 }
@@ -196,7 +196,7 @@ gst_vaapi_window_wayland_resize(
     GST_DEBUG("resize window, new size %ux%u", width, height);
 
     if (priv->opaque_region)
-	wl_region_destroy(priv->opaque_region);
+        wl_region_destroy(priv->opaque_region);
     priv->opaque_region = wl_compositor_create_region(priv_display->compositor);
     wl_region_add(priv->opaque_region, 0, 0, width, height);
 
@@ -260,7 +260,7 @@ gst_vaapi_window_wayland_render(
 
     /* Wait for the previous frame to complete redraw */
     if (priv->redraw_pending) 
-	wl_display_iterate(wl_display, WL_DISPLAY_READABLE);
+        wl_display_iterate(wl_display, WL_DISPLAY_READABLE);
 
     /* XXX: use VA/VPP for other filters */
     va_flags = from_GstVaapiSurfaceRenderFlags(flags);
