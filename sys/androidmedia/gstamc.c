@@ -2515,15 +2515,45 @@ gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels)
   GstAudioChannelPosition *pos = g_new0 (GstAudioChannelPosition, channels);
   gint i, j;
 
-  if (channel_mask == 0 && channels == 1) {
-    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-    return pos;
-  }
+  if (channel_mask == 0) {
+    if (channels == 1) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+      return pos;
+    }
+    if (channels == 2) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      return pos;
+    }
 
-  if (channel_mask == 0 && channels == 2) {
-    pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
-    pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-    return pos;
+    /* Now let the guesswork begin, these are the
+     * AAC default channel assignments for these numbers
+     * of channels */
+    if (channels == 3) {
+      channel_mask =
+          CHANNEL_OUT_FRONT_LEFT | CHANNEL_OUT_FRONT_RIGHT |
+          CHANNEL_OUT_FRONT_CENTER;
+    } else if (channels == 4) {
+      channel_mask =
+          CHANNEL_OUT_FRONT_LEFT | CHANNEL_OUT_FRONT_RIGHT |
+          CHANNEL_OUT_FRONT_CENTER | CHANNEL_OUT_BACK_CENTER;
+    } else if (channels == 5) {
+      channel_mask =
+          CHANNEL_OUT_FRONT_LEFT | CHANNEL_OUT_FRONT_RIGHT |
+          CHANNEL_OUT_FRONT_CENTER | CHANNEL_OUT_BACK_LEFT |
+          CHANNEL_OUT_BACK_RIGHT;
+    } else if (channels == 6) {
+      channel_mask =
+          CHANNEL_OUT_FRONT_LEFT | CHANNEL_OUT_FRONT_RIGHT |
+          CHANNEL_OUT_FRONT_CENTER | CHANNEL_OUT_BACK_LEFT |
+          CHANNEL_OUT_BACK_RIGHT | CHANNEL_OUT_LOW_FREQUENCY;
+    } else if (channels == 8) {
+      channel_mask =
+          CHANNEL_OUT_FRONT_LEFT | CHANNEL_OUT_FRONT_RIGHT |
+          CHANNEL_OUT_FRONT_CENTER | CHANNEL_OUT_BACK_LEFT |
+          CHANNEL_OUT_BACK_RIGHT | CHANNEL_OUT_LOW_FREQUENCY |
+          CHANNEL_OUT_FRONT_LEFT_OF_CENTER | CHANNEL_OUT_FRONT_RIGHT_OF_CENTER;
+    }
   }
 
   for (i = 0, j = 0; i < G_N_ELEMENTS (channel_mapping_table); i++) {
