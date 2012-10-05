@@ -15,5 +15,4 @@ GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
 endif
 GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
 GSTREAMER_PLUGINS         := coreelements
-G_IO_MODULES              := gnutls
 include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
