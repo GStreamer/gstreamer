@@ -229,7 +229,7 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
     GstAudioInfo info;
     GstAudioFormat format = GST_AUDIO_INFO_FORMAT (&self->audio_info);
     gint rate = GST_AUDIO_INFO_RATE (&self->audio_info);
-    GstAudioChannelPosition position = 0;
+    GstAudioChannelPosition position = GST_AUDIO_CHANNEL_POSITION_MONO;
 
     /* Set channel position if we know it */
     if (self->keep_positions)
