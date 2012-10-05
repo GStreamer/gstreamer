@@ -3291,15 +3291,24 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
       GST_DEBUG_OBJECT (pad, "event %s marked received",
           GST_EVENT_TYPE_NAME (event));
       break;
+    case GST_FLOW_CUSTOM_SUCCESS:
+      /* we can't assume the event is received when it was dropped */
+      GST_DEBUG_OBJECT (pad, "event %s was dropped, mark pending",
+          GST_EVENT_TYPE_NAME (event));
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+      data->ret = GST_FLOW_OK;
+      break;
     case GST_FLOW_NOT_LINKED:
       /* not linked is not a problem, we are sticky so the event will be
        * sent later but only for non-EOS events */
-      GST_DEBUG_OBJECT (pad, "pad was not linked");
+      GST_DEBUG_OBJECT (pad, "pad was not linked, mark pending");
       if (GST_EVENT_TYPE (event) != GST_EVENT_EOS)
         data->ret = GST_FLOW_OK;
-      /* fallthrough */
+      GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
+      break;
     default:
-      GST_DEBUG_OBJECT (pad, "mark pending events");
+      GST_DEBUG_OBJECT (pad, "result %s, mark pending events",
+          gst_flow_get_name (data->ret));
       GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PENDING_EVENTS);
       break;
   }
@@ -3336,6 +3345,10 @@ check_sticky (GstPad * pad)
       if (ev && !ev->received) {
         data.ret = gst_pad_push_event_unchecked (pad, gst_event_ref (ev->event),
             GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM);
+        /* the event could have been dropped. Because this can only
+         * happen if the user asked for it, it's not an error */
+        if (data.ret == GST_FLOW_CUSTOM_SUCCESS)
+          data.ret = GST_FLOW_OK;
       }
     }
   }
@@ -4531,7 +4544,6 @@ probe_stopped:
     switch (ret) {
       case GST_FLOW_CUSTOM_SUCCESS:
         GST_DEBUG_OBJECT (pad, "dropped event");
-        ret = GST_FLOW_OK;
         break;
       default:
         GST_DEBUG_OBJECT (pad, "an error occured %s", gst_flow_get_name (ret));
@@ -4623,8 +4635,12 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     res = (check_sticky (pad) == GST_FLOW_OK);
   }
   if (!sticky) {
+    GstFlowReturn ret;
+
     /* other events are pushed right away */
-    res = (gst_pad_push_event_unchecked (pad, event, type) == GST_FLOW_OK);
+    ret = gst_pad_push_event_unchecked (pad, event, type);
+    /* dropped events by a probe are not an error */
+    res = (ret == GST_FLOW_OK || ret == GST_FLOW_CUSTOM_SUCCESS);
   } else {
     /* Errors in sticky event pushing are no problem and ignored here
      * as they will cause more meaningful errors during data flow.
