@@ -28,8 +28,9 @@
 static gchar *opt_effects = NULL;
 
 #define DEFAULT_EFFECTS "identity,exclusion,navigationtest," \
-    "agingtv,videoflip,vertigotv,gaussianblur,identity"
+    "agingtv,videoflip,vertigotv,gaussianblur,shagadelictv,edgetv"
 
+static GstPad *blockpad;
 static GstElement *conv_before;
 static GstElement *conv_after;
 static GstElement *cur_effect;
@@ -37,86 +38,80 @@ static GstElement *pipeline;
 
 static GQueue effects = G_QUEUE_INIT;
 
-
-#if 0
 static GstPadProbeReturn
-pad_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
-{
-  GstElement *next = user_data;
-
-  GST_ERROR_OBJECT (pad, "pad is idle now");
-
-  gst_element_set_state (cur_effect, GST_STATE_NULL);
-
-  /* remove unlinks automatically */
-  GST_ERROR_OBJECT (pipeline, "removing %" GST_PTR_FORMAT, cur_effect);
-  gst_bin_remove (GST_BIN (pipeline), cur_effect);
-  GST_ERROR_OBJECT (pipeline, "adding   %" GST_PTR_FORMAT, next);
-  gst_bin_add (GST_BIN (pipeline), next);
-  GST_ERROR_OBJECT (pipeline, "linking..");
-  gst_element_link_many (conv_before, next, conv_after, NULL);
-  gst_element_set_state (next, GST_STATE_PLAYING);
-  cur_effect = next;
-  /* FIXME: this seems to not work */
-  gst_pad_remove_probe (pad, info->id);
-  g_print ("Done\n");
-  /* FIXME: returning PROBE_REMOVE from an idle probe seems to do nothing */
-  return GST_PAD_PROBE_REMOVE;
-}
-#endif
-
-static gboolean
-timeout_cb (gpointer user_data)
+event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 {
   GMainLoop *loop = user_data;
   GstElement *next;
-  gulong block_id;
-  GstPad *pad;
 
+  if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_DATA (info)) != GST_EVENT_EOS)
+    return GST_PAD_PROBE_OK;
+
+  gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));
+
+  /* push current event back into the queue */
   g_queue_push_tail (&effects, gst_object_ref (cur_effect));
-
+  /* take next effect from the queue */
   next = g_queue_pop_head (&effects);
-
   if (next == NULL) {
+    GST_DEBUG_OBJECT (pad, "no more effects");
     g_main_loop_quit (loop);
-    return FALSE;
+    return GST_PAD_PROBE_DROP;
   }
 
   g_print ("Switching from '%s' to '%s'..\n", GST_OBJECT_NAME (cur_effect),
       GST_OBJECT_NAME (next));
 
-  pad = gst_element_get_static_pad (conv_before, "src");
-
-  block_id =
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK, NULL, NULL, NULL);
-  g_print ("Blocked\n");
-  gst_pad_remove_probe (pad, block_id);
   gst_element_set_state (cur_effect, GST_STATE_NULL);
 
   /* remove unlinks automatically */
+  GST_DEBUG_OBJECT (pipeline, "removing %" GST_PTR_FORMAT, cur_effect);
   gst_bin_remove (GST_BIN (pipeline), cur_effect);
-  g_print ("Removed\n");
-  gst_bin_add (GST_BIN (pipeline), next);
-  g_print ("Added\n");
-  gst_element_link_many (conv_before, next, conv_after, NULL);
-  g_print ("Re-linked\n");
-  gst_element_set_state (next, GST_STATE_PLAYING);
-  cur_effect = next;
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  /* FIXME: we have to remove the block before we link, otherwise the
-   * caps queries on linking will deadlock us - check if that's intentional */
-#if 0
-  gst_pad_remove_probe (pad, block_id);
-#endif
-  g_print ("Done\n\n\n");
 
-  /* FIXME: waiting for the pad to be idle, and then relinking from there
-   * doesn't seem to work very well either for some reason, and returning
-   * GST_PAD_PROBE_REMOVE does not seem to work. Doing the same from a
-   * BLOCKING callback has the same problem as above */
-#if 0
-  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_IDLE, pad_probe_cb, next, NULL);
-#endif
+  GST_DEBUG_OBJECT (pipeline, "adding   %" GST_PTR_FORMAT, next);
+  gst_bin_add (GST_BIN (pipeline), next);
+
+  GST_DEBUG_OBJECT (pipeline, "linking..");
+  gst_element_link_many (conv_before, next, conv_after, NULL);
+
+  gst_element_set_state (next, GST_STATE_PLAYING);
+
+  cur_effect = next;
+  GST_DEBUG_OBJECT (pipeline, "done");
+
+  return GST_PAD_PROBE_DROP;
+}
+
+static GstPadProbeReturn
+pad_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstPad *srcpad, *sinkpad;
+
+  GST_DEBUG_OBJECT (pad, "pad is blocked now");
+
+  /* remove the probe first */
+  gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));
+
+  /* install new probe for EOS */
+  srcpad = gst_element_get_static_pad (cur_effect, "src");
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK |
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, event_probe_cb, user_data, NULL);
+  gst_object_unref (srcpad);
+
+  /* push EOS into the element, the probe will be fired when the
+   * EOS leaves the effect and it has thus drained all of its data */
+  sinkpad = gst_element_get_static_pad (cur_effect, "sink");
+  gst_pad_send_event (sinkpad, gst_event_new_eos ());
+  gst_object_unref (sinkpad);
+
+  return GST_PAD_PROBE_OK;
+}
+
+static gboolean
+timeout_cb (gpointer user_data)
+{
+  gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      pad_probe_cb, user_data, NULL);
 
   return TRUE;
 }
@@ -175,8 +170,13 @@ main (int argc, char **argv)
     effect_names = g_strsplit (DEFAULT_EFFECTS, ",", -1);
 
   for (e = effect_names; e != NULL && *e != NULL; ++e) {
-    g_print ("Adding effect '%s'\n", *e);
-    g_queue_push_tail (&effects, gst_element_factory_make (*e, NULL));
+    GstElement *el;
+
+    el = gst_element_factory_make (*e, NULL);
+    if (el) {
+      g_print ("Adding effect '%s'\n", *e);
+      g_queue_push_tail (&effects, el);
+    }
   }
 
   pipeline = gst_pipeline_new ("pipeline");
@@ -191,6 +191,8 @@ main (int argc, char **argv)
       "YVYU, Y444, v210, v216, NV12, NV21, UYVP, A420, YUV9, YVU9, IYU1 }");
 
   q1 = gst_element_factory_make ("queue", NULL);
+
+  blockpad = gst_element_get_static_pad (q1, "src");
 
   conv_before = gst_element_factory_make ("videoconvert", NULL);
 
