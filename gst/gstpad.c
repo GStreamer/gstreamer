@@ -4360,8 +4360,9 @@ probe_stopped_unref:
   }
 }
 
+/* must be called with pad object lock */
 static gboolean
-gst_pad_store_sticky_event (GstPad * pad, GstEvent * event, gboolean locked)
+gst_pad_store_sticky_event (GstPad * pad, GstEvent * event)
 {
   guint i, len;
   GstEventType type;
@@ -4409,14 +4410,12 @@ gst_pad_store_sticky_event (GstPad * pad, GstEvent * event, gboolean locked)
 
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_CAPS:
-        if (locked)
-          GST_OBJECT_UNLOCK (pad);
+        GST_OBJECT_UNLOCK (pad);
 
         GST_DEBUG_OBJECT (pad, "notify caps");
         g_object_notify_by_pspec ((GObject *) pad, pspec_caps);
 
-        if (locked)
-          GST_OBJECT_LOCK (pad);
+        GST_OBJECT_LOCK (pad);
         break;
       default:
         break;
@@ -4609,10 +4608,10 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
     if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
       goto eos;
 
-    /* srcpad sticky events are store immediately, the received flag is set
+    /* srcpad sticky events are stored immediately, the received flag is set
      * to FALSE and will be set to TRUE when we can successfully push the
      * event to the peer pad */
-    if (gst_pad_store_sticky_event (pad, event, TRUE)) {
+    if (gst_pad_store_sticky_event (pad, event)) {
       GST_DEBUG_OBJECT (pad, "event %s updated", GST_EVENT_TYPE_NAME (event));
     }
     if (GST_EVENT_TYPE (event) == GST_EVENT_EOS)
@@ -4822,11 +4821,23 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
   if (sticky) {
     if (ret == GST_FLOW_OK) {
+      GST_OBJECT_LOCK (pad);
+      /* can't store on flushing pads */
+      if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+        goto flushing;
+
+      if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+        goto eos;
+
       /* after the event function accepted the event, we can store the sticky
        * event on the pad */
-      gst_pad_store_sticky_event (pad, event, FALSE);
+      if (gst_pad_store_sticky_event (pad, event)) {
+        GST_DEBUG_OBJECT (pad, "event %s updated", GST_EVENT_TYPE_NAME (event));
+      }
       if (event_type == GST_EVENT_EOS)
         GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_EOS);
+
+      GST_OBJECT_UNLOCK (pad);
     }
     gst_event_unref (event);
   }
