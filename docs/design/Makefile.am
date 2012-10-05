@@ -4,7 +4,6 @@ EXTRA_DIST = \
 	draft-push-pull.txt \
 	draft-tagreading.txt \
 	part-activation.txt \
-	part-block.txt \
 	part-buffering.txt \
 	part-caps.txt \
 	part-clocks.txt \

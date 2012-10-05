@@ -285,3 +285,78 @@ Query probes have the GST_PAD_PROBE_TYPE_QUERY_* flag set in the callbacks.
 For queries, the PUSH ProbeType is set when the query is traveling to the object
 that will answer the query and the PULL type is set when the query contains the
 answer.
+
+Use-cases
+---------
+
+Prerolling a partial pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ .---------.      .---------.                .----------.
+ | filesrc |      | demuxer |     .-----.    | decoder1 |
+ |        src -> sink      src1 ->|queue|-> sink       src 
+ '---------'      |         |     '-----'    '----------' X
+                  |         |                .----------.
+                  |         |     .-----.    | decoder2 |
+                  |        src2 ->|queue|-> sink       src
+                  '---------'     '-----'    '----------' X
+
+
+The purpose is to create the pipeline dynamically up to the
+decoders but not yet connect them to a sink and without losing
+any data.
+
+To do this, the source pads of the decoders is blocked so that no
+events or buffers can escape and we don't interrupt the stream.
+
+When all of the dynamic pad are created (no-more-pads emited by the
+branching point, ie, the demuxer or the queues filled) and the pads
+are blocked (blocked callback received) the pipeline is completely
+prerolled.
+
+It should then be possible to perform the following actions on the
+prerolled pipeline:
+
+- query duration/position
+- perform a flushing seek to preroll a new position
+- connect other elements and unblock the blocked pads.
+
+
+dynamically switching an element in a PLAYING pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+  .----------.      .----------.      .----------.
+  | element1 |      | element2 |      | element3 |
+ ...        src -> sink       src -> sink       ...
+  '----------'      '----------'      '----------'
+                    .----------.
+                    | element4 |
+                   sink       src                  
+                    '----------'                     
+
+The purpose is to replace element2 with element4 in the PLAYING 
+pipeline. 
+
+  1) block element1 src pad.
+  2) inside the block callback nothing is flowing between
+     element1 and element2 and nothing will flow until unblocked.
+  3) unlink element1 and element2
+  4) optional step: make sure data is flushed out of element2:
+     4a) pad event probe on element2 src
+     4b) send EOS to element2, this makes sure that element2 flushes
+         out the last bits of data it holds.
+     4c) wait for EOS to appear in the probe, drop the EOS.
+     4d) remove the EOS pad event probe.
+  5) unlink element2 and element3
+     5a) optionally element2 can now be set to NULL and/or removed from the
+         pipeline.
+  6) link element4 and element3
+  7) link element1 and element4
+  8) make sure element4 is in the same state as the rest of the elements. The
+     element should at least be PAUSED.
+  9) unblock element1 src
+
+The same flow can be used to replace an element in a PAUSED pipeline. Of
+course in a PAUSED pipeline there might not be dataflow so the block might
+not immediately happen.
