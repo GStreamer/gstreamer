@@ -1031,7 +1031,7 @@ adder_suite (void)
   tcase_add_test (tc_chain, test_event);
   tcase_add_test (tc_chain, test_play_twice);
   tcase_add_test (tc_chain, test_play_twice_then_add_and_play_again);
-  tcase_add_test (tc_chain, test_live_seeking);
+  tcase_skip_broken_test (tc_chain, test_live_seeking);
   tcase_add_test (tc_chain, test_add_pad);
   tcase_add_test (tc_chain, test_remove_pad);
   tcase_add_test (tc_chain, test_clip);
