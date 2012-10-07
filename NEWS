@@ -1,4 +1,22 @@
-This is GStreamer Bad Plugins 1.0.0
+This is GStreamer Bad Plugins 1.0.1
+
+Changes since 1.0.0:
+
+      * fieldanalysis and frei0r plugins ported to 1.0
+      * DVD playback fixes
+      * pitch: transform timestamps properly after a seek
+      * camerabin fixes
+
+Bugs fixed since 1.0.0:
+
+      * 667220 : dvdspu: add NV12 support
+      * 681562 : Issue setting " video-source " property on wrappercamerabinsrc
+      * 681564 : Issue setting " video-source-filter " property on wrappercamerabinsrc
+      * 681678 : frei0r: port to 1.0
+      * 684740 : chromaprint: resolve undefined symbols
+      * 684847 : curl: fix build on win32
+      * 685065 : Missing cast in curlbasesink
+      * 685159 : chromaprint: Missing unmap buffer in transform_ip
 
 New features in 1.0.0:
 

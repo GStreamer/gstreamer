@@ -1,3 +1,1214 @@
+=== release 1.0.1 ===
+
+2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.1
+
+2012-10-06 14:57:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-10-03 11:05:06 -0700  Michael Smith <msmith@rdio.com>
+
+	* ext/directfb/dfbvideosink.c:
+	* ext/wayland/waylandpool.c:
+	* gst-libs/gst/video/gstsurfacemeta.c:
+	* sys/applemedia/coremediabuffer.c:
+	* sys/applemedia/corevideobuffer.c:
+	* sys/pvr2d/gstpvrbufferpool.c:
+	  meta info: register thread-safely.
+
+2012-10-03 17:23:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtpvp8/Makefile.am:
+	  rtpvp8: Also commit remaining uncommitted changes...
+
+2012-10-03 09:39:28 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/rtpvp8/Makefile.am:
+	  rtpvp8: redifine vp8_norm to avoid duplicated symbols in static links with libvpx
+
+2012-10-03 09:49:39 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/videoparsers/Makefile.am:
+	  videoparsers: fix duplicated symbols for static links with libschroedinger
+
+2011-12-26 22:04:04 -0600  Rob Clark <rob@ti.com>
+
+	* gst/dvdspu/gstdvdspu-render.c:
+	* gst/dvdspu/gstdvdspu.c:
+	  dvdspu: add YV12 and NV12 support
+	  https://bugzilla.gnome.org/show_bug.cgi?id=667220
+	  Conflicts:
+	  gst/dvdspu/gstdvdspu.c
+	  gst/dvdspu/gstdvdspu.h
+	  gst/dvdspu/gstspu-pgs.c
+	  gst/dvdspu/gstspu-vobsub-render.c
+
+2012-10-02 22:20:20 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/rsnparsetter.c:
+	* ext/resindvd/rsnparsetter.h:
+	  resindvd: Remove caps lock from parsetter element.
+	  All the members it used to protect in 0.10 are protected by
+	  the stream lock now.
+
+2012-10-01 23:43:47 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/rsnparsetter.c:
+	  resindvd: Update overridden caps when the DAR changes
+	  Send a new caps event downstream when we receive new orders
+	  from the VM, if there are existing caps.
+
+2012-10-01 23:21:12 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/Makefile.am:
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/rsnparsetter.c:
+	* ext/resindvd/rsnparsetter.h:
+	* ext/resindvd/rsnwrappedbuffer.c:
+	* ext/resindvd/rsnwrappedbuffer.h:
+	  resindvd: Port parsetter element
+	  Port the DVD element which overrides the MPEG encoded pixel-aspect-ratio
+	  to match that requested by the DVD VM.
+
+2012-10-01 13:52:35 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-bad.spec.in:
+	  update for latest changes
+
+2012-09-30 20:52:30 +0200  Christophe Fergeau <cfergeau@redhat.com>
+
+	* ext/chromaprint/gstchromaprint.c:
+	  chromaprint: Missing unmap buffer in transform_ip
+	  When no samples have to be processed, transform_ip exits early, but
+	  the buffer it uses was not properly unmapped.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685159
+
+2012-09-30 03:49:17 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/resindvdsrc.c:
+	  resindvd: Fiddle with segment handling for DVD.
+	  Clarify some of the terms used, and make sure to extend the
+	  stop time when the position moves past the end of the current
+	  segment (as for still frames, for example).
+	  Also, make sure to reset the position value of the segment the
+	  demuxer outputs when collecting a seamless segment.
+
+2012-09-29 13:21:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/frei0r/gstfrei0rfilter.c:
+	* gst/frei0r/gstfrei0rmixer.c:
+	* gst/frei0r/gstfrei0rsrc.c:
+	  frei0r: fix plugin loading for frei0r elements that have no info.explanation
+	  We don't allow empty descriptions for elements any more.
+
+2012-09-29 12:36:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/directfb/Makefile.am:
+	* ext/dts/gstdtsdec.c:
+	* ext/wayland/Makefile.am:
+	  Remove some liboil references
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673285
+
+2012-09-29 12:30:20 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/cog/Makefile.am:
+	* ext/cog/gstcogcolorspace.c:
+	* ext/cog/gstcolorconvert.c:
+	* ext/cog/gstlogoinsert.c:
+	  cog: remove some old elements so they don't get ported accidentally
+	  They are replaced by videoconvert and gdkpixbufoverlay
+
+2012-09-28 22:30:39 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* ext/curl/gstcurlbasesink.c:
+	  curl: fix compiler warning with setsockopt() on windows
+	  The optval argument is of type const char * on windows.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685065
+
+2012-09-28 11:59:57 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* configure.ac:
+	* gst/frei0r/gstfrei0r.c:
+	* gst/frei0r/gstfrei0rfilter.c:
+	* gst/frei0r/gstfrei0rmixer.c:
+	* gst/frei0r/gstfrei0rmixer.h:
+	* gst/frei0r/gstfrei0rsrc.c:
+	* gst/frei0r/gstfrei0rsrc.h:
+	  frei0r: Port to 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681678
+
+2012-09-26 08:20:49 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* configure.ac:
+	* ext/curl/Makefile.am:
+	* ext/curl/gstcurlbasesink.c:
+	* ext/curl/gstcurlfilesink.c:
+	* ext/curl/gstcurlftpsink.c:
+	* ext/curl/gstcurlhttpsink.c:
+	* ext/curl/gstcurlsmtpsink.c:
+	* ext/curl/gstcurltlssink.c:
+	  curl: fix build on win32
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684847
+
+2012-09-28 00:06:45 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/camerabin2/gstwrappercamerabinsrc.c:
+	* gst/camerabin2/gstwrappercamerabinsrc.h:
+	  wrappercamerabinsrc: change video-source if the user requested
+	  When going from null to ready, check if the user requested to
+	  use a new source and replace the current one.
+	  Fixes #681562
+
+2012-09-27 23:22:37 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/camerabin2/gstwrappercamerabinsrc.h:
+	  wrappercamerabinsrc: pad probe ids are gulong
+	  Change variable to the correct type
+
+2012-09-27 19:40:36 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/camerabin2/gstwrappercamerabinsrc.c:
+	  camerabin: use correct element name when replacing the video filter
+	  The name was updated on the 0.10 -> 1.0 transition, but the
+	  gst_bin_remove was still using the old name, causing an assertion
+	  when replacing video-source-filter
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681564
+
+2012-09-26 14:50:04 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/soundtouch/gstpitch.cc:
+	  soundtouch: Transform timestamps properly after a seek.
+	  The segment is transformed to match the pitch conversion
+	  being applied, so make sure the timestamps being output
+	  match the configured downstream segment accordingly, and
+	  adjust the downstream segment position to match the stream time
+	  ratio also.
+
+2012-09-18 01:13:36 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/gstmpegdemux.c:
+	  resindvd: Don't send spurious 'close segment' events. Make a single segment
+	  With the new 1.0 segment semantics, there's no need to close the
+	  previous segment before sending out a new one, so don't do it.
+	  Also, adjust the outgoing segment to just be one contiguous
+	  timeline, with a base of 0. Fixes some repeating timestamps when
+	  segments change.
+
+2012-09-24 17:25:25 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/fieldanalysis/gstfieldanalysis.c:
+	* gst/fieldanalysis/gstfieldanalysis.h:
+	  fieldanalysis: Port to 1.0
+	  I was also vaguely forced to overhaul some bits and pieces and mess with
+	  the data structures. This was mostly due to caps not being part of
+	  buffers and so I had to switch to using GstVideoFrame and GstVideoInfo.
+
+2012-09-24 16:11:32 -0500  Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+
+	* ext/chromaprint/Makefile.am:
+	  chromaprint: link against libgstbase
+	  Calls to gst_base_transform_get_type and gst_base_transform_set_passthrough
+	  require linking with libgstbase.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684740
+
+2012-09-24 16:59:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.0 ===
+
+2012-09-24 14:42:25 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.0.0
+
+2012-09-24 14:42:12 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	  docs: update
+
+2012-09-23 13:15:20 -0700  David Schleef <ds@schleef.org>
+
+	* sys/decklink/capture.cpp:
+	* sys/decklink/gstdecklink.cpp:
+	* sys/decklink/gstdecklink.h:
+	* sys/decklink/gstdecklinksink.cpp:
+	* sys/decklink/gstdecklinksrc.cpp:
+	* sys/decklink/gstdecklinksrc.h:
+	  decklink: change device instance lifecycle
+	  The decklink driver eventually crashes after repeated creation/deletion
+	  of device, input, output, and configuration objects.  Change to create
+	  these at the outset and keep them around forever.
+
+2012-09-22 13:56:57 -0700  David Schleef <ds@schleef.org>
+
+	* sys/decklink/gstdecklinksrc.cpp:
+	  decklinksrc: Fix memory leaks
+	  Buffers now hold on to a reference for the input, so the input
+	  object doesn't get freed (and carry the buffers with it) before
+	  all the buffers are freed.
+
+2012-09-23 21:08:57 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/assrender.c:
+	  tests: disable assrender unit test
+	  Doesn't work, needs fixing.
+
+2012-09-23 21:07:07 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/assrender/gstassrender.c:
+	  assrender: disable for autoplugging until it works
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683192
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684683
+
+2012-09-22 15:00:27 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/dtmf/gstrtpdtmfdepay.c:
+	  rtpdtmfdepay: Use 1.0-style caps negotiation and audio/x-raw
+
+2012-09-20 18:42:50 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/opus/gstopus.c:
+	  opusenc: Rank as Primary
+
+2012-09-20 18:41:24 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/opus/gstrtpopuspay.c:
+	  rtpopuspay: Allocate the rtp buffer correctly
+	  Use the right functions to allocate the rtp buffer
+
+2012-09-22 16:08:39 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+2012-09-20 00:08:56 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/inter/gstintersubsrc.c:
+	  intersubsrc: disable timestamping code that doesn't make sense
+	  and which breaks the states check because we end up trying to
+	  divide by 0.
+
+2012-09-18 13:17:55 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* sys/applemedia/corevideobuffer.c:
+	* sys/applemedia/vtdec.c:
+	  applemedia: init videoinfo
+
+2012-09-18 13:17:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: init videoinfo
+
+2012-09-18 00:12:52 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	  docs: remove one more old include
+
+=== release 0.11.99 ===
+
+2012-09-17 18:04:51 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 0.11.99
+
+2012-09-17 17:52:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-aiff.xml:
+	* docs/plugins/inspect/plugin-apexsink.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-cdaudio.xml:
+	* docs/plugins/inspect/plugin-cdxaparse.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-cog.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-colorspace.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-dc1394.xml:
+	* docs/plugins/inspect/plugin-dccp.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-decklink.xml:
+	* docs/plugins/inspect/plugin-dfbvideosink.xml:
+	* docs/plugins/inspect/plugin-directdraw.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-faceoverlay.xml:
+	* docs/plugins/inspect/plugin-fbdevsink.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-filter.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-freeverb.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsettings.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-hdvparse.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-invtelecine.xml:
+	* docs/plugins/inspect/plugin-ivfparse.xml:
+	* docs/plugins/inspect/plugin-jp2kdecimator.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-kate.xml:
+	* docs/plugins/inspect/plugin-ladspa.xml:
+	* docs/plugins/inspect/plugin-linsys.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-lv2.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpeg4videoparse.xml:
+	* docs/plugins/inspect/plugin-mpegdemux2.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegpsmux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	* docs/plugins/inspect/plugin-musicbrainz.xml:
+	* docs/plugins/inspect/plugin-mve.xml:
+	* docs/plugins/inspect/plugin-mxf.xml:
+	* docs/plugins/inspect/plugin-mythtv.xml:
+	* docs/plugins/inspect/plugin-nas.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-nsf.xml:
+	* docs/plugins/inspect/plugin-nuvdemux.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-patchdetect.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-real.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rsvg.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdi.xml:
+	* docs/plugins/inspect/plugin-sdl.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-sndfile.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-spcdec.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-stereo.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-swfdec.xml:
+	* docs/plugins/inspect/plugin-timidity.xml:
+	* docs/plugins/inspect/plugin-tta.xml:
+	* docs/plugins/inspect/plugin-vcdsrc.xml:
+	* docs/plugins/inspect/plugin-vdpau.xml:
+	* docs/plugins/inspect/plugin-video3d.xml:
+	* docs/plugins/inspect/plugin-videofiltersbad.xml:
+	* docs/plugins/inspect/plugin-videomeasure.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-videosignal.xml:
+	* docs/plugins/inspect/plugin-vmnc.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-wildmidi.xml:
+	* docs/plugins/inspect/plugin-xvid.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	  docs: update
+
+2012-09-17 17:13:45 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-freeze.xml:
+	* gst/freeze/Makefile.am:
+	* gst/freeze/gstfreeze.c:
+	* gst/freeze/gstfreeze.h:
+	  freeze: remove freeze element, was replaced by imagefreeze in -good years ago
+
+2012-09-17 23:59:34 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/resindvdbin.c:
+	  resindvd: Fix segment handling in the demuxer.
+	  Transfer the incoming segment base time to the src
+	  segment the demuxer sends downstream. Add some
+	  (disabled) debug to the bin for tracking outgoing
+	  timestamps.
+
+2012-09-17 00:05:19 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-bad.spec.in:
+	  Remove vp8 plugin from spec after move to good
+
+2012-09-16 15:48:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-vp8.xml:
+	* ext/Makefile.am:
+	* ext/vp8/GstVP8Enc.prs:
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	* ext/vp8/gstvp8utils.c:
+	* ext/vp8/gstvp8utils.h:
+	* ext/vp8/plugin.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/vp8dec.c:
+	* tests/check/elements/vp8enc.c:
+	  vp8: Remove plugin, moved to gst-plugins-good
+
+2012-09-16 15:25:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  vp8dec: Unref input/output states when stopping the decoder
+
+2012-09-16 15:18:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/GstVP8Enc.prs:
+	  vp8enc: Update realtime profile to the new properties
+
+2012-09-16 11:00:53 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-bad.spec.in:
+	  Update and fix spec with latest changes and F18 name scheeme
+
+2012-09-16 10:56:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/vp8/gstvp8dec.c:
+	  vp8: Require latest libvpx release (1.1.0 from May 2012)
+	  Fixes bug #684116 and simplifies configure checks.
+
+2012-09-15 20:23:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  vp8enc: Use a string field for the profile in the caps
+	  Just for consistency with all the other codecs.
+
+2012-09-15 19:08:33 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/resindvd/rsndec.c:
+	* gst/autoconvert/gstautovideoconvert.c:
+	* tests/examples/opencv/gst_element_print_properties.c:
+	  use gst_element_factory_get_metadata to replace obsolete API
+
+2012-09-15 00:04:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  vp8enc: Correctly set profile in caps
+
+2012-09-14 23:41:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  vp8: Update copyright and authors
+
+2012-09-14 23:40:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-freeze.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-vp8.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	  docs: Update plugin docs
+
+2012-09-08 15:38:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  vp8enc: Rework encoder properties to be more in line with the libvpx tools and API
+	  Also add all available properties.
+
+2012-09-14 17:55:05 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/jp2kdecimator/gstjp2kdecimator.c:
+	* sys/decklink/gstdecklinksrc.cpp:
+	  replace _get_caps_reffed with _get_caps
+
+2012-09-14 17:08:49 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/apexsink/gstapexsink.c:
+	* ext/assrender/gstassrender.c:
+	* ext/audiofile/gstafparse.c:
+	* ext/audiofile/gstafsink.c:
+	* ext/audiofile/gstafsrc.c:
+	* ext/bz2/gstbz2dec.c:
+	* ext/bz2/gstbz2enc.c:
+	* ext/cdaudio/gstcdaudio.c:
+	* ext/celt/gstceltdec.c:
+	* ext/celt/gstceltenc.c:
+	* ext/chromaprint/gstchromaprint.c:
+	* ext/cog/gstcogcolorspace.c:
+	* ext/cog/gstcogdownsample.c:
+	* ext/cog/gstcogmse.c:
+	* ext/cog/gstcogscale.c:
+	* ext/cog/gstcolorconvert.c:
+	* ext/cog/gstlogoinsert.c:
+	* ext/curl/gstcurlbasesink.c:
+	* ext/curl/gstcurlfilesink.c:
+	* ext/curl/gstcurlftpsink.c:
+	* ext/curl/gstcurlhttpsink.c:
+	* ext/curl/gstcurlsmtpsink.c:
+	* ext/curl/gstcurltlssink.c:
+	* ext/dc1394/gstdc1394.c:
+	* ext/dirac/gstdiracdec.cc:
+	* ext/dirac/gstdiracenc.cc:
+	* ext/directfb/dfbvideosink.c:
+	* ext/dts/gstdtsdec.c:
+	* ext/faac/gstfaac.c:
+	* ext/faad/gstfaad.c:
+	* ext/flite/gstflitetestsrc.c:
+	* ext/gme/gstgme.c:
+	* ext/gsettings/gstgsettingsaudiosink.c:
+	* ext/gsettings/gstgsettingsaudiosrc.c:
+	* ext/gsettings/gstgsettingsvideosink.c:
+	* ext/gsettings/gstgsettingsvideosrc.c:
+	* ext/gsm/gstgsmdec.c:
+	* ext/gsm/gstgsmenc.c:
+	* ext/jasper/gstjasperdec.c:
+	* ext/jasper/gstjasperenc.c:
+	* ext/kate/gstkatedec.c:
+	* ext/kate/gstkateenc.c:
+	* ext/kate/gstkateparse.c:
+	* ext/kate/gstkatetag.c:
+	* ext/kate/gstkatetiger.c:
+	* ext/ladspa/gstladspa.c:
+	* ext/libfame/gstlibfame.c:
+	* ext/libmms/gstmms.c:
+	* ext/lv2/gstlv2.c:
+	* ext/mimic/gstmimdec.c:
+	* ext/mimic/gstmimenc.c:
+	* ext/modplug/gstmodplug.cc:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mplex/gstmplex.cc:
+	* ext/musepack/gstmusepackdec.c:
+	* ext/musicbrainz/gsttrm.c:
+	* ext/mythtv/gstmythtvsrc.c:
+	* ext/nas/nassink.c:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/ofa/gstofa.c:
+	* ext/openal/gstopenalsink.c:
+	* ext/openal/gstopenalsrc.c:
+	* ext/opencv/gstcvdilate.c:
+	* ext/opencv/gstcvequalizehist.c:
+	* ext/opencv/gstcverode.c:
+	* ext/opencv/gstcvlaplace.c:
+	* ext/opencv/gstcvsmooth.c:
+	* ext/opencv/gstcvsobel.c:
+	* ext/opencv/gstedgedetect.c:
+	* ext/opencv/gstfaceblur.c:
+	* ext/opencv/gstfacedetect.c:
+	* ext/opencv/gstmotioncells.c:
+	* ext/opencv/gstpyramidsegment.c:
+	* ext/opencv/gsttemplatematch.c:
+	* ext/opencv/gsttextoverlay.c:
+	* ext/opus/gstopusdec.c:
+	* ext/opus/gstopusenc.c:
+	* ext/opus/gstopusparse.c:
+	* ext/opus/gstrtpopusdepay.c:
+	* ext/opus/gstrtpopuspay.c:
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/rsndec.c:
+	* ext/resindvd/rsnparsetter.c:
+	* ext/rsvg/gstrsvgdec.c:
+	* ext/rsvg/gstrsvgoverlay.c:
+	* ext/rtmp/gstrtmpsink.c:
+	* ext/rtmp/gstrtmpsrc.c:
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	* ext/sdl/sdlaudiosink.c:
+	* ext/sdl/sdlvideosink.c:
+	* ext/snapshot/gstsnapshot.c:
+	* ext/sndfile/gstsfsink.c:
+	* ext/sndfile/gstsfsrc.c:
+	* ext/sndio/sndiosink.c:
+	* ext/sndio/sndiosrc.c:
+	* ext/soundtouch/gstbpmdetect.cc:
+	* ext/soundtouch/gstpitch.cc:
+	* ext/spandsp/gstspanplc.c:
+	* ext/spc/gstspc.c:
+	* ext/swfdec/gstswfdec.c:
+	* ext/teletextdec/gstteletextdec.c:
+	* ext/timidity/gsttimidity.c:
+	* ext/timidity/gstwildmidi.c:
+	* ext/voaacenc/gstvoaacenc.c:
+	* ext/voamrwbenc/gstvoamrwbenc.c:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/wayland/gstwaylandsink.c:
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	* ext/zbar/gstzbar.c:
+	* gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c:
+	* gst/adpcmdec/adpcmdec.c:
+	* gst/adpcmenc/adpcmenc.c:
+	* gst/aiff/aiffmux.c:
+	* gst/aiff/aiffparse.c:
+	* gst/asfmux/gstasfmux.c:
+	* gst/asfmux/gstasfparse.c:
+	* gst/asfmux/gstrtpasfpay.c:
+	* gst/audiobuffer/gstaudioringbuffer.c:
+	* gst/audiovisualizers/gstspacescope.c:
+	* gst/audiovisualizers/gstspectrascope.c:
+	* gst/audiovisualizers/gstsynaescope.c:
+	* gst/audiovisualizers/gstwavescope.c:
+	* gst/autoconvert/gstautovideoconvert.c:
+	* gst/bayer/gstbayer2rgb.c:
+	* gst/bayer/gstrgb2bayer.c:
+	* gst/camerabin2/gstcamerabin2.c:
+	* gst/camerabin2/gstviewfinderbin.c:
+	* gst/camerabin2/gstwrappercamerabinsrc.c:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/cdxaparse/gstvcdparse.c:
+	* gst/coloreffects/gstchromahold.c:
+	* gst/coloreffects/gstcoloreffects.c:
+	* gst/dataurisrc/gstdataurisrc.c:
+	* gst/dccp/gstdccpclientsink.c:
+	* gst/dccp/gstdccpclientsrc.c:
+	* gst/dccp/gstdccpserversink.c:
+	* gst/dccp/gstdccpserversrc.c:
+	* gst/debugutils/fpsdisplaysink.c:
+	* gst/debugutils/gstchecksumsink.c:
+	* gst/debugutils/gstchopmydata.c:
+	* gst/debugutils/gstcompare.c:
+	* gst/debugutils/gstdebugspy.c:
+	* gst/dtmf/gstdtmfsrc.c:
+	* gst/dtmf/gstrtpdtmfdepay.c:
+	* gst/dvbsuboverlay/gstdvbsuboverlay.c:
+	* gst/dvdspu/gstdvdspu.c:
+	* gst/faceoverlay/gstfaceoverlay.c:
+	* gst/festival/gstfestival.c:
+	* gst/fieldanalysis/gstfieldanalysis.c:
+	* gst/freeverb/gstfreeverb.c:
+	* gst/freeze/gstfreeze.c:
+	* gst/frei0r/gstfrei0rfilter.c:
+	* gst/frei0r/gstfrei0rmixer.c:
+	* gst/frei0r/gstfrei0rsrc.c:
+	* gst/games/gstpuzzle.c:
+	* gst/gaudieffects/gstburn.c:
+	* gst/gaudieffects/gstchromium.c:
+	* gst/gaudieffects/gstdilate.c:
+	* gst/gaudieffects/gstdodge.c:
+	* gst/gaudieffects/gstexclusion.c:
+	* gst/gaudieffects/gstgaussblur.c:
+	* gst/gaudieffects/gstsolarize.c:
+	* gst/geometrictransform/gstbulge.c:
+	* gst/geometrictransform/gstcircle.c:
+	* gst/geometrictransform/gstdiffuse.c:
+	* gst/geometrictransform/gstfisheye.c:
+	* gst/geometrictransform/gstkaleidoscope.c:
+	* gst/geometrictransform/gstmarble.c:
+	* gst/geometrictransform/gstmirror.c:
+	* gst/geometrictransform/gstpinch.c:
+	* gst/geometrictransform/gstrotate.c:
+	* gst/geometrictransform/gstsphere.c:
+	* gst/geometrictransform/gstsquare.c:
+	* gst/geometrictransform/gststretch.c:
+	* gst/geometrictransform/gsttunnel.c:
+	* gst/geometrictransform/gsttwirl.c:
+	* gst/geometrictransform/gstwaterripple.c:
+	* gst/hdvparse/gsthdvparse.c:
+	* gst/hls/gsthlsdemux.c:
+	* gst/hls/gsthlssink.c:
+	* gst/id3tag/gstid3mux.c:
+	* gst/inter/gstinteraudiosink.c:
+	* gst/inter/gstinteraudiosrc.c:
+	* gst/inter/gstintersubsink.c:
+	* gst/inter/gstintersubsrc.c:
+	* gst/inter/gstintervideosink.c:
+	* gst/inter/gstintervideosrc.c:
+	* gst/interlace/gstinterlace.c:
+	* gst/ivfparse/gstivfparse.c:
+	* gst/jp2kdecimator/gstjp2kdecimator.c:
+	* gst/jpegformat/gstjifmux.c:
+	* gst/jpegformat/gstjpegparse.c:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/liveadder/liveadder.c:
+	* gst/mixmatrix/mixmatrix.c:
+	* gst/mpeg1sys/gstmpeg1systemencode.c:
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegpsmux/mpegpsmux.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mve/gstmvedemux.c:
+	* gst/mve/gstmvemux.c:
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfmux.c:
+	* gst/nsf/gstnsf.c:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* gst/overlay/gstoverlay.c:
+	* gst/patchdetect/gstpatchdetect.c:
+	* gst/pcapparse/gstirtspparse.c:
+	* gst/pcapparse/gstpcapparse.c:
+	* gst/pnm/gstpnmdec.c:
+	* gst/pnm/gstpnmenc.c:
+	* gst/rawparse/gstaudioparse.c:
+	* gst/rawparse/gstvideoparse.c:
+	* gst/real/gstrealaudiodec.c:
+	* gst/real/gstrealvideodec.c:
+	* gst/removesilence/gstremovesilence.c:
+	* gst/rtjpeg/gstrtjpegdec.c:
+	* gst/rtjpeg/gstrtjpegenc.c:
+	* gst/rtpvp8/gstrtpvp8pay.c:
+	* gst/scaletempo/gstscaletempo.c:
+	* gst/sdi/gstsdidemux.c:
+	* gst/sdi/gstsdimux.c:
+	* gst/sdp/gstsdpdemux.c:
+	* gst/segmentclip/gstaudiosegmentclip.c:
+	* gst/segmentclip/gstvideosegmentclip.c:
+	* gst/siren/gstsirendec.c:
+	* gst/siren/gstsirenenc.c:
+	* gst/smooth/gstsmooth.c:
+	* gst/speed/gstspeed.c:
+	* gst/stereo/gststereo.c:
+	* gst/subenc/gstsrtenc.c:
+	* gst/subenc/gstwebvttenc.c:
+	* gst/tta/gstttadec.c:
+	* gst/tta/gstttaparse.c:
+	* gst/vbidec/gstvbidec.c:
+	* gst/videofilters/gstscenechange.c:
+	* gst/videofilters/gstzebrastripe.c:
+	* gst/videomeasure/gstvideomeasure_collector.c:
+	* gst/videomeasure/gstvideomeasure_ssim.c:
+	* gst/videoparsers/gstdiracparse.c:
+	* gst/videoparsers/gsth263parse.c:
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	* gst/videosignal/gstvideoanalyse.c:
+	* gst/videosignal/gstvideodetect.c:
+	* gst/videosignal/gstvideomark.c:
+	* gst/vmnc/vmncdec.c:
+	* gst/y4m/gsty4mdec.c:
+	* sys/acmenc/acmenc.c:
+	* sys/acmmp3dec/acmmp3dec.c:
+	* sys/applemedia/avfvideosrc.m:
+	* sys/applemedia/celvideosrc.c:
+	* sys/applemedia/miovideosrc.c:
+	* sys/applemedia/qtkitvideosrc.m:
+	* sys/applemedia/vtenc.c:
+	* sys/applemedia/vth264decbin.c:
+	* sys/applemedia/vth264encbin.c:
+	* sys/avc/gstavcsrc.cpp:
+	* sys/cdrom/gstcdplayer.c:
+	* sys/decklink/gstdecklinksink.cpp:
+	* sys/decklink/gstdecklinksrc.cpp:
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directsound/gstdirectsoundsrc.c:
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.cpp:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.cpp:
+	* sys/dshowvideosink/dshowvideosink.cpp:
+	* sys/dvb/dvbbasebin.c:
+	* sys/dvb/gstdvbsrc.c:
+	* sys/dxr3/dxr3audiosink.c:
+	* sys/dxr3/dxr3spusink.c:
+	* sys/dxr3/dxr3videosink.c:
+	* sys/fbdev/gstfbdevsink.c:
+	* sys/linsys/gstlinsyssdisink.c:
+	* sys/linsys/gstlinsyssdisrc.c:
+	* sys/osxvideo/osxvideosrc.c:
+	* sys/pvr2d/gstpvrvideosink.c:
+	* sys/qcam/gstqcamsrc.c:
+	* sys/qtwrapper/audiodecoders.c:
+	* sys/qtwrapper/videodecoders.c:
+	* sys/shm/gstshmsink.c:
+	* sys/shm/gstshmsrc.c:
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	* sys/uvch264/gstuvch264_src.c:
+	* sys/vcd/vcdsrc.c:
+	* sys/vdpau/gstvdpsink.c:
+	* sys/vdpau/gstvdpvideopostprocess.c:
+	* sys/vdpau/h264/gstvdph264dec.c:
+	* sys/vdpau/mpeg/gstvdpmpegdec.c:
+	* sys/vdpau/mpeg4/gstvdpmpeg4dec.c:
+	* sys/wasapi/gstwasapisink.c:
+	* sys/wasapi/gstwasapisrc.c:
+	* sys/wininet/gstwininetsrc.c:
+	* sys/winks/gstksvideosrc.c:
+	* sys/winscreencap/gstdx9screencapsrc.c:
+	* sys/winscreencap/gstgdiscreencapsrc.c:
+	* tests/check/elements/baseaudiovisualizer.c:
+	* tests/check/elements/camerabin.c:
+	* tools/gst-element-maker:
+	  replace gst_element_class_set_details_simple with gst_element_class_set_metadata
+
+2012-09-14 12:06:23 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: init pps and sps structures before parsing
+	  ... which arranges for a valid fallback id, and allows to continue best effort
+	  processing even when sps/pps parsing fails.
+
+2012-09-03 13:58:22 +0200  Peter Seiderer <ps.report@gmx.net>
+
+	* gst/videoparsers/gsth264parse.c:
+	  gsth264parse: add comment where return should be checked.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683264
+
+2012-09-03 13:43:03 +0200  Peter Seiderer <ps.report@gmx.net>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  gsth264parser: fix Coverity found not initialized sps/pps valid member.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683264
+
+2012-09-03 13:09:29 +0200  Peter Seiderer <ps.report@gmx.net>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  gsth264parser: fix Coverity detected off by one at call to READ_UE_ALLOWED.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=683263
+
+2012-09-14 16:49:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gaudieffects/blur-example.py:
+	* gst/gaudieffects/burn-example.py:
+	  rename some caps
+
+2012-09-14 16:45:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/assrender/gstassrender.c:
+	* ext/cog/gstcogscale.c:
+	* ext/gsettings/gstgsettingsvideosink.c:
+	* ext/gsettings/gstgsettingsvideosrc.c:
+	* ext/kate/gstkatetiger.c:
+	* ext/opencv/gstedgedetect.c:
+	* ext/opencv/gstfaceblur.c:
+	* ext/opencv/gsttemplatematch.c:
+	* ext/resindvd/resin-play:
+	* ext/rsvg/gstrsvgdec.c:
+	* ext/rsvg/gstrsvgoverlay.c:
+	* ext/teletextdec/gstteletextdec.c:
+	* ext/zbar/gstzbar.c:
+	* gst/asfmux/gstasfmux.c:
+	* gst/coloreffects/gstchromahold.c:
+	* gst/coloreffects/gstcoloreffects.c:
+	* gst/faceoverlay/gstfaceoverlay.c:
+	* gst/fieldanalysis/gstfieldanalysis.c:
+	* gst/freeze/gstfreeze.c:
+	* gst/gaudieffects/blur-example.py:
+	* gst/gaudieffects/burn-example.py:
+	* gst/hls/gsthlsdemux.c:
+	* gst/jp2kdecimator/gstjp2kdecimator.c:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* gst/pnm/gstpnmdec.c:
+	* gst/pnm/gstpnmenc.c:
+	* gst/scaletempo/gstscaletempo.c:
+	* gst/videomeasure/gstvideomeasure_ssim.c:
+	* gst/videosignal/gstvideoanalyse.c:
+	* gst/videosignal/gstvideodetect.c:
+	* sys/uvch264/gstuvch264_src.c:
+	* tests/examples/capsfilter/capsfilter1.c:
+	* tests/examples/directfb/gstdfb.c:
+	* tests/examples/opencv/gstmotioncells_dynamic_test.c:
+	* tests/icles/metadata_editor.c:
+	  ffmpegcolorspace is no more
+
+2012-09-14 16:29:23 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/opencv/gstfacedetect.c:
+	* ext/opencv/gstmotioncells.c:
+	* gst/asfmux/gstasfmux.c:
+	* gst/autoconvert/gstautovideoconvert.c:
+	* gst/interlace/gstinterlace.c:
+	* gst/pnm/gstpnmenc.c:
+	* gst/rawparse/README:
+	* win32/common/config.h:
+	  rename some caps and elements in examples
+
+2012-09-02 20:17:14 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpeg4videoparse.h:
+	  mpeg4videoparse: use previously parsed visual object when parsing VOL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683254
+
+2012-09-02 20:19:17 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst-libs/gst/codecparsers/gstmpeg4parser.c:
+	  mpeg4parser: parse complexity estimation header in video object layer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683254
+
+2012-09-02 20:18:32 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst-libs/gst/codecparsers/gstmpeg4parser.c:
+	  mpeg4parser: fix some issues related to video object layer parsing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683254
+
+2012-09-02 18:21:16 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	  mpeg4videoparse: do not skip user data
+	  User data was skipped until now, so the user data was included when
+	  parsing the previous packet and in the config buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683254
+
+2012-09-14 02:59:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.94 ===
+
+2012-09-14 02:50:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 0.11.94
+
 2012-09-14 02:06:48 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:
