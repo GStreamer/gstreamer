@@ -167,6 +167,10 @@ dnl *** checks for header files ***
 dnl check if we have ANSI C header files
 AC_HEADER_STDC
 
+dnl check for GCC specific SSE headers
+dnl these are used by the speex resampler code
+AC_CHECK_HEADERS([xmmintrin.h emmintrin.h])
+
 ac_cppflags_save="$CPPFLAGS"
 CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
 AC_COMPILE_IFELSE([
