@@ -1,4 +1,13 @@
-This is GStreamer Ugly Plugins 1.0.0
+This is GStreamer Ugly Plugins 1.0.1
+
+Changes since 1.0.0:
+
+      * x264enc: encoder latency fixes
+      * mpeg2dec: ignore transient decoding errors
+
+Bugs fixed since 1.0.0:
+     
+      * 685107 : Unexpected error return from mpeg2dec
 
 New features in 1.0.0:
 

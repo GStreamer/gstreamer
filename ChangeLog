@@ -1,3 +1,186 @@
+=== release 1.0.1 ===
+
+2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.1
+
+2012-10-06 14:58:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-10-01 00:01:09 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Don't error out when there is no associated buffer
+	  In 0.10, having mpeg2dec occasionally tell us to output a frame that
+	  was never decoded was just ignored, so do the same in 1.0
+	  Fixes: #685107
+
+2012-09-29 12:13:00 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* REQUIREMENTS:
+	* gst/dvdsub/gstdvdsubdec.c:
+	  Purge mention of liboil and update REQUIREMENTS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673285
+
+2012-09-26 01:04:32 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: when setting fallback decoder latency, set valid min_latency
+	  Min. latency needs to be a valid time, so pass 0 as default
+	  value in the fallback case where we can't determine any latency,
+	  and avoid nasty criticals at runtime.
+
+2012-09-24 16:52:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.0 ===
+
+2012-09-24 14:32:12 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.0.0
+
+2012-09-22 16:08:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+=== release 0.11.99 ===
+
+2012-09-17 17:59:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.11.99
+
+2012-09-17 16:57:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	  docs: update docs
+
+2012-09-17 16:57:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* ext/amrnb/Makefile.am:
+	* ext/amrwbdec/Makefile.am:
+	* ext/lame/Makefile.am:
+	* ext/twolame/Makefile.am:
+	* tests/check/Makefile.am:
+	  Remove -DGST_USE_UNSTABLE_API
+
+2012-09-17 12:22:51 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	  Update docs
+
+2012-09-17 10:53:12 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/cdio/gstcdio.c:
+	  cdio: work around cdio headers re-defining VERSION and PACKAGE_VERSION
+	  Thanks guys. Fixes plugin version in gst-inspect-1.0 and docs
+	  introspection/updating for this plugin.
+
+2012-09-15 22:23:53 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-ugly.spec.in:
+	  Switch to F18 package naming
+
+2012-09-14 16:28:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/dvdread/demo-play:
+	* tests/check/elements/mpeg2dec.c:
+	  rename some caps and elements in examples
+
+2012-09-14 02:58:26 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.94 ===
+
+2012-09-14 02:49:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 0.11.94
+
 2012-09-14 01:48:50 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* docs/plugins/gst-plugins-ugly-plugins.hierarchy:
