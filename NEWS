@@ -1,4 +1,15 @@
-This is GStreamer Libav Plugins 1.0.0
+This is GStreamer Libav Plugins 1.0.1
+
+Changes since 1.0.0:
+
+      * avviddec: handle 0-sized buffers without crashing
+      * avviddec: don't set invalid latency
+
+Bugs fixed since 1.0.0:
+     
+      * 680464 : avdemux_*: not-negotiated error
+      * 680499 : avdemux_ape: will not play some ape files, not-negotiated error
+      * 685113 : avviddec: ignored audio decoders end up registered as video decoders
 
 New features in 1.0.0:
 

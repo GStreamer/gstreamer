@@ -1,3 +1,115 @@
+=== release 1.0.1 ===
+
+2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.1
+
+2012-10-06 15:00:42 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-09-30 16:25:29 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: also skip non-video encoders
+	  Doesn't actually make any difference at the moment, but
+	  seems the right thing to do.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685113
+
+2012-09-30 01:27:10 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: exclude non-video decoders
+	  Otherwise audio decoders "ignored", ie blacklisted, end up
+	  registered by avviddec as video decoders.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685113
+
+2012-09-28 16:53:49 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: fix not-negotiated errors
+	  Drop caps event received on the sink pad, instead of
+	  putting it in the list of cached events to be sent
+	  downstream later. We don't want to send our container
+	  caps downstream to our decoders, that'll give us
+	  nasty not-negotiated errors.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680464
+
+2012-09-27 12:20:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Correctly handle 0-sized buffers without crashing
+	  Might e.g. be valid for Theora.
+
+2012-09-25 18:29:08 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: don't try to set invalid latency
+	  Avoids warnings when we don't know the latency.
+
+2012-09-24 17:01:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development (bug fixing)
+
+=== release 1.0.0 ===
+
+2012-09-24 14:53:57 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.0
+
+2012-09-23 21:14:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/avdec_adpcm.c:
+	* tests/check/elements/avdemux_ape.c:
+	  tests: skip broken tests
+
+2012-09-22 16:10:07 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+=== release 0.11.99 ===
+
+2012-09-17 18:05:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 0.11.99
+
+2012-09-17 17:53:29 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	  Remove -DGST_USE_UNSTABLE_API
+
+2012-09-14 13:24:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: improve debug
+
+2012-09-14 02:59:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.94 ===
+
+2012-09-14 02:51:13 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 0.11.94
+
 2012-09-13 09:36:14 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
 
 	* ext/libav/gstavviddec.c:
