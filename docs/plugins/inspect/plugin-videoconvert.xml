@@ -3,15 +3,15 @@
   <description>Colorspace conversion</description>
   <filename>../../gst/videoconvert/.libs/libgstvideoconvert.so</filename>
   <basename>libgstvideoconvert.so</basename>
-  <version>1.0.0.1</version>
+  <version>1.0.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package></package>
-  <origin></origin>
+  <package>GStreamer Base Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>videoconvert</name>
-      <longname> Colorspace converter</longname>
+      <longname>Colorspace converter</longname>
       <class>Filter/Converter/Video</class>
       <description>Converts video from one colorspace to another</description>
       <author>GStreamer maintainers &lt;gstreamer-devel@lists.sourceforge.net&gt;</author>

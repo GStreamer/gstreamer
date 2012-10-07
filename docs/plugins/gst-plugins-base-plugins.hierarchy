@@ -91,6 +91,7 @@ GObject
           GstOgmTextParse
           GstOgmVideoParse
         GstSsaParse
+        GstStreamSynchronizer
         GstSubParse
         GstTextRender
         GstTheoraParse
@@ -101,6 +102,9 @@ GObject
         GstVorbisParse
           GstVorbisTag
       GstPad
+        GstProxyPad
+          GstGhostPad
+            GstDecodePad
       GstPadTemplate
       GstPlugin
       GstPluginFeature

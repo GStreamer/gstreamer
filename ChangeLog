@@ -1,3 +1,679 @@
+=== release 1.0.1 ===
+
+2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.1
+
+2012-10-07 13:34:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/libs/struct_i386.h:
+	  tests: fix ABI struct headers for x86
+	  Not caused by anything we changed recently as
+	  far as I can tell.
+
+2012-10-07 13:13:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_ppc32.h:
+	  tests: add ABI structs header for 32-bit powerpc
+
+2012-10-06 15:32:55 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/adder.c:
+	  tests: skip adder test_live_seeking test while it's unreliable
+	  Was an issue in 0.10 as well.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=617418
+
+2012-10-06 14:56:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-10-05 10:59:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/icles/test-effect-switch.c:
+	  tests: fix test-effect-switch
+	  Make it into an example of how to dynamically change an element
+	  in a playing pipeline using pad blocking.
+
+2012-10-04 13:40:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: make stop() vfunc also optional
+	  Just change default value, since we also don't want to fail
+	  if we want to deactivate and aren't active or want to activate
+	  and are already active.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685490
+
+2012-10-04 14:05:13 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: don't fail if the start vfunc is not implemented
+	  Fix behaviour to match documentation and decoder class behaviour.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685490
+
+2012-10-04 12:15:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/icles/playbin-text.c:
+	  tests: don't stop on just warnings
+
+2012-10-04 11:12:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/icles/test-scale.c:
+	  tests: fix scale test for 1.0
+	  It needs a basetransform patch that makes it prefer the order of
+	  the caps property instead of passthrough.
+
+2012-10-03 10:45:26 -0700  Michael Smith <msmith@rdio.com>
+
+	  Merge branch 'master' of ssh://git.freedesktop.org/git/gstreamer/gst-plugins-base
+
+2012-10-03 10:44:59 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst-libs/gst/audio/gstaudiometa.c:
+	* gst-libs/gst/video/gstvideometa.c:
+	* gst-libs/gst/video/video-overlay-composition.c:
+	* sys/ximage/ximagepool.c:
+	* sys/xvimage/xvimagepool.c:
+	  meta registration: use g_once functions to register these threadsafely.
+
+2012-10-03 11:37:33 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	* gst/playback/gstplaysink.c:
+	  playback: class_ref() some types so we can create multiple playback elements at the same time
+	  Should fix "cannot register existing type `GstPlaybinSelectorPad'" warnings
+	  and subsequent errors when creating multiple players at the same time.
+	  Conflicts:
+	  gst/playback/gststreamselector.c
+
+2012-10-02 09:29:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Fix unused variable compiler warning if debugging is disabled
+
+2012-10-01 21:31:39 +0200  Sebastian Pölsterl <sebp@k-d-w.org>
+
+	* gst-libs/gst/rtsp/gstrtspurl.c:
+	  rtsp: mark url argument of gst_rtsp_url_parse() as out arg
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685242
+
+2012-09-28 20:07:43 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Also use the object lock to protect the output_state
+	  Hold both the stream and the object lock to modify the output_state,
+	  this way it can be safely modified while hold either one or the other.
+	  Also, only hold the object lock in the query
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684832
+
+2012-10-01 11:58:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/draft-subtitle-overlays.txt:
+	* docs/design/draft-va.txt:
+	* docs/design/part-playbin.txt:
+	  docs: update for 1.0
+
+2012-09-30 00:31:21 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/encoding/gstencodebin.c:
+	  encodebin: muxer sink pad is not always a request pad
+	  GstId3Mux sink pad is an always (static) pad. Thus releasing it
+	  as if a request pad triggers:
+	  (sound-juicer:11826): GStreamer-CRITICAL **:
+	  gst_element_release_request_pad: assertion `GST_PAD_PAD_TEMPLATE (pad)
+	  == NULL || GST_PAD_TEMPLATE_PRESENCE (GST_PAD_PAD_TEMPLATE (pad)) ==
+	  GST_PAD_REQUEST' failed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685110
+
+2012-09-29 21:42:46 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: fix max-latency property getter
+	  Was returning the min-latency value.
+
+2012-09-29 11:46:56 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/audioconvert/gstchannelmix.c:
+	* gst/playback/gstplaysink.c:
+	* tests/check/elements/ffmpegcolorspace.c:
+	* tests/check/elements/videotestsrc.c:
+	  Purge all references to liboil
+	  And remove unused ffmpegcolorspace tests in the process.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673285
+
+2012-09-28 13:59:24 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideoencoder.c:
+	* gst-libs/gst/video/gstvideoutils.h:
+	  video{de,en}coder: fix missing timestamp estimating
+	  ... by having some more timestamp tracking in a private frame field.
+	  Not doing so would lead to (a.o.) losing the needed minimum timestamp in
+	  an earlier sent frame.
+
+2012-09-27 12:40:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  basetextoverlay: Correctly handle empty text buffers
+
+2012-09-27 11:31:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: use oldest frame DTS to estimate missing outgoing PTS
+
+2012-09-26 16:31:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: use oldest frame PTS to estimate missing outgoing DTS
+
+2012-09-26 16:22:56 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: incoming buffer DTS is irrelevant
+	  ... and bogus anyway if PTS != DTS
+
+2012-09-26 13:22:09 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/icles/playbin-text.c:
+	  test: fix for new-sample signature
+	  The new-sample signal expects a GstFlowReturn as a result.
+	  Add support for external subtitles as well.
+
+2012-09-25 17:19:15 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: clip input buffers to current input segment
+	  ... rather than to output segment, which will only be set
+	  to current input segment if some output is produced
+	  (coming from non-clipped input).
+	  Also fixup debug message.
+
+2012-09-25 13:16:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videoconvert/gstvideoconvert.c:
+	  videoconvert: Set correct plugin metadata
+
+2012-09-24 16:38:35 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.0 ===
+
+2012-09-24 13:35:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.0
+
+2012-09-24 10:16:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: don't take STREAM_LOCK on upstream events
+	  Don't try to take STREAM_LOCK on upstream events such as QOS.
+	  Protect qos-related variables with object lock instead. Fixes
+	  possible deadlock when shutting down in certain situations.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684658
+
+2012-08-29 16:02:11 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	  videotestsrc: keep track of the correct running time after renegotiations
+	  Need to store the old running time and frame numbers when renegotiating and
+	  start from 0 again when a new caps is set, preventing that framerate changes
+	  cause timestamping issues.
+	  For example, if a stream pushed 10 buffers on framerate=2/1, its
+	  running time will be 5s. If a new framerate of 1/1 is set, it would
+	  make the running time go to 10s as it would count those 10 buffers
+	  as being sent on this new framerate.
+	  Fixes camerbin unit test.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682973
+
+2012-09-23 13:31:17 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/adder/gstadder.c:
+	* gst/adder/gstadder.h:
+	  adder: send stream-start event, and send caps event after stream-start
+	  Delay sending of caps event so that it is sent only after
+	  the stream-start event.
+
+2012-09-23 13:27:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/ogg/gstoggmux.c:
+	  oggmux: send stream-start event
+
+2012-09-22 16:07:35 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+2012-09-21 16:10:27 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggmux.h:
+	  oggmux: fix up previous commit
+	  Was missing the header file change.
+
+2012-09-21 15:58:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/ogg/gstoggmux.c:
+	  oggmux: send a segment event at the beginning
+
+2012-09-20 10:03:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Update comments about forwarding/not-forwarding serialized events immediately
+
+2012-09-19 21:16:01 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Protect all accesses to priv->output_frame with the stream lock
+	  Fixes segfault as queries/events can happen after a reset
+
+2012-09-19 17:29:01 +0200  Andreas Frisch <fraxinas@opendreambox.org>
+
+	* tests/icles/playbin-text.c:
+	  tests: port playbin-text example to 1.0 api
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684084
+
+2012-09-19 08:52:45 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/alsa/gstalsasink.c:
+	* gst-libs/gst/audio/gstaudioiec61937.c:
+	* gst-libs/gst/audio/gstaudioiec61937.h:
+	  audio: Explicitly specify endianness for IEC 61937 payloading
+	  This is required since some systems (DirectSound and OS X) manage the
+	  final byte order themselves.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678021
+
+2012-09-18 13:16:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/audioresample/gstaudioresample.c:
+	  audioresample: mark semi-unused variable
+	  ../../../gst-plugins-base/gst/audioresample/gstaudioresample.c: In function 'gst_audio_resample_dump_drain':
+	  ../../../gst-plugins-base/gst/audioresample/gstaudioresample.c:729:9: warning: variable 'in_len' set but not used [-Wunused-but-set-variable]
+
+=== release 0.11.99 ===
+
+2012-09-17 17:57:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 0.11.99
+
+2012-09-17 17:57:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	  docs: update
+
+2012-09-17 16:19:37 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/examples/snapshot/snapshot.c:
+	  examples: make snapshot example actually compile and work
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684063
+
+2012-09-17 16:03:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/fft/Makefile.am:
+	* gst-libs/gst/pbutils/Makefile.am:
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/sdp/Makefile.am:
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/video/Makefile.am:
+	  Remove -DGST_USE_UNSTABLE_API
+
+2012-09-14 02:18:52 +0900  Javier Jardón <jjardon@gnome.org>
+
+	* tests/examples/snapshot/snapshot.c:
+	  tests/examples/snapshot/snapshot.c: get caps from the sample
+	  pull-preroll signal returns a GstSample, not a GstBuffer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684063
+
+2012-09-17 13:18:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/ogg/gstoggmux.c:
+	* ext/pango/gstbasetextoverlay.c:
+	* gst/playback/gstsubtitleoverlay.c:
+	  gst: Update for link/unlink function API change
+
+2012-09-17 12:07:30 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-base-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-base-plugins.signals:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	  docs: update docs and fix build a bit more
+	  Don't try to include plugin that doesn't exist any longer
+	  (merged into the playback plugin).
+
+2012-09-15 22:08:30 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-base.spec.in:
+	  Update spec file with latest changes and switch to F18 package naming
+
+2012-09-15 18:57:09 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstsubtitleoverlay.c:
+	* tests/examples/encoding/gstcapslist.c:
+	* tests/examples/seek/jsseek.c:
+	  use gst_element_factory_get_metadata to replace obsolete API
+
+2012-09-14 17:53:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggmux.c:
+	* ext/ogg/gstoggstream.c:
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisenc.c:
+	* ext/vorbis/gstvorbistag.c:
+	* gst-libs/gst/audio/gstaudiocdsrc.c:
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	* gst-libs/gst/pbutils/gstdiscoverer-types.c:
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	* gst-libs/gst/riff/riff-read.c:
+	* gst-libs/gst/tag/gstexiftag.c:
+	* gst-libs/gst/tag/gsttagdemux.c:
+	* gst-libs/gst/tag/gsttagmux.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* gst-libs/gst/tag/id3v2.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* tests/check/elements/vorbisdec.c:
+	* tests/check/elements/vorbistag.c:
+	* tests/check/libs/audiocdsrc.c:
+	* tests/check/libs/pbutils.c:
+	* tests/check/libs/tag.c:
+	* tests/check/libs/xmpwriter.c:
+	  replace gst_tag_list_free with gst_tag_list_unref
+
+2012-09-14 17:02:53 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/theora/gsttheoradec.c:
+	* ext/theora/gsttheoraenc.c:
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsrc.c:
+	* tests/check/elements/decodebin.c:
+	* tests/check/elements/decodebin2.c:
+	* tests/check/elements/playbin-compressed.c:
+	* tests/check/elements/playbin.c:
+	* tests/check/elements/videoscale.c:
+	* tests/check/libs/audiocdsrc.c:
+	  replace gst_element_class_set_details_simple with gst_element_class_set_metadata
+
+2012-09-14 16:06:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiobasesink.c:
+	* gst-libs/gst/audio/gstaudiobasesrc.c:
+	  audio: improve property description
+	  Improve the description of the latency-time and buffer-time properties in the
+	  audio sink and source.
+
+2012-09-14 14:53:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Don't output an (unreffed) buffer in error cases
+
+2012-09-14 13:39:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/convertframe.c:
+	* tests/examples/app/appsink-src.c:
+	  fix for appsink GstFlowReturn
+
+2012-09-14 13:31:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/app/gstappsink.c:
+	* gst-libs/gst/app/gstappsink.h:
+	  appsink: add GstFlowReturn from signal handler
+	  Expect a GstFlowReturn from the signal handler, just like from the callback.
+	  Also use the return value.
+
+2012-09-14 13:19:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/design-decodebin.txt:
+	* docs/design/design-encoding.txt:
+	* docs/design/draft-subtitle-overlays.txt:
+	* gst/videoscale/README:
+	* tests/examples/app/appsink-src.c:
+	* tests/examples/audio/audiomix.c:
+	* tests/examples/dynamic/codec-select.c:
+	* tests/examples/dynamic/sprinkle.c:
+	* tests/examples/dynamic/sprinkle2.c:
+	* tests/examples/dynamic/sprinkle3.c:
+	* tests/examples/encoding/gstcapslist.c:
+	* tests/examples/seek/jsseek.c:
+	* tests/examples/snapshot/snapshot.c:
+	* tests/icles/input-selector-test.c:
+	* tests/icles/test-scale.c:
+	* tests/icles/test-textoverlay.c:
+	  fix caps
+
+2012-09-12 14:11:28 +0200  Andreas Frisch <fraxinas@opendreambox.org>
+
+	* gst/playback/gstsubtitleoverlay.c:
+	  playbin: subtitleoverlay: don't segfault in incorrectly init'ed plugins
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683865
+
+2012-09-14 02:57:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.94 ===
+
+2012-09-14 02:47:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* gst-libs/gst/audio/gstaudiopack-dist.c:
+	* gst-libs/gst/video/video-orc-dist.c:
+	* gst-plugins-base.doap:
+	* gst/adder/gstadderorc-dist.c:
+	* gst/audioconvert/gstaudioconvertorc-dist.c:
+	* gst/videoconvert/gstvideoconvertorc-dist.c:
+	* gst/videoscale/gstvideoscaleorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.c:
+	* gst/volume/gstvolumeorc-dist.c:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/video-enumtypes.c:
+	  Release 0.11.94
+
+2012-09-14 01:34:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	  docs: update docs
+
+2012-09-14 01:33:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translations
+
 2012-09-14 00:16:23 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* gst/playback/gststreamsynchronizer.c:

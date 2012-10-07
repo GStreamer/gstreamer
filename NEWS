@@ -1,4 +1,19 @@
-This is GStreamer Base Plugins 1.0.0
+This is GStreamer Base Plugins 1.0.1
+
+Changes since 1.0.0:
+    
+      * videodecoder and -encoder timestamp handling improvements
+      * thread-safey fixes for GstMeta registrations and GstVideoDecoder
+      * bug fixes
+
+Bugs fixed since 1.0.0:
+     
+      * 684424 : playbin: external subtitles break playback
+      * 684832 : videodecoder: Takes stream lock in query function
+      * 685110 : encodebin fails to release mux request sink pad for GstId3Mux as it is a static one for this mux
+      * 685242 : rtsp: mark url argument of gst_rtsp_url_parse as out
+      * 685332 : GstMeta registry race
+      * 685490 : audioencoder: don't require base class to implement to start vfunc
 
 New features in 1.0.0:
 
