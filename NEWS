@@ -1,4 +1,25 @@
-This is GStreamer 1.0.0
+This is GStreamer 1.0.1
+
+Changes since 1.0.0:
+
+      * Capsfilter prefers filter caps over passthrough now
+      * Application Development Manual, Plugin Writer's Guide and other documentation updated and extended for 1.0
+      * Bug fixes 
+
+Bugs fixed since 1.0.0:
+
+      * 680862 : identity with single-segment=true gives buffer.pts of CLOCK_TIME_NONE
+      * 684538 : baseparse: no timestamps after seeking in mp3 or aac
+      * 684755 : typo - whithin > within
+      * 684765 : Plugins without a klass in the metadata crashes autoaudiosink
+      * 684809 : proxypad don't hold a ref to their internal pad while streaming through it
+      * 684970 : Don't register printf extension for %p when glib is not using system printf
+      * 684981 : Pipeline hangs on PREROLLING negotiating caps
+      * 685072 : memory: map(READ)/unmap clears the READONLY status
+
+API additions since 1.0.0:
+
+      * gst_base_transform_set_prefer_passthrough()
 
 New features in 1.0.0:
 

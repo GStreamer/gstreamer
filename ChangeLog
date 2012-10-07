@@ -1,3 +1,919 @@
+=== release 1.0.1 ===
+
+2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.1
+
+2012-10-07 00:15:49 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/gst/struct_i386.h:
+	* tests/check/libs/struct_i386.h:
+	  tests: update struct_i386.h for ABI checks
+	  Fixes make check on 32-bit x86.
+
+2012-10-06 17:26:21 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/gst/struct_ppc32.h:
+	* tests/check/libs/struct_ppc32.h:
+	  tests: update struct_ppc32.h for ABI checks
+	  Fixes make check on 32-bit PowerPC.
+
+2012-10-06 14:55:35 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-10-06 12:08:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/examples/manual/.gitignore:
+	  examples: .gitignore more binaries from the manual
+
+2012-10-05 16:04:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/Makefile.am:
+	* docs/design/part-block.txt:
+	* docs/design/part-probes.txt:
+	  docs: remove obsolete part-block document
+	  Merge the part-block document into part-probes
+
+2012-10-05 09:42:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: resend dropped events
+	  If we try to push sticky events but a probe dropped them, we don't mark
+	  the event as received and mark the pad as PENDING_EVENTS. This ensures
+	  that we resend the event the next time. For this we need to let the
+	  custom flow return from the probe trickle up to
+	  gst_pad_push_event_unchecked() so that we can differentiate between
+	  OK and DROPPED probe returns.
+
+2012-10-05 07:14:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: don't store sticky events on flushing/EOS pads
+	  Don't store sticky events on flushing or EOS pads. This was done
+	  correctly for source pads but not for sink pads.
+
+2012-10-04 11:24:09 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasetransform.c:
+	* win32/common/libgstbase.def:
+	  docs: add Since markers for new API and add it to docs and .def file
+
+2012-10-04 11:50:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* tests/examples/manual/Makefile.am:
+	  manual: add dynamic capsfilter example
+
+2012-10-04 11:18:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: don't prefer passthrough
+	  Basetransform should not try to negotiate in passthrough mode but
+	  respect the order of what we return in the transform_caps method.
+	  A typical case is that you specify some specific new caps in the
+	  caps property but also allow the current caps to pass.
+
+2012-10-04 11:15:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	* libs/gst/base/gstbasetransform.h:
+	  basetrans: add an option to prefer passthrough
+	  Basetransform attempts to do passthrough mode regardless of the order of
+	  the transform_caps method. Add a method to disable this.
+	  This is needed for elements like capsfilter that want to transform caps
+	  based on the order of the caps property.
+
+2012-10-04 10:01:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetrans: improve some comments
+
+2012-10-03 17:17:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: talk some more about dynamic pipelines
+
+2012-10-03 13:49:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstmeta.c:
+	  meta: don't put essential logic in g_return_val_*
+
+2012-10-03 13:45:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-allocation.xml:
+	* libs/gst/net/gstnetaddressmeta.c:
+	* tests/check/gst/gstmeta.c:
+	  meta: do metadata registration threadsafe
+	  We need to use g_once to register the metadata implementations
+	  only once.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=685332
+
+2012-10-03 13:35:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstmeta.c:
+	  meta: handle multiple implementation registration
+	  First check that we can actually register the implementation before
+	  making a GstMetaInfo. If we can't register we would otherwise end
+	  up with an undefined type and an invalid GstMetaInfo.
+	  It's possible that type registration fails because another metadata
+	  with the same implementation name was already registered.
+
+2012-10-03 13:12:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: use CDATA for code blocks
+	  then we don't have to escape special token anymore.
+
+2012-10-03 13:09:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* tests/examples/manual/Makefile.am:
+	  manual: add partial preroll example with probes
+
+2012-10-03 10:53:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: add more stuff about probes
+
+2012-10-02 17:23:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: start talking about dynamic pipeline changes
+
+2012-10-02 16:47:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  manual: move section around
+
+2012-10-02 16:44:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* tests/examples/manual/Makefile.am:
+	  pwg: add appsink docs
+
+2012-10-02 16:15:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* tests/examples/manual/Makefile.am:
+	  pwg: rewite data-access chapter
+	  Rewrite the data-access chapter so that we talk about appsrc instead
+	  of the fakesrc hacks.
+
+2012-10-02 13:22:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/draft-klass.txt:
+	* docs/manual/advanced-dataaccess.xml:
+	* docs/manual/advanced-metadata.xml:
+	* docs/manual/appendix-integration.xml:
+	* gst/gstpreset.c:
+	* po/README:
+	* tools/gst-plot-timeline.py:
+	  docs: some 0.10 -> 1.0 changes
+
+2012-10-02 13:12:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-allocation.xml:
+	  pwg: add allocation query example
+
+2012-10-02 12:49:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-allocation.xml:
+	  pwg: add bufferpool docs
+
+2012-10-02 11:34:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/appendix-programs.xml:
+	* docs/manual/manual.xml:
+	* docs/pwg/advanced-allocation.xml:
+	  pwg: flesh out allocation docs
+	  Add more examples.
+	  Add example for implementing new metadata.
+	  Add programs to the docs (again?), it seems to contain useful info.
+
+2012-10-01 16:59:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/titlepage.xml:
+	  pwg: add new author
+
+2012-10-01 16:55:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-allocation.xml:
+	  pwg: add allocation docs
+
+2012-10-01 16:46:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-buffer.txt:
+	* docs/design/part-bufferpool.txt:
+	* docs/design/part-meta.txt:
+	  docs: update design docs
+
+2012-10-01 13:28:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-bufferpool.txt:
+	* docs/design/part-memory.txt:
+	* docs/pwg/advanced-allocation.xml:
+	* docs/pwg/pwg.xml:
+	  docs: more docs fixes
+	  Fix allocator design doc
+	  Add beginning of allocation chapter in the pwg
+
+2012-10-01 11:47:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/appendix-checklist.xml:
+	* docs/pwg/appendix-porting.xml:
+	* docs/pwg/other-manager.xml:
+	* docs/pwg/other-ntoone.xml:
+	  pwg: final cleanups for 1.0
+
+2012-10-01 11:24:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-events.xml:
+	* docs/pwg/other-base.xml:
+	  pwg: fix events and base classes
+
+2012-10-01 10:40:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-tagging.xml:
+	  pwg: fixup tag docs
+
+2012-10-01 09:48:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-interfaces.xml:
+	  pwg: patch up the section about interfaces
+
+2012-09-30 04:05:36 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Fix seamless segment function
+	  The 3rd parameter of gst_base_src_new_seamless_segment in
+	  0.10 is the time associated with the start of the new segment,
+	  not the position in the new segment. Fix the name of the parameter,
+	  the docs, and the implementation to match the needs of the only
+	  extant consumer: DVD playback.
+
+2012-09-29 14:35:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstvalue.c:
+	* tests/check/gst/gstcaps.c:
+	  value: avoid duplicates when intersecting lists
+	  Fixes negotiation taking a ridiculous amount of
+	  time (multiple 10s of seconds on a core2) when
+	  there are duplicate entries in lists.
+	  Could have a negative performance impact on other
+	  scenarios because we now have to iterate the
+	  dest list to avoid duplicates, but we don't
+	  have a lot of lists any more these days, and
+	  they tend to be small anyway. The negatives
+	  are hopefully countered by the positive effects
+	  of reducing the list length early on in the
+	  process. And in any case, it's the right thing
+	  to do.
+	  Based on patch by Andre Moreira Magalhaes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684981
+
+2012-09-29 00:27:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/pwg/building-boiler.xml:
+	  pwg: minor update
+	  https://bugzilla.gnome.org/show_bug.cgi?id=621121
+
+2012-09-28 23:53:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/faq/dependencies.xml:
+	  faq: add missing </para> tag
+
+2012-09-28 15:17:27 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstminiobject.c:
+	* tests/check/gst/gstmemory.c:
+	  miniobject: Always reject WRITE locks on READONLY miniobjects
+	  Verify that mapping a read-only memory as read doesnt make it writable
+
+2012-09-28 20:38:20 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/faq/dependencies.xml:
+	* docs/random/autotools:
+	* docs/random/moving-plugins:
+	  docs: purge all mention of liboil, update FAQ
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673285
+
+2012-09-28 16:03:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-clock.xml:
+	* docs/pwg/advanced-dparams.xml:
+	* docs/pwg/advanced-interfaces.xml:
+	  pwg: update for 1.0
+	  Rewrite clock part.
+	  start on interfaces
+
+2012-09-28 13:25:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-request.xml:
+	  pwg: rework dynamic pads docs
+
+2012-09-28 13:25:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-scheduling.xml:
+	  pwg: rework scheduling docs
+
+2012-09-28 13:24:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/building-props.xml:
+	* docs/pwg/other-base.xml:
+	  pwg: remove some GST_BOILERPLATE
+
+2012-09-28 11:18:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-activation.txt:
+	  docs: update activation design docs
+
+2012-09-28 10:41:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	  pad: fix activate docs
+
+2012-09-28 10:04:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: fix more negotiation for 1.0
+
+2012-09-27 16:59:04 +0200  Olivier Blin <olivier.blin@softathome.com>
+
+	* gst/gstinfo.c:
+	  info: do not register printf extension for %p
+	  This happened when glib was not using system printf, and caused the
+	  internal gstreamer printf extensions to be used for all %p printfs,
+	  causing crashes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684970
+
+2012-09-27 17:21:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: fix some negotiation to 1.0
+
+2012-09-27 14:42:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/building-props.xml:
+	* docs/pwg/building-state.xml:
+	* docs/pwg/building-testapp.xml:
+	  pwg: more updates for 1.0
+
+2012-09-27 13:57:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/building-chainfn.xml:
+	* docs/pwg/building-eventfn.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/pwg.xml:
+	  pwg: more updates for 1.0
+
+2012-09-27 11:53:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/building-boiler.xml:
+	  pwg: update boiler to 1.0
+
+2012-09-27 11:06:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstghostpad.c:
+	  ghostpad: also ref the internal pad for activate functions
+	  Also take a ref to the internal pad in the activate functions
+
+2012-09-24 18:26:16 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstghostpad.c:
+	  proxypad: Hold a reference to the internal pad while pushing through it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684809
+
+2012-09-25 14:44:54 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/gst/gstghostpad.c:
+	  tests: Test the case where ghost pads are removed while streaming
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684809
+
+2012-09-27 09:44:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/libsabi.c:
+	* tests/check/libs/struct_arm.h:
+	* tests/check/libs/struct_hppa.h:
+	* tests/check/libs/struct_i386.h:
+	* tests/check/libs/struct_ppc32.h:
+	* tests/check/libs/struct_ppc64.h:
+	* tests/check/libs/struct_sparc.h:
+	* tests/check/libs/struct_x86_64.h:
+	  tests: enable library abi checks
+
+2012-09-26 23:32:35 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	  docs: fix up basesrc/basesink docs formatting
+
+2012-09-26 17:08:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/gst/struct_arm.h:
+	* tests/check/gst/struct_hppa.h:
+	* tests/check/gst/struct_i386.h:
+	* tests/check/gst/struct_ppc32.h:
+	* tests/check/gst/struct_ppc64.h:
+	* tests/check/gst/struct_sparc.h:
+	* tests/check/gst/struct_x86_64.h:
+	  tests: add abi checks
+	  Enable abi checks again.
+	  Fix abi sizes for x86_64, copy the file to other archs.
+
+2012-09-26 16:26:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	  update docs for 1.0 API
+
+2012-09-26 14:15:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/gsturi.c:
+	  uri: use proper 'transfer floating' annotation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=664099
+
+2012-09-26 13:19:13 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gsttypefindelement.c:
+	* plugins/elements/gsttypefindelement.h:
+	  typefind: send STREAM-START event
+	  Send a STREAM_START event when we are operating in pull mode.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=684424
+
+2012-09-26 10:55:28 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/gstsegment.h:
+	  segment: mark GstSegmentFlags as flags rather than enum
+	  ... which really makes a difference when trying to serialize
+	  a flags value which is a combination of flags, which is hard
+	  to do as an enum type.
+
+2012-09-26 10:54:06 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* plugins/elements/gstidentity.c:
+	  identity: retimestamp both pts and dts when doing so
+
+2012-09-26 15:01:42 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Move some run of the mill debug statements to LOG level
+
+2012-09-26 14:23:52 +1000  Jan Schmidt <thaytan@noraisin.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Output timestamps after a seek.
+	  Reinitialise the DTS after a seek so as to continue
+	  generating timestamps when baseparse is not downstream
+	  of a demuxer.
+	  Fixes: #684538
+
+2012-09-25 17:06:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/appendix-programs.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/pwg/advanced-types.xml:
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-pads.xml:
+	* docs/pwg/other-ntoone.xml:
+	* tools/gst-launch.1.in:
+	* tools/gst-typefind.1.in:
+	  docs: updates
+	  MIME-type -> Media type
+	  Fix some old gst-inspect output
+
+2012-09-25 16:53:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/intro-basics.xml:
+	* docs/pwg/intro-preface.xml:
+	  pwg: update for 1.0 API
+
+2012-09-25 15:11:33 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/gst/gstreamer-sections.txt:
+	  docs: add section for metadata
+
+2012-09-25 13:09:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstelement.c:
+	* gst/gstelementfactory.c:
+	  elementfactory: Fail if no valid element factory metadata is set
+
+2012-09-25 13:09:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstplugin.c:
+	  plugin: Fail if no valid plugin metadata is set
+
+2012-09-25 15:06:43 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* plugins/elements/gstidentity.c:
+	  identity: also track and store segment info in single segment mode
+
+2012-09-25 14:40:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/advanced-dataaccess.xml:
+	* docs/manual/advanced-interfaces.xml:
+	* docs/manual/advanced-threads.xml:
+	* docs/manual/appendix-checklist.xml:
+	* docs/manual/appendix-integration.xml:
+	* docs/manual/appendix-porting.xml:
+	* docs/manual/basics-bins.xml:
+	* docs/manual/basics-bus.xml:
+	* docs/manual/basics-data.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-helloworld.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/intro-basics.xml:
+	* docs/manual/manual.xml:
+	* docs/random/porting-to-1.0.txt:
+	* tests/examples/manual/Makefile.am:
+	  manual: fix up the manual
+	  MIME-type -> media types
+	  Fix up the manual in various places with the 1.0 way of doing things
+	  such as probes, static elements, scheduling, ...
+	  Add porting from 0.10 to 1.0 chapter.
+	  Add probe example to build.
+	  Remove some docs for remove components such as GstMixer and
+	  GstPropertyProbe, XML...
+
+2012-09-24 16:50:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/intro-gstreamer.xml:
+	  docs: gst-python is no more
+	  gst-python is no more and gst-libav is one of the main modules that
+	  we release.
+
+2012-09-24 16:31:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  docs: fix basesink docs
+
+2012-09-24 16:25:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/faq/getting.xml:
+	* docs/faq/troubleshooting.xml:
+	* docs/faq/using.xml:
+	  docs: update FAQ
+	  Change versions.
+	  Use tools with version prefix.
+
+2012-09-25 13:15:14 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update translations for typo fix
+
+2012-09-25 13:14:53 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gsttaglist.c:
+	  taglist: fix typo in translated string
+	  Spotted by Chris Leonard.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684755
+
+2012-09-25 09:27:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpluginfeature.c:
+	  pluginfeature: Remove 0.11.9X->1.0.0 version mangling
+
+2012-09-25 01:02:03 +0100  Josep Torra Valles <n770galaxy@gmail.com>
+
+	* tests/benchmarks/complexity.c:
+	* tests/benchmarks/gstpollstress.c:
+	  benchmarks: printf format fixes to make intel compiler happy
+	  https://bugzilla.gnome.org/show_bug.cgi?id=552657
+
+2012-09-25 00:55:59 +0100  Josep Torra Valles <n770galaxy@gmail.com>
+
+	* libs/gst/base/gsttypefindhelper.c:
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesrc.c:
+	* plugins/elements/gstmultiqueue.c:
+	* plugins/elements/gsttee.c:
+	* tools/gst-launch.c:
+	* tools/tools.h:
+	  Make intel compiler happier
+	  https://bugzilla.gnome.org/show_bug.cgi?id=552657
+
+2012-09-24 16:31:54 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.0 ===
+
+2012-09-24 12:19:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	  Release 1.0.0
+
+2012-09-24 00:39:26 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/random/porting-to-1.0.txt:
+	  docs: update 0.11 references in porting guide
+
+2012-09-24 00:37:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/random/porting-to-0.11.txt:
+	* docs/random/porting-to-1.0.txt:
+	  docs: rename porting-to-0.11.txt to porting-to-1.0.txt
+
+2012-09-23 19:56:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/check/gstcheck.h:
+	  check: fix FIXME printing for tcase_skip_broken_test()
+
+2012-09-23 17:30:50 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/random/release:
+	  docs: update release doc
+	  Create tags for releases without the ugly RELEASE- prefix.
+
+2012-09-23 12:42:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: don't forward random stream-start event
+	  It's not right, and we don't know what extra properties
+	  that event might have set in future (e.g. sparseness).
+	  This change means collectpad users need to create their
+	  own stream-start event now. We could add a utility
+	  function that creates a stream-start event based on
+	  the input stream-start events.
+
+2012-09-22 16:07:15 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+2012-09-21 21:13:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/manual/advanced-dparams.xml:
+	  manual: update controller documentation
+
+2012-09-21 21:13:13 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/gstobject.c:
+	  object: update controller documentation
+
+2012-09-18 15:22:03 +0200  Bastian Winkler <buz@netbuz.org>
+
+	* tools/gst-launch.1.in:
+	  man: Fix syntax for value lists in caps strings
+	  Value lists use curly brackets instead of parentheses
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684293
+
+2012-09-20 14:48:17 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstpad.c:
+	* tests/check/gst/gstpad.c:
+	  pad: Remove pad probes only once
+	  Also add test to make sure that if a pad probe is removed while it's
+	  callback is running, the cleanup_hook isn't called again if it
+	  returns GST_PAD_PROBE_REMOVE
+
+2012-09-19 15:01:46 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* win32/common/libgstreamer.def:
+	  pad: Add functions to safely access GstProbeInfo data pointer
+	  This is so that introspection based bindings can access it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684402
+
+2012-09-19 23:25:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/manual/basics-bins.xml:
+	  docs: remove reference to 0.8 GstBin API from manual
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684048
+
+2012-09-19 15:14:35 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* plugins/elements/gstidentity.c:
+	  identity: transform GAP event in single segment mode
+
+2012-09-19 09:44:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/base/gstcollectpads.c:
+	  docs: collectpads doc fixes
+
+2012-09-18 21:49:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: check acquire result value
+	  Check the result value from _buffer_pool_acquire() and return the
+	  value when allocation failed.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=684285
+
+2012-09-18 12:14:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Fix refcount bug by unreffing the correct variable
+
+=== release 0.11.99 ===
+
+2012-09-17 17:56:44 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	  Release 0.11.99
+
+2012-09-17 13:35:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* libs/gst/base/Makefile.am:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/net/Makefile.am:
+	* win32/vs10/Common.props:
+	  Remove GST_USE_UNSTABLE_API guard and defines
+
+2012-09-17 13:09:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	* gst/gstpad.h:
+	* tests/check/gst/gstghostpad.c:
+	  pad: Add parent parameter to the link and unlink functions
+	  Fixes part of bug #683995.
+
+2012-09-16 23:20:46 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gststructure.c:
+	* gst/gstvalue.c:
+	* tests/check/gst/gsttag.c:
+	  sample: add serialisation/deserialisation functions for GstSample
+	  Since these things are inside taglists now, it would be good to be
+	  able to print them and deserialise them.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681322
+
+2012-09-15 21:56:07 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gstreamer.spec.in:
+	  Switch to F18 naming of the package
+
+2012-09-15 18:43:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/basics-elements.xml:
+	* tools/gst-inspect.c:
+	  use gst_element_factory_get_metadata to replace obsolete API
+
+2012-09-14 17:52:14 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* docs/manual/advanced-metadata.xml:
+	* docs/manual/basics-bus.xml:
+	  replace gst_tag_list_free with gst_tag_list_unref
+
+2012-09-14 17:00:23 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* tests/check/gst/gstcontroller.c:
+	* tests/check/gst/gstpreset.c:
+	* tests/check/libs/controller.c:
+	* tests/check/libs/test_transform.c:
+	* tests/check/pipelines/parse-launch.c:
+	* tests/examples/controller/control-sources.c:
+	  replace gst_element_class_set_details_simple with gst_element_class_set_metadata
+
+2012-09-06 16:32:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetrans: whitespace fix
+
+2012-09-14 14:08:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/gstreamer-plugins-docs.sgml:
+	  docs: indexers are no more
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684018
+
+2012-09-14 13:34:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/examples/stepping/framestep1.c:
+	  tests: fix for appsink return value addition
+
+2012-09-14 02:54:52 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.94 ===
+
+2012-09-14 02:46:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/gstreamer-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	  Release 0.11.94
+
+2012-09-14 01:28:46 +0100  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstpad.c:
+	  pad: don't try to pretty-print event after we've given away ownership
+	  Might cause crashes with debug logging enabled.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683996
+
+2012-09-14 01:17:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update translations
+
 2012-09-14 00:30:37 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* gst/gstcompat.h:

@@ -1524,16 +1524,16 @@ GType
 gst_segment_flags_get_type (void)
 {
   static gsize id = 0;
-  static const GEnumValue values[] = {
-    {C_ENUM (GST_SEGMENT_FLAG_NONE), "GST_SEGMENT_FLAG_NONE", "none"},
-    {C_ENUM (GST_SEGMENT_FLAG_RESET), "GST_SEGMENT_FLAG_RESET", "reset"},
-    {C_ENUM (GST_SEGMENT_FLAG_SKIP), "GST_SEGMENT_FLAG_SKIP", "skip"},
-    {C_ENUM (GST_SEGMENT_FLAG_SEGMENT), "GST_SEGMENT_FLAG_SEGMENT", "segment"},
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_SEGMENT_FLAG_NONE), "GST_SEGMENT_FLAG_NONE", "none"},
+    {C_FLAGS (GST_SEGMENT_FLAG_RESET), "GST_SEGMENT_FLAG_RESET", "reset"},
+    {C_FLAGS (GST_SEGMENT_FLAG_SKIP), "GST_SEGMENT_FLAG_SKIP", "skip"},
+    {C_FLAGS (GST_SEGMENT_FLAG_SEGMENT), "GST_SEGMENT_FLAG_SEGMENT", "segment"},
     {0, NULL, NULL}
   };
 
   if (g_once_init_enter (&id)) {
-    GType tmp = g_enum_register_static ("GstSegmentFlags", values);
+    GType tmp = g_flags_register_static ("GstSegmentFlags", values);
     g_once_init_leave (&id, tmp);
   }
 
