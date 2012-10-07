@@ -74,6 +74,7 @@
 #define speex_resampler_get_input_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_input_latency)
 #define speex_resampler_get_output_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_latency)
 #define speex_resampler_get_filt_len CAT_PREFIX(RANDOM_PREFIX,_resampler_get_filt_len)
+#define speex_resampler_get_sinc_filter_mode CAT_PREFIX(RANDOM_PREFIX,_resampler_get_sinc_filter_mode)
 #define speex_resampler_skip_zeros CAT_PREFIX(RANDOM_PREFIX,_resampler_skip_zeros)
 #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
 #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
@@ -113,6 +114,15 @@ enum {
    RESAMPLER_ERR_MAX_ERROR
 };
 
+typedef enum {
+   RESAMPLER_SINC_FILTER_INTERPOLATED   = 0,
+   RESAMPLER_SINC_FILTER_FULL           = 1,
+   RESAMPLER_SINC_FILTER_AUTO           = 2
+} SpeexResamplerSincFilterMode;
+
+#define RESAMPLER_SINC_FILTER_DEFAULT RESAMPLER_SINC_FILTER_INTERPOLATED
+#define RESAMPLER_SINC_FILTER_AUTO_THRESHOLD_DEFAULT (1 * 1048576)
+
 struct SpeexResamplerState_;
 typedef struct SpeexResamplerState_ SpeexResamplerState;
 
@@ -122,13 +132,23 @@ typedef struct SpeexResamplerState_ SpeexResamplerState;
  * @param out_rate Output sampling rate (integer number of Hz).
  * @param quality Resampling quality between 0 and 10, where 0 has poor quality
  * and 10 has very high quality.
+ * @param sinc_filter_mode Sinc filter table mode to use
+ * @param sinc_filter_auto_threshold Threshold to use if sinc filter mode is auto, in bytes
  * @return Newly created resampler state
  * @retval NULL Error: not enough memory
+ *
+ * If a full filter table would be larger than the auto threshold, and sinc_filter_mode is AUTO,
+ * the resample uses the interpolated mode instead
+ *
+ * @note A full sinc table can significantly improve the resampler's performance, but calculating the table
+ * takes longer, as opposed to the interpolated variant
  */
 SpeexResamplerState *speex_resampler_init(spx_uint32_t nb_channels, 
                                           spx_uint32_t in_rate, 
                                           spx_uint32_t out_rate, 
                                           int quality,
+                                          SpeexResamplerSincFilterMode sinc_filter_mode,
+                                          spx_uint32_t sinc_filter_auto_threshold,
                                           int *err);
 
 /** Create a new resampler with fractional input/output rates. The sampling 
@@ -141,8 +161,16 @@ SpeexResamplerState *speex_resampler_init(spx_uint32_t nb_channels,
  * @param out_rate Output sampling rate rounded to the nearest integer (in Hz).
  * @param quality Resampling quality between 0 and 10, where 0 has poor quality
  * and 10 has very high quality.
+ * @param sinc_filter_mode Sinc filter table mode to use
+ * @param sinc_filter_auto_threshold Threshold to use if sinc filter mode is auto, in bytes
  * @return Newly created resampler state
  * @retval NULL Error: not enough memory
+ *
+ * If a full filter table would be larger than the auto threshold, and sinc_filter_mode is AUTO,
+ * the resample uses the interpolated mode instead
+ *
+ * @note A full sinc table can significantly improve the resampler's performance, but calculating the table
+ * takes longer, as opposed to the interpolated variant
  */
 SpeexResamplerState *speex_resampler_init_frac(spx_uint32_t nb_channels, 
                                                spx_uint32_t ratio_num, 
@@ -150,6 +178,8 @@ SpeexResamplerState *speex_resampler_init_frac(spx_uint32_t nb_channels,
                                                spx_uint32_t in_rate, 
                                                spx_uint32_t out_rate, 
                                                int quality,
+                                               SpeexResamplerSincFilterMode sinc_filter_mode,
+                                               spx_uint32_t sinc_filter_auto_threshold,
                                                int *err);
 
 /** Destroy a resampler state.
@@ -338,6 +368,12 @@ int speex_resampler_get_output_latency(SpeexResamplerState *st);
  * @param st Resampler state
  */
 int speex_resampler_get_filt_len(SpeexResamplerState *st);
+
+/** Returns 1 if the full sinc filter table is used, 0 if the interpolated one is used
+ * @param st Resampler state
+ * @return Sinc filter mode
+ */
+int speex_resampler_get_sinc_filter_mode(SpeexResamplerState *st);
 
 /** Make sure that the first samples to go out of the resamplers don't have 
  * leading zeros. This is only useful before starting to use a newly created 

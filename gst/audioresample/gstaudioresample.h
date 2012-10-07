@@ -77,6 +77,9 @@ struct _GstAudioResample {
   gint inrate;
   gint outrate;
 
+  SpeexResamplerSincFilterMode sinc_filter_mode;
+  guint32 sinc_filter_auto_threshold;
+
   guint8 *tmp_in;
   guint tmp_in_size;
 

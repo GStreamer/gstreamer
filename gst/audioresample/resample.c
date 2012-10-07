@@ -184,6 +184,7 @@ struct SpeexResamplerState_
   spx_uint32_t oversample;
   int initialised;
   int started;
+  int use_full_sinc_table;
 
   /* These are per-channel */
   spx_int32_t *last_sample;
@@ -754,7 +755,8 @@ update_filter (SpeexResamplerState * st)
   }
 
   /* Choose the resampling type that requires the least amount of memory */
-  if (st->den_rate <= st->oversample) {
+  /* Or if the full sinc table is explicitely requested, use that */
+  if (st->use_full_sinc_table || (st->den_rate <= st->oversample)) {
     spx_uint32_t i;
     if (!st->sinc_table)
       st->sinc_table =
@@ -918,10 +920,11 @@ update_filter (SpeexResamplerState * st)
 
 EXPORT SpeexResamplerState *
 speex_resampler_init (spx_uint32_t nb_channels, spx_uint32_t in_rate,
-    spx_uint32_t out_rate, int quality, int *err)
+    spx_uint32_t out_rate, int quality, SpeexResamplerSincFilterMode sinc_filter_mode,
+    spx_uint32_t sinc_filter_auto_threshold, int *err)
 {
   return speex_resampler_init_frac (nb_channels, in_rate, out_rate, in_rate,
-      out_rate, quality, err);
+      out_rate, quality, sinc_filter_mode, sinc_filter_auto_threshold, err);
 }
 
 #if defined HAVE_ORC && !defined DISABLE_ORC
@@ -940,15 +943,33 @@ check_insn_set (SpeexResamplerState * st, const char *name)
 EXPORT SpeexResamplerState *
 speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
     spx_uint32_t ratio_den, spx_uint32_t in_rate, spx_uint32_t out_rate,
-    int quality, int *err)
+    int quality, SpeexResamplerSincFilterMode sinc_filter_mode,
+    spx_uint32_t sinc_filter_auto_threshold, int *err)
 {
   spx_uint32_t i;
   SpeexResamplerState *st;
+  int use_full_sinc_table = 0;
   if (quality > 10 || quality < 0) {
     if (err)
       *err = RESAMPLER_ERR_INVALID_ARG;
     return NULL;
   }
+  switch (sinc_filter_mode) {
+    case RESAMPLER_SINC_FILTER_INTERPOLATED:
+      use_full_sinc_table = 0;
+      break;
+    case RESAMPLER_SINC_FILTER_FULL:
+      use_full_sinc_table = 1;
+      break;
+    case RESAMPLER_SINC_FILTER_AUTO:
+      /* Handled below */
+      break;
+    default:
+      if (err)
+        *err = RESAMPLER_ERR_INVALID_ARG;
+      return NULL;
+  }
+
   st = (SpeexResamplerState *) speex_alloc (sizeof (SpeexResamplerState));
   st->initialised = 0;
   st->started = 0;
@@ -962,6 +983,7 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
   st->filt_len = 0;
   st->mem = 0;
   st->resampler_ptr = 0;
+  st->use_full_sinc_table = use_full_sinc_table;
 
   st->cutoff = 1.f;
   st->nb_channels = nb_channels;
@@ -1004,6 +1026,16 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
   speex_resampler_set_quality (st, quality);
   speex_resampler_set_rate_frac (st, ratio_num, ratio_den, in_rate, out_rate);
 
+  if (sinc_filter_mode == RESAMPLER_SINC_FILTER_AUTO) {
+    /*
+    Estimate how big the filter table would become if the full mode were to be used
+    calculations used correspond to the ones in update_filter()
+    if the size is bigger than the threshold, use interpolated sinc instead
+    */
+    spx_uint32_t base_filter_length = st->filt_len = quality_map[st->quality].base_length;
+    spx_uint32_t filter_table_size = base_filter_length * st->den_rate * sizeof(spx_uint16_t);
+    st->use_full_sinc_table = (filter_table_size > sinc_filter_auto_threshold) ? 0 : 1;
+  }
 
   update_filter (st);
 
@@ -1389,6 +1421,12 @@ EXPORT int
 speex_resampler_get_filt_len (SpeexResamplerState * st)
 {
   return st->filt_len;
+}
+
+EXPORT int
+speex_resampler_get_sinc_filter_mode (SpeexResamplerState * st)
+{
+  return st->use_full_sinc_table;
 }
 
 EXPORT int
