@@ -1128,10 +1128,10 @@ GST_START_TEST (test_overlay_composition_premultiplied_alpha)
   fail_unless_equals_int (data5[3], 0x80);
 #else
   /* A - R - G - B */
-  fail_unless_equals_int (data5[0], 0x40);
+  fail_unless_equals_int (data5[0], 0x80);
   fail_unless_equals_int (data5[1], 0x40);
   fail_unless_equals_int (data5[2], 0x40);
-  fail_unless_equals_int (data5[3], 0x80);
+  fail_unless_equals_int (data5[3], 0x40);
 #endif
   gst_buffer_unmap (pix5, &map);
 
@@ -1163,10 +1163,10 @@ GST_START_TEST (test_overlay_composition_premultiplied_alpha)
   fail_unless_equals_int (data7[3], 0x80);
 #else
   /* A - R - G - B */
-  fail_unless_equals_int (data7[0], 0x40);
+  fail_unless_equals_int (data7[0], 0x80);
   fail_unless_equals_int (data7[1], 0x40);
   fail_unless_equals_int (data7[2], 0x40);
-  fail_unless_equals_int (data7[3], 0x80);
+  fail_unless_equals_int (data7[3], 0x40);
 #endif
   gst_buffer_unmap (pix7, &map);
 
