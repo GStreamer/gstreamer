@@ -10,3 +10,6 @@ DIST_SUBDIRS = plugins
 EXTRA_DIST = \
         random/ChangeLog-0.8 \
         version.entities.in
+
+upload:
+	make -C plugins upload
