@@ -1,3 +1,1769 @@
+=== release 1.0.1 ===
+
+2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.1
+
+2012-10-06 14:57:10 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 6c0b52c to 6bb6951
+
+2012-10-05 15:12:27 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/interleave/deinterleave.c:
+	  deinterleave: output channels should be marked as MONO, not FRONT_LEFT, if we're not preserving input channel positions.
+
+2012-10-04 15:13:20 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/interleave/interleave.c:
+	  interleave: use gst_audio_channel_positions_to_mask instead of a local copy of half of it. Handles some values more correctly.
+
+2012-10-04 20:32:45 +0200  Rasmus Rohde <rohde@duff.dk>
+
+	* gst/rtp/gstrtpgstdepay.c:
+	  gstrtpdepay: don't leak input buffer
+	  The rtp buffer is never unmapped in the normal code exit path
+	  of gst_rtp_gst_depay_process(..) resulting in a memory leak.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685512
+
+2012-10-04 18:37:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/videofilter/gstvideobalance.c:
+	  videobalance: Add support for NV12 and NV21
+
+2012-10-01 15:11:05 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	* tests/check/elements/rtp-payloading.c:
+	  rtph264pay: do not push unmapped data
+	  Also do not use a GstBuffer after it has been pushed into the adapter.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685213
+
+2012-10-03 10:51:45 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/interleave/deinterleave.c:
+	* sys/v4l2/gstv4l2bufferpool.c:
+	* sys/ximage/ximageutil.c:
+	  meta info: threadsafe registration using g_once
+
+2012-10-01 15:44:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: push mode; handle some initial junk before hdrl list
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685059
+
+2012-10-01 14:03:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/icles/gdkpixbufsink-test.c:
+	  tests: port gdkpixbufsink test
+
+2012-09-29 11:59:31 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/level/gstlevel.c:
+	* tests/check/elements/videocrop.c:
+	  Purge references to liboil
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673285
+
+2012-09-28 16:51:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/avi-ids.h:
+	* gst/avi/gstavidemux.c:
+	  avidemux: recognize all xsub frames as keyframes
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=684977
+
+2012-09-28 16:50:25 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: push mode: find the correct chunk for segment following seek
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=684977
+
+2012-09-27 22:17:49 +0100  Arnaud Vrac <rawoul@gmail.com>
+
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: fix parsing in push mode when moov atom is at the end
+	  When playing an mp4 file with the MOOV atom at the end of the file, playback
+	  fails with the error message "no 'moov' atom within the first 10 MB". This is
+	  due to a mistake in the upstream_size typing, making the seek to the end of
+	  file never happening.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684972
+
+2012-09-27 15:50:49 -0300  Andre Moreira Magalhaes (andrunko) <andre.magalhaes@collabora.co.uk>
+
+	* gst/videofilter/gstgamma.c:
+	  gamma: remove duplicate entries at format at caps
+	  Avoids extra caps/structures processing
+
+2012-09-27 14:13:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  rtpvrawdepay: negotiate pool with srcpad caps
+
+2012-09-27 11:02:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/dv/gstdvdemux.c:
+	  dvdemux: The convert and duration queries are not supposed to change the format
+
+2012-09-26 09:28:59 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: clear video frame more correctly
+	  Make sure not to touch memory that doesn't belong to
+	  our frame, we might be one part of a side-by-side 3D
+	  frame, or in a picture-in-picture scenario.
+
+2012-09-26 00:44:59 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: minor clean-up
+	  Use GstByteWriter, because we can, and g_value_take_boxed.
+
+2012-09-10 10:27:28 +0400  Dmitriy Samonenko <dmitriy.samonenko@teligent.ru>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: fix speex audio decoding by creating fake stream header
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683622
+
+2012-09-25 21:21:15 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/videomixer/videomixer2.c:
+	* tests/check/pipelines/simple-launch-lines.c:
+	  videomixer: fix warnings when using transparent background
+	  gst_video_frame_map() increases the refcount, which makes
+	  the buffer not writable any more technically, so calling
+	  gst_buffer_memset() on it will cause nasty warnings.
+	  Unit test disabled because it very rarely (for me)
+	  fails, possibly negotiation-related.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684398
+
+2012-09-25 10:43:28 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Add some useful debug logging
+
+2012-09-25 10:41:44 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Fix telecine
+	  This only affects behaviour in telecine cases with pattern locking
+	  enabled. The default case should be untouched.
+	  This works with the output from fieldanalysis at least, but the field
+	  order looks swapped for telecine mixed buffers with the
+	  David_slides_Schleef clip.
+
+2012-09-25 14:43:15 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Disable GLIB deprecation warnings
+	  GValueArray has been deprecated since 2.32 ... but there's no usable
+	  replacement for it.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=667228
+
+2012-09-25 14:18:35 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Fix leak
+
+2012-09-24 16:46:18 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.0 ===
+
+2012-09-24 14:06:42 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.0.0
+
+2012-09-24 11:56:56 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/rganalysis.c:
+	  tests: remove g_printerr() that's not needed any longer
+	  now that tcase_skip_broken_test() prints it as well.
+
+2012-09-23 19:50:42 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/rganalysis.c:
+	  tests: disable failing replaygain tests
+
+2012-09-23 16:31:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/smpte/gstsmpte.c:
+	* gst/smpte/gstsmpte.h:
+	  smpte: send stream-start event
+
+2012-09-23 16:10:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/multipart/multipartmux.c:
+	* gst/multipart/multipartmux.h:
+	  multipartmux: send stream-start event
+
+2012-09-23 16:02:19 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: send stream-start
+
+2012-09-23 15:57:35 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: send stream-start event
+
+2012-09-23 15:48:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/interleave/interleave.c:
+	* gst/interleave/interleave.h:
+	  interleave: add a bunch of FIXMEs
+	  Needs some more work, so stream-start, caps and tags are
+	  sent in the right order.
+
+2012-09-23 15:18:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/flv/gstflvmux.c:
+	  flvmux: send stream-start event
+
+2012-09-23 15:16:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/avi/gstavimux.c:
+	  avimux: send stream-start event
+
+2012-09-22 16:08:05 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 4f962f7 to 6c0b52c
+
+2012-09-21 21:54:36 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: answer URI query
+	  Without this, something also answered the query
+	  with TRUE but without setting a uri, not sure
+	  what that was..
+
+2012-09-20 17:28:47 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: Make sure the caps don't have duplicated sps/pps
+
+2012-09-20 19:58:12 +0200  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: Mute stream post-connection if required
+	  A bug in PulseAudio causes PA_STREAM_START_MUTED to be rejected on
+	  record streams. Until this is fixed upstream, we mute the stream
+	  manually at startup. Based on a patch by Alban Browaeys
+	  <prahal@yahoo.com>.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684469
+
+2012-09-20 18:00:59 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: 24 bit audio here is S24LE, not S24_3LE.
+
+2012-09-20 10:07:24 +0200  Sjoerd Simons <sjoerd@luon.net>
+
+	* sys/v4l2/gstv4l2src.c:
+	  v4l2src: handle latency query before setting up the bufferpool
+	  Fixes crash if no bufferpool is set up yet.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684430
+
+2012-09-19 09:17:03 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	  osxaudiosink: Specify endianness in IEC 61937 payloading
+	  Corresponds to an API change in gst-plugins-base. This needs to be fixed
+	  to query the expected byte order using appropriate API.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678021
+
+2012-09-19 09:15:53 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: Specify endianness in IEC 61937 payloading
+	  DirectSound expects native endian byte order.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678021
+
+2012-09-19 09:13:11 +0530  Arun Raghavan <arun.raghavan@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: Specify endianness in IEC 61937 payloading
+	  Corresponds to an API change in gst-plugins-base.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678021
+
+2012-09-19 00:39:01 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Remove incorrect logic
+	  I don't understand why these lines were added, they don't make sense to
+	  me now and both David and I agree that removing them moves closer to
+	  related logic being correct, therefore, they're being removed.
+	  I've tested a few progressive, interlaced and telecine clips and they
+	  all behave properly timestamp-wise and visually after these changes.
+
+2012-09-19 00:17:49 +0200  Robert Swain <robert.swain@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: Fix field duration
+	  The frame rate fraction is correctly adjusted in the cases preceding the
+	  field duration calculation and so the factor of 2 is incorrect.
+
+2012-09-18 10:34:03 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: Fix U/V strides for a number of cases.
+
+2012-09-18 12:13:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: init videoinfo
+	  ... to prevent random bogus caps fields.
+
+2012-09-18 12:12:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: chain up to collectpads query function
+
+2012-09-17 13:17:00 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Don't let GstCollectPad shadow custom sink pad query func
+	  In the current implementation, the custom pad query function is not called.
+	  This patch, set that query function on the GstCollectPads to avoid this
+	  shadowing.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=684237
+
+2012-09-17 18:23:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/files/Makefile.am:
+	  tests: dist image.jpg for jpeg test
+
+=== release 0.11.99 ===
+
+2012-09-17 17:57:58 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 0.11.99
+
+2012-09-17 16:53:04 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.types:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	  docs: update
+
+2012-09-17 13:30:15 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-good.spec.in:
+	  Fix spec file for vp8 move
+
+2012-09-17 13:23:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* Makefile.am:
+	  annodex: Add to the CRUFT_DIRS
+
+2012-09-17 12:14:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-halelements.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	  docs: update
+
+2012-09-17 09:48:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Correctly finish frames
+	  Previously we would always get the same frame if multiple frames are pending,
+	  leaking memory of the previous frames and breaking timestamps.
+
+2012-09-17 09:40:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Allow changing bitrate and other parameters during playback
+	  Fixes bug #648276.
+
+2012-09-17 09:16:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	* ext/vpx/gstvp8enc.h:
+	  vp8enc: Store configuration in the vpx_codec_enc_cfg_t struct instead of duplicating all variables
+	  Also protect encoder with a mutex.
+
+2012-09-16 16:03:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Update documentation to reflect new property names
+	  ...and also link to the WebM encoder parameters website.
+
+2012-09-16 15:57:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Make some property names more readable
+
+2012-09-16 15:47:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/.gitignore:
+	  vp8: Add tests to .gitignore
+
+2012-09-16 15:46:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/vp8enc.c:
+	  vp8enc: Update patch to the new property names
+
+2012-09-16 15:46:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	  vpx: Integrate test into the build system too
+
+2012-02-07 17:00:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/vp8dec.c:
+	* tests/check/elements/vp8enc.c:
+	  [MOVED FROM BAD 6/6] tests: fix more unit tests
+
+2011-11-24 21:42:39 +0100  René Stadler <rene.stadler@collabora.co.uk>
+
+	* tests/check/elements/vp8dec.c:
+	* tests/check/elements/vp8enc.c:
+	  [MOVED FROM BAD 5/6] tests: update for gstcheck API change
+
+2010-07-10 15:46:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/vp8dec.c:
+	  [MOVED FROM BAD 4/6] vp8dec: Add simple unit test for vp8dec
+
+2010-07-10 15:46:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/vp8enc.c:
+	  [MOVED FROM BAD 3/6] vp8enc: Improve unit test a bit
+
+2010-07-10 15:32:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/vp8enc.c:
+	  [MOVED FROM BAD 2/6] vp8enc: Also check the output caps in the unit test
+
+2010-07-10 15:29:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/vp8enc.c:
+	  [MOVED FROM BAD 1/6] vp8enc: Add simple unit test
+
+2012-09-16 15:43:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.interfaces:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* ext/Makefile.am:
+	  vpx: Integrate into the build system
+
+2012-09-16 15:33:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/GstVP8Enc.prs:
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	* ext/vp8/gstvp8utils.c:
+	* ext/vp8/gstvp8utils.h:
+	* ext/vp8/plugin.c:
+	* ext/vpx/GstVP8Enc.prs:
+	* ext/vpx/Makefile.am:
+	* ext/vpx/gstvp8dec.c:
+	* ext/vpx/gstvp8dec.h:
+	* ext/vpx/gstvp8enc.c:
+	* ext/vpx/gstvp8enc.h:
+	* ext/vpx/gstvp8utils.c:
+	* ext/vpx/gstvp8utils.h:
+	* ext/vpx/plugin.c:
+	  vpx: Rename vp8 plugin to vpx
+	  This is using libvpx, which can support more codecs than just VP8
+	  and will likely support future codecs.
+
+2012-09-16 15:32:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  vp8: Apply remaining changes that got lost while moving the plugin via git am thanks to merges
+
+2012-09-16 15:25:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 134/134] vp8dec: Unref input/output states when stopping the decoder
+
+2012-09-16 15:18:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/GstVP8Enc.prs:
+	  [MOVED FROM BAD 133/134] vp8enc: Update realtime profile to the new properties
+
+2012-09-16 10:56:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 132/134] vp8: Require latest libvpx release (1.1.0 from May 2012)
+	  Fixes bug #684116 and simplifies configure checks.
+
+2012-09-15 20:23:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 131/134] vp8enc: Use a string field for the profile in the caps
+	  Just for consistency with all the other codecs.
+
+2012-09-15 00:04:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 130/134] vp8enc: Correctly set profile in caps
+
+2012-09-14 23:41:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 129/134] vp8: Update copyright and authors
+
+2012-09-08 15:38:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 128/134] vp8enc: Rework encoder properties to be more in line with the libvpx tools and API
+	  Also add all available properties.
+
+2012-09-14 17:08:49 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 127/134] replace gst_element_class_set_details_simple with gst_element_class_set_metadata
+
+2012-07-19 09:05:28 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 126/134] vp8dec: Call gst_video_decoder_negotiate()
+
+2012-08-14 11:17:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	  [MOVED FROM BAD 125/134] vp8dec: Add support for multiple decoding threads
+
+2012-08-14 11:09:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 124/134] vp8dec: Add support for the MFQE postprocessing flag
+	  Which is enabled by default if postprocessing is enabled.
+
+2012-08-09 13:37:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	  [MOVED FROM BAD 123/134] vp8: Use pkg-config file for getting the LIBS and CFLAGS
+
+2012-08-08 17:06:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 122/134] vp8enc: Update the per-component strides for every frame too
+	  This is necessary because of GstVideoAlignment
+
+2012-07-26 19:31:14 +0200  Oleksij Rempel <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 121/134] vp8enc: initiate encoder to fix a crash.
+	  Without this patch vp8enc send header before and after first
+	  key frame. On second keyframe vp8dec will crash without getting
+	  decoded frame. With this pipe it is easy to reproduce this issue:
+	  gst-launch-1.0 videotestsrc ! vp8enc ! vp8dec ! fakesink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680667
+
+2012-07-28 00:32:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 120/134] tag: Update for taglist/tag event API changes
+
+2012-07-23 10:35:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 119/134] ext: Update for video base classes API changes
+
+2012-07-21 19:59:21 +0200  Oleksij Rempel <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 118/134] vp8enc: fix memory leak
+	  unref frame. i hope it is correct place to do it.
+	  Signed-off-by: Oleksij Rempel <bug-track@fisher-privat.net>
+
+2012-07-06 11:50:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 117/134] update for query api changes
+
+2012-07-06 11:26:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 116/134] update for query api changes
+
+2012-07-06 11:03:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 115/134] update for allocation query changes
+
+2012-06-07 12:33:31 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 114/134] vp8: fix codec state leaks
+	  I only tested that vp8enc ! vp8dec does not crash, as valgrind does not grok
+	  at least one of the instructions used by vp8enc, preventing me from checking
+	  a leak, and the lack of one after the patch.
+
+2012-06-06 13:02:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 113/134] update for tag event change
+
+2012-05-28 16:05:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 112/134] vp8: Port to 0.11 again
+
+2012-05-18 12:46:55 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 111/134] vp8enc: fix target bitrate config with libvpx 1.1.0
+	  libvpx 1.1.0 disallows a bitrate of 0, which was used by
+	  vp8enc as a default value.
+	  Instead, we use the default libvpx bitrate, scaled to our
+	  video size, if no bitrate was specified.
+	  This fixes encoding VP8 video with libvpx 1.1.0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676245
+
+2012-05-16 14:04:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 110/134] vp8enc: Update for GstVideoCodecFrame API changes
+
+2012-04-27 18:22:42 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	  [MOVED FROM BAD 109/134] vp8dec: Improve output_state handling
+	  Avoid getting output_state for every buffer as that requires
+	  getting the objectlock and doing reference counting. Store it locally
+	  when it is created and use it.
+
+2012-04-27 09:05:57 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 108/134] vp8dec: Use outputstate when copying output buffer data
+	  Using the input state was causing a crash because the strides/offsets
+	  would be wrong. Fix it by using the output as we are dealing with
+	  the decoded frame.
+
+2012-04-24 11:08:41 +0200  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 107/134] vp8: Port to -base video base classes
+	  Conflicts:
+	  ext/vp8/Makefile.am
+	  ext/vp8/gstvp8dec.c
+	  ext/vp8/gstvp8enc.c
+	  Back to 0.10 state for now, need to be ported again.
+
+2012-05-18 12:46:55 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 106/134] vp8enc: fix target bitrate config with libvpx 1.1.0
+	  libvpx 1.1.0 disallows a bitrate of 0, which was used by
+	  vp8enc as a default value.
+	  Instead, we use the default libvpx bitrate, scaled to our
+	  video size, if no bitrate was specified.
+	  This fixes encoding VP8 video with libvpx 1.1.0.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=676245
+
+2012-04-05 18:02:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/plugin.c:
+	  [MOVED FROM BAD 105/134] gst: Update for GST_PLUGIN_DEFINE() API changes
+
+2012-04-04 14:41:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	  [MOVED FROM BAD 104/134] gst: Update versioning
+
+2012-03-06 15:21:17 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 103/134] vp8enc: Fix 'argument to 'sizeof' in 'memset' call is the same expression as the destination' compiler warning
+
+2012-01-30 17:17:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 102/134] update for HEADER flag
+
+2012-01-25 18:49:58 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 101/134] port some more to new memory API
+	  Fixes #668677.
+
+2012-01-24 11:22:46 +0100  Oleksij Rempel (Alexey Fisher) <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 100/134] vp8enc: trace outgoing timestamps
+	  add info level prints for outgoing timestamps.
+	  Signed-off-by: Oleksij Rempel (Alexey Fisher) <bug-track@fisher-privat.net>
+
+2012-01-04 11:05:48 +0100  Oleksij Rempel (Alexey Fisher) <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 099/134] vp8dec: use is_alt_data option to prevent timestamp collisions
+	  altref/invisible frames usually stored in container with same timestamp as
+	  dependet frame. This make basevideodecoder to update timestamp for dependet
+	  frame and couse TS colision on next frame:
+	  ^- here is altref
+	  time     : 1 2 3 4 5 6 7 8 9
+	  webm ts  : 1   3 5 5   7   9
+	  vp8dec ts: 1   3   7   7   9
+	  Fix bug: https://bugzilla.gnome.org/show_bug.cgi?id=655245
+	  Signed-off-by: Oleksij Rempel (Alexey Fisher) <bug-track@fisher-privat.net>
+
+2012-01-02 08:28:13 +0100  Oleksij Rempel (Alexey Fisher) <bug-track@fisher-privat.net>
+
+	* ext/vp8/GstVP8Enc.prs:
+	* ext/vp8/Makefile.am:
+	  [MOVED FROM BAD 098/134] vp8: add initial preset file
+	  This is initial preset file, currently with only one profile
+	  for realtime encoding.
+	  Signed-off-by: Oleksij Rempel (Alexey Fisher) <bug-track@fisher-privat.net>
+
+2011-11-28 13:08:27 +0000  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 097/134] various: fix pad template ref leaks
+	  https://bugzilla.gnome.org/show_bug.cgi?id=662664
+
+2011-11-25 11:36:14 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 096/134] vp8dec: use new basevideodecoder API to drop frames and get QoS messages posted
+
+2011-11-10 15:13:34 +0200  Mart Raudsepp <leio@gentoo.org>
+
+	* ext/vp8/Makefile.am:
+	  [MOVED FROM BAD 095/134] mimic, opencv, vp8, acmmp3dec, linsys: Don't build static plugins
+	  Pass --tag=disable-static to libtool everywhere where it's been forgotten
+	  https://bugzilla.gnome.org/show_bug.cgi?id=663768
+
+2011-11-03 14:01:41 +0100  Edward Hervey <edward.hervey@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 094/134] vp8: Port to 0.11
+
+2011-08-21 20:15:25 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 093/134] vp8enc: fix drop-frame property
+	  Fixes #656929.
+
+2011-08-19 19:17:15 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 092/134] vp8: probe for the new tuning API to keep building with older libvpx
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656928
+
+2011-08-18 10:39:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 091/134] vp8enc: Remove unused and useless variable in tags handling
+
+2011-08-12 12:08:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 090/134] vp8enc: Update for basevideoencoder ::get_caps() removal
+
+2011-07-09 18:53:24 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 089/134] vp8enc: Add more properties
+
+2011-06-19 16:06:46 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 088/134] vp8enc: add min/maxsection-pct option
+	  This options should be good to redeuce decode CPU load.
+	  for lowend hardware:
+	  minsection-pct=15 maxsection-pct=400
+	  for hiend hw:
+	  minsection-pct=5 maxsection-pct=800
+	  see example:
+	  http://www.webmproject.org/tools/encoder-parameters/#2-pass_vbr_encoding_for_smooth_playback_on_low-end_hardware
+	  Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
+	  Signed-off-by: David Schleef <ds@schleef.org>
+
+2011-06-19 11:05:36 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 087/134] vp8enc: add lag-in-frames option.
+	  This option set maximum of frames codec should remember,
+	  to make better prediktion for alt-ref frames.
+	  See example:
+	  http://www.webmproject.org/tools/encoder-parameters/#2-pass_best_quality_vbr_encoding
+	  Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
+	  Signed-off-by: David Schleef <ds@schleef.org>
+
+2011-06-19 07:16:57 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 086/134] vp8enc: use multipass.cache file name as default for multipass mode.
+	  Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
+	  Signed-off-by: David Schleef <ds@schleef.org>
+
+2011-07-21 08:03:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 085/134] vp8enc: Update for GstBaseVideoEncoder::finish() signature change
+
+2011-07-12 18:05:25 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 084/134] vp8: Fix set-but-unused warnings
+
+2011-07-09 11:31:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 083/134] vp8enc: Use destroy notify to free the coder hook
+
+2011-06-18 15:56:49 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 082/134] vp8enc: update for new libvpx api
+
+2011-06-26 15:15:54 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 081/134] vp8enc: generate a timestamp for alt-ref frames.
+	  It will fix handling of altref/invisible frames since matroska-mux
+	  drop any fram with no timestamp.
+	  see also:
+	  http://www.webmproject.org/code/specs/container/
+	  The encoder will currently set the AR's timestamp as close as possible
+	  to the previous frame while attempting to provide a timestamp that is
+	  strictly increasing. In cases where the time base given to the encoder
+	  at configure time is not granular enough to allow for this the AR
+	  will share the same timestamp as D, but should be
+	  treated as having no duration.
+	  Fixes bug #652951
+	  Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
+
+2011-06-18 17:47:36 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 080/134] vp8dec: add check if we have legal aspect-ratio before reset it.
+	  the commit f9b552f0494e (vp8dec: set par to 1/1)
+	  will fix situation where no aspect-ratio is set, but it brake
+	  stream with available aspect-ratio. This patch fix it.
+	  Fixes: #652902.
+	  Signed-off-by: Alexey Fisher <bug-track@fisher-privat.net>
+
+2011-06-03 19:36:59 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 079/134] vp8dec: set par to 1/1
+
+2011-05-18 13:27:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 078/134] vp8enc: Name max/min quantizer properties {max,min}-quantizer
+	  Also improve quality property description.
+
+2011-05-18 13:26:23 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 077/134] vp8enc: Add properties to select a maximum and minimum quantizer
+	  Fixes bug #641405.
+
+2011-05-18 13:18:58 +0200  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 076/134] vp8enc: Fix quality to (constant) quantizer mapping
+	  This now allows to select all possible quantizers between
+	  0 and 63.
+	  See bug #641405.
+
+2011-04-01 22:13:55 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 075/134] vp8dec: debug code style fixes
+
+2011-04-01 22:13:00 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 074/134] vp8dec: propagate downstream flow return to upstream
+
+2011-03-30 10:18:23 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 073/134] basevideodecoder: really and only set src pad caps whenever requested
+	  ... since subclass is expected to be wise enough to know when to do so.
+
+2011-03-29 10:41:54 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 072/134] basevideodecoder: invoke subclass start method at state change and use set_format
+	  While this changes API slightly (e.g. actually uses set_format now), which is OK
+	  for unstable API, it has following merits:
+	  * symmetric w.r.t. stop at state change
+	  * in line with other base class practice
+	  * otherwise no subclass method at state change (global activation time)
+	  Moreover, subclassese are either unaffected or trivially adjusted accordingly.
+
+2011-03-28 08:59:20 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 071/134] basevideodecoder: subsume skip_frame into finish_frame
+
+2011-03-24 14:10:07 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 070/134] basevideoencoder: provide proper upstream flow return handling
+
+2011-03-24 13:59:35 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 069/134] vp8enc: minor optimization in setting up image buffer
+
+2011-03-24 12:50:23 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 068/134] vp8enc: refactor frame processing
+
+2011-03-24 11:55:41 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 067/134] vp8enc: do init at set_format time
+
+2011-03-24 10:15:55 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 066/134] vp8enc: fix keyframe forcing
+
+2011-03-23 09:45:20 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 065/134] basevideocodec: remove redundant caps field
+	  ... as it is already at hand as the src pad's negotiated caps.
+
+2011-03-23 08:50:31 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 064/134] vp8enc: use baseclass event virtual handler
+
+2011-02-20 14:16:18 -0800  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8dec.h:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 063/134] basevideo: merge utils header into basevideocodec
+
+2011-03-17 16:34:02 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	  [MOVED FROM BAD 062/134] vp8: fix LIBADD order in Makefile.am
+
+2011-02-04 09:08:26 +0100  Alexey Fisher <bug-track@fisher-privat.net>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 061/134] vp8enc: Add description for bitrate units.
+
+2010-11-30 18:43:24 -0800  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 060/134] vp8enc: Readd setting of granulepos
+	  Revert parts of last patch that removed setting of granulepos.
+	  oggmux still requires correct granulepos in incoming packet.
+
+2010-11-29 20:21:31 -0800  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 059/134] vp8enc: Don't override timestamps set by base class
+	  Because the base class does it correctly.
+	  Fixes: #635720, #625558.
+
+2010-11-25 18:52:47 +0100  Edward Hervey <bilboed@bilboed.com>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 058/134] vp8: Remove dead assignments
+
+2010-10-09 17:36:07 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 057/134] basevideo: Move common fields/functions to basecodec
+
+2010-09-18 17:28:48 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 056/134] basevideo: Move deadline to frame structure
+
+2010-08-13 14:34:21 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 055/134] vp8dec: Set GstBaseVideoDecoder::packetized to TRUE as soon as possible
+	  This fixes an infinite loop if an EOS event is received before
+	  GstBaseVideoDecoder::start() is called, e.g. immediately when the
+	  pads are activated.
+	  Fixes bug #626815.
+
+2010-07-10 16:52:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 054/134] vp8enc: Add support for enabling automatic insertion of alt-ref frames by the encoder
+
+2010-07-10 16:51:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 053/134] vp8enc: Fix handling of invisible/alt ref frames
+
+2010-07-03 17:47:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	  [MOVED FROM BAD 052/134] vp8: Add initial documentation, based on the theoradec/theoraenc documentation
+
+2010-07-03 17:34:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8dec.h:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8enc.h:
+	* ext/vp8/plugin.c:
+	  [MOVED FROM BAD 051/134] vp8: Move structure definitions, etc to public header files for gtk-doc
+
+2010-06-12 09:02:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 050/134] vp8enc: Implement multipass encoding
+	  Fixes bug #621348.
+
+2010-06-14 15:56:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 049/134] vp8enc: Set VP8E_SET_CPUUSED to 0
+	  This setting controls how much CPU can be used by the encoder, specified
+	  in fractions of 16. Negative values mean strict enforcement of this
+	  while positive values are adaptive.
+	  The default value is -4, which means that we're not running as fast
+	  as possible and probably are wasting some quality. 0 is the recommended
+	  default by libvpx upstream.
+
+2010-06-14 15:51:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 048/134] vp8enc: Use VPX defines for REALTIME, GOOD/BEST quality deadlines instead of our own
+	  These are the values used for the speed property.
+
+2010-06-03 10:49:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 047/134] vp8enc: fix printf format warning in log message
+	  gstvp8enc.c:564: error: format ‘%d’ expects type ‘int’, but argument 8 has type ‘size_t’
+	  gstvp8enc.c:744: error: format ‘%d’ expects type ‘int’, but argument 8 has type ‘size_t’
+
+2009-07-03 16:08:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	  [MOVED FROM BAD 046/134] basevideo, vp8: guard unstable API with GST_USE_UNSTABLE_API
+	  Add some guards and fat warnings to the header files with still unstable
+	  API, so people who just look at the installed headers know that it
+	  actually is unstable API.
+	  Merging previous commit into current codebase.
+
+2010-06-01 15:54:51 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gst/video/gstbasevideocodec.c:
+	* ext/vp8/gst/video/gstbasevideocodec.h:
+	* ext/vp8/gst/video/gstbasevideodecoder.c:
+	* ext/vp8/gst/video/gstbasevideodecoder.h:
+	* ext/vp8/gst/video/gstbasevideoencoder.c:
+	* ext/vp8/gst/video/gstbasevideoencoder.h:
+	* ext/vp8/gst/video/gstbasevideoparse.c:
+	* ext/vp8/gst/video/gstbasevideoparse.h:
+	* ext/vp8/gst/video/gstbasevideoutils.c:
+	* ext/vp8/gst/video/gstbasevideoutils.h:
+	* ext/vp8/gst/video/gstvideocompat.c:
+	* ext/vp8/gst/video/gstvideocompat.h:
+	  [MOVED FROM BAD 045/134] basevideo: Move base video from vp8 to gst-libs
+
+2010-05-26 06:52:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8utils.h:
+	  [MOVED FROM BAD 044/134] vp8: Use VPX_PLANE_* instead of PLANE_*
+
+2010-05-24 11:04:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8utils.h:
+	  [MOVED FROM BAD 043/134] vp8: Add compatilibity defines to work with older versions of libvpx too
+
+2010-05-23 09:28:13 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 042/134] vp8dec: s/IMG_FMT_I420/VPX_IMG_FMT_I420/
+	  This corresponds to upstream libvpx commit 6cd4a10e167203d1deb79abf60ee72599e97891b
+
+2010-05-22 12:55:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 041/134] vp8enc: Allow a maximum keyframe distance of 0, i.e. all frames are keyframes
+
+2010-05-22 08:45:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 040/134] vp8dec: Set decoder deadline from the QoS information
+
+2010-05-28 16:35:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 039/134] vp8enc: Move debug output one line above where the packet is still valid
+
+2010-05-28 15:53:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 038/134] vp8enc: Correctly ignore non-frame packets from the encoder
+	  Fixes bug #619916.
+
+2010-05-22 07:44:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gst/video/gstbasevideodecoder.c:
+	  [MOVED FROM BAD 037/134] basevideodecoder: Take the frame duration into account when calculating the earliest time
+	  This formula is used in many other elements too.
+	  Fixes bug #619318.
+
+2010-05-22 07:35:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gst/video/gstbasevideodecoder.c:
+	  [MOVED FROM BAD 036/134] basevideodecoder: Reset QoS values when necessary
+
+2010-05-22 09:35:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 035/134] vp8enc: Use GST_VIDEO_CAPS_YUV(I420) instead of handwritten I420 caps for the pad template
+	  Fixes bug #619344.
+
+2010-05-21 20:53:36 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gst/video/gstbasevideodecoder.c:
+	* ext/vp8/gst/video/gstbasevideodecoder.h:
+	* ext/vp8/gst/video/gstbasevideoutils.h:
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 034/134] vp8dec: drop late frames after decoding them
+	  This saves a memcpy, which is always something.
+
+2010-05-21 21:28:29 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 033/134] vp8enc: threads property
+	  Increasing from 1 to 2 threads on an Thinkpad X60s decreased encode time
+	  in a test from ~24 s to ~19 s, so this is quite useful.
+	  Ideally we should let 0 be the default and automatically match the number
+	  of CPU cores (or something).
+
+2010-05-21 15:17:46 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 032/134] vp8enc: add mode property to switch between CBR/VBR
+	  Always using CBR when bitrate is used isn't that great, VBR mode
+	  can produce meaningful results too.
+
+2010-05-21 10:54:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 031/134] vp8dec: Only enable postprocessing if the decoder supports it
+
+2010-05-21 08:23:58 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/plugin.c:
+	  [MOVED FROM BAD 030/134] vp8: typo: s/HAVE_VP8_DECODER/HAVE_VP8_ENCODER/
+	  Fixup for bug #619172.
+
+2010-05-21 08:13:06 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 029/134] vp8: move #ifdef HAVE_VP8_ENCODER/DECODER
+	  Otherwise we'll try including e.g. <vpx/vp8cx.h> which doesn't exist.
+
+2010-05-20 20:06:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 028/134] vp8enc: Write GStreamer element and version in the vorbiscomment vendor string
+
+2010-05-20 16:49:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/plugin.c:
+	  [MOVED FROM BAD 027/134] vp8: Only enable the encoder or decoder if it's available in libvpx
+	  Fixes bug #619172.
+
+2010-05-20 10:19:54 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/plugin.c:
+	  [MOVED FROM BAD 026/134] vp8: exlcude dec/enc based on CONFIG_VP8_DECODER/ENCODER
+	  This may not be very autotoolish, but works with libvpx in the state
+	  that libvpx is actually in. Moved the debug init to the elements
+	  themselves to minimize amount of #ifdefs
+
+2010-05-20 09:24:53 +0200  Philip Jägenstedt <philipj@opera.com>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 025/134] vp8enc: Limit max-latency to 25 to match libvpx
+	  From libvpx/vp8/encoder/onyx_int.h:
+	  #define MAX_LAG_BUFFERS (CONFIG_REALTIME_ONLY? 1 : 25)
+	  While we don't need to be tied to what libvpx does internally, it
+	  doesn't make sense to pretend to support longer frame lags than are
+	  actually possible.
+
+2010-05-20 09:56:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8utils.c:
+	  [MOVED FROM BAD 024/134] vp8: Undef HAVE_CONFIG_H before including libvpx headers
+	  A public libvpx header includes private headers if this is
+	  defined, causing compilation failures because the private headers
+	  are not installed of course.
+
+2010-05-20 08:53:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 023/134] vp8enc: Some more minor adjustments for the Ogg mapping
+
+2010-05-19 23:02:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 022/134] vp8dec: Fix memory leak
+
+2010-05-19 21:34:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 021/134] vp8enc: Adjust Ogg mapping for the changes
+
+2010-05-19 18:12:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 020/134] vp8dec: Add properties to control the VP8 decoder post processing feature
+	  This is disabled by default for now.
+
+2010-05-19 17:16:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 019/134] vp8enc: Rename keyframe-interval to max-keyframe-distance
+	  And use default settings for buffer sizes until we expose this
+	  somehow.
+
+2010-05-19 17:13:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/gstvp8utils.c:
+	* ext/vp8/gstvp8utils.h:
+	  [MOVED FROM BAD 018/134] vp8: Improve error handling and debug output
+
+2010-05-19 14:46:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 017/134] vp8: Use correct strides and plane offsets for GStreamer
+
+2010-05-18 14:47:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 016/134] vp8enc: Implement GstTagSetter interface
+
+2010-05-18 14:33:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 015/134] vp8enc: Fix setting of the keyframe flag on encoded frames
+
+2010-05-18 14:30:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 014/134] vp8enc: Post an error message on the bus if encoder initialization fails
+
+2010-05-18 14:28:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 013/134] vp8dec: Fix memory leaks and fail if initializing the decoder fails
+
+2010-05-18 02:44:54 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 012/134] vp8enc: Set timebase
+	  Also misc cleanup.
+
+2010-05-16 10:36:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 011/134] vp8dec: Fix decoding of invisible frames
+
+2010-05-14 14:26:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 010/134] vp8enc: Update the latency when initializing the encoder
+
+2010-05-14 14:02:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 009/134] vp8dec: Correctly initialize stream info before peeking at the stream
+	  Otherwise peeking will fail and we'll get invalid values
+
+2010-05-14 11:01:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 008/134] vp8dec: Make sure to pass a keyframe as first frame to the decoder, copy output frames only once and require width/height/etc on the input caps
+
+2010-05-14 10:30:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 007/134] vp8enc: Add support for invisible frames and the Ogg mapping
+
+2010-05-14 01:14:46 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/gstvp8dec.c:
+	  [MOVED FROM BAD 006/134] vp8dec: Fix reset after seeking
+	  Also remove some unused code.
+
+2010-05-13 21:19:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 005/134] vp8enc: Set frame numbers as buffer offsets
+
+2010-05-13 21:18:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 004/134] vp8enc: Always get as many frames as possible from the encoder
+
+2010-05-13 21:08:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 003/134] vp8enc: Fill the oldest pending frame instead of the newest
+
+2010-05-13 20:20:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vp8/gstvp8enc.c:
+	  [MOVED FROM BAD 002/134] vp8enc: Correctly set delta unit flag for non-keyframes
+
+2010-05-13 01:04:04 -0700  David Schleef <ds@schleef.org>
+
+	* ext/vp8/Makefile.am:
+	* ext/vp8/gst/video/gstbasevideocodec.c:
+	* ext/vp8/gst/video/gstbasevideocodec.h:
+	* ext/vp8/gst/video/gstbasevideodecoder.c:
+	* ext/vp8/gst/video/gstbasevideodecoder.h:
+	* ext/vp8/gst/video/gstbasevideoencoder.c:
+	* ext/vp8/gst/video/gstbasevideoencoder.h:
+	* ext/vp8/gst/video/gstbasevideoparse.c:
+	* ext/vp8/gst/video/gstbasevideoparse.h:
+	* ext/vp8/gst/video/gstbasevideoutils.c:
+	* ext/vp8/gst/video/gstbasevideoutils.h:
+	* ext/vp8/gst/video/gstvideocompat.c:
+	* ext/vp8/gst/video/gstvideocompat.h:
+	* ext/vp8/gstvp8dec.c:
+	* ext/vp8/gstvp8enc.c:
+	* ext/vp8/plugin.c:
+	  [MOVED FROM BAD 001/134] vp8: Add encoder/decoder
+
+2012-09-15 22:16:52 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrisin.org>
+
+	* gst-plugins-good.spec.in:
+	  Update spec file with F18 name change and add deinterlacer
+
+2012-09-15 19:06:06 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/autodetect/gstautoaudiosink.c:
+	* gst/autodetect/gstautoaudiosrc.c:
+	* gst/autodetect/gstautovideosink.c:
+	* gst/autodetect/gstautovideosrc.c:
+	  use gst_element_factory_get_metadata to replace obsolete API
+
+2012-09-14 17:55:16 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	  replace _get_caps_reffed with _get_caps
+
+2012-09-14 17:07:26 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngenc.c:
+	* tests/check/elements/qtmux.c:
+	  replace gst_element_class_set_details_simple with gst_element_class_set_metadata
+
+2012-09-14 13:30:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/jpeg/gstjpegenc.c:
+	* gst/multipart/multipartmux.c:
+	* gst/rtp/README:
+	* gst/videocrop/gstaspectratiocrop.c:
+	* gst/y4m/gsty4mencode.c:
+	* tests/examples/equalizer/demo.c:
+	* tests/examples/rtp/server-VTS-H263p-ATS-PCMA.sh:
+	* tests/examples/rtp/server-VTS-H263p.sh:
+	* tests/examples/rtp/server-decodebin-H263p-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H263p-alsasrc-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	* tests/examples/shapewipe/shapewipe-example.c:
+	* tests/examples/v4l2/camctrl.c:
+	* tests/icles/gdkpixbufsink-test.c:
+	  fix more caps
+
+2012-09-14 02:57:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development
+
+=== release 0.11.94 ===
+
+2012-09-14 02:48:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* configure.ac:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 0.11.94
+
+2012-09-14 01:50:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  po: update translations
+
 2012-09-14 01:46:14 +0100  Tim-Philipp Müller <tim@centricular.net>
 
 	* docs/plugins/gst-plugins-good-plugins.args:

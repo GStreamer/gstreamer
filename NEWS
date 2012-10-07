@@ -1,4 +1,18 @@
-This is GStreamer Good Plugins 1.0.0
+This is GStreamer Good Plugins 1.0.1
+
+Changes since 1.0.0:
+
+      * interleave, deinterlave: channel handling fixes for mono audio
+      * videobalance now supports NV12 and NV21 as well
+
+Bugs fixed since 1.0.0:
+
+      * 683622 : flvdemux: Internal flow error when demuxing speex
+      * 684972 : qtdemux: cannot play mp4 file when MOOV atom is at the end of file
+      * 684977 : Can't seek in AVI file in push mode
+      * 685059 : avidemux: cannot play video in push mode
+      * 685213 : rtph264pay: pushing unmapped data.
+      * 685512 : rtpgstdepay has a memory leak
 
 New features in 1.0.0:
 
