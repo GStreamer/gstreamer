@@ -60,7 +60,7 @@ static void gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType ** pointer
 static void gst_mpdparser_parse_s_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_segment_timeline_node (GstSegmentTimelineNode ** pointer, xmlNode * a_node);
 static void gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer, xmlNode * a_node);
-static void gst_mpdparser_parse_segment_list_node (GList ** list, xmlNode * a_node);
+static void gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer, xmlNode * a_node);
 static void gst_mpdparser_parse_representation_base_type (GstRepresentationBaseType ** pointer, xmlNode * a_node);
 static void gst_mpdparser_parse_representation_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node);
@@ -96,7 +96,7 @@ static GstRepresentationNode *gst_mpdparser_get_highest_representation (GList * 
 static GstRepresentationNode *gst_mpdparser_get_representation_with_max_bandwidth (GList * Representations, gint max_bandwidth);
 #endif
 static GstSegmentBaseType *gst_mpdparser_get_segment_base (GstPeriodNode *Period, GstAdaptationSetNode * AdaptationSet, GstRepresentationNode * Representation);
-static GstSegmentListNode *gst_mpdparser_get_first_segment_list (GList * SegmentList);
+static GstSegmentListNode *gst_mpdparser_get_segment_list (GstPeriodNode *Period, GstAdaptationSetNode * AdaptationSet, GstRepresentationNode * Representation);
 
 /* Memory management */
 static void gst_mpdparser_free_mpd_node (GstMPDNode * mpd_node);
@@ -1092,17 +1092,17 @@ gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType ** pointer, x
 }
 
 static void
-gst_mpdparser_parse_segment_list_node (GList ** list, xmlNode * a_node)
+gst_mpdparser_parse_segment_list_node (GstSegmentListNode ** pointer, xmlNode * a_node)
 {
   xmlNode *cur_node;
   GstSegmentListNode *new_segment_list;
 
-  new_segment_list = g_slice_new0 (GstSegmentListNode);
+  gst_mpdparser_free_segment_list_node (*pointer);
+  *pointer = new_segment_list = g_slice_new0 (GstSegmentListNode);
   if (new_segment_list == NULL) {
     GST_WARNING ("Allocation of SegmentList node failed!");
     return;
   }
-  *list = g_list_append (*list, new_segment_list);
 
   GST_LOG ("extension of SegmentList node:");
   gst_mpdparser_parse_mult_seg_base_type_ext (&new_segment_list->MultSegBaseType, a_node);
@@ -1292,6 +1292,8 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node)
         gst_mpdparser_parse_baseURL_node (&new_adap_set->BaseURLs, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentBase") == 0) {
         gst_mpdparser_parse_seg_base_type_ext (&new_adap_set->SegmentBase, cur_node);
+      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentList") == 0) {
+        gst_mpdparser_parse_segment_list_node (&new_adap_set->SegmentList, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "ContentComponent") == 0) {
         gst_mpdparser_parse_content_component_node (&new_adap_set->ContentComponents, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "SegmentTemplate") == 0) {
@@ -1365,13 +1367,14 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
-        gst_mpdparser_parse_representation_node (&new_period->Representations, cur_node);
-      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "AdaptationSet") == 0) {
+      if (xmlStrcmp (cur_node->name, (xmlChar *) "AdaptationSet") == 0) {
         gst_mpdparser_parse_adaptation_set_node (&new_period->AdaptationSets, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "SegmentBase") == 0) {
         gst_mpdparser_parse_seg_base_type_ext (&new_period->SegmentBase, cur_node);
+      } else if (xmlStrcmp (cur_node->name,
+              (xmlChar *) "SegmentList") == 0) {
+        gst_mpdparser_parse_segment_list_node (&new_period->SegmentList, cur_node);
       } else if (xmlStrcmp (cur_node->name,
               (xmlChar *) "SegmentTemplate") == 0) {
         gst_mpdparser_parse_segment_template_node (&new_period->SegmentTemplate, cur_node);
@@ -1782,16 +1785,20 @@ gst_mpdparser_get_rep_idx_with_max_bandwidth (GList * Representations,
 }
 
 static GstSegmentListNode *
-gst_mpdparser_get_first_segment_list (GList * SegmentList)
+gst_mpdparser_get_segment_list (GstPeriodNode *Period,
+    GstAdaptationSetNode * AdaptationSet, GstRepresentationNode * Representation)
 {
-  GList *list = NULL;
+  GstSegmentListNode *SegmentList = NULL;
 
-  if (SegmentList == NULL)
-    return NULL;
+  if (Representation && Representation->SegmentBase) {
+    SegmentList = Representation->SegmentList;
+  } else if (AdaptationSet) {
+    SegmentList = AdaptationSet->SegmentList;
+  } else {
+    SegmentList = Period->SegmentList;
+  }
 
-  list = g_list_first (SegmentList);
-
-  return list ? (GstSegmentListNode *) list->data : NULL;
+  return SegmentList;
 }
 
 /* memory management functions */
@@ -1862,13 +1869,11 @@ gst_mpdparser_free_period_node (GstPeriodNode * period_node)
   if (period_node) {
     g_free (period_node->id);
     gst_mpdparser_free_seg_base_type_ext (period_node->SegmentBase);
+    gst_mpdparser_free_segment_list_node (period_node->SegmentList);
     gst_mpdparser_free_segment_template_node (period_node->SegmentTemplate);
     g_list_foreach (period_node->AdaptationSets,
         (GFunc) gst_mpdparser_free_adaptation_set_node, NULL);
     g_list_free (period_node->AdaptationSets);
-    g_list_foreach (period_node->Representations,
-        (GFunc) gst_mpdparser_free_representation_node, NULL);
-    g_list_free (period_node->Representations);
     g_list_foreach (period_node->Subsets,
         (GFunc) gst_mpdparser_free_subset_node, NULL);
     g_list_free (period_node->Subsets);
@@ -1946,6 +1951,7 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
     gst_mpdparser_free_representation_base_type
         (adaptation_set_node->RepresentationBase);
     gst_mpdparser_free_seg_base_type_ext (adaptation_set_node->SegmentBase);
+    gst_mpdparser_free_segment_list_node (adaptation_set_node->SegmentList);
     gst_mpdparser_free_segment_template_node (adaptation_set_node->SegmentTemplate);
     g_list_foreach (adaptation_set_node->BaseURLs,
         (GFunc) gst_mpdparser_free_base_url_node, NULL);
@@ -1975,9 +1981,7 @@ gst_mpdparser_free_representation_node (GstRepresentationNode *
     g_list_free (representation_node->SubRepresentations);
     gst_mpdparser_free_seg_base_type_ext (representation_node->SegmentBase);
     gst_mpdparser_free_segment_template_node (representation_node->SegmentTemplate);
-    g_list_foreach (representation_node->SegmentList,
-        (GFunc) gst_mpdparser_free_segment_list_node, NULL);
-    g_list_free (representation_node->SegmentList);
+    gst_mpdparser_free_segment_list_node (representation_node->SegmentList);
     g_list_foreach (representation_node->BaseURLs,
         (GFunc) gst_mpdparser_free_base_url_node, NULL);
     g_list_free (representation_node->BaseURLs);
@@ -2416,7 +2420,12 @@ gst_mpd_client_setup_representation (GstMpdClient * client, GstActiveStream *str
   GstClockTime PeriodStart = 0, PeriodEnd, start_time, duration;
   guint i;
 
-  rep_list = stream->cur_adapt_set ? stream->cur_adapt_set->Representations : client->cur_period->Representations;
+  if (stream->cur_adapt_set == NULL) {
+    GST_WARNING ("No valid AdaptationSet node in the MPD file, aborting...");
+    return FALSE;
+  }
+
+  rep_list = stream->cur_adapt_set->Representations;
   stream->cur_representation = representation;
   stream->representation_idx = g_list_index (rep_list, representation);
 
@@ -2457,7 +2466,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client, GstActiveStream *str
 
     /* get the first segment_list of the selected representation */
     if ((stream->cur_segment_list =
-            gst_mpdparser_get_first_segment_list (representation->SegmentList)) == NULL) {
+            gst_mpdparser_get_segment_list (client->cur_period, stream->cur_adapt_set, representation)) == NULL) {
       GST_WARNING ("No valid SegmentList node in the MPD file, aborting...");
       return FALSE;
     }
@@ -2548,7 +2557,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
   GstActiveStream *stream;
   GstAdaptationSetNode *adapt_set;
   GstRepresentationNode *representation;
-  GList *rep_list;
+  GList *rep_list = NULL;
 
   /* select a new period */
   if (!client->cur_period)
@@ -2569,11 +2578,12 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
         adapt_set =
             gst_mpdparser_get_first_adapt_set (client->cur_period->
             AdaptationSets);
+      if (!adapt_set) {
+        GST_INFO ("No adaptation set found, aborting...");
+        return FALSE;
+      }
       /* retrive the list of representations */
-      if (adapt_set != NULL)
-        rep_list = adapt_set->Representations;
-      else
-        rep_list = client->cur_period->Representations;
+      rep_list = adapt_set->Representations;
       if (!rep_list) {
         GST_WARNING ("Can not retrieve any representation, aborting...");
         return FALSE;
@@ -2595,7 +2605,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
             gst_mpdparser_get_first_adapt_set_with_mimeType (client->
             cur_period->AdaptationSets, "audio");
       if (!adapt_set) {
-        GST_INFO ("No audio adaptation set found");
+        GST_INFO ("No audio adaptation set found, aborting...");
         return FALSE;
       }
       rep_list = adapt_set->Representations;
@@ -2620,7 +2630,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
             gst_mpdparser_get_first_adapt_set_with_mimeType (client->
             cur_period->AdaptationSets, "application");
       if (!adapt_set) {
-        GST_INFO ("No application adaptation set found");
+        GST_INFO ("No application adaptation set found, aborting...");
         return FALSE;
       }
       rep_list = adapt_set->Representations;
@@ -2650,8 +2660,6 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
   /* retrive representation list */
   if (stream->cur_adapt_set != NULL)
     rep_list = stream->cur_adapt_set->Representations;
-  else
-    rep_list = client->cur_period->Representations;
 
 #if 0
   /* fast start */

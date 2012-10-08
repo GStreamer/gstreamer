@@ -239,8 +239,8 @@ struct _GstRepresentationNode
   GstSegmentBaseType *SegmentBase;
   /* SegmentTemplate node */
   GstSegmentTemplateNode *SegmentTemplate;
-  /* list of SegmentList nodes */
-  GList *SegmentList;
+  /* SegmentList node */
+  GstSegmentListNode *SegmentList;
 };
 
 struct _GstDescriptorType
@@ -288,6 +288,8 @@ struct _GstAdaptationSetNode
   GstRepresentationBaseType *RepresentationBase;
   /* SegmentBase node */
   GstSegmentBaseType *SegmentBase;
+  /* SegmentList node */
+  GstSegmentListNode *SegmentList;
   /* SegmentTemplate node */
   GstSegmentTemplateNode *SegmentTemplate;
   /* list of BaseURL nodes */
@@ -312,13 +314,13 @@ struct _GstPeriodNode
   gboolean bitstreamSwitching;
   /* SegmentBase node */
   GstSegmentBaseType *SegmentBase;
+  /* SegmentList node */
+  GstSegmentListNode *SegmentList;
   /* SegmentTemplate node */
   GstSegmentTemplateNode *SegmentTemplate;
   /* list of Adaptation Set nodes */
   GList *AdaptationSets;
   /* list of Representation nodes */
-  GList *Representations;
-  /* list of Subset nodes */
   GList *Subsets;
   /* list of BaseURL nodes */
   GList *BaseURLs;

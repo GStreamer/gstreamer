@@ -1069,7 +1069,7 @@ static gboolean
 gst_dash_demux_switch_playlist (GstDashDemux * demux, guint64 bitrate)
 {
   GstActiveStream *stream = NULL;
-  GList *rep_list;
+  GList *rep_list = NULL;
   gint new_index;
   gboolean ret = FALSE;
 
@@ -1083,8 +1083,8 @@ gst_dash_demux_switch_playlist (GstDashDemux * demux, guint64 bitrate)
     /* retrieve representation list */
     if (stream->cur_adapt_set)
       rep_list = stream->cur_adapt_set->Representations;
-    else
-      rep_list = demux->client->cur_period->Representations;
+    if (!rep_list)
+      return FALSE;
 
     /* get representation index with current max_bandwidth */
     new_index =
