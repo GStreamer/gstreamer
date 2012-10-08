@@ -67,7 +67,7 @@ static void gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_
 static void gst_mpdparser_parse_subset_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_segment_template_node (GstSegmentTemplateNode ** pointer, xmlNode * a_node);
 static void gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node);
-static void gst_mpdparser_parse_program_info_node (GstProgramInformationNode ** pointer, xmlNode * a_node);
+static void gst_mpdparser_parse_program_info_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_metrics_range_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_root_node (GstMpdClient * client, xmlNode *a_node);
@@ -1388,17 +1388,17 @@ gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node)
 }
 
 static void
-gst_mpdparser_parse_program_info_node (GstProgramInformationNode ** pointer, xmlNode * a_node)
+gst_mpdparser_parse_program_info_node (GList ** list, xmlNode * a_node)
 {
   xmlNode *cur_node;
   GstProgramInformationNode *new_prog_info;
 
-  gst_mpdparser_free_prog_info_node (*pointer);
-  *pointer = new_prog_info = g_slice_new0 (GstProgramInformationNode);
+  new_prog_info = g_slice_new0 (GstProgramInformationNode);
   if (new_prog_info == NULL) {
     GST_WARNING ("Allocation of ProgramInfo node failed!");
     return;
   }
+  *list = g_list_append (*list, new_prog_info);
 
   GST_LOG ("attributes of ProgramInformation node:");
   new_prog_info->moreInformationURL =
@@ -1816,7 +1816,9 @@ gst_mpdparser_free_mpd_node (GstMPDNode * mpd_node)
       gst_date_time_unref (mpd_node->availabilityStartTime);
     if (mpd_node->availabilityEndTime)
       gst_date_time_unref (mpd_node->availabilityEndTime);
-    gst_mpdparser_free_prog_info_node (mpd_node->ProgramInfo);
+    g_list_foreach (mpd_node->ProgramInfo,
+        (GFunc) gst_mpdparser_free_prog_info_node, NULL);
+    g_list_free (mpd_node->ProgramInfo);
     g_list_foreach (mpd_node->BaseURLs,
         (GFunc) gst_mpdparser_free_base_url_node, NULL);
     g_list_free (mpd_node->BaseURLs);

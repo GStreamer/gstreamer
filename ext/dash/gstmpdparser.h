@@ -372,8 +372,8 @@ struct _GstMPDNode
   GList *BaseURLs;
   /* list of Location nodes */
   GList *Locations;
-  /* ProgramInformation node */
-  GstProgramInformationNode *ProgramInfo;
+  /* List of ProgramInformation nodes */
+  GList *ProgramInfo;
   /* list of Periods nodes */
   GList *Periods;
   /* list of Metrics nodes */
