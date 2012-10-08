@@ -1119,7 +1119,7 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
 
   if (!gst_mpd_client_get_next_header (demux->client, &initializationURL,
           stream_idx))
-    return FALSE;
+    return NULL;
 
   if (strncmp (initializationURL, "http://", 7) != 0) {
     next_header_uri =
@@ -1336,15 +1336,14 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
       /* We need to fetch a new header */
       if ((header = gst_dash_demux_get_next_header (demux, stream_idx)) == NULL) {
         GST_INFO_OBJECT (demux, "Unable to fetch header");
-        return FALSE;
+      } else {
+        /* Replace fragment with a new one including the header */
+        GstFragment *new_fragment =
+            gst_dash_demux_prepend_header (demux, download, header);
+        g_object_unref (header);
+        g_object_unref (download);
+        download = new_fragment;
       }
-
-      /* Replace fragment with a new one including the header */
-      GstFragment *new_fragment =
-          gst_dash_demux_prepend_header (demux, download, header);
-      g_object_unref (header);
-      g_object_unref (download);
-      download = new_fragment;
     } else
       gst_caps_unref (caps);
 
