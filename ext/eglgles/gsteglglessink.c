@@ -161,11 +161,8 @@ static const char *frag_REORDER_prog = {
       "uniform sampler2D tex;"
       "void main(void)"
       "{"
-      " float r, g, b;"
-      " r = texture2D(tex, opos).%c;"
-      " g = texture2D(tex, opos).%c;"
-      " b = texture2D(tex, opos).%c;"
-      " gl_FragColor = vec4(r, g, b, 1.0);"
+      " vec4 t = texture2D(tex, opos);"
+      " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);"
       "}"
 };
 
