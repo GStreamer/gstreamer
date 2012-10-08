@@ -127,7 +127,7 @@ struct _GstSNode
 
 struct _GstSegmentTimelineNode
 {
-  /* list of S nodes (1..N) */
+  /* list of S nodes */
   GList *S;
 };
 
@@ -336,6 +336,7 @@ struct _GstPeriodNode
 
 struct _GstProgramInformationNode
 {
+  gchar *lang;                      /* LangVectorType RFC 5646 */
   gchar *moreInformationURL;
   /* children nodes */
   gchar *Title;

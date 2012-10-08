@@ -1409,6 +1409,8 @@ gst_mpdparser_parse_program_info_node (GList ** list, xmlNode * a_node)
   *list = g_list_append (*list, new_prog_info);
 
   GST_LOG ("attributes of ProgramInformation node:");
+  new_prog_info->lang =
+      gst_mpdparser_get_xml_prop_string (a_node, "lang");
   new_prog_info->moreInformationURL =
       gst_mpdparser_get_xml_prop_string (a_node, "moreInformationURL");
 
@@ -1846,6 +1848,7 @@ static void
 gst_mpdparser_free_prog_info_node (GstProgramInformationNode * prog_info_node)
 {
   if (prog_info_node) {
+    g_free (prog_info_node->lang);
     g_free (prog_info_node->moreInformationURL);
     g_free (prog_info_node->Title);
     g_free (prog_info_node->Source);
