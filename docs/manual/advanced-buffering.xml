@@ -1,0 +1,269 @@
+<chapter id="chapter-buffering">
+  <title>Buffering</title>
+  <para>
+    The purpose of buffering is to accumulate enough data in a pipeline so that
+    playback can occur smoothly and without interruptions. It is typically done
+    when reading from a (slow) and non-live network source but can also be
+    used for live sources.
+  </para>
+  <para>
+    &GStreamer; provides support for the following use cases:
+    <itemizedlist>
+      <listitem>
+        <para>
+          Buffering up to a specific amount of data, in memory, before starting
+          playback so that network fluctuations are minimized.
+          See <xref linkend="section-buffering-stream"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Download of the network file to a local disk with fast seeking in the
+          downloaded data. This is similar to the quicktime/youtube players.
+          See <xref linkend="section-buffering-download"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Caching of (semi)-live streams to a local, on disk, ringbuffer with
+          seeking in the cached area. This is similar to tivo-like timeshifting.
+          See <xref linkend="section-buffering-timeshift"/>.
+        </para>
+      </listitem>
+    </itemizedlist>
+  </para>
+  <para>
+    &GStreamer; can provide the application with progress reports about the
+    current buffering state as well as let the application decide on how
+    to buffer and when the buffering stops.
+  </para>
+  <para>
+    In the most simple case, the application has to listen for BUFFERING
+    messages on the bus. If the percent indicator inside the BUFFERING message
+    is smaller than 100, the pipeline is buffering. When a message is
+    received with 100 percent, buffering is complete. In the buffering state,
+    the application should keep the pipeline in the PAUSED state. When buffering
+    completes, it can put the pipeline (back) in the PLAYING state.
+  </para>
+  <para>
+    What follows is an example of how the message handler could deal with
+    the BUFFERING messages. We will see more advanced methods in
+    <xref linkend="section-buffering-strategies"/>.
+  </para>
+  <programlisting>
+<![CDATA[
+  [...]
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_BUFFERING:{
+      gint percent;
+
+      gst_message_parse_buffering (message, &percent);
+
+      /* no state management needed for live pipelines */
+      if (is_live)
+        break;
+
+      if (percent == 100) {
+        /* a 100% message means buffering is done */
+        buffering = FALSE;
+        /* if the desired state is playing, go back */
+        if (target_state == GST_STATE_PLAYING) {
+          gst_element_set_state (pipeline, GST_STATE_PLAYING);
+        }
+      } else {
+        /* buffering busy */
+        if (buffering == FALSE && target_state == GST_STATE_PLAYING) {
+          /* we were not buffering but PLAYING, PAUSE  the pipeline. */
+          gst_element_set_state (pipeline, GST_STATE_PAUSED);
+        }
+        buffering = TRUE;
+      }
+      break;
+    case ...
+
+  [...]
+]]>
+  </programlisting>
+
+  <sect1 id="section-buffering-stream">
+    <title>Stream buffering </title>
+    <programlisting>
+      +---------+     +---------+     +-------+
+      | httpsrc |     | buffer  |     | demux |
+      |        src - sink      src - sink     ....
+      +---------+     +---------+     +-------+
+    </programlisting>
+    <para>
+      In this case we are reading from a slow network source into a buffer
+      element (such as queue2).
+    </para>
+    <para>
+      The buffer element has a low and high watermark expressed in bytes. The
+      buffer uses the watermarks as follows:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          The buffer element will post BUFFERING messages until the high
+          watermark is hit. This instructs the application to keep the pipeline
+          PAUSED, which will eventually block the srcpad from pushing while
+          data is prerolled in the sinks.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          When the high watermark is hit, a BUFFERING message with 100% will be
+          posted, which instructs the application to continue playback.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          When during playback, the low watermark is hit, the queue will start
+          posting BUFFERING messages again, making the application PAUSE the
+          pipeline again until the high watermark is hit again. This is called
+          the rebuffering stage.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          During playback, the queue level will fluctuate between the high and
+          the low watermark as a way to compensate for network irregularities.
+        </para>
+      </listitem>
+   </itemizedlist>
+   <para>
+     This buffering method is usable when the demuxer operates in push mode.
+     Seeking in the stream requires the seek to happen in the network source.
+     It is mostly desirable when the total duration of the file is not known,
+     such as in live streaming or when efficient seeking is not
+     possible/required.
+   </para>
+   <para>
+     The problem is configuring a good low and high watermark. Here are some
+     ideas:
+   </para>
+   <itemizedlist>
+      <listitem>
+        <para>
+          It is possible to measure the network bandwidth and configure the
+          low/high watermarks in such a way that buffering takes a fixed
+          amount of time.
+        </para>
+        <para>
+          The queue2 element in &GStreamer; core has the max-size-time property
+          that, together with the use-rate-estimate property, does exactly
+          that. Also the playbin buffer-duration property uses the rate estimate
+          to scale the amount of data that is buffered.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Based on the codec bitrate, it is also possible to set the watermarks
+          in such a way that a fixed amount of data is buffered before playback
+          starts. Normally, the buffering element doesn't know about the
+          bitrate of the stream but it can get this with a query.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Start with a fixed amount of bytes, measure the time between
+          rebuffering and increase the queue size until the time between
+          rebuffering is within the application's chosen limits.
+        </para>
+      </listitem>
+   </itemizedlist>
+   <para>
+     The buffering element can be inserted anywhere in the pipeline. You could,
+     for example, insert the buffering element before a decoder. This would
+     make it possible to set the low/high watermarks based on time.
+   </para>
+   <para>
+     The buffering flag on playbin, performs buffering on the parsed data.
+     Another advantage of doing the buffering at a later stage is that you can
+     let the demuxer operate in pull mode. When reading data from a slow
+     network drive (with filesrc) this can be an interesting way to buffer.
+   </para>
+  </sect1>
+
+  <sect1 id="section-buffering-download">
+    <title>Download buffering </title>
+    <programlisting>
+      +---------+     +---------+     +-------+
+      | httpsrc |     | buffer  |     | demux |
+      |        src - sink      src - sink     ....
+      +---------+     +----|----+     +-------+
+                           V
+                          file
+    </programlisting>
+    <para>
+      If we know the server is streaming a fixed length file to the client,
+      the application can choose to download the entire file on disk. The
+      buffer element will provide a push or pull based srcpad to the demuxer
+      to navigate in the downloaded file.
+    </para>
+    <para>
+      This mode is only suitable when the client can determine the length of
+      the file on the server.
+    </para>
+    <para>
+      In this case, buffering messages will be emited as usual when the
+      requested range is not within the downloaded area + buffersize. The
+      buffering message will also contain an indication that incremental
+      download is being performed. This flag can be used to let the application
+      control the buffering in a more intelligent way, using the BUFFERING
+      query, for example. See <xref linkend="section-buffering-strategies"/>.
+    </para>
+  </sect1>
+
+  <sect1 id="section-buffering-timeshift">
+    <title>Timeshift buffering </title>
+    <programlisting>
+      +---------+     +---------+     +-------+
+      | httpsrc |     | buffer  |     | demux |
+      |        src - sink      src - sink     ....
+      +---------+     +----|----+     +-------+
+                           V
+                       file-ringbuffer
+    </programlisting>
+    <para>
+      In this mode, a fixed size ringbuffer is kept to download the server
+      content.  This allows for seeking in the buffered data. Depending on the
+      size of the ringbuffer one can seek further back in time.
+    </para>
+    <para>
+      This mode is suitable for all live streams. As with the incremental
+      download mode, buffering messages are emited along with an indication
+      that timeshifting download is in progress.
+    </para>
+  </sect1>
+
+  <sect1 id="section-buffering-live">
+    <title>Live buffering </title>
+    <para>
+      In live pipelines we usually introduce some fixed latency between the
+      capture and the playback elements. This latency can be introduced by
+      a queue (such as a jitterbuffer) or by other means (in the audiosink).
+    </para>
+    <para>
+      Buffering messages can be emited in those live pipelines as well and
+      serve as an indication to the user of the latency buffering. The
+      application usually does not react to these buffering messages with a
+      state change.
+    </para>
+  </sect1>
+
+  <sect1 id="section-buffering-strategies">
+    <title>Buffering strategies </title>
+    <para>
+      WRITEME
+    </para>
+    <para>
+      The application can use the BUFFERING query to get the estimated
+      download time and match this time to the current/remaining playback time
+      to control when playback should start to have a non-interrupted playback
+      experience.
+    </para>
+  </sect1>
+
+</chapter>

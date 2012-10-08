@@ -50,7 +50,7 @@ Some use cases:
 
   This buffering method is usable when the demuxer operates in push mode.
   Seeking in the stream requires the seek to happen in the network source.
-  It is mostly desirable when the total duration of the file is not know, such
+  It is mostly desirable when the total duration of the file is not known, such
   as in live streaming or when efficient seeking is not possible/required.
 
  * Incremental download

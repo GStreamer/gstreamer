@@ -41,6 +41,7 @@
 <!ENTITY METADATA             SYSTEM "advanced-metadata.xml">
 <!ENTITY INTERFACES           SYSTEM "advanced-interfaces.xml">
 <!ENTITY CLOCKS               SYSTEM "advanced-clocks.xml">
+<!ENTITY BUFFERING            SYSTEM "advanced-buffering.xml">
 <!ENTITY DPARAMS              SYSTEM "advanced-dparams.xml">
 <!ENTITY THREADS              SYSTEM "advanced-threads.xml">
 <!ENTITY AUTOPLUGGING         SYSTEM "advanced-autoplugging.xml">
@@ -172,6 +173,7 @@
     &METADATA;
     &INTERFACES;
     &CLOCKS;
+    &BUFFERING;
     &DPARAMS;
     &THREADS;
     &AUTOPLUGGING;
