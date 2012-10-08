@@ -28,7 +28,8 @@ state could unqueue the buffer again.
 The state is commited in the following conditions:
 
  - a buffer is received on a sinkpad
- - an EOS is received on a sinkpad.
+ - an GAP event is received on a sinkpad.
+ - an EOS event is received on a sinkpad.
 
 We require the state change to be commited in EOS as well since an EOS means
 by definition that no buffer is going to arrive anymore.

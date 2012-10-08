@@ -11,6 +11,9 @@ elements could know not to expect any more data for that gap.
 In 0.10, segment information conveyed through SEGMENT events can be used
 for the same purpose.
 
+In 1.0, there is a GAP event that works in a similar fashion as the FILLER
+event in 0.8.
+
 Use cases
 ~~~~~~~~~
 
