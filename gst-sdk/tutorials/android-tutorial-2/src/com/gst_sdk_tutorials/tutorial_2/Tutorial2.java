@@ -12,16 +12,16 @@ import android.widget.Toast;
 import com.gst_sdk.GStreamer;
 
 public class Tutorial2 extends Activity {
-    private native void nativeInit();
-    private native void nativeFinalize();
-    private native void nativePlay();
-    private native void nativePause();
-    private static native boolean classInit();
-    private long native_custom_data;
+    private native void nativeInit(); /* Initialize native code, build pipeline, etc */
+    private native void nativeFinalize(); /* Destroy pipeline and shutdown native code */
+    private native void nativePlay(); /* Set pipeline to PLAYING */
+    private native void nativePause(); /* Set pipeline to PAUSED */
+    private static native boolean nativeClassInit(); /* Initialize native class: cache Method IDs for callbacks */
+    private long native_custom_data; /* Native code will use this to keep private data */
 
-    private boolean is_playing_desired;
+    private boolean is_playing_desired; /* Whether the user asked to go to PLAYING */
 
-    private Bundle initialization_data;
+    private Bundle initialization_data; /* onCreate parameters kept for later */
 
     /* Called when the activity is first created. */
     @Override
@@ -29,8 +29,9 @@ public class Tutorial2 extends Activity {
     {
         super.onCreate(savedInstanceState);
 
+        /* Initialize GStreamer and warn if it fails */
         try {
-        GStreamer.init(this);
+            GStreamer.init(this);
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             finish(); 
@@ -55,16 +56,19 @@ public class Tutorial2 extends Activity {
             }
         });
 
+        /* Keep the instance state for later, since we will not perform our initialization
+         * until the native code reports that it is itself initialized.
+         */
         initialization_data = savedInstanceState;
 
-        /* Start with disabled buttons, until GStreamer is initialized */
+        /* Start with disabled buttons, until native code is initialized */
         this.findViewById(R.id.button_play).setEnabled(false);
         this.findViewById(R.id.button_stop).setEnabled(false);
         is_playing_desired = false;
 
         nativeInit();
     }
-    
+
     protected void onSaveInstanceState (Bundle outState) {
         Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired);
         outState.putBoolean("playing", is_playing_desired);
@@ -75,7 +79,7 @@ public class Tutorial2 extends Activity {
         super.onDestroy();
     }
 
-    /* Called from native code */
+    /* Called from native code. This sets the content of the TextView from the UI thread. */
     private void setMessage(final String message) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_message);
         runOnUiThread (new Runnable() {
@@ -85,8 +89,11 @@ public class Tutorial2 extends Activity {
         });
     }
 
-    /* Called from native code */
-    private void onGStreamerInitialized () {    	
+    /* Called from native code. Native code calls this once it has created its pipeline and
+     * the main loop is running, so it is ready to accept commands.
+     */
+    private void onGStreamerInitialized () {
+        /* If initialization data is present, retrieve it */
         if (initialization_data != null) {
             is_playing_desired = initialization_data.getBoolean("playing");
             Log.i ("GStreamer", "Restoring state, playing:" + is_playing_desired);
@@ -107,7 +114,7 @@ public class Tutorial2 extends Activity {
     static {
         System.loadLibrary("gstreamer_android");
         System.loadLibrary("tutorial-2");
-        classInit();
+        nativeClassInit();
     }
 
 }
