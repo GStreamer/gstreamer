@@ -313,7 +313,7 @@ dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" aiff \
  cdxaparse \
  dccp faceoverlay \
- fieldanalysis freeverb \
+ freeverb \
  hdvparse ivfparse jp2kdecimator \
  kate librfb \
  mpegpsmux mve mxf mythtv nsf nuvdemux \
