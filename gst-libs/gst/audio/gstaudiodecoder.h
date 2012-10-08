@@ -215,12 +215,18 @@ struct _GstAudioDecoder
  *                  Allows closing external resources.
  * @negotiate:      Optional.
  *                  Negotiate with downstream and configure buffer pools, etc.
+ *                  Subclasses should chain up to the parent implementation to
+ *                  invoke the default handler.
  * @decide_allocation: Optional.
  *                     Setup the allocation parameters for allocating output
  *                     buffers. The passed in query contains the result of the
  *                     downstream allocation query.
+ *                     Subclasses should chain up to the parent implementation to
+ *                     invoke the default handler.
  * @propose_allocation: Optional.
  *                      Propose buffer allocation parameters for upstream elements.
+ *                      Subclasses should chain up to the parent implementation to
+ *                      invoke the default handler.
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame (and likely @set_format) needs to be
