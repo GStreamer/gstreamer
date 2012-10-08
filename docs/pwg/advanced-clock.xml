@@ -73,7 +73,10 @@
     <para>
       Synchronization is now a matter of making sure that a buffer with a
       certain running-time is played when the clock reaches the same
-      running-time. Usually this task is done by sink elements.
+      running-time. Usually this task is done by sink elements. Sink also
+      have to take into account the latency configured in the pipeline and
+      add this to the buffer running-time before synchronizing to the
+      pipeline clock.
     </para>
   </sect1>
   
@@ -120,11 +123,11 @@
     </sect2>
 
     <sect2>
-      <title>Parser elements </title>
+      <title>Parser/Decoder/Encoder elements </title>
       <para>
-        Parser elements must use the incomming timestamps and transfer those
-        to the resulting output buffers. They are allowed to interpolate or
-        reconstruct timestamps on missing input buffers when they can.
+        Parser/Decoder elements must use the incomming timestamps and transfer
+        those to the resulting output buffers. They are allowed to interpolate
+        or reconstruct timestamps on missing input buffers when they can.
       </para>
     </sect2>
 
@@ -139,8 +142,18 @@
         buffer timestamps.
       </para>
     </sect2>
+
+    <sect2>
+      <title>Muxer elements</title>
+      <para>
+        Muxer elements should use the incomming buffer running-time to mux the
+        different streams together. They should copy the incomming running-time
+        to the outgoing buffers.
+      </para>
+    </sect2>
     
-    <sect2> <title> Sink elements </title>
+    <sect2>
+      <title>Sink elements</title>
       <para>
 	If the element is intended to emit samples at a specific time (real time
 	playing), the element should require a clock, and thus implement the
@@ -148,8 +161,9 @@
       </para>
       <para>
         The sink should then make sure that the sample with running-time is played
-        exactly when the pipeline clock reaches that running-time. Some elements
-        might use the clock API such as <function>gst_clock_id_wait()</function>
+        exactly when the pipeline clock reaches that running-time + latency.
+        Some elements might use the clock API such as
+        <function>gst_clock_id_wait()</function>
         to perform this action. Other sinks might need to use other means of
         scheduling timely playback of the data.
       </para>
