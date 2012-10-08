@@ -284,6 +284,14 @@ struct _GstAdaptationSetNode
   GstConditionalUintType *subsegmentAlignment;
   GstSAPType subsegmentStartsWithSAP;
   gboolean bitstreamSwitching;
+  /* list of Accessibility DescriptorType nodes */
+  GList *Accessibility;
+  /* list of Role DescriptorType nodes */
+  GList *Role;
+  /* list of Rating DescriptorType nodes */
+  GList *Rating;
+  /* list of Viewpoint DescriptorType nodes */
+  GList *Viewpoint;
   /* RepresentationBase extension */
   GstRepresentationBaseType *RepresentationBase;
   /* SegmentBase node */

@@ -1286,7 +1286,15 @@ gst_mpdparser_parse_adaptation_set_node (GList ** list, xmlNode * a_node)
   /* explore children nodes */
   for (cur_node = a_node->children; cur_node; cur_node = cur_node->next) {
     if (cur_node->type == XML_ELEMENT_NODE) {
-      if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
+      if (xmlStrcmp (cur_node->name, (xmlChar *) "Accessibility") == 0) {
+        gst_mpdparser_parse_descriptor_type_node (&new_adap_set->Accessibility, cur_node);
+      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Role") == 0) {
+        gst_mpdparser_parse_descriptor_type_node (&new_adap_set->Role, cur_node);
+      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Rating") == 0) {
+        gst_mpdparser_parse_descriptor_type_node (&new_adap_set->Rating, cur_node);
+      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Viewpoint") == 0) {
+        gst_mpdparser_parse_descriptor_type_node (&new_adap_set->Viewpoint, cur_node);
+      } else if (xmlStrcmp (cur_node->name, (xmlChar *) "Representation") == 0) {
         gst_mpdparser_parse_representation_node (&new_adap_set->Representations, cur_node);
       } else if (xmlStrcmp (cur_node->name, (xmlChar *) "BaseURL") == 0) {
         gst_mpdparser_parse_baseURL_node (&new_adap_set->BaseURLs, cur_node);
@@ -1950,6 +1958,18 @@ gst_mpdparser_free_adaptation_set_node (GstAdaptationSetNode *
         adaptation_set_node->segmentAlignment);
     g_slice_free (GstConditionalUintType,
         adaptation_set_node->subsegmentAlignment);
+    g_list_foreach (adaptation_set_node->Accessibility,
+        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
+    g_list_free (adaptation_set_node->Accessibility);
+    g_list_foreach (adaptation_set_node->Role,
+        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
+    g_list_free (adaptation_set_node->Role);
+    g_list_foreach (adaptation_set_node->Rating,
+        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
+    g_list_free (adaptation_set_node->Rating);
+    g_list_foreach (adaptation_set_node->Viewpoint,
+        (GFunc) gst_mpdparser_free_descriptor_type_node, NULL);
+    g_list_free (adaptation_set_node->Viewpoint);
     gst_mpdparser_free_representation_base_type
         (adaptation_set_node->RepresentationBase);
     gst_mpdparser_free_seg_base_type_ext (adaptation_set_node->SegmentBase);
