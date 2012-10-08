@@ -2887,8 +2887,9 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GList **lang,
   gchar *this_mimeType = "audio";
   gchar *mimeType = NULL;
   guint nb_adapatation_set = 0;
+
   if (AdaptationSets == NULL)
-    return;
+    return 0;
 
   for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
     adapt_set = (GstAdaptationSetNode *) list->data;
