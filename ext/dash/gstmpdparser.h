@@ -468,12 +468,12 @@ GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client,
 guint gst_mpdparser_get_nb_adaptationSet(GstMpdClient *client);
 
 /* Get With and high of video parameter by stream */
-guint  gst_mpd_client_get_width_of_video_current_stream (GstMpdClient *client, GstActiveStream *stream);
-guint  gst_mpd_client_get_height_of_video_current_stream (GstMpdClient *client, GstActiveStream *stream);
+guint  gst_mpd_client_get_width_of_video_current_stream (GstRepresentationBaseType *RepresentationBase);
+guint  gst_mpd_client_get_height_of_video_current_stream (GstRepresentationBaseType *RepresentationBase);
 
 /* Get channel and rate of audio parameter by stream */
-guint  gst_mpd_client_get_rate_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream);
-guint  gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream);
+guint  gst_mpd_client_get_rate_of_audio_current_stream (GstRepresentationBaseType *RepresentationBase);
+guint  gst_mpd_client_get_num_channels_of_audio_current_stream (GstRepresentationBaseType *RepresentationBase);
 
 /* Support multi language */
 guint gst_mpdparser_get_list_and_nb_of_audio_language(GList **lang, GList *AdaptationSets);

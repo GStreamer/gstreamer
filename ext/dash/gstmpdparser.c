@@ -2884,43 +2884,43 @@ guint gst_mpdparser_get_nb_active_stream (GstMpdClient *client){
  return g_list_length (client->active_streams);
 }
 
-guint gst_mpdparser_get_nb_adaptationSet(GstMpdClient *client){
-
+guint gst_mpdparser_get_nb_adaptationSet(GstMpdClient *client)
+{
  g_return_val_if_fail (client != NULL, FALSE);
  g_return_val_if_fail (client->cur_period != NULL, FALSE);
  g_return_val_if_fail (client->cur_period->AdaptationSets != NULL, FALSE);
  return g_list_length (client->cur_period->AdaptationSets);
 }
 
-GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client, gint stream_idx){
-
+GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client, gint stream_idx)
+{
  g_return_val_if_fail (client != NULL, FALSE);
  g_return_val_if_fail (client->active_streams != NULL, FALSE);
  return g_list_nth_data (client->active_streams,
             stream_idx);
 }
 
-guint gst_mpd_client_get_width_of_video_current_stream (GstMpdClient *client, GstActiveStream *stream){
-
- g_return_val_if_fail (stream != NULL, FALSE);
- return stream->cur_representation->RepresentationBase->width;
+guint gst_mpd_client_get_width_of_video_current_stream (GstRepresentationBaseType *RepresentationBase)
+{
+ g_return_val_if_fail (RepresentationBase != NULL, 0);
+ return RepresentationBase->width;
 }
 
-guint gst_mpd_client_get_height_of_video_current_stream (GstMpdClient *client, GstActiveStream *stream){
-
- g_return_val_if_fail (stream != NULL, FALSE);
- return stream->cur_representation->RepresentationBase->height;
+guint gst_mpd_client_get_height_of_video_current_stream (GstRepresentationBaseType *RepresentationBase)
+{
+ g_return_val_if_fail (RepresentationBase != NULL, 0);
+ return RepresentationBase->height;
 }
 
-guint gst_mpd_client_get_rate_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream){
-
- g_return_val_if_fail (stream != NULL, FALSE);
- return (guint) stream->cur_representation->RepresentationBase->audioSamplingRate;
+guint gst_mpd_client_get_rate_of_audio_current_stream (GstRepresentationBaseType *RepresentationBase)
+{
+ g_return_val_if_fail (RepresentationBase != NULL, 0);
+ return (guint) RepresentationBase->audioSamplingRate;
 }
 
-guint gst_mpd_client_get_num_channels_of_audio_current_stream (GstMpdClient *client, GstActiveStream *stream){
-
- g_return_val_if_fail (stream != NULL, FALSE);
+guint gst_mpd_client_get_num_channels_of_audio_current_stream (GstRepresentationBaseType *RepresentationBase)
+{
+ g_return_val_if_fail (RepresentationBase != NULL, 0);
  /* TODO*/
  return 1;
 }
