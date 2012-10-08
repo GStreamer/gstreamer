@@ -792,11 +792,12 @@ gst_field_analysis_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     default:
+      forward = TRUE;
       break;
   }
 
   if (forward) {
-    ret = gst_pad_push_event (filter->srcpad, event);
+    ret = gst_pad_event_default (pad, parent, event);
   }
 
   return ret;
