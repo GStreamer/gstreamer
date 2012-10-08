@@ -126,7 +126,7 @@ GstFlowReturn _gst_video_decoder_error (GstVideoDecoder *dec, gint weight,
 /**
  * GST_VIDEO_DECODER_ERROR:
  * @el:     the base video decoder element that generates the error
- * @weight: element defined weight of the error, added to error count
+ * @w:      element defined weight of the error, added to error count
  * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
  * @code:   error code defined for that domain (see #gstreamer-GstGError)
  * @text:   the message to display (format string and args enclosed in
