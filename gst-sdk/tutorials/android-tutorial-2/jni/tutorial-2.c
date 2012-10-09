@@ -145,7 +145,7 @@ static void *app_function (void *userdata) {
   data->context = g_main_context_new ();
 
   /* Build pipeline */
-  data->pipeline = gst_parse_launch("audiotestsrc ! autoaudiosink", &error);
+  data->pipeline = gst_parse_launch("audiotestsrc ! audioconvert ! audioresample ! autoaudiosink", &error);
   if (error) {
     gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
     g_clear_error (&error);
