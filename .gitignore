@@ -15,3 +15,7 @@ obj
 .project
 .settings
 .libs
+.cproject
+gst-build
+project.properties
+gst_sdk
