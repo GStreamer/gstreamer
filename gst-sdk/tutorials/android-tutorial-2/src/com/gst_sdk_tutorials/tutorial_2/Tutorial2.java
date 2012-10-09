@@ -14,8 +14,8 @@ import com.gst_sdk.GStreamer;
 public class Tutorial2 extends Activity {
     private native void nativeInit();     // Initialize native code, build pipeline, etc
     private native void nativeFinalize(); // Destroy pipeline and shutdown native code
-    private native void nativePlay();     // Set pipeline toPLAYING
-    private native void nativePause();    // Set pipeline toPAUSED
+    private native void nativePlay();     // Set pipeline to PLAYING
+    private native void nativePause();    // Set pipeline to PAUSED
     private static native boolean nativeClassInit(); // Initialize native class: cache Method IDs for callbacks
     private long native_custom_data;      // Native code will use this to keep private data
 
@@ -56,8 +56,8 @@ public class Tutorial2 extends Activity {
             }
         });
 
-        // Keep the instance state for later, since we will not perform ourinitialization
-        // until the native code reports that it is itselfinitialized.
+        // Keep the instance state for later, since we will not perform our initialization
+        // until the native code reports that it is itself initialized.
         initialization_data = savedInstanceState;
 
         // Start with disabled buttons, until native code is initialized
@@ -88,8 +88,8 @@ public class Tutorial2 extends Activity {
         });
     }
 
-    // Called from native code. Native code calls this once it has created its pipelineand
-    // the main loop is running, so it is ready to acceptcommands.
+    // Called from native code. Native code calls this once it has created its pipeline and
+    // the main loop is running, so it is ready to accept commands.
     private void onGStreamerInitialized () {
         // If initialization data is present, retrieve it
         if (initialization_data != null) {
