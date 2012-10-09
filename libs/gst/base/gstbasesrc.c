@@ -3295,6 +3295,7 @@ gst_base_src_start_wait (GstBaseSrc * basesrc)
       goto flushing;
   }
   result = basesrc->priv->start_result;
+  GST_DEBUG_OBJECT (basesrc, "got %s", gst_flow_get_name (result));
   GST_LIVE_UNLOCK (basesrc);
 
   return result;
