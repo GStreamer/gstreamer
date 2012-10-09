@@ -675,6 +675,11 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
+  if (width == 0 || height == 0) {
+    GST_ERROR_OBJECT (self, "Height or width not set");
+    return FALSE;
+  }
+
   if (crop_bottom)
     height = height - (height - crop_bottom - 1);
   if (crop_top)
@@ -718,6 +723,7 @@ static gboolean
 gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
     const GstAmcBufferInfo * buffer_info, GstBuffer * outbuf)
 {
+  GstAmcVideoDecClass *klass = GST_AMC_VIDEO_DEC_GET_CLASS (self);
   GstAmcBuffer *buf = &self->output_buffers[idx];
   GstVideoCodecState *state =
       gst_video_decoder_get_output_state (GST_VIDEO_DECODER (self));
@@ -748,32 +754,50 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
     case COLOR_FormatYUV420Planar:{
       gint i, j, height;
       guint8 *src, *dest;
+      gint stride, slice_height;
       gint src_stride, dest_stride;
       gint row_length;
 
+      stride = self->stride;
+      if (stride == 0) {
+        GST_ERROR_OBJECT (self, "Stride not set");
+        goto done;
+      }
+
+      slice_height = self->slice_height;
+      if (slice_height == 0) {
+        /* NVidia Tegra 3 on Nexus 7 does not set this */
+        if (g_str_has_prefix (klass->codec_info->name, "OMX.Nvidia.")) {
+          slice_height = GST_ROUND_UP_32 (self->height);
+        } else {
+          GST_ERROR_OBJECT (self, "Slice height not set");
+          goto done;
+        }
+      }
+
       for (i = 0; i < 3; i++) {
         if (i == 0) {
-          src_stride = self->stride;
+          src_stride = stride;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         } else {
-          src_stride = (self->stride + 1) / 2;
+          src_stride = (stride + 1) / 2;
           dest_stride = GST_VIDEO_INFO_COMP_STRIDE (info, i);
         }
 
         src = buf->data + buffer_info->offset;
 
         if (i == 0) {
-          src += self->crop_top * self->stride;
+          src += self->crop_top * stride;
           src += self->crop_left;
           row_length = self->width;
         } else if (i > 0) {
-          src += self->slice_height * self->stride;
+          src += slice_height * stride;
           src += self->crop_top * src_stride;
           src += self->crop_left / 2;
           row_length = (self->width + 1) / 2;
         }
         if (i == 2)
-          src += ((self->slice_height + 1) / 2) * ((self->stride + 1) / 2);
+          src += ((slice_height + 1) / 2) * ((stride + 1) / 2);
 
         dest = GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, i);
         height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
@@ -793,6 +817,12 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       guint8 *src, *dest;
       gint src_stride, dest_stride;
       gint row_length;
+
+      /* This should always be set */
+      if (self->stride == 0 || self->slice_height == 0) {
+        GST_ERROR_OBJECT (self, "Stride or slice height not set");
+        goto done;
+      }
 
       /* FIXME: This does not work for odd widths or heights
        * but might as well be a bug in the codec */
@@ -831,6 +861,12 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       guint8 *src, *dest;
       gint src_stride, dest_stride;
       gint row_length;
+
+      /* This should always be set */
+      if (self->stride == 0 || self->slice_height == 0) {
+        GST_ERROR_OBJECT (self, "Stride or slice height not set");
+        goto done;
+      }
 
       /* FIXME: This is untested! */
 
