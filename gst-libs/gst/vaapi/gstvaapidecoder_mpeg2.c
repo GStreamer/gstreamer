@@ -971,7 +971,7 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         }
 
         status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-        if (size < 8)
+        if (size < 4)
             break;
         ofs = scan_for_start_code(priv->adapter, 0, size, &start_code);
         if (ofs < 0)
@@ -991,17 +991,6 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
             break;
         buffer = gst_adapter_take_buffer(priv->adapter, ofs);
         size -= ofs;
-
-        if (ofs == 4) {
-            // Ignore empty user-data packets
-            if ((start_code & 0xff) == GST_MPEG_VIDEO_PACKET_USER_DATA) {
-                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-                continue;
-            }
-            GST_ERROR("failed to get a valid packet (SC: 0x%08x)", start_code);
-            status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-            break;
-        }
 
         buf      = GST_BUFFER_DATA(buffer);
         buf_size = GST_BUFFER_SIZE(buffer);
