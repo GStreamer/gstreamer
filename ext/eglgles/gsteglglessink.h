@@ -77,8 +77,8 @@ typedef struct _GstEglGlesRenderContext GstEglGlesRenderContext;
 
 typedef struct _GstEglGlesImageFmt GstEglGlesImageFmt;
 
-/* Should be extended when new rendering methods
- *   get implemented.
+/* Should be extended if new rendering methods
+ * get implemented.
  */
 typedef enum
 {
@@ -145,21 +145,22 @@ struct _GstEglGlesBuffer
 
 struct _GstEglGlesSink
 {
-  GstVideoSink videosink;
-  GstVideoFormat format;
-  GstCaps *current_caps;
-
   int par_n, par_d;                     /* Aspect ratio from caps */
 
+  GstVideoSink videosink;
+  GstVideoFormat format;
+  GstVideoRectangle display_region;
+  GstCaps *sinkcaps;
+  GstCaps *current_caps;
+
+  GstEglGlesImageFmt *selected_fmt;
+  GstEglGlesSinkRenderingPath rendering_path;
   GstEglGlesRenderContext *eglglesctx;
 
-  GstVideoRectangle display_region;
-  GList *supported_fmts;
-  GstEglGlesImageFmt *selected_fmt;
-  GstCaps *sinkcaps;
-
   GMutex *flow_lock;
+  GList *supported_fmts;
 
+  /* Runtime flags */
   gboolean have_window;
   gboolean using_own_window;
   gboolean have_surface;;
@@ -167,9 +168,7 @@ struct _GstEglGlesSink
   gboolean have_texture;
   gboolean egl_started;
 
-  GstEglGlesSinkRenderingPath rendering_path;
-
-  /* props */
+  /* Properties */
   gboolean create_window;
   gboolean force_rendering_slow;
   gboolean force_aspect_ratio;

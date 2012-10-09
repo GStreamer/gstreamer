@@ -1582,12 +1582,10 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   eglglessink->have_surface = TRUE;
   g_mutex_unlock (eglglessink->flow_lock);
 
-  /* Init vertex and fragment progs.
-   * XXX: Need to be runtime conditional or ifdefed
-   */
-
-  /* Shader compiler support is optional but we
-   * currently rely on it.
+  /* Init vertex and fragment GLSL shaders. This entire block might need to be
+   * runtime conditional once the fast rendering path gets fully implemented.
+   *
+   * Note: Shader compiler support is optional but we currently rely on it.
    */
 
   glGetBooleanv (GL_SHADER_COMPILER, &ret);
@@ -1805,10 +1803,10 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       /* Set 2D resizing params */
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      /* The following two calls are for non-POT width/height cases. If these
-       * are not set the texture image unit returns (R, G, B, A) = black
-       * on glTexImage2D. For a deeper explanation take a look at
-       * the OpenGl ES docs for glTexParameter */
+      /* If these are not set the texture image unit will return
+       * (R, G, B, A) = black on glTexImage2D for non-POT width/height
+       * frames. For a deeper explanation take a look at the OpenGL ES
+       * documentation for glTexParameter */
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       if (got_gl_error ("glTexParameteri"))
@@ -1949,7 +1947,7 @@ gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
   g_mutex_lock (eglglessink->flow_lock);
 
   if (width == -1 && height == -1) {
-    /* This is the set_defaults condition according to
+    /* This is the set-defaults condition according to
      * the xOverlay interface docs
      */
     eglglessink->display_region.w = 0;
@@ -2161,7 +2159,8 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
        * a sane default. According to the docs on the xOverlay
        * interface we are supposed to fill the overlay 100%. We
        * do this trying to take PAR/DAR into account unless the
-       * calling party explicitly ask us not to.
+       * calling party explicitly ask us not to by setting
+       * force_aspect_ratio to FALSE.
        */
       if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
           !eglglessink->display_region.w || !eglglessink->display_region.h) {
@@ -2285,7 +2284,6 @@ gst_eglglessink_getcaps (GstBaseSink * bsink)
   return ret;
 }
 
-/* XXX: WIP renego logic */
 static gboolean
 gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
@@ -2449,7 +2447,6 @@ SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Setcaps succeed");
   return TRUE;
 
-/* Errors */
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Setcaps failed");
   return FALSE;
@@ -2652,7 +2649,7 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
     GstEglGlesSinkClass * gclass)
 {
   /* Init defaults */
- 
+
   /** Flags */
   eglglessink->have_window = FALSE;
   eglglessink->have_surface = FALSE;
