@@ -73,17 +73,6 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
     return TRUE;
 }
 
-static void
-push_back_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
-{
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    GST_DEBUG("requeue encoded data buffer %p (%d bytes)",
-              buffer, GST_BUFFER_SIZE(buffer));
-
-    g_queue_push_head(priv->buffers, buffer);
-}
-
 static GstBuffer *
 pop_buffer(GstVaapiDecoder *decoder)
 {
@@ -569,24 +558,6 @@ gst_vaapi_decoder_ensure_context(
             return FALSE;
     }
     priv->va_context = gst_vaapi_context_get_id(priv->context);
-    return TRUE;
-}
-
-gboolean
-gst_vaapi_decoder_push_buffer_sub(
-    GstVaapiDecoder *decoder,
-    GstBuffer       *buffer,
-    guint            offset,
-    guint            size
-)
-{
-    GstBuffer *subbuffer;
-
-    subbuffer = gst_buffer_create_sub(buffer, offset, size);
-    if (!subbuffer)
-        return FALSE;
-
-    push_back_buffer(decoder, subbuffer);
     return TRUE;
 }
 

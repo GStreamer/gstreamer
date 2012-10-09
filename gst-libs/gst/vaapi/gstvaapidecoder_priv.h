@@ -164,15 +164,6 @@ gst_vaapi_decoder_ensure_context(
 );
 
 G_GNUC_INTERNAL
-gboolean
-gst_vaapi_decoder_push_buffer_sub(
-    GstVaapiDecoder *decoder,
-    GstBuffer       *buffer,
-    guint            offset,
-    guint            size
-);
-
-G_GNUC_INTERNAL
 void
 gst_vaapi_decoder_push_surface_proxy(
     GstVaapiDecoder      *decoder,
