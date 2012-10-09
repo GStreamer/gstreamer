@@ -389,7 +389,10 @@ gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder)
  * Queues a #GstBuffer to the HW decoder. The decoder holds a
  * reference to @buf.
  *
- * Caller can notify an End-Of-Stream with @buf set to %NULL.
+ * Caller can notify an End-Of-Stream with @buf set to %NULL. However,
+ * if an empty buffer is passed, i.e. a buffer with %NULL data pointer
+ * or size equals to zero, then the function ignores this buffer and
+ * returns %TRUE.
  *
  * Return value: %TRUE on success
  */
@@ -398,7 +401,12 @@ gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
 {
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), FALSE);
 
-    return push_buffer(decoder, buf ? gst_buffer_ref(buf) : NULL);
+    if (buf) {
+        if (!GST_BUFFER_DATA(buf) || GST_BUFFER_SIZE(buf) <= 0)
+            return TRUE;
+        buf = gst_buffer_ref(buf);
+    }
+    return push_buffer(decoder, buf);
 }
 
 /**
