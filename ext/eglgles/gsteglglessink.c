@@ -235,8 +235,8 @@ static const char *frag_AYUV_prog = {
       "}"
 };
 
-/** YUY2/UYVY to RGB conversion */
-static const char *frag_YUY2_UYVY_prog = {
+/** YUY2/YVYU/UYVY to RGB conversion */
+static const char *frag_YUY2_YVYU_UYVY_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D Ytex, UVtex;"
@@ -312,7 +312,7 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
         GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
         GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
         GST_VIDEO_CAPS_YUV
-        ("{ AYUV, Y444, I420, YV12, NV12, NV21, YUY2, UYVY, Y42B, Y41B }") ";"
+        ("{ AYUV, Y444, I420, YV12, NV12, NV21, YUY2, YVYU, UYVY, Y42B, Y41B }") ";"
         GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";" GST_VIDEO_CAPS_RGB_16));
 
 /* Filter signals and args */
@@ -972,6 +972,8 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
+    gst_caps_append (format->caps,
+        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YVYU));
     gst_caps_append (format->caps,
         gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
     gst_caps_append (format->caps,
@@ -1647,7 +1649,15 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[2] = "Vtex";
       break;
     case GST_VIDEO_FORMAT_YUY2:
-      tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'r', 'g', 'a');
+      tmp_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'r', 'g', 'a');
+      glShaderSource (eglglessink->eglglesctx->fragshader, 1,
+          (const GLchar **) &tmp_prog, NULL);
+      eglglessink->eglglesctx->n_textures = 2;
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      break;
+    case GST_VIDEO_FORMAT_YVYU:
+      tmp_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'r', 'a', 'g');
       glShaderSource (eglglessink->eglglesctx->fragshader, 1,
           (const GLchar **) &tmp_prog, NULL);
       eglglessink->eglglesctx->n_textures = 2;
@@ -1655,7 +1665,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
       texnames[1] = "UVtex";
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      tmp_prog = g_strdup_printf (frag_YUY2_UYVY_prog, 'a', 'r', 'b');
+      tmp_prog = g_strdup_printf (frag_YUY2_YVYU_UYVY_prog, 'a', 'r', 'b');
       glShaderSource (eglglessink->eglglesctx->fragshader, 1,
           (const GLchar **) &tmp_prog, NULL);
       eglglessink->eglglesctx->n_textures = 2;
@@ -2094,6 +2104,7 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
                 break;
               }
               case GST_VIDEO_FORMAT_YUY2:
+              case GST_VIDEO_FORMAT_YVYU:
               case GST_VIDEO_FORMAT_UYVY:
                 glActiveTexture (GL_TEXTURE0);
                 glBindTexture (GL_TEXTURE_2D,
