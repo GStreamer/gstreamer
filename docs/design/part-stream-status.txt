@@ -12,7 +12,7 @@ the threadpool to use.
 We accommodate for the following requirements:
 
  - Application is informed when a streaming thread is about to be created. It
-   should be possible for the application to suggest a custom GstTask.
+   should be possible for the application to suggest a custom GstTaskPool.
  - Application is informed when the status of a streaming thread is changed.
    This can be interesting for GUI application that want to visualize the status
    of the streaming threads (playing/paused/stopped)
@@ -42,9 +42,9 @@ Use cases
   - The application will usually react to the STREAM_STATUS messages with a sync
     bus handler.
 
-  - The application can create and configure a custom GstTask to manage the
-    streaming thread or it can ignore the message which will make the element
-    use its default GstTask.
+  - The application can configure the GstTask with a custom GstTaskPool to
+    manage the streaming thread or it can ignore the message which will make
+    the element use its default GstTaskPool.
 
   - The application can react to the ENTER/LEAVE stream status message to
     configure the thread right before it is started/stopped. This can be used to
@@ -86,8 +86,7 @@ Messages
       application and configure the thread appropriatly.
 
   - "object", G_TYPE, GstTask/GThread
-      A GstTask/GThread controlling this streaming thread. This can be NULL when
-      the object controlling the streaming thread is not yet created.
+      A GstTask/GThread controlling this streaming thread.
 
   - "flow-return", GstFlowReturn
       A status code for why the thread state changed. when threads are created
