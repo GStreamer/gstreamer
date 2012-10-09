@@ -168,6 +168,15 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
 #endif
 
 /* *INDENT-OFF* */
+
+/* GLESv2 GLSL Shaders
+ *
+ * OpenGL ES Standard does not mandate YUV support. This is
+ * why most of these shaders deal with Packed/Planar YUV->RGB
+ * conversion.
+ */
+
+/* Direct vertex copy */
 static const char *vert_COPY_prog = {
       "attribute vec3 position;"
       "attribute vec2 texpos;"
@@ -179,6 +188,7 @@ static const char *vert_COPY_prog = {
       "}"
 };
 
+/* Direct fragments copy */
 static const char *frag_COPY_prog = {
   "precision mediump float;"
       "varying vec2 opos;"
@@ -190,6 +200,7 @@ static const char *frag_COPY_prog = {
       "}"
 };
 
+/* Channel reordering for XYZ <-> ZYX conversion */
 static const char *frag_REORDER_prog = {
   "precision mediump float;"
       "varying vec2 opos;"
@@ -201,7 +212,9 @@ static const char *frag_REORDER_prog = {
       "}"
 };
 
-/* From gst-plugins-gl */
+/* Packed YUV converters */
+
+/** From gst-plugins-gl: AYUV to RGB conversion */
 static const char *frag_AYUV_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
@@ -222,46 +235,7 @@ static const char *frag_AYUV_prog = {
       "}"
 };
 
-static const char *frag_PLANAR_YUV_prog = {
-      "precision mediump float;"
-      "varying vec2 opos;"
-      "uniform sampler2D Ytex,Utex,Vtex;"
-      "void main(void) {"
-      "  float r,g,b,y,u,v;"
-      "  vec2 nxy = opos.xy;"
-      "  y=texture2D(Ytex,nxy).r;"
-      "  u=texture2D(Utex,nxy).r;"
-      "  v=texture2D(Vtex,nxy).r;"
-      "  y=1.1643*(y-0.0625);"
-      "  u=u-0.5;"
-      "  v=v-0.5;"
-      "  r=y+1.5958*v;"
-      "  g=y-0.39173*u-0.81290*v;"
-      "  b=y+2.017*u;"
-      "  gl_FragColor=vec4(r,g,b,1.0);"
-      "}"
-};
-
-static const char *frag_NV12_NV21_prog = {
-      "precision mediump float;"
-      "varying vec2 opos;"
-      "uniform sampler2D Ytex,UVtex;"
-      "void main(void) {"
-      "  float r,g,b,y,u,v;"
-      "  vec2 nxy = opos.xy;"
-      "  y=texture2D(Ytex,nxy).r;"
-      "  u=texture2D(UVtex,nxy).%c;"
-      "  v=texture2D(UVtex,nxy).%c;"
-      "  y=1.1643*(y-0.0625);"
-      "  u=u-0.5;"
-      "  v=v-0.5;"
-      "  r=y+1.5958*v;"
-      "  g=y-0.39173*u-0.81290*v;"
-      "  b=y+2.017*u;"
-      "  gl_FragColor=vec4(r,g,b,1.0);"
-      "}"
-};
-
+/** YUY2/UYVY to RGB conversion */
 static const char *frag_YUY2_UYVY_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
@@ -283,13 +257,52 @@ static const char *frag_YUY2_UYVY_prog = {
       "}"
 };
 
+/* Planar YUV converters */
 
+/** YUV to RGB conversion */
+static const char *frag_PLANAR_YUV_prog = {
+      "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D Ytex,Utex,Vtex;"
+      "void main(void) {"
+      "  float r,g,b,y,u,v;"
+      "  vec2 nxy = opos.xy;"
+      "  y=texture2D(Ytex,nxy).r;"
+      "  u=texture2D(Utex,nxy).r;"
+      "  v=texture2D(Vtex,nxy).r;"
+      "  y=1.1643*(y-0.0625);"
+      "  u=u-0.5;"
+      "  v=v-0.5;"
+      "  r=y+1.5958*v;"
+      "  g=y-0.39173*u-0.81290*v;"
+      "  b=y+2.017*u;"
+      "  gl_FragColor=vec4(r,g,b,1.0);"
+      "}"
+};
+
+/** NV12/NV21 to RGB conversion */
+static const char *frag_NV12_NV21_prog = {
+      "precision mediump float;"
+      "varying vec2 opos;"
+      "uniform sampler2D Ytex,UVtex;"
+      "void main(void) {"
+      "  float r,g,b,y,u,v;"
+      "  vec2 nxy = opos.xy;"
+      "  y=texture2D(Ytex,nxy).r;"
+      "  u=texture2D(UVtex,nxy).%c;"
+      "  v=texture2D(UVtex,nxy).%c;"
+      "  y=1.1643*(y-0.0625);"
+      "  u=u-0.5;"
+      "  v=v-0.5;"
+      "  r=y+1.5958*v;"
+      "  g=y-0.39173*u-0.81290*v;"
+      "  b=y+2.017*u;"
+      "  gl_FragColor=vec4(r,g,b,1.0);"
+      "}"
+};
 /* *INDENT-ON* */
 
-/* Input capabilities.
- *
- * Note: OpenGL ES Standard does not mandate YUV support.
- */
+/* Input capabilities. */
 static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
