@@ -950,6 +950,7 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
+    gboolean is_eos;
     guchar *buf;
     guint buf_size, size;
     guint32 start_code;
@@ -958,10 +959,9 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
-    if (!buf && buf_size == 0)
-        return decode_sequence_end(decoder);
-
-    gst_adapter_push(priv->adapter, gst_buffer_ref(buffer));
+    is_eos   = GST_BUFFER_IS_EOS(buffer);
+    if (buf && buf_size > 0)
+        gst_adapter_push(priv->adapter, gst_buffer_ref(buffer));
 
     size = gst_adapter_available(priv->adapter);
     do {
@@ -987,8 +987,12 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         if (size < 8)
             break;
         ofs = scan_for_start_code(priv->adapter, 4, size - 4, NULL);
-        if (ofs < 0)
-            break;
+        if (ofs < 0) {
+            // Assume the whole packet is present if end-of-stream
+            if (!is_eos)
+                break;
+            ofs = size;
+        }
         buffer = gst_adapter_take_buffer(priv->adapter, ofs);
         size -= ofs;
 
@@ -1072,6 +1076,10 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         }
         gst_buffer_unref(buffer);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
+
+    if (is_eos && (status == GST_VAAPI_DECODER_STATUS_SUCCESS ||
+                   status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA))
+        status = decode_sequence_end(decoder);
     return status;
 }
 
