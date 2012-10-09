@@ -10,7 +10,6 @@ Makefile.in
 appsink
 appsrc
 blockprobe
-dynamic
 dynformat
 elementget
 elementmake

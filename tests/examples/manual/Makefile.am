@@ -21,7 +21,6 @@ TESTS_ENVIRONMENT = \
 EXTRA_DIST = extract.pl
 
 EXAMPLES = \
-	dynamic \
 	$(GNOME) \
 	elementcreate \
 	elementmake \
@@ -53,7 +52,7 @@ BUILT_SOURCES = \
 	helloworld.c \
 	init.c \
 	query.c \
-	typefind.c dynamic.c \
+	typefind.c \
 	blockprobe.c \
 	probe.c \
 	appsrc.c \
@@ -90,7 +89,7 @@ init.c: $(top_srcdir)/docs/manual/basics-init.xml
 query.c: $(top_srcdir)/docs/manual/advanced-position.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
-typefind.c dynamic.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
+typefind.c: $(top_srcdir)/docs/manual/advanced-autoplugging.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 blockprobe.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
