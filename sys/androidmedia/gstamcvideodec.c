@@ -1202,7 +1202,7 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
 
   self = GST_AMC_VIDEO_DEC (decoder);
   GST_DEBUG_OBJECT (self, "Stopping decoder");
-  gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
+  self->flushing = TRUE;
   if (self->started) {
     gst_amc_codec_flush (self->codec);
     gst_amc_codec_stop (self->codec);
@@ -1214,6 +1214,7 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
       gst_amc_codec_free_buffers (self->output_buffers, self->n_output_buffers);
     self->output_buffers = NULL;
   }
+  gst_pad_stop_task (GST_VIDEO_DECODER_SRC_PAD (decoder));
 
   self->downstream_flow_ret = GST_FLOW_WRONG_STATE;
   self->eos = FALSE;
@@ -1222,7 +1223,6 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
   g_cond_broadcast (self->drain_cond);
   g_mutex_unlock (self->drain_lock);
   gst_buffer_replace (&self->codec_data, NULL);
-  self->flushing = TRUE;
   GST_DEBUG_OBJECT (self, "Stopped decoder");
   return TRUE;
 }
@@ -1268,6 +1268,15 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
     gst_amc_video_dec_stop (GST_VIDEO_DECODER (self));
     GST_VIDEO_DECODER_STREAM_LOCK (self);
+    gst_amc_video_dec_close (GST_VIDEO_DECODER (self));
+    if (!gst_amc_video_dec_open (GST_VIDEO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to open codec again");
+      return FALSE;
+    }
+
+    if (!gst_amc_video_dec_start (GST_VIDEO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to start codec again");
+    }
   }
   /* srcpad task is not running at this point */
 

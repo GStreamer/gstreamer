@@ -772,7 +772,7 @@ gst_amc_audio_dec_stop (GstAudioDecoder * decoder)
 
   self = GST_AMC_AUDIO_DEC (decoder);
   GST_DEBUG_OBJECT (self, "Stopping decoder");
-  gst_pad_stop_task (GST_AUDIO_DECODER_SRC_PAD (decoder));
+  self->flushing = TRUE;
   if (self->started) {
     gst_amc_codec_flush (self->codec);
     gst_amc_codec_stop (self->codec);
@@ -784,6 +784,7 @@ gst_amc_audio_dec_stop (GstAudioDecoder * decoder)
       gst_amc_codec_free_buffers (self->output_buffers, self->n_output_buffers);
     self->output_buffers = NULL;
   }
+  gst_pad_stop_task (GST_AUDIO_DECODER_SRC_PAD (decoder));
 
   g_free (self->positions);
   self->positions = NULL;
@@ -799,7 +800,6 @@ gst_amc_audio_dec_stop (GstAudioDecoder * decoder)
   g_cond_broadcast (self->drain_cond);
   g_mutex_unlock (self->drain_lock);
   gst_buffer_replace (&self->codec_data, NULL);
-  self->flushing = TRUE;
   GST_DEBUG_OBJECT (self, "Stopped decoder");
   return TRUE;
 }
@@ -845,6 +845,15 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     GST_AUDIO_DECODER_STREAM_UNLOCK (self);
     gst_amc_audio_dec_stop (GST_AUDIO_DECODER (self));
     GST_AUDIO_DECODER_STREAM_LOCK (self);
+    gst_amc_audio_dec_close (GST_AUDIO_DECODER (self));
+    if (!gst_amc_audio_dec_open (GST_AUDIO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to open codec again");
+      return FALSE;
+    }
+
+    if (!gst_amc_audio_dec_start (GST_AUDIO_DECODER (self))) {
+      GST_ERROR_OBJECT (self, "Failed to start codec again");
+    }
   }
   /* srcpad task is not running at this point */
 
