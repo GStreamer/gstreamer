@@ -456,6 +456,11 @@ gst_amc_audio_dec_set_src_caps (GstAmcAudioDec * self, GstAmcFormat * format)
     return FALSE;
   }
 
+  if (rate == 0 || channels == 0) {
+    GST_ERROR_OBJECT (self, "Rate or channels not set");
+    return FALSE;
+  }
+
   /* Not always present */
   if (gst_amc_format_contains_key (format, "channel-mask"))
     gst_amc_format_get_int (format, "channel-mask", (gint *) & channel_mask);
