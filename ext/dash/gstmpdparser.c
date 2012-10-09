@@ -1760,12 +1760,28 @@ gst_mpdparser_get_segment_base (GstPeriodNode *Period,
 {
   GstSegmentBaseType *SegmentBase = NULL;
 
-  if (Representation && Representation->SegmentBase) {
+  if (Representation && Representation->SegmentBase && Representation->SegmentBase->Initialization) {
     SegmentBase = Representation->SegmentBase;
-  } else if (AdaptationSet) {
+  } else if (AdaptationSet && AdaptationSet->SegmentBase && AdaptationSet->SegmentBase->Initialization) {
     SegmentBase = AdaptationSet->SegmentBase;
-  } else {
+  } else if (Period && Period->SegmentBase && Period->SegmentBase->Initialization) {
     SegmentBase = Period->SegmentBase;
+  }
+  /* the SegmentBase element could be encoded also inside a SegmentList element */
+  if (SegmentBase == NULL) {
+    if (Representation && Representation->SegmentList && Representation->SegmentList->MultSegBaseType &&
+        Representation->SegmentList->MultSegBaseType->SegBaseType &&
+        Representation->SegmentList->MultSegBaseType->SegBaseType->Initialization) {
+      SegmentBase = Representation->SegmentList->MultSegBaseType->SegBaseType;
+    } else if (AdaptationSet && AdaptationSet->SegmentList && AdaptationSet->SegmentList->MultSegBaseType &&
+        AdaptationSet->SegmentList->MultSegBaseType->SegBaseType &&
+        AdaptationSet->SegmentList->MultSegBaseType->SegBaseType->Initialization) {
+      SegmentBase = AdaptationSet->SegmentList->MultSegBaseType->SegBaseType;
+    } else if (Period && Period->SegmentList && Period->SegmentList->MultSegBaseType &&
+        Period->SegmentList->MultSegBaseType->SegBaseType &&
+        Period->SegmentList->MultSegBaseType->SegBaseType->Initialization) {
+      SegmentBase = Period->SegmentList->MultSegBaseType->SegBaseType;
+    }
   }
 
   return SegmentBase;
@@ -1800,9 +1816,9 @@ gst_mpdparser_get_segment_list (GstPeriodNode *Period,
 {
   GstSegmentListNode *SegmentList = NULL;
 
-  if (Representation && Representation->SegmentBase) {
+  if (Representation && Representation->SegmentList) {
     SegmentList = Representation->SegmentList;
-  } else if (AdaptationSet) {
+  } else if (AdaptationSet && AdaptationSet->SegmentList) {
     SegmentList = AdaptationSet->SegmentList;
   } else {
     SegmentList = Period->SegmentList;
@@ -2479,14 +2495,13 @@ gst_mpd_client_setup_representation (GstMpdClient * client, GstActiveStream *str
   GST_LOG ("Building segment list for Period from %" GST_TIME_FORMAT " to %"
       GST_TIME_FORMAT, GST_TIME_ARGS (PeriodStart), GST_TIME_ARGS (PeriodEnd));
 
-  if (representation->SegmentBase != NULL) {
+  if (representation->SegmentBase != NULL || representation->SegmentList != NULL) {
     GList *SegmentURL;
 
     /* get the first segment_base of the selected representation */
     if ((stream->cur_segment_base =
             gst_mpdparser_get_segment_base (client->cur_period, stream->cur_adapt_set, representation)) == NULL) {
-      GST_WARNING ("No valid SegmentBase node in the MPD file, aborting...");
-      return FALSE;
+      GST_WARNING ("No valid SegmentBase node in the MPD file");
     }
 
     /* get the first segment_list of the selected representation */
