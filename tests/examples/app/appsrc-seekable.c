@@ -114,8 +114,8 @@ seek_data (GstElement * appsrc, guint64 position, App * app)
   return TRUE;
 }
 
-/* this callback is called when playbin2 has constructed a source object to read
- * from. Since we provided the appsrc:// uri to playbin2, this will be the
+/* this callback is called when playbin has constructed a source object to read
+ * from. Since we provided the appsrc:// uri to playbin, this will be the
  * appsrc that we must handle. We set up some signals to push data into appsrc
  * and one to perform a seek. */
 static void
@@ -194,7 +194,7 @@ main (int argc, char *argv[])
   /* create a mainloop to get messages */
   app->loop = g_main_loop_new (NULL, TRUE);
 
-  app->playbin = gst_element_factory_make ("playbin2", NULL);
+  app->playbin = gst_element_factory_make ("playbin", NULL);
   g_assert (app->playbin);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (app->playbin));

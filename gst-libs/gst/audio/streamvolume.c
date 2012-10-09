@@ -24,7 +24,7 @@
  * <refsect2>
  * <para>
  * This interface is implemented by elements that provide a stream volume. Examples for
- * such elements are #volume and #playbin2.
+ * such elements are #volume and #playbin.
  * </para>
  * <para>
  * Applications can use this interface to get or set the current stream volume. For this

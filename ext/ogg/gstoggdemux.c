@@ -1434,7 +1434,7 @@ gst_ogg_pad_handle_push_mode_state (GstOggPad * pad, ogg_page * page)
       /* If we were determining the duration of the stream, we're now done,
          and can get back to sending the original event we delayed.
          We stop a bit before the end of the stream, as if we get a EOS
-         event and there is a queue2 upstream (such as when using playbin2),
+         event and there is a queue2 upstream (such as when using playbin),
          it will pause the task *after* we come back from the EOS handler,
          so we cannot prevent the pausing by issuing a seek. */
       if (ogg->push_byte_offset + EOS_AVOIDANCE_THRESHOLD >=

@@ -177,7 +177,7 @@
  * The device to use for CDs/DVDs needs to be set on the source element
  * playbin creates before it is opened. The most generic way of doing this
  * is to connect to playbin's "source-setup" (or "notify::source") signal,
- * which will be emitted by playbin2 when it has created the source element
+ * which will be emitted by playbin when it has created the source element
  * for a particular URI. In the signal callback you can check if the source
  * element has a "device" property and set it appropriately. In some cases
  * the device can also be set as part of the URI, but it depends on the
@@ -198,18 +198,18 @@
  * <refsect2>
  * <title>Examples</title>
  * |[
- * gst-launch -v playbin2 uri=file:///path/to/somefile.avi
+ * gst-launch -v playbin uri=file:///path/to/somefile.avi
  * ]| This will play back the given AVI video file, given that the video and
  * audio decoders required to decode the content are installed. Since no
  * special audio sink or video sink is supplied (not possible via gst-launch),
  * playbin will try to find a suitable audio and video sink automatically
  * using the autoaudiosink and autovideosink elements.
  * |[
- * gst-launch -v playbin2 uri=cdda://4
+ * gst-launch -v playbin uri=cdda://4
  * ]| This will play back track 4 on an audio CD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * |[
- * gst-launch -v playbin2 uri=dvd://
+ * gst-launch -v playbin uri=dvd://
  * ]| This will play back the DVD in your disc drive (assuming
  * the drive is detected automatically by the plugin).
  * </refsect2>
@@ -1687,7 +1687,7 @@ get_current_stream_number (GstPlayBin * playbin, GPtrArray * channels)
 }
 
 static gboolean
-gst_playbin2_send_custom_event (GstObject * selector, const gchar * event_name)
+gst_play_bin_send_custom_event (GstObject * selector, const gchar * event_name)
 {
   GstPad *src;
   GstPad *peer;
@@ -1744,7 +1744,7 @@ gst_play_bin_set_current_video_stream (GstPlayBin * playbin, gint stream)
       g_object_get (selector, "active-pad", &old_sinkpad, NULL);
 
       if (old_sinkpad != sinkpad) {
-        if (gst_playbin2_send_custom_event (selector,
+        if (gst_play_bin_send_custom_event (selector,
                 "playsink-custom-video-flush"))
           playbin->video_pending_flush_finish = TRUE;
 
@@ -1802,7 +1802,7 @@ gst_play_bin_set_current_audio_stream (GstPlayBin * playbin, gint stream)
       g_object_get (selector, "active-pad", &old_sinkpad, NULL);
 
       if (old_sinkpad != sinkpad) {
-        if (gst_playbin2_send_custom_event (selector,
+        if (gst_play_bin_send_custom_event (selector,
                 "playsink-custom-audio-flush"))
           playbin->audio_pending_flush_finish = TRUE;
 
@@ -1988,7 +1988,7 @@ gst_play_bin_set_current_text_stream (GstPlayBin * playbin, gint stream)
           gst_play_bin_suburidecodebin_block (group, group->suburidecodebin,
               TRUE);
 
-        if (gst_playbin2_send_custom_event (selector,
+        if (gst_play_bin_send_custom_event (selector,
                 "playsink-custom-subtitle-flush"))
           playbin->text_pending_flush_finish = TRUE;
 
@@ -2603,7 +2603,7 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
       if (playbin->video_pending_flush_finish) {
         playbin->video_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-        gst_playbin2_send_custom_event (GST_OBJECT (selector),
+        gst_play_bin_send_custom_event (GST_OBJECT (selector),
             "playsink-custom-video-flush-finish");
         goto notify;
       }
@@ -2617,7 +2617,7 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
       if (playbin->audio_pending_flush_finish) {
         playbin->audio_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-        gst_playbin2_send_custom_event (GST_OBJECT (selector),
+        gst_play_bin_send_custom_event (GST_OBJECT (selector),
             "playsink-custom-audio-flush-finish");
         goto notify;
       }
@@ -2630,7 +2630,7 @@ selector_active_pad_changed (GObject * selector, GParamSpec * pspec,
       if (playbin->text_pending_flush_finish) {
         playbin->text_pending_flush_finish = FALSE;
         GST_PLAY_BIN_UNLOCK (playbin);
-        gst_playbin2_send_custom_event (GST_OBJECT (selector),
+        gst_play_bin_send_custom_event (GST_OBJECT (selector),
             "playsink-custom-subtitle-flush-finish");
         goto notify;
       }
@@ -2877,7 +2877,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
     sinkpad = NULL;
 
     /* store the selector for the pad */
-    g_object_set_data (G_OBJECT (pad), "playbin2.select", select);
+    g_object_set_data (G_OBJECT (pad), "playbin.select", select);
   }
   GST_SOURCE_GROUP_UNLOCK (group);
 
@@ -2958,7 +2958,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
 
   GST_SOURCE_GROUP_LOCK (group);
 
-  if ((select = g_object_get_data (G_OBJECT (pad), "playbin2.select"))) {
+  if ((select = g_object_get_data (G_OBJECT (pad), "playbin.select"))) {
     g_assert (select->selector == NULL);
     g_assert (select->srcpad == pad);
     gst_object_unref (pad);

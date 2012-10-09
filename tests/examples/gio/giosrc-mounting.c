@@ -106,7 +106,7 @@ main (int argc, char *argv[])
   gst_init (NULL, NULL);
   gtk_init (NULL, NULL);
 
-  pipeline = gst_element_factory_make ("playbin2", NULL);
+  pipeline = gst_element_factory_make ("playbin", NULL);
   g_assert (pipeline);
   g_object_set (G_OBJECT (pipeline), "uri", argv[1], NULL);
 
