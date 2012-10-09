@@ -3115,8 +3115,12 @@ gst_base_src_start (GstBaseSrc * basesrc)
   if (!result)
     goto could_not_start;
 
-  if (!gst_base_src_is_async (basesrc))
+  if (!gst_base_src_is_async (basesrc)) {
     gst_base_src_start_complete (basesrc, GST_FLOW_OK);
+    /* not really waiting here, we call this to get the result
+     * from the start_complete call */
+    result = gst_base_src_start_wait (basesrc) == GST_FLOW_OK;
+  }
 
   return result;
 
