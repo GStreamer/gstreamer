@@ -23,7 +23,7 @@
 
 #include "gstvorbisdec.h"
 
-GST_DEBUG_CATEGORY (vorbisdec_debug);
+GST_DEBUG_CATEGORY (ivorbisdec_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -34,7 +34,7 @@ plugin_init (GstPlugin * plugin)
           gst_vorbis_dec_get_type ()))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "ivorbisdec", 0,
+  GST_DEBUG_CATEGORY_INIT (ivorbisdec_debug, "ivorbisdec", 0,
       "vorbis decoding element (integer decoder)");
 
   return TRUE;

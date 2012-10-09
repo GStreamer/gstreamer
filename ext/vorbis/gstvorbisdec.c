@@ -47,8 +47,13 @@
 
 #include "gstvorbiscommon.h"
 
+#ifndef TREMOR
 GST_DEBUG_CATEGORY_EXTERN (vorbisdec_debug);
 #define GST_CAT_DEFAULT vorbisdec_debug
+#else
+GST_DEBUG_CATEGORY_EXTERN (ivorbisdec_debug);
+#define GST_CAT_DEFAULT ivorbisdec_debug
+#endif
 
 static GstStaticPadTemplate vorbis_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
