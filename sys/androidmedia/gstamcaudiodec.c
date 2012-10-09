@@ -586,8 +586,10 @@ retry:
       buffer_info.flags);
 
   is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
+  self->n_buffers++;
 
   if (buffer_info.size > 0) {
+    GstAmcAudioDecClass *klass = GST_AMC_AUDIO_DEC_GET_CLASS (self);
     GstBuffer *outbuf;
     GstAmcBuffer *buf;
 
@@ -598,6 +600,16 @@ retry:
     if (idx >= self->n_output_buffers)
       goto invalid_buffer_index;
 
+    if (strcmp (klass->codec_info->name, "OMX.google.mp3.decoder") == 0) {
+      /* Google's MP3 decoder outputs garbage in the first output buffer
+       * so we just drop it here */
+      if (self->n_buffers == 1) {
+        GST_DEBUG_OBJECT (self,
+            "Skipping first buffer of Google MP3 decoder output");
+        goto done;
+      }
+    }
+
     outbuf = gst_buffer_try_new_and_alloc (buffer_info.size);
     if (!outbuf)
       goto failed_allocate;
@@ -606,10 +618,15 @@ retry:
     orc_memcpy (GST_BUFFER_DATA (outbuf), buf->data + buffer_info.offset,
         buffer_info.size);
 
+    /* FIXME: We should get one decoded input frame here for
+     * every buffer. If this is not the case somewhere, we will
+     * error out at some point and will need to add workarounds
+     */
     flow_ret =
-        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf, -1);
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (self), outbuf, 1);
   }
 
+done:
   if (!gst_amc_codec_release_output_buffer (self->codec, idx))
     goto failed_release;
 
@@ -894,6 +911,7 @@ gst_amc_audio_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   GST_DEBUG_OBJECT (self, "Configuring codec with format: %s", format_string);
   g_free (format_string);
 
+  self->n_buffers = 0;
   if (!gst_amc_codec_configure (self->codec, format, 0)) {
     GST_ERROR_OBJECT (self, "Failed to configure codec");
     return FALSE;
