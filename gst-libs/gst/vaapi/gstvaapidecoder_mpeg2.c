@@ -963,9 +963,14 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
 
     gst_adapter_push(priv->adapter, gst_buffer_ref(buffer));
 
-    size   = gst_adapter_available(priv->adapter);
-    status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    size = gst_adapter_available(priv->adapter);
     do {
+        if (size == 0) {
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+            break;
+        }
+
+        status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
         if (size < 8)
             break;
         ofs = scan_for_start_code(priv->adapter, 0, size, &start_code);
@@ -978,6 +983,7 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
 
+        status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
         if (size < 8)
             break;
         ofs = scan_for_start_code(priv->adapter, 4, size - 4, NULL);
@@ -988,8 +994,10 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
 
         if (ofs == 4) {
             // Ignore empty user-data packets
-            if ((start_code & 0xff) == GST_MPEG_VIDEO_PACKET_USER_DATA)
+            if ((start_code & 0xff) == GST_MPEG_VIDEO_PACKET_USER_DATA) {
+                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
                 continue;
+            }
             GST_ERROR("failed to get a valid packet (SC: 0x%08x)", start_code);
             status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
             break;
@@ -1001,9 +1009,16 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         type = start_code & 0xff;
         switch (type) {
         case GST_MPEG_VIDEO_PACKET_PICTURE:
-            if (!priv->width || !priv->height)
+            if (priv->width > 0 && priv->height > 0) {
+                status = decode_picture(decoder, buf, buf_size);
                 break;
-            status = decode_picture(decoder, buf, buf_size);
+            }
+
+            // Ignore packet while picture size is undefined
+            // i.e. missing sequence headers, or not parsed correctly
+        skip_picture_unknown_size:
+            GST_WARNING("failed to parse picture of unknown size");
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
             break;
         case GST_MPEG_VIDEO_PACKET_SEQUENCE:
             status = decode_sequence(decoder, buf, buf_size);
@@ -1018,13 +1033,15 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
                 status = decode_quant_matrix_ext(decoder, buf, buf_size);
                 break;
             case GST_MPEG_VIDEO_PACKET_EXT_PICTURE:
-                if (!priv->width || !priv->height)
+                if (priv->width > 0 && priv->height > 0) {
+                    status = decode_picture_ext(decoder, buf, buf_size);
                     break;
-                status = decode_picture_ext(decoder, buf, buf_size);
-                break;
+                }
+                goto skip_picture_unknown_size;
             default:
                 // Ignore unknown extensions
                 GST_WARNING("unsupported start-code extension (0x%02x)", id);
+                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
                 break;
             }
             break;
@@ -1042,8 +1059,12 @@ decode_buffer(GstVaapiDecoderMpeg2 *decoder, GstBuffer *buffer)
         default:
             if (type >= GST_MPEG_VIDEO_PACKET_SLICE_MIN &&
                 type <= GST_MPEG_VIDEO_PACKET_SLICE_MAX) {
-                if (!priv->current_picture)
+                if (!priv->current_picture) {
+                    // Ignore packet while picture is undefined
+                    // i.e. missing picture headers, or not parsed correctly
+                    status = GST_VAAPI_DECODER_STATUS_SUCCESS;
                     break;
+                }
                 status = decode_slice(
                     decoder,
                     type - GST_MPEG_VIDEO_PACKET_SLICE_MIN,
