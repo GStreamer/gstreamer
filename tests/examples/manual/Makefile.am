@@ -41,6 +41,7 @@ EXAMPLES = \
 	appsink \
 	dynformat \
 	effectswitch \
+	testrtpool \
 	playbin \
 	decodebin
 
@@ -59,6 +60,7 @@ BUILT_SOURCES = \
 	appsink.c \
 	dynformat.c \
 	effectswitch.c \
+	testrtpool.c \
 	playbin.c decodebin.c
 
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
@@ -110,6 +112,9 @@ effectswitch.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+testrtpool.c: $(top_srcdir)/docs/manual/advanced-threads.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 TESTS = bin \

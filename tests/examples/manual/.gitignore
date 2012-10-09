@@ -33,6 +33,8 @@ probe
 query
 fakesrc
 typefind
+effectswitch
+testrtpool
 
 xml-mp3
 xml
