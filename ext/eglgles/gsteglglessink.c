@@ -167,8 +167,6 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
 #endif
 #endif
 
-/* *INDENT-OFF* */
-
 /* GLESv2 GLSL Shaders
  *
  * OpenGL ES Standard does not mandate YUV support. This is
@@ -176,6 +174,7 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
  * conversion.
  */
 
+/* *INDENT-OFF* */
 /* Direct vertex copy */
 static const char *vert_COPY_prog = {
       "attribute vec3 position;"
@@ -735,10 +734,6 @@ gst_eglglessink_different_size_suggestion (GstEglGlesSink * eglglessink,
   s = gst_caps_get_structure (intersection, 0);
 
   gst_util_fraction_multiply (width, height, par_n, par_d, &dar_n, &dar_d);
-
-  /* XXX: xvimagesink supports all PARs not sure about our eglglessink
-   * though, need to review this afterwards.
-   */
 
   gst_structure_fixate_field_nearest_int (s, "width", width);
   gst_structure_fixate_field_nearest_int (s, "height", height);
@@ -2632,15 +2627,22 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_CREATE_WINDOW,
       g_param_spec_boolean ("create-window", "Create Window",
-          "Attempt to create a window if none is provided",
+          "If set to true, the sink will attempt to create it's own window to "
+          "render to if none is provided. This is currently only supported "
+          "when the sink is used under X11",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_RENDERING_SLOW,
-      g_param_spec_boolean ("force-rendering-slow", "Force Slow Rendering",
-          "Force slow rendering path", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_boolean ("force-rendering-slow", "Force slow rendering path",
+          "If set to true, the sink will use the slow rendering path even "
+          "if needed EGL/GLES extensions for the fast rendering path are found "
+          "to be available at runtime",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
-      g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
-          "When enabled, scaling will respect original aspect ratio",
+      g_param_spec_boolean ("force-aspect-ratio",
+          "Respect aspect ratio when scaling",
+          "If set to true, the sink will attempt to preserve the incoming "
+          "frame's geometry while scaling, taking both the storage's and "
+          "display's pixel aspect ratio into account",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -2650,18 +2652,23 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
     GstEglGlesSinkClass * gclass)
 {
   /* Init defaults */
+ 
+  /** Flags */
   eglglessink->have_window = FALSE;
   eglglessink->have_surface = FALSE;
   eglglessink->have_vbo = FALSE;
   eglglessink->have_texture = FALSE;
   eglglessink->egl_started = FALSE;
-  eglglessink->create_window = TRUE;
-  eglglessink->force_rendering_slow = FALSE;
-  eglglessink->force_aspect_ratio = TRUE;
   eglglessink->using_own_window = FALSE;
-  eglglessink->eglglesctx = g_new0 (GstEglGlesRenderContext, 1);
+
+  /** Props */
+  eglglessink->create_window = TRUE;
+  eglglessink->force_aspect_ratio = TRUE;
+  eglglessink->force_rendering_slow = FALSE;
+
   eglglessink->par_n = 1;
   eglglessink->par_d = 1;
+  eglglessink->eglglesctx = g_new0 (GstEglGlesRenderContext, 1);
   eglglessink->flow_lock = g_mutex_new ();
 }
 
