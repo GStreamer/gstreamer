@@ -45,12 +45,23 @@
 /**
  * SECTION:element-eglglessink
  *
- * This is a vout sink using EGL/GLES.
+ * EglGlesSink renders video frames on a EGL surface it sets up
+ * from a window it either creates (on X11) or gets a handle to
+ * through it's xOverlay interface. All the display/surface logic
+ * in this sink uses EGL to interact with the native window system.
+ * The rendering logic, in turn, uses OpenGL ES v2.
+ *
+ * This sink has been tested to work on X11/Mesa and on Android
+ * (From Gingerbread on to Jelly Bean) and while it's currently
+ * using an slow copy-over rendering path it has proven to be fast
+ * enough on the devices we have tried it on. That being said, there's
+ * an currently unfinished and drafted fast rendering path in the code,
+ * relying on a set of EGL/GLES extensions.
  *
  * <refsect2>
- * <title>Rationale on OpenGL ES version</title>
+ * <title>Supported EGL/OpenGL ES versions</title>
  * <para>
- * This Sink uses GLESv2
+ * This Sink uses EGLv1 and GLESv2
  * </para>
  * </refsect2>
  *
@@ -64,9 +75,9 @@
  * <refsect2>
  * <title>Example launch line with forced slow path rendering</title>
  * <para>
- * The sink will chose a buffer copy-over slow rendering path even
- * if needed EGL/GLES extensions to use a fast rendering path are
- * available.
+ * By setting the force_rendering_slow property you can force the sink
+ * to chose the buffer-copy slow rendering path even if the needed
+ * EGL/GLES extensions for the fast rendering path are available.
  * </para>
  * |[
  * gst-launch -v -m videotestsrc ! eglglessink force_rendering_slow=TRUE
@@ -76,12 +87,36 @@
  * <refsect2>
  * <title>Example launch line with internal window creation disabled</title>
  * <para>
- * The sink will wait for a window handle through it's xOverlay interface
- * even if internal window creation is supported by the platform and
- * implemented.
+ * By setting the can_create_window property to FALSE you can force the
+ * sink to wait for a window handle through it's xOverlay interface even
+ * if internal window creation is supported by the platform. Window creation
+ * is only supported in X11 right now but it should be trivial to add support
+ * for different platforms.
  * </para>
  * |[
  * gst-launch -v -m videotestsrc ! eglglessink can_create_window=FALSE
+ * ]|
+ * </refsect2>
+ *
+ * <refsect2>
+ * <title>Scaling</title>
+ * <para>
+ * The sink will try it's best to consider the incoming frame's and display's
+ * pixel aspect ratio and fill the corresponding surface without altering the
+ * decoded frame's geometry when scaling. You can disable this logic by setting
+ * the force_aspect_ratio property to FALSE, in which case the sink will just
+ * fill the entire surface it has access to regardles of the PAR/DAR relationship.
+ * </para>
+ * <para>
+ * Querying the display aspect ratio is only supported with EGL versions >= 1.2.
+ * The sink will just assume the DAR to be 1/1 if it can't get access to this
+ * information.
+ * </para>
+ * <para>
+ * Here is an example launch line with the PAR/DAR aware scaling disabled:
+ * </para>
+ * |[
+ * gst-launch -v -m videotestsrc ! eglglessink force_aspect_ratio=FALSE
  * ]|
  * </refsect2>
  */
