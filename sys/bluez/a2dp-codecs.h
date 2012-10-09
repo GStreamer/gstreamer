@@ -26,6 +26,7 @@
 #define A2DP_CODEC_MPEG12		0x01
 #define A2DP_CODEC_MPEG24		0x02
 #define A2DP_CODEC_ATRAC		0x03
+#define A2DP_CODEC_VENDOR		0xFF
 
 #define SBC_SAMPLING_FREQ_16000		(1 << 3)
 #define SBC_SAMPLING_FREQ_32000		(1 << 2)
@@ -114,3 +115,8 @@ typedef struct {
 #else
 #error "Unknown byte order"
 #endif
+
+typedef struct {
+	uint8_t vendor_id[4];
+	uint8_t codec_id[2];
+} __attribute__ ((packed)) a2dp_vendor_codec_t;
