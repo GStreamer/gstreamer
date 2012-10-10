@@ -659,7 +659,6 @@ gst_audio_decoder_set_output_format (GstAudioDecoder * dec,
   if (!gst_caps_is_subset (caps, templ_caps)) {
     GST_WARNING_OBJECT (dec, "Requested output format %" GST_PTR_FORMAT
         " do not match template %" GST_PTR_FORMAT, caps, templ_caps);
-    gst_caps_unref (caps);
     gst_caps_unref (templ_caps);
     goto refuse_caps;
   }
