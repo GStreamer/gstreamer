@@ -23,7 +23,7 @@
  *
  * The Spectrum element analyzes the frequency spectrum of an audio signal.
  * If the #GstSpectrum:post-messages property is #TRUE, it sends analysis results
- * as application messages named
+ * as element messages named
  * <classname>&quot;spectrum&quot;</classname> after each interval of time given
  * by the #GstSpectrum:interval property.
  *
