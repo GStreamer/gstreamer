@@ -498,11 +498,6 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   g_mutex_lock (&sink->client_lock);
   GST_LOG_OBJECT (bsink, "about to send %" G_GSIZE_FORMAT " bytes", size);
 
-  if (size > UDP_MAX_SIZE) {
-    GST_WARNING_OBJECT (bsink, "Attempting to send a UDP packet larger than "
-        "maximum size (%" G_GSIZE_FORMAT " > %d)", size, UDP_MAX_SIZE);
-  }
-
   no_clients = 0;
   num = 0;
   for (clients = sink->clients; clients; clients = g_list_next (clients)) {
@@ -523,13 +518,29 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
           g_socket_send_message (sink->used_socket, client->addr, vec, n_mem,
           NULL, 0, 0, sink->cancellable, &err);
 
-      if (ret < 0)
-        goto send_error;
+      if (G_UNLIKELY (ret < 0)) {
+        if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+          goto flushing;
 
-      num++;
-      client->bytes_sent += ret;
-      client->packets_sent++;
-      sink->bytes_served += ret;
+        /* we continue after posting a warning, next packets might be ok
+         * again */
+        if (size > UDP_MAX_SIZE) {
+          GST_ELEMENT_WARNING (sink, RESOURCE, WRITE,
+              ("Attempting to send a UDP packet larger than maximum size "
+                  "(%" G_GSIZE_FORMAT " > %d)", size, UDP_MAX_SIZE),
+              ("Reason: %s", err ? err->message : "unknown reason"));
+        } else {
+          GST_ELEMENT_WARNING (sink, RESOURCE, WRITE,
+              ("Error sending UDP packet"), ("Reason: %s",
+                  err ? err->message : "unknown reason"));
+        }
+        g_clear_error (&err);
+      } else {
+        num++;
+        client->bytes_sent += ret;
+        client->packets_sent++;
+        sink->bytes_served += ret;
+      }
     }
   }
   g_mutex_unlock (&sink->client_lock);
@@ -552,23 +563,13 @@ no_data:
   {
     return GST_FLOW_OK;
   }
-send_error:
+flushing:
   {
-    GstFlowReturn res;
-
+    GST_DEBUG ("we are flushing");
     g_mutex_unlock (&sink->client_lock);
-    GST_DEBUG ("got send error %s", err->message);
-
-    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
-      res = GST_FLOW_FLUSHING;
-    else {
-      res = GST_FLOW_ERROR;
-      GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-          ("Error sending UDP packet: %s",
-              err ? err->message : "unknown reason"));
-    }
     g_clear_error (&err);
-    return res;
+
+    return GST_FLOW_FLUSHING;
   }
 }
 
