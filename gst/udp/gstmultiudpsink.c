@@ -81,7 +81,6 @@ enum
 #define DEFAULT_CLOSE_SOCKET       TRUE
 #define DEFAULT_USED_SOCKET        NULL
 #define DEFAULT_CLIENTS            NULL
-#define DEFAULT_FAMILY             G_SOCKET_FAMILY_IPV6
 /* FIXME, this should be disabled by default, we don't need to join a multicast
  * group for sending, if this socket is also used for receiving, it should
  * be configured in the element that does the receive. */
@@ -347,7 +346,6 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->ttl_mc = DEFAULT_TTL_MC;
   sink->loop = DEFAULT_LOOP;
   sink->qos_dscp = DEFAULT_QOS_DSCP;
-  sink->family = DEFAULT_FAMILY;
   sink->send_duplicates = DEFAULT_SEND_DUPLICATES;
 
   sink->cancellable = g_cancellable_new ();
@@ -820,11 +818,9 @@ gst_multiudpsink_start (GstBaseSink * bsink)
   if (sink->socket == NULL) {
     GST_DEBUG_OBJECT (sink, "creating sockets");
     /* create sender socket try IP6, fall back to IP4 */
-    sink->family = G_SOCKET_FAMILY_IPV6;
     if ((sink->used_socket =
             g_socket_new (G_SOCKET_FAMILY_IPV6,
                 G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
-      sink->family = G_SOCKET_FAMILY_IPV4;
       if ((sink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
                   G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
         goto no_socket;
@@ -836,7 +832,6 @@ gst_multiudpsink_start (GstBaseSink * bsink)
     GST_DEBUG_OBJECT (sink, "using configured socket");
     /* we use the configured socket */
     sink->used_socket = G_SOCKET (g_object_ref (sink->socket));
-    sink->family = g_socket_get_family (sink->used_socket);
     sink->external_socket = TRUE;
   }
 

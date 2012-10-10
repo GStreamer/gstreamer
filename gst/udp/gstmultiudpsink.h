@@ -76,7 +76,6 @@ struct _GstMultiUDPSink {
   gint           ttl_mc;
   gboolean       loop;
   gint           qos_dscp;
-  GSocketFamily  family;
 
   gboolean       send_duplicates;
   gint           buffer_size;
