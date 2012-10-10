@@ -741,8 +741,9 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
     else
       GST_DEBUG_OBJECT (mpvparse, "Invalid level - %u", level_c);
 
-    gst_caps_set_simple (caps, "interlaced",
-        G_TYPE_BOOLEAN, !mpvparse->sequenceext.progressive, NULL);
+    gst_caps_set_simple (caps, "interlace-mode",
+        G_TYPE_STRING,
+        (mpvparse->sequenceext.progressive ? "progressive" : "mixed"), NULL);
   }
 
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (mpvparse), caps);
