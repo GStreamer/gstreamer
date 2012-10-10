@@ -224,7 +224,7 @@ static const char *frag_AYUV_prog = {
       "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);"
       "void main(void) {"
       "  float r,g,b;"
-      "  vec3 yuv;
+      "  vec3 yuv;"
       "  vec2 nxy = opos.xy;"
       "  yuv  = texture2D(tex,nxy).gba;"
       "  yuv += offset;"
