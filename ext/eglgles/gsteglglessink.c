@@ -195,7 +195,7 @@ static const char *frag_COPY_prog = {
       "void main(void)"
       "{"
       " vec4 t = texture2D(tex, opos);"
-      " gl_FragColor = vec4(t.xyz, 1.0);"
+      " gl_FragColor = vec4(t.rgb, 1.0);"
       "}"
 };
 
