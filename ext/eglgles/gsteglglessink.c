@@ -213,23 +213,24 @@ static const char *frag_REORDER_prog = {
 
 /* Packed YUV converters */
 
-/** From gst-plugins-gl: AYUV to RGB conversion */
+/** AYUV to RGB conversion */
 static const char *frag_AYUV_prog = {
       "precision mediump float;"
       "varying vec2 opos;"
       "uniform sampler2D tex;"
+      "const vec3 offset = vec3(-0.0625, -0.5, -0.5);"
+      "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);"
+      "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);"
+      "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);"
       "void main(void) {"
-      "  float r,g,b,y,u,v;"
+      "  float r,g,b;"
+      "  vec3 yuv;
       "  vec2 nxy = opos.xy;"
-      "  y=texture2D(tex,nxy).g;"
-      "  u=texture2D(tex,nxy).b;"
-      "  v=texture2D(tex,nxy).a;"
-      "  y=1.1643*(y-0.0625);"
-      "  u=u-0.5;"
-      "  v=v-0.5;"
-      "  r=y+1.5958*v;"
-      "  g=y-0.39173*u-0.81290*v;"
-      "  b=y+2.017*u;"
+      "  yuv  = texture2D(tex,nxy).gba;"
+      "  yuv += offset;"
+      "  r = dot(yuv, rcoeff);"
+      "  g = dot(yuv, gcoeff);"
+      "  b = dot(yuv, bcoeff);"
       "  gl_FragColor=vec4(r,g,b,1.0);"
       "}"
 };
