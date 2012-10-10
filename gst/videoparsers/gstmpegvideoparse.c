@@ -834,6 +834,7 @@ gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
      * src caps are based on sink caps so it will end up in there
      * whether sucessful or not */
     gst_mpegv_parse_process_config (mpvparse, buf, gst_buffer_get_size (buf));
+    gst_mpegv_parse_reset_frame (mpvparse);
   }
 
   /* let's not interfere and accept regardless of config parsing success */
