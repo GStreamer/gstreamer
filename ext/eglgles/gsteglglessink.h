@@ -168,9 +168,23 @@ struct _GstEglGlesImageFmt
   GstCaps *caps;                /* Matching caps for the attribs */
 };
 
-/* XXX: Maybe use GstVideoRectangle for the image data? */
+/*
+ * GstEglGlesBuffer:
+ * @buffer: GST buffer
+ * @eglglessink: Pointer to the eglglessink instance this buffer belongs to
+ * @image: Pointer to the EGL image data
+ * @format: Image's picture format
+ * @width: Image's pixel width
+ * @height: Image's pixel height
+ * @size: Image's data size
+ *
+ * This struct holds the internal representation of the sink's custom
+ * buffer. This implementation is just a draft and only makes sense for
+ * the fast rendering path logic.
+ */
 struct _GstEglGlesBuffer
 {
+  /* XXX: Maybe use GstVideoRectangle for the image data? */
   GstBuffer buffer;
   GstEglGlesSink *eglglessink;
 
