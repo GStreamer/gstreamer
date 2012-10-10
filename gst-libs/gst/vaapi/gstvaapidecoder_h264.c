@@ -2214,6 +2214,45 @@ scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
 }
 
 static GstVaapiDecoderStatus
+decode_nalu(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
+{
+    GstVaapiDecoderStatus status;
+
+    switch (nalu->type) {
+    case GST_H264_NAL_SLICE_IDR:
+        /* fall-through. IDR specifics are handled in init_picture() */
+    case GST_H264_NAL_SLICE:
+        status = decode_slice(decoder, nalu);
+        break;
+    case GST_H264_NAL_SPS:
+        status = decode_sps(decoder, nalu);
+        break;
+    case GST_H264_NAL_PPS:
+        status = decode_pps(decoder, nalu);
+        break;
+    case GST_H264_NAL_SEI:
+        status = decode_sei(decoder, nalu);
+        break;
+    case GST_H264_NAL_SEQ_END:
+        status = decode_sequence_end(decoder);
+        break;
+    case GST_H264_NAL_AU_DELIMITER:
+        /* skip all Access Unit NALs */
+        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        break;
+    case GST_H264_NAL_FILLER_DATA:
+        /* skip all Filler Data NALs */
+        status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+        break;
+    default:
+        GST_WARNING("unsupported NAL unit type %d", nalu->type);
+        status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
+        break;
+    }
+    return status;
+}
+
+static GstVaapiDecoderStatus
 decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
@@ -2298,42 +2337,8 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             );
         }
         status = get_status(result);
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-            gst_buffer_unref(buffer);
-            break;
-        }
-
-        switch (nalu.type) {
-        case GST_H264_NAL_SLICE_IDR:
-            /* fall-through. IDR specifics are handled in init_picture() */
-        case GST_H264_NAL_SLICE:
-            status = decode_slice(decoder, &nalu);
-            break;
-        case GST_H264_NAL_SPS:
-            status = decode_sps(decoder, &nalu);
-            break;
-        case GST_H264_NAL_PPS:
-            status = decode_pps(decoder, &nalu);
-            break;
-        case GST_H264_NAL_SEI:
-            status = decode_sei(decoder, &nalu);
-            break;
-        case GST_H264_NAL_SEQ_END:
-            status = decode_sequence_end(decoder);
-            break;
-        case GST_H264_NAL_AU_DELIMITER:
-            /* skip all Access Unit NALs */
-            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-            break;
-        case GST_H264_NAL_FILLER_DATA:
-            /* skip all Filler Data NALs */
-            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-            break;
-        default:
-            GST_WARNING("unsupported NAL unit type %d", nalu.type);
-            status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-            break;
-        }
+        if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
+            status = decode_nalu(decoder, &nalu);
         gst_buffer_unref(buffer);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
 
