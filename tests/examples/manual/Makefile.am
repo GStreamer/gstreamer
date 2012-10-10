@@ -42,7 +42,8 @@ EXAMPLES = \
 	effectswitch \
 	testrtpool \
 	playbin \
-	decodebin
+	decodebin \
+	playsink 
 
 BUILT_SOURCES = \
 	elementmake.c elementcreate.c elementget.c elementlink.c elementfactory.c \
@@ -60,7 +61,8 @@ BUILT_SOURCES = \
 	dynformat.c \
 	effectswitch.c \
 	testrtpool.c \
-	playbin.c decodebin.c
+	playbin.c decodebin.c \
+	playsink.c
 
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
 
@@ -110,7 +112,7 @@ dynformat.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 effectswitch.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
-playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-playback.xml
+playbin.c decodebin.c playsink.c: $(top_srcdir)/docs/manual/highlevel-playback.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 testrtpool.c: $(top_srcdir)/docs/manual/advanced-threads.xml
