@@ -99,6 +99,35 @@ typedef struct _coord3
   float z;
 } coord3;
 
+/*
+ * GstEglGlesRenderContext:
+ * @config: Current EGL config
+ * @eglcontext: Current EGL context
+ * @display: Current EGL display connection
+ * @window: Current EGL window asociated with the display connection
+ * @used_window: Last seen EGL window asociated with the display connection
+ * @surface: EGL surface the sink is rendering into
+ * @fragshader: Fragment shader
+ * @vertshader: Vertex shader
+ * @glslprogram: Compiled and linked GLSL program in use for rendering
+ * @texture Texture units in use
+ * @surface_width: Pixel width of the surface the sink is rendering into
+ * @surface_height: Pixel height of the surface the sink is rendering into
+ * @pixel_aspect_ratio: EGL display aspect ratio
+ * @egl_minor: EGL version (minor)
+ * @egl_major: EGL version (major)
+ * @n_textures: Texture units count
+ * @position_loc: Index of the position vertex attribute array
+ * @texpos_loc: Index of the textpos vertex attribute array
+ * @position_array: VBO position array
+ * @texpos_array: VBO texpos array
+ * @index_array: VBO index array
+ * @position_buffer: Position buffer object name
+ * @texpos_buffer: Texpos buffer object name
+ * @index_buffer: Index buffer object name
+ *
+ * This struct holds the sink's EGL/GLES rendering context.
+ */
 struct _GstEglGlesRenderContext
 {
   EGLConfig config;
