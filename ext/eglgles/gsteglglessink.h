@@ -195,11 +195,36 @@ struct _GstEglGlesBuffer
   size_t size;
 };
 
+/*
+ * GstEglGlesSink:
+ * @par_n: Incoming frame's aspect ratio numerator
+ * @par_d: Incoming frame's aspect ratio denominator
+ * @format: Caps' video format field
+ * @display_region: Surface region to use as rendering canvas
+ * @sinkcaps: Full set of suported caps
+ * @current_caps: Current caps
+ * @selected_fmt: Pointer to the GST caps/EGL attribs pairing in use
+ * @rendering_path: Rendering path (Slow/Fast)
+ * @eglglesctx: Pointer to the associated EGL/GLESv2 rendering context
+ * @flow_lock: Simple concurrent access ward to the sink's runtime state
+ * @supported_fmts: Pointer to the runtime supported format list
+ * @have_window: Set if the sink has access to a window to hold it's canvas
+ * @using_own_window: Set if the sink created its own window
+ * @have_surface: Set if the EGL surface setup has been performed
+ * @have_vbo: Set if the GLES VBO setup has been performed
+ * @have_texture: Set if the GLES texture setup has been performed
+ * @egl_started: Set if the whole EGL setup has been performed
+ * @create_window: Property value holder to allow/forbid internal window creation
+ * @force_rendering_slow: Property value holder to force slow rendering path
+ * @force_aspect_ratio: Property value holder to consider PAR/DAR when scaling
+ *
+ * The #GstEglGlesSink data structure.
+ */
 struct _GstEglGlesSink
 {
   int par_n, par_d;                     /* Aspect ratio from caps */
 
-  GstVideoSink videosink;
+  GstVideoSink videosink;               /* Element hook */
   GstVideoFormat format;
   GstVideoRectangle display_region;
   GstCaps *sinkcaps;
