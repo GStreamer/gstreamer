@@ -362,14 +362,14 @@ gst_udpsrc_getcaps (GstBaseSrc * src, GstCaps * filter)
 static GstFlowReturn
 gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
+  GstFlowReturn ret;
   GstUDPSrc *udpsrc;
   GstBuffer *outbuf;
+  GstMapInfo info;
   GSocketAddress *saddr = NULL;
-  guint8 *pktdata;
-  gint pktsize;
   gsize offset;
   gssize readsize;
-  gssize ret;
+  gssize res;
   gboolean try_again;
   GError *err = NULL;
 
@@ -422,13 +422,10 @@ retry:
   if (G_UNLIKELY (!readsize)) {
     /* try to read a packet (and it will be ignored),
      * in case a packet with no data arrived */
-
-    pktdata = NULL;
-    pktsize = 0;
-    ret =
-        g_socket_receive_from (udpsrc->used_socket, NULL, (gchar *) pktdata,
-        pktsize, udpsrc->cancellable, &err);
-    if (G_UNLIKELY (ret < 0))
+    res =
+        g_socket_receive_from (udpsrc->used_socket, NULL, NULL,
+        0, udpsrc->cancellable, &err);
+    if (G_UNLIKELY (res < 0))
       goto receive_error;
 
     /* poll again */
@@ -438,34 +435,36 @@ retry:
 no_select:
   GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
 
-  pktdata = g_malloc (readsize);
-  pktsize = readsize;
+  ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC_CAST (udpsrc),
+      -1, readsize, &outbuf);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
+  gst_buffer_map (outbuf, &info, GST_MAP_WRITE);
   offset = 0;
 
   if (saddr)
     g_object_unref (saddr);
   saddr = NULL;
 
-  ret =
-      g_socket_receive_from (udpsrc->used_socket, &saddr, (gchar *) pktdata,
-      pktsize, udpsrc->cancellable, &err);
+  res =
+      g_socket_receive_from (udpsrc->used_socket, &saddr, (gchar *) info.data,
+      info.size, udpsrc->cancellable, &err);
 
-  if (G_UNLIKELY (ret < 0))
+  if (G_UNLIKELY (res < 0))
     goto receive_error;
 
-  /* patch pktdata and len when stripping off the headers */
+  /* patch offset and size when stripping off the headers */
   if (G_UNLIKELY (udpsrc->skip_first_bytes != 0)) {
     if (G_UNLIKELY (readsize < udpsrc->skip_first_bytes))
       goto skip_error;
 
     offset += udpsrc->skip_first_bytes;
-    ret -= udpsrc->skip_first_bytes;
+    res -= udpsrc->skip_first_bytes;
   }
 
-  outbuf = gst_buffer_new ();
-  gst_buffer_append_memory (outbuf,
-      gst_memory_new_wrapped (0, pktdata, pktsize, offset, ret, pktdata,
-          g_free));
+  gst_buffer_unmap (outbuf, &info);
+  gst_buffer_resize (outbuf, offset, res);
 
   /* use buffer metadata so receivers can also track the address */
   if (saddr) {
@@ -478,7 +477,7 @@ no_select:
 
   *buf = GST_BUFFER_CAST (outbuf);
 
-  return GST_FLOW_OK;
+  return ret;
 
   /* ERRORS */
 select_error:
@@ -500,9 +499,15 @@ get_available_error:
         ("get available bytes failed"));
     return GST_FLOW_ERROR;
   }
+alloc_failed:
+  {
+    GST_DEBUG ("Allocation failed");
+    return ret;
+  }
 receive_error:
   {
-    g_free (pktdata);
+    gst_buffer_unmap (outbuf, &info);
+    gst_buffer_unref (outbuf);
 
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_BUSY) ||
         g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
@@ -517,6 +522,9 @@ receive_error:
   }
 skip_error:
   {
+    gst_buffer_unmap (outbuf, &info);
+    gst_buffer_unref (outbuf);
+
     GST_ELEMENT_ERROR (udpsrc, STREAM, DECODE, (NULL),
         ("UDP buffer to small to skip header"));
     return GST_FLOW_ERROR;
