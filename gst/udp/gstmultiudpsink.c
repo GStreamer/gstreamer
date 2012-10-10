@@ -541,14 +541,19 @@ no_data:
   }
 send_error:
   {
-    GstFlowReturn res = GST_FLOW_ERROR;
+    GstFlowReturn res;
 
     g_mutex_unlock (&sink->client_lock);
     GST_DEBUG ("got send error %s", err->message);
 
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED))
       res = GST_FLOW_FLUSHING;
-
+    else {
+      res = GST_FLOW_ERROR;
+      GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
+          ("Error sending UDP packet: %s",
+              err ? err->message : "unknown reason"));
+    }
     g_clear_error (&err);
     return res;
   }
