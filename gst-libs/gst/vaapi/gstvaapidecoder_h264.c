@@ -2220,6 +2220,7 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
     GstVaapiDecoderStatus status;
     GstH264ParserResult result;
     GstH264NalUnit nalu;
+    gboolean is_eos;
     const guchar *buf;
     guint i, buf_size, nalu_size, size;
     guint32 start_code;
@@ -2227,13 +2228,17 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
 
     buf      = GST_BUFFER_DATA(buffer);
     buf_size = GST_BUFFER_SIZE(buffer);
-    if (!buf && buf_size == 0)
-        return decode_sequence_end(decoder);
-
-    gst_adapter_push(priv->adapter, gst_buffer_ref(buffer));
+    is_eos   = GST_BUFFER_IS_EOS(buffer);
+    if (buf && buf_size > 0)
+        gst_adapter_push(priv->adapter, gst_buffer_ref(buffer));
 
     size = gst_adapter_available(priv->adapter);
     do {
+        if (size == 0) {
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+            break;
+        }
+
         status = gst_vaapi_decoder_check_status(GST_VAAPI_DECODER(decoder));
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             break;
@@ -2264,7 +2269,7 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             );
         }
         else {
-            if (size < 8)
+            if (size < 4)
                 break;
             ofs = scan_for_start_code(priv->adapter, 0, size, &start_code);
             if (ofs < 0)
@@ -2272,11 +2277,14 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
             gst_adapter_flush(priv->adapter, ofs);
             size -= ofs;
 
-            if (size < 8)
-                break;
-            ofs = scan_for_start_code(priv->adapter, 4, size - 4, NULL);
-            if (ofs < 0)
-                break;
+            ofs = G_UNLIKELY(size < 8) ? -1 :
+                scan_for_start_code(priv->adapter, 4, size - 4, NULL);
+            if (ofs < 0) {
+                // Assume the whole NAL unit is present if end-of-stream
+                if (!is_eos)
+                    break;
+                ofs = size;
+            }
             buffer = gst_adapter_take_buffer(priv->adapter, ofs);
             size -= ofs;
 
@@ -2328,6 +2336,10 @@ decode_buffer(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         }
         gst_buffer_unref(buffer);
     } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
+
+    if (is_eos && (status == GST_VAAPI_DECODER_STATUS_SUCCESS ||
+                   status == GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA))
+        status = decode_sequence_end(decoder);
     return status;
 }
 
