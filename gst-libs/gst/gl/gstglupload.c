@@ -762,8 +762,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 
 #ifndef OPENGL_ES2
             if (!gst_gl_shader_compile_and_check
-                (upload->shader, text_shader_I420_YV12,
-                    GST_GL_SHADER_FRAGMENT_SOURCE)) {
+                (upload->shader, text_shader, GST_GL_SHADER_FRAGMENT_SOURCE)) {
               gst_gl_display_set_error (display,
                   "Failed to initialize shader for uploading I420 or YV12");
               g_object_unref (G_OBJECT (upload->shader));
