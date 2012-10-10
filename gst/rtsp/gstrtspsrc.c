@@ -86,7 +86,6 @@
 #endif /* HAVE_UNISTD_H */
 #include <stdlib.h>
 #include <string.h>
-#include <locale.h>
 #include <stdio.h>
 #include <stdarg.h>
 
