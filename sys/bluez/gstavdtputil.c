@@ -29,6 +29,9 @@
 #include <string.h>
 #include <stdint.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <bluetooth/bluetooth.h>
 #include "a2dp-codecs.h"
 
@@ -634,6 +637,7 @@ gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn)
   GIOStatus status;
   GIOFlags flags;
   int fd;
+  int priority;
 
   /* Proceed if stream was already acquired */
   if (conn->stream == NULL) {
@@ -665,6 +669,11 @@ gst_avdtp_connection_conf_recv_stream_fd (GstAvdtpConnection * conn)
   status = g_io_channel_set_flags (conn->stream, flags, &gerr);
   if (status != G_IO_STATUS_NORMAL)
     GST_WARNING ("Error while setting server socket to block");
+
+  priority = 6;
+  if (setsockopt (fd, SOL_SOCKET, SO_PRIORITY, (const void *) &priority,
+          sizeof (priority)) < 0)
+    GST_WARNING ("Unable to set socket to low delay");
 
   memset (data->buffer, 0, sizeof (data->buffer));
 
