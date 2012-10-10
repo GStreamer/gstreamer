@@ -1353,7 +1353,7 @@ gst_collect_pads_recalculate_waiting (GstCollectPads * pads)
     }
 
     /* check if the waiting state should be changed */
-    comp_time = MAX (data->segment.start, data->segment.position);
+    comp_time = data->segment.position;
     cmp_res = pads->priv->compare_func (pads, data, comp_time,
         pads->priv->earliest_data, pads->priv->earliest_time,
         pads->priv->compare_user_data);
@@ -1558,6 +1558,29 @@ exit:
 
 }
 
+static GstClockTime
+gst_collect_pads_clip_time (GstCollectPads * pads, GstCollectData * data,
+    GstClockTime time)
+{
+  GstClockTime otime = time;
+  GstBuffer *in, *out = NULL;
+
+  if (pads->priv->clip_func) {
+    in = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (in) = time;
+    pads->priv->clip_func (pads, data, in, &out, NULL);
+    if (out) {
+      otime = GST_BUFFER_TIMESTAMP (out);
+    } else {
+      /* FIXME should distinguish between ahead or after segment,
+       * let's assume after segment and use some large time ... */
+      otime = G_MAXINT64 / 2;
+    }
+  }
+
+  return otime;
+}
+
 /**
  * gst_collect_pads_event_default:
  * @pads: the collectpads to use
@@ -1668,9 +1691,6 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
 
       GST_DEBUG_OBJECT (data->pad, "got segment %" GST_SEGMENT_FORMAT, &seg);
 
-      /* sanitize to make sure; reasonably so at start */
-      seg.position = seg.start;
-
       /* default collection can not handle other segment formats than time */
       if (buffer_func && seg.format != GST_FORMAT_TIME) {
         GST_WARNING_OBJECT (pads, "GstCollectPads default collecting "
@@ -1678,14 +1698,20 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
         goto newsegment_done;
       }
 
+      /* need to update segment first */
       data->segment = seg;
       GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_NEW_SEGMENT);
+
+      /* now we can use for e.g. running time */
+      seg.position = gst_collect_pads_clip_time (pads, data, seg.start);
+      /* update again */
+      data->segment = seg;
 
       /* default muxing functionality */
       if (!buffer_func)
         goto newsegment_done;
 
-      gst_collect_pads_handle_position_update (pads, data, seg.start);
+      gst_collect_pads_handle_position_update (pads, data, seg.position);
 
     newsegment_done:
       GST_COLLECT_PADS_STREAM_UNLOCK (pads);
@@ -1704,9 +1730,10 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
         start += duration;
       /* we do not expect another buffer until after gap,
        * so that is our position now */
-      data->segment.position = start;
+      data->segment.position = gst_collect_pads_clip_time (pads, data, start);
 
-      gst_collect_pads_handle_position_update (pads, data, start);
+      gst_collect_pads_handle_position_update (pads, data,
+          data->segment.position);
 
       GST_COLLECT_PADS_STREAM_UNLOCK (pads);
       goto eat;
