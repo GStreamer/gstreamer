@@ -3343,7 +3343,7 @@ gst_base_parse_set_passthrough (GstBaseParse * parse, gboolean passthrough)
 /**
  * gst_base_parse_set_pts_interpolation:
  * @parse: a #GstBaseParse
- * @passthrough: %TRUE if parser should interpolate PTS timestamps
+ * @pts_interpolate: %TRUE if parser should interpolate PTS timestamps
  *
  * By default, the base class will guess PTS timestamps using a simple
  * interpolation (previous timestamp + duration), which is incorrect for
