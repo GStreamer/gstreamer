@@ -152,6 +152,15 @@ struct _GstEglGlesRenderContext
   unsigned int position_buffer, texpos_buffer, index_buffer;
 };
 
+/*
+ * GstEglGlesImageFmt:
+ * @fmt: Internal identifier for the EGL attribs / GST caps pairing
+ * @attribs: Pointer to the set of EGL attributes asociated with this format
+ * @caps: Pointer to the GST caps asociated with this format
+ *
+ * This struct holds a pairing between GST caps and the matching EGL attributes
+ * associated with a given pixel format
+ */
 struct _GstEglGlesImageFmt
 {
   gint fmt;                     /* Private identifier */
