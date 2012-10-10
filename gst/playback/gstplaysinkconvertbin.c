@@ -517,7 +517,7 @@ gst_play_sink_convert_bin_cache_converter_caps (GstPlaySinkConvertBin * self)
   }
 
   if (!self->conversion_elements) {
-    GST_WARNING_OBJECT (self, "No conversion elements");
+    GST_INFO_OBJECT (self, "No conversion elements");
     return;
   }
 
