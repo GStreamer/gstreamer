@@ -528,6 +528,7 @@ gst_rtsp_session_stream_set_transport (GstRTSPSessionStream * stream,
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       ct->port = st->port = stream->media_stream->server_port;
       st->destination = g_strdup (ct->destination);
+      st->ttl = ct->ttl;
       break;
     case GST_RTSP_LOWER_TRANS_TCP:
       st->interleaved = ct->interleaved;
