@@ -149,8 +149,8 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
     
     if (!GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
       timeout_source = g_timeout_source_new (diff / GST_MSECOND);
-      g_source_attach (timeout_source, data->context);
       g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
+      g_source_attach (timeout_source, data->context);
       g_source_unref (timeout_source);
     }
     data->desired_position = desired_position;
@@ -293,8 +293,8 @@ static void *app_function (void *userdata) {
 
   /* Register a function that GLib will call 4 times per second */
   timeout_source = g_timeout_source_new (250);
-  g_source_attach (timeout_source, data->context);
   g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, data, NULL);
+  g_source_attach (timeout_source, data->context);
   g_source_unref (timeout_source);
 
   /* Create a GLib Main Loop and set it to run */
