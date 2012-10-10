@@ -76,6 +76,7 @@ struct _GstRTSPClientState{
  * @watch: watch for the connection
  * @watchid: id of the watch
  * @ip: ip address used by the client to connect to us
+ * @use_client_settings: whether to allow client transport settings for multicast
  * @session_pool: handle to the session pool used by the client.
  * @media_mapping: handle to the media mapping used by the client.
  * @uri: cached uri
@@ -93,6 +94,7 @@ struct _GstRTSPClient {
   guint              watchid;
   gchar             *server_ip;
   gboolean           is_ipv6;
+  gboolean           use_client_settings;
 
   GstRTSPServer        *server;
   GstRTSPSessionPool   *session_pool;
@@ -138,6 +140,10 @@ GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 void                  gst_rtsp_client_set_media_mapping (GstRTSPClient *client,
                                                          GstRTSPMediaMapping *mapping);
 GstRTSPMediaMapping * gst_rtsp_client_get_media_mapping (GstRTSPClient *client);
+
+void                  gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
+                                                               gboolean use_client_settings);
+gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * client);
 
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);

@@ -1891,6 +1891,14 @@ remove_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
   g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
 }
 
+static void
+set_multicast_ttl (GstRTSPMedia * media, GstRTSPMediaStream * stream, guint ttl)
+{
+  GST_INFO ("setting ttl-mc %d", ttl);
+  g_object_set (G_OBJECT (stream->udpsink[0]), "ttl-mc", ttl, NULL);
+  g_object_set (G_OBJECT (stream->udpsink[1]), "ttl-mc", ttl, NULL);
+}
+
 /**
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
@@ -1962,11 +1970,13 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
       {
         gchar *dest;
         gint min, max;
+        guint ttl = 0;
 
         dest = trans->destination;
         if (trans->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
           min = trans->port.min;
           max = trans->port.max;
+          ttl = trans->ttl;
         } else {
           min = trans->client_port.min;
           max = trans->client_port.max;
@@ -1974,6 +1984,9 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
         if (add && !tr->active) {
           add_udp_destination (media, stream, dest, min, max);
+          if (ttl > 0) {
+            set_multicast_ttl (media, stream, ttl);
+          }
           stream->transports = g_list_prepend (stream->transports, tr);
           tr->active = TRUE;
           media->active++;

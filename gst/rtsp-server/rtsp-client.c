@@ -27,11 +27,16 @@
 static GMutex tunnels_lock;
 static GHashTable *tunnels;
 
+#define DEFAULT_SESSION_POOL            NULL
+#define DEFAULT_MEDIA_MAPPING           NULL
+#define DEFAULT_USE_CLIENT_SETTINGS     FALSE
+
 enum
 {
   PROP_0,
   PROP_SESSION_POOL,
   PROP_MEDIA_MAPPING,
+  PROP_USE_CLIENT_SETTINGS,
   PROP_LAST
 };
 
@@ -92,6 +97,12 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_param_spec_object ("media-mapping", "Media Mapping",
           "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_USE_CLIENT_SETTINGS,
+      g_param_spec_boolean ("use-client-settings", "Use Client Settings",
+          "Use client settings for ttl and destination in multicast",
+          DEFAULT_USE_CLIENT_SETTINGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_client_signals[SIGNAL_CLOSED] =
@@ -162,6 +173,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
+  client->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
 }
 
 static void
@@ -238,6 +250,10 @@ gst_rtsp_client_get_property (GObject * object, guint propid,
     case PROP_MEDIA_MAPPING:
       g_value_take_object (value, gst_rtsp_client_get_media_mapping (client));
       break;
+    case PROP_USE_CLIENT_SETTINGS:
+      g_value_set_boolean (value,
+          gst_rtsp_client_get_use_client_settings (client));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -255,6 +271,10 @@ gst_rtsp_client_set_property (GObject * object, guint propid,
       break;
     case PROP_MEDIA_MAPPING:
       gst_rtsp_client_set_media_mapping (client, g_value_get_object (value));
+      break;
+    case PROP_USE_CLIENT_SETTINGS:
+      gst_rtsp_client_set_use_client_settings (client,
+          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1042,13 +1062,20 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto invalid_blocksize;
 
   /* we have a valid transport now, set the destination of the client. */
-  g_free (ct->destination);
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    ct->destination = gst_rtsp_media_get_multicast_group (media->media);
+    if (ct->destination == NULL || !client->use_client_settings) {
+      g_free (ct->destination);
+      ct->destination = gst_rtsp_media_get_multicast_group (media->media);
+    }
+    /* reset ttl if client settings are not allowed */
+    if (!client->use_client_settings) {
+      ct->ttl = 0;
+    }
   } else {
     GstRTSPUrl *url;
 
     url = gst_rtsp_connection_get_url (client->connection);
+    g_free (ct->destination);
     ct->destination = g_strdup (url->host);
 
     if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
@@ -1699,6 +1726,35 @@ gst_rtsp_client_get_media_mapping (GstRTSPClient * client)
     g_object_ref (result);
 
   return result;
+}
+
+/**
+ * gst_rtsp_client_set_use_client_settings:
+ * @client: a #GstRTSPClient
+ * @use_client_settings: whether to use client settings for multicast
+ *
+ * Use client transport settings (destination and ttl) for multicast.
+ * When @use_client_settings is %FALSE, the server settings will be
+ * used.
+ */
+void
+gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
+    gboolean use_client_settings)
+{
+  client->use_client_settings = use_client_settings;
+}
+
+/**
+ * gst_rtsp_client_get_use_client_settings:
+ * @client: a #GstRTSPClient
+ *
+ * Check if client transport settings (destination and ttl) for multicast
+ * will be used.
+ */
+gboolean
+gst_rtsp_client_get_use_client_settings (GstRTSPClient * client)
+{
+  return client->use_client_settings;
 }
 
 /**
