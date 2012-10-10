@@ -75,6 +75,7 @@ struct _GstMultiUDPSink {
   gint           ttl;
   gint           ttl_mc;
   gboolean       loop;
+  gboolean       force_ipv4;
   gint           qos_dscp;
 
   gboolean       send_duplicates;

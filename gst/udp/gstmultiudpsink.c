@@ -88,6 +88,7 @@ enum
 #define DEFAULT_TTL                64
 #define DEFAULT_TTL_MC             1
 #define DEFAULT_LOOP               TRUE
+#define DEFAULT_FORCE_IPV4         FALSE
 #define DEFAULT_QOS_DSCP           -1
 #define DEFAULT_SEND_DUPLICATES    TRUE
 #define DEFAULT_BUFFER_SIZE        0
@@ -105,6 +106,7 @@ enum
   PROP_TTL,
   PROP_TTL_MC,
   PROP_LOOP,
+  PROP_FORCE_IPV4,
   PROP_QOS_DSCP,
   PROP_SEND_DUPLICATES,
   PROP_BUFFER_SIZE,
@@ -287,6 +289,18 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           "Used for setting the multicast loop parameter. TRUE = enable,"
           " FALSE = disable", DEFAULT_LOOP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstMultiUDPSink::force-ipv4
+   *
+   * Force the use of an IPv4 socket.
+   *
+   * Since: 1.0.2
+   */
+  g_object_class_install_property (gobject_class, PROP_FORCE_IPV4,
+      g_param_spec_boolean ("force-ipv4", "Force IPv4",
+          "Forcing the use of an IPv4 socket", DEFAULT_FORCE_IPV4,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_QOS_DSCP,
       g_param_spec_int ("qos-dscp", "QoS diff srv code point",
           "Quality of Service, differentiated services code point (-1 default)",
@@ -345,6 +359,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->ttl = DEFAULT_TTL;
   sink->ttl_mc = DEFAULT_TTL_MC;
   sink->loop = DEFAULT_LOOP;
+  sink->force_ipv4 = DEFAULT_FORCE_IPV4;
   sink->qos_dscp = DEFAULT_QOS_DSCP;
   sink->send_duplicates = DEFAULT_SEND_DUPLICATES;
 
@@ -693,6 +708,9 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
     case PROP_LOOP:
       udpsink->loop = g_value_get_boolean (value);
       break;
+    case PROP_FORCE_IPV4:
+      udpsink->force_ipv4 = g_value_get_boolean (value);
+      break;
     case PROP_QOS_DSCP:
       udpsink->qos_dscp = g_value_get_int (value);
       gst_multiudpsink_setup_qos_dscp (udpsink);
@@ -748,6 +766,9 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_LOOP:
       g_value_set_boolean (value, udpsink->loop);
+      break;
+    case PROP_FORCE_IPV4:
+      g_value_set_boolean (value, udpsink->force_ipv4);
       break;
     case PROP_QOS_DSCP:
       g_value_set_int (value, udpsink->qos_dscp);
@@ -818,7 +839,7 @@ gst_multiudpsink_start (GstBaseSink * bsink)
   if (sink->socket == NULL) {
     GST_DEBUG_OBJECT (sink, "creating sockets");
     /* create sender socket try IP6, fall back to IP4 */
-    if ((sink->used_socket =
+    if (sink->force_ipv4 || (sink->used_socket =
             g_socket_new (G_SOCKET_FAMILY_IPV6,
                 G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
       if ((sink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
