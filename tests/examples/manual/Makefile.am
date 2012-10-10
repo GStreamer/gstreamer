@@ -110,7 +110,7 @@ dynformat.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 effectswitch.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
-playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-components.xml
+playbin.c decodebin.c: $(top_srcdir)/docs/manual/highlevel-playback.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 testrtpool.c: $(top_srcdir)/docs/manual/advanced-threads.xml

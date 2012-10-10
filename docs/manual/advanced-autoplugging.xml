@@ -10,7 +10,7 @@
     by looking at all available elements in a system. This process is called
     autoplugging, and &GStreamer; contains high-quality autopluggers. If
     you're looking for an autoplugger, don't read any further and go to
-    <xref linkend="chapter-components"/>. This chapter will explain the
+    <xref linkend="chapter-playback-components"/>. This chapter will explain the
     <emphasis>concept</emphasis> of autoplugging and typefinding. It will
     explain what systems &GStreamer; includes to dynamically detect the
     type of a media stream, and how to generate a pipeline of decoder
@@ -235,8 +235,8 @@ main (gint   argc,
   <sect1 id="section-dynamic">
     <title>Dynamically autoplugging a pipeline</title>
     <para>
-      See <xref linkend="chapter-components"/> for using the high level
-      object that you can use to dynamically construct pipelines.
+      See <xref linkend="chapter-playback-components"/> for using the high
+      level object that you can use to dynamically construct pipelines.
     </para>
   </sect1>
 </chapter>

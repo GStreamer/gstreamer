@@ -48,7 +48,7 @@
 <!ENTITY DATAACCESS           SYSTEM "advanced-dataaccess.xml">
 
 <!-- Part 4: Higher-level interfaces -->
-<!ENTITY COMPONENTS           SYSTEM "highlevel-components.xml">
+<!ENTITY PLAYBACK             SYSTEM "highlevel-playback.xml">
 
 <!-- Appendices -->
 <!ENTITY PROGRAMS             SYSTEM "appendix-programs.xml">
@@ -201,7 +201,7 @@
       </para>
     </partintro>
 
-    &COMPONENTS;
+    &PLAYBACK;
 
   </part>
 

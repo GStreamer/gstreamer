@@ -1,5 +1,5 @@
-<chapter id="chapter-components">
-  <title>Components</title>
+<chapter id="chapter-playback-components">
+  <title>Playback Components</title>
 
   <para>
     &GStreamer; includes several higher-level components to simplify an
@@ -366,11 +366,57 @@ main (gint   argc,
       command <command>gst-launch-1.0 filesrc location=file.ogg ! decodebin
       ! audioconvert ! audioresample ! autoaudiosink</command>.
     </para>
+  </sect1>
+
+  <sect1 id="section-components-uridecodebin">
+    <title>URIDecodebin</title>
     <para>
       The uridecodebin element is very similar to decodebin, only that it
       automatically plugs a source plugin based on the protocol of the URI
       given.
     </para>
+    <para>
+      Uridecodebin will also automatically insert buffering elements when
+      the uri is a slow network source. The buffering element will post
+      BUFFERING messages that the application needs to handle as explained
+      in <xref linkend="chapter-buffering"/>.     
+      The following properties can be used to configure the buffering method:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          The buffer-size property allows you to configure a maximum size in
+          bytes for the buffer element.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          The buffer-duration property allows you to configure a maximum size
+          in time for the buffer element. The time will be estimated based on
+          the bitrate of the network.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          With the download property you can enable the download buffering
+          method as described in <xref linkend="section-buffering-download"/>.
+          Setting this option to TRUE will only enable download buffering
+          for selected formats such as quicktime, flash video, avi and
+          webm.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          You can also enable buffering on the parsed/demuxed data with the
+          use-buffering property. This is interesting to enable buffering
+          on slower random access media such as a network file server.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      URIDecodebin can be easily tested on the commandline, e.g. by using the
+      command <command>gst-launch-1.0 uridecodebin uri=file:///file.ogg !
+      ! audioconvert ! audioresample ! autoaudiosink</command>.
+    </para>
   </sect1>
-
 </chapter>
