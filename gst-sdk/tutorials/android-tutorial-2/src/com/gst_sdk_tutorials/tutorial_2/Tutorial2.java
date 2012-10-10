@@ -105,8 +105,13 @@ public class Tutorial2 extends Activity {
         }
 
         // Re-enable buttons, now that GStreamer is initialized
-        this.findViewById(R.id.button_play).setEnabled(true);
-        this.findViewById(R.id.button_stop).setEnabled(true);
+        final Activity activity = this;
+        runOnUiThread(new Runnable() {
+            public void run() {
+                activity.findViewById(R.id.button_play).setEnabled(true);
+                activity.findViewById(R.id.button_stop).setEnabled(true);
+            }
+        });
     }
 
     static {
