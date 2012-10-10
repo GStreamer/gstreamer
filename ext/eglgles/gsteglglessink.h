@@ -222,9 +222,9 @@ struct _GstEglGlesBuffer
  */
 struct _GstEglGlesSink
 {
+  GstVideoSink videosink;               /* Element hook */
   int par_n, par_d;                     /* Aspect ratio from caps */
 
-  GstVideoSink videosink;               /* Element hook */
   GstVideoFormat format;
   GstVideoRectangle display_region;
   GstCaps *sinkcaps;
