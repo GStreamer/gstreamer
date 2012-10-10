@@ -3579,7 +3579,7 @@ sticky_failed:
   }
 no_peer:
   {
-    GST_WARNING_OBJECT (pad, "pad has no peer");
+    GST_INFO_OBJECT (pad, "pad has no peer");
     GST_OBJECT_UNLOCK (pad);
     return FALSE;
   }
