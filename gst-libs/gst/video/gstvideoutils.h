@@ -249,6 +249,7 @@ struct _GstVideoCodecFrame
   union {
     struct {
       GstClockTime ts;
+      GstClockTime ts2;
     } ABI;
     void         *padding[GST_PADDING_LARGE];
   } abidata;
