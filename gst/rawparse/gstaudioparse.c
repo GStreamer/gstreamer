@@ -70,7 +70,8 @@ enum
   PROP_RATE,
   PROP_CHANNELS,
   PROP_INTERLEAVED,
-  PROP_CHANNEL_POSITIONS
+  PROP_CHANNEL_POSITIONS,
+  PROP_USE_SINK_CAPS
 };
 
 #define GST_AUDIO_PARSE_FORMAT (gst_audio_parse_format_get_type ())
@@ -146,6 +147,11 @@ gst_audio_parse_class_init (GstAudioParseClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_USE_SINK_CAPS,
+      g_param_spec_boolean ("use-sink-caps", "Use sink caps",
+          "Use the sink caps for the format, only performing timestamping",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_metadata (gstelement_class, "Audio Parse",
       "Filter/Audio",
       "Converts stream into audio frames",
@@ -206,6 +212,9 @@ gst_audio_parse_set_property (GObject * object, guint prop_id,
 
       ap->channel_positions = g_value_dup_boxed (value);
       break;
+    case PROP_USE_SINK_CAPS:
+      ap->use_sink_caps = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -242,6 +251,9 @@ gst_audio_parse_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CHANNEL_POSITIONS:
       g_value_set_boxed (value, ap->channel_positions);
+      break;
+    case PROP_USE_SINK_CAPS:
+      g_value_set_boolean (value, ap->use_sink_caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -355,6 +367,17 @@ gst_audio_parse_get_caps (GstRawParse * rp)
   GstAudioInfo info;
   gint fps_n, fps_d;
   const GValue *val;
+
+  if (ap->use_sink_caps) {
+    gint rate;
+    GstCaps *caps = gst_pad_get_current_caps (rp->sinkpad);
+    gst_audio_info_from_caps (&info, caps);
+
+    rate = GST_AUDIO_INFO_RATE (&info);
+    gst_raw_parse_set_fps (GST_RAW_PARSE (ap), rate, 1);
+
+    return caps;
+  }
 
   gst_raw_parse_get_fps (rp, &fps_n, &fps_d);
   gst_audio_parse_setup_channel_positions (ap);

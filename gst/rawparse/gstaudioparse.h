@@ -48,6 +48,7 @@ struct _GstAudioParse
   GstRawParse parent;
 
   /* properties */
+  gboolean use_sink_caps;
   gint format;
   GstAudioFormat raw_format;
   gint channels;
