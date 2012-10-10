@@ -253,33 +253,42 @@ nal_reader_is_byte_aligned (NalReader * nr)
 gboolean
 nal_reader_has_more_data (NalReader * nr)
 {
-  guint remaining;
+  NalReader nr_tmp;
+  guint remaining, nbits;
+  guint8 rbsp_stop_one_bit, zero_bits;
 
   remaining = nal_reader_get_remaining (nr);
   if (remaining == 0)
     return FALSE;
 
-  if (remaining <= 8) {
-    guint8 rbsp_stop_one_bit;
+  nr_tmp = *nr;
+  nr = &nr_tmp;
 
-    if (!nal_reader_peek_bits_uint8 (nr, &rbsp_stop_one_bit, 1))
+  /* The spec defines that more_rbsp_data() searches for the last bit
+     equal to 1, and that it is the rbsp_stop_one_bit. Subsequent bits
+     until byte boundary is reached shall be zero.
+
+     This means that more_rbsp_data() is FALSE if the next bit is 1
+     and the remaining bits until byte boundary are zero. One way to
+     be sure that this bit was the very last one, is that every other
+     bit after we reached byte boundary are also set to zero.
+     Otherwise, if the next bit is 0 or if there are non-zero bits
+     afterwards, then then we have more_rbsp_data() */
+  if (!nal_reader_get_bits_uint8 (nr, &rbsp_stop_one_bit, 1))
+    return FALSE;
+  if (!rbsp_stop_one_bit)
+    return TRUE;
+
+  nbits = --remaining % 8;
+  while (remaining > 0) {
+    if (!nal_reader_get_bits_uint8 (nr, &zero_bits, nbits))
       return FALSE;
-
-    if (rbsp_stop_one_bit == 1) {
-      guint8 zero_bits;
-
-      if (remaining == 1)
-        return FALSE;
-
-      if (!nal_reader_peek_bits_uint8 (nr, &zero_bits, remaining))
-        return FALSE;
-
-      if ((zero_bits - (1 << (remaining - 1))) == 0)
-        return FALSE;
-    }
+    if (zero_bits != 0)
+      return TRUE;
+    remaining -= nbits;
+    nbits = 8;
   }
-
-  return TRUE;
+  return FALSE;
 }
 
 /***********  end of nal parser ***************/
