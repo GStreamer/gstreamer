@@ -28,7 +28,7 @@
  * gst-launch videotestsrc ! fpsdisplaysink
  * gst-launch videotestsrc ! fpsdisplaysink text-overlay=false
  * gst-launch filesrc location=video.avi ! decodebin2 name=d ! queue ! fpsdisplaysink d. ! queue ! fakesink sync=true
- * gst-launch playbin2 uri=file:///path/to/video.avi video-sink="fpsdisplaysink" audio-sink=fakesink
+ * gst-launch playbin uri=file:///path/to/video.avi video-sink="fpsdisplaysink" audio-sink=fakesink
  * ]|
  * </refsect2>
  */

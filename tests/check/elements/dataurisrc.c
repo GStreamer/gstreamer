@@ -169,7 +169,7 @@ const gchar data_uri[] = "data:audio/ogg;base64,"
     "AWZeiL1v7LSgX1wHDrB3NhI3k3sSnaKJAAAAAAAAQOJJS94nzV+3/3r/2Ho5ub5tHN70XSuPfdZZ"
     "C/9eZOtqZc5Zfl8wP5ZenOT3hbWPpZeE6jzjkdY3f+GXCblaF41qKouT/N7UyQA=";
 
-GST_START_TEST (test_playbin2)
+GST_START_TEST (test_playbin)
 {
   GstElement *playbin, *sink;
   int loops = 2;
@@ -225,7 +225,7 @@ dataurisrc_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_playbin2);
+  tcase_add_test (tc_chain, test_playbin);
 
   return s;
 }

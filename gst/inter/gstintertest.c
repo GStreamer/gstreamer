@@ -157,7 +157,7 @@ gst_inter_test_create_pipeline_playbin (GstInterTest * intertest,
 
   pipeline = gst_pipeline_new (NULL);
   gst_bin_add (GST_BIN (pipeline),
-      gst_element_factory_make ("playbin2", "source"));
+      gst_element_factory_make ("playbin", "source"));
 
   if (error) {
     g_print ("pipeline parsing error: %s\n", error->message);
