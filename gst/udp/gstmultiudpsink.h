@@ -72,6 +72,7 @@ struct _GstMultiUDPSink {
   gboolean       external_socket;
 
   gboolean       auto_multicast;
+  gchar         *multi_iface;
   gint           ttl;
   gint           ttl_mc;
   gboolean       loop;

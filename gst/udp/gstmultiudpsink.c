@@ -85,6 +85,7 @@ enum
  * group for sending, if this socket is also used for receiving, it should
  * be configured in the element that does the receive. */
 #define DEFAULT_AUTO_MULTICAST     TRUE
+#define DEFAULT_MULTICAST_IFACE    NULL
 #define DEFAULT_TTL                64
 #define DEFAULT_TTL_MC             1
 #define DEFAULT_LOOP               TRUE
@@ -103,6 +104,7 @@ enum
   PROP_USED_SOCKET,
   PROP_CLIENTS,
   PROP_AUTO_MULTICAST,
+  PROP_MULTICAST_IFACE,
   PROP_TTL,
   PROP_TTL_MC,
   PROP_LOOP,
@@ -276,6 +278,10 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           "Automatically join/leave the multicast groups, FALSE means user"
           " has to do it himself", DEFAULT_AUTO_MULTICAST,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_IFACE,
+      g_param_spec_string ("multicast-iface", "Multicast Interface",
+          "The network interface on which to join the multicast group",
+          DEFAULT_MULTICAST_IFACE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TTL,
       g_param_spec_int ("ttl", "Unicast TTL",
           "Used for setting the unicast TTL parameter",
@@ -362,6 +368,7 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   sink->force_ipv4 = DEFAULT_FORCE_IPV4;
   sink->qos_dscp = DEFAULT_QOS_DSCP;
   sink->send_duplicates = DEFAULT_SEND_DUPLICATES;
+  sink->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
 
   sink->cancellable = g_cancellable_new ();
 }
@@ -452,6 +459,9 @@ gst_multiudpsink_finalize (GObject * object)
   if (sink->cancellable)
     g_object_unref (sink->cancellable);
   sink->cancellable = NULL;
+
+  g_free (sink->multi_iface);
+  sink->multi_iface = NULL;
 
   g_mutex_clear (&sink->client_lock);
 
@@ -700,6 +710,14 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
     case PROP_AUTO_MULTICAST:
       udpsink->auto_multicast = g_value_get_boolean (value);
       break;
+    case PROP_MULTICAST_IFACE:
+      g_free (udpsink->multi_iface);
+
+      if (g_value_get_string (value) == NULL)
+        udpsink->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
+      else
+        udpsink->multi_iface = g_value_dup_string (value);
+      break;
     case PROP_TTL:
       udpsink->ttl = g_value_get_int (value);
       break;
@@ -759,6 +777,9 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_AUTO_MULTICAST:
       g_value_set_boolean (value, udpsink->auto_multicast);
       break;
+    case PROP_MULTICAST_IFACE:
+      g_value_set_string (value, udpsink->multi_iface);
+      break;
     case PROP_TTL:
       g_value_set_int (value, udpsink->ttl);
       break;
@@ -800,8 +821,8 @@ gst_multiudpsink_configure_client (GstMultiUDPSink * sink,
     GST_DEBUG_OBJECT (sink, "we have a multicast client %p", client);
     if (sink->auto_multicast) {
       GST_DEBUG_OBJECT (sink, "autojoining group");
-      if (!g_socket_join_multicast_group (sink->used_socket, addr, FALSE, NULL,
-              &err))
+      if (!g_socket_join_multicast_group (sink->used_socket, addr, FALSE,
+              sink->multi_iface, &err))
         goto join_group_failed;
     }
     GST_DEBUG_OBJECT (sink, "setting loop to %d", sink->loop);
@@ -1046,8 +1067,8 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
         && g_inet_address_get_is_multicast (addr)) {
       GError *err = NULL;
 
-      if (!g_socket_leave_multicast_group (sink->used_socket, addr, FALSE, NULL,
-              &err)) {
+      if (!g_socket_leave_multicast_group (sink->used_socket, addr, FALSE,
+              sink->multi_iface, &err)) {
         GST_DEBUG_OBJECT (sink, "Failed to leave multicast group: %s",
             err->message);
         g_clear_error (&err);
