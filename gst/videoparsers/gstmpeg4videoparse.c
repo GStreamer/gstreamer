@@ -828,6 +828,7 @@ gst_mpeg4vparse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* And take it as config */
     gst_mpeg4vparse_process_config (mp4vparse, data, 3, size);
     gst_buffer_unmap (buf, &map);
+    gst_mpeg4vparse_reset_frame (mp4vparse);
   }
 
   /* let's not interfere and accept regardless of config parsing success */
