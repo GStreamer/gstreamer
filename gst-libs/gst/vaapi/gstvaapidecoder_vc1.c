@@ -49,8 +49,6 @@ struct _GstVaapiDecoderVC1Private {
     GstVaapiProfile             profile;
     guint                       width;
     guint                       height;
-    guint                       fps_n;
-    guint                       fps_d;
     GstVC1SeqHdr                seq_hdr;
     GstVC1EntryPointHdr         entrypoint_hdr;
     GstVC1FrameHdr              frame_hdr;
@@ -286,43 +284,8 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
         }
         break;
     case GST_VC1_PROFILE_ADVANCED:
-        if (adv_hdr->display_ext && adv_hdr->framerate_flag) {
-            if (adv_hdr->framerateind) {
-                // 6.1.14.4.4 - Frame Rate Explicit
-                fps_n = adv_hdr->framerateexp + 1;
-                fps_d = 32;
-            }
-            else {
-                // 6.1.14.4.2 - Frame Rate Numerator
-                static const guint frameratenr_table[] = {
-                    [1] = 24000,
-                    [2] = 25000,
-                    [3] = 30000,
-                    [4] = 50000,
-                    [5] = 60000,
-                    [6] = 48000,
-                    [7] = 72000
-                };
-
-                // 6.1.14.4.3 - Frame Rate Denominator
-                static const guint frameratedr_table[] = {
-                    [1] = 1000,
-                    [2] = 1001
-                };
-
-                if (adv_hdr->frameratenr < 1 || adv_hdr->frameratenr > 7) {
-                    GST_DEBUG("unsupported FRAMERATENR value");
-                    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-                }
-                fps_n = frameratenr_table[adv_hdr->frameratenr];
-
-                if (adv_hdr->frameratedr < 1 || adv_hdr->frameratedr > 2) {
-                    GST_DEBUG("unsupported FRAMERATEDR value");
-                    return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-                }
-                fps_d = frameratedr_table[adv_hdr->frameratedr];
-            }
-        }
+        fps_n = adv_hdr->fps_n;
+        fps_d = adv_hdr->fps_d;
         par_n = adv_hdr->par_n;
         par_d = adv_hdr->par_d;
         break;
@@ -330,11 +293,9 @@ decode_sequence(GstVaapiDecoderVC1 *decoder, GstVC1BDU *rbdu, GstVC1BDU *ebdu)
         g_assert(0 && "XXX: we already validated the profile above");
         break;
     }
-    if (fps_n && fps_d) {
-        priv->fps_n = fps_n;
-        priv->fps_d = fps_d;
-        gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
-    }
+
+    if (fps_n && fps_d)
+        gst_vaapi_decoder_set_framerate(base_decoder, fps_n, fps_d);
 
     if (par_n > 0 && par_d > 0)
         gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder, par_n, par_d);
@@ -1302,8 +1263,6 @@ gst_vaapi_decoder_vc1_init(GstVaapiDecoderVC1 *decoder)
     decoder->priv               = priv;
     priv->width                 = 0;
     priv->height                = 0;
-    priv->fps_n                 = 0;
-    priv->fps_d                 = 0;
     priv->profile               = (GstVaapiProfile)0;
     priv->current_picture       = NULL;
     priv->next_picture          = NULL;
