@@ -132,6 +132,7 @@ struct _GstFluPSDemux
 
   GstSegment sink_segment;
   GstSegment src_segment;
+  gboolean adjust_segment;
 
   /* stream output */
   GstFluPSStream *current_stream;

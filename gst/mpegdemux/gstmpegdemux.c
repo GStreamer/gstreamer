@@ -335,6 +335,7 @@ gst_flups_demux_reset (GstFluPSDemux * demux)
   demux->next_pts = G_MAXUINT64;
   demux->next_dts = G_MAXUINT64;
   demux->need_no_more_pads = TRUE;
+  demux->adjust_segment = TRUE;
   gst_flups_demux_reset_psm (demux);
   gst_segment_init (&demux->sink_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&demux->src_segment, GST_FORMAT_TIME);
@@ -507,9 +508,7 @@ gst_flups_demux_send_segment (GstFluPSDemux * demux, GstFluPSStream * stream,
 {
   /* discont */
   if (G_UNLIKELY (stream->need_segment)) {
-    guint64 time, start, stop;
     GstSegment segment;
-    GstEvent *newsegment;
 
     GST_DEBUG ("PTS timestamp:%" GST_TIME_FORMAT " base_time %" GST_TIME_FORMAT
         " src_segment.start:%" GST_TIME_FORMAT " .stop:%" GST_TIME_FORMAT,
@@ -517,48 +516,35 @@ gst_flups_demux_send_segment (GstFluPSDemux * demux, GstFluPSStream * stream,
         GST_TIME_ARGS (demux->src_segment.start),
         GST_TIME_ARGS (demux->src_segment.stop));
 
-    if (GST_CLOCK_TIME_IS_VALID (demux->base_time) &&
-        GST_CLOCK_TIME_IS_VALID (demux->src_segment.start))
-      start = demux->base_time + demux->src_segment.start;
-    else
-      start = 0;
-
-    if (GST_CLOCK_TIME_IS_VALID (demux->src_segment.stop) &&
-        GST_CLOCK_TIME_IS_VALID (demux->base_time))
-      stop = demux->base_time + demux->src_segment.stop;
-    else
-      stop = -1;
-
-    if (pts != GST_CLOCK_TIME_NONE) {
+    /* adjust segment start if estimating a seek was off quite a bit,
+     * make sure to do for all streams though to preserve a/v sync */
+    /* FIXME such adjustment tends to be frowned upon */
+    if (pts != GST_CLOCK_TIME_NONE && demux->adjust_segment) {
       if (demux->src_segment.rate > 0) {
-        if (GST_CLOCK_DIFF (start, pts) > GST_SECOND)
-          start = pts;
+        if (GST_CLOCK_DIFF (demux->src_segment.start, pts) > GST_SECOND)
+          demux->src_segment.start = pts - demux->base_time;
       } else {
-        if (GST_CLOCK_DIFF (stop, pts) > GST_SECOND)
-          stop = pts;
+        if (GST_CLOCK_DIFF (demux->src_segment.stop, pts) > GST_SECOND)
+          demux->src_segment.stop = pts - demux->base_time;
       }
     }
-    if (GST_CLOCK_TIME_IS_VALID (demux->base_time) && start > demux->base_time)
-      time = start - demux->base_time;
-    else
-      time = 0;
+    demux->adjust_segment = FALSE;
 
-    GST_INFO_OBJECT (demux, "sending new segment: rate %g applied_rate %g "
-        "start: %" GST_TIME_FORMAT ", stop: %" GST_TIME_FORMAT
-        ", time: %" GST_TIME_FORMAT " to pad %" GST_PTR_FORMAT,
-        demux->sink_segment.rate, demux->sink_segment.applied_rate,
-        GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
-        GST_TIME_ARGS (time), stream->pad);
+    /* we should be in sync with downstream, so start from our segment notion,
+     * which also includes proper base_time etc, tweak it a bit and send */
+    gst_segment_copy_into (&demux->src_segment, &segment);
+    if (GST_CLOCK_TIME_IS_VALID (demux->base_time)) {
+      if (GST_CLOCK_TIME_IS_VALID (segment.start))
+        segment.start += demux->base_time;
+      if (GST_CLOCK_TIME_IS_VALID (segment.stop))
+        segment.stop += demux->base_time;
+      segment.time = segment.start - demux->base_time;
+    }
 
-    gst_segment_init (&segment, GST_FORMAT_TIME);
-    segment.rate = demux->sink_segment.rate;
-    segment.applied_rate = demux->sink_segment.applied_rate;
-    segment.start = start;
-    segment.stop = stop;
-    segment.time = time;
-    newsegment = gst_event_new_segment (&segment);
+    GST_INFO_OBJECT (demux, "sending segment event %" GST_SEGMENT_FORMAT
+        " to pad %" GST_PTR_FORMAT, &segment, stream->pad);
 
-    gst_pad_push_event (stream->pad, newsegment);
+    gst_pad_push_event (stream->pad, gst_event_new_segment (&segment));
 
     stream->need_segment = FALSE;
   }
@@ -652,13 +638,14 @@ gst_flups_demux_mark_discont (GstFluPSDemux * demux, gboolean discont,
     if (G_LIKELY (stream)) {
       stream->discont |= discont;
       stream->need_segment |= need_segment;
+      demux->adjust_segment |= need_segment;
       GST_DEBUG_OBJECT (demux, "marked stream as discont %d, need_segment %d",
           stream->discont, stream->need_segment);
     }
   }
 }
 
-static inline gboolean
+static gboolean
 gst_flups_demux_send_event (GstFluPSDemux * demux, GstEvent * event)
 {
   gint i, count = demux->found_count;
