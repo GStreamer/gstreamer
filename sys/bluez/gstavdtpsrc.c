@@ -180,7 +180,11 @@ gst_avdtp_src_getcaps (GstPad * pad)
     format = gst_structure_get_name (structure);
 
     if (g_str_equal (format, "audio/x-sbc")) {
+      /* FIXME: we can return a fixed payload type once we
+       * are in PLAYING */
       ret = gst_caps_new_simple ("application/x-rtp",
+          "media", G_TYPE_STRING, "audio",
+          "payload", GST_TYPE_INT_RANGE, 96, 127,
           "encoding-name", G_TYPE_STRING, "SBC", NULL);
     } else if (g_str_equal (format, "audio/mpeg")) {
       GST_ERROR_OBJECT (avdtpsrc, "Only SBC is supported at " "the moment");
