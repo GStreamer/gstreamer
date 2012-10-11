@@ -562,10 +562,9 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     GstClockTime new_time = demux->base_time + demux->src_segment.position;
 
     if (stream->last_ts == GST_CLOCK_TIME_NONE || stream->last_ts < new_time) {
-#if 0
-      g_print ("last_ts update on pad %s to time %" GST_TIME_FORMAT "\n",
-          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (cur_scr_time));
-#endif
+      GST_LOG_OBJECT (demux,
+          "last_ts update on pad %s to time %" GST_TIME_FORMAT,
+          GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_time));
       stream->last_ts = new_time;
     }
 
@@ -798,11 +797,6 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
         stream->last_ts = demux->src_segment.start + base_time;
 
       if (stream->last_ts + stream->segment_thresh < new_start) {
-#if 0
-        g_print ("Segment update to pad %s time %" GST_TIME_FORMAT " stop now %"
-            GST_TIME_FORMAT "\n", GST_PAD_NAME (stream->pad),
-            GST_TIME_ARGS (new_start), GST_TIME_ARGS (demux->src_segment.stop));
-#endif
         GST_DEBUG_OBJECT (demux,
             "Segment update to pad %s time %" GST_TIME_FORMAT,
             GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_start));
