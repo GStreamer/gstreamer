@@ -305,7 +305,7 @@ gst_flups_demux_reset (GstFluPSDemux * demux)
     GstFluPSStream *stream = demux->streams[i];
 
     if (stream != NULL) {
-      if (stream->pad)
+      if (stream->pad && GST_PAD_PARENT (stream->pad))
         gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
 
       g_free (stream);
@@ -487,7 +487,15 @@ gst_flups_demux_get_stream (GstFluPSDemux * demux, gint id, gint type)
     GST_DEBUG_OBJECT (demux, "adding pad for stream id 0x%02x type 0x%02x", id,
         type);
 
-    gst_element_add_pad (GST_ELEMENT (demux), stream->pad);
+    if (demux->need_no_more_pads) {
+      gst_element_add_pad (GST_ELEMENT (demux), stream->pad);
+    } else {
+      /* only likely to confuse decodebin etc, so discard */
+      /* FIXME should perform full switch protocol:
+       * add a whole new set of pads, drop old and no-more-pads again */
+      GST_DEBUG_OBJECT (demux,
+          "but already signalled no-more-pads; not adding");
+    }
 
     demux->streams[id] = stream;
     demux->streams_found[demux->found_count++] = stream;
