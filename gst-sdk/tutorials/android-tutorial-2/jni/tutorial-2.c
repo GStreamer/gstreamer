@@ -186,7 +186,7 @@ static void *app_function (void *userdata) {
  */
 
 /* Instruct the native code to create its internal data structure, pipeline and thread */
-void gst_native_init (JNIEnv* env, jobject thiz) {
+static void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = g_new0 (CustomData, 1);
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   gst_debug_set_threshold_for_name("tutorial-2", GST_LEVEL_DEBUG);
@@ -197,7 +197,7 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
 }
 
 /* Quit the main loop, remove the native thread and free resources */
-void gst_native_finalize (JNIEnv* env, jobject thiz) {
+static void gst_native_finalize (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Quitting main loop...");
@@ -213,7 +213,7 @@ void gst_native_finalize (JNIEnv* env, jobject thiz) {
 }
 
 /* Set pipeline to PLAYING state */
-void gst_native_play (JNIEnv* env, jobject thiz) {
+static void gst_native_play (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Setting state to PLAYING");
@@ -221,7 +221,7 @@ void gst_native_play (JNIEnv* env, jobject thiz) {
 }
 
 /* Set pipeline to PAUSED state */
-void gst_native_pause (JNIEnv* env, jobject thiz) {
+static void gst_native_pause (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Setting state to PAUSED");
@@ -229,7 +229,7 @@ void gst_native_pause (JNIEnv* env, jobject thiz) {
 }
 
 /* Static class initializer: retrieve method and field IDs */
-jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
+static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
