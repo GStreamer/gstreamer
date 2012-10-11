@@ -25,6 +25,11 @@ gen_source_c += gstjpegparser.c
 gen_source_h += gstjpegparser.h
 endif
 
+if USE_LOCAL_CODEC_PARSERS_H264
+gen_source_c += gsth264parser.c parserutils.c
+gen_source_h += gsth264parser.h parserutils.h
+endif
+
 GENFILES = \
 	$(gen_source_c)				\
 	$(gen_source_h)				\
