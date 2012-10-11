@@ -41,6 +41,7 @@ EXAMPLES = \
 	dynformat \
 	effectswitch \
 	testrtpool \
+	norebuffer \
 	playbin \
 	decodebin \
 	playsink 
@@ -61,6 +62,7 @@ BUILT_SOURCES = \
 	dynformat.c \
 	effectswitch.c \
 	testrtpool.c \
+	norebuffer.c \
 	playbin.c decodebin.c \
 	playsink.c
 
@@ -110,6 +112,9 @@ dynformat.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 effectswitch.c: $(top_srcdir)/docs/manual/advanced-dataaccess.xml
+	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
+
+norebuffer.c: $(top_srcdir)/docs/manual/advanced-buffering.xml
 	$(PERL_PATH) $(srcdir)/extract.pl $@ $<
 
 playbin.c decodebin.c playsink.c: $(top_srcdir)/docs/manual/highlevel-playback.xml
