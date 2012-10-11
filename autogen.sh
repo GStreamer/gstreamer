@@ -16,7 +16,7 @@ cd "$srcdir"
 mkdir -p m4
 
 GTKDOCIZE=`which gtkdocize`
-if test -z $GTKDOCIZE; then
+if test -z "$GTKDOCIZE"; then
     echo "*** No gtk-doc support ***"
     echo "EXTRA_DIST =" > gtk-doc.make
 else
@@ -24,7 +24,7 @@ else
 fi
 
 AUTORECONF=`which autoreconf`
-if test -z $AUTORECONF; then
+if test -z "$AUTORECONF"; then
     echo "*** No autoreconf found ***"
     exit 1
 else
