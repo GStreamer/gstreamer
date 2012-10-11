@@ -141,8 +141,9 @@ static void *app_function (void *userdata) {
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
-  /* Create our own GLib Main Context, so we do not interfere with other libraries using GLib */
+  /* Create our own GLib Main Context and make it the default one */
   data->context = g_main_context_new ();
+  g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
   data->pipeline = gst_parse_launch("audiotestsrc ! audioconvert ! audioresample ! autoaudiosink", &error);
@@ -174,6 +175,7 @@ static void *app_function (void *userdata) {
   data->main_loop = NULL;
 
   /* Free resources */
+  g_main_context_pop_thread_default(data->context);
   g_main_context_unref (data->context);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->pipeline);
