@@ -1109,7 +1109,7 @@ gst_query_parse_buffering_percent (GstQuery * query, gboolean * busy,
  * @mode: a buffering mode
  * @avg_in: the average input rate
  * @avg_out: the average output rate
- * @buffering_left: amount of buffering time left
+ * @buffering_left: amount of buffering time left in milliseconds
  *
  * Configures the buffering stats values in @query.
  */
@@ -1136,7 +1136,8 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
  * @mode: (out) (allow-none): a buffering mode, or NULL
  * @avg_in: (out) (allow-none): the average input rate, or NULL
  * @avg_out: (out) (allow-none): the average output rat, or NULLe
- * @buffering_left: (out) (allow-none): amount of buffering time left, or NULL
+ * @buffering_left: (out) (allow-none): amount of buffering time left in
+ *     milliseconds, or NULL
  *
  * Extracts the buffering stats values from @query.
  */
