@@ -31,6 +31,7 @@
 
 G_BEGIN_DECLS
 #define DEFAULT_CODEC_BUFFER_SIZE 2048
+#define TEMPLATE_MAX_BITPOOL_STR "64"
     struct bluetooth_data
 {
   guint link_mtu;
