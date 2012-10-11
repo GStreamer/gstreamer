@@ -20,7 +20,7 @@ https://bugzilla.gnome.org/show_bug.cgi?id=678767
 https://bugzilla.gnome.org/show_bug.cgi?id=678772
 
 decodebin2 (from gst-plugins-base):
-To be completed
+https://bugzilla.gnome.org/show_bug.cgi?id=685938
 
 To build gst-dashdemux:
 ./autogen.sh
@@ -32,4 +32,4 @@ To launch gst-dashdemux:
 
 gst-launch playbin2 uri=http://www-itec.uni-klu.ac.at/ftp/datasets/mmsys12/RedBullPlayStreets/redbull_4s/RedBullPlayStreets_4s_isoffmain_DIS_23009_1_v_2_1c2_2011_08_30.mpd
  
-
+gst-launch playbin2 uri=http://download.tsi.telecom-paristech.fr/gpac/DASH_CONFORMANCE/TelecomParisTech/mp4-main-multi/mp4-main-multi-mpd-AV-BS.mpd
