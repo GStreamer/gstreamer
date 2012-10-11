@@ -401,6 +401,7 @@ struct _GstDecodeChain
 
   GstPad *pad;                  /* srcpad that caused creation of this chain */
 
+  gboolean drained;             /* TRUE if the all children are drained */
   gboolean demuxer;             /* TRUE if elements->data is a demuxer */
   gboolean seekable;            /* TRUE if this chain ends on a demuxer and is seekable */
   GList *elements;              /* All elements in this group, first
@@ -3237,7 +3238,6 @@ drain_and_switch_group (GstDecodeGroup * group, GstDecodePad * drainpad,
     gboolean * last_group, gboolean * drained, gboolean * switched)
 {
   gboolean handled = FALSE;
-  gboolean alldrained = TRUE;
   GList *tmp;
 
   GST_DEBUG ("Checking group %p (target pad %s:%s)",
@@ -3250,6 +3250,7 @@ drain_and_switch_group (GstDecodeGroup * group, GstDecodePad * drainpad,
 
   /* Figure out if all our chains are drained with the
    * new information */
+  group->drained = TRUE;
   for (tmp = group->children; tmp; tmp = tmp->next) {
     GstDecodeChain *chain = (GstDecodeChain *) tmp->data;
     gboolean subdrained = FALSE;
@@ -3258,13 +3259,13 @@ drain_and_switch_group (GstDecodeGroup * group, GstDecodePad * drainpad,
         drain_and_switch_chains (chain, drainpad, last_group, &subdrained,
         switched);
     if (!subdrained)
-      alldrained = FALSE;
+      group->drained = FALSE;
   }
 
 beach:
   GST_DEBUG ("group %p (last_group:%d, drained:%d, switched:%d, handled:%d)",
-      group, *last_group, alldrained, *switched, handled);
-  *drained = alldrained;
+      group, *last_group, group->drained, *switched, handled);
+  *drained = group->drained;
   return handled;
 }
 
@@ -3280,6 +3281,11 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
 
   CHAIN_MUTEX_LOCK (chain);
 
+  /* Definitely can't be in drained chains */
+  if (G_UNLIKELY (chain->drained)) {
+    goto beach;
+  }
+  
   if (chain->endpad) {
     /* Check if we're reached the target endchain */
     if (chain == drainpad->chain) {
@@ -3288,7 +3294,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
       handled = TRUE;
     }
 
-    *drained = chain->endpad->drained;
+    chain->drained = chain->endpad->drained;
     goto beach;
   }
 
@@ -3316,11 +3322,11 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
         chain->next_groups =
             g_list_delete_link (chain->next_groups, chain->next_groups);
         *switched = TRUE;
-        *drained = FALSE;
+        chain->drained = FALSE;
       } else {
         GST_DEBUG ("Group %p was the last in chain %p", chain->active_group,
             chain);
-        *drained = TRUE;
+        chain->drained = TRUE;	
         /* We're drained ! */
       }
     }
@@ -3330,7 +3336,9 @@ beach:
   CHAIN_MUTEX_UNLOCK (chain);
 
   GST_DEBUG ("Chain %p (handled:%d, last_group:%d, drained:%d, switched:%d)",
-      chain, handled, *last_group, *drained, *switched);
+      chain, handled, *last_group, chain->drained, *switched);
+
+  *drained = chain->drained;
 
   if (*drained)
     g_signal_emit (dbin, gst_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
