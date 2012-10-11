@@ -76,7 +76,7 @@ gst_avdtp_src_base_init (gpointer klass)
 
   gst_element_class_set_details_simple (element_class,
       "Bluetooth AVDTP Source",
-      "Codec/Depayloader/Network/RTP",
+      "Source/Audio/Network/RTP",
       "Receives audio from an A2DP device",
       "Arun Raghavan <arun.raghavan@collabora.co.uk>");
 }
