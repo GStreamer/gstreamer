@@ -22,6 +22,7 @@ libgstvaapi_includedir =			\
 libgstvaapi_cflags =				\
 	-DGST_USE_UNSTABLE_API			\
 	-I$(top_srcdir)/gst-libs		\
+	-I$(top_builddir)/gst-libs		\
 	$(GST_BASE_CFLAGS)			\
 	$(GST_BASEVIDEO_CFLAGS)			\
 	$(GST_VIDEO_CFLAGS)			\
@@ -37,7 +38,7 @@ libgstvaapi_libs =				\
 	$(GST_VIDEO_LIBS)			\
 	$(GST_CODEC_PARSERS_LIBS)		\
 	$(LIBVA_LIBS)				\
-	$(NULL)
+	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la
 
 libgstvaapi_source_c =				\
 	gstvaapicodec_objects.c			\
@@ -196,11 +197,6 @@ libgstvaapi_wayland_source_priv_h =		\
 	gstvaapidisplay_wayland_priv.h		\
 	gstvaapiutils.h				\
 	$(NULL)
-
-if USE_LOCAL_CODEC_PARSERS
-libgstvaapi_libs += \
-	$(top_builddir)/gst-libs/gst/codecparsers/libgstvaapi-codecparsers.la
-endif
 
 libgstvaapi_@GST_MAJORMINOR@_la_SOURCES =	\
 	$(libgstvaapi_source_c)			\

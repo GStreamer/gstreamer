@@ -56,6 +56,8 @@ docs/reference/plugins/html*
 docs/reference/plugins/plugins-docs.xml
 docs/reference/plugins/tmpl*
 docs/reference/plugins/xml*
+gst-libs/gst/codecparsers/*.[ch]
+gst-libs/gst/codecparsers/.timestamp.*
 gst-libs/gst/gstutils_version.h
 gtk-doc.make
 pkgconfig/gstreamer-vaapi-0.10.pc
