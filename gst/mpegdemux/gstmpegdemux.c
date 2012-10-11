@@ -501,23 +501,10 @@ unknown_stream:
   }
 }
 
-static GstFlowReturn
-gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
-    GstBuffer * buf)
+static inline void
+gst_flups_demux_send_segment (GstFluPSDemux * demux, GstFluPSStream * stream,
+    GstClockTime pts)
 {
-  GstFlowReturn result;
-  GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
-  guint size;
-
-  if (stream == NULL)
-    goto no_stream;
-
-  /* timestamps */
-  if (G_UNLIKELY (demux->next_pts != G_MAXUINT64))
-    pts = MPEGTIME_TO_GSTTIME (demux->next_pts);
-  if (G_UNLIKELY (demux->next_dts != G_MAXUINT64))
-    dts = MPEGTIME_TO_GSTTIME (demux->next_dts);
-
   /* discont */
   if (G_UNLIKELY (stream->need_segment)) {
     guint64 time, start, stop;
@@ -575,6 +562,26 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 
     stream->need_segment = FALSE;
   }
+}
+
+static GstFlowReturn
+gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
+    GstBuffer * buf)
+{
+  GstFlowReturn result;
+  GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
+  guint size;
+
+  if (stream == NULL)
+    goto no_stream;
+
+  /* timestamps */
+  if (G_UNLIKELY (demux->next_pts != G_MAXUINT64))
+    pts = MPEGTIME_TO_GSTTIME (demux->next_pts);
+  if (G_UNLIKELY (demux->next_dts != G_MAXUINT64))
+    dts = MPEGTIME_TO_GSTTIME (demux->next_dts);
+
+  gst_flups_demux_send_segment (demux, stream, pts);
 
   /* OK, sent new segment now prepare the buffer for sending */
   GST_BUFFER_PTS (buf) = pts;
