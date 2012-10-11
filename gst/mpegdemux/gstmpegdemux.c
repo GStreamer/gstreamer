@@ -822,68 +822,6 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
     gst_event_unref (event);
 }
 
-static inline void
-gst_flups_demux_close_segment (GstFluPSDemux * demux)
-{
-  gint i, count = demux->found_count;
-  GstEvent *event = NULL;
-  guint64 base_time;
-  GstSegment segment;
-
-  GST_INFO_OBJECT (demux, "closing running segment %" GST_SEGMENT_FORMAT,
-      &demux->src_segment);
-
-  /* FIXME: Need to send a different segment-close to each pad where the
-   * last_seg_start != clock_time_none, as that indicates a sparse-stream
-   * event was sent there */
-
-  if ((base_time = demux->base_time) == (guint64) - 1)
-    base_time = 0;
-
-  gst_segment_init (&segment, demux->src_segment.format);
-  segment.rate = demux->src_segment.rate;
-  /* Close the current segment for a linear playback */
-  if (demux->src_segment.rate >= 0) {
-    /* for forward playback, we played from start to last_stop */
-    segment.start = demux->src_segment.start + base_time;
-    segment.stop = demux->src_segment.position + base_time;
-    segment.position = demux->src_segment.time;
-    event = gst_event_new_segment (&segment);
-  } else {
-    gint64 stop;
-
-    if ((stop = demux->src_segment.stop) == -1)
-      stop = demux->src_segment.duration;
-
-    segment.start = demux->src_segment.position + base_time;
-    segment.stop = stop + base_time;
-    segment.position = demux->src_segment.position;
-    /* for reverse playback, we played from stop to last_stop. */
-    event = gst_event_new_segment (&segment);
-  }
-
-  if (event) {
-    for (i = 0; i < count; i++) {
-      GstFluPSStream *stream = demux->streams_found[i];
-
-      if (stream && !stream->notlinked && !stream->need_segment) {
-        (void) gst_event_ref (event);
-
-        if (!gst_pad_push_event (stream->pad, event)) {
-          GST_DEBUG_OBJECT (stream, "event %s was not handled correctly",
-              GST_EVENT_TYPE_NAME (event));
-        } else {
-          /* If at least one push returns TRUE, then we return TRUE. */
-          GST_DEBUG_OBJECT (stream, "event %s was handled correctly",
-              GST_EVENT_TYPE_NAME (event));
-        }
-      }
-    }
-
-    gst_event_unref (event);
-  }
-}
-
 static inline gboolean
 have_open_streams (GstFluPSDemux * demux)
 {
@@ -908,9 +846,6 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       const GstSegment *segment;
-
-      /* Close current segment */
-      gst_flups_demux_close_segment (demux);
 
       gst_event_parse_segment (event, &segment);
 
@@ -1215,8 +1150,6 @@ gst_flups_demux_handle_seek_pull (GstFluPSDemux * demux, GstEvent * event)
   if (flush) {
     /* Stop flushing, the sinks are at time 0 now */
     gst_flups_demux_send_event (demux, gst_event_new_flush_stop (TRUE));
-  } else {
-    gst_flups_demux_close_segment (demux);
   }
 
   if (flush || seeksegment.position != demux->src_segment.position) {
