@@ -530,6 +530,7 @@ debian.upstream/libgstvaapi-x11.install.in
     docs/reference/libs/libs-docs.xml
     docs/reference/plugins/Makefile
     docs/reference/plugins/plugins-docs.xml
+    ext/Makefile
     gst-libs/Makefile
     gst-libs/gst/Makefile
     gst-libs/gst/codecparsers/Makefile

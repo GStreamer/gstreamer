@@ -15,6 +15,17 @@ cd "$srcdir"
 
 mkdir -p m4
 
+GIT=`which git`
+if test -z "$GIT"; then
+    echo "*** No git found ***"
+    exit 1
+else
+    if test ! -f ext/codecparsers/autogen.sh; then
+        $GIT submodule init
+    fi
+    $GIT submodule update
+fi
+
 GTKDOCIZE=`which gtkdocize`
 if test -z "$GTKDOCIZE"; then
     echo "*** No gtk-doc support ***"
