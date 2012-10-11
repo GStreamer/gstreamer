@@ -163,8 +163,17 @@ main (int   argc,
       of the top-level pipeline to start up the pipeline or shut it down.
     </para>
     <para>
+      The bin will perform the state changes on all its children from the
+      sink element to the source element. This ensures that the downstream
+      element is ready to receive data when the upstream element is brought
+      to PAUSED or PLAYING. Similarly when shutting down, the sink elements
+      will be set to READY or NULL first, which will cause the upstream
+      elements to receive a FLUSHING error and stop the streaming threads
+      before the elements are set to the READY or NULL state.
+    </para>
+    <para>
       Note, however, that if elements are added to a bin or pipeline that's
-      already running, , e.g. from within a "pad-added" or "new-decoded-pad"
+      already running, , e.g. from within a "pad-added"
       signal callback, its state will not automatically be brought in line with
       the current state or target state of the bin or pipeline it was added to.
       Instead, you have to need to set it to the desired target state yourself
