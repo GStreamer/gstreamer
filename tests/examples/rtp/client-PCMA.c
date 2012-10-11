@@ -75,7 +75,7 @@ print_source_stats (GObject * source)
   g_free (str);
 }
 
-/* will be called when gstrtpbin signals on-ssrc-active. It means that an RTCP
+/* will be called when rtpbin signals on-ssrc-active. It means that an RTCP
  * packet was received from another source. */
 static void
 on_ssrc_active_cb (GstElement * rtpbin, guint sessid, guint ssrc,
@@ -116,7 +116,7 @@ pad_added_cb (GstElement * rtpbin, GstPad * new_pad, GstElement * depay)
 
 /* build a pipeline equivalent to:
  *
- * gst-launch -v gstrtpbin name=rtpbin                                                \
+ * gst-launch -v rtpbin name=rtpbin                                                \
  *      udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
  *        rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! alsasink \
  *      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \

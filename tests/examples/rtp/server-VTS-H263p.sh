@@ -32,13 +32,13 @@ AOFFSET=0
 VELEM="videotestsrc is-live=1"
 VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
 VSOURCE="$VELEM ! $VCAPS"
-VENC="ffenc_h263p ! rtph263ppay"
+VENC="avenc_h263p ! rtph263ppay"
 
 VRTPSINK="udpsink port=5000 host=$DEST ts-offset=$VOFFSET name=vrtpsink"
 VRTCPSINK="udpsink port=5001 host=$DEST sync=false async=false name=vrtcpsink"
 VRTCPSRC="udpsrc port=5005 name=vrtpsrc"
 
-PIPELINE="gstrtpbin name=rtpbin 
+PIPELINE="rtpbin name=rtpbin
             $VSOURCE ! $VENC ! rtpbin.send_rtp_sink_2
 	      rtpbin.send_rtp_src_2 ! $VRTPSINK 
               rtpbin.send_rtcp_src_2 ! $VRTCPSINK

@@ -67,7 +67,7 @@ ARTPSINK="udpsink port=5002 host=$DEST ts-offset=$AOFFSET name=artpsink"
 ARTCPSINK="udpsink port=5003 host=$DEST sync=false async=false name=artcpsink"
 ARTCPSRC="udpsrc port=5007 name=artpsrc"
 
-gst-launch-1.0 -v gstrtpbin name=rtpbin \
+gst-launch-1.0 -v rtpbin name=rtpbin \
     $VSOURCE ! $VENC ! rtpbin.send_rtp_sink_0                                             \
         rtpbin.send_rtp_src_0 ! $VRTPSINK                                                 \
         rtpbin.send_rtcp_src_0 ! $VRTCPSINK                                               \

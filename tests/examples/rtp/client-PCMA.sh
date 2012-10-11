@@ -32,7 +32,7 @@ AUDIO_SINK="audioconvert ! audioresample ! autoaudiosink"
 # from another machine, change this address.
 DEST=127.0.0.1
 
-gst-launch-1.0 -v gstrtpbin name=rtpbin                                                \
+gst-launch-1.0 -v rtpbin name=rtpbin                                                \
 	   udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
 	         rtpbin. ! $AUDIO_DEC ! $AUDIO_SINK                                \
            udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \

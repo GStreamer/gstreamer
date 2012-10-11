@@ -17,7 +17,7 @@ VOFFSET=0
 VCAPS="video/x-raw,width=352,height=288,framerate=15/1"
 
 # video and audio encoding and payloading
-VENCPAY="ffenc_h263p ! rtph263ppay"
+VENCPAY="avenc_h263p ! rtph263ppay"
 AENCPAY="amrnbenc ! rtpamrpay"
 
 # video conversion 
@@ -28,7 +28,7 @@ ACONV="audioconvert ! audioresample"
 #HOST=192.168.1.126
 HOST=127.0.0.1
 
-gst-launch-1.0 -v gstrtpbin name=rtpbin \
+gst-launch-1.0 -v rtpbin name=rtpbin \
            uridecodebin uri="$1" name=decode \
            decode. ! $VCONV ! $VENCPAY ! rtpbin.send_rtp_sink_0      \
                      rtpbin.send_rtp_src_0 ! queue ! udpsink host=$HOST port=5000 ts-offset=$AOFFSET      \

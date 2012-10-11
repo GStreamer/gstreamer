@@ -24,7 +24,7 @@
 # have a mechanism to get this from the sender with a -launch line.
 VIDEO_CAPS="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264"
 
-VIDEO_DEC="rtph264depay ! ffdec_h264"
+VIDEO_DEC="rtph264depay ! avdec_h264"
 
 VIDEO_SINK="videoconvert ! autovideosink"
 
@@ -35,7 +35,7 @@ DEST=127.0.0.1
 
 LATENCY=200
 
-gst-launch-1.0 -v gstrtpbin name=rtpbin latency=$LATENCY                                \
+gst-launch-1.0 -v rtpbin name=rtpbin latency=$LATENCY                                \
     udpsrc caps=$VIDEO_CAPS port=5000 ! rtpbin.recv_rtp_sink_0                      \
       rtpbin. ! $VIDEO_DEC ! $VIDEO_SINK                                            \
     udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0                                      \
