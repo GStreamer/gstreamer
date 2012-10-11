@@ -1650,11 +1650,13 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
     case GST_EVENT_SEGMENT:
     {
       GstSegment seg;
+      GstFormat format;
 
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
       gst_event_copy_segment (event, &seg);
 
-      if (seg.format == GST_FORMAT_TIME) {
+      format = seg.format;
+      if (format == GST_FORMAT_TIME) {
         GST_DEBUG_OBJECT (dec, "received TIME SEGMENT %" GST_SEGMENT_FORMAT,
             &seg);
       } else {
@@ -1696,7 +1698,7 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
         /* and that's where we time from,
          * in case upstream does not come up with anything better
          * (e.g. upstream BYTE) */
-        if (seg.format != GST_FORMAT_TIME) {
+        if (format != GST_FORMAT_TIME) {
           dec->priv->base_ts = seg.start;
           dec->priv->samples = 0;
         }
