@@ -312,6 +312,12 @@ gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
 
   if (ret < 0)
     goto read_error;
+  else if (ret == 0) {
+    GST_ERROR_OBJECT (avdtpsrc, "Got EOF on the transport fd");
+    GST_ELEMENT_ERROR ((avdtpsrc), RESOURCE, FAILED, ("Disconnected"
+            " from remote device"), (NULL));
+    goto eof;
+  }
 
   GST_LOG_OBJECT (avdtpsrc, "Read %d bytes", ret);
 
@@ -325,10 +331,11 @@ gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
   return GST_FLOW_OK;
 
 read_error:
-  gst_buffer_unref (buf);
-
   GST_ERROR_OBJECT (avdtpsrc, "Error while reading audio data: %s",
       strerror (errno));
+
+eof:
+  gst_buffer_unref (buf);
 
   return GST_FLOW_ERROR;
 }
