@@ -166,7 +166,7 @@ static inline gboolean gst_flups_demux_scan_forward_ts (GstFluPSDemux * demux,
 static inline gboolean gst_flups_demux_scan_backward_ts (GstFluPSDemux * demux,
     guint64 * pos, SCAN_MODE mode, guint64 * rts, gint limit);
 
-static inline void gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
+static inline void gst_flups_demux_send_gap_updates (GstFluPSDemux * demux,
     GstClockTime new_time);
 static inline void gst_flups_demux_clear_times (GstFluPSDemux * demux);
 
@@ -606,7 +606,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
       stream->last_ts = new_time;
     }
 
-    gst_flups_demux_send_segment_updates (demux, new_time);
+    gst_flups_demux_send_gap_updates (demux, new_time);
   }
 
   /* Set the buffer discont flag, and clear discont state on the stream */
@@ -798,20 +798,19 @@ gst_flups_demux_clear_times (GstFluPSDemux * demux)
     GstFluPSStream *stream = demux->streams_found[i];
 
     if (G_LIKELY (stream)) {
-      stream->last_seg_start = stream->last_ts = GST_CLOCK_TIME_NONE;
+      stream->last_ts = GST_CLOCK_TIME_NONE;
     }
   }
 }
 
 static inline void
-gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
-    GstClockTime new_start)
+gst_flups_demux_send_gap_updates (GstFluPSDemux * demux, GstClockTime new_start)
 {
-  GstClockTime base_time, stop, time;
+  GstClockTime base_time, stop;
   gint i, count = demux->found_count;
   GstEvent *event = NULL;
 
-  /* Advance all lagging streams by sending a segment update */
+  /* Advance all lagging streams by sending a gap event */
   if ((base_time = demux->base_time) == GST_CLOCK_TIME_NONE)
     base_time = 0;
 
@@ -821,9 +820,6 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
 
   if (new_start > stop)
     return;
-
-  time = demux->src_segment.time;
-  time += new_start - (demux->src_segment.start + base_time);
 
   /* FIXME: Handle reverse playback */
   for (i = 0; i < count; i++) {
@@ -836,28 +832,14 @@ gst_flups_demux_send_segment_updates (GstFluPSDemux * demux,
 
       if (stream->last_ts + stream->segment_thresh < new_start) {
         GST_DEBUG_OBJECT (demux,
-            "Segment update to pad %s time %" GST_TIME_FORMAT,
+            "Sending gap update to pad %s time %" GST_TIME_FORMAT,
             GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_start));
-        if (event == NULL) {
-          GstSegment segment;
-          gst_segment_init (&segment, GST_FORMAT_TIME);
-          segment.rate = demux->src_segment.rate;
-          segment.applied_rate = demux->src_segment.applied_rate;
-          segment.start = new_start;
-          segment.stop = stop;
-          segment.time = time;
-          event = gst_event_new_segment (&segment);
-        }
-        gst_event_ref (event);
+        event =
+            gst_event_new_gap (stream->last_ts, new_start - stream->last_ts);
         gst_pad_push_event (stream->pad, event);
-        stream->last_seg_start = stream->last_ts = new_start;
-        stream->need_segment = FALSE;
       }
     }
   }
-
-  if (event)
-    gst_event_unref (event);
 }
 
 static inline gboolean

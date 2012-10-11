@@ -89,7 +89,6 @@ struct _GstFluPSStream
   gint type;
 
   GstClockTime segment_thresh;
-  GstClockTime last_seg_start;
   GstClockTime last_ts;
 
   gboolean discont;
