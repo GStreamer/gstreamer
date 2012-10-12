@@ -291,16 +291,48 @@ find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
 {
   GList *list;
   GstElementFactory *factory = NULL;
+  gboolean autoplug_more = FALSE;
 
   /* first find a demuxer that can link */
   list = gst_element_factory_list_filter (urifact->demuxers, caps,
       GST_PAD_SINK, FALSE);
 
-  if (list != NULL) {
-    /* we have a demuxer, try that one first */
+  if (list) {
+    GstStructure *structure = gst_caps_get_structure (caps, 0);
+    gboolean parsed = FALSE;
+
+    gst_structure_get_boolean (structure, "parsed", &parsed);
+
+    /* Avoid plugging parsers in a loop. This is not 100% correct, as some
+     * parsers don't set parsed=true in caps. We should do something like
+     * decodebin does and track decode chains and elements plugged in those
+     * chains...
+     */
+    if (parsed) {
+      GList *walk;
+      const gchar *klass;
+
+      for (walk = list; walk; walk = walk->next) {
+        factory = GST_ELEMENT_FACTORY (walk->data);
+        klass = gst_element_factory_get_klass (factory);
+        if (strstr (klass, "Parser"))
+          /* caps have parsed=true, so skip this parser to avoid loops */
+          continue;
+
+        autoplug_more = TRUE;
+        break;
+      }
+    } else {
+      /* caps don't have parsed=true set and we have a demuxer/parser */
+      autoplug_more = TRUE;
+    }
+
     gst_plugin_feature_list_free (list);
-    return NULL;
   }
+
+  if (autoplug_more)
+    /* we have a demuxer, try that one first */
+    return NULL;
 
   /* no demuxer try a depayloader */
   list = gst_element_factory_list_filter (urifact->payloaders, caps,
