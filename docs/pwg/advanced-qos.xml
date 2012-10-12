@@ -247,7 +247,9 @@
     </para>
     <para>
       The default sink base class, has the <quote>throttle-time</quote>
-      property for this feature.
+      property for this feature. You can test this with: 
+      <command>gst-launch-1.0 videotestsrc !
+        xvimagesink throttle-time=500000000</command>
     </para>
   </sect1>
 
