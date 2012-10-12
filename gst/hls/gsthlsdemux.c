@@ -947,7 +947,7 @@ gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf)
 
   /* alloc size + 1 to end with a null character */
   playlist = g_malloc0 (info.size + 1);
-  memcpy (playlist, info.data, info.size + 1);
+  memcpy (playlist, info.data, info.size);
 
   gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
