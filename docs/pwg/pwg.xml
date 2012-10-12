@@ -34,6 +34,7 @@
 <!ENTITY ADVANCED_INTERFACES  SYSTEM "advanced-interfaces.xml">
 <!ENTITY ADVANCED_TAGGING     SYSTEM "advanced-tagging.xml">
 <!ENTITY ADVANCED_EVENTS      SYSTEM "advanced-events.xml">
+<!ENTITY ADVANCED_QOS         SYSTEM "advanced-qos.xml">
 
 <!-- Part 4: Creating special element types -->
 <!ENTITY OTHER_BASE           SYSTEM "other-base.xml">
@@ -150,6 +151,7 @@
     &ADVANCED_INTERFACES;
     &ADVANCED_TAGGING;
     &ADVANCED_EVENTS;
+    &ADVANCED_QOS;
 
     <!-- FIXME: add querying, event handling and conversion -->
 
