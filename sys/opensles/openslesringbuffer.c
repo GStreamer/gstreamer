@@ -887,13 +887,16 @@ gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
   thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
 
   if (thiz->playerPlay) {
+    SLuint32 state;
     SLmillisecond position;
-    guint64 playedpos, queuedpos;
-
-    (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
-    playedpos = gst_util_uint64_scale_round (position, rb->spec.rate, 1000);
-    queuedpos = g_atomic_int_get (&thiz->segqueued) * rb->samples_per_seg;
-    res = queuedpos - playedpos;
+    guint64 playedpos = 0, queuedpos = 0;
+    (*thiz->playerPlay)->GetPlayState (thiz->playerPlay, &state);
+    if (state == SL_PLAYSTATE_PLAYING) {
+      (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
+      playedpos = gst_util_uint64_scale_round (position, rb->spec.rate, 1000);
+      queuedpos = g_atomic_int_get (&thiz->segqueued) * rb->samples_per_seg;
+      res = queuedpos - playedpos;
+    }
 
     GST_LOG_OBJECT (thiz, "queued samples %" G_GUINT64_FORMAT " position %u ms "
         "(%" G_GUINT64_FORMAT " samples) delay %u samples",
