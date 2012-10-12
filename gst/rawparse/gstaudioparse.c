@@ -373,8 +373,14 @@ gst_audio_parse_get_caps (GstRawParse * rp)
     GstCaps *caps = gst_pad_get_current_caps (rp->sinkpad);
     gst_audio_info_from_caps (&info, caps);
 
+    ap->format = GST_AUDIO_PARSE_FORMAT_RAW;
+    ap->raw_format = GST_AUDIO_INFO_FORMAT (&info);
+    ap->channels = GST_AUDIO_INFO_CHANNELS (&info);
+    ap->interleaved = info.layout == GST_AUDIO_LAYOUT_INTERLEAVED;
+
     rate = GST_AUDIO_INFO_RATE (&info);
     gst_raw_parse_set_fps (GST_RAW_PARSE (ap), rate, 1);
+    gst_audio_parse_update_frame_size (ap);
 
     return caps;
   }
