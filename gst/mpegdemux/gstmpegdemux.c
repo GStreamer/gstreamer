@@ -307,6 +307,8 @@ gst_flups_demux_reset (GstFluPSDemux * demux)
       if (stream->pad && GST_PAD_PARENT (stream->pad))
         gst_element_remove_pad (GST_ELEMENT_CAST (demux), stream->pad);
 
+      if (stream->pending_tags)
+        gst_tag_list_unref (stream->pending_tags);
       g_free (stream);
       demux->streams[i] = NULL;
     }
@@ -453,6 +455,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   stream->notlinked = FALSE;
   stream->last_flow = GST_FLOW_OK;
   stream->type = stream_type;
+  stream->pending_tags = NULL;
   stream->pad = gst_pad_new_from_template (template, name);
   stream->segment_thresh = threshold;
   gst_pad_set_event_function (stream->pad,
@@ -552,6 +555,14 @@ gst_flups_demux_send_segment (GstFluPSDemux * demux, GstFluPSStream * stream,
     gst_pad_push_event (stream->pad, gst_event_new_segment (&segment));
 
     stream->need_segment = FALSE;
+  }
+
+  if (G_UNLIKELY (stream->pending_tags)) {
+    GST_DEBUG_OBJECT (demux, "Sending pending_tags %p for pad %s:%s : %"
+        GST_PTR_FORMAT, stream->pending_tags,
+        GST_DEBUG_PAD_NAME (stream->pad), stream->pending_tags);
+    gst_pad_push_event (stream->pad, gst_event_new_tag (stream->pending_tags));
+    stream->pending_tags = NULL;
   }
 }
 
@@ -685,7 +696,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
   const char *type = gst_structure_get_string (structure, "event");
   gint i;
   gchar cur_stream_name[32];
-  GstFluPSStream *temp G_GNUC_UNUSED;
+  GstFluPSStream *temp;
+  const gchar *lang_code;
 
   if (strcmp (type, "dvd-lang-codes") == 0) {
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
@@ -742,6 +754,16 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
               stream_format);
           break;
       }
+
+      g_snprintf (cur_stream_name, 32, "audio-%d-language", i);
+      lang_code = gst_structure_get_string (structure, cur_stream_name);
+      if (lang_code) {
+        GstTagList *list = gst_tag_list_new_empty ();
+
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_LANGUAGE_CODE, lang_code, NULL);
+        temp->pending_tags = list;
+      }
     }
 
     /* And subtitle streams */
@@ -764,6 +786,16 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
       /* Retrieve the subpicture stream to force pad creation */
       temp = gst_flups_demux_get_stream (demux, 0x20 + stream_id,
           ST_PS_DVD_SUBPICTURE);
+
+      g_snprintf (cur_stream_name, 32, "subpicture-%d-language", i);
+      lang_code = gst_structure_get_string (structure, cur_stream_name);
+      if (lang_code) {
+        GstTagList *list = gst_tag_list_new_empty ();
+
+        gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+            GST_TAG_LANGUAGE_CODE, lang_code, NULL);
+        temp->pending_tags = list;
+      }
     }
 
     GST_DEBUG_OBJECT (demux, "Created all pads from Language Codes event, "

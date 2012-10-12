@@ -95,6 +95,8 @@ struct _GstFluPSStream
   gboolean discont;
   gboolean notlinked;
   gboolean need_segment;
+
+  GstTagList *pending_tags;
 };
 
 struct _GstFluPSDemux
