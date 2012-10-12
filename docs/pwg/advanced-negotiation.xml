@@ -1,21 +1,194 @@
 <chapter id="chapter-negotiation" xreflabel="Caps negotiation">
   <title>Caps negotiation</title>
   <para>
-    Caps negotiation is the process where elements configure themselves
-    and each other for streaming a particular media format over their pads.
-    Since different types of elements have different requirements for the
-    media formats they can negotiate to, it is important that this process
-    is generic and implements all those use cases correctly.
-  </para>
-  <para>
-    In this chapter, we will discuss downstream negotiation and upstream
-    negotiation from a pipeline perspective, implicating the responsibilities
-    of different types of elements in a pipeline, and we will introduce the
-    concept of <emphasis>fixed caps</emphasis>.
+    Caps negotiation is the act of finding a media format (GstCaps) between
+    elements that they can handle. This process in &GStreamer; can in most
+    cases find an optimal solution for the complete pipeline. In this section
+    we explain how this works.
   </para>
 
-  <sect1 id="section-nego-requirements" xreflabel="Caps negotiation use cases">
+  <sect1 id="section-nego-basics">
+    <title>Caps negotiation basics</title>
+    <para>
+      In &GStreamer;, negotiation of the media format always follows the
+      following simple rules:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          A downstream element suggest a format on its sinkpad and places the
+          suggestion in the result of the CAPS query performed on the sinkpad.
+          See also <xref linkend="section-nego-getcaps"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          An upstream element decides on a format. It sends the selected media
+          format downstream on its source pad with a CAPS event. Downstream
+          elements reconfigure themselves to handle the media type in the CAPS
+          event on the sinkpad.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          An upstream element can inform downstream that it would like to
+          suggest a new format by sending a RECONFIGURE event upstream. The
+          RECONFIGURE event simply instructs an upstream element to restart
+          the negotiation phase. Because the element that sent out the
+          RECONFIGURE event is now suggesting another format, the format
+          in the pipeline might change.
+        </para>
+      </listitem>
+    </itemizedlist>
+    <para>
+      In addition to the CAPS and RECONFIGURE event and the CAPS query, there
+      is an ACCEPT_CAPS query to quickly check if a certain caps can
+      be accepted by an element.
+    </para>
+    <para>
+      All negotiation follows these simple rules. Let's take a look at some
+      typical uses cases and how negotiation happens.
+    </para>
+  </sect1>
+
+  <sect1 id="section-nego-usecases">
     <title>Caps negotiation use cases</title>
+    <para>
+      In what follows we will look at some use cases for push-mode scheduling.
+      The pull-mode scheduling negotiation phase is discussed in
+      <xref linkend="section-nego-pullmode"/> and is actually similar as we
+      will see. 
+    </para>
+    <para>
+      Since the sink pads only suggest formats and the source pads need to
+      decide, the most complicated work is done in the source pads.
+      We can identify 3 caps negotiation use cases for the source pads:
+    </para>
+    <itemizedlist>
+      <listitem>
+        <para>
+          Fixed negotiation. An element can output one format only.
+          See <xref linkend="section-nego-fixed"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Transform negotiation. There is a (fixed) transform between the
+          input and output format of the element, usually based on some
+          element property. The caps that the element will produce depend
+          on the upstream caps and the caps that the element can accept
+          depend on the downstream caps.
+          See <xref linkend="section-nego-transform"/>.
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+          Dynamic negotiation. An element can output many formats.
+          See <xref linkend="section-nego-dynamic"/>.
+        </para>
+      </listitem>
+    </itemizedlist>
+
+    <sect2 id="section-nego-fixed">
+      <title>Fixed negotiation</title>
+      <para>
+        In this case, the source pad can only produce a fixed format. Usually
+        this format is encoded inside the media. No downstream element can
+        ask for a different format, the only way that the source pad will
+        renegotiate is when the element decides to change the caps itself.
+      </para>
+      <para>
+        Elements that could implement fixed caps (on their source pads) are,
+        in general, all elements that are not renegotiable. Examples include:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            A typefinder, since the type found is part of the actual data stream
+            and can thus not be re-negotiated. The typefinder will look at the
+            stream of bytes, figure out the type, send a CAPS event with the
+            caps and then push buffers of the type.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Pretty much all demuxers, since the contained elementary data
+            streams are defined in the file headers, and thus not
+            renegotiable.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Some decoders, where the format is embedded in the data stream
+            and not part of the peercaps <emphasis>and</emphasis> where the
+            decoder itself is not reconfigurable, too.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        <function>gst_pad_use_fixed_caps()</function> is used on the source
+        pad with fixed caps. As long as the pad is not negotiated, the default
+        CAPS query will return the caps presented in the padtemplate. As soon
+        as the pad is negotiated, the CAPS query will return the negotiated
+        caps (and nothing else). These are the relevant code snippets for fixed
+        caps source pads.
+      </para>
+      <programlisting>
+<![CDATA[
+[..]
+  pad = gst_pad_new_from_static_template (..);
+  gst_pad_use_fixed_caps (pad);
+[..]
+]]>
+      </programlisting>
+      <para>
+        The fixed caps can then be set on the pad by calling
+        <function>gst_pad_set_caps ()</function>.
+      </para>
+      <programlisting>
+<![CDATA[
+[..]
+    caps = gst_caps_new_simple ("audio/x-raw",
+        "format", G_TYPE_STRING, GST_AUDIO_NE(F32),
+        "rate", G_TYPE_INT, <samplerate>,
+        "channels", G_TYPE_INT, <num-channels>, NULL);
+    if (!gst_pad_set_caps (pad, caps)) {
+      GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
+          ("Some debug information here"));
+      return GST_FLOW_ERROR;
+    }
+[..]
+]]>
+      </programlisting>
+      <para>
+        All other elements that need to be configured for the format should
+        implement full caps negotiation, which will be explained in the next
+        few sections.
+      </para>
+    </sect2>
+
+    <sect2 id="section-nego-transform">
+      <title>Transform negotiation</title>
+      <para>
+      </para>
+    </sect2>
+
+    <sect2 id="section-nego-dynamic">
+      <title>Dynamic negotiation</title>
+      <para>
+      </para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="section-nego-pullmode">
+    <title>Pull-mode Caps negotiation</title>
+    <para>
+    </para>
+  </sect1>
+
+<!--
+  <sect1 id="section-nego-old">
+    <title>Old stuff</title>
     <para>
       Let's take the case of a file source, linked to a demuxer, linked to a
       decoder, linked to a converter with a caps filter and finally an audio
@@ -71,71 +244,7 @@
       it should return an error from the chain function.
     </para>
   </sect1>
-
-  <sect1 id="section-nego-fixedcaps" xreflabel="Fixed caps">
-    <title>Fixed caps</title>
-    <para>
-      The simplest way in which to do caps negotiation is setting a fixed
-      caps on a pad. After a fixed caps has been set, the pad can not be
-      renegotiated from the outside. The only way to reconfigure the pad
-      is for the element owning the pad to set a new fixed caps on the pad.
-      Fixed caps is a setup property for pads, called when creating the pad:
-    </para>
-    <programlisting>
-[..]
-  pad = gst_pad_new_from_static_template (..);
-  gst_pad_use_fixed_caps (pad);
-[..]
-    </programlisting>
-    <para>
-      The fixed caps can then be set on the pad by calling
-      <function>gst_pad_set_caps ()</function>.
-    </para>
-    <programlisting>
-[..]
-  caps = gst_caps_new_simple ("audio/x-raw",
-      "format", G_TYPE_STRING, GST_AUDIO_NE(F32),
-      "rate", G_TYPE_INT, &lt;samplerate&gt;,
-      "channels", G_TYPE_INT, &lt;num-channels&gt;, NULL);
-  if (!gst_pad_set_caps (pad, caps)) {
-    GST_ELEMENT_ERROR (element, CORE, NEGOTIATION, (NULL),
-        ("Some debug information here"));
-    return GST_FLOW_ERROR;
-  }
-[..]
-    </programlisting>
-    <para>
-      Elements that could implement fixed caps (on their source pads) are,
-      in general, all elements that are not renegotiable. Examples include:
-    </para>
-    <itemizedlist>
-      <listitem>
-        <para>
-          A typefinder, since the type found is part of the actual data stream
-          and can thus not be re-negotiated.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Pretty much all demuxers, since the contained elementary data
-          streams are defined in the file headers, and thus not
-          renegotiable.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          Some decoders, where the format is embedded in the data stream
-          and not part of the peercaps <emphasis>and</emphasis> where the
-          decoder itself is not reconfigurable, too.
-        </para>
-      </listitem>
-    </itemizedlist>
-    <para>
-      All other elements that need to be configured for the format should
-      implement full caps negotiation, which will be explained in the next
-      few sections.
-    </para>
-  </sect1>
+-->
 
   <sect1 id="section-nego-downstream" xreflabel="Downstream caps negotiation">
     <title>Downstream caps negotiation</title>
