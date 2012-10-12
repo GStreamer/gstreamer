@@ -24,6 +24,7 @@
 #include "rtsp-client.h"
 
 #define DEFAULT_ADDRESS         "0.0.0.0"
+#define DEFAULT_BOUND_PORT      -1
 /* #define DEFAULT_ADDRESS         "::0" */
 #define DEFAULT_SERVICE         "8554"
 #define DEFAULT_BACKLOG         5
@@ -38,6 +39,7 @@ enum
   PROP_0,
   PROP_ADDRESS,
   PROP_SERVICE,
+  PROP_BOUND_PORT,
   PROP_BACKLOG,
 
   PROP_SESSION_POOL,
@@ -100,6 +102,18 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           "The service or port number the server uses to listen on",
           DEFAULT_SERVICE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
+   * GstRTSPServer::bound-port
+   *
+   * The actual port the server is listening on. Can be used to retrieve the
+   * port number when the server is started on port 0, which means bind to a
+   * random port. Set to -1 if the server has not been bound yet.
+   */
+  g_object_class_install_property (gobject_class, PROP_BOUND_PORT,
+      g_param_spec_int ("bound-port", "Bound port",
+          "The port number the server is listening on",
+          -1, G_MAXUINT16, DEFAULT_BOUND_PORT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
    * GstRTSPServer::backlog
    *
    * The backlog argument defines the maximum length to which the queue of
@@ -155,6 +169,7 @@ gst_rtsp_server_init (GstRTSPServer * server)
   g_mutex_init (&server->lock);
   server->address = g_strdup (DEFAULT_ADDRESS);
   server->service = g_strdup (DEFAULT_SERVICE);
+  server->socket = NULL;
   server->backlog = DEFAULT_BACKLOG;
   server->session_pool = gst_rtsp_session_pool_new ();
   server->media_mapping = gst_rtsp_media_mapping_new ();
@@ -169,6 +184,8 @@ gst_rtsp_server_finalize (GObject * object)
 
   g_free (server->address);
   g_free (server->service);
+  if (server->socket)
+    g_object_unref (server->socket);
 
   g_object_unref (server->session_pool);
   g_object_unref (server->media_mapping);
@@ -233,6 +250,28 @@ gst_rtsp_server_get_address (GstRTSPServer * server)
 
   GST_RTSP_SERVER_LOCK (server);
   result = g_strdup (server->address);
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
+}
+
+int
+gst_rtsp_server_get_bound_port (GstRTSPServer * server)
+{
+  GSocketAddress *address;
+  int result = -1;
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), result);
+
+  GST_RTSP_SERVER_LOCK (server);
+  if (server->socket == NULL)
+    goto out;
+
+  address = g_socket_get_local_address (server->socket, NULL);
+  result = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (address));
+  g_object_unref (address);
+
+out:
   GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
@@ -491,6 +530,9 @@ gst_rtsp_server_get_property (GObject * object, guint propid,
       break;
     case PROP_SERVICE:
       g_value_take_string (value, gst_rtsp_server_get_service (server));
+      break;
+    case PROP_BOUND_PORT:
+      g_value_set_int (value, gst_rtsp_server_get_bound_port (server));
       break;
     case PROP_BACKLOG:
       g_value_set_int (value, gst_rtsp_server_get_backlog (server));
@@ -923,6 +965,7 @@ gst_rtsp_server_create_source (GstRTSPServer * server,
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
   socket = gst_rtsp_server_create_socket (server, NULL, error);
+  server->socket = g_object_ref (socket);
   if (socket == NULL)
     goto no_socket;
 
