@@ -107,6 +107,7 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
           gst_pad_template_get_caps (template));
 
       gst_caps_unref (caps);
+      gst_object_unref (template);
     }
 
     gst_buffer_set_caps (output, dec->outcaps);
