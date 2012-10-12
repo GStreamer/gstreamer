@@ -7636,7 +7636,8 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
 
   GST_DEBUG_OBJECT (qtdemux, "Looking for streams with unknown bitrate");
 
-  if (!gst_pad_peer_query_duration (qtdemux->sinkpad, GST_FORMAT_BYTES, &size)) {
+  if (!gst_pad_peer_query_duration (qtdemux->sinkpad, GST_FORMAT_BYTES, &size)
+      || size <= 0) {
     GST_DEBUG_OBJECT (qtdemux,
         "Size in bytes of the stream not known - bailing");
     return;
@@ -7645,7 +7646,10 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
   /* Subtract the header size */
   GST_DEBUG_OBJECT (qtdemux, "Total size %" G_GINT64_FORMAT ", header size %u",
       size, qtdemux->header_size);
-  g_assert (size >= qtdemux->header_size);
+
+  if (size < qtdemux->header_size)
+    return;
+
   size = size - qtdemux->header_size;
 
   if (!gst_qtdemux_get_duration (qtdemux, &duration) ||
