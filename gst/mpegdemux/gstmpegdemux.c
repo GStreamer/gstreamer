@@ -872,6 +872,7 @@ gst_flups_demux_send_gap_updates (GstFluPSDemux * demux, GstClockTime new_start)
         event =
             gst_event_new_gap (stream->last_ts, new_start - stream->last_ts);
         gst_pad_push_event (stream->pad, event);
+        stream->last_ts = new_start;
       }
     }
   }
