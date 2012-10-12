@@ -151,6 +151,8 @@ GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *
 void                  gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory,
                                                               const GstRTSPUrl *url,
                                                               GstRTSPMedia *media);
+ 
+GstElement *          gst_rtsp_media_factory_get_element     (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 
 G_END_DECLS
 

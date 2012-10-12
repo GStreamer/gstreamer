@@ -877,3 +877,18 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
     g_free (mc);
   }
 }
+
+/**
+ * gst_rtsp_media_factory_get_element:
+ * @factory: a #GstRTSPMediaFactory
+ * @url: the url used
+ *
+ * Returns: (transfer floating) a new #GstElement.
+ */
+GstElement *
+gst_rtsp_media_factory_get_element (GstRTSPMediaFactory * factory,
+    const GstRTSPUrl * url)
+{
+  GstRTSPMediaFactoryClass *klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
+  return klass->get_element (factory, url);
+}
