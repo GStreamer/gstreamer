@@ -123,7 +123,7 @@ gst_rtsp_media_mapping_find_factory (GstRTSPMediaMapping * mapping,
  * gst_rtsp_media_mapping_add_factory:
  * @mapping: a #GstRTSPMediaMapping
  * @path: a mount point
- * @factory: a #GstRTSPMediaFactory
+ * @factory: (transfer full): a #GstRTSPMediaFactory
  *
  * Attach @factory to the mount point @path in @mapping.
  *
