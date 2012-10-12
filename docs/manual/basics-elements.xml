@@ -557,7 +557,7 @@ main (int   argc,
       automatically, so it's usually only necessary to set the state of the
       top-level pipeline to start up the pipeline or shut it down. However,
       when adding elements dynamically to an already-running pipeline, e.g.
-      from within a "pad-added" or "new-decoded-pad" signal callback, you
+      from within a "pad-added" signal callback, you
       need to set it to the desired target state yourself using
       <function>gst_element_set_state ()</function> or
       <function>gst_element_sync_state_with_parent ()</function>.
