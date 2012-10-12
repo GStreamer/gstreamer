@@ -1346,8 +1346,8 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     case GST_EVENT_EOS:
-      res = gst_mpegts_base_handle_eos (base);
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
+      res = gst_mpegts_base_handle_eos (base);
       break;
     case GST_EVENT_CAPS:
       /* FIXME, do something */
