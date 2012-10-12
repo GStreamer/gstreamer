@@ -713,28 +713,34 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
       if (!gst_structure_get_int (structure, cur_stream_name, &stream_format))
         continue;
 
+      g_snprintf (cur_stream_name, 32, "audio-%d-stream", i);
+      if (!gst_structure_get_int (structure, cur_stream_name, &stream_id))
+        continue;
+      if (stream_id < 0 || stream_id >= MAX_DVD_AUDIO_STREAMS)
+        continue;
+
       switch (stream_format) {
         case 0x0:
           /* AC3 */
-          stream_id = 0x80 + i;
+          stream_id += 0x80;
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_AC3);
           break;
         case 0x2:
         case 0x3:
           /* MPEG audio without and with extension stream are
            * treated the same */
-          stream_id = 0xC0 + i;
+          stream_id += 0xC0;
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_AUDIO_MPEG1);
           break;
         case 0x4:
           /* LPCM */
-          stream_id = 0xA0 + i;
+          stream_id += 0xA0;
           temp =
               gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_LPCM);
           break;
         case 0x6:
           /* DTS */
-          stream_id = 0x88 + i;
+          stream_id += 0x88;
           temp = gst_flups_demux_get_stream (demux, stream_id, ST_PS_AUDIO_DTS);
           break;
         case 0x7:
@@ -750,13 +756,24 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
     /* And subtitle streams */
     for (i = 0; i < MAX_DVD_SUBPICTURE_STREAMS; i++) {
-      g_snprintf (cur_stream_name, 32, "subpicture-%d-format", i);
+      gint stream_id;
 
-      if (gst_structure_get_string (structure, cur_stream_name) == NULL)
-        break;
+      g_snprintf (cur_stream_name, 32, "subpicture-%d-format", i);
+      if (!gst_structure_get_int (structure, cur_stream_name, &stream_id))
+        continue;
+
+      g_snprintf (cur_stream_name, 32, "subpicture-%d-stream", i);
+      if (!gst_structure_get_int (structure, cur_stream_name, &stream_id))
+        continue;
+      if (stream_id < 0 || stream_id >= MAX_DVD_SUBPICTURE_STREAMS)
+        continue;
+
+      GST_DEBUG_OBJECT (demux, "Subpicture stream %d ID 0x%02x", i,
+          0x20 + stream_id);
 
       /* Retrieve the subpicture stream to force pad creation */
-      temp = gst_flups_demux_get_stream (demux, 0x20 + i, ST_PS_DVD_SUBPICTURE);
+      temp = gst_flups_demux_get_stream (demux, 0x20 + stream_id,
+          ST_PS_DVD_SUBPICTURE);
     }
 
     GST_DEBUG_OBJECT (demux, "Created all pads from Language Codes event, "
