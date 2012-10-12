@@ -220,6 +220,7 @@
         GstAllocator.  Elements can ask a GstBufferPool or GstAllocator
         from the downstream peer element. If downstream is able to provide
         these objects, upstream can use them to allocate buffers.
+        See more in <xref linkend="chapter-allocation"/>.
       </para>
       <para>
         Many sink elements have accelerated methods for copying data
@@ -254,7 +255,8 @@
       for ensuring that the parameters required to fully specify a format match
       up correctly when linking pads between elements. Each link that is
       made between elements has a specified type and optionally a set of
-      properties.
+      properties. See more about caps negotiation in
+      <xref linkend="chapter-negotiation"/>.
     </para>
 
     <!-- ############ sect2 ############# -->
