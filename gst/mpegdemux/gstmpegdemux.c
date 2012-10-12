@@ -2925,6 +2925,11 @@ gst_flups_demux_combine_flows (GstFluPSDemux * demux, GstFlowReturn ret)
     ret = stream->last_flow;
     streams++;
 
+    /* some streams may still have to appear,
+     * and only those ones may end up linked */
+    if (G_UNLIKELY (demux->need_no_more_pads && ret == GST_FLOW_NOT_LINKED))
+      ret = GST_FLOW_OK;
+
     /* no unexpected or unlinked, return */
     if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
       goto done;
