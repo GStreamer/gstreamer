@@ -299,7 +299,6 @@ gst_flups_demux_reset (GstFluPSDemux * demux)
 {
   /* Clean up the streams and pads we allocated */
   gint i;
-  GstEvent **p_ev;
 
   for (i = 0; i < GST_FLUPS_DEMUX_MAX_STREAMS; i++) {
     GstFluPSStream *stream = demux->streams[i];
@@ -315,9 +314,6 @@ gst_flups_demux_reset (GstFluPSDemux * demux)
   memset (demux->streams_found, 0,
       sizeof (GstFluPSStream *) * (GST_FLUPS_DEMUX_MAX_STREAMS));
   demux->found_count = 0;
-  p_ev = &demux->lang_codes;
-
-  gst_event_replace (p_ev, NULL);
 
   gst_adapter_clear (demux->adapter);
   gst_adapter_clear (demux->rev_adapter);
@@ -692,13 +688,6 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
   GstFluPSStream *temp G_GNUC_UNUSED;
 
   if (strcmp (type, "dvd-lang-codes") == 0) {
-    GstEvent **p_ev;
-    /* Store the language codes event on the element, then iterate over the 
-     * streams it specifies and retrieve them. The stream creation code then 
-     * creates the pad appropriately and sends tag events as needed */
-    p_ev = &demux->lang_codes;
-    gst_event_replace (p_ev, event);
-
     GST_DEBUG_OBJECT (demux, "Handling language codes event");
 
     /* Create a video pad to ensure have it before emit no more pads */

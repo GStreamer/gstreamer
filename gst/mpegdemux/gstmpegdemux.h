@@ -146,10 +146,6 @@ struct _GstFluPSDemux
 
   /* Indicates an MPEG-2 stream */
   gboolean is_mpeg2_pack;
-
-  /* Language codes event is stored when a dvd-lang-codes
-   * custom event arrives from upstream */
-  GstEvent *lang_codes;
 };
 
 struct _GstFluPSDemuxClass
