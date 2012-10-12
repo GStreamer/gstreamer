@@ -895,7 +895,7 @@ Formats
                            size (component2) +
                            size (component3)
 
- "RGB8_PALETTED" 8-bit paletted RGB
+ "RGB8P" 8-bit paletted RGB
 
         Component 0: R
           depth:           8
