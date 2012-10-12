@@ -14,7 +14,7 @@
    height="1052.3622047"
    id="svg2"
    sodipodi:version="0.32"
-   inkscape:version="0.47pre4 r22446"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="diagrams-general.svg"
    inkscape:output_extension="org.inkscape.output.svg.inkscape"
    version="1.1">
@@ -29,17 +29,17 @@
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="1.3698288"
-     inkscape:cx="497.33586"
-     inkscape:cy="192.02865"
+     inkscape:cx="498.7959"
+     inkscape:cy="-611.64746"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
      showguides="true"
      inkscape:guide-bbox="true"
-     inkscape:window-width="1400"
-     inkscape:window-height="980"
+     inkscape:window-width="1680"
+     inkscape:window-height="994"
      inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-y="27"
      showborder="false"
      inkscape:showpageshadow="false"
      borderlayer="false"
@@ -8478,7 +8478,7 @@
        inkscape:export-xdpi="90"
        inkscape:export-filename="/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/hello-world.png"
        xml:space="preserve"
-       style="font-size:10px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       style="font-size:10px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="857.57947"
        y="498.46274"
        id="text3459"><tspan
@@ -8486,7 +8486,7 @@
          sodipodi:role="line"
          id="tspan3461"
          x="857.57947"
-         y="498.46274">alsa-output</tspan></text>
+         y="498.46274">audio-output</tspan></text>
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
@@ -8813,7 +8813,7 @@
            transform="translate(607.0203,108.9958)">
           <path
              transform="matrix(-0.593231,-0.723251,-0.841753,0.511835,-574.4794,-69.23682)"
-             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 17.147576,5.1596154 17.198788,5.7204327 17.25,6.28125 z"
+             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 l 0.460076,-0.3247596 0.05121,0.5608173 z"
              inkscape:randomized="0"
              inkscape:rounded="0"
              inkscape:flatsided="false"
@@ -8829,7 +8829,7 @@
              sodipodi:type="star" />
           <path
              transform="matrix(-0.59323,-0.726082,-0.841753,0.513838,-573.4796,-69.20067)"
-             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 17.147576,5.1596154 17.198788,5.7204327 17.25,6.28125 z"
+             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 l 0.460076,-0.3247596 0.05121,0.5608173 z"
              inkscape:randomized="0"
              inkscape:rounded="0"
              inkscape:flatsided="false"
@@ -8950,7 +8950,7 @@
            transform="matrix(-1,0,0,1,-557.9747,108.994)">
           <path
              transform="matrix(-0.593231,-0.723251,-0.841753,0.511835,-574.4794,-69.23682)"
-             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 17.147576,5.1596154 17.198788,5.7204327 17.25,6.28125 z"
+             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 l 0.460076,-0.3247596 0.05121,0.5608173 z"
              inkscape:randomized="0"
              inkscape:rounded="0"
              inkscape:flatsided="false"
@@ -8966,7 +8966,7 @@
              sodipodi:type="star" />
           <path
              transform="matrix(-0.59323,-0.726082,-0.841753,0.513838,-573.4796,-69.20067)"
-             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 17.147576,5.1596154 17.198788,5.7204327 17.25,6.28125 z"
+             d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 l 0.460076,-0.3247596 0.05121,0.5608173 z"
              inkscape:randomized="0"
              inkscape:rounded="0"
              inkscape:flatsided="false"
@@ -9017,7 +9017,7 @@
              id="g7918">
             <path
                transform="matrix(0.591247,-0.728125,0.83894,0.515285,9.532946,46.82691)"
-               d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 17.147576,5.1596154 17.198788,5.7204327 17.25,6.28125 z"
+               d="M 17.25,6.28125 16.738712,6.0451923 16.227424,5.8091345 16.6875,5.484375 l 0.460076,-0.3247596 0.05121,0.5608173 z"
                inkscape:randomized="0"
                inkscape:rounded="0"
                inkscape:flatsided="false"
@@ -12420,7 +12420,7 @@
        id="text12580"
        y="-652.47449"
        x="572.29089"
-       style="font-size:14px;font-style:normal;font-weight:normal;text-align:justify;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       style="font-size:14px;font-style:normal;font-weight:normal;text-align:justify;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        xml:space="preserve"><tspan
          style="text-align:start;text-anchor:start"
          y="-652.47449"
@@ -12447,16 +12447,16 @@
          y="-582.47449"
          x="572.29089"
          sodipodi:role="line">plugin system</tspan><tspan
-         id="tspan5685"
-         style="text-align:start;text-anchor:start"
-         y="-564.97449"
-         x="572.29089"
-         sodipodi:role="line">utility libraries</tspan><tspan
          style="text-align:start;text-anchor:start"
          id="tspan4601"
+         y="-564.97449"
+         x="572.29089"
+         sodipodi:role="line">data transport</tspan><tspan
+         style="text-align:start;text-anchor:start"
          y="-547.47449"
          x="572.29089"
-         sodipodi:role="line">language bindings</tspan></text>
+         sodipodi:role="line"
+         id="tspan5025">synchronization</tspan></text>
     <g
        transform="translate(7,0)"
        id="g5667">
@@ -12475,7 +12475,7 @@
            id="tspan10170">gstreamer plugins</tspan></text>
       <text
          xml:space="preserve"
-         style="font-size:14px;font-style:normal;font-weight:normal;text-align:start;text-anchor:start;fill:#204a87;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+         style="font-size:14px;font-style:normal;font-weight:normal;text-align:start;text-anchor:start;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
          x="751.36243"
          y="-454.21878"
          id="text4102"
@@ -12485,7 +12485,7 @@
            sodipodi:role="line"
            x="751.36243"
            y="-454.21878"
-           id="tspan4108">gstreamer includes over 150 plugins</tspan></text>
+           id="tspan4108">gstreamer includes over 250 plugins</tspan></text>
     </g>
     <text
        inkscape:export-ydpi="91.230003"
@@ -12759,7 +12759,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1068.5056"
@@ -12771,7 +12771,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1068.5056"
@@ -12783,7 +12783,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,392.46241,-1802.0774)"
        id="g5691">
       <path
@@ -12823,7 +12823,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1069.5864"
@@ -12835,7 +12835,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1350.6531"
@@ -12847,7 +12847,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1350.3138"
@@ -12859,7 +12859,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1350.3925"
@@ -12871,7 +12871,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1350.3923"
@@ -12883,7 +12883,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1350.5883"
@@ -12895,7 +12895,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1350.3138"
@@ -12907,7 +12907,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1253.8427"
@@ -12974,7 +12974,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5743"
        y="-1368.0675"
        x="497.82346"
@@ -12987,7 +12987,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5747"
        y="-1317.264"
        x="318.82349"
@@ -13000,7 +13000,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5751"
        y="-1326.014"
        x="432.01428"
@@ -13017,7 +13017,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5757"
        y="-1324.6571"
        x="537.4043"
@@ -13034,7 +13034,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5763"
        y="-1315.9071"
        x="633.49585"
@@ -13047,7 +13047,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5767"
        y="-1203.861"
        x="168.36176"
@@ -13061,7 +13061,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5771"
        y="-1368.1378"
        x="162"
@@ -13075,7 +13075,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5775"
        y="-956.63782"
        x="742.71094"
@@ -13092,7 +13092,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5779"
        d="M 319.45241,-1263.4829 L 319.45241,-1254.5949"
@@ -13100,7 +13100,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="translate(85.369675,-547.0675)"
        d="M 239.9574,-724.04565 A 5.8746634,5.8746634 0 1 1 228.20807,-724.04565 A 5.8746634,5.8746634 0 1 1 239.9574,-724.04565 z"
        sodipodi:ry="5.8746634"
@@ -13113,7 +13113,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5783"
        d="M 319.45241,-1291.1354 L 319.45241,-1282.0949"
@@ -13121,7 +13121,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:open="true"
        sodipodi:end="6.2831853"
        sodipodi:start="3.1415927"
@@ -13137,7 +13137,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5787"
        y="-1316.7377"
        x="714.90118"
@@ -13150,7 +13150,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,-25.819906,-1802.7166)"
        id="g5791">
       <path
@@ -13190,7 +13190,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,57.836573,-1802.4825)"
        id="g5801">
       <path
@@ -13230,7 +13230,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,141.49302,-1802.4825)"
        id="g5811">
       <path
@@ -13270,7 +13270,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,225.14948,-1802.4825)"
        id="g5821">
       <path
@@ -13310,7 +13310,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="translate(198.31779,-547.06749)"
        d="M 239.9574,-724.04565 A 5.8746634,5.8746634 0 1 1 228.20807,-724.04565 A 5.8746634,5.8746634 0 1 1 239.9574,-724.04565 z"
        sodipodi:ry="5.8746634"
@@ -13323,7 +13323,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5833"
        d="M 432.40053,-1263.4829 L 432.40053,-1254.5949"
@@ -13331,7 +13331,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5835"
        d="M 432.40053,-1291.1354 L 432.40053,-1282.0949"
@@ -13339,7 +13339,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:open="true"
        sodipodi:end="6.2831853"
        sodipodi:start="3.1415927"
@@ -13355,7 +13355,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="translate(303.06519,-547.06749)"
        d="M 239.9574,-724.04565 A 5.8746634,5.8746634 0 1 1 228.20807,-724.04565 A 5.8746634,5.8746634 0 1 1 239.9574,-724.04565 z"
        sodipodi:ry="5.8746634"
@@ -13368,7 +13368,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5841"
        d="M 537.14793,-1263.4829 L 537.14793,-1254.5949"
@@ -13376,7 +13376,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5843"
        d="M 537.14793,-1291.1354 L 537.14793,-1282.0949"
@@ -13384,7 +13384,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:open="true"
        sodipodi:end="6.2831853"
        sodipodi:start="3.1415927"
@@ -13400,7 +13400,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="translate(399.61478,-547.87085)"
        d="M 239.9574,-724.04565 A 5.8746634,5.8746634 0 1 1 228.20807,-724.04565 A 5.8746634,5.8746634 0 1 1 239.9574,-724.04565 z"
        sodipodi:ry="5.8746634"
@@ -13413,7 +13413,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5849"
        d="M 633.69752,-1264.2863 L 633.69752,-1255.3983"
@@ -13421,7 +13421,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5851"
        d="M 633.69752,-1291.9387 L 633.69752,-1282.8983"
@@ -13429,7 +13429,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:open="true"
        sodipodi:end="6.2831853"
        sodipodi:start="3.1415927"
@@ -13445,7 +13445,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="translate(480.81846,-547.87085)"
        d="M 239.9574,-724.04565 A 5.8746634,5.8746634 0 1 1 228.20807,-724.04565 A 5.8746634,5.8746634 0 1 1 239.9574,-724.04565 z"
        sodipodi:ry="5.8746634"
@@ -13458,7 +13458,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5857"
        d="M 714.90119,-1264.2863 L 714.90119,-1255.3983"
@@ -13466,7 +13466,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path5859"
        d="M 714.90119,-1291.9387 L 714.90119,-1282.8983"
@@ -13474,7 +13474,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:open="true"
        sodipodi:end="6.2831853"
        sodipodi:start="3.1415927"
@@ -13490,7 +13490,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5863"
        y="-1334.764"
        x="169.93443"
@@ -13511,7 +13511,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1069.5864"
@@ -13523,7 +13523,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1069.5864"
@@ -13535,7 +13535,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1068.5056"
@@ -13547,7 +13547,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(0.2661835,0,0,0.2661835,-53.124993,-922.19296)"
        id="g5879">
       <use
@@ -13978,7 +13978,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5987"
        y="-1232.4841"
        x="167.3703"
@@ -13992,7 +13992,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text5991"
        y="-1034.9705"
        x="166.41623"
@@ -14021,7 +14021,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6001"
        y="-1034.9705"
        x="250.79111"
@@ -14050,7 +14050,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6009"
        y="-1053.9922"
        x="168.23218"
@@ -14063,7 +14063,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6013"
        y="-1053.9922"
        x="257.436"
@@ -14076,7 +14076,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6017"
        y="-1053.9922"
        x="341.21552"
@@ -14089,7 +14089,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6021"
        y="-1053.9922"
        x="427.27139"
@@ -14102,7 +14102,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6025"
        y="-1053.9922"
        x="515.61047"
@@ -14115,11 +14115,11 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6059"
        y="-1228.8972"
        x="569.02454"
-       style="font-size:14px;font-style:normal;font-weight:normal;text-align:justify;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+       style="font-size:14px;font-style:normal;font-weight:normal;text-align:justify;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        xml:space="preserve"><tspan
          style="text-align:start;text-anchor:start"
          y="-1228.8972"
@@ -14146,21 +14146,21 @@
          y="-1158.8972"
          x="569.02454"
          sodipodi:role="line">plugin system</tspan><tspan
-         id="tspan6071"
-         style="text-align:start;text-anchor:start"
-         y="-1141.3972"
-         x="569.02454"
-         sodipodi:role="line">utility libraries</tspan><tspan
          style="text-align:start;text-anchor:start"
          id="tspan6073"
+         y="-1141.3972"
+         x="569.02454"
+         sodipodi:role="line">data transport</tspan><tspan
+         style="text-align:start;text-anchor:start"
          y="-1123.8972"
          x="569.02454"
-         sodipodi:role="line">language bindings</tspan></text>
+         sodipodi:role="line"
+         id="tspan5021">synchronization</tspan></text>
     <g
        transform="translate(0,11)"
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="g6181">
       <text
          xml:space="preserve"
@@ -14177,7 +14177,7 @@
            id="tspan6079">gstreamer plugins</tspan></text>
       <text
          xml:space="preserve"
-         style="font-size:14px;font-style:normal;font-weight:normal;text-align:start;text-anchor:start;fill:#204a87;fill-opacity:1;stroke:none;stroke-width:1pt;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Bitstream Vera Sans"
+         style="font-size:14px;font-style:normal;font-weight:normal;text-align:start;text-anchor:start;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
          x="159.89606"
          y="-948.39148"
          id="text6081"
@@ -14187,12 +14187,12 @@
            sodipodi:role="line"
            x="159.89606"
            y="-948.39148"
-           id="tspan6083">gstreamer includes over 150 plugins</tspan></text>
+           id="tspan6083">gstreamer includes over 250 plugins</tspan></text>
     </g>
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6085"
        y="-1053.9922"
        x="601.23566"
@@ -14205,7 +14205,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6089"
        y="-1034.9705"
        x="333.3338"
@@ -14234,7 +14234,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6099"
        y="-1035.1814"
        x="417.18256"
@@ -14263,7 +14263,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6109"
        y="-1035.6619"
        x="499.47424"
@@ -14292,7 +14292,7 @@
     <text
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        id="text6119"
        y="-1034.9705"
        x="583.83484"
@@ -14321,7 +14321,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,308.80595,-1801.7446)"
        id="g6129">
       <path
@@ -14361,7 +14361,7 @@
     <rect
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        ry="5"
        rx="5"
        y="-1068.1346"
@@ -14373,7 +14373,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path6147"
        d="M 702.6725,-1098.6908 L 702.6725,-1107.5787"
@@ -14381,7 +14381,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="matrix(1,0,0,-1,468.58975,-1815.1063)"
        d="M 239.9574,-724.04565 A 5.8746634,5.8746634 0 1 1 228.20807,-724.04565 A 5.8746634,5.8746634 0 1 1 239.9574,-724.04565 z"
        sodipodi:ry="5.8746634"
@@ -14394,7 +14394,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:nodetypes="cc"
        id="path6151"
        d="M 702.54716,-1068.4106 L 702.54716,-1081.1207"
@@ -14402,7 +14402,7 @@
     <path
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        sodipodi:open="true"
        sodipodi:end="6.2831853"
        sodipodi:start="3.1415927"
@@ -14418,7 +14418,7 @@
     <g
        inkscape:export-ydpi="91.230003"
        inkscape:export-xdpi="91.230003"
-       inkscape:export-filename="/scratchbox/users/luc/home/luc/dev/mm/gstreamer-0.10.19.2/docs/manual/gstreamer-overview3.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/gstreamer-overview.png"
        transform="translate(-14.644014,-559)"
        id="g6155">
       <path
@@ -14513,7 +14513,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#eeeeec;fill-opacity:0.11764706000000000;fill-rule:nonzero;stroke:#204a87;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect4780-0"
        width="752.95264"
@@ -14525,7 +14525,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:0.11764706;fill-rule:nonzero;stroke:#204a87;stroke-width:1.78325748;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3369-4"
        width="153.2551"
@@ -14537,7 +14537,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="72.103302"
@@ -14551,7 +14551,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:1;fill-rule:nonzero;stroke:#204a87;stroke-width:1.77165353;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3385-4"
        width="49.561798"
@@ -14561,7 +14561,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans Bold"
        x="188.9866"
@@ -14574,7 +14574,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:0.11764706;fill-rule:nonzero;stroke:#204a87;stroke-width:1.78325748;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3391-6"
        width="153.2551"
@@ -14586,7 +14586,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="266.22043"
@@ -14600,7 +14600,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:1;fill-rule:nonzero;stroke:#204a87;stroke-width:1.77165353;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3399-4"
        width="49.561798"
@@ -14610,7 +14610,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans Bold"
        x="272.41562"
@@ -14623,7 +14623,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:1;fill-rule:nonzero;stroke:#204a87;stroke-width:1.77165353;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3407-2"
        width="49.561798"
@@ -14633,7 +14633,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans Bold"
        x="375.10361"
@@ -14646,7 +14646,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:0.11764706;fill-rule:nonzero;stroke:#204a87;stroke-width:1.78325748;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3413-5"
        width="153.2551"
@@ -14658,7 +14658,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="460.33749"
@@ -14672,7 +14672,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:1;fill-rule:nonzero;stroke:#204a87;stroke-width:1.77165353;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3421-0"
        width="49.561798"
@@ -14682,7 +14682,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans Bold"
        x="466.53256"
@@ -14695,7 +14695,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#729fcf;fill-opacity:1;fill-rule:nonzero;stroke:#204a87;stroke-width:1.77165353;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect3429-3"
        width="49.561798"
@@ -14705,7 +14705,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans Bold"
        x="577.2207"
@@ -14718,7 +14718,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:bold;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;-inkscape-font-specification:Bitstream Vera Sans Bold"
        x="661.3457"
@@ -14731,7 +14731,7 @@
     <g
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        transform="translate(-194,40)"
        id="g4937">
       <rect
@@ -14759,7 +14759,7 @@
            x="848.91956"
            id="tspan3461-9"
            sodipodi:role="line"
-           style="font-size:14px;fill:#204a87">alsa-output</tspan></text>
+           style="font-size:14px;fill:#204a87">audio-output</tspan></text>
       <rect
          y="842.36218"
          x="843.13733"
@@ -14787,7 +14787,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:none;stroke:#204a87;stroke-width:2.11019325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:3.28930069;marker-end:url(#Arrow2Mendq)"
        d="m 219.35906,899.31607 37.00004,0"
        id="path3481-5"
@@ -14795,7 +14795,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:18px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="70"
@@ -14809,7 +14809,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:none;stroke:#204a87;stroke-width:2.11019325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:3.28930069;marker-end:url(#Arrow2Mendq)"
        d="m 413.4225,907.31607 37,0"
        id="path6087-9"
@@ -14817,7 +14817,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:none;stroke:#204a87;stroke-width:2.11019325;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:3.28930069;marker-end:url(#Arrow2Mendq)"
        d="m 608.2524,907.31607 36.99996,0"
        id="path6089-4"
@@ -14825,7 +14825,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#eeeeec;fill-opacity:0.11764706000000000;fill-rule:nonzero;stroke:#204a87;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect4780-0-9"
        width="752.95264"
@@ -14837,7 +14837,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:18px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="70.344391"
@@ -14851,7 +14851,7 @@
     <rect
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        style="fill:#eeeeec;fill-opacity:0.11764706;fill-rule:nonzero;stroke:#204a87;stroke-width:2;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
        id="rect4780-0-9-6"
        width="752.95264"
@@ -14863,7 +14863,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:18px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="70"
@@ -14877,7 +14877,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#204a87;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="411.80399"
@@ -14891,7 +14891,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        sodipodi:nodetypes="cc"
        id="path6657"
        d="m 335,836.47893 0,-88.46755"
@@ -14899,7 +14899,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#ff6600;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="344"
@@ -14913,7 +14913,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        sodipodi:nodetypes="cc"
        id="path7468"
        d="m 726,710.26235 0,123.06146"
@@ -14921,7 +14921,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#00aa00;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="632.87537"
@@ -14935,7 +14935,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        sodipodi:nodetypes="cc"
        id="path15921"
        d="m 531.28769,710.07844 0,123.29289"
@@ -14943,7 +14943,7 @@
     <text
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        xml:space="preserve"
        style="font-size:10px;font-style:normal;font-weight:normal;fill:#c83737;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
        x="439.32886"
@@ -14957,7 +14957,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        id="path15921-4"
        d="m 417.44946,890.07242 33.87087,0"
        style="fill:none;stroke:#c83737;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker-start:url(#Arrow2Mstartx);marker-end:url(#Arrow2Mendln)"
@@ -14965,7 +14965,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        sodipodi:nodetypes="cc"
        id="path6657-2"
        d="m 335.01089,753.82151 0,-40.82638"
@@ -14973,7 +14973,7 @@
     <path
        inkscape:export-ydpi="90"
        inkscape:export-xdpi="90"
-       inkscape:export-filename="/home/ensonic/projects/gstreamer/gstreamer/docs/manual/communication.png"
+       inkscape:export-filename="/home/wim/gst/head/gstreamer/docs/manual/communication.png"
        id="path15921-4-3"
        d="m 610.80289,889.75891 33.87087,0"
        style="stroke-linejoin:miter;marker-end:url(#Arrow2Mendlnz);stroke-opacity:1;marker-start:url(#Arrow2MstartxO);stroke:#00d400;stroke-linecap:butt;stroke-miterlimit:4;stroke-dasharray:none;stroke-width:2;fill:none"
