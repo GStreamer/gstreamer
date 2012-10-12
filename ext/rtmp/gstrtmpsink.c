@@ -243,7 +243,7 @@ gst_rtmp_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  if (!RTMP_Write (sink->rtmp, (char *) map.data, map.size))
+  if (RTMP_Write (sink->rtmp, (char *) map.data, map.size) <= 0)
     goto write_failed;
 
   gst_buffer_unmap (buf, &map);
