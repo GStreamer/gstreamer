@@ -510,6 +510,9 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
     t = g_strdup_printf ("audio-%d-format", i);
     gst_structure_set (s, t, G_TYPE_INT, (int) a->audio_format, NULL);
     g_free (t);
+    t = g_strdup_printf ("audio-%d-stream", i);
+    gst_structure_set (s, t, G_TYPE_INT, (int) i, NULL);
+    g_free (t);
 
     if (a->lang_type) {
       t = g_strdup_printf ("audio-%d-language", i);
@@ -547,10 +550,15 @@ gst_dvd_read_src_goto_title (GstDvdReadSrc * src, gint title, gint angle)
     }
 
     if (u->type) {
-      t = g_strdup_printf ("subtitle-%d-language", sid);
+      t = g_strdup_printf ("subpicture-%d-language", i);
       lang_code[0] = (u->lang_code >> 8) & 0xff;
       lang_code[1] = u->lang_code & 0xff;
       gst_structure_set (s, t, G_TYPE_STRING, lang_code, NULL);
+      t = g_strdup_printf ("subpicture-%d-stream", i);
+      gst_structure_set (s, t, G_TYPE_INT, (int) sid, NULL);
+      g_free (t);
+      t = g_strdup_printf ("subpicture-%d-format", i);
+      gst_structure_set (s, t, G_TYPE_INT, (int) 0, NULL);
       g_free (t);
     } else {
       lang_code[0] = '\0';
