@@ -455,6 +455,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   stream->discont = TRUE;
   stream->need_segment = TRUE;
   stream->notlinked = FALSE;
+  stream->last_flow = GST_FLOW_OK;
   stream->type = stream_type;
   stream->pad = gst_pad_new_from_template (template, name);
   stream->segment_thresh = threshold;
@@ -616,7 +617,7 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   demux->next_pts = G_MAXUINT64;
   demux->next_dts = G_MAXUINT64;
 
-  result = gst_pad_push (stream->pad, buf);
+  stream->last_flow = result = gst_pad_push (stream->pad, buf);
   GST_DEBUG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, pts time: %"
       GST_TIME_FORMAT ", size %d. result: %s",
       stream->id, stream->type, GST_TIME_ARGS (pts),
@@ -811,6 +812,7 @@ gst_flups_demux_clear_times (GstFluPSDemux * demux)
 
     if (G_LIKELY (stream)) {
       stream->last_ts = GST_CLOCK_TIME_NONE;
+      stream->last_flow = GST_FLOW_OK;
     }
   }
 }
@@ -2880,6 +2882,49 @@ gst_flups_demux_sink_activate_mode (GstPad * pad, GstObject * parent,
   return FALSE;
 }
 
+/* EOS and NOT_LINKED need to be combined. This means that we return:
+*
+*  GST_FLOW_NOT_LINKED: when all pads NOT_LINKED.
+*  GST_FLOW_EOS: when all pads EOS or NOT_LINKED.
+*/
+static GstFlowReturn
+gst_flups_demux_combine_flows (GstFluPSDemux * demux, GstFlowReturn ret)
+{
+  gint i, count = demux->found_count, streams = 0;
+  gboolean unexpected = FALSE, not_linked = TRUE;
+
+  GST_LOG_OBJECT (demux, "flow return: %s", gst_flow_get_name (ret));
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
+  for (i = 0; i < count; i++) {
+    GstFluPSStream *stream = demux->streams_found[i];
+
+    if (G_UNLIKELY (!stream))
+      continue;
+
+    ret = stream->last_flow;
+    streams++;
+
+    /* no unexpected or unlinked, return */
+    if (G_LIKELY (ret != GST_FLOW_EOS && ret != GST_FLOW_NOT_LINKED))
+      goto done;
+
+    /* we check to see if we have at least 1 unexpected or all unlinked */
+    unexpected |= (ret == GST_FLOW_EOS);
+    not_linked &= (ret == GST_FLOW_NOT_LINKED);
+  }
+
+  /* when we get here, we all have unlinked or unexpected */
+  if (not_linked && streams)
+    ret = GST_FLOW_NOT_LINKED;
+  else if (unexpected)
+    ret = GST_FLOW_EOS;
+
+done:
+  GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
+  return ret;
+}
+
 static GstFlowReturn
 gst_flups_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
@@ -3011,6 +3056,9 @@ gst_flups_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         ret = GST_FLOW_OK;
         break;
       default:
+        ret = gst_flups_demux_combine_flows (demux, ret);
+        if (ret != GST_FLOW_OK)
+          goto done;
         break;
     }
   }

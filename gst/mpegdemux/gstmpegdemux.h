@@ -90,6 +90,7 @@ struct _GstFluPSStream
 
   GstClockTime segment_thresh;
   GstClockTime last_ts;
+  GstFlowReturn last_flow;
 
   gboolean discont;
   gboolean notlinked;
