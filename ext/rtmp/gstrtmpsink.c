@@ -47,6 +47,8 @@
 #include <winsock2.h>
 #endif
 
+#include <stdlib.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_rtmp_sink_debug);
 #define GST_CAT_DEFAULT gst_rtmp_sink_debug
 
@@ -293,6 +295,7 @@ gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     GError ** error)
 {
   GstRTMPSink *sink = GST_RTMP_SINK (handler);
+  gboolean ret = TRUE;
 
   if (GST_STATE (sink) >= GST_STATE_PAUSED) {
     g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
@@ -315,14 +318,19 @@ gst_rtmp_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri,
           ("Failed to parse URI %s", uri), (NULL));
       g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
           "Could not parse RTMP URI");
-      return FALSE;
+      ret = FALSE;
+    } else {
+      sink->uri = g_strdup (uri);
     }
-    sink->uri = g_strdup (uri);
+
+    if (playpath.av_val)
+      free (playpath.av_val);
   }
 
-  GST_DEBUG_OBJECT (sink, "Changed URI to %s", GST_STR_NULL (uri));
+  if (ret)
+    GST_DEBUG_OBJECT (sink, "Changed URI to %s", GST_STR_NULL (uri));
 
-  return TRUE;
+  return ret;
 }
 
 static void
