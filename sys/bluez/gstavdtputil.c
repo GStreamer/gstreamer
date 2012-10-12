@@ -140,7 +140,7 @@ gst_avdtp_connection_release (GstAvdtpConnection * conn)
 
     dbus_connection_unref (conn->data.conn);
 
-    conn->data.conn = FALSE;
+    conn->data.conn = NULL;
   }
 }
 
