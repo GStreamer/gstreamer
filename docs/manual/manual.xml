@@ -52,6 +52,7 @@
 
 <!-- Appendices -->
 <!ENTITY PROGRAMS             SYSTEM "appendix-programs.xml">
+<!ENTITY COMPILING            SYSTEM "appendix-compiling.xml">
 <!ENTITY CHECKLIST            SYSTEM "appendix-checklist.xml">
 <!ENTITY PORTING              SYSTEM "appendix-porting.xml">
 <!ENTITY INTEGRATION          SYSTEM "appendix-integration.xml">
@@ -257,6 +258,7 @@
     -->
 
     &PROGRAMS;
+    &COMPILING;
     &CHECKLIST;
     &PORTING;
     &INTEGRATION;
