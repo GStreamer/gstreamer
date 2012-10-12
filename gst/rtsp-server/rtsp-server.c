@@ -608,7 +608,7 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
 
   /* resolve the server IP address */
   port = atoi (server->service);
-  if (port != 0)
+  if (port != 0 || !strcmp (server->service, "0"))
     conn = g_network_address_new (server->address, port);
   else
     conn = g_network_service_new (server->service, "tcp", server->address);
