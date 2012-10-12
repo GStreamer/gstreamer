@@ -84,7 +84,7 @@ fast and does not significantly contribute to the QoS problems. Options to
 disable this feature could also be presented on elements.
 
 This message can be posted by a sink/src that performs synchronisation against the
-clock (live) or it could be dropped by an upstream element that performs QoS
+clock (live) or it could be posted by an upstream element that performs QoS
 because of QOS events received from a downstream element (!live).
 
 The GST_MESSAGE_QOS contains at least the following info:
