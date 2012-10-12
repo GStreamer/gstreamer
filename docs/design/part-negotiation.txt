@@ -339,8 +339,8 @@ We can identify 3 patterns in negotiation:
       - A video/audio decoder
       - usually uses gst_pad_use_fixed_caps()
 
- 2) Passthrough
-      - Caps not modified
+ 2) Transform
+      - Caps not modified (passthrough)
       - can do caps transform based on element property
       - videobox
 
