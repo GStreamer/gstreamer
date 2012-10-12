@@ -69,7 +69,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       if (strf) {
         if (bpp == 8) {
           caps = gst_caps_new_simple ("video/x-raw",
-              "format", G_TYPE_STRING, "RGB8_PALETTED", NULL);
+              "format", G_TYPE_STRING, "RGB8P", NULL);
         } else if (bpp == 24) {
           caps = gst_caps_new_simple ("video/x-raw",
               "format", G_TYPE_STRING, "BGR", NULL);
@@ -84,7 +84,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         /* for template */
         caps =
             gst_caps_from_string ("video/x-raw, format = (string) "
-            "{ RGB8_PALETTED, BGR, BGRx }");
+            "{ RGB8P, BGR, BGRx }");
       }
 
       palette = strf_data;
