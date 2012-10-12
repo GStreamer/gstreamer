@@ -9540,8 +9540,34 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_from_string ("video/x-vp8");
       break;
     case GST_MAKE_FOURCC ('a', 'p', 'c', 's'):
+      _codec ("Apple ProRes LT");
+      caps =
+          gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING, "lt",
+          NULL);
+      break;
+    case GST_MAKE_FOURCC ('a', 'p', 'c', 'h'):
+      _codec ("Apple ProRes HQ");
+      caps =
+          gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING, "hq",
+          NULL);
+      break;
+    case GST_MAKE_FOURCC ('a', 'p', 'c', 'n'):
       _codec ("Apple ProRes");
-      caps = gst_caps_from_string ("video/x-prores");
+      caps =
+          gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
+          "standard", NULL);
+      break;
+    case GST_MAKE_FOURCC ('a', 'p', 'c', 'o'):
+      _codec ("Apple ProRes Proxy");
+      caps =
+          gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
+          "proxy", NULL);
+      break;
+    case GST_MAKE_FOURCC ('a', 'p', '4', 'h'):
+      _codec ("Apple ProRes 4444");
+      caps =
+          gst_caps_new_simple ("video/x-prores", "variant", G_TYPE_STRING,
+          "4444", NULL);
       break;
     case FOURCC_ovc1:
       _codec ("VC-1");
