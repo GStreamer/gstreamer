@@ -882,8 +882,12 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
-
       gst_segment_copy_into (segment, &demux->sink_segment);
+
+      GST_INFO_OBJECT (demux, "received segment %" GST_SEGMENT_FORMAT, segment);
+
+      /* we need to emit a new segment */
+      gst_flups_demux_mark_discont (demux, TRUE, TRUE);
 
       if (segment->format == GST_FORMAT_BYTES
           && demux->scr_rate_n != G_MAXUINT64
@@ -894,15 +898,14 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         demux->src_segment.start = BYTES_TO_GSTTIME (segment->start);
         demux->src_segment.stop = BYTES_TO_GSTTIME (segment->stop);
         demux->src_segment.time = BYTES_TO_GSTTIME (segment->time);
+      } else if (segment->format == GST_FORMAT_TIME) {
+        /* we expect our timeline (SCR, PTS) to match the one from upstream,
+         * if not, will adjust with offset later on */
+        gst_segment_copy_into (segment, &demux->src_segment);
+        /* accept upstream segment without adjusting */
+        demux->adjust_segment = FALSE;
       }
 
-      GST_INFO_OBJECT (demux, "received new segment: rate %g "
-          "format %d, start: %" G_GINT64_FORMAT ", stop: %" G_GINT64_FORMAT
-          ", time: %" G_GINT64_FORMAT, segment->rate, segment->format,
-          segment->start, segment->stop, segment->time);
-
-      /* we need to emit a new segment */
-      gst_flups_demux_mark_discont (demux, TRUE, TRUE);
       gst_event_unref (event);
 
       break;
@@ -1590,12 +1593,29 @@ gst_flups_demux_parse_pack_start (GstFluPSDemux * demux)
 
   /* keep the first src in order to calculate delta time */
   if (G_UNLIKELY (demux->first_scr == G_MAXUINT64)) {
+    gint64 diff;
+
     demux->first_scr = scr;
     demux->first_scr_offset = demux->cur_scr_offset;
     demux->base_time = MPEGTIME_TO_GSTTIME (demux->first_scr);
+    GST_DEBUG_OBJECT (demux, "determined base_time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->base_time));
     /* at begin consider the new_rate as the scr rate, bytes/clock ticks */
     scr_rate_n = new_rate;
     scr_rate_d = CLOCK_FREQ;
+    /* our SCR timeline might have offset wrt upstream timeline */
+    if (demux->sink_segment.format == GST_FORMAT_TIME) {
+      if (demux->sink_segment.start > demux->base_time)
+        diff = -(demux->sink_segment.start - demux->base_time);
+      else
+        diff = demux->base_time - demux->sink_segment.start;
+      if (diff > GST_SECOND) {
+        GST_DEBUG_OBJECT (demux, "diff of %" GST_TIME_FORMAT
+            " wrt upstream start %" GST_TIME_FORMAT "; adjusting base",
+            GST_TIME_ARGS (diff), GST_TIME_ARGS (demux->sink_segment.start));
+        demux->base_time += diff;
+      }
+    }
   } else if (G_LIKELY (demux->first_scr_offset != demux->cur_scr_offset)) {
     /* estimate byte rate related to the SCR */
     scr_rate_n = demux->cur_scr_offset - demux->first_scr_offset;
