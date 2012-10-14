@@ -260,6 +260,7 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
   vc1parse->width = 0;
   vc1parse->height = 0;
   vc1parse->fps_n = vc1parse->fps_d = 0;
+  vc1parse->frame_duration = GST_CLOCK_TIME_NONE;
   vc1parse->fps_from_caps = FALSE;
   vc1parse->par_n = vc1parse->par_d = 0;
   vc1parse->par_from_caps = FALSE;
@@ -609,9 +610,13 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
   g_assert (vc1parse->width != 0 && vc1parse->height != 0);
   gst_caps_set_simple (caps, "width", G_TYPE_INT, vc1parse->width, "height",
       G_TYPE_INT, vc1parse->height, NULL);
-  if (vc1parse->fps_d != 0)
+  if (vc1parse->fps_d != 0) {
     gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, vc1parse->fps_n,
         vc1parse->fps_d, NULL);
+
+    vc1parse->frame_duration = gst_util_uint64_scale (GST_SECOND,
+        vc1parse->fps_d, vc1parse->fps_n);
+  }
   if (vc1parse->par_n != 0 && vc1parse->par_d != 0)
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         vc1parse->par_n, vc1parse->par_d, NULL);
@@ -964,6 +969,9 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GST_ERROR_OBJECT (vc1parse, "Need a sequence header or sequence layer");
       return GST_FLOW_ERROR;
     }
+
+    if (GST_CLOCK_TIME_IS_VALID (vc1parse->frame_duration))
+      GST_BUFFER_DURATION (buffer) = vc1parse->frame_duration;
 
     /* Might be multiple BDUs here, complex... */
     if (vc1parse->profile == GST_VC1_PROFILE_ADVANCED) {

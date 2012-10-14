@@ -74,6 +74,7 @@ struct _GstVC1Parse
 
   gint fps_n, fps_d;
   gboolean fps_from_caps;
+  GstClockTime frame_duration;
   gint par_n, par_d;
   gboolean par_from_caps;
 
