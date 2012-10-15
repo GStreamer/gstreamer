@@ -51,6 +51,10 @@
 #define VSHR32(a, shift) (((shift)>0) ? SHR32(a, shift) : SHL32(a, -(shift)))
 #define SATURATE16(x,a) (((x)>(a) ? (a) : (x)<-(a) ? -(a) : (x)))
 #define SATURATE32(x,a) (((x)>(a) ? (a) : (x)<-(a) ? -(a) : (x)))
+ 
+#define SATURATE32PSHR(x,shift,a) (((x)>=(SHL32(a,shift))) ? (a) : \
+                                   (x)<=-(SHL32(a,shift)) ? -(a) : \
+                                   (PSHR32(x, shift)))
 
 #define SHR(a,shift) ((a) >> (shift))
 #define SHL(a,shift) ((spx_word32_t)(a) << (shift))

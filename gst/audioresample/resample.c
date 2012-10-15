@@ -478,7 +478,7 @@ resampler_basic_direct_single (SpeexResamplerState * st,
         sum = inner_product_single (sinc, iptr, N);
     SSE_END (INNER_PRODUCT_SINGLE)
 #endif
-        out[out_stride * out_sample++] = SATURATE32 (PSHR32 (sum, 15), 32767);
+    out[out_stride * out_sample++] = SATURATE32PSHR(sum, 15, 32767);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
@@ -616,7 +616,7 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
         interp);
     SSE_END (INTERPOLATE_PRODUCT_SINGLE)
 #endif
-        out[out_stride * out_sample++] = SATURATE32 (PSHR32 (sum, 14), 32767);
+    out[out_stride * out_sample++] = SATURATE32PSHR(sum, 14, 32767);
     last_sample += int_advance;
     samp_frac_num += frac_advance;
     if (samp_frac_num >= den_rate) {
