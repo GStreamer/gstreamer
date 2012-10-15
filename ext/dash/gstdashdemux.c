@@ -891,7 +891,6 @@ needs_pad_switch (GstDashDemux * demux, GList * fragment)
             || (!gst_caps_is_equal_fixed (demux->output_caps[i], srccaps))
             || demux->need_segment)) {
       switch_pad = TRUE;
-      GST_INFO_OBJECT (demux, "Switch pad i =%d", i);
     }
     if (G_LIKELY (srccaps))
       gst_caps_unref (srccaps);
