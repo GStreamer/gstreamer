@@ -863,7 +863,24 @@ needs_pad_switch (GstDashDemux * demux, GList * fragment)
   return switch_pad;
 }
 
-
+/* gst_dash_demux_stream_loop:
+ * 
+ * Loop for the "stream' task that pushes fragments to the src pads.
+ * 
+ * Startup: 
+ * The task is started as soon as we have received the manifest and
+ * waits for the first fragment to be downloaded and pushed in the
+ * queue. Once this fragment has been pushed, the task pauses itself
+ * until actual playback begins.
+ * 
+ * During playback:  
+ * The task pushes fragments downstream at regular intervals based on
+ * the fragment duration. If it detects a queue underrun, it sends
+ * a buffering event to tell the main application to pause.
+ * 
+ * Teardown:
+ * The task is stopped when we reach the end of the manifest
+ */
 static void
 gst_dash_demux_stream_loop (GstDashDemux * demux)
 {
@@ -872,21 +889,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   GstBufferList *buffer_list;
   guint nb_adaptation_set = 0;
   GstActiveStream *stream;
-  /* Loop for the source pad task.
-   * 
-   * Startup: 
-   * The task is started as soon as we have received the manifest and
-   * waits for the first fragment to be downloaded and pushed in the
-   * queue. Once this fragment has been pushed, the task pauses itself
-   * until actual playback begins.
-   * 
-   * During playback:  
-   * The task pushes fragments downstream at regular intervals based on
-   * the fragment duration. If it detects a queue underrun, it sends
-   * a buffering event to tell the main application to pause.
-   * 
-   * Teardown:
-   * The task is stopped when we reach the end of the manifest */
 
   /* Wait until the next scheduled push downstream */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
