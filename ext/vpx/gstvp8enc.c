@@ -441,7 +441,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_RC_TARGET_BITRATE,
       g_param_spec_int ("target-bitrate", "Target bitrate",
           "Target bitrate (in bits/sec)",
-          0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE / 1000,
+          0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_RC_MIN_QUANTIZER,
@@ -565,7 +565,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           "Coding layer target bitrates",
           "Target bitrates for coding layers (one per layer, decreasing)",
           g_param_spec_int ("target-bitrate", "Target bitrate",
-              "Target bitrate", 0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE / 1000,
+              "Target bitrate", 0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
