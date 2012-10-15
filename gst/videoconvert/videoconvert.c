@@ -440,6 +440,9 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
       PACK_FRAME (dest, convert->tmpline, j, width);
     }
   }
+  if (GST_VIDEO_FRAME_FORMAT (dest) == GST_VIDEO_FORMAT_RGB8P) {
+    memcpy (GST_VIDEO_FRAME_PLANE_DATA (dest, 1), convert->palette, 256 * 4);
+  }
 }
 
 #define FRAME_GET_PLANE_STRIDE(frame, plane) \
