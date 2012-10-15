@@ -77,6 +77,26 @@ class Caps(Gst.Caps):
 Caps = override(Caps)
 __all__.append('Caps')
 
+class IteratorError(Exception):
+    pass
+__all__.append('IteratorError')
+
+class Iterator(Gst.Iterator):
+    def __iter__(self):
+        while True:
+            result, value = self.next()
+            if result == Gst.IteratorResult.DONE:
+                break
+
+            if result != Gst.IteratorResult.OK:
+                raise IteratorError(result)
+
+            yield value
+
+Iterator = override(Iterator)
+__all__.append('Iterator')
+
+
 class ElementFactory(Gst.ElementFactory):
 
     # ElementFactory
