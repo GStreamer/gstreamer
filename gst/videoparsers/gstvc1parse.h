@@ -55,6 +55,11 @@ typedef enum {
   VC1_STREAM_FORMAT_FRAME_LAYER
 } VC1StreamFormat;
 
+typedef enum {
+  GST_VC1_PARSE_FORMAT_WMV3,
+  GST_VC1_PARSE_FORMAT_WVC1
+} GstVC1ParseFormat;
+
 /* FIXME move into baseparse, or anything equivalent;
  * see https://bugzilla.gnome.org/show_bug.cgi?id=650093 */
 #define GST_BASE_PARSE_FRAME_FLAG_PARSING   0x10000
@@ -69,7 +74,7 @@ struct _GstVC1Parse
   /* Caps */
   GstVC1Profile profile;
   GstVC1Level level;
-  guint32 fourcc;
+  GstVC1ParseFormat format;
   gint width, height;
 
   gint fps_n, fps_d;

@@ -154,33 +154,33 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-wmv, wmvversion=(int) 3, "
-        "format=(fourcc) {WVC1, WMV3}"));
+        "format=(string) {WVC1, WMV3}"));
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-wmv, wmvversion=(int) 3, "
-        "format=(fourcc) {WVC1, WMV3}, "
+        "format=(string) {WVC1, WMV3}, "
         "stream-format=(string) {bdu, bdu-frame, sequence-layer-bdu, "
         "sequence-layer-bdu-frame, sequence-layer-raw-frame, "
         "sequence-layer-frame-layer, asf, frame-layer}, "
         "header-format=(string) {none, asf, sequence-layer}"));
 
 
-GST_BOILERPLATE (GstVC1Parse, gst_vc1_parse, GstBaseParse, GST_TYPE_BASE_PARSE);
+#define parent_class gst_vc1_parse_parent_class
+G_DEFINE_TYPE (GstVC1Parse, gst_vc1_parse, GST_TYPE_BASE_PARSE);
 
 static void gst_vc1_parse_finalize (GObject * object);
 
 static gboolean gst_vc1_parse_start (GstBaseParse * parse);
 static gboolean gst_vc1_parse_stop (GstBaseParse * parse);
-static gboolean gst_vc1_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize);
-static GstFlowReturn gst_vc1_parse_parse_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame);
+static GstFlowReturn gst_vc1_parse_handle_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame, gint * skipsize);
 static GstFlowReturn gst_vc1_parse_pre_push_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame);
 static gboolean gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps);
-static GstCaps *gst_vc1_parse_get_sink_caps (GstBaseParse * parse);
+static GstCaps *gst_vc1_parse_get_sink_caps (GstBaseParse * parse,
+    GstCaps * filter);
 static GstFlowReturn gst_vc1_parse_detect (GstBaseParse * parse,
     GstBuffer * buffer);
 
@@ -195,36 +195,29 @@ static void gst_vc1_parse_update_stream_format_properties (GstVC1Parse *
     vc1parse);
 
 static void
-gst_vc1_parse_base_init (gpointer g_class)
+gst_vc1_parse_class_init (GstVC1ParseClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
 
-  gst_element_class_add_pad_template (gstelement_class,
+  GST_DEBUG_CATEGORY_INIT (vc1_parse_debug, "vc1parse", 0, "vc1 parser");
+
+  gobject_class->finalize = gst_vc1_parse_finalize;
+
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (gstelement_class,
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_details_simple (gstelement_class, "VC1 parser",
+  gst_element_class_set_static_metadata (element_class, "VC1 parser",
       "Codec/Parser/Converter/Video",
       "Parses VC1 streams",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
-  GST_DEBUG_CATEGORY_INIT (vc1_parse_debug, "vc1parse", 0, "vc1 parser");
-}
-
-static void
-gst_vc1_parse_class_init (GstVC1ParseClass * klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstBaseParseClass *parse_class = GST_BASE_PARSE_CLASS (klass);
-
-  gobject_class->finalize = gst_vc1_parse_finalize;
-
   parse_class->start = GST_DEBUG_FUNCPTR (gst_vc1_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_vc1_parse_stop);
-  parse_class->check_valid_frame =
-      GST_DEBUG_FUNCPTR (gst_vc1_parse_check_valid_frame);
-  parse_class->parse_frame = GST_DEBUG_FUNCPTR (gst_vc1_parse_parse_frame);
+  parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vc1_parse_handle_frame);
   parse_class->pre_push_frame =
       GST_DEBUG_FUNCPTR (gst_vc1_parse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_vc1_parse_set_caps);
@@ -233,7 +226,7 @@ gst_vc1_parse_class_init (GstVC1ParseClass * klass)
 }
 
 static void
-gst_vc1_parse_init (GstVC1Parse * vc1parse, GstVC1ParseClass * g_class)
+gst_vc1_parse_init (GstVC1Parse * vc1parse)
 {
   /* Default values for stream-format=raw, i.e.
    * raw VC1 frames with startcodes */
@@ -256,7 +249,7 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
 {
   vc1parse->profile = -1;
   vc1parse->level = -1;
-  vc1parse->fourcc = 0;
+  vc1parse->format = 0;
   vc1parse->width = 0;
   vc1parse->height = 0;
   vc1parse->fps_n = vc1parse->fps_d = 0;
@@ -306,9 +299,6 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
 {
   GstCaps *allowed_caps;
 
-  if (!vc1parse->renegotiate)
-    return TRUE;
-
   /* Negotiate with downstream here */
   GST_DEBUG_OBJECT (vc1parse, "Renegotiating");
 
@@ -322,7 +312,7 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
         allowed_caps);
 
     allowed_caps = gst_caps_make_writable (allowed_caps);
-    gst_caps_truncate (allowed_caps);
+    allowed_caps = gst_caps_truncate (allowed_caps);
     s = gst_caps_get_structure (allowed_caps, 0);
 
     /* If already fixed this does nothing */
@@ -374,14 +364,14 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
 }
 
 static GstCaps *
-gst_vc1_parse_get_sink_caps (GstBaseParse * parse)
+gst_vc1_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 {
   GstCaps *peercaps;
-  const GstCaps *templ;
+  GstCaps *templ;
   GstCaps *ret;
 
   templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse));
-  peercaps = gst_pad_peer_get_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), NULL);
   if (peercaps) {
     guint i, n;
     GstStructure *s;
@@ -400,8 +390,16 @@ gst_vc1_parse_get_sink_caps (GstBaseParse * parse)
 
     ret = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
+    gst_caps_unref (templ);
   } else {
-    ret = gst_caps_copy (templ);
+    ret = templ;
+  }
+
+  if (filter) {
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (ret);
+    ret = tmp;
   }
 
   return ret;
@@ -411,14 +409,18 @@ static GstFlowReturn
 gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
+  GstMapInfo minfo;
   guint8 *data;
   gint size;
 
   if (!vc1parse->detecting_stream_format)
     return GST_FLOW_OK;
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  if (!gst_buffer_map (buffer, &minfo, GST_MAP_READ))
+    return GST_FLOW_ERROR;
+
+  data = minfo.data;
+  size = minfo.size;
 
 #if 0
   /* FIXME: disable BDU check for now as BDU parsing needs more work.
@@ -437,8 +439,6 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
   }
 #endif
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
   while (size >= 40) {
     if (data[3] == 0xc5 && GST_READ_UINT32_BE (data + 4) == 0x00000004 &&
         GST_READ_UINT32_BE (data + 20) == 0x0000000c) {
@@ -463,14 +463,16 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
     size -= 4;
   }
 
-  if (GST_BUFFER_SIZE (buffer) <= 128) {
+  if (gst_buffer_get_size (buffer) <= 128) {
     GST_DEBUG_OBJECT (vc1parse, "Requesting more data");
+    gst_buffer_unmap (buffer, &minfo);
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
   if (GST_BASE_PARSE_DRAINING (vc1parse)) {
     GST_ERROR_OBJECT (vc1parse, "Failed to detect or assume a stream format "
         "and draining now");
+    gst_buffer_unmap (buffer, &minfo);
     return GST_FLOW_ERROR;
   }
 
@@ -485,6 +487,7 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
     goto detected;
   } else {
     GST_ERROR_OBJECT (vc1parse, "Can't detect or assume a stream format");
+    gst_buffer_unmap (buffer, &minfo);
     return GST_FLOW_ERROR;
   }
 
@@ -492,116 +495,11 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
   return GST_FLOW_ERROR;
 
 detected:
+
+  gst_buffer_unmap (buffer, &minfo);
   vc1parse->detecting_stream_format = FALSE;
   gst_vc1_parse_update_stream_format_properties (vc1parse);
   return GST_FLOW_OK;
-}
-
-static gboolean
-gst_vc1_parse_check_valid_frame (GstBaseParse * parse,
-    GstBaseParseFrame * frame, guint * framesize, gint * skipsize)
-{
-  GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
-  GstBuffer *buffer = frame->buffer;
-  guint8 *data = GST_BUFFER_DATA (buffer);
-  guint size = GST_BUFFER_SIZE (buffer);
-
-  if (vc1parse->renegotiate) {
-    if (!gst_vc1_parse_renegotiate (vc1parse)) {
-      GST_ERROR_OBJECT (vc1parse, "Failed to negotiate with downstream");
-      return FALSE;
-    }
-  }
-
-  if (!vc1parse->seq_layer_buffer
-      && (vc1parse->input_stream_format == VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU
-          || vc1parse->input_stream_format ==
-          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME
-          || vc1parse->input_stream_format ==
-          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME
-          || vc1parse->input_stream_format ==
-          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER)) {
-    if (data[3] == 0xc5 && GST_READ_UINT32_BE (data + 4) == 0x00000004
-        && GST_READ_UINT32_BE (data + 20) == 0x0000000c) {
-      *framesize = 36;
-      return TRUE;
-    }
-    return FALSE;
-  } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
-      vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
-      (vc1parse->seq_layer_buffer
-          && (vc1parse->input_stream_format ==
-              VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU
-              || vc1parse->input_stream_format ==
-              VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME))) {
-    GstVC1ParserResult pres;
-    GstVC1BDU bdu;
-    g_assert (size >= 4);
-    memset (&bdu, 0, sizeof (bdu));
-    GST_DEBUG_OBJECT (vc1parse,
-        "Handling buffer of size %u at offset %" G_GUINT64_FORMAT, size,
-        GST_BUFFER_OFFSET (buffer));
-    /* XXX: when a buffer contains multiple BDUs, does the first one start with
-     * a startcode?
-     */
-    pres = gst_vc1_identify_next_bdu (data, size, &bdu);
-    switch (pres) {
-      case GST_VC1_PARSER_OK:
-        GST_DEBUG_OBJECT (vc1parse, "Have complete BDU");
-        if (bdu.sc_offset > 4) {
-          *skipsize = bdu.sc_offset;
-          return FALSE;
-        } else {
-          *framesize = bdu.offset + bdu.size;
-          return TRUE;
-        }
-        break;
-      case GST_VC1_PARSER_BROKEN_DATA:
-        GST_ERROR_OBJECT (vc1parse, "Broken data");
-        return FALSE;
-        break;
-      case GST_VC1_PARSER_NO_BDU:
-        GST_DEBUG_OBJECT (vc1parse, "Found no BDU startcode");
-        *skipsize = size - 3;
-        return FALSE;
-        break;
-      case GST_VC1_PARSER_NO_BDU_END:
-        GST_DEBUG_OBJECT (vc1parse, "Found no BDU end");
-        if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (vc1parse))) {
-          GST_DEBUG_OBJECT (vc1parse, "Draining - assuming complete frame");
-          *framesize = size;
-          return TRUE;
-        } else {
-          *skipsize = 0;
-          /* Request all that is available */
-          *framesize = G_MAXUINT;
-          return FALSE;
-        }
-        break;
-      case GST_VC1_PARSER_ERROR:
-        GST_ERROR_OBJECT (vc1parse, "Parsing error");
-        return FALSE;
-        break;
-      default:
-        g_assert_not_reached ();
-        break;
-    }
-  } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_ASF ||
-      (vc1parse->seq_layer_buffer
-          && vc1parse->input_stream_format ==
-          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME)) {
-    /* Must be packetized already */
-    *framesize = size;
-    return TRUE;
-  } else {
-    /* frame-layer or sequence-layer-frame-layer */
-    g_assert (size >= 8);
-    /* Parse frame layer size */
-    *framesize = GST_READ_UINT24_BE (data + 1) + 8;
-    return TRUE;
-  }
-
-  return FALSE;
 }
 
 static gboolean
@@ -609,10 +507,19 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
 {
   GstCaps *caps;
   GstVC1Profile profile;
-  if (GST_PAD_CAPS (GST_BASE_PARSE_SRC_PAD (vc1parse))
+  const gchar *stream_format, *header_format;
+
+  if (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (vc1parse))
       && !vc1parse->update_caps)
     return TRUE;
+
   caps = gst_caps_new_simple ("video/x-wmv", "wmvversion", G_TYPE_INT, 3, NULL);
+
+  header_format = header_format_to_string (vc1parse->output_header_format);
+  stream_format = stream_format_to_string (vc1parse->output_stream_format);
+  gst_caps_set_simple (caps, "header-format", G_TYPE_STRING, header_format,
+      "stream-format", G_TYPE_STRING, stream_format, NULL);
+
   /* Must have this here from somewhere */
   g_assert (vc1parse->width != 0 && vc1parse->height != 0);
   gst_caps_set_simple (caps, "width", G_TYPE_INT, vc1parse->width, "height",
@@ -624,15 +531,18 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
     vc1parse->frame_duration = gst_util_uint64_scale (GST_SECOND,
         vc1parse->fps_d, vc1parse->fps_n);
   }
+
   if (vc1parse->par_n != 0 && vc1parse->par_d != 0)
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         vc1parse->par_n, vc1parse->par_d, NULL);
+
   if (vc1parse->seq_hdr_buffer)
     profile = vc1parse->seq_hdr.profile;
   else if (vc1parse->seq_layer_buffer)
     profile = vc1parse->seq_layer.struct_c.profile;
   else
     g_assert_not_reached ();
+
   if (profile == GST_VC1_PROFILE_ADVANCED) {
     const gchar *level;
     /* Caller must make sure this is valid here */
@@ -658,21 +568,21 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         break;
     }
 
-    gst_caps_set_simple (caps, "format", GST_TYPE_FOURCC,
-        GST_MAKE_FOURCC ('W', 'V', 'C', '1'),
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING, "WVC1",
         "profile", G_TYPE_STRING, "advanced",
         "level", G_TYPE_STRING, level, NULL);
-  } else
-      if (profile == GST_VC1_PROFILE_SIMPLE
+  } else if (profile == GST_VC1_PROFILE_SIMPLE
       || profile == GST_VC1_PROFILE_MAIN) {
     const gchar *profile_str;
+
     if (profile == GST_VC1_PROFILE_SIMPLE)
       profile_str = "simple";
     else
       profile_str = "main";
-    gst_caps_set_simple (caps, "format", GST_TYPE_FOURCC,
-        GST_MAKE_FOURCC ('W', 'M', 'V', '3'),
+
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING, "WMV3",
         "profile", G_TYPE_STRING, profile_str, NULL);
+
     if (vc1parse->seq_layer_buffer) {
       const gchar *level;
       switch (vc1parse->seq_layer.struct_b.level) {
@@ -700,10 +610,15 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
     case VC1_HEADER_FORMAT_ASF:
       if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED) {
         GstBuffer *codec_data;
+
         if (vc1parse->seq_hdr_buffer) {
-          codec_data = gst_buffer_create_sub (vc1parse->seq_hdr_buffer, 0, 4);
+          codec_data =
+              gst_buffer_copy_region (vc1parse->seq_hdr_buffer,
+              GST_BUFFER_COPY_ALL, 0, 4);
         } else {
+          GstMapInfo minfo;
           guint32 seq_hdr = 0;
+
           /* Build simple/main sequence header from sequence layer */
           seq_hdr |= (vc1parse->profile << 30);
           seq_hdr |= (vc1parse->seq_layer.struct_c.wmvp << 28);
@@ -722,7 +637,10 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
           seq_hdr |= (vc1parse->seq_layer.struct_c.quantizer << 2);
           seq_hdr |= (vc1parse->seq_layer.struct_c.finterpflag << 1);
           codec_data = gst_buffer_new_and_alloc (4);
-          GST_WRITE_UINT32_BE (GST_BUFFER_DATA (codec_data), seq_hdr);
+
+          gst_buffer_map (codec_data, &minfo, GST_MAP_WRITE);
+          GST_WRITE_UINT32_BE (minfo.data, seq_hdr);
+          gst_buffer_unmap (codec_data, &minfo);
         }
 
         gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
@@ -730,26 +648,33 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         gst_buffer_unref (codec_data);
       } else {
         GstBuffer *codec_data;
+        GstMapInfo minfo, sminfo, eminfo;
+
         /* Should have seqhdr and entrypoint for the advanced profile here */
         g_assert (vc1parse->seq_hdr_buffer && vc1parse->entrypoint_buffer);
         codec_data =
             gst_buffer_new_and_alloc (1 + 4 +
-            GST_BUFFER_SIZE (vc1parse->seq_hdr_buffer) + 4 +
-            GST_BUFFER_SIZE (vc1parse->entrypoint_buffer));
+            gst_buffer_get_size (vc1parse->seq_hdr_buffer) + 4 +
+            gst_buffer_get_size (vc1parse->entrypoint_buffer));
+
+        gst_buffer_map (codec_data, &minfo, GST_MAP_WRITE);
+        gst_buffer_map (vc1parse->seq_hdr_buffer, &sminfo, GST_MAP_READ);
+        gst_buffer_map (vc1parse->entrypoint_buffer, &eminfo, GST_MAP_READ);
+
         if (vc1parse->profile == GST_VC1_PROFILE_SIMPLE)
-          GST_WRITE_UINT8 (GST_BUFFER_DATA (codec_data), 0x29);
+          GST_WRITE_UINT8 (minfo.data, 0x29);
         else
-          GST_WRITE_UINT8 (GST_BUFFER_DATA (codec_data), 0x2b);
-        GST_WRITE_UINT32_BE (GST_BUFFER_DATA (codec_data) + 1, 0x0000010f);
-        memcpy (GST_BUFFER_DATA (codec_data) + 1 + 4,
-            GST_BUFFER_DATA (vc1parse->seq_hdr_buffer),
-            GST_BUFFER_SIZE (vc1parse->seq_hdr_buffer));
-        GST_WRITE_UINT32_BE (GST_BUFFER_DATA (codec_data) + 1 + 4 +
-            GST_BUFFER_SIZE (vc1parse->seq_hdr_buffer), 0x0000010e);
-        memcpy (GST_BUFFER_DATA (codec_data) + 1 + 4 +
-            GST_BUFFER_SIZE (vc1parse->seq_hdr_buffer) + 4,
-            GST_BUFFER_DATA (vc1parse->entrypoint_buffer),
-            GST_BUFFER_SIZE (vc1parse->entrypoint_buffer));
+          GST_WRITE_UINT8 (minfo.data, 0x2b);
+
+        GST_WRITE_UINT32_BE (minfo.data + 1, 0x0000010f);
+        memcpy (minfo.data + 1 + 4, sminfo.data, sminfo.size);
+        GST_WRITE_UINT32_BE (minfo.data + 1 + 4 +
+            gst_buffer_get_size (vc1parse->seq_hdr_buffer), 0x0000010e);
+        memcpy (minfo.data + 1 + 4 + sminfo.size + 4, eminfo.data, eminfo.size);
+        gst_buffer_unmap (codec_data, &minfo);
+        gst_buffer_unmap (vc1parse->seq_hdr_buffer, &sminfo);
+        gst_buffer_unmap (vc1parse->entrypoint_buffer, &eminfo);
+
         gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
             NULL);
         gst_buffer_unref (codec_data);
@@ -761,8 +686,13 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
             vc1parse->seq_layer_buffer, NULL);
       } else {
         GstBuffer *codec_data = gst_buffer_new_and_alloc (36);
-        guint8 *data = GST_BUFFER_DATA (codec_data);
+        guint8 *data;
         guint32 structC = 0;
+        GstMapInfo minfo;
+
+        gst_buffer_map (codec_data, &minfo, GST_MAP_WRITE);
+
+        data = minfo.data;
         /* Unknown number of frames and start code */
         data[0] = 0xff;
         data[1] = 0xff;
@@ -814,6 +744,8 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         GST_WRITE_UINT32_BE (data + 32,
             ((guint32) (((gdouble) vc1parse->fps_n) /
                     ((gdouble) vc1parse->fps_d) + 0.5)));
+        gst_buffer_unmap (codec_data, &minfo);
+
         gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
             NULL);
         gst_buffer_unref (codec_data);
@@ -870,7 +802,12 @@ gst_vc1_parse_handle_bdus (GstVC1Parse * vc1parse, GstBuffer * buffer,
 {
   GstVC1BDU bdu;
   GstVC1ParserResult pres;
-  guint8 *data = GST_BUFFER_DATA (buffer) + offset;
+  guint8 *data;
+  GstMapInfo minfo;
+
+  gst_buffer_map (buffer, &minfo, GST_MAP_READ);
+
+  data = minfo.data + offset;
 
   do {
     memset (&bdu, 0, sizeof (bdu));
@@ -885,13 +822,17 @@ gst_vc1_parse_handle_bdus (GstVC1Parse * vc1parse, GstBuffer * buffer,
       size -= bdu.offset;
 
       if (!gst_vc1_parse_handle_bdu (vc1parse, bdu.type, buffer,
-              data - GST_BUFFER_DATA (buffer), bdu.size))
+              data - minfo.data, bdu.size)) {
+        gst_buffer_unmap (buffer, &minfo);
         return FALSE;
+      }
 
       data += bdu.size;
       size -= bdu.size;
     }
   } while (pres == GST_VC1_PARSER_OK && size > 0);
+
+  gst_buffer_unmap (buffer, &minfo);
 
   if (pres != GST_VC1_PARSER_OK) {
     GST_DEBUG_OBJECT (vc1parse, "Failed to parse BDUs");
@@ -901,12 +842,129 @@ gst_vc1_parse_handle_bdus (GstVC1Parse * vc1parse, GstBuffer * buffer,
 }
 
 static GstFlowReturn
-gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
+    gint * skipsize)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
   GstBuffer *buffer = frame->buffer;
-  guint8 *data = GST_BUFFER_DATA (buffer);
-  guint size = GST_BUFFER_SIZE (buffer);
+  guint8 *data;
+  gsize size;
+  gsize framesize = -1;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstMapInfo minfo;
+
+  memset (&minfo, 0, sizeof (minfo));
+
+  *skipsize = 0;
+
+  if (vc1parse->renegotiate
+      || gst_pad_check_reconfigure (GST_BASE_PARSE_SRC_PAD (parse))) {
+    if (!gst_vc1_parse_renegotiate (vc1parse)) {
+      GST_ERROR_OBJECT (vc1parse, "Failed to negotiate with downstream");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto done;
+    }
+  }
+
+  if (!gst_buffer_map (buffer, &minfo, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (vc1parse, "Failed to map buffer");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
+  data = minfo.data;
+  size = minfo.size;
+
+  /* First check if we have a valid, complete frame here */
+  if (!vc1parse->seq_layer_buffer
+      && (vc1parse->input_stream_format == VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU
+          || vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME
+          || vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME
+          || vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER)) {
+    if (data[3] == 0xc5 && GST_READ_UINT32_BE (data + 4) == 0x00000004
+        && GST_READ_UINT32_BE (data + 20) == 0x0000000c) {
+      framesize = 36;
+    } else {
+      *skipsize = 1;
+    }
+  } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
+      vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+      (vc1parse->seq_layer_buffer
+          && (vc1parse->input_stream_format ==
+              VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU
+              || vc1parse->input_stream_format ==
+              VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME))) {
+    GstVC1ParserResult pres;
+    GstVC1BDU bdu;
+
+    g_assert (size >= 4);
+    memset (&bdu, 0, sizeof (bdu));
+    GST_DEBUG_OBJECT (vc1parse,
+        "Handling buffer of size %u at offset %" G_GUINT64_FORMAT, size,
+        GST_BUFFER_OFFSET (buffer));
+    /* XXX: when a buffer contains multiple BDUs, does the first one start with
+     * a startcode?
+     */
+    pres = gst_vc1_identify_next_bdu (data, size, &bdu);
+    switch (pres) {
+      case GST_VC1_PARSER_OK:
+        GST_DEBUG_OBJECT (vc1parse, "Have complete BDU");
+        if (bdu.sc_offset > 4) {
+          *skipsize = bdu.sc_offset;
+        } else {
+          framesize = bdu.offset + bdu.size;
+        }
+        break;
+      case GST_VC1_PARSER_BROKEN_DATA:
+        GST_ERROR_OBJECT (vc1parse, "Broken data");
+        *skipsize = 1;
+        break;
+      case GST_VC1_PARSER_NO_BDU:
+        GST_DEBUG_OBJECT (vc1parse, "Found no BDU startcode");
+        *skipsize = size - 3;
+        break;
+      case GST_VC1_PARSER_NO_BDU_END:
+        GST_DEBUG_OBJECT (vc1parse, "Found no BDU end");
+        if (G_UNLIKELY (GST_BASE_PARSE_DRAINING (vc1parse))) {
+          GST_DEBUG_OBJECT (vc1parse, "Draining - assuming complete frame");
+          framesize = size;
+        } else {
+          /* Need more data */
+          *skipsize = 0;
+        }
+        break;
+      case GST_VC1_PARSER_ERROR:
+        GST_ERROR_OBJECT (vc1parse, "Parsing error");
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_ASF ||
+      (vc1parse->seq_layer_buffer
+          && vc1parse->input_stream_format ==
+          VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME)) {
+    /* Must be packetized already */
+    framesize = size;
+  } else {
+    /* frame-layer or sequence-layer-frame-layer */
+    g_assert (size >= 8);
+    /* Parse frame layer size */
+    framesize = GST_READ_UINT24_BE (data + 1) + 8;
+  }
+
+
+  if (framesize == -1) {
+    GST_DEBUG_OBJECT (vc1parse, "Not a complete frame, skipping %d", *skipsize);
+    ret = GST_FLOW_OK;
+    goto done;
+  }
+  g_assert (*skipsize == 0);
+
+  /* We have a complete frame at this point */
 
   if (!vc1parse->seq_layer_buffer
       && (vc1parse->input_stream_format == VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU
@@ -919,7 +977,8 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     g_assert (size >= 36);
     if (!gst_vc1_parse_handle_seq_layer (vc1parse, buffer, 0, size)) {
       GST_ERROR_OBJECT (vc1parse, "Invalid sequence layer");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     frame->flags |= GST_BASE_PARSE_FRAME_FLAG_NO_FRAME;
@@ -935,6 +994,8 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       /* frame-layer */
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (vc1parse), 8);
     }
+
+    ret = GST_FLOW_OK;
   } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU ||
       vc1parse->input_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
       (vc1parse->seq_layer_buffer
@@ -952,7 +1013,8 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       if (!vc1parse->seq_hdr_buffer && !vc1parse->seq_layer_buffer) {
         GST_ERROR_OBJECT (vc1parse,
             "Need sequence header/layer before anything else");
-        return GST_FLOW_ERROR;
+        ret = GST_FLOW_ERROR;
+        goto done;
       }
     } else if (startcode != GST_VC1_ENTRYPOINT
         && vc1parse->profile == GST_VC1_PROFILE_ADVANCED) {
@@ -960,12 +1022,17 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         GST_ERROR_OBJECT (vc1parse,
             "Need entrypoint header after the sequence header for the "
             "advanced profile");
-        return GST_FLOW_ERROR;
+        ret = GST_FLOW_ERROR;
+        goto done;
       }
     }
 
-    if (!gst_vc1_parse_handle_bdu (vc1parse, startcode, buffer, 4, size - 4))
-      return GST_FLOW_ERROR;
+    if (!gst_vc1_parse_handle_bdu (vc1parse, startcode, buffer, 4, size - 4)) {
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
+
+    ret = GST_FLOW_OK;
   } else if (vc1parse->input_stream_format == VC1_STREAM_FORMAT_ASF ||
       (vc1parse->seq_layer_buffer
           && vc1parse->input_stream_format ==
@@ -974,7 +1041,8 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     if (!vc1parse->seq_hdr_buffer && !vc1parse->seq_layer_buffer) {
       GST_ERROR_OBJECT (vc1parse, "Need a sequence header or sequence layer");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     if (GST_CLOCK_TIME_IS_VALID (vc1parse->frame_duration))
@@ -985,24 +1053,29 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       gboolean startcodes = FALSE;
 
       if (size >= 4) {
-        guint32 startcode = GST_READ_UINT32_BE (data);
+        guint32 startcode = GST_READ_UINT32_BE (data + 4);
+
         startcodes = ((startcode & 0xffffff00) == 0x00000100);
       }
 
       if (startcodes) {
-        if (!gst_vc1_parse_handle_bdus (vc1parse, buffer, 0, size))
-          return GST_FLOW_ERROR;
+        if (!gst_vc1_parse_handle_bdus (vc1parse, buffer, 0, size)) {
+          ret = GST_FLOW_ERROR;
+          goto done;
+        }
 
         /* For the advanced profile we need a sequence header here */
         if (!vc1parse->seq_hdr_buffer) {
           GST_ERROR_OBJECT (vc1parse, "Need sequence header");
-          return GST_FLOW_ERROR;
+          ret = GST_FLOW_ERROR;
+          goto done;
         }
       } else {
         /* Must be a frame or a frame + field */
         /* TODO: Check if keyframe */
       }
     }
+    ret = GST_FLOW_OK;
   } else {
     GstVC1ParserResult pres;
     GstVC1FrameLayer flayer;
@@ -1015,6 +1088,7 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
      */
     if (size >= 8 + 4) {
       guint32 startcode = GST_READ_UINT32_BE (data + 8);
+
       startcodes = ((startcode & 0xffffff00) == 0x00000100);
     }
 
@@ -1026,24 +1100,28 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
      */
     if (!vc1parse->seq_layer_buffer && !vc1parse->seq_hdr_buffer && !startcodes) {
       GST_ERROR_OBJECT (vc1parse, "Need a sequence header or sequence layer");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     if ((vc1parse->seq_layer_buffer || vc1parse->seq_hdr_buffer)
         && vc1parse->profile == GST_VC1_PROFILE_ADVANCED && !startcodes) {
       GST_ERROR_OBJECT (vc1parse,
           "Advanced profile frame-layer data must start with startcodes");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
     memset (&flayer, 0, sizeof (flayer));
+
     pres = gst_vc1_parse_frame_layer (data, size, &flayer);
+
     if (pres != GST_VC1_PARSER_OK) {
       GST_ERROR_OBJECT (vc1parse, "Invalid VC1 frame layer");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
 
-    frame->buffer = buffer = gst_buffer_make_metadata_writable (buffer);
     GST_BUFFER_TIMESTAMP (buffer) =
         gst_util_uint64_scale (flayer.timestamp, GST_MSECOND, 1);
     if (!flayer.key)
@@ -1060,20 +1138,26 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
      */
     if (startcodes) {
       /* skip frame layer header */
-      if (!gst_vc1_parse_handle_bdus (vc1parse, buffer, 8, size - 8))
-        return GST_FLOW_ERROR;
+      if (!gst_vc1_parse_handle_bdus (vc1parse, buffer, 8, size - 8)) {
+        ret = GST_FLOW_ERROR;
+        goto done;
+      }
 
       /* For the advanced profile we need a sequence header here */
       if (!vc1parse->seq_hdr_buffer) {
         GST_ERROR_OBJECT (vc1parse, "Need sequence header");
-        return GST_FLOW_ERROR;
+        ret = GST_FLOW_ERROR;
+        goto done;
       }
     }
+
+    ret = GST_FLOW_OK;
   }
 
   /* Need sequence header or sequence layer here, above code
    * checks this already */
   g_assert (vc1parse->seq_layer_buffer || vc1parse->seq_hdr_buffer);
+
   /* We need the entrypoint BDU for the advanced profile before we can set
    * the caps. For the ASF header format it will already be in the codec_data,
    * for the frame-layer stream format it will be in the first frame already.
@@ -1088,17 +1172,30 @@ gst_vc1_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         || vc1parse->input_stream_format == VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU
         || vc1parse->input_stream_format ==
         VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME) {
-      return GST_BASE_PARSE_FLOW_QUEUED;
+      frame->flags |= GST_BASE_PARSE_FRAME_FLAG_QUEUE;
+      ret = GST_FLOW_OK;
     } else {
       GST_ERROR_OBJECT (vc1parse, "Need entrypoint for the advanced profile");
-      return GST_FLOW_ERROR;
+      ret = GST_FLOW_ERROR;
+      goto done;
     }
   }
 
-  if (!gst_vc1_parse_update_caps (vc1parse))
-    return GST_FLOW_NOT_NEGOTIATED;
+  if (!gst_vc1_parse_update_caps (vc1parse)) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
 
-  return GST_FLOW_OK;
+  gst_buffer_unmap (buffer, &minfo);
+  memset (&minfo, 0, sizeof (minfo));
+  GST_DEBUG_OBJECT (vc1parse, "Finishing frame of size %d", framesize);
+  ret = gst_base_parse_finish_frame (parse, frame, framesize);
+
+done:
+  if (minfo.data)
+    gst_buffer_unmap (buffer, &minfo);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1159,17 +1256,24 @@ gst_vc1_parse_handle_seq_hdr (GstVC1Parse * vc1parse,
 {
   GstVC1ParserResult pres;
   GstVC1Profile profile;
-  g_assert (GST_BUFFER_SIZE (buf) >= offset + size);
+  GstMapInfo minfo;
+
+  g_assert (gst_buffer_get_size (buf) >= offset + size);
   gst_buffer_replace (&vc1parse->seq_hdr_buffer, NULL);
   memset (&vc1parse->seq_hdr, 0, sizeof (vc1parse->seq_hdr));
+
+  gst_buffer_map (buf, &minfo, GST_MAP_READ);
   pres =
-      gst_vc1_parse_sequence_header (GST_BUFFER_DATA (buf) + offset,
+      gst_vc1_parse_sequence_header (minfo.data + offset,
       size, &vc1parse->seq_hdr);
+  gst_buffer_unmap (buf, &minfo);
+
   if (pres != GST_VC1_PARSER_OK) {
     GST_ERROR_OBJECT (vc1parse, "Invalid VC1 sequence header");
     return FALSE;
   }
-  vc1parse->seq_hdr_buffer = gst_buffer_create_sub (buf, offset, size);
+  vc1parse->seq_hdr_buffer =
+      gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, size);
   profile = vc1parse->seq_hdr.profile;
   if (vc1parse->profile != profile) {
     vc1parse->update_caps = TRUE;
@@ -1283,17 +1387,25 @@ gst_vc1_parse_handle_seq_layer (GstVC1Parse * vc1parse,
   GstVC1Profile profile;
   GstVC1Level level;
   gint width, height;
-  g_assert (GST_BUFFER_SIZE (buf) >= offset + size);
+  GstMapInfo minfo;
+
+  g_assert (gst_buffer_get_size (buf) >= offset + size);
+
   gst_buffer_replace (&vc1parse->seq_layer_buffer, NULL);
   memset (&vc1parse->seq_layer, 0, sizeof (vc1parse->seq_layer));
+
+  gst_buffer_map (buf, &minfo, GST_MAP_READ);
   pres =
-      gst_vc1_parse_sequence_layer (GST_BUFFER_DATA (buf) + offset,
+      gst_vc1_parse_sequence_layer (minfo.data + offset,
       size, &vc1parse->seq_layer);
+  gst_buffer_unmap (buf, &minfo);
+
   if (pres != GST_VC1_PARSER_OK) {
     GST_ERROR_OBJECT (vc1parse, "Invalid VC1 sequence layer");
     return FALSE;
   }
-  vc1parse->seq_layer_buffer = gst_buffer_create_sub (buf, offset, size);
+  vc1parse->seq_layer_buffer =
+      gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, size);
   profile = vc1parse->seq_layer.struct_c.profile;
   if (vc1parse->profile != profile) {
     vc1parse->update_caps = TRUE;
@@ -1339,9 +1451,12 @@ static gboolean
 gst_vc1_parse_handle_entrypoint (GstVC1Parse * vc1parse,
     GstBuffer * buf, guint offset, guint size)
 {
-  g_assert (GST_BUFFER_SIZE (buf) >= offset + size);
+  g_assert (gst_buffer_get_size (buf) >= offset + size);
+
   gst_buffer_replace (&vc1parse->entrypoint_buffer, NULL);
-  vc1parse->entrypoint_buffer = gst_buffer_create_sub (buf, offset, size);
+  vc1parse->entrypoint_buffer =
+      gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, size);
+
   return TRUE;
 }
 
@@ -1393,25 +1508,36 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   const gchar *stream_format = NULL;
   const gchar *header_format = NULL;
   const gchar *profile = NULL;
+  const gchar *format;
+
   GST_DEBUG_OBJECT (parse, "caps %" GST_PTR_FORMAT, caps);
   /* Parse the caps to get as much information as possible */
   s = gst_caps_get_structure (caps, 0);
+
   vc1parse->width = 0;
   gst_structure_get_int (s, "width", &vc1parse->width);
   vc1parse->height = 0;
   gst_structure_get_int (s, "height", &vc1parse->height);
+
   vc1parse->fps_n = vc1parse->fps_d = 0;
   vc1parse->fps_from_caps = FALSE;
   gst_structure_get_fraction (s, "framerate", &vc1parse->fps_n,
       &vc1parse->fps_d);
   if (vc1parse->fps_d != 0)
     vc1parse->fps_from_caps = TRUE;
+
   gst_structure_get_fraction (s, "pixel-aspect-ratio",
       &vc1parse->par_n, &vc1parse->par_d);
   if (vc1parse->par_n != 0 && vc1parse->par_d != 0)
     vc1parse->par_from_caps = TRUE;
-  vc1parse->fourcc = 0;
-  gst_structure_get_fourcc (s, "format", &vc1parse->fourcc);
+
+  vc1parse->format = 0;
+  format = gst_structure_get_string (s, "format");
+  if (format && strcmp (format, "WVC1") == 0)
+    vc1parse->format = GST_VC1_PARSE_FORMAT_WVC1;
+  else
+    vc1parse->format = GST_VC1_PARSE_FORMAT_WMV3;
+
   vc1parse->profile = -1;
   profile = gst_structure_get_string (s, "profile");
   if (profile && strcmp (profile, "simple"))
@@ -1420,14 +1546,16 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     vc1parse->profile = GST_VC1_PROFILE_MAIN;
   else if (profile && strcmp (profile, "advanced"))
     vc1parse->profile = GST_VC1_PROFILE_ADVANCED;
-  else if (vc1parse->fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1'))
+  else if (vc1parse->format == GST_VC1_PARSE_FORMAT_WVC1)
     vc1parse->profile = GST_VC1_PROFILE_ADVANCED;
-  else if (vc1parse->fourcc == GST_MAKE_FOURCC ('W', 'M', 'V', '3'))
+  else if (vc1parse->format == GST_VC1_PARSE_FORMAT_WMV3)
     vc1parse->profile = GST_VC1_PROFILE_MAIN;   /* or SIMPLE */
+
   vc1parse->level = -1;
   vc1parse->detecting_stream_format = FALSE;
   header_format = gst_structure_get_string (s, "header-format");
   stream_format = gst_structure_get_string (s, "stream-format");
+
   /* Now parse the codec_data */
   gst_buffer_replace (&vc1parse->seq_layer_buffer, NULL);
   gst_buffer_replace (&vc1parse->seq_hdr_buffer, NULL);
@@ -1435,28 +1563,34 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   memset (&vc1parse->seq_layer, 0, sizeof (vc1parse->seq_layer));
   memset (&vc1parse->seq_hdr, 0, sizeof (vc1parse->seq_hdr));
   value = gst_structure_get_value (s, "codec_data");
+
   if (value != NULL) {
+    gsize codec_data_size;
+    GstMapInfo minfo;
+
     codec_data = gst_value_get_buffer (value);
-    if ((GST_BUFFER_SIZE (codec_data) == 4 ||
-            GST_BUFFER_SIZE (codec_data) == 5)) {
+    gst_buffer_map (codec_data, &minfo, GST_MAP_READ);
+    codec_data_size = gst_buffer_get_size (codec_data);
+    if ((codec_data_size == 4 || codec_data_size == 5)) {
       /* ASF, VC1/WMV3 simple/main profile
        * This is the sequence header without start codes
        */
       if (!gst_vc1_parse_handle_seq_hdr (vc1parse, codec_data,
-              0, GST_BUFFER_SIZE (codec_data)))
+              0, codec_data_size)) {
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
+      }
       if (header_format && strcmp (header_format, "asf") != 0)
         GST_WARNING_OBJECT (vc1parse,
             "Upstream claimed '%s' header format but 'asf' detected",
             header_format);
       vc1parse->input_header_format = VC1_HEADER_FORMAT_ASF;
-    } else
-        if (GST_BUFFER_SIZE (codec_data) == 36 &&
-        GST_BUFFER_DATA (codec_data)[3] == 0xc5) {
+    } else if (codec_data_size == 36 && minfo.data[3] == 0xc5) {
       /* Sequence Layer, SMPTE S421M-2006 Annex L.3 */
       if (!gst_vc1_parse_handle_seq_layer (vc1parse, codec_data, 0,
-              GST_BUFFER_SIZE (codec_data))) {
+              codec_data_size)) {
         GST_ERROR_OBJECT (vc1parse, "Invalid VC1 sequence layer");
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
       }
 
@@ -1473,33 +1607,39 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
        * 2) Sequence Header with startcode
        * 3) EntryPoint Header with startcode
        */
-      if (GST_BUFFER_SIZE (codec_data) < 1 + 4 + 4 + 4 + 2) {
+      if (codec_data_size < 1 + 4 + 4 + 4 + 2) {
         GST_ERROR_OBJECT (vc1parse,
             "Too small for VC1 advanced profile ASF header");
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
       }
 
       /* Some sanity checking */
-      if ((GST_BUFFER_DATA (codec_data)[0] & 0x01) != 0x01) {
+      if ((minfo.data[0] & 0x01) != 0x01) {
         GST_ERROR_OBJECT (vc1parse,
             "Invalid binding byte for VC1 advanced profile ASF header");
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
       }
 
-      start_code = GST_READ_UINT32_BE (GST_BUFFER_DATA (codec_data) + 1);
+      start_code = GST_READ_UINT32_BE (minfo.data + 1);
       if (start_code != 0x000010f) {
         GST_ERROR_OBJECT (vc1parse,
             "VC1 advanced profile ASF header does not start with SequenceHeader startcode");
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
       }
 
       if (!gst_vc1_parse_handle_bdus (vc1parse, codec_data, 1,
-              GST_BUFFER_SIZE (codec_data) - 1))
+              codec_data_size - 1)) {
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
+      }
 
       if (!vc1parse->seq_hdr_buffer || !vc1parse->entrypoint_buffer) {
         GST_ERROR_OBJECT (vc1parse,
             "Need sequence header and entrypoint header in the codec_data");
+        gst_buffer_unmap (codec_data, &minfo);
         return FALSE;
       }
 
@@ -1510,6 +1650,7 @@ gst_vc1_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
       vc1parse->input_header_format = VC1_HEADER_FORMAT_ASF;
     }
+    gst_buffer_unmap (codec_data, &minfo);
   } else {
     vc1parse->input_header_format = VC1_HEADER_FORMAT_NONE;
     if (header_format && strcmp (header_format, "sequence-layer") != 0)
