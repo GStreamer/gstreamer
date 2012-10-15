@@ -122,6 +122,9 @@ class ElementFactory(Gst.ElementFactory):
         return Gst.ElementFactory.make(factory_name, instance_name)
 
 class Pad(Gst.Pad):
+    def query_caps(self, filter=None):
+        return Gst.Pad.query_caps(self, filter)
+
     def link(self, pad):
         ret = Gst.Pad.link(self, pad)
         if ret != Gst.PadLinkReturn.OK:
