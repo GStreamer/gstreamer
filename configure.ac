@@ -196,6 +196,24 @@ AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h], [], [], [AC_INCLUDES_DEFAULT])
 
+dnl checks for ARM NEON support
+dnl this instruction set is used by the speex resampler code
+AC_MSG_CHECKING(for ARM NEON support in current arch/CFLAGS)
+AC_LINK_IFELSE([
+AC_LANG_PROGRAM([[
+  #include <arm_neon.h>
+  int32x4_t testfunc(int16_t *a, int16_t *b) {
+      return vmull_s16(vld1_s16(a), vld1_s16(b));
+  }
+]])],
+[
+  AC_DEFINE(HAVE_ARM_NEON,[],[ARM NEON support is enabled])
+  AC_MSG_RESULT(yes)
+],
+[
+  AC_MSG_RESULT(no)
+])
+
 dnl also, Windows does not have long long
 AX_CREATE_STDINT_H
 

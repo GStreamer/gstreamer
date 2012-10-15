@@ -88,6 +88,12 @@
 #endif
 #endif
 
+#ifdef _USE_NEON
+#ifndef HAVE_ARM_NEON
+#undef _USE_NEON
+#endif
+#endif
+
 static inline void *
 speex_alloc (int size)
 {
@@ -134,6 +140,10 @@ speex_free (void *ptr)
 #include "resample_sse.h"
 #endif
 
+#ifdef _USE_NEON
+#include "resample_neon.h"
+#endif
+
 /* Numer of elements to allocate on the stack */
 #ifdef VAR_ARRAYS
 #define FIXED_STACK_ALLOC 8192
@@ -160,6 +170,16 @@ speex_free (void *ptr)
 #define SSE2_END(macro) sse2_##macro##_end:; }
 #else
 #define SSE2_FALLBACK(macro)
+#endif
+
+#ifdef _USE_NEON
+#define NEON_FALLBACK(macro) \
+  if (st->use_neon) goto neon_##macro##_neon; {
+#define NEON_IMPLEMENTATION(macro) \
+  goto neon_##macro##_end; } neon_##macro##_neon: {
+#define NEON_END(macro) neon_##macro##_end:; }
+#else
+#define NEON_FALLBACK(macro)
 #endif
 
 
@@ -201,6 +221,7 @@ struct SpeexResamplerState_
 
   int use_sse:1;
   int use_sse2:1;
+  int use_neon:1;
 };
 
 static double kaiser12_table[68] = {
@@ -457,6 +478,7 @@ resampler_basic_direct_single (SpeexResamplerState * st,
     const spx_word16_t *iptr = &in[last_sample];
 
     SSE_FALLBACK (INNER_PRODUCT_SINGLE)
+    NEON_FALLBACK (INNER_PRODUCT_SINGLE)
         sum = 0;
     for (j = 0; j < N; j++)
       sum += MULT16_16 (sinc[j], iptr[j]);
@@ -473,7 +495,11 @@ resampler_basic_direct_single (SpeexResamplerState * st,
       }
       sum = accum[0] + accum[1] + accum[2] + accum[3];
 */
-#ifdef OVERRIDE_INNER_PRODUCT_SINGLE
+#if defined(OVERRIDE_INNER_PRODUCT_SINGLE) && defined(_USE_NEON)
+    NEON_IMPLEMENTATION (INNER_PRODUCT_SINGLE)
+    sum = inner_product_single (sinc, iptr, N);
+    NEON_END(INNER_PRODUCT_SINGLE)
+#elif defined(OVERRIDE_INNER_PRODUCT_SINGLE) && defined(_USE_SSE)
     SSE_IMPLEMENTATION (INNER_PRODUCT_SINGLE)
         sum = inner_product_single (sinc, iptr, N);
     SSE_END (INNER_PRODUCT_SINGLE)
@@ -528,7 +554,7 @@ resampler_basic_direct_double (SpeexResamplerState * st,
       accum[3] += sinc[j + 3] * iptr[j + 3];
     }
     sum = accum[0] + accum[1] + accum[2] + accum[3];
-#ifdef OVERRIDE_INNER_PRODUCT_DOUBLE
+#if defined(OVERRIDE_INNER_PRODUCT_DOUBLE) && defined(_USE_SSE2)
     SSE2_IMPLEMENTATION (INNER_PRODUCT_DOUBLE)
         sum = inner_product_double (sinc, iptr, N);
     SSE2_END (INNER_PRODUCT_DOUBLE)
@@ -607,7 +633,7 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
             1)) + MULT16_32_Q15 (interp[1], SHR32 (accum[1],
             1)) + MULT16_32_Q15 (interp[2], SHR32 (accum[2],
             1)) + MULT16_32_Q15 (interp[3], SHR32 (accum[3], 1));
-#ifdef OVERRIDE_INTERPOLATE_PRODUCT_SINGLE
+#if defined(OVERRIDE_INTERPOLATE_PRODUCT_SINGLE) && defined(_USE_SSE)
     SSE_IMPLEMENTATION (INTERPOLATE_PRODUCT_SINGLE)
         cubic_coef (frac, interp);
     sum =
@@ -697,7 +723,7 @@ resampler_basic_interpolate_double (SpeexResamplerState * st,
         MULT16_32_Q15 (interp[0], accum[0]) + MULT16_32_Q15 (interp[1],
         accum[1]) + MULT16_32_Q15 (interp[2],
         accum[2]) + MULT16_32_Q15 (interp[3], accum[3]);
-#ifdef OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE
+#if defined(OVERRIDE_INTERPOLATE_PRODUCT_DOUBLE) && defined(_USE_SSE2)
     SSE2_IMPLEMENTATION (INTERPOLATE_PRODUCT_DOUBLE)
         cubic_coef (frac, interp);
     sum =
@@ -933,10 +959,18 @@ check_insn_set (SpeexResamplerState * st, const char *name)
 {
   if (!name)
     return;
+#ifdef _USE_SSE
   if (!strcmp (name, "sse"))
     st->use_sse = 1;
+#endif
+#ifdef _USE_SSE2
   if (!strcmp (name, "sse2"))
     st->use_sse = st->use_sse2 = 1;
+#endif
+#ifdef _USE_NEON
+  if (!strcmp (name, "neon"))
+    st->use_neon = 1;
+#endif
 }
 #endif
 
@@ -997,6 +1031,7 @@ speex_resampler_init_frac (spx_uint32_t nb_channels, spx_uint32_t ratio_num,
 #endif
 
   st->use_sse = st->use_sse2 = 0;
+  st->use_neon = 0;
 #if defined HAVE_ORC && !defined DISABLE_ORC
   orc_init ();
   {

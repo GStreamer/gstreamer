@@ -19,6 +19,7 @@
 
 #define _USE_SSE
 #define _USE_SSE2
+#define _USE_NEON
 #define FLOATING_POINT
 #define OUTSIDE_SPEEX
 #define RANDOM_PREFIX resample_float

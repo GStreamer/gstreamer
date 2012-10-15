@@ -39,6 +39,7 @@ noinst_HEADERS = \
 	gstaudioresample.h \
 	resample.c \
 	resample_sse.h \
+	resample_neon.h \
 	speex_resampler.h \
 	speex_resampler_wrapper.h
 
