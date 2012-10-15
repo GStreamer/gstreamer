@@ -1244,8 +1244,8 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
   eglexts = eglQueryString (eglglessink->eglglesctx->display, EGL_EXTENSIONS);
   glexts = glGetString (GL_EXTENSIONS);
 
-  GST_DEBUG_OBJECT (eglglessink, "Available EGL extensions: %s\n", eglexts);
-  GST_DEBUG_OBJECT (eglglessink, "Available GLES extensions: %s\n", glexts);
+  GST_DEBUG_OBJECT (eglglessink, "Available EGL extensions: %s\n", GST_STR_NULL (eglexts));
+  GST_DEBUG_OBJECT (eglglessink, "Available GLES extensions: %s\n", GST_STR_NULL ((const char *) glexts));
 
 #ifdef EGL_FAST_RENDERING_POSSIBLE
   /* OK Fast rendering should be possible from the declared
@@ -1254,11 +1254,11 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
 
   /* Check for support from claimed EGL/GLES extensions */
 
-  if (!strstr (eglexts, "EGL_KHR_image"))
+  if (!eglexts || !strstr (eglexts, "EGL_KHR_image"))
     goto KHR_IMAGE_NA;
-  if (!strstr (eglexts, "EGL_KHR_lock_surface"))
+  if (!eglexts || !strstr (eglexts, "EGL_KHR_lock_surface"))
     goto SURFACE_LOCK_NA;
-  if (!strstr ((char *) glexts, "GL_OES_EGL_image"))
+  if (!glexts || !strstr ((char *) glexts, "GL_OES_EGL_image"))
     goto TEXTURE_2DOES_NA;
 
   /* Check for actual extension proc addresses */
