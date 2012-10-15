@@ -23,11 +23,7 @@
 
 #include <gst/gst.h>
 
-#ifdef HAVE_GST_0_10_37
 #include <gst/video/gstvideodecoder.h>
-#else
-#include "video/gstvideodecoder.h"
-#endif
 
 #include "gstamc.h"
 

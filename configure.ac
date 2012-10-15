@@ -609,6 +609,7 @@ AG_GST_CHECK_FEATURE(ANDROID_MEDIA, [Android Media], androidmedia, [
     *)
       HAVE_ANDROID_MEDIA="no"
       ;;
+  esac
 ])
 
 dnl *** AppleMedia (OS X and iOS) ***
