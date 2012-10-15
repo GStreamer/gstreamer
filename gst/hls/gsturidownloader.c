@@ -167,7 +167,9 @@ gst_uri_downloader_sink_event (GstPad * pad, GstObject * parent,
             gst_util_get_timestamp ();
         GST_OBJECT_UNLOCK (downloader);
         GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
+        g_mutex_lock (&downloader->priv->lock);
         g_cond_signal (&downloader->priv->cond);
+        g_mutex_unlock (&downloader->priv->lock);
       } else {
         GST_OBJECT_UNLOCK (downloader);
       }
@@ -271,7 +273,9 @@ gst_uri_downloader_cancel (GstUriDownloader * downloader)
     downloader->priv->download = NULL;
     GST_OBJECT_UNLOCK (downloader);
     GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
+    g_mutex_lock (&downloader->priv->lock);
     g_cond_signal (&downloader->priv->cond);
+    g_mutex_unlock (&downloader->priv->lock);
   } else {
     GST_OBJECT_UNLOCK (downloader);
     GST_DEBUG_OBJECT (downloader,
