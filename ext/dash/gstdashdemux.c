@@ -38,6 +38,43 @@
  * 
  * The following section describes how dashdemux works internally.
  * 
+ * Introduction:
+ * 
+ * dashdemux is a "fake" demux, as unlike traditional demux elements, it
+ * doesn't split data streams contained in an enveloppe to expose them
+ * to downstream decoding elements.
+ * 
+ * Instead, it parses an XML file called a manifest to identify a set of
+ * individual stream fragments it needs to fetch and expose to the actual
+ * demux elements that will handle them (this behavior is sometimes 
+ * referred as the "demux after a demux" scenario).
+ * 
+ * For a given section of content, several representations corresponding
+ * to different bitrates may be available: dashdemux will select the most
+ * appropriate representation based on local conditions (typically the 
+ * available bandwidth and the amount of buffering available, capped by
+ * a maximum allowed bitrate). 
+ * 
+ * The representation selection algorithm can be configured using
+ * specific properties: max bitrate, min/max buffering, bandwidth ratio.
+ * 
+ * 
+ * General Design:
+ * 
+ * dashdemux has a single sink pad that accepts the data corresponding 
+ * to the manifest, typically fetched from an HTTP or file source.
+ * 
+ * dashdemux exposes the streams it recreates based on the fragments it
+ * fetches through dedicated src pads corresponding to the caps of the
+ * fragments container (ISOBMFF/MP4 or MPEG2TS).
+ * 
+ * During playback, new representations will typically be exposed as a
+ * new set of pads (see 'Switching between representations' below).
+ * 
+ * Fragments downloading is performed using a dedicated task that fills
+ * an internal queue. Another task is in charge of popping fragments
+ * from the queue and pushing them downstream.
+ * 
  * Switching between representations:
  * 
  * Decodebin supports scenarios allowing to seamlessly switch from one 
