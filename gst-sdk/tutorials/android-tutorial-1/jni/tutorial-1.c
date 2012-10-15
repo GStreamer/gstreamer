@@ -1,5 +1,6 @@
 #include <string.h>
 #include <jni.h>
+#include <android/log.h>
 #include <gst/gst.h>
 
 /*
@@ -17,7 +18,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
 
   if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    GST_ERROR ("Could not retrieve JNIEnv");
+    __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "Could not retrieve JNIEnv");
     return 0;
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_1/Tutorial1");

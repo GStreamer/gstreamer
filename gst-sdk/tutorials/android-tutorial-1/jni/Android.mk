@@ -5,6 +5,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := tutorial-1
 LOCAL_SRC_FILES := tutorial-1.c
 LOCAL_SHARED_LIBRARIES := gstreamer_android
+LOCAL_LDLIBS := -llog
 include $(BUILD_SHARED_LIBRARY)
 
 ifndef GSTREAMER_SDK_ROOT
