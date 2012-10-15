@@ -317,7 +317,9 @@ gst_my_filter_sink_event (GstPad    *pad,
         <listitem>
           <para>
             If the element prefers to operate in passthrough mode, check
-            if downstream accepts the caps with the ACCEPT_CAPS query.
+            if downstream accepts the caps with the ACCEPT_CAPS query. If it
+            does, we can complete negotiation and we can operate in
+            passthrough mode.
           </para>
         </listitem>
         <listitem>
@@ -334,7 +336,9 @@ gst_my_filter_sink_event (GstPad    *pad,
         <listitem>
           <para>
             Select from the downstream list the first caps that you can
-            transform to and set this as the output caps.
+            transform to and set this as the output caps. You might have to
+            fixate the caps to some reasonable defaults to construct
+            fixed caps.
           </para>
         </listitem>
       </itemizedlist>
@@ -444,12 +448,6 @@ gst_my_filter_chain (GstPad    *pad,
     </sect2>
   </sect1>
 
-  <sect1 id="section-nego-pullmode">
-    <title>Pull-mode Caps negotiation</title>
-    <para>
-    </para>
-  </sect1>
-
   <sect1 id="section-nego-upstream" xreflabel="Upstream caps (re)negotiation">
     <title>Upstream caps (re)negotiation</title>
     <para>
@@ -489,13 +487,17 @@ gst_my_filter_chain (GstPad    *pad,
         <para>
           Elements that operate in transform negotiation according to
           <xref linkend="section-nego-transform"/> pass the RECONFIGURE
-          event upstream.
+          event upstream. Because these elements simply do a fixed transform
+          based on the upstream caps, they need to send the event upstream
+          so that it can select a new format.
         </para>
       </listitem>
       <listitem>
         <para>
           Elements that operate in fixed negotiation 
           (<xref linkend="section-nego-fixed"/>) drop the RECONFIGURE event.
+          These elements can't reconfigure and their output caps don't depend
+          on the upstream caps so the event can be dropped.
         </para>
       </listitem>
       <listitem>
@@ -580,6 +582,15 @@ gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
 }
 ]]>
     </programlisting>
+  </sect1>
+
+  <sect1 id="section-nego-pullmode">
+    <title>Pull-mode Caps negotiation</title>
+    <para>
+      WRITEME, the mechanism of pull-mode negotiation is not yet fully
+      understood.
+    </para>
+
     <para>
       Using all the knowledge you've acquired by reading this chapter, you
       should be able to write an element that does correct caps negotiation.
