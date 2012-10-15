@@ -102,7 +102,7 @@ static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_schedule (GstDashDemux * demux);
-static gboolean gst_dash_demux_switch_playlist (GstDashDemux * demux,
+static gboolean gst_dash_demux_select_representation (GstDashDemux * demux,
     guint64 current_bitrate);
 static gboolean gst_dash_demux_get_next_fragment (GstDashDemux * demux,
     gboolean caching);
@@ -982,7 +982,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
 
     /* fetch the next fragment */
     /* try to switch to another bitrate if needed */
-    gst_dash_demux_switch_playlist (demux,
+    gst_dash_demux_select_representation (demux,
         demux->bandwidth_usage * demux->dnl_rate *
         gst_dash_demux_get_buffering_ratio (demux));
 
@@ -1053,8 +1053,15 @@ gst_dash_demux_schedule (GstDashDemux * demux)
   return TRUE;
 }
 
+/* gst_dash_demux_select_representation:
+ *
+ * Select the most appropriate media representation based on a target 
+ * bitrate.
+ * 
+ * Returns TRUE if a new representation has been selected
+ */
 static gboolean
-gst_dash_demux_switch_playlist (GstDashDemux * demux, guint64 bitrate)
+gst_dash_demux_select_representation (GstDashDemux * demux, guint64 bitrate)
 {
   GstActiveStream *stream = NULL;
   GList *rep_list = NULL;
@@ -1078,8 +1085,9 @@ gst_dash_demux_switch_playlist (GstDashDemux * demux, guint64 bitrate)
     new_index =
         gst_mpdparser_get_rep_idx_with_max_bandwidth (rep_list, bitrate);
 
+    /* if no representation has the required bandwidth, take the lowest one */
     if (new_index == -1)
-      new_index = 0;            /* if no representation has the required bandwidth, take the lowest one */
+      new_index = 0;
 
     if (new_index != stream->representation_idx) {
       GST_MPD_CLIENT_LOCK (demux->client);
