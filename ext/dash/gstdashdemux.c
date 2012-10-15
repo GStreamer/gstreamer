@@ -95,12 +95,12 @@
  * the following tree would be created:
  * 
  * chain "DASH Demux"
- * |_ group "Representation 1"
+ * |_ group "Representation set 1"
  * |   |_ chain "Qt Demux 0"
  * |       |_ group "Stream 0"
  * |           |_ chain "H264"
  * |           |_ chain "AAC"
- * |_ group "Representation 2"
+ * |_ group "Representation set 2"
  *     |_ chain "Qt Demux 1"
  *         |_ group "Stream 1"
  *             |_ chain "H264"
@@ -109,14 +109,14 @@
  * Or, if audio and video are contained in separate fragments:
  *
  * chain "DASH Demux"
- * |_ group "Representation 1"
+ * |_ group "Representation set 1"
  * |   |_ chain "Qt Demux 0"
  * |   |   |_ group "Stream 0"
  * |   |       |_ chain "H264"
  * |   |_ chain "Qt Demux 1"
  * |       |_ group "Stream 1"
  * |           |_ chain "AAC" 
- * |_ group "Representation 2"
+ * |_ group "Representation set 2"
  *     |_ chain "Qt Demux 3"
  *     |   |_ group "Stream 2"
  *     |       |_ chain "H264"
@@ -124,11 +124,11 @@
  *         |_ group "Stream 3"
  *             |_ chain "AAC" 
  *
- * In both cases, when switching from Rep 1 to Rep 2 an EOS is sent on
- *  each end pad corresponding to Rep 0, triggering the "drain" state to
+ * In both cases, when switching from Set 1 to Set 2 an EOS is sent on
+ * each end pad corresponding to Rep 0, triggering the "drain" state to
  * propagate upstream.
- * Once both EOS have been processed, the "Rep 1" group is completely
- * drained, and decodebin2 will switch to the "Rep 2" group.
+ * Once both EOS have been processed, the "Set 1" group is completely
+ * drained, and decodebin2 will switch to the "Set 2" group.
  * 
  * Note: nothing can be pushed to the new decoding group before the 
  * old one has been drained, which means that in order to be able to 
@@ -205,10 +205,9 @@ static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_schedule (GstDashDemux * demux);
-static gboolean gst_dash_demux_select_representation (GstDashDemux * demux,
+static gboolean gst_dash_demux_select_representations (GstDashDemux * demux,
     guint64 current_bitrate);
-static gboolean gst_dash_demux_get_next_fragment (GstDashDemux * demux,
-    gboolean caching);
+static gboolean gst_dash_demux_get_next_fragment_set (GstDashDemux * demux);
 
 static void gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose);
 static GstClockTime gst_dash_demux_get_buffering_time (GstDashDemux * demux);
@@ -808,9 +807,9 @@ gst_dash_demux_stop (GstDashDemux * demux)
 
 /* switch_pads:
  * 
- * Called when switching from one representation to the other, if the 
- * new representation requires different downstream elements (see the
- * next function).
+ * Called when switching from one set of representations to another, but
+ * only if one of the new representations requires different downstream 
+ * elements (see the next function).
  * 
  * This function first creates the new pads, then sends a no-more-pads
  * event (that will tell decodebin to create a new group), then sends
@@ -861,7 +860,7 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
 
 /* needs_pad_switch:
  * 
- * Figure out if the newly selected representation requires a new set
+ * Figure out if the newly selected representations require a new set
  * of demuxers and decoders or if we can carry on with the existing ones.
  * 
  * Basically, we look at the list of fragments we need to push downstream, 
@@ -870,6 +869,8 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
  * As soon as one fragment requires a new set of caps, we need to switch
  * all decoding pads to recreate a whole decoding group as we cannot 
  * move pads between groups (FIXME: or can we ?).
+ * 
+ * FIXME: redundant with need_add_header
  * 
  */
 static gboolean
@@ -1081,7 +1082,7 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
 /* gst_dash_demux_download_loop:
  * 
  * Loop for the "download' task that fetches fragments based on the 
- * selected representation.
+ * selected representations.
  * 
  * Startup: 
  * 
@@ -1090,7 +1091,7 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
  * During playback:  
  * 
  * It sequentially fetches fragments corresponding to the current 
- * representation and pushes them into a queue.
+ * representations and pushes them into a queue.
  * 
  * It tries to maintain the number of queued items within a predefined 
  * range: if the queue is full, it will pause, checking every 100 ms if 
@@ -1098,7 +1099,7 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
  * 
  * When a new set of fragments has been downloaded, it evaluates the
  * download time to check if we can or should switch to a different 
- * representation.
+ * set of representations.
  *
  * Teardown:
  * 
@@ -1134,13 +1135,13 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
               100 * gst_dash_demux_get_buffering_ratio (demux)));
     }
 
-    /* try to switch to another representation if needed */
-    gst_dash_demux_select_representation (demux,
+    /* try to switch to another set of representations if needed */
+    gst_dash_demux_select_representations (demux,
         demux->bandwidth_usage * demux->dnl_rate *
         gst_dash_demux_get_buffering_ratio (demux));
 
     /* fetch the next fragment */
-    if (!gst_dash_demux_get_next_fragment (demux, FALSE)) {
+    if (!gst_dash_demux_get_next_fragment_set (demux)) {
       if (!demux->end_of_manifest && !demux->cancelled) {
         demux->client->update_failed_count++;
         if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
@@ -1207,15 +1208,20 @@ gst_dash_demux_schedule (GstDashDemux * demux)
   return TRUE;
 }
 
-/* gst_dash_demux_select_representation:
+/* gst_dash_demux_select_representations:
  *
- * Select the most appropriate media representation based on a target 
+ * Select the most appropriate media representations based on a target 
  * bitrate.
  * 
- * Returns TRUE if a new representation has been selected
+ * FIXME: all representations are selected against the same bitrate, but
+ * they will share the same bandwidth. This only works today because the
+ * audio representations bitrate usage is negligible as compared to the
+ * video representation one.
+ * 
+ * Returns TRUE if a new set of representations has been selected
  */
 static gboolean
-gst_dash_demux_select_representation (GstDashDemux * demux, guint64 bitrate)
+gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
 {
   GstActiveStream *stream = NULL;
   GList *rep_list = NULL;
@@ -1456,12 +1462,21 @@ need_add_header (GstDashDemux * demux)
   return switch_caps;
 }
 
+/* gst_dash_demux_get_next_fragment_set:
+ *
+ * Get the next set of fragments for the current representations.
+ * 
+ * This function uses the generic URI downloader API.
+ *
+ * Returns FALSE if an error occured while downloading fragments
+ * 
+ */
 static gboolean
-gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
+gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
 {
   GstActiveStream *stream;
   GstFragment *download, *header;
-  GList *list_fragment;
+  GList *fragment_set;
   const gchar *next_fragment_uri;
   GstClockTime duration;
   GstClockTime timestamp;
@@ -1472,10 +1487,13 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
   guint64 size_buffer = 0;
 
   g_get_current_time (&start);
-  /* support multiple streams */
+  /* Figure out if we will need to switch pads, thus requiring a new
+   * header to initialize the new decoding chain
+   * FIXME: redundant with needs_pad_switch */
   gboolean need_header = need_add_header (demux);
   int stream_idx = 0;
-  list_fragment = NULL;
+  fragment_set = NULL;
+  /* Get the fragment corresponding to each stream index */
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
     if (!gst_mpd_client_get_next_fragment (demux->client,
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
@@ -1505,7 +1523,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
 
     if (need_header) {
-      /* We changed spatial representation */
+      /* Store the new input caps for that stream */
       gst_caps_replace (&demux->input_caps[stream_idx], caps);
       GST_INFO_OBJECT (demux, "Input source caps: %" GST_PTR_FORMAT,
           demux->input_caps[stream_idx]);
@@ -1524,14 +1542,14 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
       gst_caps_unref (caps);
 
     gst_fragment_set_caps (download, demux->input_caps[stream_idx]);
-    list_fragment = g_list_append (list_fragment, download);
+    fragment_set = g_list_append (fragment_set, download);
     size_buffer += gst_fragment_get_buffer_size (download);
     stream_idx++;
   }
-  g_queue_push_tail (demux->queue, list_fragment);
-  if (!caching) {
-    GST_TASK_SIGNAL (demux->download_task);
-  }
+  /* Push fragment set into the queue */
+  g_queue_push_tail (demux->queue, fragment_set);
+  /* Wake the download task up */
+  GST_TASK_SIGNAL (demux->download_task);
   g_get_current_time (&now);
   diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (start));
   demux->dnl_rate = (size_buffer * 8) / ((double) diff / GST_SECOND);
