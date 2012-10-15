@@ -1040,15 +1040,38 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
     return buffering_time / demux->min_buffering_time;
 }
 
+/* gst_dash_demux_download_loop:
+ * 
+ * Loop for the "download' task that fetches fragments based on the 
+ * selected representation.
+ * 
+ * Startup: 
+ * 
+ * The task is started from the stream loop.
+ * 
+ * During playback:  
+ * 
+ * It sequentially fetches fragments corresponding to the current 
+ * representation and pushes them into a queue.
+ * 
+ * It tries to maintain the number of queued items within a predefined 
+ * range: if the queue is full, it will pause, checking every 100 ms if 
+ * it needs to restart downloading fragments.
+ * 
+ * When a new set of fragments has been downloaded, it evaluates the
+ * download time to check if we can or should switch to a different 
+ * representation.
+ *
+ * Teardown:
+ * 
+ * The task will exit when it encounters an error or will be terminated
+ * by the stream task (FIXME: shouldn't it stop by itself as soon as it 
+ * has reached the end of the manifest ?)
+ * 
+ */
 void
 gst_dash_demux_download_loop (GstDashDemux * demux)
 {
-  /* Loop for downloading the fragments. It's started from the stream
-   * loop, and fetches new fragments to maintain the number of queued
-   * items within a predefined range. When a new fragment is downloaded,
-   *  it evaluates the download time to check if we can or should
-   * switch to a different bitrate */
-
   /* Wait until the next scheduled download */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->download_task),
           demux->download_timed_lock, &demux->next_download)) {
@@ -1073,12 +1096,12 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
               100 * gst_dash_demux_get_buffering_ratio (demux)));
     }
 
-    /* fetch the next fragment */
-    /* try to switch to another bitrate if needed */
+    /* try to switch to another representation if needed */
     gst_dash_demux_select_representation (demux,
         demux->bandwidth_usage * demux->dnl_rate *
         gst_dash_demux_get_buffering_ratio (demux));
 
+    /* fetch the next fragment */
     if (!gst_dash_demux_get_next_fragment (demux, FALSE)) {
       if (!demux->end_of_manifest && !demux->cancelled) {
         demux->client->update_failed_count++;
