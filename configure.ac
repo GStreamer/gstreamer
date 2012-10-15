@@ -598,6 +598,19 @@ int main () {
   AC_SUBST(HAVE_DIRECTSHOW)
 ])
 
+dnl *** Android Media ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_ANDROID_MEDIA, true)
+HAVE_ANDROID_MEDIA="no"
+AG_GST_CHECK_FEATURE(ANDROID_MEDIA, [Android Media], androidmedia, [
+  case "$host" in
+    *android*)
+      AC_CHECK_HEADER(jni.h, HAVE_ANDROID_MEDIA="yes", HAVE_ANDROID_MEDIA="no")
+      ;;
+    *)
+      HAVE_ANDROID_MEDIA="no"
+      ;;
+])
+
 dnl *** AppleMedia (OS X and iOS) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_APPLE_MEDIA, true)
 HAVE_APPLE_MEDIA="no"
@@ -2042,6 +2055,7 @@ sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
+sys/androidmedia/Makefile
 sys/applemedia/Makefile
 sys/avc/Makefile
 sys/d3dvideosink/Makefile

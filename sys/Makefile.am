@@ -4,6 +4,12 @@ else
 ACM_DIR=
 endif
 
+if USE_ANDROID_MEDIA
+ANDROID_MEDIA_DIR=androidmedia
+else
+ANDROID_MEDIA_DIR=
+endif
+
 if USE_APPLE_MEDIA
 APPLE_MEDIA_DIR=applemedia
 else
@@ -136,9 +142,9 @@ else
 UVCH264_DIR=
 endif
 
-SUBDIRS = $(ACM_DIR) $(APPLE_MEDIA_DIR) $(AVC_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DIRECTSHOW_DIR) $(DVB_DIR) $(FBDEV_DIR) $(LINSYS_DIR) $(OSX_VIDEO_DIR) $(PVR_DIR) $(QT_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR)
+SUBDIRS = $(ACM_DIR) $(ANDROID_MEDIA) $(APPLE_MEDIA_DIR) $(AVC_DIR) $(D3DVIDEOSINK_DIR) $(DECKLINK_DIR) $(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(DIRECTSHOW_DIR) $(DVB_DIR) $(FBDEV_DIR) $(LINSYS_DIR) $(OSX_VIDEO_DIR) $(PVR_DIR) $(QT_DIR) $(SHM_DIR) $(UVCH264_DIR) $(VCD_DIR) $(VDPAU_DIR) $(WININET_DIR) $(WINSCREENCAP_DIR)
 
-DIST_SUBDIRS = acmenc acmmp3dec applemedia avc d3dvideosink decklink directdraw directsound dvb linsys fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
+DIST_SUBDIRS = acmenc acmmp3dec androidmedia applemedia avc d3dvideosink decklink directdraw directsound dvb linsys fbdev dshowdecwrapper dshowsrcwrapper dshowvideosink \
 		osxvideo pvr2d qtwrapper shm uvch264 vcd vdpau wasapi wininet winks winscreencap
 
 include $(top_srcdir)/common/parallel-subdirs.mak
