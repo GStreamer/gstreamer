@@ -822,6 +822,19 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
   }
 }
 
+/* needs_pad_switch:
+ * 
+ * Figure out if the newly selected representation requires a new set
+ * of demuxers and decoders or if we can carry on with the existing ones.
+ * 
+ * Basically, we look at the list of fragments we need to push downstream, 
+ * and compare their caps with those of the corresponding src pads.
+ * 
+ * As soon as one fragment requires a new set of caps, we need to switch
+ * all decoding pads to recreate a whole decoding group as we cannot 
+ * move pads between groups (FIXME: or can we ?).
+ * 
+ */
 static gboolean
 needs_pad_switch (GstDashDemux * demux, GList * fragment)
 {
