@@ -1675,6 +1675,13 @@ scan_codecs (GstPlugin * plugin)
       valid_codec = FALSE;
       goto next_codec;
     }
+
+    if (g_str_has_suffix (name_str, ".secure")) {
+      GST_INFO ("Skipping DRM codec '%s'", name_str);
+      valid_codec = FALSE;
+      goto next_codec;
+    }
+
     /* FIXME: Non-Google codecs usually just don't work and hang forever
      * or crash when not used from a process that started the Java
      * VM via the non-public AndroidRuntime class. Can we somehow
