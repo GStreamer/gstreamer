@@ -996,7 +996,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
 end_of_manifest:
   {
-    GST_DEBUG_OBJECT (demux, "Reached end of manifest, sending EOS");
+    GST_INFO_OBJECT (demux, "Reached end of manifest, sending EOS");
     guint i = 0;
     for (i = 0; i < nb_adaptation_set; i++) {
       gst_pad_push_event (demux->srcpad[i], gst_event_new_eos ());
@@ -1008,7 +1008,7 @@ end_of_manifest:
 error_pushing:
   {
     /* FIXME: handle error */
-    GST_DEBUG_OBJECT (demux, "Error pushing buffer: %s... stopping task",
+    GST_ERROR_OBJECT (demux, "Error pushing buffer: %s... stopping task",
         gst_flow_get_name (ret));
     gst_dash_demux_stop (demux);
     return;
@@ -1166,7 +1166,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
   return;
 quit:
   {
-    GST_DEBUG_OBJECT (demux, "Stopped download task");
+    GST_INFO_OBJECT (demux, "Stopped download task");
     gst_dash_demux_stop (demux);
   }
 }
