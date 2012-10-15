@@ -142,6 +142,18 @@
 
 #include "gsteglglessink.h"
 
+/* Some EGL implementations are reporting wrong
+ * values for the display's EGL_PIXEL_ASPECT_RATIO.
+ * They are required by the khronos specs to report
+ * this value as w/h * EGL_DISPLAY_SCALING (Which is
+ * a constant with value 10000) but at least the
+ * Galaxy SIII (Android) is reporting just 1 when
+ * w = h. We use these two to bound returned values to
+ * sanity.
+ */
+#define EGL_SANE_DAR_MIN ((EGL_DISPLAY_SCALING)/10)
+#define EGL_SANE_DAR_MAX ((EGL_DISPLAY_SCALING)*10)
+
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);
 #define GST_CAT_DEFAULT gst_eglglessink_debug
 
@@ -1444,6 +1456,7 @@ static gboolean
 gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
 {
   gint width, height;
+  EGLint display_par;
 
   /* Save surface dims */
   eglQuerySurface (eglglessink->eglglesctx->display,
@@ -1451,27 +1464,39 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
   eglQuerySurface (eglglessink->eglglesctx->display,
       eglglessink->eglglesctx->surface, EGL_HEIGHT, &height);
 
-  /* Save Pixel Aspect Ratio
+  /* Save display's pixel aspect ratio
    *
-   * PAR is reported as w/h * EGL_DISPLAY_SCALING wich is
+   * DAR is reported as w/h * EGL_DISPLAY_SCALING wich is
    * a constant with value 10000. This attribute is only
    * supported if the EGL version is >= 1.2
    * XXX: Setup this as a property.
+   * XXX: Move this initialization out to init_egl_surface()
+   * or some other one time check. Right now it's being called once
+   * per frame.
    */
-  if (eglglessink->eglglesctx->egl_minor > 1) {
-    eglQuerySurface (eglglessink->eglglesctx->display,
-        eglglessink->eglglesctx->surface, EGL_PIXEL_ASPECT_RATIO,
-        &eglglessink->eglglesctx->pixel_aspect_ratio);
-  } else {
+  if (eglglessink->eglglesctx->egl_major == 1 &&
+      eglglessink->eglglesctx->egl_minor < 2) {
     GST_DEBUG_OBJECT (eglglessink, "Can't query PAR. Using default: %dx%d",
         EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
     eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
-  }
-
-  if (eglglessink->eglglesctx->pixel_aspect_ratio == EGL_UNKNOWN) {
-    GST_DEBUG_OBJECT (eglglessink, "PAR value returned doesn't make sense. "
-        "Will use default: %d/%d", EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
-    eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
+  } else {
+    eglQuerySurface (eglglessink->eglglesctx->display,
+        eglglessink->eglglesctx->surface, EGL_PIXEL_ASPECT_RATIO,
+        &display_par);
+   /* Fix for outbound DAR reporting on some implementations not
+    * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
+    * requirement
+    */
+    if (display_par == EGL_UNKNOWN || display_par < EGL_SANE_DAR_MIN ||
+        display_par > EGL_SANE_DAR_MAX) {
+      GST_DEBUG_OBJECT (eglglessink, "Nonsensical PAR value returned: %d. "
+          "Bad EGL implementation? "
+          "Will use default: %d/%d", eglglessink->eglglesctx->pixel_aspect_ratio,
+          EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
+      eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
+    } else {
+      eglglessink->eglglesctx->pixel_aspect_ratio = display_par;
+    }
   }
 
   if (width != eglglessink->eglglesctx->surface_width ||
