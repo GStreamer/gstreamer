@@ -897,19 +897,22 @@ Formats
 
  "RGB8P" 8-bit paletted RGB
 
-        Component 0: R
+        Component 0: INDEX
           depth:           8
+          pstride:         1
+          default offset:  0
+          default rstride: RU4 (width)
+          default size:    rstride (component0) * height
 
-        Component 1: G
-          depth            8
-
-        Component 2: B
-          depth:           8
+        Component 1: PALETTE
+          depth            32
+          pstride:         4
+          default offset:  size (component0)
+          rstride:         4
+          size:            256 * 4
 
         Image
-          default pstride: 1
-          default rstride: RU4 (width)
-          default size:    rstride (image) * height
+          default size:    size (component0) + size (component1)
 
  "YUV9" planar 4:1:0 YUV
 
