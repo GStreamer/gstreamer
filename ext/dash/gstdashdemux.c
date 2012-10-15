@@ -34,6 +34,72 @@
  * ]|
  */
 
+/* Implementation notes:
+ * 
+ * The following section describes how dashdemux works internally.
+ * 
+ * Switching between representations:
+ * 
+ * Decodebin supports scenarios allowing to seamlessly switch from one 
+ * stream to another inside the same "decoding chain".
+ * 
+ * To achieve that, it combines the elements it autoplugged in chains
+ *  and groups, allowing only one decoding group to be active at a given
+ * time for a given chain.
+ *
+ * A chain can signal decodebin that it is complete by sending a 
+ * no-more-pads event, but even after that new pads can be added to
+ * create new subgroups, providing that a new no-more-pads event is sent.
+ *
+ * We take advantage of that to dynamically create a new decoding group
+ * in order to select a different representation during playback.
+ *
+ * Typically, assuming that each fragment contains both audio and video,
+ * the following tree would be created:
+ * 
+ * chain "DASH Demux"
+ * |_ group "Representation 1"
+ * |   |_ chain "Qt Demux 0"
+ * |       |_ group "Stream 0"
+ * |           |_ chain "H264"
+ * |           |_ chain "AAC"
+ * |_ group "Representation 2"
+ *     |_ chain "Qt Demux 1"
+ *         |_ group "Stream 1"
+ *             |_ chain "H264"
+ *             |_ chain "AAC"
+ *
+ * Or, if audio and video are contained in separate fragments:
+ *
+ * chain "DASH Demux"
+ * |_ group "Representation 1"
+ * |   |_ chain "Qt Demux 0"
+ * |   |   |_ group "Stream 0"
+ * |   |       |_ chain "H264"
+ * |   |_ chain "Qt Demux 1"
+ * |       |_ group "Stream 1"
+ * |           |_ chain "AAC" 
+ * |_ group "Representation 2"
+ *     |_ chain "Qt Demux 3"
+ *     |   |_ group "Stream 2"
+ *     |       |_ chain "H264"
+ *     |_ chain "Qt Demux 4"
+ *         |_ group "Stream 3"
+ *             |_ chain "AAC" 
+ *
+ * In both cases, when switching from Rep 1 to Rep 2 an EOS is sent on
+ *  each end pad corresponding to Rep 0, triggering the "drain" state to
+ * propagate upstream.
+ * Once both EOS have been processed, the "Rep 1" group is completely
+ * drained, and decodebin2 will switch to the "Rep 2" group.
+ * 
+ * Note: nothing can be pushed to the new decoding group before the 
+ * old one has been drained, which means that in order to be able to 
+ * adapt quickly to bandwidth changes, we will not be able to rely
+ * on downstream buffering, and will instead manage an internal queue.
+ * 
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -501,8 +567,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
         break;
       }
 
-      GST_DEBUG_OBJECT (demux,
-          "Got EOS on the sink pad: manifest fetched");
+      GST_DEBUG_OBJECT (demux, "Got EOS on the sink pad: manifest fetched");
 
       if (demux->client)
         gst_mpd_client_free (demux->client);
@@ -704,11 +769,23 @@ gst_dash_demux_stop (GstDashDemux * demux)
     gst_task_stop (demux->stream_task);
 }
 
+/* switch_pads:
+ * 
+ * Called when switching from one representation to the other, if the 
+ * new representation requires different downstream elements (see the
+ * next function).
+ * 
+ * This function first creates the new pads, then sends a no-more-pads
+ * event (that will tell decodebin to create a new group), then sends
+ * EOS on the old pads to trigger the group switch.
+ * 
+ */
 static void
 switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
 {
   GstPad *oldpad[MAX_LANGUAGES];
   guint i = 0;
+  /* Remember old pads */
   while (i < nb_adaptation_set) {
     oldpad[i] = demux->srcpad[i];
     if (oldpad[i]) {
@@ -717,7 +794,7 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
     }
     i++;
   }
-  /* First create and activate new pad */
+  /* Create and activate new pads */
   i = 0;
   while (i < nb_adaptation_set) {
     demux->srcpad[i] = gst_pad_new_from_static_template (&srctemplate, NULL);
@@ -731,8 +808,9 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
     gst_element_add_pad (GST_ELEMENT (demux), demux->srcpad[i]);
     i++;
   }
+  /* Send 'no-more-pads' to have decodebin create the new group */
   gst_element_no_more_pads (GST_ELEMENT (demux));
-  /* Push out EOS and remove the last chain/group */
+  /* Push out EOS on all old pads to switch to the new group */
   i = 0;
   while (i < nb_adaptation_set) {
     if (oldpad[i]) {
