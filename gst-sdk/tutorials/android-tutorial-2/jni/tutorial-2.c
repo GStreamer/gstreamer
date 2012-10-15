@@ -191,6 +191,7 @@ static void *app_function (void *userdata) {
 static void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = g_new0 (CustomData, 1);
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
+  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-2", 0, "Android tutorial 2");
   gst_debug_set_threshold_for_name("tutorial-2", GST_LEVEL_DEBUG);
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
@@ -259,12 +260,10 @@ static JNINativeMethod native_methods[] = {
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
 
-  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-2", 0, "Android tutorial 2");
-
   java_vm = vm;
 
   if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    GST_ERROR ("Could not retrieve JNIEnv");
+    __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "Could not retrieve JNIEnv");
     return 0;
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_2/Tutorial2");
