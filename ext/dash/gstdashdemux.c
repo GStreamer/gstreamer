@@ -1206,12 +1206,10 @@ gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
   if (RepresentationBase == NULL)
     return NULL;
 
-  width =
-      gst_mpd_client_get_width_of_video_current_stream (RepresentationBase);
+  width = gst_mpd_client_get_width_of_video_current_stream (RepresentationBase);
   height =
       gst_mpd_client_get_height_of_video_current_stream (RepresentationBase);
-  mimeType =
-      gst_mpd_mimetype_to_caps (RepresentationBase->mimeType);
+  mimeType = gst_mpd_mimetype_to_caps (RepresentationBase->mimeType);
   caps =
       gst_caps_new_simple (mimeType, "width", G_TYPE_INT, width, "height",
       G_TYPE_INT, height, NULL);
@@ -1238,11 +1236,10 @@ gst_dash_demux_get_audio_input_caps (GstDashDemux * demux,
     return NULL;
 
   channels =
-      gst_mpd_client_get_num_channels_of_audio_current_stream (RepresentationBase);
-  rate =
-      gst_mpd_client_get_rate_of_audio_current_stream (RepresentationBase);
-  mimeType =
-      gst_mpd_mimetype_to_caps (RepresentationBase->mimeType);
+      gst_mpd_client_get_num_channels_of_audio_current_stream
+      (RepresentationBase);
+  rate = gst_mpd_client_get_rate_of_audio_current_stream (RepresentationBase);
+  mimeType = gst_mpd_mimetype_to_caps (RepresentationBase->mimeType);
   caps =
       gst_caps_new_simple (mimeType, "channels", G_TYPE_INT, channels, "rate",
       G_TYPE_INT, rate, NULL);
@@ -1267,8 +1264,7 @@ gst_dash_demux_get_application_input_caps (GstDashDemux * demux,
   if (RepresentationBase == NULL)
     return NULL;
 
-  mimeType =
-      gst_mpd_mimetype_to_caps (RepresentationBase->mimeType);
+  mimeType = gst_mpd_mimetype_to_caps (RepresentationBase->mimeType);
   caps = gst_caps_new_simple (mimeType, NULL);
   return caps;
 }
