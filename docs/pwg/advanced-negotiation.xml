@@ -124,6 +124,11 @@
             decoder itself is not reconfigurable, too.
           </para>
         </listitem>
+        <listitem>
+          <para>
+            Some sources that produce a fixed format.
+          </para>
+        </listitem>
       </itemizedlist>
       <para>
         <function>gst_pad_use_fixed_caps()</function> is used on the source
@@ -161,6 +166,11 @@
 ]]>
       </programlisting>
       <para>
+        These types of elements also don't have a relation between the input
+        format and the output format, the input caps simply don't contain the
+        information needed to produce the output caps.
+      </para>
+      <para>
         All other elements that need to be configured for the format should
         implement full caps negotiation, which will be explained in the next
         few sections.
@@ -170,12 +180,129 @@
     <sect2 id="section-nego-transform">
       <title>Transform negotiation</title>
       <para>
+        In this negotiation technique, there is a fixed transform between
+        the element input caps and the output caps. This transformation
+        could be parameterized by element properties but not by the
+        content of the stream (see <xref linkend="section-nego-fixed"/>
+        for that use-case).
       </para>
+      <para>
+        The caps that the element can accept depend on the (fixed
+        transformation) downstream caps. The caps that the element can
+        produce depend on the (fixed transformation of) the upstream
+        caps.
+      </para>
+      <para>
+        This type of element can usually set caps on its source pad from
+        the <function>_event()</function> function on the sink pad when
+        it received the CAPS event. This means that the caps transform
+        function transforms a fixed caps into another fixed caps.
+        Examples of elements include:
+      </para>
+      <itemizedlist>
+        <listitem>
+          <para>
+            Videobox. It adds configurable border around a video frame
+            depending on object properties.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Identity elements. All elements that don't change the format
+            of the data, only the content. Video and audio effects are an
+            example. Other examples include elements that inspect the
+            stream.
+          </para>
+        </listitem>
+        <listitem>
+          <para>
+            Some decoders and encoders, where the output format is defined
+            by input format, like mulawdec and mulawenc. These decoders
+            usually have no headers that define the content of the stream.
+            They are usually more like conversion elements.
+          </para>
+        </listitem>
+      </itemizedlist>
+      <para>
+        Below is an example of a negotiation steps of a typical transform 
+        element. In the sink pad CAPS event handler, we compute the caps
+        for the source pad and set those.
+      </para>
+      <programlisting>
+<![CDATA[
+  [...]
+
+static gboolean
+gst_my_filter_setcaps (GstMyFilter *filter,
+		       GstCaps *caps)
+{
+  GstStructure *structure;
+  int rate, channels;
+  gboolean ret;
+  GstCaps *outcaps;
+
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "rate", &rate);
+  ret = ret && gst_structure_get_int (structure, "channels", &channels);
+  if (!ret)
+    return FALSE;
+
+  outcaps = gst_caps_new_simple ("audio/x-raw",
+      "format", G_TYPE_STRING, GST_AUDIO_NE(S16),
+      "rate", G_TYPE_INT, samplerate,
+      "channels", G_TYPE_INT, channels, NULL);
+  ret = gst_pad_set_caps (filter->srcpad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return ret;
+}
+
+static gboolean
+gst_my_filter_sink_event (GstPad    *pad,
+		          GstObject *parent,
+		          GstEvent  *event)
+{
+  gboolean ret;
+  GstMyFilter *filter = GST_MY_FILTER (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      ret = gst_my_filter_setcaps (filter, caps);
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+  return ret;
+}
+
+  [...]
+]]>
+      </programlisting>
     </sect2>
 
     <sect2 id="section-nego-dynamic">
       <title>Dynamic negotiation</title>
       <para>
+        A last negotiation method is the most complex and powerful dynamic
+        negotiation.
+      </para>
+      <para>
+        Like with the transform negotiation in 
+        <xref linkend="section-nego-transform"/>, dynamic negotiation will
+        perform a transformation on the downstream/upstream caps. Unlike the
+        transform
+        negotiation, this transform will convert fixed caps to unfixed caps. This
+        means that the sink pad input caps can be converted into unfixed (multiple)
+        formats. The source pad will have to choose a format from all the
+        possibilities. It would usually like to choose a format that requires the
+        least amount of effort to produce but it does not have to be. The selection
+        of the format should also depend on the caps that can be accepted downstream
       </para>
     </sect2>
   </sect1>
@@ -259,75 +386,6 @@
     <sect2 id="section-nego-downstream-embed"
         xreflabel="Negotiating caps embedded in input caps">
       <title>Negotiating caps embedded in input caps</title>
-      <para>
-        Many elements, particularly effects and converters, will be able
-        to parse the format of the stream from their input caps, and decide
-        the output format right at that time already. For those elements, all
-        (downstream) caps negotiation can be done from the 
-        <function>_event ()</function> function when a GST_EVENT_CAPS is
-        received on the sinkpad. This CAPS event is received whenever the
-        format changes or when no format was negotiated yet. It will always
-        be called before you receive the buffer in the format specified in
-        the CAPS event.
-      </para>
-      <para>
-        In the <function>_event ()</function>-function, the element can
-        forward the CAPS event to the next element and, if that pad accepts the
-        format too, the element can parse the relevant parameters from the
-        caps and configure itself internally. The caps passed to this function
-        is <emphasis>always</emphasis> a subset of the template caps, so
-        there's no need for extensive safety checking. The following example
-        should give a clear indication of how such a function can be
-        implemented:
-      </para>
-      <programlisting><!-- example-begin forwardcaps.c a --><!--
-#include "init.func"
-static GstCaps *
-gst_my_filter_getcaps (GstPad * pad)
-{
-  return  NULL;
-}
---><!-- example-end forwardcaps.c a -->
-<!-- example-begin forwardcaps.c b -->
-static gboolean
-gst_my_filter_sink_event (GstPad    *pad,
-		          GstObject *parent,
-		          GstEvent  *event)
-{
-  gboolean ret;
-  GstMyFilter *filter = GST_MY_FILTER (parent);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-      GstStructure *s;
-
-      gst_event_parse_caps (event, &amp;caps);
-
-      /* forward-negotiate */
-      ret = gst_pad_set_caps (filter-&gt;srcpad, caps);
-      if (!ret)
-        return FALSE;
-
-      /* negotiation succeeded, so now configure ourselves */
-      s = gst_caps_get_structure (caps, 0);
-      gst_structure_get_int (s, "rate", &amp;filter-&gt;samplerate);
-      gst_structure_get_int (s, "channels", &amp;filter-&gt;channels);
-      break;
-    }
-    default:
-      ret = gst_pad_event_default (pad, parent, event);
-      break;
-  }
-  return ret;
-}
-<!-- example-end forwardcaps.c b -->
-<!-- example-begin forwardcaps.c c --><!--
-#include "chain.func"
-#include "state.func"
-#include "register.func"
-      --><!-- example-end forwardcaps.c c --></programlisting>
       <para>
         There may also be cases where the filter actually is able to
         <emphasis>change</emphasis> the format of the stream. In those cases,
@@ -446,30 +504,6 @@ gst_my_filter_chain (GstPad    *pad,
 #include "register.func"
       --><!-- example-end convertcaps.c c --></programlisting>
     </sect2>
-
-    <sect2 id="section-nego-downstream-parse"
-        xreflabel="Parsing and setting caps">
-      <title>Parsing and setting caps</title>
-      <para>
-        Other elements, such as certain types of decoders, will not be able
-        to parse the caps from their input, simply because the input format
-        does not contain the information required to know the output format
-        yet; rather, the data headers need to be parsed, too. In many cases,
-        fixed-caps will be enough, but in some cases, particularly in cases
-        where such decoders are renegotiable, it is also possible to use
-        full caps negotiation.
-      </para>
-      <para>
-        Fortunately, the code required to do so is very similar to the last
-        code example in <xref linkend="section-nego-downstream-embed"/>, with
-        the difference being that the caps is selected in the <function>_chain
-        ()</function>-function rather than in the <function>_event
-        ()</function>-function. The rest, as for getting all allowed caps from
-        the source pad, fixating and such, is all the same. Re-negotiation,
-        which will be handled in the next section, is very different for such
-        elements, though.
-      </para>
-    </sect2>
   </sect1>
 
   <sect1 id="section-nego-upstream" xreflabel="Upstream caps (re)negotiation">
@@ -528,10 +562,8 @@ gst_my_filter_chain (GstPad    *pad,
     </para>
     <para>
     </para>
-    <programlisting><!-- example-begin getcaps.c a --><!--
-#include "init.func"
---><!-- example-end getcaps.c a -->
-<!-- example-begin getcaps.c b -->
+    <programlisting>
+<![CDATA[
 static gboolean
 gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
 {
@@ -545,15 +577,15 @@ gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
       GstCaps *temp, *caps, *filter, *tcaps;
       gint i;
 
-      otherpad = (pad == filter-&gt;srcpad) ? filter-&gt;sinkpad :
-                                              filter-&gt;srcpad;
+      otherpad = (pad == filter->srcpad) ? filter->sinkpad :
+                                           filter->srcpad;
       caps = gst_pad_get_allowed_caps (otherpad);
 
-      gst_query_parse_caps (query, &amp;filter);
+      gst_query_parse_caps (query, &filter);
 
       /* We support *any* samplerate, indifferent from the samplerate
        * supported by the linked elements on both sides. */
-      for (i = 0; i &lt; gst_caps_get_size (caps); i++) {
+      for (i = 0; i < gst_caps_get_size (caps); i++) {
         GstStructure *structure = gst_caps_get_structure (caps, i);
 
         gst_structure_remove_field (structure, "rate");
@@ -585,17 +617,8 @@ gst_my_filter_query (GstPad *pad, GstObject * parent, GstQuery * query)
   }
   return ret;
 }
-<!-- example-end getcaps.c b -->
-<!-- example-begin getcaps.c c --><!--
-static gboolean
-gst_my_filter_setcaps (GstPad * pad, GstCaps * caps)
-{
-  return FALSE;
-}
-#include "chain.func"
-#include "state.func"
-#include "register.func"
-    --><!-- example-end getcaps.c c --></programlisting>
+]]>
+    </programlisting>
     <para>
       Using all the knowledge you've acquired by reading this chapter, you
       should be able to write an element that does correct caps negotiation.
