@@ -1,5 +1,6 @@
 #include <string.h>
 #include <jni.h>
+#include <android/log.h>
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
@@ -324,6 +325,8 @@ void gst_native_init (JNIEnv* env, jobject thiz) {
   data->desired_position = GST_CLOCK_TIME_NONE;
   data->last_seek_time = GST_CLOCK_TIME_NONE;
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
+  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-5", 0, "Android tutorial 5");
+  gst_debug_set_threshold_for_name("tutorial-5", GST_LEVEL_DEBUG);
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
@@ -459,12 +462,10 @@ static JNINativeMethod native_methods[] = {
 jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   JNIEnv *env = NULL;
 
-  GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-5", 0, "Android tutorial 5");
-
   java_vm = vm;
 
   if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-    GST_ERROR ("Could not retrieve JNIEnv");
+    __android_log_print (ANDROID_LOG_ERROR, "tutorial-5", "Could not retrieve JNIEnv");
     return 0;
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_5/Tutorial5");
