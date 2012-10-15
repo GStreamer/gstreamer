@@ -64,11 +64,11 @@ struct _GstDashDemux
   GstCaps *output_caps[MAX_LANGUAGES]; /*Video/Audio/Application output buf caps*/
   GstCaps *input_caps[MAX_LANGUAGES]; /*Video/Audio/Application input caps*/
 
-  GstBuffer *playlist;
+  GstBuffer *manifest;
   GstUriDownloader *downloader;
   GstMpdClient *client;         /* MPD client */
   GQueue *queue;                /*Video/Audio/Application List of fragment storing the fetched fragments */
-  gboolean end_of_playlist;
+  gboolean end_of_manifest;
 
   /* Properties */
   GstClockTime min_buffering_time;    /* Minimum buffering time accumulated before playback */

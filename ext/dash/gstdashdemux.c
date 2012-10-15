@@ -320,7 +320,7 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       /* Start the streaming loop in paused only if we already received
-         the main playlist. It might have been stopped if we were in PAUSED
+         the manifest. It might have been stopped if we were in PAUSED
          state and we filled our queue with enough cached fragments
        */
       if (gst_mpdparser_get_baseURL (demux->client) != NULL)
@@ -492,17 +492,17 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
 
   switch (event->type) {
     case GST_EVENT_EOS:{
-      gchar *playlist;
+      gchar *manifest;
       GstQuery *query;
       gboolean res;
 
-      if (demux->playlist == NULL) {
-        GST_WARNING_OBJECT (demux, "Received EOS without a playlist.");
+      if (demux->manifest == NULL) {
+        GST_WARNING_OBJECT (demux, "Received EOS without a manifest.");
         break;
       }
 
       GST_DEBUG_OBJECT (demux,
-          "Got EOS on the sink pad: main playlist fetched");
+          "Got EOS on the sink pad: manifest fetched");
 
       if (demux->client)
         gst_mpd_client_free (demux->client);
@@ -519,20 +519,20 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       }
       gst_query_unref (query);
 
-      playlist = (gchar *) GST_BUFFER_DATA (demux->playlist);
-      if (playlist == NULL) {
-        GST_WARNING_OBJECT (demux, "Error validating first playlist.");
-      } else if (!gst_mpd_parse (demux->client, playlist,
-              GST_BUFFER_SIZE (demux->playlist))) {
+      manifest = (gchar *) GST_BUFFER_DATA (demux->manifest);
+      if (manifest == NULL) {
+        GST_WARNING_OBJECT (demux, "Error validating the manifest.");
+      } else if (!gst_mpd_parse (demux->client, manifest,
+              GST_BUFFER_SIZE (demux->manifest))) {
         /* In most cases, this will happen if we set a wrong url in the
          * source element and we have received the 404 HTML response instead of
-         * the playlist */
-        GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid playlist."),
+         * the manifest */
+        GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Invalid manifest."),
             (NULL));
         return FALSE;
       }
-      gst_buffer_unref (demux->playlist);
-      demux->playlist = NULL;
+      gst_buffer_unref (demux->manifest);
+      demux->manifest = NULL;
 
       if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_VIDEO, "")) {
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
@@ -667,7 +667,7 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
     default:
       /* Don't fordward queries upstream because of the special nature of this
        * "demuxer", which relies on the upstream element only to be fed with the
-       * first playlist */
+       * manifest file */
       break;
   }
 
@@ -679,10 +679,10 @@ gst_dash_demux_pad (GstPad * pad, GstBuffer * buf)
 {
   GstDashDemux *demux = GST_DASH_DEMUX (gst_pad_get_parent (pad));
 
-  if (demux->playlist == NULL)
-    demux->playlist = buf;
+  if (demux->manifest == NULL)
+    demux->manifest = buf;
   else
-    demux->playlist = gst_buffer_join (demux->playlist, buf);
+    demux->manifest = gst_buffer_join (demux->manifest, buf);
 
   gst_object_unref (demux);
 
@@ -795,7 +795,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
    * a buffering event to tell the main application to pause.
    * 
    * Teardown:
-   * The task is stopped when we reach the end of the playlist */
+   * The task is stopped when we reach the end of the manifest */
 
   /* Wait until the next scheduled push downstream */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
@@ -804,14 +804,14 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   }
 
   if (g_queue_is_empty (demux->queue)) {
-    if (demux->end_of_playlist)
-      goto end_of_playlist;
+    if (demux->end_of_manifest)
+      goto end_of_manifest;
 
     return;
   }
 
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
-    if (!demux->end_of_playlist
+    if (!demux->end_of_manifest
         && gst_dash_demux_get_buffering_time (demux) <
         demux->min_buffering_time) {
       /* Warn we are below our threshold: this will eventually pause 
@@ -862,9 +862,9 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
   return;
 
-end_of_playlist:
+end_of_manifest:
   {
-    GST_DEBUG_OBJECT (demux, "Reached end of playlist, sending EOS");
+    GST_DEBUG_OBJECT (demux, "Reached end of manifest, sending EOS");
     guint i = 0;
     for (i = 0; i < nb_adaptation_set; i++) {
       gst_pad_push_event (demux->srcpad[i], gst_event_new_eos ());
@@ -892,7 +892,7 @@ pause_task:
 static void
 gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 {
-  demux->end_of_playlist = FALSE;
+  demux->end_of_manifest = FALSE;
   demux->cancelled = FALSE;
 
   guint i = 0;
@@ -902,9 +902,9 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
       demux->input_caps[i] = NULL;
     }
 
-  if (demux->playlist) {
-    gst_buffer_unref (demux->playlist);
-    demux->playlist = NULL;
+  if (demux->manifest) {
+    gst_buffer_unref (demux->manifest);
+    demux->manifest = NULL;
   }
   if (demux->client) {
     gst_mpd_client_free (demux->client);
@@ -970,7 +970,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       gst_mpd_client_get_target_duration (demux->client);
   if (demux->max_buffering_time > target_buffering_time)
     target_buffering_time = demux->max_buffering_time;
-  if (!demux->end_of_playlist
+  if (!demux->end_of_manifest
       && gst_dash_demux_get_buffering_time (demux) < target_buffering_time) {
     if (GST_STATE (demux) != GST_STATE_PLAYING) {
       /* Signal our buffering status (this will eventually restart the
@@ -987,7 +987,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
         gst_dash_demux_get_buffering_ratio (demux));
 
     if (!gst_dash_demux_get_next_fragment (demux, FALSE)) {
-      if (!demux->end_of_playlist && !demux->cancelled) {
+      if (!demux->end_of_manifest && !demux->cancelled) {
         demux->client->update_failed_count++;
         if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
           GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
@@ -1325,8 +1325,8 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux, gboolean caching)
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
     if (!gst_mpd_client_get_next_fragment (demux->client,
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
-      GST_INFO_OBJECT (demux, "This playlist doesn't contain more fragments");
-      demux->end_of_playlist = TRUE;
+      GST_INFO_OBJECT (demux, "This manifest doesn't contain more fragments");
+      demux->end_of_manifest = TRUE;
       gst_task_start (demux->stream_task);
       return FALSE;
     }
