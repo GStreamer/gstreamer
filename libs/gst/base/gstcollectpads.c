@@ -524,7 +524,7 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
  * @user_data: user data to pass to @clip_func
  *
  * Install a clipping function that is called right after a buffer is received
- * on a pad managed by @pads. See #GstCollectPad2ClipFunction for more info.
+ * on a pad managed by @pads. See #GstCollectPadsClipFunction for more info.
  */
 void
 gst_collect_pads_set_clip_function (GstCollectPads * pads,

@@ -217,7 +217,7 @@ typedef gboolean (*GstCollectPadsQueryFunction)        (GstCollectPads *pads, Gs
  * GstCollectPadsClipFunction:
  * @pads: a #GstCollectPads
  * @data: a #GstCollectData
- * @inbuffer: the input #GstBuffer
+ * @inbuffer: (transfer full): the input #GstBuffer
  * @outbuffer: the output #GstBuffer
  * @user_data: user data
  *
