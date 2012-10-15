@@ -24,17 +24,17 @@
 <!ENTITY BUILDING_TESTAPP     SYSTEM "building-testapp.xml">
 
 <!-- Part 3: Advanced Filter Concepts -->
+<!ENTITY ADVANCED_REQUEST     SYSTEM "advanced-request.xml">
+<!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
 <!ENTITY ADVANCED_NEGOTIATION SYSTEM "advanced-negotiation.xml">
 <!ENTITY ADVANCED_ALLOCATION  SYSTEM "advanced-allocation.xml">
-<!ENTITY ADVANCED_SCHEDULING  SYSTEM "advanced-scheduling.xml">
 <!ENTITY ADVANCED_TYPES       SYSTEM "advanced-types.xml">
-<!ENTITY ADVANCED_REQUEST     SYSTEM "advanced-request.xml">
+<!ENTITY ADVANCED_EVENTS      SYSTEM "advanced-events.xml">
 <!ENTITY ADVANCED_CLOCK       SYSTEM "advanced-clock.xml">
+<!ENTITY ADVANCED_QOS         SYSTEM "advanced-qos.xml">
 <!ENTITY ADVANCED_DPARAMS     SYSTEM "advanced-dparams.xml">
 <!ENTITY ADVANCED_INTERFACES  SYSTEM "advanced-interfaces.xml">
 <!ENTITY ADVANCED_TAGGING     SYSTEM "advanced-tagging.xml">
-<!ENTITY ADVANCED_EVENTS      SYSTEM "advanced-events.xml">
-<!ENTITY ADVANCED_QOS         SYSTEM "advanced-qos.xml">
 
 <!-- Part 4: Creating special element types -->
 <!ENTITY OTHER_BASE           SYSTEM "other-base.xml">
@@ -141,17 +141,17 @@
       </para>
     </partintro>
 
+    &ADVANCED_REQUEST;
+    &ADVANCED_SCHEDULING;
     &ADVANCED_NEGOTIATION;
     &ADVANCED_ALLOCATION;
-    &ADVANCED_SCHEDULING;
     &ADVANCED_TYPES;
-    &ADVANCED_REQUEST;
+    &ADVANCED_EVENTS;
     &ADVANCED_CLOCK;
+    &ADVANCED_QOS;
     &ADVANCED_DPARAMS;
     &ADVANCED_INTERFACES;
     &ADVANCED_TAGGING;
-    &ADVANCED_EVENTS;
-    &ADVANCED_QOS;
 
     <!-- FIXME: add querying, event handling and conversion -->
 
