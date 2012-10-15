@@ -117,6 +117,9 @@ class ElementFactory(Gst.ElementFactory):
     def get_klass(self):
         return self.get_metadata("klass")
 
+    @classmethod
+    def make(cls, factory_name, instance_name=None):
+        return Gst.ElementFactory.make(factory_name, instance_name)
 
 class Pad(Gst.Pad):
     def link(self, pad):
