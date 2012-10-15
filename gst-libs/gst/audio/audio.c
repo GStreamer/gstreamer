@@ -78,6 +78,10 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   trim = 0;
   osize = size = gst_buffer_get_size (buffer);
 
+  /* no data, nothing to clip */
+  if (!size)
+    return buffer;
+
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   GST_DEBUG ("timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (timestamp));
   if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
