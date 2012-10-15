@@ -85,6 +85,10 @@ class AddError(Exception):
     pass
 __all__.append('AddError')
 
+class LinkError(Exception):
+    pass
+__all__.append('LinkError')
+
 class Iterator(Gst.Iterator):
     def __iter__(self):
         while True:
@@ -113,6 +117,15 @@ class ElementFactory(Gst.ElementFactory):
     def get_klass(self):
         return self.get_metadata("klass")
 
+
+class Pad(Gst.Pad):
+    def link(self, pad):
+        ret = Gst.Pad.link(self, pad)
+        if ret != Gst.PadLinkReturn.OK:
+            raise LinkError(ret)
+
+Pad = override(Pad)
+__all__.append('Pad')
 
 class Pipeline(Gst.Pipeline):
     def __init__(self, name=None):
