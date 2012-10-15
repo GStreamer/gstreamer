@@ -2816,15 +2816,15 @@ plugin_init (GstPlugin * plugin)
 #ifdef GST_PLUGIN_DEFINE2
 GST_PLUGIN_DEFINE2 (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    amc,
-    "Android MediaCodec plugin",
+    androidmedia,
+    "Android Media plugin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 #else
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "amc",
-    "Android MediaCodec plugin",
+    "androidmedia",
+    "Android Media plugin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 #endif
