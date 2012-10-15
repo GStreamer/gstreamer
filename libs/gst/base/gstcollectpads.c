@@ -1571,6 +1571,7 @@ gst_collect_pads_clip_time (GstCollectPads * pads, GstCollectData * data,
     pads->priv->clip_func (pads, data, in, &out, pads->priv->clip_user_data);
     if (out) {
       otime = GST_BUFFER_TIMESTAMP (out);
+      gst_buffer_unref (out);
     } else {
       /* FIXME should distinguish between ahead or after segment,
        * let's assume after segment and use some large time ... */
