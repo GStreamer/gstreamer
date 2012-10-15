@@ -879,7 +879,9 @@ needs_pad_switch (GstDashDemux * demux, GList * fragment)
  * a buffering event to tell the main application to pause.
  * 
  * Teardown:
- * The task is stopped when we reach the end of the manifest
+ * The task is stopped when we have reached the end of the manifest
+ * and emptied our queue.
+ * 
  */
 static void
 gst_dash_demux_stream_loop (GstDashDemux * demux)
