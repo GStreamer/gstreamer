@@ -129,6 +129,7 @@ class Pad(Gst.Pad):
         ret = Gst.Pad.link(self, pad)
         if ret != Gst.PadLinkReturn.OK:
             raise LinkError(ret)
+        return ret
 
 Pad = override(Pad)
 __all__.append('Pad')
