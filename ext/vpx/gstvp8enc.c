@@ -441,7 +441,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   g_object_class_install_property (gobject_class, PROP_RC_TARGET_BITRATE,
       g_param_spec_int ("target-bitrate", "Target bitrate",
           "Target bitrate (in bits/sec)",
-          0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE,
+          0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE / 1000,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (gobject_class, PROP_RC_MIN_QUANTIZER,
@@ -565,7 +565,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
           "Coding layer target bitrates",
           "Target bitrates for coding layers (one per layer, decreasing)",
           g_param_spec_int ("target-bitrate", "Target bitrate",
-              "Target bitrate", 0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE,
+              "Target bitrate", 0, G_MAXINT, DEFAULT_RC_TARGET_BITRATE / 1000,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -724,7 +724,7 @@ gst_vp8_enc_init (GstVP8Enc * gst_vp8_enc)
   }
 
   gst_vp8_enc->cfg.rc_end_usage = DEFAULT_RC_END_USAGE;
-  gst_vp8_enc->cfg.rc_target_bitrate = DEFAULT_RC_TARGET_BITRATE;
+  gst_vp8_enc->cfg.rc_target_bitrate = DEFAULT_RC_TARGET_BITRATE / 1000;
   gst_vp8_enc->rc_target_bitrate_set = FALSE;
   gst_vp8_enc->cfg.rc_min_quantizer = DEFAULT_RC_MIN_QUANTIZER;
   gst_vp8_enc->cfg.rc_max_quantizer = DEFAULT_RC_MAX_QUANTIZER;
@@ -1504,7 +1504,8 @@ gst_vp8_enc_set_format (GstVideoEncoder * video_encoder,
   if (!encoder->rc_target_bitrate_set)
     encoder->cfg.rc_target_bitrate =
         gst_util_uint64_scale (DEFAULT_RC_TARGET_BITRATE,
-        GST_VIDEO_INFO_WIDTH (info) * GST_VIDEO_INFO_HEIGHT (info), 320 * 240);
+        GST_VIDEO_INFO_WIDTH (info) * GST_VIDEO_INFO_HEIGHT (info),
+        320 * 240 * 1000);
 
   encoder->cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
   encoder->cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
