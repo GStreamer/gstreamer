@@ -258,7 +258,7 @@ static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
     /* We emit this message through the Android log instead of the GStreamer log because the later
      * has not been initialized yet.
      */
-//    __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "The calling class does not implement all necessary interface methods");
+    __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "The calling class does not implement all necessary interface methods");
     return JNI_FALSE;
   }
   return JNI_TRUE;
@@ -317,7 +317,7 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved) {
   java_vm = vm;
 
   if ((*vm)->GetEnv(vm, (void**) &env, JNI_VERSION_1_4) != JNI_OK) {
-//    __android_log_print (ANDROID_LOG_ERROR, "tutorial-3", "Could not retrieve JNIEnv");
+    __android_log_print (ANDROID_LOG_ERROR, "tutorial-3", "Could not retrieve JNIEnv");
     return 0;
   }
   jclass klass = (*env)->FindClass (env, "com/gst_sdk_tutorials/tutorial_3/Tutorial3");
