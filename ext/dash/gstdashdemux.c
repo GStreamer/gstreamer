@@ -717,18 +717,6 @@ switch_pads (GstDashDemux * demux, guint nb_adaptation_set)
     }
     i++;
   }
-  /* FIXME: This is a workaround for a bug in playsink.
-   * If we're switching from an audio-only or video-only fragment
-   * to an audio-video segment, the new sink doesn't know about
-   * the current running time and audio/video will go out of sync.
-   *
-   * This should be fixed in playsink by distributing the
-   * current running time to newly created sinks and is
-   * fixed in 0.11 with the new segments.
-   */
-  /*if (*srcpad )
-     gst_pad_push_event (*srcpad, gst_event_new_flush_stop ());
-   */
   /* First create and activate new pad */
   i = 0;
   while (i < nb_adaptation_set) {
