@@ -81,6 +81,10 @@ class IteratorError(Exception):
     pass
 __all__.append('IteratorError')
 
+class AddError(Exception):
+    pass
+__all__.append('AddError')
+
 class Iterator(Gst.Iterator):
     def __iter__(self):
         while True:
@@ -108,6 +112,19 @@ class ElementFactory(Gst.ElementFactory):
 
     def get_klass(self):
         return self.get_metadata("klass")
+
+
+class Pipeline(Gst.Pipeline):
+    def __init__(self, name=None):
+        Gst.Pipeline.__init__(self, name=name)
+
+    def add(self, *args):
+        for arg in args:
+            if not Gst.Pipeline.add(self, arg):
+                raise AddError(arg)
+
+Pipeline = override(Pipeline)
+__all__.append('Pipeline')
 
 ElementFactory = override(ElementFactory)
 __all__.append('ElementFactory')
