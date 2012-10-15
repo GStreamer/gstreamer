@@ -66,6 +66,14 @@ class Caps(Gst.Caps):
     def __str__(self):
         return self.to_string()
 
+    def __getitem__(self, index):
+        if index >= self.get_size():
+            raise IndexError('structure index out of range')
+        return self.get_structure(index)
+
+    def __len__(self):
+        return self.get_size()
+
 Caps = override(Caps)
 __all__.append('Caps')
 
