@@ -930,7 +930,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
 
   /* Wait until the next scheduled push downstream */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
-          demux->stream_timed_lock, &demux->next_stream)) {
+          demux->stream_timed_lock, &demux->next_push)) {
     goto pause_task;
   }
 
@@ -985,12 +985,12 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   }
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
     /* Wait for the duration of a fragment before resuming this task */
-    g_get_current_time (&demux->next_stream);
-    g_time_val_add (&demux->next_stream,
+    g_get_current_time (&demux->next_push);
+    g_time_val_add (&demux->next_push,
         gst_mpd_client_get_target_duration (demux->client)
         / GST_SECOND * G_USEC_PER_SEC);
     GST_DEBUG_OBJECT (demux, "Next push scheduled at %s",
-        g_time_val_to_iso8601 (&demux->next_stream));
+        g_time_val_to_iso8601 (&demux->next_push));
   } else {
     /* The pipeline is now set up, wait until playback begins */
     goto pause_task;
@@ -1187,7 +1187,7 @@ gst_dash_demux_pause_stream_task (GstDashDemux * demux)
 static void
 gst_dash_demux_resume_stream_task (GstDashDemux * demux)
 {
-  g_get_current_time (&demux->next_stream);
+  g_get_current_time (&demux->next_push);
   gst_task_start (demux->stream_task);
 }
 
