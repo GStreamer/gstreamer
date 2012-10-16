@@ -203,6 +203,7 @@ static void gst_dash_demux_download_loop (GstDashDemux * demux);
 static void gst_dash_demux_stop (GstDashDemux * demux);
 static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
+static void gst_dash_demux_pause_download_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_select_representations (GstDashDemux * demux,
     guint64 current_bitrate);
@@ -450,6 +451,22 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+void
+gst_dash_demux_clear_queue (GstDashDemux * demux)
+{
+  while (!g_queue_is_empty (demux->queue)) {
+    GList *listfragment = g_queue_pop_head (demux->queue);
+    guint j = 0;
+    while (j < g_list_length (listfragment)) {
+      GstFragment *fragment = g_list_nth_data (listfragment, j);
+      g_object_unref (fragment);
+      j++;
+    }
+    g_list_free (listfragment);
+  }
+  g_queue_clear (demux->queue);
+}
+
 static gboolean
 gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 {
@@ -535,17 +552,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       /* wait for streaming to finish */
       g_static_rec_mutex_lock (&demux->stream_lock);
 
-      while (!g_queue_is_empty (demux->queue)) {
-        GList *listfragment = g_queue_pop_head (demux->queue);
-        guint j = 0;
-        while (j < g_list_length (listfragment)) {
-          GstFragment *fragment = g_list_nth_data (listfragment, j);
-          g_object_unref (fragment);
-          j++;
-        }
-        g_list_free (listfragment);
-      }
-      g_queue_clear (demux->queue);
+      gst_dash_demux_clear_queue (demux);
 
       GST_MPD_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
@@ -1040,17 +1047,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
     demux->client = gst_mpd_client_new ();
   }
 
-  while (!g_queue_is_empty (demux->queue)) {
-    GList *listfragment = g_queue_pop_head (demux->queue);
-    guint j = 0;
-    while (j < g_list_length (listfragment)) {
-      GstFragment *fragment = g_list_nth_data (listfragment, j);
-      g_object_unref (fragment);
-      j++;
-    }
-    g_list_free (listfragment);
-  }
-  g_queue_clear (demux->queue);
+  gst_dash_demux_clear_queue (demux);
 
   demux->position = 0;
   demux->position_shift = 0;
