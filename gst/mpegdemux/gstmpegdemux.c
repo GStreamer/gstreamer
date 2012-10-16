@@ -696,7 +696,7 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
   const char *type = gst_structure_get_string (structure, "event");
   gint i;
   gchar cur_stream_name[32];
-  GstFluPSStream *temp;
+  GstFluPSStream *temp = NULL;
   const gchar *lang_code;
 
   if (strcmp (type, "dvd-lang-codes") == 0) {
@@ -752,6 +752,8 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
           GST_WARNING_OBJECT (demux,
               "Unknown audio stream format in language code event: %d",
               stream_format);
+          temp = NULL;
+          continue;
           break;
       }
 
