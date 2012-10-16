@@ -136,8 +136,6 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-#include <pthread.h>
-
 #include "video_platform_wrapper.h"
 
 #include "gsteglglessink.h"
@@ -429,14 +427,18 @@ static gboolean gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink);
 static void gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink,
     gboolean reset);
+static gboolean
+gst_eglglessink_configure_caps (GstEglGlesSink *eglglessink, GstCaps * caps);
 static GstFlowReturn gst_eglglessink_render_and_display (GstEglGlesSink * sink,
+    GstBuffer * buf);
+static GstFlowReturn gst_eglglessink_queue_buffer (GstEglGlesSink * sink,
     GstBuffer * buf);
 static inline gboolean got_gl_error (const char *wtf);
 static inline void show_egl_error (const char *wtf);
 static void gst_eglglessink_wipe_fmt (gpointer data);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
-    eglglessink, gboolean bind, gboolean streaming_thread);
+    eglglessink, gboolean bind);
 
 static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
 #define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
@@ -1062,38 +1064,42 @@ HANDLE_ERROR:
   return FALSE;
 }
 
-static gboolean
-gst_eglglessink_start (GstEglGlesSink * eglglessink)
+static gpointer
+render_thread_func (GstEglGlesSink * eglglessink)
 {
-  if (!eglglessink->egl_started) {
-    GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
-    goto HANDLE_ERROR;
+  GstDataQueueItem *item = NULL;
+
+  while (gst_data_queue_pop (eglglessink->queue, &item)) {
+    GstBuffer *buf = NULL;
+
+    GST_DEBUG_OBJECT (eglglessink, "Handling object %" GST_PTR_FORMAT, item->object);
+
+    if (item->object) {
+      GstCaps * caps;
+
+      buf = GST_BUFFER (item->object);
+      caps = GST_BUFFER_CAPS (buf);
+      if (caps != eglglessink->configured_caps) {
+        if (!gst_eglglessink_configure_caps (eglglessink, caps)) {
+          eglglessink->last_flow = GST_FLOW_NOT_NEGOTIATED;
+          g_cond_broadcast (eglglessink->render_cond);
+          item->destroy (item);
+          break;
+        }
+      }
+    }
+
+    eglglessink->last_flow = gst_eglglessink_render_and_display (eglglessink, buf);
+    g_cond_broadcast (eglglessink->render_cond);
+    item->destroy (item);
+    if (eglglessink->last_flow != GST_FLOW_OK)
+      break;
   }
 
-  /* Ask for a window to render to */
-  if (!eglglessink->have_window)
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
+  if (eglglessink->last_flow == GST_FLOW_OK)
+    eglglessink->last_flow = GST_FLOW_WRONG_STATE;
 
-  if (!eglglessink->have_window && !eglglessink->create_window) {
-    GST_ERROR_OBJECT (eglglessink, "Window handle unavailable and we "
-        "were instructed not to create an internal one. Bailing out.");
-    goto HANDLE_ERROR;
-  }
-
-  return TRUE;
-
-HANDLE_ERROR:
-  GST_ERROR_OBJECT (eglglessink, "Couldn't start");
-  return FALSE;
-}
-
-static gboolean
-gst_eglglessink_stop (GstEglGlesSink * eglglessink)
-{
-  /* EGL/GLES2 cleanup */
-  if (!gst_eglglessink_context_make_current (eglglessink, TRUE, FALSE))
-    return FALSE;
-
+  /* EGL/GLES cleanup */
   if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
     glUseProgram (0);
 
@@ -1123,7 +1129,7 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
     }
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, FALSE, FALSE))
+  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
     return FALSE;
 
   if (eglglessink->eglglesctx.surface) {
@@ -1138,6 +1144,69 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
         eglglessink->eglglesctx.eglcontext);
     eglglessink->eglglesctx.eglcontext = NULL;
   }
+
+  if (eglglessink->configured_caps) {
+    gst_caps_unref (eglglessink->configured_caps);
+    eglglessink->configured_caps = NULL;
+  }
+
+  return NULL;
+}
+
+static gboolean
+gst_eglglessink_start (GstEglGlesSink * eglglessink)
+{
+  GError *error = NULL;
+
+  if (!eglglessink->egl_started) {
+    GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
+    goto HANDLE_ERROR;
+  }
+
+  /* Ask for a window to render to */
+  if (!eglglessink->have_window)
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
+
+  if (!eglglessink->have_window && !eglglessink->create_window) {
+    GST_ERROR_OBJECT (eglglessink, "Window handle unavailable and we "
+        "were instructed not to create an internal one. Bailing out.");
+    goto HANDLE_ERROR;
+  }
+
+  eglglessink->last_flow = GST_FLOW_OK;
+  gst_data_queue_set_flushing (eglglessink->queue, FALSE);
+
+#if !GLIB_CHECK_VERSION (2, 31, 0)
+  eglglessink->thread =
+      g_thread_create ((GThreadFunc) render_thread_func, eglglessink, TRUE,
+      &error);
+#else
+  eglglessink->thread = g_thread_try_new ("eglglessink-render",
+      (GThreadFunc) render_thread_func, eglglessink, &error);
+#endif
+
+  if (!eglglessink->thread || error != NULL)
+    goto HANDLE_ERROR;
+
+  return TRUE;
+
+HANDLE_ERROR:
+  GST_ERROR_OBJECT (eglglessink, "Couldn't start");
+  g_clear_error (&error);
+  return FALSE;
+}
+
+static gboolean
+gst_eglglessink_stop (GstEglGlesSink * eglglessink)
+{
+  gst_data_queue_set_flushing (eglglessink->queue, TRUE);
+  g_cond_broadcast (eglglessink->render_cond);
+
+  if (eglglessink->thread) {
+    g_thread_join (eglglessink->thread);
+    eglglessink->thread = NULL;
+  }
+  eglglessink->last_flow = GST_FLOW_WRONG_STATE;
 
   if (eglglessink->using_own_window) {
     platform_destroy_native_window (eglglessink->eglglesctx.display,
@@ -1227,7 +1296,7 @@ gst_eglglessink_expose (GstXOverlay * overlay)
   GST_DEBUG_OBJECT (eglglessink, "Expose catched, redisplay");
 
   /* Render from last seen buffer */
-  ret = gst_eglglessink_render_and_display (eglglessink, NULL);
+  ret = gst_eglglessink_queue_buffer (eglglessink, NULL);
   if (ret == GST_FLOW_ERROR)
     GST_ERROR_OBJECT (eglglessink, "Redisplay failed");
 }
@@ -1495,61 +1564,32 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
   return FALSE;
 }
 
-static pthread_key_t context_key;
-
-static void
-detach_context (void *data)
-{
-  GstEglGlesSink *eglglessink = data;
-
-  GST_DEBUG_OBJECT (eglglessink,
-      "Detaching current context from streaming thread");
-  gst_eglglessink_context_make_current (eglglessink, FALSE, TRUE);
-  gst_object_unref (eglglessink);
-}
-
 static gboolean
 gst_eglglessink_context_make_current (GstEglGlesSink * eglglessink,
-    gboolean bind, gboolean streaming_thread)
+    gboolean bind)
 {
   g_assert (eglglessink->eglglesctx.display != NULL);
 
   if (bind && eglglessink->eglglesctx.surface &&
       eglglessink->eglglesctx.eglcontext) {
-    if (streaming_thread) {
-      EGLContext *ctx = eglGetCurrentContext ();
+    EGLContext *ctx = eglGetCurrentContext ();
 
-      if (ctx == eglglessink->eglglesctx.eglcontext) {
-        GST_DEBUG_OBJECT (eglglessink, "Already attached the context");
-        return TRUE;
-      }
+    if (ctx == eglglessink->eglglesctx.eglcontext) {
+      GST_DEBUG_OBJECT (eglglessink, "Already attached the context to thread %p", g_thread_self ());
+      return TRUE;
+    }
 
-      GST_DEBUG_OBJECT (eglglessink, "Attaching context to streaming thread");
-      if (!eglMakeCurrent (eglglessink->eglglesctx.display,
-              eglglessink->eglglesctx.surface,
-              eglglessink->eglglesctx.surface,
-              eglglessink->eglglesctx.eglcontext)) {
-        show_egl_error ("eglMakeCurrent");
-        GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
-        return FALSE;
-      }
-
-      if (!pthread_getspecific (context_key)) {
-        pthread_setspecific (context_key, gst_object_ref (eglglessink));
-      }
-    } else {
-      GST_DEBUG_OBJECT (eglglessink, "Attaching context");
-      if (!eglMakeCurrent (eglglessink->eglglesctx.display,
-              eglglessink->eglglesctx.surface,
-              eglglessink->eglglesctx.surface,
-              eglglessink->eglglesctx.eglcontext)) {
-        show_egl_error ("eglMakeCurrent");
-        GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
-        return FALSE;
-      }
+    GST_DEBUG_OBJECT (eglglessink, "Attaching context to thread %p", g_thread_self ());
+    if (!eglMakeCurrent (eglglessink->eglglesctx.display,
+            eglglessink->eglglesctx.surface,
+            eglglessink->eglglesctx.surface,
+            eglglessink->eglglesctx.eglcontext)) {
+      show_egl_error ("eglMakeCurrent");
+      GST_ERROR_OBJECT (eglglessink, "Couldn't bind context");
+      return FALSE;
     }
   } else {
-    GST_DEBUG_OBJECT (eglglessink, "Detaching context");
+    GST_DEBUG_OBJECT (eglglessink, "Detaching context from thread %p", g_thread_self ());
     if (!eglMakeCurrent (eglglessink->eglglesctx.display,
             EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
       show_egl_error ("eglMakeCurrent");
@@ -1583,7 +1623,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     goto HANDLE_EGL_ERROR_LOCKED;
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, TRUE, TRUE))
+  if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
     goto HANDLE_EGL_ERROR_LOCKED;
 
   /* Save surface dims */
@@ -1968,6 +2008,40 @@ gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
   return;
 }
 
+static void
+queue_item_destroy (GstDataQueueItem * item)
+{
+  gst_mini_object_replace (&item->object, NULL);
+  g_slice_free (GstDataQueueItem, item);
+}
+
+static GstFlowReturn
+gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink,
+    GstBuffer * buf)
+{
+  GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
+
+  item->object = GST_MINI_OBJECT_CAST ((buf ? gst_buffer_ref (buf) : NULL));
+  item->size = GST_BUFFER_SIZE (buf);
+  item->duration = GST_BUFFER_DURATION (buf);
+  item->visible = (buf ? TRUE : FALSE);
+  item->destroy = (GDestroyNotify) queue_item_destroy;
+
+  if (buf)
+    g_mutex_lock (eglglessink->render_lock);
+  if (!gst_data_queue_push (eglglessink->queue, item)) {
+    g_mutex_unlock (eglglessink->render_lock);
+    return GST_FLOW_WRONG_STATE;
+  }
+
+  if (buf) {
+    g_cond_wait (eglglessink->render_cond, eglglessink->render_lock);
+    g_mutex_unlock (eglglessink->render_lock);
+  }
+
+  return (buf ? eglglessink->last_flow : GST_FLOW_OK);
+}
+
 /* Rendering and display */
 static GstFlowReturn
 gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
@@ -1983,9 +2057,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     EGL_FALSE, EGL_NONE, EGL_NONE
   };
 #endif
-
-  if (!gst_eglglessink_context_make_current (eglglessink, TRUE, TRUE))
-    goto HANDLE_EGL_ERROR;
 
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
@@ -2248,21 +2319,14 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   eglglessink = GST_EGLGLESSINK (vsink);
   GST_DEBUG_OBJECT (eglglessink, "Got buffer: %p", buf);
 
-  if (!eglglessink->have_window) {
-    GST_ERROR_OBJECT (eglglessink, "I don't have a window to render to");
-    return GST_FLOW_ERROR;
-  }
-
-  if (!eglglessink->have_surface) {
-    GST_ERROR_OBJECT (eglglessink, "I don't have a surface to render to");
-    return GST_FLOW_ERROR;
-  }
 #ifndef EGL_ANDROID_image_native_buffer
   GST_WARNING_OBJECT (eglglessink, "EGL_ANDROID_image_native_buffer not "
       "available");
 #endif
 
-  return gst_eglglessink_render_and_display (eglglessink, buf);
+  buf = gst_buffer_make_metadata_writable (gst_buffer_ref (buf));
+  gst_buffer_set_caps (buf, eglglessink->current_caps);
+  return gst_eglglessink_queue_buffer (eglglessink, buf);
 }
 
 static GstCaps *
@@ -2287,20 +2351,13 @@ gst_eglglessink_getcaps (GstBaseSink * bsink)
 }
 
 static gboolean
-gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+gst_eglglessink_configure_caps (GstEglGlesSink *eglglessink, GstCaps * caps)
 {
-  GstEglGlesSink *eglglessink;
   gboolean ret = TRUE;
   gint width, height;
   int par_n, par_d;
   EGLNativeWindowType window;
   GstEglGlesImageFmt *format;
-
-  eglglessink = GST_EGLGLESSINK (bsink);
-
-  GST_DEBUG_OBJECT (eglglessink,
-      "In setcaps. Possible caps %" GST_PTR_FORMAT ", setting caps %"
-      GST_PTR_FORMAT, eglglessink->current_caps, caps);
 
   if (!(ret = gst_video_format_parse_caps (caps, &eglglessink->format, &width,
               &height))) {
@@ -2330,9 +2387,9 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   GST_VIDEO_SINK_WIDTH (eglglessink) = width;
   GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
 
-  if (eglglessink->current_caps) {
+  if (eglglessink->configured_caps) {
     GST_ERROR_OBJECT (eglglessink, "Caps were already set");
-    if (gst_caps_can_intersect (caps, eglglessink->current_caps)) {
+    if (gst_caps_can_intersect (caps, eglglessink->configured_caps)) {
       GST_INFO_OBJECT (eglglessink, "Caps are compatible anyway");
       goto SUCCEED;
     }
@@ -2340,10 +2397,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
 
     /* Cleanup */
-
-    if (!gst_eglglessink_context_make_current (eglglessink, TRUE, TRUE))
-      return FALSE;
-
     if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
       glUseProgram (0);
 
@@ -2373,7 +2426,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       }
     }
 
-    if (!gst_eglglessink_context_make_current (eglglessink, FALSE, TRUE))
+    if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
       return FALSE;
 
     if (eglglessink->eglglesctx.surface) {
@@ -2398,8 +2451,8 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     eglglessink->display_region.h = 0;
     GST_OBJECT_UNLOCK (eglglessink);
 
-    gst_caps_unref (eglglessink->current_caps);
-    eglglessink->current_caps = NULL;
+    gst_caps_unref (eglglessink->configured_caps);
+    eglglessink->configured_caps = NULL;
   }
 
   if (!gst_eglglessink_choose_config (eglglessink)) {
@@ -2407,7 +2460,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto HANDLE_ERROR;
   }
 
-  eglglessink->current_caps = gst_caps_ref (caps);
+  gst_caps_replace (&eglglessink->configured_caps, caps);
 
   /* By now the application should have set a window
    * if it meant to do so
@@ -2440,12 +2493,28 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   }
 
 SUCCEED:
-  GST_INFO_OBJECT (eglglessink, "Setcaps succeed");
+  GST_INFO_OBJECT (eglglessink, "Configured caps successfully");
   return TRUE;
 
 HANDLE_ERROR:
-  GST_ERROR_OBJECT (eglglessink, "Setcaps failed");
+  GST_ERROR_OBJECT (eglglessink, "Configuring caps failed");
   return FALSE;
+}
+
+static gboolean
+gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
+{
+  GstEglGlesSink *eglglessink;
+
+  eglglessink = GST_EGLGLESSINK (bsink);
+
+  GST_DEBUG_OBJECT (eglglessink,
+      "Current caps %" GST_PTR_FORMAT ", setting caps %"
+      GST_PTR_FORMAT, eglglessink->current_caps, caps);
+
+  gst_caps_replace (&eglglessink->current_caps, caps);
+
+  return TRUE;
 }
 
 static void
@@ -2469,7 +2538,6 @@ gst_eglglessink_open (GstEglGlesSink * eglglessink)
 static gboolean
 gst_eglglessink_close (GstEglGlesSink * eglglessink)
 {
-  g_mutex_lock (eglglessink->flow_lock);
   if (eglglessink->eglglesctx.display) {
     eglTerminate (eglglessink->eglglesctx.display);
     eglglessink->eglglesctx.display = NULL;
@@ -2481,7 +2549,6 @@ gst_eglglessink_close (GstEglGlesSink * eglglessink)
   gst_caps_unref (eglglessink->sinkcaps);
   eglglessink->sinkcaps = NULL;
   eglglessink->egl_started = FALSE;
-  g_mutex_unlock (eglglessink->flow_lock);
 
   return TRUE;
 }
@@ -2528,6 +2595,7 @@ gst_eglglessink_change_state (GstElement * element, GstStateChange transition)
       if (!gst_eglglessink_stop (eglglessink)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
+      }
       break;
     default:
       break;
@@ -2540,6 +2608,23 @@ done:
 static void
 gst_eglglessink_finalize (GObject * object)
 {
+  GstEglGlesSink *eglglessink;
+
+  g_return_if_fail (GST_IS_EGLGLESSINK (object));
+
+  eglglessink = GST_EGLGLESSINK (object);
+
+  if (eglglessink->queue)
+    g_object_unref (eglglessink->queue);
+  eglglessink->queue = NULL;
+
+  if (eglglessink->render_cond)
+    g_cond_free (eglglessink->render_cond);
+  eglglessink->render_cond = NULL;
+  if (eglglessink->render_lock);
+    g_mutex_free (eglglessink->render_lock);
+  eglglessink->render_lock = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -2659,6 +2744,11 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
+static gboolean
+queue_check_full_func (GstDataQueue * queue, guint visible, guint bytes, guint64 time, gpointer checkdata)
+{
+  return visible != 0;
+}
 
 static void
 gst_eglglessink_init (GstEglGlesSink * eglglessink,
@@ -2681,6 +2771,11 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
 
   eglglessink->par_n = 1;
   eglglessink->par_d = 1;
+
+  eglglessink->render_lock = g_mutex_new ();
+  eglglessink->render_cond = g_cond_new ();
+  eglglessink->queue = gst_data_queue_new (queue_check_full_func, NULL);
+  eglglessink->last_flow = GST_FLOW_WRONG_STATE;
 }
 
 /* Interface initializations. Used here for initializing the XOverlay
@@ -2713,8 +2808,6 @@ eglglessink_plugin_init (GstPlugin * plugin)
   /* debug category for fltering log messages */
   GST_DEBUG_CATEGORY_INIT (gst_eglglessink_debug, "eglglessink",
       0, "Simple EGL/GLES Sink");
-
-  pthread_key_create (&context_key, detach_context);
 
   return gst_element_register (plugin, "eglglessink", GST_RANK_PRIMARY,
       GST_TYPE_EGLGLESSINK);
