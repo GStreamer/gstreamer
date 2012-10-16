@@ -591,6 +591,8 @@ struct _GstElement
  * @send_event: send a #GstEvent to the element
  * @query: perform a #GstQuery on the element
  * @state_changed: called immediately after a new state was set.
+ * @post_message: called when a message is posted on the element. Chain up to
+ *                the parent class' handler to have it posted on the bus.
  *
  * GStreamer element class. Override the vmethods to implement the element
  * functionality.
@@ -645,8 +647,10 @@ struct _GstElementClass
 
   gboolean              (*query)                (GstElement *element, GstQuery *query);
 
+  gboolean              (*post_message)         (GstElement *element, GstMessage *message);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING_LARGE-1];
 };
 
 /* element class pad templates */
