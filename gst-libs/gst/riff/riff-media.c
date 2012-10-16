@@ -905,27 +905,24 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     size = gst_buffer_get_size (palette);
 
     if (size >= (num_colors * 4)) {
-      /* palette is always at least 256*4 bytes */
-      copy = gst_buffer_new ();
-      gst_buffer_copy_into (copy, palette, GST_BUFFER_COPY_MEMORY, 0, size);
+      guint8 *pdata;
 
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-      {
-        GstMapInfo palette_mapinfo;
-        guint8 *p;
+      /* palette is always at least 256*4 bytes */
+      pdata = g_malloc0 (MAX (size, 256 * 4));
+      gst_buffer_extract (palette, 0, pdata, size);
+
+      if (G_BYTE_ORDER == G_BIG_ENDIAN) {
+        guint8 *p = pdata;
         gint n;
 
-        gst_buffer_map (copy, &palette_mapinfo, GST_MAP_READWRITE);
-
         /* own endianness */
-        p = palette_mapinfo.data;
         for (n = 0; n < num_colors; n++) {
           GST_WRITE_UINT32_BE (p, GST_READ_UINT32_LE (p));
           p += sizeof (guint32);
         }
-        gst_buffer_unmap (copy, &palette_mapinfo);
       }
-#endif
+
+      copy = gst_buffer_new_wrapped (pdata, size);
       gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, copy, NULL);
       gst_buffer_unref (copy);
     } else {
