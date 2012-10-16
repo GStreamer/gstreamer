@@ -60,9 +60,9 @@ struct _GstDashDemux
 {
   GstElement parent;
   GstPad *sinkpad;
-  GstPad *srcpad[MAX_LANGUAGES];   /*Video/Audio/Application src pad*/
-  GstCaps *output_caps[MAX_LANGUAGES]; /*Video/Audio/Application output buf caps*/
-  GstCaps *input_caps[MAX_LANGUAGES]; /*Video/Audio/Application input caps*/
+  GstPad *srcpad[MAX_LANGUAGES];        /*Video/Audio/Application src pad */
+  GstCaps *output_caps[MAX_LANGUAGES];  /*Video/Audio/Application output buf caps */
+  GstCaps *input_caps[MAX_LANGUAGES];   /*Video/Audio/Application input caps */
 
   GstBuffer *manifest;
   GstUriDownloader *downloader;
@@ -71,17 +71,16 @@ struct _GstDashDemux
   gboolean end_of_manifest;
 
   /* Properties */
-  GstClockTime min_buffering_time;    /* Minimum buffering time accumulated before playback */
-  GstClockTime max_buffering_time;    /* Maximum buffering time accumulated during playback */
-  gfloat bandwidth_usage;             /* Percentage of the available bandwidth to use       */
-  guint64 max_bitrate;              /* max of bitrate supported by target decoder         */
+  GstClockTime min_buffering_time;      /* Minimum buffering time accumulated before playback */
+  GstClockTime max_buffering_time;      /* Maximum buffering time accumulated during playback */
+  gfloat bandwidth_usage;       /* Percentage of the available bandwidth to use       */
+  guint64 max_bitrate;          /* max of bitrate supported by target decoder         */
 
   /* Streaming task */
   GstTask *stream_task;
   GStaticRecMutex stream_lock;
-  gboolean stop_stream_task;
   GMutex *stream_timed_lock;
-  GTimeVal next_push;         /* Time of the next push */
+  GTimeVal next_push;           /* Time of the next push */
 
   /* Download task */
   GstTask *download_task;
