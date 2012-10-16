@@ -45,13 +45,34 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_FILTERSIZE   5
+#define DEFAULT_LUM_ONLY     TRUE
 enum
 {
   PROP_0,
-  PROP_ACTIVE,
   PROP_FILTERSIZE,
   PROP_LUM_ONLY
 };
+
+#define GST_TYPE_VIDEO_MEDIAN_SIZE (gst_video_median_size_get_type())
+
+static const GEnumValue video_median_sizes[] = {
+  {GST_VIDEO_MEDIAN_SIZE_5, "Median of 5 neighbour pixels", "5"},
+  {GST_VIDEO_MEDIAN_SIZE_9, "Median of 9 neighbour pixels", "9"},
+  {0, NULL, NULL},
+};
+
+static GType
+gst_video_median_size_get_type (void)
+{
+  static GType video_median_size_type = 0;
+
+  if (!video_median_size_type) {
+    video_median_size_type = g_enum_register_static ("GstVideoMedianSize",
+        video_median_sizes);
+  }
+  return video_median_size_type;
+}
 
 #define gst_video_median_parent_class parent_class
 G_DEFINE_TYPE (GstVideoMedian, gst_video_median, GST_TYPE_VIDEO_FILTER);
@@ -78,15 +99,14 @@ gst_video_median_class_init (GstVideoMedianClass * klass)
   gobject_class->set_property = gst_video_median_set_property;
   gobject_class->get_property = gst_video_median_get_property;
 
-  /* FIXME: add long property descriptions */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ACTIVE,
-      g_param_spec_boolean ("active", "active", "active", TRUE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_FILTERSIZE,
-      g_param_spec_int ("filtersize", "filtersize", "filtersize", G_MININT,
-          G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_enum ("filtersize", "Filtersize", "The size of the filter",
+          GST_TYPE_VIDEO_MEDIAN_SIZE, DEFAULT_FILTERSIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LUM_ONLY,
-      g_param_spec_boolean ("lum-only", "lum-only", "lum-only", TRUE,
+      g_param_spec_boolean ("lum-only", "Lum Only", "Only apply filter on "
+          "luminance", DEFAULT_LUM_ONLY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
@@ -105,9 +125,8 @@ gst_video_median_class_init (GstVideoMedianClass * klass)
 void
 gst_video_median_init (GstVideoMedian * median)
 {
-  median->filtersize = 5;
-  median->lum_only = TRUE;
-  median->active = TRUE;
+  median->filtersize = DEFAULT_FILTERSIZE;
+  median->lum_only = DEFAULT_LUM_ONLY;
 }
 
 #define PIX_SORT(a,b) { if ((a)>(b)) PIX_SWAP((a),(b)); }
@@ -268,22 +287,12 @@ gst_video_median_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVideoMedian *median;
-  gint argvalue;
 
   median = GST_VIDEO_MEDIAN (object);
 
   switch (prop_id) {
     case PROP_FILTERSIZE:
-      argvalue = g_value_get_int (value);
-      if (argvalue != 5 && argvalue != 9) {
-        g_warning ("median: invalid filtersize (%d), must be 5 or 9\n",
-            argvalue);
-      } else {
-        median->filtersize = argvalue;
-      }
-      break;
-    case PROP_ACTIVE:
-      median->active = g_value_get_boolean (value);
+      median->filtersize = g_value_get_enum (value);
       break;
     case PROP_LUM_ONLY:
       median->lum_only = g_value_get_boolean (value);
@@ -303,10 +312,7 @@ gst_video_median_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_FILTERSIZE:
-      g_value_set_int (value, median->filtersize);
-      break;
-    case PROP_ACTIVE:
-      g_value_set_boolean (value, median->active);
+      g_value_set_enum (value, median->filtersize);
       break;
     case PROP_LUM_ONLY:
       g_value_set_boolean (value, median->lum_only);

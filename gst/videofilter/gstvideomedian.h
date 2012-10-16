@@ -42,19 +42,17 @@ G_BEGIN_DECLS
 typedef struct _GstVideoMedian GstVideoMedian;
 typedef struct _GstVideoMedianClass GstVideoMedianClass;
 
+typedef enum
+{
+  GST_VIDEO_MEDIAN_SIZE_5 = 5,
+  GST_VIDEO_MEDIAN_SIZE_9 = 9
+} GstVideoMedianSize;
+
 struct _GstVideoMedian {
   GstVideoFilter parent;
 
-  int format;
-  int width;
-  int height;
-
-  int filtersize;
-
-  gboolean active;
+  GstVideoMedianSize filtersize;
   gboolean lum_only;
-
-  GstPad *sinkpad,*srcpad;
 };
 
 struct _GstVideoMedianClass {
