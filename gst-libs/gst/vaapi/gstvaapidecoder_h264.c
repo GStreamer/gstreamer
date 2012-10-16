@@ -1975,37 +1975,12 @@ decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     return TRUE;
 }
 
-#ifndef HAVE_GST_H264_SLICE_HDR_EPB_COUNT
-static guint
-get_epb_count(const guint8 *buf, guint buf_size, guint header_size)
-{
-    guint i, n = 0;
-
-    if (buf_size > header_size)
-        buf_size = header_size;
-
-    for (i = 2; i < buf_size; i++) {
-        if (!buf[i - 2] && !buf[i - 1] && buf[i] == 0x03)
-            i += 2, n++;
-    }
-    return n;
-}
-#endif
-
 static inline guint
 get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr, GstH264NalUnit *nalu)
 {
     guint epb_count;
 
-#ifdef HAVE_GST_H264_SLICE_HDR_EPB_COUNT
     epb_count = slice_hdr->n_emulation_prevention_bytes;
-#else
-    epb_count = get_epb_count(
-        nalu->data + nalu->offset,
-        nalu->size,
-        slice_hdr->header_size / 8
-    );
-#endif
     return 8 /* nal_unit_type */ + slice_hdr->header_size - epb_count * 8;
 }
 
