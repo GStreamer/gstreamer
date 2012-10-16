@@ -3,6 +3,7 @@ plugin_LTLIBRARIES = libgsteglglessink.la
 libgsteglglessink_la_SOURCES = gsteglglessink.c video_platform_wrapper.c
 
 libgsteglglessink_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
+                              $(GST_BASE_CFLAGS) \
                               $(GST_CFLAGS) \
                               $(EGLGLES_CFLAGS) \
                               $(X11_CFLAGS)
