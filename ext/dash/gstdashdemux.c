@@ -436,13 +436,13 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_dash_demux_pause_stream_task (demux);
-      gst_task_pause (demux->stream_task);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       demux->cancelled = TRUE;
       gst_dash_demux_stop (demux);
       gst_task_join (demux->stream_task);
-      gst_dash_demux_reset (demux, FALSE);
+      gst_task_join (demux->download_task);
+      GST_WARNING_OBJECT (demux, "DASH demux now terminated");
       break;
     default:
       break;
@@ -1514,7 +1514,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
         next_fragment_uri);
 
     if (download == NULL)
-      goto error;
+      return FALSE;
 
     download->start_time = timestamp;
     download->stop_time = timestamp + duration;
@@ -1522,7 +1522,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
     stream =
         gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
     if (stream == NULL)
-      goto error;
+            return FALSE;
     download->index = stream->segment_idx;
 
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
@@ -1561,11 +1561,5 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
   GST_INFO_OBJECT (demux, "Download rate = %d Kbits/s (%d Ko in %.2f s)",
       demux->dnl_rate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
   return TRUE;
-
-error:
-  {
-    gst_dash_demux_stop (demux);
-    return FALSE;
-  }
 }
 
