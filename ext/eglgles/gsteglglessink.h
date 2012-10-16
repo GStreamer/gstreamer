@@ -46,6 +46,8 @@
 #define __GST_EGLGLESSINK_H__
 
 #include <gst/gst.h>
+#include <gst/video/gstvideosink.h>
+#include <gst/base/gstdataqueue.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -228,13 +230,12 @@ struct _GstEglGlesSink
   GstVideoFormat format;
   GstVideoRectangle display_region;
   GstCaps *sinkcaps;
-  GstCaps *current_caps;
+  GstCaps *current_caps, *configured_caps;
 
   GstEglGlesImageFmt *selected_fmt;
   GstEglGlesSinkRenderingPath rendering_path;
-  GstEglGlesRenderContext *eglglesctx;
+  GstEglGlesRenderContext eglglesctx;
 
-  GMutex *flow_lock;
   GList *supported_fmts;
 
   /* Runtime flags */
@@ -244,6 +245,13 @@ struct _GstEglGlesSink
   gboolean have_vbo;
   gboolean have_texture;
   gboolean egl_started;
+
+  GThread *thread;
+  gboolean thread_running;
+  GstDataQueue *queue;
+  GCond *render_cond;
+  GMutex *render_lock;
+  GstFlowReturn last_flow;
 
   /* Properties */
   gboolean create_window;
