@@ -68,7 +68,8 @@ static const gchar *_quark_strings[] = {
   "GstEventSegmentDone",
   "GstEventStreamStart", "stream-id", "GstQueryContext",
   "GstMessageNeedContext", "GstMessageHaveContext", "context", "context-type",
-  "GstMessageStreamStart", "group-id", "uri-redirection", "GstMessageExtended"
+  "GstMessageStreamStart", "group-id", "uri-redirection", "GstMessageExtended",
+  "GstMessageDeviceAdded", "GstMessageDeviceRemoved", "device"
 };
 
 GQuark _priv_gst_quark_table[GST_QUARK_MAX];

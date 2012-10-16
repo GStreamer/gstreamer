@@ -33,6 +33,7 @@
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttypefindfactory.h>
+#include <gst/gstdevicemonitorfactory.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>
@@ -332,6 +333,23 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
     } else {
       gst_registry_chunks_save_const_string (list, "");
     }
+  } else if (GST_IS_DEVICE_MONITOR_FACTORY (feature)) {
+    GstRegistryChunkDeviceMonitorFactory *tff;
+    GstDeviceMonitorFactory *factory = GST_DEVICE_MONITOR_FACTORY (feature);
+
+    /* Initialize with zeroes because of struct padding and
+     * valgrind complaining about copying unitialized memory
+     */
+    tff = g_slice_new0 (GstRegistryChunkDeviceMonitorFactory);
+    chk =
+        gst_registry_chunks_make_data (tff,
+        sizeof (GstRegistryChunkDeviceMonitorFactory));
+    pf = (GstRegistryChunkPluginFeature *) tff;
+
+
+    /* pack element metadata strings */
+    gst_registry_chunks_save_string (list,
+        gst_structure_to_string (factory->metadata));
   } else {
     GST_WARNING_OBJECT (feature, "unhandled feature type '%s'", type_name);
   }
@@ -648,6 +666,30 @@ gst_registry_chunks_load_feature (GstRegistry * registry, gchar ** in,
       for (i = tff->nextensions; i > 0; i--) {
         unpack_string (*in, str, end, fail);
         factory->extensions[i - 1] = str;
+      }
+    }
+  } else if (GST_IS_DEVICE_MONITOR_FACTORY (feature)) {
+    GstRegistryChunkDeviceMonitorFactory *dmf;
+    GstDeviceMonitorFactory *factory = GST_DEVICE_MONITOR_FACTORY (feature);
+    const gchar *meta_data_str;
+
+    align (*in);
+    GST_DEBUG
+        ("Reading/casting for GstRegistryChunkPluginFeature at address %p",
+        *in);
+    unpack_element (*in, dmf, GstRegistryChunkDeviceMonitorFactory, end, fail);
+
+    pf = (GstRegistryChunkPluginFeature *) dmf;
+
+    /* unpack element factory strings */
+    unpack_string_nocopy (*in, meta_data_str, end, fail);
+    if (meta_data_str && *meta_data_str) {
+      factory->metadata = gst_structure_from_string (meta_data_str, NULL);
+      if (!factory->metadata) {
+        GST_ERROR
+            ("Error when trying to deserialize structure for metadata '%s'",
+            meta_data_str);
+        goto fail;
       }
     }
   } else {

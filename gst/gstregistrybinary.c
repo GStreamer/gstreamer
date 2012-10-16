@@ -56,6 +56,7 @@
 #include <gst/gstelement.h>
 #include <gst/gsttypefind.h>
 #include <gst/gsttypefindfactory.h>
+#include <gst/gstdevicemonitorfactory.h>
 #include <gst/gsturi.h>
 #include <gst/gstinfo.h>
 #include <gst/gstenumtypes.h>
@@ -525,6 +526,7 @@ priv_gst_registry_binary_read_cache (GstRegistry * registry,
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
   GST_TYPE_TYPE_FIND_FACTORY;
+  GST_TYPE_DEVICE_MONITOR_FACTORY;
 
 #ifndef GST_DISABLE_GST_DEBUG
   timer = g_timer_new ();

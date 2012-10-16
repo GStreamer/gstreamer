@@ -108,7 +108,8 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_NEED_CONTEXT, "need-context", 0},
   {GST_MESSAGE_HAVE_CONTEXT, "have-context", 0},
   {GST_MESSAGE_EXTENDED, "extended", 0},
-  {GST_MESSAGE_DEVICE, "device", 0},
+  {GST_MESSAGE_DEVICE_ADDED, "device-added", 0},
+  {GST_MESSAGE_DEVICE_REMOVED, "device-removed", 0},
   {0, NULL, 0}
 };
 
@@ -2356,4 +2357,105 @@ gst_message_parse_have_context (GstMessage * message, GstContext ** context)
   if (context)
     gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
         GST_QUARK (CONTEXT), GST_TYPE_CONTEXT, context, NULL);
+}
+
+/**
+ * gst_message_new_device_added:
+ * @src: The #GstObject that created the message
+ * @device: (transfer none): The new #GstDevice
+ *
+ * Creates a new device-added message. The device-added message is produced by
+ * #GstDeviceMonitor or a #GstGlobalDeviceMonitor. They announce the appearance
+ * of monitored devices.
+ *
+ * Returns: a newly allocated #GstMessage
+ *
+ * Since: 1.4
+ */
+GstMessage *
+gst_message_new_device_added (GstObject * src, GstDevice * device)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_DEVICE_ADDED),
+      GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
+  message = gst_message_new_extended (GST_MESSAGE_DEVICE_ADDED, src, structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_device_added:
+ * @device: (out) (allow-none) (transfer none): A location where to store a
+ *  pointer to the new #GstDevice, or %NULL
+ * 
+ * Parses a device-added message. The device-added message is produced by
+ * #GstDeviceMonitor or a #GstGlobalDeviceMonitor. It announces the appearance
+ * of monitored devices.
+ *
+ * Since: 1.4
+ */
+void
+gst_message_parse_device_added (GstMessage * message, GstDevice ** device)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EXTENDED);
+  g_return_if_fail (gst_message_get_extended_type (message) ==
+      GST_MESSAGE_DEVICE_ADDED);
+
+  if (device)
+    gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+        GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
+}
+
+/**
+ * gst_message_new_device_removed:
+ * @src: The #GstObject that created the message
+ * @device: (transfer none): The removed #GstDevice
+ *
+ * Creates a new device-removed message. The device-removed message is produced
+ * by #GstDeviceMonitor or a #GstGlobalDeviceMonitor. They announce the
+ * disappearance of monitored devices.
+ *
+ * Returns: a newly allocated #GstMessage
+ *
+ * Since: 1.4
+ */
+GstMessage *
+gst_message_new_device_removed (GstObject * src, GstDevice * device)
+{
+  GstMessage *message;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id (GST_QUARK (MESSAGE_DEVICE_REMOVED),
+      GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
+  message = gst_message_new_extended (GST_MESSAGE_DEVICE_REMOVED, src,
+      structure);
+
+  return message;
+}
+
+/**
+ * gst_message_parse_device_removed:
+ * @device: (out) (allow-none) (transfer none): A location where to store a
+ *  pointer to the removed #GstDevice, or %NULL
+ *
+ * Parses a device-removed message. The device-removed message is produced by
+ * #GstDeviceMonitor or a #GstGlobalDeviceMonitor. It announces the
+ * disappearance of monitored devices.
+ *
+ * Since: 1.4
+ */
+void
+gst_message_parse_device_removed (GstMessage * message, GstDevice ** device)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EXTENDED);
+  g_return_if_fail (gst_message_get_extended_type (message) ==
+      GST_MESSAGE_DEVICE_REMOVED);
+
+  if (device)
+    gst_structure_id_get (GST_MESSAGE_STRUCTURE (message),
+        GST_QUARK (DEVICE), GST_TYPE_DEVICE, device, NULL);
 }

@@ -390,6 +390,35 @@ EXPORTS
 	gst_debug_set_threshold_from_string
 	gst_debug_unset_threshold_for_name
 	gst_deinit
+	gst_device_create_element
+	gst_device_get_caps
+	gst_device_get_display_name
+	gst_device_get_type
+	gst_device_monitor_can_monitor
+	gst_device_monitor_class_add_metadata
+	gst_device_monitor_class_add_static_metadata
+	gst_device_monitor_class_get_metadata
+	gst_device_monitor_class_set_metadata
+	gst_device_monitor_class_set_static_metadata
+	gst_device_monitor_device_add
+	gst_device_monitor_device_remove
+	gst_device_monitor_factory_find
+	gst_device_monitor_factory_get
+	gst_device_monitor_factory_get_by_name
+	gst_device_monitor_factory_get_device_monitor_type
+	gst_device_monitor_factory_get_metadata
+	gst_device_monitor_factory_get_metadata_keys
+	gst_device_monitor_factory_get_type
+	gst_device_monitor_factory_list_get_device_monitors
+	gst_device_monitor_factory_list_is_type
+	gst_device_monitor_get_bus
+	gst_device_monitor_get_devices
+	gst_device_monitor_get_factory
+	gst_device_monitor_get_type
+	gst_device_monitor_register
+	gst_device_monitor_start
+	gst_device_monitor_stop
+	gst_device_reconfigure_element
 	gst_double_range_get_type
 	gst_element_abort_state
 	gst_element_add_pad
@@ -592,6 +621,8 @@ EXPORTS
 	gst_memory_resize
 	gst_memory_share
 	gst_memory_unmap
+	gst_message_extended_type_get_type
+	gst_message_get_extended_type
 	gst_message_get_seqnum
 	gst_message_get_stream_status_object
 	gst_message_get_structure
@@ -604,6 +635,8 @@ EXPORTS
 	gst_message_new_clock_lost
 	gst_message_new_clock_provide
 	gst_message_new_custom
+	gst_message_new_device_added
+	gst_message_new_device_removed
 	gst_message_new_duration_changed
 	gst_message_new_element
 	gst_message_new_eos
@@ -635,6 +668,8 @@ EXPORTS
 	gst_message_parse_clock_lost
 	gst_message_parse_clock_provide
 	gst_message_parse_context_type
+	gst_message_parse_device_added
+	gst_message_parse_device_removed
 	gst_message_parse_error
 	gst_message_parse_group_id
 	gst_message_parse_have_context

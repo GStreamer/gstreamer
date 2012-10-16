@@ -149,15 +149,20 @@ typedef enum
 
 /**
  * GstMessageExtendedType:
- * @GST_MESSAGE_DEVICE: A #GstDevice addition or removal according to
- * a #GstDeviceMonitor
+ * @GST_MESSAGE_DEVICE_ADDED: A #GstDevice addition according to
+ * a #GstDeviceMonitor (Since 1.4)
+ * @GST_MESSAGE_DEVICE_REMOVED: A #GstDevice removal according to
+ * a #GstDeviceMonitor (Since 1.4)
  *
  * Extra message types, see #GstMessageType for the basic types
+ *
+ * Since: 1.4
  */
 
 typedef enum {
   /* Skip those defined in #GstMessage to avoid confusion */
-  GST_MESSAGE_DEVICE            = 3
+  GST_MESSAGE_DEVICE_ADDED               = 3,
+  GST_MESSAGE_DEVICE_REMOVED             = 5
 } GstMessageExtendedType;
 
 #include <gst/gstminiobject.h>
@@ -167,6 +172,7 @@ typedef enum {
 #include <gst/gststructure.h>
 #include <gst/gstquery.h>
 #include <gst/gsttoc.h>
+#include <gst/gstdevice.h>
 
 #define GST_TYPE_MESSAGE                         (gst_message_get_type())
 #define GST_IS_MESSAGE(obj)                      (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_MESSAGE))
@@ -590,6 +596,15 @@ gboolean        gst_message_parse_context_type  (GstMessage * message, const gch
 /* HAVE_CONTEXT */
 GstMessage *    gst_message_new_have_context    (GstObject * src, GstContext *context) G_GNUC_MALLOC;
 void            gst_message_parse_have_context  (GstMessage *message, GstContext **context);
+
+/* DEVICE_ADDED */
+GstMessage *    gst_message_new_device_added    (GstObject * src, GstDevice * device) G_GNUC_MALLOC;
+void            gst_message_parse_device_added  (GstMessage * message, GstDevice ** device);
+
+/* DEVICE_REMOVED */
+GstMessage *    gst_message_new_device_removed    (GstObject * src, GstDevice * device) G_GNUC_MALLOC;
+void            gst_message_parse_device_removed  (GstMessage * message, GstDevice ** device);
+
 
 G_END_DECLS
 
