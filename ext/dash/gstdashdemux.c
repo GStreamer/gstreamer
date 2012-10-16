@@ -764,11 +764,19 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     }
-    default:
-      /* Don't fordward queries upstream because of the special nature of this
-       * "demuxer", which relies on the upstream element only to be fed with the
-       * manifest file */
+    default:{
+      GstPad *peer;
+
+      if ((peer = gst_pad_get_peer (dashdemux->sinkpad))) {
+        /* Try to query upstream */
+        ret = gst_pad_query (peer, query);
+        gst_object_unref (peer);
+      } else {
+        /* no peer, we don't know */
+        ret = FALSE;
+      }
       break;
+    }
   }
 
   return ret;
