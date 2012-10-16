@@ -1538,48 +1538,12 @@ static gboolean
 gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
 {
   gint width, height;
-  EGLint display_par;
 
   /* Save surface dims */
   eglQuerySurface (eglglessink->eglglesctx.display,
       eglglessink->eglglesctx.surface, EGL_WIDTH, &width);
   eglQuerySurface (eglglessink->eglglesctx.display,
       eglglessink->eglglesctx.surface, EGL_HEIGHT, &height);
-
-  /* Save display's pixel aspect ratio
-   *
-   * DAR is reported as w/h * EGL_DISPLAY_SCALING wich is
-   * a constant with value 10000. This attribute is only
-   * supported if the EGL version is >= 1.2
-   * XXX: Setup this as a property.
-   * XXX: Move this initialization out to init_egl_surface()
-   * or some other one time check. Right now it's being called once
-   * per frame.
-   */
-  if (eglglessink->eglglesctx.egl_major == 1 &&
-      eglglessink->eglglesctx.egl_minor < 2) {
-    GST_DEBUG_OBJECT (eglglessink, "Can't query PAR. Using default: %dx%d",
-        EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
-    eglglessink->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
-  } else {
-    eglQuerySurface (eglglessink->eglglesctx.display,
-        eglglessink->eglglesctx.surface, EGL_PIXEL_ASPECT_RATIO,
-        &display_par);
-   /* Fix for outbound DAR reporting on some implementations not
-    * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
-    * requirement
-    */
-    if (display_par == EGL_UNKNOWN || display_par < EGL_SANE_DAR_MIN ||
-        display_par > EGL_SANE_DAR_MAX) {
-      GST_DEBUG_OBJECT (eglglessink, "Nonsensical PAR value returned: %d. "
-          "Bad EGL implementation? "
-          "Will use default: %d/%d", eglglessink->eglglesctx.pixel_aspect_ratio,
-          EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
-      eglglessink->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
-    } else {
-      eglglessink->eglglesctx.pixel_aspect_ratio = display_par;
-    }
-  }
 
   if (width != eglglessink->eglglesctx.surface_width ||
       height != eglglessink->eglglesctx.surface_height) {
@@ -1635,6 +1599,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   GLint test;
   GLboolean ret;
   GLchar *info_log;
+  EGLint display_par;
   const gchar *texnames[3] = { NULL, };
   gchar *tmp_prog = NULL;
 
@@ -1653,6 +1618,40 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
 
   if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
     goto HANDLE_EGL_ERROR_LOCKED;
+
+  /* Save display's pixel aspect ratio
+   *
+   * DAR is reported as w/h * EGL_DISPLAY_SCALING wich is
+   * a constant with value 10000. This attribute is only
+   * supported if the EGL version is >= 1.2
+   * XXX: Setup this as a property.
+   * or some other one time check. Right now it's being called once
+   * per frame.
+   */
+  if (eglglessink->eglglesctx.egl_major == 1 &&
+      eglglessink->eglglesctx.egl_minor < 2) {
+    GST_DEBUG_OBJECT (eglglessink, "Can't query PAR. Using default: %dx%d",
+        EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
+    eglglessink->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
+  } else {
+    eglQuerySurface (eglglessink->eglglesctx.display,
+        eglglessink->eglglesctx.surface, EGL_PIXEL_ASPECT_RATIO,
+        &display_par);
+   /* Fix for outbound DAR reporting on some implementations not
+    * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
+    * requirement
+    */
+    if (display_par == EGL_UNKNOWN || display_par < EGL_SANE_DAR_MIN ||
+        display_par > EGL_SANE_DAR_MAX) {
+      GST_DEBUG_OBJECT (eglglessink, "Nonsensical PAR value returned: %d. "
+          "Bad EGL implementation? "
+          "Will use default: %d/%d", eglglessink->eglglesctx.pixel_aspect_ratio,
+          EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
+      eglglessink->eglglesctx.pixel_aspect_ratio = EGL_DISPLAY_SCALING;
+    } else {
+      eglglessink->eglglesctx.pixel_aspect_ratio = display_par;
+    }
+  }
 
   /* Save surface dims */
   gst_eglglessink_update_surface_dimensions (eglglessink);
