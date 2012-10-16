@@ -604,6 +604,8 @@ struct _GstElement
  * @query: perform a #GstQuery on the element
  * @request_new_pad_full: called when a new pad is requested. Since: 0.10.32.
  * @state_changed: called immediately after a new state was set. Since: 0.10.36.
+ * @post_message: called when a message is posted on the element. Chain up to
+ *                the parent class' handler to have it posted on the bus. Since: 0.10.37.
  *
  * GStreamer element class. Override the vmethods to implement the element
  * functionality.
@@ -674,8 +676,10 @@ struct _GstElementClass
   void                  (*state_changed)        (GstElement *element, GstState oldstate,
                                                  GstState newstate, GstState pending);
 
+  gboolean              (*post_message)         (GstElement *element, GstMessage *message);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-3];
+  gpointer _gst_reserved[GST_PADDING-4];
 };
 
 /* element class pad templates */
