@@ -26,6 +26,7 @@
 #include "gstgamma.h"
 #include "gstvideoflip.h"
 #include "gstvideobalance.h"
+#include "gstvideomedian.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -34,7 +35,9 @@ plugin_init (GstPlugin * plugin)
       && gst_element_register (plugin, "videobalance", GST_RANK_NONE,
           GST_TYPE_VIDEO_BALANCE)
       && gst_element_register (plugin, "videoflip", GST_RANK_NONE,
-          GST_TYPE_VIDEO_FLIP));
+          GST_TYPE_VIDEO_FLIP)
+      && gst_element_register (plugin, "videomedian", GST_RANK_NONE,
+          GST_TYPE_VIDEO_MEDIAN));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

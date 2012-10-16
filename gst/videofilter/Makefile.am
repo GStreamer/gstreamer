@@ -1,6 +1,6 @@
 plugin_LTLIBRARIES = libgstvideofilter.la
 
-noinst_HEADERS = gstvideoflip.h gstvideobalance.h gstgamma.h
+noinst_HEADERS = gstvideoflip.h gstvideobalance.h gstgamma.h gstvideomedian.h
 
 EXTRA_DIST = gstvideotemplate.c make_filter
 CLEANFILES = gstvideoexample.c
@@ -8,7 +8,8 @@ CLEANFILES = gstvideoexample.c
 libgstvideofilter_la_SOURCES = plugin.c \
 			gstvideoflip.c \
 			gstvideobalance.c \
-			gstgamma.c
+			gstgamma.c \
+			gstvideomedian.c
 libgstvideofilter_la_CFLAGS = $(GST_CFLAGS) \
 			$(GST_BASE_CFLAGS) \
 			$(GST_PLUGINS_BASE_CFLAGS)
