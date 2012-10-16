@@ -204,7 +204,6 @@ static void gst_dash_demux_stop (GstDashDemux * demux);
 static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
-static gboolean gst_dash_demux_schedule (GstDashDemux * demux);
 static gboolean gst_dash_demux_select_representations (GstDashDemux * demux,
     guint64 current_bitrate);
 static gboolean gst_dash_demux_get_next_fragment_set (GstDashDemux * demux);
@@ -985,8 +984,13 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto error_pushing;
   }
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
-    /* Schedule the next push */
-    gst_dash_demux_schedule (demux);
+    /* Wait for the duration of a fragment before resuming this task */
+    g_get_current_time (&demux->next_stream);
+    g_time_val_add (&demux->next_stream,
+        gst_mpd_client_get_target_duration (demux->client)
+        / GST_SECOND * G_USEC_PER_SEC);
+    GST_DEBUG_OBJECT (demux, "Next push scheduled at %s",
+        g_time_val_to_iso8601 (&demux->next_stream));
   } else {
     /* The pipeline is now set up, wait until playback begins */
     goto pause_task;
@@ -1192,20 +1196,6 @@ gst_dash_demux_resume_download_task (GstDashDemux * demux)
 {
   g_get_current_time (&demux->next_download);
   gst_task_start (demux->download_task);
-}
-
-static gboolean
-gst_dash_demux_schedule (GstDashDemux * demux)
-{
-  /* schedule the next push */
-  g_get_current_time (&demux->next_stream);
-  g_time_val_add (&demux->next_stream,
-      gst_mpd_client_get_target_duration (demux->client)
-      / GST_SECOND * G_USEC_PER_SEC);
-  GST_INFO_OBJECT (demux, "Next push scheduled at %s",
-      g_time_val_to_iso8601 (&demux->next_stream));
-
-  return TRUE;
 }
 
 /* gst_dash_demux_select_representations:
