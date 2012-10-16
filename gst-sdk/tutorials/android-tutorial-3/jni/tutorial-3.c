@@ -160,6 +160,7 @@ static void *app_function (void *userdata) {
     return NULL;
   }
 
+  /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
   gst_element_set_state(data->pipeline, GST_STATE_READY);
 
   data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_X_OVERLAY);
@@ -210,6 +211,7 @@ static void gst_native_init (JNIEnv* env, jobject thiz) {
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-3", 0, "Android tutorial 3");
   gst_debug_set_threshold_for_name("tutorial-3", GST_LEVEL_DEBUG);
+  gst_debug_set_threshold_for_name("eglgles*", GST_LEVEL_DEBUG);
   GST_DEBUG ("Created CustomData at %p", data);
   data->app = (*env)->NewGlobalRef (env, thiz);
   GST_DEBUG ("Created GlobalRef for app object at %p", data->app);
@@ -277,6 +279,7 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
 
   if (data->video_sink) {
     GST_DEBUG ("Pipeline already created, notifying it about the native window.");
+    gst_element_set_state (data->pipeline, GST_STATE_READY);
     gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)data->native_window);
   } else {
     GST_DEBUG ("Pipeline not created yet, it will later be notified about the native window.");
@@ -292,11 +295,12 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
 
   if (data->video_sink) {
     gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)NULL);
-    gst_element_set_state (data->pipeline, GST_STATE_NULL);
+    gst_element_set_state (data->pipeline, GST_STATE_READY);
   }
 
   ANativeWindow_release (data->native_window);
   data->native_window = NULL;
+  data->initialized = FALSE;
 }
 
 /* List of implemented native methods */
