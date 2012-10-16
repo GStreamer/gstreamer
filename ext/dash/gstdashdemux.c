@@ -543,6 +543,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           g_object_unref (fragment);
           j++;
         }
+        g_list_free(listfragment);
       }
       g_queue_clear (demux->queue);
 
@@ -967,6 +968,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     if ((ret != GST_FLOW_OK) && (stream->mimeType == GST_STREAM_VIDEO))
       goto error_pushing;
   }
+  g_list_free(listfragment);
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
     /* Wait for the duration of a fragment before resuming this task */
     g_get_current_time (&demux->next_push);
@@ -1042,6 +1044,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
       g_object_unref (fragment);
       j++;
     }
+    g_list_free(listfragment);
   }
   g_queue_clear (demux->queue);
 
