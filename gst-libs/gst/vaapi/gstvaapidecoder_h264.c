@@ -37,6 +37,9 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/* Defined to 1 if strict ordering of DPB is needed. Only useful for debug */
+#define USE_STRICT_DPB_ORDERING 0
+
 typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
 typedef struct _GstVaapiPictureH264Class        GstVaapiPictureH264Class;
 typedef struct _GstVaapiSliceH264               GstVaapiSliceH264;
@@ -369,9 +372,13 @@ static void
 dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint num_pictures = --priv->dpb_count;
+    guint i, num_pictures = --priv->dpb_count;
 
-    if (index != num_pictures)
+    if (USE_STRICT_DPB_ORDERING) {
+        for (i = index; i < num_pictures; i++)
+            gst_vaapi_picture_replace(&priv->dpb[i], priv->dpb[i + 1]);
+    }
+    else if (index != num_pictures)
         gst_vaapi_picture_replace(&priv->dpb[index], priv->dpb[num_pictures]);
     gst_vaapi_picture_replace(&priv->dpb[num_pictures], NULL);
 }
