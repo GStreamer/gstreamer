@@ -1082,7 +1082,9 @@ render_thread_func (GstEglGlesSink * eglglessink)
       if (caps != eglglessink->configured_caps) {
         if (!gst_eglglessink_configure_caps (eglglessink, caps)) {
           eglglessink->last_flow = GST_FLOW_NOT_NEGOTIATED;
+          g_mutex_lock (eglglessink->render_lock);
           g_cond_broadcast (eglglessink->render_cond);
+          g_mutex_unlock (eglglessink->render_lock);
           item->destroy (item);
           break;
         }
@@ -1090,14 +1092,23 @@ render_thread_func (GstEglGlesSink * eglglessink)
     }
 
     eglglessink->last_flow = gst_eglglessink_render_and_display (eglglessink, buf);
+    g_mutex_lock (eglglessink->render_lock);
     g_cond_broadcast (eglglessink->render_cond);
+    g_mutex_unlock (eglglessink->render_lock);
     item->destroy (item);
     if (eglglessink->last_flow != GST_FLOW_OK)
       break;
+    GST_DEBUG_OBJECT (eglglessink, "Successfully handled object");
   }
+
+  g_mutex_lock (eglglessink->render_lock);
+  g_cond_broadcast (eglglessink->render_cond);
+  g_mutex_unlock (eglglessink->render_lock);
 
   if (eglglessink->last_flow == GST_FLOW_OK)
     eglglessink->last_flow = GST_FLOW_WRONG_STATE;
+
+  GST_DEBUG_OBJECT (eglglessink, "Shutting down thread");
 
   /* EGL/GLES cleanup */
   if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
@@ -1158,6 +1169,8 @@ gst_eglglessink_start (GstEglGlesSink * eglglessink)
 {
   GError *error = NULL;
 
+  GST_DEBUG_OBJECT (eglglessink, "Starting");
+
   if (!eglglessink->egl_started) {
     GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
     goto HANDLE_ERROR;
@@ -1188,6 +1201,8 @@ gst_eglglessink_start (GstEglGlesSink * eglglessink)
   if (!eglglessink->thread || error != NULL)
     goto HANDLE_ERROR;
 
+  GST_DEBUG_OBJECT (eglglessink, "Started");
+
   return TRUE;
 
 HANDLE_ERROR:
@@ -1199,8 +1214,12 @@ HANDLE_ERROR:
 static gboolean
 gst_eglglessink_stop (GstEglGlesSink * eglglessink)
 {
+  GST_DEBUG_OBJECT (eglglessink, "Stopping");
+
   gst_data_queue_set_flushing (eglglessink->queue, TRUE);
+  g_mutex_lock (eglglessink->render_lock);
   g_cond_broadcast (eglglessink->render_cond);
+  g_mutex_unlock (eglglessink->render_lock);
 
   if (eglglessink->thread) {
     g_thread_join (eglglessink->thread);
@@ -1219,6 +1238,8 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
     gst_caps_unref (eglglessink->current_caps);
     eglglessink->current_caps = NULL;
   }
+
+  GST_DEBUG_OBJECT (eglglessink, "Stopped");
 
   return TRUE;
 }
@@ -2027,15 +2048,20 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink,
   item->visible = (buf ? TRUE : FALSE);
   item->destroy = (GDestroyNotify) queue_item_destroy;
 
+  GST_DEBUG_OBJECT (eglglessink, "Queueing buffer %" GST_PTR_FORMAT, buf);
+
   if (buf)
     g_mutex_lock (eglglessink->render_lock);
   if (!gst_data_queue_push (eglglessink->queue, item)) {
     g_mutex_unlock (eglglessink->render_lock);
+    GST_DEBUG_OBJECT (eglglessink, "Flushing");
     return GST_FLOW_WRONG_STATE;
   }
 
   if (buf) {
+    GST_DEBUG_OBJECT (eglglessink, "Waiting for buffer to be rendered");
     g_cond_wait (eglglessink->render_cond, eglglessink->render_lock);
+    GST_DEBUG_OBJECT (eglglessink, "Buffer rendered: %s", gst_flow_get_name (eglglessink->last_flow));
     g_mutex_unlock (eglglessink->render_lock);
   }
 
