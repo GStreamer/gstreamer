@@ -383,8 +383,6 @@ static GstStateChangeReturn gst_eglglessink_change_state (GstElement * element,
 static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
     GstBuffer * buf);
 static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
-static gboolean gst_eglglessink_start (GstBaseSink * sink);
-static gboolean gst_eglglessink_stop (GstBaseSink * sink);
 static GstFlowReturn gst_eglglessink_buffer_alloc (GstBaseSink * sink,
     guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink);
@@ -1064,11 +1062,9 @@ HANDLE_ERROR:
   return FALSE;
 }
 
-gboolean
-gst_eglglessink_start (GstBaseSink * sink)
+static gboolean
+gst_eglglessink_start (GstEglGlesSink * eglglessink)
 {
-  GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
-
   if (!eglglessink->egl_started) {
     GST_ERROR_OBJECT (eglglessink, "EGL uninitialized. Bailing out");
     goto HANDLE_ERROR;
@@ -1091,11 +1087,9 @@ HANDLE_ERROR:
   return FALSE;
 }
 
-gboolean
-gst_eglglessink_stop (GstBaseSink * sink)
+static gboolean
+gst_eglglessink_stop (GstEglGlesSink * eglglessink)
 {
-  GstEglGlesSink *eglglessink = GST_EGLGLESSINK (sink);
-
   /* EGL/GLES2 cleanup */
   if (!gst_eglglessink_context_make_current (eglglessink, TRUE, FALSE))
     return FALSE;
@@ -2462,6 +2456,36 @@ gst_eglglessink_wipe_fmt (gpointer data)
   g_free (format);
 }
 
+static gboolean
+gst_eglglessink_open (GstEglGlesSink * eglglessink)
+{
+  if (!egl_init (eglglessink)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_eglglessink_close (GstEglGlesSink * eglglessink)
+{
+  g_mutex_lock (eglglessink->flow_lock);
+  if (eglglessink->eglglesctx.display) {
+    eglTerminate (eglglessink->eglglesctx.display);
+    eglglessink->eglglesctx.display = NULL;
+  }
+
+  eglglessink->selected_fmt = NULL;
+  g_list_free_full (eglglessink->supported_fmts, gst_eglglessink_wipe_fmt);
+  eglglessink->supported_fmts = NULL;
+  gst_caps_unref (eglglessink->sinkcaps);
+  eglglessink->sinkcaps = NULL;
+  eglglessink->egl_started = FALSE;
+  g_mutex_unlock (eglglessink->flow_lock);
+
+  return TRUE;
+}
+
 static GstStateChangeReturn
 gst_eglglessink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -2470,9 +2494,17 @@ gst_eglglessink_change_state (GstElement * element, GstStateChange transition)
 
   eglglessink = GST_EGLGLESSINK (element);
 
+  GST_ERROR_OBJECT (eglglessink, "Changing state %d -> %d", GST_STATE_TRANSITION_CURRENT (transition), GST_STATE_TRANSITION_NEXT (transition));
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!egl_init (eglglessink)) {
+      if (!gst_eglglessink_open (eglglessink)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto done;
+      }
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (!gst_eglglessink_start (eglglessink)) {
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
@@ -2487,17 +2519,15 @@ gst_eglglessink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (eglglessink->eglglesctx.display) {
-        eglTerminate (eglglessink->eglglesctx.display);
-        eglglessink->eglglesctx.display = NULL;
+      if (!gst_eglglessink_close (eglglessink)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto done;
       }
-
-      eglglessink->selected_fmt = NULL;
-      g_list_free_full (eglglessink->supported_fmts, gst_eglglessink_wipe_fmt);
-      eglglessink->supported_fmts = NULL;
-      gst_caps_unref (eglglessink->sinkcaps);
-      eglglessink->sinkcaps = NULL;
-      eglglessink->egl_started = FALSE;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (!gst_eglglessink_stop (eglglessink)) {
+        ret = GST_STATE_CHANGE_FAILURE;
+        goto done;
       break;
     default:
       break;
@@ -2600,8 +2630,6 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
 
   gstelement_class->change_state = gst_eglglessink_change_state;
 
-  gstbasesink_class->start = gst_eglglessink_start;
-  gstbasesink_class->stop = gst_eglglessink_stop;
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_setcaps);
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_getcaps);
   gstbasesink_class->buffer_alloc = GST_DEBUG_FUNCPTR
