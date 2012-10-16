@@ -23,12 +23,10 @@
 
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideofilter.h>
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+G_BEGIN_DECLS
 
 #define GST_TYPE_MEDIAN \
   (gst_median_get_type())
@@ -45,7 +43,7 @@ typedef struct _GstMedian GstMedian;
 typedef struct _GstMedianClass GstMedianClass;
 
 struct _GstMedian {
-  GstElement element;
+  GstVideoFilter parent;
 
   int format;
   int width;
@@ -60,12 +58,11 @@ struct _GstMedian {
 };
 
 struct _GstMedianClass {
-  GstElementClass parent_class;
+  GstVideoFilterClass parent_class;
 };
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+GType gst_median_get_type (void);
 
+G_END_DECLS
 
 #endif /* __GST_MEDIAN_H__ */

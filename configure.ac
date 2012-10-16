@@ -326,6 +326,7 @@ AG_GST_CHECK_PLUGIN(isomp4)
 AG_GST_CHECK_PLUGIN(law)
 AG_GST_CHECK_PLUGIN(level)
 AG_GST_CHECK_PLUGIN(matroska)
+AG_GST_CHECK_PLUGIN(median)
 AG_GST_CHECK_PLUGIN(monoscope)
 AG_GST_CHECK_PLUGIN(multifile)
 AG_GST_CHECK_PLUGIN(multipart)
@@ -1082,6 +1083,7 @@ gst/isomp4/Makefile
 gst/law/Makefile
 gst/level/Makefile
 gst/matroska/Makefile
+gst/median/Makefile
 gst/monoscope/Makefile
 gst/multifile/Makefile
 gst/multipart/Makefile
