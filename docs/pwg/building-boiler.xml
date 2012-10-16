@@ -378,6 +378,7 @@ gst_my_filter_init (GstMyFilter * filter)
       correct template would look like this:
     </para>
     <programlisting>
+<![CDATA[
 static GstStaticPadTemplate sink_factory =
 GST_STATIC_PAD_TEMPLATE (
   "sink",
@@ -390,6 +391,7 @@ GST_STATIC_PAD_TEMPLATE (
       "rate = (int) [ 8000, 96000 ]"
   )
 );
+]]>
     </programlisting>
     <para>
       Values surrounded by curly brackets (<quote>{</quote> and
@@ -428,7 +430,9 @@ GST_STATIC_PAD_TEMPLATE (
       Also, in this function, any supported element type in the plugin should
       be registered.
     </para>
-    <programlisting><!-- example-begin register.func -->
+    <programlisting>
+<!-- example-begin register.func -->
+<![CDATA[
 static gboolean
 plugin_init (GstPlugin *plugin)
 {
@@ -448,7 +452,9 @@ GST_PLUGIN_DEFINE (
   "GStreamer",
   "http://gstreamer.net/"
 )
-    <!-- example-end register.func --></programlisting>
+]]>
+<!-- example-end register.func -->
+    </programlisting>
     <para>
       Note that the information returned by the plugin_init() function will be
       cached in a central registry. For this reason, it is important that the

@@ -18,6 +18,7 @@
 <!ENTITY BUILDING_PADS        SYSTEM "building-pads.xml">
 <!ENTITY BUILDING_CHAINFN     SYSTEM "building-chainfn.xml">
 <!ENTITY BUILDING_EVENTFN     SYSTEM "building-eventfn.xml">
+<!ENTITY BUILDING_QUERYFN     SYSTEM "building-queryfn.xml">
 <!ENTITY BUILDING_STATE       SYSTEM "building-state.xml">
 <!ENTITY BUILDING_PROPS       SYSTEM "building-props.xml">
 <!ENTITY BUILDING_SIGNALS     SYSTEM "building-signals.xml">
@@ -120,6 +121,7 @@
     &BUILDING_PADS;
     &BUILDING_CHAINFN;
     &BUILDING_EVENTFN;
+    &BUILDING_QUERYFN;
     &BUILDING_STATE;
     &BUILDING_PROPS;
     &BUILDING_SIGNALS;
