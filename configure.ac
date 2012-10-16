@@ -2056,6 +2056,7 @@ sys/Makefile
 sys/dshowdecwrapper/Makefile
 sys/acmenc/Makefile
 sys/acmmp3dec/Makefile
+sys/androidmedia/Makefile
 sys/applemedia/Makefile
 sys/avc/Makefile
 sys/d3dvideosink/Makefile
