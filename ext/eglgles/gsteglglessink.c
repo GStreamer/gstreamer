@@ -1093,18 +1093,16 @@ render_thread_func (GstEglGlesSink * eglglessink)
     }
 
     eglglessink->last_flow = gst_eglglessink_render_and_display (eglglessink, buf);
-    g_mutex_lock (eglglessink->render_lock);
-    g_cond_broadcast (eglglessink->render_cond);
-    g_mutex_unlock (eglglessink->render_lock);
+    if (buf) {
+      g_mutex_lock (eglglessink->render_lock);
+      g_cond_broadcast (eglglessink->render_cond);
+      g_mutex_unlock (eglglessink->render_lock);
+    }
     item->destroy (item);
     if (eglglessink->last_flow != GST_FLOW_OK)
       break;
     GST_DEBUG_OBJECT (eglglessink, "Successfully handled object");
   }
-
-  g_mutex_lock (eglglessink->render_lock);
-  g_cond_broadcast (eglglessink->render_cond);
-  g_mutex_unlock (eglglessink->render_lock);
 
   if (eglglessink->last_flow == GST_FLOW_OK)
     eglglessink->last_flow = GST_FLOW_WRONG_STATE;
