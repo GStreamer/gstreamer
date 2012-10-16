@@ -718,30 +718,6 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
           ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
       break;
     }
-    case GST_QUERY_URI:
-      if (dashdemux->client) {
-        const gchar *initializationURL;
-        gchar *header_uri;
-        /* GG: I would answer with the URI of the initialization segment, or,
-         * if there is no initialization segment, with the URI of the first segment
-         * as this are usually mp4 files */
-        if (!gst_mpd_client_get_next_header (dashdemux->client,
-                &initializationURL, 0)) {
-          if (strncmp (initializationURL, "http://", 7) != 0) {
-            header_uri =
-                g_strconcat (gst_mpdparser_get_baseURL (dashdemux->client),
-                initializationURL, NULL);
-          } else {
-            header_uri = g_strdup (initializationURL);
-          }
-          gst_query_set_uri (query, header_uri);
-          g_free (header_uri);
-          ret = TRUE;
-        } else {
-          ret = FALSE;
-        }
-      }
-      break;
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
       gint64 stop = -1;
