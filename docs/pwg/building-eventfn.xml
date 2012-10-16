@@ -13,18 +13,11 @@
     Below follows a very simple event function that we install on the sink
     pad of our element.
   </para>
-  <programlisting><!-- example-begin event.c a --><!--
-#include "init.func"
-#include "caps.func"
-static gboolean
-gst_my_filter_event (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  return gst_pad_event_default (pad, parent, event);
-}
---><!-- example-end event.c a -->
+  <programlisting>
+<![CDATA[
 static gboolean gst_my_filter_sink_event (GstPad    *pad,
                                           GstObject *parent,
-                                          GstBuffer *buf);
+                                          GstEvent  *event);
 
 [..]
 
@@ -34,7 +27,7 @@ gst_my_filter_init (GstMyFilter * filter)
 [..]
   /* configure event function on the pad before adding
    * the pad to the element */
-  gst_pad_set_event_function (filter-&gt;sinkpad,
+  gst_pad_set_event_function (filter->sinkpad,
       gst_my_filter_sink_event);
 [..]
 }
@@ -67,6 +60,7 @@ gst_my_filter_sink_event (GstPad    *pad,
   }
   return ret;
 }
+]]>
   </programlisting>
   <para>
     It is a good idea to call the default event handler
