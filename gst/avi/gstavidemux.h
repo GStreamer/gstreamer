@@ -73,6 +73,7 @@ typedef struct {
     gpointer     data;
   } strf;
   GstBuffer     *extradata, *initdata;
+  GstBuffer     *rgb8_palette;
   gchar         *name;
 
   /* the start/step/stop entries */
