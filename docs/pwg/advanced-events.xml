@@ -200,7 +200,9 @@ gst_my_filter_sink_event (GstPad  *pad, GstObject * parent, GstEvent * event)
     <sect2 id="section-events-caps" xreflabel="Caps">
       <title>Caps</title>
       <para>
-        WRITEME
+        The CAPS event contains the format description of the following
+        buffers. See <xref linkend="chapter-negotiation"/> for more
+        information about negotiation.
       </para>
     </sect2>
 
@@ -378,7 +380,9 @@ gst_my_filter_sink_event (GstPad  *pad, GstObject * parent, GstEvent * event)
     <sect2 id="section-events-qos" xreflabel="Quality Of Service (QOS)">
       <title>Quality Of Service (QOS)</title>
       <para>
-        WRITEME
+        The QOS event contains a report about the current real-time
+        performance of the stream. See more info in 
+        <xref linkend="chapter-advanced-qos"/>.
       </para>
     </sect2>
 
