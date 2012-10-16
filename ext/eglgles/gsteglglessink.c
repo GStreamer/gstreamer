@@ -2,6 +2,7 @@
  * GStreamer EGL/GLES Sink
  * Copyright (C) 2012 Collabora Ltd.
  *   @author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+ *   @author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -2723,7 +2724,8 @@ gst_eglglessink_base_init (gpointer gclass)
       "EGL/GLES vout Sink",
       "Sink/Video",
       "An EGL/GLES Video Output Sink Implementing the XOverlay interface",
-      "Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>");
+      "Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_eglglessink_sink_template_factory));

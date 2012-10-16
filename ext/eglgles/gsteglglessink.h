@@ -2,6 +2,7 @@
  * GStreamer EGL/GLES Sink
  * Copyright (C) 2012 Collabora Ltd.
  *   @author: Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+ *   @author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
