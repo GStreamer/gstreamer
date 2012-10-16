@@ -151,8 +151,8 @@
  * w = h. We use these two to bound returned values to
  * sanity.
  */
-#define EGL_SANE_DAR_MIN ((EGL_DISPLAY_SCALING)/10)
-#define EGL_SANE_DAR_MAX ((EGL_DISPLAY_SCALING)*10)
+#define EGL_SANE_PAR_MIN ((EGL_DISPLAY_SCALING)/10)
+#define EGL_SANE_PAR_MAX ((EGL_DISPLAY_SCALING)*10)
 
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);
 #define GST_CAT_DEFAULT gst_eglglessink_debug
@@ -1460,7 +1460,7 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
 
   /* Save display's pixel aspect ratio
    *
-   * DAR is reported as w/h * EGL_DISPLAY_SCALING wich is
+   * PAR is reported as w/h * EGL_DISPLAY_SCALING wich is
    * a constant with value 10000. This attribute is only
    * supported if the EGL version is >= 1.2
    * XXX: Setup this as a property.
@@ -1477,15 +1477,15 @@ gst_eglglessink_update_surface_dimensions (GstEglGlesSink * eglglessink)
     eglQuerySurface (eglglessink->eglglesctx->display,
         eglglessink->eglglesctx->surface, EGL_PIXEL_ASPECT_RATIO,
         &display_par);
-   /* Fix for outbound DAR reporting on some implementations not
+   /* Fix for outbound PAR reporting on some implementations not
     * honoring the 'should return w/h * EGL_DISPLAY_SCALING' spec
     * requirement
     */
-    if (display_par == EGL_UNKNOWN || display_par < EGL_SANE_DAR_MIN ||
-        display_par > EGL_SANE_DAR_MAX) {
+    if (display_par == EGL_UNKNOWN || display_par < EGL_SANE_PAR_MIN ||
+        display_par > EGL_SANE_PAR_MAX) {
       GST_DEBUG_OBJECT (eglglessink, "Nonsensical PAR value returned: %d. "
           "Bad EGL implementation? "
-          "Will use default: %d/%d", eglglessink->eglglesctx->pixel_aspect_ratio,
+          "Will use default: %d/%d", display_par,
           EGL_DISPLAY_SCALING, EGL_DISPLAY_SCALING);
       eglglessink->eglglesctx->pixel_aspect_ratio = EGL_DISPLAY_SCALING;
     } else {
