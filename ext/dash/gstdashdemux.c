@@ -998,7 +998,7 @@ end_of_manifest:
   {
     GST_INFO_OBJECT (demux, "Reached end of manifest, sending EOS");
     guint i = 0;
-    for (i = 0; i < nb_adaptation_set; i++) {
+    for (i = 0; i < gst_mpdparser_get_nb_active_stream (demux->client); i++) {
       gst_pad_push_event (demux->srcpad[i], gst_event_new_eos ());
     }
     gst_dash_demux_stop (demux);
