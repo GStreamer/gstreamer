@@ -1140,8 +1140,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
     }
   }
 
-  if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
-    return FALSE;
+  gst_eglglessink_context_make_current (eglglessink, FALSE);
 
   if (eglglessink->eglglesctx.surface) {
     eglDestroySurface (eglglessink->eglglesctx.display,
@@ -1185,6 +1184,15 @@ gst_eglglessink_start (GstEglGlesSink * eglglessink)
         "were instructed not to create an internal one. Bailing out.");
     goto HANDLE_ERROR;
   }
+
+  GST_OBJECT_LOCK (eglglessink);
+  /* Reset display region
+   * XXX: Should probably keep old ones if set_render_rect()
+   * has been called.
+   */
+  eglglessink->display_region.w = 0;
+  eglglessink->display_region.h = 0;
+  GST_OBJECT_UNLOCK (eglglessink);
 
   eglglessink->last_flow = GST_FLOW_OK;
   gst_data_queue_set_flushing (eglglessink->queue, FALSE);
