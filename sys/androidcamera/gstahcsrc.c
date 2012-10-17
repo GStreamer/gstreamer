@@ -385,11 +385,33 @@ gst_ahc_src_unlock_stop (GstBaseSrc * bsrc)
   return TRUE;
 }
 
+typedef struct {
+  GstAHCSrc *self;
+  jbyteArray array;
+  jbyte *data;
+} FreeFuncBuffer;
+
+static void
+gst_ahc_src_buffer_free_func (gpointer priv)
+{
+  FreeFuncBuffer *data = (FreeFuncBuffer *) priv;
+  GstAHCSrc *self = data->self;
+  JNIEnv *env = gst_dvm_get_env ();
+
+  (*env)->ReleaseByteArrayElements(env, data->array, data->data, JNI_ABORT);
+  if (self->camera)
+    gst_ah_camera_add_callback_buffer (self->camera, data->array);
+  (*env)->DeleteGlobalRef (env, data->array);
+
+  g_slice_free (FreeFuncBuffer, data);
+}
+
 static GstFlowReturn
 gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer)
 {
   GstAHCSrc *self = GST_AHC_SRC (src);
   JNIEnv *env = gst_dvm_get_env ();
+  FreeFuncBuffer *user_data;
   jbyteArray data = NULL;
 
   while (data == NULL) {
@@ -398,13 +420,19 @@ gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer)
       return GST_FLOW_WRONG_STATE;
   }
 
-  *buffer = gst_buffer_new_and_alloc (self->buffer_size);
-  (*env)->GetByteArrayRegion (env, data, 0, self->buffer_size,
-      (jbyte *) GST_BUFFER_DATA (*buffer));
-  gst_buffer_set_caps (*buffer, self->caps);
+  //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
 
-  gst_ah_camera_add_callback_buffer (self->camera, data);
-  (*env)->DeleteGlobalRef (env, data);
+  user_data = g_slice_new0 (FreeFuncBuffer);
+  user_data->self = self;
+  user_data->array = data;
+  user_data->data = (*env)->GetByteArrayElements (env, data, NULL);
+
+  *buffer = gst_buffer_new ();
+  GST_BUFFER_DATA (*buffer) = (guint8 *) user_data->data;
+  GST_BUFFER_SIZE (*buffer) = self->buffer_size;
+  GST_BUFFER_MALLOCDATA (*buffer) = (gpointer) user_data;
+  GST_BUFFER_FREE_FUNC (*buffer) = gst_ahc_src_buffer_free_func;
+  gst_buffer_set_caps (*buffer, self->caps);
 
   return GST_FLOW_OK;
 }
