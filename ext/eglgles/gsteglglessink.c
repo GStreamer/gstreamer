@@ -2598,8 +2598,6 @@ gst_eglglessink_change_state (GstElement * element, GstStateChange transition)
 
   eglglessink = GST_EGLGLESSINK (element);
 
-  GST_ERROR_OBJECT (eglglessink, "Changing state %d -> %d", GST_STATE_TRANSITION_CURRENT (transition), GST_STATE_TRANSITION_NEXT (transition));
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       if (!gst_eglglessink_open (eglglessink)) {
