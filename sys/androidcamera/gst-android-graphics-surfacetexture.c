@@ -32,10 +32,10 @@ static struct
   jclass klass;
   jmethodID constructor;
   jmethodID release;
-} android_graphics_surfacetexture;
+} android_graphics_surfacetexture = {0};
 
-gboolean
-gst_android_graphics_surfacetexture_init ()
+static gboolean
+_init_classes ()
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -49,6 +49,26 @@ gst_android_graphics_surfacetexture_init ()
   return TRUE;
 }
 
+gboolean
+gst_android_graphics_surfacetexture_init ()
+{
+  if (!_init_classes ()) {
+    gst_android_graphics_surfacetexture_deinit ();
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+void
+gst_android_graphics_surfacetexture_deinit ()
+{
+  JNIEnv *env = gst_dvm_get_env ();
+
+  if (android_graphics_surfacetexture.klass)
+    (*env)->DeleteGlobalRef (env, android_graphics_surfacetexture.klass);
+  android_graphics_surfacetexture.klass = NULL;
+}
 
 /* android.graphics.SurfaceTexture */
 GstAGSurfaceTexture *

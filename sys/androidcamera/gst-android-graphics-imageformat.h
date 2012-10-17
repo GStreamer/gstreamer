@@ -37,6 +37,7 @@ extern gint ImageFormat_YUY2;
 extern gint ImageFormat_YV12;
 
 gboolean gst_android_graphics_imageformat_init (void);
+void gst_android_graphics_imageformat_deinit (void);
 
 gint gst_ag_imageformat_get_bits_per_pixel (gint format);
 

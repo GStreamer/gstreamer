@@ -46,7 +46,7 @@ static struct
   jmethodID stopPreview;
   jmethodID stopSmoothZoom;
   jmethodID unlock;
-} android_hardware_camera;
+} android_hardware_camera = {0};
 
 static struct
 {
@@ -56,7 +56,7 @@ static struct
   jfieldID orientation;
   jint CAMERA_FACING_BACK;
   jint CAMERA_FACING_FRONT;
-} android_hardware_camera_camerainfo;
+} android_hardware_camera_camerainfo = {0};
 gint CameraInfo_CAMERA_FACING_BACK;
 gint CameraInfo_CAMERA_FACING_FRONT;
 
@@ -65,7 +65,7 @@ static struct
   jclass klass;
   jfieldID width;
   jfieldID height;
-} android_hardware_camera_size;
+} android_hardware_camera_size = {0};
 
 /* TODO: Add other parameters */
 static struct
@@ -82,32 +82,32 @@ static struct
   jmethodID setPreviewFpsRange;
   jmethodID setPreviewSize;
   jmethodID unflatten;
-} android_hardware_camera_parameters;
+} android_hardware_camera_parameters = {0};
 
 static struct
 {
   jclass klass;
   jmethodID iterator;
-} java_util_list;
+} java_util_list = {0};
 
 static struct
 {
   jclass klass;
   jmethodID hasNext;
   jmethodID next;
-} java_util_iterator;
+} java_util_iterator = {0};
 
 static struct
 {
   jclass klass;
   jmethodID intValue;
-} java_lang_integer;
+} java_lang_integer = {0};
 
 static struct
 {
   jclass klass;
   jmethodID constructor;
-} com_gstreamer_gstahccallback;
+} com_gstreamer_gstahccallback = {0};
 
 static void
 gst_ah_camera_on_preview_frame (JNIEnv * env, jclass klass, jbyteArray data,
@@ -134,15 +134,10 @@ static JNINativeMethod native_methods[] = {
       (void *) gst_ah_camera_on_error}
 };
 
-gboolean
-gst_android_hardware_camera_init ()
+static gboolean
+_init_classes ()
 {
   JNIEnv *env = gst_dvm_get_env ();
-
-  if (!gst_android_graphics_surfacetexture_init ())
-    return FALSE;
-  if (!gst_android_graphics_imageformat_init ())
-    return FALSE;
 
   /* android.hardware.Camera */
   GST_DVM_GET_CLASS (android_hardware_camera, "android/hardware/Camera");
@@ -247,6 +242,57 @@ gst_android_hardware_camera_init ()
   return TRUE;
 }
 
+
+gboolean
+gst_android_hardware_camera_init ()
+{
+  if (!_init_classes ()) {
+    gst_android_hardware_camera_deinit ();
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+void
+gst_android_hardware_camera_deinit ()
+{
+  JNIEnv *env = gst_dvm_get_env ();
+
+  if (android_hardware_camera.klass)
+    (*env)->DeleteGlobalRef (env, android_hardware_camera.klass);
+  android_hardware_camera.klass = NULL;
+
+  if (android_hardware_camera_camerainfo.klass)
+    (*env)->DeleteGlobalRef (env, android_hardware_camera_camerainfo.klass);
+  android_hardware_camera_camerainfo.klass = NULL;
+
+  if (android_hardware_camera_size.klass)
+    (*env)->DeleteGlobalRef (env, android_hardware_camera_size.klass);
+  android_hardware_camera_size.klass = NULL;
+
+  if (android_hardware_camera_parameters.klass)
+    (*env)->DeleteGlobalRef (env, android_hardware_camera_parameters.klass);
+  android_hardware_camera_parameters.klass = NULL;
+
+  if (java_util_list.klass)
+    (*env)->DeleteGlobalRef (env, java_util_list.klass);
+  java_util_list.klass = NULL;
+
+  if (java_util_iterator.klass)
+    (*env)->DeleteGlobalRef (env, java_util_iterator.klass);
+  java_util_iterator.klass = NULL;
+
+  if (java_lang_integer.klass)
+    (*env)->DeleteGlobalRef (env, java_lang_integer.klass);
+  java_lang_integer.klass = NULL;
+
+  if (com_gstreamer_gstahccallback.klass) {
+    (*env)->UnregisterNatives (env, com_gstreamer_gstahccallback.klass);
+    (*env)->DeleteGlobalRef (env, com_gstreamer_gstahccallback.klass);
+  }
+  com_gstreamer_gstahccallback.klass = NULL;
+}
 
 /* android.hardware.Camera */
 void

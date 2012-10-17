@@ -66,6 +66,7 @@ typedef void (*GstAHCErrorCallback) (gint error, gpointer user_data);
 typedef void (*GstAHCPreviewCallback) (jbyteArray data, gpointer user_data);
 
 gboolean gst_android_hardware_camera_init (void);
+void gst_android_hardware_camera_deinit (void);
 
 /* android.hardware.Camera */
 void gst_ah_camera_add_callback_buffer (GstAHCamera *self,

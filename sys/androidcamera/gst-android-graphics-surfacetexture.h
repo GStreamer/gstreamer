@@ -36,6 +36,7 @@ struct _GstAGSurfaceTexture {
 
 
 gboolean gst_android_graphics_surfacetexture_init (void);
+void gst_android_graphics_surfacetexture_deinit (void);
 
 /* android.graphics.SurfaceTexture */
 GstAGSurfaceTexture *gst_ag_surfacetexture_new (gint texture_id);

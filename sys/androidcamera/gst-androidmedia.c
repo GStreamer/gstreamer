@@ -38,8 +38,18 @@ plugin_init (GstPlugin * plugin)
   if (!gst_dvm_init ())
     return FALSE;
 
-  if (!gst_android_hardware_camera_init ())
+  if (!gst_android_graphics_surfacetexture_init ())
     return FALSE;
+
+  if (!gst_android_graphics_imageformat_init ()) {
+    gst_android_graphics_surfacetexture_deinit ();
+    return FALSE;
+  }
+  if (!gst_android_hardware_camera_init ()) {
+    gst_android_graphics_surfacetexture_deinit ();
+    gst_android_graphics_imageformat_deinit ();
+    return FALSE;
+  }
 
   return gst_element_register (plugin, "ahcsrc", GST_RANK_NONE,
       GST_TYPE_AHC_SRC);

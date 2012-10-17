@@ -38,7 +38,7 @@ static struct
   jint UNKNOWN;
   jint YUY2;
   jint YV12;
-} android_graphics_imageformat;
+} android_graphics_imageformat = {0};
 
 gint ImageFormat_JPEG;
 gint ImageFormat_NV16;
@@ -48,8 +48,8 @@ gint ImageFormat_UNKNOWN;
 gint ImageFormat_YUY2;
 gint ImageFormat_YV12;
 
-gboolean
-gst_android_graphics_imageformat_init ()
+static gboolean
+_init_classes ()
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -77,6 +77,26 @@ gst_android_graphics_imageformat_init ()
   return TRUE;
 }
 
+gboolean
+gst_android_graphics_imageformat_init ()
+{
+  if (!_init_classes ()) {
+    gst_android_graphics_imageformat_deinit ();
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+void
+gst_android_graphics_imageformat_deinit ()
+{
+  JNIEnv *env = gst_dvm_get_env ();
+
+  if (android_graphics_imageformat.klass)
+    (*env)->DeleteGlobalRef (env, android_graphics_imageformat.klass);
+  android_graphics_imageformat.klass = NULL;
+}
 
 /* android.graphics.ImageFormat */
 gint
