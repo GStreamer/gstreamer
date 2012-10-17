@@ -82,71 +82,86 @@ max_rate_err:
   }
 }
 
-static const struct
+static snd_pcm_format_t
+gst_alsa_get_pcm_format (GstAudioFormat fmt)
 {
-  const int width;
-  const int depth;
-  const int sformat;
-  const int uformat;
-} pcmformats[] = {
-  {
-  8, 8, SND_PCM_FORMAT_S8, SND_PCM_FORMAT_U8}, {
-  16, 16, SND_PCM_FORMAT_S16, SND_PCM_FORMAT_U16}, {
-  32, 24, SND_PCM_FORMAT_S24, SND_PCM_FORMAT_U24}, {
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)   /* no endian-unspecific enum available */
-  24, 24, SND_PCM_FORMAT_S24_3LE, SND_PCM_FORMAT_U24_3LE}, {
-#else
-  24, 24, SND_PCM_FORMAT_S24_3BE, SND_PCM_FORMAT_U24_3BE}, {
-#endif
-  32, 32, SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
-};
+  switch (fmt) {
+    case GST_AUDIO_FORMAT_S8:
+      return SND_PCM_FORMAT_S8;
+    case GST_AUDIO_FORMAT_U8:
+      return SND_PCM_FORMAT_U8;
+      /* 16 bit */
+    case GST_AUDIO_FORMAT_S16LE:
+      return SND_PCM_FORMAT_S16_LE;
+    case GST_AUDIO_FORMAT_S16BE:
+      return SND_PCM_FORMAT_S16_BE;
+    case GST_AUDIO_FORMAT_U16LE:
+      return SND_PCM_FORMAT_U16_LE;
+    case GST_AUDIO_FORMAT_U16BE:
+      return SND_PCM_FORMAT_U16_BE;
+      /* 24 bit in low 3 bytes of 32 bits */
+    case GST_AUDIO_FORMAT_S24_32LE:
+      return SND_PCM_FORMAT_S24_LE;
+    case GST_AUDIO_FORMAT_S24_32BE:
+      return SND_PCM_FORMAT_S24_BE;
+    case GST_AUDIO_FORMAT_U24_32LE:
+      return SND_PCM_FORMAT_U24_LE;
+    case GST_AUDIO_FORMAT_U24_32BE:
+      return SND_PCM_FORMAT_U24_BE;
+      /* 24 bit in 3 bytes */
+    case GST_AUDIO_FORMAT_S24LE:
+      return SND_PCM_FORMAT_S24_3LE;
+    case GST_AUDIO_FORMAT_S24BE:
+      return SND_PCM_FORMAT_S24_3BE;
+    case GST_AUDIO_FORMAT_U24LE:
+      return SND_PCM_FORMAT_U24_3LE;
+    case GST_AUDIO_FORMAT_U24BE:
+      return SND_PCM_FORMAT_U24_3BE;
+      /* 32 bit */
+    case GST_AUDIO_FORMAT_S32LE:
+      return SND_PCM_FORMAT_S32_LE;
+    case GST_AUDIO_FORMAT_S32BE:
+      return SND_PCM_FORMAT_S32_BE;
+    case GST_AUDIO_FORMAT_U32LE:
+      return SND_PCM_FORMAT_U32_LE;
+    case GST_AUDIO_FORMAT_U32BE:
+      return SND_PCM_FORMAT_U32_BE;
+    default:
+      break;
+  }
+  return SND_PCM_FORMAT_UNKNOWN;
+}
 
-static GstCaps *
-add_format (const gchar * str, GstStructure * s, snd_pcm_format_mask_t * mask,
-    GstCaps * caps)
+static gboolean
+format_supported (const GValue * format_val, snd_pcm_format_mask_t * mask,
+    int endianness)
 {
-  GstStructure *scopy;
-  GstAudioFormat format;
   const GstAudioFormatInfo *finfo;
-  gint w, width = 0, depth = 0;
+  snd_pcm_format_t pcm_format;
+  GstAudioFormat format;
 
-  format = gst_audio_format_from_string (str);
+  if (!G_VALUE_HOLDS_STRING (format_val))
+    return FALSE;
+
+  format = gst_audio_format_from_string (g_value_get_string (format_val));
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
-    return caps;
+    return FALSE;
 
   finfo = gst_audio_format_get_info (format);
 
-  width = GST_AUDIO_FORMAT_INFO_WIDTH (finfo);
-  depth = GST_AUDIO_FORMAT_INFO_DEPTH (finfo);
+  if (GST_AUDIO_FORMAT_INFO_ENDIANNESS (finfo) != endianness)
+    return FALSE;
 
-  for (w = 0; w < G_N_ELEMENTS (pcmformats); w++)
-    if (pcmformats[w].width == width && pcmformats[w].depth == depth)
-      break;
-  if (w == G_N_ELEMENTS (pcmformats))
-    return caps;                /* Unknown format */
+  pcm_format = gst_alsa_get_pcm_format (format);
+  if (pcm_format == SND_PCM_FORMAT_UNKNOWN)
+    return FALSE;
 
-  if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat) &&
-      snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
-    scopy = gst_structure_copy (s);
-  } else if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat)) {
-    scopy = gst_structure_copy (s);
-    /* FIXME, remove unsigned version */
-  } else if (snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
-    scopy = gst_structure_copy (s);
-    /* FIXME, remove signed version */
-  } else {
-    scopy = NULL;
-  }
-  if (scopy) {
-    caps = gst_caps_merge_structure (caps, scopy);
-  }
-  return caps;
+  return snd_pcm_format_mask_test (mask, pcm_format);
 }
-
 
 static GstCaps *
 gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
-    GstCaps * in_caps)
+    GstCaps * in_caps, int endianness)
 {
   snd_pcm_format_mask_t *mask;
   GstStructure *s;
@@ -156,10 +171,11 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
   snd_pcm_format_mask_malloc (&mask);
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
 
-  caps = gst_caps_new_empty ();
+  caps = NULL;
 
   for (i = 0; i < gst_caps_get_size (in_caps); ++i) {
     const GValue *format;
+    GValue list = G_VALUE_INIT;
 
     s = gst_caps_get_structure (in_caps, i);
     if (!gst_structure_has_name (s, "audio/x-raw")) {
@@ -171,6 +187,8 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
     if (format == NULL)
       continue;
 
+    g_value_init (&list, GST_TYPE_LIST);
+
     if (GST_VALUE_HOLDS_LIST (format)) {
       gint i, len;
 
@@ -179,13 +197,31 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
         const GValue *val;
 
         val = gst_value_list_get_value (format, i);
-        if (G_VALUE_HOLDS_STRING (val))
-          caps = add_format (g_value_get_string (val), s, mask, caps);
+        if (format_supported (val, mask, endianness))
+          gst_value_list_append_value (&list, val);
       }
     } else if (G_VALUE_HOLDS_STRING (format)) {
-      caps = add_format (g_value_get_string (format), s, mask, caps);
-    } else
-      continue;
+      if (format_supported (format, mask, endianness))
+        gst_value_list_append_value (&list, format);
+    }
+
+    if (gst_value_list_get_size (&list) > 1) {
+      if (caps == NULL)
+        caps = gst_caps_new_empty ();
+      s = gst_structure_copy (s);
+      gst_structure_take_value (s, "format", &list);
+      gst_caps_append_structure (caps, s);
+    } else if (gst_value_list_get_size (&list) == 1) {
+      if (caps == NULL)
+        caps = gst_caps_new_empty ();
+      format = gst_value_list_get_value (&list, 0);
+      s = gst_structure_copy (s);
+      gst_structure_set_value (s, "format", format);
+      gst_caps_append_structure (caps, s);
+      g_value_unset (&list);
+    } else {
+      g_value_unset (&list);
+    }
   }
 
   snd_pcm_format_mask_free (mask);
@@ -463,7 +499,7 @@ gst_alsa_probe_supported_formats (GstObject * obj, gchar * device,
 
   caps = gst_caps_copy (template_caps);
 
-  if (!(caps = gst_alsa_detect_formats (obj, hw_params, caps)))
+  if (!(caps = gst_alsa_detect_formats (obj, hw_params, caps, G_BYTE_ORDER)))
     goto subroutine_error;
 
   if (!(caps = gst_alsa_detect_rates (obj, hw_params, caps)))

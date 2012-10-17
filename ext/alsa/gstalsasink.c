@@ -286,12 +286,18 @@ gst_alsasink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   }
 
   if (sink->cached_caps) {
-    GST_LOG_OBJECT (sink, "Returning cached caps");
-    if (filter)
-      return gst_caps_intersect_full (filter, sink->cached_caps,
+    if (filter) {
+      caps = gst_caps_intersect_full (filter, sink->cached_caps,
           GST_CAPS_INTERSECT_FIRST);
-    else
+      GST_LOG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT " with "
+          "filter %" GST_PTR_FORMAT " applied: %" GST_PTR_FORMAT,
+          sink->cached_caps, filter, caps);
+      return caps;
+    } else {
+      GST_LOG_OBJECT (sink, "Returning cached caps %" GST_PTR_FORMAT,
+          sink->cached_caps);
       return gst_caps_ref (sink->cached_caps);
+    }
   }
 
   element_class = GST_ELEMENT_GET_CLASS (sink);
