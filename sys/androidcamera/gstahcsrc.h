@@ -24,6 +24,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include <gst/base/gstdataqueue.h>
+
 #include "gst-android-hardware-camera.h"
 
 G_BEGIN_DECLS
@@ -51,9 +53,8 @@ struct _GstAHCSrc
   GstAGSurfaceTexture *texture;
   GstCaps *caps;
   GList *data;
-  GAsyncQueue *queue;
+  GstDataQueue *queue;
   gint buffer_size;
-  gboolean flushing;
 };
 
 struct _GstAHCSrcClass
