@@ -60,7 +60,7 @@ gst_ag_surfacetexture_new (gint texture_id)
 
   object = (*env)->NewObject (env,
       android_graphics_surfacetexture.klass,
-      android_graphics_surfacetexture.constructor);
+      android_graphics_surfacetexture.constructor, texture_id);
   if ((*env)->ExceptionCheck (env) || !object) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
