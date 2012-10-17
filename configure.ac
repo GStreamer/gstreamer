@@ -75,7 +75,7 @@ AC_CONFIG_AUX_DIR([build-aux])
 
 AC_CANONICAL_TARGET
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([1.11 tar-ustar no-dist-gzip dist-bzip2])
 
 TODAY="`LC_ALL=C date +'%a, %d %b %Y %X %z'`"
 AC_SUBST(TODAY)
