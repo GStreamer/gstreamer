@@ -1450,6 +1450,7 @@ static gboolean
 need_add_header (GstDashDemux * demux)
 {
   GstActiveStream *stream;
+  GstCaps *caps;
   guint stream_idx = 0;
   gboolean switch_caps = FALSE;
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
@@ -1457,12 +1458,14 @@ need_add_header (GstDashDemux * demux)
         gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
     if (stream == NULL)
       return FALSE;
-    GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
+    caps = gst_dash_demux_get_input_caps (demux, stream);
     if (!demux->input_caps[stream_idx]
         || !gst_caps_is_equal (caps, demux->input_caps[stream_idx])) {
       switch_caps = TRUE;
+      gst_caps_unref (caps);
       break;
     }
+    gst_caps_unref (caps);
     stream_idx++;
   }
   return switch_caps;
