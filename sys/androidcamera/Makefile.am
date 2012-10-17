@@ -20,7 +20,10 @@ libgstandroidmedia_la_SOURCES = \
 	video/gstvideodecoder.c \
 	video/gstvideoencoder.c \
 	video/gstvideoutils.c \
-	gst-dvm.c
+	gst-dvm.c \
+	gst-android-hardware-camera.c \
+	gst-android-graphics-surfacetexture.c \
+	gst-android-graphics-imageformat.c
 
 noinst_HEADERS = \
 	gstamc.h \
@@ -31,7 +34,10 @@ noinst_HEADERS = \
 	video/gstvideodecoder.h \
 	video/gstvideoencoder.h \
 	video/gstvideoutils.h \
-	gst-dvm.h
+	gst-dvm.h \
+	gst-android-hardware-camera.h \
+	gst-android-graphics-surfacetexture.h \
+	gst-android-graphics-imageformat.h
 
 if !HAVE_GST_0_10_37
 libgstandroidmedia_la_SOURCES += $(VIDEO_BASE_CLASSES_C)
