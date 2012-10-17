@@ -207,15 +207,15 @@ gst_ahc_src_open (GstAHCSrc * self)
 
       GST_WARNING_OBJECT (self, "Params : %s",
           gst_ahc_parameters_flatten (params));
-      gst_ahc_parameters_set_preview_size (params, 640, 480);
-      gst_ahc_parameters_set_preview_format (params, ImageFormat_NV21);
+      gst_ahc_parameters_set_preview_size (params, 1280, 720);
+      gst_ahc_parameters_set_preview_format (params, ImageFormat_YV12);
 
       GST_WARNING_OBJECT (self, "Setting new params (%d) : %s",
           gst_ah_camera_set_parameters (self->camera, params),
           gst_ahc_parameters_flatten (params));
       size = gst_ahc_parameters_get_preview_size (params);
       self->caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('N', 'V', '2', '1'),
+          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
           "width", G_TYPE_INT, size->width,
           "height", G_TYPE_INT, size->height,
           "framerate", GST_TYPE_FRACTION, 30, 1, NULL);
