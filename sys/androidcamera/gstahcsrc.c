@@ -43,6 +43,8 @@ static gboolean gst_ahc_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_ahc_src_unlock_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer);
 
+#define NUM_CALLBACK_BUFFERS 5
+
 #define GST_AHC_SRC_CAPS_STR                                    \
   GST_VIDEO_CAPS_YUV (" { YV12 , YUY2 , NV21 , NV16 }") ";"     \
   GST_VIDEO_CAPS_RGB_16
@@ -262,6 +264,7 @@ gst_ahc_src_open (GstAHCSrc * self)
     GST_WARNING_OBJECT (self, "Opened camera");
     if (params) {
       GstAHCSize *size;
+      int i;
 
       GST_WARNING_OBJECT (self, "Params : %s",
           gst_ahc_parameters_flatten (params));
@@ -286,12 +289,13 @@ gst_ahc_src_open (GstAHCSrc * self)
           self);
       gst_ah_camera_set_preview_callback_with_buffer (self->camera,
           gst_ahc_src_on_preview_frame, self);
-      gst_ah_camera_add_callback_buffer (self->camera,
-          (*env)->NewByteArray (env, self->buffer_size));
-      gst_ah_camera_add_callback_buffer (self->camera,
-          (*env)->NewByteArray (env, self->buffer_size));
-      gst_ah_camera_add_callback_buffer (self->camera,
-          (*env)->NewByteArray (env, self->buffer_size));
+
+      for (i = 0; i < NUM_CALLBACK_BUFFERS; i++) {
+        jbyteArray array = (*env)->NewByteArray (env, self->buffer_size);
+
+        gst_ah_camera_add_callback_buffer (self->camera, array);
+        (*env)->DeleteLocalRef (env, array);
+      }
 
       {
         GList *list, *i;
