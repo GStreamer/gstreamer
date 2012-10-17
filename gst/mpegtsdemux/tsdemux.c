@@ -1499,6 +1499,12 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream)
     goto beach;
   }
 
+  if (G_UNLIKELY (demux->program == NULL)) {
+    GST_LOG_OBJECT (demux, "No program");
+    g_free (stream->data);
+    goto beach;
+  }
+
   if (G_UNLIKELY (stream->need_newsegment))
     calculate_and_push_newsegment (demux, stream);
 
