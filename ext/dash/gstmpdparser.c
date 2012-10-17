@@ -2800,7 +2800,6 @@ gst_mpd_client_get_next_header (GstMpdClient * client, const gchar **uri, guint 
   /* select stream */
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->active_streams != NULL, FALSE);
-  /* TODO: support multiple streams */
   stream = g_list_nth_data (client->active_streams, stream_idx);
   g_return_val_if_fail (stream != NULL, FALSE);
   g_return_val_if_fail (stream->cur_representation != NULL, FALSE);
@@ -2812,7 +2811,15 @@ gst_mpd_client_get_next_header (GstMpdClient * client, const gchar **uri, guint 
   if (stream->cur_segment_base && stream->cur_segment_base->Initialization) {
     *uri = gst_mpdparser_get_initializationURL(stream->cur_segment_base->Initialization);
   } else if (stream->cur_seg_template) {
-    *uri = gst_mpdparser_build_URL_from_template (stream->cur_seg_template->initialization,
+    const gchar *initialization = NULL;
+    if (stream->cur_seg_template->initialization) {
+      initialization = stream->cur_seg_template->initialization;
+    } else if (stream->cur_adapt_set->SegmentTemplate && stream->cur_adapt_set->SegmentTemplate->initialization) {
+      initialization = stream->cur_adapt_set->SegmentTemplate->initialization;
+    } else if (client->cur_period->SegmentTemplate && client->cur_period->SegmentTemplate->initialization) {
+      initialization = client->cur_period->SegmentTemplate->initialization;
+    }
+    *uri = gst_mpdparser_build_URL_from_template (initialization,
         stream->cur_representation->id, 0, stream->cur_representation->bandwidth, 0);
   }
   GST_MPD_CLIENT_UNLOCK (client);
