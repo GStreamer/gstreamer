@@ -1309,8 +1309,6 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
     GST_ERROR_OBJECT (eglglessink, "Could not create window");
     return window;
   }
-  gst_x_overlay_got_window_handle (GST_X_OVERLAY (eglglessink),
-      (guintptr) window);
   return window;
 }
 
@@ -1998,12 +1996,12 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (overlay);
 
   g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
-  GST_DEBUG_OBJECT (eglglessink, "We got a window handle: %p", (void *) id);
+  GST_DEBUG_OBJECT (eglglessink, "We got a window handle: %p", (gpointer) id);
 
   /* OK, we have a new window */
   GST_OBJECT_LOCK (eglglessink);
   eglglessink->eglglesctx.window = (EGLNativeWindowType) id;
-  eglglessink->have_window = TRUE;
+  eglglessink->have_window = ((gpointer) id != NULL);
   GST_OBJECT_UNLOCK (eglglessink);
 
   return;
@@ -2388,7 +2386,6 @@ gst_eglglessink_configure_caps (GstEglGlesSink *eglglessink, GstCaps * caps)
   gboolean ret = TRUE;
   gint width, height;
   int par_n, par_d;
-  EGLNativeWindowType window;
   GstEglGlesImageFmt *format;
 
   if (!(ret = gst_video_format_parse_caps (caps, &eglglessink->format, &width,
@@ -2497,18 +2494,26 @@ gst_eglglessink_configure_caps (GstEglGlesSink *eglglessink, GstCaps * caps)
   /* By now the application should have set a window
    * if it meant to do so
    */
+  GST_OBJECT_LOCK (eglglessink);
   if (!eglglessink->have_window) {
+    EGLNativeWindowType window;
+
     GST_INFO_OBJECT (eglglessink,
         "No window. Will attempt internal window creation");
     if (!(window = gst_eglglessink_create_window (eglglessink, width, height))) {
       GST_ERROR_OBJECT (eglglessink, "Internal window creation failed!");
+      GST_OBJECT_UNLOCK (eglglessink);
       goto HANDLE_ERROR;
     }
     eglglessink->using_own_window = TRUE;
-    gst_eglglessink_set_window_handle (GST_X_OVERLAY (eglglessink),
-        (guintptr) window);
+    eglglessink->eglglesctx.window = window;
+    eglglessink->have_window = TRUE;
   }
+  GST_DEBUG_OBJECT (eglglessink, "Using window handle %p", eglglessink->eglglesctx.window);
   eglglessink->eglglesctx.used_window = eglglessink->eglglesctx.window;
+  GST_OBJECT_UNLOCK (eglglessink);
+  gst_x_overlay_got_window_handle (GST_X_OVERLAY (eglglessink),
+      (guintptr) eglglessink->eglglesctx.used_window);
 
   if (!eglglessink->have_surface) {
     if (!gst_eglglessink_init_egl_surface (eglglessink)) {
