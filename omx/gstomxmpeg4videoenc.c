@@ -65,7 +65,7 @@ gst_omx_mpeg4_video_enc_class_init (GstOMXMPEG4VideoEncClass * klass)
       "systemstream=(boolean) false, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenMAX MPEG4 Video Encoder",
       "Codec/Encoder/Video",
       "Encode MPEG4 video streams",

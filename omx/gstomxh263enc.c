@@ -61,7 +61,7 @@ gst_omx_h263_enc_class_init (GstOMXH263EncClass * klass)
   videoenc_class->cdata.default_src_template_caps = "video/x-h263, "
       "width=(int) [ 16, 4096 ], " "height=(int) [ 16, 4096 ]";
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenMAX H.263 Video Encoder",
       "Codec/Encoder/Video",
       "Encode H.263 video streams",

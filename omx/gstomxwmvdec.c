@@ -62,7 +62,7 @@ gst_omx_wmv_dec_class_init (GstOMXWMVDecClass * klass)
   videodec_class->cdata.default_sink_template_caps = "video/x-wmv";
 
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenMAX WMV Video Decoder",
       "Codec/Decoder/Video",
       "Decode WMV video streams",

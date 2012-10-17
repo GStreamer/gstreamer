@@ -63,7 +63,7 @@ gst_omx_h264_dec_class_init (GstOMXH264DecClass * klass)
       "parsed=(boolean) true, "
       "alignment=(string)au, " "stream-format=(string) byte-stream";
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenMAX H.264 Video Decoder",
       "Codec/Decoder/Video",
       "Decode H.264 video streams",

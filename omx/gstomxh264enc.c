@@ -65,7 +65,7 @@ gst_omx_h264_enc_class_init (GstOMXH264EncClass * klass)
   videoenc_class->handle_output_frame =
       GST_DEBUG_FUNCPTR (gst_omx_h264_enc_handle_output_frame);
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenMAX H.264 Video Encoder",
       "Codec/Encoder/Video",
       "Encode H.264 video streams",

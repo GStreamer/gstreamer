@@ -148,7 +148,7 @@ gst_omx_aac_enc_class_init (GstOMXAACEncClass * klass)
       "stream-format=(string){raw, adts, adif, loas, latm}";
 
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "OpenMAX AAC Audio Encoder",
       "Codec/Encoder/Audio",
       "Encode AAC audio streams",
