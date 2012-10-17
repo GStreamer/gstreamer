@@ -282,8 +282,6 @@ gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstAHCSrc *self = GST_AHC_SRC (element);
 
-  GST_WARNING_OBJECT (self, "Changing state %d", transition);
-
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
     {
@@ -292,7 +290,7 @@ gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
 
       GST_WARNING_OBJECT (self, "Found %d cameras on the system", num_cams);
 
-      for (i = 0; i <= num_cams; i++) {
+      for (i = 0; i < num_cams; i++) {
         GstAHCCameraInfo info;
         if (gst_ah_camera_get_camera_info (i, &info)) {
           GST_WARNING_OBJECT (self, "Camera info for %d", i);
