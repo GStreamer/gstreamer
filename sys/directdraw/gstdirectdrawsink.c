@@ -382,8 +382,8 @@ gst_directdraw_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class, "Direct Draw Video Sink",
-      "Sink/Video",
+  gst_element_class_set_static_metadata (element_class,
+      "Direct Draw Video Sink", "Sink/Video",
       "Output to a video card via Direct Draw",
       "Sebastien Moutte <sebastien@moutte.net>");
   gst_element_class_add_pad_template (element_class,
@@ -1753,9 +1753,9 @@ gst_directdraw_sink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat)
   gint order = 0, binary;
 
   binary =
-      lpddpfPixelFormat->dwRBitMask | lpddpfPixelFormat->
-      dwGBitMask | lpddpfPixelFormat->dwBBitMask | lpddpfPixelFormat->
-      dwRGBAlphaBitMask;
+      lpddpfPixelFormat->
+      dwRBitMask | lpddpfPixelFormat->dwGBitMask | lpddpfPixelFormat->
+      dwBBitMask | lpddpfPixelFormat->dwRGBAlphaBitMask;
   while (binary != 0) {
     if ((binary % 2) == 1)
       order++;

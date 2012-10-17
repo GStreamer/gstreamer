@@ -1460,7 +1460,7 @@ gst_pvrvideosink_class_init (GstPVRVideoSinkClass * klass)
           "original aspect ratio", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "PVR Video sink", "Sink/Video",
       "A PVR videosink",
       "Luciana Fujii Pontello <luciana.fujii@collabora.co.uk");

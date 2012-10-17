@@ -1231,7 +1231,7 @@ gst_wrapper_camera_bin_src_class_init (GstWrapperCameraBinSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&vidsrc_template));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Wrapper camera src element for camerabin2", "Source/Video",
       "Wrapper camera src element for camerabin2",
       "Thiago Santos <thiago.sousa.santos@collabora.com>");

@@ -304,7 +304,7 @@ gst_motion_cells_class_init (GstMotioncellsClass * klass)
           THICKNESS_MIN, THICKNESS_MAX, THICKNESS_DEF,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "motioncells",
       "Filter/Effect/Video",
       "Performs motion detection on videos and images, providing detected motion cells index via bus messages",

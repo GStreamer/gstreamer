@@ -132,7 +132,7 @@ gst_nuv_demux_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_set_metadata (element_class, "Nuv demuxer",
+  gst_element_class_set_static_metadata (element_class, "Nuv demuxer",
       "Codec/Demuxer",
       "Demultiplex a MythTV NuppleVideo .nuv file into audio and video",
       "Renato Araujo Oliveira Filho <renato.filho@indt.org.br>,"

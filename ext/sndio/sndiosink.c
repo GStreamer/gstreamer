@@ -51,7 +51,7 @@ enum
 };
 
 static GstStaticPadTemplate sndio_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -59,8 +59,7 @@ static GstStaticPadTemplate sndio_sink_factory =
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) { 8, 16, 24, 32 }, "
         "depth = (int) { 8, 16, 24, 32 }, "
-        "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 16 ] ")
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 16 ] ")
     );
 
 static void gst_sndiosink_finalize (GObject * object);
@@ -91,11 +90,10 @@ gst_sndiosink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Sndio audio sink",
       "Sink/Audio",
-      "Plays audio through sndio",
-      "Jacob Meuser <jakemsr@sdf.lonestar.org>");
+      "Plays audio through sndio", "Jacob Meuser <jakemsr@sdf.lonestar.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sndio_sink_factory));
@@ -123,8 +121,7 @@ gst_sndiosink_class_init (GstSndioSinkClass * klass)
   gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_sndiosink_open);
   gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_sndiosink_close);
   gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_sndiosink_prepare);
-  gstaudiosink_class->unprepare =
-      GST_DEBUG_FUNCPTR (gst_sndiosink_unprepare);
+  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_sndiosink_unprepare);
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_sndiosink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_sndiosink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_sndiosink_reset);
@@ -139,8 +136,7 @@ gst_sndiosink_class_init (GstSndioSinkClass * klass)
 }
 
 static void
-gst_sndiosink_init (GstSndioSink * sndiosink,
-    GstSndioSinkClass * klass)
+gst_sndiosink_init (GstSndioSink * sndiosink, GstSndioSinkClass * klass)
 {
   sndiosink->hdl = NULL;
   sndiosink->host = g_strdup (g_getenv ("AUDIODEVICE"));
@@ -170,8 +166,7 @@ gst_sndiosink_getcaps (GstBaseSink * bsink)
     return NULL;
   }
 
-  GST_LOG_OBJECT (sndiosink, "returning %" GST_PTR_FORMAT,
-      sndiosink->cur_caps);
+  GST_LOG_OBJECT (sndiosink, "returning %" GST_PTR_FORMAT, sndiosink->cur_caps);
 
   return gst_caps_ref (sndiosink->cur_caps);
 }

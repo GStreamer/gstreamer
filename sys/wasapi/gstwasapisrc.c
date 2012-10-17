@@ -71,7 +71,7 @@ gst_wasapi_src_base_init (gpointer gclass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
-  gst_element_class_set_metadata (element_class, "WasapiSrc",
+  gst_element_class_set_static_metadata (element_class, "WasapiSrc",
       "Source/Audio",
       "Stream audio from an audio capture device through WASAPI",
       "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>");

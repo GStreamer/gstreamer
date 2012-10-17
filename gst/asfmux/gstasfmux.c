@@ -277,7 +277,7 @@ gst_asf_mux_class_init (GstAsfMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "ASF muxer",
+  gst_element_class_set_static_metadata (gstelement_class, "ASF muxer",
       "Codec/Muxer",
       "Muxes audio and video into an ASF stream",
       "Thiago Santos <thiagoss@embedded.ufcg.edu.br>");

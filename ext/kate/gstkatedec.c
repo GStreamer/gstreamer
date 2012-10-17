@@ -161,7 +161,7 @@ gst_kate_dec_class_init (GstKateDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Kate stream text decoder", "Codec/Decoder/Subtitle",
       "Decodes Kate text streams",
       "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");

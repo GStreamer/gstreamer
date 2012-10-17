@@ -50,8 +50,7 @@ enum
   PROP_HOST
 };
 
-static GstStaticPadTemplate sndio_src_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate sndio_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -59,8 +58,7 @@ static GstStaticPadTemplate sndio_src_factory =
         "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) { 8, 16, 24, 32 }, "
         "depth = (int) { 8, 16, 24, 32 }, "
-        "rate = (int) [ 8000, 192000 ], "
-        "channels = (int) [ 1, 16 ] ")
+        "rate = (int) [ 8000, 192000 ], " "channels = (int) [ 1, 16 ] ")
     );
 
 static void gst_sndiosrc_finalize (GObject * object);
@@ -83,19 +81,17 @@ static void gst_sndiosrc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_sndiosrc_cb (void *addr, int delta);
 
-GST_BOILERPLATE (GstSndioSrc, gst_sndiosrc, GstAudioSrc,
-    GST_TYPE_AUDIO_SRC);
+GST_BOILERPLATE (GstSndioSrc, gst_sndiosrc, GstAudioSrc, GST_TYPE_AUDIO_SRC);
 
 static void
 gst_sndiosrc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Sndio audio source",
       "Source/Audio",
-      "Records audio through sndio",
-      "Jacob Meuser <jakemsr@sdf.lonestar.org>");
+      "Records audio through sndio", "Jacob Meuser <jakemsr@sdf.lonestar.org>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sndio_src_factory));
@@ -168,8 +164,7 @@ gst_sndiosrc_getcaps (GstBaseSrc * bsrc)
     return NULL;
   }
 
-  GST_LOG_OBJECT (sndiosrc, "returning %" GST_PTR_FORMAT,
-      sndiosrc->cur_caps);
+  GST_LOG_OBJECT (sndiosrc, "returning %" GST_PTR_FORMAT, sndiosrc->cur_caps);
 
   return gst_caps_ref (sndiosrc->cur_caps);
 }
@@ -301,8 +296,7 @@ gst_sndiosrc_open (GstAudioSrc * asrc)
   g_array_free (chans, TRUE);
 
   pad_template = gst_static_pad_template_get (&sndio_src_factory);
-  sndiosrc->cur_caps =
-      gst_caps_copy (gst_pad_template_get_caps (pad_template));
+  sndiosrc->cur_caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
   gst_object_unref (pad_template);
 
   for (i = 0; i < sndiosrc->cur_caps->structs->len; i++) {

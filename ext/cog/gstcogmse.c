@@ -143,7 +143,7 @@ gst_mse_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_framestore_sink_test_template));
 
-  gst_element_class_set_metadata (element_class, "Calculate MSE",
+  gst_element_class_set_static_metadata (element_class, "Calculate MSE",
       "Filter/Effect",
       "Calculates mean squared error between two video streams",
       "David Schleef <ds@schleef.org>");

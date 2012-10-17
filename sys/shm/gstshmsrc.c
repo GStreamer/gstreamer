@@ -134,7 +134,7 @@ gst_shm_src_class_init (GstShmSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Shared Memory Source",
       "Source",
       "Receive data from the shared memory sink",

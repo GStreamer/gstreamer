@@ -531,7 +531,7 @@ gst_base_camera_src_class_init (GstBaseCameraSrcClass * klass)
 
   gstelement_class->change_state = gst_base_camera_src_change_state;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Base class for camerabin src bin", "Source/Video",
       "Abstracts capture device for camerabin2", "Rob Clark <rob@ti.com>");
 }

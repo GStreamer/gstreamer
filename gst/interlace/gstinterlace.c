@@ -226,7 +226,7 @@ gst_interlace_class_init (GstInterlaceClass * klass)
           "Allow generation of buffers with RFF flag set, i.e., duration of 3 fields",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Interlace filter", "Filter/Video",
       "Creates an interlaced video from progressive frames",
       "David Schleef <ds@schleef.org>");

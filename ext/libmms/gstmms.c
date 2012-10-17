@@ -103,7 +103,7 @@ gst_mms_class_init (GstMMSClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "MMS streaming source", "Source/Network",
       "Receive data streamed via MSFT Multi Media Server protocol",
       "Maciej Katafiasz <mathrick@users.sourceforge.net>");

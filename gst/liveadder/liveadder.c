@@ -172,7 +172,7 @@ gst_live_adder_class_init (GstLiveAdderClass * klass)
       gst_static_pad_template_get (&gst_live_adder_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_live_adder_sink_template));
-  gst_element_class_set_metadata (gstelement_class, "Live Adder element",
+  gst_element_class_set_static_metadata (gstelement_class, "Live Adder element",
       "Generic/Audio",
       "Mixes live/discontinuous audio streams",
       "Olivier Crete <olivier.crete@collabora.co.uk>");

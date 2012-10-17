@@ -132,7 +132,7 @@ gst_gaussianblur_class_init (GstGaussianBlurClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "GstGaussianBlur",
       "Filter/Effect/Video",
       "Perform Gaussian blur/sharpen on a video",

@@ -278,7 +278,7 @@ gst_field_analysis_class_init (GstFieldAnalysisClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_field_analysis_change_state);
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Video field analysis",
       "Filter/Analysis/Video",
       "Analyse fields from video frames to identify if they are progressive/telecined/interlaced",

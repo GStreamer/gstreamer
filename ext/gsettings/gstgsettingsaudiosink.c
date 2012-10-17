@@ -329,7 +329,7 @@ gst_gsettings_audio_sink_base_init (gpointer klass)
 {
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_metadata (eklass, "GSettings audio sink",
+  gst_element_class_set_static_metadata (eklass, "GSettings audio sink",
       "Sink/Audio",
       "Audio sink embedding the GSettings preferences for audio output",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

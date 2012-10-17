@@ -114,7 +114,7 @@ gst_patchdetect_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_patchdetect_src_template));
 
-  gst_element_class_set_metadata (element_class, "Color Patch Detector",
+  gst_element_class_set_static_metadata (element_class, "Color Patch Detector",
       "Video/Analysis", "Detects color patches from a color calibration chart",
       "David Schleef <ds@entropywave.com>");
 }

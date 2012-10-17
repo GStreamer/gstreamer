@@ -617,7 +617,7 @@ gst_camera_bin_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class, "Camera Bin",
+  gst_element_class_set_static_metadata (element_class, "Camera Bin",
       "Generic/Bin/Camera",
       "Take image snapshots and record movies from camera",
       "Thiago Santos <thiago.sousa.santos@collabora.co.uk>");

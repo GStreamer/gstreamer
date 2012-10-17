@@ -130,7 +130,7 @@ gst_dodge_class_init (GstDodgeClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Dodge",
       "Filter/Effect/Video",
       "Dodge saturates the colors in the video signal.",

@@ -270,7 +270,7 @@ gst_face_detect_class_init (GstFaceDetectClass * klass)
           "Minimum area height to be recognized as a face", 0, G_MAXINT,
           DEFAULT_MIN_SIZE_HEIGHT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "facedetect",
       "Filter/Effect/Video",
       "Performs face detection on videos and images, providing detected positions via bus messages",

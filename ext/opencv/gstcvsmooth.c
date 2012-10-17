@@ -175,7 +175,7 @@ gst_cv_smooth_class_init (GstCvSmoothClass * klass)
           0, G_MAXDOUBLE, DEFAULT_PARAM4,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "cvsmooth",
       "Transform/Effect/Video",
       "Applies cvSmooth OpenCV function to the image",

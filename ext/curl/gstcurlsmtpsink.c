@@ -229,7 +229,7 @@ gst_curl_smtp_sink_class_init (GstCurlSmtpSinkClass * klass)
       "curl smtp sink element");
   GST_DEBUG_OBJECT (klass, "class_init");
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Curl smtp sink",
       "Sink/Network",
       "Upload data over SMTP protocol using libcurl",

@@ -111,7 +111,7 @@ gst_kate_parse_class_init (GstKateParseClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_kate_parse_sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "Kate stream parser",
+  gst_element_class_set_static_metadata (gstelement_class, "Kate stream parser",
       "Codec/Parser/Subtitle",
       "parse raw kate streams",
       "Vincent Penquerc'h <ogg.k.ogg.k at googlemail dot com>");

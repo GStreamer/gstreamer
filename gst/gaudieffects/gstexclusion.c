@@ -136,7 +136,7 @@ gst_exclusion_class_init (GstExclusionClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class, "Exclusion",
+  gst_element_class_set_static_metadata (gstelement_class, "Exclusion",
       "Filter/Effect/Video",
       "Exclusion exclodes the colors in the video signal.",
       "Luis de Bethencourt <luis@debethencourt.com>");

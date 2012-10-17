@@ -146,7 +146,7 @@ gst_sdlaudio_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class, "SDL audio sink",
+  gst_element_class_set_static_metadata (element_class, "SDL audio sink",
       "Sink/Audio",
       "Output to a sound card via SDLAUDIO",
       "Edgard Lima <edgard.lima@indt.org.br>");

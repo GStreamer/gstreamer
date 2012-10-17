@@ -160,7 +160,7 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Select convertor based on caps", "Generic/Bin",
       "Selects the right transform element based on the caps",
       "Olivier Crete <olivier.crete@collabora.com>");

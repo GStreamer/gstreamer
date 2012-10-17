@@ -169,7 +169,7 @@ gst_bayer2rgb_class_init (GstBayer2RGBClass * klass)
   gobject_class->set_property = gst_bayer2rgb_set_property;
   gobject_class->get_property = gst_bayer2rgb_get_property;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Bayer to RGB decoder for cameras", "Filter/Converter/Video",
       "Converts video/x-bayer to video/x-raw",
       "William Brack <wbrack@mmm.com.hk>");

@@ -60,7 +60,7 @@ rsn_parsetter_class_init (RsnParSetterClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Resin Aspect Ratio Setter", "Filter/Video",
       "Overrides caps on video buffers to force a particular display ratio",
       "Jan Schmidt <thaytan@noraisin.net>");

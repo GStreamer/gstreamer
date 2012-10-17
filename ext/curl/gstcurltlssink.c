@@ -98,7 +98,7 @@ gst_curl_tls_sink_class_init (GstCurlTlsSinkClass * klass)
       "curl tls sink element");
   GST_DEBUG_OBJECT (klass, "class_init");
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Curl tls sink",
       "Sink/Network",
       "Upload data over TLS protocol using libcurl",

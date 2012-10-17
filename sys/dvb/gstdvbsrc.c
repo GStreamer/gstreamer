@@ -334,7 +334,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&ts_src_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "DVB Source",
+  gst_element_class_set_static_metadata (gstelement_class, "DVB Source",
       "Source/Video",
       "Digital Video Broadcast Source",
       "P2P-VCR, C-Lab, University of Paderborn,"

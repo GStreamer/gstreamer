@@ -339,7 +339,7 @@ gst_dccp_server_sink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_metadata (element_class, "DCCP server sink",
+  gst_element_class_set_static_metadata (element_class, "DCCP server sink",
       "Sink/Network",
       "Send data as a server over the network via DCCP",
       "E-Phone Team at Federal University of Campina Grande <leandroal@gmail.com>");

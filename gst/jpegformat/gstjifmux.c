@@ -141,7 +141,7 @@ gst_jif_mux_class_init (GstJifMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_jif_mux_sink_pad_template));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "JPEG stream muxer",
       "Video/Formatter",
       "Remuxes JPEG images with markers and tags",

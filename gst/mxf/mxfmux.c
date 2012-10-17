@@ -107,7 +107,7 @@ gst_mxf_mux_base_init (gpointer g_class)
     p++;
   }
 
-  gst_element_class_set_metadata (element_class, "MXF muxer",
+  gst_element_class_set_static_metadata (element_class, "MXF muxer",
       "Codec/Muxer",
       "Muxes video/audio streams into a MXF stream",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

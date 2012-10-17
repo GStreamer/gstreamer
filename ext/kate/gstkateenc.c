@@ -216,8 +216,8 @@ gst_kate_enc_class_init (GstKateEncClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "Kate stream encoder",
-      "Codec/Encoder/Subtitle",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "Kate stream encoder", "Codec/Encoder/Subtitle",
       "Encodes Kate streams from text or subpictures",
       "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>");
 }

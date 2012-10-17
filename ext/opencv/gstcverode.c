@@ -70,7 +70,7 @@ gst_cv_erode_class_init (GstCvErodeClass * klass)
 
   gstopencvbasefilter_class->cv_trans_ip_func = gst_cv_erode_transform_ip;
   gstopencvbasefilter_class->cv_trans_func = gst_cv_erode_transform;
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "cverode",
       "Transform/Effect/Video",
       "Applies cvErode OpenCV function to the image",

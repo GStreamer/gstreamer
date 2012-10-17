@@ -86,7 +86,7 @@ gst_sf_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sf_src_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "Sndfile source",
+  gst_element_class_set_static_metadata (gstelement_class, "Sndfile source",
       "Source/Audio",
       "Read audio streams from disk using libsndfile",
       "Andy Wingo <wingo at pobox dot com>");

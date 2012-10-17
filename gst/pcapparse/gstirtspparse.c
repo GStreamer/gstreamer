@@ -110,7 +110,7 @@ gst_irtsp_parse_class_init (GstIRTSPParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_metadata (element_class, "IRTSPParse",
+  gst_element_class_set_static_metadata (element_class, "IRTSPParse",
       "Raw/Parser",
       "Parses a raw interleaved RTSP stream",
       "Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>");

@@ -224,7 +224,7 @@ gst_dshowvideosink_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_metadata (element_class, "DirectShow video sink",
+  gst_element_class_set_static_metadata (element_class, "DirectShow video sink",
       "Sink/Video", "Display data using a DirectShow video renderer",
       "Pioneers of the Inevitable <songbird@songbirdnest.com>, " \
       "FLUENDO S.A. <support@fluendo.com>");

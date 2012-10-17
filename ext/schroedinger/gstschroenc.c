@@ -219,7 +219,7 @@ gst_schro_enc_class_init (GstSchroEncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_schro_enc_sink_template));
 
-  gst_element_class_set_metadata (element_class, "Dirac Encoder",
+  gst_element_class_set_static_metadata (element_class, "Dirac Encoder",
       "Codec/Encoder/Video",
       "Encode raw video into Dirac stream", "David Schleef <ds@schleef.org>");
 

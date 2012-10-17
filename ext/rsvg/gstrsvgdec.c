@@ -77,7 +77,7 @@ gst_rsvg_dec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "SVG image decoder", "Codec/Decoder/Image",
       "Uses librsvg to decode SVG images",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

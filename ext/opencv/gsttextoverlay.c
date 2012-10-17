@@ -200,7 +200,7 @@ gst_opencv_text_overlay_class_init (GstOpencvTextOverlayClass * klass)
           "Sets the width of fonts", 1.0, 5.0,
           DEFAULT_WIDTH, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "opencvtextoverlay",
       "Filter/Effect/Video",
       "Write text on the top of video", "sreerenj<bsreerenj@gmail.com>");
@@ -351,7 +351,8 @@ gst_opencv_text_overlay_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_structure_get_int (structure, "height", &height);
 
       if (!filter->cvImage) {
-        filter->cvImage = cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
+        filter->cvImage =
+            cvCreateImage (cvSize (width, height), IPL_DEPTH_8U, 3);
         filter->cvStorage = cvCreateMemStorage (0);
       }
       break;

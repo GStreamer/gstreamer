@@ -176,7 +176,7 @@ gst_shm_sink_class_init (GstShmSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Shared Memory Sink",
       "Sink",
       "Send data over shared memory to the matching source",

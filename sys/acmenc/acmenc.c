@@ -494,7 +494,7 @@ acmenc_base_init (ACMEncClass * klass)
           && *shortname) ? shortname : params->name);
   description = g_strdup_printf ("ACM Encoder: %s", (longname
           && *longname) ? longname : params->name);
-  gst_element_class_set_metadata (element_class, detail,
+  gst_element_class_set_static_metadata (element_class, detail,
       "Codec/Encoder/Audio", description,
       "Pioneers of the Inevitable <songbird@songbirdnest.com>");
   g_free (shortname);

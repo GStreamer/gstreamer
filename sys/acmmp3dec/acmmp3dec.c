@@ -409,7 +409,7 @@ acmmp3dec_base_init (gpointer klass)
       gst_static_pad_template_get (&acmmp3dec_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&acmmp3dec_src_template));
-  gst_element_class_set_metadata (element_class, "ACM MP3 decoder",
+  gst_element_class_set_static_metadata (element_class, "ACM MP3 decoder",
       "Codec/Decoder/Audio",
       "Decode MP3 using ACM decoder",
       "Pioneers of the Inevitable <songbird@songbirdnest.com");

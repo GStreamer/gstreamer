@@ -168,7 +168,7 @@ G_DEFINE_TYPE (GstFestival, gst_festival, GST_TYPE_ELEMENT)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template_factory));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Festival Text-to-Speech synthesizer", "Filter/Effect/Audio",
       "Synthesizes plain text into audio",
       "Wim Taymans <wim.taymans@gmail.com>");

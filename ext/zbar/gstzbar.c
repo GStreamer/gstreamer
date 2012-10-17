@@ -163,7 +163,7 @@ gst_zbar_class_init (GstZBarClass * g_class)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class, "Barcode detector",
+  gst_element_class_set_static_metadata (gstelement_class, "Barcode detector",
       "Filter/Analyzer/Video",
       "Detect bar codes in the video streams",
       "Stefan Kost <ensonic@users.sf.net>");

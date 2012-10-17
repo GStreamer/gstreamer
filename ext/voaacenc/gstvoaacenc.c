@@ -164,7 +164,7 @@ gst_voaacenc_class_init (GstVoAacEncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_metadata (element_class, "AAC audio encoder",
+  gst_element_class_set_static_metadata (element_class, "AAC audio encoder",
       "Codec/Encoder/Audio", "AAC audio encoder", "Kan Hu <kan.hu@linaro.org>");
 
   GST_DEBUG_CATEGORY_INIT (gst_voaacenc_debug, "voaacenc", 0, "voaac encoder");
@@ -491,8 +491,7 @@ gst_voaacenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buf)
     goto encode_failed;
   }
 
-  GST_LOG_OBJECT (voaacenc, "encoded to %lu bytes",
-      output.Length);
+  GST_LOG_OBJECT (voaacenc, "encoded to %lu bytes", output.Length);
   gst_buffer_unmap (buf, &map);
   gst_buffer_unmap (out, &omap);
   gst_buffer_resize (out, 0, output.Length);

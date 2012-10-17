@@ -208,7 +208,7 @@ gst_swfdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class, "SWF video decoder",
+  gst_element_class_set_static_metadata (element_class, "SWF video decoder",
       "Codec/Decoder/Video",
       "Uses libswfdec to decode Flash video streams",
       "David Schleef <ds@schleef.org>");

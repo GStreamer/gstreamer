@@ -207,7 +207,7 @@ fps_display_sink_class_init (GstFPSDisplaySinkClass * klass)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&fps_display_sink_template));
 
-  gst_element_class_set_metadata (gstelement_klass,
+  gst_element_class_set_static_metadata (gstelement_klass,
       "Measure and show framerate on videosink", "Sink/Video",
       "Shows the current frame-rate and drop-rate of the videosink as overlay or text on stdout",
       "Zeeshan Ali <zeeshan.ali@nokia.com>, Stefan Kost <stefan.kost@nokia.com>");

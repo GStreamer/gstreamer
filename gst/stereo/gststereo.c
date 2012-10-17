@@ -86,7 +86,7 @@ gst_stereo_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstCaps *caps;
 
-  gst_element_class_set_metadata (element_class, "Stereo effect",
+  gst_element_class_set_static_metadata (element_class, "Stereo effect",
       "Filter/Effect/Audio",
       "Muck with the stereo signal to enhance its 'stereo-ness'",
       "Erik Walthinsen <omega@cse.ogi.edu>");

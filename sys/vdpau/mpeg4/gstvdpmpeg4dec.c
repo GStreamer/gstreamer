@@ -439,7 +439,7 @@ gst_vdp_mpeg4_dec_base_init (gpointer gclass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "VDPAU Mpeg4 Decoder",
       "Decoder",
       "Decode mpeg4 stream with vdpau",

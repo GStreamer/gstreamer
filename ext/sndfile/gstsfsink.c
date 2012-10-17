@@ -86,7 +86,7 @@ gst_sf_sink_base_init (gpointer g_class)
   GST_DEBUG_CATEGORY_INIT (gst_sf_debug, "sfsink", 0, "sfsink element");
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sf_sink_factory));
-  gst_element_class_set_metadata (element_class, "Sndfile sink",
+  gst_element_class_set_static_metadata (element_class, "Sndfile sink",
       "Sink/Audio",
       "Write audio streams to disk using libsndfile",
       "Andy Wingo <wingo at pobox dot com>");

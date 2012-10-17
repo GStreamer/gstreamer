@@ -60,7 +60,7 @@ gst_vcd_parse_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_factory));
 
-  gst_element_class_set_metadata (element_class, "(S)VCD stream parser",
+  gst_element_class_set_static_metadata (element_class, "(S)VCD stream parser",
       "Codec/Parser", "Strip (S)VCD stream from its sync headers",
       "Tim-Philipp Müller <tim centricular net>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");

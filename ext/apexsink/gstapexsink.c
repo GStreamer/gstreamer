@@ -261,7 +261,7 @@ gst_apexsink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Apple AirPort Express Audio Sink", "Sink/Audio/Wireless",
       "Output stream to an AirPort Express",
       "Jérémie Bernard [GRemi] <gremimail@gmail.com>");

@@ -94,7 +94,7 @@ gst_inter_sub_sink_class_init (GstInterSubSinkClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_sub_sink_sink_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Internal subtitle sink",
       "Sink/Subtitle",
       "Virtual subtitle sink for internal process communication",

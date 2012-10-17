@@ -130,7 +130,7 @@ gst_neonhttp_src_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_metadata (element_class, "HTTP client source",
+  gst_element_class_set_static_metadata (element_class, "HTTP client source",
       "Source/Network",
       "Receive data as a client over the network via HTTP using NEON",
       "Edgard Lima <edgard.lima@indt.org.br>, "

@@ -77,7 +77,7 @@ gst_rtjpegdec_base_init (GstRTJpegDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_metadata (element_class, "RTjpeg video decoder",
+  gst_element_class_set_static_metadata (element_class, "RTjpeg video decoder",
       "Codec/Decoder/Video",
       "Decodes video in RTjpeg format", "Erik Walthinsen <omega@cse.ogi.edu>");
 }

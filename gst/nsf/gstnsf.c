@@ -136,7 +136,7 @@ gst_nsfdec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_metadata (element_class, "Nsf decoder",
+  gst_element_class_set_static_metadata (element_class, "Nsf decoder",
       "Codec/Decoder/Audio",
       "Using nosefart to decode NSF audio tunes",
       "Johan Dahlin <johan@gnome.org>");

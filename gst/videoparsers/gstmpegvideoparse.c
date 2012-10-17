@@ -148,7 +148,7 @@ gst_mpegv_parse_class_init (GstMpegvParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "MPEG video elementary stream parser",
       "Codec/Parser/Video",
       "Parses and frames MPEG-1 and MPEG-2 elementary video streams",

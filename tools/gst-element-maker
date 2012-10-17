@@ -189,7 +189,7 @@ done
 
 cat <<EOF
 
-  gst_element_class_set_metadata (element_class, "FIXME Long name",
+  gst_element_class_set_static_metadata (element_class, "FIXME Long name",
       "Generic", "FIXME Description", "$REAL_NAME <$EMAIL_ADDRESS>");
 }
 

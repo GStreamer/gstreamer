@@ -158,7 +158,7 @@ gst_dvbsub_overlay_class_init (GstDVBSubOverlayClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&text_sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "DVB Subtitles Overlay",
       "Mixer/Video/Overlay/Subtitle",
       "Renders DVB subtitles", "Mart Raudsepp <mart.raudsepp@collabora.co.uk>");

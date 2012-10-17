@@ -122,7 +122,7 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
           "Set the hysteresis (on samples) used on the internal VAD",
           1, G_MAXUINT64, DEFAULT_VAD_HYSTERESIS, G_PARAM_READWRITE));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "RemoveSilence",
       "Filter/Effect/Audio",
       "Removes all the silence periods from the audio stream.",

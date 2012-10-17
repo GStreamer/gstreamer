@@ -121,7 +121,7 @@ gst_dshowaudiosrc_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Directshow audio capture source", "Source/Audio",
       "Receive data from a directshow audio capture graph",
       "Sebastien Moutte <sebastien@moutte.net>");

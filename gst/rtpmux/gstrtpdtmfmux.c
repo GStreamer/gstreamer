@@ -87,7 +87,7 @@ gst_rtp_dtmf_mux_class_init (GstRTPDTMFMuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&priority_sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "RTP muxer",
+  gst_element_class_set_static_metadata (gstelement_class, "RTP muxer",
       "Codec/Muxer",
       "mixes RTP DTMF streams into other RTP streams",
       "Zeeshan Ali <first.last@nokia.com>");

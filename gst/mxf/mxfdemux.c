@@ -3976,7 +3976,7 @@ gst_mxf_demux_base_init (gpointer g_class)
       gst_static_pad_template_get (&mxf_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&mxf_src_template));
-  gst_element_class_set_metadata (element_class, "MXF Demuxer",
+  gst_element_class_set_static_metadata (element_class, "MXF Demuxer",
       "Codec/Demuxer",
       "Demux MXF files", "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
 }

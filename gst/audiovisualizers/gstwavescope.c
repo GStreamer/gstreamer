@@ -141,7 +141,7 @@ gst_wave_scope_class_init (GstWaveScopeClass * g_class)
           GST_TYPE_WAVE_SCOPE_STYLE, STYLE_DOTS,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Waveform oscilloscope", "Visualization", "Simple waveform oscilloscope",
       "Stefan Kost <ensonic@users.sf.net>");
 

@@ -99,7 +99,7 @@ gst_timidity_base_init (gpointer gclass)
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_metadata (element_class, "Timidity",
+  gst_element_class_set_static_metadata (element_class, "Timidity",
       "Codec/Decoder/Audio",
       "Midi Synthesizer Element", "Wouter Paesen <wouter@blue-gate.be>");
 }

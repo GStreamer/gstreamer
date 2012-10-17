@@ -153,7 +153,7 @@ gst_test_camera_src_class_init (GstTestCameraSrcClass * klass)
   gstbasecamera_class = GST_BASE_CAMERA_SRC_CLASS (klass);
   gstbasecamera_class->set_mode = gst_test_camera_src_set_mode;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Test Camera Src",
       "Camera/Src",
       "Some test camera src",

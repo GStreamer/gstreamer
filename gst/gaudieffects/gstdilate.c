@@ -135,7 +135,7 @@ gst_dilate_class_init (GstDilateClass * klass)
   GstElementClass *gstelement_class = (GstElementClass *) klass;
   GstVideoFilterClass *vfilter_class = (GstVideoFilterClass *) klass;
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "Dilate",
       "Filter/Effect/Video",
       "Dilate copies the brightest pixel around.",

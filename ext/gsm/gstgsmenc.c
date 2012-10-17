@@ -82,7 +82,7 @@ gst_gsmenc_class_init (GstGSMEncClass * klass)
       gst_static_pad_template_get (&gsmenc_sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gsmenc_src_template));
-  gst_element_class_set_metadata (element_class, "GSM audio encoder",
+  gst_element_class_set_static_metadata (element_class, "GSM audio encoder",
       "Codec/Encoder/Audio",
       "Encodes GSM audio", "Philippe Khalaf <burger@speedy.org>");
 

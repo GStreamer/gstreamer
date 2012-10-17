@@ -205,7 +205,7 @@ gst_dirac_enc_base_init (gpointer g_class)
   gst_element_class_add_static_pad_template (element_class,
       &gst_dirac_enc_sink_template);
 
-  gst_element_class_set_metadata (element_class, "Dirac Encoder",
+  gst_element_class_set_static_metadata (element_class, "Dirac Encoder",
       "Codec/Encoder/Video",
       "Encode raw YUV video into Dirac stream",
       "David Schleef <ds@schleef.org>");

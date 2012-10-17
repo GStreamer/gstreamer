@@ -116,7 +116,7 @@ gst_system_encode_base_init (GstMPEG1SystemEncodeClass * klass)
       gst_static_pad_template_get (&audio_sink_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&video_sink_factory));
-  gst_element_class_set_metadata (element_class, "MPEG-1 muxer",
+  gst_element_class_set_static_metadata (element_class, "MPEG-1 muxer",
       "Codec/Muxer",
       "Multiplexes MPEG-1 Streams", "Wim Taymans <wim.taymans@chello.be>");
 }

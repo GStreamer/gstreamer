@@ -100,7 +100,7 @@ gst_inter_video_src_class_init (GstInterVideoSrcClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_inter_video_src_src_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "Internal video source",
       "Source/Video",
       "Virtual video source for internal process communication",

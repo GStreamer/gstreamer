@@ -143,7 +143,7 @@ gst_cv_sobel_class_init (GstCvSobelClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "cvsobel",
       "Transform/Effect/Video",
       "Applies cvSobel OpenCV function to the image",

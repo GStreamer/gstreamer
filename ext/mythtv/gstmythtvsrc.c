@@ -159,7 +159,7 @@ GST_BOILERPLATE_FULL (GstMythtvSrc, gst_mythtv_src, GstPushSrc,
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
 
-  gst_element_class_set_metadata (element_class, "MythTV client source",
+  gst_element_class_set_static_metadata (element_class, "MythTV client source",
       "Source/Network",
       "Control and receive data as a client over the network "
       "via raw socket connections using the MythTV protocol",

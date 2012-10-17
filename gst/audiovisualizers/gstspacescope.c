@@ -126,7 +126,7 @@ gst_space_scope_class_init (GstSpaceScopeClass * g_class)
   GstElementClass *element_class = (GstElementClass *) g_class;
   GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *) g_class;
 
-  gst_element_class_set_metadata (element_class, "Stereo visualizer",
+  gst_element_class_set_static_metadata (element_class, "Stereo visualizer",
       "Visualization",
       "Simple stereo visualizer", "Stefan Kost <ensonic@users.sf.net>");
 

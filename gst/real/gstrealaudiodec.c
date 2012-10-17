@@ -562,7 +562,7 @@ gst_real_audio_dec_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&snk_t));
   gst_element_class_add_pad_template (ec, gst_static_pad_template_get (&src_t));
-  gst_element_class_set_metadata (ec, "RealAudio decoder",
+  gst_element_class_set_static_metadata (ec, "RealAudio decoder",
       "Codec/Decoder/Audio", "Decoder for RealAudio streams",
       "Lutz Mueller <lutz@topfrose.de>");
 }

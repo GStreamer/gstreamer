@@ -70,7 +70,7 @@ gst_cv_dilate_class_init (GstCvDilateClass * klass)
 
   gstopencvbasefilter_class->cv_trans_ip_func = gst_cv_dilate_transform_ip;
   gstopencvbasefilter_class->cv_trans_func = gst_cv_dilate_transform;
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "cvdilate",
       "Transform/Effect/Video",
       "Applies cvDilate OpenCV function to the image",

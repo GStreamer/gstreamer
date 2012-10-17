@@ -78,7 +78,7 @@ gst_span_plc_class_init (GstSpanPlcClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_metadata (gstelement_class, "SpanDSP PLC",
+  gst_element_class_set_static_metadata (gstelement_class, "SpanDSP PLC",
       "Filter/Effect/Audio",
       "Adds packet loss concealment to audio",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");

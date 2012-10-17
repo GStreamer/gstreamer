@@ -116,7 +116,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_template));
 
-  gst_element_class_set_metadata (gstelement_class,
+  gst_element_class_set_static_metadata (gstelement_class,
       "wayland video sink", "Sink/Video",
       "Output to wayland surface",
       "Sreerenj Balachandran <sreerenj.balachandran@intel.com>");

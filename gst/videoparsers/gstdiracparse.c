@@ -113,7 +113,7 @@ gst_dirac_parse_class_init (GstDiracParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_dirac_parse_sink_template));
 
-  gst_element_class_set_metadata (element_class, "Dirac parser",
+  gst_element_class_set_static_metadata (element_class, "Dirac parser",
       "Codec/Parser/Video", "Parses Dirac streams",
       "David Schleef <ds@schleef.org>");
 

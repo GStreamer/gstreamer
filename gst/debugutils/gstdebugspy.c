@@ -133,7 +133,7 @@ gst_debug_spy_class_init (GstDebugSpyClass * klass)
           "Checksum algorithm to use", GST_DEBUG_SPY_CHECKSUM_TYPE,
           G_CHECKSUM_SHA1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "DebugSpy",
       "Filter/Analyzer/Debug",
       "DebugSpy provides information on buffers with bus messages",

@@ -154,7 +154,7 @@ gst_chroma_hold_class_init (GstChromaHoldClass * klass)
       GST_DEBUG_FUNCPTR (gst_chroma_hold_transform_frame_ip);
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_chroma_hold_set_info);
 
-  gst_element_class_set_metadata (gstelement_class, "Chroma hold filter",
+  gst_element_class_set_static_metadata (gstelement_class, "Chroma hold filter",
       "Filter/Effect/Video",
       "Removes all color information except for one color",
       "Sebastian Dröge <sebastian.droege@collabora.co.uk>");

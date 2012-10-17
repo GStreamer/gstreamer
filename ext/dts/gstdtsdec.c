@@ -160,7 +160,7 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
       gst_static_pad_template_get (&sink_factory));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
-  gst_element_class_set_metadata (gstelement_class, "DTS audio decoder",
+  gst_element_class_set_static_metadata (gstelement_class, "DTS audio decoder",
       "Codec/Decoder/Audio",
       "Decodes DTS audio streams",
       "Jan Schmidt <thaytan@noraisin.net>, "
