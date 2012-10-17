@@ -22,14 +22,27 @@
 #include "config.h"
 #endif
 
-#include "gstamc.h"
-
 #include <gst/gst.h>
+
+#include "gstamc.h"
+#include "gst-dvm.h"
+#include "gst-android-hardware-camera.h"
+#include "gstahcsrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_amc_init (plugin);
+  if (!gst_amc_init (plugin))
+    return FALSE;
+
+  if (!gst_dvm_init ())
+    return FALSE;
+
+  if (!gst_android_hardware_camera_init ())
+    return FALSE;
+
+  return gst_element_register (plugin, "ahcsrc", GST_RANK_NONE,
+      GST_TYPE_AHC_SRC);
 }
 
 #ifdef GST_PLUGIN_DEFINE2
