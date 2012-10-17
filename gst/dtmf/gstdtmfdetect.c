@@ -123,8 +123,8 @@ gst_dtmf_detect_class_init (GstDtmfDetectClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
 
-  gst_element_class_set_metadata (gstelement_class, "DTMF detector element",
-      "Filter/Analyzer/Audio",
+  gst_element_class_set_static_metadata (gstelement_class,
+      "DTMF detector element", "Filter/Analyzer/Audio",
       "This element detects DTMF tones",
       "Olivier Crete <olivier.crete@collabora.com>");
 
