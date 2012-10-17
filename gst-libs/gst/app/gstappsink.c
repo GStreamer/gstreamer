@@ -320,7 +320,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
           pull_sample), NULL, NULL, __gst_app_marshal_BOXED__VOID,
       GST_TYPE_SAMPLE, 0, G_TYPE_NONE);
 
-  gst_element_class_set_metadata (element_class, "AppSink",
+  gst_element_class_set_static_metadata (element_class, "AppSink",
       "Generic/Sink", "Allow the application to get access to raw buffer",
       "David Schleef <ds@schleef.org>, Wim Taymans <wim.taymans@gmail.com>");
 
