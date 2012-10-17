@@ -1785,6 +1785,8 @@ gst_rtp_session_setcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
     GST_DEBUG_OBJECT (rtpsession, "setting internal SSRC to %08x", ssrc);
     rtp_session_set_internal_ssrc (priv->session, ssrc);
   }
+  rtp_session_update_send_caps (priv->session, caps);
+
   return TRUE;
 }
 

@@ -2455,6 +2455,26 @@ ignore:
 }
 
 /**
+ * rtp_session_update_send_caps:
+ * @sess: an #RTPSession
+ * @caps: a #GstCaps
+ *
+ * Update the caps of the sender in the rtp session.
+ */
+void
+rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
+{
+  g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_CAPS (caps), GST_FLOW_ERROR);
+
+  GST_LOG ("received caps %" GST_PTR_FORMAT, caps);
+
+  RTP_SESSION_LOCK (sess);
+  rtp_source_update_caps (sess->source, caps);
+  RTP_SESSION_UNLOCK (sess);
+}
+
+/**
  * rtp_session_send_rtp:
  * @sess: an #RTPSession
  * @data: pointer to either an RTP buffer or a list of RTP buffers
