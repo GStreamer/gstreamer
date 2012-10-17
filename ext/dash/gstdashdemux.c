@@ -157,7 +157,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/xml"));
+    GST_STATIC_CAPS ("application/dash+xml"));
 
 GST_DEBUG_CATEGORY_STATIC (gst_dash_demux_debug);
 #define GST_CAT_DEFAULT gst_dash_demux_debug
