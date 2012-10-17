@@ -1998,7 +1998,7 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (overlay);
 
   g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
-  GST_DEBUG_OBJECT (eglglessink, "We got a window handle!");
+  GST_DEBUG_OBJECT (eglglessink, "We got a window handle: %p", (void *) id);
 
   /* OK, we have a new window */
   GST_OBJECT_LOCK (eglglessink);
