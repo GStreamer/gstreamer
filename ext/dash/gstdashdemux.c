@@ -1272,7 +1272,9 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
 static GstFragment *
 gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
 {
-  const gchar *next_header_uri, *initializationURL;
+  const gchar *initializationURL;
+  gchar *next_header_uri;
+  GstFragment *fragment;
 
   if (!gst_mpd_client_get_next_header (demux->client, &initializationURL,
           stream_idx))
@@ -1288,7 +1290,10 @@ gst_dash_demux_get_next_header (GstDashDemux * demux, guint stream_idx)
 
   GST_INFO_OBJECT (demux, "Fetching header %s", next_header_uri);
 
-  return gst_uri_downloader_fetch_uri (demux->downloader, next_header_uri);
+  fragment = gst_uri_downloader_fetch_uri (demux->downloader, next_header_uri);
+  g_free (next_header_uri);
+
+  return fragment;
 }
 
 static GstBufferListItem
