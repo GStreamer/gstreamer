@@ -62,8 +62,6 @@ public class Tutorial3 extends Activity implements SurfaceHolder.Callback {
         SurfaceHolder sh = sv.getHolder();
         sh.addCallback(this);
 
-        // Keep the instance state for later, since we will not perform our initialization
-        // until the native code reports that it is itself initialized.
         if (savedInstanceState != null) {
             is_playing_desired = savedInstanceState.getBoolean("playing");
             Log.i ("GStreamer", "Activity created. Saved state is playing:" + is_playing_desired);
