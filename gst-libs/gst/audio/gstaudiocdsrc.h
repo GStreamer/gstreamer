@@ -61,7 +61,14 @@ typedef enum {
  * @tags: Track-specific tags (e.g. from cd-text information), or NULL
  *
  * CD track abstraction to communicate TOC entries to the base class.
+ *
+ * This structure is only for use by sub-classed in connection with
+ * gst_audio_cd_src_add_track().
+ *
+ * Applications will be informed of the available tracks via a TOC message
+ * on the pipeline's #GstBus instead.
  */
+/* FIXME 2.0: remove this struct and pass values directly to _add_track() */
 struct _GstAudioCdSrcTrack {
   gboolean     is_audio;      /* TRUE if this is an audio track             */
   guint        num;           /* real track number (usually starts from 1)  */
@@ -128,17 +135,6 @@ GType    gst_audio_cd_src_mode_get_type (void);
 gboolean gst_audio_cd_src_add_track (GstAudioCdSrc      * src,
                                      GstAudioCdSrcTrack * track);
 
-#if 0
-/*
- * GST_TAG_CDDA_TRACK_TAGS:
- *
- * Tag details for all available tracks
- * FiXME: find out which type we want for this!
- */
-#define GST_TAG_CDDA_TRACK_TAGS               "track-tags"
-#endif
-
 G_END_DECLS
 
 #endif /* __GST_AUDIO_CD_SRC_H__ */
-

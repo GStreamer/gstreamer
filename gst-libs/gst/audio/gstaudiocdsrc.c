@@ -38,12 +38,12 @@
  * SECTION:gstaudiocdsrc
  * @short_description: Base class for Audio CD sources
  *
- * <refsect2>
  * <para>
  * Provides a base class for CD digital audio (CDDA) sources, which handles
  * things like seeking, querying, discid calculation, tags, and buffer
  * timestamping.
  * </para>
+ * <refsect2>
  * <title>Using GstAudioCdSrc-based elements in applications</title>
  * <para>
  * GstAudioCdSrc registers two #GstFormat<!-- -->s of its own, namely
@@ -70,6 +70,8 @@
  * setting a new cdda://n+1 URI on playbin (as setting a new URI on playbin
  * involves closing and re-opening the CD device, which is much much slower).
  * </para>
+ * <refsect2>
+ * </refsect2>
  * <title>Tags and meta-information</title>
  * <para>
  * CDDA sources will automatically emit a number of tags, details about which
@@ -77,6 +79,17 @@
  * #GST_TAG_CDDA_CDDB_DISCID, #GST_TAG_CDDA_CDDB_DISCID_FULL,
  * #GST_TAG_CDDA_MUSICBRAINZ_DISCID, #GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL,
  * among others.
+ * </para>
+ * </refsect2>
+ * <refsect2>
+ * <title>Tracks and Table of Contents (TOC)</title>
+ * <para>
+ * Applications will be informed of the available tracks via a TOC message
+ * on the pipeline's #GstBus. The #GstToc will contain a #GstTocEntry for
+ * each track, with information about each track. The duration for each
+ * track can be retrieved via the #GST_TAG_DURATION tag from each entry's
+ * tag list, or calculated via gst_toc_entry_get_start_stop_times().
+ * The track entries in the TOC will be sorted by track number.
  * </para>
  * </refsect2>
  */
