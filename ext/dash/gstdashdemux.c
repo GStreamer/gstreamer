@@ -443,7 +443,6 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
       gst_dash_demux_stop (demux);
       gst_task_join (demux->stream_task);
       gst_task_join (demux->download_task);
-      GST_WARNING_OBJECT (demux, "DASH demux now terminated");
       break;
     default:
       break;
@@ -787,13 +786,12 @@ gst_dash_demux_stop (GstDashDemux * demux)
   gst_uri_downloader_cancel (demux->downloader);
 
   if (GST_TASK_STATE (demux->download_task) != GST_TASK_STOPPED) {
-    gst_task_stop (demux->download_task);
     GST_TASK_SIGNAL (demux->download_task);
+    gst_task_stop (demux->download_task);
   }
-
   if (GST_TASK_STATE (demux->stream_task) != GST_TASK_STOPPED) {
-    gst_task_stop (demux->stream_task);
     GST_TASK_SIGNAL (demux->stream_task);
+    gst_task_stop (demux->stream_task);
   }
 }
 
@@ -924,7 +922,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   /* Wait until the next scheduled push downstream */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
           demux->stream_timed_lock, &demux->next_push)) {
-    goto pause_streaming;
+    goto quit;
   }
 
   if (g_queue_is_empty (demux->queue)) {
@@ -990,7 +988,10 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     goto pause_streaming;
   }
 
-  return;
+quit:
+  {
+    return;
+  }
 
 end_of_manifest:
   {
@@ -1105,7 +1106,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
   /* Wait until the next scheduled download */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->download_task),
           demux->download_timed_lock, &demux->next_download)) {
-    goto pause_download;
+    goto quit;
   }
 
   /* Target buffering time MUST at least exceeds mimimum buffering time 
@@ -1141,11 +1142,8 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
         if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
           GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
           return;
-        } else {
-          GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
-              ("Could not fetch the next fragment"), (NULL));
+        } else
           goto error_downloading;
-        }
       }
     } else {
       GST_INFO_OBJECT (demux, "Internal buffering : %d s",
@@ -1157,23 +1155,24 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
     g_get_current_time (&demux->next_download);
     g_time_val_add (&demux->next_download, 100000);
   }
-  return;
+
+quit:
+  {
+    return;
+  }
+
 end_of_manifest:
   {
     GST_INFO_OBJECT (demux, "Stopped download task");
     gst_task_stop (demux->download_task);
     return;
   }
+
 error_downloading:
   {
-    GST_INFO_OBJECT (demux, "Terminating the demux");
+    GST_ELEMENT_ERROR (demux, RESOURCE, NOT_FOUND,
+        ("Could not fetch the next fragment"), (NULL));
     gst_dash_demux_stop (demux);
-    return;
-  }
-pause_download:
-  {
-    GST_INFO_OBJECT (demux, "Pausing download task");
-    gst_task_pause (demux->download_task);
     return;
   }
 }
@@ -1519,7 +1518,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
     stream =
         gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
     if (stream == NULL)
-            return FALSE;
+      return FALSE;
     download->index = stream->segment_idx;
 
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
