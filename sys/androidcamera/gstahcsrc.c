@@ -205,6 +205,7 @@ gst_ahc_src_buffer_free_func (gpointer priv)
 static void
 _data_queue_item_free (GstDataQueueItem *item)
 {
+  gst_buffer_unref (GST_BUFFER (item->object));
   g_slice_free (GstDataQueueItem, item);
 }
 
@@ -474,7 +475,7 @@ gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer)
   //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
 
   *buffer = GST_BUFFER (item->object);
-  _data_queue_item_free (item);
+  g_slice_free (GstDataQueueItem, item);
 
   return GST_FLOW_OK;
 }
