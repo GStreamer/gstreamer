@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2012, Collabora Ltd.
- *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2012, Cisco Systems, Inc.
+ *   Author: Youness Alaoui <youness.alaoui@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,6 @@
 
 #include <gst/gst.h>
 
-#include "gstamc.h"
 #include "gst-dvm.h"
 #include "gst-android-hardware-camera.h"
 #include "gstahcsrc.h"
@@ -32,9 +31,6 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_amc_init (plugin))
-    return FALSE;
-
   if (!gst_dvm_init ())
     return FALSE;
 
@@ -58,15 +54,15 @@ plugin_init (GstPlugin * plugin)
 #ifdef GST_PLUGIN_DEFINE2
 GST_PLUGIN_DEFINE2 (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    androidmedia,
-    "Android Media plugin",
+    androidcamera,
+    "Android Camera plugin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 #else
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "androidmedia",
-    "Android Media plugin",
+    "androidcamera",
+    "Android Camera plugin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 #endif
