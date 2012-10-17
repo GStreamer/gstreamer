@@ -107,7 +107,7 @@ static GstCaps *gst_directsound_src_getcaps (GstBaseSrc * bsrc,
     GstCaps * filter);
 
 static guint gst_directsound_src_read (GstAudioSrc * asrc,
-    gpointer data, guint length);
+    gpointer data, guint length, GstClockTime * timestamp);
 
 static void gst_directsound_src_dispose (GObject * object);
 
@@ -464,7 +464,8 @@ gst_directsound_src_unprepare (GstAudioSrc * asrc)
 /* 
 return number of readed bytes */
 static guint
-gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length)
+gst_directsound_src_read (GstAudioSrc * asrc, gpointer data, guint length,
+    GstClockTime * timestamp)
 {
   GstDirectSoundSrc *dsoundsrc;
 
