@@ -59,8 +59,10 @@ struct _GstTCPServerSink {
   GstMultiSocketSink element;
 
   /* server information */
-  gint server_port;
-  gchar *host;
+  int current_port;        /* currently bound-to port, or 0 */ /* ATOMIC */
+  int server_port;         /* port property */
+  gchar *host;             /* host property */
+
   GSocket *server_socket;
   GSource *server_source;
 };

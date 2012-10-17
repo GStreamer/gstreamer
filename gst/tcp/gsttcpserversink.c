@@ -53,6 +53,7 @@ enum
   PROP_0,
   PROP_HOST,
   PROP_PORT,
+  PROP_CURRENT_PORT
 };
 
 static void gst_tcp_server_sink_finalize (GObject * gobject);
@@ -93,6 +94,10 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
       g_param_spec_int ("port", "port", "The port to send the packets to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CURRENT_PORT,
+      g_param_spec_int ("current-port", "current-port",
+          "The port number the socket is currently bound to", 0,
+          TCP_HIGHEST_PORT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "TCP server sink", "Sink/Network",
@@ -256,6 +261,9 @@ gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
     case PROP_PORT:
       g_value_set_int (value, sink->server_port);
       break;
+    case PROP_CURRENT_PORT:
+      g_value_set_int (value, g_atomic_int_get (&sink->current_port));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -272,6 +280,7 @@ gst_tcp_server_sink_init_send (GstMultiHandleSink * parent)
   GInetAddress *addr;
   GSocketAddress *saddr;
   GResolver *resolver;
+  gint bound_port;
 
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (this->host);
@@ -329,6 +338,20 @@ gst_tcp_server_sink_init_send (GstMultiHandleSink * parent)
   GST_DEBUG_OBJECT (this,
       "listened on server socket %p, returning from connection setup",
       this->server_socket);
+
+  if (this->server_port == 0) {
+    saddr = g_socket_get_local_address (this->server_socket, NULL);
+    bound_port = g_inet_socket_address_get_port ((GInetSocketAddress *) saddr);
+    g_object_unref (saddr);
+  } else {
+    bound_port = this->server_port;
+  }
+
+  GST_DEBUG_OBJECT (this, "listening on port %d", bound_port);
+
+  g_atomic_int_set (&this->current_port, bound_port);
+
+  g_object_notify (G_OBJECT (this), "current-port");
 
   this->server_source =
       g_socket_create_source (this->server_socket,
@@ -413,6 +436,9 @@ gst_tcp_server_sink_close (GstMultiHandleSink * parent)
     }
     g_object_unref (this->server_socket);
     this->server_socket = NULL;
+
+    g_atomic_int_set (&this->current_port, 0);
+    g_object_notify (G_OBJECT (this), "current-port");
   }
 
   return TRUE;

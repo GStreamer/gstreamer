@@ -60,7 +60,8 @@ enum
 {
   PROP_0,
   PROP_HOST,
-  PROP_PORT
+  PROP_PORT,
+  PROP_CURRENT_PORT
 };
 
 #define gst_tcp_server_src_parent_class parent_class
@@ -104,6 +105,10 @@ gst_tcp_server_src_class_init (GstTCPServerSrcClass * klass)
       g_param_spec_int ("port", "Port", "The port to listen to",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CURRENT_PORT,
+      g_param_spec_int ("current-port", "current-port",
+          "The port number the socket is currently bound to", 0,
+          TCP_HIGHEST_PORT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -338,6 +343,9 @@ gst_tcp_server_src_get_property (GObject * object, guint prop_id,
     case PROP_PORT:
       g_value_set_int (value, tcpserversrc->server_port);
       break;
+    case PROP_CURRENT_PORT:
+      g_value_set_int (value, g_atomic_int_get (&tcpserversrc->current_port));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -353,6 +361,7 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
   GInetAddress *addr;
   GSocketAddress *saddr;
   GResolver *resolver;
+  gint bound_port = 0;
 
   /* look up name if we need to */
   addr = g_inet_address_new_from_string (src->host);
@@ -406,6 +415,19 @@ gst_tcp_server_src_start (GstBaseSrc * bsrc)
     goto listen_failed;
 
   GST_OBJECT_FLAG_SET (src, GST_TCP_SERVER_SRC_OPEN);
+
+  if (src->server_port == 0) {
+    saddr = g_socket_get_local_address (src->server_socket, NULL);
+    bound_port = g_inet_socket_address_get_port ((GInetSocketAddress *) saddr);
+    g_object_unref (saddr);
+  } else {
+    bound_port = src->server_port;
+  }
+
+  GST_DEBUG_OBJECT (src, "listening on port %d", bound_port);
+
+  g_atomic_int_set (&src->current_port, bound_port);
+  g_object_notify (G_OBJECT (src), "current-port");
 
   return TRUE;
 
@@ -485,6 +507,9 @@ gst_tcp_server_src_stop (GstBaseSrc * bsrc)
     }
     g_object_unref (src->server_socket);
     src->server_socket = NULL;
+
+    g_atomic_int_set (&src->current_port, 0);
+    g_object_notify (G_OBJECT (src), "current-port");
   }
 
   GST_OBJECT_FLAG_UNSET (src, GST_TCP_SERVER_SRC_OPEN);

@@ -54,8 +54,9 @@ struct _GstTCPServerSrc {
   GstPushSrc element;
 
   /* server information */
-  int server_port;
-  gchar *host;
+  int current_port;        /* currently bound-to port, or 0 */ /* ATOMIC */
+  int server_port;         /* port property */
+  gchar *host;             /* host property */
 
   GCancellable *cancellable;
   GSocket *server_socket;
