@@ -1805,9 +1805,11 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   /**
    * GstRtpBin::ntp-sync:
    *
-   * Synchronize received streams to the NTP clock. When the NTP clock is shared
-   * between the receivers and the senders (such as when using ntpd) this option
-   * can be used to synchronize receivers on multiple machines.
+   * Set the NTP time from the sender reports as the running-time on the
+   * buffers. When both the sender and receiver have sychronized
+   * running-time, i.e. when the clock and base-time is shared
+   * between the receivers and the and the senders, this option can be
+   * used to synchronize receivers on multiple machines.
    *
    * Since: 0.10.21
    */
