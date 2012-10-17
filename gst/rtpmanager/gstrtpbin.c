@@ -939,7 +939,7 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
     clock_time = gst_clock_get_time (clock);
 
     if (bin->use_pipeline_clock) {
-      ntpns = clock_time;
+      ntpns = clock_time - base_time;
     } else {
       GTimeVal current;
 
@@ -1786,7 +1786,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_USE_PIPELINE_CLOCK,
       g_param_spec_boolean ("use-pipeline-clock", "Use pipeline clock",
-          "Use the pipeline clock to set the NTP time in the RTCP SR messages",
+          "Use the pipeline running-time to set the NTP time in the RTCP SR messages",
           DEFAULT_USE_PIPELINE_CLOCK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
