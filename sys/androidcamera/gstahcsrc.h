@@ -55,6 +55,7 @@ struct _GstAHCSrc
   GList *data;
   GstDataQueue *queue;
   gint buffer_size;
+  GstClockTime previous_ts;
 };
 
 struct _GstAHCSrcClass

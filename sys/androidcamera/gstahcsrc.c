@@ -116,7 +116,7 @@ gst_ahc_src_init (GstAHCSrc * self, GstAHCSrcClass * klass)
 {
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
-  gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (self), FALSE);
 
   self->camera = NULL;
   self->texture = gst_ag_surfacetexture_new (0);
@@ -216,8 +216,9 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GstBuffer *buffer;
   GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
   FreeFuncBuffer *malloc_data = g_slice_new0 (FreeFuncBuffer);
+  GstClock *clock;
 
-  GST_WARNING_OBJECT (self, "Received data buffer %p", data);
+  //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
   malloc_data->self = self;
   malloc_data->array = (*env)->NewGlobalRef (env, data);
   malloc_data->data = (*env)->GetByteArrayElements (env, data, NULL);
@@ -227,7 +228,21 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GST_BUFFER_SIZE (buffer) = self->buffer_size;
   GST_BUFFER_MALLOCDATA (buffer) = (gpointer) malloc_data;
   GST_BUFFER_FREE_FUNC (buffer) = gst_ahc_src_buffer_free_func;
-  GST_BUFFER_DURATION (buffer) = (1.0 / 30.0) * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 0;
+  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+  if ((clock = GST_ELEMENT_CLOCK (self))) {
+    GstClockTime base_time = GST_ELEMENT_CAST (self)->base_time;
+    GstClockTime current_ts;
+
+    gst_object_ref (clock);
+    current_ts = gst_clock_get_time (clock) - base_time;
+    if (GST_CLOCK_TIME_IS_VALID (self->previous_ts)) {
+      GST_BUFFER_TIMESTAMP (buffer) = self->previous_ts;
+      GST_BUFFER_DURATION (buffer) = current_ts - self->previous_ts;
+    }
+    self->previous_ts = current_ts;
+    gst_object_unref (clock);
+  }
 
   gst_buffer_set_caps (buffer, self->caps);
 
@@ -287,8 +302,6 @@ gst_ahc_src_open (GstAHCSrc * self)
       gst_ah_camera_set_preview_texture (self->camera, self->texture);
       gst_ah_camera_set_error_callback (self->camera, gst_ahc_src_on_error,
           self);
-      gst_ah_camera_set_preview_callback_with_buffer (self->camera,
-          gst_ahc_src_on_preview_frame, self);
 
       for (i = 0; i < NUM_CALLBACK_BUFFERS; i++) {
         jbyteArray array = (*env)->NewByteArray (env, self->buffer_size);
@@ -404,9 +417,11 @@ gst_ahc_src_start (GstBaseSrc * bsrc)
   GST_WARNING_OBJECT (self, "Starting preview");
   if (self->camera) {
     gboolean ret = gst_ah_camera_start_preview (self->camera);
-    if (ret)
+    if (ret) {
+      self->previous_ts = GST_CLOCK_TIME_NONE;
       gst_ah_camera_set_preview_callback_with_buffer (self->camera,
           gst_ahc_src_on_preview_frame, self);
+    }
     return ret;
   } else {
     return FALSE;
