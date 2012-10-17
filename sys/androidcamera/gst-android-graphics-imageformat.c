@@ -105,14 +105,8 @@ gst_ag_imageformat_get_bits_per_pixel (gint format)
   JNIEnv *env = gst_dvm_get_env ();
   jint bpp = 0;
 
-  bpp = (*env)->CallStaticIntMethod (env,
-      android_graphics_imageformat.klass,
-      android_graphics_imageformat.getBitsPerPixel, format);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return -1;
-  }
+  bpp = GST_DVM_STATIC_CALL(return -1, Int,
+      android_graphics_imageformat, getBitsPerPixel, format);
 
   return bpp;
 }

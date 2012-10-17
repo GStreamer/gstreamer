@@ -96,6 +96,25 @@
     }                                                                   \
   }
 
+#define GST_DVM_STATIC_CALL(error_statement, type, k, method, ...)      \
+  (*env)->CallStatic##type##Method (env, k.klass, k.method, ## __VA_ARGS__); \
+  if ((*env)->ExceptionCheck (env)) {                                   \
+    GST_ERROR ("Failed to call Java method");                           \
+    (*env)->ExceptionDescribe (env);                                    \
+    (*env)->ExceptionClear (env);                                       \
+    error_statement;                                                    \
+  }
+
+#define GST_DVM_CALL(error_statement, obj, type, k, method, ...)        \
+  (*env)->Call##type##Method (env, obj, k.method, ## __VA_ARGS__);      \
+  if ((*env)->ExceptionCheck (env)) {                                   \
+    GST_ERROR ("Failed to call Java method");                           \
+    (*env)->ExceptionDescribe (env);                                    \
+    (*env)->ExceptionClear (env);                                       \
+    error_statement;                                                    \
+  }
+
+
 
 JNIEnv *gst_dvm_get_env (void);
 gboolean gst_dvm_init (void);

@@ -295,14 +295,19 @@ gst_android_hardware_camera_deinit ()
 }
 
 /* android.hardware.Camera */
+#define AHC_CALL(error_statement, type, method, ...)                    \
+  GST_DVM_CALL (error_statement, self->object, type, android_hardware_camera, \
+      method, ## __VA_ARGS__);
+#define AHC_STATIC_CALL(error_statement, type, method, ...)             \
+  GST_DVM_STATIC_CALL (error_statement, type, android_hardware_camera,  \
+      method, ## __VA_ARGS__);
+
 void
 gst_ah_camera_add_callback_buffer (GstAHCamera * self, jbyteArray buffer)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  /* TODO: use a java.nio.ByteBuffer if possible */
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.addCallbackBuffer, buffer);
+  AHC_CALL (, Void, addCallbackBuffer, buffer);
 }
 
 gboolean
@@ -310,7 +315,7 @@ gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject jcamera_info = NULL;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   jcamera_info = (*env)->NewObject (env,
       android_hardware_camera_camerainfo.klass,
@@ -318,25 +323,16 @@ gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
   if (!jcamera_info) {
     GST_ERROR ("Failed to call Java method");
     (*env)->ExceptionClear (env);
-    ret = FALSE;
     goto done;
   }
 
-  (*env)->CallStaticVoidMethod (env, android_hardware_camera.klass,
-      android_hardware_camera.getCameraInfo, camera_id, jcamera_info);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    ret = FALSE;
-    goto done;
-  }
+  AHC_STATIC_CALL (goto done, Void, getCameraInfo, camera_id, jcamera_info);
 
   camera_info->facing = (*env)->GetIntField (env, jcamera_info,
       android_hardware_camera_camerainfo.facing);
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to get CameraInfo.facing field");
     (*env)->ExceptionClear (env);
-    ret = FALSE;
     goto done;
   }
 
@@ -345,10 +341,10 @@ gst_ah_camera_get_camera_info (gint camera_id, GstAHCCameraInfo * camera_info)
   if ((*env)->ExceptionCheck (env)) {
     GST_ERROR ("Failed to get CameraInfo.orientation field");
     (*env)->ExceptionClear (env);
-    ret = FALSE;
     goto done;
   }
 
+  ret = TRUE;
 done:
   if (jcamera_info)
     (*env)->DeleteLocalRef (env, jcamera_info);
@@ -362,13 +358,7 @@ gst_ah_camera_get_number_of_cameras ()
   JNIEnv *env = gst_dvm_get_env ();
   gint num_cameras;
 
-  num_cameras = (*env)->CallStaticIntMethod (env, android_hardware_camera.klass,
-      android_hardware_camera.getNumberOfCameras);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return -1;
-  }
+  num_cameras = AHC_STATIC_CALL (return -1, Int, getNumberOfCameras);
 
   return num_cameras;
 }
@@ -380,23 +370,17 @@ gst_ah_camera_get_parameters (GstAHCamera * self)
   jobject object = NULL;
   GstAHCParameters *params = NULL;
 
-  object = (*env)->CallObjectMethod (env, self->object,
-      android_hardware_camera.getParameters);
-  if ((*env)->ExceptionCheck (env) || !object) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return NULL;
-  }
+  object = AHC_CALL (return NULL, Object, getParameters);
 
   params = g_slice_new0 (GstAHCParameters);
   params->object = (*env)->NewGlobalRef (env, object);
+  (*env)->DeleteLocalRef (env, object);
   if (!params->object) {
     GST_ERROR ("Failed to create global reference");
     (*env)->ExceptionClear (env);
     g_slice_free (GstAHCParameters, params);
-    params = NULL;
+    return NULL;
   }
-  (*env)->DeleteLocalRef (env, object);
 
   return params;
 }
@@ -406,12 +390,7 @@ gst_ah_camera_lock (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object, android_hardware_camera.lock);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, lock);
 
   return TRUE;
 }
@@ -423,28 +402,21 @@ gst_ah_camera_open (gint camera_id)
   jobject object = NULL;
   GstAHCamera *camera = NULL;
 
-  object = (*env)->CallStaticObjectMethod (env, android_hardware_camera.klass,
-      android_hardware_camera.open, camera_id);
-  if ((*env)->ExceptionCheck (env) || !object) {
-    /* TODO: return a GError ? */
-    //jthrowable e = (*env)->ExceptionOccurred(env);
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionDescribe (env);
-    (*env)->ExceptionClear (env);
-    return NULL;
-  }
+  object = AHC_STATIC_CALL (goto done, Object, open, camera_id);
 
   camera = g_slice_new0 (GstAHCamera);
   camera->object = (*env)->NewGlobalRef (env, object);
+  (*env)->DeleteLocalRef (env, object);
   if (!camera->object) {
     GST_ERROR ("Failed to create global reference");
     (*env)->ExceptionClear (env);
     g_slice_free (GstAHCamera, camera);
-    camera = NULL;
+    goto done;
   }
-  (*env)->DeleteLocalRef (env, object);
 
   return camera;
+done:
+  return NULL;
 }
 
 gboolean
@@ -452,12 +424,7 @@ gst_ah_camera_reconnect (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object, android_hardware_camera.reconnect);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, reconnect);
 
   return TRUE;
 }
@@ -467,7 +434,7 @@ gst_ah_camera_release (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object, android_hardware_camera.release);
+  AHC_CALL (, Void, release);
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAHCamera, self);
@@ -478,13 +445,7 @@ gst_ah_camera_set_parameters (GstAHCamera * self, GstAHCParameters * params)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.setParameters, params->object);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, setParameters, params->object);
 
   return TRUE;
 }
@@ -495,7 +456,7 @@ gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject object;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   object = (*env)->NewObject (env,
       com_gstreamer_gstahccallback.klass,
@@ -504,18 +465,12 @@ gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
   if (!object) {
     GST_ERROR ("Failed to create callback object");
     (*env)->ExceptionClear (env);
-    ret = FALSE;
-    goto done;
-  }
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.setErrorCallback, object);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    ret = FALSE;
     goto done;
   }
 
+  AHC_CALL (goto done, Void, setErrorCallback, object);
+
+  ret = TRUE;
 done:
   if (object)
     (*env)->DeleteLocalRef (env, object);
@@ -529,7 +484,7 @@ gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject object;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   object = (*env)->NewObject (env,
       com_gstreamer_gstahccallback.klass,
@@ -538,18 +493,12 @@ gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
   if (!object) {
     GST_ERROR ("Failed to create callback object");
     (*env)->ExceptionClear (env);
-    ret = FALSE;
-    goto done;
-  }
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.setPreviewCallbackWithBuffer, object);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    ret = FALSE;
     goto done;
   }
 
+  AHC_CALL (goto done, Void, setPreviewCallbackWithBuffer, object);
+
+  ret = TRUE;
 done:
   if (object)
     (*env)->DeleteLocalRef (env, object);
@@ -563,8 +512,7 @@ gst_ah_camera_set_preview_texture (GstAHCamera * self,
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.setPreviewTexture, surfaceTexture->object);
+  AHC_CALL (, Void, setPreviewTexture, surfaceTexture->object);
 }
 
 gboolean
@@ -572,13 +520,7 @@ gst_ah_camera_start_preview (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.startPreview);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, startPreview);
 
   return TRUE;
 }
@@ -588,13 +530,7 @@ gst_ah_camera_start_smooth_zoom (GstAHCamera * self, gint value)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.startSmoothZoom, value);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, startSmoothZoom, value);
 
   return TRUE;
 }
@@ -604,13 +540,7 @@ gst_ah_camera_stop_preview (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.stopPreview);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, stopPreview);
 
   return TRUE;
 }
@@ -620,13 +550,7 @@ gst_ah_camera_stop_smooth_zoom (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera.stopSmoothZoom);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, stopSmoothZoom);
 
   return TRUE;
 }
@@ -636,15 +560,13 @@ gst_ah_camera_unlock (GstAHCamera * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object, android_hardware_camera.unlock);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHC_CALL (return FALSE, Void, unlock);
 
   return TRUE;
 }
+
+#undef AHC_CALL
+#undef AHC_STATIC_CALL
 
 /* android.hardware.Camera.Size */
 GstAHCSize *
@@ -664,8 +586,39 @@ gst_ahc_size_free (GstAHCSize * self)
   g_slice_free (GstAHCSize, self);
 }
 
+/* java.util.List */
+static jobject
+java_util_list_iterator (JNIEnv * env, jobject obj)
+{
+  return (*env)->CallObjectMethod (env, obj, java_util_list.iterator);
+}
+
+static jobject
+java_util_iterator_next (JNIEnv * env, jobject obj)
+{
+  return (*env)->CallObjectMethod (env, obj, java_util_iterator.next);
+}
+
+static jboolean
+java_util_iterator_has_next (JNIEnv * env, jobject obj)
+{
+  return (*env)->CallBooleanMethod (env, obj, java_util_iterator.hasNext);
+}
+
+static jint
+java_lang_integer_int_value (JNIEnv * env, jobject obj)
+{
+  return (*env)->CallIntMethod (env, obj, java_lang_integer.intValue);
+}
 
 /* android.hardware.Camera.Parameters */
+#define AHCP_CALL(error_statement, type, method, ...)                   \
+  GST_DVM_CALL (error_statement, self->object, type,                    \
+      android_hardware_camera_parameters, method, ## __VA_ARGS__);
+#define AHCP_STATIC_CALL(error_statement, type, method, ...)            \
+  GST_DVM_STATIC_CALL (error_statement, type,                           \
+      android_hardware_camera_parameters, method, ## __VA_ARGS__);
+
 gchar *
 gst_ahc_parameters_flatten (GstAHCParameters * self)
 {
@@ -674,14 +627,7 @@ gst_ahc_parameters_flatten (GstAHCParameters * self)
   const gchar *v = NULL;
   gchar *ret = NULL;
 
-  v_str = (*env)->CallObjectMethod (env, self->object,
-      android_hardware_camera_parameters.flatten);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    goto done;
-  }
-
+  v_str = AHCP_CALL (goto done, Object, flatten);
   v = (*env)->GetStringUTFChars (env, v_str, NULL);
   if (!v) {
     GST_ERROR ("Failed to convert string to UTF8");
@@ -705,13 +651,7 @@ gst_ahc_parameters_get_preview_format (GstAHCParameters * self)
   JNIEnv *env = gst_dvm_get_env ();
   gint format;
 
-  format = (*env)->CallIntMethod (env, self->object,
-      android_hardware_camera_parameters.getPreviewFormat);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return 0;
-  }
+  format = AHCP_CALL (return 0, Int, getPreviewFormat);
 
   return format;
 }
@@ -721,7 +661,7 @@ gst_ahc_parameters_get_preview_fps_range (GstAHCParameters * self,
     gint * min, gint * max)
 {
   JNIEnv *env = gst_dvm_get_env ();
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
   jintArray range = NULL;
   jint *fps = NULL;
 
@@ -729,23 +669,15 @@ gst_ahc_parameters_get_preview_fps_range (GstAHCParameters * self,
   if (!fps) {
     (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to create array");
-    ret = FALSE;
     goto done;
   }
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera_parameters.getPreviewFpsRange, range);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return 0;
-  }
+  AHCP_CALL (goto done, Void, getPreviewFpsRange, range);
 
   fps = (*env)->GetIntArrayElements (env, range, NULL);
   if ((*env)->ExceptionCheck (env) || !fps) {
     (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get array elements");
-    ret = FALSE;
     goto done;
   }
   if (min)
@@ -753,6 +685,7 @@ gst_ahc_parameters_get_preview_fps_range (GstAHCParameters * self,
   if (max)
     *max = fps[1];
 
+  ret = TRUE;
 done:
   if (fps)
     (*env)->ReleaseIntArrayElements (env, range, fps, JNI_ABORT);
@@ -769,13 +702,7 @@ gst_ahc_parameters_get_preview_size (GstAHCParameters * self)
   jobject jsize = NULL;
   GstAHCSize *size = NULL;
 
-  jsize = (*env)->CallObjectMethod (env, self->object,
-      android_hardware_camera_parameters.getPreviewSize);
-  if ((*env)->ExceptionCheck (env) || !jsize) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    goto done;
-  }
+  jsize = AHCP_CALL (goto done, Object, getPreviewSize);
 
   size = g_slice_new0 (GstAHCSize);
 
@@ -806,30 +733,6 @@ done:
   return size;
 }
 
-static jobject
-java_util_list_iterator (JNIEnv * env, jobject obj)
-{
-  return (*env)->CallObjectMethod (env, obj, java_util_list.iterator);
-}
-
-static jobject
-java_util_iterator_next (JNIEnv * env, jobject obj)
-{
-  return (*env)->CallObjectMethod (env, obj, java_util_iterator.next);
-}
-
-static jboolean
-java_util_iterator_has_next (JNIEnv * env, jobject obj)
-{
-  return (*env)->CallBooleanMethod (env, obj, java_util_iterator.hasNext);
-}
-
-static jint
-java_lang_integer_int_value (JNIEnv * env, jobject obj)
-{
-  return (*env)->CallIntMethod (env, obj, java_lang_integer.intValue);
-}
-
 GList *
 gst_ahc_parameters_get_supported_preview_formats (GstAHCParameters * self)
 {
@@ -838,13 +741,7 @@ gst_ahc_parameters_get_supported_preview_formats (GstAHCParameters * self)
   jobject iterator = NULL;
   GList *ret = NULL;
 
-  list = (*env)->CallObjectMethod (env, self->object,
-      android_hardware_camera_parameters.getSupportedPreviewFormats);
-  if ((*env)->ExceptionCheck (env) || !list) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return NULL;
-  }
+  list = AHCP_CALL (return NULL, Object, getSupportedPreviewFormats);
 
   iterator = java_util_list_iterator (env, list);
   if (iterator) {
@@ -879,13 +776,7 @@ gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
   jobject iterator = NULL;
   GList *ret = NULL;
 
-  list = (*env)->CallObjectMethod (env, self->object,
-      android_hardware_camera_parameters.getSupportedPreviewFpsRange);
-  if ((*env)->ExceptionCheck (env) || !list) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return NULL;
-  }
+  list = AHCP_CALL (return NULL, Object, getSupportedPreviewFpsRange);
 
   iterator = java_util_list_iterator (env, list);
   if (iterator) {
@@ -921,13 +812,7 @@ gst_ahc_parameters_get_supported_preview_sizes (GstAHCParameters * self)
   jobject iterator = NULL;
   GList *ret = NULL;
 
-  list = (*env)->CallObjectMethod (env, self->object,
-      android_hardware_camera_parameters.getSupportedPreviewSizes);
-  if ((*env)->ExceptionCheck (env) || !list) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return NULL;
-  }
+  list = AHCP_CALL (return NULL, Object, getSupportedPreviewSizes);
 
   iterator = java_util_list_iterator (env, list);
   if (iterator) {
@@ -964,13 +849,7 @@ gst_ahc_parameters_set_preview_format (GstAHCParameters * self, gint format)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera_parameters.setPreviewFormat, format);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHCP_CALL (return FALSE, Void, setPreviewFormat, format);
 
   return TRUE;
 }
@@ -981,13 +860,7 @@ gst_ahc_parameters_set_preview_fps_range (GstAHCParameters * self,
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera_parameters.setPreviewFpsRange, min, max);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHCP_CALL (return FALSE, Void, setPreviewFpsRange, min, max);
 
   return TRUE;
 }
@@ -998,13 +871,7 @@ gst_ahc_parameters_set_preview_size (GstAHCParameters * self,
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera_parameters.setPreviewSize, width, height);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    return FALSE;
-  }
+  AHCP_CALL (return FALSE, Void, setPreviewSize, width, height);
 
   return TRUE;
 }
@@ -1020,13 +887,7 @@ gst_ahc_parameters_unflatten (GstAHCParameters * self, gchar * flattened)
   if (v_str == NULL)
     return FALSE;
 
-  (*env)->CallVoidMethod (env, self->object,
-      android_hardware_camera_parameters.unflatten, v_str);
-  if ((*env)->ExceptionCheck (env)) {
-    GST_ERROR ("Failed to call Java method");
-    (*env)->ExceptionClear (env);
-    ret = FALSE;
-  }
+  AHCP_CALL (ret = FALSE, Void, unflatten, v_str);
 
   (*env)->DeleteLocalRef (env, v_str);
 
