@@ -1589,14 +1589,6 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
   if (got_gl_error ("glBufferData position_buffer"))
     goto HANDLE_ERROR_LOCKED;
 
-  /* Map the texpos already */
-  glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
-  glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc, 2, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (gfloat), (gpointer) (3 * sizeof (gfloat)));
-  if (got_gl_error ("glVertexAttribPointer"))
-    goto HANDLE_ERROR_LOCKED;
-  glUseProgram (0);
-
   glBindBuffer (GL_ELEMENT_ARRAY_BUFFER, eglglessink->eglglesctx.index_buffer);
   if (got_gl_error ("glBindBuffer index_buffer"))
     goto HANDLE_ERROR_LOCKED;
@@ -2535,6 +2527,11 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
           GL_FLOAT, GL_FALSE, sizeof (coord5),
           (gpointer) (0 * sizeof (coord5)));
+      if (got_gl_error ("glVertexAttribPointer"))
+        goto HANDLE_ERROR;
+
+      glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc, 2, GL_FLOAT,
+          GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
       if (got_gl_error ("glVertexAttribPointer"))
         goto HANDLE_ERROR;
 
