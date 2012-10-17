@@ -2464,8 +2464,8 @@ ignore:
 void
 rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
 {
-  g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_CAPS (caps), GST_FLOW_ERROR);
+  g_return_if_fail (RTP_IS_SESSION (sess));
+  g_return_if_fail (GST_IS_CAPS (caps));
 
   GST_LOG ("received caps %" GST_PTR_FORMAT, caps);
 
