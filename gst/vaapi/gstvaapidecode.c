@@ -282,8 +282,8 @@ error_create_buffer:
             gst_vaapi_surface_get_id(GST_VAAPI_SURFACE_PROXY_SURFACE(proxy));
 
         GST_DEBUG("video sink failed to create video buffer for proxy'ed "
-                  "surface %" GST_VAAPI_ID_FORMAT " (error %d)",
-                  GST_VAAPI_ID_ARGS(surface_id), ret);
+                  "surface %" GST_VAAPI_ID_FORMAT,
+                  GST_VAAPI_ID_ARGS(surface_id));
         g_object_unref(proxy);
         return GST_FLOW_UNEXPECTED;
     }
@@ -367,7 +367,7 @@ static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
     if (decode->decoder) {
-        gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
+        (void)gst_vaapi_decoder_put_buffer(decode->decoder, NULL);
         g_object_unref(decode->decoder);
         decode->decoder = NULL;
     }
