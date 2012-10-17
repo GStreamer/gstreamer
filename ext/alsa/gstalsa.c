@@ -497,10 +497,20 @@ gst_alsa_probe_supported_formats (GstObject * obj, gchar * device,
 
   stream_type = snd_pcm_stream (handle);
 
-  caps = gst_caps_copy (template_caps);
+  caps = gst_alsa_detect_formats (obj, hw_params,
+      gst_caps_copy (template_caps), G_BYTE_ORDER);
 
-  if (!(caps = gst_alsa_detect_formats (obj, hw_params, caps, G_BYTE_ORDER)))
-    goto subroutine_error;
+  /* if there are no formats in native endianness, try non-native as well */
+  if (caps == NULL) {
+    GST_INFO_OBJECT (obj, "no formats in native endianness detected");
+
+    caps = gst_alsa_detect_formats (obj, hw_params,
+        gst_caps_copy (template_caps),
+        (G_BYTE_ORDER == G_LITTLE_ENDIAN) ? G_BIG_ENDIAN : G_LITTLE_ENDIAN);
+
+    if (caps == NULL)
+      goto subroutine_error;
+  }
 
   if (!(caps = gst_alsa_detect_rates (obj, hw_params, caps)))
     goto subroutine_error;
@@ -533,7 +543,7 @@ subroutine_error:
   {
     GST_ERROR_OBJECT (obj, "failed to query formats");
     snd_pcm_hw_params_free (hw_params);
-    gst_caps_unref (caps);
+    gst_caps_replace (&caps, NULL);
     return NULL;
   }
 }
