@@ -89,18 +89,14 @@ typedef enum
   GST_EGLGLESSINK_RENDER_FAST
 } GstEglGlesSinkRenderingPath;
 
-typedef struct _coord2
-{
-  float x;
-  float y;
-} coord2;
-
-typedef struct _coord3
+typedef struct _coord5
 {
   float x;
   float y;
   float z;
-} coord3;
+  float a; /* texpos x */
+  float b; /* texpos y */
+} coord5;
 
 /*
  * GstEglGlesRenderContext:
@@ -138,7 +134,7 @@ struct _GstEglGlesRenderContext
   EGLDisplay display;
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
-  GLuint fragshader, vertshader, glslprogram;
+  GLuint fragshader[2], vertshader[2], glslprogram[2];
   GLuint texture[3];
   EGLint surface_width;
   EGLint surface_height;
@@ -147,12 +143,11 @@ struct _GstEglGlesRenderContext
   gint n_textures;
 
   /* shader vars */
-  GLuint position_loc, texpos_loc;
+  GLuint position_loc[2], texpos_loc;
   GLuint tex_loc[3];
-  coord3 position_array[4];
-  coord2 texpos_array[4];
+  coord5 position_array[12]; /* 3 x Frame, 3 x Border1, 3 x Border2 */
   unsigned short index_array[4];
-  unsigned int position_buffer, texpos_buffer, index_buffer;
+  unsigned int position_buffer, index_buffer;
 };
 
 /*
