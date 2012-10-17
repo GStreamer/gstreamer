@@ -18,7 +18,7 @@ noinst_HEADERS =             \
 
 # compiler and linker flags used to compile this plugin, set in configure.ac
 libgstdashdemux_la_CFLAGS = $(GST_CFLAGS) 
-libgstdashdemux_la_LIBADD = $(GST_LIBS)
+libgstdashdemux_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstdashdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdashdemux_la_LIBTOOLFLAGS = --tag=disable-static
 
