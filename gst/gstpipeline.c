@@ -182,7 +182,7 @@ gst_pipeline_class_init (GstPipelineClass * klass)
 
   gobject_class->dispose = gst_pipeline_dispose;
 
-  gst_element_class_set_metadata (gstelement_class, "Pipeline object",
+  gst_element_class_set_static_metadata (gstelement_class, "Pipeline object",
       "Generic/Bin",
       "Complete pipeline object",
       "Erik Walthinsen <omega@cse.ogi.edu>, Wim Taymans <wim@fluendo.com>");

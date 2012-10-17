@@ -441,7 +441,7 @@ gst_bin_class_init (GstBinClass * klass)
 
   gobject_class->dispose = gst_bin_dispose;
 
-  gst_element_class_set_metadata (gstelement_class, "Generic bin",
+  gst_element_class_set_static_metadata (gstelement_class, "Generic bin",
       "Generic/Bin",
       "Simple container object",
       "Erik Walthinsen <omega@cse.ogi.edu>,"
