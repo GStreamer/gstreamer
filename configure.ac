@@ -11,8 +11,8 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 
 # glib version number
 m4_define([glib_major_version], [2])
-m4_define([glib_minor_version], [28])
-m4_define([glib_micro_version], [0])
+m4_define([glib_minor_version], [31])
+m4_define([glib_micro_version], [2])
 m4_define([glib_major_minor_version],
           [glib_major_version.glib_minor_version])
 m4_define([glib_version],
