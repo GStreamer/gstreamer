@@ -19,7 +19,8 @@ libgstandroidmedia_la_SOURCES = \
 	video/video.c \
 	video/gstvideodecoder.c \
 	video/gstvideoencoder.c \
-	video/gstvideoutils.c
+	video/gstvideoutils.c \
+	gst-dvm.c
 
 noinst_HEADERS = \
 	gstamc.h \
@@ -29,7 +30,8 @@ noinst_HEADERS = \
 	video/video.h \
 	video/gstvideodecoder.h \
 	video/gstvideoencoder.h \
-	video/gstvideoutils.h
+	video/gstvideoutils.h \
+	gst-dvm.h
 
 if !HAVE_GST_0_10_37
 libgstandroidmedia_la_SOURCES += $(VIDEO_BASE_CLASSES_C)
