@@ -38,7 +38,8 @@ static struct
   jint UNKNOWN;
   jint YUY2;
   jint YV12;
-} android_graphics_imageformat = {0};
+} android_graphics_imageformat = {
+0};
 
 gint ImageFormat_JPEG;
 gint ImageFormat_NV16;
@@ -49,7 +50,7 @@ gint ImageFormat_YUY2;
 gint ImageFormat_YV12;
 
 static gboolean
-_init_classes ()
+_init_classes (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -78,7 +79,7 @@ _init_classes ()
 }
 
 gboolean
-gst_android_graphics_imageformat_init ()
+gst_android_graphics_imageformat_init (void)
 {
   if (!_init_classes ()) {
     gst_android_graphics_imageformat_deinit ();
@@ -89,7 +90,7 @@ gst_android_graphics_imageformat_init ()
 }
 
 void
-gst_android_graphics_imageformat_deinit ()
+gst_android_graphics_imageformat_deinit (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -105,7 +106,7 @@ gst_ag_imageformat_get_bits_per_pixel (gint format)
   JNIEnv *env = gst_dvm_get_env ();
   jint bpp = 0;
 
-  bpp = GST_DVM_STATIC_CALL(return -1, Int,
+  bpp = GST_DVM_STATIC_CALL (return -1, Int,
       android_graphics_imageformat, getBitsPerPixel, format);
 
   return bpp;

@@ -46,7 +46,8 @@ static struct
   jmethodID stopPreview;
   jmethodID stopSmoothZoom;
   jmethodID unlock;
-} android_hardware_camera = {0};
+} android_hardware_camera = {
+0};
 
 static struct
 {
@@ -56,7 +57,9 @@ static struct
   jfieldID orientation;
   jint CAMERA_FACING_BACK;
   jint CAMERA_FACING_FRONT;
-} android_hardware_camera_camerainfo = {0};
+} android_hardware_camera_camerainfo = {
+0};
+
 gint CameraInfo_CAMERA_FACING_BACK;
 gint CameraInfo_CAMERA_FACING_FRONT;
 
@@ -65,7 +68,8 @@ static struct
   jclass klass;
   jfieldID width;
   jfieldID height;
-} android_hardware_camera_size = {0};
+} android_hardware_camera_size = {
+0};
 
 /* TODO: Add other parameters */
 static struct
@@ -82,32 +86,37 @@ static struct
   jmethodID setPreviewFpsRange;
   jmethodID setPreviewSize;
   jmethodID unflatten;
-} android_hardware_camera_parameters = {0};
+} android_hardware_camera_parameters = {
+0};
 
 static struct
 {
   jclass klass;
   jmethodID iterator;
-} java_util_list = {0};
+} java_util_list = {
+0};
 
 static struct
 {
   jclass klass;
   jmethodID hasNext;
   jmethodID next;
-} java_util_iterator = {0};
+} java_util_iterator = {
+0};
 
 static struct
 {
   jclass klass;
   jmethodID intValue;
-} java_lang_integer = {0};
+} java_lang_integer = {
+0};
 
 static struct
 {
   jclass klass;
   jmethodID constructor;
-} com_gstreamer_gstahccallback = {0};
+} com_gstreamer_gstahccallback = {
+0};
 
 static void
 gst_ah_camera_on_preview_frame (JNIEnv * env, jclass klass, jbyteArray data,
@@ -135,7 +144,7 @@ static JNINativeMethod native_methods[] = {
 };
 
 static gboolean
-_init_classes ()
+_init_classes (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -244,7 +253,7 @@ _init_classes ()
 
 
 gboolean
-gst_android_hardware_camera_init ()
+gst_android_hardware_camera_init (void)
 {
   if (!_init_classes ()) {
     gst_android_hardware_camera_deinit ();
@@ -255,7 +264,7 @@ gst_android_hardware_camera_init ()
 }
 
 void
-gst_android_hardware_camera_deinit ()
+gst_android_hardware_camera_deinit (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -353,7 +362,7 @@ done:
 }
 
 gint
-gst_ah_camera_get_number_of_cameras ()
+gst_ah_camera_get_number_of_cameras (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
   gint num_cameras;

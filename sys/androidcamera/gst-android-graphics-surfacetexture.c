@@ -32,10 +32,11 @@ static struct
   jclass klass;
   jmethodID constructor;
   jmethodID release;
-} android_graphics_surfacetexture = {0};
+} android_graphics_surfacetexture = {
+0};
 
 static gboolean
-_init_classes ()
+_init_classes (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -50,7 +51,7 @@ _init_classes ()
 }
 
 gboolean
-gst_android_graphics_surfacetexture_init ()
+gst_android_graphics_surfacetexture_init (void)
 {
   if (!_init_classes ()) {
     gst_android_graphics_surfacetexture_deinit ();
@@ -61,7 +62,7 @@ gst_android_graphics_surfacetexture_init ()
 }
 
 void
-gst_android_graphics_surfacetexture_deinit ()
+gst_android_graphics_surfacetexture_deinit (void)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
@@ -105,7 +106,7 @@ gst_ag_surfacetexture_release (GstAGSurfaceTexture * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  GST_DVM_CALL(, self->object, Void, android_graphics_surfacetexture, release);
+  GST_DVM_CALL (, self->object, Void, android_graphics_surfacetexture, release);
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAGSurfaceTexture, self);
