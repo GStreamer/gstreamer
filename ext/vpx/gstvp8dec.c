@@ -176,7 +176,7 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vp8_dec_sink_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "On2 VP8 Decoder",
       "Codec/Decoder/Video",
       "Decode VP8 video streams", "David Schleef <ds@entropywave.com>, "

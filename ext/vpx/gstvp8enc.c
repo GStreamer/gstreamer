@@ -416,7 +416,7 @@ gst_vp8_enc_class_init (GstVP8EncClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vp8_enc_sink_template));
 
-  gst_element_class_set_metadata (element_class,
+  gst_element_class_set_static_metadata (element_class,
       "On2 VP8 Encoder",
       "Codec/Encoder/Video",
       "Encode VP8 video streams", "David Schleef <ds@entropywave.com>, "
