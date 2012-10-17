@@ -2046,7 +2046,7 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink,
 {
   GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
 
-  item->object = GST_MINI_OBJECT_CAST ((buf ? gst_buffer_ref (buf) : NULL));
+  item->object = GST_MINI_OBJECT_CAST (buf);
   item->size = GST_BUFFER_SIZE (buf);
   item->duration = GST_BUFFER_DURATION (buf);
   item->visible = (buf ? TRUE : FALSE);
