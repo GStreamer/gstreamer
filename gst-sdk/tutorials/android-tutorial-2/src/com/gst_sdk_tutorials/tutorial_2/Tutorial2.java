@@ -21,8 +21,6 @@ public class Tutorial2 extends Activity {
 
     private boolean is_playing_desired;   // Whether the user asked to go to PLAYING
 
-    private Bundle initialization_data;   // onCreate parameters kept for later
-
     // Called when the activity is first created.
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -56,14 +54,17 @@ public class Tutorial2 extends Activity {
             }
         });
 
-        // Keep the instance state for later, since we will not perform our initialization
-        // until the native code reports that it is itself initialized.
-        initialization_data = savedInstanceState;
+        if (savedInstanceState != null) {
+            is_playing_desired = savedInstanceState.getBoolean("playing");
+            Log.i ("GStreamer", "Activity created. Saved state is playing:" + is_playing_desired);
+        } else {
+            is_playing_desired = false;
+            Log.i ("GStreamer", "Activity created. There is no saved state, playing: false");
+        }
 
         // Start with disabled buttons, until native code is initialized
         this.findViewById(R.id.button_play).setEnabled(false);
         this.findViewById(R.id.button_stop).setEnabled(false);
-        is_playing_desired = false;
 
         nativeInit();
     }
@@ -91,12 +92,7 @@ public class Tutorial2 extends Activity {
     // Called from native code. Native code calls this once it has created its pipeline and
     // the main loop is running, so it is ready to accept commands.
     private void onGStreamerInitialized () {
-        // If initialization data is present, retrieve it
-        if (initialization_data != null) {
-            is_playing_desired = initialization_data.getBoolean("playing");
-            Log.i ("GStreamer", "Restoring state, playing:" + is_playing_desired);
-        }
-
+        Log.i ("GStreamer", "Gst initialized. Restoring state, playing:" + is_playing_desired);
         // Restore previous playing state
         if (is_playing_desired) {
             nativePlay();
