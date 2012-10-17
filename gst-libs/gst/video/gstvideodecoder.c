@@ -3032,11 +3032,16 @@ gst_video_decoder_negotiate (GstVideoDecoder * decoder)
  * Helper function that allocates a buffer to hold a video frame for @decoder's
  * current #GstVideoCodecState.
  *
- * Returns: (transfer full): allocated buffer
+ * You should use gst_video_decoder_allocate_output_frame() instead of this
+ * function, if possible at all.
+ *
+ * Returns: (transfer full): allocated buffer, or NULL if no buffer could be
+ *     allocated (e.g. when downstream is flushing or shutting down)
  */
 GstBuffer *
 gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
 {
+  GstFlowReturn flow;
   GstBuffer *buffer;
 
   GST_DEBUG ("alloc src buffer");
@@ -3047,9 +3052,15 @@ gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
               && gst_pad_check_reconfigure (decoder->srcpad))))
     gst_video_decoder_negotiate (decoder);
 
-  gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
+  flow = gst_buffer_pool_acquire_buffer (decoder->priv->pool, &buffer, NULL);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
+  if (flow != GST_FLOW_OK) {
+    GST_INFO_OBJECT (decoder, "couldn't allocate output buffer, flow %s",
+        gst_flow_get_name (flow));
+    buffer = NULL;
+  }
 
   return buffer;
 }
