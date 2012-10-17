@@ -608,7 +608,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   GList *list;
   guint32 rtptime;
   guint16 seqnum;
-  GstRTPBuffer rtp = {NULL};
+  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (buf != NULL, FALSE);
@@ -621,7 +621,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   for (list = jbuf->packets->head; list; list = g_list_next (list)) {
     guint16 qseq;
     gint gap;
-    GstRTPBuffer rtpb = {NULL};
+    GstRTPBuffer rtpb = { NULL };
 
     gst_rtp_buffer_map (GST_BUFFER_CAST (list->data), GST_MAP_READ, &rtpb);
     qseq = gst_rtp_buffer_get_seq (&rtpb);
@@ -680,7 +680,8 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
    * receive time, this function will retimestamp @buf with the skew corrected
    * running time. */
   time = calculate_skew (jbuf, rtptime, time, clock_rate);
-  GST_BUFFER_TIMESTAMP (buf) = time;
+  GST_BUFFER_PTS (buf) = time;
+  GST_BUFFER_DTS (buf) = time;
 
   /* It's more likely that the packet was inserted in the front of the buffer */
   if (G_LIKELY (list))
@@ -863,7 +864,7 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
   guint64 high_ts, low_ts;
   GstBuffer *high_buf, *low_buf;
   guint32 result;
-  GstRTPBuffer rtp = {NULL};
+  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (jbuf != NULL, 0);
 

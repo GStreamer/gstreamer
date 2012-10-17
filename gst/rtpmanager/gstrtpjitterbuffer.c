@@ -1849,7 +1849,8 @@ push_buffer:
   }
 
   /* apply timestamp with offset to buffer now */
-  GST_BUFFER_TIMESTAMP (outbuf) = out_time;
+  GST_BUFFER_PTS (outbuf) = out_time;
+  GST_BUFFER_DTS (outbuf) = out_time;
 
   /* update the elapsed time when we need to check against the npt stop time. */
   if (priv->npt_stop != -1 && priv->ext_timestamp != -1
