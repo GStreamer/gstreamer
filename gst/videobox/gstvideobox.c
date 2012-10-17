@@ -3144,9 +3144,9 @@ gst_video_box_set_info (GstVideoFilter * vfilter, GstCaps * in,
   video_box->in_width = GST_VIDEO_INFO_WIDTH (in_info);
   video_box->in_height = GST_VIDEO_INFO_HEIGHT (in_info);
 
-  video_box->out_format = GST_VIDEO_INFO_FORMAT (in_info);
-  video_box->out_width = GST_VIDEO_INFO_WIDTH (in_info);
-  video_box->out_height = GST_VIDEO_INFO_HEIGHT (in_info);
+  video_box->out_format = GST_VIDEO_INFO_FORMAT (out_info);
+  video_box->out_width = GST_VIDEO_INFO_WIDTH (out_info);
+  video_box->out_height = GST_VIDEO_INFO_HEIGHT (out_info);
 
   video_box->in_sdtv =
       in_info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601;
