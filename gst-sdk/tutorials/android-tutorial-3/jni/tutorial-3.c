@@ -5,6 +5,7 @@
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
 #include <gst/interfaces/xoverlay.h>
+#include <gst/video/video.h>
 #include <pthread.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
@@ -40,6 +41,7 @@ static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
+static jmethodID on_media_size_changed_method_id;
 
 /*
  * Private methods
@@ -121,6 +123,31 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   }
 }
 
+/* Called when Pad Caps change on the video sink */
+static void caps_cb (GstPad *pad, GParamSpec *pspec, CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  GstVideoFormat fmt;
+  int width;
+  int height;
+  GstCaps *caps;
+
+  caps = gst_pad_get_negotiated_caps (pad);
+  if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
+    int par_n, par_d;
+    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
+      width = width * par_n / par_d;
+    }
+    GST_DEBUG ("Media size changed to %dx%d", width, height);
+
+    (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)width, (jint)height);
+    if ((*env)->ExceptionCheck (env)) {
+      GST_ERROR ("Failed to call Java method");
+      (*env)->ExceptionClear (env);
+    }
+  }
+  gst_caps_unref(caps);
+}
+
 /* Check if all conditions are met to report GStreamer as initialized.
  * These conditions will change depending on the application */
 static void check_initialization_complete (CustomData *data) {
@@ -143,6 +170,7 @@ static void *app_function (void *userdata) {
   CustomData *data = (CustomData *)userdata;
   GSource *bus_source;
   GError *error = NULL;
+  GstPad *video_sink_pad;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
@@ -166,7 +194,12 @@ static void *app_function (void *userdata) {
   data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_X_OVERLAY);
   if (!data->video_sink) {
     GST_ERROR ("Could not retrieve video sink");
+    return NULL;
   }
+  /* We want to be notified when the Caps on the video sink's Pad change */
+  video_sink_pad = gst_element_get_static_pad (data->video_sink, "sink");
+  g_signal_connect (G_OBJECT (video_sink_pad), "notify::caps", (GCallback)caps_cb, data);
+  gst_object_unref (video_sink_pad);
 
   if (data->native_window) {
     GST_DEBUG ("Native window already received, notifying the pipeline about it.");
@@ -255,12 +288,14 @@ static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
+  on_media_size_changed_method_id = (*env)->GetMethodID (env, klass, "onMediaSizeChanged", "(II)V");
 
-  if (!custom_data_field_id || !set_message_method_id || !on_gstreamer_initialized_method_id) {
+  if (!custom_data_field_id || !set_message_method_id || !on_gstreamer_initialized_method_id ||
+      !on_media_size_changed_method_id) {
     /* We emit this message through the Android log instead of the GStreamer log because the later
      * has not been initialized yet.
      */
-    __android_log_print (ANDROID_LOG_ERROR, "tutorial-2", "The calling class does not implement all necessary interface methods");
+    __android_log_print (ANDROID_LOG_ERROR, "tutorial-3", "The calling class does not implement all necessary interface methods");
     return JNI_FALSE;
   }
   return JNI_TRUE;
