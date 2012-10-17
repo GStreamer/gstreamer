@@ -310,7 +310,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
     if (G_UNLIKELY (length < 2))
       goto need_more_data;
     val8 = *data;
-    if (G_UNLIKELY ((val8 * 0xc0) != 0x40))
+    if (G_UNLIKELY ((val8 & 0xc0) != 0x40))
       goto bad_P_STD_marker;
     res->P_STD_buffer_size =
         (GST_READ_UINT16_BE (data) & 0x1fff) << (val8 & 0x20) ? 10 : 7;
