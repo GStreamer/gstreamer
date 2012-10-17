@@ -24,13 +24,13 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
-  jobject app;           /* Application instance, used to call its methods. A global reference is kept. */
-  GstElement *pipeline;  /* The running pipeline */
-  GstElement *video_sink;/* The video sink element which receives XOverlay commands */
-  GMainContext *context; /* GLib context used to run the main loop */
-  GMainLoop *main_loop;  /* GLib main loop */
-  gboolean initialized;  /* To avoid informing the UI multiple times about the initialization */
-  ANativeWindow *native_window;
+  jobject app;            /* Application instance, used to call its methods. A global reference is kept. */
+  GstElement *pipeline;   /* The running pipeline */
+  GMainContext *context;  /* GLib context used to run the main loop */
+  GMainLoop *main_loop;   /* GLib main loop */
+  gboolean initialized;   /* To avoid informing the UI multiple times about the initialization */
+  GstElement *video_sink; /* The video sink element which receives XOverlay commands */
+  ANativeWindow *native_window; /* The Android native window where video will be rendered */
 } CustomData;
 
 /* These global variables cache values which are not changing during execution */
