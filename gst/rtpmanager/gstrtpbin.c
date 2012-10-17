@@ -968,7 +968,7 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
 
 static void
 stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
-    gint64 ts_offset)
+    gint64 ts_offset, gboolean check)
 {
   gint64 prev_ts_offset;
 
@@ -984,18 +984,20 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
         "ts-offset %" G_GINT64_FORMAT ", prev %" G_GINT64_FORMAT
         ", diff: %" G_GINT64_FORMAT, ts_offset, prev_ts_offset, diff);
 
-    /* only change diff when it changed more than 4 milliseconds. This
-     * compensates for rounding errors in NTP to RTP timestamp
-     * conversions */
-    if (ABS (diff) > 4 * GST_MSECOND) {
-      if (ABS (diff) < (3 * GST_SECOND)) {
-        g_object_set (stream->buffer, "ts-offset", ts_offset, NULL);
-      } else {
-        GST_WARNING_OBJECT (bin, "offset unusually large, ignoring");
+    if (check) {
+      /* only change diff when it changed more than 4 milliseconds. This
+       * compensates for rounding errors in NTP to RTP timestamp
+       * conversions */
+      if (ABS (diff) < 4 * GST_MSECOND) {
+        GST_DEBUG_OBJECT (bin, "offset too small, ignoring");
+        return;
       }
-    } else {
-      GST_DEBUG_OBJECT (bin, "offset too small, ignoring");
+      if (ABS (diff) > (3 * GST_SECOND)) {
+        GST_WARNING_OBJECT (bin, "offset unusually large, ignoring");
+        return;
+      }
     }
+    g_object_set (stream->buffer, "ts-offset", ts_offset, NULL);
   }
   GST_DEBUG_OBJECT (bin, "stream SSRC %08x, delta %" G_GINT64_FORMAT,
       stream->ssrc, ts_offset);
@@ -1112,7 +1114,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     /* combine to get the final diff to apply to the running_time */
     stream->rt_delta = rtdiff - ntpdiff;
 
-    stream_set_ts_offset (bin, stream, stream->rt_delta);
+    stream_set_ts_offset (bin, stream, stream->rt_delta, FALSE);
   } else {
     gint64 min, rtp_min, clock_base = stream->clock_base;
     gboolean all_sync, use_rtp;
@@ -1264,7 +1266,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
       else
         ts_offset = ostream->rt_delta - min;
 
-      stream_set_ts_offset (bin, ostream, ts_offset);
+      stream_set_ts_offset (bin, ostream, ts_offset, TRUE);
     }
   }
   return;
