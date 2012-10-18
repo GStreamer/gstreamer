@@ -703,6 +703,14 @@ AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
   AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
 ])
 
+dnl check for OpenSL ES
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENSLES, true)
+AG_GST_CHECK_FEATURE(OPENSLES, [OpenSL ES], opensl, [
+  AC_CHECK_HEADER(SLES/OpenSLES.h,
+      AC_CHECK_HEADER(SLES/OpenSLES_Android.h, HAVE_OPENSLES="yes", HAVE_OPENSLES="no"),
+      HAVE_OPENSLES="no"
+  )
+])
 
 dnl *** UVC H264 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_UVCH264, true)
@@ -2068,6 +2076,7 @@ sys/dshowvideosink/Makefile
 sys/dvb/Makefile
 sys/fbdev/Makefile
 sys/linsys/Makefile
+sys/opensles/Makefile
 sys/osxvideo/Makefile
 sys/qtwrapper/Makefile
 sys/shm/Makefile

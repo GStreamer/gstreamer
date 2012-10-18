@@ -15,10 +15,7 @@ libgstopensles_la_LIBADD =            \
     $(GST_BASE_LIBS)                  \
     $(GST_LIBS)
 libgstopensles_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lOpenSLES
-
-if !GST_PLUGIN_BUILD_STATIC
 libgstopensles_la_LIBTOOLFLAGS = --tag=disable-static --tag=CC
-endif
 
 noinst_HEADERS = openslesringbuffer.h \
                  openslessink.h       \
