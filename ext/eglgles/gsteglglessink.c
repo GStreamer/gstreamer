@@ -1668,8 +1668,8 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
   GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
 
   item->object = GST_MINI_OBJECT_CAST (buf);
-  item->size = GST_BUFFER_SIZE (buf);
-  item->duration = GST_BUFFER_DURATION (buf);
+  item->size = (buf ? GST_BUFFER_SIZE (buf) : 0);
+  item->duration = (buf ? GST_BUFFER_DURATION (buf) : GST_CLOCK_TIME_NONE);
   item->visible = (buf ? TRUE : FALSE);
   item->destroy = (GDestroyNotify) queue_item_destroy;
 
