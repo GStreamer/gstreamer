@@ -706,10 +706,7 @@ AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
 dnl check for OpenSL ES
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENSLES, true)
 AG_GST_CHECK_FEATURE(OPENSLES, [OpenSL ES], opensl, [
-  AC_CHECK_HEADER(SLES/OpenSLES.h,
-      AC_CHECK_HEADER(SLES/OpenSLES_Android.h, HAVE_OPENSLES="yes", HAVE_OPENSLES="no"),
-      HAVE_OPENSLES="no"
-  )
+  AC_CHECK_HEADER(SLES/OpenSLES.h, HAVE_OPENSLES="yes", HAVE_OPENSLES="no")
 ])
 
 dnl *** UVC H264 ***
