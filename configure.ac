@@ -323,7 +323,7 @@ GST_PLUGINS_NONPORTED=" androidmedia aiff \
  decklink fbdev linsys vcd \
  apexsink cdaudio cog dc1394 dirac directfb \
  gsettings jasper ladspa \
- musepack musicbrainz nas neon ofa openal rsvg sdl sndfile timidity \
+ musepack musicbrainz nas neon ofa openal opensles rsvg sdl sndfile timidity \
  directdraw direct3d9 acm wininet \
  wildmidi xvid lv2 teletextdec sndio uvch264"
 AC_SUBST(GST_PLUGINS_NONPORTED)
