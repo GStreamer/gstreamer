@@ -21,7 +21,7 @@
 #define __OPENSLESRINGBUFFER_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstringbuffer.h>
+#include <gst/audio/gstaudioringbuffer.h>
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
@@ -54,15 +54,15 @@ typedef enum
   RB_MODE_LAST
 } RingBufferMode;
 
-typedef gboolean (*AcquireFunc) (GstRingBuffer * rb, GstRingBufferSpec * spec);
-typedef gboolean (*StateFunc) (GstRingBuffer * rb);
+typedef gboolean (*AcquireFunc) (GstAudioRingBuffer * rb, GstAudioRingBufferSpec * spec);
+typedef gboolean (*StateFunc) (GstAudioRingBuffer * rb);
 
 typedef struct _GstOpenSLESRingBuffer GstOpenSLESRingBuffer;
 typedef struct _GstOpenSLESRingBufferClass GstOpenSLESRingBufferClass;
 
 struct _GstOpenSLESRingBuffer
 {
-  GstRingBuffer object;
+  GstAudioRingBuffer object;
 
   RingBufferMode mode;
 
@@ -105,13 +105,13 @@ struct _GstOpenSLESRingBuffer
 
 struct _GstOpenSLESRingBufferClass
 {
-  GstRingBufferClass parent_class;
+  GstAudioRingBufferClass parent_class;
 };
 
 GType gst_opensles_ringbuffer_get_type (void);
-GstRingBuffer *gst_opensles_ringbuffer_new (RingBufferMode mode);
-void gst_opensles_ringbuffer_set_volume (GstRingBuffer * rb, gfloat volume);
-void gst_opensles_ringbuffer_set_mute (GstRingBuffer * rb, gboolean mute);
+GstAudioRingBuffer *gst_opensles_ringbuffer_new (RingBufferMode mode);
+void gst_opensles_ringbuffer_set_volume (GstAudioRingBuffer * rb, gfloat volume);
+void gst_opensles_ringbuffer_set_mute (GstAudioRingBuffer * rb, gboolean mute);
 
 G_END_DECLS
 #endif /* __OPENSLESRINGBUFFER_H__ */
