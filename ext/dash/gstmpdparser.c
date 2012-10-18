@@ -2501,43 +2501,52 @@ gst_mpd_client_setup_representation (GstMpdClient * client, GstActiveStream *str
     /* get the first segment_base of the selected representation */
     if ((stream->cur_segment_base =
             gst_mpdparser_get_segment_base (client->cur_period, stream->cur_adapt_set, representation)) == NULL) {
-      GST_WARNING ("No valid SegmentBase node in the MPD file");
+      GST_DEBUG ("No useful SegmentBase node for the current Representation");
     }
 
     /* get the first segment_list of the selected representation */
     if ((stream->cur_segment_list =
             gst_mpdparser_get_segment_list (client->cur_period, stream->cur_adapt_set, representation)) == NULL) {
-      GST_WARNING ("No valid SegmentList node in the MPD file, aborting...");
-      return FALSE;
-    }
-
-    /* build the list of GstMediaSegment nodes from the SegmentList node */
-    SegmentURL = stream->cur_segment_list->SegmentURL;
-    if (SegmentURL == NULL) {
-      GST_WARNING ("No valid list of SegmentURL nodes in the MPD file, aborting...");
-      return FALSE;
-    }
-
-    /* build segment list */
-    i = stream->cur_segment_list->MultSegBaseType->startNumber;
-    start_time = 0;
-    duration = gst_mpd_client_get_target_duration (client);
-
-    while (SegmentURL) {
+      GST_DEBUG ("No useful SegmentList node for the current Representation");
+      /* here we should have a single segment for each representation, whose URL is encoded in the baseURL element */
       media_segment = g_slice_new0 (GstMediaSegment);
       if (media_segment == NULL) {
         GST_WARNING ("Allocation of GstMediaSegment struct failed!");
         return FALSE;
       }
       stream->segments = g_list_append (stream->segments, media_segment);
-      /* TODO: support SegmentTimeline */
-      media_segment->SegmentURL = (GstSegmentURLNode *) SegmentURL->data;
-      media_segment->number = i;
-      media_segment->start_time = start_time;
-      media_segment->duration = duration;
-      i++;
-      start_time += duration;
-      SegmentURL = g_list_next (SegmentURL);
+      media_segment->number = 1;
+      media_segment->start_time = 0;
+      media_segment->duration = PeriodEnd;
+    } else {
+      /* build the list of GstMediaSegment nodes from the SegmentList node */
+      SegmentURL = stream->cur_segment_list->SegmentURL;
+      if (SegmentURL == NULL) {
+        GST_WARNING ("No valid list of SegmentURL nodes in the MPD file, aborting...");
+        return FALSE;
+      }
+
+      /* build segment list */
+      i = stream->cur_segment_list->MultSegBaseType->startNumber;
+      start_time = 0;
+      duration = gst_mpd_client_get_target_duration (client);
+
+      while (SegmentURL) {
+        media_segment = g_slice_new0 (GstMediaSegment);
+        if (media_segment == NULL) {
+          GST_WARNING ("Allocation of GstMediaSegment struct failed!");
+          return FALSE;
+        }
+        stream->segments = g_list_append (stream->segments, media_segment);
+        /* TODO: support SegmentTimeline */
+        media_segment->SegmentURL = (GstSegmentURLNode *) SegmentURL->data;
+        media_segment->number = i;
+        media_segment->start_time = start_time;
+        media_segment->duration = duration;
+        i++;
+        start_time += duration;
+        SegmentURL = g_list_next (SegmentURL);
+      }
     }
   } else {
     if (representation->SegmentTemplate != NULL) {
@@ -2836,7 +2845,6 @@ gst_mpd_client_get_current_position (GstMpdClient * client,
 
   *timestamp = GST_CLOCK_TIME_NONE;
 
-  /* select stream TODO: support multiple streams */
   stream = g_list_nth_data (client->active_streams, client->stream_idx);
   g_return_if_fail (stream != NULL);
 
@@ -2882,14 +2890,20 @@ gst_mpd_client_get_target_duration (GstMpdClient * client)
   }
 
   if (base == NULL || base->SegBaseType == NULL) {
-    return GST_CLOCK_TIME_NONE;
+    /* this may happen when we have a single segment */
+    /* TODO: support SegmentTimeline */
+    if (client->cur_period->duration) {
+      duration = client->cur_period->duration * GST_MSECOND;
+    } else {
+      duration = client->mpd_node->mediaPresentationDuration * GST_MSECOND;
+    }
+  } else {
+    duration = base->duration * GST_SECOND;
+    timescale = base->SegBaseType->timescale;
+
+    if (timescale > 1)
+      duration /= timescale;
   }
-
-  duration = base->duration * GST_SECOND;
-  timescale = base->SegBaseType->timescale;
-
-  if (timescale > 1)
-    duration /= timescale;
 
   return duration;
 }

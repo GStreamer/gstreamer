@@ -1508,6 +1508,11 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
       GST_INFO_OBJECT (demux, "This manifest doesn't contain more fragments");
       demux->end_of_manifest = TRUE;
+      if (GST_STATE (demux) != GST_STATE_PLAYING) {
+        /* Restart the pipeline regardless of the current buffering level */
+        gst_element_post_message (GST_ELEMENT (demux),
+            gst_message_new_buffering (GST_OBJECT (demux), 100));
+      }
       gst_task_start (demux->stream_task);
       return FALSE;
     }
