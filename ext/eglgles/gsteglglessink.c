@@ -406,6 +406,8 @@ static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
     eglglessink, gboolean bind);
 static void gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink);
+static inline void gst_eglglessink_reset_display_region (GstEglGlesSink *
+    eglglessink);
 
 GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
     GST_TYPE_VIDEO_SINK, gst_eglglessink_init_interfaces);
@@ -688,11 +690,17 @@ gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
     eglglessink->eglglesctx.eglcontext = NULL;
   }
 
+  gst_eglglessink_reset_display_region (eglglessink);
+}
+
+/* Reset display region
+ * XXX: Should probably keep old ones if set_render_rect()
+ * has been called.
+ */
+static inline void
+gst_eglglessink_reset_display_region (GstEglGlesSink * eglglessink)
+{
   GST_OBJECT_LOCK (eglglessink);
-  /* Reset display region
-   * XXX: Should probably keep old ones if set_render_rect()
-   * has been called.
-   */
   eglglessink->display_region.w = 0;
   eglglessink->display_region.h = 0;
   GST_OBJECT_UNLOCK (eglglessink);
@@ -720,15 +728,7 @@ gst_eglglessink_start (GstEglGlesSink * eglglessink)
     goto HANDLE_ERROR;
   }
 
-  GST_OBJECT_LOCK (eglglessink);
-  /* Reset display region
-   * XXX: Should probably keep old ones if set_render_rect()
-   * has been called.
-   */
-  eglglessink->display_region.w = 0;
-  eglglessink->display_region.h = 0;
-  GST_OBJECT_UNLOCK (eglglessink);
-
+  gst_eglglessink_reset_display_region (eglglessink);
   eglglessink->last_flow = GST_FLOW_OK;
   gst_data_queue_set_flushing (eglglessink->queue, FALSE);
 
@@ -1628,15 +1628,15 @@ gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
     /* This is the set-defaults condition according to
      * the xOverlay interface docs
      */
-    eglglessink->display_region.w = 0;
-    eglglessink->display_region.h = 0;
+    gst_eglglessink_reset_display_region (eglglessink);
   } else {
+    GST_OBJECT_LOCK (eglglessink);
     eglglessink->display_region.x = x;
     eglglessink->display_region.y = y;
     eglglessink->display_region.w = width;
     eglglessink->display_region.h = height;
+    GST_OBJECT_UNLOCK (eglglessink);
   }
-  GST_OBJECT_UNLOCK (eglglessink);
 
   return;
 }
