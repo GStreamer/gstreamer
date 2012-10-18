@@ -271,7 +271,7 @@ find_index (GArray * array, GstPollFD * fd)
 #if !defined(HAVE_PPOLL) && defined(HAVE_POLL)
 /* check if all file descriptors will fit in an fd_set */
 static gboolean
-selectable_fds (const GstPoll * set)
+selectable_fds (GstPoll * set)
 {
   guint i;
 
@@ -311,7 +311,7 @@ pollable_timeout (GstClockTime timeout)
 #endif
 
 static GstPollMode
-choose_mode (const GstPoll * set, GstClockTime timeout)
+choose_mode (GstPoll * set, GstClockTime timeout)
 {
   GstPollMode mode;
 
