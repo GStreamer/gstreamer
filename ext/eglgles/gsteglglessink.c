@@ -687,6 +687,15 @@ gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
         eglglessink->eglglesctx.eglcontext);
     eglglessink->eglglesctx.eglcontext = NULL;
   }
+
+  GST_OBJECT_LOCK (eglglessink);
+  /* Reset display region
+   * XXX: Should probably keep old ones if set_render_rect()
+   * has been called.
+   */
+  eglglessink->display_region.w = 0;
+  eglglessink->display_region.h = 0;
+  GST_OBJECT_UNLOCK (eglglessink);
 }
 
 static gboolean
@@ -2025,15 +2034,6 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
 
     /* EGL/GLES cleanup */
     gst_eglglessink_wipe_eglglesctx (eglglessink);
-
-    GST_OBJECT_LOCK (eglglessink);
-    /* Reset display region
-     * XXX: Should probably keep old ones if set_render_rect()
-     * has been called.
-     */
-    eglglessink->display_region.w = 0;
-    eglglessink->display_region.h = 0;
-    GST_OBJECT_UNLOCK (eglglessink);
 
     gst_caps_unref (eglglessink->configured_caps);
     eglglessink->configured_caps = NULL;
