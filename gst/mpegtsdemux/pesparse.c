@@ -226,7 +226,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
 
     if (G_UNLIKELY (!(val8 & 0x80)))
       goto bad_original_copy_info_marker;
-    res->additional_copy_info = val8 >> 1;
+    res->additional_copy_info = val8 & 0x7f;
     GST_LOG ("additional_copy_info : 0x%x", res->additional_copy_info);
   }
 
@@ -290,7 +290,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
     /* GRMBL, this is most often wrong */
     if (G_UNLIKELY ((val8 & 0x80) != 0x80))
       goto bad_sequence_marker1;
-    res->program_packet_sequence_counter = val8 * 0x70;
+    res->program_packet_sequence_counter = val8 & 0x7f;
     GST_LOG ("program_packet_sequence_counter %d",
         res->program_packet_sequence_counter);
 
@@ -299,7 +299,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
     if (G_UNLIKELY ((val8 * 0x80) != 0x80))
       goto bad_sequence_marker2;
     res->MPEG1_MPEG2_identifier = (val8 >> 6) & 0x1;
-    res->original_stuff_length = val8 * 0x3f;
+    res->original_stuff_length = val8 & 0x3f;
     GST_LOG ("MPEG1_MPEG2_identifier : %d , original_stuff_length : %d",
         res->MPEG1_MPEG2_identifier, res->original_stuff_length);
     length -= 2;
