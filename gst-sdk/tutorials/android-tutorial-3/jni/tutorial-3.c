@@ -304,13 +304,21 @@ static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
 static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
-  GST_DEBUG ("Received surface %p", surface);
+  ANativeWindow *new_native_window = ANativeWindow_fromSurface(env, surface);
+  GST_DEBUG ("Received surface %p (native window %p)", surface, new_native_window);
+
   if (data->native_window) {
-    GST_DEBUG ("Releasing previous native window %p", data->native_window);
     ANativeWindow_release (data->native_window);
+    if (data->native_window == new_native_window) {
+      GST_DEBUG ("New native window is the same as the previous one", data->native_window);
+      if (data->video_sink)
+        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
+      return;
+    } else {
+      GST_DEBUG ("Released previous native window %p", data->native_window);
+    }
   }
-  data->native_window = ANativeWindow_fromSurface(env, surface);
-  GST_DEBUG ("Got Native Window %p", data->native_window);
+  data->native_window = new_native_window;
 
   if (data->video_sink) {
     GST_DEBUG ("Pipeline already created, notifying it about the native window.");

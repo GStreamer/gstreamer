@@ -120,9 +120,14 @@ public class Tutorial3 extends Activity implements SurfaceHolder.Callback {
 
     private void onMediaSizeChanged (int width, int height) {
         Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
-        GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
+        final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
         gsv.media_width = width;
         gsv.media_height = height;
+        runOnUiThread(new Runnable() {
+            public void run() {
+                gsv.requestLayout();
+            }
+        });
     }
 
     static {
