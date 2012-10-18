@@ -1382,8 +1382,8 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (!eglglessink->eglglesctx.buffer_preserved) {
     /* Build shader program for black borders */
     eglglessink->eglglesctx.vertshader[1] = glCreateShader (GL_VERTEX_SHADER);
-    GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d", vert_COPY_prog,
-        eglglessink->eglglesctx.vertshader[1]);
+    GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d",
+        vert_COPY_prog_no_tex, eglglessink->eglglesctx.vertshader[1]);
     glShaderSource (eglglessink->eglglesctx.vertshader[1], 1,
         &vert_COPY_prog_no_tex, NULL);
     if (got_gl_error ("glShaderSource vertex"))
