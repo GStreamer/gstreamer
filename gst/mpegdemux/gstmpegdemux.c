@@ -805,6 +805,10 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
 
     gst_element_no_more_pads (GST_ELEMENT (demux));
     demux->need_no_more_pads = FALSE;
+  } else {
+    /* forward to all pads, e.g. dvd clut event */
+    gst_event_ref (event);
+    gst_flups_demux_send_event (demux, event);
   }
 
   gst_event_unref (event);
