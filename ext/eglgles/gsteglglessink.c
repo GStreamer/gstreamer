@@ -1899,6 +1899,12 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
         eglglessink->eglglesctx.surface_width,
         eglglessink->eglglesctx.surface_height);
 
+    /* Clear the surface once if its content is preserved */
+    if (eglglessink->eglglesctx.buffer_preserved) {
+      glClearColor (0.0, 0.0, 0.0, 1.0);
+      glClear (GL_COLOR_BUFFER_BIT);
+    }
+
     if (!gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
       GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
       goto HANDLE_ERROR;
