@@ -184,7 +184,7 @@ static GstStaticPadTemplate audiosink_templ =
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
-    GST_STATIC_PAD_TEMPLATE ("subtitle_%d",
+    GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("subtitle/x-kate; "
