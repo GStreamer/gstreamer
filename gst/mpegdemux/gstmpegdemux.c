@@ -868,6 +868,9 @@ gst_flups_demux_send_gap_updates (GstFluPSDemux * demux, GstClockTime new_start)
         stream->last_ts = demux->src_segment.start + base_time;
 
       if (stream->last_ts + stream->segment_thresh < new_start) {
+        /* should send segment info before gap event */
+        gst_flups_demux_send_segment (demux, stream, GST_CLOCK_TIME_NONE);
+
         GST_DEBUG_OBJECT (demux,
             "Sending gap update to pad %s time %" GST_TIME_FORMAT,
             GST_PAD_NAME (stream->pad), GST_TIME_ARGS (new_start));
