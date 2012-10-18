@@ -536,33 +536,28 @@ static GList *
 gst_tag_to_metadata_block_picture (const gchar * tag,
     const GValue * image_value)
 {
-#if 0
   gchar *comment_data, *data_result;
   const gchar *mime_type;
   guint mime_type_len;
   GstStructure *mime_struct;
+  GstSample *sample;
   GstBuffer *buffer;
-#endif
+  GstCaps *caps;
   GList *l = NULL;
-#if 0
-  guint8 *data;
-  gsize size;
+  GstMapInfo mapinfo = { 0, };
   GstByteWriter writer;
   GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
   gint width = 0, height = 0;
   guint8 *metadata_block;
   guint metadata_block_len;
-#endif
 
   g_return_val_if_fail (image_value != NULL, NULL);
 
-  /* FIXME, no more buffer caps */
-  g_assert_not_reached ();
-
-#if 0
-  buffer = gst_value_get_buffer (image_value);
-  g_return_val_if_fail (gst_caps_is_fixed (buffer->caps), NULL);
-  mime_struct = gst_caps_get_structure (buffer->caps, 0);
+  sample = gst_value_get_sample (image_value);
+  buffer = gst_sample_get_buffer (sample);
+  caps = gst_sample_get_caps (sample);
+  g_return_val_if_fail (gst_caps_is_fixed (caps), NULL);
+  mime_struct = gst_caps_get_structure (caps, 0);
 
   mime_type = gst_structure_get_name (mime_struct);
   if (strcmp (mime_type, "text/uri-list") == 0)
@@ -600,10 +595,15 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
   /* for indexed formats the number of colors */
   gst_byte_writer_put_uint32_be_unchecked (&writer, 0);
 
-  data = gst_buffer_map (buffer, &size, NULL, GST_MAP_READ);
-  gst_byte_writer_put_uint32_be_unchecked (&writer, size);
-  gst_byte_writer_put_data_unchecked (&writer, data, size);
-  gst_buffer_unmap (buffer, data, size);
+  if (gst_buffer_map (buffer, &mapinfo, GST_MAP_READ)) {
+    gst_byte_writer_put_uint32_be_unchecked (&writer, mapinfo.size);
+    gst_byte_writer_put_data_unchecked (&writer, mapinfo.data, mapinfo.size);
+    gst_buffer_unmap (buffer, &mapinfo);
+  } else {
+    GST_WARNING ("Failed to map vorbistag image buffer");
+    gst_byte_writer_reset (&writer);
+    return NULL;                /* List is always null up to here */
+  }
 
   g_assert (gst_byte_writer_get_pos (&writer) == metadata_block_len);
 
@@ -614,7 +614,6 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
   g_free (comment_data);
 
   l = g_list_append (l, data_result);
-#endif
 
   return l;
 }
