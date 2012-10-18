@@ -71,31 +71,19 @@ G_BEGIN_DECLS
 #define GST_EGLGLESSINK_IMAGE_RGB565 2
 #define GST_EGLGLESSINK_IMAGE_RGBA8888 3
 #define GST_EGLGLESSINK_EGL_MIN_VERSION 1
-typedef struct _GstEglGlesBuffer GstEglGlesBuffer;
-typedef struct _GstEglGlesBufferClass GstEglGlesBufferClass;
-
 typedef struct _GstEglGlesSink GstEglGlesSink;
 typedef struct _GstEglGlesSinkClass GstEglGlesSinkClass;
 typedef struct _GstEglGlesRenderContext GstEglGlesRenderContext;
 
 typedef struct _GstEglGlesImageFmt GstEglGlesImageFmt;
 
-/* Should be extended if new rendering methods
- * get implemented.
- */
-typedef enum
-{
-  GST_EGLGLESSINK_RENDER_SLOW,
-  GST_EGLGLESSINK_RENDER_FAST
-} GstEglGlesSinkRenderingPath;
-
 typedef struct _coord5
 {
   float x;
   float y;
   float z;
-  float a; /* texpos x */
-  float b; /* texpos y */
+  float a;                      /* texpos x */
+  float b;                      /* texpos y */
 } coord5;
 
 /*
@@ -145,7 +133,7 @@ struct _GstEglGlesRenderContext
   /* shader vars */
   GLuint position_loc[2], texpos_loc;
   GLuint tex_loc[3];
-  coord5 position_array[12]; /* 3 x Frame, 3 x Border1, 3 x Border2 */
+  coord5 position_array[12];    /* 3 x Frame, 3 x Border1, 3 x Border2 */
   unsigned short index_array[4];
   unsigned int position_buffer, index_buffer;
 };
@@ -164,33 +152,6 @@ struct _GstEglGlesImageFmt
   gint fmt;                     /* Private identifier */
   const EGLint *attribs;        /* EGL Attributes */
   GstCaps *caps;                /* Matching caps for the attribs */
-};
-
-/*
- * GstEglGlesBuffer:
- * @buffer: GST buffer
- * @eglglessink: Pointer to the eglglessink instance this buffer belongs to
- * @image: Pointer to the EGL image data
- * @format: Image's picture format
- * @width: Image's pixel width
- * @height: Image's pixel height
- * @size: Image's data size
- *
- * This struct holds the internal representation of the sink's custom
- * buffer. This implementation is just a draft and only makes sense for
- * the fast rendering path logic.
- */
-struct _GstEglGlesBuffer
-{
-  /* XXX: Maybe use GstVideoRectangle for the image data? */
-  GstBuffer buffer;
-  GstEglGlesSink *eglglessink;
-
-  EGLint *image;
-  gint format;
-
-  gint width, height;
-  size_t size;
 };
 
 /*
@@ -220,8 +181,8 @@ struct _GstEglGlesBuffer
  */
 struct _GstEglGlesSink
 {
-  GstVideoSink videosink;               /* Element hook */
-  int par_n, par_d;                     /* Aspect ratio from caps */
+  GstVideoSink videosink;       /* Element hook */
+  int par_n, par_d;             /* Aspect ratio from caps */
 
   GstVideoFormat format;
   GstVideoRectangle display_region;
@@ -229,7 +190,6 @@ struct _GstEglGlesSink
   GstCaps *current_caps, *configured_caps;
 
   GstEglGlesImageFmt *selected_fmt;
-  GstEglGlesSinkRenderingPath rendering_path;
   GstEglGlesRenderContext eglglesctx;
 
   GList *supported_fmts;
@@ -251,7 +211,6 @@ struct _GstEglGlesSink
 
   /* Properties */
   gboolean create_window;
-  gboolean force_rendering_slow;
   gboolean force_aspect_ratio;
 };
 

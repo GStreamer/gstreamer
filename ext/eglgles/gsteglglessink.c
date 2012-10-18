@@ -55,9 +55,7 @@
  * This sink has been tested to work on X11/Mesa and on Android
  * (From Gingerbread on to Jelly Bean) and while it's currently
  * using an slow copy-over rendering path it has proven to be fast
- * enough on the devices we have tried it on. That being said, there's
- * an currently unfinished and drafted fast rendering path in the code,
- * relying on a set of EGL/GLES extensions.
+ * enough on the devices we have tried it on. 
  *
  * <refsect2>
  * <title>Supported EGL/OpenGL ES versions</title>
@@ -70,18 +68,6 @@
  * <title>Example launch line</title>
  * |[
  * gst-launch -v -m videotestsrc ! eglglessink
- * ]|
- * </refsect2>
- *
- * <refsect2>
- * <title>Example launch line with forced slow path rendering</title>
- * <para>
- * By setting the force_rendering_slow property you can force the sink
- * to chose the buffer-copy slow rendering path even if the needed
- * EGL/GLES extensions for the fast rendering path are available.
- * </para>
- * |[
- * gst-launch -v -m videotestsrc ! eglglessink force_rendering_slow=TRUE
  * ]|
  * </refsect2>
  *
@@ -155,28 +141,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_eglglessink_debug);
 #define GST_CAT_DEFAULT gst_eglglessink_debug
-
-/* These are only needed for the fast rendering path */
-#ifdef EGL_KHR_image
-static PFNEGLCREATEIMAGEKHRPROC my_eglCreateImageKHR;
-static PFNEGLDESTROYIMAGEKHRPROC my_eglDestroyImageKHR;
-
-#ifdef EGL_KHR_lock_surface
-static PFNEGLLOCKSURFACEKHRPROC my_eglLockSurfaceKHR;
-static PFNEGLUNLOCKSURFACEKHRPROC my_eglUnlockSurfaceKHR;
-
-static EGLint lock_attribs[] = {
-  EGL_MAP_PRESERVE_PIXELS_KHR, EGL_TRUE,
-  EGL_LOCK_USAGE_HINT_KHR, EGL_READ_SURFACE_BIT_KHR | EGL_WRITE_SURFACE_BIT_KHR,
-  EGL_NONE
-};
-
-#ifdef GL_OES_EGL_image
-static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC my_glEGLImageTargetTexture2DOES;
-#define EGL_FAST_RENDERING_POSSIBLE 1
-#endif
-#endif
-#endif
 
 /* GLESv2 GLSL Shaders
  *
@@ -358,7 +322,6 @@ enum
   PROP_0,
   PROP_CREATE_WINDOW,
   PROP_FORCE_ASPECT_RATIO,
-  PROP_FORCE_RENDERING_SLOW
 };
 
 /* will probably move elsewhere */
@@ -400,8 +363,6 @@ static GstStateChangeReturn gst_eglglessink_change_state (GstElement * element,
 static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
     GstBuffer * buf);
 static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
-static GstFlowReturn gst_eglglessink_buffer_alloc (GstBaseSink * sink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf);
 static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink);
 
 /* XOverlay interface cruft */
@@ -419,23 +380,9 @@ static void gst_eglglessink_set_window_handle (GstXOverlay * overlay,
 static void gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x,
     gint y, gint width, gint height);
 
-/* Custom Buffer funcs */
-static void gst_eglglesbuffer_destroy (GstEglGlesBuffer * eglglessink);
-static void gst_eglglesbuffer_init (GstEglGlesBuffer * eglglessink,
-    gpointer g_class);
-static GType gst_eglglesbuffer_get_type (void);
+/* Utility */
 static GstEglGlesImageFmt *gst_eglglessink_get_compat_format_from_caps
     (GstEglGlesSink * eglglessink, GstCaps * caps);
-static void gst_eglglesbuffer_finalize (GstEglGlesBuffer * eglglessink);
-static void gst_eglglesbuffer_class_init (gpointer g_class,
-    gpointer class_data);
-static void gst_eglglesbuffer_free (GstEglGlesBuffer * eglglesbuffer);
-static GstEglGlesBuffer *gst_eglglesbuffer_new (GstEglGlesSink * eglglessink,
-    GstCaps * caps);
-static EGLint *gst_eglglesbuffer_create_native (EGLNativeWindowType win,
-    EGLConfig config, EGLNativeDisplayType display, const EGLint * egl_attribs);
-
-/* Utility */
 static EGLNativeWindowType gst_eglglessink_create_window (GstEglGlesSink *
     eglglessink, gint width, gint height);
 static inline gint
@@ -459,248 +406,9 @@ static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
     eglglessink, gboolean bind);
 
-static GstBufferClass *gsteglglessink_buffer_parent_class = NULL;
-#define GST_TYPE_EGLGLESBUFFER (gst_eglglesbuffer_get_type())
-#define GST_IS_EGLGLESBUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_EGLGLESBUFFER))
-#define GST_EGLGLESBUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_EGLGLESBUFFER, GstEglGlesBuffer))
-#define GST_EGLGLESBUFFER_CAST(obj) ((GstEglGlesBuffer *)(obj))
-
-
 GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
     GST_TYPE_VIDEO_SINK, gst_eglglessink_init_interfaces);
 
-/* Custom Buffer Funcs */
-/* XXX: Drafted implementation */
-static EGLint *
-gst_eglglesbuffer_create_native (EGLNativeWindowType win,
-    EGLConfig config, EGLNativeDisplayType display, const EGLint * egl_attribs)
-{
-  EGLNativePixmapType pix = 0;
-  EGLSurface pix_surface;
-  EGLint *buffer = NULL;
-
-  /* XXX: Need to figure out how to create an egl_native_pixmap_t to
-   * feed to eglCreatePixmapSurface. An option on android: create an
-   * android_native_buffer_t to pass straight to eglCreateImageKHR.
-   */
-
-  pix_surface = eglCreatePixmapSurface (display, config, pix, egl_attribs);
-
-  if (pix_surface == EGL_NO_SURFACE) {
-    show_egl_error ("eglCreatePixmapSurface");
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "Unable to create pixmap surface");
-    goto EGL_ERROR;
-  }
-
-  if (my_eglLockSurfaceKHR (display, pix_surface, lock_attribs) == EGL_FALSE) {
-    show_egl_error ("eglLockSurfaceKHR");
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "Unable to lock surface");
-    goto EGL_ERROR;
-  }
-
-  if (eglQuerySurface (display, pix_surface, EGL_BITMAP_POINTER_KHR, buffer)
-      == EGL_FALSE) {
-    show_egl_error ("eglQuerySurface");
-    GST_CAT_ERROR (GST_CAT_DEFAULT,
-        "Unable to query surface for bitmap pointer");
-    goto EGL_ERROR_LOCKED;
-  }
-
-  return buffer;
-
-EGL_ERROR_LOCKED:
-  my_eglUnlockSurfaceKHR (display, pix_surface);
-EGL_ERROR:
-  GST_CAT_ERROR (GST_CAT_DEFAULT, "EGL call returned error %x", eglGetError ());
-  if (!eglDestroySurface (display, pix_surface)) {
-    show_egl_error ("eglDestroySurface");
-    GST_CAT_ERROR (GST_CAT_DEFAULT, "Couldn't destroy surface");
-  }
-  return NULL;
-}
-
-static GstEglGlesBuffer *
-gst_eglglesbuffer_new (GstEglGlesSink * eglglessink, GstCaps * caps)
-{
-  GstEglGlesBuffer *eglglesbuffer = NULL;
-  GstStructure *structure = NULL;
-  GstEglGlesImageFmt *format;
-
-  g_return_val_if_fail (GST_IS_EGLGLESSINK (eglglessink), NULL);
-  g_return_val_if_fail (caps, NULL);
-
-  eglglesbuffer =
-      (GstEglGlesBuffer *) gst_mini_object_new (GST_TYPE_EGLGLESBUFFER);
-  GST_DEBUG_OBJECT (eglglesbuffer, "Creating new GstEglGlesBuffer");
-
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "width", &eglglesbuffer->width) ||
-      !gst_structure_get_int (structure, "height", &eglglesbuffer->height)) {
-    GST_WARNING ("Failed getting geometry from caps %" GST_PTR_FORMAT, caps);
-  }
-
-  GST_LOG_OBJECT (eglglessink, "creating %dx%d", eglglesbuffer->width,
-      eglglesbuffer->height);
-
-  format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
-
-  if (!format) {
-    GST_WARNING_OBJECT (eglglessink,
-        "Failed to get format from caps %" GST_PTR_FORMAT, caps);
-    GST_ERROR_OBJECT (eglglessink,
-        "Invalid input caps. Failed to create  %dx%d buffer",
-        eglglesbuffer->width, eglglesbuffer->height);
-    goto BEACH_UNLOCKED;
-  }
-
-  eglglesbuffer->format = format->fmt;
-  eglglesbuffer->eglglessink = gst_object_ref (eglglessink);
-
-  eglglesbuffer->image = gst_eglglesbuffer_create_native
-      (eglglessink->eglglesctx.used_window, eglglessink->eglglesctx.config,
-      eglglessink->eglglesctx.display, NULL);
-  if (!eglglesbuffer->image) {
-    GST_ERROR_OBJECT (eglglessink,
-        "Failed to create native %dx%d image buffer", eglglesbuffer->width,
-        eglglesbuffer->height);
-    goto BEACH_UNLOCKED;
-  }
-
-  GST_BUFFER_DATA (eglglesbuffer) = (guchar *) eglglesbuffer->image;
-  GST_BUFFER_SIZE (eglglesbuffer) = eglglesbuffer->size;
-
-  return eglglesbuffer;
-
-BEACH_UNLOCKED:
-  gst_eglglesbuffer_free (eglglesbuffer);
-  eglglesbuffer = NULL;
-  return NULL;
-}
-
-static void
-gst_eglglesbuffer_destroy (GstEglGlesBuffer * eglglesbuffer)
-{
-
-  GstEglGlesSink *eglglessink;
-
-  GST_DEBUG_OBJECT (eglglesbuffer, "Destroying buffer");
-
-  eglglessink = eglglesbuffer->eglglessink;
-  if (G_UNLIKELY (eglglessink == NULL))
-    goto NO_SINK;
-
-  g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
-
-  GST_OBJECT_LOCK (eglglessink);
-  GST_DEBUG_OBJECT (eglglessink, "Destroying image");
-
-  if (eglglesbuffer->image) {
-    if (GST_BUFFER_DATA (eglglesbuffer)) {
-      g_free (GST_BUFFER_DATA (eglglesbuffer));
-    }
-    eglglesbuffer->image = NULL;
-    /* XXX: Unallocate EGL/GL especific resources asociated with this
-     * Image here
-     */
-  }
-
-  GST_OBJECT_UNLOCK (eglglessink);
-  eglglesbuffer->eglglessink = NULL;
-  gst_object_unref (eglglessink);
-
-  GST_MINI_OBJECT_CLASS (gsteglglessink_buffer_parent_class)->finalize
-      (GST_MINI_OBJECT (eglglesbuffer));
-
-  return;
-
-NO_SINK:
-  GST_WARNING ("No sink found");
-  return;
-}
-
-/* XXX: Missing implementation.
- * This function will have the code for maintaing the pool. readding or
- * destroying the buffers on size or runing/status change. Right now all
- * it does is to call _destroy.
- * for a proper implementation take a look at xvimagesink's image buffer
- * destroy func.
- */
-static void
-gst_eglglesbuffer_finalize (GstEglGlesBuffer * eglglesbuffer)
-{
-  GstEglGlesSink *eglglessink;
-
-  eglglessink = eglglesbuffer->eglglessink;
-  if (G_UNLIKELY (eglglessink == NULL))
-    goto NO_SINK;
-
-  g_return_if_fail (GST_IS_EGLGLESSINK (eglglessink));
-
-  gst_eglglesbuffer_destroy (eglglesbuffer);
-
-  return;
-
-NO_SINK:
-  GST_WARNING ("No sink found");
-  return;
-}
-
-static void
-gst_eglglesbuffer_free (GstEglGlesBuffer * eglglesbuffer)
-{
-  /* Make sure it is not recycled. This is meaningless without
-   * a pool but was left here as a reference
-   */
-  eglglesbuffer->width = -1;
-  eglglesbuffer->height = -1;
-  gst_buffer_unref (GST_BUFFER (eglglesbuffer));
-}
-
-static void
-gst_eglglesbuffer_init (GstEglGlesBuffer * eglglesbuffer, gpointer g_class)
-{
-  eglglesbuffer->width = 0;
-  eglglesbuffer->height = 0;
-  eglglesbuffer->size = 0;
-  eglglesbuffer->image = NULL;
-  eglglesbuffer->format = GST_EGLGLESSINK_IMAGE_NOFMT;
-}
-
-static void
-gst_eglglesbuffer_class_init (gpointer g_class, gpointer class_data)
-{
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  gsteglglessink_buffer_parent_class = g_type_class_peek_parent (g_class);
-
-  mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
-      gst_eglglesbuffer_finalize;
-}
-
-static GType
-gst_eglglesbuffer_get_type (void)
-{
-  static GType _gst_eglglessink_buffer_type;
-
-  if (G_UNLIKELY (_gst_eglglessink_buffer_type == 0)) {
-    static const GTypeInfo eglglessink_buffer_info = {
-      sizeof (GstBufferClass),
-      NULL,
-      NULL,
-      gst_eglglesbuffer_class_init,
-      NULL,
-      NULL,
-      sizeof (GstEglGlesBuffer),
-      0,
-      (GInstanceInitFunc) gst_eglglesbuffer_init,
-      NULL
-    };
-    _gst_eglglessink_buffer_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstEglGlesBuffer", &eglglessink_buffer_info, 0);
-  }
-  return _gst_eglglessink_buffer_type;
-}
 
 static GstEglGlesImageFmt *
 gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
@@ -733,222 +441,6 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
   }
 
   return NULL;
-}
-
-static GstCaps *
-gst_eglglessink_different_size_suggestion (GstEglGlesSink * eglglessink,
-    GstCaps * caps)
-{
-  GstCaps *intersection;
-  GstCaps *new_caps;
-  GstStructure *s;
-  gint width, height;
-  gint par_n = 1, par_d = 1;
-  gint dar_n, dar_d;
-  gint w, h;
-
-  new_caps = gst_caps_copy (caps);
-
-  s = gst_caps_get_structure (new_caps, 0);
-
-  gst_structure_get_int (s, "width", &width);
-  gst_structure_get_int (s, "height", &height);
-  gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
-
-  gst_structure_remove_field (s, "width");
-  gst_structure_remove_field (s, "height");
-  gst_structure_remove_field (s, "pixel-aspect-ratio");
-
-  intersection = gst_caps_intersect (eglglessink->current_caps, new_caps);
-  gst_caps_unref (new_caps);
-
-  if (gst_caps_is_empty (intersection))
-    return intersection;
-
-  s = gst_caps_get_structure (intersection, 0);
-
-  gst_util_fraction_multiply (width, height, par_n, par_d, &dar_n, &dar_d);
-
-  gst_structure_fixate_field_nearest_int (s, "width", width);
-  gst_structure_fixate_field_nearest_int (s, "height", height);
-  gst_structure_get_int (s, "width", &w);
-  gst_structure_get_int (s, "height", &h);
-
-  gst_util_fraction_multiply (h, w, dar_n, dar_d, &par_n, &par_d);
-  gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
-      NULL);
-
-  return intersection;
-}
-
-static GstFlowReturn
-gst_eglglessink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf)
-{
-
-  GstEglGlesSink *eglglessink;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstEglGlesBuffer *eglglesbuffer = NULL;
-  GstCaps *intersection = NULL;
-  GstStructure *structure = NULL;
-  gint width, height;
-  GstEglGlesImageFmt *format;
-
-  eglglessink = GST_EGLGLESSINK (bsink);
-
-  /* No custom alloc for the slow rendering path */
-  if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-    GST_INFO_OBJECT (eglglessink, "No custom alloc for slow rendering path");
-    *buf = NULL;
-    return GST_FLOW_OK;
-  }
-
-  if (G_UNLIKELY (!caps))
-    goto NO_CAPS;
-
-  if (G_LIKELY (gst_caps_is_equal (caps, eglglessink->current_caps))) {
-    GST_LOG_OBJECT (eglglessink,
-        "Buffer alloc for same last_caps, reusing caps");
-    intersection = gst_caps_ref (caps);
-    width = GST_VIDEO_SINK_WIDTH (eglglessink);
-    height = GST_VIDEO_SINK_HEIGHT (eglglessink);
-
-    goto REUSE_LAST_CAPS;
-  }
-
-  GST_DEBUG_OBJECT (eglglessink, "Buffer alloc requested size %d with caps %"
-      GST_PTR_FORMAT ", intersecting with our caps %" GST_PTR_FORMAT, size,
-      caps, eglglessink->current_caps);
-
-  /* Check the caps against our current caps */
-  intersection = gst_caps_intersect (eglglessink->current_caps, caps);
-
-  GST_DEBUG_OBJECT (eglglessink, "Intersection in buffer alloc returned %"
-      GST_PTR_FORMAT, intersection);
-
-  if (gst_caps_is_empty (intersection)) {
-    GstCaps *new_caps;
-
-    gst_caps_unref (intersection);
-
-    /* So we don't support this kind of buffer, let's define one we'd like */
-    new_caps = gst_caps_copy (caps);
-
-    structure = gst_caps_get_structure (new_caps, 0);
-    if (!gst_structure_has_field (structure, "width") ||
-        !gst_structure_has_field (structure, "height")) {
-      gst_caps_unref (new_caps);
-      goto INVALID;
-    }
-
-    /* Try different dimensions */
-    intersection =
-        gst_eglglessink_different_size_suggestion (eglglessink, new_caps);
-
-    /* YUV not implemented yet */
-    if (gst_caps_is_empty (intersection)) {
-
-      gst_structure_set_name (structure, "video/x-raw-rgb");
-
-      /* Remove format specific fields */
-      gst_structure_remove_field (structure, "format");
-      gst_structure_remove_field (structure, "endianness");
-      gst_structure_remove_field (structure, "depth");
-      gst_structure_remove_field (structure, "bpp");
-      gst_structure_remove_field (structure, "red_mask");
-      gst_structure_remove_field (structure, "green_mask");
-      gst_structure_remove_field (structure, "blue_mask");
-      gst_structure_remove_field (structure, "alpha_mask");
-
-      /* Reuse intersection with current_caps */
-      intersection = gst_caps_intersect (eglglessink->current_caps, new_caps);
-    }
-
-    /* Try with different dimensions and RGB formats */
-    if (gst_caps_is_empty (intersection))
-      intersection =
-          gst_eglglessink_different_size_suggestion (eglglessink, new_caps);
-
-    /* Clean this copy */
-    gst_caps_unref (new_caps);
-
-    if (gst_caps_is_empty (intersection))
-      goto INCOMPATIBLE;
-  }
-
-  /* Ensure the returned caps are fixed */
-  gst_caps_truncate (intersection);
-
-  GST_DEBUG_OBJECT (eglglessink, "Allocating a buffer with caps %"
-      GST_PTR_FORMAT, intersection);
-  if (gst_caps_is_equal (intersection, caps)) {
-    /* Things work better if we return a buffer with the same caps ptr
-     * as was asked for when we can */
-    gst_caps_replace (&intersection, caps);
-  }
-
-  /* Get image format from caps */
-  format = gst_eglglessink_get_compat_format_from_caps (eglglessink,
-      intersection);
-
-  if (!format)
-    GST_WARNING_OBJECT (eglglessink, "Can't get a compatible format from caps");
-
-  /* Get geometry from caps */
-  structure = gst_caps_get_structure (intersection, 0);
-  if (!gst_structure_get_int (structure, "width", &width) ||
-      !gst_structure_get_int (structure, "height", &height) || !format)
-    goto INVALID_CAPS;
-
-REUSE_LAST_CAPS:
-
-  GST_DEBUG_OBJECT (eglglessink, "Creating eglglesbuffer");
-  eglglesbuffer = gst_eglglesbuffer_new (eglglessink, intersection);
-
-  if (eglglesbuffer) {
-    /* Make sure the buffer is cleared of any previously used flags */
-    GST_MINI_OBJECT_CAST (eglglesbuffer)->flags = 0;
-    gst_buffer_set_caps (GST_BUFFER_CAST (eglglesbuffer), intersection);
-  }
-
-  *buf = GST_BUFFER_CAST (eglglesbuffer);
-
-BEACH:
-  if (intersection) {
-    gst_caps_unref (intersection);
-  }
-
-  return ret;
-
-  /* ERRORS */
-INVALID:
-  {
-    GST_DEBUG_OBJECT (eglglessink, "No width/height on caps!?");
-    ret = GST_FLOW_WRONG_STATE;
-    goto BEACH;
-  }
-INCOMPATIBLE:
-  {
-    GST_WARNING_OBJECT (eglglessink, "We were requested a buffer with "
-        "caps %" GST_PTR_FORMAT ", but our current caps %" GST_PTR_FORMAT
-        " are completely incompatible!", caps, eglglessink->current_caps);
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto BEACH;
-  }
-INVALID_CAPS:
-  {
-    GST_WARNING_OBJECT (eglglessink, "Invalid caps for buffer allocation %"
-        GST_PTR_FORMAT, intersection);
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto BEACH;
-  }
-NO_CAPS:
-  {
-    GST_WARNING_OBJECT (eglglessink, "Have no caps, doing fallback allocation");
-    *buf = NULL;
-    ret = GST_FLOW_OK;
-    goto BEACH;
-  }
 }
 
 static inline gint
@@ -1130,43 +622,41 @@ render_thread_func (GstEglGlesSink * eglglessink)
   GST_DEBUG_OBJECT (eglglessink, "Shutting down thread");
 
   /* EGL/GLES cleanup */
-  if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-    glUseProgram (0);
+  glUseProgram (0);
 
-    if (eglglessink->have_vbo) {
-      glDeleteBuffers (1, &eglglessink->eglglesctx.position_buffer);
-      glDeleteBuffers (1, &eglglessink->eglglesctx.index_buffer);
-      eglglessink->have_vbo = FALSE;
-    }
+  if (eglglessink->have_vbo) {
+    glDeleteBuffers (1, &eglglessink->eglglesctx.position_buffer);
+    glDeleteBuffers (1, &eglglessink->eglglesctx.index_buffer);
+    eglglessink->have_vbo = FALSE;
+  }
 
-    if (eglglessink->have_texture) {
-      glDeleteTextures (eglglessink->eglglesctx.n_textures,
-          eglglessink->eglglesctx.texture);
-      eglglessink->have_texture = FALSE;
-      eglglessink->eglglesctx.n_textures = 0;
-    }
+  if (eglglessink->have_texture) {
+    glDeleteTextures (eglglessink->eglglesctx.n_textures,
+        eglglessink->eglglesctx.texture);
+    eglglessink->have_texture = FALSE;
+    eglglessink->eglglesctx.n_textures = 0;
+  }
 
-    if (eglglessink->eglglesctx.glslprogram[0]) {
-      glDetachShader (eglglessink->eglglesctx.glslprogram[0],
-          eglglessink->eglglesctx.fragshader[0]);
-      glDetachShader (eglglessink->eglglesctx.glslprogram[0],
-          eglglessink->eglglesctx.vertshader[0]);
-      glDeleteProgram (eglglessink->eglglesctx.glslprogram[0]);
-      glDeleteShader (eglglessink->eglglesctx.fragshader[0]);
-      glDeleteShader (eglglessink->eglglesctx.vertshader[0]);
-      eglglessink->eglglesctx.glslprogram[0] = 0;
-    }
+  if (eglglessink->eglglesctx.glslprogram[0]) {
+    glDetachShader (eglglessink->eglglesctx.glslprogram[0],
+        eglglessink->eglglesctx.fragshader[0]);
+    glDetachShader (eglglessink->eglglesctx.glslprogram[0],
+        eglglessink->eglglesctx.vertshader[0]);
+    glDeleteProgram (eglglessink->eglglesctx.glslprogram[0]);
+    glDeleteShader (eglglessink->eglglesctx.fragshader[0]);
+    glDeleteShader (eglglessink->eglglesctx.vertshader[0]);
+    eglglessink->eglglesctx.glslprogram[0] = 0;
+  }
 
-    if (eglglessink->eglglesctx.glslprogram[1]) {
-      glDetachShader (eglglessink->eglglesctx.glslprogram[1],
-          eglglessink->eglglesctx.fragshader[1]);
-      glDetachShader (eglglessink->eglglesctx.glslprogram[1],
-          eglglessink->eglglesctx.vertshader[1]);
-      glDeleteProgram (eglglessink->eglglesctx.glslprogram[1]);
-      glDeleteShader (eglglessink->eglglesctx.fragshader[1]);
-      glDeleteShader (eglglessink->eglglesctx.vertshader[1]);
-      eglglessink->eglglesctx.glslprogram[1] = 0;
-    }
+  if (eglglessink->eglglesctx.glslprogram[1]) {
+    glDetachShader (eglglessink->eglglesctx.glslprogram[1],
+        eglglessink->eglglesctx.fragshader[1]);
+    glDetachShader (eglglessink->eglglesctx.glslprogram[1],
+        eglglessink->eglglesctx.vertshader[1]);
+    glDeleteProgram (eglglessink->eglglesctx.glslprogram[1]);
+    glDeleteShader (eglglessink->eglglesctx.fragshader[1]);
+    glDeleteShader (eglglessink->eglglesctx.vertshader[1]);
+    eglglessink->eglglesctx.glslprogram[1] = 0;
   }
 
   gst_eglglessink_context_make_current (eglglessink, FALSE);
@@ -1357,10 +847,10 @@ gst_eglglessink_expose (GstXOverlay * overlay)
     GST_ERROR_OBJECT (eglglessink, "Redisplay failed");
 }
 
-/* Checks available EGL/GLES extensions and chooses
- * a suitable rendering path from GstEglGlesSinkRenderingPath
- * accordingly. This function can only be called after an
- * EGL context has been made current.
+/* Prints available EGL/GLES extensions 
+ * If another rendering path is implemented this is the place
+ * where you want to check for the availability of its supporting
+ * EGL/GLES extensions.
  */
 static void
 gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
@@ -1376,75 +866,6 @@ gst_eglglessink_init_egl_exts (GstEglGlesSink * eglglessink)
   GST_DEBUG_OBJECT (eglglessink, "Available GLES extensions: %s\n",
       GST_STR_NULL ((const char *) glexts));
 
-#ifdef EGL_FAST_RENDERING_POSSIBLE
-  /* OK Fast rendering should be possible from the declared
-   * extensions on the eglexts/glexts.h headers
-   */
-
-  /* Check for support from claimed EGL/GLES extensions */
-
-  if (!eglexts || !strstr (eglexts, "EGL_KHR_image"))
-    goto KHR_IMAGE_NA;
-  if (!eglexts || !strstr (eglexts, "EGL_KHR_lock_surface"))
-    goto SURFACE_LOCK_NA;
-  if (!glexts || !strstr ((char *) glexts, "GL_OES_EGL_image"))
-    goto TEXTURE_2DOES_NA;
-
-  /* Check for actual extension proc addresses */
-
-  my_eglCreateImageKHR =
-      (PFNEGLCREATEIMAGEKHRPROC) eglGetProcAddress ("eglCreateImageKHR");
-  my_eglDestroyImageKHR =
-      (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress ("eglDestroyImageKHR");
-
-  if (!my_eglCreateImageKHR || !my_eglDestroyImageKHR) {
-  KHR_IMAGE_NA:
-    GST_INFO_OBJECT (eglglessink, "Extension missing: EGL_KHR_image");
-    goto MISSING_EXTS;
-  }
-
-  my_eglLockSurfaceKHR =
-      (PFNEGLLOCKSURFACEKHRPROC) eglGetProcAddress ("eglLockSurfaceKHR");
-  my_eglUnlockSurfaceKHR =
-      (PFNEGLUNLOCKSURFACEKHRPROC) eglGetProcAddress ("eglUnlockSurfaceKHR");
-
-  if (!my_eglLockSurfaceKHR || !my_eglUnlockSurfaceKHR) {
-  SURFACE_LOCK_NA:
-    GST_INFO_OBJECT (eglglessink, "Extension missing: EGL_KHR_lock_surface");
-    goto MISSING_EXTS;
-  }
-
-  my_glEGLImageTargetTexture2DOES =
-      (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress
-      ("glEGLImageTargetTexture2DOES");
-
-  if (!my_glEGLImageTargetTexture2DOES) {
-  TEXTURE_2DOES_NA:
-    GST_INFO_OBJECT (eglglessink, "Extension missing: GL_OES_EGL_image");
-    goto MISSING_EXTS;
-  }
-
-  if (!eglglessink->force_rendering_slow) {
-    GST_INFO_OBJECT (eglglessink,
-        "Have needed extensions for fast rendering path");
-  } else {
-    GST_WARNING_OBJECT (eglglessink,
-        "Extension check passed but slow rendering path being forced");
-    goto SLOW_PATH_SELECTED;
-  }
-
-  /* Extension check passed. Enable fast rendering path */
-  eglglessink->rendering_path = GST_EGLGLESSINK_RENDER_FAST;
-  GST_INFO_OBJECT (eglglessink, "Using fast rendering path");
-  return;
-#endif
-
-MISSING_EXTS:
-  GST_WARNING_OBJECT (eglglessink,
-      "Extensions missing. Can't use fast rendering path");
-SLOW_PATH_SELECTED:
-  eglglessink->rendering_path = GST_EGLGLESSINK_RENDER_SLOW;
-  GST_INFO_OBJECT (eglglessink, "Using slow rendering path");
   return;
 }
 
@@ -1736,9 +1157,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   /* We have a surface! */
   eglglessink->have_surface = TRUE;
 
-  /* Init vertex and fragment GLSL shaders. This entire block might need to be
-   * runtime conditional once the fast rendering path gets fully implemented.
-   *
+  /* Init vertex and fragment GLSL shaders. 
    * Note: Shader compiler support is optional but we currently rely on it.
    */
 
@@ -2254,13 +1673,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   gint w, h;
   guint dar_n, dar_d;
 
-#ifdef EGL_FAST_RENDERING_POSSIBLE
-  EGLImageKHR img = EGL_NO_IMAGE_KHR;
-  EGLint attrs[] = { EGL_IMAGE_PRESERVED_KHR,
-    EGL_FALSE, EGL_NONE, EGL_NONE
-  };
-#endif
-
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
@@ -2268,283 +1680,248 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
       "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
       buf ? GST_BUFFER_SIZE (buf) : -1);
 
-  switch (eglglessink->rendering_path) {
-#ifdef EGL_FAST_RENDERING_POSSIBLE
-    case GST_EGLGLESSINK_RENDER_FAST:
-      /* XXX: Not Fully implemented */
-      img =
-          my_eglCreateImageKHR (eglglessink->eglglesctx.display,
-          EGL_NO_CONTEXT, EGL_NATIVE_PIXMAP_KHR,
-          (EGLClientBuffer) GST_BUFFER_DATA (buf), attrs);
+  if (buf) {
+    switch (eglglessink->selected_fmt->fmt) {
+      case GST_EGLGLESSINK_IMAGE_RGB888:
+        glActiveTexture (GL_TEXTURE0);
+        glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+            GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+        break;
+      case GST_EGLGLESSINK_IMAGE_RGB565:
+        glActiveTexture (GL_TEXTURE0);
+        glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+        glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+            GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+        break;
+      case GST_EGLGLESSINK_IMAGE_RGBA8888:
 
-      if (img == EGL_NO_IMAGE_KHR) {
-        GST_ERROR_OBJECT (eglglessink, "my_eglCreateImageKHR failed");
-        goto HANDLE_EGL_ERROR;
-      }
-
-      my_glEGLImageTargetTexture2DOES (GL_TEXTURE_2D, img);
-
-      break;
-#endif
-    default:                   /* case GST_EGLGLESSINK_RENDER_SLOW */
-
-      if (buf) {
-        switch (eglglessink->selected_fmt->fmt) {
-          case GST_EGLGLESSINK_IMAGE_RGB888:
+        switch (eglglessink->format) {
+          case GST_VIDEO_FORMAT_RGBA:
+          case GST_VIDEO_FORMAT_BGRA:
+          case GST_VIDEO_FORMAT_ARGB:
+          case GST_VIDEO_FORMAT_ABGR:
+          case GST_VIDEO_FORMAT_RGBx:
+          case GST_VIDEO_FORMAT_BGRx:
+          case GST_VIDEO_FORMAT_xRGB:
+          case GST_VIDEO_FORMAT_xBGR:
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
                 GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
             break;
-          case GST_EGLGLESSINK_IMAGE_RGB565:
+          case GST_VIDEO_FORMAT_AYUV:
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-                GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
+                GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
             break;
-          case GST_EGLGLESSINK_IMAGE_RGBA8888:
-            switch (eglglessink->format) {
-              case GST_VIDEO_FORMAT_RGBA:
-              case GST_VIDEO_FORMAT_BGRA:
-              case GST_VIDEO_FORMAT_ARGB:
-              case GST_VIDEO_FORMAT_ABGR:
-              case GST_VIDEO_FORMAT_RGBx:
-              case GST_VIDEO_FORMAT_BGRx:
-              case GST_VIDEO_FORMAT_xRGB:
-              case GST_VIDEO_FORMAT_xBGR:
-                glActiveTexture (GL_TEXTURE0);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[0]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-                break;
-              case GST_VIDEO_FORMAT_AYUV:
-                glActiveTexture (GL_TEXTURE0);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[0]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                    GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-                break;
-              case GST_VIDEO_FORMAT_Y444:
-              case GST_VIDEO_FORMAT_I420:
-              case GST_VIDEO_FORMAT_YV12:
-              case GST_VIDEO_FORMAT_Y42B:
-              case GST_VIDEO_FORMAT_Y41B:{
-                gint coffset, cw, ch;
+          case GST_VIDEO_FORMAT_Y444:
+          case GST_VIDEO_FORMAT_I420:
+          case GST_VIDEO_FORMAT_YV12:
+          case GST_VIDEO_FORMAT_Y42B:
+          case GST_VIDEO_FORMAT_Y41B:{
+            gint coffset, cw, ch;
 
-                coffset =
-                    gst_video_format_get_component_offset (eglglessink->format,
-                    0, w, h);
-                cw = gst_video_format_get_component_width (eglglessink->format,
-                    0, w);
-                ch = gst_video_format_get_component_height (eglglessink->format,
-                    0, h);
-                glActiveTexture (GL_TEXTURE0);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[0]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                    GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                    GST_BUFFER_DATA (buf) + coffset);
-                coffset =
-                    gst_video_format_get_component_offset (eglglessink->format,
-                    1, w, h);
-                cw = gst_video_format_get_component_width (eglglessink->format,
-                    1, w);
-                ch = gst_video_format_get_component_height (eglglessink->format,
-                    1, h);
-                glActiveTexture (GL_TEXTURE1);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[1]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                    GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                    GST_BUFFER_DATA (buf) + coffset);
-                coffset =
-                    gst_video_format_get_component_offset (eglglessink->format,
-                    2, w, h);
-                cw = gst_video_format_get_component_width (eglglessink->format,
-                    2, w);
-                ch = gst_video_format_get_component_height (eglglessink->format,
-                    2, h);
-                glActiveTexture (GL_TEXTURE2);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[2]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                    GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                    GST_BUFFER_DATA (buf) + coffset);
-                break;
-              }
-              case GST_VIDEO_FORMAT_YUY2:
-              case GST_VIDEO_FORMAT_YVYU:
-              case GST_VIDEO_FORMAT_UYVY:
-                glActiveTexture (GL_TEXTURE0);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[0]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, w, h, 0,
-                    GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                    GST_BUFFER_DATA (buf));
-                glActiveTexture (GL_TEXTURE1);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[1]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, GST_ROUND_UP_2 (w) / 2,
-                    h, 0, GL_RGBA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-                break;
-              case GST_VIDEO_FORMAT_NV12:
-              case GST_VIDEO_FORMAT_NV21:{
-                gint coffset, cw, ch;
-
-                coffset =
-                    gst_video_format_get_component_offset (eglglessink->format,
-                    0, w, h);
-                cw = gst_video_format_get_component_width (eglglessink->format,
-                    0, w);
-                ch = gst_video_format_get_component_height (eglglessink->format,
-                    0, h);
-                glActiveTexture (GL_TEXTURE0);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[0]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                    GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                    GST_BUFFER_DATA (buf) + coffset);
-
-                coffset =
-                    gst_video_format_get_component_offset (eglglessink->format,
-                    (eglglessink->format == GST_VIDEO_FORMAT_NV12 ? 1 : 2), w,
-                    h);
-                cw = gst_video_format_get_component_width (eglglessink->format,
-                    1, w);
-                ch = gst_video_format_get_component_height (eglglessink->format,
-                    1, h);
-                glActiveTexture (GL_TEXTURE1);
-                glBindTexture (GL_TEXTURE_2D,
-                    eglglessink->eglglesctx.texture[1]);
-                glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cw, ch, 0,
-                    GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                    GST_BUFFER_DATA (buf) + coffset);
-                break;
-              }
-              default:
-                g_assert_not_reached ();
-                break;
-            }
-        }
-
-        if (got_gl_error ("glTexImage2D"))
-          goto HANDLE_ERROR;
-      }
-
-      /* If no one has set a display rectangle on us initialize
-       * a sane default. According to the docs on the xOverlay
-       * interface we are supposed to fill the overlay 100%. We
-       * do this trying to take PAR/DAR into account unless the
-       * calling party explicitly ask us not to by setting
-       * force_aspect_ratio to FALSE.
-       */
-      if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
-          !eglglessink->display_region.w || !eglglessink->display_region.h) {
-        GST_OBJECT_LOCK (eglglessink);
-        if (!eglglessink->force_aspect_ratio) {
-          eglglessink->display_region.x = 0;
-          eglglessink->display_region.y = 0;
-          eglglessink->display_region.w = eglglessink->eglglesctx.surface_width;
-          eglglessink->display_region.h =
-              eglglessink->eglglesctx.surface_height;
-        } else {
-          if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, w, h,
-                  eglglessink->par_n, eglglessink->par_d,
-                  eglglessink->eglglesctx.pixel_aspect_ratio,
-                  EGL_DISPLAY_SCALING)) {
-            GST_WARNING_OBJECT (eglglessink, "Could not compute resulting DAR");
-            frame.w = w;
-            frame.h = h;
-          } else {
-            /* Find suitable matching new size acording to dar & par
-             * rationale for prefering leaving the height untouched
-             * comes from interlacing considerations.
-             * XXX: Move this to gstutils?
-             */
-            if (h % dar_d == 0) {
-              frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
-              frame.h = h;
-            } else if (w % dar_n == 0) {
-              frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
-              frame.w = w;
-            } else {
-              /* Neither width nor height can be precisely scaled.
-               * Prefer to leave height untouched. See comment above.
-               */
-              frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
-              frame.h = h;
-            }
+            coffset =
+                gst_video_format_get_component_offset (eglglessink->format,
+                0, w, h);
+            cw = gst_video_format_get_component_width (eglglessink->format,
+                0, w);
+            ch = gst_video_format_get_component_height (eglglessink->format,
+                0, h);
+            glActiveTexture (GL_TEXTURE0);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_BUFFER_DATA (buf) + coffset);
+            coffset =
+                gst_video_format_get_component_offset (eglglessink->format,
+                1, w, h);
+            cw = gst_video_format_get_component_width (eglglessink->format,
+                1, w);
+            ch = gst_video_format_get_component_height (eglglessink->format,
+                1, h);
+            glActiveTexture (GL_TEXTURE1);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_BUFFER_DATA (buf) + coffset);
+            coffset =
+                gst_video_format_get_component_offset (eglglessink->format,
+                2, w, h);
+            cw = gst_video_format_get_component_width (eglglessink->format,
+                2, w);
+            ch = gst_video_format_get_component_height (eglglessink->format,
+                2, h);
+            glActiveTexture (GL_TEXTURE2);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[2]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_BUFFER_DATA (buf) + coffset);
+            break;
           }
+          case GST_VIDEO_FORMAT_YUY2:
+          case GST_VIDEO_FORMAT_YVYU:
+          case GST_VIDEO_FORMAT_UYVY:
+            glActiveTexture (GL_TEXTURE0);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, w, h, 0,
+                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+            glActiveTexture (GL_TEXTURE1);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, GST_ROUND_UP_2 (w) / 2,
+                h, 0, GL_RGBA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+            break;
+          case GST_VIDEO_FORMAT_NV12:
+          case GST_VIDEO_FORMAT_NV21:{
+            gint coffset, cw, ch;
 
-          surface.w = eglglessink->eglglesctx.surface_width;
-          surface.h = eglglessink->eglglesctx.surface_height;
-          gst_video_sink_center_rect (frame, surface,
-              &eglglessink->display_region, TRUE);
+            coffset =
+                gst_video_format_get_component_offset (eglglessink->format,
+                0, w, h);
+            cw = gst_video_format_get_component_width (eglglessink->format,
+                0, w);
+            ch = gst_video_format_get_component_height (eglglessink->format,
+                0, h);
+            glActiveTexture (GL_TEXTURE0);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
+                GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_BUFFER_DATA (buf) + coffset);
+
+            coffset =
+                gst_video_format_get_component_offset (eglglessink->format,
+                (eglglessink->format == GST_VIDEO_FORMAT_NV12 ? 1 : 2), w, h);
+            cw = gst_video_format_get_component_width (eglglessink->format, 1,
+                w);
+            ch = gst_video_format_get_component_height (eglglessink->format, 1,
+                h);
+            glActiveTexture (GL_TEXTURE1);
+            glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cw, ch, 0,
+                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                GST_BUFFER_DATA (buf) + coffset);
+            break;
+          }
+          default:
+            g_assert_not_reached ();
+            break;
         }
-        GST_OBJECT_UNLOCK (eglglessink);
+    }
 
-        glViewport (0, 0,
-            eglglessink->eglglesctx.surface_width,
-            eglglessink->eglglesctx.surface_height);
+    if (got_gl_error ("glTexImage2D"))
+      goto HANDLE_ERROR;
+  }
 
-        if (!gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
-          GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
-          goto HANDLE_ERROR;
+  /* If no one has set a display rectangle on us initialize
+   * a sane default. According to the docs on the xOverlay
+   * interface we are supposed to fill the overlay 100%. We
+   * do this trying to take PAR/DAR into account unless the
+   * calling party explicitly ask us not to by setting
+   * force_aspect_ratio to FALSE.
+   */
+  if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
+      !eglglessink->display_region.w || !eglglessink->display_region.h) {
+    GST_OBJECT_LOCK (eglglessink);
+    if (!eglglessink->force_aspect_ratio) {
+      eglglessink->display_region.x = 0;
+      eglglessink->display_region.y = 0;
+      eglglessink->display_region.w = eglglessink->eglglesctx.surface_width;
+      eglglessink->display_region.h = eglglessink->eglglesctx.surface_height;
+    } else {
+      if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, w, h,
+              eglglessink->par_n, eglglessink->par_d,
+              eglglessink->eglglesctx.pixel_aspect_ratio,
+              EGL_DISPLAY_SCALING)) {
+        GST_WARNING_OBJECT (eglglessink, "Could not compute resulting DAR");
+        frame.w = w;
+        frame.h = h;
+      } else {
+        /* Find suitable matching new size acording to dar & par
+         * rationale for prefering leaving the height untouched
+         * comes from interlacing considerations.
+         * XXX: Move this to gstutils?
+         */
+        if (h % dar_d == 0) {
+          frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
+          frame.h = h;
+        } else if (w % dar_n == 0) {
+          frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
+          frame.w = w;
+        } else {
+          /* Neither width nor height can be precisely scaled.
+           * Prefer to leave height untouched. See comment above.
+           */
+          frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
+          frame.h = h;
         }
       }
 
-      /* Draw black borders */
-      GST_DEBUG_OBJECT (eglglessink, "Drawing black border 1");
-      glUseProgram (eglglessink->eglglesctx.glslprogram[1]);
+      surface.w = eglglessink->eglglesctx.surface_width;
+      surface.h = eglglessink->eglglesctx.surface_height;
+      gst_video_sink_center_rect (frame, surface,
+          &eglglessink->display_region, TRUE);
+    }
+    GST_OBJECT_UNLOCK (eglglessink);
 
-      glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (4 * sizeof (coord5)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
+    glViewport (0, 0,
+        eglglessink->eglglesctx.surface_width,
+        eglglessink->eglglesctx.surface_height);
 
-      glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
-      if (got_gl_error ("glDrawElements"))
-        goto HANDLE_ERROR;
+    if (!gst_eglglessink_setup_vbo (eglglessink, FALSE)) {
+      GST_ERROR_OBJECT (eglglessink, "VBO setup failed");
+      goto HANDLE_ERROR;
+    }
+  }
 
-      GST_DEBUG_OBJECT (eglglessink, "Drawing black border 2");
+  /* Draw black borders */
+  GST_DEBUG_OBJECT (eglglessink, "Drawing black border 1");
+  glUseProgram (eglglessink->eglglesctx.glslprogram[1]);
 
-      glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (8 * sizeof (coord5)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
+  glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
+      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
+  if (got_gl_error ("glVertexAttribPointer"))
+    goto HANDLE_ERROR;
 
-      glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
-      if (got_gl_error ("glDrawElements"))
-        goto HANDLE_ERROR;
+  glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
+  if (got_gl_error ("glDrawElements"))
+    goto HANDLE_ERROR;
 
-      /* Draw video frame */
-      GST_DEBUG_OBJECT (eglglessink, "Drawing video frame");
-      glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
+  GST_DEBUG_OBJECT (eglglessink, "Drawing black border 2");
 
-      glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
-          GL_FLOAT, GL_FALSE, sizeof (coord5),
-          (gpointer) (0 * sizeof (coord5)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
+  glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
+      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (8 * sizeof (coord5)));
+  if (got_gl_error ("glVertexAttribPointer"))
+    goto HANDLE_ERROR;
 
-      glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc, 2, GL_FLOAT,
-          GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
-      if (got_gl_error ("glVertexAttribPointer"))
-        goto HANDLE_ERROR;
+  glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
+  if (got_gl_error ("glDrawElements"))
+    goto HANDLE_ERROR;
 
-      glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
-      if (got_gl_error ("glDrawElements"))
-        goto HANDLE_ERROR;
+  /* Draw video frame */
+  GST_DEBUG_OBJECT (eglglessink, "Drawing video frame");
+  glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
 
-      if ((eglSwapBuffers (eglglessink->eglglesctx.display,
-                  eglglessink->eglglesctx.surface))
-          == EGL_FALSE) {
-        show_egl_error ("eglSwapBuffers");
-        goto HANDLE_ERROR;
-      }
+  glVertexAttribPointer (eglglessink->eglglesctx.position_loc[0], 3,
+      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (0 * sizeof (coord5)));
+  if (got_gl_error ("glVertexAttribPointer"))
+    goto HANDLE_ERROR;
+
+  glVertexAttribPointer (eglglessink->eglglesctx.texpos_loc, 2, GL_FLOAT,
+      GL_FALSE, sizeof (coord5), (gpointer) (3 * sizeof (gfloat)));
+  if (got_gl_error ("glVertexAttribPointer"))
+    goto HANDLE_ERROR;
+
+  glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
+  if (got_gl_error ("glDrawElements"))
+    goto HANDLE_ERROR;
+
+  if ((eglSwapBuffers (eglglessink->eglglesctx.display,
+              eglglessink->eglglesctx.surface))
+      == EGL_FALSE) {
+    show_egl_error ("eglSwapBuffers");
+    goto HANDLE_ERROR;
   }
 
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
@@ -2567,11 +1944,6 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 
   eglglessink = GST_EGLGLESSINK (vsink);
   GST_DEBUG_OBJECT (eglglessink, "Got buffer: %p", buf);
-
-#ifndef EGL_ANDROID_image_native_buffer
-  GST_WARNING_OBJECT (eglglessink, "EGL_ANDROID_image_native_buffer not "
-      "available");
-#endif
 
   buf = gst_buffer_make_metadata_writable (gst_buffer_ref (buf));
   gst_buffer_set_caps (buf, eglglessink->current_caps);
@@ -2645,43 +2017,41 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
 
     /* Cleanup */
-    if (eglglessink->rendering_path == GST_EGLGLESSINK_RENDER_SLOW) {
-      glUseProgram (0);
+    glUseProgram (0);
 
-      if (eglglessink->have_vbo) {
-        glDeleteBuffers (1, &eglglessink->eglglesctx.position_buffer);
-        glDeleteBuffers (1, &eglglessink->eglglesctx.index_buffer);
-        eglglessink->have_vbo = FALSE;
-      }
+    if (eglglessink->have_vbo) {
+      glDeleteBuffers (1, &eglglessink->eglglesctx.position_buffer);
+      glDeleteBuffers (1, &eglglessink->eglglesctx.index_buffer);
+      eglglessink->have_vbo = FALSE;
+    }
 
-      if (eglglessink->have_texture) {
-        glDeleteTextures (eglglessink->eglglesctx.n_textures,
-            eglglessink->eglglesctx.texture);
-        eglglessink->have_texture = FALSE;
-        eglglessink->eglglesctx.n_textures = 0;
-      }
+    if (eglglessink->have_texture) {
+      glDeleteTextures (eglglessink->eglglesctx.n_textures,
+          eglglessink->eglglesctx.texture);
+      eglglessink->have_texture = FALSE;
+      eglglessink->eglglesctx.n_textures = 0;
+    }
 
-      if (eglglessink->eglglesctx.glslprogram[0]) {
-        glDetachShader (eglglessink->eglglesctx.glslprogram[0],
-            eglglessink->eglglesctx.fragshader[0]);
-        glDetachShader (eglglessink->eglglesctx.glslprogram[0],
-            eglglessink->eglglesctx.vertshader[0]);
-        glDeleteProgram (eglglessink->eglglesctx.glslprogram[0]);
-        glDeleteShader (eglglessink->eglglesctx.fragshader[0]);
-        glDeleteShader (eglglessink->eglglesctx.vertshader[0]);
-        eglglessink->eglglesctx.glslprogram[0] = 0;
-      }
+    if (eglglessink->eglglesctx.glslprogram[0]) {
+      glDetachShader (eglglessink->eglglesctx.glslprogram[0],
+          eglglessink->eglglesctx.fragshader[0]);
+      glDetachShader (eglglessink->eglglesctx.glslprogram[0],
+          eglglessink->eglglesctx.vertshader[0]);
+      glDeleteProgram (eglglessink->eglglesctx.glslprogram[0]);
+      glDeleteShader (eglglessink->eglglesctx.fragshader[0]);
+      glDeleteShader (eglglessink->eglglesctx.vertshader[0]);
+      eglglessink->eglglesctx.glslprogram[0] = 0;
+    }
 
-      if (eglglessink->eglglesctx.glslprogram[1]) {
-        glDetachShader (eglglessink->eglglesctx.glslprogram[1],
-            eglglessink->eglglesctx.fragshader[1]);
-        glDetachShader (eglglessink->eglglesctx.glslprogram[1],
-            eglglessink->eglglesctx.vertshader[1]);
-        glDeleteProgram (eglglessink->eglglesctx.glslprogram[1]);
-        glDeleteShader (eglglessink->eglglesctx.fragshader[1]);
-        glDeleteShader (eglglessink->eglglesctx.vertshader[1]);
-        eglglessink->eglglesctx.glslprogram[1] = 0;
-      }
+    if (eglglessink->eglglesctx.glslprogram[1]) {
+      glDetachShader (eglglessink->eglglesctx.glslprogram[1],
+          eglglessink->eglglesctx.fragshader[1]);
+      glDetachShader (eglglessink->eglglesctx.glslprogram[1],
+          eglglessink->eglglesctx.vertshader[1]);
+      glDeleteProgram (eglglessink->eglglesctx.glslprogram[1]);
+      glDeleteShader (eglglessink->eglglesctx.fragshader[1]);
+      glDeleteShader (eglglessink->eglglesctx.vertshader[1]);
+      eglglessink->eglglesctx.glslprogram[1] = 0;
     }
 
     if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
@@ -2900,9 +2270,6 @@ gst_eglglessink_set_property (GObject * object, guint prop_id,
     case PROP_CREATE_WINDOW:
       eglglessink->create_window = g_value_get_boolean (value);
       break;
-    case PROP_FORCE_RENDERING_SLOW:
-      eglglessink->force_rendering_slow = g_value_get_boolean (value);
-      break;
     case PROP_FORCE_ASPECT_RATIO:
       eglglessink->force_aspect_ratio = g_value_get_boolean (value);
       break;
@@ -2925,9 +2292,6 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_CREATE_WINDOW:
       g_value_set_boolean (value, eglglessink->create_window);
-      break;
-    case PROP_FORCE_RENDERING_SLOW:
-      g_value_set_boolean (value, eglglessink->force_rendering_slow);
       break;
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, eglglessink->force_aspect_ratio);
@@ -2976,8 +2340,6 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_setcaps);
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_getcaps);
-  gstbasesink_class->buffer_alloc = GST_DEBUG_FUNCPTR
-      (gst_eglglessink_buffer_alloc);
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_eglglessink_show_frame);
@@ -2988,12 +2350,6 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
           "render to if none is provided. This is currently only supported "
           "when the sink is used under X11",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (gobject_class, PROP_FORCE_RENDERING_SLOW,
-      g_param_spec_boolean ("force-rendering-slow", "Force slow rendering path",
-          "If set to true, the sink will use the slow rendering path even "
-          "if needed EGL/GLES extensions for the fast rendering path are found "
-          "to be available at runtime",
-          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio",
           "Respect aspect ratio when scaling",
@@ -3027,7 +2383,6 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
   /** Props */
   eglglessink->create_window = TRUE;
   eglglessink->force_aspect_ratio = TRUE;
-  eglglessink->force_rendering_slow = FALSE;
 
   eglglessink->par_n = 1;
   eglglessink->par_d = 1;
