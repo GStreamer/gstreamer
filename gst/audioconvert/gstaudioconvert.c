@@ -436,6 +436,64 @@ find_suitable_mask (guint64 mask, gint n_chans)
 }
 
 static void
+gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
+    GstStructure * outs)
+{
+  const gchar *in_format;
+  const GValue *format;
+  const GstAudioFormatInfo *in_info, *out_info = NULL;
+
+  in_format = gst_structure_get_string (ins, "format");
+  if (!in_format)
+    return;
+
+  format = gst_structure_get_value (outs, "format");
+  /* should not happen */
+  if (format == NULL)
+    return;
+
+  in_info =
+      gst_audio_format_get_info (gst_audio_format_from_string (in_format));
+  if (!in_info)
+    return;
+
+  if (GST_VALUE_HOLDS_LIST (format)) {
+    gint i, len;
+
+    len = gst_value_list_get_size (format);
+    for (i = 0; i < len; i++) {
+      const GValue *val;
+      const gchar *fname;
+
+      val = gst_value_list_get_value (format, i);
+      if (G_VALUE_HOLDS_STRING (val)) {
+        fname = g_value_get_string (val);
+        out_info =
+            gst_audio_format_get_info (gst_audio_format_from_string (fname));
+        if (!out_info)
+          continue;
+        /* accept input format */
+        if (strcmp (fname, in_format) == 0)
+          break;
+        /* or another format without losing precision */
+        if ((GST_AUDIO_FORMAT_INFO_FLAGS (out_info) ==
+                GST_AUDIO_FORMAT_INFO_FLAGS (in_info)) &&
+            (GST_AUDIO_FORMAT_INFO_DEPTH (out_info) >=
+                GST_AUDIO_FORMAT_INFO_DEPTH (in_info)))
+          break;
+      }
+      out_info = NULL;
+    }
+    if (out_info)
+      gst_structure_set (outs, "format", G_TYPE_STRING,
+          GST_AUDIO_FORMAT_INFO_NAME (out_info), NULL);
+  } else {
+    /* nothing to fixate */
+    return;
+  }
+}
+
+static void
 gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
     GstStructure * outs)
 {
@@ -626,6 +684,9 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
   outs = gst_caps_get_structure (result, 0);
 
   gst_audio_convert_fixate_channels (base, ins, outs);
+  gst_audio_convert_fixate_format (base, ins, outs);
+
+  /* fixate remaining */
   result = gst_caps_fixate (result);
 
   GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, result);
