@@ -88,6 +88,12 @@ else
 DTS_DIR=
 endif
 
+if USE_EGLGLES
+EGLGLES_DIR=eglgles
+else
+EGLGLES_DIR=
+endif
+
 if USE_RESINDVD
  RESINDVD_DIR = resindvd
 else
@@ -379,6 +385,7 @@ SUBDIRS=\
 	$(WAYLAND_DIR) \
 	$(DTS_DIR) \
 	$(RESINDVD_DIR) \
+	$(EGLGLES_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
 	$(FLITE_DIR) \
@@ -446,6 +453,7 @@ DIST_SUBDIRS = \
 	libmms \
 	lv2 \
 	dts \
+	eglgles \
 	modplug \
 	mimic \
 	mpeg2enc \
