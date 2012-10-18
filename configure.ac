@@ -946,7 +946,7 @@ AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 dnl **** Wayland ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAYLAND, true)
 AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
-  PKG_CHECK_MODULES(WAYLAND, wayland-client >= 0.95.0, [
+  PKG_CHECK_MODULES(WAYLAND, wayland-client == 0.95, [
     HAVE_WAYLAND="yes" ], [ HAVE_WAYLAND="no"
   ])
 ])
