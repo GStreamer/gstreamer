@@ -229,6 +229,7 @@ static void *app_function (void *userdata) {
   g_main_context_pop_thread_default(data->context);
   g_main_context_unref (data->context);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
+  gst_object_unref (data->video_sink);
   gst_object_unref (data->pipeline);
 
   return NULL;
