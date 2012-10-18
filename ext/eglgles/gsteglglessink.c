@@ -405,6 +405,7 @@ static void gst_eglglessink_wipe_fmt (gpointer data);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 static gboolean gst_eglglessink_context_make_current (GstEglGlesSink *
     eglglessink, gboolean bind);
+static void gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink);
 
 GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
     GST_TYPE_VIDEO_SINK, gst_eglglessink_init_interfaces);
@@ -622,6 +623,19 @@ render_thread_func (GstEglGlesSink * eglglessink)
   GST_DEBUG_OBJECT (eglglessink, "Shutting down thread");
 
   /* EGL/GLES cleanup */
+  gst_eglglessink_wipe_eglglesctx (eglglessink);
+
+  if (eglglessink->configured_caps) {
+    gst_caps_unref (eglglessink->configured_caps);
+    eglglessink->configured_caps = NULL;
+  }
+
+  return NULL;
+}
+
+static void
+gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink)
+{
   glUseProgram (0);
 
   if (eglglessink->have_vbo) {
@@ -673,13 +687,6 @@ render_thread_func (GstEglGlesSink * eglglessink)
         eglglessink->eglglesctx.eglcontext);
     eglglessink->eglglesctx.eglcontext = NULL;
   }
-
-  if (eglglessink->configured_caps) {
-    gst_caps_unref (eglglessink->configured_caps);
-    eglglessink->configured_caps = NULL;
-  }
-
-  return NULL;
 }
 
 static gboolean
@@ -2016,59 +2023,8 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
 
     GST_DEBUG_OBJECT (eglglessink, "Caps are not compatible, reconfiguring");
 
-    /* Cleanup */
-    glUseProgram (0);
-
-    if (eglglessink->have_vbo) {
-      glDeleteBuffers (1, &eglglessink->eglglesctx.position_buffer);
-      glDeleteBuffers (1, &eglglessink->eglglesctx.index_buffer);
-      eglglessink->have_vbo = FALSE;
-    }
-
-    if (eglglessink->have_texture) {
-      glDeleteTextures (eglglessink->eglglesctx.n_textures,
-          eglglessink->eglglesctx.texture);
-      eglglessink->have_texture = FALSE;
-      eglglessink->eglglesctx.n_textures = 0;
-    }
-
-    if (eglglessink->eglglesctx.glslprogram[0]) {
-      glDetachShader (eglglessink->eglglesctx.glslprogram[0],
-          eglglessink->eglglesctx.fragshader[0]);
-      glDetachShader (eglglessink->eglglesctx.glslprogram[0],
-          eglglessink->eglglesctx.vertshader[0]);
-      glDeleteProgram (eglglessink->eglglesctx.glslprogram[0]);
-      glDeleteShader (eglglessink->eglglesctx.fragshader[0]);
-      glDeleteShader (eglglessink->eglglesctx.vertshader[0]);
-      eglglessink->eglglesctx.glslprogram[0] = 0;
-    }
-
-    if (eglglessink->eglglesctx.glslprogram[1]) {
-      glDetachShader (eglglessink->eglglesctx.glslprogram[1],
-          eglglessink->eglglesctx.fragshader[1]);
-      glDetachShader (eglglessink->eglglesctx.glslprogram[1],
-          eglglessink->eglglesctx.vertshader[1]);
-      glDeleteProgram (eglglessink->eglglesctx.glslprogram[1]);
-      glDeleteShader (eglglessink->eglglesctx.fragshader[1]);
-      glDeleteShader (eglglessink->eglglesctx.vertshader[1]);
-      eglglessink->eglglesctx.glslprogram[1] = 0;
-    }
-
-    if (!gst_eglglessink_context_make_current (eglglessink, FALSE))
-      return FALSE;
-
-    if (eglglessink->eglglesctx.surface) {
-      eglDestroySurface (eglglessink->eglglesctx.display,
-          eglglessink->eglglesctx.surface);
-      eglglessink->eglglesctx.surface = NULL;
-      eglglessink->have_surface = FALSE;
-    }
-
-    if (eglglessink->eglglesctx.eglcontext) {
-      eglDestroyContext (eglglessink->eglglesctx.display,
-          eglglessink->eglglesctx.eglcontext);
-      eglglessink->eglglesctx.eglcontext = NULL;
-    }
+    /* EGL/GLES cleanup */
+    gst_eglglessink_wipe_eglglesctx (eglglessink);
 
     GST_OBJECT_LOCK (eglglessink);
     /* Reset display region
