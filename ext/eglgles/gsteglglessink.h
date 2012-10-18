@@ -122,6 +122,7 @@ struct _GstEglGlesRenderContext
   EGLDisplay display;
   EGLNativeWindowType window, used_window;
   EGLSurface surface;
+  gboolean buffer_preserved;
   GLuint fragshader[2], vertshader[2], glslprogram[2];
   GLuint texture[3];
   EGLint surface_width;

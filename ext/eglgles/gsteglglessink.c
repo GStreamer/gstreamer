@@ -1117,6 +1117,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   EGLint display_par;
   const gchar *texnames[3] = { NULL, };
   gchar *tmp_prog = NULL;
+  EGLint swap_behavior;
 
   GST_DEBUG_OBJECT (eglglessink, "Enter EGL surface setup");
 
@@ -1129,6 +1130,16 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
     show_egl_error ("eglCreateWindowSurface");
     GST_ERROR_OBJECT (eglglessink, "Can't create surface");
     goto HANDLE_EGL_ERROR_LOCKED;
+  }
+
+  eglglessink->eglglesctx.buffer_preserved = FALSE;
+  if (eglQuerySurface (eglglessink->eglglesctx.display,
+          eglglessink->eglglesctx.surface, EGL_SWAP_BEHAVIOR, &swap_behavior)) {
+    GST_DEBUG_OBJECT (eglglessink, "Buffer swap behavior %x", swap_behavior);
+    eglglessink->eglglesctx.buffer_preserved =
+        swap_behavior == EGL_BUFFER_PRESERVED;
+  } else {
+    GST_DEBUG_OBJECT (eglglessink, "Can't query buffer swap behavior");
   }
 
   if (!gst_eglglessink_context_make_current (eglglessink, TRUE))
@@ -1368,89 +1379,92 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   if (got_gl_error ("glEnableVertexAttribArray"))
     goto HANDLE_ERROR;
 
-  /* Build shader program for black borders */
-  eglglessink->eglglesctx.vertshader[1] = glCreateShader (GL_VERTEX_SHADER);
-  GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d", vert_COPY_prog,
-      eglglessink->eglglesctx.vertshader[1]);
-  glShaderSource (eglglessink->eglglesctx.vertshader[1], 1,
-      &vert_COPY_prog_no_tex, NULL);
-  if (got_gl_error ("glShaderSource vertex"))
-    goto HANDLE_ERROR;
+  if (!eglglessink->eglglesctx.buffer_preserved) {
+    /* Build shader program for black borders */
+    eglglessink->eglglesctx.vertshader[1] = glCreateShader (GL_VERTEX_SHADER);
+    GST_DEBUG_OBJECT (eglglessink, "Sending %s to handle %d", vert_COPY_prog,
+        eglglessink->eglglesctx.vertshader[1]);
+    glShaderSource (eglglessink->eglglesctx.vertshader[1], 1,
+        &vert_COPY_prog_no_tex, NULL);
+    if (got_gl_error ("glShaderSource vertex"))
+      goto HANDLE_ERROR;
 
-  glCompileShader (eglglessink->eglglesctx.vertshader[1]);
-  if (got_gl_error ("glCompileShader vertex"))
-    goto HANDLE_ERROR;
+    glCompileShader (eglglessink->eglglesctx.vertshader[1]);
+    if (got_gl_error ("glCompileShader vertex"))
+      goto HANDLE_ERROR;
 
-  glGetShaderiv (eglglessink->eglglesctx.vertshader[1], GL_COMPILE_STATUS,
-      &test);
-  if (test != GL_FALSE)
-    GST_DEBUG_OBJECT (eglglessink, "Successfully compiled vertex shader");
-  else {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't compile vertex shader");
-    glGetShaderiv (eglglessink->eglglesctx.vertshader[1], GL_INFO_LOG_LENGTH,
+    glGetShaderiv (eglglessink->eglglesctx.vertshader[1], GL_COMPILE_STATUS,
         &test);
-    info_log = g_new0 (GLchar, test);
-    glGetShaderInfoLog (eglglessink->eglglesctx.vertshader[1], test, NULL,
-        info_log);
-    GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
-    g_free (info_log);
-    goto HANDLE_ERROR;
-  }
+    if (test != GL_FALSE)
+      GST_DEBUG_OBJECT (eglglessink, "Successfully compiled vertex shader");
+    else {
+      GST_ERROR_OBJECT (eglglessink, "Couldn't compile vertex shader");
+      glGetShaderiv (eglglessink->eglglesctx.vertshader[1], GL_INFO_LOG_LENGTH,
+          &test);
+      info_log = g_new0 (GLchar, test);
+      glGetShaderInfoLog (eglglessink->eglglesctx.vertshader[1], test, NULL,
+          info_log);
+      GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
+      g_free (info_log);
+      goto HANDLE_ERROR;
+    }
 
-  eglglessink->eglglesctx.fragshader[1] = glCreateShader (GL_FRAGMENT_SHADER);
-  glShaderSource (eglglessink->eglglesctx.fragshader[1], 1, &frag_BLACK_prog,
-      NULL);
+    eglglessink->eglglesctx.fragshader[1] = glCreateShader (GL_FRAGMENT_SHADER);
+    glShaderSource (eglglessink->eglglesctx.fragshader[1], 1, &frag_BLACK_prog,
+        NULL);
 
-  if (got_gl_error ("glShaderSource fragment"))
-    goto HANDLE_ERROR;
+    if (got_gl_error ("glShaderSource fragment"))
+      goto HANDLE_ERROR;
 
-  glCompileShader (eglglessink->eglglesctx.fragshader[1]);
-  if (got_gl_error ("glCompileShader fragment"))
-    goto HANDLE_ERROR;
+    glCompileShader (eglglessink->eglglesctx.fragshader[1]);
+    if (got_gl_error ("glCompileShader fragment"))
+      goto HANDLE_ERROR;
 
-  glGetShaderiv (eglglessink->eglglesctx.fragshader[1], GL_COMPILE_STATUS,
-      &test);
-  if (test != GL_FALSE)
-    GST_DEBUG_OBJECT (eglglessink, "Successfully compiled fragment shader");
-  else {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't compile fragment shader");
-    glGetShaderiv (eglglessink->eglglesctx.fragshader[1], GL_INFO_LOG_LENGTH,
+    glGetShaderiv (eglglessink->eglglesctx.fragshader[1], GL_COMPILE_STATUS,
         &test);
-    info_log = g_new0 (GLchar, test);
-    glGetShaderInfoLog (eglglessink->eglglesctx.fragshader[1], test, NULL,
-        info_log);
-    GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
-    g_free (info_log);
-    goto HANDLE_ERROR;
+    if (test != GL_FALSE)
+      GST_DEBUG_OBJECT (eglglessink, "Successfully compiled fragment shader");
+    else {
+      GST_ERROR_OBJECT (eglglessink, "Couldn't compile fragment shader");
+      glGetShaderiv (eglglessink->eglglesctx.fragshader[1], GL_INFO_LOG_LENGTH,
+          &test);
+      info_log = g_new0 (GLchar, test);
+      glGetShaderInfoLog (eglglessink->eglglesctx.fragshader[1], test, NULL,
+          info_log);
+      GST_INFO_OBJECT (eglglessink, "Compilation info log:\n%s", info_log);
+      g_free (info_log);
+      goto HANDLE_ERROR;
+    }
+
+    eglglessink->eglglesctx.glslprogram[1] = glCreateProgram ();
+    if (got_gl_error ("glCreateProgram"))
+      goto HANDLE_ERROR;
+    glAttachShader (eglglessink->eglglesctx.glslprogram[1],
+        eglglessink->eglglesctx.vertshader[1]);
+    if (got_gl_error ("glAttachShader vertices"))
+      goto HANDLE_ERROR;
+    glAttachShader (eglglessink->eglglesctx.glslprogram[1],
+        eglglessink->eglglesctx.fragshader[1]);
+    if (got_gl_error ("glAttachShader fragments"))
+      goto HANDLE_ERROR;
+    glLinkProgram (eglglessink->eglglesctx.glslprogram[1]);
+    glGetProgramiv (eglglessink->eglglesctx.glslprogram[1], GL_LINK_STATUS,
+        &test);
+    if (test != GL_FALSE)
+      GST_DEBUG_OBJECT (eglglessink, "GLES: Successfully linked program");
+    else {
+      GST_ERROR_OBJECT (eglglessink, "Couldn't link program");
+      goto HANDLE_ERROR;
+    }
+
+    eglglessink->eglglesctx.position_loc[1] =
+        glGetAttribLocation (eglglessink->eglglesctx.glslprogram[1],
+        "position");
+
+    glEnableVertexAttribArray (eglglessink->eglglesctx.position_loc[1]);
+    if (got_gl_error ("glEnableVertexAttribArray"))
+      goto HANDLE_ERROR;
   }
-
-  eglglessink->eglglesctx.glslprogram[1] = glCreateProgram ();
-  if (got_gl_error ("glCreateProgram"))
-    goto HANDLE_ERROR;
-  glAttachShader (eglglessink->eglglesctx.glslprogram[1],
-      eglglessink->eglglesctx.vertshader[1]);
-  if (got_gl_error ("glAttachShader vertices"))
-    goto HANDLE_ERROR;
-  glAttachShader (eglglessink->eglglesctx.glslprogram[1],
-      eglglessink->eglglesctx.fragshader[1]);
-  if (got_gl_error ("glAttachShader fragments"))
-    goto HANDLE_ERROR;
-  glLinkProgram (eglglessink->eglglesctx.glslprogram[1]);
-  glGetProgramiv (eglglessink->eglglesctx.glslprogram[1], GL_LINK_STATUS,
-      &test);
-  if (test != GL_FALSE)
-    GST_DEBUG_OBJECT (eglglessink, "GLES: Successfully linked program");
-  else {
-    GST_ERROR_OBJECT (eglglessink, "Couldn't link program");
-    goto HANDLE_ERROR;
-  }
-
-  eglglessink->eglglesctx.position_loc[1] =
-      glGetAttribLocation (eglglessink->eglglesctx.glslprogram[1], "position");
-
-  glEnableVertexAttribArray (eglglessink->eglglesctx.position_loc[1]);
-  if (got_gl_error ("glEnableVertexAttribArray"))
-    goto HANDLE_ERROR;
 
   glUseProgram (eglglessink->eglglesctx.glslprogram[0]);
 
@@ -1891,29 +1905,31 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     }
   }
 
-  /* Draw black borders */
-  GST_DEBUG_OBJECT (eglglessink, "Drawing black border 1");
-  glUseProgram (eglglessink->eglglesctx.glslprogram[1]);
+  if (!eglglessink->eglglesctx.buffer_preserved) {
+    /* Draw black borders */
+    GST_DEBUG_OBJECT (eglglessink, "Drawing black border 1");
+    glUseProgram (eglglessink->eglglesctx.glslprogram[1]);
 
-  glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
-      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
-  if (got_gl_error ("glVertexAttribPointer"))
-    goto HANDLE_ERROR;
+    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (4 * sizeof (coord5)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
 
-  glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
-  if (got_gl_error ("glDrawElements"))
-    goto HANDLE_ERROR;
+    glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
+    if (got_gl_error ("glDrawElements"))
+      goto HANDLE_ERROR;
 
-  GST_DEBUG_OBJECT (eglglessink, "Drawing black border 2");
+    GST_DEBUG_OBJECT (eglglessink, "Drawing black border 2");
 
-  glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
-      GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (8 * sizeof (coord5)));
-  if (got_gl_error ("glVertexAttribPointer"))
-    goto HANDLE_ERROR;
+    glVertexAttribPointer (eglglessink->eglglesctx.position_loc[1], 3,
+        GL_FLOAT, GL_FALSE, sizeof (coord5), (gpointer) (8 * sizeof (coord5)));
+    if (got_gl_error ("glVertexAttribPointer"))
+      goto HANDLE_ERROR;
 
-  glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
-  if (got_gl_error ("glDrawElements"))
-    goto HANDLE_ERROR;
+    glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_SHORT, 0);
+    if (got_gl_error ("glDrawElements"))
+      goto HANDLE_ERROR;
+  }
 
   /* Draw video frame */
   GST_DEBUG_OBJECT (eglglessink, "Drawing video frame");
