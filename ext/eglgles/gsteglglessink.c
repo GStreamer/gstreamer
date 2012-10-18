@@ -1943,8 +1943,6 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
   return GST_FLOW_OK;
 
-HANDLE_EGL_ERROR:
-  GST_ERROR_OBJECT (eglglessink, "EGL call returned error %x", eglGetError ());
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Rendering disabled for this frame");
 
