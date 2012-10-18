@@ -62,49 +62,23 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) { " RATES "}, "
-        "channels = (int) [1, 2];"
-        "audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { FALSE }, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) { " GST_AUDIO_NE (S16) ", " GST_AUDIO_NE (U8) "}, "
         "rate = (int) { " RATES "}, " "channels = (int) [1, 2]")
     );
 
-static void
-_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (opensles_sink_debug, "opensles_sink", 0,
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (opensles_sink_debug, "opensles_sink", 0, \
       "OpenSL ES Sink");
-}
+#define parent_class gst_opensles_sink_parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOpenSLESSink, gst_opensles_sink,
+    GST_TYPE_AUDIO_BASE_SINK, _do_init);
 
-GST_BOILERPLATE_FULL (GstOpenSLESSink, gst_opensles_sink, GstBaseAudioSink,
-    GST_TYPE_BASE_AUDIO_SINK, _do_init);
-
-static void
-gst_opensles_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-
-  gst_element_class_set_details_simple (element_class, "OpenSL ES Sink",
-      "Sink/Audio",
-      "Output sound using the OpenSL ES APIs",
-      "Josep Torra <support@fluendo.com>");
-}
-
-static GstRingBuffer *
-gst_opensles_sink_create_ringbuffer (GstBaseAudioSink * base)
+static GstAudioRingBuffer *
+gst_opensles_sink_create_ringbuffer (GstAudioBaseSink * base)
 {
   GstOpenSLESSink *sink = GST_OPENSLES_SINK (base);
-  GstRingBuffer *rb;
+  GstAudioRingBuffer *rb;
 
   rb = gst_opensles_ringbuffer_new (RB_MODE_SINK_PCM);
   gst_opensles_ringbuffer_set_volume (rb, sink->volume);
@@ -208,7 +182,7 @@ gst_opensles_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstOpenSLESSink *sink = GST_OPENSLES_SINK (object);
-  GstRingBuffer *rb = GST_BASE_AUDIO_SINK (sink)->ringbuffer;
+  GstAudioRingBuffer *rb = GST_AUDIO_BASE_SINK (sink)->ringbuffer;
 
   switch (prop_id) {
     case PROP_VOLUME:
@@ -251,12 +225,12 @@ static void
 gst_opensles_sink_class_init (GstOpenSLESSinkClass * klass)
 {
   GObjectClass *gobject_class;
-  GstBaseAudioSinkClass *gstbaseaudiosink_class;
+  GstElementClass *gstelement_class;
+  GstAudioBaseSinkClass *gstbaseaudiosink_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
+  gstelement_class = (GstElementClass *) klass;
+  gstbaseaudiosink_class = (GstAudioBaseSinkClass *) klass;
 
   gobject_class->set_property = gst_opensles_sink_set_property;
   gobject_class->get_property = gst_opensles_sink_get_property;
@@ -269,21 +243,29 @@ gst_opensles_sink_class_init (GstOpenSLESSinkClass * klass)
       g_param_spec_boolean ("mute", "Mute", "Mute state of this stream",
           DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&sink_factory));
+
+  gst_element_class_set_static_metadata (gstelement_class, "OpenSL ES Sink",
+      "Sink/Audio",
+      "Output sound using the OpenSL ES APIs",
+      "Josep Torra <support@fluendo.com>");
+
   gstbaseaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_opensles_sink_create_ringbuffer);
 }
 
 static void
-gst_opensles_sink_init (GstOpenSLESSink * sink, GstOpenSLESSinkClass * gclass)
+gst_opensles_sink_init (GstOpenSLESSink * sink)
 {
   sink->volume = DEFAULT_VOLUME;
   sink->mute = DEFAULT_MUTE;
 
   _opensles_query_capabilities (sink);
 
-  gst_base_audio_sink_set_provide_clock (GST_BASE_AUDIO_SINK (sink), TRUE);
+  gst_audio_base_sink_set_provide_clock (GST_AUDIO_BASE_SINK (sink), TRUE);
   /* Override some default values to fit on the AudioFlinger behaviour of
    * processing 20ms buffers as minimum buffer size. */
-  GST_BASE_AUDIO_SINK (sink)->buffer_time = 400000;
-  GST_BASE_AUDIO_SINK (sink)->latency_time = 20000;
+  GST_AUDIO_BASE_SINK (sink)->buffer_time = 400000;
+  GST_AUDIO_BASE_SINK (sink)->latency_time = 20000;
 }

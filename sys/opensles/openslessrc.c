@@ -45,43 +45,24 @@ GST_DEBUG_CATEGORY_STATIC (opensles_src_debug);
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) {" G_STRINGIFY (G_BYTE_ORDER) " }, "
-        "signed = (boolean) { TRUE }, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "rate = (int) 16000, "
+    GST_STATIC_CAPS ("audio/x-raw, "
+        "format = (string) " GST_AUDIO_NE (S16) ", "
+        "rate = (int) { 16000 }, "
         "channels = (int) 1")
     );
 /* *INDENT-ON* */
 
-static void
-_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (opensles_src_debug, "opensles_src", 0,
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (opensles_src_debug, "opensles_src", 0, \
       "OpenSL ES Src");
-}
+#define parent_class gst_opensles_src_parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOpenSLESSrc, gst_opensles_src,
+    GST_TYPE_AUDIO_BASE_SRC, _do_init);
 
-GST_BOILERPLATE_FULL (GstOpenSLESSrc, gst_opensles_src, GstBaseAudioSrc,
-    GST_TYPE_BASE_AUDIO_SRC, _do_init);
-
-static void
-gst_opensles_src_base_init (gpointer g_class)
+static GstAudioRingBuffer *
+gst_opensles_src_create_ringbuffer (GstAudioBaseSrc * base)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
-
-  gst_element_class_set_details_simple (element_class, "OpenSL ES Src",
-      "Src/Audio",
-      "Input sound using the OpenSL ES APIs",
-      "Josep Torra <support@fluendo.com>");
-}
-
-static GstRingBuffer *
-gst_opensles_src_create_ringbuffer (GstBaseAudioSrc * base)
-{
-  GstRingBuffer *rb;
+  GstAudioRingBuffer *rb;
 
   rb = gst_opensles_ringbuffer_new (RB_MODE_SRC);
 
@@ -91,21 +72,29 @@ gst_opensles_src_create_ringbuffer (GstBaseAudioSrc * base)
 static void
 gst_opensles_src_class_init (GstOpenSLESSrcClass * klass)
 {
-  GstBaseAudioSrcClass *gstbaseaudiosrc_class;
+  GstElementClass *gstelement_class;
+  GstAudioBaseSrcClass *gstaudiobasesrc_class;
 
-  gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+  gstaudiobasesrc_class = (GstAudioBaseSrcClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_factory));
 
-  gstbaseaudiosrc_class->create_ringbuffer =
+  gst_element_class_set_static_metadata (gstelement_class, "OpenSL ES Src",
+      "Src/Audio",
+      "Input sound using the OpenSL ES APIs",
+      "Josep Torra <support@fluendo.com>");
+
+  gstaudiobasesrc_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_opensles_src_create_ringbuffer);
 }
 
 static void
-gst_opensles_src_init (GstOpenSLESSrc * src, GstOpenSLESSrcClass * gclass)
+gst_opensles_src_init (GstOpenSLESSrc * src)
 {
   /* Override some default values to fit on the AudioFlinger behaviour of
    * processing 20ms buffers as minimum buffer size. */
-  GST_BASE_AUDIO_SRC (src)->buffer_time = 400000;
-  GST_BASE_AUDIO_SRC (src)->latency_time = 20000;
+  GST_AUDIO_BASE_SRC (src)->buffer_time = 400000;
+  GST_AUDIO_BASE_SRC (src)->latency_time = 20000;
 }

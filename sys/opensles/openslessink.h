@@ -21,7 +21,7 @@
 #define __OPENSLESSINK_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosink.h>
+#include <gst/audio/gstaudiobasesink.h>
 #include "openslesringbuffer.h"
 
 G_BEGIN_DECLS
@@ -38,7 +38,7 @@ typedef struct _GstOpenSLESSinkClass GstOpenSLESSinkClass;
 
 struct _GstOpenSLESSink
 {
-  GstBaseAudioSink sink;
+  GstAudioBaseSink sink;
 
   gfloat volume;
   gboolean mute;
@@ -46,7 +46,7 @@ struct _GstOpenSLESSink
 
 struct _GstOpenSLESSinkClass
 {
-  GstBaseAudioSinkClass parent_class;
+  GstAudioBaseSinkClass parent_class;
 };
 
 GType gst_opensles_sink_get_type (void);

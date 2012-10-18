@@ -26,17 +26,13 @@
 GST_DEBUG_CATEGORY_STATIC (opensles_ringbuffer_debug);
 #define GST_CAT_DEFAULT opensles_ringbuffer_debug
 
-static GstRingBufferClass *ring_parent_class = NULL;
-
-static void
-_do_init (GType type)
-{
-  GST_DEBUG_CATEGORY_INIT (opensles_ringbuffer_debug,
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (opensles_ringbuffer_debug, \
       "opensles_ringbuffer", 0, "OpenSL ES ringbuffer");
-}
 
-GST_BOILERPLATE_FULL (GstOpenSLESRingBuffer, gst_opensles_ringbuffer,
-    GstRingBuffer, GST_TYPE_RING_BUFFER, _do_init);
+#define parent_class gst_opensles_ringbuffer_parent_class
+G_DEFINE_TYPE_WITH_CODE (GstOpenSLESRingBuffer, gst_opensles_ringbuffer,
+    GST_TYPE_AUDIO_RING_BUFFER, _do_init);
 
 /*
  * Some generic helper functions
@@ -78,9 +74,9 @@ _opensles_sample_rate (guint rate)
 }
 
 static inline SLuint32
-_opensles_channel_mask (GstRingBufferSpec * spec)
+_opensles_channel_mask (GstAudioRingBufferSpec * spec)
 {
-  switch (spec->channels) {
+  switch (spec->info.channels) {
     case 1:
       return (SL_SPEAKER_FRONT_CENTER);
     case 2:
@@ -91,16 +87,17 @@ _opensles_channel_mask (GstRingBufferSpec * spec)
 }
 
 static inline void
-_opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
+_opensles_format (GstAudioRingBufferSpec * spec, SLDataFormat_PCM * format)
 {
   format->formatType = SL_DATAFORMAT_PCM;
-  format->numChannels = spec->channels;
-  format->samplesPerSec = _opensles_sample_rate (spec->rate);
-  format->bitsPerSample = spec->depth;
-  format->containerSize = spec->width;
+  format->numChannels = spec->info.channels;
+  format->samplesPerSec = _opensles_sample_rate (spec->info.rate);
+  format->bitsPerSample = spec->info.finfo->depth;
+  format->containerSize = spec->info.finfo->width;
   format->channelMask = _opensles_channel_mask (spec);
   format->endianness =
-      (spec->bigend ? SL_BYTEORDER_BIGENDIAN : SL_BYTEORDER_LITTLEENDIAN);
+      ((spec->info.finfo->endianness ==
+          G_BIG_ENDIAN) ? SL_BYTEORDER_BIGENDIAN : SL_BYTEORDER_LITTLEENDIAN);
 }
 
 /* 
@@ -108,7 +105,8 @@ _opensles_format (GstRingBufferSpec * spec, SLDataFormat_PCM * format)
  */
 
 static gboolean
-_opensles_recorder_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
+_opensles_recorder_acquire (GstAudioRingBuffer * rb,
+    GstAudioRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -185,7 +183,7 @@ failed:
 static void
 _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
-  GstRingBuffer *rb = GST_RING_BUFFER_CAST (context);
+  GstAudioRingBuffer *rb = GST_AUDIO_RING_BUFFER_CAST (context);
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
   guint8 *ptr;
@@ -194,11 +192,11 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 
   /* Advance only when we are called by the callback function */
   if (bufferQueue) {
-    gst_ring_buffer_advance (rb, 1);
+    gst_audio_ring_buffer_advance (rb, 1);
   }
 
   /* Get a segment form the GStreamer ringbuffer to write in */
-  if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
+  if (!gst_audio_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
     return;
   }
@@ -215,7 +213,7 @@ _opensles_recorder_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 }
 
 static gboolean
-_opensles_recorder_start (GstRingBuffer * rb)
+_opensles_recorder_start (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -249,7 +247,7 @@ _opensles_recorder_start (GstRingBuffer * rb)
 }
 
 static gboolean
-_opensles_recorder_stop (GstRingBuffer * rb)
+_opensles_recorder_stop (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -290,7 +288,7 @@ _opensles_recorder_stop (GstRingBuffer * rb)
  */
 
 static gboolean
-_opensles_player_change_volume (GstRingBuffer * rb)
+_opensles_player_change_volume (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   SLresult result;
@@ -313,7 +311,7 @@ _opensles_player_change_volume (GstRingBuffer * rb)
 }
 
 static gboolean
-_opensles_player_change_mute (GstRingBuffer * rb)
+_opensles_player_change_mute (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   SLresult result;
@@ -351,7 +349,8 @@ _opensles_player_event_cb (SLPlayItf caller, void *context, SLuint32 event)
 }
 
 static gboolean
-_opensles_player_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
+_opensles_player_acquire (GstAudioRingBuffer * rb,
+    GstAudioRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -478,7 +477,7 @@ failed:
 static void
 _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
 {
-  GstRingBuffer *rb = GST_RING_BUFFER_CAST (context);
+  GstAudioRingBuffer *rb = GST_AUDIO_RING_BUFFER_CAST (context);
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
   guint8 *ptr, *cur;
@@ -486,7 +485,7 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   gint len;
 
   /* Get a segment form the GStreamer ringbuffer to read some samples */
-  if (!gst_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
+  if (!gst_audio_ring_buffer_prepare_read (rb, &seg, &ptr, &len)) {
     GST_WARNING_OBJECT (rb, "No segment available");
     return;
   }
@@ -510,13 +509,13 @@ _opensles_player_cb (SLAndroidSimpleBufferQueueItf bufferQueue, void *context)
   }
 
   /* Fill with silence samples the segment of the GStreamer ringbuffer */
-  gst_ring_buffer_clear (rb, seg);
+  gst_audio_ring_buffer_clear (rb, seg);
   /* Make the segment reusable */
-  gst_ring_buffer_advance (rb, 1);
+  gst_audio_ring_buffer_advance (rb, 1);
 }
 
 static gboolean
-_opensles_player_start (GstRingBuffer * rb)
+_opensles_player_start (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -556,7 +555,7 @@ _opensles_player_start (GstRingBuffer * rb)
 }
 
 static gboolean
-_opensles_player_pause (GstRingBuffer * rb)
+_opensles_player_pause (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -573,7 +572,7 @@ _opensles_player_pause (GstRingBuffer * rb)
 }
 
 static gboolean
-_opensles_player_stop (GstRingBuffer * rb)
+_opensles_player_stop (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz = GST_OPENSLES_RING_BUFFER_CAST (rb);
   SLresult result;
@@ -617,7 +616,7 @@ _opensles_player_stop (GstRingBuffer * rb)
  * OpenSL ES ringbuffer wrapper
  */
 
-GstRingBuffer *
+GstAudioRingBuffer *
 gst_opensles_ringbuffer_new (RingBufferMode mode)
 {
   GstOpenSLESRingBuffer *thiz;
@@ -645,11 +644,11 @@ gst_opensles_ringbuffer_new (RingBufferMode mode)
 
   GST_DEBUG_OBJECT (thiz, "ringbuffer created");
 
-  return GST_RING_BUFFER (thiz);
+  return GST_AUDIO_RING_BUFFER (thiz);
 }
 
 void
-gst_opensles_ringbuffer_set_volume (GstRingBuffer * rb, gfloat volume)
+gst_opensles_ringbuffer_set_volume (GstAudioRingBuffer * rb, gfloat volume)
 {
   GstOpenSLESRingBuffer *thiz;
 
@@ -663,7 +662,7 @@ gst_opensles_ringbuffer_set_volume (GstRingBuffer * rb, gfloat volume)
 }
 
 void
-gst_opensles_ringbuffer_set_mute (GstRingBuffer * rb, gboolean mute)
+gst_opensles_ringbuffer_set_mute (GstAudioRingBuffer * rb, gboolean mute)
 {
   GstOpenSLESRingBuffer *thiz;
 
@@ -677,7 +676,7 @@ gst_opensles_ringbuffer_set_mute (GstRingBuffer * rb, gboolean mute)
 }
 
 static gboolean
-gst_opensles_ringbuffer_open_device (GstRingBuffer * rb)
+gst_opensles_ringbuffer_open_device (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   SLresult result;
@@ -758,7 +757,7 @@ failed:
 }
 
 static gboolean
-gst_opensles_ringbuffer_close_device (GstRingBuffer * rb)
+gst_opensles_ringbuffer_close_device (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
 
@@ -784,7 +783,8 @@ gst_opensles_ringbuffer_close_device (GstRingBuffer * rb)
 }
 
 static gboolean
-gst_opensles_ringbuffer_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
+gst_opensles_ringbuffer_acquire (GstAudioRingBuffer * rb,
+    GstAudioRingBufferSpec * spec)
 {
   GstOpenSLESRingBuffer *thiz;
 
@@ -796,15 +796,15 @@ gst_opensles_ringbuffer_acquire (GstRingBuffer * rb, GstRingBufferSpec * spec)
   }
 
   /* Initialize our ringbuffer memory region */
-  rb->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
-  memset (GST_BUFFER_DATA (rb->data), 0, GST_BUFFER_SIZE (rb->data));
+  rb->size = spec->segtotal * spec->segsize;
+  rb->memory = g_malloc0 (rb->size);
 
   GST_DEBUG_OBJECT (thiz, "ringbuffer acquired");
   return TRUE;
 }
 
 static gboolean
-gst_opensles_ringbuffer_release (GstRingBuffer * rb)
+gst_opensles_ringbuffer_release (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
 
@@ -830,9 +830,10 @@ gst_opensles_ringbuffer_release (GstRingBuffer * rb)
     thiz->data = NULL;
   }
 
-  if (rb->data) {
-    gst_buffer_unref (rb->data);
-    rb->data = NULL;
+  if (rb->memory) {
+    g_free (rb->memory);
+    rb->memory = NULL;
+    rb->size = 0;
   }
 
   GST_DEBUG_OBJECT (thiz, "ringbuffer released");
@@ -840,7 +841,7 @@ gst_opensles_ringbuffer_release (GstRingBuffer * rb)
 }
 
 static gboolean
-gst_opensles_ringbuffer_start (GstRingBuffer * rb)
+gst_opensles_ringbuffer_start (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   gboolean res;
@@ -853,7 +854,7 @@ gst_opensles_ringbuffer_start (GstRingBuffer * rb)
 }
 
 static gboolean
-gst_opensles_ringbuffer_pause (GstRingBuffer * rb)
+gst_opensles_ringbuffer_pause (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   gboolean res;
@@ -866,7 +867,7 @@ gst_opensles_ringbuffer_pause (GstRingBuffer * rb)
 }
 
 static gboolean
-gst_opensles_ringbuffer_stop (GstRingBuffer * rb)
+gst_opensles_ringbuffer_stop (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   gboolean res;
@@ -879,7 +880,7 @@ gst_opensles_ringbuffer_stop (GstRingBuffer * rb)
 }
 
 static guint
-gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
+gst_opensles_ringbuffer_delay (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
   guint res = 0;
@@ -893,7 +894,8 @@ gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
     (*thiz->playerPlay)->GetPlayState (thiz->playerPlay, &state);
     if (state == SL_PLAYSTATE_PLAYING) {
       (*thiz->playerPlay)->GetPosition (thiz->playerPlay, &position);
-      playedpos = gst_util_uint64_scale_round (position, rb->spec.rate, 1000);
+      playedpos =
+          gst_util_uint64_scale_round (position, rb->spec.info.rate, 1000);
       queuedpos = g_atomic_int_get (&thiz->segqueued) * rb->samples_per_seg;
       res = queuedpos - playedpos;
     }
@@ -907,7 +909,7 @@ gst_opensles_ringbuffer_delay (GstRingBuffer * rb)
 }
 
 static void
-gst_opensles_ringbuffer_clear_all (GstRingBuffer * rb)
+gst_opensles_ringbuffer_clear_all (GstAudioRingBuffer * rb)
 {
   GstOpenSLESRingBuffer *thiz;
 
@@ -928,37 +930,29 @@ gst_opensles_ringbuffer_clear_all (GstRingBuffer * rb)
     g_atomic_int_set (&thiz->is_prerolled, 0);
   }
 
-  GST_CALL_PARENT (GST_RING_BUFFER_CLASS, clear_all, (rb));
+  GST_CALL_PARENT (GST_AUDIO_RING_BUFFER_CLASS, clear_all, (rb));
 }
 
 static void
 gst_opensles_ringbuffer_dispose (GObject * object)
 {
-  G_OBJECT_CLASS (ring_parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
 gst_opensles_ringbuffer_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (ring_parent_class)->finalize (object);
-}
-
-static void
-gst_opensles_ringbuffer_base_init (gpointer g_class)
-{
-  /* Nothing to do right now */
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gst_opensles_ringbuffer_class_init (GstOpenSLESRingBufferClass * klass)
 {
   GObjectClass *gobject_class;
-  GstRingBufferClass *gstringbuffer_class;
+  GstAudioRingBufferClass *gstringbuffer_class;
 
   gobject_class = (GObjectClass *) klass;
-  gstringbuffer_class = (GstRingBufferClass *) klass;
-
-  ring_parent_class = g_type_class_peek_parent (klass);
+  gstringbuffer_class = (GstAudioRingBufferClass *) klass;
 
   gobject_class->dispose = gst_opensles_ringbuffer_dispose;
   gobject_class->finalize = gst_opensles_ringbuffer_finalize;
@@ -985,8 +979,7 @@ gst_opensles_ringbuffer_class_init (GstOpenSLESRingBufferClass * klass)
 }
 
 static void
-gst_opensles_ringbuffer_init (GstOpenSLESRingBuffer * thiz,
-    GstOpenSLESRingBufferClass * g_class)
+gst_opensles_ringbuffer_init (GstOpenSLESRingBuffer * thiz)
 {
   thiz->mode = RB_MODE_NONE;
   thiz->engineObject = NULL;

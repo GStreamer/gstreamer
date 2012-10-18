@@ -21,7 +21,7 @@
 #define __OPENSLESSRC_H__
 
 #include <gst/gst.h>
-#include <gst/audio/gstbaseaudiosrc.h>
+#include <gst/audio/gstaudiobasesrc.h>
 #include "openslesringbuffer.h"
 
 G_BEGIN_DECLS
@@ -38,12 +38,12 @@ typedef struct _GstOpenSLESSrcClass GstOpenSLESSrcClass;
 
 struct _GstOpenSLESSrc
 {
-  GstBaseAudioSrc src;
+  GstAudioBaseSrc src;
 };
 
 struct _GstOpenSLESSrcClass
 {
-  GstBaseAudioSrcClass parent_class;
+  GstAudioBaseSrcClass parent_class;
 };
 
 GType gst_opensles_src_get_type (void);
