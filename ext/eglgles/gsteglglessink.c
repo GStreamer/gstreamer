@@ -773,10 +773,10 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   if (eglglessink->using_own_window) {
     platform_destroy_native_window (eglglessink->eglglesctx.display,
         eglglessink->eglglesctx.used_window);
-    eglglessink->eglglesctx.used_window = NULL;
+    eglglessink->eglglesctx.used_window = 0;
     eglglessink->have_window = FALSE;
   }
-  eglglessink->eglglesctx.used_window = NULL;
+  eglglessink->eglglesctx.used_window = 0;
   if (eglglessink->current_caps) {
     gst_caps_unref (eglglessink->current_caps);
     eglglessink->current_caps = NULL;
@@ -2404,23 +2404,10 @@ eglglessink_plugin_init (GstPlugin * plugin)
       GST_TYPE_EGLGLESSINK);
 }
 
-/* PACKAGE: this is usually set by autotools depending on some _INIT macro
- * in configure.ac and then written into and defined in config.h, but we can
- * just set it ourselves here in case someone doesn't use autotools to
- * compile this code. GST_PLUGIN_DEFINE needs PACKAGE to be defined.
- */
-#ifndef PACKAGE
-#define PACKAGE "EGL/GLES Sink"
-#endif
-
-#ifndef VERSION
-#define VERSION "0.911"
-#endif
-
 /* gstreamer looks for this structure to register eglglessinks */
-GST_PLUGIN_DEFINE2 (GST_VERSION_MAJOR,
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    eglglessink,
+    "eglglessink",
     "EGL/GLES sink",
     eglglessink_plugin_init,
     VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
