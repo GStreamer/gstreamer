@@ -312,7 +312,7 @@ dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" androidmedia aiff \
  cdxaparse \
- dccp faceoverlay \
+ dccp eglgles faceoverlay \
  freeverb \
  hdvparse ivfparse jp2kdecimator \
  kate librfb \
