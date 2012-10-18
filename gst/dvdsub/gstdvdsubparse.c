@@ -131,15 +131,25 @@ gst_dvd_sub_parse_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   parse = GST_DVD_SUB_PARSE (parent);
 
-  switch GST_EVENT_TYPE
-    (event) {
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+
+      gst_event_unref (event);
+      caps = gst_static_pad_template_get_caps (&src_template);
+      gst_pad_push_event (parse->srcpad, gst_event_new_caps (caps));
+      gst_caps_unref (caps);
+      ret = TRUE;
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       gst_dvd_sub_parse_reset (parse);
       /* fall-through */
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
-    }
+  }
 
   return ret;
 }
