@@ -1960,9 +1960,7 @@ done:
 static gboolean
 gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
 {
-  GstPulseRingBuffer *pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK
-      (psink)->ringbuffer);
-  GstPad *pad = GST_BASE_SINK_PAD (psink);
+  GstPulseRingBuffer *pbuf = NULL;
   GstCaps *pad_caps;
   GstStructure *st;
   gboolean ret = FALSE;
@@ -1975,14 +1973,14 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   pa_format_info *format = NULL, *formats[1];
   guint channels;
 
-  pad_caps = gst_pad_query_caps (pad, caps);
+  pad_caps = gst_pad_query_caps (GST_BASE_SINK_PAD (psink), caps);
   ret = pad_caps != NULL;
   gst_caps_unref (pad_caps);
 
   GST_DEBUG_OBJECT (psink, "caps %" GST_PTR_FORMAT, caps);
 
-  /* Either template caps didn't match, or we're still in NULL state */
-  if (!ret || !pbuf->context)
+  /* Template caps didn't match */
+  if (!ret)
     goto done;
 
   /* If we've not got fixed caps, creating a stream might fail, so let's just
@@ -1990,9 +1988,22 @@ gst_pulsesink_query_acceptcaps (GstPulseSink * psink, GstCaps * caps)
   if (!gst_caps_is_fixed (caps))
     goto done;
 
-  ret = FALSE;
+  GST_OBJECT_LOCK (psink);
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
+  if (pbuf != NULL)
+    gst_object_ref (pbuf);
+  GST_OBJECT_UNLOCK (psink);
+
+  /* We're still in NULL state */
+  if (pbuf == NULL)
+    goto done;
 
   pa_threaded_mainloop_lock (mainloop);
+
+  if (pbuf->context == NULL)
+    goto out;
+
+  ret = FALSE;
 
   spec.latency_time = GST_AUDIO_BASE_SINK (psink)->latency_time;
   if (!gst_audio_ring_buffer_parse_caps (&spec, caps))
@@ -2077,7 +2088,10 @@ out:
 
   pa_threaded_mainloop_unlock (mainloop);
 
+  gst_object_unref (pbuf);
+
 done:
+
   return ret;
 
 info_failed:
