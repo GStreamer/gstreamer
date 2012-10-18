@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/audio/multichannel.h>
+#include <gst/audio/audio.h>
 #include <jni.h>
 
 G_BEGIN_DECLS
@@ -116,8 +116,8 @@ gboolean gst_amc_format_get_int (GstAmcFormat *format, const gchar *key, gint *v
 void gst_amc_format_set_int (GstAmcFormat *format, const gchar *key, gint value);
 gboolean gst_amc_format_get_string (GstAmcFormat *format, const gchar *key, gchar **value);
 void gst_amc_format_set_string (GstAmcFormat *format, const gchar *key, const gchar *value);
-gboolean gst_amc_format_get_buffer (GstAmcFormat *format, const gchar *key, GstBuffer **value);
-void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, GstBuffer *value);
+gboolean gst_amc_format_get_buffer (GstAmcFormat *format, const gchar *key, guint8 **data, gsize *size);
+void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, guint8 *data, gsize size);
 
 GstVideoFormat gst_amc_color_format_to_video_format (gint color_format);
 gint gst_amc_video_format_to_color_format (GstVideoFormat video_format);
@@ -137,7 +137,7 @@ gint gst_amc_mpeg4_level_from_string (const gchar *level);
 const gchar * gst_amc_aac_profile_to_string (gint profile);
 gint gst_amc_aac_profile_from_string (const gchar *profile);
 
-GstAudioChannelPosition* gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels);
+gboolean gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels, GstAudioChannelPosition *pos);
 guint32 gst_amc_audio_channel_mask_from_positions (GstAudioChannelPosition *positions, gint channels);
 
 G_END_DECLS

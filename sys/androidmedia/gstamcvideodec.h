@@ -64,7 +64,8 @@ struct _GstAmcVideoDec
   gint crop_left, crop_right;
   gint crop_top, crop_bottom;
 
-  GstBuffer *codec_data;
+  guint8 *codec_data;
+  gsize codec_data_size;
   /* TRUE if the component is configured and saw
    * the first buffer */
   gboolean started;

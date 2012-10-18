@@ -487,7 +487,7 @@ AG_GST_DEFAULT_ELEMENTS
 dnl *** plug-ins to include ***
 dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
-GST_PLUGINS_NONPORTED=" androidmedia aiff \
+GST_PLUGINS_NONPORTED=" aiff \
  cdxaparse \
  dccp faceoverlay \
  freeverb \

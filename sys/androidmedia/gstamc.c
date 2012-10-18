@@ -28,6 +28,7 @@
 #include "gstamcvideodec.h"
 #include "gstamcaudiodec.h"
 
+#include <gmodule.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
@@ -1169,20 +1170,20 @@ done:
 
 gboolean
 gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
-    GstBuffer ** value)
+    guint8 ** data, gsize * size)
 {
   JNIEnv *env;
   gboolean ret = FALSE;
   jstring key_str = NULL;
   jobject v = NULL;
-  guint8 *data;
-  gsize size;
 
   g_return_val_if_fail (format != NULL, FALSE);
   g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+  g_return_val_if_fail (size != NULL, FALSE);
 
-  *value = 0;
+  *data = NULL;
+  *size = 0;
   env = gst_amc_get_jni_env ();
 
   key_str = (*env)->NewStringUTF (env, key);
@@ -1197,15 +1198,14 @@ gst_amc_format_get_buffer (GstAmcFormat * format, const gchar * key,
     goto done;
   }
 
-  data = (*env)->GetDirectBufferAddress (env, v);
+  *data = (*env)->GetDirectBufferAddress (env, v);
   if (!data) {
     (*env)->ExceptionClear (env);
     GST_ERROR ("Failed to get buffer address");
     goto done;
   }
-  size = (*env)->GetDirectBufferCapacity (env, v);
-  *value = gst_buffer_new_and_alloc (size);
-  memcpy (GST_BUFFER_DATA (*value), data, size);
+  *size = (*env)->GetDirectBufferCapacity (env, v);
+  *data = g_memdup (*data, *size);
 
   ret = TRUE;
 
@@ -1220,7 +1220,7 @@ done:
 
 void
 gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
-    GstBuffer * value)
+    guint8 * data, gsize size)
 {
   JNIEnv *env;
   jstring key_str = NULL;
@@ -1228,7 +1228,7 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
 
   g_return_if_fail (format != NULL);
   g_return_if_fail (key != NULL);
-  g_return_if_fail (value != NULL);
+  g_return_if_fail (data != NULL);
 
   env = gst_amc_get_jni_env ();
 
@@ -1236,9 +1236,8 @@ gst_amc_format_set_buffer (GstAmcFormat * format, const gchar * key,
   if (!key_str)
     goto done;
 
-  /* FIXME: The buffer must remain valid until the codec is stopped */
-  v = (*env)->NewDirectByteBuffer (env, GST_BUFFER_DATA (value),
-      GST_BUFFER_SIZE (value));
+  /* FIXME: The memory must remain valid until the codec is stopped */
+  v = (*env)->NewDirectByteBuffer (env, data, size);
   if (!v)
     goto done;
 
@@ -2016,7 +2015,7 @@ scan_codecs (GstPlugin * plugin)
    * number is limited by 64 in Android).
    */
   if (ret) {
-    GstStructure *new_cache_data = gst_structure_empty_new ("gst-amc-cache");
+    GstStructure *new_cache_data = gst_structure_new_empty ("gst-amc-cache");
     GList *l;
     GValue arr = { 0, };
 
@@ -2025,7 +2024,7 @@ scan_codecs (GstPlugin * plugin)
     for (l = codec_infos; l; l = l->next) {
       GstAmcCodecInfo *gst_codec_info = l->data;
       GValue cv = { 0, };
-      GstStructure *cs = gst_structure_empty_new ("gst-amc-codec");
+      GstStructure *cs = gst_structure_new_empty ("gst-amc-codec");
       GValue starr = { 0, };
       gint i;
 
@@ -2036,7 +2035,7 @@ scan_codecs (GstPlugin * plugin)
 
       for (i = 0; i < gst_codec_info->n_supported_types; i++) {
         GstAmcCodecType *gst_codec_type = &gst_codec_info->supported_types[i];
-        GstStructure *sts = gst_structure_empty_new ("gst-amc-supported-type");
+        GstStructure *sts = gst_structure_new_empty ("gst-amc-supported-type");
         GValue stv = { 0, };
         GValue tmparr = { 0, };
         gint j;
@@ -2497,7 +2496,7 @@ static const struct
   CHANNEL_OUT_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
   CHANNEL_OUT_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
   CHANNEL_OUT_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
-  CHANNEL_OUT_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE}, {
+  CHANNEL_OUT_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
   CHANNEL_OUT_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
   CHANNEL_OUT_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
   CHANNEL_OUT_FRONT_LEFT_OF_CENTER,
@@ -2516,21 +2515,21 @@ static const struct
   CHANNEL_OUT_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}
 };
 
-GstAudioChannelPosition *
-gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels)
+gboolean
+gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels,
+    GstAudioChannelPosition * pos)
 {
-  GstAudioChannelPosition *pos = g_new0 (GstAudioChannelPosition, channels);
   gint i, j;
 
   if (channel_mask == 0) {
     if (channels == 1) {
-      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
-      return pos;
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+      return TRUE;
     }
     if (channels == 2) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
-      return pos;
+      return TRUE;
     }
 
     /* Now let the guesswork begin, these are the
@@ -2567,10 +2566,10 @@ gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels)
     if ((channel_mask & channel_mapping_table[i].mask)) {
       pos[j++] = channel_mapping_table[i].pos;
       if (channel_mapping_table[i].pos == GST_AUDIO_CHANNEL_POSITION_INVALID) {
-        g_free (pos);
+        memset (pos, 0, sizeof (GstAudioChannelPosition) * channels);
         GST_ERROR ("Unable to map channel mask 0x%08x",
             channel_mapping_table[i].mask);
-        return NULL;
+        return FALSE;
       }
       if (j == channels)
         break;
@@ -2578,13 +2577,13 @@ gst_amc_audio_channel_mask_to_positions (guint32 channel_mask, gint channels)
   }
 
   if (j != channels) {
-    g_free (pos);
+    memset (pos, 0, sizeof (GstAudioChannelPosition) * channels);
     GST_ERROR ("Unable to map all channel positions in mask 0x%08x",
         channel_mask);
-    return NULL;
+    return FALSE;
   }
 
-  return pos;
+  return TRUE;
 }
 
 guint32
@@ -2813,18 +2812,9 @@ plugin_init (GstPlugin * plugin)
   return TRUE;
 }
 
-#ifdef GST_PLUGIN_DEFINE2
-GST_PLUGIN_DEFINE2 (GST_VERSION_MAJOR,
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     androidmedia,
     "Android Media plugin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
-#else
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "androidmedia",
-    "Android Media plugin",
-    plugin_init,
-    PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
-#endif
