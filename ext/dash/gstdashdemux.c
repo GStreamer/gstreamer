@@ -203,7 +203,6 @@ static void gst_dash_demux_download_loop (GstDashDemux * demux);
 static void gst_dash_demux_stop (GstDashDemux * demux);
 static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
-static void gst_dash_demux_pause_download_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_select_representations (GstDashDemux * demux,
     guint64 current_bitrate);
@@ -1192,15 +1191,6 @@ gst_dash_demux_resume_stream_task (GstDashDemux * demux)
 {
   g_get_current_time (&demux->next_push);
   gst_task_start (demux->stream_task);
-}
-
-static void
-gst_dash_demux_pause_download_task (GstDashDemux * demux)
-{
-  /* Send a signal to the download task so that it pauses itself */
-  GST_TASK_SIGNAL (demux->download_task);
-  /* Pause it explicitly (if it was not in the COND) */
-  gst_task_pause (demux->download_task);
 }
 
 static void
