@@ -489,8 +489,6 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       guint nb_active_stream;
       guint stream_idx;
 
-      GST_INFO_OBJECT (demux, "Received GST_EVENT_SEEK");
-
       if (gst_mpd_client_is_live (demux->client)) {
         GST_WARNING_OBJECT (demux, "Received seek event for live stream");
         return FALSE;
@@ -502,16 +500,13 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       if (format != GST_FORMAT_TIME)
         return FALSE;
 
-      nb_active_stream = gst_mpdparser_get_nb_active_stream (demux->client);
-      gst_task_stop (demux->download_task);
-      GST_DEBUG_OBJECT (demux, "seek event, rate: %f start: %" GST_TIME_FORMAT
-          " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
+      GST_DEBUG_OBJECT (demux,
+          "seek event, rate: %f type: %d start: %" GST_TIME_FORMAT " stop: %"
+          GST_TIME_FORMAT, rate, start_type, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
       GST_MPD_CLIENT_LOCK (demux->client);
-      stream =
-          g_list_nth_data (demux->client->active_streams,
-          demux->client->stream_idx);
+      stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
 
       current_pos = 0;
       target_pos = (GstClockTime) start;
@@ -527,12 +522,12 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       GST_MPD_CLIENT_UNLOCK (demux->client);
 
       if (walk == NULL) {
-        gst_dash_demux_resume_stream_task (demux);
-        gst_dash_demux_resume_download_task (demux);
         GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
         return FALSE;
       }
 
+      /* We can actually perform the seek */
+      nb_active_stream = gst_mpdparser_get_nb_active_stream (demux->client);
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GST_DEBUG_OBJECT (demux, "sending flush start");
@@ -544,25 +539,30 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         }
       }
 
+      /* Stop the demux */
       demux->cancelled = TRUE;
-      gst_dash_demux_pause_stream_task (demux);
-      gst_uri_downloader_cancel (demux->downloader);
+      gst_dash_demux_stop (demux);
 
-      /* wait for streaming to finish */
+      /* Wait for streaming to finish */
       g_static_rec_mutex_lock (&demux->stream_lock);
 
+      /* Clear the buffering queue */
+      /* FIXME: allow seeking in the buffering queue */
       gst_dash_demux_clear_queue (demux);
 
       GST_MPD_CLIENT_LOCK (demux->client);
-      GST_DEBUG_OBJECT (demux, "seeking to sequence %d", current_sequence);
+      GST_DEBUG_OBJECT (demux, "Seeking to sequence %d", current_sequence);
       stream_idx = 0;
+      /* Update the current sequence on all streams */
       while (stream_idx < nb_active_stream) {
         stream =
             gst_mpdparser_get_active_stream_by_index (demux->client,
             stream_idx);
+        /* FIXME: we should'nt fiddle with stream internals like that */
         stream->segment_idx = current_sequence;
         stream_idx++;
       }
+      /* Calculate offset in the next fragment */
       gst_mpd_client_get_current_position (demux->client, &demux->position);
       demux->position_shift = start - demux->position;
       demux->need_segment = TRUE;
@@ -570,7 +570,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
-        GST_DEBUG_OBJECT (demux, "sending flush stop on all pad");
+        GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
         stream_idx = 0;
         while (stream_idx < nb_active_stream) {
           gst_pad_push_event (demux->srcpad[stream_idx],
@@ -579,6 +579,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         }
       }
 
+      /* Restart the demux */
       demux->cancelled = FALSE;
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
