@@ -606,8 +606,13 @@ render_thread_func (GstEglGlesSink * eglglessink)
       }
     }
 
-    eglglessink->last_flow =
-        gst_eglglessink_render_and_display (eglglessink, buf);
+    if (eglglessink->configured_caps) {
+      eglglessink->last_flow =
+          gst_eglglessink_render_and_display (eglglessink, buf);
+    } else {
+      GST_DEBUG_OBJECT (eglglessink, "No caps configured yet, not drawing anything");
+    }
+
     if (buf) {
       g_mutex_lock (eglglessink->render_lock);
       g_cond_broadcast (eglglessink->render_cond);
