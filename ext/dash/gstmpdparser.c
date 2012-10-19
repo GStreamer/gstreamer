@@ -2750,7 +2750,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
 gboolean
 gst_mpd_client_get_next_fragment (GstMpdClient * client,
-    guint indexStream, gboolean *discontinuity, const gchar **uri,
+    guint indexStream, gboolean *discontinuity, gchar **uri,
     GstClockTime *duration, GstClockTime *timestamp)
 {
   GstActiveStream *stream = NULL;

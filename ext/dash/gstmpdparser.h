@@ -449,7 +449,7 @@ gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStr
 void gst_mpd_client_get_current_position (GstMpdClient *client, GstClockTime * timestamp);
 GstClockTime gst_mpd_client_get_duration (GstMpdClient *client);
 GstClockTime gst_mpd_client_get_target_duration (GstMpdClient *client);
-gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, gboolean *discontinuity, const gchar **uri, GstClockTime *duration, GstClockTime *timestamp);
+gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, gboolean *discontinuity, gchar **uri, GstClockTime *duration, GstClockTime *timestamp);
 gboolean gst_mpd_client_get_next_header (GstMpdClient *client, const gchar **uri, guint stream_idx);
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 
