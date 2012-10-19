@@ -35,7 +35,7 @@
             android:src="@android:drawable/ic_media_pause"
             android:text="@string/button_stop" />
     </LinearLayout>
-
+
     <com.gst_sdk_tutorials.tutorial_3.GStreamerSurfaceView
         android:id="@+id/surface_video"
         android:layout_width="wrap_content"
