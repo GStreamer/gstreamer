@@ -313,6 +313,7 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
       GST_DEBUG ("New native window is the same as the previous one", data->native_window);
       if (data->video_sink)
         gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
+        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
       return;
     } else {
       GST_DEBUG ("Released previous native window %p", data->native_window);
