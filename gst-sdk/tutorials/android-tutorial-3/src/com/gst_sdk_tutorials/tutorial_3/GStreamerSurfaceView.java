@@ -65,8 +65,7 @@ public class GStreamerSurfaceView extends SurfaceView {
             height = media_height;
         }
 
-        // Preserve aspect ratio if we are allowed freedom in both axes
-        // FIXME: Implement the case where only one axis is free
+        // Finally, calculate best size when both axis are free
         if (hmode == View.MeasureSpec.AT_MOST && wmode == View.MeasureSpec.AT_MOST) {
             int correct_height = width * media_height / media_width;
             int correct_width = height * media_width / media_height;
