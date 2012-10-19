@@ -8,8 +8,8 @@ import android.view.View;
 
 // A simple SurfaceView whose width and height is set from the outside
 public class GStreamerSurfaceView extends SurfaceView {
-    public int media_width = 100;  // Default values, only really meaningful for the layout editor in Eclipse
-    public int media_height = 100;
+    public int media_width = 320;  // Default values, only really meaningful for the layout editor in Eclipse
+    public int media_height = 240;
 
     // Mandatory constructors, they do not do much
     public GStreamerSurfaceView(Context context, AttributeSet attrs,
