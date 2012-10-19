@@ -25,27 +25,41 @@ public class GStreamerSurfaceView extends SurfaceView {
         super(context);
     }
 
-    // Called by the layout manager to find out our size and give us some rules
+    // Called by the layout manager to find out our size and give us some rules.
+    // We will try to maximize our size, and preserve the media's aspect ratio if
+    // we are given the freedom to do so.
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = 0, height = 0;
+        int wmode = View.MeasureSpec.getMode(widthMeasureSpec);
+        int hmode = View.MeasureSpec.getMode(heightMeasureSpec);
+        int wsize = View.MeasureSpec.getSize(widthMeasureSpec);
+        int hsize = View.MeasureSpec.getSize(heightMeasureSpec);
 
         Log.i ("GStreamer", "onMeasure called with " + media_width + "x" + media_height);
         // Obey width rules
-        switch (View.MeasureSpec.getMode(widthMeasureSpec)) {
+        switch (wmode) {
         case View.MeasureSpec.AT_MOST:
+            if (hmode == View.MeasureSpec.EXACTLY) {
+                width = Math.min(hsize * media_width / media_height, wsize);
+                break;
+            }
         case View.MeasureSpec.EXACTLY:
-            width = View.MeasureSpec.getSize(widthMeasureSpec);
+            width = wsize;
             break;
         case View.MeasureSpec.UNSPECIFIED:
             width = media_width;
         }
 
         // Obey height rules
-        switch (View.MeasureSpec.getMode(heightMeasureSpec)) {
+        switch (hmode) {
         case View.MeasureSpec.AT_MOST:
+            if (wmode == View.MeasureSpec.EXACTLY) {
+                height = Math.min(wsize * media_height / media_width, hsize);
+                break;
+            }
         case View.MeasureSpec.EXACTLY:
-            height = View.MeasureSpec.getSize(heightMeasureSpec);
+            height = hsize;
             break;
         case View.MeasureSpec.UNSPECIFIED:
             height = media_height;
@@ -53,8 +67,7 @@ public class GStreamerSurfaceView extends SurfaceView {
 
         // Preserve aspect ratio if we are allowed freedom in both axes
         // FIXME: Implement the case where only one axis is free
-        if (View.MeasureSpec.getMode(heightMeasureSpec) == View.MeasureSpec.AT_MOST &&
-            View.MeasureSpec.getMode(widthMeasureSpec) == View.MeasureSpec.AT_MOST) {
+        if (hmode == View.MeasureSpec.AT_MOST && wmode == View.MeasureSpec.AT_MOST) {
             int correct_height = width * media_height / media_width;
             int correct_width = height * media_width / media_height;
 
