@@ -80,6 +80,7 @@ static gchar *gst_mpdparser_get_mediaURL (GstSegmentURLNode *segmentURL);
 static gchar *gst_mpdparser_get_initializationURL (GstURLType *InitializationURL);
 static gchar *gst_mpdparser_build_URL_from_template (const gchar *url_template, const gchar *id, guint number, guint bandwidth, guint time);
 static gboolean gst_mpd_client_add_media_segment (GstActiveStream *stream, GstSegmentURLNode *url_node, guint number, guint start, GstClockTime start_time, GstClockTime duration);
+static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
 
 /* Period */
 static GstPeriodNode *gst_mpdparser_get_next_period (GList *Periods, GstPeriodNode *prev_period);
@@ -2736,7 +2737,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
             gst_mpdparser_get_first_adapt_set_with_mimeType (client->
             cur_period->AdaptationSets, "audio");
       if (!adapt_set) {
-        GST_INFO ("No audio adaptation set found, aborting...");
+        GST_INFO ("No audio adaptation set found");
         return FALSE;
       }
       rep_list = adapt_set->Representations;
@@ -2761,7 +2762,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
             gst_mpdparser_get_first_adapt_set_with_mimeType (client->
             cur_period->AdaptationSets, "application");
       if (!adapt_set) {
-        GST_INFO ("No application adaptation set found, aborting...");
+        GST_INFO ("No application adaptation set found");
         return FALSE;
       }
       rep_list = adapt_set->Representations;
@@ -3011,29 +3012,87 @@ GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client,
             stream_idx);
 }
 
-guint gst_mpd_client_get_width_of_video_current_stream (GstRepresentationBaseType *RepresentationBase)
+static const gchar *
+gst_mpdparser_mimetype_to_caps (const gchar * mimeType)
 {
- g_return_val_if_fail (RepresentationBase != NULL, 0);
- return RepresentationBase->width;
+  if (mimeType == NULL)
+    return NULL;
+  if (strcmp (mimeType, "video/mp2t") == 0) {
+    return "video/mpegts";
+  } else if (strcmp (mimeType, "video/mp4") == 0) {
+    return "video/quicktime";
+  } else if (strcmp (mimeType, "audio/mp4") == 0) {
+    return "audio/x-m4a";
+  } else
+    return mimeType;
 }
 
-guint gst_mpd_client_get_height_of_video_current_stream (GstRepresentationBaseType *RepresentationBase)
+const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream)
 {
- g_return_val_if_fail (RepresentationBase != NULL, 0);
- return RepresentationBase->height;
+  const gchar *mimeType;
+
+  if (stream == NULL || stream->cur_adapt_set == NULL || stream->cur_representation == NULL)
+    return NULL;
+
+  mimeType = stream->cur_representation->RepresentationBase->mimeType;
+  if (mimeType == NULL) {
+    mimeType = stream->cur_adapt_set->RepresentationBase->mimeType;
+  }
+
+  return gst_mpdparser_mimetype_to_caps (mimeType);
 }
 
-guint gst_mpd_client_get_rate_of_audio_current_stream (GstRepresentationBaseType *RepresentationBase)
+guint gst_mpd_client_get_video_stream_width (GstActiveStream * stream)
 {
- g_return_val_if_fail (RepresentationBase != NULL, 0);
- return (guint) RepresentationBase->audioSamplingRate;
+  guint width;
+
+  if (stream == NULL || stream->cur_adapt_set == NULL || stream->cur_representation == NULL)
+    return 0;
+
+  width = stream->cur_representation->RepresentationBase->width;
+  if (width == 0) {
+    width = stream->cur_adapt_set->RepresentationBase->width;
+  }
+
+  return width;
 }
 
-guint gst_mpd_client_get_num_channels_of_audio_current_stream (GstRepresentationBaseType *RepresentationBase)
+guint gst_mpd_client_get_video_stream_height (GstActiveStream * stream)
 {
- g_return_val_if_fail (RepresentationBase != NULL, 0);
- /* TODO*/
- return 1;
+  guint height;
+
+  if (stream == NULL || stream->cur_adapt_set == NULL || stream->cur_representation == NULL)
+    return 0;
+
+  height = stream->cur_representation->RepresentationBase->height;
+  if (height == 0) {
+    height = stream->cur_adapt_set->RepresentationBase->height;
+  }
+
+  return height;
+}
+
+guint gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream)
+{
+  const gchar *rate;
+
+  if (stream == NULL || stream->cur_adapt_set == NULL || stream->cur_representation == NULL)
+    return 0;
+
+  rate = stream->cur_representation->RepresentationBase->audioSamplingRate;
+  if (rate == NULL) {
+    rate = stream->cur_adapt_set->RepresentationBase->audioSamplingRate;
+  }
+
+  return rate ? atoi (rate) : 0;
+}
+
+guint gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream)
+{
+  if (stream == NULL || stream->cur_adapt_set == NULL || stream->cur_representation == NULL)
+    return 0;
+  /* TODO: here we have to parse the AudioChannelConfiguration descriptors */
+  return 0;
 }
 
 guint
