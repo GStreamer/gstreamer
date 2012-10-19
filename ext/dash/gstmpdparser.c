@@ -2934,9 +2934,10 @@ gst_mpd_client_get_duration (GstMpdClient * client)
   g_return_val_if_fail (client != NULL, GST_CLOCK_TIME_NONE);
 
   GST_MPD_CLIENT_LOCK (client);
-  duration = client->mpd_node->mediaPresentationDuration * GST_MSECOND;
-  /* We can only get the duration for on-demand streams */
-  if (!duration) {
+  if (client->mpd_node->mediaPresentationDuration != -1) {
+    duration = client->mpd_node->mediaPresentationDuration * GST_MSECOND;
+  } else {
+    /* We can only get the duration for on-demand streams */
     duration = GST_CLOCK_TIME_NONE;
   }
   GST_MPD_CLIENT_UNLOCK (client);

@@ -673,12 +673,15 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       if (!gst_mpd_client_is_live (demux->client)) {
         GstClockTime duration = gst_mpd_client_get_duration (demux->client);
 
-        GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (duration));
-        if (duration != GST_CLOCK_TIME_NONE)
+        if (duration != GST_CLOCK_TIME_NONE) {
+          GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (duration));
           gst_element_post_message (GST_ELEMENT (demux),
               gst_message_new_duration (GST_OBJECT (demux),
                   GST_FORMAT_TIME, duration));
+        } else {
+          GST_DEBUG_OBJECT (demux, "mediaPresentationDuration unknown, can not send the duration message");
+        }
       }
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
