@@ -88,12 +88,22 @@ gst_tcp_server_sink_class_init (GstTCPServerSinkClass * klass)
   gobject_class->finalize = gst_tcp_server_sink_finalize;
 
   g_object_class_install_property (gobject_class, PROP_HOST,
-      g_param_spec_string ("host", "host", "The host/IP to send the packets to",
+      g_param_spec_string ("host", "host", "The host/IP to listen on",
           TCP_DEFAULT_HOST, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_PORT,
-      g_param_spec_int ("port", "port", "The port to send the packets to",
+      g_param_spec_int ("port", "port",
+          "The port to listen to (0=random available port)",
           0, TCP_HIGHEST_PORT, TCP_DEFAULT_PORT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTCPServerSink:current-port:
+   *
+   * The port number the socket is currently bound to. Applications can use
+   * this property to retrieve the port number actually bound to in case
+   * the port requested was 0 (=allocate a random available port).
+   *
+   * Since: 1.0.2
+   **/
   g_object_class_install_property (gobject_class, PROP_CURRENT_PORT,
       g_param_spec_int ("current-port", "current-port",
           "The port number the socket is currently bound to", 0,
@@ -185,15 +195,12 @@ static void
 gst_tcp_server_sink_removed (GstMultiHandleSink * sink,
     GstMultiSinkHandle handle)
 {
-#ifndef GST_DISABLE_GST_DEBUG
-  GstTCPServerSink *this = GST_TCP_SERVER_SINK (sink);
-#endif
   GError *err = NULL;
 
-  GST_DEBUG_OBJECT (this, "closing socket");
+  GST_DEBUG_OBJECT (sink, "closing socket");
 
   if (!g_socket_close (handle.socket, &err)) {
-    GST_ERROR_OBJECT (this, "Failed to close socket: %s", err->message);
+    GST_ERROR_OBJECT (sink, "Failed to close socket: %s", err->message);
     g_clear_error (&err);
   }
 }
@@ -224,7 +231,6 @@ gst_tcp_server_sink_set_property (GObject * object, guint prop_id,
 {
   GstTCPServerSink *sink;
 
-  g_return_if_fail (GST_IS_TCP_SERVER_SINK (object));
   sink = GST_TCP_SERVER_SINK (object);
 
   switch (prop_id) {
@@ -251,7 +257,6 @@ gst_tcp_server_sink_get_property (GObject * object, guint prop_id,
 {
   GstTCPServerSink *sink;
 
-  g_return_if_fail (GST_IS_TCP_SERVER_SINK (object));
   sink = GST_TCP_SERVER_SINK (object);
 
   switch (prop_id) {
@@ -335,9 +340,7 @@ gst_tcp_server_sink_init_send (GstMultiHandleSink * parent)
   if (!g_socket_listen (this->server_socket, &err))
     goto listen_failed;
 
-  GST_DEBUG_OBJECT (this,
-      "listened on server socket %p, returning from connection setup",
-      this->server_socket);
+  GST_DEBUG_OBJECT (this, "listened on server socket %p", this->server_socket);
 
   if (this->server_port == 0) {
     saddr = g_socket_get_local_address (this->server_socket, NULL);
