@@ -296,7 +296,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
 
     val8 = *data++;
     /* GRMBL, this is most often wrong */
-    if (G_UNLIKELY ((val8 * 0x80) != 0x80))
+    if (G_UNLIKELY ((val8 & 0x80) != 0x80))
       goto bad_sequence_marker2;
     res->MPEG1_MPEG2_identifier = (val8 >> 6) & 0x1;
     res->original_stuff_length = val8 & 0x3f;
