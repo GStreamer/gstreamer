@@ -84,7 +84,7 @@ _gst_sample_free (GstSample * sample)
  * gst_sample_new:
  * @buffer: (transfer none) (allow-none): a #GstBuffer, or NULL
  * @caps: (transfer none) (allow-none): a #GstCaps, or NULL
- * @segment: transfer none) (allow-none): a #GstSegment, or NULL
+ * @segment: (transfer none) (allow-none): a #GstSegment, or NULL
  * @info: (transfer full) (allow-none): a #GstStructure, or NULL
  *
  * Create a new #GstSample with the provided details.
