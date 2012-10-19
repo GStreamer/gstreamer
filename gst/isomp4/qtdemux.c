@@ -7320,6 +7320,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
                 if (extra)
                   gst_buffer_unref (extra);
+                g_free (header);
               }
             }
           } else
