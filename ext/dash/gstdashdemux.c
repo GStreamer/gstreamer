@@ -1524,7 +1524,8 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
         gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
     if (stream == NULL)
       return FALSE;
-    download->index = stream->segment_idx;
+    /* FIXME: we should'nt fiddle with stream internals like that */
+    download->index = stream->segment_idx -1;
 
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
 
