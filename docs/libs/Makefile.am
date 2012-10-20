@@ -37,7 +37,7 @@ HFILE_GLOB=$(top_srcdir)/libs/gst/*/*.h
 CFILE_GLOB=$(top_srcdir)/libs/gst/*/*.c
 
 # Extra options to pass to gtkdoc-scanobj or gtkdoc-scangobj.
-SCANOBJ_OPTIONS=--type-init-func="g_type_init();gst_init(&argc,&argv)"
+SCANOBJ_OPTIONS=--type-init-func="gst_init(&argc,&argv)"
 
 # Header files to ignore when scanning.
 IGNORE_HFILES = \
