@@ -377,6 +377,7 @@ gst_alsasink_acceptcaps (GstAlsaSink * alsa, GstCaps * caps)
   ret = TRUE;
 
 done:
+  gst_caps_replace (&spec.caps, NULL);
   return ret;
 }
 
