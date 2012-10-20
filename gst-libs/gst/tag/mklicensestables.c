@@ -718,8 +718,6 @@ main (int argc, char **argv)
   GList *l;
   int idx = 0;
 
-  g_type_init ();
-
   ctx = g_option_context_new ("");
   g_option_context_add_main_entries (ctx, options, NULL);
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
