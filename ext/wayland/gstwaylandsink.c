@@ -88,12 +88,11 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query);
 static gboolean gst_wayland_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 
-static int event_mask_update (uint32_t mask, void *data);
 static struct display *create_display (void);
-static void display_handle_global (struct wl_display *display, uint32_t id,
-    const char *interface, uint32_t version, void *data);
-static void frame_redraw_callback (void *data, struct wl_callback *callback,
-    uint32_t time);
+static void registry_handle_global (void *data, struct wl_registry *registry,
+    uint32_t id, const char *interface, uint32_t version);
+static void frame_redraw_callback (void *data,
+    struct wl_callback *callback, uint32_t time);
 static void create_window (GstWaylandSink * sink, struct display *display,
     int width, int height);
 static void shm_pool_destroy (struct shm_pool *pool);
@@ -261,16 +260,6 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   return caps;
 }
 
-static int
-event_mask_update (uint32_t mask, void *data)
-{
-  struct display *d = data;
-
-  d->mask = mask;
-
-  return 0;
-}
-
 static void
 shm_format (void *data, struct wl_shm *wl_shm, uint32_t format)
 {
@@ -284,21 +273,25 @@ struct wl_shm_listener shm_listenter = {
 };
 
 static void
-display_handle_global (struct wl_display *display, uint32_t id,
-    const char *interface, uint32_t version, void *data)
+registry_handle_global (void *data, struct wl_registry *registry,
+    uint32_t id, const char *interface, uint32_t version)
 {
   struct display *d = data;
 
   if (strcmp (interface, "wl_compositor") == 0) {
-    d->compositor = wl_display_bind (display, id, &wl_compositor_interface);
+    d->compositor =
+        wl_registry_bind (registry, id, &wl_compositor_interface, 1);
   } else if (strcmp (interface, "wl_shell") == 0) {
-    d->shell = wl_display_bind (display, id, &wl_shell_interface);
+    d->shell = wl_registry_bind (registry, id, &wl_shell_interface, 1);
   } else if (strcmp (interface, "wl_shm") == 0) {
-    d->shm = wl_display_bind (display, id, &wl_shm_interface);
+    d->shm = wl_registry_bind (registry, id, &wl_shm_interface, 1);
     wl_shm_add_listener (d->shm, &shm_listenter, d);
   }
-
 }
+
+static const struct wl_registry_listener registry_listener = {
+  registry_handle_global
+};
 
 static struct display *
 create_display (void)
@@ -313,10 +306,15 @@ create_display (void)
     return NULL;
   }
 
-  wl_display_add_global_listener (display->display,
-      display_handle_global, display);
+  display->registry = wl_display_get_registry (display->display);
+  wl_registry_add_listener (display->registry, &registry_listener, display);
 
-  wl_display_iterate (display->display, WL_DISPLAY_READABLE);
+  wl_display_roundtrip (display->display);
+  if (display->shm == NULL) {
+    GST_ERROR ("No wl_shm global..");
+    return NULL;
+  }
+
   wl_display_roundtrip (display->display);
 
   if (!(display->formats & (1 << WL_SHM_FORMAT_XRGB8888))) {
@@ -324,7 +322,7 @@ create_display (void)
     return NULL;
   }
 
-  wl_display_get_fd (display->display, event_mask_update, display);
+  wl_display_get_fd (display->display);
 
   return display;
 }
@@ -590,12 +588,11 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   window = sink->window;
   display = sink->display;
 
-  /* Wait for the previous frame to complete redraw */
-  if (window->redraw_pending) {
-    wl_display_iterate (display->display, WL_DISPLAY_READABLE);
-  }
-
   meta = gst_buffer_get_wl_meta (buffer);
+
+  if (window->redraw_pending) {
+    wl_display_dispatch (display->display);
+  }
 
   if (meta && meta->sink == sink) {
     GST_LOG_OBJECT (sink, "buffer %p from our pool, writing directly", buffer);
@@ -630,10 +627,11 @@ gst_wayland_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 
   wl_surface_attach (sink->window->surface, meta->wbuffer, 0, 0);
   wl_surface_damage (sink->window->surface, 0, 0, res.w, res.h);
-  wl_display_iterate (display->display, WL_DISPLAY_WRITABLE);
   window->redraw_pending = TRUE;
   window->callback = wl_surface_frame (window->surface);
   wl_callback_add_listener (window->callback, &frame_callback_listener, window);
+  wl_surface_commit (window->surface);
+  wl_display_dispatch (display->display);
 
   if (buffer != to_render)
     gst_buffer_unref (to_render);

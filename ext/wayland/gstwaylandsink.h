@@ -58,11 +58,11 @@
 struct  display
 {
   struct wl_display *display;
+  struct wl_registry *registry;
   struct wl_compositor *compositor;
   struct wl_shell *shell;
   struct wl_shm *shm;
   uint32_t formats;
-  uint32_t mask;
 };
 
 struct window
