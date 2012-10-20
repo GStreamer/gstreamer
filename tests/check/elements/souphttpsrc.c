@@ -445,8 +445,6 @@ souphttpsrc_suite (void)
 
   TCase *tc_chain, *tc_internet;
 
-  g_type_init ();
-
   s = suite_create ("souphttpsrc");
   tc_chain = tcase_create ("general");
   tc_internet = tcase_create ("internet");
