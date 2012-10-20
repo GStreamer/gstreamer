@@ -2088,6 +2088,7 @@ out:
 
   pa_threaded_mainloop_unlock (mainloop);
 
+  gst_caps_replace (&spec.caps, NULL);
   gst_object_unref (pbuf);
 
 done:
