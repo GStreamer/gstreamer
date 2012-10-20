@@ -534,7 +534,7 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 {
   GstAudioDecoderClass *klass;
   gboolean res = TRUE;
-  GstCaps *caps = NULL;
+  GstCaps *caps;
   GstQuery *query = NULL;
   GstAllocator *allocator;
   GstAllocationParams params;
@@ -544,11 +544,12 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 
   klass = GST_AUDIO_DECODER_GET_CLASS (dec);
 
-  GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
-
   caps = gst_audio_info_to_caps (&dec->priv->ctx.info);
 
+  GST_DEBUG_OBJECT (dec, "setting src caps %" GST_PTR_FORMAT, caps);
+
   res = gst_pad_set_caps (dec->srcpad, caps);
+
   if (!res)
     goto done;
   dec->priv->ctx.output_format_changed = FALSE;
@@ -2458,6 +2459,8 @@ _gst_audio_decoder_error (GstAudioDecoder * dec, gint weight,
         domain, code, txt, dbg, file, function, line);
     return GST_FLOW_ERROR;
   } else {
+    g_free (txt);
+    g_free (dbg);
     return GST_FLOW_OK;
   }
 }
