@@ -3174,6 +3174,8 @@ _gst_video_decoder_error (GstVideoDecoder * dec, gint weight,
         domain, code, txt, dbg, file, function, line);
     return GST_FLOW_ERROR;
   } else {
+    g_free (txt);
+    g_free (dbg);
     return GST_FLOW_OK;
   }
 }
