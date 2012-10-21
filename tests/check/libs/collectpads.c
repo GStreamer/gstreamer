@@ -76,6 +76,19 @@ collected_cb (GstCollectPads * pads, gpointer user_data)
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+handle_buffer_cb (GstCollectPads * pads, GstCollectData * data,
+    GstBuffer * buf, gpointer user_data)
+{
+  GST_DEBUG ("Collected a buffer via callback");
+  g_mutex_lock (&lock);
+  collected = TRUE;
+  g_cond_signal (&cond);
+  g_mutex_unlock (&lock);
+
+  return GST_FLOW_OK;
+}
+
 static gpointer
 push_buffer (gpointer user_data)
 {
@@ -107,10 +120,9 @@ push_event (gpointer user_data)
 }
 
 static void
-setup (void)
+setup_default (void)
 {
   collect = gst_collect_pads_new ();
-  gst_collect_pads_set_function (collect, collected_cb, NULL);
 
   srcpad1 = gst_pad_new_from_static_template (&srctemplate, "src1");
   srcpad2 = gst_pad_new_from_static_template (&srctemplate, "src2");
@@ -127,6 +139,20 @@ setup (void)
   data1 = NULL;
   data2 = NULL;
   collected = FALSE;
+}
+
+static void
+setup (void)
+{
+  setup_default ();
+  gst_collect_pads_set_function (collect, collected_cb, NULL);
+}
+
+static void
+setup_buffer_cb (void)
+{
+  setup_default ();
+  gst_collect_pads_set_buffer_function (collect, handle_buffer_cb, NULL);
 }
 
 static void
@@ -202,6 +228,7 @@ GST_START_TEST (test_collect)
 }
 
 GST_END_TEST;
+
 
 GST_START_TEST (test_collect_eos)
 {
@@ -345,11 +372,69 @@ GST_START_TEST (test_collect_twice)
 
 GST_END_TEST;
 
+
+/* Test the default collected buffer func */
+GST_START_TEST (test_collect_default)
+{
+  GstBuffer *buf1, *buf2, *tmp;
+  GThread *thread1, *thread2;
+
+  data1 = (TestData *) gst_collect_pads_add_pad (collect,
+      sinkpad1, sizeof (TestData), NULL, TRUE);
+  fail_unless (data1 != NULL);
+
+  data2 = (TestData *) gst_collect_pads_add_pad (collect,
+      sinkpad2, sizeof (TestData), NULL, TRUE);
+  fail_unless (data2 != NULL);
+
+  buf1 = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buf1) = 0;
+  buf2 = gst_buffer_new ();
+  GST_BUFFER_TIMESTAMP (buf2) = GST_SECOND;
+
+  /* start collect pads */
+  gst_collect_pads_start (collect);
+
+  /* push buffers on the pads */
+  data1->pad = srcpad1;
+  data1->buffer = buf1;
+  thread1 = g_thread_try_new ("gst-check", push_buffer, data1, NULL);
+  /* here thread1 is blocked and srcpad1 has a queued buffer */
+  fail_unless_collected (FALSE);
+
+  data2->pad = srcpad2;
+  data2->buffer = buf2;
+  thread2 = g_thread_try_new ("gst-check", push_buffer, data2, NULL);
+
+  /* now both pads have a buffer */
+  fail_unless_collected (TRUE);
+
+  /* The default callback should have popped the buffer with lower timestamp,
+   * and this should therefore be NULL: */
+  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data1);
+  fail_unless (tmp == NULL);
+  /* While this one should still be pending: */
+  tmp = gst_collect_pads_pop (collect, (GstCollectData *) data2);
+  fail_unless (tmp == buf2);
+
+  /* these will return immediately as at this point the threads have been
+   * unlocked and are finished */
+  g_thread_join (thread1);
+  g_thread_join (thread2);
+
+  gst_collect_pads_stop (collect);
+
+  gst_buffer_unref (buf1);
+  gst_buffer_unref (buf2);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_collect_pads_suite (void)
 {
   Suite *suite;
-  TCase *general;
+  TCase *general, *buffers;
 
   suite = suite_create ("GstCollectPads");
   general = tcase_create ("general");
@@ -359,6 +444,11 @@ gst_collect_pads_suite (void)
   tcase_add_test (general, test_collect);
   tcase_add_test (general, test_collect_eos);
   tcase_add_test (general, test_collect_twice);
+
+  buffers = tcase_create ("buffers");
+  suite_add_tcase (suite, buffers);
+  tcase_add_checked_fixture (buffers, setup_buffer_cb, teardown);
+  tcase_add_test (buffers, test_collect_default);
 
   return suite;
 }
