@@ -166,7 +166,7 @@ static void mpegtsdemux_prepare_srcpad (MpegTsMux * mux);
 GstFlowReturn mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
     GstCollectData * cdata, GstBuffer * buf, GstBuffer ** outbuf,
     gpointer user_data);
-static GstFlowReturn mpegtsmux_collected (GstCollectPads * pads,
+static GstFlowReturn mpegtsmux_collected_buffer (GstCollectPads * pads,
     GstCollectData * data, GstBuffer * buf, MpegTsMux * mux);
 
 static gboolean mpegtsmux_sink_event (GstCollectPads * pads,
@@ -196,11 +196,13 @@ typedef struct
 
 G_DEFINE_TYPE (MpegTsMux, mpegtsmux, GST_TYPE_ELEMENT)
 
+/* Takes over the ref on the buffer */
      static StreamData *stream_data_new (GstBuffer * buffer)
 {
   StreamData *res = g_new (StreamData, 1);
   res->buffer = buffer;
   gst_buffer_map (buffer, &(res->map_info), GST_MAP_READ);
+
   return res;
 }
 
@@ -288,8 +290,8 @@ mpegtsmux_init (MpegTsMux * mux)
 
   mux->collect = gst_collect_pads_new ();
   gst_collect_pads_set_buffer_function (mux->collect,
-      (GstCollectPadsBufferFunction) GST_DEBUG_FUNCPTR (mpegtsmux_collected),
-      mux);
+      (GstCollectPadsBufferFunction)
+      GST_DEBUG_FUNCPTR (mpegtsmux_collected_buffer), mux);
 
   gst_collect_pads_set_event_function (mux->collect,
       (GstCollectPadsEventFunction) GST_DEBUG_FUNCPTR (mpegtsmux_sink_event),
@@ -987,7 +989,7 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
       } else {
         pad_data->last_pts = time;
       }
-      *outbuf = gst_buffer_make_writable (buf);
+      buf = *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_TIMESTAMP (*outbuf) = time;
     }
   }
@@ -1014,7 +1016,7 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
       } else {
         pad_data->last_dts = time;
       }
-      *outbuf = gst_buffer_make_writable (buf);
+      buf = *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_TIMESTAMP (*outbuf) = time;
     }
   }
@@ -1032,7 +1034,7 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
 }
 
 static GstFlowReturn
-mpegtsmux_collected (GstCollectPads * pads, GstCollectData * data,
+mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     GstBuffer * buf, MpegTsMux * mux)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1153,12 +1155,11 @@ mpegtsmux_collected (GstCollectPads * pads, GstCollectData * data,
     if (prog->pcr_stream == best->stream) {
       /* prefer DTS if present for PCR as it should be monotone */
       mux->last_ts =
-          GST_CLOCK_TIME_IS_VALID (best->last_dts) ? best->last_dts : best->
-          last_pts;
+          GST_CLOCK_TIME_IS_VALID (best->last_dts) ? best->
+          last_dts : best->last_pts;
     }
 
     mux->is_delta = delta;
-    mux->last_size = stream_data->map_info.size;
     while (tsmux_stream_bytes_in_buffer (best->stream) > 0) {
       if (!tsmux_write_stream_packet (mux->tsmux, best->stream)) {
         /* Failed writing data for some reason. Set appropriate error */

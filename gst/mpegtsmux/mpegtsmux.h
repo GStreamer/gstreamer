@@ -163,8 +163,6 @@ struct MpegTsMux {
   /* output buffer aggregation */
   GstAdapter *out_adapter;
   GstBuffer *out_buffer;
-  gint out_offset;
-  gint last_size;
 
 #if 0
   /* SPN/PTS index handling */
