@@ -431,6 +431,10 @@ static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
 static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 fourcc, const guint8 * data,
     gchar ** codec_name);
+static GstCaps *qtdemux_generic_caps (GstQTDemux * qtdemux,
+    QtDemuxStream * stream, guint32 fourcc, const guint8 * stsd_data,
+    gchar ** codec_name);
+
 static gboolean qtdemux_parse_samples (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint32 n);
 static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
@@ -5214,6 +5218,13 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         gst_pad_new_from_static_template (&gst_qtdemux_subsrc_template, name);
     g_free (name);
     qtdemux->n_sub_streams++;
+  } else if (stream->caps) {
+    gchar *name = g_strdup_printf ("video_%u", qtdemux->n_video_streams);
+
+    stream->pad =
+        gst_pad_new_from_static_template (&gst_qtdemux_videosrc_template, name);
+    g_free (name);
+    qtdemux->n_video_streams++;
   } else {
     GST_DEBUG_OBJECT (qtdemux, "unknown stream type");
     goto done;
@@ -7506,7 +7517,22 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         break;
     }
   } else {
-    goto unknown_stream;
+    /* everything in 1 sample */
+    stream->sampled = TRUE;
+
+    stream->caps =
+        qtdemux_generic_caps (qtdemux, stream, fourcc, stsd_data, &codec);
+
+    if (stream->caps == NULL)
+      goto unknown_stream;
+
+    if (codec) {
+      list = gst_tag_list_new_empty ();
+      gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
+          GST_TAG_SUBTITLE_CODEC, codec, NULL);
+      g_free (codec);
+      codec = NULL;
+    }
   }
 
   /* promote to sampled format */
@@ -9852,6 +9878,25 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_empty_simple (s);
       break;
     }
+  }
+  return caps;
+}
+
+static GstCaps *
+qtdemux_generic_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
+{
+  GstCaps *caps;
+
+  switch (fourcc) {
+    case GST_MAKE_FOURCC ('m', '1', 'v', ' '):
+      _codec ("MPEG 1 video");
+      caps = gst_caps_new_simple ("video/mpeg", "mpegversion", G_TYPE_INT, 1,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+      break;
+    default:
+      caps = NULL;
+      break;
   }
   return caps;
 }
