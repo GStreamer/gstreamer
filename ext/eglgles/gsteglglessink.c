@@ -117,6 +117,7 @@
 #include <gst/video/video.h>
 #include <gst/video/video-frame.h>
 #include <gst/video/gstvideosink.h>
+#include <gst/video/gstvideometa.h>
 #include <gst/video/videooverlay.h>
 
 #include <EGL/egl.h>
@@ -363,6 +364,8 @@ static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
     GstBuffer * buf);
 static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
 static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter);
+static gboolean gst_eglglessink_propose_allocation (GstBaseSink * bsink,
+    GstQuery * query);
 
 /* VideoOverlay interface cruft */
 static void gst_eglglessink_videooverlay_init (GstVideoOverlayInterface *
@@ -893,6 +896,7 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
 {
   gdouble surface_width, surface_height;
   gdouble x1, x2, y1, y2;
+  gdouble tx1, tx2, ty1, ty2;
 
   GST_INFO_OBJECT (eglglessink, "VBO setup. have_vbo:%d, should reset %d",
       eglglessink->have_vbo, reset);
@@ -915,29 +919,38 @@ gst_eglglessink_setup_vbo (GstEglGlesSink * eglglessink, gboolean reset)
   y2 = ((eglglessink->display_region.y +
           eglglessink->display_region.h) / surface_height) * 2.0 - 1;
 
+  tx1 = (eglglessink->crop.x / eglglessink->configured_info.width);
+  tx2 =
+      ((eglglessink->crop.x +
+          eglglessink->crop.width) / eglglessink->configured_info.width);
+  ty1 = (eglglessink->crop.y / eglglessink->configured_info.height);
+  ty2 =
+      ((eglglessink->crop.y +
+          eglglessink->crop.height) / eglglessink->configured_info.height);
+
   eglglessink->eglglesctx.position_array[0].x = x2;
   eglglessink->eglglesctx.position_array[0].y = y2;
   eglglessink->eglglesctx.position_array[0].z = 0;
-  eglglessink->eglglesctx.position_array[0].a = 1;
-  eglglessink->eglglesctx.position_array[0].b = 0;
+  eglglessink->eglglesctx.position_array[0].a = tx2;
+  eglglessink->eglglesctx.position_array[0].b = ty1;
 
   eglglessink->eglglesctx.position_array[1].x = x2;
   eglglessink->eglglesctx.position_array[1].y = y1;
   eglglessink->eglglesctx.position_array[1].z = 0;
-  eglglessink->eglglesctx.position_array[1].a = 1;
-  eglglessink->eglglesctx.position_array[1].b = 1;
+  eglglessink->eglglesctx.position_array[1].a = tx2;
+  eglglessink->eglglesctx.position_array[1].b = ty2;
 
   eglglessink->eglglesctx.position_array[2].x = x1;
   eglglessink->eglglesctx.position_array[2].y = y2;
   eglglessink->eglglesctx.position_array[2].z = 0;
-  eglglessink->eglglesctx.position_array[2].a = 0;
-  eglglessink->eglglesctx.position_array[2].b = 0;
+  eglglessink->eglglesctx.position_array[2].a = tx1;
+  eglglessink->eglglesctx.position_array[2].b = ty1;
 
   eglglessink->eglglesctx.position_array[3].x = x1;
   eglglessink->eglglesctx.position_array[3].y = y1;
   eglglessink->eglglesctx.position_array[3].z = 0;
-  eglglessink->eglglesctx.position_array[3].a = 0;
-  eglglessink->eglglesctx.position_array[3].b = 1;
+  eglglessink->eglglesctx.position_array[3].a = tx1;
+  eglglessink->eglglesctx.position_array[3].b = ty2;
 
   if (eglglessink->display_region.x == 0) {
     /* Borders top/bottom */
@@ -1702,6 +1715,22 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
   return (buf ? eglglessink->last_flow : GST_FLOW_OK);
 }
 
+static gboolean
+gst_eglglessink_crop_changed (GstEglGlesSink * eglglessink,
+    GstVideoCropMeta * crop)
+{
+  if (crop) {
+    return (crop->x != eglglessink->crop.x ||
+        crop->y != eglglessink->crop.y ||
+        crop->width != eglglessink->crop.width ||
+        crop->height != eglglessink->crop.height);
+  }
+
+  return (eglglessink->crop.x != 0 || eglglessink->crop.y != 0 ||
+      eglglessink->crop.width != GST_VIDEO_SINK_WIDTH (eglglessink) ||
+      eglglessink->crop.height != GST_VIDEO_SINK_HEIGHT (eglglessink));
+}
+
 /* Rendering and display */
 static GstFlowReturn
 gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
@@ -1711,11 +1740,14 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
   GstVideoRectangle frame, surface;
   gint w, h;
   guint dar_n, dar_d;
+  GstVideoCropMeta *crop;
 
   memset (&vframe, 0, sizeof (vframe));
 
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
+
+  crop = gst_buffer_get_video_crop_meta (buf);
 
   if (!gst_video_frame_map (&vframe, &eglglessink->configured_info, buf,
           GST_MAP_READ)) {
@@ -1844,39 +1876,59 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
    * force_aspect_ratio to FALSE.
    */
   if (gst_eglglessink_update_surface_dimensions (eglglessink) ||
-      !eglglessink->display_region.w || !eglglessink->display_region.h) {
+      !eglglessink->display_region.w || !eglglessink->display_region.h ||
+      gst_eglglessink_crop_changed (eglglessink, crop)) {
     GST_OBJECT_LOCK (eglglessink);
+    if (crop) {
+      eglglessink->crop.x = crop->x;
+      eglglessink->crop.y = crop->y;
+      eglglessink->crop.width = crop->width;
+      eglglessink->crop.height = crop->height;
+    } else {
+      eglglessink->crop.x = 0;
+      eglglessink->crop.y = 0;
+      eglglessink->crop.width = w;
+      eglglessink->crop.height = h;
+    }
+
     if (!eglglessink->force_aspect_ratio) {
       eglglessink->display_region.x = 0;
       eglglessink->display_region.y = 0;
       eglglessink->display_region.w = eglglessink->eglglesctx.surface_width;
       eglglessink->display_region.h = eglglessink->eglglesctx.surface_height;
     } else {
-      if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, w, h,
-              eglglessink->par_n, eglglessink->par_d,
+      if (!gst_video_calculate_display_ratio (&dar_n, &dar_d,
+              eglglessink->crop.width, eglglessink->crop.height,
+              eglglessink->configured_info.par_n,
+              eglglessink->configured_info.par_d,
               eglglessink->eglglesctx.pixel_aspect_ratio,
               EGL_DISPLAY_SCALING)) {
         GST_WARNING_OBJECT (eglglessink, "Could not compute resulting DAR");
-        frame.w = w;
-        frame.h = h;
+        frame.w = eglglessink->crop.width;
+        frame.h = eglglessink->crop.height;
       } else {
         /* Find suitable matching new size acording to dar & par
          * rationale for prefering leaving the height untouched
          * comes from interlacing considerations.
          * XXX: Move this to gstutils?
          */
-        if (h % dar_d == 0) {
-          frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
-          frame.h = h;
-        } else if (w % dar_n == 0) {
-          frame.h = gst_util_uint64_scale_int (w, dar_d, dar_n);
-          frame.w = w;
+        if (eglglessink->crop.height % dar_d == 0) {
+          frame.w =
+              gst_util_uint64_scale_int (eglglessink->crop.height, dar_n,
+              dar_d);
+          frame.h = eglglessink->crop.height;
+        } else if (eglglessink->crop.width % dar_n == 0) {
+          frame.h =
+              gst_util_uint64_scale_int (eglglessink->crop.width, dar_d, dar_n);
+          frame.w = eglglessink->crop.width;
         } else {
           /* Neither width nor height can be precisely scaled.
            * Prefer to leave height untouched. See comment above.
            */
-          frame.w = gst_util_uint64_scale_int (h, dar_n, dar_d);
-          frame.h = h;
+          frame.w =
+              gst_util_uint64_scale_int (eglglessink->crop.height, dar_n,
+              dar_d);
+          frame.h = eglglessink->crop.height;
         }
       }
 
@@ -2007,6 +2059,17 @@ gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter)
   }
 
   return ret;
+}
+
+static gboolean
+gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  /* FIXME: Add support for video meta, i.e. arbitrary strides
+     gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+   */
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
+
+  return TRUE;
 }
 
 static gboolean
@@ -2295,6 +2358,8 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
 
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_setcaps);
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_eglglessink_getcaps);
+  gstbasesink_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_eglglessink_propose_allocation);
 
   gstvideosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_eglglessink_show_frame);
@@ -2347,9 +2412,6 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
   /** Props */
   eglglessink->create_window = TRUE;
   eglglessink->force_aspect_ratio = TRUE;
-
-  eglglessink->par_n = 1;
-  eglglessink->par_d = 1;
 
   eglglessink->render_lock = g_mutex_new ();
   eglglessink->render_cond = g_cond_new ();
