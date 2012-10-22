@@ -1242,6 +1242,9 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
   g_mutex_unlock (self->drain_lock);
   g_free (self->codec_data);
   self->codec_data_size = 0;
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = NULL;
   GST_DEBUG_OBJECT (self, "Stopped decoder");
   return TRUE;
 }
@@ -1296,6 +1299,9 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
 
     /* Framerate or something minor changed */
     self->input_state_changed = TRUE;
+    if (self->input_state)
+      gst_video_codec_state_unref (self->input_state);
+    self->input_state = gst_video_codec_state_ref (state);
     GST_DEBUG_OBJECT (self,
         "Already running and caps did not change the format");
     return TRUE;
@@ -1317,6 +1323,9 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     }
   }
   /* srcpad task is not running at this point */
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = NULL;
 
   g_free (self->codec_data);
   self->codec_data = codec_data;
@@ -1366,6 +1375,7 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   self->started = TRUE;
+  self->input_state = gst_video_codec_state_ref (state);
   self->input_state_changed = TRUE;
 
   /* Start the srcpad loop again */
