@@ -965,9 +965,9 @@ gst_rtsp_server_create_source (GstRTSPServer * server,
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
   socket = gst_rtsp_server_create_socket (server, NULL, error);
-  server->socket = g_object_ref (socket);
   if (socket == NULL)
     goto no_socket;
+  server->socket = g_object_ref (socket);
 
   /* create a watch for reads (new connections) and possible errors */
   source = g_socket_create_source (socket, G_IO_IN |
