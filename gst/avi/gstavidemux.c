@@ -1849,8 +1849,7 @@ gst_avi_demux_expose_streams (GstAviDemux * avi, gboolean force)
     GstAviStream *stream = &avi->stream[i];
 
     if (force || stream->idx_n != 0) {
-      GST_LOG_OBJECT (avi, "Adding pad %s" GST_PTR_FORMAT,
-          GST_PAD_NAME (stream->pad));
+      GST_LOG_OBJECT (avi, "Adding pad %s", GST_PAD_NAME (stream->pad));
       gst_element_add_pad ((GstElement *) avi, stream->pad);
 
 #if 0
