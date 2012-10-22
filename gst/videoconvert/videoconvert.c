@@ -1208,6 +1208,7 @@ videoconvert_convert_lookup_fastpath (VideoConvert * convert)
         (transforms[i].keeps_color_matrix ||
             (transforms[i].in_matrix == in_matrix &&
                 transforms[i].out_matrix == out_matrix))) {
+      GST_DEBUG ("using fastpath");
       convert->convert = transforms[i].convert;
       return TRUE;
     }
