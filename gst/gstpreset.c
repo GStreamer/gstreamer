@@ -390,7 +390,6 @@ preset_get_keyfile (GstPreset * preset)
         if (presets)
           g_key_file_free (presets);
         presets = in_user;
-        version = version_user;
       }
     }
 
