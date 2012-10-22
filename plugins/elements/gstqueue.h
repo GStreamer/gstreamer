@@ -25,7 +25,7 @@
 #define __GST_QUEUE_H__
 
 #include <gst/gst.h>
-#include "gstqueuearray.h"
+#include <gst/base/gstqueuearray.h>
 
 G_BEGIN_DECLS
 
@@ -108,7 +108,7 @@ struct _GstQueue {
   gboolean      eos;
 
   /* the queue of data we're keeping our grubby hands on */
-  GstQueueArray queue;
+  GstQueueArray *queue;
 
   GstQueueSize
     cur_level,          /* currently in the queue */

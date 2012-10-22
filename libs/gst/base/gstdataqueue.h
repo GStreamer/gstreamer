@@ -24,7 +24,6 @@
 #define __GST_DATA_QUEUE_H__
 
 #include <gst/gst.h>
-#include "gstqueuearray.h"
 
 G_BEGIN_DECLS
 #define GST_TYPE_DATA_QUEUE \
@@ -41,6 +40,7 @@ typedef struct _GstDataQueue GstDataQueue;
 typedef struct _GstDataQueueClass GstDataQueueClass;
 typedef struct _GstDataQueueSize GstDataQueueSize;
 typedef struct _GstDataQueueItem GstDataQueueItem;
+typedef struct _GstDataQueuePrivate GstDataQueuePrivate;
 
 /**
  * GstDataQueueItem:
@@ -66,6 +66,9 @@ struct _GstDataQueueItem
 
   /* user supplied destroy function */
   GDestroyNotify destroy;
+
+  /* < private > */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -113,24 +116,8 @@ struct _GstDataQueue
   GObject object;
 
   /*< private >*/
-  /* the array of data we're keeping our grubby hands on */
-  GstQueueArray queue;
-
-  GstDataQueueSize cur_level;   /* size of the queue */
-  GstDataQueueCheckFullFunction checkfull;      /* Callback to check if the queue is full */
-  gpointer *checkdata;
-
-  GMutex qlock;                /* lock for queue (vs object lock) */
-  gboolean waiting_add;
-  GCond item_add;              /* signals buffers now available for reading */
-  gboolean waiting_del;
-  GCond item_del;              /* signals space now available for writing */
-  gboolean flushing;            /* indicates whether conditions where signalled because
-                                 * of external flushing */
-  GstDataQueueFullCallback fullcallback;
-  GstDataQueueEmptyCallback emptycallback;
-
-  /* gpointer _gst_reserved[GST_PADDING]; */
+  GstDataQueuePrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstDataQueueClass
@@ -141,47 +128,32 @@ struct _GstDataQueueClass
   void (*empty) (GstDataQueue * queue);
   void (*full) (GstDataQueue * queue);
 
-  /* gpointer _gst_reserved[GST_PADDING]; */
+  gpointer _gst_reserved[GST_PADDING];
 };
 
-G_GNUC_INTERNAL
 GType gst_data_queue_get_type (void);
 
-G_GNUC_INTERNAL
 GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction checkfull,
-                                              gpointer checkdata) G_GNUC_MALLOC;
-
-G_GNUC_INTERNAL
-GstDataQueue * gst_data_queue_new_full       (GstDataQueueCheckFullFunction checkfull,
 					      GstDataQueueFullCallback fullcallback,
 					      GstDataQueueEmptyCallback emptycallback,
 					      gpointer checkdata) G_GNUC_MALLOC;
 
-G_GNUC_INTERNAL
 gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
 
-G_GNUC_INTERNAL
 gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);
 
-G_GNUC_INTERNAL
 void           gst_data_queue_flush          (GstDataQueue * queue);
 
-G_GNUC_INTERNAL
 void           gst_data_queue_set_flushing   (GstDataQueue * queue, gboolean flushing);
 
-G_GNUC_INTERNAL
 gboolean       gst_data_queue_drop_head      (GstDataQueue * queue, GType type);
 
-G_GNUC_INTERNAL
 gboolean       gst_data_queue_is_full        (GstDataQueue * queue);
 
-G_GNUC_INTERNAL
 gboolean       gst_data_queue_is_empty       (GstDataQueue * queue);
 
-G_GNUC_INTERNAL
 void           gst_data_queue_get_level      (GstDataQueue * queue, GstDataQueueSize *level);
 
-G_GNUC_INTERNAL
 void           gst_data_queue_limits_changed (GstDataQueue * queue);
 
 G_END_DECLS

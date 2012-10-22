@@ -1983,7 +1983,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   sq->mqueue = mqueue;
   sq->srcresult = GST_FLOW_FLUSHING;
   sq->pushed = FALSE;
-  sq->queue = gst_data_queue_new_full ((GstDataQueueCheckFullFunction)
+  sq->queue = gst_data_queue_new ((GstDataQueueCheckFullFunction)
       single_queue_check_full,
       (GstDataQueueFullCallback) single_queue_overrun_cb,
       (GstDataQueueEmptyCallback) single_queue_underrun_cb, sq);
