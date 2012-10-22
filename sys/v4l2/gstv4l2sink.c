@@ -118,7 +118,6 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Sink, gst_v4l2sink, GST_TYPE_VIDEO_SINK,
         gst_v4l2sink_video_orientation_interface_init));
 
 
-static void gst_v4l2sink_dispose (GObject * object);
 static void gst_v4l2sink_finalize (GstV4l2Sink * v4l2sink);
 
 /* GObject methods: */
@@ -154,7 +153,6 @@ gst_v4l2sink_class_init (GstV4l2SinkClass * klass)
   element_class = GST_ELEMENT_CLASS (klass);
   basesink_class = GST_BASE_SINK_CLASS (klass);
 
-  gobject_class->dispose = gst_v4l2sink_dispose;
   gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2sink_finalize;
   gobject_class->set_property = gst_v4l2sink_set_property;
   gobject_class->get_property = gst_v4l2sink_get_property;
@@ -232,23 +230,8 @@ gst_v4l2sink_init (GstV4l2Sink * v4l2sink)
    */
   g_object_set (v4l2sink, "device", "/dev/video1", NULL);
 
-  v4l2sink->probed_caps = NULL;
-
   v4l2sink->overlay_fields_set = 0;
   v4l2sink->crop_fields_set = 0;
-}
-
-
-static void
-gst_v4l2sink_dispose (GObject * object)
-{
-  GstV4l2Sink *v4l2sink = GST_V4L2SINK (object);
-
-  if (v4l2sink->probed_caps) {
-    gst_caps_unref (v4l2sink->probed_caps);
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
@@ -506,9 +489,6 @@ static GstCaps *
 gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstV4l2Sink *v4l2sink = GST_V4L2SINK (bsink);
-  GstCaps *ret;
-  GSList *walk;
-  GSList *formats;
 
   if (!GST_V4L2_IS_OPEN (v4l2sink->v4l2object)) {
     /* FIXME: copy? */
@@ -516,49 +496,8 @@ gst_v4l2sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
     return gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (v4l2sink));
   }
 
-  if (v4l2sink->probed_caps == NULL) {
-    formats = gst_v4l2_object_get_format_list (v4l2sink->v4l2object);
 
-    ret = gst_caps_new_empty ();
-
-    for (walk = formats; walk; walk = walk->next) {
-      struct v4l2_fmtdesc *format;
-
-      GstStructure *template;
-
-      format = (struct v4l2_fmtdesc *) walk->data;
-
-      template = gst_v4l2_object_v4l2fourcc_to_structure (format->pixelformat);
-
-      if (template) {
-        GstCaps *tmp;
-
-        tmp =
-            gst_v4l2_object_probe_caps_for_format (v4l2sink->v4l2object,
-            format->pixelformat, template);
-        if (tmp)
-          gst_caps_append (ret, tmp);
-
-        gst_structure_free (template);
-      } else {
-        GST_DEBUG_OBJECT (v4l2sink, "unknown format %u", format->pixelformat);
-      }
-    }
-    v4l2sink->probed_caps = ret;
-  }
-
-  if (filter) {
-    ret =
-        gst_caps_intersect_full (filter, v4l2sink->probed_caps,
-        GST_CAPS_INTERSECT_FIRST);
-  } else {
-    ret = gst_caps_ref (v4l2sink->probed_caps);
-  }
-
-  GST_INFO_OBJECT (v4l2sink, "probed caps: %p", ret);
-  LOG_CAPS (v4l2sink, ret);
-
-  return ret;
+  return gst_v4l2_object_get_caps (v4l2sink->v4l2object, filter);
 }
 
 static gboolean

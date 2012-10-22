@@ -57,9 +57,6 @@ struct _GstV4l2Src
   /*< private >*/
   GstV4l2Object * v4l2object;
 
-  /* pads */
-  GstCaps *probed_caps;
-
   guint64 offset;
 
   GstClockTime ctrl_time;

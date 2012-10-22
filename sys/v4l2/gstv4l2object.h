@@ -139,6 +139,7 @@ struct _GstV4l2Object {
 
   /* lists... */
   GSList *formats;              /* list of available capture formats */
+  GstCaps *probed_caps;
 
   GList *colors;
   GList *norms;
@@ -223,11 +224,6 @@ GValueArray* gst_v4l2_probe_get_values      (GstPropertyProbe * probe, guint pro
                                              GList ** klass_devices);
 #endif
 
-GstCaps*      gst_v4l2_object_probe_caps_for_format (GstV4l2Object *v4l2object, guint32 pixelformat,
-                                             const GstStructure * template);
-
-GSList*       gst_v4l2_object_get_format_list  (GstV4l2Object *v4l2object);
-
 GstCaps*      gst_v4l2_object_get_all_caps (void);
 
 GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
@@ -244,6 +240,9 @@ gboolean      gst_v4l2_object_stop        (GstV4l2Object *v4l2object);
 
 gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
                                            GstBuffer * dest, GstBuffer *src);
+
+GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
+                                           GstCaps * filter);
 
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \

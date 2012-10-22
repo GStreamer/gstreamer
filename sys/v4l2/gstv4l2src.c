@@ -109,7 +109,6 @@ G_DEFINE_TYPE_WITH_CODE (GstV4l2Src, gst_v4l2src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_ORIENTATION,
         gst_v4l2src_video_orientation_interface_init));
 
-static void gst_v4l2src_dispose (GObject * object);
 static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
 
 /* element methods */
@@ -148,7 +147,6 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class = GST_BASE_SRC_CLASS (klass);
   pushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
-  gobject_class->dispose = gst_v4l2src_dispose;
   gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2src_finalize;
   gobject_class->set_property = gst_v4l2src_set_property;
   gobject_class->get_property = gst_v4l2src_get_property;
@@ -217,18 +215,6 @@ gst_v4l2src_init (GstV4l2Src * v4l2src)
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
-}
-
-static void
-gst_v4l2src_dispose (GObject * object)
-{
-  GstV4l2Src *v4l2src = GST_V4L2SRC (object);
-
-  if (v4l2src->probed_caps) {
-    gst_caps_unref (v4l2src->probed_caps);
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
@@ -437,9 +423,6 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   GstV4l2Src *v4l2src;
   GstV4l2Object *obj;
-  GstCaps *ret;
-  GSList *walk;
-  GSList *formats;
 
   v4l2src = GST_V4L2SRC (src);
   obj = v4l2src->v4l2object;
@@ -448,41 +431,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src, GstCaps * filter)
     return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (v4l2src));
   }
 
-  if (v4l2src->probed_caps)
-    return gst_caps_ref (v4l2src->probed_caps);
-
-  formats = gst_v4l2_object_get_format_list (obj);
-
-  ret = gst_caps_new_empty ();
-
-  for (walk = formats; walk; walk = walk->next) {
-    struct v4l2_fmtdesc *format;
-    GstStructure *template;
-
-    format = (struct v4l2_fmtdesc *) walk->data;
-
-    template = gst_v4l2_object_v4l2fourcc_to_structure (format->pixelformat);
-
-    if (template) {
-      GstCaps *tmp;
-
-      tmp =
-          gst_v4l2_object_probe_caps_for_format (obj,
-          format->pixelformat, template);
-      if (tmp)
-        gst_caps_append (ret, tmp);
-
-      gst_structure_free (template);
-    } else {
-      GST_DEBUG_OBJECT (v4l2src, "unknown format %u", format->pixelformat);
-    }
-  }
-
-  v4l2src->probed_caps = gst_caps_ref (ret);
-
-  GST_INFO_OBJECT (v4l2src, "probed caps: %" GST_PTR_FORMAT, ret);
-
-  return ret;
+  return gst_v4l2_object_get_caps (obj, filter);
 }
 
 static gboolean
@@ -741,10 +690,6 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
       if (!gst_v4l2_object_close (obj))
         return GST_STATE_CHANGE_FAILURE;
 
-      if (v4l2src->probed_caps) {
-        gst_caps_unref (v4l2src->probed_caps);
-        v4l2src->probed_caps = NULL;
-      }
       break;
     default:
       break;
