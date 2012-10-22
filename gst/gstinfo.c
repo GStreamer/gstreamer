@@ -127,6 +127,8 @@
 
 #endif /* !GST_DISABLE_GST_DEBUG */
 
+extern gboolean gst_is_initialized (void);
+
 /* we want these symbols exported even if debug is disabled, to maintain
  * ABI compatibility. Unless GST_REMOVE_DISABLED is defined. */
 #if !defined(GST_DISABLE_GST_DEBUG) || !defined(GST_REMOVE_DISABLED)
@@ -1108,8 +1110,9 @@ gst_debug_add_log_function (GstLogFunction func, gpointer data)
   __log_functions = g_slist_prepend (list, entry);
   g_static_mutex_unlock (&__log_func_mutex);
 
-  GST_DEBUG ("prepended log function %p (user data %p) to log functions",
-      func, data);
+  if (gst_is_initialized ())
+    GST_DEBUG ("prepended log function %p (user data %p) to log functions",
+        func, data);
 }
 
 static gint
@@ -1174,8 +1177,9 @@ gst_debug_remove_log_function (GstLogFunction func)
   removals =
       gst_debug_remove_with_compare_func
       (gst_debug_compare_log_function_by_func, (gpointer) func);
-  GST_DEBUG ("removed log function %p %d times from log function list", func,
-      removals);
+  if (gst_is_initialized ())
+    GST_DEBUG ("removed log function %p %d times from log function list", func,
+        removals);
 
   return removals;
 }
@@ -1196,9 +1200,11 @@ gst_debug_remove_log_function_by_data (gpointer data)
   removals =
       gst_debug_remove_with_compare_func
       (gst_debug_compare_log_function_by_data, data);
-  GST_DEBUG
-      ("removed %d log functions with user data %p from log function list",
-      removals, data);
+
+  if (gst_is_initialized ())
+    GST_DEBUG
+        ("removed %d log functions with user data %p from log function list",
+        removals, data);
 
   return removals;
 }
@@ -1305,8 +1311,9 @@ gst_debug_reset_threshold (gpointer category, gpointer unused)
 
     walk = g_slist_next (walk);
     if (g_pattern_match_string (entry->pat, cat->name)) {
-      GST_LOG ("category %s matches pattern %p - gets set to level %d",
-          cat->name, entry->pat, entry->level);
+      if (gst_is_initialized ())
+        GST_LOG ("category %s matches pattern %p - gets set to level %d",
+            cat->name, entry->pat, entry->level);
       gst_debug_category_set_threshold (cat, entry->level);
       goto exit;
     }
@@ -1332,8 +1339,9 @@ for_each_threshold_by_entry (gpointer data, gpointer user_data)
   LevelNameEntry *entry = (LevelNameEntry *) user_data;
 
   if (g_pattern_match_string (entry->pat, cat->name)) {
-    GST_LOG ("category %s matches pattern %p - gets set to level %d",
-        cat->name, entry->pat, entry->level);
+    if (gst_is_initialized ())
+      GST_LOG ("category %s matches pattern %p - gets set to level %d",
+          cat->name, entry->pat, entry->level);
     gst_debug_category_set_threshold (cat, entry->level);
   }
 }
