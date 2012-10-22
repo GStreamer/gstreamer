@@ -47,6 +47,7 @@
 #define __GST_EGLGLESSINK_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/base/gstdataqueue.h>
 
@@ -185,10 +186,10 @@ struct _GstEglGlesSink
   GstVideoSink videosink;       /* Element hook */
   int par_n, par_d;             /* Aspect ratio from caps */
 
-  GstVideoFormat format;
   GstVideoRectangle display_region;
   GstCaps *sinkcaps;
   GstCaps *current_caps, *configured_caps;
+  GstVideoInfo configured_info;
 
   GstEglGlesImageFmt *selected_fmt;
   GstEglGlesRenderContext eglglesctx;
