@@ -21,10 +21,10 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "string.h"
+
+#include <string.h>
 
 #include "gstwebvttenc.h"
-#include <gst/controller/gstcontroller.h>
 
 GST_DEBUG_CATEGORY_STATIC (webvttenc_debug);
 #define GST_CAT_DEFAULT webvttenc_debug
@@ -39,27 +39,29 @@ enum
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/webvtt"));
+    GST_STATIC_CAPS ("text/vtt"));
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("text/plain; text/x-pango-markup"));
+    GST_STATIC_CAPS ("text/x-raw, format = { pango-markup, utf8 }"));
 
-static GstFlowReturn gst_webvtt_enc_chain (GstPad * pad, GstBuffer * buf);
-static gchar *gst_webvtt_enc_timeconvertion (GstWebvttEnc * webvttenc,
+static GstFlowReturn gst_webvtt_enc_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
-static gchar *gst_webvtt_enc_timestamp_to_string (GstClockTime timestamp);
+static void gst_webvtt_enc_append_timestamp_to_string (GstClockTime timestamp,
+    GString * str);
 static void gst_webvtt_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_webvtt_enc_reset (GstWebvttEnc * webvttenc);
 static void gst_webvtt_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
-GST_BOILERPLATE (GstWebvttEnc, gst_webvtt_enc, GstElement, GST_TYPE_ELEMENT);
+#define parent_class gst_webvtt_enc_parent_class
+G_DEFINE_TYPE (GstWebvttEnc, gst_webvtt_enc, GST_TYPE_ELEMENT);
 
-static gchar *
-gst_webvtt_enc_timestamp_to_string (GstClockTime timestamp)
+static void
+gst_webvtt_enc_append_timestamp_to_string (GstClockTime timestamp,
+    GString * str)
 {
   guint h, m, s, ms;
 
@@ -74,97 +76,102 @@ gst_webvtt_enc_timestamp_to_string (GstClockTime timestamp)
   timestamp -= s * GST_SECOND;
   ms = timestamp / GST_MSECOND;
 
-  return g_strdup_printf ("%02d:%02d:%02d.%03d", h, m, s, ms);
-}
-
-static gchar *
-gst_webvtt_enc_timeconvertion (GstWebvttEnc * webvttenc, GstBuffer * buf)
-{
-  gchar *start_time;
-  gchar *stop_time;
-  gchar *string;
-
-  start_time = gst_webvtt_enc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
-      webvttenc->timestamp);
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buf))) {
-    stop_time = gst_webvtt_enc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
-        webvttenc->timestamp + GST_BUFFER_DURATION (buf) + webvttenc->duration);
-  } else {
-    stop_time = gst_webvtt_enc_timestamp_to_string (GST_BUFFER_TIMESTAMP (buf) +
-        webvttenc->timestamp + webvttenc->duration);
-  }
-  string = g_strdup_printf ("%s --> %s\n", start_time, stop_time);
-
-  g_free (start_time);
-  g_free (stop_time);
-  return string;
+  g_string_append_printf (str, "%02d:%02d:%02d.%03d", h, m, s, ms);
 }
 
 static GstFlowReturn
-gst_webvtt_enc_chain (GstPad * pad, GstBuffer * buf)
+gst_webvtt_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
-  GstWebvttEnc *webvttenc;
+  GstWebvttEnc *webvttenc = GST_WEBVTT_ENC (parent);
+  GstClockTime ts, dur = GST_SECOND;
   GstBuffer *new_buffer;
-  gchar *timing;
+  GstMapInfo map_info;
   GstFlowReturn ret;
-
-  webvttenc = GST_WEBVTT_ENC (gst_pad_get_parent_element (pad));
+  GString *s;
+  gsize buf_size;
 
   if (!webvttenc->pushed_header) {
     const char *header = "WEBVTT\n\n";
 
-    new_buffer = gst_buffer_new_and_alloc (strlen (header));
-    memcpy (GST_BUFFER_DATA (new_buffer), header, strlen (header));
+    new_buffer = gst_buffer_new_wrapped (g_strdup (header), strlen (header));
 
-    GST_BUFFER_TIMESTAMP (new_buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_PTS (new_buffer) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (new_buffer) = GST_CLOCK_TIME_NONE;
 
     ret = gst_pad_push (webvttenc->srcpad, new_buffer);
-    if (ret != GST_FLOW_OK) {
+
+    if (ret != GST_FLOW_OK)
       goto out;
-    }
 
     webvttenc->pushed_header = TRUE;
   }
 
-  gst_object_sync_values (GST_OBJECT (webvttenc), GST_BUFFER_TIMESTAMP (buf));
+  gst_object_sync_values (GST_OBJECT (webvttenc), GST_BUFFER_PTS (buf));
 
-  timing = gst_webvtt_enc_timeconvertion (webvttenc, buf);
-  new_buffer =
-      gst_buffer_new_and_alloc (strlen (timing) + GST_BUFFER_SIZE (buf) + 1);
-  memcpy (GST_BUFFER_DATA (new_buffer), timing, strlen (timing));
-  memcpy (GST_BUFFER_DATA (new_buffer) + strlen (timing), GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
-  memcpy (GST_BUFFER_DATA (new_buffer) + GST_BUFFER_SIZE (new_buffer) - 1,
-      "\n", 1);
-  g_free (timing);
+  ts = GST_BUFFER_PTS (buf) + webvttenc->timestamp;
+  if (GST_BUFFER_DURATION_IS_VALID (buf))
+    dur = GST_BUFFER_DURATION (buf) + webvttenc->duration;
+  else if (webvttenc->duration > 0)
+    dur = webvttenc->duration;
+  else
+    dur = GST_SECOND;
+
+  buf_size = gst_buffer_get_size (buf);
+  s = g_string_sized_new (50 + buf_size + 1 + 1);
+
+  /* start_time --> end_time */
+  gst_webvtt_enc_append_timestamp_to_string (ts, s);
+  g_string_append_printf (s, " --> ");
+  gst_webvtt_enc_append_timestamp_to_string (ts + dur, s);
+  g_string_append_c (s, '\n');
+
+  /* text */
+  if (gst_buffer_map (buf, &map_info, GST_MAP_READ)) {
+    g_string_append_len (s, (const gchar *) map_info.data, map_info.size);
+    gst_buffer_unmap (buf, &map_info);
+  }
+
+  g_string_append_c (s, '\n');
+
+  buf_size = s->len;
+  new_buffer = gst_buffer_new_wrapped (g_string_free (s, FALSE), buf_size);
 
   GST_BUFFER_TIMESTAMP (new_buffer) = GST_BUFFER_TIMESTAMP (buf);
   GST_BUFFER_DURATION (new_buffer) = GST_BUFFER_DURATION (buf);
 
-
   ret = gst_pad_push (webvttenc->srcpad, new_buffer);
 
 out:
+
   gst_buffer_unref (buf);
-  gst_object_unref (webvttenc);
 
   return ret;
 }
 
-static void
-gst_webvtt_enc_base_init (gpointer klass)
+static gboolean
+gst_webvtt_enc_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstWebvttEnc *webvttenc = GST_WEBVTT_ENC (parent);
+  gboolean ret;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
 
-  gst_element_class_set_static_metadata (element_class,
-      "WebVTT encoder", "Codec/Encoder/Subtitle",
-      "WebVTT subtitle encoder", "David Schleef <ds@schleef.org>");
+      caps = gst_static_pad_template_get_caps (&src_template);
+      gst_pad_set_caps (webvttenc->srcpad, caps);
+      gst_caps_unref (caps);
+      gst_event_unref (event);
+      ret = TRUE;
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+
+  return ret;
 }
 
 static void
@@ -259,12 +266,21 @@ gst_webvtt_enc_class_init (GstWebvttEncClass * klass)
           0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_static_metadata (element_class,
+      "WebVTT encoder", "Codec/Encoder/Subtitle",
+      "WebVTT subtitle encoder", "David Schleef <ds@schleef.org>");
+
   GST_DEBUG_CATEGORY_INIT (webvttenc_debug, "webvttenc", 0,
       "SubRip subtitle encoder");
 }
 
 static void
-gst_webvtt_enc_init (GstWebvttEnc * webvttenc, GstWebvttEncClass * klass)
+gst_webvtt_enc_init (GstWebvttEnc * webvttenc)
 {
   gst_webvtt_enc_reset (webvttenc);
 
@@ -272,6 +288,9 @@ gst_webvtt_enc_init (GstWebvttEnc * webvttenc, GstWebvttEncClass * klass)
   gst_element_add_pad (GST_ELEMENT (webvttenc), webvttenc->srcpad);
   webvttenc->sinkpad =
       gst_pad_new_from_static_template (&sink_template, "sink");
+  gst_pad_set_chain_function (webvttenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_webvtt_enc_chain));
+  gst_pad_set_event_function (webvttenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_webvtt_enc_event));
   gst_element_add_pad (GST_ELEMENT (webvttenc), webvttenc->sinkpad);
-  gst_pad_set_chain_function (webvttenc->sinkpad, gst_webvtt_enc_chain);
 }
