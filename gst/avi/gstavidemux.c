@@ -4514,12 +4514,10 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 static GstBuffer *
 gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
 {
-  GstStructure *s;
   gint y, w, h;
   gint bpp, stride;
   guint8 *tmp = NULL;
   GstMapInfo map;
-  GstCaps *caps;
   guint32 fourcc;
 
   if (stream->strh->type != GST_RIFF_FCC_vids)
@@ -4536,19 +4534,10 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
     return buf;                 /* Ignore non DIB buffers */
   }
 
-  caps = gst_pad_get_current_caps (stream->pad);
-  s = gst_caps_get_structure (caps, 0);
-  gst_caps_unref (caps);
-
-  if (stream->rgb8_palette != NULL) {
-    bpp = 8;
-  } else if (!gst_structure_get_int (s, "bpp", &bpp)) { /* FIXME */
-    GST_WARNING ("Failed to retrieve depth from caps");
-    return buf;
-  }
 
   h = stream->strf.vids->height;
   w = stream->strf.vids->width;
+  bpp = stream->strf.vids->bit_cnt ? stream->strf.vids->bit_cnt : 8;
   stride = GST_ROUND_UP_4 (w * (bpp / 8));
 
   buf = gst_buffer_make_writable (buf);
