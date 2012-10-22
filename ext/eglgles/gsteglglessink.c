@@ -115,8 +115,9 @@
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/video/video.h>
+#include <gst/video/video-frame.h>
 #include <gst/video/gstvideosink.h>
-#include <gst/interfaces/xoverlay.h>
+#include <gst/video/videooverlay.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -298,17 +299,15 @@ static const char *frag_NV12_NV21_prog = {
 
 /* Input capabilities. */
 static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA ";"
-        GST_VIDEO_CAPS_ARGB ";" GST_VIDEO_CAPS_ABGR ";"
-        GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
-        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR ";"
-        GST_VIDEO_CAPS_YUV
-        ("{ AYUV, Y444, I420, YV12, NV12, NV21, YUY2, YVYU, UYVY, Y42B, Y41B }")
-        ";" GST_VIDEO_CAPS_RGB ";" GST_VIDEO_CAPS_BGR ";"
-        GST_VIDEO_CAPS_RGB_16));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ "
+            "RGBA, BGRA, ARGB, ABGR, "
+            "RGBx, BGRx, xRGB, xBGR, "
+            "AYUV, Y444, I420, YV12, "
+            "NV12, NV21, YUY2, YVYU, "
+            "UYVY, Y42B, Y41B, RGB, " "BGR, RGB16 }")));
 
 /* Filter signals and args */
 enum
@@ -363,22 +362,18 @@ static GstStateChangeReturn gst_eglglessink_change_state (GstElement * element,
 static GstFlowReturn gst_eglglessink_show_frame (GstVideoSink * vsink,
     GstBuffer * buf);
 static gboolean gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps);
-static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink);
+static GstCaps *gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter);
 
-/* XOverlay interface cruft */
-static gboolean gst_eglglessink_interface_supported
-    (GstImplementsInterface * iface, GType type);
-static void gst_eglglessink_implements_init
-    (GstImplementsInterfaceClass * klass);
-static void gst_eglglessink_xoverlay_init (GstXOverlayClass * iface);
-static void gst_eglglessink_init_interfaces (GType type);
+/* VideoOverlay interface cruft */
+static void gst_eglglessink_videooverlay_init (GstVideoOverlayInterface *
+    iface);
 
-/* Actual XOverlay interface funcs */
-static void gst_eglglessink_expose (GstXOverlay * overlay);
-static void gst_eglglessink_set_window_handle (GstXOverlay * overlay,
+/* Actual VideoOverlay interface funcs */
+static void gst_eglglessink_expose (GstVideoOverlay * overlay);
+static void gst_eglglessink_set_window_handle (GstVideoOverlay * overlay,
     guintptr id);
-static void gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x,
-    gint y, gint width, gint height);
+static void gst_eglglessink_set_render_rectangle (GstVideoOverlay * overlay,
+    gint x, gint y, gint width, gint height);
 
 /* Utility */
 static GstEglGlesImageFmt *gst_eglglessink_get_compat_format_from_caps
@@ -409,8 +404,10 @@ static void gst_eglglessink_wipe_eglglesctx (GstEglGlesSink * eglglessink);
 static inline void gst_eglglessink_reset_display_region (GstEglGlesSink *
     eglglessink);
 
-GST_BOILERPLATE_FULL (GstEglGlesSink, gst_eglglessink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK, gst_eglglessink_init_interfaces);
+#define parent_class gst_eglglessink_parent_class
+G_DEFINE_TYPE_WITH_CODE (GstEglGlesSink, gst_eglglessink, GST_TYPE_VIDEO_SINK,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+        gst_eglglessink_videooverlay_init));
 
 
 static GstEglGlesImageFmt *
@@ -446,6 +443,16 @@ gst_eglglessink_get_compat_format_from_caps (GstEglGlesSink * eglglessink,
   return NULL;
 }
 
+static GstCaps *
+_gst_video_format_new_template_caps (GstVideoFormat format)
+{
+  return gst_caps_new_simple ("video/x-raw",
+      "format", G_TYPE_STRING, gst_video_format_to_string (format),
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+}
+
 static inline gint
 gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
 {
@@ -465,43 +472,43 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGBA8888;
     format->attribs = eglglessink_RGBA8888_attribs;
-    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA);
+    format->caps = _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBA);
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGRA));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGRA));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_ARGB));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_ARGB));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_ABGR));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_ABGR));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGBx));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGRx));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGRx));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_xRGB));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_xRGB));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_xBGR));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_xBGR));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_AYUV));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_AYUV));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y444));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y444));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_I420));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_I420));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YV12));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YV12));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV12));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV12));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_NV21));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YUY2));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YVYU));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_YVYU));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_UYVY));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y42B));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y42B));
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y41B));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_Y41B));
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -516,9 +523,9 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB888;
     format->attribs = eglglessink_RGB888_attribs;
-    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB);
+    format->caps = _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB);
     gst_caps_append (format->caps,
-        gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGR));
+        _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_BGR));
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -532,7 +539,7 @@ gst_eglglessink_fill_supported_fbuffer_configs (GstEglGlesSink * eglglessink)
     format = g_new0 (GstEglGlesImageFmt, 1);
     format->fmt = GST_EGLGLESSINK_IMAGE_RGB565;
     format->attribs = eglglessink_RGB565_attribs;
-    format->caps = gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB16);
+    format->caps = _gst_video_format_new_template_caps (GST_VIDEO_FORMAT_RGB16);
     eglglessink->supported_fmts =
         g_list_append (eglglessink->supported_fmts, format);
     ret++;
@@ -590,10 +597,12 @@ render_thread_func (GstEglGlesSink * eglglessink)
         item->object);
 
     if (item->object) {
+      GstSample *sample;
       GstCaps *caps;
 
-      buf = GST_BUFFER (item->object);
-      caps = GST_BUFFER_CAPS (buf);
+      sample = GST_SAMPLE (item->object);
+      buf = gst_sample_get_buffer (sample);
+      caps = gst_sample_get_caps (sample);
       if (caps != eglglessink->configured_caps) {
         if (!gst_eglglessink_configure_caps (eglglessink, caps)) {
           eglglessink->last_flow = GST_FLOW_NOT_NEGOTIATED;
@@ -610,7 +619,8 @@ render_thread_func (GstEglGlesSink * eglglessink)
       eglglessink->last_flow =
           gst_eglglessink_render_and_display (eglglessink, buf);
     } else {
-      GST_DEBUG_OBJECT (eglglessink, "No caps configured yet, not drawing anything");
+      GST_DEBUG_OBJECT (eglglessink,
+          "No caps configured yet, not drawing anything");
     }
 
     if (buf) {
@@ -625,7 +635,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
   }
 
   if (eglglessink->last_flow == GST_FLOW_OK)
-    eglglessink->last_flow = GST_FLOW_WRONG_STATE;
+    eglglessink->last_flow = GST_FLOW_FLUSHING;
 
   GST_DEBUG_OBJECT (eglglessink, "Shutting down thread");
 
@@ -725,7 +735,7 @@ gst_eglglessink_start (GstEglGlesSink * eglglessink)
 
   /* Ask for a window to render to */
   if (!eglglessink->have_window)
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (eglglessink));
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (eglglessink));
 
   if (!eglglessink->have_window && !eglglessink->create_window) {
     GST_ERROR_OBJECT (eglglessink, "Window handle unavailable and we "
@@ -773,7 +783,7 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
     g_thread_join (eglglessink->thread);
     eglglessink->thread = NULL;
   }
-  eglglessink->last_flow = GST_FLOW_WRONG_STATE;
+  eglglessink->last_flow = GST_FLOW_FLUSHING;
 
   if (eglglessink->using_own_window) {
     platform_destroy_native_window (eglglessink->eglglesctx.display,
@@ -793,23 +803,11 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
 }
 
 static void
-gst_eglglessink_xoverlay_init (GstXOverlayClass * iface)
+gst_eglglessink_videooverlay_init (GstVideoOverlayInterface * iface)
 {
   iface->set_window_handle = gst_eglglessink_set_window_handle;
   iface->expose = gst_eglglessink_expose;
   iface->set_render_rectangle = gst_eglglessink_set_render_rectangle;
-}
-
-static gboolean
-gst_eglglessink_interface_supported (GstImplementsInterface * iface, GType type)
-{
-  return (type == GST_TYPE_X_OVERLAY);
-}
-
-static void
-gst_eglglessink_implements_init (GstImplementsInterfaceClass * klass)
-{
-  klass->supported = gst_eglglessink_interface_supported;
 }
 
 static inline gboolean
@@ -854,7 +852,7 @@ gst_eglglessink_create_window (GstEglGlesSink * eglglessink, gint width,
 }
 
 static void
-gst_eglglessink_expose (GstXOverlay * overlay)
+gst_eglglessink_expose (GstVideoOverlay * overlay)
 {
   GstEglGlesSink *eglglessink;
   GstFlowReturn ret;
@@ -1229,7 +1227,7 @@ gst_eglglessink_init_egl_surface (GstEglGlesSink * eglglessink)
   }
 
   eglglessink->eglglesctx.fragshader[0] = glCreateShader (GL_FRAGMENT_SHADER);
-  switch (eglglessink->format) {
+  switch (eglglessink->configured_info.finfo->format) {
     case GST_VIDEO_FORMAT_AYUV:
       glShaderSource (eglglessink->eglglesctx.fragshader[0], 1, &frag_AYUV_prog,
           NULL);
@@ -1618,7 +1616,7 @@ HANDLE_ERROR:
 }
 
 static void
-gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
+gst_eglglessink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (overlay);
 
@@ -1635,7 +1633,7 @@ gst_eglglessink_set_window_handle (GstXOverlay * overlay, guintptr id)
 }
 
 static void
-gst_eglglessink_set_render_rectangle (GstXOverlay * overlay, gint x, gint y,
+gst_eglglessink_set_render_rectangle (GstVideoOverlay * overlay, gint x, gint y,
     gint width, gint height)
 {
   GstEglGlesSink *eglglessink = GST_EGLGLESSINK (overlay);
@@ -1671,9 +1669,14 @@ static GstFlowReturn
 gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
 {
   GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
+  GstSample *sample;
 
-  item->object = GST_MINI_OBJECT_CAST (buf);
-  item->size = (buf ? GST_BUFFER_SIZE (buf) : 0);
+  sample =
+      (buf ? gst_sample_new (buf, eglglessink->current_caps, NULL,
+          NULL) : NULL);
+
+  item->object = GST_MINI_OBJECT_CAST (sample);
+  item->size = (buf ? gst_buffer_get_size (buf) : 0);
   item->duration = (buf ? GST_BUFFER_DURATION (buf) : GST_CLOCK_TIME_NONE);
   item->visible = (buf ? TRUE : FALSE);
   item->destroy = (GDestroyNotify) queue_item_destroy;
@@ -1685,7 +1688,7 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
   if (!gst_data_queue_push (eglglessink->queue, item)) {
     g_mutex_unlock (eglglessink->render_lock);
     GST_DEBUG_OBJECT (eglglessink, "Flushing");
-    return GST_FLOW_WRONG_STATE;
+    return GST_FLOW_FLUSHING;
   }
 
   if (buf) {
@@ -1704,16 +1707,25 @@ static GstFlowReturn
 gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     GstBuffer * buf)
 {
+  GstVideoFrame vframe;
   GstVideoRectangle frame, surface;
   gint w, h;
   guint dar_n, dar_d;
 
+  memset (&vframe, 0, sizeof (vframe));
+
   w = GST_VIDEO_SINK_WIDTH (eglglessink);
   h = GST_VIDEO_SINK_HEIGHT (eglglessink);
 
+  if (!gst_video_frame_map (&vframe, &eglglessink->configured_info, buf,
+          GST_MAP_READ)) {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't map frame");
+    goto HANDLE_ERROR;
+  }
+
   GST_DEBUG_OBJECT (eglglessink,
       "Got good buffer %p. Sink geometry is %dx%d size %d", buf, w, h,
-      buf ? GST_BUFFER_SIZE (buf) : -1);
+      buf ? gst_buffer_get_size (buf) : -1);
 
   if (buf) {
     switch (eglglessink->selected_fmt->fmt) {
@@ -1721,17 +1733,17 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
         glActiveTexture (GL_TEXTURE0);
         glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-            GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+            GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
         break;
       case GST_EGLGLESSINK_IMAGE_RGB565:
         glActiveTexture (GL_TEXTURE0);
         glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
         glTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB,
-            GL_UNSIGNED_SHORT_5_6_5, GST_BUFFER_DATA (buf));
+            GL_UNSIGNED_SHORT_5_6_5, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
         break;
       case GST_EGLGLESSINK_IMAGE_RGBA8888:
 
-        switch (eglglessink->format) {
+        switch (eglglessink->configured_info.finfo->format) {
           case GST_VIDEO_FORMAT_RGBA:
           case GST_VIDEO_FORMAT_BGRA:
           case GST_VIDEO_FORMAT_ARGB:
@@ -1743,57 +1755,42 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
             break;
           case GST_VIDEO_FORMAT_AYUV:
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA,
-                GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                GL_UNSIGNED_BYTE, GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
             break;
           case GST_VIDEO_FORMAT_Y444:
           case GST_VIDEO_FORMAT_I420:
           case GST_VIDEO_FORMAT_YV12:
           case GST_VIDEO_FORMAT_Y42B:
           case GST_VIDEO_FORMAT_Y41B:{
-            gint coffset, cw, ch;
-
-            coffset =
-                gst_video_format_get_component_offset (eglglessink->format,
-                0, w, h);
-            cw = gst_video_format_get_component_width (eglglessink->format,
-                0, w);
-            ch = gst_video_format_get_component_height (eglglessink->format,
-                0, h);
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                GST_BUFFER_DATA (buf) + coffset);
-            coffset =
-                gst_video_format_get_component_offset (eglglessink->format,
-                1, w, h);
-            cw = gst_video_format_get_component_width (eglglessink->format,
-                1, w);
-            ch = gst_video_format_get_component_height (eglglessink->format,
-                1, h);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0),
+                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
+                0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_COMP_DATA (&vframe, 0));
+
             glActiveTexture (GL_TEXTURE1);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                GST_BUFFER_DATA (buf) + coffset);
-            coffset =
-                gst_video_format_get_component_offset (eglglessink->format,
-                2, w, h);
-            cw = gst_video_format_get_component_width (eglglessink->format,
-                2, w);
-            ch = gst_video_format_get_component_height (eglglessink->format,
-                2, h);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1),
+                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1),
+                0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_COMP_DATA (&vframe, 1));
+
             glActiveTexture (GL_TEXTURE2);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[2]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                GST_BUFFER_DATA (buf) + coffset);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 2),
+                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 2),
+                0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_COMP_DATA (&vframe, 2));
             break;
           }
           case GST_VIDEO_FORMAT_YUY2:
@@ -1802,41 +1799,31 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, w, h, 0,
-                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
             glActiveTexture (GL_TEXTURE1);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
             glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, GST_ROUND_UP_2 (w) / 2,
-                h, 0, GL_RGBA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
+                h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
             break;
           case GST_VIDEO_FORMAT_NV12:
           case GST_VIDEO_FORMAT_NV21:{
-            gint coffset, cw, ch;
-
-            coffset =
-                gst_video_format_get_component_offset (eglglessink->format,
-                0, w, h);
-            cw = gst_video_format_get_component_width (eglglessink->format,
-                0, w);
-            ch = gst_video_format_get_component_height (eglglessink->format,
-                0, h);
             glActiveTexture (GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[0]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE, cw, ch, 0,
-                GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                GST_BUFFER_DATA (buf) + coffset);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE,
+                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 0),
+                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 0),
+                0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0));
 
-            coffset =
-                gst_video_format_get_component_offset (eglglessink->format,
-                (eglglessink->format == GST_VIDEO_FORMAT_NV12 ? 1 : 2), w, h);
-            cw = gst_video_format_get_component_width (eglglessink->format, 1,
-                w);
-            ch = gst_video_format_get_component_height (eglglessink->format, 1,
-                h);
             glActiveTexture (GL_TEXTURE1);
             glBindTexture (GL_TEXTURE_2D, eglglessink->eglglesctx.texture[1]);
-            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, cw, ch, 0,
-                GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-                GST_BUFFER_DATA (buf) + coffset);
+            glTexImage2D (GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA,
+                GST_VIDEO_FRAME_COMP_WIDTH (&vframe, 1),
+                GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, 1),
+                0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
+                GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1));
             break;
           }
           default:
@@ -1967,11 +1954,15 @@ gst_eglglessink_render_and_display (GstEglGlesSink * eglglessink,
     goto HANDLE_ERROR;
   }
 
+  gst_video_frame_unmap (&vframe);
+
   GST_DEBUG_OBJECT (eglglessink, "Succesfully rendered 1 frame");
   return GST_FLOW_OK;
 
 HANDLE_ERROR:
   GST_ERROR_OBJECT (eglglessink, "Rendering disabled for this frame");
+  if (vframe.buffer)
+    gst_video_frame_unmap (&vframe);
 
   return GST_FLOW_ERROR;
 }
@@ -1986,13 +1977,11 @@ gst_eglglessink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
   eglglessink = GST_EGLGLESSINK (vsink);
   GST_DEBUG_OBJECT (eglglessink, "Got buffer: %p", buf);
 
-  buf = gst_buffer_make_metadata_writable (gst_buffer_ref (buf));
-  gst_buffer_set_caps (buf, eglglessink->current_caps);
   return gst_eglglessink_queue_buffer (eglglessink, buf);
 }
 
 static GstCaps *
-gst_eglglessink_getcaps (GstBaseSink * bsink)
+gst_eglglessink_getcaps (GstBaseSink * bsink, GstCaps * filter)
 {
   GstEglGlesSink *eglglessink;
   GstCaps *ret = NULL;
@@ -2009,6 +1998,14 @@ gst_eglglessink_getcaps (GstBaseSink * bsink)
   }
   GST_OBJECT_UNLOCK (eglglessink);
 
+  if (filter) {
+    GstCaps *tmp =
+        gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+
+    gst_caps_unref (ret);
+    ret = tmp;
+  }
+
   return ret;
 }
 
@@ -2016,21 +2013,13 @@ static gboolean
 gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
 {
   gboolean ret = TRUE;
-  gint width, height;
-  int par_n, par_d;
   GstEglGlesImageFmt *format;
+  GstVideoInfo info;
 
-  if (!(ret = gst_video_format_parse_caps (caps, &eglglessink->format, &width,
-              &height))) {
-    GST_ERROR_OBJECT (eglglessink, "Got weird and/or incomplete caps");
+  gst_video_info_init (&info);
+  if (!(ret = gst_video_info_from_caps (&info, caps))) {
+    GST_ERROR_OBJECT (eglglessink, "Couldn't parse caps");
     goto HANDLE_ERROR;
-  }
-
-  if (!(ret = gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d))) {
-    par_n = 1;
-    par_d = 1;
-    GST_WARNING_OBJECT (eglglessink,
-        "Can't parse PAR from caps. Using default: 1");
   }
 
   format = gst_eglglessink_get_compat_format_from_caps (eglglessink, caps);
@@ -2043,10 +2032,9 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
         format->fmt);
 
   eglglessink->selected_fmt = format;
-  eglglessink->par_n = par_n;
-  eglglessink->par_d = par_d;
-  GST_VIDEO_SINK_WIDTH (eglglessink) = width;
-  GST_VIDEO_SINK_HEIGHT (eglglessink) = height;
+  eglglessink->configured_info = info;
+  GST_VIDEO_SINK_WIDTH (eglglessink) = info.width;
+  GST_VIDEO_SINK_HEIGHT (eglglessink) = info.height;
 
   if (eglglessink->configured_caps) {
     GST_ERROR_OBJECT (eglglessink, "Caps were already set");
@@ -2080,7 +2068,9 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
 
     GST_INFO_OBJECT (eglglessink,
         "No window. Will attempt internal window creation");
-    if (!(window = gst_eglglessink_create_window (eglglessink, width, height))) {
+    if (!(window =
+            gst_eglglessink_create_window (eglglessink, info.width,
+                info.height))) {
       GST_ERROR_OBJECT (eglglessink, "Internal window creation failed!");
       GST_OBJECT_UNLOCK (eglglessink);
       goto HANDLE_ERROR;
@@ -2093,7 +2083,7 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
       eglglessink->eglglesctx.window);
   eglglessink->eglglesctx.used_window = eglglessink->eglglesctx.window;
   GST_OBJECT_UNLOCK (eglglessink);
-  gst_x_overlay_got_window_handle (GST_X_OVERLAY (eglglessink),
+  gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (eglglessink),
       (guintptr) eglglessink->eglglesctx.used_window);
 
   if (!eglglessink->have_surface) {
@@ -2283,22 +2273,6 @@ gst_eglglessink_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_eglglessink_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_details_simple (element_class,
-      "EGL/GLES vout Sink",
-      "Sink/Video",
-      "An EGL/GLES Video Output Sink Implementing the XOverlay interface",
-      "Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>, "
-      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_eglglessink_sink_template_factory));
-}
-
 /* initialize the eglglessink's class */
 static void
 gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
@@ -2338,6 +2312,16 @@ gst_eglglessink_class_init (GstEglGlesSinkClass * klass)
           "frame's geometry while scaling, taking both the storage's and "
           "display's pixel aspect ratio into account",
           TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_static_metadata (gstelement_class,
+      "EGL/GLES vout Sink",
+      "Sink/Video",
+      "An EGL/GLES Video Output Sink Implementing the VideoOverlay interface",
+      "Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>, "
+      "Sebastian Dröge <sebastian.droege@collabora.co.uk>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&gst_eglglessink_sink_template_factory));
 }
 
 static gboolean
@@ -2348,8 +2332,7 @@ queue_check_full_func (GstDataQueue * queue, guint visible, guint bytes,
 }
 
 static void
-gst_eglglessink_init (GstEglGlesSink * eglglessink,
-    GstEglGlesSinkClass * gclass)
+gst_eglglessink_init (GstEglGlesSink * eglglessink)
 {
   /* Init defaults */
 
@@ -2370,28 +2353,9 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink,
 
   eglglessink->render_lock = g_mutex_new ();
   eglglessink->render_cond = g_cond_new ();
-  eglglessink->queue = gst_data_queue_new (queue_check_full_func, NULL);
-  eglglessink->last_flow = GST_FLOW_WRONG_STATE;
-}
-
-/* Interface initializations. Used here for initializing the XOverlay
- * Interface.
- */
-static void
-gst_eglglessink_init_interfaces (GType type)
-{
-  static const GInterfaceInfo implements_info = {
-    (GInterfaceInitFunc) gst_eglglessink_implements_init, NULL, NULL
-  };
-
-  static const GInterfaceInfo xoverlay_info = {
-    (GInterfaceInitFunc) gst_eglglessink_xoverlay_init, NULL, NULL
-  };
-
-  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
-      &implements_info);
-  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
-
+  eglglessink->queue =
+      gst_data_queue_new (queue_check_full_func, NULL, NULL, NULL);
+  eglglessink->last_flow = GST_FLOW_FLUSHING;
 }
 
 /* entry point to initialize the plug-in
@@ -2412,7 +2376,7 @@ eglglessink_plugin_init (GstPlugin * plugin)
 /* gstreamer looks for this structure to register eglglessinks */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "eglglessink",
+    eglglessink,
     "EGL/GLES sink",
     eglglessink_plugin_init,
     VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
