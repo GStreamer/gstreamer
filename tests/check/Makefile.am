@@ -49,10 +49,12 @@ gst_rtspserver_CFLAGS = \
 	$(GST_PLUGINS_GOOD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
+	$(GIO_CFLAGS) \
 	$(AM_CFLAGS)
 
 gst_rtspserver_LDADD = \
 	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la \
 	$(GST_PLUGINS_GOOD_LIBS) \
 	$(GST_BASE_LIBS) -lgstrtsp-@GST_API_VERSION@ -lgstsdp-@GST_API_VERSION@ \
+	$(GIO_LIBS) \
 	$(LDADD)
