@@ -1296,10 +1296,16 @@ remove_reference_at(
 )
 {
     guint num_pictures = *picture_count;
+    GstVaapiPictureH264 *picture;
 
     g_return_val_if_fail(index < num_pictures, FALSE);
 
-    GST_VAAPI_PICTURE_FLAG_UNSET(pictures[index], GST_VAAPI_PICTURE_FLAG_REFERENCE);
+    picture = pictures[index];
+    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
+    picture->is_long_term = FALSE;
+    picture->info.flags &= ~(VA_PICTURE_H264_SHORT_TERM_REFERENCE |
+                             VA_PICTURE_H264_LONG_TERM_REFERENCE);
+
     if (index != --num_pictures)
         gst_vaapi_picture_replace(&pictures[index], pictures[num_pictures]);
     gst_vaapi_picture_replace(&pictures[num_pictures], NULL);
@@ -1608,22 +1614,10 @@ init_picture(
             for (i = 0; i < dec_ref_pic_marking->n_ref_pic_marking; i++) {
                 GstH264RefPicMarking * const ref_pic_marking =
                     &dec_ref_pic_marking->ref_pic_marking[i];
-                switch (ref_pic_marking->memory_management_control_operation) {
-                case 3:
-                case 6:
-                    picture->is_long_term = TRUE;
-                    pic->frame_idx = ref_pic_marking->long_term_frame_idx;
-                    break;
-                case 5:
+                if (ref_pic_marking->memory_management_control_operation == 5)
                     picture->has_mmco_5 = TRUE;
-                    break;
-                }
             }
         }
-        if (picture->is_long_term)
-            pic->flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
-        else
-            pic->flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
     }
 
     init_picture_poc(decoder, picture, slice_hdr);
@@ -1713,7 +1707,7 @@ exec_ref_pic_marking_adaptive_mmco_2(
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     gint32 i;
 
-    i = find_long_term_reference(decoder, picture->long_term_pic_num);
+    i = find_long_term_reference(decoder, ref_pic_marking->long_term_pic_num);
     if (i < 0)
         return;
     remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
@@ -1727,12 +1721,55 @@ exec_ref_pic_marking_adaptive_mmco_3(
     GstH264RefPicMarking *ref_pic_marking
 )
 {
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    VAPictureH264 *pic;
     gint32 i, picNumX;
+
+    for (i = 0; i < priv->long_ref_count; i++) {
+        if (priv->long_ref[i]->info.frame_idx == ref_pic_marking->long_term_frame_idx)
+            break;
+    }
+    if (i != priv->long_ref_count)
+        remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
 
     picNumX = get_picNumX(picture, ref_pic_marking);
     i = find_short_term_reference(decoder, picNumX);
     if (i < 0)
         return;
+
+    picture = gst_vaapi_picture_ref(priv->short_ref[i]);
+    remove_reference_at(decoder, priv->short_ref, &priv->short_ref_count, i);
+    gst_vaapi_picture_replace(&priv->long_ref[priv->long_ref_count++], picture);
+    gst_vaapi_picture_unref(picture);
+
+    picture->is_long_term = TRUE;
+    pic = &picture->info;
+    pic->frame_idx = ref_pic_marking->long_term_frame_idx;
+    pic->flags &= ~VA_PICTURE_H264_SHORT_TERM_REFERENCE;
+    pic->flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
+    GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
+}
+
+/* 8.2.5.4.4. Mark pictures with LongTermFramIdx > max_long_term_frame_idx
+ * as "unused for reference" */
+static void
+exec_ref_pic_marking_adaptive_mmco_4(
+    GstVaapiDecoderH264  *decoder,
+    GstVaapiPictureH264  *picture,
+    GstH264RefPicMarking *ref_pic_marking
+)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    gint32 i, long_term_frame_idx;
+
+    long_term_frame_idx = ref_pic_marking->max_long_term_frame_idx_plus1 - 1;
+
+    for (i = 0; i < priv->long_ref_count; i++) {
+        if ((gint32)priv->long_ref[i]->info.frame_idx <= long_term_frame_idx)
+            continue;
+        remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
+        i--;
+    }
 }
 
 /* 8.2.5.4.5. Mark all reference pictures as "unused for reference" */
@@ -1747,6 +1784,23 @@ exec_ref_pic_marking_adaptive_mmco_5(
 
     clear_references(decoder, priv->short_ref, &priv->short_ref_count);
     clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
+    dpb_flush(decoder);
+
+    /* The picture shall be inferred to have had frame_num equal to 0 (7.4.3) */
+    picture->frame_num = 0;
+    picture->poc = 0;
+}
+
+/* 8.2.5.4.6. Assign a long-term frame index to the current picture */
+static void
+exec_ref_pic_marking_adaptive_mmco_6(
+    GstVaapiDecoderH264  *decoder,
+    GstVaapiPictureH264  *picture,
+    GstH264RefPicMarking *ref_pic_marking
+)
+{
+    picture->is_long_term = TRUE;
+    picture->info.frame_idx = ref_pic_marking->long_term_frame_idx;
 }
 
 /* 8.2.5.4. Adaptive memory control decoded reference picture marking process */
@@ -1772,8 +1826,9 @@ exec_ref_pic_marking_adaptive(
         exec_ref_pic_marking_adaptive_mmco_1,
         exec_ref_pic_marking_adaptive_mmco_2,
         exec_ref_pic_marking_adaptive_mmco_3,
-        NULL,
+        exec_ref_pic_marking_adaptive_mmco_4,
         exec_ref_pic_marking_adaptive_mmco_5,
+        exec_ref_pic_marking_adaptive_mmco_6,
     };
 
     for (i = 0; i < dec_ref_pic_marking->n_ref_pic_marking; i++) {
@@ -1814,10 +1869,14 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         }
     }
 
-    if (picture->is_long_term)
+    if (picture->is_long_term) {
         picture_ptr = &priv->long_ref[priv->long_ref_count++];
-    else
+        picture->info.flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
+    }
+    else {
         picture_ptr = &priv->short_ref[priv->short_ref_count++];
+        picture->info.flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
+    }
     gst_vaapi_picture_replace(picture_ptr, picture);
     return TRUE;
 }
@@ -1847,11 +1906,14 @@ exit_picture_poc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         break;
     case 1:
     case 2:
-        priv->prev_frame_num = priv->frame_num;
-        if (picture->has_mmco_5)
+        if (picture->has_mmco_5) {
+            priv->prev_frame_num = 0;
             priv->prev_frame_num_offset = 0;
-        else
+        }
+        else {
+            priv->prev_frame_num = priv->frame_num;
             priv->prev_frame_num_offset = priv->frame_num_offset;
+        }
         break;
     }
 }
