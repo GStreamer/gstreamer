@@ -109,6 +109,10 @@
 #include "gstmultihandlesink.h"
 #include "gsttcp-marshal.h"
 
+#ifdef HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
 #ifndef G_OS_WIN32
 #include <netinet/in.h>
 #endif
@@ -533,7 +537,7 @@ gint
 gst_multi_handle_sink_setup_dscp_client (GstMultiHandleSink * sink,
     GstMultiHandleClient * client)
 {
-#ifndef IP_TOS
+#if !defined(IP_TOS) || !defined(HAVE_SYS_SOCKET_H)
   return 0;
 #else
   gint tos;
