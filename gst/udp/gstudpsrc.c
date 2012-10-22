@@ -515,7 +515,7 @@ receive_error:
       return GST_FLOW_FLUSHING;
     } else {
       GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
-          ("receive error %" G_GSSIZE_FORMAT ": %s", ret, err->message));
+          ("receive error %" G_GSSIZE_FORMAT ": %s", res, err->message));
       g_clear_error (&err);
       return GST_FLOW_ERROR;
     }
