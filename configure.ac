@@ -313,8 +313,8 @@ dnl Check for stdio_ext.f for __fbufsize
 AC_CHECK_HEADERS([stdio_ext.h], [], [], [AC_INCLUDES_DEFAULT])
 
 dnl check for pthreads
-AC_CHECK_HEADERS([pthread.h], [HAVE_PTHREAD_H=yes], [HAVE_PTHREAD_H=no], [AC_INCLUDES_DEFAULT])
-AM_CONDITIONAL(HAVE_PTHREAD_H, test "x$HAVE_PTHREAD_H" = "xyes")
+AX_PTHREAD([HAVE_PTHREAD=yes], [HAVE_PTHREAD=no])
+AM_CONDITIONAL(HAVE_PTHREAD, test "x$HAVE_PTHREAD" = "xyes")
 
 dnl check for sys/prctl for setting thread name on Linux
 AC_CHECK_HEADERS([sys/prctl.h], [], [], [AC_INCLUDES_DEFAULT])
