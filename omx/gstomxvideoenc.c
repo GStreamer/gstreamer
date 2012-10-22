@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/gstvideometa.h>
 #include <string.h>
 
 #include "gstomxvideoenc.h"
@@ -87,6 +88,8 @@ static gboolean gst_omx_video_enc_reset (GstVideoEncoder * encoder,
 static GstFlowReturn gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_omx_video_enc_finish (GstVideoEncoder * encoder);
+static gboolean gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query);
 
 static GstFlowReturn gst_omx_video_enc_drain (GstOMXVideoEnc * self,
     gboolean at_eos);
@@ -179,6 +182,8 @@ gst_omx_video_enc_class_init (GstOMXVideoEncClass * klass)
   video_encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_omx_video_enc_handle_frame);
   video_encoder_class->finish = GST_DEBUG_FUNCPTR (gst_omx_video_enc_finish);
+  video_encoder_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_omx_video_enc_propose_allocation);
 
   klass->cdata.default_sink_template_caps = "video/x-raw, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
@@ -1449,4 +1454,15 @@ gst_omx_video_enc_drain (GstOMXVideoEnc * self, gboolean at_eos)
   self->started = FALSE;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_omx_video_enc_propose_allocation (GstVideoEncoder * encoder,
+    GstQuery * query)
+{
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return
+      GST_VIDEO_ENCODER_CLASS
+      (gst_omx_video_enc_parent_class)->propose_allocation (encoder, query);
 }

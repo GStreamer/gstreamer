@@ -23,6 +23,8 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/gstvideometa.h>
+#include <gst/video/gstvideopool.h>
 #include <string.h>
 
 #include "gstomxvideodec.h"
@@ -58,6 +60,8 @@ static gboolean gst_omx_video_dec_reset (GstVideoDecoder * decoder,
 static GstFlowReturn gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_omx_video_dec_finish (GstVideoDecoder * decoder);
+static gboolean gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec,
+    GstQuery * query);
 
 static GstFlowReturn gst_omx_video_dec_drain (GstOMXVideoDec * self,
     gboolean is_eos);
@@ -97,6 +101,8 @@ gst_omx_video_dec_class_init (GstOMXVideoDecClass * klass)
   video_decoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_omx_video_dec_handle_frame);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_omx_video_dec_finish);
+  video_decoder_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_omx_video_dec_decide_allocation);
 
   klass->cdata.default_src_template_caps = "video/x-raw, "
       "width = " GST_VIDEO_SIZE_RANGE ", "
@@ -1399,4 +1405,29 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
   self->started = FALSE;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_omx_video_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  if (!GST_VIDEO_DECODER_CLASS
+      (gst_omx_video_dec_parent_class)->decide_allocation (bdec, query))
+    return FALSE;
+
+  g_assert (gst_query_get_n_allocation_pools (query) > 0);
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, NULL, NULL, NULL);
+  g_assert (pool != NULL);
+
+  config = gst_buffer_pool_get_config (pool);
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+  gst_buffer_pool_set_config (pool, config);
+  gst_object_unref (pool);
+
+  return TRUE;
 }
