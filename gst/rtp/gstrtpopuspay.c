@@ -94,16 +94,10 @@ static gboolean
 gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
   gboolean res;
-  gchar *capsstr;
-
-  capsstr = gst_caps_to_string (caps);
 
   gst_rtp_base_payload_set_options (payload, "audio", FALSE,
       "X-GST-OPUS-DRAFT-SPITTKA-00", 48000);
-  res =
-      gst_rtp_base_payload_set_outcaps (payload, "caps", G_TYPE_STRING, capsstr,
-      NULL);
-  g_free (capsstr);
+  res = gst_rtp_base_payload_set_outcaps (payload, NULL);
 
   return res;
 }
