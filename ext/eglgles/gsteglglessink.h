@@ -158,8 +158,6 @@ struct _GstEglGlesImageFmt
 
 /*
  * GstEglGlesSink:
- * @par_n: Incoming frame's aspect ratio numerator
- * @par_d: Incoming frame's aspect ratio denominator
  * @format: Caps' video format field
  * @display_region: Surface region to use as rendering canvas
  * @sinkcaps: Full set of suported caps
@@ -184,9 +182,11 @@ struct _GstEglGlesImageFmt
 struct _GstEglGlesSink
 {
   GstVideoSink videosink;       /* Element hook */
-  int par_n, par_d;             /* Aspect ratio from caps */
 
   GstVideoRectangle display_region;
+  struct {
+    gint x, y, width, height;
+  } crop;
   GstCaps *sinkcaps;
   GstCaps *current_caps, *configured_caps;
   GstVideoInfo configured_info;
