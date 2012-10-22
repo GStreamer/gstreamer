@@ -641,6 +641,12 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       gst_buffer_unref (demux->manifest);
       demux->manifest = NULL;
 
+      if (!gst_mpd_client_setup_media_presentation (demux->client)) {
+        GST_ELEMENT_ERROR (demux, STREAM, DECODE,
+            ("Incompatible manifest file."), (NULL));
+        return FALSE;
+      }
+
       if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_VIDEO, "")) {
         GST_ELEMENT_ERROR (demux, STREAM, DECODE,
             ("Incompatible manifest file."), (NULL));
@@ -649,8 +655,8 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
 
       GList *listLang = NULL;
       guint nb_audio =
-          gst_mpdparser_get_list_and_nb_of_audio_language (&listLang,
-          demux->client->cur_period->AdaptationSets);
+          gst_mpdparser_get_list_and_nb_of_audio_language (demux->client,
+          &listLang);
       if (nb_audio == 0)
         nb_audio = 1;
       GST_INFO_OBJECT (demux, "Number of language is=%d", nb_audio);
@@ -1470,7 +1476,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
    * header to initialize the new decoding chain
    * FIXME: redundant with needs_pad_switch */
   gboolean need_header = need_add_header (demux);
-  int stream_idx = 0;
+  guint stream_idx = 0;
   fragment_set = NULL;
   /* Get the fragment corresponding to each stream index */
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {

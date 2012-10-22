@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstMpdClient              GstMpdClient;
 typedef struct _GstActiveStream           GstActiveStream;
+typedef struct _GstStreamPeriod           GstStreamPeriod;
 typedef struct _GstMediaSegment           GstMediaSegment;
 typedef struct _GstMPDNode                GstMPDNode;
 typedef struct _GstPeriodNode             GstPeriodNode;
@@ -390,6 +391,19 @@ struct _GstMPDNode
 };
 
 /**
+ * GstStreamPeriod:
+ *
+ * Stream period data structure
+ */
+struct _GstStreamPeriod
+{
+  GstPeriodNode *period;                      /* Stream period */
+  guint number;                               /* Period number */
+  GstClockTime start;                         /* Period start time */
+  GstClockTime duration;                      /* Period duration */
+};
+
+/**
  * GstMediaSegment:
  *
  * Media segment data structure
@@ -422,29 +436,34 @@ struct _GstActiveStream
   GstSegmentBaseType *cur_segment_base;       /* active segment base */
   GstSegmentListNode *cur_segment_list;       /* active segment list */
   GstSegmentTemplateNode *cur_seg_template;   /* active segment template */
-  gint segment_idx;                           /* index of next sequence chunk */
-  GList *segments;                            /* list of GstMediaSegment nodes */
+  guint segment_idx;                          /* index of next sequence chunk */
+  GList *segments;                            /* list of GstMediaSegment */
 };
 
 struct _GstMpdClient
 {
-  GstMPDNode   *mpd_node;                     /* active MPD manifest file */
-  GstPeriodNode *cur_period;                  /* active period */
+  GstMPDNode *mpd_node;                       /* active MPD manifest file */
 
-  GList        *active_streams;               /* list of GstActiveStream (only one supported on the first implementation) */
-  guint        stream_idx;                    /* currently active stream */
+  GList *periods;                             /* list of GstStreamPeriod */
+  guint period_idx;                           /* index of current Period */
 
-  guint         update_failed_count;
-  gchar        *mpd_uri;                      /* manifest file URI */
-  GMutex       *lock;
+  GList *active_streams;                      /* list of GstActiveStream */
+  guint stream_idx;                           /* currently active stream */
+
+  guint update_failed_count;
+  gchar *mpd_uri;                             /* manifest file URI */
+  GMutex *lock;
 };
 
 /* Basic initialization/deinitialization functions */
 GstMpdClient *gst_mpd_client_new ();
 void gst_mpd_client_free (GstMpdClient * client);
 
-/* Basic parsing */
+/* MPD file parsing */
 gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
+
+/* Streaming management */
+gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
 gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, gchar* lang);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
 void gst_mpd_client_get_current_position (GstMpdClient *client, GstClockTime * timestamp);
@@ -463,20 +482,20 @@ GstMediaSegment *gst_mpdparser_get_chunk_by_index (GstMpdClient *client, guint i
 
 /* Active stream */
 guint gst_mpdparser_get_nb_active_stream (GstMpdClient *client);
-GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client, gint stream_idx);
+GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client, guint stream_idx);
 
 /* AdaptationSet */
-guint gst_mpdparser_get_nb_adaptationSet(GstMpdClient *client);
+guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);
-guint  gst_mpd_client_get_video_stream_width (GstActiveStream * stream);
-guint  gst_mpd_client_get_video_stream_height (GstActiveStream * stream);
-guint  gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream);
-guint  gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream);
+guint gst_mpd_client_get_video_stream_width (GstActiveStream * stream);
+guint gst_mpd_client_get_video_stream_height (GstActiveStream * stream);
+guint gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream);
+guint gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream);
 
 /* Support multi language */
-guint gst_mpdparser_get_list_and_nb_of_audio_language(GList **lang, GList *AdaptationSets);
+guint gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient *client, GList **lang);
 G_END_DECLS
 
 #endif /* __GST_MPDPARSER_H__ */
