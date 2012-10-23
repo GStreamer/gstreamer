@@ -72,32 +72,32 @@ public class MediaInfo.App : Window
   private MenuBar create_menu ()
   {
     MenuBar menu_bar = new MenuBar ();
-    MenuItem item;
-    Menu sub_menu;
+    Gtk.MenuItem item;
+    Gtk.Menu sub_menu;
     AccelGroup accel_group;
 
     accel_group = new AccelGroup ();
     this.add_accel_group (accel_group);
 
-    item = new MenuItem.with_label (_("File"));
+    item = new Gtk.MenuItem.with_label (_("File"));
     menu_bar.append (item);
 
-    sub_menu = new Menu ();
+    sub_menu = new Gtk.Menu ();
     item.set_submenu (sub_menu);
 
     // TODO: add "open uri" item
     // -> dialog with text entry (pre-file with clipboard content)
     // -> discover that uri and clear selection in browser
 
-    item = new ImageMenuItem.from_stock (STOCK_QUIT, accel_group);
+    item = new ImageMenuItem.from_stock (Stock.QUIT, accel_group);
     sub_menu.append (item);
     item.activate.connect (Gtk.main_quit);
 
-    item = new MenuItem.with_label (_("View"));
+    item = new Gtk.MenuItem.with_label (_("View"));
     //item.set_accel_path ("<GstMi-Main>/MainMenu/View");
     menu_bar.append (item);
 
-    sub_menu = new Menu ();
+    sub_menu = new Gtk.Menu ();
     item.set_submenu (sub_menu);
 
     CheckMenuItem citem = new CheckMenuItem.with_label (_("Full Screen"));
@@ -111,13 +111,13 @@ public class MediaInfo.App : Window
     citem.toggled.connect (on_fullscreen_toggled);
 
     // add "help" menu with "about" item
-    item = new MenuItem.with_label (_("Help"));
+    item = new Gtk.MenuItem.with_label (_("Help"));
     menu_bar.append (item);
 
-    sub_menu = new Menu ();
+    sub_menu = new Gtk.Menu ();
     item.set_submenu (sub_menu);
 
-    item = new ImageMenuItem.from_stock (STOCK_ABOUT, accel_group);
+    item = new ImageMenuItem.from_stock (Stock.ABOUT, accel_group);
     sub_menu.append (item);
     item.activate.connect (on_about_clicked);
 
@@ -146,7 +146,7 @@ public class MediaInfo.App : Window
     }
   }
 
-  private void on_about_clicked (MenuItem item)
+  private void on_about_clicked (Gtk.MenuItem item)
   {
     AboutDialog dlg = new AboutDialog ();
 

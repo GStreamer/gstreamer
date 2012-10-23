@@ -289,8 +289,8 @@ public class MediaInfo.Info : VPaned
 
       try {
         FileInfo finfo = file.query_info ("standard::*", FileQueryInfoFlags.NONE, null);
-        mime_type.set_text (finfo.get_attribute_string (FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE));
-        icon_image.set_from_gicon ((Icon) finfo.get_attribute_object (FILE_ATTRIBUTE_STANDARD_ICON), IconSize.DIALOG);
+        mime_type.set_text (finfo.get_attribute_string (FileAttribute.STANDARD_CONTENT_TYPE));
+        icon_image.set_from_gicon ((Icon) finfo.get_attribute_object (FileAttribute.STANDARD_ICON), IconSize.DIALOG);
       } catch (Error e) {
         debug ("Failed to query file info from %s: %s: %s", uri, e.domain.to_string (), e.message);
       }
@@ -298,7 +298,7 @@ public class MediaInfo.Info : VPaned
       if (false) {
         /* sync API */
         try {
-          on_uri_discovered (dc.discover_uri (uri), null);
+          process_new_uri (dc.discover_uri (uri));
         } catch (Error e) {
           debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
         }
@@ -311,8 +311,18 @@ public class MediaInfo.Info : VPaned
     }
     return (res);
   }
-
+  
   private void on_uri_discovered (DiscovererInfo info, Error e)
+  {
+    if (e != null) {
+      debug ("Failed to extract metadata from %s: %s: %s", info.get_uri(), e.domain.to_string (), e.message);
+      container_name.set_text ("");
+      duration.set_text ("");
+    }
+    process_new_uri (info);
+  }
+
+  private void process_new_uri (DiscovererInfo info)
   {
     string uri = info.get_uri();
     GLib.List<DiscovererStreamInfo> l;
@@ -329,11 +339,6 @@ public class MediaInfo.Info : VPaned
     Caps caps;
     Structure s;
 
-    if (e != null) {
-      debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
-      container_name.set_text ("");
-      duration.set_text ("");
-    }
     if (info == null) {
       container_name.set_text ("");
       duration.set_text ("");
@@ -775,7 +780,7 @@ public class MediaInfo.Info : VPaned
         Caps c = buf.get_caps();
 
         try {
-          InputStream is = new MemoryInputStream.from_data (buf.data,buf.size,null);
+          InputStream is = new MemoryInputStream.from_data (buf.data,null);
           album_art = new Gdk.Pixbuf.from_stream (is, null);
           is.close(null);
         } catch (Error e) {
