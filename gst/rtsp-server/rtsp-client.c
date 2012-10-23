@@ -2045,7 +2045,7 @@ attach_client (GstRTSPClient * client, GSocket * socket,
     GstRTSPConnection * conn, GError ** error)
 {
   GSocket *read_socket;
-  GSocketAddress *addres;
+  GSocketAddress *address;
   GSource *source;
   GMainContext *context;
   GstRTSPUrl *url;
@@ -2053,17 +2053,18 @@ attach_client (GstRTSPClient * client, GSocket * socket,
   read_socket = gst_rtsp_connection_get_read_socket (conn);
   client->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
 
-  if (!(addres = g_socket_get_remote_address (read_socket, error)))
+  if (!(address = g_socket_get_remote_address (read_socket, error)))
     goto no_address;
 
   g_free (client->server_ip);
   /* keep the original ip that the client connected to */
-  if (G_IS_INET_SOCKET_ADDRESS (addres)) {
+  if (G_IS_INET_SOCKET_ADDRESS (address)) {
     GInetAddress *iaddr;
 
-    iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (addres));
+    iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (address));
 
     client->server_ip = g_inet_address_to_string (iaddr);
+    g_object_unref (address);
   } else {
     client->server_ip = g_strdup ("unknown");
   }
