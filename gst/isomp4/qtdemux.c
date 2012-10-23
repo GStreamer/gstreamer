@@ -5203,10 +5203,17 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
         gst_pad_new_from_static_template (&gst_qtdemux_audiosrc_template, name);
     g_free (name);
     if (stream->caps) {
-      /* FIXME: Need to set channel-mask here and maybe reorder */
       gst_caps_set_simple (stream->caps,
           "rate", G_TYPE_INT, (int) stream->rate,
           "channels", G_TYPE_INT, stream->n_channels, NULL);
+
+      if (stream->n_channels > 2) {
+        /* FIXME: Need to parse the 'chan' atom to get channel layouts
+         * correctly; this is just the minimum we can do - assume
+         * we don't actually have any channel positions. */
+        gst_caps_set_simple (stream->caps,
+            "channel-mask", GST_TYPE_BITMASK, 0, NULL);
+      }
     }
     qtdemux->n_audio_streams++;
   } else if (stream->subtype == FOURCC_strm) {
