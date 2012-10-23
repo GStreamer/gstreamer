@@ -463,7 +463,7 @@ gst_scaletempo_transform (GstBaseTransform * trans,
     gdouble frames_to_slide;
     guint frames_to_stride_whole;
 
-    // output stride
+    /* output stride */
     if (p->output_overlap) {
       if (p->best_overlap_offset) {
         bytes_off = p->best_overlap_offset (scaletempo);
@@ -475,7 +475,7 @@ gst_scaletempo_transform (GstBaseTransform * trans,
     pout += p->bytes_stride;
     bytes_out += p->bytes_stride;
 
-    // input stride
+    /* input stride */
     memcpy (p->buf_overlap,
         p->buf_queue + bytes_off + p->bytes_stride, p->bytes_overlap);
     frames_to_slide = p->frames_stride_scaled + p->frames_stride_error;
@@ -565,7 +565,7 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
       priv->segment_start = segment.start;
       segment.applied_rate = priv->scale;
       segment.rate = 1.0;
-      //gst_event_unref (event);
+      gst_event_unref (event);
 
       if (segment.stop != -1) {
         segment.stop = (segment.stop - segment.start) / segment.applied_rate +
