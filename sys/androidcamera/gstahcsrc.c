@@ -105,7 +105,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
 }
 
 static gboolean
-_data_queue_check_full (GstDataQueue *queue, guint visible,
+_data_queue_check_full (GstDataQueue * queue, guint visible,
     guint bytes, guint64 time, gpointer checkdata)
 {
   return FALSE;
@@ -181,7 +181,8 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
   }
 }
 
-typedef struct {
+typedef struct
+{
   GstAHCSrc *self;
   jbyteArray array;
   jbyte *data;
@@ -194,7 +195,7 @@ gst_ahc_src_buffer_free_func (gpointer priv)
   GstAHCSrc *self = data->self;
   JNIEnv *env = gst_dvm_get_env ();
 
-  (*env)->ReleaseByteArrayElements(env, data->array, data->data, JNI_ABORT);
+  (*env)->ReleaseByteArrayElements (env, data->array, data->data, JNI_ABORT);
   if (self->camera)
     gst_ah_camera_add_callback_buffer (self->camera, data->array);
   (*env)->DeleteGlobalRef (env, data->array);
@@ -203,7 +204,7 @@ gst_ahc_src_buffer_free_func (gpointer priv)
 }
 
 static void
-_data_queue_item_free (GstDataQueueItem *item)
+_data_queue_item_free (GstDataQueueItem * item)
 {
   gst_buffer_unref (GST_BUFFER (item->object));
   g_slice_free (GstDataQueueItem, item);
