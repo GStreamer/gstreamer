@@ -32,10 +32,13 @@ G_BEGIN_DECLS
 #define GST_IS_SCALETEMPO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),  GST_TYPE_SCALETEMPO))
 typedef struct _GstScaletempo GstScaletempo;
 typedef struct _GstScaletempoClass GstScaletempoClass;
+typedef struct _GstScaletempoPrivate GstScaletempoPrivate;
 
 struct _GstScaletempo
 {
   GstBaseTransform element;
+
+  GstScaletempoPrivate *priv;
 };
 
 struct _GstScaletempoClass
