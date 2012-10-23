@@ -113,7 +113,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 G_DEFINE_TYPE_WITH_CODE (GstScaletempo, gst_scaletempo,
     GST_TYPE_BASE_TRANSFORM, DEBUG_INIT (0));
 
-typedef struct _GstScaletempoPrivate
+struct _GstScaletempoPrivate
 {
   gdouble scale;
   /* parameters */
@@ -153,14 +153,14 @@ typedef struct _GstScaletempoPrivate
   gint64 segment_start;
   /* threads */
   gboolean reinit_buffers;
-} GstScaletempoPrivate;
+};
 #define GST_SCALETEMPO_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_SCALETEMPO, GstScaletempoPrivate))
 
 
 static guint
 best_overlap_offset_float (GstScaletempo * scaletempo)
 {
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   gfloat *pw, *po, *ppc, *search_start;
   gfloat best_corr = G_MININT;
   guint best_off = 0;
@@ -197,7 +197,7 @@ best_overlap_offset_float (GstScaletempo * scaletempo)
 static guint
 best_overlap_offset_s16 (GstScaletempo * scaletempo)
 {
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   gint32 *pw, *ppc;
   gint16 *po, *search_start;
   gint64 best_corr = G_MININT64;
@@ -242,7 +242,7 @@ static void
 output_overlap_float (GstScaletempo * scaletempo,
     gpointer buf_out, guint bytes_off)
 {
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   gfloat *pout = buf_out;
   gfloat *pb = p->table_blend;
   gfloat *po = p->buf_overlap;
@@ -258,7 +258,7 @@ static void
 output_overlap_s16 (GstScaletempo * scaletempo,
     gpointer buf_out, guint bytes_off)
 {
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   gint16 *pout = buf_out;
   gint32 *pb = p->table_blend;
   gint16 *po = p->buf_overlap;
@@ -273,7 +273,7 @@ output_overlap_s16 (GstScaletempo * scaletempo,
 static guint
 fill_queue (GstScaletempo * scaletempo, GstBuffer * buf_in, guint offset)
 {
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   guint bytes_in = gst_buffer_get_size (buf_in) - offset;
   guint offset_unchanged = offset;
   GstMapInfo map;
@@ -310,7 +310,7 @@ fill_queue (GstScaletempo * scaletempo, GstBuffer * buf_in, guint offset)
 static void
 reinit_buffers (GstScaletempo * scaletempo)
 {
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   gint i, j;
   guint frames_overlap;
   guint new_size;
@@ -436,7 +436,7 @@ gst_scaletempo_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
   GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
-  GstScaletempoPrivate *p = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *p = scaletempo->priv;
   gint8 *pout;
   guint offset_in, bytes_out;
   GstMapInfo omap;
@@ -490,7 +490,7 @@ gst_scaletempo_transform_size (GstBaseTransform * trans,
 {
   if (direction == GST_PAD_SINK) {
     GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
-    GstScaletempoPrivate *priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+    GstScaletempoPrivate *priv = scaletempo->priv;
     gint bytes_to_out;
 
     if (priv->reinit_buffers)
@@ -517,7 +517,7 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
-    GstScaletempoPrivate *priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+    GstScaletempoPrivate *priv = scaletempo->priv;
     GstSegment segment;
 
     gst_event_copy_segment (event, &segment);
@@ -566,7 +566,7 @@ gst_scaletempo_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps)
 {
   GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
-  GstScaletempoPrivate *priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *priv = scaletempo->priv;
 
   gint width, bps, nch, rate;
   gboolean use_int;
@@ -605,7 +605,7 @@ gst_scaletempo_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstScaletempo *scaletempo = GST_SCALETEMPO (object);
-  GstScaletempoPrivate *priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *priv = scaletempo->priv;
 
   switch (prop_id) {
     case PROP_RATE:
@@ -631,7 +631,7 @@ gst_scaletempo_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstScaletempo *scaletempo = GST_SCALETEMPO (object);
-  GstScaletempoPrivate *priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *priv = scaletempo->priv;
 
   switch (prop_id) {
     case PROP_STRIDE:{
@@ -715,7 +715,10 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
 static void
 gst_scaletempo_init (GstScaletempo * scaletempo)
 {
-  GstScaletempoPrivate *priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+  GstScaletempoPrivate *priv;
+
+  scaletempo->priv = priv = GST_SCALETEMPO_GET_PRIVATE (scaletempo);
+
   /* defaults */
   priv->ms_stride = 30;
   priv->percent_overlap = .2;
