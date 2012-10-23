@@ -457,7 +457,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
           GstEvent *gap_event;
 
           gap_event = gst_event_new_gap (0, 0);
-          gst_pad_push_event (srcpad, gap_event);
+          ret = gst_pad_push_event (srcpad, gap_event);
         }
         ret = TRUE;
       }
