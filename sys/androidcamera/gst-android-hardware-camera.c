@@ -24,7 +24,9 @@
 #endif
 
 #include "gst-dvm.h"
+#include "gstahccallback.h"
 #include "gst-android-hardware-camera.h"
+#include "stdio.h"
 
 static struct
 {
@@ -238,8 +240,102 @@ _init_classes (void)
   GST_DVM_GET_METHOD (java_lang_integer, intValue, "()I");
 
   /* com.gstreamer.GstAhcCallback */
-  GST_DVM_GET_CLASS (com_gstreamer_gstahccallback,
-      "com/gstreamer/GstAhcCallback");
+  if (gst_ahc_callback_jar) {
+    jclass dex_loader = NULL;
+    gchar *path = g_strdup_printf ("%s/GstAhcCallback.jar", g_getenv ("TMP"));
+    FILE *fd = fopen (path, "wb");
+
+    GST_WARNING ("Found embedded GstAhcCallback.jar, trying to load dynamically"
+        "from %s", path);
+    if (fd) {
+      if (fwrite (gst_ahc_callback_jar, gst_ahc_callback_jar_size, 1, fd) == 1) {
+        dex_loader = (*env)->FindClass (env, "dalvik/system/DexClassLoader");
+        (*env)->ExceptionClear (env);
+      }
+      fclose (fd);
+    }
+
+    if (dex_loader) {
+      jmethodID constructor;
+      jmethodID load_class;
+
+      constructor = (*env)->GetMethodID (env, dex_loader, "<init>",
+          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;"
+          "Ljava/lang/ClassLoader;)V");
+      load_class = (*env)->GetMethodID (env, dex_loader, "loadClass",
+          "(Ljava/lang/String;)Ljava/lang/Class;");
+      (*env)->ExceptionClear (env);
+      if (constructor && load_class) {
+        jstring dex_path = NULL;
+        jstring optimized_directory = NULL;
+
+        dex_path = (*env)->NewStringUTF (env, path);
+        optimized_directory = (*env)->NewStringUTF (env, g_getenv ("TMP"));
+        (*env)->ExceptionClear (env);
+        if (dex_path && optimized_directory) {
+          jobject loader;
+          jobject parent = NULL;
+          jclass klass;
+
+          klass = (*env)->FindClass (env, "java/lang/Class");
+          (*env)->ExceptionClear (env);
+          if (klass) {
+            jmethodID get_class_loader;
+
+            get_class_loader = (*env)->GetMethodID (env, klass,
+                "getClassLoader", "()Ljava/lang/ClassLoader;");
+            (*env)->ExceptionClear (env);
+            if (get_class_loader) {
+              parent = (*env)->CallObjectMethod (env, klass, get_class_loader);
+              (*env)->ExceptionClear (env);
+            }
+            (*env)->DeleteLocalRef (env, klass);
+          }
+          loader = (*env)->NewObject (env, dex_loader, constructor, dex_path,
+              optimized_directory, NULL, parent);
+          (*env)->ExceptionClear (env);
+          if (loader) {
+            jstring class_name = NULL;
+
+            class_name = (*env)->NewStringUTF (env,
+                "com/gstreamer/GstAhcCallback");
+            (*env)->ExceptionClear (env);
+            if (class_name) {
+              jclass temp;
+
+              temp = (*env)->CallObjectMethod (env, loader, load_class,
+                  class_name);
+              (*env)->ExceptionClear (env);
+              if (temp) {
+
+                GST_WARNING ("Successfully loaded embedded GstAhcCallback");
+                com_gstreamer_gstahccallback.klass = (*env)->NewGlobalRef (env,
+                    temp);
+                (*env)->DeleteLocalRef (env, temp);
+              }
+              (*env)->DeleteLocalRef (env, class_name);
+            }
+            (*env)->DeleteLocalRef (env, loader);
+          }
+          if (parent)
+            (*env)->DeleteLocalRef (env, parent);
+        }
+        if (dex_path)
+          (*env)->DeleteLocalRef (env, dex_path);
+        if (optimized_directory)
+          (*env)->DeleteLocalRef (env, optimized_directory);
+      }
+      (*env)->DeleteLocalRef (env, dex_loader);
+      g_free (path);
+    }
+  } else {
+    GST_WARNING ("Did not find embedded GstAhcCallback.jar, fallback to"
+        " FindClass");
+  }
+  if (!com_gstreamer_gstahccallback.klass) {
+    GST_DVM_GET_CLASS (com_gstreamer_gstahccallback,
+        "com/gstreamer/GstAhcCallback");
+  }
   GST_DVM_GET_CONSTRUCTOR (com_gstreamer_gstahccallback, constructor, "(JJ)V");
 
   if ((*env)->RegisterNatives (env, com_gstreamer_gstahccallback.klass,
