@@ -64,6 +64,7 @@
     <xi:include href="xml/element-modplug.xml" />
     <xi:include href="xml/element-mpeg2enc.xml" />
     <xi:include href="xml/element-mplex.xml" />
+    <xi:include href="xml/element-mpg123audiodec.xml" />
     <xi:include href="xml/element-pcapparse.xml" />
     <xi:include href="xml/element-pinch.xml" />
     <xi:include href="xml/element-pyramidsegment.xml" />

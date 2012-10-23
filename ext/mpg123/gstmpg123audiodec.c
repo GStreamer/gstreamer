@@ -16,6 +16,20 @@
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+/**
+ * SECTION: element-mpg123audiodec
+ * @see_also: lamemp3enc, mad
+ *
+ * Audio decoder for MPEG-1 layer 1/2/3 audio data.
+ *
+ * <refsect2>
+ * <title>Example pipelines</title>
+ * |[
+ * gst-launch filesrc location=music.mp3 ! mpegaudioparse ! mpg123audiodec ! audioconvert ! audioresample ! autoaudiosink
+ * ]| Decode and play the mp3 file
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
