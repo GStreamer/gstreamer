@@ -443,10 +443,11 @@ gst_ahc_src_stop (GstBaseSrc * bsrc)
   GstAHCSrc *self = GST_AHC_SRC (bsrc);
 
   GST_WARNING_OBJECT (self, "Stopping preview");
-  if (self->camera)
+  if (self->camera) {
+    gst_data_queue_flush (self->queue);
     return gst_ah_camera_stop_preview (self->camera);
-  else
-    return TRUE;
+  }
+  return TRUE;
 }
 
 static gboolean
