@@ -121,7 +121,7 @@ gst_ahc_src_init (GstAHCSrc * self, GstAHCSrcClass * klass)
   gst_base_src_set_do_timestamp (GST_BASE_SRC (self), FALSE);
 
   self->camera = NULL;
-  self->texture = gst_ag_surfacetexture_new (0);
+  self->texture = NULL;
   self->data = NULL;
   self->queue = gst_data_queue_new (_data_queue_check_full, NULL);
   self->caps = NULL;
@@ -133,10 +133,6 @@ gst_ahc_src_dispose (GObject * object)
   GstAHCSrc *self = GST_AHC_SRC (object);
 
   gst_ahc_src_close (self);
-
-  if (self->texture)
-    gst_ag_surfacetexture_release (self->texture);
-  self->texture = NULL;
 
   if (self->queue)
     g_object_unref (self->queue);
@@ -301,6 +297,7 @@ gst_ahc_src_open (GstAHCSrc * self)
           gst_ag_imageformat_get_bits_per_pixel
           (gst_ahc_parameters_get_preview_format (params)) / 8;
       gst_ahc_size_free (size);
+      self->texture = gst_ag_surfacetexture_new (0);
       gst_ah_camera_set_preview_texture (self->camera, self->texture);
       gst_ah_camera_set_error_callback (self->camera, gst_ahc_src_on_error,
           self);
@@ -360,6 +357,9 @@ gst_ahc_src_close (GstAHCSrc * self)
     gst_ah_camera_release (self->camera);
   self->camera = NULL;
 
+  if (self->texture)
+    gst_ag_surfacetexture_release (self->texture);
+  self->texture = NULL;
 }
 
 static GstStateChangeReturn
