@@ -452,6 +452,7 @@ gst_scaletempo_transform (GstBaseTransform * trans,
   gint8 *pout;
   guint offset_in, bytes_out;
   GstMapInfo omap;
+  GstClockTime timestamp;
 
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
   pout = (gint8 *) omap.data;
@@ -487,11 +488,17 @@ gst_scaletempo_transform (GstBaseTransform * trans,
 
   gst_buffer_unmap (outbuf, &omap);
 
+  timestamp = GST_BUFFER_TIMESTAMP (inbuf) - p->segment_start;
+  if (timestamp < p->latency)
+    timestamp = 0;
+  else
+    timestamp -= p->latency;
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp / p->scale + p->segment_start;
+  GST_BUFFER_DURATION (outbuf) =
+      gst_util_uint64_scale (bytes_out, GST_SECOND,
+      p->bytes_per_frame * p->sample_rate);
   gst_buffer_set_size (outbuf, bytes_out);
-  GST_BUFFER_TIMESTAMP (outbuf) =
-      (GST_BUFFER_TIMESTAMP (outbuf) - p->segment_start) / p->scale +
-      p->segment_start;
-  //GST_BUFFER_DURATION (outbuf)  = bytes_out * GST_SECOND / (p->bytes_per_frame * p->sample_rate);
+
   return GST_FLOW_OK;
 }
 
