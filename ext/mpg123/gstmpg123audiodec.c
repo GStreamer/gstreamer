@@ -228,6 +228,11 @@ gst_mpg123_audio_dec_start (GstAudioDecoder * dec)
   /* Sets the resync limit to the end of the stream (otherwise mpg123 may give
    * up on decoding prematurely, especially with mp3 web radios) */
   mpg123_param (mpg123_decoder->handle, MPG123_RESYNC_LIMIT, -1, 0);
+  /* Don't let mpg123 resample output */
+  mpg123_param (mpg123_decoder->handle, MPG123_REMOVE_FLAGS,
+      MPG123_AUTO_RESAMPLE, 0);
+  /* Don't let mpg123 print messages to stdout/stderr */
+  mpg123_param (mpg123_decoder->handle, MPG123_ADD_FLAGS, MPG123_QUIET, 0);
 
   /* Open in feed mode (= encoded data is fed manually into the handle). */
   error = mpg123_open_feed (mpg123_decoder->handle);
@@ -315,24 +320,23 @@ gst_mpg123_audio_dec_handle_frame (GstAudioDecoder * dec,
   size_t num_decoded_bytes;
   GstFlowReturn retval;
 
-  if (G_UNLIKELY (input_buffer == NULL))
-    return GST_FLOW_OK;
-
   mpg123_decoder = GST_MPG123_AUDIO_DEC (dec);
 
   g_assert (mpg123_decoder->handle != NULL);
 
   /* The actual decoding */
   {
-    GstMapInfo info;
+    /* feed input data (if there is any) */
+    if (G_LIKELY (input_buffer != NULL)) {
+      GstMapInfo info;
 
-    /* feed input data */
-    if (gst_buffer_map (input_buffer, &info, GST_MAP_READ)) {
-      mpg123_feed (mpg123_decoder->handle, info.data, info.size);
-      gst_buffer_unmap (input_buffer, &info);
-    } else {
-      GST_ERROR_OBJECT (mpg123_decoder, "gst_memory_map() failed");
-      return GST_FLOW_ERROR;
+      if (gst_buffer_map (input_buffer, &info, GST_MAP_READ)) {
+        mpg123_feed (mpg123_decoder->handle, info.data, info.size);
+        gst_buffer_unmap (input_buffer, &info);
+      } else {
+        GST_ERROR_OBJECT (mpg123_decoder, "gst_memory_map() failed");
+        return GST_FLOW_ERROR;
+      }
     }
 
     /* Try to decode a frame */
