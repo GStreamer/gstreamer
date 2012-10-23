@@ -306,7 +306,15 @@ else
   fi
 
   # if we are cross-compiling, tell libav so
-  target_os=`echo $host_os | sed 's/-gnu//'`
+  case $host in
+      *android*)
+        target_os=linux
+      ;;
+      *)
+        target_os=`echo $host_os | sed 's/-gnu//'`
+      ;;
+  esac
+
   if test "x$cross_compiling" = xyes; then
     emblibav_configure_args="$emblibav_configure_args --enable-cross-compile \
         --target-os=$target_os --arch=$host_cpu --cross-prefix=$host_alias-"
