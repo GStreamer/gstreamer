@@ -88,7 +88,6 @@ struct _GstVaapiPictureH264 {
     guint                       is_long_term            : 1;
     guint                       field_pic_flag          : 1;
     guint                       bottom_field_flag       : 1;
-    guint                       has_mmco_5              : 1;
     guint                       output_flag             : 1;
     guint                       output_needed           : 1;
 };
@@ -129,7 +128,6 @@ gst_vaapi_picture_h264_init(GstVaapiPictureH264 *picture)
     picture->poc                = 0;
     picture->is_long_term       = FALSE;
     picture->is_idr             = FALSE;
-    picture->has_mmco_5         = FALSE;
     picture->output_needed      = FALSE;
 }
 
@@ -289,9 +287,10 @@ struct _GstVaapiDecoderH264Private {
     gint32                      prev_poc_msb;           // prevPicOrderCntMsb
     gint32                      prev_poc_lsb;           // prevPicOrderCntLsb
     gint32                      frame_num_offset;       // FrameNumOffset
-    gint32                      prev_frame_num_offset;  // prevFrameNumOffset
     gint32                      frame_num;              // frame_num (from slice_header())
     gint32                      prev_frame_num;         // prevFrameNum
+    gboolean                    prev_pic_has_mmco5;     // prevMmco5Pic
+    gboolean                    prev_pic_bottom_field;  // Flag: previous picture is a bottom field
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
     guint                       is_avc                  : 1;
@@ -786,6 +785,20 @@ init_picture_poc_0(
 
     GST_DEBUG("decode picture order count type 0");
 
+    if (picture->is_idr) {
+        priv->prev_poc_msb = 0;
+        priv->prev_poc_lsb = 0;
+    }
+    else if (priv->prev_pic_has_mmco5) {
+        priv->prev_poc_msb = 0;
+        priv->prev_poc_lsb = priv->prev_pic_bottom_field ? 0 :
+            priv->field_poc[TOP_FIELD];
+    }
+    else {
+        priv->prev_poc_msb = priv->poc_msb;
+        priv->prev_poc_lsb = priv->poc_lsb;
+    }
+
     // (8-3)
     priv->poc_lsb = slice_hdr->pic_order_cnt_lsb;
     if (priv->poc_lsb < priv->prev_poc_lsb &&
@@ -821,18 +834,23 @@ init_picture_poc_1(
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
     const gint32 MaxFrameNum = 1 << (sps->log2_max_frame_num_minus4 + 4);
-    gint32 abs_frame_num, expected_poc;
+    gint32 prev_frame_num_offset, abs_frame_num, expected_poc;
     guint i;
 
     GST_DEBUG("decode picture order count type 1");
+
+    if (priv->prev_pic_has_mmco5)
+        prev_frame_num_offset = 0;
+    else
+        prev_frame_num_offset = priv->frame_num_offset;
 
     // (8-6)
     if (picture->is_idr)
         priv->frame_num_offset = 0;
     else if (priv->prev_frame_num > priv->frame_num)
-        priv->frame_num_offset = priv->prev_frame_num_offset + MaxFrameNum;
+        priv->frame_num_offset = prev_frame_num_offset + MaxFrameNum;
     else
-        priv->frame_num_offset = priv->prev_frame_num_offset;
+        priv->frame_num_offset = prev_frame_num_offset;
 
     // (8-7)
     if (sps->num_ref_frames_in_pic_order_cnt_cycle != 0)
@@ -894,17 +912,22 @@ init_picture_poc_2(
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
     const gint32 MaxFrameNum = 1 << (sps->log2_max_frame_num_minus4 + 4);
-    guint temp_poc;
+    gint32 prev_frame_num_offset, temp_poc;
 
     GST_DEBUG("decode picture order count type 2");
+
+    if (priv->prev_pic_has_mmco5)
+        prev_frame_num_offset = 0;
+    else
+        prev_frame_num_offset = priv->frame_num_offset;
 
     // (8-11)
     if (picture->is_idr)
         priv->frame_num_offset = 0;
     else if (priv->prev_frame_num > priv->frame_num)
-        priv->frame_num_offset = priv->prev_frame_num_offset + MaxFrameNum;
+        priv->frame_num_offset = prev_frame_num_offset + MaxFrameNum;
     else
-        priv->frame_num_offset = priv->prev_frame_num_offset;
+        priv->frame_num_offset = prev_frame_num_offset;
 
     // (8-12)
     if (picture->is_idr)
@@ -1552,8 +1575,8 @@ init_picture(
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiPicture * const base_picture = &picture->base;
     VAPictureH264 *pic;
-    guint i;
 
+    priv->prev_frame_num        = priv->frame_num;
     priv->frame_num             = slice_hdr->frame_num;
     picture->frame_num          = priv->frame_num;
     picture->frame_num_wrap     = priv->frame_num;
@@ -1568,8 +1591,6 @@ init_picture(
         GST_DEBUG("<IDR>");
         clear_references(decoder, priv->short_ref, &priv->short_ref_count);
         clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
-        priv->prev_poc_msb = 0;
-        priv->prev_poc_lsb = 0;
     }
 
     /* Initialize VA picture info */
@@ -1609,14 +1630,6 @@ init_picture(
         if (picture->is_idr) {
             if (dec_ref_pic_marking->long_term_reference_flag)
                 picture->is_long_term = TRUE;
-        }
-        else if (dec_ref_pic_marking->adaptive_ref_pic_marking_mode_flag) {
-            for (i = 0; i < dec_ref_pic_marking->n_ref_pic_marking; i++) {
-                GstH264RefPicMarking * const ref_pic_marking =
-                    &dec_ref_pic_marking->ref_pic_marking[i];
-                if (ref_pic_marking->memory_management_control_operation == 5)
-                    picture->has_mmco_5 = TRUE;
-            }
         }
     }
 
@@ -1781,13 +1794,24 @@ exec_ref_pic_marking_adaptive_mmco_5(
 )
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    VAPictureH264 * const pic = &picture->info;
 
     clear_references(decoder, priv->short_ref, &priv->short_ref_count);
     clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
     dpb_flush(decoder);
 
+    priv->prev_pic_has_mmco5 = TRUE;
+
     /* The picture shall be inferred to have had frame_num equal to 0 (7.4.3) */
+    priv->frame_num = 0;
+    priv->frame_num_offset = 0;
     picture->frame_num = 0;
+
+    /* Update TopFieldOrderCnt and BottomFieldOrderCnt (8.2.1) */
+    if (!(pic->flags & VA_PICTURE_H264_BOTTOM_FIELD))
+        pic->TopFieldOrderCnt -= picture->poc;
+    if (!(pic->flags & VA_PICTURE_H264_TOP_FIELD))
+        pic->BottomFieldOrderCnt -= picture->poc;
     picture->poc = 0;
 }
 
@@ -1853,6 +1877,10 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiPictureH264 **picture_ptr;
 
+    priv->prev_pic_has_mmco5 = FALSE;
+    priv->prev_pic_bottom_field =
+        picture->field_pic_flag && picture->bottom_field_flag;
+
     if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
         return TRUE;
 
@@ -1878,55 +1906,6 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         picture->info.flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
     }
     gst_vaapi_picture_replace(picture_ptr, picture);
-    return TRUE;
-}
-
-/* Update picture order count */
-static void
-exit_picture_poc(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
-{
-    GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264SPS * const sps = priv->sps;
-
-    switch (sps->pic_order_cnt_type) {
-    case 0:
-        if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
-            break;
-        if (picture->has_mmco_5) {
-            priv->prev_poc_msb = 0;
-            if (!picture->field_pic_flag || !picture->bottom_field_flag)
-                priv->prev_poc_lsb = picture->info.TopFieldOrderCnt;
-            else
-                priv->prev_poc_lsb = 0;
-        }
-        else {
-            priv->prev_poc_msb = priv->poc_msb;
-            priv->prev_poc_lsb = priv->poc_lsb;
-        }
-        break;
-    case 1:
-    case 2:
-        if (picture->has_mmco_5) {
-            priv->prev_frame_num = 0;
-            priv->prev_frame_num_offset = 0;
-        }
-        else {
-            priv->prev_frame_num = priv->frame_num;
-            priv->prev_frame_num_offset = priv->frame_num_offset;
-        }
-        break;
-    }
-}
-
-static inline gboolean
-exit_picture(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
-{
-    /* Update picture order count */
-    exit_picture_poc(decoder, picture);
-
-    /* Decoded reference picture marking process */
-    if (!exec_ref_pic_marking(decoder, picture))
-        return FALSE;
     return TRUE;
 }
 
@@ -2086,7 +2065,7 @@ decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     if (!fill_quant_matrix(decoder, picture))
         return FALSE;
-    if (!exit_picture(decoder, picture))
+    if (!exec_ref_pic_marking(decoder, picture))
         return FALSE;
     if (!dpb_add(decoder, picture))
         return FALSE;
@@ -2610,9 +2589,10 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->prev_poc_msb          = 0;
     priv->prev_poc_lsb          = 0;
     priv->frame_num_offset      = 0;
-    priv->prev_frame_num_offset = 0;
     priv->frame_num             = 0;
     priv->prev_frame_num        = 0;
+    priv->prev_pic_has_mmco5    = FALSE;
+    priv->prev_pic_bottom_field = FALSE;
     priv->is_constructed        = FALSE;
     priv->is_opened             = FALSE;
     priv->is_avc                = FALSE;
