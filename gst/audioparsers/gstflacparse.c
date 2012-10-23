@@ -1551,7 +1551,13 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
       GST_MEMDUMP_OBJECT (parse, "bad header data", map.data, size);
 
       gst_buffer_unref (sbuffer);
-      goto header_parsing_error;
+
+      /* error out unless we have a STREAMINFO header */
+      if (flacparse->samplerate == 0 || flacparse->bps == 0)
+        goto header_parsing_error;
+
+      /* .. in which case just stop header parsing and try to find audio */
+      is_last = TRUE;
     }
 
     if (is_last) {
