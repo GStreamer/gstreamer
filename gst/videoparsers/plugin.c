@@ -45,7 +45,7 @@ plugin_init (GstPlugin * plugin)
   ret |= gst_element_register (plugin, "mpeg4videoparse",
       GST_RANK_PRIMARY + 1, GST_TYPE_MPEG4VIDEO_PARSE);
   ret |= gst_element_register (plugin, "vc1parse",
-      GST_RANK_PRIMARY + 1, GST_TYPE_VC1_PARSE);
+      GST_RANK_NONE, GST_TYPE_VC1_PARSE);
 
   return ret;
 }
