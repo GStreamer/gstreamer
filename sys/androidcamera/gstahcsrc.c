@@ -43,6 +43,8 @@ static gboolean gst_ahc_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_ahc_src_unlock_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer);
 
+static void gst_ahc_src_close (GstAHCSrc * self);
+
 #define NUM_CALLBACK_BUFFERS 5
 
 #define GST_AHC_SRC_CAPS_STR                                    \
@@ -130,9 +132,7 @@ gst_ahc_src_dispose (GObject * object)
 {
   GstAHCSrc *self = GST_AHC_SRC (object);
 
-  if (self->camera)
-    gst_ah_camera_release (self->camera);
-  self->camera = NULL;
+  gst_ahc_src_close (self);
 
   if (self->texture)
     gst_ag_surfacetexture_release (self->texture);
@@ -353,6 +353,15 @@ gst_ahc_src_open (GstAHCSrc * self)
   return (self->camera != NULL);
 }
 
+static void
+gst_ahc_src_close (GstAHCSrc * self)
+{
+  if (self->camera)
+    gst_ah_camera_release (self->camera);
+  self->camera = NULL;
+
+}
+
 static GstStateChangeReturn
 gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
 {
@@ -400,9 +409,7 @@ gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (self->camera)
-        gst_ah_camera_release (self->camera);
-      self->camera = NULL;
+      gst_ahc_src_close (self);
       break;
     default:
       break;
