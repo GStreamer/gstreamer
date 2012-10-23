@@ -215,13 +215,15 @@ gst_vaapi_picture_new(
 GstVaapiPicture *
 gst_vaapi_picture_new_field(GstVaapiPicture *picture)
 {
+    GType type;
     GstMiniObject *obj;
     GstVaapiCodecObject *va_obj;
     GstVaapiCodecObjectConstructorArgs args;
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), NULL);
 
-    obj = gst_mini_object_new(GST_VAAPI_TYPE_PICTURE);
+    type = G_TYPE_FROM_CLASS(GST_VAAPI_PICTURE_GET_CLASS(picture));
+    obj  = gst_mini_object_new(type);
     if (!obj)
         return NULL;
 
