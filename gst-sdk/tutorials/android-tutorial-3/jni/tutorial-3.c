@@ -284,6 +284,7 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
       return;
     } else {
       GST_DEBUG ("Released previous native window %p", data->native_window);
+      data->initialized = FALSE;
     }
   }
   data->native_window = new_native_window;
