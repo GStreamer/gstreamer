@@ -962,19 +962,24 @@ static gboolean
 gst_flac_parse_handle_vorbiscomment (GstFlacParse * flacparse,
     GstBuffer * buffer)
 {
+  GstTagList *tags;
   GstMapInfo map;
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  flacparse->tags =
+  tags =
       gst_tag_list_from_vorbiscomment (map.data, map.size, map.data, 4, NULL);
   gst_buffer_unmap (buffer, &map);
 
-  if (flacparse->tags == NULL) {
+  if (tags == NULL) {
     GST_ERROR_OBJECT (flacparse, "Invalid vorbiscomment block");
-  } else if (gst_tag_list_is_empty (flacparse->tags)) {
-    gst_tag_list_unref (flacparse->tags);
-    flacparse->tags = NULL;
+  } else if (gst_tag_list_is_empty (tags)) {
+    gst_tag_list_unref (tags);
+  } else if (flacparse->tags == NULL) {
+    flacparse->tags = tags;
+  } else {
+    gst_tag_list_insert (flacparse->tags, tags, GST_TAG_MERGE_APPEND);
+    gst_tag_list_unref (tags);
   }
 
   return TRUE;
@@ -1124,6 +1129,7 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
   if (!flacparse->tags)
     flacparse->tags = gst_tag_list_new_empty ();
 
+  GST_INFO_OBJECT (flacparse, "Got image of %d bytes", img_len);
   gst_tag_list_add_id3_image (flacparse->tags,
       map.data + gst_byte_reader_get_pos (&reader), img_len, img_type);
 
@@ -1504,7 +1510,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   } else if (flacparse->state == GST_FLAC_PARSE_STATE_HEADERS) {
     gboolean is_last = ((map.data[0] & 0x80) == 0x80);
     guint type = (map.data[0] & 0x7F);
-    gboolean hdr_ok;
+    gboolean hdr_ok = TRUE;
 
     if (type == 127) {
       GST_WARNING_OBJECT (flacparse, "Invalid metadata block type");
@@ -1518,24 +1524,33 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
     switch (type) {
       case 0:                  /* STREAMINFO */
+        GST_INFO_OBJECT (flacparse, "STREAMINFO header");
         hdr_ok = gst_flac_parse_handle_streaminfo (flacparse, sbuffer);
         break;
       case 3:                  /* SEEKTABLE */
+        GST_INFO_OBJECT (flacparse, "SEEKTABLE header");
         hdr_ok = gst_flac_parse_handle_seektable (flacparse, sbuffer);
         break;
       case 4:                  /* VORBIS_COMMENT */
+        GST_INFO_OBJECT (flacparse, "VORBISCOMMENT header");
         hdr_ok = gst_flac_parse_handle_vorbiscomment (flacparse, sbuffer);
         break;
       case 5:                  /* CUESHEET */
+        GST_INFO_OBJECT (flacparse, "CUESHEET header");
         hdr_ok = gst_flac_parse_handle_cuesheet (flacparse, sbuffer);
         break;
       case 6:                  /* PICTURE */
+        GST_INFO_OBJECT (flacparse, "PICTURE header");
         hdr_ok = gst_flac_parse_handle_picture (flacparse, sbuffer);
         break;
       case 1:                  /* PADDING */
+        GST_INFO_OBJECT (flacparse, "PADDING header");
+        break;
       case 2:                  /* APPLICATION */
+        GST_INFO_OBJECT (flacparse, "APPLICATION header");
+        break;
       default:                 /* RESERVED */
-        hdr_ok = TRUE;
+        GST_INFO_OBJECT (flacparse, "unhandled header of type %u", type);
         break;
     }
 
