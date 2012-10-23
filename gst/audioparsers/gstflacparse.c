@@ -1504,6 +1504,7 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
   } else if (flacparse->state == GST_FLAC_PARSE_STATE_HEADERS) {
     gboolean is_last = ((map.data[0] & 0x80) == 0x80);
     guint type = (map.data[0] & 0x7F);
+    gboolean hdr_ok;
 
     if (type == 127) {
       GST_WARNING_OBJECT (flacparse, "Invalid metadata block type");
@@ -1517,37 +1518,41 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
     switch (type) {
       case 0:                  /* STREAMINFO */
-        if (!gst_flac_parse_handle_streaminfo (flacparse, sbuffer))
-          goto cleanup;
+        hdr_ok = gst_flac_parse_handle_streaminfo (flacparse, sbuffer);
         break;
       case 3:                  /* SEEKTABLE */
-        if (!gst_flac_parse_handle_seektable (flacparse, sbuffer))
-          goto cleanup;
+        hdr_ok = gst_flac_parse_handle_seektable (flacparse, sbuffer);
         break;
       case 4:                  /* VORBIS_COMMENT */
-        if (!gst_flac_parse_handle_vorbiscomment (flacparse, sbuffer))
-          goto cleanup;
+        hdr_ok = gst_flac_parse_handle_vorbiscomment (flacparse, sbuffer);
         break;
       case 5:                  /* CUESHEET */
-        if (!gst_flac_parse_handle_cuesheet (flacparse, sbuffer))
-          goto cleanup;
+        hdr_ok = gst_flac_parse_handle_cuesheet (flacparse, sbuffer);
         break;
       case 6:                  /* PICTURE */
-        if (!gst_flac_parse_handle_picture (flacparse, sbuffer))
-          goto cleanup;
+        hdr_ok = gst_flac_parse_handle_picture (flacparse, sbuffer);
         break;
       case 1:                  /* PADDING */
       case 2:                  /* APPLICATION */
       default:                 /* RESERVED */
+        hdr_ok = TRUE;
         break;
     }
 
-    GST_BUFFER_TIMESTAMP (sbuffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_DURATION (sbuffer) = GST_CLOCK_TIME_NONE;
-    GST_BUFFER_OFFSET (sbuffer) = 0;
-    GST_BUFFER_OFFSET_END (sbuffer) = 0;
+    if (hdr_ok) {
+      GST_BUFFER_TIMESTAMP (sbuffer) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DURATION (sbuffer) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_OFFSET (sbuffer) = 0;
+      GST_BUFFER_OFFSET_END (sbuffer) = 0;
 
-    flacparse->headers = g_list_append (flacparse->headers, sbuffer);
+      flacparse->headers = g_list_append (flacparse->headers, sbuffer);
+    } else {
+      GST_WARNING_OBJECT (parse, "failed to parse header of type %u", type);
+      GST_MEMDUMP_OBJECT (parse, "bad header data", map.data, size);
+
+      gst_buffer_unref (sbuffer);
+      goto header_parsing_error;
+    }
 
     if (is_last) {
       if (!gst_flac_parse_handle_headers (flacparse))
@@ -1643,6 +1648,14 @@ cleanup:
   gst_buffer_unmap (buffer, &map);
 
   return res;
+
+/* ERRORS */
+header_parsing_error:
+  {
+    GST_ELEMENT_ERROR (flacparse, STREAM, DECODE, (NULL),
+        ("Failed to parse headers"));
+    goto cleanup;
+  }
 }
 
 static GstFlowReturn
