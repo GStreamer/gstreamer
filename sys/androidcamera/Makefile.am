@@ -37,9 +37,10 @@ CLEANFILES = gstahccallback.c
 if HAVE_ANDROID_SDK
 gstahccallback.c: $(JAVA_SOURCE)
 	@echo "  JAVAC $(JAVA_SOURCE)"
-	@$(JAVAC) -target 1.6 -source 1.6 -nowarn -classpath $(ANDROID_SDK_DIR)/platforms/android-14/android.jar $(JAVA_SOURCE)
+	@$(JAVAC) -target 1.6 -source 1.6 -nowarn \
+	 -classpath $(ANDROID_SDK_DIR)/platforms/android-$(ANDROID_PLATFORM)/android.jar $(JAVA_SOURCE)
 	@echo "  DEX $(JAVA_SOURCE:.java=.class)"
-	@$(ANDROID_SDK_DIR)/platform-tools/dx --dex --output GstAhcCallback.jar $(JAVA_SOURCE:.java=.class)
+	@$(DX) --dex --output GstAhcCallback.jar $(JAVA_SOURCE:.java=.class)
 	@echo "  GEN $@"
 	@echo "#include \"gstahccallback.h\"" > $@
 	@echo "" >> $@
