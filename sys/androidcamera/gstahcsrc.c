@@ -212,11 +212,35 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GstAHCSrc *self = GST_AHC_SRC (user_data);
   JNIEnv *env = gst_dvm_get_env ();
   GstBuffer *buffer;
-  GstDataQueueItem *item = g_slice_new0 (GstDataQueueItem);
-  FreeFuncBuffer *malloc_data = g_slice_new0 (FreeFuncBuffer);
+  GstDataQueueItem *item = NULL;
+  FreeFuncBuffer *malloc_data = NULL;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+  GstClockTime duration = 0;
   GstClock *clock;
 
+  if ((clock = GST_ELEMENT_CLOCK (self))) {
+    GstClockTime base_time = GST_ELEMENT_CAST (self)->base_time;
+    GstClockTime current_ts;
+
+    gst_object_ref (clock);
+    current_ts = gst_clock_get_time (clock) - base_time;
+    if (GST_CLOCK_TIME_IS_VALID (self->previous_ts)) {
+      timestamp = self->previous_ts;
+      duration = current_ts - self->previous_ts;
+    } else {
+      /* Drop the first buffer */
+      gst_ah_camera_add_callback_buffer (self->camera, data);
+      return;
+    }
+    self->previous_ts = current_ts;
+    gst_object_unref (clock);
+    gst_base_src_set_do_timestamp (GST_BASE_SRC (self), FALSE);
+  } else {
+    gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
+  }
+
   //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
+  malloc_data = g_slice_new0 (FreeFuncBuffer);
   malloc_data->self = self;
   malloc_data->array = (*env)->NewGlobalRef (env, data);
   malloc_data->data = (*env)->GetByteArrayElements (env, data, NULL);
@@ -226,24 +250,12 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GST_BUFFER_SIZE (buffer) = self->buffer_size;
   GST_BUFFER_MALLOCDATA (buffer) = (gpointer) malloc_data;
   GST_BUFFER_FREE_FUNC (buffer) = gst_ahc_src_buffer_free_func;
-  GST_BUFFER_DURATION (buffer) = 0;
-  GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
-  if ((clock = GST_ELEMENT_CLOCK (self))) {
-    GstClockTime base_time = GST_ELEMENT_CAST (self)->base_time;
-    GstClockTime current_ts;
-
-    gst_object_ref (clock);
-    current_ts = gst_clock_get_time (clock) - base_time;
-    if (GST_CLOCK_TIME_IS_VALID (self->previous_ts)) {
-      GST_BUFFER_TIMESTAMP (buffer) = self->previous_ts;
-      GST_BUFFER_DURATION (buffer) = current_ts - self->previous_ts;
-    }
-    self->previous_ts = current_ts;
-    gst_object_unref (clock);
-  }
+  GST_BUFFER_DURATION (buffer) = duration;
+  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
 
   gst_buffer_set_caps (buffer, self->caps);
 
+  item = g_slice_new0 (GstDataQueueItem);
   item->object = GST_MINI_OBJECT (buffer);
   item->size = GST_BUFFER_SIZE (buffer);
   item->duration = GST_BUFFER_DURATION (buffer);
@@ -480,8 +492,6 @@ gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   if (!gst_data_queue_pop (self->queue, &item))
     return GST_FLOW_WRONG_STATE;
-
-  //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
 
   *buffer = GST_BUFFER (item->object);
   g_slice_free (GstDataQueueItem, item);
