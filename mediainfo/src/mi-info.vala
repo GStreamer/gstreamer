@@ -1,5 +1,5 @@
 /* GStreamer media browser
- * Copyright (C) 2010 Stefan Sauer <ensonic@user.sf.net>
+ * Copyright (C) 2010-2012 Stefan Sauer <ensonic@user.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -628,6 +628,8 @@ public class MediaInfo.Info : VPaned
       nb.append_page (table, new Label (@"audio $i"));
     }
     nb.show_all();
+    
+    drawing_area.queue_draw();
 
     //l = info.get_container_streams ();
 
@@ -765,15 +767,7 @@ public class MediaInfo.Info : VPaned
       if (str.length > 0)
         str += "\n";
 
-      // TODO: decode images:
-      /*
-      GInputStream is = g_memory_input_stream_new_from_data(GST_BUFFER_DATA(buf),GST_BUFFER_SIZE(buf,NULL);
-      GdkPixbuf pb = gdk_pixbuf_new_from_stream(is, NULL, NULL);
-      g_input_stream_close(is,NULL,NULL);
-      res = gdk_pixbuf_scale_simple(pb, w, h, GDK_INTERP_BILINEAR);
-      */
-      // - need to figure a way to return them
-      // - where we show them -> in the drawing area
+      // decode images, we show them in the drawing area
       v = s.get_value (fn);
       if (v.holds(typeof(Gst.Buffer))) {
         Gst.Buffer buf = v.get_buffer();
@@ -782,6 +776,7 @@ public class MediaInfo.Info : VPaned
         try {
           InputStream is = new MemoryInputStream.from_data (buf.data,null);
           album_art = new Gdk.Pixbuf.from_stream (is, null);
+          debug("found album art");
           is.close(null);
         } catch (Error e) {
           debug ("Decoding album art failed: %s: %s", e.domain.to_string (), e.message);
