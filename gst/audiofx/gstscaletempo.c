@@ -151,6 +151,7 @@ struct _GstScaletempoPrivate
     guint (*best_overlap_offset) (GstScaletempo * scaletempo);
   /* gstreamer */
   gint64 segment_start;
+  GstClockTime latency;
   /* threads */
   gboolean reinit_buffers;
 };
@@ -314,6 +315,7 @@ reinit_buffers (GstScaletempo * scaletempo)
   gint i, j;
   guint frames_overlap;
   guint new_size;
+  GstClockTime latency;
 
   guint frames_stride = p->ms_stride * p->sample_rate / 1000.0;
   p->bytes_stride = frames_stride * p->bytes_per_frame;
@@ -411,8 +413,18 @@ reinit_buffers (GstScaletempo * scaletempo)
       p->bytes_queued = new_queued;
     }
   }
+
   p->bytes_queue_max = new_size;
   p->buf_queue = g_realloc (p->buf_queue, p->bytes_queue_max);
+
+  latency =
+      gst_util_uint64_scale (p->bytes_queue_max, GST_SECOND,
+      p->bytes_per_frame * p->sample_rate);
+  if (p->latency != latency) {
+    p->latency = latency;
+    gst_element_post_message (GST_ELEMENT (scaletempo),
+        gst_message_new_latency (GST_OBJECT (scaletempo)));
+  }
 
   p->bytes_stride_scaled = p->bytes_stride * p->scale;
   p->frames_stride_scaled = p->bytes_stride_scaled / p->bytes_per_frame;
@@ -598,6 +610,59 @@ gst_scaletempo_set_caps (GstBaseTransform * trans,
   return TRUE;
 }
 
+static gboolean
+gst_scaletempo_query (GstBaseTransform * trans, GstPadDirection direction,
+    GstQuery * query)
+{
+  GstScaletempo *scaletempo = GST_SCALETEMPO (trans);
+  GstScaletempoPrivate *p = scaletempo->priv;
+
+  if (direction == GST_PAD_SRC) {
+    switch (GST_QUERY_TYPE (query)) {
+      case GST_QUERY_LATENCY:{
+        GstPad *peer;
+        gboolean res;
+
+        if ((peer = gst_pad_get_peer (GST_BASE_TRANSFORM_SINK_PAD (trans)))) {
+          if ((res = gst_pad_query (peer, query))) {
+            GstClockTime min, max;
+            gboolean live;
+
+            gst_query_parse_latency (query, &live, &min, &max);
+
+            GST_DEBUG_OBJECT (scaletempo, "Peer latency: min %"
+                GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+            /* add our own latency */
+            GST_DEBUG_OBJECT (scaletempo, "Our latency: %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (p->latency));
+            min += p->latency;
+            if (max != GST_CLOCK_TIME_NONE)
+              max += p->latency;
+
+            GST_DEBUG_OBJECT (scaletempo, "Calculated total latency : min %"
+                GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+            gst_query_set_latency (query, live, min, max);
+          }
+          gst_object_unref (peer);
+        }
+
+        return TRUE;
+        break;
+      }
+      default:{
+        return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+            query);
+        break;
+      }
+    }
+  } else {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
+        query);
+  }
+}
 
 /* GObject vmethod implementations */
 static void
@@ -710,6 +775,7 @@ gst_scaletempo_class_init (GstScaletempoClass * klass)
   basetransform_class->transform_size =
       GST_DEBUG_FUNCPTR (gst_scaletempo_transform_size);
   basetransform_class->transform = GST_DEBUG_FUNCPTR (gst_scaletempo_transform);
+  basetransform_class->query = GST_DEBUG_FUNCPTR (gst_scaletempo_query);
 }
 
 static void
