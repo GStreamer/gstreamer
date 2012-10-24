@@ -189,6 +189,34 @@ struct _GstPluginDesc {
 #endif
 
 /**
+ * GST_PLUGIN_STATIC_DECLARE:
+ * @name: short, but unique name of the plugin
+ *
+ * This macro can be used to initialize statically linked plugins. It is
+ * necessary to call this macro before the plugin can be used.
+ * It has to be used in combination with GST_PLUGIN_STATIC_REGISTER
+ * and must be placed outside any block to declare the plugin initialization
+ * function.
+ *
+ * Since: 1.2.0
+ */
+#define GST_PLUGIN_STATIC_DECLARE(name) \
+  extern void G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void)
+
+/**
+ * GST_PLUGIN_STATIC_REGISTER:
+ * @name: short, but unique name of the plugin
+ *
+ * This macro can be used to initialize statically linked plugins. It is
+ * necessary to call this macro before the plugin can be used.
+ * It has to be used in combination with GST_PLUGIN_STATIC_DECLARE and
+ * calls the plugin initialization function.
+ *
+ * Since: 1.2.0
+ */
+#define GST_PLUGIN_STATIC_REGISTER(name) G_PASTE(gst_plugin_, G_PASTE(name, _register)) ()
+
+/**
  * GST_PLUGIN_DEFINE:
  * @major: major version number of the gstreamer-core that plugin was compiled for
  * @minor: minor version number of the gstreamer-core that plugin was compiled for
@@ -213,6 +241,20 @@ struct _GstPluginDesc {
  * If defined, the GST_PACKAGE_RELEASE_DATETIME will also be used for the
  * #GstPluginDesc,release_datetime field.
  */
+#ifdef GST_PLUGIN_BUILD_STATIC
+#define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
+G_BEGIN_DECLS						\
+GST_PLUGIN_EXPORT void G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void);			\
+							\
+void							\
+G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void)	\
+{							\
+  gst_plugin_register_static (major, minor, G_STRINGIFY(name),	\
+      description, init, version, license,		\
+      PACKAGE, package, origin);			\
+}							\
+G_END_DECLS
+#else /* !GST_PLUGIN_BUILD_STATIC */
 #define GST_PLUGIN_DEFINE(major,minor,name,description,init,version,license,package,origin)	\
 G_BEGIN_DECLS \
 GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
@@ -230,6 +272,7 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   GST_PADDING_INIT				        \
 }; \
 G_END_DECLS
+#endif /* GST_PLUGIN_BUILD_STATIC */
 
 /**
  * GST_LICENSE_UNKNOWN:
