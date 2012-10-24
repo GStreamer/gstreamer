@@ -8,7 +8,7 @@ libgstaudiorate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudiorate_la_LIBADD = $(GST_LIBS) \
         $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la
 
-libgstaudiorate_la_LIBTOOLFLAGS = --tag=disable-static
+libgstaudiorate_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
