@@ -1014,6 +1014,38 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
     return ret;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_GAP:{
+      GstClockTime timestamp, duration;
+      GstAudioRingBufferSpec *spec;
+      GstBuffer *buffer;
+      gint n_samples = 0;
+      GstMapInfo minfo;
+
+      spec = &sink->ringbuffer->spec;
+      gst_event_parse_gap (event, &timestamp, &duration);
+
+      if (duration != GST_CLOCK_TIME_NONE) {
+        n_samples =
+            gst_util_uint64_scale_ceil (duration, spec->info.rate, GST_SECOND);
+        buffer = gst_buffer_new_and_alloc (n_samples * spec->info.bpf);
+
+        if (n_samples != 0) {
+          gst_buffer_map (buffer, &minfo, GST_MAP_WRITE);
+          gst_audio_format_fill_silence (spec->info.finfo, minfo.data,
+              minfo.size);
+          gst_buffer_unmap (buffer, &minfo);
+        }
+        GST_BUFFER_PTS (buffer) = timestamp;
+        GST_BUFFER_DURATION (buffer) = duration;
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_GAP);
+
+        ret = gst_audio_base_sink_render (bsink, buffer);
+        gst_buffer_unref (buffer);
+      } else {
+        gst_audio_base_sink_drain (sink);
+      }
+      break;
+    }
     case GST_EVENT_EOS:
       /* now wait till we played everything */
       gst_audio_base_sink_drain (sink);
