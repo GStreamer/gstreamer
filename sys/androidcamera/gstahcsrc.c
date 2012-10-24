@@ -131,6 +131,7 @@ gst_ahc_src_init (GstAHCSrc * self, GstAHCSrcClass * klass)
   self->data = NULL;
   self->queue = gst_data_queue_new (_data_queue_check_full, NULL);
   self->start = FALSE;
+  self->previous_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -513,21 +514,18 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
 
     gst_object_ref (clock);
     current_ts = gst_clock_get_time (clock) - base_time;
+    gst_object_unref (clock);
     if (GST_CLOCK_TIME_IS_VALID (self->previous_ts)) {
       timestamp = self->previous_ts;
       duration = current_ts - self->previous_ts;
+      self->previous_ts = current_ts;
     } else {
       /* Drop the first buffer */
+      self->previous_ts = current_ts;
       gst_ah_camera_add_callback_buffer (self->camera, data);
       return;
     }
-    self->previous_ts = current_ts;
-    gst_object_unref (clock);
-    gst_base_src_set_do_timestamp (GST_BASE_SRC (self), FALSE);
-  } else {
-    gst_base_src_set_do_timestamp (GST_BASE_SRC (self), TRUE);
   }
-
   //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
   malloc_data = g_slice_new0 (FreeFuncBuffer);
   malloc_data->self = self;
