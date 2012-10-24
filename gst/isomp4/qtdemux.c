@@ -5212,7 +5212,7 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
          * correctly; this is just the minimum we can do - assume
          * we don't actually have any channel positions. */
         gst_caps_set_simple (stream->caps,
-            "channel-mask", GST_TYPE_BITMASK, 0, NULL);
+            "channel-mask", GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
       }
     }
     qtdemux->n_audio_streams++;
