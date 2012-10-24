@@ -568,7 +568,6 @@ gst_event_new_gap (GstClockTime timestamp, GstClockTime duration)
   GstEvent *event;
 
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), NULL);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (duration), NULL);
 
   GST_CAT_TRACE (GST_CAT_EVENT, "creating gap %" GST_TIME_FORMAT " - "
       "%" GST_TIME_FORMAT " (duration: %" GST_TIME_FORMAT ")",
