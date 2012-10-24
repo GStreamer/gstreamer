@@ -33,6 +33,11 @@ typedef struct _CustomData {
   ANativeWindow *native_window; /* The Android native window where video will be rendered */
 } CustomData;
 
+/* playbin2 flags */
+typedef enum {
+  GST_PLAY_FLAG_TEXT          = (1 << 2)  /* We want subtitle output */
+} GstPlayFlags;
+
 /* These global variables cache values which are not changing during execution */
 static pthread_t gst_app_thread;
 static pthread_key_t current_jni_env;
@@ -200,9 +205,10 @@ static void *app_function (void *userdata) {
     set_ui_message("Unable to build pipeline", data);
     return NULL;
   }
+
+  /* Disable subtitles */
   g_object_get (data->pipeline, "flags", &flags, NULL);
-  /* Disable subtitles for now */
-  flags &= ~0x00000004;
+  flags &= ~GST_PLAY_FLAG_TEXT;
   g_object_set (data->pipeline, "flags", flags, NULL);
 
   /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
