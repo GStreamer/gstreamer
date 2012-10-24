@@ -11,7 +11,7 @@ libgstamrnb_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
         -lgstaudio-@GST_API_VERSION@ \
         $(GST_BASE_LIBS) $(GST_LIBS) $(AMRNB_LIBS)
 libgstamrnb_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstamrnb_la_LIBTOOLFLAGS = --tag=disable-static
+libgstamrnb_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	amrnbdec.h \

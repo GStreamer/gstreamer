@@ -6,6 +6,6 @@ libgstmpeg2dec_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 libgstmpeg2dec_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_LIBS) $(MPEG2DEC_LIBS)
 libgstmpeg2dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmpeg2dec_la_LIBTOOLFLAGS = --tag=disable-static
+libgstmpeg2dec_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstmpeg2dec.h

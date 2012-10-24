@@ -15,6 +15,6 @@ libgsta52dec_la_LIBADD = \
 	$(ORC_LIBS) \
 	$(A52DEC_LIBS)
 libgsta52dec_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgsta52dec_la_LIBTOOLFLAGS = --tag=disable-static
+libgsta52dec_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gsta52dec.h
