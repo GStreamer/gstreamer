@@ -594,6 +594,38 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
+gst_dash_demux_setup_all_streams (GstDashDemux *demux)
+{
+  GList *listLang = NULL;
+  guint i, nb_audio;
+  gchar *lang;
+
+  /* clean old active stream list, if any */
+  gst_active_streams_free (demux->client);
+
+  if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_VIDEO, ""))
+    GST_INFO_OBJECT (demux, "No video adaptation set found");
+
+  nb_audio = gst_mpdparser_get_list_and_nb_of_audio_language (demux->client, &listLang);
+  if (nb_audio == 0)
+    nb_audio = 1;
+  GST_INFO_OBJECT (demux, "Number of language is=%d", nb_audio);
+
+  for (i = 0; i < nb_audio; i++) {
+    lang = (gchar *) g_list_nth_data (listLang, i);
+    if (gst_mpdparser_get_nb_adaptationSet (demux->client) > 1)
+      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO, lang))
+        GST_INFO_OBJECT (demux, "No audio adaptation set found");
+
+    if (gst_mpdparser_get_nb_adaptationSet (demux->client) > nb_audio)
+      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_APPLICATION, lang))
+        GST_INFO_OBJECT (demux, "No application adaptation set found");
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
 {
   GstDashDemux *demux = GST_DASH_DEMUX (gst_pad_get_parent (pad));
@@ -646,35 +678,11 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
             ("Incompatible manifest file."), (NULL));
         return FALSE;
       }
-
-      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_VIDEO, "")) {
-        GST_ELEMENT_ERROR (demux, STREAM, DECODE,
-            ("Incompatible manifest file."), (NULL));
+      /* start from first Period */
+      demux->client->period_idx = 0;
+      /* setup video, audio and subtitle streams */
+      if (!gst_dash_demux_setup_all_streams (demux))
         return FALSE;
-      }
-
-      GList *listLang = NULL;
-      guint nb_audio =
-          gst_mpdparser_get_list_and_nb_of_audio_language (demux->client,
-          &listLang);
-      if (nb_audio == 0)
-        nb_audio = 1;
-      GST_INFO_OBJECT (demux, "Number of language is=%d", nb_audio);
-      guint i = 0;
-      for (i = 0; i < nb_audio; i++) {
-        gchar *lang = (gchar *) g_list_nth_data (listLang, i);
-        if (gst_mpdparser_get_nb_adaptationSet (demux->client) > 1)
-          if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO,
-                  lang))
-            GST_INFO_OBJECT (demux, "No audio adaptation set found");
-
-        if (gst_mpdparser_get_nb_adaptationSet (demux->client) > nb_audio)
-          if (!gst_mpd_client_setup_streaming (demux->client,
-                  GST_STREAM_APPLICATION, lang)) {
-            GST_INFO_OBJECT (demux, "No application adaptation set found");
-          }
-      }
-
       /* Send duration message */
       if (!gst_mpd_client_is_live (demux->client)) {
         GstClockTime duration = gst_mpd_client_get_duration (demux->client);
@@ -1035,6 +1043,7 @@ pause_streaming:
 static void
 gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 {
+  demux->end_of_period = FALSE;
   demux->end_of_manifest = FALSE;
   demux->cancelled = FALSE;
 
@@ -1142,23 +1151,40 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
         gst_dash_demux_get_buffering_ratio (demux));
 
     /* fetch the next fragment */
-    if (!gst_dash_demux_get_next_fragment_set (demux)) {
-      if (demux->end_of_manifest) {
-        GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
-        goto end_of_manifest;
+    while (!gst_dash_demux_get_next_fragment_set (demux)) {
+      if (demux->end_of_period) {
+        GST_INFO_OBJECT (demux, "Reached the end of the Period");
+        /* load the next Period in the Media Presentation */
+        if (!gst_mpd_client_get_next_period (demux->client) || !gst_dash_demux_setup_all_streams (demux)) {
+          GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
+          demux->end_of_manifest = TRUE;
+          if (GST_STATE (demux) != GST_STATE_PLAYING) {
+            /* Restart the pipeline regardless of the current buffering level */
+            gst_element_post_message (GST_ELEMENT (demux),
+                gst_message_new_buffering (GST_OBJECT (demux), 100));
+          }
+          gst_task_start (demux->stream_task);
+          goto end_of_manifest;
+        }
+        /* create a new set of pads and send new_segment events */
+        /* FIXME: fix pad switching */
+        //demux->need_segment = TRUE;
+        demux->end_of_period = FALSE;
       } else if (!demux->cancelled) {
         demux->client->update_failed_count++;
         if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
           GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
-          return;
-        } else
+          goto quit;
+        } else {
           goto error_downloading;
+        }
+      } else {
+        goto quit;
       }
-    } else {
-      GST_INFO_OBJECT (demux, "Internal buffering : %d s",
-          gst_dash_demux_get_buffering_time (demux) / GST_SECOND);
-      demux->client->update_failed_count = 0;
     }
+    GST_INFO_OBJECT (demux, "Internal buffering : %d s",
+        gst_dash_demux_get_buffering_time (demux) / GST_SECOND);
+    demux->client->update_failed_count = 0;
   } else {
     /* schedule the next download in 100 ms */
     g_get_current_time (&demux->next_download);
@@ -1231,8 +1257,7 @@ gst_dash_demux_select_representations (GstDashDemux * demux, guint64 bitrate)
 
   guint i = 0;
   while (i < gst_mpdparser_get_nb_active_stream (demux->client)) {
-    if (demux->client->active_streams)
-      stream = g_list_nth_data (demux->client->active_streams, i);
+    stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
     if (!stream)
       return FALSE;
 
@@ -1482,14 +1507,8 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
   while (stream_idx < gst_mpdparser_get_nb_active_stream (demux->client)) {
     if (!gst_mpd_client_get_next_fragment (demux->client,
             stream_idx, &discont, &next_fragment_uri, &duration, &timestamp)) {
-      GST_INFO_OBJECT (demux, "This manifest doesn't contain more fragments");
-      demux->end_of_manifest = TRUE;
-      if (GST_STATE (demux) != GST_STATE_PLAYING) {
-        /* Restart the pipeline regardless of the current buffering level */
-        gst_element_post_message (GST_ELEMENT (demux),
-            gst_message_new_buffering (GST_OBJECT (demux), 100));
-      }
-      gst_task_start (demux->stream_task);
+      GST_INFO_OBJECT (demux, "This Period doesn't contain more fragments");
+      demux->end_of_period = TRUE;
       return FALSE;
     }
 

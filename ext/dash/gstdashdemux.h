@@ -67,7 +67,8 @@ struct _GstDashDemux
   GstBuffer *manifest;
   GstUriDownloader *downloader;
   GstMpdClient *client;         /* MPD client */
-  GQueue *queue;                /*Video/Audio/Application List of fragment storing the fetched fragments */
+  GQueue *queue;                /* Video/Audio/Application List of fragment storing the fetched fragments */
+  gboolean end_of_period;
   gboolean end_of_manifest;
 
   /* Properties */

@@ -457,6 +457,7 @@ struct _GstMpdClient
 
 /* Basic initialization/deinitialization functions */
 GstMpdClient *gst_mpd_client_new ();
+void gst_active_streams_free (GstMpdClient * client);
 void gst_mpd_client_free (GstMpdClient * client);
 
 /* MPD file parsing */
@@ -472,6 +473,9 @@ GstClockTime gst_mpd_client_get_target_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_next_fragment (GstMpdClient *client, guint indexStream, gboolean *discontinuity, gchar **uri, GstClockTime *duration, GstClockTime *timestamp);
 gboolean gst_mpd_client_get_next_header (GstMpdClient *client, const gchar **uri, guint stream_idx);
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
+
+/* Period selection */
+gboolean gst_mpd_client_get_next_period (GstMpdClient *client);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);
