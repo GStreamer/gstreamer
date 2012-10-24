@@ -11,7 +11,7 @@ libgstencodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstencodebin_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(GST_LIBS)
-libgstencodebin_la_LIBTOOLFLAGS = --tag=disable-static
+libgstencodebin_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = 		\
 	gstencodebin.h		\
