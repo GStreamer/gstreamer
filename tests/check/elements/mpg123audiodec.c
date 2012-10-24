@@ -313,6 +313,8 @@ run_decoding_test (GstElement * mpg123audiodec, gchar const *filename)
     fail_unless_equals_int (gst_pad_push (mysrcpad, input_buffer), GST_FLOW_OK);
 
     ++num_input_buffers;
+
+    gst_sample_unref (sample);
   }
 
   num_decoded_buffers = g_list_length (buffers);
@@ -507,43 +509,22 @@ is_test_file_available (gchar const *filename)
   return ret;
 }
 
-
 static Suite *
 mpg123audiodec_suite (void)
 {
-  gboolean has_necessary_elements = TRUE;
+  GstRegistry *registry;
   Suite *s = suite_create ("mpg123audiodec");
   TCase *tc_chain = tcase_create ("general");
 
-  /* check if mpegaudioparse, appsink, and filesrc elments are available */
-  {
-    gchar const **element;
-    gchar const *elements[] = { "filesrc", "mpegaudioparse", "appsink", NULL };
-
-    for (element = elements; *element != NULL; ++element) {
-      GstElement *e;
-      GstStateChangeReturn ret;
-
-      e = gst_element_factory_make (*element, NULL);
-      if (e == NULL) {
-        has_necessary_elements = FALSE;
-        break;
-      }
-
-      ret = gst_element_set_state (e, GST_STATE_READY);
-      if (ret == GST_STATE_CHANGE_SUCCESS) {
-        gst_element_set_state (e, GST_STATE_NULL);
-        gst_object_unref (GST_OBJECT (e));
-      } else {
-        gst_object_unref (GST_OBJECT (e));
-        has_necessary_elements = FALSE;
-        break;
-      }
-    }
-  }
+  registry = gst_registry_get ();
 
   suite_add_tcase (s, tc_chain);
-  if (has_necessary_elements) {
+  if (gst_registry_check_feature_version (registry, "filesrc",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0) &&
+      gst_registry_check_feature_version (registry, "mpegaudioparse",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0) &&
+      gst_registry_check_feature_version (registry, "appsrc",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, 0)) {
     if (is_test_file_available (MP2_STREAM_FILENAME))
       tcase_add_test (tc_chain, test_decode_mpeg1layer2);
     if (is_test_file_available (MP3_CBR_STREAM_FILENAME))
@@ -558,24 +539,4 @@ mpg123audiodec_suite (void)
 }
 
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-  Suite *s;
-  SRunner *sr;
-
-  gst_check_init (&argc, &argv);
-
-  s = mpg123audiodec_suite ();
-  if (s == NULL)
-    return 0;
-
-  sr = srunner_create (s);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (mpg123audiodec)
