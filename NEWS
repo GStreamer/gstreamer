@@ -1,4 +1,34 @@
-This is GStreamer Base Plugins 1.0.1
+This is GStreamer Base Plugins 1.0.2
+
+Changes since 1.0.1:
+
+      * Parallel installability with 0.10.x series
+      * alsa: fix probing of supported formats, and advertise non-native-endianness formats as fallback
+      * audiobasesink: properly handle GAP events (fixing some isses with e.g. certain DVD menus)
+      * audioconvert: try harder to not convert or to preserve input format precision
+      * audiodecoder: leak fixes and refcounting fixes
+      * audioresample: re-enable the SSE/SSE2 code paths for better performance
+      * riff: fix paletted RGB formats and msvideo mapping
+      * rtsp: make formatting and parsing of range floating-point values locale-independent
+      * playbin: streamsynchronizer fixes, esp. for handling corner-cases near EOS
+      * tcpserver{sink,src}: add 'current-port' property and signal actually used port
+      * videoconvert: fix handling of paletted RGB formats
+      * videodecoder: don't leak message strings when error is not fatal
+      * videodecoder: finetune missing timestamp estimating
+      * videotestsrc: add palette for paletted RGB formats
+      * vorbistag: fix writing of image tags into vorbis comments
+
+Bugs fixed since 1.0.1:
+
+      * 580093 : tcpserversink,src: add 'current-port' property and signal actually used port when port=0 was set
+      * 680904 : alsasink: no supported formats detected with using USB sound card on big-endian system
+      * 683098 : videodecoder: log failure message if acquire_buffer failed
+      * 684411 : rtsp: range in SDP formatted according to locale
+      * 685273 : Pre-rolling on GAP events doesn't work properly for audio sinks
+      * 685711 : audio, video: update docs for virtual functions that require chaining up
+      * 685938 : [decodebin] Issues with group switching algorithm
+      * 686081 : adder: all unit tests crash now after collectpads changes
+      * 686298 : Cannot decode some AVI files with Microsoft Video 1
 
 Changes since 1.0.0:
     

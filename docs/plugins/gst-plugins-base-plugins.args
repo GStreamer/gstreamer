@@ -664,7 +664,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>host</NICK>
-<BLURB>The host/IP to send the packets to.</BLURB>
+<BLURB>The host/IP to listen on.</BLURB>
 <DEFAULT>"localhost"</DEFAULT>
 </ARG>
 
@@ -674,8 +674,18 @@
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>port</NICK>
-<BLURB>The port to send the packets to.</BLURB>
+<BLURB>The port to listen to (0=random available port).</BLURB>
 <DEFAULT>4953</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSink::current-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>current-port</NICK>
+<BLURB>The port number the socket is currently bound to.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -694,7 +704,7 @@
 <RANGE>[0,65535]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
-<BLURB>The port to listen to.</BLURB>
+<BLURB>The port to listen to (0=random available port).</BLURB>
 <DEFAULT>4953</DEFAULT>
 </ARG>
 
@@ -706,6 +716,16 @@
 <NICK>Protocol</NICK>
 <BLURB>The protocol to wrap data in.</BLURB>
 <DEFAULT>GST_TCP_PROTOCOL_NONE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTCPServerSrc::current-port</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>current-port</NICK>
+<BLURB>The port number the socket is currently bound to.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
