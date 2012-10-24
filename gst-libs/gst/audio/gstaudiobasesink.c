@@ -1024,6 +1024,10 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
       spec = &sink->ringbuffer->spec;
       gst_event_parse_gap (event, &timestamp, &duration);
 
+      /* If the GAP event has a duration, handle it like a
+       * silence buffer of that duration. Otherwise at least
+       * start the ringbuffer to make sure the clock is running.
+       */
       if (duration != GST_CLOCK_TIME_NONE) {
         n_samples =
             gst_util_uint64_scale_ceil (duration, spec->info.rate, GST_SECOND);
