@@ -453,7 +453,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     n = opus_multistream_decode (dec->state, data, size, out_data, samples, 0);
   }
   gst_buffer_unmap (outbuf, &omap);
-  if (buf)
+  if (data != NULL)
     gst_buffer_unmap (buf, &map);
 
   if (n < 0) {
