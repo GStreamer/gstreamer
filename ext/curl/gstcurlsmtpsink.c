@@ -580,6 +580,12 @@ generate_encoded_word (gchar * str)
   return encoded_word;
 }
 
+/* Setup header fields (From:/To:/Date: etc) and message body for the e-mail.
+ * This data is supposed to be sent to libcurl just before any media data.
+ * This function is called once for each e-mail:
+ * 1. we are about the send the first attachment
+ * 2. we have sent all the attachments and continue sending new ones within
+ *    a new e-mail (transfer options have been reset). */
 static gboolean
 gst_curl_smtp_sink_set_transfer_options_unlocked (GstCurlBaseSink * bcsink)
 {
