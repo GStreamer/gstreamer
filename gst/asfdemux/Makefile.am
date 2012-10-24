@@ -14,13 +14,13 @@ noinst_HEADERS = gstasfdemux.h asfheaders.h asfpacket.h gstrtpasfdepay.h gstrtsp
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
-	-:PROJECT libgstasfdemux -:SHARED libgstasfdemux \
+	-:PROJECT libgstasf -:SHARED libgstasf \
 	 -:TAGS eng debug \
          -:REL_TOP $(top_srcdir) -:ABS_TOP $(abs_top_srcdir) \
-	 -:SOURCES $(libgstasfdemux_la_SOURCES) \
-	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstasfdemux_la_CFLAGS) \
-	 -:LDFLAGS $(libgstasfdemux_la_LDFLAGS) \
-	           $(libgstasfdemux_la_LIBADD) \
+	 -:SOURCES $(libgstasf_la_SOURCES) \
+	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstasf_la_CFLAGS) \
+	 -:LDFLAGS $(libgstasf_la_LDFLAGS) \
+	           $(libgstasf_la_LIBADD) \
 	           -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
 		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
