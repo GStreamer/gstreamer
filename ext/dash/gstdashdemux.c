@@ -1187,9 +1187,6 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
           gst_task_start (demux->stream_task);
           goto end_of_manifest;
         }
-        /* create a new set of pads and send new_segment events */
-        /* FIXME: fix pad switching */
-        //demux->need_segment = TRUE;
         demux->end_of_period = FALSE;
       } else if (!demux->cancelled) {
         demux->client->update_failed_count++;
