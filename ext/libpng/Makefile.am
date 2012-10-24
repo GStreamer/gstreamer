@@ -5,6 +5,6 @@ libgstpng_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(LIBPNG_CFLAGS)
 libgstpng_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ \
 	$(GST_LIBS) $(LIBPNG_LIBS)
 libgstpng_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstpng_la_LIBTOOLFLAGS = --tag=disable-static
+libgstpng_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstpngdec.h gstpngenc.h

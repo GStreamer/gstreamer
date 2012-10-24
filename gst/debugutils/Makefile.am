@@ -18,7 +18,7 @@ libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstnavigationtest_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_API_VERSION@ $(LIBM)
 libgstnavigationtest_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstnavigationtest_la_LIBTOOLFLAGS = --tag=disable-static
+libgstnavigationtest_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 libgstdebug_la_SOURCES = \
 	gstdebug.c \
@@ -38,7 +38,7 @@ libgstdebug_la_SOURCES = \
 libgstdebug_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstdebug_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstdebug_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdebug_la_LIBTOOLFLAGS = --tag=disable-static
+libgstdebug_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

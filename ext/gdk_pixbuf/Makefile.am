@@ -21,7 +21,7 @@ libgstgdkpixbuf_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) $(GDK_PIXBUF_LIBS)
 libgstgdkpixbuf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstgdkpixbuf_la_LIBTOOLFLAGS = --tag=disable-static
+libgstgdkpixbuf_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstgdkpixbufdec.h \

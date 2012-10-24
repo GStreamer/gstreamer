@@ -8,7 +8,7 @@ libgstsmpte_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstsmpte_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(LIBM) \
 			-lgstvideo-$(GST_API_VERSION) 
 libgstsmpte_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsmpte_la_LIBTOOLFLAGS = --tag=disable-static
+libgstsmpte_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

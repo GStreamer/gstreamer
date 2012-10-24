@@ -23,7 +23,7 @@ if !HAVE_IOS
 libgstosxaudio_la_LDFLAGS += -Wl,-framework,AudioUnit -Wl,-framework,CoreServices
 endif
 
-libgstosxaudio_la_LIBTOOLFLAGS = --tag=disable-static --tag=CC
+libgstosxaudio_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS) --tag=CC
 
 noinst_HEADERS = gstosxaudiosink.h	  \
                  gstosxaudioelement.h \

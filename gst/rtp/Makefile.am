@@ -89,7 +89,7 @@ libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
 	$(LIBM)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
-libgstrtp_la_LIBTOOLFLAGS = --tag=disable-static
+libgstrtp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS =			\
 	dboolhuff.h \
