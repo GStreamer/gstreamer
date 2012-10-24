@@ -984,7 +984,6 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       gst_pad_push_event (demux->srcpad[i],
           gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
               start, GST_CLOCK_TIME_NONE, start));
-      demux->need_segment = FALSE;
       demux->position_shift = 0;
     }
 
@@ -995,6 +994,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
     if ((ret != GST_FLOW_OK) && (stream->mimeType == GST_STREAM_VIDEO))
       goto error_pushing;
   }
+  demux->need_segment = FALSE;
   g_list_free (listfragment);
   if (GST_STATE (demux) == GST_STATE_PLAYING) {
     /* Wait for the duration of a fragment before resuming this task */
