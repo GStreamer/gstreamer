@@ -10,7 +10,7 @@ libgstwaveformsink_la_LIBADD = \
 	$(GST_LIBS) \
 	-lwinmm
 libgstwaveformsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstwaveformsink_la_LIBTOOLFLAGS = --tag=disable-static
+libgstwaveformsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstwaveformsink.h
 

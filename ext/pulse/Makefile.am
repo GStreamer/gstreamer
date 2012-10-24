@@ -12,7 +12,7 @@ libgstpulse_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(PULSE_LIBS)
 libgstpulse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstpulse_la_LIBTOOLFLAGS = --tag=disable-static
+libgstpulse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	pulseprobe.h \

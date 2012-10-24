@@ -40,7 +40,7 @@ libgstmatroska_la_LIBADD = \
 	$(BZ2_LIBS) \
 	$(LIBM)
 libgstmatroska_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmatroska_la_LIBTOOLFLAGS = --tag=disable-static
+libgstmatroska_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 
 Android.mk: Makefile.am $(BUILT_SOURCES)

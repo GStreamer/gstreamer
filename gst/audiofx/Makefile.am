@@ -33,7 +33,7 @@ libgstaudiofx_la_LIBADD = $(GST_LIBS) \
 	-lgstfft-$(GST_API_VERSION) \
 	$(LIBM)
 libgstaudiofx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstaudiofx_la_LIBTOOLFLAGS = --tag=disable-static
+libgstaudiofx_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = audiopanorama.h \
