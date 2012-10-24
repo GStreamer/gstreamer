@@ -23,7 +23,7 @@ libgstmxf_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS
 libgstmxf_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-@GST_API_VERSION@
 libgstmxf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmxf_la_LIBTOOLFLAGS = --tag=disable-static
+libgstmxf_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	mxful.h \

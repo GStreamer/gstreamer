@@ -37,4 +37,4 @@ libgstvdp_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(X11_LIBS) $(VDPAU_LIBS) \
 	../basevideodecoder/libgstbasevideodecoder.la
   
 libgstvdp_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_LT_LDFLAGS) $(GST_ALL_LDFLAGS)
-libgstvdp_@GST_API_VERSION@_la_LIBTOOLFLAGS = --tag=disable-static
+libgstvdp_@GST_API_VERSION@_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

@@ -19,7 +19,7 @@ libgstdtmf_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 libgstdtmf_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstdtmf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdtmf_la_LIBTOOLFLAGS = --tag=disable-static
+libgstdtmf_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

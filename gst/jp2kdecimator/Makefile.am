@@ -9,7 +9,7 @@ libgstjp2kdecimator_la_CFLAGS = \
 libgstjp2kdecimator_la_LIBADD = \
     $(GST_LIBS) $(GST_BASE_LIBS)
 libgstjp2kdecimator_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstjp2kdecimator_la_LIBTOOLFLAGS = --tag=disable-static
+libgstjp2kdecimator_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstjp2kdecimator.h jp2kcodestream.h
 

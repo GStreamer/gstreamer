@@ -18,7 +18,7 @@ libgstcog_la_LIBADD = \
 	$(ORC_LIBS) \
 	$(COG_LIBS)
 libgstcog_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
-libgstcog_la_LIBTOOLFLAGS = --tag=disable-static
+libgstcog_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 libgstcog_la_SOURCES = \
 	cog.h \

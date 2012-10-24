@@ -14,7 +14,7 @@ libgstpatchdetect_la_LIBADD = \
 	$(GST_LIBS) \
 	$(LIBM)
 libgstpatchdetect_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstpatchdetect_la_LIBTOOLFLAGS = --tag=disable-static
+libgstpatchdetect_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstpatchdetect.h
 

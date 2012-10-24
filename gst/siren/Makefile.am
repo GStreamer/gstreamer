@@ -13,7 +13,7 @@ libgstsiren_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstsiren_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 libgstsiren_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsiren_la_LIBTOOLFLAGS = --tag=disable-static
+libgstsiren_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

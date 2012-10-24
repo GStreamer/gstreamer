@@ -11,7 +11,7 @@ libgstwinks_la_LIBADD = $(DIRECTSHOW_LIBS) \
 	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	-lgstinterfaces-$(GST_MAJORMINOR)
 libgstwinks_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DIRECTX_LDFLAGS)
-libgstwinks_la_LIBTOOLFLAGS = --tag=disable-static
+libgstwinks_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS= gstksclock.h
 

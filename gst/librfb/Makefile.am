@@ -7,7 +7,7 @@ libgstrfbsrc_la_SOURCES = gstrfbsrc.c
 libgstrfbsrc_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(X11_CFLAGS) -I$(srcdir)/..
 libgstrfbsrc_la_LIBADD = $(GST_BASE_LIBS) $(X11_LIBS) $(WINSOCK2_LIBS) librfb.la
 libgstrfbsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrfbsrc_la_LIBTOOLFLAGS = --tag=disable-static
+libgstrfbsrc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 librfb_la_SOURCES = \
 	rfbbuffer.c \

@@ -9,7 +9,7 @@ libgstscaletempoplugin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstscaletempoplugin_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstaudio-@GST_API_VERSION@ \
 	$(GST_LIBS) $(GST_BASE_LIBS)
 libgstscaletempoplugin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstscaletempoplugin_la_LIBTOOLFLAGS = --tag=disable-static
+libgstscaletempoplugin_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = gstscaletempo.h

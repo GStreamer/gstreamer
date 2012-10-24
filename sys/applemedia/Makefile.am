@@ -27,7 +27,7 @@ libgstapplemedia_la_LIBADD =			\
 	$(GST_PLUGINS_BASE_LIBS)		\
 	-lgstvideo-$(GST_API_VERSION)
 
-libgstapplemedia_la_LIBTOOLFLAGS = --tag=disable-static
+libgstapplemedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 libgstapplemedia_la_LDFLAGS =			\
 	$(GST_PLUGIN_LDFLAGS)			\

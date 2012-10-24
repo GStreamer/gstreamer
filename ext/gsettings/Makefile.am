@@ -25,7 +25,7 @@ libgstgsettingselements_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS) $(GS
 	-DGstSwitchSinkClass=GstGSettingsSwitchSinkClass
 libgstgsettingselements_la_LIBADD = $(GST_LIBS) $(GSETTINGS_LIBS)
 libgstgsettingselements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstgsettingselements_la_LIBTOOLFLAGS = --tag=disable-static
+libgstgsettingselements_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
         gstgsettingsaudiosink.h \

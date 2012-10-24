@@ -12,7 +12,7 @@ libgstmpegpsdemux_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)
 libgstmpegpsdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmpegpsdemux_la_LIBTOOLFLAGS = --tag=disable-static
+libgstmpegpsdemux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstmpegdefs.h   \

@@ -20,6 +20,6 @@ libgstschro_la_LIBADD = \
         $(GST_BASE_LIBS) $(GST_LIBS) \
 	$(SCHRO_LIBS)
 libgstschro_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstschro_la_LIBTOOLFLAGS = --tag=disable-static
+libgstschro_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 
