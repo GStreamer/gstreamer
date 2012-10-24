@@ -507,6 +507,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       GST_MPD_CLIENT_LOCK (demux->client);
       stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
 
+      /* FIXME: support seeking across periods */
       current_pos = 0;
       target_pos = (GstClockTime) start;
       for (walk = stream->segments; walk; walk = walk->next) {
@@ -551,6 +552,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_MPD_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "Seeking to sequence %d", current_sequence);
+      /* FIXME: support seeking across periods */
       stream_idx = 0;
       /* Update the current sequence on all streams */
       while (stream_idx < nb_active_stream) {
@@ -562,7 +564,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         stream_idx++;
       }
       /* Calculate offset in the next fragment */
-      gst_mpd_client_get_current_position (demux->client, &demux->position);
+      demux->position = gst_mpd_client_get_current_position (demux->client);
       demux->position_shift = start - demux->position;
       demux->need_segment = TRUE;
       GST_MPD_CLIENT_UNLOCK (demux->client);
@@ -685,7 +687,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
         return FALSE;
       /* Send duration message */
       if (!gst_mpd_client_is_live (demux->client)) {
-        GstClockTime duration = gst_mpd_client_get_duration (demux->client);
+        GstClockTime duration = gst_mpd_client_get_media_presentation_duration (demux->client);
 
         if (duration != GST_CLOCK_TIME_NONE) {
           GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
@@ -731,7 +733,7 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_duration (query, &fmt, NULL);
       if (fmt == GST_FORMAT_TIME) {
-        duration = gst_mpd_client_get_duration (dashdemux->client);
+        duration = gst_mpd_client_get_media_presentation_duration (dashdemux->client);
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
           gst_query_set_duration (query, GST_FORMAT_TIME, duration);
           ret = TRUE;
@@ -752,7 +754,7 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
       if (fmt == GST_FORMAT_TIME) {
         GstClockTime duration;
 
-        duration = gst_mpd_client_get_duration (dashdemux->client);
+        duration = gst_mpd_client_get_media_presentation_duration (dashdemux->client);
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
           stop = duration;
 
@@ -1151,7 +1153,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
    * buffering time */
   GstClockTime target_buffering_time =
       demux->min_buffering_time +
-      gst_mpd_client_get_target_duration (demux->client);
+      gst_mpd_client_get_next_fragment_duration (demux->client);
   if (demux->max_buffering_time > target_buffering_time)
     target_buffering_time = demux->max_buffering_time;
   if (!demux->end_of_manifest
