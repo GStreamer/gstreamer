@@ -14,7 +14,7 @@ libgstrmdemux_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 				-lgstpbutils-@GST_API_VERSION@ \
 				$(GST_BASE_LIBS) $(GST_LIBS)
 libgstrmdemux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrmdemux_la_LIBTOOLFLAGS = --tag=disable-static
+libgstrmdemux_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = rademux.h rmdemux.h rmutils.h rdtdepay.h rdtmanager.h \
 		 rdtjitterbuffer.h rtspreal.h realhash.h asmrules.h gstrdtbuffer.h \
