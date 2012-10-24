@@ -30,7 +30,6 @@ typedef struct _CustomData {
   GMainContext *context;  /* GLib context used to run the main loop */
   GMainLoop *main_loop;   /* GLib main loop */
   gboolean initialized;   /* To avoid informing the UI multiple times about the initialization */
-  GstElement *video_sink; /* The video sink element which receives XOverlay commands */
   ANativeWindow *native_window; /* The Android native window where video will be rendered */
 } CustomData;
 
@@ -41,6 +40,7 @@ static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
+static jmethodID on_media_size_changed_method_id;
 
 /*
  * Private methods
@@ -122,6 +122,31 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   }
 }
 
+/* Called when Pad Caps change on the video sink */
+static void caps_cb (GstPad *pad, GParamSpec *pspec, CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  GstVideoFormat fmt;
+  int width;
+  int height;
+  GstCaps *caps;
+
+  caps = gst_pad_get_negotiated_caps (pad);
+  if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
+    int par_n, par_d;
+    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
+      width = width * par_n / par_d;
+    }
+    GST_DEBUG ("Media size changed to %dx%d", width, height);
+
+    (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)width, (jint)height);
+    if ((*env)->ExceptionCheck (env)) {
+      GST_ERROR ("Failed to call Java method");
+      (*env)->ExceptionClear (env);
+    }
+  }
+  gst_caps_unref(caps);
+}
+
 /* Check if all conditions are met to report GStreamer as initialized.
  * These conditions will change depending on the application */
 static void check_initialization_complete (CustomData *data) {
@@ -130,7 +155,7 @@ static void check_initialization_complete (CustomData *data) {
     GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%p", data->native_window, data->main_loop);
 
     /* The main loop is running and we received a native window, inform the sink about it */
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)data->native_window);
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
 
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
@@ -147,7 +172,7 @@ static void *app_function (void *userdata) {
   GstBus *bus;
   CustomData *data = (CustomData *)userdata;
   GSource *bus_source;
-  GError *error = NULL;
+  guint flags;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
 
@@ -156,23 +181,18 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
-  data->pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
-  if (error) {
-    gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
-    g_clear_error (&error);
-    set_ui_message(message, data);
-    g_free (message);
+  data->pipeline = gst_element_factory_make ("playbin2", NULL);
+  if (!data->pipeline) {
+    set_ui_message("Unable to build pipeline", data);
     return NULL;
   }
+  g_object_get (data->pipeline, "flags", &flags, NULL);
+  /* Disable subtitles for now */
+  flags &= ~0x00000004;
+  g_object_set (data->pipeline, "flags", flags, NULL);
 
   /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
   gst_element_set_state(data->pipeline, GST_STATE_READY);
-
-  data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_X_OVERLAY);
-  if (!data->video_sink) {
-    GST_ERROR ("Could not retrieve video sink");
-    return NULL;
-  }
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
   bus = gst_element_get_bus (data->pipeline);
@@ -197,7 +217,6 @@ static void *app_function (void *userdata) {
   g_main_context_pop_thread_default(data->context);
   g_main_context_unref (data->context);
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
-  gst_object_unref (data->video_sink);
   gst_object_unref (data->pipeline);
 
   return NULL;
@@ -235,6 +254,16 @@ static void gst_native_finalize (JNIEnv* env, jobject thiz) {
   GST_DEBUG ("Done finalizing");
 }
 
+void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data || !data->pipeline) return;
+  const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
+  GST_DEBUG ("Setting URI to %s", char_uri);
+  gst_element_set_state (data->pipeline, GST_STATE_READY);
+  g_object_set(data->pipeline, "uri", char_uri, NULL);
+  (*env)->ReleaseStringUTFChars (env, uri, char_uri);
+}
+
 /* Set pipeline to PLAYING state */
 static void gst_native_play (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
@@ -256,8 +285,10 @@ static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
   on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
+  on_media_size_changed_method_id = (*env)->GetMethodID (env, klass, "onMediaSizeChanged", "(II)V");
 
-  if (!custom_data_field_id || !set_message_method_id || !on_gstreamer_initialized_method_id) {
+  if (!custom_data_field_id || !set_message_method_id || !on_gstreamer_initialized_method_id ||
+      !on_media_size_changed_method_id) {
     /* We emit this message through the Android log instead of the GStreamer log because the later
      * has not been initialized yet.
      */
@@ -277,9 +308,9 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
     ANativeWindow_release (data->native_window);
     if (data->native_window == new_native_window) {
       GST_DEBUG ("New native window is the same as the previous one", data->native_window);
-      if (data->video_sink) {
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
+      if (data->pipeline) {
+        gst_x_overlay_expose(GST_X_OVERLAY (data->pipeline));
+        gst_x_overlay_expose(GST_X_OVERLAY (data->pipeline));
       }
       return;
     } else {
@@ -297,8 +328,8 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   if (!data) return;
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
 
-  if (data->video_sink) {
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)NULL);
+  if (data->pipeline) {
+    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
     gst_element_set_state (data->pipeline, GST_STATE_READY);
   }
 
@@ -311,6 +342,7 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
 static JNINativeMethod native_methods[] = {
   { "nativeInit", "()V", (void *) gst_native_init},
   { "nativeFinalize", "()V", (void *) gst_native_finalize},
+  { "nativeSetUri", "(Ljava/lang/String;)V", (void *) gst_native_set_uri},
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},
   { "nativeSurfaceInit", "(Ljava/lang/Object;)V", (void *) gst_native_surface_init},

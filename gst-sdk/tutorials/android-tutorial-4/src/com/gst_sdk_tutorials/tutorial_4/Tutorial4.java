@@ -16,6 +16,7 @@ import com.gstreamer.GStreamer;
 public class Tutorial4 extends Activity implements SurfaceHolder.Callback {
     private native void nativeInit();     // Initialize native code, build pipeline, etc
     private native void nativeFinalize(); // Destroy pipeline and shutdown native code
+    private native void nativeSetUri(String uri); // Set the URI of the media to play
     private native void nativePlay();     // Set pipeline to PLAYING
     private native void nativePause();    // Set pipeline to PAUSED
     private static native boolean nativeClassInit(); // Initialize native class: cache Method IDs for callbacks
@@ -24,6 +25,8 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback {
     private long native_custom_data;      // Native code will use this to keep private data
 
     private boolean is_playing_desired;   // Whether the user asked to go to PLAYING
+
+    private String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
 
     // Called when the activity is first created.
     @Override
@@ -102,6 +105,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback {
     private void onGStreamerInitialized () {
         Log.i ("GStreamer", "Gst initialized. Restoring state, playing:" + is_playing_desired);
         // Restore previous playing state
+        nativeSetUri (mediaUri);
         if (is_playing_desired) {
             nativePlay();
         } else {
@@ -138,6 +142,18 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d("GStreamer", "Surface destroyed");
         nativeSurfaceFinalize ();
+    }
+
+    private void onMediaSizeChanged (int width, int height) {
+        Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
+        final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
+        gsv.media_width = width;
+        gsv.media_height = height;
+        runOnUiThread(new Runnable() {
+            public void run() {
+                gsv.requestLayout();
+            }
+        });
     }
 
 }
