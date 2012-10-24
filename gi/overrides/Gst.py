@@ -77,6 +77,22 @@ class Caps(Gst.Caps):
 Caps = override(Caps)
 __all__.append('Caps')
 
+class GhostPad(Gst.GhostPad):
+    def __init__(self, name, target=None, direction=None):
+        if direction is None:
+            if target is None:
+                raise TypeError('you must pass at least one of target'
+                        'and direction')
+            direction = target.props.direction
+
+        Gst.GhostPad.__init__(self, name=name, direction=direction)
+        self.construct()
+        if target is not None:
+            self.set_target(target)
+
+GhostPad = override(GhostPad)
+__all__.append('GhostPad')
+
 class IteratorError(Exception):
     pass
 __all__.append('IteratorError')
