@@ -110,6 +110,40 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
 }
 
+/* Called when Pad Caps change on the video sink */
+static void check_media_size (CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  GstElement *video_sink;
+  GstPad *video_sink_pad;
+  GstCaps *caps;
+  GstVideoFormat fmt;
+  int width;
+  int height;
+
+  /* Retrieve the Caps at the entrance of the video sink */
+  g_object_get (data->pipeline, "video-sink", &video_sink, NULL);
+  video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
+  caps = gst_pad_get_negotiated_caps (video_sink_pad);
+
+  if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
+    int par_n, par_d;
+    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
+      width = width * par_n / par_d;
+    }
+    GST_DEBUG ("Media size changed to %dx%d, notifying application", width, height);
+
+    (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)width, (jint)height);
+    if ((*env)->ExceptionCheck (env)) {
+      GST_ERROR ("Failed to call Java method");
+      (*env)->ExceptionClear (env);
+    }
+  }
+
+  gst_caps_unref(caps);
+  gst_object_unref (video_sink_pad);
+  gst_object_unref(video_sink);
+}
+
 /* Notify UI about pipeline state changes */
 static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   GstState old_state, new_state, pending_state;
@@ -119,32 +153,12 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
     gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
     set_ui_message(message, data);
     g_free (message);
-  }
-}
 
-/* Called when Pad Caps change on the video sink */
-static void caps_cb (GstPad *pad, GParamSpec *pspec, CustomData *data) {
-  JNIEnv *env = get_jni_env ();
-  GstVideoFormat fmt;
-  int width;
-  int height;
-  GstCaps *caps;
-
-  caps = gst_pad_get_negotiated_caps (pad);
-  if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
-    int par_n, par_d;
-    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-      width = width * par_n / par_d;
-    }
-    GST_DEBUG ("Media size changed to %dx%d", width, height);
-
-    (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)width, (jint)height);
-    if ((*env)->ExceptionCheck (env)) {
-      GST_ERROR ("Failed to call Java method");
-      (*env)->ExceptionClear (env);
+    if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
+      /* By now the sink already knows the media size */
+      check_media_size(data);
     }
   }
-  gst_caps_unref(caps);
 }
 
 /* Check if all conditions are met to report GStreamer as initialized.
