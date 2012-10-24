@@ -212,6 +212,7 @@ check_PROGRAMS = \
 	elements/mpegtsmux \
 	elements/mpegvideoparse \
 	elements/mpeg4videoparse \
+	elements/mpg123audiodec \
 	elements/mxfdemux \
 	elements/mxfmux \
 	elements/id3mux \
@@ -350,6 +351,10 @@ elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION
 
 elements_mpegtsmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_mpegtsmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
+
+elements_mpg123audiodec_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) $(GST_LIBS) $(LDADD) \
+	-lgstaudio-@GST_API_VERSION@ -lgstfft-@GST_API_VERSION@ -lgstapp-@GST_API_VERSION@
 
 elements_uvch264demux_CFLAGS = -DUVCH264DEMUX_DATADIR="$(srcdir)/elements/uvch264demux_data" \
 				$(AM_CFLAGS)
