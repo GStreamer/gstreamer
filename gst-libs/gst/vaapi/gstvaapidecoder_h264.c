@@ -149,6 +149,17 @@ gst_vaapi_picture_h264_new(GstVaapiDecoderH264 *decoder)
     return GST_VAAPI_PICTURE_H264_CAST(object);
 }
 
+static inline GstVaapiSliceH264 *
+gst_vaapi_picture_h264_get_last_slice(GstVaapiPictureH264 *picture)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), NULL);
+
+    if (G_UNLIKELY(picture->base.slices->len < 1))
+        return NULL;
+    return g_ptr_array_index(picture->base.slices,
+        picture->base.slices->len - 1);
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- Slices                                                            --- */
 /* ------------------------------------------------------------------------- */
@@ -507,16 +518,6 @@ get_status(GstH264ParserResult result)
         break;
     }
     return status;
-}
-
-static inline GstH264DecRefPicMarking *
-get_dec_ref_pic_marking(GstVaapiPictureH264 *picture_h264)
-{
-    GstVaapiPicture * const picture = GST_VAAPI_PICTURE_CAST(picture_h264);
-    GstVaapiSliceH264 *slice;
-
-    slice = g_ptr_array_index(picture->slices, picture->slices->len - 1);
-    return &slice->slice_hdr.dec_ref_pic_marking;
 }
 
 static void
@@ -1920,8 +1921,10 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         return TRUE;
 
     if (!picture->is_idr) {
+        GstVaapiSliceH264 * const slice =
+            gst_vaapi_picture_h264_get_last_slice(picture);
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
-            get_dec_ref_pic_marking(picture);
+            &slice->slice_hdr.dec_ref_pic_marking;
         if (dec_ref_pic_marking->adaptive_ref_pic_marking_mode_flag) {
             if (!exec_ref_pic_marking_adaptive(decoder, picture, dec_ref_pic_marking))
                 return FALSE;
@@ -2026,6 +2029,83 @@ fill_picture(
     COPY_BFM(pic_fields, pps, deblocking_filter_control_present_flag);
     COPY_BFM(pic_fields, pps, redundant_pic_cnt_present_flag);
     return TRUE;
+}
+
+/* Detection of the first VCL NAL unit of a primary coded picture (7.4.1.2.4) */
+static gboolean
+is_new_picture(
+    GstVaapiDecoderH264 *decoder,
+    GstH264NalUnit      *nalu,
+    GstH264SliceHdr     *slice_hdr
+)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstH264PPS * const pps = slice_hdr->pps;
+    GstH264SPS * const sps = pps->sequence;
+    GstVaapiSliceH264 *slice;
+    GstH264SliceHdr *prev_slice_hdr;
+
+    if (!priv->current_picture)
+        return TRUE;
+
+    slice = gst_vaapi_picture_h264_get_last_slice(priv->current_picture);
+    if (!slice)
+        return FALSE;
+    prev_slice_hdr = &slice->slice_hdr;
+
+#define CHECK_EXPR(expr, field_name) do {              \
+        if (!(expr)) {                                 \
+            GST_DEBUG(field_name " differs in value"); \
+            return TRUE;                               \
+        }                                              \
+    } while (0)
+
+#define CHECK_VALUE(new_slice_hdr, old_slice_hdr, field) \
+    CHECK_EXPR(((new_slice_hdr)->field == (old_slice_hdr)->field), #field)
+
+    /* frame_num differs in value, regardless of inferred values to 0 */
+    CHECK_VALUE(slice_hdr, prev_slice_hdr, frame_num);
+
+    /* pic_parameter_set_id differs in value */
+    CHECK_VALUE(slice_hdr, prev_slice_hdr, pps);
+
+    /* field_pic_flag differs in value */
+    CHECK_VALUE(slice_hdr, prev_slice_hdr, field_pic_flag);
+
+    /* bottom_field_flag is present in both and differs in value */
+    if (slice_hdr->field_pic_flag && prev_slice_hdr->field_pic_flag)
+        CHECK_VALUE(slice_hdr, prev_slice_hdr, bottom_field_flag);
+
+    /* nal_ref_idc differs in value with one of the nal_ref_idc values is 0 */
+    CHECK_EXPR(((GST_VAAPI_PICTURE_IS_REFERENCE(priv->current_picture) ^
+                 (nalu->ref_idc != 0)) == 0), "nal_ref_idc");
+
+    /* POC type is 0 for both and either pic_order_cnt_lsb differs in
+       value or delta_pic_order_cnt_bottom differs in value */
+    if (sps->pic_order_cnt_type == 0) {
+        CHECK_VALUE(slice_hdr, prev_slice_hdr, pic_order_cnt_lsb);
+        if (pps->pic_order_present_flag && !slice_hdr->field_pic_flag)
+            CHECK_VALUE(slice_hdr, prev_slice_hdr, delta_pic_order_cnt_bottom);
+    }
+
+    /* POC type is 1 for both and either delta_pic_order_cnt[0]
+       differs in value or delta_pic_order_cnt[1] differs in value */
+    else if (sps->pic_order_cnt_type == 1) {
+        CHECK_VALUE(slice_hdr, prev_slice_hdr, delta_pic_order_cnt[0]);
+        CHECK_VALUE(slice_hdr, prev_slice_hdr, delta_pic_order_cnt[1]);
+    }
+
+    /* IdrPicFlag differs in value */
+    CHECK_EXPR(((priv->current_picture->is_idr ^
+                 (nalu->type == GST_H264_NAL_SLICE_IDR)) == 0), "IdrPicFlag");
+
+    /* IdrPicFlag is equal to 1 for both and idr_pic_id differs in value */
+    if (priv->current_picture->is_idr)
+        CHECK_VALUE(slice_hdr, prev_slice_hdr, idr_pic_id);
+
+#undef CHECK_EXPR
+#undef CHECK_VALUE
+    return FALSE;
 }
 
 static GstVaapiDecoderStatus
@@ -2254,7 +2334,7 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
         goto error;
     }
 
-    if (slice_hdr->first_mb_in_slice == 0) {
+    if (is_new_picture(decoder, nalu, slice_hdr)) {
         status = decode_picture(decoder, nalu, slice_hdr);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             goto error;
