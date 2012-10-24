@@ -1241,6 +1241,7 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
       buffer = gst_buffer_make_writable (buffer);
       GST_BUFFER_TIMESTAMP (buffer) = ts;
       flush += len;
+      priv->force = FALSE;
     } else {
       if (!force)
         break;
@@ -1249,6 +1250,7 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
         break;
       }
       buffer = NULL;
+      priv->force = TRUE;
     }
 
     ret = gst_audio_decoder_handle_frame (dec, klass, buffer);
