@@ -34,7 +34,7 @@ libgstinter_la_LIBADD = \
 	$(LIBM)
 
 libgstinter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstinter_la_LIBTOOLFLAGS = --tag=disable-static
+libgstinter_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 gstintertest_SOURCES = \
 	gstintertest.c

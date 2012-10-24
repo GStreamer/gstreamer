@@ -7,6 +7,6 @@ libgstwaylandsink_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
                                -lgstvideo-$(GST_API_VERSION) \
                                $(WAYLAND_LIBS)
 libgstwaylandsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstwaylandsink_la_LIBTOOLFLAGS = --tag=disable-static
+libgstwaylandsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstwaylandsink.h waylandpool.h

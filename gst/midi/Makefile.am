@@ -11,7 +11,7 @@ libgstmidi_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(LIBM)
 libgstmidi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmidi_la_LIBTOOLFLAGS = --tag=disable-static
+libgstmidi_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = midiparse.h
 

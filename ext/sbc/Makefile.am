@@ -19,4 +19,4 @@ libgstsbc_la_LIBADD = \
 	$(GST_BASE_LIBS) $(GST_LIBS) \
 	$(SBC_LIBS)
 libgstsbc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsbc_la_LIBTOOLFLAGS = --tag=disable-static
+libgstsbc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

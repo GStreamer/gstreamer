@@ -15,7 +15,7 @@ libgstfragmented_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstpbutils-$(GST_API_VERSION) -lgstvideo-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS) $(LIBM) $(GNUTLS_LIBS)
 libgstfragmented_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -no-undefined
-libgstfragmented_la_LIBTOOLFLAGS = --tag=disable-static
+libgstfragmented_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = 			\

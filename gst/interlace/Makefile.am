@@ -13,7 +13,7 @@ libgstinterlace_la_LIBADD = \
 	$(LIBM)
 
 libgstinterlace_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstinterlace_la_LIBTOOLFLAGS = --tag=disable-static
+libgstinterlace_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

@@ -21,7 +21,7 @@ libgstresindvd_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 -lgsttag-$(GST_API_VERSION) \
 $(GST_BASE_LIBS) $(GST_LIBS) $(GMODULE_NO_EXPORT_LIBS) $(DVDNAV_LIBS)
 libgstresindvd_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstresindvd_la_LIBTOOLFLAGS = --tag=disable-static
+libgstresindvd_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = resindvdbin.h \
 	rsndec.h \

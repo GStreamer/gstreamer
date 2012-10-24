@@ -6,7 +6,7 @@ libgstjpegformat_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
 libgstjpegformat_la_LIBADD = \
     $(GST_PLUGINS_BASE_LIBS) -lgsttag-@GST_API_VERSION@ $(GST_BASE_LIBS) $(GST_LIBS)
 libgstjpegformat_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstjpegformat_la_LIBTOOLFLAGS = --tag=disable-static
+libgstjpegformat_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstjpegformat.h gstjpegparse.h gstjifmux.h
 

@@ -22,5 +22,5 @@ libgstmfc_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstmfc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstmfc_la_LIBTOOLFLAGS = --tag=disable-static
+libgstmfc_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 

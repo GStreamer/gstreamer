@@ -15,7 +15,7 @@ libgstuvch264_la_CFLAGS =   $(GST_PLUGINS_BAD_CFLAGS) \
 			    -DGST_USE_UNSTABLE_API
 
 libgstuvch264_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstuvch264_la_LIBTOOLFLAGS = --tag=disable-static
+libgstuvch264_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 libgstuvch264_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 			    $(GST_BASE_LIBS) \

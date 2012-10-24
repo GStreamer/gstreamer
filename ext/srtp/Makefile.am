@@ -16,7 +16,7 @@ libgstsrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	$(GST_LIBS)				\
 	$(SRTP_LIBS) 
 libgstsrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstsrtp_la_LIBTOOLFLAGS = --tag=disable-static
+libgstsrtp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 srtp_headers =          \
         gstsrtpdec.h	\

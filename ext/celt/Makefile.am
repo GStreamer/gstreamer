@@ -12,6 +12,6 @@ libgstcelt_la_LIBADD = \
 	$(GST_LIBS) \
 	$(CELT_LIBS)
 libgstcelt_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
-libgstcelt_la_LIBTOOLFLAGS = --tag=disable-static
+libgstcelt_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstceltenc.h gstceltdec.h 

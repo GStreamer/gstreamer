@@ -21,7 +21,7 @@ libgstcdxaparse_la_LIBADD = \
 	-lgstriff-@GST_API_VERSION@
 
 libgstcdxaparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstcdxaparse_la_LIBTOOLFLAGS = --tag=disable-static
+libgstcdxaparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

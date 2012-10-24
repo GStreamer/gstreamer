@@ -20,7 +20,7 @@ libgstbluez_la_LIBADD = \
 	$(GST_LIBS) \
 	$(DBUS_LIBS)
 libgstbluez_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstbluez_la_LIBTOOLFLAGS = --tag=disable-static
+libgstbluez_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	a2dp-codecs.h \

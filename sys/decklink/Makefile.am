@@ -20,7 +20,7 @@ libgstdecklink_la_LDFLAGS += \
 	-Wl,-framework,CoreFoundation
 endif
 
-libgstdecklink_la_LIBTOOLFLAGS = --tag=disable-static
+libgstdecklink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 libgstdecklink_la_SOURCES = \
 	gstdecklinksink.cpp \

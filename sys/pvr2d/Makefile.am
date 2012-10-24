@@ -14,7 +14,7 @@ libgstpvr_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(LIBM)
 
 libgstpvr_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstpvr_la_LIBTOOLFLAGS = --tag=disable-static
+libgstpvr_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstpvr.h \

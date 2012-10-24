@@ -12,6 +12,6 @@ libgstflite_la_LIBADD = \
 	$(GST_LIBS) \
 	$(FLITE_LIBS)
 libgstflite_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
-libgstflite_la_LIBTOOLFLAGS = --tag=disable-static
+libgstflite_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 

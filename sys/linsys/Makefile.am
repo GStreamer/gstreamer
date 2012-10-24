@@ -23,4 +23,4 @@ libgstlinsys_la_CFLAGS = \
 libgstlinsys_la_LDFLAGS = \
 	$(GST_PLUGIN_LDFLAGS)
 libgstlinsys_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS)
-libgstlinsys_la_LIBTOOLFLAGS = --tag=disable-static
+libgstlinsys_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)

@@ -16,7 +16,7 @@ libgstrawparse_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS)
 libgstrawparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstrawparse_la_LIBTOOLFLAGS = --tag=disable-static
+libgstrawparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstaudioparse.h \

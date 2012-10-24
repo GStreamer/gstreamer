@@ -8,6 +8,6 @@ libgstdirectdrawsink_la_LIBADD = \
 	-lgstinterfaces-$(GST_API_VERSION) \
 	 $(DIRECTX_LDFLAGS) $(DIRECTDRAW_LIBS)
 libgstdirectdrawsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstdirectdrawsink_la_LIBTOOLFLAGS = --tag=disable-static
+libgstdirectdrawsink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS= gstdirectdrawsink.h

@@ -10,6 +10,6 @@ libgstladspa_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
 	$(LIBM) $(LRDF_LIBS)
 libgstladspa_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstladspa_la_LIBTOOLFLAGS = --tag=disable-static
+libgstladspa_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gstladspa.h
