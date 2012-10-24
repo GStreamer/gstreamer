@@ -2812,6 +2812,14 @@ gst_pulsesink_event (GstBaseSink * sink, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_GAP:{
+      GstClockTime timestamp, duration;
+
+      gst_event_parse_gap (event, &timestamp, &duration);
+      if (duration == GST_CLOCK_TIME_NONE)
+        gst_pulsesink_flush_ringbuffer (pulsesink);
+      break;
+    }
     case GST_EVENT_EOS:
       gst_pulsesink_flush_ringbuffer (pulsesink);
       break;
