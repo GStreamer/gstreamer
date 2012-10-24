@@ -584,7 +584,7 @@ gst_stream_synchronizer_sink_chain (GstPad * pad, GstObject * parent,
         ostream->segment.position = new_start;
 
         gst_pad_push_event (ostream->srcpad,
-            gst_event_new_gap (new_start, GST_SECOND));
+            gst_event_new_gap (position, new_start - position));
       }
     }
     GST_STREAM_SYNCHRONIZER_UNLOCK (self);
