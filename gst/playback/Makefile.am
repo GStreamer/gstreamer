@@ -23,7 +23,7 @@ libgstplayback_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 	$(GST_LIBS)
-libgstplayback_la_LIBTOOLFLAGS = --tag=disable-static
+libgstplayback_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstplayback.h \

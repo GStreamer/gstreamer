@@ -34,7 +34,7 @@ nodist_libgsttcp_la_SOURCES = \
 libgsttcp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
 libgsttcp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgsttcp_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS)
-libgsttcp_la_LIBTOOLFLAGS = --tag=disable-static
+libgsttcp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
   gsttcp.h \
