@@ -402,6 +402,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       gboolean seen_data;
       GSList *pads = NULL;
       GstPad *srcpad;
+      GstClockTime timestamp;
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       stream = gst_pad_get_element_private (pad);
@@ -416,6 +417,11 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
 
       seen_data = stream->seen_data;
       srcpad = gst_object_ref (stream->srcpad);
+
+      if (stream->segment.rate < 0.0 || stream->segment.stop == -1)
+        timestamp = stream->segment.start;
+      else
+        timestamp = stream->segment.stop;
 
       for (l = self->streams; l; l = l->next) {
         GstStream *ostream = l->data;
@@ -456,10 +462,11 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
         if (!seen_data) {
           GstEvent *gap_event;
 
-          gap_event = gst_event_new_gap (0, 0);
+          gap_event = gst_event_new_gap (timestamp, GST_CLOCK_TIME_NONE);
           ret = gst_pad_push_event (srcpad, gap_event);
+        } else {
+          ret = TRUE;
         }
-        ret = TRUE;
       }
       gst_object_unref (srcpad);
       gst_event_unref (event);
