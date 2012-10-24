@@ -56,13 +56,13 @@
 #define GST_LICENSE "LGPL"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer git"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2012-10-07T15:37Z"
+#define GST_PACKAGE_RELEASE_DATETIME "2012-10-24"
 
 /* location of the installed gst-plugin-scanner */
 #define GST_PLUGIN_SCANNER_INSTALLED LIBDIR "\\gst-plugin-scanner"
@@ -211,8 +211,11 @@
 /* Define to 1 if you have the `pselect' function. */
 #undef HAVE_PSELECT
 
-/* Define to 1 if you have the <pthread.h> header file. */
-#undef HAVE_PTHREAD_H
+/* Define if you have POSIX threads libraries and header files. */
+#undef HAVE_PTHREAD
+
+/* Have PTHREAD_PRIO_INHERIT. */
+#undef HAVE_PTHREAD_PRIO_INHERIT
 
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
@@ -337,7 +340,7 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 1.0.1.1"
+#define PACKAGE_STRING "GStreamer 1.0.2"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
@@ -346,7 +349,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.1.1"
+#define PACKAGE_VERSION "1.0.2"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -354,6 +357,10 @@
 #else
 #  define PLUGINDIR PREFIX "\\lib\\gstreamer-1.0"
 #endif
+
+/* Define to necessary symbol if this constant uses a non-standard name on
+   your system. */
+#undef PTHREAD_CREATE_JOINABLE
 
 /* The size of `char', as computed by sizeof. */
 #undef SIZEOF_CHAR
@@ -380,7 +387,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "1.0.1.1"
+#define VERSION "1.0.2"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

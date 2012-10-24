@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.0.1
+Release notes for GStreamer 1.0.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -43,26 +43,20 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * Capsfilter prefers filter caps over passthrough now
-      * Application Development Manual, Plugin Writer's Guide and other documentation updated and extended for 1.0
-      * Bug fixes
+      * collectpads: ensure all timestamps are in same time domain
+      * gobject-introspection: fix GstSample annotations
+      * add GstElement::post_message() vfunc
+      * info: allow gst_debug_add_log_function() to be called before gst_init()
+      * event: allow GST_CLOCK_TIME_NONE as duration for GAP events
+      * documentation: new chapters and updates for the application development manual and the plugin writer's guide
 
 Bugs fixed in this release
      
-      * 680862 :  " identity " with single-segment=true gives buffer.pts of CLOCK_TIME_NONE
-      * 684538 : baseparse: no timestamps after seeking in mp3 or aac
-      * 684755 : typo - whithin > within
-      * 684765 : Plugins without a klass in the metadata crashes autoaudiosink
-      * 684809 : proxypad don't hold a ref to their internal pad while streaming through it
-      * 684970 : Don't register printf extension for %p when glib is not using system printf
-      * 684981 : Pipeline hangs on PREROLLING negotiating caps
-      * 685072 : memory: map(READ)/unmap clears the READONLY status
-
-API changes in this release
-     
- - API additions:
-    
-      * gst_base_transform_set_prefer_passthrough ()
+      * 686456 : g_type_init is no longer required
+      * 686658 : allocator: fix memory leak in _fallback_mem_copy
+      * 686659 : preset: remove variable not read
+      * 686723 : basesrc: generic/states test in -base now hangs with appsrc
+      * 686787 : testrtpool must be linked to pthreads
 
 ==== Download ====
 
@@ -99,12 +93,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
-      * Josep Torra Valles
       * Mark Nauwelaerts
-      * Olivier Blin
-      * Olivier Crête
+      * Michael Smith
+      * Miguel Angel Cabrera Moya
       * Sebastian Dröge
       * Tim-Philipp Müller
       * Wim Taymans
+      * Руслан Ижбулатов
  

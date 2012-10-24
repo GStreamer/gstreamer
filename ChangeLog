@@ -1,9 +1,362 @@
-=== release 1.0.1 ===
+=== release 1.0.2 ===
 
-2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+2012-10-24  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.1
+	  releasing 1.0.2
+
+2012-10-24 16:13:34 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* tests/examples/manual/Makefile.am:
+	  examples: link testrtpool to pthreads
+	  Fixes #686787
+
+2012-10-24 11:46:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstevent.c:
+	  event: Allow GST_CLOCK_TIME_NONE as duration for GAP events
+
+2012-10-24 11:16:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: use new GCond for async state change
+	  Use a new GCond, protected with the object lock, to signal completion
+	  of the async state change. We can't reuse the live lock because that
+	  one can be locked when the create function blocks.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686723
+
+2012-10-22 20:25:43 +0200  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* gst/gstallocator.c:
+	  allocator: fix memory leak in _fallback_mem_copy
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686658
+
+2012-10-22 20:33:06 +0200  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* gst/gstpreset.c:
+	  preset: remove variable not read
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686659
+
+2012-10-22 15:04:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* libs/gst/check/libcheck/Makefile.am:
+	* m4/ax_pthread.m4:
+	* tests/examples/streams/Makefile.am:
+	  configure: Properly check for pthread
+	  The old check failed on Android for example.
+
+2012-10-22 10:25:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstinfo.c:
+	  info: Don't use GST_DEBUG() in gst_debug_add_log_function() and related functions unconditionally
+	  If GStreamer was not initialized yet this will cause g_warnings().
+
+2012-10-20 19:44:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/base/gstcollectpads.h:
+	  collectpads: fix g-i annotation for GstCollectPadsBufferFunction
+	  We pass ownership of the buffer to the function.
+
+2012-10-20 12:54:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/libs/Makefile.am:
+	* gst/gst.c:
+	  g_type_init() is no longer required and deprecated in glib >= 2.35.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686456
+
+2012-10-19 13:36:33 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/gstsample.c:
+	  GstSample: fix typo in G-I annotations, allows creating GstSamples from bindings.
+
+2012-10-18 15:31:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpoll.c:
+	  poll: Fix compiler warning about constness
+	  passing argument 1 of 'g_mutex_lock' discards 'const' qualifier from pointer target type
+	  passing argument 1 of 'g_mutex_unlock' discards 'const' qualifier from pointer target type
+
+2012-10-17 16:49:19 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstbin.c:
+	* gst/gstpipeline.c:
+	  bin, pipeline: use gst_element_class_set_static_metadata()
+	  So the strings aren't copied.
+
+2012-10-16 12:31:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	  element: API: Add GstElement::post_message() vfunc
+	  Conflicts:
+	  gst/gstelement.h
+
+2012-10-16 11:54:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-events.xml:
+	  pwg: link to caps and qos chapters
+
+2012-10-16 11:20:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/building-boiler.xml:
+	* docs/pwg/building-queryfn.xml:
+	* docs/pwg/pwg.xml:
+	  pwg: add section about query function
+
+2012-10-16 11:12:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/building-eventfn.xml:
+	  pwg: fix event function
+
+2012-10-15 19:56:36 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gstcollectpads.h:
+	  collectpads: minor docs fixes
+
+2012-10-15 19:55:42 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: fix buffer leak in clip_time
+
+2012-10-15 18:44:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: call clip function with user data
+
+2012-10-15 14:06:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/pwg.xml:
+	  pwg: reorder some chapters
+	  Reorder some chapter so that they match the steps done in the
+	  element.
+
+2012-10-15 13:59:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: small tweaks to negotiation
+
+2012-10-15 13:44:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: improve negotiation documentation some more
+
+2012-10-15 12:10:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: update negotiation part
+
+2012-10-15 12:10:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-synchronisation.txt:
+	  docs: update synchronization docs
+
+2012-10-12 16:58:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-negotiation.xml:
+	  pwg: work on rewriting caps negotiation docs
+
+2012-10-12 16:09:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-negotiation.txt:
+	  design: rename passthrough negotiation
+	  Rename passthrough negotiation to transform negotiation to avoid
+	  confusion with passthrough operation.
+
+2012-10-12 13:15:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-pads.xml:
+	  manual: no more new-decoded-pad
+
+2012-10-12 13:13:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* docs/manual/appendix-compiling.xml:
+	* docs/manual/manual.xml:
+	  manual: move embedding elements to separate chapter
+
+2012-10-12 13:01:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-qos.xml:
+	  pwg: small example for throttle
+
+2012-10-12 12:55:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/advanced-qos.xml:
+	* docs/pwg/pwg.xml:
+	  pwg: add info about QoS
+
+2012-10-12 12:55:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/pwg/intro-basics.xml:
+	  pwg: adds some more links
+
+2012-10-12 12:55:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-qos.txt:
+	  qos: messages are posted, not dropped
+
+2012-10-12 10:35:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/communication.png:
+	* docs/manual/diagrams-general.svg:
+	* docs/manual/diagrams-pipelines.svg:
+	* docs/manual/gstreamer-overview.png:
+	* docs/manual/mime-world.png:
+	* docs/manual/thread-buffering.png:
+	  manual: update graphics
+
+2012-10-11 17:10:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-buffering.xml:
+	* tests/examples/manual/.gitignore:
+	* tests/examples/manual/Makefile.am:
+	  manual: add example of no-rebuffer buffering strategy
+
+2012-10-11 17:10:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/basics-bus.xml:
+	* docs/manual/intro-gstreamer.xml:
+	  manual: small tweaks
+
+2012-10-11 17:09:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstquery.c:
+	  query: buffering time left is in milliseconds
+
+2012-10-11 17:07:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/basics-bins.xml:
+	  manual: add some text about bin state change order
+
+2012-10-10 16:43:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/highlevel-playback.xml:
+	* tests/examples/manual/Makefile.am:
+	  manual: talk about playsink
+	  Talk about playsink and give an example of its usage.
+
+2012-10-10 13:08:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* docs/manual/highlevel-components.xml:
+	* docs/manual/highlevel-playback.xml:
+	* docs/manual/manual.xml:
+	* tests/examples/manual/Makefile.am:
+	  manual: add something about uridecodebin
+
+2012-10-10 11:35:01 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: ensure all timestamps are in same time domain
+	  ... by not only processing incoming buffers through a clip function,
+	  but also other timestamps such as those coming from GAP event.
+
+2012-10-10 10:36:32 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesrc.h:
+	  docs: adjust some parameter mismatches
+
+2012-10-10 11:34:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Downgrade GST_WARNING to GST_INFO
+	  It's usually not a problem if a query fails if there's no peer,
+	  especially as it will happen during pad linking (caps query)
+	  quite often and spams the logs.
+
+2012-10-09 17:06:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-autoplugging.xml:
+	* tests/examples/manual/.gitignore:
+	* tests/examples/manual/Makefile.am:
+	  manual: remove outdated autoplugging section
+	  Remove autoplugging chapter and point to decodebin/playbin examples.
+
+2012-10-09 16:12:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-threads.xml:
+	* tests/examples/manual/.gitignore:
+	* tests/examples/manual/Makefile.am:
+	  manual: Talk about threading
+	  Rework the threading chapter.
+	  Talk about stream-status and give some examples on how to change
+	  the thread priorities.
+
+2012-10-09 15:57:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-stream-status.txt:
+	  design: improve stream-status document
+
+2012-10-09 15:31:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: retrieve the result from start_complete
+	  gst_base_src_start_complete() can fail when the thread could not be
+	  started, for example. Make sure it causes the state change to fail by
+	  retrieving the result from _start_complete().
+
+2012-10-09 15:31:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: improve debug
+
+2012-10-09 10:24:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstpad.h:
+	  pad: small docs fixes and remove a 0.11 fixme
+
+2012-10-08 16:42:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-buffering.txt:
+	* docs/manual/advanced-buffering.xml:
+	* docs/manual/manual.xml:
+	  manual: talk a bit about buffering
+
+2012-10-08 13:22:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-clocks.xml:
+	* docs/pwg/advanced-clock.xml:
+	  docs: improve clock chapter
+
+2012-10-08 10:39:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/manual/advanced-dataaccess.xml:
+	* tests/examples/manual/Makefile.am:
+	  manual: add example for effect switching
+
+2012-10-08 09:11:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-preroll.txt:
+	* docs/design/part-sparsestreams.txt:
+	  docs: small updates
+
+2012-10-07 16:48:25 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Back to development (bug-fixing)
+
+=== release 1.0.1 ===
+
+2012-10-07 13:10:33 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.0.1
 
 2012-10-07 00:15:49 +0100  Tim-Philipp Müller <tim@centricular.net>
 
