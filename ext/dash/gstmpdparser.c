@@ -77,7 +77,7 @@ static gint convert_to_millisecs (gint decimals, gint pos);
 static int strncmp_ext (const char *s1, const char *s2);
 static gchar *gst_mpdparser_parse_baseURL (GstMpdClient * client);
 static gchar *gst_mpdparser_get_segmentURL_for_range (gchar *url, GstRange *range);
-static gchar *gst_mpdparser_get_mediaURL (GstSegmentURLNode *segmentURL);
+static gchar *gst_mpdparser_get_mediaURL (GstMpdClient * client, GstSegmentURLNode *segmentURL);
 static gchar *gst_mpdparser_get_initializationURL (GstURLType *InitializationURL);
 static gchar *gst_mpdparser_build_URL_from_template (const gchar *url_template, const gchar *id, guint number, guint bandwidth, guint time);
 static gboolean gst_mpd_client_add_media_segment (GstActiveStream *stream, GstSegmentURLNode *url_node, guint number, guint start, GstClockTime start_time, GstClockTime duration);
@@ -2202,10 +2202,15 @@ gst_mpdparser_get_segmentURL_for_range (gchar *url, GstRange *range)
 }
 
 static gchar *
-gst_mpdparser_get_mediaURL (GstSegmentURLNode *segmentURL)
+gst_mpdparser_get_mediaURL (GstMpdClient *client, GstSegmentURLNode *segmentURL)
 {
+  gchar *url_prefix;
+
+  g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (segmentURL != NULL, NULL);
-  g_return_val_if_fail (segmentURL->media != NULL, NULL);
+
+  url_prefix = segmentURL->media ? segmentURL->media : gst_mpdparser_get_baseURL (client);
+  g_return_val_if_fail (url_prefix != NULL, NULL);
 
   return gst_mpdparser_get_segmentURL_for_range(segmentURL->media, segmentURL->mediaRange);
 }
@@ -2846,7 +2851,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   }
 
   if (currentChunk->SegmentURL != NULL) {
-    mediaURL = gst_mpdparser_get_mediaURL (currentChunk->SegmentURL);
+    mediaURL = gst_mpdparser_get_mediaURL (client, currentChunk->SegmentURL);
   } else if (stream->cur_seg_template != NULL) {
     mediaURL = gst_mpdparser_build_URL_from_template (stream->cur_seg_template->media,
         stream->cur_representation->id, currentChunk->number, stream->cur_representation->bandwidth, currentChunk->start);
