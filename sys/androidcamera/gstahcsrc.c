@@ -37,6 +37,8 @@ static void gst_ahc_src_dispose (GObject * object);
 static GstStateChangeReturn gst_ahc_src_change_state (GstElement * element,
     GstStateChange transition);
 static GstCaps *gst_ahc_src_getcaps (GstBaseSrc * src);
+static gboolean gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps);
+static void gst_ahc_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 static gboolean gst_ahc_src_start (GstBaseSrc * bsrc);
 static gboolean gst_ahc_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_ahc_src_unlock (GstBaseSrc * bsrc);
@@ -44,6 +46,8 @@ static gboolean gst_ahc_src_unlock_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer);
 
 static void gst_ahc_src_close (GstAHCSrc * self);
+static void gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data);
+static void gst_ahc_src_on_error (int error, gpointer user_data);
 
 #define NUM_CALLBACK_BUFFERS 5
 
@@ -98,6 +102,8 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   element_class->change_state = gst_ahc_src_change_state;
 
   gstbasesrc_class->get_caps = gst_ahc_src_getcaps;
+  gstbasesrc_class->set_caps = gst_ahc_src_setcaps;
+  gstbasesrc_class->fixate = gst_ahc_src_fixate;
   gstbasesrc_class->start = gst_ahc_src_start;
   gstbasesrc_class->stop = gst_ahc_src_stop;
   gstbasesrc_class->unlock = gst_ahc_src_unlock;
@@ -124,7 +130,7 @@ gst_ahc_src_init (GstAHCSrc * self, GstAHCSrcClass * klass)
   self->texture = NULL;
   self->data = NULL;
   self->queue = gst_data_queue_new (_data_queue_check_full, NULL);
-  self->caps = NULL;
+  self->start = FALSE;
 }
 
 static void
@@ -298,6 +304,141 @@ gst_ahc_src_getcaps (GstBaseSrc * src)
 }
 
 static void
+gst_ahc_src_fixate (GstBaseSrc * src, GstCaps * caps)
+{
+  GstAHCSrc *self = GST_AHC_SRC (src);
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  const GValue *value;
+
+  GST_WARNING_OBJECT (self, "Fixating : %s", gst_caps_to_string (caps));
+  if (s) {
+    value = gst_structure_get_value (s, "framerate");
+    if (value) {
+      const GValue *min, *max;
+      gint n, d;
+
+      min = gst_value_get_fraction_range_min (value);
+      max = gst_value_get_fraction_range_max (value);
+      if (min) {
+        n = gst_value_get_fraction_numerator (min);
+        d = gst_value_get_fraction_denominator (min);
+        self->fps_min = n * 1000 / d;
+      }
+      if (max) {
+        n = gst_value_get_fraction_numerator (max);
+        d = gst_value_get_fraction_denominator (max);
+        self->fps_max = n * 1000 / d;
+      }
+      GST_WARNING_OBJECT (self, "Fps : [%d, %d]", self->fps_min, self->fps_max);
+    }
+  }
+  /* Let it fixate itself */
+}
+
+static gboolean
+gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
+{
+  GstAHCSrc *self = GST_AHC_SRC (src);
+  JNIEnv *env = gst_dvm_get_env ();
+  gboolean ret = FALSE;
+  GstAHCParameters *params = NULL;
+
+  if (!self->camera) {
+    GST_WARNING_OBJECT (self, "setcaps called without a camera available");
+    goto end;
+  }
+
+  params = gst_ah_camera_get_parameters (self->camera);
+  if (params) {
+    GstVideoFormat format;
+    gint fmt;
+    gint width, height, fps_n, fps_d;
+    gint i;
+
+    if (!gst_video_format_parse_caps (caps, &format, &width, &height) ||
+        !gst_video_parse_caps_framerate (caps, &fps_n, &fps_d)) {
+      GST_WARNING_OBJECT (self, "unable to parse video caps");
+      goto end;
+    }
+    fps_n *= 1000 / fps_d;
+    if (fps_n < self->fps_min || fps_n > self->fps_max) {
+      self->fps_min = self->fps_max = fps_n;
+    }
+
+    switch (format) {
+      case GST_VIDEO_FORMAT_YV12:
+        fmt = ImageFormat_YV12;
+        break;
+      case GST_VIDEO_FORMAT_NV21:
+        fmt = ImageFormat_NV21;
+        break;
+      case GST_VIDEO_FORMAT_YUY2:
+        fmt = ImageFormat_YUY2;
+        break;
+      case GST_VIDEO_FORMAT_RGB16:
+        fmt = ImageFormat_RGB_565;
+        break;
+        /* GST_VIDEO_FORMAT_NV16 doesn't exist */
+        //case GST_VIDEO_FORMAT_NV16:
+        //fmt = ImageFormat_NV16;
+        //break;
+      default:
+        fmt = ImageFormat_UNKNOWN;
+        break;
+    }
+
+    if (fmt == ImageFormat_UNKNOWN) {
+      GST_WARNING_OBJECT (self, "unsupported video format");
+      goto end;
+    }
+
+    gst_ahc_parameters_set_preview_size (params, width, height);
+    gst_ahc_parameters_set_preview_format (params, fmt);
+    gst_ahc_parameters_set_preview_fps_range (params, self->fps_min,
+        self->fps_max);
+
+    GST_WARNING_OBJECT (self, "Setting camera parameters : %dx%d @ [%f, %f]",
+        width, height, self->fps_min / 1000.0, self->fps_max / 1000.0);
+
+    if (!gst_ah_camera_set_parameters (self->camera, params)) {
+      GST_WARNING_OBJECT (self, "Unable to set video parameters");
+      goto end;
+    }
+
+    self->width = width;
+    self->height = height;
+    self->format = fmt;
+    self->buffer_size = width * height *
+        ((double) gst_ag_imageformat_get_bits_per_pixel (fmt) / 8);
+
+    for (i = 0; i < NUM_CALLBACK_BUFFERS; i++) {
+      jbyteArray array = (*env)->NewByteArray (env, self->buffer_size);
+
+      gst_ah_camera_add_callback_buffer (self->camera, array);
+      (*env)->DeleteLocalRef (env, array);
+    }
+    ret = TRUE;
+  }
+
+end:
+  if (params)
+    gst_ahc_parameters_free (params);
+
+  if (ret && self->start) {
+    ret = gst_ah_camera_start_preview (self->camera);
+    if (ret) {
+      /* Need to reset callbacks after every startPreview */
+      gst_ah_camera_set_preview_callback_with_buffer (self->camera,
+          gst_ahc_src_on_preview_frame, self);
+      gst_ah_camera_set_error_callback (self->camera, gst_ahc_src_on_error,
+          self);
+      self->start = FALSE;
+    }
+  }
+  return ret;
+}
+
+static void
 gst_ahc_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -401,8 +542,6 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GST_BUFFER_DURATION (buffer) = duration;
   GST_BUFFER_TIMESTAMP (buffer) = timestamp;
 
-  gst_buffer_set_caps (buffer, self->caps);
-
   item = g_slice_new0 (GstDataQueueItem);
   item->object = GST_MINI_OBJECT (buffer);
   item->size = GST_BUFFER_SIZE (buffer);
@@ -429,46 +568,10 @@ gst_ahc_src_open (GstAHCSrc * self)
   self->camera = gst_ah_camera_open (0);
 
   if (self->camera) {
-    JNIEnv *env = gst_dvm_get_env ();
-    GstAHCParameters *params;
-    gint i;
-
     GST_WARNING_OBJECT (self, "Opened camera");
 
     self->texture = gst_ag_surfacetexture_new (0);
     gst_ah_camera_set_preview_texture (self->camera, self->texture);
-    gst_ah_camera_set_error_callback (self->camera, gst_ahc_src_on_error, self);
-
-    params = gst_ah_camera_get_parameters (self->camera);
-    if (params) {
-      GstAHCSize *size;
-
-      GST_WARNING_OBJECT (self, "Params : %s",
-          gst_ahc_parameters_flatten (params));
-      gst_ahc_parameters_set_preview_size (params, 1280, 720);
-      gst_ahc_parameters_set_preview_format (params, ImageFormat_YV12);
-
-      GST_WARNING_OBJECT (self, "Setting new params (%d) : %s",
-          gst_ah_camera_set_parameters (self->camera, params),
-          gst_ahc_parameters_flatten (params));
-      size = gst_ahc_parameters_get_preview_size (params);
-      self->caps = gst_caps_new_simple ("video/x-raw-yuv",
-          "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('Y', 'V', '1', '2'),
-          "width", G_TYPE_INT, size->width,
-          "height", G_TYPE_INT, size->height,
-          "framerate", GST_TYPE_FRACTION, 30, 1, NULL);
-      self->buffer_size = size->width * size->height *
-          gst_ag_imageformat_get_bits_per_pixel
-          (gst_ahc_parameters_get_preview_format (params)) / 8;
-      gst_ahc_size_free (size);
-      gst_ahc_parameters_free (params);
-    }
-    for (i = 0; i < NUM_CALLBACK_BUFFERS; i++) {
-      jbyteArray array = (*env)->NewByteArray (env, self->buffer_size);
-
-      gst_ah_camera_add_callback_buffer (self->camera, array);
-      (*env)->DeleteLocalRef (env, array);
-    }
   } else {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Unable to open device '%d'.", 0), GST_ERROR_SYSTEM);
@@ -552,13 +655,12 @@ gst_ahc_src_start (GstBaseSrc * bsrc)
 
   GST_WARNING_OBJECT (self, "Starting preview");
   if (self->camera) {
-    gboolean ret = gst_ah_camera_start_preview (self->camera);
-    if (ret) {
-      self->previous_ts = GST_CLOCK_TIME_NONE;
-      gst_ah_camera_set_preview_callback_with_buffer (self->camera,
-          gst_ahc_src_on_preview_frame, self);
-    }
-    return ret;
+    self->previous_ts = GST_CLOCK_TIME_NONE;
+    self->fps_min = self->fps_max = self->width = self->height = 0;
+    self->format = ImageFormat_UNKNOWN;
+    self->start = TRUE;
+
+    return TRUE;
   } else {
     return FALSE;
   }
@@ -572,6 +674,7 @@ gst_ahc_src_stop (GstBaseSrc * bsrc)
   GST_WARNING_OBJECT (self, "Stopping preview");
   if (self->camera) {
     gst_data_queue_flush (self->queue);
+    self->start = FALSE;
     return gst_ah_camera_stop_preview (self->camera);
   }
   return TRUE;

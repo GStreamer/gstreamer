@@ -51,11 +51,16 @@ struct _GstAHCSrc
 
   GstAHCamera *camera;
   GstAGSurfaceTexture *texture;
-  GstCaps *caps;
   GList *data;
   GstDataQueue *queue;
   gint buffer_size;
   GstClockTime previous_ts;
+  gint format;
+  gint width;
+  gint height;
+  gint fps_min;
+  gint fps_max;
+  gboolean start;
 };
 
 struct _GstAHCSrcClass
