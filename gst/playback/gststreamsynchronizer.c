@@ -418,7 +418,9 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       seen_data = stream->seen_data;
       srcpad = gst_object_ref (stream->srcpad);
 
-      if (stream->segment.rate < 0.0 || stream->segment.stop == -1)
+      if (seen_data && stream->segment.position != -1)
+        timestamp = stream->segment.position;
+      else if (stream->segment.rate < 0.0 || stream->segment.stop == -1)
         timestamp = stream->segment.start;
       else
         timestamp = stream->segment.stop;
@@ -465,7 +467,12 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
           gap_event = gst_event_new_gap (timestamp, GST_CLOCK_TIME_NONE);
           ret = gst_pad_push_event (srcpad, gap_event);
         } else {
-          ret = TRUE;
+          GstEvent *gap_event;
+
+          /* FIXME: Also send a GAP event to let audio sinks start their
+           * clock in case they did not have enough data yet */
+          gap_event = gst_event_new_gap (timestamp, GST_CLOCK_TIME_NONE);
+          ret = gst_pad_push_event (srcpad, gap_event);
         }
       }
       gst_object_unref (srcpad);
