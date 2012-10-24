@@ -935,6 +935,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   GstBufferList *buffer_list;
   guint nb_adaptation_set = 0;
   GstActiveStream *stream;
+  GstClockTime duration = 0;
 
   /* Wait until the next scheduled push downstream */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->stream_task),
@@ -972,6 +973,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   for (i = 0; i < nb_adaptation_set; i++) {
     GstFragment *fragment = g_list_nth_data (listfragment, i);
     stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
+    duration = fragment->stop_time - fragment->start_time;
     if (demux->need_segment) {
       GstClockTime start = fragment->start_time + demux->position_shift;
       /* And send a newsegment */
