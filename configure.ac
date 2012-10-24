@@ -244,6 +244,28 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
   ["${srcdir}/gst-omx.doap"],
   [$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
+dnl build static plugins or not
+AC_MSG_CHECKING([whether to build static plugins or not])
+AC_ARG_ENABLE(
+  static-plugins,
+  AC_HELP_STRING(
+    [--enable-static-plugins],
+    [build static plugins @<:@default=no@:>@]),
+  [AS_CASE(
+    [$enableval], [no], [], [yes], [],
+    [AC_MSG_ERROR([bad value "$enableval" for --enable-static-plugins])])],
+  [enable_static_plugins=no])
+AC_MSG_RESULT([$enable_static_plugins])
+if test "x$enable_static_plugins" = xyes; then
+  AC_DEFINE(GST_PLUGIN_BUILD_STATIC, 1,
+    [Define if static plugins should be built])
+  GST_PLUGIN_LIBTOOLFLAGS=""
+else
+  GST_PLUGIN_LIBTOOLFLAGS="--tag=disable-static"
+fi
+AC_SUBST(GST_PLUGIN_LIBTOOLFLAGS)
+AM_CONDITIONAL(GST_PLUGIN_BUILD_STATIC, test "x$enable_static_plugins" = "xyes")
+
 dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($FATAL_WARNINGS, [
     -Wmissing-declarations -Wmissing-prototypes -Wredundant-decls -Wundef
@@ -323,7 +345,7 @@ AC_SUBST(GST_ALL_LDFLAGS)
 
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
-GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc.*' $GST_ALL_LDFLAGS"
+GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_.*' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
