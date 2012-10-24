@@ -115,7 +115,7 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
 }
 
-/* Called when Pad Caps change on the video sink */
+/* Retrieve the video sink's Caps and tell the application about the media size */
 static void check_media_size (CustomData *data) {
   JNIEnv *env = get_jni_env ();
   GstElement *video_sink;
@@ -135,7 +135,7 @@ static void check_media_size (CustomData *data) {
     if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
       width = width * par_n / par_d;
     }
-    GST_DEBUG ("Media size changed to %dx%d, notifying application", width, height);
+    GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
 
     (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)width, (jint)height);
     if ((*env)->ExceptionCheck (env)) {
