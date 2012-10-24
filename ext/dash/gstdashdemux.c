@@ -174,10 +174,10 @@ enum
 };
 
 /* Default values for properties */
-#define DEFAULT_MIN_BUFFERING_TIME	5       /* in seconds */
-#define DEFAULT_MAX_BUFFERING_TIME	30      /* in seconds */
-#define DEFAULT_BANDWIDTH_USAGE		0.8     /* 0 to 1     */
-#define DEFAULT_MAX_BITRATE	24000000        /* in Mbit/s  */
+#define DEFAULT_MIN_BUFFERING_TIME        5  /* in seconds */
+#define DEFAULT_MAX_BUFFERING_TIME       30  /* in seconds */
+#define DEFAULT_BANDWIDTH_USAGE         0.8  /* 0 to 1     */
+#define DEFAULT_MAX_BITRATE        24000000  /* in bit/s  */
 
 #define DEFAULT_FAILED_COUNT 3
 
@@ -1076,8 +1076,25 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 static GstClockTime
 gst_dash_demux_get_buffering_time (GstDashDemux * demux)
 {
-  return (g_queue_get_length (demux->queue)) *
-      gst_mpd_client_get_target_duration (demux->client);
+  GstClockTime buffer_time = 0;
+  GList *listfragment;
+  GstFragment *first_fragment, *last_fragment;
+
+  if (g_queue_is_empty (demux->queue))
+    return 0;
+
+  /* get first fragment */
+  listfragment = g_queue_peek_head (demux->queue);
+  first_fragment = listfragment->data;
+  /* get last fragment */
+  listfragment = g_queue_peek_tail (demux->queue);
+  last_fragment = listfragment->data;
+
+  if (first_fragment && last_fragment) {
+    buffer_time = last_fragment->stop_time - first_fragment->start_time;
+  }
+
+  return buffer_time;
 }
 
 static float
