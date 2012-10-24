@@ -128,3 +128,6 @@ TESTS = bin \
 	ghostpad init
 
 noinst_PROGRAMS = $(EXAMPLES)
+
+testrtpool_LDADD = $(GST_OBJ_LIBS) $(PTHREAD_LIBS)
+testrtpool_CFLAGS = $(GST_OBJ_CFLAGS) $(PTHREAD_CFLAGS)
