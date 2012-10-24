@@ -7,6 +7,6 @@ libgstlibvisual_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-$(GST_API_VERSION).la \
 	$(GST_BASE_LIBS) $(LIBVISUAL_LIBS)
 libgstlibvisual_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstlibvisual_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstlibvisual_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = visual.h gstaudiovisualizer.h

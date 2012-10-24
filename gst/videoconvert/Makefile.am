@@ -16,7 +16,7 @@ libgstvideoconvert_la_LIBADD = \
 	$(ORC_LIBS) \
 	$(LIBM)
 libgstvideoconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstvideoconvert_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstvideoconvert_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = gstvideoconvert.h videoconvert.h gstcms.h
 

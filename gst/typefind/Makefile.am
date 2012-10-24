@@ -9,7 +9,7 @@ libgsttypefindfunctions_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) $(GST_LIBS) $(GIO_LIBS)
 
-libgsttypefindfunctions_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgsttypefindfunctions_la_LIBTOOLFLAGS = --tag=disable-static
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

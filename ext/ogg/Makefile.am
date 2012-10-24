@@ -27,7 +27,7 @@ libgstogg_la_LIBADD = \
 	$(GST_LIBS) \
 	$(OGG_LIBS)
 libgstogg_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstogg_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstogg_la_LIBTOOLFLAGS = --tag=disable-static
 
 
 Android.mk: Makefile.am $(BUILT_SOURCES)

@@ -22,7 +22,7 @@ libgstsubparse_la_SOURCES = \
 libgstsubparse_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
 libgstsubparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstsubparse_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
-libgstsubparse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstsubparse_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS = \
 	gstssaparse.h \

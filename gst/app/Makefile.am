@@ -4,7 +4,7 @@ libgstapp_la_SOURCES = gstapp.c
 libgstapp_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
 libgstapp_la_LIBADD = $(GST_BASE_LIBS) $(top_builddir)/gst-libs/gst/app/libgstapp-@GST_API_VERSION@.la
 libgstapp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
-libgstapp_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgstapp_la_LIBTOOLFLAGS = --tag=disable-static
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
