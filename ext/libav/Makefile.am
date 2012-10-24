@@ -29,7 +29,7 @@ libgstlibav_la_LIBADD = $(LIBAV_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 	-lgstpbutils-$(GST_API_VERSION) $(GST_BASE_LIBS) \
 	$(LIBM) $(WIN32_LIBS) -lz $(BZ2_LIBS)
 libgstlibav_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DARWIN_LDFLAGS)
-libgstlibav_la_LIBTOOLFLAGS = --tag=disable-static
+libgstlibav_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 if HAVE_LIBAV_UNINSTALLED
 libgstlibav_la_DEPENDENCIES = $(LIBAV_LIBS)
