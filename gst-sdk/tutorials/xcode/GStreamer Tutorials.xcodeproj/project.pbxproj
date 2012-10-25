@@ -794,6 +794,10 @@
 				OTHER_LDFLAGS = (
 					"-framework",
 					Cocoa,
+					"-L/Library/Frameworks/GStreamer.framework/Libraries",
+					"-lcairo",
+					"-lgtk-quartz-2.0",
+					"-lgdk-quartz-2.0",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -805,6 +809,10 @@
 				OTHER_LDFLAGS = (
 					"-framework",
 					Cocoa,
+					"-L/Library/Frameworks/GStreamer.framework/Libraries",
+					"-lcairo",
+					"-lgtk-quartz-2.0",
+					"-lgdk-quartz-2.0",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
