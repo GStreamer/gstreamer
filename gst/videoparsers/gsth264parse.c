@@ -1121,7 +1121,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   if (!sink_caps)
     sink_caps = gst_caps_new_empty_simple ("video/x-h264");
   else
-    s = gst_caps_get_structure (caps, 0);
+    s = gst_caps_get_structure (sink_caps, 0);
 
   sps = h264parse->nalparser->last_sps;
   GST_DEBUG_OBJECT (h264parse, "sps: %p", sps);
