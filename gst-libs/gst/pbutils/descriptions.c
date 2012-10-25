@@ -190,6 +190,7 @@ static const FormatInfo formats[] = {
   {"video/x-mve", "Interplay MVE", FLAG_CONTAINER},
   {"video/x-nut", "NUT", FLAG_CONTAINER},
   {"video/x-nuv", "MythTV NuppelVideo (NUV)", FLAG_CONTAINER},
+  {"video/x-prores", "Apple ProRes", 0},
   {"video/x-qdrw", "Apple QuickDraw", 0},
   {"video/x-smc", "Apple SMC", 0},
   {"video/x-smoke", "Smoke", 0},
