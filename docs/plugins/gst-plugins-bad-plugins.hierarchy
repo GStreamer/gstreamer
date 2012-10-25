@@ -193,6 +193,7 @@ GObject
         GstEdgeDetect
         GstFaceBlur
         GstFestival
+        GstFieldAnalysis
         GstGDPDepay
         GstGDPPay
         GstGmeDec
@@ -230,6 +231,7 @@ GObject
           GstVideoSegmentClip
         GstSpanPlc
         GstSpeed
+        GstSrtEnc
         GstTagMux
           GstId3Mux
         GstTemplateMatch
@@ -237,6 +239,7 @@ GObject
           GstSchroDec
         GstVideoEncoder
           GstSchroEnc
+        GstWebvttEnc
         GstY4mDec
         MpegTSBase
           GstTSDemux

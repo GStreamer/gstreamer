@@ -1,9 +1,2604 @@
-=== release 1.0.1 ===
+=== release 1.0.2 ===
 
-2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+2012-10-25  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.1
+	  releasing 1.0.2
+
+2012-10-24 23:40:20 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/opus/gstopusdec.c:
+	  opusdec: fixed buffer unmapping bug
+	  When the decoder received a NULL buffer, it tried to
+	  unmap a not mapped buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686829
+
+2012-10-24 14:23:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: require wayland >= 1.0.0
+	  We have an API stable release now, require that.
+
+2012-10-24 13:41:00 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.gitignore:
+	* tests/check/elements/mpg123audiodec.c:
+	* tests/files/Makefile.am:
+	  tests: fix up mpg123 test a little
+	  - dist input files
+	  - fix sample leak
+	  - simplify check for elements
+	  - only run mpg123 test if mpg123 is available and selected
+	  - fix build in uninstalled setup
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 12:30:10 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/mpg123audiodec.c:
+	* tests/files/cbr_stream.mp3:
+	* tests/files/stream.mp2:
+	* tests/files/vbr_stream.mp3:
+	  tets: add unit test for mpg123audiodec
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 00:36:42 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: added gtkdoc section
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 00:22:05 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: fixed bug with last frame, disabled internal resampler & chatter
+	  * The last MP3 frame wasn't being pushed when base class was draining
+	  * Made sure mpg123 cannot ever use its (crude) internal resampler
+	  * Disabled mpg123 stderr output
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 00:21:45 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: cleaned up comments, formatting, and logging lines
+	  also replaced mpg123decoder->handle != NULL checks with asserts
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686595
+
+2012-10-24 11:34:32 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* ext/curl/gstcurlsmtpsink.c:
+	  curlsmtpsink: add comment describing function
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686774
+
+2010-07-02 15:28:41 +0200  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: check base_time before calculating new_start
+	  https://bugzilla.gnome.org/show_bug.cgi?id=623387
+
+2012-10-23 14:33:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/scaletempo/gstscaletempo.c:
+	  scaletempo: Fix event leak
+
+2012-10-23 14:32:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/scaletempo/gstscaletempo.c:
+	  scaletempo: Fix timestamp tracking
+
+2012-10-23 14:06:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/scaletempo/gstscaletempo.c:
+	  scaletempo: Implement LATENCY query
+
+2012-10-23 13:39:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/scaletempo/gstscaletempo.c:
+	* gst/scaletempo/gstscaletempo.h:
+	  scaletempo: Store instance private data in the instance struct
+	  Getting it over and over again via G_TYPE_INSTANCE_GET_PRIVATE()
+	  is really slow.
+
+2012-10-23 10:07:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/Makefile.am:
+	  hls: Link to $(LIBM) for isfinite()
+
+2012-10-22 21:41:20 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/soundtouch/gstpitch.cc:
+	  pitch: fix for start times > 0
+	  Fixes buffering and playback of streams that start with
+	  a non-0 timestamp in totem (which has a 'pitch' element
+	  before pulsesink).
+	  Example URI: http://lobostv.lobocast.org.es:8004/lobostv.ogg
+	  Still breaks with chained oggs, on second chain.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686391
+
+2012-10-22 12:08:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/opus/gstrtpopuspay.c:
+	  opuspay: remove pointless caps serialization
+	  Remove the caps serialization in the rtp caps. the spec nor the receiver
+	  does anything with it.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686547
+
+2012-10-22 10:45:17 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* gst/subenc/gstsrtenc.c:
+	* gst/subenc/gstwebvttenc.c:
+	  subenc: port to 1.0
+
+2012-10-22 01:39:13 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mpegtsmux/mpegtsmux.h:
+	  mpegtsmux: Don't make the same buffer writable twice.
+	  Fixes Bug 686327 - mpegtsmux: fix refcount issue with input buffers
+
+2012-10-20 14:55:41 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	* ext/wayland/gstwaylandsink.c:
+	* ext/wayland/gstwaylandsink.h:
+	  wayland: update to wayland-protocol 0.99
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686520
+
+2012-10-18 22:23:07 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: forward non-processed dvd events
+	  ... such as notably dvd-spu-clut-change.
+
+2012-10-18 22:22:12 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: segment event should be sent before gap event
+
+2012-10-19 09:59:10 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't try to render expose() if no caps are known yet
+
+2012-10-18 15:12:21 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix expose
+
+2012-10-19 01:03:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegtsdemux/pesparse.c:
+	  tsdemux: fix program packet sequence counter parsing in PES header
+
+2012-10-19 00:47:45 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegtsdemux/pesparse.c:
+	  tsdemux: fix some inconsequential PES header parsing issues
+	  additional_copy_info: need to get rid of the highest
+	  bit, not the lowest one
+	  program_packet_sequence_counter: also need to get rid
+	  of the highest bit instead of multiplying with a random
+	  value
+	  original_stuff_length: want to AND 0x3f to extract the
+	  lowest 6 bits, not multiply by it.
+	  None of these fields are actually used though, so these
+	  should not have caused any issues.
+
+2012-10-17 15:54:32 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* gst/mpegtsdemux/pesparse.c:
+	  tsdemux: Fix parsing P-STD_buffer in PES header
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686294
+
+2012-10-18 18:56:33 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  wayland: don't try to build against 0.99 or later
+	  The plugin needs updating for some API changes since 0.95.
+
+2012-10-18 01:47:57 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: fix potential crash dereferencing NULL program pointer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686358
+
+2012-10-18 15:06:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  opensles: Only check for the main opensles header
+
+2012-10-18 14:38:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  eglglessink: Put into the not-ported plugins list
+
+2012-10-18 14:25:05 +0200  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	  eglglessink: Documentation: Hook eglglessink documentation in
+
+2012-10-18 14:09:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Make compilable on desktop Linux with MESA too
+
+2012-10-18 14:07:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/eglgles/Makefile.am:
+	  eglglessink: Integrate into the build system
+	  Conflicts:
+	  ext/Makefile.am
+
+2012-10-18 10:49:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix debug output
+
+2012-10-18 10:32:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Also clear the surface once when the buffer content is preserved
+
+2012-10-18 10:20:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Only draw black borders if the default swap behaviour of the surface is to destroy the buffer
+
+2012-10-18 09:37:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Remove unused label
+
+2012-10-18 02:26:17 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Factor display region reset to its own func
+
+2012-10-18 01:45:51 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Always Reset display_region.* at EGL/GLES ctx wipe
+
+2012-10-18 01:36:49 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Factor ELG/GLES context cleanup into its own func
+
+2012-10-18 00:33:26 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Drop drafted fast rendering path logic
+
+2012-10-17 15:50:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Also update header file
+
+2012-10-17 15:37:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Provide the texture positions to the shader on every frame too
+
+2012-10-17 15:04:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Draw black borders and also use a single GL buffer for all vertices
+	  Fixes weird artifacts outside the video frame on
+	  Qualcomm Snapdragon chipsets and should be faster
+	  than glClear() on the complete area all the time.
+
+2012-10-17 12:49:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix memory leak
+
+2012-10-17 10:47:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Remove useless debug output added for debugging earlier
+
+2012-10-17 10:08:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Make window setting/handling a bit more threadsafe
+
+2012-10-17 09:59:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Print window handle after setting it
+
+2012-10-16 17:50:03 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Move DAR query & store to surface init
+	  The DAR (display's pixel aspect ratio) should remain a
+	  constant at runtime so there's no point on repeatedly
+	  query and store this value. Doing it at surface setup
+	  should be enough. As an added bonus this change should
+	  make rendering a bit faster.
+
+2012-10-16 17:35:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't signal the GCond too often
+
+2012-10-16 17:05:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Add myself as author
+
+2012-10-16 16:25:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Make sure to always reset the display region in start()
+
+2012-10-16 16:23:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Also commit missing changes to the header file
+
+2012-10-16 16:18:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/Makefile.am:
+	  eglglessink: Also include $(GST_BASE_CFLAGS)
+
+2012-10-16 16:12:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix race condition
+
+2012-10-16 15:40:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Refactor rendering and all context specific GL things into a separate thread
+	  Also fixes some threading related problems.
+
+2012-10-16 14:39:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Re-add accidentially reverted commit
+
+2012-10-16 14:15:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Remove unneeded flow_lock
+	  Use the object lock in the few places necessary, everything
+	  else is protected by other things already.
+	  Also store the context directly inside the instance struct
+	  instead of allocating some memory for it.
+
+2012-10-16 11:53:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix debug output and constant names
+
+2012-10-16 11:51:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: start()/stop() is called in READY<->NULL in basesink
+	  But this should be called in PAUSED<->READY.
+
+2012-10-15 13:44:29 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix for outbound DAR reported by EGL
+	  Some EGL implementations don't honor the spec
+	  requirement of returning DAR values as w/h *
+	  EGL_DISPLAY_SCALING.
+	  This changeset:
+	  - Fixes rendering on the Samsung Galaxy III
+	  - Fixes wrong check on required 1.2 EGL version
+	  - Reorders the code a bit.
+
+2012-10-15 13:38:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix crashes if there are no EGL or GLES extensions
+
+2012-10-10 12:42:47 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Fix crash at element instantiation
+
+2012-10-10 12:26:04 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: GLSL: Save one extra texture lookup
+
+2012-10-10 12:22:24 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: GLSL: Minor named index access tweak xyz -> rgb
+
+2012-10-10 12:18:27 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: GLSL: Assorted fixes to optimized code
+	  - Don't copy over opos as it's already a vec2
+	  - Fix index order access at frag_YUY2_YVYU_UYVY_prog
+
+2012-10-10 11:50:28 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: GLSL: Planar YUV converters optimization
+	  - Use consts for the transform's offset and cofficients values
+	  - Use dot product instead of mult and add
+	  - Avoid unneeded texture lookups
+
+2012-10-10 11:05:04 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  Geglglessink: LSL: Optimize frag_YUY2_YVYU_UYVY_prog
+	  - Avoid repeatedly performing the texture lookup
+	  - Use consts for the transform's offset and cofficients values
+	  - Use the dot product instead of the explicit mult and add
+
+2012-10-10 03:02:21 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: GLSL: Drop unneded nxy vec2
+
+2012-10-10 02:16:35 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix missing double quotation mark in GLSL code
+
+2012-10-10 02:04:18 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: GLSL: Optimize frag_AYUV_prog
+	  - Avoid repeatedly performing the texture lookup
+	  - Use consts for the transform's offset and cofficients values
+	  - Use the dot product instead of the explicit mult and add
+
+2012-10-09 23:35:22 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Documentation: GstEglGlesSink struct
+
+2012-10-09 23:04:05 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Documentation: GstEglGlesBuffer struct (DRAFT)
+
+2012-10-09 22:54:48 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Documentation: GstEglGlesImageFmt struct
+
+2012-10-09 22:40:19 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Documentation: GstEglGlesRenderContext struct
+
+2012-10-09 17:00:52 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Assorted doc and reordering fixes
+
+2012-10-09 16:25:46 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Documentation: Element properties
+	  Brief explanatory comments plus some reordering
+	  to group default setting of properties and runtime
+	  flags values.
+
+2012-10-09 17:20:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add support for YVYU
+
+2012-10-09 11:48:09 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Documentation: GLSL Shaders
+	  Brief explanatory comments plus some rerdering
+	  to group packed/planar converters.
+
+2012-10-09 11:00:24 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Documentation: Element overview
+
+2012-10-08 12:10:25 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Refactor REORDER shader.
+	  Avoid unneededly calling texture2D() 3 consecutive times.
+
+2012-10-04 15:47:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix handling of caps changes by only releasing what needs to be released
+	  And not terminating the display connection
+
+2012-10-04 02:15:24 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Move display_region reset to locked section
+
+2012-10-04 01:56:10 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Reset display_region dims at caps renego
+
+2012-10-04 01:33:31 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Cosmetics
+
+2012-10-04 01:29:40 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't access local value from struct
+
+2012-10-03 23:41:52 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Terminate display connection at caps renego
+
+2012-10-02 17:56:14 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Cosmetics
+
+2012-10-03 12:32:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Only attach the context once to the streaming thread
+
+2012-10-03 10:53:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Make the context current for the thread and unbind it again around every use
+	  This fixes some crashes and leaking of our context into other
+	  OpenGL code on the same thread.
+
+2012-10-02 17:29:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Improve cleanup
+
+2012-10-02 15:46:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Remove unused label
+
+2012-10-02 15:42:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Allow setting a NULL handle
+
+2012-10-02 09:48:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Revert "Do not update_surface_dims() once per frame"
+	  This reverts commit 82103376ede2bc7c63dd699f5982168660f67852.
+	  We have to update the surface dimensions on every frame to
+	  make sure that we get notified about updates. This happens
+	  for example if the Android window gets re-layouted because
+	  a widget takes more space than before.
+
+2012-10-02 01:43:35 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Do not update_surface_dims() once per frame
+	  And.. Upgrade debug message to warging on weird DAR.
+	  Correct fix to avoid spaming with this message
+	  once per each frame is avoid calling update_surface_dims()
+	  at render_and_display(). This is handled at egl surface
+	  init.
+
+2012-10-01 16:36:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: And downgrade another warning too
+
+2012-10-01 16:14:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Downgrade GST_WARNING to GST_DEBUG
+
+2012-10-01 09:44:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add some {} to if statements make them work as expected
+
+2012-09-30 23:07:48 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Drop stale defines for max frame size
+
+2012-09-30 23:06:19 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Small commentary fixes here an there
+
+2012-09-28 11:48:23 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Avoid setting height or width twice
+
+2012-09-27 01:18:37 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Use PAR/DAR to set viewport
+
+2012-09-27 14:28:05 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Correctly resize if the surface dimensions change
+
+2012-09-27 14:08:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Update surface dimensions on every buffer
+
+2012-09-27 14:02:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: More consistent naming of shader related variables
+
+2012-09-27 13:57:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Some variable name cleanup
+
+2012-09-27 13:53:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Remove default-width/height properties
+	  These are completely unneeded
+
+2012-09-25 13:32:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix double free()
+
+2012-09-25 09:06:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't leak EGL/ES render context
+
+2012-09-25 01:39:21 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Put EGL/GLES context vars on their own struct
+
+2012-09-24 11:19:32 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/TODO:
+	  eglglessink: Small TODO reformatting
+
+2012-09-24 10:23:28 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/TODO:
+	  eglglessink: Add TODO file
+
+2012-09-24 14:43:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Correctly implement ::expose()
+	  We don't need the past buffer for this, the old one is still available
+	  as texture and we just need to draw our rectangle again.
+
+2012-09-24 13:48:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Allow setting another window for the next time we reconfigure everything
+
+2012-09-24 12:36:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Also unref current caps after usage
+
+2012-09-24 12:32:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Implement support for caps changes
+
+2012-09-24 12:27:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: More cleanup and making the element reusable
+
+2012-09-24 12:05:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Properly init/release resources when going from NULL->READY and the other way around
+
+2012-09-24 11:48:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Generate the sink caps exactly once
+
+2012-09-24 11:17:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix code style a bit to stop confusing indent
+
+2012-09-24 11:15:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix support for YUY2 and UYVY
+
+2012-09-24 11:01:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Some property cleanup
+
+2012-09-24 10:45:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add support for the remaining RGB formats
+
+2012-09-24 10:23:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add support for Y444, Y42B and Y41B, just because it's so easy
+
+2012-09-24 10:02:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add some simple TODOs
+
+2012-09-24 01:08:22 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Lock while altering display region coords
+
+2012-09-24 00:27:23 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix _get_compat_format_from_caps() logic
+	  It's a getter so it shouldn't messing with the sink context.
+	  Adding insult to injury it was setting selected_fmt without
+	  locking.
+	  The associated changes to the buffer functions are merely
+	  make-it build fixes. Those functions are barely drafted
+	  and in WIP state.
+
+2012-09-23 23:07:29 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Drop unneded initial set to NULL
+
+2012-09-23 22:33:58 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Minor formatting and comment fixes
+
+2012-09-21 12:12:24 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Clean-up gl/egl allocations at _stop()
+	  Also, conditionaly destroy window if the sink created its own.
+
+2012-09-21 17:08:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add support for NV12 and NV21
+	  Also YUY2 and UYVY but this is disabled for now as it
+	  doesn't work completely yet. Something is wrong with
+	  the chroma.
+
+2012-09-21 15:44:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Add support for I420 and YV12 color formats
+
+2012-09-21 14:05:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Preparations for supporting multiple textures for more YUV formats
+
+2012-09-21 13:42:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Use the attrib locations as really used inside the shader
+
+2012-09-21 12:53:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Really decouple vertex and texture positions in the shader
+
+2012-09-21 12:45:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Decouple texture and vertex positions
+
+2012-09-21 12:14:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Reorder vertex value order to make a bit more sense
+
+2012-09-21 01:09:11 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Handle frame scaling to fill surface
+
+2012-09-21 00:09:06 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Draft set_render_rectangle() from the xOverlay interface
+
+2012-09-20 22:50:31 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Remove stale comment
+
+2012-09-20 22:41:10 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Move VBO setup to setcaps
+
+2012-09-20 22:11:08 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't do context ops at render
+	  We don't need to repeatedly call
+	  eglMakeCurrent() while using the
+	  same context anyway.
+
+2012-09-20 22:01:20 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't clear surface color at render
+
+2012-09-20 17:22:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Rename shader variables to make more sense
+
+2012-09-20 17:14:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add support for AYUV
+
+2012-09-20 17:02:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Reorder caps a bit to make more sense
+
+2012-09-20 16:50:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Set rank to PRIMARY
+
+2012-09-20 16:25:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add support for RGBA
+
+2012-09-20 16:21:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Correctly generated caps for the supported formats
+
+2012-09-20 16:08:28 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add ::get_caps() vfunc that returns the actually supported caps
+
+2012-09-20 15:56:56 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Also require a configuration with EGL_SURFACE_TYPE containing EGL_WINDOW_BIT
+
+2012-09-20 14:50:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix compiler warnings
+
+2012-09-19 19:26:54 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Clear surface to black by default
+
+2012-09-19 19:23:50 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Make sure we get a config we can use with GLES2
+
+2012-09-19 19:12:30 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: set_window_handle() has been tested to work now
+
+2012-09-19 12:29:13 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Avoid autoscaling by default
+
+2012-09-18 14:58:43 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Avoid repeatedly setting 2D resizing params
+	  Moved to initial texture setup so it hapens
+	  just once while on the same context.
+
+2012-09-18 12:04:20 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Avoid initializing EGL at _set_window_handle()
+	  _start() should take care of that.
+	  This change asumes _setcaps() will
+	  happen always after _start() is
+	  done.
+
+2012-09-18 10:43:38 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Don't ask for a window if we already have one
+
+2012-09-18 10:31:26 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Fix EGL attribs var naming
+
+2012-09-18 02:32:25 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix slow path rendering on Android
+	  Specify missing and mandatory params for npot
+	  Before calling glTexImage2D.
+	  In particular, _WRAP_T and _WRAP_S need to be
+	  set to GL_CLAMP_TO_EDGE to avoid all-black
+	  rendering with npot sized frames.
+
+2012-09-18 00:51:36 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add test on usable eglconfigs returned
+
+2012-09-17 23:05:29 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Drop stale error_locked label
+
+2012-09-17 23:04:05 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Cleanup stale code comments
+
+2012-09-17 18:00:16 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: GlViewPort() should use actual surface size
+
+2012-09-17 17:21:26 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Avoid reiniting EGL after the first time
+
+2012-09-17 13:44:09 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Use correct template caps
+
+2012-09-17 12:54:05 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix missing texture setup bits
+
+2012-09-17 11:57:24 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add error checking on eglSwapBuffers
+
+2012-09-17 11:40:49 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix stale&wrong 0.5 alpha blend
+
+2012-09-17 10:56:14 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add float precision specifier to fragment shader
+	  This is required by GLES and fixes compilation of fragment
+	  shader prog.
+
+2012-09-17 10:47:39 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add log reporting at shader compilation failure
+
+2012-09-16 22:43:38 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Add some missing checks on shader ops
+	  - Check whether there is shader compiler support
+	  and bail out otherwise.
+	  - Add checks on compile and linking ops
+
+2012-09-14 20:49:48 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Fix setup chain logic
+	  Mostly a procedural reordering. Idea is to avoid
+	  trying to setup a surface without a display.This
+	  change relies on the asumption that:
+	  1.- set_window_handle() can happen at any time
+	  2.- setcaps will never get called before _start()
+	  is done.
+	  If both conditions are meet the new procedure
+	  should work as expected.
+
+2012-09-14 15:59:05 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: WIP: Reorder locking
+
+2012-09-13 23:23:08 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix xOverlay logic
+	  Several fixes dealing with correct window
+	  creation and set_handle() ops. Tested on
+	  X11/mesa with internal window creation.
+
+2012-09-13 00:55:33 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Actually test EGL configs before claiming support
+
+2012-09-13 00:11:49 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Caps nego EGL fixes
+	  - Fix alloc lol on format list: Asked for 2 slices and used 3.
+	  - Reordered display & context init logic to prepare for actual
+	  config checking before claiming support for a given format.
+	  Change deals basically with setting up EGL display at start()
+	  and choose an EGL config only at setcaps time.
+
+2012-09-12 22:11:39 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Caps nego. Start extending RGB support to a set.
+
+2012-09-12 16:19:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/eglgles/Makefile.am:
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix build of static plugin
+
+2012-09-12 09:28:22 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Drop wrong format test on _setcaps (draft leftover)
+
+2012-09-11 13:54:09 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Support RGB24 by default
+
+2012-09-11 13:51:25 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Instrument EGL error reporting
+
+2012-09-11 12:04:30 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Correctly return GstFlowReturn from render_and_display()
+
+2012-09-11 11:51:28 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Move VBO setup to it's own function
+
+2012-09-11 10:20:16 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix render_and_display logic
+	  Switch procedure according to enabled rendering path
+
+2012-09-10 22:59:57 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Fix sample launch line with disabled window creation
+
+2012-09-10 22:41:52 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Rename stale android leftover
+
+2012-09-10 20:22:22 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/Makefile.am:
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	* ext/eglgles/gstvidroidsink.c:
+	* ext/eglgles/gstvidroidsink.h:
+	  eglglessink: Move eglgles Sink to ext/ #2
+
+2012-09-10 20:00:57 -0300  Reynaldo H. Verdejo Pinochet <reynaldo@collabora.com>
+
+	* ext/eglgles/Android.mk:
+	* ext/eglgles/Makefile.am:
+	* ext/eglgles/gstvidroidsink.c:
+	* ext/eglgles/gstvidroidsink.h:
+	* ext/eglgles/video_platform_wrapper.c:
+	* ext/eglgles/video_platform_wrapper.h:
+	  eglglessink: Move eglgles Sink to ext/
+
+2012-10-18 14:03:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  opensles: Add the opensles plugin to the list of not ported plugins
+
+2012-10-18 13:56:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/opensles/Makefile.am:
+	  opensles: Integrate into build system
+
+2012-10-12 10:08:59 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  openslessink: Return 0 delay if the player object is in PAUSED state
+
+2012-10-01 12:54:15 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: fixes noise on seekeing
+
+2012-10-01 11:46:50 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: chain up on _clear_all
+
+2012-10-01 11:14:24 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: implement the ringbuffer clear_all vmethod too
+
+2012-10-01 10:59:08 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslessrc.c:
+	  opensles: initial attempt to reduce the src latency
+
+2012-09-29 19:00:13 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	* sys/opensles/openslessink.c:
+	* sys/opensles/openslessrc.c:
+	  opensles: sprinkle comments and cosmetic fixes
+
+2012-09-28 15:10:19 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: check for device outputs in the mixer
+
+2012-09-28 14:39:01 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslessink.c:
+	  opensles: drop 48kHz sample rate
+	  OpenSL ES implementation in Android is just a 'facade' API on top of
+	  AudioFlinger which will downsample 48kHz into 44.1kHz before
+	  delivering the audio to the underlaying hardware.
+	  We found that it suffer some sort of underrun when the downsample
+	  enters in action so relay on our good resampler to take care of that
+	  and fix the clicks issue. And get an extra bonus of a lower latency.
+
+2012-09-27 19:24:50 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslessink.c:
+	  opensles: change the defaults to use 20 ms ringbuffer segments
+	  In my nexus7 seems that the internal min buffer size is 20 ms so make
+	  our segments match.
+
+2012-09-27 18:33:09 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: ensure that we register the callback only in STOPPED
+	  Fixes the error registering the callback on the PLAYING -> PAUSE ->
+	  PLAYING state change sequence.
+
+2012-09-27 17:46:27 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: cap queue size
+	  Just in case we want to tweak the sink behaviour with buffer-time and
+	  latency-time properties cap the queue size to something reasonable.
+
+2012-09-27 17:32:14 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslessink.c:
+	  opensles: sink to provide the audioclock by default
+
+2012-09-27 17:27:24 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: only drain half ringbuffer on start
+	  At start drain half ringbuffer into the OpenSL so the writting/reading
+	  pointers will start at half ringbuffer distance.
+
+2012-09-27 14:52:59 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: monitor some player events
+
+2012-09-27 07:22:47 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: rework around the _delay function
+
+2012-09-27 05:40:46 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: implement _delay function
+
+2012-09-27 04:00:28 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: refactor to behave more like other sinks
+	  Reflect the queue in our own data buffer.
+	  Drop the _commit hook that wasn't usefull.
+	  Don't mess with the segsize/segtotal.
+
+2012-09-26 14:01:17 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: read player position and show it in the log
+
+2012-09-26 12:50:42 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslessink.c:
+	  opensles: do not provide a clock in the sink element.
+
+2012-09-26 12:32:44 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: rework on start/stop operations and callback function handling
+
+2012-09-26 12:09:04 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslessink.c:
+	  opensles: fixes 8 bit format which is unsigned on android.
+
+2012-09-25 19:25:01 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: attempt to reduce playback latency
+
+2012-09-25 18:04:27 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: drop _buffer_clear calls and refactor to a shared _enqueue_cb
+
+2012-09-21 17:04:14 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: use 0.25s segments in the sink to lower latency
+
+2012-09-21 16:11:42 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslessrc.c:
+	  opensles: finish remaining bits for source element.
+
+2012-09-21 14:15:12 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslessink.c:
+	  opensles: attempt to query device for capabilities
+
+2012-09-20 18:41:50 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	* sys/opensles/openslessink.c:
+	* sys/opensles/openslessink.h:
+	* sys/opensles/openslessrc.c:
+	  opensles: add the mute property and handle volume/mute changes on the fly
+
+2012-09-20 18:04:29 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	* sys/opensles/openslessink.c:
+	* sys/opensles/openslessink.h:
+	  opensles: make the volume property actually work
+
+2012-09-20 14:16:25 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	  opensles: rework on the ringbufffer to properly clear segments
+	  Make the segments bigger (1 second) as it seems to be the minimum size
+	  we need to not introduce noise.
+	  Sink works in my nexus 7 with rates from 8000 to 44100 and some noise
+	  can be noticed on higger sample rates.
+
+2012-09-20 11:50:50 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/opensles.c:
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	* sys/opensles/openslessink.c:
+	* sys/opensles/openslessink.h:
+	* sys/opensles/openslessrc.c:
+	* sys/opensles/openslessrc.h:
+	  opensles: fixes the license headers
+
+2012-09-20 10:41:50 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/openslesringbuffer.c:
+	  opensles: produces expected output until ringbuffer wraps
+	  Add some log messages.
+	  Fixed a bit the _player_cb function and properly advance reding in the
+	  ringbuffer.
+	  Still produces noise when the ringbuffer wraps.
+
+2012-09-19 18:11:54 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* sys/opensles/Makefile.am:
+	* sys/opensles/opensles.c:
+	* sys/opensles/openslesringbuffer.c:
+	* sys/opensles/openslesringbuffer.h:
+	* sys/opensles/openslessink.c:
+	* sys/opensles/openslessink.h:
+	* sys/opensles/openslessrc.c:
+	* sys/opensles/openslessrc.h:
+	  opensles: Add initial draft implementation of OpenSL ES plugin.
+	  Initial draft implementation for a OpenSL ES based plugin for Android
+	  that provides audio src and sink.
+
+2012-10-18 09:24:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/Makefile.am:
+	  androidmedia: Use correct variable name in Makefile.am
+
+2012-10-17 22:54:28 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* sys/directsound/gstdirectsoundsrc.c:
+	  directsoundsrc: Fix compiler warning
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673414
+
+2012-10-17 17:34:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/apexsink/gstapexsink.c:
+	* ext/assrender/gstassrender.c:
+	* ext/audiofile/gstafparse.c:
+	* ext/audiofile/gstafsink.c:
+	* ext/audiofile/gstafsrc.c:
+	* ext/bz2/gstbz2dec.c:
+	* ext/bz2/gstbz2enc.c:
+	* ext/cdaudio/gstcdaudio.c:
+	* ext/celt/gstceltdec.c:
+	* ext/celt/gstceltenc.c:
+	* ext/chromaprint/gstchromaprint.c:
+	* ext/cog/gstcogdownsample.c:
+	* ext/cog/gstcogmse.c:
+	* ext/cog/gstcogscale.c:
+	* ext/curl/gstcurlbasesink.c:
+	* ext/curl/gstcurlfilesink.c:
+	* ext/curl/gstcurlftpsink.c:
+	* ext/curl/gstcurlhttpsink.c:
+	* ext/curl/gstcurlsmtpsink.c:
+	* ext/curl/gstcurltlssink.c:
+	* ext/dc1394/gstdc1394.c:
+	* ext/dirac/gstdiracdec.cc:
+	* ext/dirac/gstdiracenc.cc:
+	* ext/directfb/dfbvideosink.c:
+	* ext/dts/gstdtsdec.c:
+	* ext/faac/gstfaac.c:
+	* ext/faad/gstfaad.c:
+	* ext/flite/gstflitetestsrc.c:
+	* ext/gme/gstgme.c:
+	* ext/gsettings/gstgsettingsaudiosink.c:
+	* ext/gsettings/gstgsettingsaudiosrc.c:
+	* ext/gsettings/gstgsettingsvideosink.c:
+	* ext/gsettings/gstgsettingsvideosrc.c:
+	* ext/gsm/gstgsmdec.c:
+	* ext/gsm/gstgsmenc.c:
+	* ext/jasper/gstjasperdec.c:
+	* ext/jasper/gstjasperenc.c:
+	* ext/kate/gstkatedec.c:
+	* ext/kate/gstkateenc.c:
+	* ext/kate/gstkateparse.c:
+	* ext/kate/gstkatetag.c:
+	* ext/kate/gstkatetiger.c:
+	* ext/libfame/gstlibfame.c:
+	* ext/libmms/gstmms.c:
+	* ext/mimic/gstmimdec.c:
+	* ext/mimic/gstmimenc.c:
+	* ext/modplug/gstmodplug.cc:
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/mplex/gstmplex.cc:
+	* ext/musepack/gstmusepackdec.c:
+	* ext/musicbrainz/gsttrm.c:
+	* ext/mythtv/gstmythtvsrc.c:
+	* ext/nas/nassink.c:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/ofa/gstofa.c:
+	* ext/openal/gstopenalsink.c:
+	* ext/openal/gstopenalsrc.c:
+	* ext/opencv/gstcvdilate.c:
+	* ext/opencv/gstcvequalizehist.c:
+	* ext/opencv/gstcverode.c:
+	* ext/opencv/gstcvlaplace.c:
+	* ext/opencv/gstcvsmooth.c:
+	* ext/opencv/gstcvsobel.c:
+	* ext/opencv/gstedgedetect.c:
+	* ext/opencv/gstfaceblur.c:
+	* ext/opencv/gstfacedetect.c:
+	* ext/opencv/gstmotioncells.c:
+	* ext/opencv/gstpyramidsegment.c:
+	* ext/opencv/gsttemplatematch.c:
+	* ext/opencv/gsttextoverlay.c:
+	* ext/opus/gstopusdec.c:
+	* ext/opus/gstopusenc.c:
+	* ext/opus/gstopusparse.c:
+	* ext/opus/gstrtpopusdepay.c:
+	* ext/opus/gstrtpopuspay.c:
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/resindvdbin.c:
+	* ext/resindvd/resindvdsrc.c:
+	* ext/resindvd/rsndec.c:
+	* ext/resindvd/rsnparsetter.c:
+	* ext/rsvg/gstrsvgdec.c:
+	* ext/rsvg/gstrsvgoverlay.c:
+	* ext/rtmp/gstrtmpsink.c:
+	* ext/rtmp/gstrtmpsrc.c:
+	* ext/schroedinger/gstschrodec.c:
+	* ext/schroedinger/gstschroenc.c:
+	* ext/sdl/sdlaudiosink.c:
+	* ext/sdl/sdlvideosink.c:
+	* ext/snapshot/gstsnapshot.c:
+	* ext/sndfile/gstsfsink.c:
+	* ext/sndfile/gstsfsrc.c:
+	* ext/sndio/sndiosink.c:
+	* ext/sndio/sndiosrc.c:
+	* ext/soundtouch/gstbpmdetect.cc:
+	* ext/soundtouch/gstpitch.cc:
+	* ext/spandsp/gstspanplc.c:
+	* ext/spc/gstspc.c:
+	* ext/swfdec/gstswfdec.c:
+	* ext/teletextdec/gstteletextdec.c:
+	* ext/timidity/gsttimidity.c:
+	* ext/timidity/gstwildmidi.c:
+	* ext/voaacenc/gstvoaacenc.c:
+	* ext/voamrwbenc/gstvoamrwbenc.c:
+	* ext/wayland/gstwaylandsink.c:
+	* ext/xvid/gstxviddec.c:
+	* ext/xvid/gstxvidenc.c:
+	* ext/zbar/gstzbar.c:
+	* gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c:
+	* gst/adpcmdec/adpcmdec.c:
+	* gst/adpcmenc/adpcmenc.c:
+	* gst/aiff/aiffmux.c:
+	* gst/aiff/aiffparse.c:
+	* gst/asfmux/gstasfmux.c:
+	* gst/asfmux/gstasfparse.c:
+	* gst/asfmux/gstrtpasfpay.c:
+	* gst/audiobuffer/gstaudioringbuffer.c:
+	* gst/audiovisualizers/gstspacescope.c:
+	* gst/audiovisualizers/gstspectrascope.c:
+	* gst/audiovisualizers/gstsynaescope.c:
+	* gst/audiovisualizers/gstwavescope.c:
+	* gst/autoconvert/gstautoconvert.c:
+	* gst/autoconvert/gstautovideoconvert.c:
+	* gst/bayer/gstbayer2rgb.c:
+	* gst/bayer/gstrgb2bayer.c:
+	* gst/camerabin2/gstcamerabin2.c:
+	* gst/camerabin2/gstviewfinderbin.c:
+	* gst/camerabin2/gstwrappercamerabinsrc.c:
+	* gst/cdxaparse/gstcdxaparse.c:
+	* gst/cdxaparse/gstvcdparse.c:
+	* gst/coloreffects/gstchromahold.c:
+	* gst/coloreffects/gstcoloreffects.c:
+	* gst/dataurisrc/gstdataurisrc.c:
+	* gst/dccp/gstdccpclientsink.c:
+	* gst/dccp/gstdccpclientsrc.c:
+	* gst/dccp/gstdccpserversink.c:
+	* gst/dccp/gstdccpserversrc.c:
+	* gst/debugutils/fpsdisplaysink.c:
+	* gst/debugutils/gstchecksumsink.c:
+	* gst/debugutils/gstchopmydata.c:
+	* gst/debugutils/gstcompare.c:
+	* gst/debugutils/gstdebugspy.c:
+	* gst/dtmf/gstdtmfdetect.c:
+	* gst/dtmf/gstdtmfsrc.c:
+	* gst/dtmf/gstrtpdtmfdepay.c:
+	* gst/dtmf/gstrtpdtmfsrc.c:
+	* gst/dvbsuboverlay/gstdvbsuboverlay.c:
+	* gst/dvdspu/gstdvdspu.c:
+	* gst/faceoverlay/gstfaceoverlay.c:
+	* gst/festival/gstfestival.c:
+	* gst/fieldanalysis/gstfieldanalysis.c:
+	* gst/freeverb/gstfreeverb.c:
+	* gst/games/gstpuzzle.c:
+	* gst/gaudieffects/gstburn.c:
+	* gst/gaudieffects/gstchromium.c:
+	* gst/gaudieffects/gstdilate.c:
+	* gst/gaudieffects/gstdodge.c:
+	* gst/gaudieffects/gstexclusion.c:
+	* gst/gaudieffects/gstgaussblur.c:
+	* gst/gaudieffects/gstsolarize.c:
+	* gst/geometrictransform/gstbulge.c:
+	* gst/geometrictransform/gstcircle.c:
+	* gst/geometrictransform/gstdiffuse.c:
+	* gst/geometrictransform/gstfisheye.c:
+	* gst/geometrictransform/gstkaleidoscope.c:
+	* gst/geometrictransform/gstmarble.c:
+	* gst/geometrictransform/gstmirror.c:
+	* gst/geometrictransform/gstpinch.c:
+	* gst/geometrictransform/gstrotate.c:
+	* gst/geometrictransform/gstsphere.c:
+	* gst/geometrictransform/gstsquare.c:
+	* gst/geometrictransform/gststretch.c:
+	* gst/geometrictransform/gsttunnel.c:
+	* gst/geometrictransform/gsttwirl.c:
+	* gst/geometrictransform/gstwaterripple.c:
+	* gst/hdvparse/gsthdvparse.c:
+	* gst/hls/gsthlsdemux.c:
+	* gst/hls/gsthlssink.c:
+	* gst/id3tag/gstid3mux.c:
+	* gst/inter/gstinteraudiosink.c:
+	* gst/inter/gstinteraudiosrc.c:
+	* gst/inter/gstintersubsink.c:
+	* gst/inter/gstintersubsrc.c:
+	* gst/inter/gstintervideosink.c:
+	* gst/inter/gstintervideosrc.c:
+	* gst/interlace/gstinterlace.c:
+	* gst/ivfparse/gstivfparse.c:
+	* gst/jp2kdecimator/gstjp2kdecimator.c:
+	* gst/jpegformat/gstjifmux.c:
+	* gst/jpegformat/gstjpegparse.c:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/liveadder/liveadder.c:
+	* gst/mixmatrix/mixmatrix.c:
+	* gst/mpeg1sys/gstmpeg1systemencode.c:
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegpsmux/mpegpsmux.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mve/gstmvedemux.c:
+	* gst/mve/gstmvemux.c:
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfmux.c:
+	* gst/nsf/gstnsf.c:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* gst/overlay/gstoverlay.c:
+	* gst/patchdetect/gstpatchdetect.c:
+	* gst/pcapparse/gstirtspparse.c:
+	* gst/pcapparse/gstpcapparse.c:
+	* gst/pnm/gstpnmdec.c:
+	* gst/pnm/gstpnmenc.c:
+	* gst/rawparse/gstaudioparse.c:
+	* gst/rawparse/gstvideoparse.c:
+	* gst/real/gstrealaudiodec.c:
+	* gst/real/gstrealvideodec.c:
+	* gst/removesilence/gstremovesilence.c:
+	* gst/rtjpeg/gstrtjpegdec.c:
+	* gst/rtjpeg/gstrtjpegenc.c:
+	* gst/rtpmux/gstrtpdtmfmux.c:
+	* gst/rtpmux/gstrtpmux.c:
+	* gst/rtpvp8/gstrtpvp8depay.c:
+	* gst/rtpvp8/gstrtpvp8pay.c:
+	* gst/scaletempo/gstscaletempo.c:
+	* gst/sdi/gstsdidemux.c:
+	* gst/sdi/gstsdimux.c:
+	* gst/sdp/gstsdpdemux.c:
+	* gst/segmentclip/gstaudiosegmentclip.c:
+	* gst/segmentclip/gstvideosegmentclip.c:
+	* gst/siren/gstsirendec.c:
+	* gst/siren/gstsirenenc.c:
+	* gst/smooth/gstsmooth.c:
+	* gst/speed/gstspeed.c:
+	* gst/stereo/gststereo.c:
+	* gst/subenc/gstsrtenc.c:
+	* gst/subenc/gstwebvttenc.c:
+	* gst/tta/gstttadec.c:
+	* gst/tta/gstttaparse.c:
+	* gst/vbidec/gstvbidec.c:
+	* gst/videofilters/gstscenechange.c:
+	* gst/videofilters/gstzebrastripe.c:
+	* gst/videomeasure/gstvideomeasure_collector.c:
+	* gst/videomeasure/gstvideomeasure_ssim.c:
+	* gst/videoparsers/gstdiracparse.c:
+	* gst/videoparsers/gsth263parse.c:
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	* gst/videosignal/gstvideoanalyse.c:
+	* gst/videosignal/gstvideodetect.c:
+	* gst/videosignal/gstvideomark.c:
+	* gst/vmnc/vmncdec.c:
+	* gst/y4m/gsty4mdec.c:
+	* sys/acmenc/acmenc.c:
+	* sys/acmmp3dec/acmmp3dec.c:
+	* sys/avc/gstavcsrc.cpp:
+	* sys/cdrom/gstcdplayer.c:
+	* sys/decklink/gstdecklinksink.cpp:
+	* sys/decklink/gstdecklinksrc.cpp:
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.cpp:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.cpp:
+	* sys/dshowvideosink/dshowvideosink.cpp:
+	* sys/dvb/dvbbasebin.c:
+	* sys/dvb/gstdvbsrc.c:
+	* sys/dxr3/dxr3audiosink.c:
+	* sys/dxr3/dxr3spusink.c:
+	* sys/dxr3/dxr3videosink.c:
+	* sys/fbdev/gstfbdevsink.c:
+	* sys/linsys/gstlinsyssdisink.c:
+	* sys/linsys/gstlinsyssdisrc.c:
+	* sys/osxvideo/osxvideosrc.c:
+	* sys/pvr2d/gstpvrvideosink.c:
+	* sys/qcam/gstqcamsrc.c:
+	* sys/shm/gstshmsink.c:
+	* sys/shm/gstshmsrc.c:
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	* sys/uvch264/gstuvch264_src.c:
+	* sys/vcd/vcdsrc.c:
+	* sys/vdpau/gstvdpsink.c:
+	* sys/vdpau/gstvdpvideopostprocess.c:
+	* sys/vdpau/h264/gstvdph264dec.c:
+	* sys/vdpau/mpeg/gstvdpmpegdec.c:
+	* sys/vdpau/mpeg4/gstvdpmpeg4dec.c:
+	* sys/wasapi/gstwasapisink.c:
+	* sys/wasapi/gstwasapisrc.c:
+	* sys/wininet/gstwininetsrc.c:
+	* sys/winks/gstksvideosrc.c:
+	* sys/winscreencap/gstdx9screencapsrc.c:
+	* sys/winscreencap/gstgdiscreencapsrc.c:
+	* tests/check/elements/baseaudiovisualizer.c:
+	* tests/check/elements/camerabin.c:
+	* tools/gst-element-maker:
+	  Use gst_element_class_set_static_metadata()
+	  where possible. Avoids some string copies. Also re-indent
+	  some stuff. Also some indent fixes here and there.
+
+2012-04-03 12:09:19 +0300  Raimo Järvi <raimo.jarvi@gmail.com>
+
+	* configure.ac:
+	* sys/directsound/gstdirectsoundsrc.c:
+	  directsoundsrc: port to 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=673414
+
+2012-10-16 11:38:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: Fix unitialized variable compiler warning
+
+2012-10-16 11:34:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Revert "configure: fix build"
+	  This reverts commit 5c1c35290d7f72a4bc016e8aef276d8c1bdcf37b.
+
+2012-10-16 11:31:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/Makefile.am:
+	  androidmedia: Add missing file
+
+2012-10-16 11:32:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  configure: fix build
+
+2012-10-15 16:35:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  androidmedia: Rename plugin
+
+2012-10-15 16:29:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  androidmedia: Add to the not yet ported plugins
+
+2012-10-15 16:05:39 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/androidmedia/gstamcvideodec.h:
+	  androidmedia: Make everything buildable
+
+2012-10-15 14:36:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Don't try to use the NVidia DRM codecs
+
+2012-10-09 10:56:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Try to handle format changes more gracefully
+	  And make stop() faster and more robust
+
+2012-10-09 10:27:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcaudiodec.h:
+	  Add workaround for Google MP3 decoder outputting garbage in first output buffer
+	  And assume one decoded input frame per output buffer to fix timestamp
+	  handling by the base class.
+
+2012-10-09 10:14:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Also add some more output format checks to the audio decoder
+
+2012-10-09 10:13:32 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Check output format metadata some more
+	  And implement workaround for NVidia Tegra 3 not setting the slice_height.
+	  Thanks to Josep Torra for debugging this issue.
+
+2012-10-05 15:09:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Add some more default channel layouts, these should be good for AAC at least
+
+2012-10-05 14:56:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Don't set timestamps, the baseclass handles this for us anyway
+
+2012-10-03 10:06:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  List profiles in reverse to minimize caps
+
+2012-10-03 09:56:50 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Iterate levels in reverse order to minimize caps
+
+2012-10-03 09:51:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Merge structures into caps instead of appending them
+
+2012-09-25 10:32:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Use orc_memcpy() instead of memcpy() as it should be faster for larger memory areas
+
+2012-09-24 15:32:44 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Add support for audio/mpeg-L2 for the Nexus 7
+
+2012-09-24 15:14:09 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Add support for MPEG1/2 video
+
+2012-09-19 14:52:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Ignore the *law and Vorbis decoders
+	  They are broken unfortunately.
+
+2012-09-19 11:20:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Add FIXME comment for not handling odd widths/height with the TI hardware decoders
+	  Must likely an issue with the codec itself though.
+
+2012-09-19 09:47:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Fix handling of I420 buffers with odd width
+
+2012-09-18 15:38:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Only mpegversion=4 is supported for AAC
+
+2012-09-18 15:28:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Remove some obsolete FIXMEs
+
+2012-09-17 13:46:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Fix flushing logic to unbreak handling of flushing seeks
+
+2012-09-17 12:24:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Fix chroma stride for I420 stride/crop conversion
+
+2012-09-17 11:28:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Fix Vorbis decoding
+
+2012-09-14 16:17:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Wait at most 100ms for dequeueing a buffer, and retry after that
+	  Some codecs don't fail the dequeueing if the codec is flushed,
+	  causing deadlocks when shutting down the element.
+
+2012-09-14 16:11:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Release output buffers a bit earlier
+
+2012-09-14 16:11:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Keep another reference of the input buffer in handle_frame()
+	  It might be unreffed in the meantime by the other thread due
+	  to finish_frame().
+
+2012-09-14 16:10:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Pass -1 as number of frames to the base class
+	  This will automatically do the right thing if timestamps are good enough
+
+2012-09-14 16:09:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Use correct buffer variable
+
+2012-09-14 14:43:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Always pass 1 as number of frames to finish_frame()
+
+2012-09-14 14:42:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Correctly remember number of channels and samplerate
+
+2012-09-14 14:42:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Don't unref input buffer from handle_frame(), it's owned by the baseclass
+
+2012-09-14 13:31:21 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Remove invalid GST_ERROR() call
+
+2012-09-14 13:27:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Only try to get the channel-mask if it is set
+
+2012-09-14 13:25:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Add support for FLAC
+
+2012-09-14 13:24:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Fix src template caps
+
+2012-09-14 13:16:41 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	  Fix plugin initialization
+
+2012-09-14 13:05:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc-constants.h:
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcaudiodec.h:
+	  Add support for audio decoders, completely untested so far
+
+2012-09-14 12:07:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Only set the SYNC_FRAME flag on the first buffer if we need to split the input
+
+2012-09-12 14:30:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc-constants.h:
+	* sys/androidmedia/gstamc.c:
+	  Ignore codecs with unknown color formats for stability purposes
+	  They can be registered nonetheless if an environment variable
+	  or compile-time #define is set.
+
+2012-09-12 13:48:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Implement cropping and correctly handle the different color formats
+
+2012-09-11 16:30:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Really implement stride conversion for NV12 too
+
+2012-09-11 16:24:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Implement stride-conversion for I420 and NV12
+
+2012-09-11 15:56:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Fix typo in previous commit
+
+2012-09-11 15:49:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Don't allow using non-Google codecs if we started the Java VM ourselves
+	  Hardware codecs, e.g. the TI ones, only work in processes that had their
+	  Java VM started via the non-public AndroidRuntime class.
+
+2012-09-11 14:30:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Rename to amc from androidmediacodec everywhere
+
+2012-09-11 13:08:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Improve debug output
+
+2012-09-11 12:39:11 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Print the MediaFormats we get in the debug logs
+
+2012-09-10 15:31:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Improve debug output
+
+2012-09-10 15:30:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Improve level/profile handling
+
+2012-09-10 13:39:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Allow registering as static plugin with the GStreamer SDK API
+
+2012-09-10 13:30:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  If the buffer sizes are the same, just memcpy() to the output buffers
+
+2012-09-10 12:56:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Correctly convert timestamps between us and ns
+
+2012-09-07 16:11:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Set SYNC_FRAME flag on buffers if required
+
+2012-09-07 14:22:54 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Improve flushing
+
+2012-09-07 13:44:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Wait at most 0.5 seconds for getting an input buffer for EOS
+
+2012-09-07 13:42:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Correctly check for flushing
+
+2012-09-06 17:24:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Retry for negative return values when dequeueing buffers
+
+2012-09-06 17:07:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Fix refcount bug
+
+2012-09-06 17:07:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  The MediaCodec API is apparently not threadsafe between stop() and release()
+	  So we don't call release() and just hope for the GC to release the
+	  codec in time.
+
+2012-09-06 15:44:06 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Fix plugin cache creation
+
+2012-08-24 04:35:44 -0700  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Cache the codec informations inside the registry
+	  Otherwise we would always load all codecs during plugin initialization
+	  which can take quite some time (because of hardware) and also loads
+	  lots of shared libraries (which number is limited by 64 in Android).
+
+2012-08-24 09:20:26 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Properly attach and detach the current threads to the Java VM
+	  Attaching a thread after it was detached will cause segfaults,
+	  as such we use a pthread_key_t to keep track of the JNIEnv* of
+	  the attached threads and in the destructor (i.e. when the
+	  thread exits) we detach the thread.
+
+2012-08-23 17:31:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Don't get the output format from the codec before it is ready
+	  Apparently things are crashing otherwise.
+
+2012-08-23 17:31:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Get the input buffers from the codec
+
+2012-08-23 17:30:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Fix JNI method call signatures
+
+2012-08-23 17:30:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Initialize the VM will full debugging for now
+
+2012-08-23 13:53:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Use NewStringUTF() instead of our own method for that
+
+2012-08-23 12:30:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Add the TI format to the mapping table too
+
+2012-08-23 12:29:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc-constants.h:
+	* sys/androidmedia/gstamc.c:
+	  Add another TI specific OpenMAX color format
+
+2012-08-22 19:30:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  Fixes to element/elementfactory creation
+
+2012-08-22 19:12:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Some bugfixes to the codec scanning code
+	  Also it's not possible to attach a thread after it was
+	  detached once. As such we simply never detach any thread
+	  at all now.
+
+2012-08-22 18:35:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	  Fix some compilation errors
+
+2012-08-20 14:13:30 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  Add important FIXME
+
+2012-08-20 13:45:53 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	* sys/androidmedia/gstamcvideodec.h:
+	  Add video decoder element
+
+2012-08-20 13:45:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	  Add some more JNI wrapping
+
+2012-08-20 13:42:24 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc-constants.h:
+	  Add some missing color format constants
+
+2012-08-16 15:18:19 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc-constants.h:
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	  Implement basic wrapper around MediaCodec API
+	  Ideally nothing else will be needed from the elements later.
+
+2012-08-15 18:23:34 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	  Some more WIP
+	  Scanning all codecs now and have data structures for holding codec
+	  information and codec contexts. Also function declarations for
+	  working with them.
+
+2012-08-14 13:20:14 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamc.h:
+	  Initial commit
+
+2012-10-15 15:53:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	  androidmedia: Add androidmedia plugin
+
+2012-10-15 11:45:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: And fix another deadlock caused by the update thread not correctly shutting down
+	  Conflicts:
+	  gst/hls/gsthlsdemux.c
+
+2012-10-15 11:02:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsturidownloader.c:
+	  hlsdemux: Also hold the mutex before signalling the condition variable
+	  Conflicts:
+	  gst/hls/gsturidownloader.c
+
+2012-10-15 10:53:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Also cancel the downloader before stopping the playlist update task
+
+2012-10-15 10:38:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Only lock the mutex when it's not locked already
+	  Conflicts:
+	  gst/hls/gsthlsdemux.c
+
+2012-10-15 10:32:47 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Fix another race condition by holding the mutex that the condition variable uses
+	  Conflicts:
+	  gst/hls/gsthlsdemux.c
+
+2012-10-15 09:47:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Port some things from the last commits
+
+2012-10-15 09:35:16 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Never ever stop a task from the task function
+	  This will deadlock. Also make sure to always post an error message
+	  if required before pausing tasks from the task function.
+	  Should fix another bunch of deadlocks.
+	  Conflicts:
+	  gst/hls/gsthlsdemux.c
+
+2012-10-15 09:24:01 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Fix lots of deadlocks caused by race conditions in the task state handling
+
+2012-10-12 10:57:44 +0400  Sergey N. Gorshkov <sng@setevisor.tv>
+
+	* ext/rtmp/gstrtmpsink.c:
+	  rtmpsink: handle RTMP_Write() return value correctly
+	  Error might also be negative (-1). Unclear if 0 should
+	  be fatal as well though.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681111
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686009
+
+2012-10-12 23:09:06 +0100  David Régade <dregade@viewsurf.com>
+
+	* ext/rtmp/gstrtmpsink.c:
+	  rtmpsink: fix memory leak from URI verification via RTMP_ParseURL()
+	  In gst_rtmp_sink_uri_set_uri(), a test is performed in order
+	  to be sure uri is correct for librtmp. This test calls
+	  RTMP_ParseURL with 3 AVal pointers as parameters: host,
+	  playpath and app.
+	  AVal is a struct with a char* + int. After RTMP_ParseURL call,
+	  host.av_val and app.av_val both refer a substring of "uri". But
+	  playpath.av_val may be the result of a malloc so it needs to
+	  be freed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681459
+
+2012-10-12 22:33:45 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: advance stream time when sending GAP event
+
+2012-10-12 22:33:27 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	  mpegdemux: send language info downstream if available
+	  ... as extracted from dvd event.
+
+2012-10-12 22:31:53 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	  mpegdemux: remove obsolete struct field
+
+2012-10-12 12:28:44 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/rawparse/gstaudioparse.c:
+	  audioparse: Set framesize and properties correctly when taking format from caps.
+
+2012-10-12 17:51:51 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: tweak flow return aggregation
+
+2012-10-12 15:44:03 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: handle upstream TIME segments
+
+2012-10-12 15:07:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	  mpegdemux: handle and combine downstream flow return
+
+2012-10-12 14:50:34 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: handle new style dvd event
+
+2012-10-11 15:29:36 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: do not add pad after no-more-pads
+
+2012-10-11 15:27:12 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	  mpegdemux: clean up segment sending
+	  ... to use the src_segment as a basis for the sent segment,
+	  thereby properly conveying accumulated base_time etc.
+	  Also ensure src_segment is only adjusted once, so that
+	  all downstream segments are identical to avoid stream
+	  misalignment.
+
+2012-10-11 12:07:46 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	  mpegdemux: send GAP event rather than segment updates
+
+2012-10-11 11:51:50 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: refactor segment sending
+
+2012-10-11 11:30:44 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: refactor init and reset
+
+2012-10-11 11:04:33 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: no more segment closing in 1.0
+
+2012-10-11 11:03:21 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: clean up some debug statements
+
+2012-10-11 15:31:04 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dts/gstdtsdec.c:
+	  dtsdec: fix buffer parsing
+	  ... to avoid feeding empty buffers to decoder.
+
+2012-10-12 15:26:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: First push EOS, then destroy all programs
+	  And also properly remove the program from the subclass
+
+2012-10-12 15:09:07 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/hls/gsthlsdemux.c:
+	  hlsdemux: Fix invalid read
+
+2012-10-10 18:18:03 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: signal interlacing properly in video caps
+	  The field is called "interlace-mode" mode now and is a string.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685895
+
+2012-10-10 14:11:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/apexsink/gstapexsink.c:
+	* gst/debugutils/fpsdisplaysink.c:
+	* gst/inter/gstintertest.c:
+	* tests/check/elements/dataurisrc.c:
+	* tools/gst-app-maker:
+	  replace some playbin2 -> playbin
+
+2012-10-10 09:58:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	  mpeg4videoparse: reset frame parser after parsing caps codec data
+	  ... so as to arrange for a proper fresh state upon first frame.
+
+2012-10-10 09:48:58 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* common:
+	  common: Update to the right commit again
+	  Was accidentially reverted to an older version in the last commit.
+
+2012-10-09 23:00:14 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/rawparse/gstaudioparse.c:
+	* gst/rawparse/gstaudioparse.h:
+	  audioparse: add a mode where the caps are taken from the sink pad, and thus audioparse is only performing timestamping.
+
+2012-10-09 21:19:15 -0700  Michael Smith <msmith@rdio.com>
+
+	* common:
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: reset frame parser after parsing codec_data buffer in caps, to avoid not correctly parsing the full first frame.
+
+2012-10-09 13:53:19 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	* gst/videoparsers/gstmpeg4videoparse.h:
+	  mpeg4videoparse: properly mark config data presence
+	  ... which we allow to start at VisualObjectSequence or
+	  at VideoObject.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685709
+
+2012-10-08 12:38:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/fieldanalysis/gstfieldanalysis.c:
+	  fieldanalysis: Fix unitiailized variable compiler warning
+	  And also use the pad's default event function instead
+	  of just pushing to the peerpad. This makes sure any
+	  default handling of events is called.
+
+2012-10-08 12:23:20 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  fieldanalysis: Remove from the NONPORTED plugins list
+	  It's supposed to be ported in 1.0.1 already.
+
+2012-10-07 17:06:39 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/Makefile.am:
+	  docs: add 'make upload' target for docs/ for new-release script
+
+2012-10-07 17:03:45 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.1 ===
+
+2012-10-07 15:57:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.0.1
 
 2012-10-06 14:57:54 +0100  Tim-Philipp Müller <tim@centricular.net>
 

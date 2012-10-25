@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.0.1
+Release notes for GStreamer Bad Plugins 1.0.2
 
 
 The GStreamer team is proud to announce a new release
@@ -63,22 +63,38 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * fieldanalysis and frei0r plugins ported to 1.0
-      * DVD playback fixes
-      * pitch: transform timestamps properly after a seek
-      * camerabin fixes
-      * bug fixes
+      * audioparse: add mode where caps are taken from upstream and only timestamping is performed
+      * directsoundsrc: port to 1.0
+      * dtsdec: fix buffer parsing
+      * fieldanalysis: actually build (remove from the NONPORTED plugins list)
+      * hlsdemux: numerous thread-safety fixes, and an invalid memory access fix
+      * mpegdemux: handle and combine downstream flow returns better
+      * mpegdemux: make work properly with dvdreadsrc
+      * mpegtsdemux: PES header parsing fixes; fix potential crash
+      * mpegtsdemux: First push EOS, then destroy all programs
+      * mpegtsmux: fix buffer refcounting issue
+      * mpeg4videoparse: correctly parse the full first frame; properly mark config data presence
+      * mpegvideoparse: correctly parse the full first frame; signal interlacing properly in caps
+      * pitch: fix for start times > 0 (e.g. ogg streaming)
+      * rtmpsink: handle RTMP_Write() return value correctly, fix memory leak
+      * scaletempo: fix timestamp and latency query handling, and event leak
+      * subenc: port to 1.0
 
 Bugs fixed in this release
      
-      * 667220 : dvdspu: add NV12 support
-      * 681562 : Issue setting " video-source " property on wrappercamerabinsrc
-      * 681564 : Issue setting " video-source-filter " property on wrappercamerabinsrc
-      * 681678 : frei0r: port to 1.0
-      * 684740 : chromaprint: resolve undefined symbols
-      * 684847 : curl: fix build on win32
-      * 685065 : Missing cast in curlbasesink
-      * 685159 : chromaprint: Missing unmap buffer in transform_ip
+      * 623387 : mpegdemux: check base_time before calculating new_start
+      * 673414 : directsoundsrc: Port to 1.0
+      * 681459 : rtmpsink: memory leak
+      * 685709 : mpeg4videoparse: AVI file with XVID video doesn't want to preroll: p_length.avi
+      * 685895 : mpegvideoparse: signal interlacing correctly in caps using new " interlace-mode " field
+      * 686009 : rtmpsink: handle RTMP_Write() return value correctly
+      * 686294 : tsdemux: Fix checking P-STD_buffer marker in PES header
+      * 686327 : mpegtsmux: fix refcount issue with input buffers
+      * 686358 : tsdemux: fix potential crash dereferencing NULL program pointer
+      * 686520 : wayland: update to wayland-protocol 0.99
+      * 686547 : rtpopuspay outputs unparseable caps
+      * 686595 : [mpg123] misc improvements and fixes
+      * 686774 : gst-plugins-bad/curl: add a comment describing function...
 
 ==== Download ====
 
@@ -113,21 +129,22 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
       * Andoni Morales Alastruey
-      * Christian Fredrik Kalager Schaller
-      * Christophe Fergeau
+      * Carlos Rafael Giani
+      * David Régade
       * Jan Schmidt
+      * Josep Torra
+      * Mark Nauwelaerts
       * Michael Smith
-      * Nicolas Dufresne
-      * Rob Clark
-      * Robert Swain
+      * Raimo Järvi
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Thiago Santos
+      * Sebastian Rasmussen
+      * Sergey N. Gorshkov
+      * Sreerenj Balachandran
+      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Yaakov Selkowitz
-      * Руслан Ижбулатов
+      * Wim Taymans
  

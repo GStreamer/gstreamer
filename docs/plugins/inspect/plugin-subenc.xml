@@ -1,8 +1,8 @@
 <plugin>
-  <name>gdp</name>
-  <description>Payload/depayload GDP packets</description>
-  <filename>../../gst/gdp/.libs/libgstgdp.so</filename>
-  <basename>libgstgdp.so</basename>
+  <name>subenc</name>
+  <description>subtitle encoders</description>
+  <filename>../../gst/subenc/.libs/libgstsubenc.so</filename>
+  <basename>libgstsubenc.so</basename>
   <version>1.0.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
@@ -10,44 +10,44 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>gdpdepay</name>
-      <longname>GDP Depayloader</longname>
-      <class>GDP/Depayloader</class>
-      <description>Depayloads GStreamer Data Protocol buffers</description>
-      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <name>srtenc</name>
+      <longname>Srt encoder</longname>
+      <class>Codec/Encoder/Subtitle</class>
+      <description>Srt subtitle encoder</description>
+      <author>Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-gdp</details>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>ANY</details>
+          <details>application/x-subtitle</details>
         </caps>
       </pads>
     </element>
     <element>
-      <name>gdppay</name>
-      <longname>GDP Payloader</longname>
-      <class>GDP/Payloader</class>
-      <description>Payloads GStreamer Data Protocol buffers</description>
-      <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <name>webvttenc</name>
+      <longname>WebVTT encoder</longname>
+      <class>Codec/Encoder/Subtitle</class>
+      <description>WebVTT subtitle encoder</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
       <pads>
         <caps>
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>ANY</details>
+          <details>text/x-raw, format=(string){ pango-markup, utf8 }</details>
         </caps>
         <caps>
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-gdp</details>
+          <details>text/vtt</details>
         </caps>
       </pads>
     </element>
