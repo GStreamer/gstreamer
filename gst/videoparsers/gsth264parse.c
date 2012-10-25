@@ -1194,18 +1194,29 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     }
 
     if (G_UNLIKELY (modified)) {
+      gint fps_num = h264parse->fps_num;
+      gint fps_den = h264parse->fps_den;
+      GstClockTime latency;
+
       caps = gst_caps_copy (sink_caps);
       /* sps should give this */
       gst_caps_set_simple (caps, "width", G_TYPE_INT, sps->width,
           "height", G_TYPE_INT, sps->height, NULL);
+
+      /* upstream overrides */
+      if (s && gst_structure_has_field (s, "framerate"))
+        gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
+
       /* but not necessarily or reliably this */
-      if (h264parse->fps_num > 0 && h264parse->fps_den > 0 &&
-          (!s || !gst_structure_has_field (s, "framerate"))) {
+      if (fps_num > 0 && fps_den > 0) {
         GST_INFO_OBJECT (h264parse, "setting framerate in caps");
         gst_caps_set_simple (caps, "framerate",
-            GST_TYPE_FRACTION, h264parse->fps_num, h264parse->fps_den, NULL);
+            GST_TYPE_FRACTION, fps_num, fps_den, NULL);
         gst_base_parse_set_frame_rate (GST_BASE_PARSE (h264parse),
-            h264parse->fps_num, h264parse->fps_den, 0, 0);
+            fps_num, fps_den, 0, 0);
+        latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+        gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
+            latency);
       }
     }
   }

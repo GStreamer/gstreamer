@@ -659,17 +659,23 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   }
 
   /* perhaps we have a framerate */
-  if (mpvparse->fps_num > 0 && mpvparse->fps_den > 0 &&
-      (!s || !gst_structure_has_field (s, "framerate"))) {
+  {
     gint fps_num = mpvparse->fps_num;
     gint fps_den = mpvparse->fps_den;
-    GstClockTime latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+    GstClockTime latency;
 
-    gst_caps_set_simple (caps, "framerate",
-        GST_TYPE_FRACTION, fps_num, fps_den, NULL);
-    gst_base_parse_set_frame_rate (GST_BASE_PARSE (mpvparse),
-        fps_num, fps_den, 0, 0);
-    gst_base_parse_set_latency (GST_BASE_PARSE (mpvparse), latency, latency);
+    /* upstream overrides */
+    if (s && gst_structure_has_field (s, "framerate"))
+      gst_structure_get_fraction (s, "framerate", &fps_num, &fps_den);
+
+    if (fps_den > 0 && fps_num > 0) {
+      gst_caps_set_simple (caps, "framerate",
+          GST_TYPE_FRACTION, fps_num, fps_den, NULL);
+      gst_base_parse_set_frame_rate (GST_BASE_PARSE (mpvparse),
+          fps_num, fps_den, 0, 0);
+      latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
+      gst_base_parse_set_latency (GST_BASE_PARSE (mpvparse), latency, latency);
+    }
   }
 
   /* or pixel-aspect-ratio */
