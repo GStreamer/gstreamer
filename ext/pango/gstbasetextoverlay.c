@@ -1252,6 +1252,16 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
   }
 }
 
+static gboolean
+gst_text_overlay_filter_foreground_attr (PangoAttribute * attr, gpointer data)
+{
+  if (attr->klass->type == PANGO_ATTR_FOREGROUND) {
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
 static void
 gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
     const gchar * string, gint textlen)
@@ -1366,11 +1376,25 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
    */
 
   /* draw shadow text */
-  cairo_save (cr);
-  cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
-  cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
-  pango_cairo_show_layout (cr, overlay->layout);
-  cairo_restore (cr);
+  {
+    PangoAttrList *origin_attr, *filtered_attr;
+
+    origin_attr =
+        pango_attr_list_copy (pango_layout_get_attributes (overlay->layout));
+    filtered_attr =
+        pango_attr_list_filter (pango_attr_list_copy (origin_attr),
+        gst_text_overlay_filter_foreground_attr, NULL);
+
+    cairo_save (cr);
+    cairo_translate (cr, overlay->shadow_offset, overlay->shadow_offset);
+    cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 0.5);
+    pango_layout_set_attributes (overlay->layout, filtered_attr);
+    pango_cairo_show_layout (cr, overlay->layout);
+    pango_layout_set_attributes (overlay->layout, origin_attr);
+    pango_attr_list_unref (filtered_attr);
+    pango_attr_list_unref (origin_attr);
+    cairo_restore (cr);
+  }
 
   a = (overlay->outline_color >> 24) & 0xff;
   r = (overlay->outline_color >> 16) & 0xff;
