@@ -52,8 +52,6 @@ GObject
           GstInterVideoSink
           GstRTMPSink
           GstShmSink
-          GstVideoSink
-            GstWaylandSink
         GstBaseSrc
           GstDTMFSrc
           GstDataURISrc
