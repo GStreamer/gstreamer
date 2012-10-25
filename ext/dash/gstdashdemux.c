@@ -425,7 +425,7 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
          the manifest. It might have been stopped if we were in PAUSED
          state and we filled our queue with enough cached fragments
        */
-      if (gst_mpdparser_get_baseURL (demux->client) != NULL)
+      if (demux->client->mpd_node != NULL)
         gst_dash_demux_resume_stream_task (demux);
       break;
     default:
