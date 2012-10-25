@@ -2971,8 +2971,13 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
 
             /* in the callback the connection should be tunneled with the
              * GET connection */
-            if (watch->funcs.tunnel_complete)
+            if (watch->funcs.tunnel_complete) {
               watch->funcs.tunnel_complete (watch, watch->user_data);
+              keep_running = !(watch->conn->read_socket == NULL &&
+                  watch->conn->write_socket == NULL);
+              if (!keep_running)
+                goto done;
+            }
             goto read_done;
           }
         }
@@ -3056,6 +3061,7 @@ gst_rtsp_source_dispatch (GSource * source, GSourceFunc callback G_GNUC_UNUSED,
     g_mutex_unlock (&watch->mutex);
   }
 
+done:
 write_blocked:
   return keep_running;
 
