@@ -559,77 +559,13 @@ gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
 /* returns TRUE if buffer is within segment, else FALSE.
  * if Buffer is on segment border, it's timestamp and duration will be clipped */
 static gboolean
-clip_audio_buffer (GstFFMpegAudDec * dec, GstBuffer * buf, GstClockTime in_ts,
-    GstClockTime in_dur)
+clip_audio_buffer (GstFFMpegAudDec * dec, GstBuffer ** buf)
 {
-  GstClockTime stop;
-  gint64 diff;
-  guint64 ctime, cstop;
-  gboolean res = TRUE;
-  gsize size, offset;
+  *buf =
+      gst_audio_buffer_clip (*buf, &dec->segment, dec->samplerate,
+      dec->depth * dec->channels);
 
-  size = gst_buffer_get_size (buf);
-  offset = 0;
-
-  GST_LOG_OBJECT (dec,
-      "timestamp:%" GST_TIME_FORMAT ", duration:%" GST_TIME_FORMAT
-      ", size %" G_GSIZE_FORMAT, GST_TIME_ARGS (in_ts), GST_TIME_ARGS (in_dur),
-      size);
-
-  /* can't clip without TIME segment */
-  if (G_UNLIKELY (dec->segment.format != GST_FORMAT_TIME))
-    goto beach;
-
-  /* we need a start time */
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (in_ts)))
-    goto beach;
-
-  /* trust duration */
-  stop = in_ts + in_dur;
-
-  res = gst_segment_clip (&dec->segment, GST_FORMAT_TIME, in_ts, stop, &ctime,
-      &cstop);
-  if (G_UNLIKELY (!res))
-    goto out_of_segment;
-
-  /* see if some clipping happened */
-  if (G_UNLIKELY ((diff = ctime - in_ts) > 0)) {
-    /* bring clipped time to bytes */
-    diff =
-        gst_util_uint64_scale_int (diff, dec->samplerate,
-        GST_SECOND) * (dec->depth * dec->channels);
-
-    GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
-        G_GINT64_FORMAT " bytes", GST_TIME_ARGS (ctime), diff);
-
-    offset += diff;
-    size -= diff;
-  }
-  if (G_UNLIKELY ((diff = stop - cstop) > 0)) {
-    /* bring clipped time to bytes */
-    diff =
-        gst_util_uint64_scale_int (diff, dec->samplerate,
-        GST_SECOND) * (dec->depth * dec->channels);
-
-    GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
-        G_GINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
-
-    size -= diff;
-  }
-  gst_buffer_resize (buf, offset, size);
-  GST_BUFFER_TIMESTAMP (buf) = ctime;
-  GST_BUFFER_DURATION (buf) = cstop - ctime;
-
-beach:
-  GST_LOG_OBJECT (dec, "%sdropping", (res ? "not " : ""));
-  return res;
-
-  /* ERRORS */
-out_of_segment:
-  {
-    GST_LOG_OBJECT (dec, "out of segment");
-    goto beach;
-  }
+  return *buf != NULL;
 }
 
 static gint
@@ -719,10 +655,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       ffmpegdec->next_out = out_pts + out_duration;
 
     /* now see if we need to clip the buffer against the segment boundaries. */
-    if (G_UNLIKELY (!clip_audio_buffer (ffmpegdec, *outbuf, out_pts,
-                out_duration)))
+    if (G_UNLIKELY (!clip_audio_buffer (ffmpegdec, outbuf)))
       goto clipped;
-
 
     /* Reorder channels to the GStreamer channel order */
     /* Only the width really matters here... and it's stored as depth */
@@ -747,7 +681,8 @@ beach:
 clipped:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "buffer clipped");
-    gst_buffer_unref (*outbuf);
+    if (*outbuf)
+      gst_buffer_unref (*outbuf);
     *outbuf = NULL;
     goto beach;
   }
