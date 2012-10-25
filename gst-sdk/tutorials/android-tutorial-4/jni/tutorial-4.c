@@ -31,6 +31,11 @@ typedef struct _CustomData {
   GMainLoop *main_loop;   /* GLib main loop */
   gboolean initialized;   /* To avoid informing the UI multiple times about the initialization */
   ANativeWindow *native_window; /* The Android native window where video will be rendered */
+  GstState state, target_state;
+  gint64 duration;
+  gint64 desired_position;
+  GstClockTime last_seek_time;
+  gboolean is_live;
 } CustomData;
 
 /* playbin2 flags */
@@ -44,6 +49,7 @@ static pthread_key_t current_jni_env;
 static JavaVM *java_vm;
 static jfieldID custom_data_field_id;
 static jmethodID set_message_method_id;
+static jmethodID set_current_position_method_id;
 static jmethodID on_gstreamer_initialized_method_id;
 static jmethodID on_media_size_changed_method_id;
 
@@ -100,6 +106,76 @@ static void set_ui_message (const gchar *message, CustomData *data) {
   (*env)->DeleteLocalRef (env, jmessage);
 }
 
+static void set_current_ui_position (gint position, gint duration, CustomData *data) {
+  JNIEnv *env = get_jni_env ();
+  (*env)->CallVoidMethod (env, data->app, set_current_position_method_id, position, duration);
+  if ((*env)->ExceptionCheck (env)) {
+    GST_ERROR ("Failed to call Java method");
+    (*env)->ExceptionClear (env);
+  }
+}
+
+static gboolean refresh_ui (CustomData *data) {
+  GstFormat fmt = GST_FORMAT_TIME;
+  gint64 current = -1;
+  gint64 position;
+
+  /* We do not want to update anything unless we have a working pipeline in the PAUSED or PLAYING state */
+  if (!data || !data->pipeline || data->state < GST_STATE_PAUSED)
+    return TRUE;
+
+  /* If we didn't know it yet, query the stream duration */
+  if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
+    if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
+      GST_WARNING ("Could not query current duration");
+    }
+  }
+
+  if (gst_element_query_position (data->pipeline, &fmt, &position)) {
+    /* Java expects these values in milliseconds, and GStreamer provides nanoseconds */
+    set_current_ui_position (position / GST_MSECOND, data->duration / GST_MSECOND, data);
+  }
+  return TRUE;
+}
+
+static void execute_seek (gint64 desired_position, CustomData *data);
+
+static gboolean delayed_seek_cb (CustomData *data) {
+  GST_DEBUG ("Doing delayed seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (data->desired_position));
+  data->last_seek_time = GST_CLOCK_TIME_NONE;
+  execute_seek (data->desired_position, data);
+  return FALSE;
+}
+
+static void execute_seek (gint64 desired_position, CustomData *data) {
+  gboolean res;
+  gint64 diff;
+
+  if (desired_position == GST_CLOCK_TIME_NONE)
+    return;
+
+  diff = gst_util_get_timestamp () - data->last_seek_time;
+
+  if (GST_CLOCK_TIME_IS_VALID (data->last_seek_time) && diff < 500 * GST_MSECOND) {
+    GSource *timeout_source;
+
+    if (!GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+      timeout_source = g_timeout_source_new (diff / GST_MSECOND);
+      g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
+      g_source_attach (timeout_source, data->context);
+      g_source_unref (timeout_source);
+    }
+    data->desired_position = desired_position;
+    GST_DEBUG ("Throttling seek to %" GST_TIME_FORMAT ", will be in %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (desired_position), GST_TIME_ARGS (500 * GST_MSECOND - diff));
+  } else {
+    GST_DEBUG ("Seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (desired_position));
+    res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
+    data->last_seek_time = gst_util_get_timestamp ();
+    data->desired_position = GST_CLOCK_TIME_NONE;
+  }
+}
+
 /* Retrieve errors from the bus and show them on the UI */
 static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   GError *err;
@@ -112,7 +188,47 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_free (debug_info);
   set_ui_message (message_string, data);
   g_free (message_string);
+  data->target_state = GST_STATE_NULL;
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
+}
+
+static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  set_ui_message (GST_MESSAGE_TYPE_NAME (msg), data);
+  refresh_ui (data);
+  data->target_state = GST_STATE_PAUSED;
+  data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
+  execute_seek (0, data);
+}
+
+static void duration_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  data->duration = GST_CLOCK_TIME_NONE;
+}
+
+static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  gint percent;
+
+  if (data->is_live)
+    return;
+
+  gst_message_parse_buffering (msg, &percent);
+  if (percent < 100 && data->target_state >= GST_STATE_PAUSED) {
+    gchar * message_string = g_strdup_printf ("Buffering %d%%", percent);
+    gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+    set_ui_message (message_string, data);
+    g_free (message_string);
+  } else if (data->target_state >= GST_STATE_PLAYING) {
+    gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+    set_ui_message ("PLAYING", data);
+  } else if (data->target_state >= GST_STATE_PAUSED) {
+    set_ui_message ("PAUSED", data);
+  }
+}
+
+static void clock_lost_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
+  if (data->target_state >= GST_STATE_PLAYING) {
+    gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+    gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+  }
 }
 
 /* Retrieve the video sink's Caps and tell the application about the media size */
@@ -155,6 +271,9 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
   /* Only pay attention to messages coming from the pipeline, not its children */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
+    data->state = new_state;
+    if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position))
+      execute_seek (data->desired_position, data);
     gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
     set_ui_message(message, data);
     g_free (message);
@@ -190,7 +309,9 @@ static void *app_function (void *userdata) {
   JavaVMAttachArgs args;
   GstBus *bus;
   CustomData *data = (CustomData *)userdata;
+  GSource *timeout_source;
   GSource *bus_source;
+  GError *error = NULL;
   guint flags;
 
   GST_DEBUG ("Creating pipeline in CustomData at %p", data);
@@ -200,9 +321,12 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
-  data->pipeline = gst_element_factory_make ("playbin2", NULL);
-  if (!data->pipeline) {
-    set_ui_message("Unable to build pipeline", data);
+  data->pipeline = gst_parse_launch("playbin2", &error);
+  if (error) {
+    gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
+    g_clear_error (&error);
+    set_ui_message(message, data);
+    g_free (message);
     return NULL;
   }
 
@@ -212,6 +336,7 @@ static void *app_function (void *userdata) {
   g_object_set (data->pipeline, "flags", flags, NULL);
 
   /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
+  data->target_state = GST_STATE_READY;
   gst_element_set_state(data->pipeline, GST_STATE_READY);
 
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
@@ -221,8 +346,18 @@ static void *app_function (void *userdata) {
   g_source_attach (bus_source, data->context);
   g_source_unref (bus_source);
   g_signal_connect (G_OBJECT (bus), "message::error", (GCallback)error_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback)eos_cb, data);
   g_signal_connect (G_OBJECT (bus), "message::state-changed", (GCallback)state_changed_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::duration", (GCallback)duration_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::buffering", (GCallback)buffering_cb, data);
+  g_signal_connect (G_OBJECT (bus), "message::clock-lost", (GCallback)clock_lost_cb, data);
   gst_object_unref (bus);
+
+  /* Register a function that GLib will call 4 times per second */
+  timeout_source = g_timeout_source_new (250);
+  g_source_set_callback (timeout_source, (GSourceFunc)refresh_ui, data, NULL);
+  g_source_attach (timeout_source, data->context);
+  g_source_unref (timeout_source);
 
   /* Create a GLib Main Loop and set it to run */
   GST_DEBUG ("Entering main loop... (CustomData:%p)", data);
@@ -236,6 +371,7 @@ static void *app_function (void *userdata) {
   /* Free resources */
   g_main_context_pop_thread_default(data->context);
   g_main_context_unref (data->context);
+  data->target_state = GST_STATE_NULL;
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
   gst_object_unref (data->pipeline);
 
@@ -279,9 +415,12 @@ void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   if (!data || !data->pipeline) return;
   const jbyte *char_uri = (*env)->GetStringUTFChars (env, uri, NULL);
   GST_DEBUG ("Setting URI to %s", char_uri);
-  gst_element_set_state (data->pipeline, GST_STATE_READY);
+  if (data->target_state >= GST_STATE_READY)
+    gst_element_set_state (data->pipeline, GST_STATE_READY);
   g_object_set(data->pipeline, "uri", char_uri, NULL);
   (*env)->ReleaseStringUTFChars (env, uri, char_uri);
+  data->duration = GST_CLOCK_TIME_NONE;
+  data->is_live = (gst_element_set_state (data->pipeline, data->target_state) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 /* Set pipeline to PLAYING state */
@@ -289,7 +428,8 @@ static void gst_native_play (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Setting state to PLAYING");
-  gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
+  data->target_state = GST_STATE_PLAYING;
+  data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PLAYING) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
 /* Set pipeline to PAUSED state */
@@ -297,18 +437,32 @@ static void gst_native_pause (JNIEnv* env, jobject thiz) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
   GST_DEBUG ("Setting state to PAUSED");
-  gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
+  data->target_state = GST_STATE_PAUSED;
+  data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
+}
+
+void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
+  CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
+  if (!data) return;
+  gint64 desired_position = (gint64)(milliseconds * GST_MSECOND);
+  if (data->state >= GST_STATE_PAUSED) {
+    execute_seek(desired_position, data);
+  } else {
+    GST_DEBUG ("Scheduling seek to %" GST_TIME_FORMAT " for later", GST_TIME_ARGS (desired_position));
+    data->desired_position = desired_position;
+  }
 }
 
 /* Static class initializer: retrieve method and field IDs */
 static jboolean gst_native_class_init (JNIEnv* env, jclass klass) {
   custom_data_field_id = (*env)->GetFieldID (env, klass, "native_custom_data", "J");
   set_message_method_id = (*env)->GetMethodID (env, klass, "setMessage", "(Ljava/lang/String;)V");
+  set_current_position_method_id = (*env)->GetMethodID (env, klass, "setCurrentPosition", "(II)V");
   on_gstreamer_initialized_method_id = (*env)->GetMethodID (env, klass, "onGStreamerInitialized", "()V");
   on_media_size_changed_method_id = (*env)->GetMethodID (env, klass, "onMediaSizeChanged", "(II)V");
 
   if (!custom_data_field_id || !set_message_method_id || !on_gstreamer_initialized_method_id ||
-      !on_media_size_changed_method_id) {
+      !on_media_size_changed_method_id || !set_current_position_method_id) {
     /* We emit this message through the Android log instead of the GStreamer log because the later
      * has not been initialized yet.
      */
@@ -365,6 +519,7 @@ static JNINativeMethod native_methods[] = {
   { "nativeSetUri", "(Ljava/lang/String;)V", (void *) gst_native_set_uri},
   { "nativePlay", "()V", (void *) gst_native_play},
   { "nativePause", "()V", (void *) gst_native_pause},
+  { "nativeSetPosition", "(I)V", (void*) gst_native_set_position},
   { "nativeSurfaceInit", "(Ljava/lang/Object;)V", (void *) gst_native_surface_init},
   { "nativeSurfaceFinalize", "()V", (void *) gst_native_surface_finalize},
   { "nativeClassInit", "()Z", (void *) gst_native_class_init}
