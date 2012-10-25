@@ -4863,6 +4863,11 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_MP4V:
       case FOURCC_fmp4:
       case FOURCC_FMP4:
+      case FOURCC_apcs:
+      case FOURCC_apch:
+      case FOURCC_apcn:
+      case FOURCC_apco:
+      case FOURCC_ap4h:
       {
         const guint8 *buf;
         guint32 version;
