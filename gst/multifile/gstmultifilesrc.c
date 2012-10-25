@@ -119,7 +119,7 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
           0, INT_MAX, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_STOP_INDEX,
-      g_param_spec_int ("stop-index", "Start Index",
+      g_param_spec_int ("stop-index", "Stop Index",
           "Stop value of index.  The special value -1 means no stop.",
           -1, INT_MAX, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
