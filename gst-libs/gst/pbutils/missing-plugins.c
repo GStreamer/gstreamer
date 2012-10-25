@@ -424,7 +424,7 @@ gst_missing_plugin_message_get_installer_detail (GstMessage * msg)
 
   /* FIXME: use gst_installer_detail_new() here too */
   str = g_string_new (GST_DETAIL_STRING_MARKER "|");
-  g_string_append_printf (str, "%u.%u|", GST_VERSION_MAJOR, GST_VERSION_MINOR);
+  g_string_append_printf (str, "%s|", GST_API_VERSION);
 
   progname = (const gchar *) g_get_prgname ();
   if (progname) {
@@ -616,7 +616,7 @@ gst_installer_detail_new (gchar * description, const gchar * type,
   GString *s;
 
   s = g_string_new (GST_DETAIL_STRING_MARKER "|");
-  g_string_append_printf (s, "%u.%u|", GST_VERSION_MAJOR, GST_VERSION_MINOR);
+  g_string_append_printf (s, "%s|", GST_API_VERSION);
 
   progname = (const gchar *) g_get_prgname ();
   if (progname) {
