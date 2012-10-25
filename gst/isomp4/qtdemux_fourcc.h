@@ -174,6 +174,10 @@ G_BEGIN_DECLS
 #define FOURCC_mp4s     GST_MAKE_FOURCC('m','p','4','s')
 #define FOURCC_gama     GST_MAKE_FOURCC('g','a','m','a')
 #define FOURCC_apcs     GST_MAKE_FOURCC('a','p','c','s')
+#define FOURCC_apch     GST_MAKE_FOURCC('a','p','c','h')
+#define FOURCC_apcn     GST_MAKE_FOURCC('a','p','c','n')
+#define FOURCC_apco     GST_MAKE_FOURCC('a','p','c','o')
+#define FOURCC_ap4h     GST_MAKE_FOURCC('a','p','4','h')
 #define FOURCC_m1v      GST_MAKE_FOURCC('m','1','v',' ')
 
 /* SVQ3 fourcc */
