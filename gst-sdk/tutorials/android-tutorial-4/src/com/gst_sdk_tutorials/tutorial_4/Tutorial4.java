@@ -20,13 +20,13 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback {
     private native void nativePlay();     // Set pipeline to PLAYING
     private native void nativePause();    // Set pipeline to PAUSED
     private static native boolean nativeClassInit(); // Initialize native class: cache Method IDs for callbacks
-    private native void nativeSurfaceInit(Object surface);
-    private native void nativeSurfaceFinalize();
+    private native void nativeSurfaceInit(Object surface); // A new surface is available
+    private native void nativeSurfaceFinalize(); // Surface about to be destroyed
     private long native_custom_data;      // Native code will use this to keep private data
 
     private boolean is_playing_desired;   // Whether the user asked to go to PLAYING
 
-    private String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
+    private String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-368p.ogv";
 
     // Called when the activity is first created.
     @Override
