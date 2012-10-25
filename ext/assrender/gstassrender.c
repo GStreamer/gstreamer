@@ -1540,6 +1540,23 @@ gst_ass_render_event_text (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_ASS_RENDER_UNLOCK (render);
       break;
     }
+    case GST_EVENT_GAP:{
+      GstClockTime start, duration;
+
+      gst_event_parse_gap (event, &start, &duration);
+      if (GST_CLOCK_TIME_IS_VALID (duration))
+        start += duration;
+      /* we do not expect another buffer until after gap,
+       * so that is our position now */
+      GST_ASS_RENDER_LOCK (render);
+      render->subtitle_segment.position = start;
+
+      /* wake up the video chain, it might be waiting for a text buffer or
+       * a text segment update */
+      GST_ASS_RENDER_BROADCAST (render);
+      GST_ASS_RENDER_UNLOCK (render);
+      break;
+    }
     case GST_EVENT_FLUSH_STOP:
       GST_ASS_RENDER_LOCK (render);
       GST_INFO_OBJECT (render, "text flush stop");
