@@ -2177,7 +2177,7 @@ gst_mpdparser_get_segmentURL_for_range (gchar *url, GstRange *range)
 static gchar *
 gst_mpdparser_get_mediaURL (GstMpdClient *client, GstSegmentURLNode *segmentURL)
 {
-  gchar *url_prefix;
+  const gchar *url_prefix;
 
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (segmentURL != NULL, NULL);
