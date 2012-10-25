@@ -38,49 +38,8 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPSession GstRTSPSession;
 typedef struct _GstRTSPSessionClass GstRTSPSessionClass;
 
-typedef struct _GstRTSPSessionStream GstRTSPSessionStream;
-typedef struct _GstRTSPSessionMedia GstRTSPSessionMedia;
-
 #include "rtsp-media.h"
-
-/**
- * GstRTSPSessionStream:
- * @trans: the media transport
- * @media_stream: the controlled media stream
- *
- * Configuration of a stream. A stream is an audio or video stream related to a
- * media.
- */
-struct _GstRTSPSessionStream
-{
-  GstRTSPMediaTrans trans;
-
-  /* the stream of the media */
-  GstRTSPMediaStream *media_stream;
-};
-
-/**
- * GstRTSPSessionMedia:
- *
- * State of a client session regarding a specific media identified by uri.
- */
-struct _GstRTSPSessionMedia
-{
-  /* the url of the media */
-  GstRTSPUrl   *url;
-
-  /* the pipeline for the media */
-  GstRTSPMedia *media;
-
-  /* the server state */
-  GstRTSPState  state;
-
-  /* counter for channels */
-  guint         counter;
-
-  /* configuration for the different streams */
-  GArray       *streams;
-};
+#include "rtsp-session-media.h"
 
 /**
  * GstRTSPSession:
@@ -138,28 +97,6 @@ gboolean               gst_rtsp_session_release_media        (GstRTSPSession *se
 /* get media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const GstRTSPUrl *url);
-/* control media */
-gboolean               gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media, GstState state);
-
-/* get stream config */
-GstRTSPSessionStream * gst_rtsp_session_media_get_stream     (GstRTSPSessionMedia *media,
-                                                              guint idx);
-
-gboolean               gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media,
-                                                              GstRTSPRange *range);
-
-/* configure transport */
-GstRTSPTransport *     gst_rtsp_session_stream_set_transport (GstRTSPSessionStream *stream,
-                                                              GstRTSPTransport *ct);
-void                   gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream *stream,
-                                                              GstRTSPSendFunc send_rtp,
-                                                              GstRTSPSendFunc send_rtcp,
-                                                              gpointer user_data,
-                                                              GDestroyNotify  notify);
-void                   gst_rtsp_session_stream_set_keepalive (GstRTSPSessionStream *stream,
-                                                              GstRTSPKeepAliveFunc keep_alive,
-                                                              gpointer user_data,
-                                                              GDestroyNotify  notify);
 
 G_END_DECLS
 

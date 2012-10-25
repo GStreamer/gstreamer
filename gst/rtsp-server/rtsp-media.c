@@ -59,8 +59,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
-static GQuark ssrc_stream_map_key;
-
 static void gst_rtsp_media_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec);
 static void gst_rtsp_media_set_property (GObject * object, guint propid,
@@ -70,6 +68,7 @@ static void gst_rtsp_media_finalize (GObject * obj);
 static gpointer do_loop (GstRTSPMediaClass * klass);
 static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
+static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_unprepare (GstRTSPMedia * media);
 static void unlock_streams (GstRTSPMedia * media);
 static void default_handle_mtu (GstRTSPMedia * media, guint mtu);
@@ -144,14 +143,12 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
   klass->handle_mtu = default_handle_mtu;
-
-  ssrc_stream_map_key = g_quark_from_static_string ("GstRTSPServer.stream");
 }
 
 static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
-  media->streams = g_array_new (FALSE, TRUE, sizeof (GstRTSPMediaStream *));
+  media->streams = g_ptr_array_new_with_free_func (g_object_unref);
   g_mutex_init (&media->lock);
   g_cond_init (&media->cond);
 
@@ -163,71 +160,20 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 }
 
-void
-gst_rtsp_media_trans_cleanup (GstRTSPMediaTrans * trans)
-{
-  if (trans->transport) {
-    gst_rtsp_transport_free (trans->transport);
-    trans->transport = NULL;
-  }
-  if (trans->rtpsource) {
-    g_object_set_qdata (trans->rtpsource, ssrc_stream_map_key, NULL);
-    trans->rtpsource = NULL;
-  }
-}
-
-static void
-gst_rtsp_media_stream_free (GstRTSPMediaStream * stream)
-{
-  if (stream->session)
-    g_object_unref (stream->session);
-
-  if (stream->caps)
-    gst_caps_unref (stream->caps);
-
-  if (stream->send_rtp_sink)
-    gst_object_unref (stream->send_rtp_sink);
-  if (stream->send_rtp_src)
-    gst_object_unref (stream->send_rtp_src);
-  if (stream->send_rtcp_src)
-    gst_object_unref (stream->send_rtcp_src);
-  if (stream->recv_rtcp_sink)
-    gst_object_unref (stream->recv_rtcp_sink);
-  if (stream->recv_rtp_sink)
-    gst_object_unref (stream->recv_rtp_sink);
-
-  g_list_free (stream->transports);
-
-  g_free (stream);
-}
-
 static void
 gst_rtsp_media_finalize (GObject * obj)
 {
   GstRTSPMedia *media;
-  guint i;
 
   media = GST_RTSP_MEDIA (obj);
 
   GST_INFO ("finalize media %p", media);
 
-  if (media->pipeline) {
-    unlock_streams (media);
-    gst_element_set_state (media->pipeline, GST_STATE_NULL);
-    gst_object_unref (media->pipeline);
-  }
+  gst_rtsp_media_unprepare (media);
 
-  for (i = 0; i < media->streams->len; i++) {
-    GstRTSPMediaStream *stream;
+  g_ptr_array_unref (media->streams);
 
-    stream = g_array_index (media->streams, GstRTSPMediaStream *, i);
-
-    gst_rtsp_media_stream_free (stream);
-  }
-  g_array_free (media->streams, TRUE);
-
-  g_list_foreach (media->dynamic, (GFunc) gst_object_unref, NULL);
-  g_list_free (media->dynamic);
+  g_list_free_full (media->dynamic, gst_object_unref);
 
   if (media->source) {
     g_source_destroy (media->source);
@@ -624,6 +570,104 @@ gst_rtsp_media_get_auth (GstRTSPMedia * media)
   return result;
 }
 
+/**
+ * gst_rtsp_media_collect_streams:
+ * @media: a #GstRTSPMedia
+ *
+ * Find all payloader elements, they should be named pay%d in the
+ * element of @media, and create #GstRTSPStreams for them.
+ *
+ * Collect all dynamic elements, named dynpay%d, and add them to
+ * the list of dynamic elements.
+ */
+void
+gst_rtsp_media_collect_streams (GstRTSPMedia * media)
+{
+  GstElement *element, *elem;
+  GstPad *pad;
+  gint i;
+  gboolean have_elem;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  element = media->element;
+
+  have_elem = TRUE;
+  for (i = 0; have_elem; i++) {
+    gchar *name;
+
+    have_elem = FALSE;
+
+    name = g_strdup_printf ("pay%d", i);
+    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
+      GST_INFO ("found stream %d with payloader %p", i, elem);
+
+      /* take the pad of the payloader */
+      pad = gst_element_get_static_pad (elem, "src");
+      /* create the stream */
+      gst_rtsp_media_create_stream (media, elem, pad);
+      g_object_unref (pad);
+
+      gst_object_unref (elem);
+
+      have_elem = TRUE;
+    }
+    g_free (name);
+
+    name = g_strdup_printf ("dynpay%d", i);
+    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
+      /* a stream that will dynamically create pads to provide RTP packets */
+
+      GST_INFO ("found dynamic element %d, %p", i, elem);
+
+      media->dynamic = g_list_prepend (media->dynamic, elem);
+
+      have_elem = TRUE;
+    }
+    g_free (name);
+  }
+}
+
+/**
+ * gst_rtsp_media_create_stream:
+ * @media: a #GstRTSPMedia
+ * @payloader: a #GstElement
+ * @srcpad: a source #GstPad
+ *
+ * Create a new stream in @media that provides RTP data on @srcpad.
+ * @srcpad should be a pad of an element inside @media->element.
+ *
+ * Returns: a new #GstRTSPStream that remains valid for as long
+ *          as @media exists.
+ */
+GstRTSPStream *
+gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
+    GstPad * pad)
+{
+  GstRTSPStream *stream;
+  GstPad *srcpad;
+  gchar *name;
+  gint idx;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (payloader), NULL);
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
+
+  idx = media->streams->len;
+
+  name = g_strdup_printf ("src_%u", idx);
+  srcpad = gst_ghost_pad_new (name, pad);
+  gst_pad_set_active (srcpad, TRUE);
+  gst_element_add_pad (media->element, srcpad);
+  g_free (name);
+
+  stream = gst_rtsp_stream_new (idx, payloader, srcpad);
+
+  g_ptr_array_add (media->streams, stream);
+
+  return stream;
+}
 
 /**
  * gst_rtsp_media_n_streams:
@@ -648,18 +692,18 @@ gst_rtsp_media_n_streams (GstRTSPMedia * media)
  *
  * Retrieve the stream with index @idx from @media.
  *
- * Returns: the #GstRTSPMediaStream at index @idx or %NULL when a stream with
+ * Returns: the #GstRTSPStream at index @idx or %NULL when a stream with
  * that index did not exist.
  */
-GstRTSPMediaStream *
+GstRTSPStream *
 gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
 {
-  GstRTSPMediaStream *res;
+  GstRTSPStream *res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
   if (idx < media->streams->len)
-    res = g_array_index (media->streams, GstRTSPMediaStream *, idx);
+    res = g_ptr_array_index (media->streams, idx);
   else
     res = NULL;
 
@@ -684,7 +728,7 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
   /* make copy */
   range = media->range;
 
-  if (!play && media->active > 0) {
+  if (!play && media->n_active > 0) {
     range.min.type = GST_RTSP_TIME_NOW;
     range.min.seconds = -1;
   }
@@ -797,657 +841,16 @@ weird_type:
   }
 }
 
-/**
- * gst_rtsp_media_stream_rtp:
- * @stream: a #GstRTSPMediaStream
- * @buffer: a #GstBuffer
- *
- * Handle an RTP buffer for the stream. This method is usually called when a
- * message has been received from a client using the TCP transport.
- *
- * This function takes ownership of @buffer.
- *
- * Returns: a GstFlowReturn.
- */
-GstFlowReturn
-gst_rtsp_media_stream_rtp (GstRTSPMediaStream * stream, GstBuffer * buffer)
-{
-  GstFlowReturn ret;
-
-  ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (stream->appsrc[0]), buffer);
-
-  return ret;
-}
-
-/**
- * gst_rtsp_media_stream_rtcp:
- * @stream: a #GstRTSPMediaStream
- * @buffer: a #GstBuffer
- *
- * Handle an RTCP buffer for the stream. This method is usually called when a
- * message has been received from a client using the TCP transport.
- *
- * This function takes ownership of @buffer.
- *
- * Returns: a GstFlowReturn.
- */
-GstFlowReturn
-gst_rtsp_media_stream_rtcp (GstRTSPMediaStream * stream, GstBuffer * buffer)
-{
-  GstFlowReturn ret;
-
-  ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (stream->appsrc[1]), buffer);
-
-  return ret;
-}
-
-/* Allocate the udp ports and sockets */
-static gboolean
-alloc_udp_ports (GstRTSPMedia * media, GstRTSPMediaStream * stream)
-{
-  GstStateChangeReturn ret;
-  GstElement *udpsrc0, *udpsrc1;
-  GstElement *udpsink0, *udpsink1;
-  gint tmp_rtp, tmp_rtcp;
-  guint count;
-  gint rtpport, rtcpport;
-  GSocket *socket;
-  const gchar *host;
-
-  udpsrc0 = NULL;
-  udpsrc1 = NULL;
-  udpsink0 = NULL;
-  udpsink1 = NULL;
-  count = 0;
-
-  /* Start with random port */
-  tmp_rtp = 0;
-
-  if (media->is_ipv6)
-    host = "udp://[::0]";
-  else
-    host = "udp://0.0.0.0";
-
-  /* try to allocate 2 UDP ports, the RTP port should be an even
-   * number and the RTCP port should be the next (uneven) port */
-again:
-  udpsrc0 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
-  if (udpsrc0 == NULL)
-    goto no_udp_protocol;
-  g_object_set (G_OBJECT (udpsrc0), "port", tmp_rtp, NULL);
-
-  ret = gst_element_set_state (udpsrc0, GST_STATE_PAUSED);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-    if (tmp_rtp != 0) {
-      tmp_rtp += 2;
-      if (++count > 20)
-        goto no_ports;
-
-      gst_element_set_state (udpsrc0, GST_STATE_NULL);
-      gst_object_unref (udpsrc0);
-
-      goto again;
-    }
-    goto no_udp_protocol;
-  }
-
-  g_object_get (G_OBJECT (udpsrc0), "port", &tmp_rtp, NULL);
-
-  /* check if port is even */
-  if ((tmp_rtp & 1) != 0) {
-    /* port not even, close and allocate another */
-    if (++count > 20)
-      goto no_ports;
-
-    gst_element_set_state (udpsrc0, GST_STATE_NULL);
-    gst_object_unref (udpsrc0);
-
-    tmp_rtp++;
-    goto again;
-  }
-
-  /* allocate port+1 for RTCP now */
-  udpsrc1 = gst_element_make_from_uri (GST_URI_SRC, host, NULL, NULL);
-  if (udpsrc1 == NULL)
-    goto no_udp_rtcp_protocol;
-
-  /* set port */
-  tmp_rtcp = tmp_rtp + 1;
-  g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, NULL);
-
-  ret = gst_element_set_state (udpsrc1, GST_STATE_PAUSED);
-  /* tmp_rtcp port is busy already : retry to make rtp/rtcp pair */
-  if (ret == GST_STATE_CHANGE_FAILURE) {
-
-    if (++count > 20)
-      goto no_ports;
-
-    gst_element_set_state (udpsrc0, GST_STATE_NULL);
-    gst_object_unref (udpsrc0);
-
-    gst_element_set_state (udpsrc1, GST_STATE_NULL);
-    gst_object_unref (udpsrc1);
-
-    tmp_rtp += 2;
-    goto again;
-  }
-
-  /* all fine, do port check */
-  g_object_get (G_OBJECT (udpsrc0), "port", &rtpport, NULL);
-  g_object_get (G_OBJECT (udpsrc1), "port", &rtcpport, NULL);
-
-  /* this should not happen... */
-  if (rtpport != tmp_rtp || rtcpport != tmp_rtcp)
-    goto port_error;
-
-  udpsink0 = gst_element_factory_make ("multiudpsink", NULL);
-  if (!udpsink0)
-    goto no_udp_protocol;
-
-  g_object_get (G_OBJECT (udpsrc0), "socket", &socket, NULL);
-  g_object_set (G_OBJECT (udpsink0), "socket", socket, NULL);
-  g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
-
-  udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
-  if (!udpsink1)
-    goto no_udp_protocol;
-
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
-          "send-duplicates")) {
-    g_object_set (G_OBJECT (udpsink0), "send-duplicates", FALSE, NULL);
-    g_object_set (G_OBJECT (udpsink1), "send-duplicates", FALSE, NULL);
-  } else {
-    g_warning
-        ("old multiudpsink version found without send-duplicates property");
-  }
-
-  if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
-          "buffer-size")) {
-    g_object_set (G_OBJECT (udpsink0), "buffer-size", media->buffer_size, NULL);
-  } else {
-    GST_WARNING ("multiudpsink version found without buffer-size property");
-  }
-
-  g_object_get (G_OBJECT (udpsrc1), "socket", &socket, NULL);
-  g_object_set (G_OBJECT (udpsink1), "socket", socket, NULL);
-  g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
-
-  g_object_set (G_OBJECT (udpsink0), "auto-multicast", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink0), "loop", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "auto-multicast", FALSE, NULL);
-  g_object_set (G_OBJECT (udpsink1), "loop", FALSE, NULL);
-
-  /* we keep these elements, we configure all in configure_transport when the
-   * server told us to really use the UDP ports. */
-  stream->udpsrc[0] = udpsrc0;
-  stream->udpsrc[1] = udpsrc1;
-  stream->udpsink[0] = udpsink0;
-  stream->udpsink[1] = udpsink1;
-  stream->server_port.min = rtpport;
-  stream->server_port.max = rtcpport;
-
-  return TRUE;
-
-  /* ERRORS */
-no_udp_protocol:
-  {
-    goto cleanup;
-  }
-no_ports:
-  {
-    goto cleanup;
-  }
-no_udp_rtcp_protocol:
-  {
-    goto cleanup;
-  }
-port_error:
-  {
-    goto cleanup;
-  }
-cleanup:
-  {
-    if (udpsrc0) {
-      gst_element_set_state (udpsrc0, GST_STATE_NULL);
-      gst_object_unref (udpsrc0);
-    }
-    if (udpsrc1) {
-      gst_element_set_state (udpsrc1, GST_STATE_NULL);
-      gst_object_unref (udpsrc1);
-    }
-    if (udpsink0) {
-      gst_element_set_state (udpsink0, GST_STATE_NULL);
-      gst_object_unref (udpsink0);
-    }
-    if (udpsink1) {
-      gst_element_set_state (udpsink1, GST_STATE_NULL);
-      gst_object_unref (udpsink1);
-    }
-    return FALSE;
-  }
-}
-
-/* executed from streaming thread */
-static void
-caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPMediaStream * stream)
-{
-  gchar *capsstr;
-  GstCaps *newcaps, *oldcaps;
-
-  newcaps = gst_pad_get_current_caps (pad);
-
-  oldcaps = stream->caps;
-  stream->caps = newcaps;
-
-  if (oldcaps)
-    gst_caps_unref (oldcaps);
-
-  capsstr = gst_caps_to_string (newcaps);
-  GST_INFO ("stream %p received caps %p, %s", stream, newcaps, capsstr);
-  g_free (capsstr);
-}
-
-static void
-dump_structure (const GstStructure * s)
-{
-  gchar *sstr;
-
-  sstr = gst_structure_to_string (s);
-  GST_INFO ("structure: %s", sstr);
-  g_free (sstr);
-}
-
-static GstRTSPMediaTrans *
-find_transport (GstRTSPMediaStream * stream, const gchar * rtcp_from)
-{
-  GList *walk;
-  GstRTSPMediaTrans *result = NULL;
-  const gchar *tmp;
-  gchar *dest;
-  guint port;
-
-  if (rtcp_from == NULL)
-    return NULL;
-
-  tmp = g_strrstr (rtcp_from, ":");
-  if (tmp == NULL)
-    return NULL;
-
-  port = atoi (tmp + 1);
-  dest = g_strndup (rtcp_from, tmp - rtcp_from);
-
-  GST_INFO ("finding %s:%d in %d transports", dest, port,
-      g_list_length (stream->transports));
-
-  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
-    GstRTSPMediaTrans *trans = walk->data;
-    gint min, max;
-
-    min = trans->transport->client_port.min;
-    max = trans->transport->client_port.max;
-
-    if ((strcmp (trans->transport->destination, dest) == 0) && (min == port
-            || max == port)) {
-      result = trans;
-      break;
-    }
-  }
-  g_free (dest);
-
-  return result;
-}
-
-static GstRTSPMediaTrans *
-check_transport (GObject * source, GstRTSPMediaStream * stream)
-{
-  GstStructure *stats;
-  GstRTSPMediaTrans *trans;
-
-  /* see if we have a stream to match with the origin of the RTCP packet */
-  trans = g_object_get_qdata (source, ssrc_stream_map_key);
-  if (trans == NULL) {
-    g_object_get (source, "stats", &stats, NULL);
-    if (stats) {
-      const gchar *rtcp_from;
-
-      dump_structure (stats);
-
-      rtcp_from = gst_structure_get_string (stats, "rtcp-from");
-      if ((trans = find_transport (stream, rtcp_from))) {
-        GST_INFO ("%p: found transport %p for source  %p", stream, trans,
-            source);
-
-        /* keep ref to the source */
-        trans->rtpsource = source;
-
-        g_object_set_qdata (source, ssrc_stream_map_key, trans);
-      }
-      gst_structure_free (stats);
-    }
-  }
-
-  return trans;
-}
-
-static void
-on_new_ssrc (GObject * session, GObject * source, GstRTSPMediaStream * stream)
-{
-  GstRTSPMediaTrans *trans;
-
-  GST_INFO ("%p: new source %p", stream, source);
-
-  trans = check_transport (source, stream);
-
-  if (trans)
-    GST_INFO ("%p: source %p for transport %p", stream, source, trans);
-}
-
-static void
-on_ssrc_sdes (GObject * session, GObject * source, GstRTSPMediaStream * stream)
-{
-  GST_INFO ("%p: new SDES %p", stream, source);
-}
-
-static void
-on_ssrc_active (GObject * session, GObject * source,
-    GstRTSPMediaStream * stream)
-{
-  GstRTSPMediaTrans *trans;
-
-  trans = check_transport (source, stream);
-
-  if (trans)
-    GST_INFO ("%p: source %p in transport %p is active", stream, source, trans);
-
-  if (trans && trans->keep_alive)
-    trans->keep_alive (trans->ka_user_data);
-
-#ifdef DUMP_STATS
-  {
-    GstStructure *stats;
-    g_object_get (source, "stats", &stats, NULL);
-    if (stats) {
-      dump_structure (stats);
-      gst_structure_free (stats);
-    }
-  }
-#endif
-}
-
-static void
-on_bye_ssrc (GObject * session, GObject * source, GstRTSPMediaStream * stream)
-{
-  GST_INFO ("%p: source %p bye", stream, source);
-}
-
-static void
-on_bye_timeout (GObject * session, GObject * source,
-    GstRTSPMediaStream * stream)
-{
-  GstRTSPMediaTrans *trans;
-
-  GST_INFO ("%p: source %p bye timeout", stream, source);
-
-  if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
-    trans->rtpsource = NULL;
-    trans->timeout = TRUE;
-  }
-}
-
-static void
-on_timeout (GObject * session, GObject * source, GstRTSPMediaStream * stream)
-{
-  GstRTSPMediaTrans *trans;
-
-  GST_INFO ("%p: source %p timeout", stream, source);
-
-  if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
-    trans->rtpsource = NULL;
-    trans->timeout = TRUE;
-  }
-}
-
-static GstFlowReturn
-handle_new_sample (GstAppSink * sink, gpointer user_data)
-{
-  GList *walk;
-  GstSample *sample;
-  GstBuffer *buffer;
-  GstRTSPMediaStream *stream;
-
-  sample = gst_app_sink_pull_sample (sink);
-  if (!sample)
-    return GST_FLOW_OK;
-
-  stream = (GstRTSPMediaStream *) user_data;
-  buffer = gst_sample_get_buffer (sample);
-
-  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
-    GstRTSPMediaTrans *tr = (GstRTSPMediaTrans *) walk->data;
-
-    if (GST_ELEMENT_CAST (sink) == stream->appsink[0]) {
-      if (tr->send_rtp)
-        tr->send_rtp (buffer, tr->transport->interleaved.min, tr->user_data);
-    } else {
-      if (tr->send_rtcp)
-        tr->send_rtcp (buffer, tr->transport->interleaved.max, tr->user_data);
-    }
-  }
-  gst_sample_unref (sample);
-
-  return GST_FLOW_OK;
-}
-
-static GstAppSinkCallbacks sink_cb = {
-  NULL,                         /* not interested in EOS */
-  NULL,                         /* not interested in preroll samples */
-  handle_new_sample,
-};
-
-/* prepare the pipeline objects to handle @stream in @media */
-static gboolean
-setup_stream (GstRTSPMediaStream * stream, guint idx, GstRTSPMedia * media)
-{
-  gchar *name;
-  GstPad *pad, *teepad, *queuepad, *selpad;
-  GstPadLinkReturn ret;
-  gint i;
-
-  /* allocate udp ports, we will have 4 of them, 2 for receiving RTP/RTCP and 2
-   * for sending RTP/RTCP. The sender and receiver ports are shared between the
-   * elements */
-  if (!alloc_udp_ports (media, stream))
-    return FALSE;
-
-  /* add the ports to the pipeline */
-  for (i = 0; i < 2; i++) {
-    gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsink[i]);
-    gst_bin_add (GST_BIN_CAST (media->pipeline), stream->udpsrc[i]);
-  }
-
-  /* create elements for the TCP transfer */
-  for (i = 0; i < 2; i++) {
-    stream->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
-    stream->appqueue[i] = gst_element_factory_make ("queue", NULL);
-    stream->appsink[i] = gst_element_factory_make ("appsink", NULL);
-    g_object_set (stream->appsink[i], "async", FALSE, "sync", FALSE, NULL);
-    g_object_set (stream->appsink[i], "emit-signals", FALSE, NULL);
-    gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appqueue[i]);
-    gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsink[i]);
-    gst_bin_add (GST_BIN_CAST (media->pipeline), stream->appsrc[i]);
-    gst_app_sink_set_callbacks (GST_APP_SINK_CAST (stream->appsink[i]),
-        &sink_cb, stream, NULL);
-  }
-
-  /* hook up the stream to the RTP session elements. */
-  name = g_strdup_printf ("send_rtp_sink_%u", idx);
-  stream->send_rtp_sink = gst_element_get_request_pad (media->rtpbin, name);
-  g_free (name);
-  name = g_strdup_printf ("send_rtp_src_%u", idx);
-  stream->send_rtp_src = gst_element_get_static_pad (media->rtpbin, name);
-  g_free (name);
-  name = g_strdup_printf ("send_rtcp_src_%u", idx);
-  stream->send_rtcp_src = gst_element_get_request_pad (media->rtpbin, name);
-  g_free (name);
-  name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
-  stream->recv_rtcp_sink = gst_element_get_request_pad (media->rtpbin, name);
-  g_free (name);
-  name = g_strdup_printf ("recv_rtp_sink_%u", idx);
-  stream->recv_rtp_sink = gst_element_get_request_pad (media->rtpbin, name);
-  g_free (name);
-
-  /* get the session */
-  g_signal_emit_by_name (media->rtpbin, "get-internal-session", idx,
-      &stream->session);
-
-  g_signal_connect (stream->session, "on-new-ssrc", (GCallback) on_new_ssrc,
-      stream);
-  g_signal_connect (stream->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
-      stream);
-  g_signal_connect (stream->session, "on-ssrc-active",
-      (GCallback) on_ssrc_active, stream);
-  g_signal_connect (stream->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
-      stream);
-  g_signal_connect (stream->session, "on-bye-timeout",
-      (GCallback) on_bye_timeout, stream);
-  g_signal_connect (stream->session, "on-timeout", (GCallback) on_timeout,
-      stream);
-
-  /* link the RTP pad to the session manager */
-  ret = gst_pad_link (stream->srcpad, stream->send_rtp_sink);
-  if (ret != GST_PAD_LINK_OK)
-    goto link_failed;
-
-  /* make tee for RTP and link to stream */
-  stream->tee[0] = gst_element_factory_make ("tee", NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->tee[0]);
-
-  pad = gst_element_get_static_pad (stream->tee[0], "sink");
-  gst_pad_link (stream->send_rtp_src, pad);
-  gst_object_unref (pad);
-
-  /* link RTP sink, we're pretty sure this will work. */
-  teepad = gst_element_get_request_pad (stream->tee[0], "src_%u");
-  pad = gst_element_get_static_pad (stream->udpsink[0], "sink");
-  gst_pad_link (teepad, pad);
-  gst_object_unref (pad);
-  gst_object_unref (teepad);
-
-  teepad = gst_element_get_request_pad (stream->tee[0], "src_%u");
-  pad = gst_element_get_static_pad (stream->appqueue[0], "sink");
-  gst_pad_link (teepad, pad);
-  gst_object_unref (pad);
-  gst_object_unref (teepad);
-
-  queuepad = gst_element_get_static_pad (stream->appqueue[0], "src");
-  pad = gst_element_get_static_pad (stream->appsink[0], "sink");
-  gst_pad_link (queuepad, pad);
-  gst_object_unref (pad);
-  gst_object_unref (queuepad);
-
-  /* make tee for RTCP */
-  stream->tee[1] = gst_element_factory_make ("tee", NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->tee[1]);
-
-  pad = gst_element_get_static_pad (stream->tee[1], "sink");
-  gst_pad_link (stream->send_rtcp_src, pad);
-  gst_object_unref (pad);
-
-  /* link RTCP elements */
-  teepad = gst_element_get_request_pad (stream->tee[1], "src_%u");
-  pad = gst_element_get_static_pad (stream->udpsink[1], "sink");
-  gst_pad_link (teepad, pad);
-  gst_object_unref (pad);
-  gst_object_unref (teepad);
-
-  teepad = gst_element_get_request_pad (stream->tee[1], "src_%u");
-  pad = gst_element_get_static_pad (stream->appqueue[1], "sink");
-  gst_pad_link (teepad, pad);
-  gst_object_unref (pad);
-  gst_object_unref (teepad);
-
-  queuepad = gst_element_get_static_pad (stream->appqueue[1], "src");
-  pad = gst_element_get_static_pad (stream->appsink[1], "sink");
-  gst_pad_link (queuepad, pad);
-  gst_object_unref (pad);
-  gst_object_unref (queuepad);
-
-  /* make selector for the RTP receivers */
-  stream->selector[0] = gst_element_factory_make ("funnel", NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->selector[0]);
-
-  pad = gst_element_get_static_pad (stream->selector[0], "src");
-  gst_pad_link (pad, stream->recv_rtp_sink);
-  gst_object_unref (pad);
-
-  selpad = gst_element_get_request_pad (stream->selector[0], "sink_%u");
-  pad = gst_element_get_static_pad (stream->udpsrc[0], "src");
-  gst_pad_link (pad, selpad);
-  gst_object_unref (pad);
-  gst_object_unref (selpad);
-
-  selpad = gst_element_get_request_pad (stream->selector[0], "sink_%u");
-  pad = gst_element_get_static_pad (stream->appsrc[0], "src");
-  gst_pad_link (pad, selpad);
-  gst_object_unref (pad);
-  gst_object_unref (selpad);
-
-  /* make selector for the RTCP receivers */
-  stream->selector[1] = gst_element_factory_make ("funnel", NULL);
-  gst_bin_add (GST_BIN_CAST (media->pipeline), stream->selector[1]);
-
-  pad = gst_element_get_static_pad (stream->selector[1], "src");
-  gst_pad_link (pad, stream->recv_rtcp_sink);
-  gst_object_unref (pad);
-
-  selpad = gst_element_get_request_pad (stream->selector[1], "sink_%u");
-  pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
-  gst_pad_link (pad, selpad);
-  gst_object_unref (pad);
-  gst_object_unref (selpad);
-
-  selpad = gst_element_get_request_pad (stream->selector[1], "sink_%u");
-  pad = gst_element_get_static_pad (stream->appsrc[1], "src");
-  gst_pad_link (pad, selpad);
-  gst_object_unref (pad);
-  gst_object_unref (selpad);
-
-  /* we set and keep these to playing so that they don't cause NO_PREROLL return
-   * values */
-  gst_element_set_state (stream->udpsrc[0], GST_STATE_PLAYING);
-  gst_element_set_state (stream->udpsrc[1], GST_STATE_PLAYING);
-  gst_element_set_locked_state (stream->udpsrc[0], TRUE);
-  gst_element_set_locked_state (stream->udpsrc[1], TRUE);
-
-  /* be notified of caps changes */
-  stream->caps_sig = g_signal_connect (stream->send_rtp_sink, "notify::caps",
-      (GCallback) caps_notify, stream);
-
-  stream->prepared = TRUE;
-
-  return TRUE;
-
-  /* ERRORS */
-link_failed:
-  {
-    GST_WARNING ("failed to link stream %d", idx);
-    return FALSE;
-  }
-}
-
 static void
 unlock_streams (GstRTSPMedia * media)
 {
-  guint i, n_streams;
+  guint i;
 
   /* unlock the udp src elements */
-  n_streams = gst_rtsp_media_n_streams (media);
-  for (i = 0; i < n_streams; i++) {
-    GstRTSPMediaStream *stream;
+  for (i = 0; i < media->streams->len; i++) {
+    GstRTSPStream *stream;
 
-    stream = gst_rtsp_media_get_stream (media, i);
+    stream = g_ptr_array_index (media->streams, i);
 
     gst_element_set_locked_state (stream->udpsrc[0], FALSE);
     gst_element_set_locked_state (stream->udpsrc[1], FALSE);
@@ -1583,10 +986,9 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       break;
     case GST_MESSAGE_EOS:
       GST_INFO ("%p: got EOS", media);
-      if (media->eos_pending) {
+      if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARING) {
         GST_DEBUG ("shutting down after EOS");
-        gst_element_set_state (media->pipeline, GST_STATE_NULL);
-        media->eos_pending = FALSE;
+        finish_unprepare (media);
         g_object_unref (media);
       }
       break;
@@ -1618,31 +1020,16 @@ bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
-  GstRTSPMediaStream *stream;
-  gchar *name;
+  GstRTSPStream *stream;
   gint i;
 
-  i = media->streams->len + 1;
-
-  GST_INFO ("pad added %s:%s, stream %d", GST_DEBUG_PAD_NAME (pad), i);
-
-  stream = g_new0 (GstRTSPMediaStream, 1);
-  stream->payloader = element;
-
-  name = g_strdup_printf ("dynpay%d", i);
+  stream = gst_rtsp_media_create_stream (media, element, pad);
+  GST_INFO ("pad added %s:%s, stream %d", GST_DEBUG_PAD_NAME (pad),
+      stream->idx);
 
   media->adding = TRUE;
 
-  /* ghost the pad of the payloader to the element */
-  stream->srcpad = gst_ghost_pad_new (name, pad);
-  gst_pad_set_active (stream->srcpad, TRUE);
-  gst_element_add_pad (media->element, stream->srcpad);
-  g_free (name);
-
-  /* add stream now */
-  g_array_append_val (media->streams, stream);
-
-  setup_stream (stream, i, media);
+  gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline), media->rtpbin);
 
   for (i = 0; i < 2; i++) {
     gst_element_set_state (stream->udpsink[i], GST_STATE_PAUSED);
@@ -1652,6 +1039,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
     gst_element_set_state (stream->selector[i], GST_STATE_PAUSED);
     gst_element_set_state (stream->appsrc[i], GST_STATE_PAUSED);
   }
+
   media->adding = FALSE;
 }
 
@@ -1686,7 +1074,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 {
   GstStateChangeReturn ret;
   GstRTSPMediaStatus status;
-  guint i, n_streams;
+  guint i;
   GstRTSPMediaClass *klass;
   GstBus *bus;
   GList *walk;
@@ -1726,13 +1114,12 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
   /* link streams we already have, other streams might appear when we have
    * dynamic elements */
-  n_streams = gst_rtsp_media_n_streams (media);
-  for (i = 0; i < n_streams; i++) {
-    GstRTSPMediaStream *stream;
+  for (i = 0; i < media->streams->len; i++) {
+    GstRTSPStream *stream;
 
-    stream = gst_rtsp_media_get_stream (media, i);
+    stream = g_ptr_array_index (media->streams, i);
 
-    setup_stream (stream, i, media);
+    gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline), media->rtpbin);
   }
 
   for (walk = media->dynamic; walk; walk = g_list_next (walk)) {
@@ -1809,8 +1196,6 @@ no_rtpbin:
 state_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
-    unlock_streams (media);
-    gst_element_set_state (media->pipeline, GST_STATE_NULL);
     gst_rtsp_media_unprepare (media);
     return FALSE;
   }
@@ -1829,7 +1214,6 @@ state_failed:
 gboolean
 gst_rtsp_media_unprepare (GstRTSPMedia * media)
 {
-  GstRTSPMediaClass *klass;
   gboolean success;
 
   if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
@@ -1837,14 +1221,18 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
 
   GST_INFO ("unprepare media %p", media);
   media->target_state = GST_STATE_NULL;
+  success = TRUE;
 
-  klass = GST_RTSP_MEDIA_GET_CLASS (media);
-  if (klass->unprepare)
-    success = klass->unprepare (media);
-  else
-    success = TRUE;
+  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
+    GstRTSPMediaClass *klass;
 
-  media->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
+    klass = GST_RTSP_MEDIA_GET_CLASS (media);
+    if (klass->unprepare)
+      success = klass->unprepare (media);
+  } else {
+    finish_unprepare (media);
+  }
+
   media->reused = TRUE;
 
   /* when the media is not reusable, this will effectively unref the media and
@@ -1854,6 +1242,36 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   return success;
 }
 
+static void
+finish_unprepare (GstRTSPMedia * media)
+{
+  gint i;
+
+  GST_DEBUG ("shutting down");
+
+  unlock_streams (media);
+  gst_element_set_state (media->pipeline, GST_STATE_NULL);
+
+  for (i = 0; i < media->streams->len; i++) {
+    GstRTSPStream *stream;
+
+    GST_INFO ("Removing elements of stream %d from pipeline", i);
+
+    stream = g_ptr_array_index (media->streams, i);
+
+    gst_rtsp_stream_leave_bin (stream, GST_BIN (media->pipeline),
+        media->rtpbin);
+  }
+  g_ptr_array_set_size (media->streams, 0);
+
+  gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
+
+  gst_object_unref (media->pipeline);
+  media->pipeline = NULL;
+
+  media->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
+}
+
 static gboolean
 default_unprepare (GstRTSPMedia * media)
 {
@@ -1861,49 +1279,22 @@ default_unprepare (GstRTSPMedia * media)
     GST_DEBUG ("sending EOS for shutdown");
     /* ref so that we don't disappear */
     g_object_ref (media);
-    media->eos_pending = TRUE;
     gst_element_send_event (media->pipeline, gst_event_new_eos ());
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
     gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
+    media->status = GST_RTSP_MEDIA_STATUS_UNPREPARING;
   } else {
-    GST_DEBUG ("shutting down");
-    gst_element_set_state (media->pipeline, GST_STATE_NULL);
+    finish_unprepare (media);
   }
   return TRUE;
-}
-
-static void
-add_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
-    gchar * dest, gint min, gint max)
-{
-  GST_INFO ("adding %s:%d-%d", dest, min, max);
-  g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
-  g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
-}
-
-static void
-remove_udp_destination (GstRTSPMedia * media, GstRTSPMediaStream * stream,
-    gchar * dest, gint min, gint max)
-{
-  GST_INFO ("removing %s:%d-%d", dest, min, max);
-  g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
-  g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
-}
-
-static void
-set_multicast_ttl (GstRTSPMedia * media, GstRTSPMediaStream * stream, guint ttl)
-{
-  GST_INFO ("setting ttl-mc %d", ttl);
-  g_object_set (G_OBJECT (stream->udpsink[0]), "ttl-mc", ttl, NULL);
-  g_object_set (G_OBJECT (stream->udpsink[1]), "ttl-mc", ttl, NULL);
 }
 
 /**
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
  * @state: the target state of the media
- * @transports: a #GArray of #GstRTSPMediaTrans pointers
+ * @transports: a #GPtrArray of #GstRTSPStreamTransport pointers
  *
  * Set the state of @media to @state and for the transports in @transports.
  *
@@ -1911,7 +1302,7 @@ set_multicast_ttl (GstRTSPMedia * media, GstRTSPMediaStream * stream, guint ttl)
  */
 gboolean
 gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
-    GArray * transports)
+    GPtrArray * transports)
 {
   gint i;
   gboolean add, remove, do_state;
@@ -1946,74 +1337,26 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     default:
       break;
   }
-  old_active = media->active;
+  old_active = media->n_active;
 
   for (i = 0; i < transports->len; i++) {
-    GstRTSPMediaTrans *tr;
-    GstRTSPMediaStream *stream;
-    GstRTSPTransport *trans;
+    GstRTSPStreamTransport *trans;
 
     /* we need a non-NULL entry in the array */
-    tr = g_array_index (transports, GstRTSPMediaTrans *, i);
-    if (tr == NULL)
+    trans = g_ptr_array_index (transports, i);
+    if (trans == NULL)
       continue;
 
     /* we need a transport */
-    if (!(trans = tr->transport))
+    if (!trans->transport)
       continue;
 
-    /* get the stream and add the destinations */
-    stream = gst_rtsp_media_get_stream (media, tr->idx);
-    switch (trans->lower_transport) {
-      case GST_RTSP_LOWER_TRANS_UDP:
-      case GST_RTSP_LOWER_TRANS_UDP_MCAST:
-      {
-        gchar *dest;
-        gint min, max;
-        guint ttl = 0;
-
-        dest = trans->destination;
-        if (trans->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-          min = trans->port.min;
-          max = trans->port.max;
-          ttl = trans->ttl;
-        } else {
-          min = trans->client_port.min;
-          max = trans->client_port.max;
-        }
-
-        if (add && !tr->active) {
-          add_udp_destination (media, stream, dest, min, max);
-          if (ttl > 0) {
-            set_multicast_ttl (media, stream, ttl);
-          }
-          stream->transports = g_list_prepend (stream->transports, tr);
-          tr->active = TRUE;
-          media->active++;
-        } else if (remove && tr->active) {
-          remove_udp_destination (media, stream, dest, min, max);
-          stream->transports = g_list_remove (stream->transports, tr);
-          tr->active = FALSE;
-          media->active--;
-        }
-        break;
-      }
-      case GST_RTSP_LOWER_TRANS_TCP:
-        if (add && !tr->active) {
-          GST_INFO ("adding TCP %s", trans->destination);
-          stream->transports = g_list_prepend (stream->transports, tr);
-          tr->active = TRUE;
-          media->active++;
-        } else if (remove && tr->active) {
-          GST_INFO ("removing TCP %s", trans->destination);
-          stream->transports = g_list_remove (stream->transports, tr);
-          tr->active = FALSE;
-          media->active--;
-        }
-        break;
-      default:
-        GST_INFO ("Unknown transport %d", trans->lower_transport);
-        break;
+    if (add) {
+      if (gst_rtsp_stream_add_transport (trans->stream, trans))
+        media->n_active++;
+    } else if (remove) {
+      if (gst_rtsp_stream_remove_transport (trans->stream, trans))
+        media->n_active--;
     }
   }
 
@@ -2021,12 +1364,12 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   if (old_active == 0 && add)
     do_state = TRUE;
   /* if we have no more active media, do the downward state changes */
-  else if (media->active == 0)
+  else if (media->n_active == 0)
     do_state = TRUE;
   else
     do_state = FALSE;
 
-  GST_INFO ("state %d active %d media %p do_state %d", state, media->active,
+  GST_INFO ("state %d active %d media %p do_state %d", state, media->n_active,
       media, do_state);
 
   if (media->target_state != state) {
@@ -2046,65 +1389,10 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
   /* remember where we are */
   if (state != GST_STATE_NULL && (state == GST_STATE_PAUSED ||
-          old_active != media->active))
+          old_active != media->n_active))
     collect_media_stats (media);
 
   return TRUE;
-}
-
-/**
- * gst_rtsp_media_remove_elements:
- * @media: a #GstRTSPMedia
- *
- * Remove all elements and the pipeline controlled by @media.
- */
-void
-gst_rtsp_media_remove_elements (GstRTSPMedia * media)
-{
-  gint i, j;
-
-  unlock_streams (media);
-
-  for (i = 0; i < media->streams->len; i++) {
-    GstRTSPMediaStream *stream;
-
-    GST_INFO ("Removing elements of stream %d from pipeline", i);
-
-    stream = g_array_index (media->streams, GstRTSPMediaStream *, i);
-
-    gst_pad_unlink (stream->srcpad, stream->send_rtp_sink);
-
-    g_signal_handler_disconnect (stream->send_rtp_sink, stream->caps_sig);
-
-    for (j = 0; j < 2; j++) {
-      gst_element_set_state (stream->udpsrc[j], GST_STATE_NULL);
-      gst_element_set_state (stream->udpsink[j], GST_STATE_NULL);
-      gst_element_set_state (stream->appsrc[j], GST_STATE_NULL);
-      gst_element_set_state (stream->appsink[j], GST_STATE_NULL);
-      gst_element_set_state (stream->appqueue[j], GST_STATE_NULL);
-      gst_element_set_state (stream->tee[j], GST_STATE_NULL);
-      gst_element_set_state (stream->selector[j], GST_STATE_NULL);
-
-      gst_bin_remove (GST_BIN (media->pipeline), stream->udpsrc[j]);
-      gst_bin_remove (GST_BIN (media->pipeline), stream->udpsink[j]);
-      gst_bin_remove (GST_BIN (media->pipeline), stream->appsrc[j]);
-      gst_bin_remove (GST_BIN (media->pipeline), stream->appsink[j]);
-      gst_bin_remove (GST_BIN (media->pipeline), stream->appqueue[j]);
-      gst_bin_remove (GST_BIN (media->pipeline), stream->tee[j]);
-      gst_bin_remove (GST_BIN (media->pipeline), stream->selector[j]);
-    }
-    if (stream->caps)
-      gst_caps_unref (stream->caps);
-    stream->caps = NULL;
-    gst_rtsp_media_stream_free (stream);
-  }
-  g_array_remove_range (media->streams, 0, media->streams->len);
-
-  gst_element_set_state (media->rtpbin, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
-
-  gst_object_unref (media->pipeline);
-  media->pipeline = NULL;
 }
 
 static void
@@ -2113,11 +1401,11 @@ default_handle_mtu (GstRTSPMedia * media, guint mtu)
   gint i;
 
   for (i = 0; i < media->streams->len; i++) {
-    GstRTSPMediaStream *stream;
+    GstRTSPStream *stream;
 
     GST_INFO ("Setting mtu %d for stream %d", mtu, i);
 
-    stream = g_array_index (media->streams, GstRTSPMediaStream *, i);
+    stream = g_ptr_array_index (media->streams, i);
 
     g_object_set (G_OBJECT (stream->payloader), "mtu", mtu, NULL);
   }

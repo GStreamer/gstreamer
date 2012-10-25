@@ -82,13 +82,13 @@ struct _GstRTSPMediaFactory {
  * @gen_key: convert @url to a key for caching shared #GstRTSPMedia objects.
  *       The default implementation of this function will use the complete URL
  *       including the query parameters to return a key.
- * @get_element: Construct and return a #GstElement that is a #GstBin containing
+ * @create_element: Construct and return a #GstElement that is a #GstBin containing
  *       the elements to use for streaming the media. The bin should contain
  *       payloaders pay%d for each stream. The default implementation of this
  *       function returns the bin created from the launch parameter.
  * @construct: the vmethod that will be called when the factory has to create the
  *       #GstRTSPMedia for @url. The default implementation of this
- *       function calls get_element to retrieve an element and then looks for
+ *       function calls create_element to retrieve an element and then looks for
  *       pay%d to create the streams.
  * @configure: configure the media created with @construct. The default
  *       implementation will configure the 'shared' property of the media.
@@ -104,7 +104,7 @@ struct _GstRTSPMediaFactoryClass {
 
   gchar *         (*gen_key)            (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
 
-  GstElement *    (*get_element)        (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+  GstElement *    (*create_element)     (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   GstRTSPMedia *  (*construct)          (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   void            (*configure)          (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
   GstElement *    (*create_pipeline)    (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
@@ -145,14 +145,11 @@ void                  gst_rtsp_media_factory_set_multicast_group (GstRTSPMediaFa
 gchar *               gst_rtsp_media_factory_get_multicast_group (GstRTSPMediaFactory * factory);
 
 /* creating the media from the factory and a url */
-GstRTSPMedia *        gst_rtsp_media_factory_construct    (GstRTSPMediaFactory *factory,
-                                                           const GstRTSPUrl *url);
+GstRTSPMedia *        gst_rtsp_media_factory_construct       (GstRTSPMediaFactory *factory,
+                                                              const GstRTSPUrl *url);
 
-void                  gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory *factory,
-                                                              const GstRTSPUrl *url,
-                                                              GstRTSPMedia *media);
- 
-GstElement *          gst_rtsp_media_factory_get_element     (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
+GstElement *          gst_rtsp_media_factory_create_element  (GstRTSPMediaFactory *factory,
+                                                              const GstRTSPUrl *url);
 
 G_END_DECLS
 

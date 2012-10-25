@@ -58,7 +58,7 @@ static void gst_rtsp_media_factory_finalize (GObject * obj);
 
 static gchar *default_gen_key (GstRTSPMediaFactory * factory,
     const GstRTSPUrl * url);
-static GstElement *default_get_element (GstRTSPMediaFactory * factory,
+static GstElement *default_create_element (GstRTSPMediaFactory * factory,
     const GstRTSPUrl * url);
 static GstRTSPMedia *default_construct (GstRTSPMediaFactory * factory,
     const GstRTSPUrl * url);
@@ -139,7 +139,7 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
       G_TYPE_NONE, 1, GST_TYPE_RTSP_MEDIA);
 
   klass->gen_key = default_gen_key;
-  klass->get_element = default_get_element;
+  klass->create_element = default_create_element;
   klass->construct = default_construct;
   klass->configure = default_configure;
   klass->create_pipeline = default_create_pipeline;
@@ -578,13 +578,15 @@ media_unprepared (GstRTSPMedia * media, GstRTSPMediaFactory * factory)
  * @factory: a #GstRTSPMediaFactory
  * @url: the url used
  *
- * Prepare the media object and create its streams. Implementations
+ * Construct the media object and create its streams. Implementations
  * should create the needed gstreamer elements and add them to the result
  * object. No state changes should be performed on them yet.
  *
- * One or more GstRTSPMediaStream objects should be added to the result with
- * the srcpad member set to a source pad that produces buffer of type 
- * application/x-rtp.
+ * One or more GstRTSPStream objects should be created from the result
+ * with gst_rtsp_media_create_stream ().
+ *
+ * After the media is constructed, it can be configured and then prepared
+ * with gst_rtsp_media_prepare ().
  *
  * Returns: (transfer full): a new #GstRTSPMedia if the media could be prepared.
  */
@@ -595,6 +597,9 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
   gchar *key;
   GstRTSPMedia *media;
   GstRTSPMediaFactoryClass *klass;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
@@ -676,7 +681,7 @@ default_gen_key (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 }
 
 static GstElement *
-default_get_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
+default_create_element (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
   GstElement *element;
   GError *error = NULL;
@@ -718,63 +723,6 @@ parse_error:
   }
 }
 
-/* try to find all the payloader elements, they should be named 'pay%d'. for
- * each of the payloaders we will create a stream and collect the source pad. */
-void
-gst_rtsp_media_factory_collect_streams (GstRTSPMediaFactory * factory,
-    const GstRTSPUrl * url, GstRTSPMedia * media)
-{
-  GstElement *element, *elem;
-  GstPad *pad;
-  gint i;
-  GstRTSPMediaStream *stream;
-  gboolean have_elem;
-
-  element = media->element;
-
-  have_elem = TRUE;
-  for (i = 0; have_elem; i++) {
-    gchar *name;
-
-    have_elem = FALSE;
-
-    name = g_strdup_printf ("pay%d", i);
-    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
-      /* create the stream */
-      stream = g_new0 (GstRTSPMediaStream, 1);
-      stream->payloader = elem;
-
-      GST_INFO ("found stream %d with payloader %p", i, elem);
-
-      pad = gst_element_get_static_pad (elem, "src");
-
-      /* ghost the pad of the payloader to the element */
-      stream->srcpad = gst_ghost_pad_new (name, pad);
-      g_object_unref (pad);
-      gst_pad_set_active (stream->srcpad, TRUE);
-      gst_element_add_pad (media->element, stream->srcpad);
-      gst_object_unref (elem);
-
-      /* add stream now */
-      g_array_append_val (media->streams, stream);
-      have_elem = TRUE;
-    }
-    g_free (name);
-
-    name = g_strdup_printf ("dynpay%d", i);
-    if ((elem = gst_bin_get_by_name (GST_BIN (element), name))) {
-      /* a stream that will dynamically create pads to provide RTP packets */
-
-      GST_INFO ("found dynamic element %d, %p", i, elem);
-
-      media->dynamic = g_list_prepend (media->dynamic, elem);
-
-      have_elem = TRUE;
-    }
-    g_free (name);
-  }
-}
-
 static GstRTSPMedia *
 default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
 {
@@ -787,10 +735,7 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   if (!klass->create_pipeline)
     goto no_create;
 
-  if (klass->get_element)
-    element = klass->get_element (factory, url);
-  else
-    element = NULL;
+  element = gst_rtsp_media_factory_create_element (factory, url);
   if (element == NULL)
     goto no_element;
 
@@ -798,11 +743,11 @@ default_construct (GstRTSPMediaFactory * factory, const GstRTSPUrl * url)
   media = gst_rtsp_media_new ();
   media->element = element;
 
+  gst_rtsp_media_collect_streams (media);
+
   media->pipeline = klass->create_pipeline (factory, media);
   if (media->pipeline == NULL)
     goto no_pipeline;
-
-  gst_rtsp_media_factory_collect_streams (factory, url, media);
 
   return media;
 
@@ -879,16 +824,34 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_factory_get_element:
+ * gst_rtsp_media_factory_create_element:
  * @factory: a #GstRTSPMediaFactory
  * @url: the url used
+ *
+ * Construct and return a #GstElement that is a #GstBin containing
+ * the elements to use for streaming the media.
+ *
+ * The bin should contain payloaders pay%d for each stream. The default
+ * implementation of this function returns the bin created from the
+ * launch parameter.
  *
  * Returns: (transfer floating) a new #GstElement.
  */
 GstElement *
-gst_rtsp_media_factory_get_element (GstRTSPMediaFactory * factory,
+gst_rtsp_media_factory_create_element (GstRTSPMediaFactory * factory,
     const GstRTSPUrl * url)
 {
-  GstRTSPMediaFactoryClass *klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
-  return klass->get_element (factory, url);
+  GstRTSPMediaFactoryClass *klass;
+  GstElement *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+
+  klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
+
+  if (klass->create_element)
+    result = klass->create_element (factory, url);
+  else
+    result = NULL;
+
+  return result;
 }

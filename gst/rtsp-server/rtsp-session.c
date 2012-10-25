@@ -77,51 +77,6 @@ gst_rtsp_session_init (GstRTSPSession * session)
 }
 
 static void
-gst_rtsp_session_free_stream (GstRTSPSessionStream * stream)
-{
-  GST_INFO ("free session stream %p", stream);
-
-  /* remove callbacks now */
-  gst_rtsp_session_stream_set_callbacks (stream, NULL, NULL, NULL, NULL);
-  gst_rtsp_session_stream_set_keepalive (stream, NULL, NULL, NULL);
-
-  gst_rtsp_media_trans_cleanup (&stream->trans);
-
-  g_free (stream);
-}
-
-static void
-gst_rtsp_session_free_media (GstRTSPSessionMedia * media,
-    GstRTSPSession * session)
-{
-  guint size, i;
-
-  size = media->streams->len;
-
-  GST_INFO ("free session media %p", media);
-
-  gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
-
-  for (i = 0; i < size; i++) {
-    GstRTSPSessionStream *stream;
-
-    stream = g_array_index (media->streams, GstRTSPSessionStream *, i);
-
-    if (stream)
-      gst_rtsp_session_free_stream (stream);
-  }
-  g_array_free (media->streams, TRUE);
-
-  if (media->url)
-    gst_rtsp_url_free (media->url);
-
-  if (media->media)
-    g_object_unref (media->media);
-
-  g_free (media);
-}
-
-static void
 gst_rtsp_session_finalize (GObject * obj)
 {
   GstRTSPSession *session;
@@ -131,9 +86,7 @@ gst_rtsp_session_finalize (GObject * obj)
   GST_INFO ("finalize session %p", session);
 
   /* free all media */
-  g_list_foreach (session->medias, (GFunc) gst_rtsp_session_free_media,
-      session);
-  g_list_free (session->medias);
+  g_list_free_full (session->medias, g_object_unref);
 
   /* free session id */
   g_free (session->sessionid);
@@ -196,24 +149,13 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const GstRTSPUrl * uri,
     GstRTSPMedia * media)
 {
   GstRTSPSessionMedia *result;
-  guint n_streams;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
   g_return_val_if_fail (media->status == GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
 
-  result = g_new0 (GstRTSPSessionMedia, 1);
-  result->media = media;
-  result->url = gst_rtsp_url_copy ((GstRTSPUrl *) uri);
-  result->state = GST_RTSP_STATE_INIT;
-
-  /* prealloc the streams now, filled with NULL */
-  n_streams = gst_rtsp_media_n_streams (media);
-  result->streams =
-      g_array_sized_new (FALSE, TRUE, sizeof (GstRTSPSessionStream *),
-      n_streams);
-  g_array_set_size (result->streams, n_streams);
+  result = gst_rtsp_session_media_new (uri, media);
 
   sess->medias = g_list_prepend (sess->medias, result);
 
@@ -235,24 +177,15 @@ gboolean
 gst_rtsp_session_release_media (GstRTSPSession * sess,
     GstRTSPSessionMedia * media)
 {
-  GList *walk, *next;
+  GList *find;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), FALSE);
   g_return_val_if_fail (media != NULL, FALSE);
 
-  for (walk = sess->medias; walk;) {
-    GstRTSPSessionMedia *find;
-
-    find = (GstRTSPSessionMedia *) walk->data;
-    next = g_list_next (walk);
-
-    if (find == media) {
-      sess->medias = g_list_delete_link (sess->medias, walk);
-
-      gst_rtsp_session_free_media (find, sess);
-      break;
-    }
-    walk = next;
+  find = g_list_find (sess->medias, media);
+  if (find) {
+    g_object_unref (find->data);
+    sess->medias = g_list_delete_link (sess->medias, find);
   }
   return (sess->medias != NULL);
 }
@@ -280,67 +213,12 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
   for (walk = sess->medias; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionMedia *) walk->data;
 
-    if (strcmp (result->url->abspath, url->abspath) == 0)
+    if (g_str_equal (result->url->abspath, url->abspath))
       break;
 
     result = NULL;
   }
   return result;
-}
-
-/**
- * gst_rtsp_session_media_get_stream:
- * @media: a #GstRTSPSessionMedia
- * @idx: the stream index
- *
- * Get a previously created or create a new #GstRTSPSessionStream at @idx.
- *
- * Returns: a #GstRTSPSessionStream that is valid until the session of @media
- * is unreffed.
- */
-GstRTSPSessionStream *
-gst_rtsp_session_media_get_stream (GstRTSPSessionMedia * media, guint idx)
-{
-  GstRTSPSessionStream *result;
-
-  g_return_val_if_fail (media != NULL, NULL);
-  g_return_val_if_fail (media->media != NULL, NULL);
-
-  if (idx >= media->streams->len)
-    return NULL;
-
-  result = g_array_index (media->streams, GstRTSPSessionStream *, idx);
-  if (result == NULL) {
-    GstRTSPMediaStream *media_stream;
-
-    media_stream = gst_rtsp_media_get_stream (media->media, idx);
-    if (media_stream == NULL)
-      goto no_media;
-
-    result = g_new0 (GstRTSPSessionStream, 1);
-    result->trans.idx = idx;
-    result->trans.transport = NULL;
-    result->media_stream = media_stream;
-
-    g_array_index (media->streams, GstRTSPSessionStream *, idx) = result;
-  }
-  return result;
-
-  /* ERRORS */
-no_media:
-  {
-    return NULL;
-  }
-}
-
-gboolean
-gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia * media,
-    GstRTSPRange * range)
-{
-  range->min = media->counter++;
-  range->max = media->counter++;
-
-  return TRUE;
 }
 
 /**
@@ -491,125 +369,4 @@ gst_rtsp_session_is_expired (GstRTSPSession * session, GTimeVal * now)
   res = (gst_rtsp_session_next_timeout (session, now) == 0);
 
   return res;
-}
-
-/**
- * gst_rtsp_session_stream_init_udp:
- * @stream: a #GstRTSPSessionStream
- * @ct: a client #GstRTSPTransport
- *
- * Set @ct as the client transport and create and return a matching server
- * transport. This function takes ownership of the passed @ct.
- *
- * Returns: a server transport or NULL if something went wrong. Use
- * gst_rtsp_transport_free () after usage.
- */
-GstRTSPTransport *
-gst_rtsp_session_stream_set_transport (GstRTSPSessionStream * stream,
-    GstRTSPTransport * ct)
-{
-  GstRTSPTransport *st;
-
-  g_return_val_if_fail (stream != NULL, NULL);
-  g_return_val_if_fail (ct != NULL, NULL);
-
-  /* prepare the server transport */
-  gst_rtsp_transport_new (&st);
-
-  st->trans = ct->trans;
-  st->profile = ct->profile;
-  st->lower_transport = ct->lower_transport;
-
-  switch (st->lower_transport) {
-    case GST_RTSP_LOWER_TRANS_UDP:
-      st->client_port = ct->client_port;
-      st->server_port = stream->media_stream->server_port;
-      break;
-    case GST_RTSP_LOWER_TRANS_UDP_MCAST:
-      ct->port = st->port = stream->media_stream->server_port;
-      st->destination = g_strdup (ct->destination);
-      st->ttl = ct->ttl;
-      break;
-    case GST_RTSP_LOWER_TRANS_TCP:
-      st->interleaved = ct->interleaved;
-    default:
-      break;
-  }
-
-  if (stream->media_stream->session)
-    g_object_get (stream->media_stream->session, "internal-ssrc", &st->ssrc,
-        NULL);
-
-  /* keep track of the transports in the stream. */
-  if (stream->trans.transport)
-    gst_rtsp_transport_free (stream->trans.transport);
-  stream->trans.transport = ct;
-
-  return st;
-}
-
-/**
- * gst_rtsp_session_stream_set_callbacks:
- * @stream: a #GstRTSPSessionStream
- * @send_rtp: (scope notified): a callback called when RTP should be sent
- * @send_rtcp: (scope notified): a callback called when RTCP should be sent
- * @user_data: user data passed to callbacks
- * @notify: called with the user_data when no longer needed.
- *
- * Install callbacks that will be called when data for a stream should be sent
- * to a client. This is usually used when sending RTP/RTCP over TCP.
- */
-void
-gst_rtsp_session_stream_set_callbacks (GstRTSPSessionStream * stream,
-    GstRTSPSendFunc send_rtp, GstRTSPSendFunc send_rtcp,
-    gpointer user_data, GDestroyNotify notify)
-{
-  stream->trans.send_rtp = send_rtp;
-  stream->trans.send_rtcp = send_rtcp;
-  if (stream->trans.notify)
-    stream->trans.notify (stream->trans.user_data);
-  stream->trans.user_data = user_data;
-  stream->trans.notify = notify;
-}
-
-/**
- * gst_rtsp_session_stream_set_keepalive:
- * @stream: a #GstRTSPSessionStream
- * @keep_alive: a callback called when the receiver is active
- * @user_data: user data passed to callback
- * @notify: called with the user_data when no longer needed.
- *
- * Install callbacks that will be called when RTCP packets are received from the
- * receiver of @stream.
- */
-void
-gst_rtsp_session_stream_set_keepalive (GstRTSPSessionStream * stream,
-    GstRTSPKeepAliveFunc keep_alive, gpointer user_data, GDestroyNotify notify)
-{
-  stream->trans.keep_alive = keep_alive;
-  if (stream->trans.ka_notify)
-    stream->trans.ka_notify (stream->trans.ka_user_data);
-  stream->trans.ka_user_data = user_data;
-  stream->trans.ka_notify = notify;
-}
-
-/**
- * gst_rtsp_session_media_set_state:
- * @media: a #GstRTSPSessionMedia
- * @state: the new state
- *
- * Tell the media object @media to change to @state.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_session_media_set_state (GstRTSPSessionMedia * media, GstState state)
-{
-  gboolean ret;
-
-  g_return_val_if_fail (media != NULL, FALSE);
-
-  ret = gst_rtsp_media_set_state (media->media, state, media->streams);
-
-  return ret;
 }

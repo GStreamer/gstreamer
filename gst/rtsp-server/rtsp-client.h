@@ -33,6 +33,7 @@ typedef struct _GstRTSPClientState GstRTSPClientState;
 #include "rtsp-media.h"
 #include "rtsp-media-mapping.h"
 #include "rtsp-session-pool.h"
+#include "rtsp-session-media.h"
 #include "rtsp-auth.h"
 #include "rtsp-sdp.h"
 
@@ -58,7 +59,7 @@ typedef struct _GstRTSPClientState GstRTSPClientState;
  *
  * Information passed around containing the client state of a request.
  */
-struct _GstRTSPClientState{
+struct _GstRTSPClientState {
   GstRTSPMessage      *request;
   GstRTSPUrl          *uri;
   GstRTSPMethod        method;
@@ -81,7 +82,7 @@ struct _GstRTSPClientState{
  * @media_mapping: handle to the media mapping used by the client.
  * @uri: cached uri
  * @media: cached media
- * @streams: a list of streams using @connection.
+ * @transports: a list of #GstRTSPStreamTransport using @connection.
  * @sessions: a list of sessions managed by @connection.
  *
  * The client structure.
@@ -104,7 +105,7 @@ struct _GstRTSPClient {
   GstRTSPUrl     *uri;
   GstRTSPMedia   *media;
 
-  GList *streams;
+  GList *transports;
   GList *sessions;
 };
 

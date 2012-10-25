@@ -66,7 +66,7 @@ static void gst_rtsp_media_factory_uri_set_property (GObject * object,
     guint propid, const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_media_factory_uri_finalize (GObject * obj);
 
-static GstElement *rtsp_media_factory_uri_get_element (GstRTSPMediaFactory *
+static GstElement *rtsp_media_factory_uri_create_element (GstRTSPMediaFactory *
     factory, const GstRTSPUrl * url);
 
 G_DEFINE_TYPE (GstRTSPMediaFactoryURI, gst_rtsp_media_factory_uri,
@@ -105,7 +105,7 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
           "Use the gstpay payloader to avoid decoding", DEFAULT_USE_GSTPAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  mediafactory_class->get_element = rtsp_media_factory_uri_get_element;
+  mediafactory_class->create_element = rtsp_media_factory_uri_create_element;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_factory_uri_debug, "rtspmediafactoryuri",
       0, "GstRTSPMediaFactoryUri");
@@ -528,7 +528,7 @@ no_more_pads_cb (GstElement * uribin, GstElement * element)
 }
 
 static GstElement *
-rtsp_media_factory_uri_get_element (GstRTSPMediaFactory * factory,
+rtsp_media_factory_uri_create_element (GstRTSPMediaFactory * factory,
     const GstRTSPUrl * url)
 {
   GstElement *topbin, *element, *uribin;

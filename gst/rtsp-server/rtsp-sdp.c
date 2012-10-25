@@ -48,7 +48,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
   g_free (rangestr);
 
   for (i = 0; i < n_streams; i++) {
-    GstRTSPMediaStream *stream;
+    GstRTSPStream *stream;
     GstSDPMedia *smedia;
     GstStructure *s;
     const gchar *caps_str, *caps_enc, *caps_params;
