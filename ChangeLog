@@ -1,9 +1,35 @@
-=== release 1.0.1 ===
+=== release 1.0.2 ===
 
-2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+2012-10-25  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.1
+	  releasing 1.0.2
+
+2012-10-24 16:01:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to 0.8.4 release
+
+2012-10-23 10:21:52 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	  configure: fix os type configure option for android
+
+2012-10-07 17:00:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development (bug fixing)
+
+=== release 1.0.1 ===
+
+2012-10-07 16:12:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.1
 
 2012-10-06 15:00:42 +0100  Tim-Philipp Müller <tim@centricular.net>
 

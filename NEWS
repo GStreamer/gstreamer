@@ -1,4 +1,8 @@
-This is GStreamer Libav Plugins 1.0.1
+This is GStreamer Libav Plugins 1.0.2
+
+Changes since 1.0.1:
+
+      * Update internal libav snapshot to 0.8.4 release which includes many crasher and CVE fixes
 
 Changes since 1.0.0:
 
