@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.1
+Release notes for GStreamer Ugly Plugins 1.0.2
 
-The GStreamer team is proud to announce a new release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -59,12 +59,13 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * x264enc: encoder latency fixes
-      * mpeg2dec: ignore transient decoding errors
+      * dvdreadsrc: correctly set next cell when seeking to sector
+      * dvdreadsrc: update dvd event to enhanced approach as used in mpegpsdemux
+      * dvdsubparse: send src caps when receiving sink caps
 
 Bugs fixed in this release
      
-      * 685107 : Unexpected error return from mpeg2dec
+      * 686748 : Makefile.am: Fix build script typo for generating the Android.mk file.
 
 ==== Download ====
 
@@ -101,6 +102,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jan Schmidt
+      * Mark Nauwelaerts
+      * Scott Fan
       * Tim-Philipp Müller
  

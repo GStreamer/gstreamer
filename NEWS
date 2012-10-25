@@ -1,4 +1,14 @@
-This is GStreamer Ugly Plugins 1.0.1
+This is GStreamer Ugly Plugins 1.0.2
+
+Changes since 1.0.1:
+
+      * dvdreadsrc: correctly set next cell when seeking to sector
+      * dvdreadsrc: update dvd event to enhanced approach as used in mpegpsdemux
+      * dvdsubparse: send src caps when receiving sink caps
+
+Bugs fixed since 1.0.1:
+
+      * 686748 : Makefile.am: Fix build script typo for generating the Android.mk file
 
 Changes since 1.0.0:
 
