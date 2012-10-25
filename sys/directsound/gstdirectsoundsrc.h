@@ -68,8 +68,8 @@ G_BEGIN_DECLS
 typedef struct _GstDirectSoundSrc      GstDirectSoundSrc;
 typedef struct _GstDirectSoundSrcClass GstDirectSoundSrcClass;
 
-#define GST_DSOUND_LOCK(obj)	(g_mutex_lock (obj->dsound_lock))
-#define GST_DSOUND_UNLOCK(obj)	(g_mutex_unlock (obj->dsound_lock))
+#define GST_DSOUND_LOCK(obj)	(g_mutex_lock (&obj->dsound_lock))
+#define GST_DSOUND_UNLOCK(obj)	(g_mutex_unlock (&obj->dsound_lock))
 
 struct _GstDirectSoundSrc
 {
@@ -96,7 +96,7 @@ struct _GstDirectSoundSrc
   guint device;
 #endif
 
-  GMutex *dsound_lock;
+  GMutex dsound_lock;
 
 };
 

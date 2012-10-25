@@ -5,7 +5,7 @@ libgstdirectsoundsrc_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(DIRECTX_CFLAGS)
 libgstdirectsoundsrc_la_LIBADD = $(DIRECTDRAW_LIBS) \
 	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
-	-lgstinterfaces-$(GST_API_VERSION) -ldsound
+	-ldsound
 libgstdirectsoundsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DIRECTX_LDFLAGS)
 libgstdirectsoundsrc_la_LIBTOOLFLAGS = --tag=disable-static
 

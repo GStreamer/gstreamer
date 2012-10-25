@@ -136,7 +136,7 @@ gst_directsound_src_finalize (GObject * object)
 {
   GstDirectSoundSrc *dsoundsrc = GST_DIRECTSOUND_SRC (object);
 
-  g_mutex_free (dsoundsrc->dsound_lock);
+  g_mutex_clear (&dsoundsrc->dsound_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -189,11 +189,8 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
 static GstCaps *
 gst_directsound_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
 {
-  GstDirectSoundSrc *dsoundsrc;
   GstCaps *caps = NULL;
   GST_DEBUG_OBJECT (bsrc, "get caps");
-
-  dsoundsrc = GST_DIRECTSOUND_SRC (bsrc);
 
   caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD
           (bsrc)));
@@ -253,7 +250,7 @@ static void
 gst_directsound_src_init (GstDirectSoundSrc * src)
 {
   GST_DEBUG_OBJECT (src, "initializing directsoundsrc");
-  src->dsound_lock = g_mutex_new ();
+  g_mutex_init (&src->dsound_lock);
 }
 
 static gboolean
@@ -319,14 +316,13 @@ static gboolean
 gst_directsound_src_close (GstAudioSrc * asrc)
 {
   GstDirectSoundSrc *dsoundsrc;
-  HRESULT hRes;                 /* Result for windows functions */
 
   GST_DEBUG_OBJECT (asrc, "closing directsoundsrc");
 
   dsoundsrc = GST_DIRECTSOUND_SRC (asrc);
 
   /* Release capture handler  */
-  hRes = IDirectSoundCapture_Release (dsoundsrc->pDSC);
+  IDirectSoundCapture_Release (dsoundsrc->pDSC);
 
   /* Close library */
   FreeLibrary (dsoundsrc->DSoundDLL);
@@ -446,17 +442,16 @@ static gboolean
 gst_directsound_src_unprepare (GstAudioSrc * asrc)
 {
   GstDirectSoundSrc *dsoundsrc;
-  HRESULT hRes;
 
   GST_DEBUG_OBJECT (asrc, "unpreparing directsoundsrc");
 
   dsoundsrc = GST_DIRECTSOUND_SRC (asrc);
 
   /* Stop capturing */
-  hRes = IDirectSoundCaptureBuffer_Stop (dsoundsrc->pDSBSecondary);
+  IDirectSoundCaptureBuffer_Stop (dsoundsrc->pDSBSecondary);
 
   /* Release buffer  */
-  hRes = IDirectSoundCaptureBuffer_Release (dsoundsrc->pDSBSecondary);
+  IDirectSoundCaptureBuffer_Release (dsoundsrc->pDSBSecondary);
 
   return TRUE;
 }
