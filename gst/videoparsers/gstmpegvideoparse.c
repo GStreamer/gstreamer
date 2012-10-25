@@ -626,6 +626,7 @@ static void
 gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
 {
   GstCaps *caps = NULL;
+  GstStructure *s = NULL;
 
   /* only update if no src caps yet or explicitly triggered */
   if (G_LIKELY (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (mpvparse)) &&
@@ -636,6 +637,7 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (mpvparse));
   if (caps) {
     caps = gst_caps_make_writable (caps);
+    s = gst_caps_get_structure (caps, 0);
   } else {
     caps = gst_caps_new_empty_simple ("video/mpeg");
   }
@@ -656,8 +658,9 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
         "height", G_TYPE_INT, mpvparse->sequencehdr.height, NULL);
   }
 
-  /* perhaps we have  a framerate */
-  if (mpvparse->fps_num > 0 && mpvparse->fps_den > 0) {
+  /* perhaps we have a framerate */
+  if (mpvparse->fps_num > 0 && mpvparse->fps_den > 0 &&
+      (!s || !gst_structure_has_field (s, "framerate"))) {
     gint fps_num = mpvparse->fps_num;
     gint fps_den = mpvparse->fps_den;
     GstClockTime latency = gst_util_uint64_scale (GST_SECOND, fps_den, fps_num);
@@ -670,7 +673,8 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
   }
 
   /* or pixel-aspect-ratio */
-  if (mpvparse->sequencehdr.par_w && mpvparse->sequencehdr.par_h > 0) {
+  if (mpvparse->sequencehdr.par_w && mpvparse->sequencehdr.par_h > 0 &&
+      (!s || !gst_structure_has_field (s, "pixel-aspect-ratio"))) {
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         mpvparse->sequencehdr.par_w, mpvparse->sequencehdr.par_h, NULL);
   }
