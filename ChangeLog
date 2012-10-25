@@ -1,9 +1,503 @@
-=== release 1.0.1 ===
+=== release 1.0.2 ===
 
-2012-10-07  Tim-Philipp Müller <tim@centricular.net>
+2012-10-25  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.1
+	  releasing 1.0.2
+
+2012-10-24 13:50:00 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: use correct type for channel-mask bitmask
+	  Fixes crash on 32-bit systems.
+
+2012-10-24 11:17:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: Flush the ringbuffer on GAP events without duration
+	  This is required to properly start the ringbuffer and clock.
+
+2012-10-02 20:51:29 +0200  Oleksij Rempel <bug-track@fisher-privat.net>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: set DECODE_ONLY flag on invisible AltRef frames
+	  https://bugzilla.gnome.org/show_bug.cgi?id=654216
+
+2012-10-23 16:02:05 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: fix coverart extraction if vorbis comments come after picture header
+	  See sample file for bug #684701.
+
+2012-10-23 13:45:17 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: ignore bad headers if we have a valid STREAMINFO header
+	  If we run into any header parsing issues and we have a valid
+	  STREAMINFO header already, don't error out, but just stop
+	  header parsing and try to find some audio frames.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684701
+
+2012-10-23 13:43:10 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/audioparsers/gstflacparse.c:
+	  flacparse: post proper error message and fix buffer leak on header parsing error
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684701
+
+2012-10-22 22:32:49 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: with raw audio, set a default channel-mask for multichannel audio. This doesn't actually parse 'chan' because it's absurdly complex.
+
+2012-10-22 15:54:17 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* gst/udp/gstudpsrc.c:
+	  updsrc: fix typo causing compilation error
+	  gstudpsrc.c: In function 'gst_udpsrc_create':
+	  gstudpsrc.c:365: error: 'ret' may be used uninitialized in this function
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686642
+
+2012-10-22 11:55:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi_ fix invert function
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686550
+
+2012-10-22 11:55:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/avi/gstavidemux.c:
+	  avi: fix debug
+
+2012-10-22 11:39:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_fourcc.h:
+	  qtdemux: add support for 'generic' samples
+	  Add support for stuffing a complete stream into 1 sample.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=686550
+
+2012-10-20 13:01:41 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/souphttpsrc.c:
+	  tests: remove superfluous g_type_init() call
+	  It's deprecated in newer GLib and not needed here.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686456
+
+2012-10-20 11:32:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: fix caps leak in acceptcaps function
+
+2012-10-19 19:24:23 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: don't leak gst_riff_strf_auds in case of MS/RIFF audio
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681192
+
+2012-10-18 22:20:39 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: unsigned subtitle template
+
+2012-10-18 11:32:10 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/pulse/pulsesink.c:
+	  pulsesink: in accept_caps() check if ring buffer is NULL before de-referencing
+	  And sprinkle some thread-safety (take object lock for
+	  accessing ring buffer, and pa main loop lock for the
+	  context).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=683782
+
+2012-09-13 00:10:00 +0000  Youness Alaoui <youness.alaoui@collabora.co.uk>
+
+	* gst/videomixer/videomixer2.c:
+	* gst/videomixer/videomixer2.h:
+	  videomixer2: Fix race condition where a src setcaps is ignored
+	  If both pads receive data at the same time, they will both get their
+	  sink_setcaps called which will call the src_setcaps, but there is
+	  a race condition where the second one might not be called.
+	  Fixes: https://bugzilla.gnome.org/show_bug.cgi?id=683842
+
+2011-10-31 15:43:25 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/matroska/matroska-mux.c:
+	  matroskamux: do not use unoffical V_MJPEG codec id
+	  Since it's not spec'ed, consider it a VfW compatibility
+	  case. Many applications (e.g. avidemux) don't understand
+	  the unofficial V_MJPEG id.
+	  Fixes #659837.
+	  Conflicts:
+	  gst/matroska/matroska-mux.c
+
+2012-10-17 17:03:39 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegenc.c:
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngenc.c:
+	* ext/vpx/gstvp8dec.c:
+	* ext/vpx/gstvp8enc.c:
+	  jpeg, png, vpx: use gst_element_class_set_static_metadata()
+	  Avoids some string copies.
+
+2012-10-17 14:23:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpjpegdepay.c:
+	  jpegdepay: store quant tables in zigzag order
+
+2012-10-17 13:55:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtsession: fix compiler warning
+
+2012-10-17 13:35:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: clarify the ntp-sync option
+
+2012-10-17 13:15:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  rtpsession: update caps in the source
+	  Inform the source when caps changed. This was removed in the port to 1.0
+	  leaving the source unaware of the clock-rate and unable to interpollate
+	  rtp timestamps for SR packets.
+
+2012-10-17 12:46:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpbin: set PTS and DTS in jitterbufffer
+
+2012-10-17 12:24:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  rtpbin: disable check for ntp-sync
+	  Disable the check for the ntp-sync method. It is expected that
+	  a rather larger offset needs to be applied with this method.
+
+2012-10-17 12:17:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpbin: use running-time for NTP time
+	  When use-pipeline-clock is set, use the running-time of the
+	  pipeline to calculate the NTP timestamps. This method would previously
+	  only work when the base-time is set to 0 but with this change it can
+	  also work with different offsets and we can also implement pause/resume
+	  of the sender and receiver now.
+
+2012-10-17 10:20:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videocrop/gstvideocrop.h:
+	  videocrop: port to videofilter
+
+2012-10-17 09:36:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videobox/gstvideobox.c:
+	  videobox: use out_info for out properties
+
+2012-10-16 14:40:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videofilter/gstvideomedian.c:
+	* gst/videofilter/gstvideomedian.h:
+	  median: small cleanups
+
+2012-10-16 13:56:19 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* Makefile.am:
+	* gst/median/.gitignore:
+	* gst/median/Makefile.am:
+	* gst/median/gstmedian.c:
+	* gst/median/gstmedian.h:
+	* gst/median/median.vcproj:
+	  median: remove now that it is in videofilter
+
+2012-10-16 13:49:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	  configure: remove median from build
+
+2012-10-16 13:47:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstvideomedian.c:
+	* gst/videofilter/gstvideomedian.h:
+	* gst/videofilter/plugin.c:
+	  videomedian: copy media to videomedian
+	  Copy the median video filter to videofilters and rename to
+	  videomedian.
+
+2012-10-16 13:12:21 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* configure.ac:
+	* gst/median/Makefile.am:
+	* gst/median/gstmedian.c:
+	* gst/median/gstmedian.h:
+	  media: port to 1.0
+
+2012-10-16 01:02:11 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: append palette data to paletted 8-bit RGB frames
+	  Fixes playback of 8-bit indexed RGB videos, with fixes in -base.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686046
+
+2012-10-15 15:36:04 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: And this time fix the default target-bitrate value for real
+
+2012-10-15 15:30:33 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Fix default target-bitrate value
+
+2012-10-13 00:03:29 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: don't assert if upstream size is not available when guessing bitrates
+	  Fixes abort in push mode where the source is not seekable and the
+	  size of the file is not available, as with
+	  cat foo.mp4 | gst-launch-1.0 playbin uri=fd://0
+	  Less noticable with releases, since we disable all
+	  g_assert() there.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686008
+
+2012-10-12 14:38:33 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: allow more streams. Bump this constant to 32, which should be enough for real-world files.
+
+2012-10-12 14:35:24 -0700  Michael Smith <msmith@rdio.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: support more different fourcc values for other ProRes variants.
+
+2012-10-11 22:36:21 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/examples/rtp/client-H263p-AMR.sh:
+	* tests/examples/rtp/client-H263p-PCMA.sh:
+	* tests/examples/rtp/client-H263p.sh:
+	* tests/examples/rtp/client-H264-PCMA.sh:
+	* tests/examples/rtp/client-H264.sh:
+	* tests/examples/rtp/client-PCMA.c:
+	* tests/examples/rtp/client-PCMA.sh:
+	* tests/examples/rtp/server-VTS-H263p-ATS-PCMA.sh:
+	* tests/examples/rtp/server-VTS-H263p.sh:
+	* tests/examples/rtp/server-alsasrc-PCMA.sh:
+	* tests/examples/rtp/server-decodebin-H263p-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H263p-alsasrc-AMR.sh:
+	* tests/examples/rtp/server-v4l2-H264-alsasrc-PCMA.sh:
+	  examples: update some element names for 1.0 in RTP examples
+	  gstrtpbin -> rtpbin
+	  ffdec_*   -> avdec_*
+	  ffenc_*   -> avenc_*
+
+2012-10-10 12:05:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: remove unused include
+
+2012-10-10 10:55:28 +0200  Rasmus Rohde <rohde@duff.dk>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstmultiudpsink.h:
+	  multiudpsink: add multicast-iface property
+	  udpsrc already has support for setting the multicast interface, which
+	  is useful for multi-homed machines. This patch adds the same code to
+	  the multiudpsink.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685864
+
+2012-10-10 11:32:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	  multiudpsink: don't error on send errors but only warn
+	  Don't error on send errors but simply post a warning, it's possible
+	  that the next packet will be fine.
+
+2012-10-10 10:28:24 +0200  Rasmus Rohde <rohde@duff.dk>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstmultiudpsink.h:
+	  multiudpsink: add force-ipv4 option
+	  Add an option to the multiudpsink that makes it possible to force
+	  the use of an IPv4 socket.
+	  This can e.g. be used to handle the issue described in
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682481
+
+2012-10-10 10:18:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstmultiudpsink.h:
+	  multiudpsink: remove unused field
+
+2012-10-10 10:10:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: use negotiated allocator or pool
+	  Use the base class to allocate a buffer for us because it knows how
+	  to use the negotiated allocator or bufferpool.
+
+2012-10-10 10:09:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstmultiudpsink.c:
+	  multiudpsink: post error when something goes wrong
+
+2012-10-10 10:09:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/spectrum/gstspectrum.c:
+	  spectrum: elements post element messages
+
+2012-10-07 16:56:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.1 ===
+
+2012-10-07 15:31:12 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.0.1
 
 2012-10-06 14:57:10 +0100  Tim-Philipp Müller <tim@centricular.net>
 

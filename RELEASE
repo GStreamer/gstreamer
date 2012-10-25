@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Good Plugins 1.0.1
+Release notes for GStreamer Good Plugins 1.0.2
 
 
-The GStreamer team is proud to announce a new release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -58,17 +58,38 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Features of this release
     
       * Parallel installability with 0.10.x series
-      * interleave, deinterlave: channel handling fixes for mono audio
-      * videobalance now supports NV12 and NV21 as well
+      * avidemux: fix handling of paletted and other raw RGB data
+      * flacparse: ignore bad headers if we have a valid STREAMINFO header; improve coverart extraction
+      * jpegdepay: store quant tables in zigzag order
+      * matroskamux: do not use unoffical V_MJPEG codec id; fix subtitle request sink pad name and functionality
+      * videofilter: add videomedian element
+      * multiudpsink: add "force-ipv4" option and "multicast-iface" property
+      * pulsesink: fix caps leak and potential crasher in acceptcaps function
+      * pulsesink: start the ringbuffer on GAP events without duration
+      * qtdemux: add support for 'generic' samples; allow more streams
+      * qtdemux: support more ProRes variants; fix memory leak for MS/RIFF audio
+      * qtdemux: with raw audio, set a default channel-mask for multichannel audio
+      * rtpbin: set PTS and DTS in jitterbufffer
+      * rtpbin: use running-time for NTP time when use-pipeline-clock is set
+      * rtpsession: inform source when caps change
+      * udpsrc: use negotiated allocator or pool
+      * videobox: use out_info for out properties
+      * videocrop: port to videofilter
+      * videomixer2: Fix race condition where a src setcaps is ignored
+      * vp8enc: fix default target-bitrate value; set DECODE_ONLY flag on invisible frames
 
 Bugs fixed in this release
      
-      * 683622 : flvdemux: Internal flow error when demuxing speex
-      * 684972 : qtdemux: cannot play mp4 file when MOOV atom is at the end of file
-      * 684977 : Can't seek in AVI file in push mode
-      * 685059 : avidemux: cannot play video in push mode
-      * 685213 : rtph264pay: pushing unmapped data.
-      * 685512 : rtpgstdepay has a memory leak
+      * 654216 : vp8enc: tag invisible frames
+      * 682481 : multiudpsink: add force-ipv4 option (problem when streaming RTP to multicast address)
+      * 683782 : Segfault in pulsesink.c:2077 gst_pulsesink_pad_acceptcaps()
+      * 683842 : Fix race condition in videomixer2 on 0.10
+      * 684701 : flacparse: fails to parse flac file with broken header: " Invalid metablock size for STREAMINFO: 8196 " 
+      * 685864 : Add multicast-iface property to multiudpsink
+      * 686008 : qtdemux: crashes in push mode with gst_qtdemux_guess_bitrate: assertion failed: (size > = qtdemux- > header_size)
+      * 686046 : avidemux: can't play 8-bit indexed RGB video
+      * 686550 : qtdemux: no streams found for journal.pone.0030940.s002.mov, m1v video fourcc
+      * 686642 : udpsrc: trivial typo causes compilation error
 
 ==== Download ====
 
@@ -103,20 +124,16 @@ Interested developers of the core library, plugins, and applications should
 subscribe to the gstreamer-devel list.
 
         
-Applications
-  
 Contributors to this release
     
-      * Andre Moreira Magalhaes (andrunko)
       * Arnaud Vrac
-      * Dmitriy Samonenko
-      * Edward Hervey
       * Mark Nauwelaerts
       * Michael Smith
-      * Patricia Muscalu
+      * Oleksij Rempel
       * Rasmus Rohde
-      * Robert Swain
       * Sebastian Dröge
+      * Sebastian Rasmussen
       * Tim-Philipp Müller
       * Wim Taymans
+      * Youness Alaoui
  

@@ -104,7 +104,6 @@ GObject
           GstRgAnalysis
           GstRgLimiter
           GstTagInject
-          GstVideoCrop
           GstVideoFilter
             GstAgingTV
             GstAlpha
@@ -125,7 +124,9 @@ GObject
             GstVertigoTV
             GstVideoBalance
             GstVideoBox
+            GstVideoCrop
             GstVideoFlip
+            GstVideoMedian
             GstWarpTV
         GstBin
           GstAspectRatioCrop

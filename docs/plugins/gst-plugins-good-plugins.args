@@ -2729,6 +2729,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiUDPSink::force-ipv4</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Force IPv4</NICK>
+<BLURB>Forcing the use of an IPv4 socket.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstMultiUDPSink::multicast-iface</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Multicast Interface</NICK>
+<BLURB>The network interface on which to join the multicast group.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstCmmlDec::wait-clip-end-time</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -20944,7 +20964,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline clock to set the NTP time in the RTCP SR messages.</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -21134,7 +21154,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Use pipeline clock</NICK>
-<BLURB>Use the pipeline clock to set the NTP time in the RTCP SR messages.</BLURB>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -23356,5 +23376,25 @@
 <NICK>Max Threads</NICK>
 <BLURB>Maximum number of decoding threads.</BLURB>
 <DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMedian::filtersize</NAME>
+<TYPE>GstVideoMedianSize</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Filtersize</NICK>
+<BLURB>The size of the filter.</BLURB>
+<DEFAULT>Median of 5 neighbour pixels</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMedian::lum-only</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lum Only</NICK>
+<BLURB>Only apply filter on luminance.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
