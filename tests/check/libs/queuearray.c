@@ -26,8 +26,7 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
-#include "../../../plugins/elements/gstqueuearray.h"
-#include "../../../plugins/elements/gstqueuearray.c"
+#include <gst/base/gstqueuearray.h>
 
 /* Simplest test
  * Initial size : 10
@@ -45,7 +44,7 @@ GST_START_TEST (test_array_1)
   for (i = 0; i < 5; i++)
     gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
 
-  fail_unless_equals_int (array->length, 5);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 5);
 
   /* pull 5 values out */
   for (i = 0; i < 5; i++) {
@@ -53,7 +52,7 @@ GST_START_TEST (test_array_1)
         i);
   }
 
-  fail_unless_equals_int (array->length, 0);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 0);
 
   gst_queue_array_free (array);
 }
@@ -67,31 +66,18 @@ GST_START_TEST (test_array_grow)
 
   /* Create an array of initial size 10 */
   array = gst_queue_array_new (10);
-  fail_unless_equals_int (array->size, 10);
 
   /* push 10 values in */
   for (i = 0; i < 10; i++)
     gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
 
-  fail_unless_equals_int (array->length, 10);
-  /* It did not grow beyond initial size */
-  fail_unless_equals_int (array->size, 10);
-  /* The head is still at the beginning */
-  fail_unless_equals_int (array->head, 0);
-  /* The tail wrapped around to the head */
-  fail_unless_equals_int (array->tail, 0);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
 
 
   /* If we add one value, it will grow */
   gst_queue_array_push_tail (array, GINT_TO_POINTER (10));
 
-  fail_unless_equals_int (array->length, 11);
-  /* It did grow beyond initial size */
-  fail_unless_equals_int (array->size, 15);
-  /* The head remains the same */
-  fail_unless_equals_int (array->head, 0);
-  /* The tail was brought to position 11 */
-  fail_unless_equals_int (array->tail, 11);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 11);
 
   /* pull the 11 values out */
   for (i = 0; i < 11; i++) {
@@ -99,7 +85,7 @@ GST_START_TEST (test_array_grow)
         i);
   }
 
-  fail_unless_equals_int (array->length, 0);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 0);
   gst_queue_array_free (array);
 }
 
@@ -112,23 +98,20 @@ GST_START_TEST (test_array_grow_multiple)
 
   /* Create an array of initial size 10 */
   array = gst_queue_array_new (10);
-  fail_unless_equals_int (array->size, 10);
 
   /* push 11 values in */
   for (i = 0; i < 11; i++)
     gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
 
   /* With 11 values, it should have grown once (15) */
-  fail_unless_equals_int (array->length, 11);
-  fail_unless_equals_int (array->size, 15);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 11);
 
   for (i = 11; i < 20; i++)
     gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
 
   /* With 20 total values, it should have grown another time (3 * 15) / 2 = 22) */
-  fail_unless_equals_int (array->length, 20);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 20);
   /* It did grow beyond initial size */
-  fail_unless_equals_int (array->size, 22);
 
   /* pull the 20 values out */
   for (i = 0; i < 20; i++) {
@@ -136,7 +119,7 @@ GST_START_TEST (test_array_grow_multiple)
         i);
   }
 
-  fail_unless_equals_int (array->length, 0);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 0);
   gst_queue_array_free (array);
 }
 
@@ -149,7 +132,6 @@ GST_START_TEST (test_array_grow_middle)
 
   /* Create an array of initial size 10 */
   array = gst_queue_array_new (10);
-  fail_unless_equals_int (array->size, 10);
 
   /* push/pull 5 values to end up in the middle */
   for (i = 0; i < 5; i++) {
@@ -162,15 +144,11 @@ GST_START_TEST (test_array_grow_middle)
   for (i = 0; i < 10; i++)
     gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
 
-  fail_unless_equals_int (array->length, 10);
-  /* It did not grow beyond initial size */
-  fail_unless_equals_int (array->size, 10);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
 
   /* If we add one value, it will grow */
   gst_queue_array_push_tail (array, GINT_TO_POINTER (10));
-  fail_unless_equals_int (array->length, 11);
-  /* It did grow beyond initial size */
-  fail_unless_equals_int (array->size, 15);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 11);
 
   /* pull the 11 values out */
   for (i = 0; i < 11; i++) {
@@ -178,7 +156,7 @@ GST_START_TEST (test_array_grow_middle)
         i);
   }
 
-  fail_unless_equals_int (array->length, 0);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 0);
   gst_queue_array_free (array);
 }
 
@@ -191,7 +169,6 @@ GST_START_TEST (test_array_grow_end)
 
   /* Create an array of initial size 10 */
   array = gst_queue_array_new (10);
-  fail_unless_equals_int (array->size, 10);
 
   /* push/pull 9 values to end up at the last position */
   for (i = 0; i < 9; i++) {
@@ -204,15 +181,11 @@ GST_START_TEST (test_array_grow_end)
   for (i = 0; i < 10; i++)
     gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
 
-  fail_unless_equals_int (array->length, 10);
-  /* It did not grow beyond initial size */
-  fail_unless_equals_int (array->size, 10);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
 
   /* If we add one value, it will grow */
   gst_queue_array_push_tail (array, GINT_TO_POINTER (10));
-  fail_unless_equals_int (array->length, 11);
-  /* It did grow beyond initial size */
-  fail_unless_equals_int (array->size, 15);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 11);
 
   /* pull the 11 values out */
   for (i = 0; i < 11; i++) {
@@ -220,7 +193,7 @@ GST_START_TEST (test_array_grow_end)
         i);
   }
 
-  fail_unless_equals_int (array->length, 0);
+  fail_unless_equals_int (gst_queue_array_get_length (array), 0);
   gst_queue_array_free (array);
 }
 
