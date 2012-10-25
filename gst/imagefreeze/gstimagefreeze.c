@@ -216,9 +216,9 @@ gst_image_freeze_sink_setcaps (GstImageFreeze * self, GstCaps * caps)
     GstStructure *s = gst_structure_copy (gst_caps_get_structure (caps, i));
 
     gst_caps_append_structure (candidate, s);
-    if (gst_pad_peer_query_accept_caps (self->srcpad, candidate)) {
-      if (gst_structure_has_field_typed (s, "framerate", GST_TYPE_FRACTION) ||
-          gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1)) {
+    if (gst_structure_has_field_typed (s, "framerate", GST_TYPE_FRACTION) ||
+        gst_structure_fixate_field_nearest_fraction (s, "framerate", 25, 1)) {
+      if (gst_pad_peer_query_accept_caps (self->srcpad, candidate)) {
         gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
         if (fps_d != 0) {
           g_mutex_lock (&self->lock);
