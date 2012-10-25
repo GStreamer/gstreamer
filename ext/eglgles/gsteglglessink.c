@@ -609,9 +609,9 @@ render_thread_func (GstEglGlesSink * eglglessink)
       if (caps != eglglessink->configured_caps) {
         if (!gst_eglglessink_configure_caps (eglglessink, caps)) {
           eglglessink->last_flow = GST_FLOW_NOT_NEGOTIATED;
-          g_mutex_lock (eglglessink->render_lock);
-          g_cond_broadcast (eglglessink->render_cond);
-          g_mutex_unlock (eglglessink->render_lock);
+          g_mutex_lock (&eglglessink->render_lock);
+          g_cond_broadcast (&eglglessink->render_cond);
+          g_mutex_unlock (&eglglessink->render_lock);
           item->destroy (item);
           break;
         }
@@ -627,9 +627,9 @@ render_thread_func (GstEglGlesSink * eglglessink)
     }
 
     if (buf) {
-      g_mutex_lock (eglglessink->render_lock);
-      g_cond_broadcast (eglglessink->render_cond);
-      g_mutex_unlock (eglglessink->render_lock);
+      g_mutex_lock (&eglglessink->render_lock);
+      g_cond_broadcast (&eglglessink->render_cond);
+      g_mutex_unlock (&eglglessink->render_lock);
     }
     item->destroy (item);
     if (eglglessink->last_flow != GST_FLOW_OK)
@@ -778,9 +778,9 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   GST_DEBUG_OBJECT (eglglessink, "Stopping");
 
   gst_data_queue_set_flushing (eglglessink->queue, TRUE);
-  g_mutex_lock (eglglessink->render_lock);
-  g_cond_broadcast (eglglessink->render_cond);
-  g_mutex_unlock (eglglessink->render_lock);
+  g_mutex_lock (&eglglessink->render_lock);
+  g_cond_broadcast (&eglglessink->render_cond);
+  g_mutex_unlock (&eglglessink->render_lock);
 
   if (eglglessink->thread) {
     g_thread_join (eglglessink->thread);
@@ -1697,19 +1697,19 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
   GST_DEBUG_OBJECT (eglglessink, "Queueing buffer %" GST_PTR_FORMAT, buf);
 
   if (buf)
-    g_mutex_lock (eglglessink->render_lock);
+    g_mutex_lock (&eglglessink->render_lock);
   if (!gst_data_queue_push (eglglessink->queue, item)) {
-    g_mutex_unlock (eglglessink->render_lock);
+    g_mutex_unlock (&eglglessink->render_lock);
     GST_DEBUG_OBJECT (eglglessink, "Flushing");
     return GST_FLOW_FLUSHING;
   }
 
   if (buf) {
     GST_DEBUG_OBJECT (eglglessink, "Waiting for buffer to be rendered");
-    g_cond_wait (eglglessink->render_cond, eglglessink->render_lock);
+    g_cond_wait (&eglglessink->render_cond, &eglglessink->render_lock);
     GST_DEBUG_OBJECT (eglglessink, "Buffer rendered: %s",
         gst_flow_get_name (eglglessink->last_flow));
-    g_mutex_unlock (eglglessink->render_lock);
+    g_mutex_unlock (&eglglessink->render_lock);
   }
 
   return (buf ? eglglessink->last_flow : GST_FLOW_OK);
@@ -2280,12 +2280,8 @@ gst_eglglessink_finalize (GObject * object)
     g_object_unref (eglglessink->queue);
   eglglessink->queue = NULL;
 
-  if (eglglessink->render_cond)
-    g_cond_free (eglglessink->render_cond);
-  eglglessink->render_cond = NULL;
-  if (eglglessink->render_lock);
-  g_mutex_free (eglglessink->render_lock);
-  eglglessink->render_lock = NULL;
+  g_cond_clear (&eglglessink->render_cond);
+  g_mutex_clear (&eglglessink->render_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2413,8 +2409,8 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
   eglglessink->create_window = TRUE;
   eglglessink->force_aspect_ratio = TRUE;
 
-  eglglessink->render_lock = g_mutex_new ();
-  eglglessink->render_cond = g_cond_new ();
+  g_mutex_init (&eglglessink->render_lock);
+  g_cond_init (&eglglessink->render_cond);
   eglglessink->queue =
       gst_data_queue_new (queue_check_full_func, NULL, NULL, NULL);
   eglglessink->last_flow = GST_FLOW_FLUSHING;

@@ -207,8 +207,8 @@ struct _GstEglGlesSink
   GThread *thread;
   gboolean thread_running;
   GstDataQueue *queue;
-  GCond *render_cond;
-  GMutex *render_lock;
+  GCond render_cond;
+  GMutex render_lock;
   GstFlowReturn last_flow;
 
   /* Properties */
