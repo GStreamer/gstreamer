@@ -218,9 +218,8 @@ static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
     g_free (message_string);
   } else if (data->target_state >= GST_STATE_PLAYING) {
     gst_element_set_state (data->pipeline, GST_STATE_PLAYING);
-    set_ui_message ("PLAYING", data);
   } else if (data->target_state >= GST_STATE_PAUSED) {
-    set_ui_message ("PAUSED", data);
+    set_ui_message ("Buffering complete", data);
   }
 }
 
