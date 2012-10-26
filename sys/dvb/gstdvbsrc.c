@@ -68,6 +68,8 @@ GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define LOF1 (9750*1000UL)
 #define LOF2 (10600*1000UL)
 
+#define NUM_DTV_PROPS 16
+
 /* Arguments */
 enum
 {
@@ -1260,21 +1262,32 @@ diseqc (int secfd, int sat_no, int voltage, int tone)
 
 }
 
+inline static void
+set_prop (struct dtv_property *props, int *n, guint32 cmd, guint32 data)
+{
+  if (*n == NUM_DTV_PROPS) {
+    g_critical ("Index out of bounds");
+  } else {
+    props[*n].cmd = cmd;
+    props[(*n)++].u.data = data;
+  }
+}
 
 static gboolean
 gst_dvbsrc_tune (GstDvbSrc * object)
 {
-#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
-  struct dvbfe_params feparams;
-#else
-  struct dvb_frontend_parameters feparams;
-#endif
+  struct dtv_properties props;
+  struct dtv_property dvb_prop[NUM_DTV_PROPS];
   fe_sec_voltage_t voltage;
   fe_status_t status;
+  int n;
   int i;
   int j;
+  unsigned int del_sys = SYS_UNDEFINED;
   unsigned int freq = object->freq;
   unsigned int sym_rate = object->sym_rate * 1000;
+  unsigned int bandwidth;
+  int inversion = object->inversion;
 
   /* found in mail archive on linuxtv.org
    * What works well for us is:
@@ -1291,37 +1304,42 @@ gst_dvbsrc_tune (GstDvbSrc * object)
     return FALSE;
   }
 
+  GST_DEBUG_OBJECT (object, "api version %d.%d", DVB_API_VERSION,
+      DVB_API_VERSION_MINOR);
+
   gst_dvbsrc_unset_pes_filters (object);
   for (j = 0; j < 5; j++) {
+    memset (dvb_prop, 0, sizeof (dvb_prop));
+    dvb_prop[0].cmd = DTV_CLEAR;
+    props.num = 1;
+    props.props = dvb_prop;
+    if (ioctl (object->fd_frontend, FE_SET_PROPERTY, &props) < 0) {
+      g_warning ("Error resetting tuner: %s", strerror (errno));
+    }
+    /* First three entries are reserved */
+    n = 3;
     switch (object->adapter_type) {
       case FE_QPSK:
         object->tone = SEC_TONE_OFF;
         if (freq > 2200000) {
           // this must be an absolute frequency
           if (freq < SLOF) {
-            feparams.frequency = (freq - LOF1);
+            freq -= LOF1;
           } else {
-            feparams.frequency = (freq - LOF2);
+            freq -= LOF2;
             object->tone = SEC_TONE_ON;
           }
-        } else {
-          // this is an L-Band frequency
-          feparams.frequency = freq;
         }
-        feparams.inversion = INVERSION_AUTO;
-        GST_DEBUG_OBJECT (object, "api version %d.%d", DVB_API_VERSION,
-            DVB_API_VERSION_MINOR);
-#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
-        GST_DEBUG_OBJECT (object, "using multiproto driver");
-        feparams.delsys.dvbs.symbol_rate = sym_rate;
-        feparams.delsys.dvbs.fec = object->code_rate_hp;
-#else
-        feparams.u.qpsk.symbol_rate = sym_rate;
-        feparams.u.qpsk.fec_inner = object->code_rate_hp;
-#endif
+
+        inversion = INVERSION_AUTO;
+        set_prop (dvb_prop, &n, DTV_SYMBOL_RATE, sym_rate);
+        set_prop (dvb_prop, &n, DTV_INNER_FEC, object->code_rate_hp);
+        /* TODO add dvbs2 */
+        del_sys = SYS_DVBS;
+
         GST_INFO_OBJECT (object,
             "tuning DVB-S to L-Band:%u, Pol:%d, srate=%u, 22kHz=%s",
-            feparams.frequency, object->pol, sym_rate,
+            freq, object->pol, sym_rate,
             object->tone == SEC_TONE_ON ? "on" : "off");
 
         if (object->pol == DVB_POL_H)
@@ -1330,13 +1348,10 @@ gst_dvbsrc_tune (GstDvbSrc * object)
           voltage = SEC_VOLTAGE_13;
 
         if (object->diseqc_src == -1 || object->send_diseqc == FALSE) {
-          if (ioctl (object->fd_frontend, FE_SET_VOLTAGE, voltage) < 0) {
-            g_warning ("Unable to set voltage on dvb frontend device");
-          }
+          set_prop (dvb_prop, &n, DTV_VOLTAGE, voltage);
 
-          if (ioctl (object->fd_frontend, FE_SET_TONE, object->tone) < 0) {
-            g_warning ("Error setting tone: %s", strerror (errno));
-          }
+          // DTV_TONE not yet implemented
+          // set_prop (fe_props_array, &n, DTV_TONE, object->tone)
         } else {
           GST_DEBUG_OBJECT (object, "Sending DISEqC");
           diseqc (object->fd_frontend, object->diseqc_src, voltage,
@@ -1348,48 +1363,52 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 
         break;
       case FE_OFDM:
-
-        feparams.frequency = freq;
-#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
-        feparams.delsys.dvbs.fec = object->code_rate_hp;
-        feparams.delsys.dvbs.modulation = object->modulation;
-        feparams.delsys.dvbs.symbol_rate = sym_rate;
-#else
-        feparams.u.ofdm.bandwidth = object->bandwidth;
-        feparams.u.ofdm.code_rate_HP = object->code_rate_hp;
-        feparams.u.ofdm.code_rate_LP = object->code_rate_lp;
-        feparams.u.ofdm.constellation = object->modulation;
-        feparams.u.ofdm.transmission_mode = object->transmission_mode;
-        feparams.u.ofdm.guard_interval = object->guard_interval;
-        feparams.u.ofdm.hierarchy_information = object->hierarchy_information;
-#endif
-        feparams.inversion = object->inversion;
+        del_sys = SYS_DVBT;
+        bandwidth = 0;
+        if (object->bandwidth != BANDWIDTH_AUTO) {
+          /* Presumably not specifying bandwidth with s2api is equivalent
+           * to BANDWIDTH_AUTO.
+           */
+          switch (object->bandwidth) {
+            case BANDWIDTH_8_MHZ:
+              bandwidth = 8000000;
+              break;
+            case BANDWIDTH_7_MHZ:
+              bandwidth = 7000000;
+              break;
+            case BANDWIDTH_6_MHZ:
+              bandwidth = 6000000;
+              break;
+            default:
+              break;
+          }
+        }
+        if (bandwidth) {
+          set_prop (dvb_prop, &n, DTV_BANDWIDTH_HZ, bandwidth);
+        }
+        set_prop (dvb_prop, &n, DTV_CODE_RATE_HP, object->code_rate_hp);
+        set_prop (dvb_prop, &n, DTV_CODE_RATE_LP, object->code_rate_lp);
+        set_prop (dvb_prop, &n, DTV_MODULATION, object->modulation);
+        set_prop (dvb_prop, &n, DTV_TRANSMISSION_MODE,
+            object->transmission_mode);
+        set_prop (dvb_prop, &n, DTV_GUARD_INTERVAL, object->guard_interval);
+        set_prop (dvb_prop, &n, DTV_HIERARCHY, object->hierarchy_information);
 
         GST_INFO_OBJECT (object, "tuning DVB-T to %d Hz", freq);
         break;
       case FE_QAM:
         GST_INFO_OBJECT (object, "Tuning DVB-C to %d, srate=%d", freq,
             sym_rate);
-        feparams.frequency = freq;
-        feparams.inversion = object->inversion;
-#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
-        feparams.delsys.dvbs.fec = object->code_rate_hp;
-        feparams.delsys.dvbs.modulation = object->modulation;
-        feparams.delsys.dvbs.symbol_rate = sym_rate;
-#else
-        feparams.u.qam.fec_inner = object->code_rate_hp;
-        feparams.u.qam.modulation = object->modulation;
-        feparams.u.qam.symbol_rate = sym_rate;
-#endif
+
+        del_sys = SYS_DVBC_ANNEX_AC;
+        set_prop (dvb_prop, &n, DTV_INNER_FEC, object->code_rate_hp);
+        set_prop (dvb_prop, &n, DTV_MODULATION, object->modulation);
+        set_prop (dvb_prop, &n, DTV_SYMBOL_RATE, sym_rate);
         break;
       case FE_ATSC:
         GST_INFO_OBJECT (object, "Tuning ATSC to %d", freq);
-        feparams.frequency = freq;
-#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
-        feparams.delsys.atsc.modulation = object->modulation;
-#else
-        feparams.u.vsb.modulation = object->modulation;
-#endif
+        del_sys = SYS_ATSC;
+        set_prop (dvb_prop, &n, DTV_MODULATION, object->modulation);
         break;
       default:
         g_error ("Unknown frontend type: %d", object->adapter_type);
@@ -1397,11 +1416,17 @@ gst_dvbsrc_tune (GstDvbSrc * object)
     }
     usleep (100000);
     /* now tune the frontend */
-#if DVB_API_VERSION == 3 && DVB_API_VERSION_MINOR == 3
-    if (ioctl (object->fd_frontend, DVBFE_SET_PARAMS, &feparams) < 0) {
-#else
-    if (ioctl (object->fd_frontend, FE_SET_FRONTEND, &feparams) < 0) {
-#endif
+    set_prop (dvb_prop, &n, DTV_TUNE, 0);
+    props.num = n;
+    props.props = dvb_prop;
+    /* set first three entries */
+    n = 0;
+    set_prop (dvb_prop, &n, DTV_DELIVERY_SYSTEM, del_sys);
+    set_prop (dvb_prop, &n, DTV_FREQUENCY, freq);
+    set_prop (dvb_prop, &n, DTV_INVERSION, inversion);
+
+    GST_DEBUG_OBJECT (object, "Setting %d properties", props.num);
+    if (ioctl (object->fd_frontend, FE_SET_PROPERTY, &props) < 0) {
       g_warning ("Error tuning channel: %s", strerror (errno));
     }
     for (i = 0; i < 50; i++) {
