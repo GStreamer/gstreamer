@@ -74,8 +74,6 @@ gst_rtsp_stream_finalize (GObject * obj)
   gst_object_unref (stream->payloader);
   gst_object_unref (stream->srcpad);
 
-  g_list_free (stream->transports);
-
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
 
