@@ -2877,7 +2877,7 @@ _init_local (void)
   QUARK_PID = g_quark_from_string ("pid");
   QUARK_PROGRAMS = g_quark_from_string ("programs");
 
-  QUARK_CAT = g_quark_from_string ("pat");
+  QUARK_CAT = g_quark_from_string ("cat");
 
   QUARK_PMT = g_quark_from_string ("pmt");
   QUARK_PCR_PID = g_quark_from_string ("pcr-pid");
