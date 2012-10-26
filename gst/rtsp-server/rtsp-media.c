@@ -1255,41 +1255,6 @@ state_failed:
   }
 }
 
-/**
- * gst_rtsp_media_unprepare:
- * @media: a #GstRTSPMedia
- *
- * Unprepare @media. After this call, the media should be prepared again before
- * it can be used again. If the media is set to be non-reusable, a new instance
- * must be created.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_media_unprepare (GstRTSPMedia * media)
-{
-  gboolean success;
-
-  if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
-    return TRUE;
-
-  GST_INFO ("unprepare media %p", media);
-  media->target_state = GST_STATE_NULL;
-  success = TRUE;
-
-  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
-    GstRTSPMediaClass *klass;
-
-    klass = GST_RTSP_MEDIA_GET_CLASS (media);
-    if (klass->unprepare)
-      success = klass->unprepare (media);
-  } else {
-    finish_unprepare (media);
-  }
-
-  return success;
-}
-
 static void
 finish_unprepare (GstRTSPMedia * media)
 {
@@ -1341,6 +1306,41 @@ default_unprepare (GstRTSPMedia * media)
     finish_unprepare (media);
   }
   return TRUE;
+}
+
+/**
+ * gst_rtsp_media_unprepare:
+ * @media: a #GstRTSPMedia
+ *
+ * Unprepare @media. After this call, the media should be prepared again before
+ * it can be used again. If the media is set to be non-reusable, a new instance
+ * must be created.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_unprepare (GstRTSPMedia * media)
+{
+  gboolean success;
+
+  if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
+    return TRUE;
+
+  GST_INFO ("unprepare media %p", media);
+  media->target_state = GST_STATE_NULL;
+  success = TRUE;
+
+  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
+    GstRTSPMediaClass *klass;
+
+    klass = GST_RTSP_MEDIA_GET_CLASS (media);
+    if (klass->unprepare)
+      success = klass->unprepare (media);
+  } else {
+    finish_unprepare (media);
+  }
+
+  return success;
 }
 
 /**
