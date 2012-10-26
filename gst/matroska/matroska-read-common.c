@@ -2042,8 +2042,8 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
   GArray *chapter_targets, *edition_targets, *track_targets;
   GstTagList *taglist;
   GList *cur;
-  guint64 target_type_value;
-  gchar *target_type;
+  guint64 target_type_value = 50;
+  gchar *target_type = NULL;
 
   DEBUG_ELEMENT_START (common, ebml, "Tag");
 
@@ -2073,6 +2073,7 @@ gst_matroska_read_common_parse_metadata_id_tag (GstMatroskaReadCommon * common,
       case GST_MATROSKA_ID_TARGETS:
         g_free (target_type);
         target_type = NULL;
+        target_type_value = 50;
         ret = gst_matroska_read_common_parse_metadata_targets (common, ebml,
             edition_targets, chapter_targets, track_targets,
             &target_type_value, &target_type);
