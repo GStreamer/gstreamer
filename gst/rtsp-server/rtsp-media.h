@@ -106,6 +106,7 @@ struct _GstRTSPMedia {
   guint              buffer_size;
   GstRTSPAuth       *auth;
   gchar             *multicast_group;
+  guint              mtu;
 
   GstElement        *element;
   GPtrArray         *streams;
@@ -155,7 +156,6 @@ struct _GstRTSPMediaClass {
   /* vmethods */
   gboolean        (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
   gboolean        (*unprepare)       (GstRTSPMedia *media);
-  void            (*handle_mtu)      (GstRTSPMedia *media, guint mtu);
 
   /* signals */
   gboolean        (*prepared)        (GstRTSPMedia *media);
@@ -190,6 +190,9 @@ guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_multicast_group (GstRTSPMedia *media, const gchar * mc);
 gchar *               gst_rtsp_media_get_multicast_group (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_mtu          (GstRTSPMedia *media, guint mtu);
+guint                 gst_rtsp_media_get_mtu          (GstRTSPMedia *media);
+
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
@@ -211,8 +214,6 @@ gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media, gboo
 
 gboolean              gst_rtsp_media_set_state        (GstRTSPMedia *media, GstState state,
                                                        GPtrArray *transports);
-
-void                  gst_rtsp_media_handle_mtu       (GstRTSPMedia *media, guint mtu);
 
 G_END_DECLS
 

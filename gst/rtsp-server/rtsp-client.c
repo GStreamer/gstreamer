@@ -912,7 +912,7 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
     } else {
       if (blocksize > G_MAXUINT)
         blocksize = G_MAXUINT;
-      gst_rtsp_media_handle_mtu (media, (guint) blocksize);
+      gst_rtsp_media_set_mtu (media, blocksize);
     }
   }
 

@@ -32,6 +32,7 @@
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
 #define DEFAULT_MULTICAST_GROUP "224.2.0.1"
+#define DEFAULT_MTU             0
 
 /* define to dump received RTCP packets */
 #undef DUMP_STATS
@@ -45,6 +46,7 @@ enum
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
   PROP_MULTICAST_GROUP,
+  PROP_MTU,
   PROP_LAST
 };
 
@@ -71,7 +73,6 @@ static gboolean default_handle_message (GstRTSPMedia * media,
 static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_unprepare (GstRTSPMedia * media);
 static void unlock_streams (GstRTSPMedia * media);
-static void default_handle_mtu (GstRTSPMedia * media, guint mtu);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -118,6 +119,12 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "The Multicast group to send media to",
           DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_MTU,
+      g_param_spec_uint ("mtu", "MTU",
+          "The MTU for the payloaders (0 = default)",
+          0, G_MAXUINT, DEFAULT_MTU,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_rtsp_media_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, prepared), NULL, NULL,
@@ -142,7 +149,6 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
-  klass->handle_mtu = default_handle_mtu;
 }
 
 static void
@@ -211,6 +217,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_MULTICAST_GROUP:
       g_value_take_string (value, gst_rtsp_media_get_multicast_group (media));
       break;
+    case PROP_MTU:
+      g_value_set_uint (value, gst_rtsp_media_get_mtu (media));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -240,6 +249,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_MULTICAST_GROUP:
       gst_rtsp_media_set_multicast_group (media, g_value_get_string (value));
+      break;
+    case PROP_MTU:
+      gst_rtsp_media_set_mtu (media, g_value_get_uint (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -571,6 +583,46 @@ gst_rtsp_media_get_auth (GstRTSPMedia * media)
 }
 
 /**
+ * gst_rtsp_media_set_mtu:
+ * @media: a #GstRTSPMedia
+ * @mtu: a new MTU
+ *
+ * Set maximum size of one RTP packet on the payloaders.
+ * The @mtu will be set on all streams.
+ */
+void
+gst_rtsp_media_set_mtu (GstRTSPMedia * media, guint mtu)
+{
+  gint i;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  media->mtu = mtu;
+  for (i = 0; i < media->streams->len; i++) {
+    GstRTSPStream *stream;
+
+    GST_INFO ("Setting mtu %u for stream %d", mtu, i);
+
+    stream = g_ptr_array_index (media->streams, i);
+    gst_rtsp_stream_set_mtu (stream, mtu);
+  }
+}
+
+/**
+ * gst_rtsp_media_get_mtu:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the configured MTU.
+ */
+guint
+gst_rtsp_media_get_mtu (GstRTSPMedia * media)
+{
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), 0);
+
+  return media->mtu;
+}
+
+/**
  * gst_rtsp_media_collect_streams:
  * @media: a #GstRTSPMedia
  *
@@ -663,6 +715,8 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   g_free (name);
 
   stream = gst_rtsp_stream_new (idx, payloader, srcpad);
+  if (media->mtu)
+    gst_rtsp_stream_set_mtu (stream, media->mtu);
 
   g_ptr_array_add (media->streams, stream);
 
@@ -1393,38 +1447,4 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     collect_media_stats (media);
 
   return TRUE;
-}
-
-static void
-default_handle_mtu (GstRTSPMedia * media, guint mtu)
-{
-  gint i;
-
-  for (i = 0; i < media->streams->len; i++) {
-    GstRTSPStream *stream;
-
-    GST_INFO ("Setting mtu %d for stream %d", mtu, i);
-
-    stream = g_ptr_array_index (media->streams, i);
-
-    g_object_set (G_OBJECT (stream->payloader), "mtu", mtu, NULL);
-  }
-}
-
-/**
- * gst_rtsp_media_handle_mtu:
- * @media: a #GstRTSPMedia
- * @mtu: the mtu
- *
- * Set maximum size of one RTP packet on the payloaders.
- */
-void
-gst_rtsp_media_handle_mtu (GstRTSPMedia * media, guint mtu)
-{
-  GstRTSPMediaClass *klass;
-
-  klass = GST_RTSP_MEDIA_GET_CLASS (media);
-
-  if (klass->handle_mtu)
-    klass->handle_mtu (media, mtu);
 }

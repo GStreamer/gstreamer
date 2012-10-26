@@ -123,6 +123,41 @@ gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * srcpad)
   return stream;
 }
 
+/**
+ * gst_rtsp_stream_set_mtu:
+ * @stream: a #GstRTSPStream
+ * @mtu: a new MTU
+ *
+ * Configure the mtu in the payloader of @stream to @mtu.
+ */
+void
+gst_rtsp_stream_set_mtu (GstRTSPStream * stream, guint mtu)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_object_set (G_OBJECT (stream->payloader), "mtu", mtu, NULL);
+}
+
+/**
+ * gst_rtsp_stream_get_mtu:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the configured MTU in the payloader of @stream.
+ *
+ * Returns: the MTU of the payloader.
+ */
+guint
+gst_rtsp_stream_get_mtu (GstRTSPStream * stream)
+{
+  guint mtu;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), 0);
+
+  g_object_get (G_OBJECT (stream->payloader), "mtu", &mtu, NULL);
+
+  return mtu;
+}
+
 static gboolean
 alloc_ports (GstRTSPStream * stream)
 {
