@@ -142,11 +142,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
 
         // Restore previous playing state
         setMediaUri ();
-        // Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
-        // milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
-        // where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
-        // backwards on each iteration.
-        nativeSetPosition (position + 1);
+        nativeSetPosition (position);
         if (is_playing_desired) {
             nativePlay();
         } else {
