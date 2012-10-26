@@ -309,31 +309,15 @@ gst_ahc_src_fixate (GstBaseSrc * src, GstCaps * caps)
 {
   GstAHCSrc *self = GST_AHC_SRC (src);
   GstStructure *s = gst_caps_get_structure (caps, 0);
-  const GValue *value;
 
-  GST_WARNING_OBJECT (self, "Fixating : %s", gst_caps_to_string (caps));
-  if (s) {
-    value = gst_structure_get_value (s, "framerate");
-    if (value) {
-      const GValue *min, *max;
-      gint n, d;
+  GST_DEBUG_OBJECT (self, "Fixating : %" GST_PTR_FORMAT, caps);
 
-      min = gst_value_get_fraction_range_min (value);
-      max = gst_value_get_fraction_range_max (value);
-      if (min) {
-        n = gst_value_get_fraction_numerator (min);
-        d = gst_value_get_fraction_denominator (min);
-        self->fps_min = n * 1000 / d;
-      }
-      if (max) {
-        n = gst_value_get_fraction_numerator (max);
-        d = gst_value_get_fraction_denominator (max);
-        self->fps_max = n * 1000 / d;
-      }
-      GST_WARNING_OBJECT (self, "Fps : [%d, %d]", self->fps_min, self->fps_max);
-    }
-  }
-  /* Let it fixate itself */
+  /* Width/height will be fixed already here, format will
+   * be left for fixation by the default handler.
+   * We only have to fixate framerate here, to the
+   * highest possible framerate.
+   */
+  gst_structure_fixate_field_nearest_fraction (s, "framerate", G_MAXINT, 1);
 }
 
 static gboolean
@@ -354,6 +338,7 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
     GstVideoFormat format;
     gint fmt;
     gint width, height, fps_n, fps_d;
+    GList *ranges, *l;
     gint i;
 
     if (!gst_video_format_parse_caps (caps, &format, &width, &height) ||
@@ -362,8 +347,28 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
       goto end;
     }
     fps_n *= 1000 / fps_d;
-    if (fps_n < self->fps_min || fps_n > self->fps_max) {
-      self->fps_min = self->fps_max = fps_n;
+
+    /* Select the best range that contains our framerate.
+     * We *must* set a range of those returned by the camera
+     * according to the API docs and can't use a subset of any
+     * of those ranges.
+     */
+    self->fps_max = self->fps_min = 0;
+    ranges = gst_ahc_parameters_get_supported_preview_fps_range (params);
+    ranges = g_list_sort (ranges, (GCompareFunc) _compare_ranges);
+    for (l = ranges; l; l = l->next) {
+      int *range = l->data;
+
+      if (fps_n >= range[0] && fps_n <= range[1]) {
+        self->fps_min = range[0];
+        self->fps_max = range[1];
+        break;
+      }
+    }
+    gst_ahc_parameters_supported_preview_fps_range_free (ranges);
+    if (self->fps_max == 0) {
+      GST_ERROR_OBJECT (self, "Couldn't find an applicable FPS range");
+      goto end;
     }
 
     switch (format) {
@@ -398,8 +403,8 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
     gst_ahc_parameters_set_preview_fps_range (params, self->fps_min,
         self->fps_max);
 
-    GST_WARNING_OBJECT (self, "Setting camera parameters : %dx%d @ [%f, %f]",
-        width, height, self->fps_min / 1000.0, self->fps_max / 1000.0);
+    GST_WARNING_OBJECT (self, "Setting camera parameters : %d %dx%d @ [%f, %f]",
+        fmt, width, height, self->fps_min / 1000.0, self->fps_max / 1000.0);
 
     if (!gst_ah_camera_set_parameters (self->camera, params)) {
       GST_WARNING_OBJECT (self, "Unable to set video parameters");
