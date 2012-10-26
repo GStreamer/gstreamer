@@ -33,7 +33,7 @@ typedef struct {
   GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
 } MXFEssenceElementHandler;
 
-typedef GstFlowReturn (*MXFEssenceElementWriteFunc) (GstBuffer *buffer, GstCaps *caps, gpointer mapping_data, GstAdapter *adapter, GstBuffer **outbuf, gboolean flush);
+typedef GstFlowReturn (*MXFEssenceElementWriteFunc) (GstBuffer *buffer, gpointer mapping_data, GstAdapter *adapter, GstBuffer **outbuf, gboolean flush);
 
 typedef struct {
    MXFMetadataFileDescriptor * (*get_descriptor) (GstPadTemplate *tmpl, GstCaps *caps, MXFEssenceElementWriteFunc *handler, gpointer *mapping_data);

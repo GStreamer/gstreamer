@@ -93,8 +93,8 @@ struct _GstMXFDemuxPad
   guint32 track_id;
   gboolean need_segment;
 
-  GstClockTime last_stop;
-  gdouble last_stop_accumulated_error;
+  GstClockTime position;
+  gdouble position_accumulated_error;
   GstFlowReturn last_flow;
   gboolean eos, discont;
 
@@ -165,6 +165,8 @@ struct _GstMXFDemux
   MXFUMID current_package_uid;
   MXFMetadataGenericPackage *current_package;
   gchar *current_package_string;
+
+  GstTagList *tags;
 
   /* Properties */
   gchar *requested_package_string;

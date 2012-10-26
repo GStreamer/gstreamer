@@ -433,8 +433,13 @@ mxf_is_mpeg_essence_track (const MXFMetadataTimelineTrack * track)
 gboolean
 mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  GstMapInfo map;
+  GstByteReader reader;
   guint32 tmp;
+  gboolean ret = FALSE;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
@@ -448,7 +453,8 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
 
       /* GOP packets are meant as random access markers */
       if (type == 0xb8) {
-        return TRUE;
+        ret = TRUE;
+        goto done;
       } else if (type == 0x00) {
         guint8 pic_type = 0;
 
@@ -460,23 +466,30 @@ mxf_mpeg_is_mpeg2_keyframe (GstBuffer * buffer)
 
         pic_type = (pic_type >> 3) & 0x07;
         if (pic_type == 0x01) {
-          return TRUE;
-        } else {
-          return FALSE;
+          ret = TRUE;
         }
+        goto done;
       }
     } else if (gst_byte_reader_skip (&reader, 1) == FALSE)
       break;
   }
 
-  return FALSE;
+done:
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
 }
 
 static gboolean
 mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  GstMapInfo map;
+  GstByteReader reader;
   guint32 tmp;
+  gboolean ret = FALSE;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
@@ -496,16 +509,18 @@ mxf_mpeg_is_mpeg4_keyframe (GstBuffer * buffer)
 
         pic_type = (pic_type >> 6) & 0x03;
         if (pic_type == 0) {
-          return TRUE;
-        } else {
-          return FALSE;
+          ret = TRUE;
         }
+        goto done;
       }
     } else if (gst_byte_reader_skip (&reader, 1) == FALSE)
       break;
   }
 
-  return FALSE;
+done:
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -666,9 +681,12 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
 
       if (local_tag) {
+        GstMapInfo map;
         GstBuffer *codec_data = NULL;
         codec_data = gst_buffer_new_and_alloc (local_tag->size);
-        memcpy (GST_BUFFER_DATA (codec_data), local_tag->data, local_tag->size);
+        gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+        memcpy (map.data, local_tag->data, local_tag->size);
+        gst_buffer_unmap (codec_data, &map);
         gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
             NULL);
         gst_buffer_unref (codec_data);
@@ -680,7 +698,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       /* RP 2008 */
 
       /* TODO: What about codec_data for AVC1 streams? */
-      caps = gst_caps_new_simple ("video/x-h264", NULL);
+      caps = gst_caps_new_empty_simple ("video/x-h264");
       codec_name = "h.264 Video";
       t = MXF_MPEG_ESSENCE_TYPE_VIDEO_AVC;
       memcpy (mdata, &t, sizeof (MXFMPEGEssenceType));
@@ -700,7 +718,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "MPEG-1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_ac3)) {
-      caps = gst_caps_new_simple ("audio/x-ac3", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-ac3");
       codec_name = "AC3 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_mpeg1_layer1)) {
@@ -728,7 +746,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
       codec_name = "MPEG-2 Layer 1 Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_dts)) {
-      caps = gst_caps_new_simple ("audio/x-dts", NULL);
+      caps = gst_caps_new_empty_simple ("audio/x-dts");
       codec_name = "Dolby DTS Audio";
     } else if (mxf_ul_is_equal (&s->sound_essence_compression,
             &sound_essence_compression_aac)) {
@@ -745,7 +763,7 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
   if (caps) {
     if (!*tags)
-      *tags = gst_tag_list_new ();
+      *tags = gst_tag_list_new_empty ();
     if (codec_name)
       gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
           codec_name, NULL);
@@ -781,17 +799,17 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     if (!track->parent.descriptor[i])
       continue;
 
-    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
+    if (MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
       f = track->parent.descriptor[i];
-      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->
-          parent.descriptor[i];
+      p = (MXFMetadataGenericPictureEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
-    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->parent.
-            descriptor[i])) {
+    } else if (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])) {
       f = track->parent.descriptor[i];
-      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->
-          parent.descriptor[i];
+      s = (MXFMetadataGenericSoundEssenceDescriptor *) track->parent.
+          descriptor[i];
       break;
     }
   }
@@ -816,34 +834,34 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
 
     if (!*tags)
-      *tags = gst_tag_list_new ();
+      *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "MPEG PS", NULL);
   } else if (f->essence_container.u[13] == 0x09) {
     GST_DEBUG ("Found MPEG TS stream");
-    caps = gst_caps_new_simple ("video/mpegts", NULL);
+    caps = gst_caps_new_empty_simple ("video/mpegts");
 
     if (!*tags)
-      *tags = gst_tag_list_new ();
+      *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "MPEG TS", NULL);
   } else if (f->essence_container.u[13] == 0x0f) {
     GST_DEBUG ("Found h264 NAL unit stream");
     /* RP 2008 */
     /* TODO: What about codec_data? */
-    caps = gst_caps_new_simple ("video/x-h264", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-h264");
 
     if (!*tags)
-      *tags = gst_tag_list_new ();
+      *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "h.264 Video", NULL);
   } else if (f->essence_container.u[13] == 0x10) {
     GST_DEBUG ("Found h264 byte stream stream");
     /* RP 2008 */
-    caps = gst_caps_new_simple ("video/x-h264", NULL);
+    caps = gst_caps_new_empty_simple ("video/x-h264");
 
     if (!*tags)
-      *tags = gst_tag_list_new ();
+      *tags = gst_tag_list_new_empty ();
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
         "h.264 Video", NULL);
   }
@@ -866,7 +884,7 @@ typedef struct
 } MPEGAudioMappingData;
 
 static GstFlowReturn
-mxf_mpeg_audio_write_func (GstBuffer * buffer, GstCaps * caps,
+mxf_mpeg_audio_write_func (GstBuffer * buffer,
     gpointer mapping_data, GstAdapter * adapter, GstBuffer ** outbuf,
     gboolean flush)
 {
@@ -1014,8 +1032,13 @@ static MXFEssenceElementWriter mxf_mpeg_audio_essence_element_writer = {
 static gboolean
 mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  GstByteReader reader;
   guint32 tmp;
+  GstMapInfo map;
+  gboolean ret = FALSE;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
@@ -1029,7 +1052,8 @@ mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
 
       /* PICTURE */
       if (type == 0x00) {
-        return TRUE;
+        ret = TRUE;
+        goto done;
       }
     } else {
       if (gst_byte_reader_skip (&reader, 1) == FALSE)
@@ -1037,14 +1061,22 @@ mxf_mpeg_is_mpeg2_frame (GstBuffer * buffer)
     }
   }
 
-  return FALSE;
+done:
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
 }
 
 static gboolean
 mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
 {
-  GstByteReader reader = GST_BYTE_READER_INIT_FROM_BUFFER (buffer);
+  GstByteReader reader;
   guint32 tmp;
+  GstMapInfo map;
+  gboolean ret = FALSE;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  gst_byte_reader_init (&reader, map.data, map.size);
 
   while (gst_byte_reader_get_remaining (&reader) > 3) {
     if (gst_byte_reader_peek_uint24_be (&reader, &tmp) && tmp == 0x000001) {
@@ -1058,7 +1090,8 @@ mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
 
       /* PICTURE */
       if (type == 0xb6) {
-        return TRUE;
+        ret = TRUE;
+        goto done;
       }
     } else {
       if (gst_byte_reader_skip (&reader, 1) == FALSE)
@@ -1066,11 +1099,14 @@ mxf_mpeg_is_mpeg4_frame (GstBuffer * buffer)
     }
   }
 
-  return FALSE;
+done:
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
 }
 
 static GstFlowReturn
-mxf_mpeg_video_write_func (GstBuffer * buffer, GstCaps * caps,
+mxf_mpeg_video_write_func (GstBuffer * buffer,
     gpointer mapping_data, GstAdapter * adapter, GstBuffer ** outbuf,
     gboolean flush)
 {
@@ -1087,23 +1123,30 @@ mxf_mpeg_video_write_func (GstBuffer * buffer, GstCaps * caps,
     } else if (buffer || gst_adapter_available (adapter)) {
       guint av = gst_adapter_available (adapter);
       GstBuffer *ret;
+      GstMapInfo map;
 
       if (buffer)
-        ret = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) + av);
+        ret = gst_buffer_new_and_alloc (gst_buffer_get_size (buffer) + av);
       else
         ret = gst_buffer_new_and_alloc (av);
 
+      gst_buffer_map (ret, &map, GST_MAP_WRITE);
       if (av) {
-        GstBuffer *tmp = gst_adapter_take_buffer (adapter, av);
-        memcpy (GST_BUFFER_DATA (ret), GST_BUFFER_DATA (tmp), av);
-        gst_buffer_unref (tmp);
+        gconstpointer data = gst_adapter_map (adapter, av);
+        memcpy (map.data, data, av);
+        gst_adapter_unmap (adapter);
       }
 
       if (buffer) {
-        memcpy (GST_BUFFER_DATA (ret) + av, GST_BUFFER_DATA (buffer),
-            GST_BUFFER_SIZE (buffer));
+        GstMapInfo buffermap;
+        gst_buffer_map (buffer, &buffermap, GST_MAP_READ);
+        memcpy (map.data + av, buffermap.data, buffermap.size);
+        gst_buffer_unmap (buffer, &buffermap);
         gst_buffer_unref (buffer);
       }
+
+      gst_buffer_unmap (ret, &map);
+
       *outbuf = ret;
       return GST_FLOW_OK;
     }
@@ -1115,23 +1158,30 @@ mxf_mpeg_video_write_func (GstBuffer * buffer, GstCaps * caps,
     } else if (buffer || gst_adapter_available (adapter)) {
       guint av = gst_adapter_available (adapter);
       GstBuffer *ret;
+      GstMapInfo map;
 
       if (buffer)
-        ret = gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buffer) + av);
+        ret = gst_buffer_new_and_alloc (gst_buffer_get_size (buffer) + av);
       else
         ret = gst_buffer_new_and_alloc (av);
 
+      gst_buffer_map (ret, &map, GST_MAP_WRITE);
       if (av) {
-        GstBuffer *tmp = gst_adapter_take_buffer (adapter, av);
-        memcpy (GST_BUFFER_DATA (ret), GST_BUFFER_DATA (tmp), av);
-        gst_buffer_unref (tmp);
+        gconstpointer data = gst_adapter_map (adapter, av);
+        memcpy (map.data, data, av);
+        gst_adapter_unmap (adapter);
       }
 
       if (buffer) {
-        memcpy (GST_BUFFER_DATA (ret) + av, GST_BUFFER_DATA (buffer),
-            GST_BUFFER_SIZE (buffer));
+        GstMapInfo buffermap;
+        gst_buffer_map (buffer, &buffermap, GST_MAP_READ);
+        memcpy (map.data + av, buffermap.data, buffermap.size);
+        gst_buffer_unmap (buffer, &buffermap);
         gst_buffer_unref (buffer);
       }
+
+      gst_buffer_unmap (ret, &map);
+
       *outbuf = ret;
       return GST_FLOW_OK;
     }
@@ -1194,9 +1244,13 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
       ret->parent.parent.picture_essence_coding.u[13] = 0x20;
       if ((v = gst_structure_get_value (s, "codec_data"))) {
         MXFLocalTag *t = g_slice_new0 (MXFLocalTag);
+        GstMapInfo map;
+
         codec_data = gst_value_get_buffer (v);
-        t->size = GST_BUFFER_SIZE (codec_data);
-        t->data = g_memdup (GST_BUFFER_DATA (codec_data), t->size);
+        gst_buffer_map ((GstBuffer *) codec_data, &map, GST_MAP_READ);
+        t->size = map.size;
+        t->data = g_memdup (map.data, map.size);
+        gst_buffer_unmap ((GstBuffer *) codec_data, &map);
         memcpy (&t->ul, &sony_mpeg4_extradata, 16);
         mxf_local_tag_insert (t, &MXF_METADATA_BASE (ret)->other_tags);
       }
@@ -1212,8 +1266,8 @@ mxf_mpeg_video_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   }
 
 
-  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->
-          parent.parent, caps)) {
+  if (!mxf_metadata_generic_picture_essence_descriptor_from_caps (&ret->parent.
+          parent, caps)) {
     g_object_unref (ret);
     return NULL;
   }

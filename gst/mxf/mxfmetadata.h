@@ -23,6 +23,7 @@
 #define __MXF_METADATA_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include "mxftypes.h"
 
 #define MXF_TYPE_METADATA_BASE \
@@ -764,6 +765,7 @@ const MXFUL * mxf_metadata_track_identifier_get (MXFMetadataTrackType type);
 void mxf_metadata_generic_picture_essence_descriptor_set_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
 gboolean mxf_metadata_generic_picture_essence_descriptor_from_caps (MXFMetadataGenericPictureEssenceDescriptor * self, GstCaps * caps);
 
+GstCaps *mxf_metadata_generic_sound_essence_descriptor_create_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstAudioFormat *format);
 void mxf_metadata_generic_sound_essence_descriptor_set_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
 gboolean mxf_metadata_generic_sound_essence_descriptor_from_caps (MXFMetadataGenericSoundEssenceDescriptor * self, GstCaps * caps);
 

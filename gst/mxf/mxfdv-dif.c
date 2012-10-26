@@ -142,7 +142,7 @@ mxf_dv_dif_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     mxf_metadata_generic_picture_essence_descriptor_set_caps (d, caps);
 
   if (!*tags)
-    *tags = gst_tag_list_new ();
+    *tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_CODEC, "DV-DIF", NULL);
 
@@ -155,7 +155,7 @@ static const MXFEssenceElementHandler mxf_dv_dif_essence_element_handler = {
 };
 
 static GstFlowReturn
-mxf_dv_dif_write_func (GstBuffer * buffer, GstCaps * caps,
+mxf_dv_dif_write_func (GstBuffer * buffer,
     gpointer mapping_data, GstAdapter * adapter, GstBuffer ** outbuf,
     gboolean flush)
 {

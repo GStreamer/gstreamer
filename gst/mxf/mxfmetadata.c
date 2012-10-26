@@ -70,7 +70,7 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 
   g_return_val_if_fail (klass->name_quark != 0, NULL);
 
-  ret = gst_structure_id_empty_new (klass->name_quark);
+  ret = gst_structure_new_id_empty (klass->name_quark);
 
   if (!mxf_uuid_is_zero (&self->instance_uid)) {
     mxf_uuid_to_string (&self->instance_uid, str);
@@ -90,6 +90,7 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
     GValue v = { 0, };
     GstStructure *s;
     GstBuffer *buf;
+    GstMapInfo map;
     GHashTableIter iter;
 
     g_hash_table_iter_init (&iter, self->other_tags);
@@ -97,12 +98,14 @@ mxf_metadata_base_to_structure_default (MXFMetadataBase * self)
 
     while (g_hash_table_iter_next (&iter, NULL, (gpointer) & tag)) {
       g_value_init (&v, GST_TYPE_STRUCTURE);
-      s = gst_structure_id_empty_new (MXF_QUARK (TAG));
+      s = gst_structure_new_id_empty (MXF_QUARK (TAG));
 
       mxf_ul_to_string (&tag->ul, str);
 
       buf = gst_buffer_new_and_alloc (tag->size);
-      memcpy (GST_BUFFER_DATA (buf), tag->data, tag->size);
+      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      memcpy (map.data, tag->data, tag->size);
+      gst_buffer_unmap (buf, &map);
 
       gst_structure_id_set (s, MXF_QUARK (NAME), G_TYPE_STRING, str,
           MXF_QUARK (DATA), GST_TYPE_BUFFER, buf, NULL);
@@ -215,6 +218,7 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
 {
   MXFMetadataBaseClass *klass;
   GstBuffer *ret;
+  GstMapInfo map;
   GList *tags, *l;
   guint size = 0, slen;
   guint8 ber[9];
@@ -266,13 +270,14 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
   size += 16 + slen;
 
   ret = gst_buffer_new_and_alloc (size);
+  gst_buffer_map (ret, &map, GST_MAP_WRITE);
 
-  memcpy (GST_BUFFER_DATA (ret), &last->ul, 16);
+  memcpy (map.data, &last->ul, 16);
   mxf_local_tag_free (last);
   last = NULL;
-  memcpy (GST_BUFFER_DATA (ret) + 16, ber, slen);
+  memcpy (map.data + 16, ber, slen);
 
-  data = GST_BUFFER_DATA (ret) + 16 + slen;
+  data = map.data + 16 + slen;
   size -= 16 + slen;
 
   for (l = tags; l; l = l->next) {
@@ -300,6 +305,8 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
   }
 
   g_list_free (tags);
+
+  gst_buffer_unmap (ret, &map);
 
   return ret;
 }
@@ -2066,8 +2073,8 @@ mxf_metadata_material_package_resolve (MXFMetadataBase * m,
         MXFMetadataTimelineTrack *tmp;
 
         if (!sc->source_package->parent.tracks[k] ||
-            !MXF_IS_METADATA_TIMELINE_TRACK (sc->source_package->
-                parent.tracks[k]))
+            !MXF_IS_METADATA_TIMELINE_TRACK (sc->source_package->parent.
+                tracks[k]))
           continue;
 
         tmp =
@@ -4395,8 +4402,8 @@ mxf_metadata_generic_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -4417,8 +4424,8 @@ mxf_metadata_generic_picture_essence_descriptor_to_structure (MXFMetadataBase *
 {
   GstStructure *ret =
       MXF_METADATA_BASE_CLASS
-      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->
-      to_structure (m);
+      (mxf_metadata_generic_picture_essence_descriptor_parent_class)->to_structure
+      (m);
   MXFMetadataGenericPictureEssenceDescriptor *self =
       MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (m);
   gchar str[48];
@@ -5012,8 +5019,8 @@ mxf_metadata_generic_sound_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_sound_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -5209,10 +5216,9 @@ void mxf_metadata_generic_sound_essence_descriptor_set_caps
   if (self->audio_sampling_rate.n == 0 || self->audio_sampling_rate.d == 0) {
     GST_ERROR ("Invalid audio sampling rate");
   } else {
-    gst_caps_set_simple (caps,
-        "rate", G_TYPE_INT,
-        (gint) (mxf_fraction_to_double (&self->audio_sampling_rate)
-            + 0.5), NULL);
+    gst_caps_set_simple (caps, "rate", G_TYPE_INT,
+        (gint) (mxf_fraction_to_double (&self->audio_sampling_rate) + 0.5),
+        NULL);
   }
 
   if (self->channel_count == 0) {
@@ -5221,6 +5227,36 @@ void mxf_metadata_generic_sound_essence_descriptor_set_caps
     gst_caps_set_simple (caps, "channels", G_TYPE_INT, self->channel_count,
         NULL);
   }
+}
+
+GstCaps *mxf_metadata_generic_sound_essence_descriptor_create_caps
+    (MXFMetadataGenericSoundEssenceDescriptor * self, GstAudioFormat * format)
+{
+  GstAudioInfo info;
+  gint rate = 0;
+  gint channels = 0;
+
+  g_return_val_if_fail (MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (self),
+      NULL);
+
+  gst_audio_info_init (&info);
+
+  if (self->audio_sampling_rate.n == 0 || self->audio_sampling_rate.d == 0) {
+    GST_ERROR ("Invalid audio sampling rate");
+  } else {
+    rate = (gint) (mxf_fraction_to_double (&self->audio_sampling_rate)
+        + 0.5);
+  }
+
+  if (self->channel_count == 0) {
+    GST_ERROR ("Invalid number of channels (0)");
+  } else {
+    channels = self->channel_count;
+  }
+
+  gst_audio_info_set_format (&info, *format, rate, channels, NULL);
+
+  return gst_audio_info_to_caps (&info);
 }
 
 gboolean
@@ -5333,8 +5369,8 @@ mxf_metadata_cdci_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_cdci_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -5643,8 +5679,8 @@ mxf_metadata_rgba_picture_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_rgba_picture_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 
@@ -5840,8 +5876,8 @@ mxf_metadata_generic_data_essence_descriptor_handle_tag (MXFMetadataBase *
     default:
       ret =
           MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_data_essence_descriptor_parent_class)->
-          handle_tag (metadata, primer, tag, tag_data, tag_size);
+          (mxf_metadata_generic_data_essence_descriptor_parent_class)->handle_tag
+          (metadata, primer, tag, tag_data, tag_size);
       break;
   }
 

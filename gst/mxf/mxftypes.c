@@ -191,15 +191,20 @@ GstBuffer *
 mxf_fill_to_buffer (guint size)
 {
   GstBuffer *ret;
+  GstMapInfo map;
   guint slen;
   guint8 ber[9];
 
   slen = mxf_ber_encode_size (size, ber);
 
   ret = gst_buffer_new_and_alloc (16 + slen + size);
-  memcpy (GST_BUFFER_DATA (ret), MXF_UL (FILL), 16);
-  memcpy (GST_BUFFER_DATA (ret) + 16, &ber, slen);
-  memset (GST_BUFFER_DATA (ret) + slen, 0, size);
+  gst_buffer_map (ret, &map, GST_MAP_WRITE);
+
+  memcpy (map.data, MXF_UL (FILL), 16);
+  memcpy (map.data + 16, &ber, slen);
+  memset (map.data + slen, 0, size);
+
+  gst_buffer_unmap (ret, &map);
 
   return ret;
 }
@@ -902,6 +907,7 @@ mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
   guint slen;
   guint8 ber[9];
   GstBuffer *ret;
+  GstMapInfo map;
   guint8 *data;
   guint i;
   guint size =
@@ -911,23 +917,25 @@ mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
   slen = mxf_ber_encode_size (size, ber);
 
   ret = gst_buffer_new_and_alloc (16 + slen + size);
-  memcpy (GST_BUFFER_DATA (ret), MXF_UL (PARTITION_PACK), 13);
-  if (pack->type == MXF_PARTITION_PACK_HEADER)
-    GST_BUFFER_DATA (ret)[13] = 0x02;
-  else if (pack->type == MXF_PARTITION_PACK_BODY)
-    GST_BUFFER_DATA (ret)[13] = 0x03;
-  else if (pack->type == MXF_PARTITION_PACK_FOOTER)
-    GST_BUFFER_DATA (ret)[13] = 0x04;
-  GST_BUFFER_DATA (ret)[14] = 0;
-  if (pack->complete)
-    GST_BUFFER_DATA (ret)[14] |= 0x02;
-  if (pack->closed)
-    GST_BUFFER_DATA (ret)[14] |= 0x01;
-  GST_BUFFER_DATA (ret)[14] += 1;
-  GST_BUFFER_DATA (ret)[15] = 0;
-  memcpy (GST_BUFFER_DATA (ret) + 16, &ber, slen);
+  gst_buffer_map (ret, &map, GST_MAP_WRITE);
 
-  data = GST_BUFFER_DATA (ret) + 16 + slen;
+  memcpy (map.data, MXF_UL (PARTITION_PACK), 13);
+  if (pack->type == MXF_PARTITION_PACK_HEADER)
+    map.data[13] = 0x02;
+  else if (pack->type == MXF_PARTITION_PACK_BODY)
+    map.data[13] = 0x03;
+  else if (pack->type == MXF_PARTITION_PACK_FOOTER)
+    map.data[13] = 0x04;
+  map.data[14] = 0;
+  if (pack->complete)
+    map.data[14] |= 0x02;
+  if (pack->closed)
+    map.data[14] |= 0x01;
+  map.data[14] += 1;
+  map.data[15] = 0;
+  memcpy (map.data + 16, &ber, slen);
+
+  data = map.data + 16 + slen;
 
   GST_WRITE_UINT16_BE (data, pack->major_version);
   GST_WRITE_UINT16_BE (data + 2, pack->minor_version);
@@ -969,6 +977,8 @@ mxf_partition_pack_to_buffer (const MXFPartitionPack * pack)
 
   for (i = 0; i < pack->n_essence_containers; i++)
     memcpy (data + 16 * i, &pack->essence_containers[i], 16);
+
+  gst_buffer_unmap (ret, &map);
 
   return ret;
 }
@@ -1019,6 +1029,7 @@ mxf_random_index_pack_to_buffer (const GArray * array)
   MXFRandomIndexPackEntry *entry;
   guint i;
   GstBuffer *ret;
+  GstMapInfo map;
   guint8 slen, ber[9];
   guint size;
   guint8 *data;
@@ -1029,10 +1040,12 @@ mxf_random_index_pack_to_buffer (const GArray * array)
   size = array->len * 12 + 4;
   slen = mxf_ber_encode_size (size, ber);
   ret = gst_buffer_new_and_alloc (16 + slen + size);
-  memcpy (GST_BUFFER_DATA (ret), MXF_UL (RANDOM_INDEX_PACK), 16);
-  memcpy (GST_BUFFER_DATA (ret) + 16, ber, slen);
+  gst_buffer_map (ret, &map, GST_MAP_WRITE);
 
-  data = GST_BUFFER_DATA (ret) + 16 + slen;
+  memcpy (map.data, MXF_UL (RANDOM_INDEX_PACK), 16);
+  memcpy (map.data + 16, ber, slen);
+
+  data = map.data + 16 + slen;
 
   for (i = 0; i < array->len; i++) {
     entry = &g_array_index (array, MXFRandomIndexPackEntry, i);
@@ -1040,7 +1053,9 @@ mxf_random_index_pack_to_buffer (const GArray * array)
     GST_WRITE_UINT64_BE (data + 4, entry->offset);
     data += 12;
   }
-  GST_WRITE_UINT32_BE (data, GST_BUFFER_SIZE (ret));
+  GST_WRITE_UINT32_BE (data, gst_buffer_get_size (ret));
+
+  gst_buffer_unmap (ret, &map);
 
   return ret;
 }
@@ -1435,6 +1450,7 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
   guint slen;
   guint8 ber[9];
   GstBuffer *ret;
+  GstMapInfo map;
   guint n;
   guint8 *data;
 
@@ -1446,10 +1462,12 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
   slen = mxf_ber_encode_size (8 + 18 * n, ber);
 
   ret = gst_buffer_new_and_alloc (16 + slen + 8 + 18 * n);
-  memcpy (GST_BUFFER_DATA (ret), MXF_UL (PRIMER_PACK), 16);
-  memcpy (GST_BUFFER_DATA (ret) + 16, &ber, slen);
+  gst_buffer_map (ret, &map, GST_MAP_WRITE);
 
-  data = GST_BUFFER_DATA (ret) + 16 + slen;
+  memcpy (map.data, MXF_UL (PRIMER_PACK), 16);
+  memcpy (map.data + 16, &ber, slen);
+
+  data = map.data + 16 + slen;
 
   GST_WRITE_UINT32_BE (data, n);
   GST_WRITE_UINT32_BE (data + 4, 18);
@@ -1469,6 +1487,8 @@ mxf_primer_pack_to_buffer (const MXFPrimerPack * pack)
       data += 18;
     }
   }
+
+  gst_buffer_unmap (ret, &map);
 
   return ret;
 }

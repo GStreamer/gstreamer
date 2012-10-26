@@ -33,6 +33,8 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
+
 #include <string.h>
 
 #include "mxfaes-bwf.h"
@@ -295,9 +297,12 @@ mxf_metadata_wave_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
 
   if (self->peak_envelope_data) {
     GstBuffer *buf = gst_buffer_new_and_alloc (self->peak_envelope_data_length);
+    GstMapInfo map;
 
-    memcpy (GST_BUFFER_DATA (buf), self->peak_envelope_data,
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    memcpy (map.data, self->peak_envelope_data,
         self->peak_envelope_data_length);
+    gst_buffer_unmap (buf, &map);
     gst_structure_id_set (ret, MXF_QUARK (PEAK_ENVELOPE_DATA), GST_TYPE_BUFFER,
         buf, NULL);
     gst_buffer_unref (buf);
@@ -821,9 +826,11 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
 
   if (self->channel_status_mode) {
     GstBuffer *buf = gst_buffer_new_and_alloc (self->n_channel_status_mode);
+    GstMapInfo map;
 
-    memcpy (GST_BUFFER_DATA (buf), self->channel_status_mode,
-        self->n_channel_status_mode);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    memcpy (map.data, self->channel_status_mode, self->n_channel_status_mode);
+    gst_buffer_unmap (buf, &map);
     gst_structure_id_set (ret, MXF_QUARK (CHANNEL_STATUS_MODE), GST_TYPE_BUFFER,
         buf, NULL);
     gst_buffer_unref (buf);
@@ -831,9 +838,11 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
 
   if (self->channel_status_mode) {
     GstBuffer *buf = gst_buffer_new_and_alloc (self->n_channel_status_mode);
+    GstMapInfo map;
 
-    memcpy (GST_BUFFER_DATA (buf), self->channel_status_mode,
-        self->n_channel_status_mode);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    memcpy (map.data, self->channel_status_mode, self->n_channel_status_mode);
+    gst_buffer_unmap (buf, &map);
     gst_structure_id_set (ret, MXF_QUARK (CHANNEL_STATUS_MODE), GST_TYPE_BUFFER,
         buf, NULL);
     gst_buffer_unref (buf);
@@ -845,6 +854,7 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
     , v = {
     0,};
     GstBuffer *buf;
+    GstMapInfo map;
 
     g_value_init (&va, GST_TYPE_ARRAY);
 
@@ -852,7 +862,9 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
       buf = gst_buffer_new_and_alloc (24);
       g_value_init (&v, GST_TYPE_BUFFER);
 
-      memcpy (GST_BUFFER_DATA (buf), self->fixed_channel_status_data[i], 24);
+      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      memcpy (map.data, self->fixed_channel_status_data[i], 24);
+      gst_buffer_unmap (buf, &map);
       gst_value_set_buffer (&v, buf);
       gst_value_array_append_value (&va, &v);
       gst_buffer_unref (buf);
@@ -868,9 +880,11 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
 
   if (self->user_data_mode) {
     GstBuffer *buf = gst_buffer_new_and_alloc (self->n_user_data_mode);
+    GstMapInfo map;
 
-    memcpy (GST_BUFFER_DATA (buf), self->user_data_mode,
-        self->n_user_data_mode);
+    gst_buffer_map (buf, &map, GST_MAP_WRITE);
+    memcpy (map.data, self->user_data_mode, self->n_user_data_mode);
+    gst_buffer_unmap (buf, &map);
     gst_structure_id_set (ret, MXF_QUARK (USER_DATA_MODE), GST_TYPE_BUFFER, buf,
         NULL);
     gst_buffer_unref (buf);
@@ -882,6 +896,7 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
     , v = {
     0,};
     GstBuffer *buf;
+    GstMapInfo map;
 
     g_value_init (&va, GST_TYPE_ARRAY);
 
@@ -889,7 +904,9 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
       buf = gst_buffer_new_and_alloc (24);
       g_value_init (&v, GST_TYPE_BUFFER);
 
-      memcpy (GST_BUFFER_DATA (buf), self->fixed_user_data[i], 24);
+      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      memcpy (map.data, self->fixed_user_data[i], 24);
+      gst_buffer_unmap (buf, &map);
       gst_value_set_buffer (&v, buf);
       gst_value_array_append_value (&va, &v);
       gst_buffer_unref (buf);
@@ -1185,6 +1202,7 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
       mxf_ul_is_subclass (&mxf_sound_essence_compression_uncompressed,
           &descriptor->sound_essence_compression)) {
     guint block_align;
+    GstAudioFormat audio_format;
 
     if (descriptor->channel_count == 0 ||
         descriptor->quantization_bits == 0 ||
@@ -1200,13 +1218,13 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
           (GST_ROUND_UP_8 (descriptor->quantization_bits) *
           descriptor->channel_count) / 8;
 
-    ret = gst_caps_new_simple ("audio/x-raw-int",
-        "signed", G_TYPE_BOOLEAN,
-        (block_align != 1), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "depth",
-        G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
-        G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
-
-    mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
+    audio_format =
+        gst_audio_format_build_integer (block_align != 1, G_LITTLE_ENDIAN,
+        (block_align / descriptor->channel_count) * 8,
+        (block_align / descriptor->channel_count) * 8);
+    ret =
+        mxf_metadata_generic_sound_essence_descriptor_create_caps (descriptor,
+        &audio_format);
 
     codec_name =
         g_strdup_printf ("Uncompressed %u-bit little endian integer PCM audio",
@@ -1214,6 +1232,7 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
   } else if (mxf_ul_is_subclass (&mxf_sound_essence_compression_aiff,
           &descriptor->sound_essence_compression)) {
     guint block_align;
+    GstAudioFormat audio_format;
 
     if (descriptor->channel_count == 0 ||
         descriptor->quantization_bits == 0 ||
@@ -1230,13 +1249,13 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
           (GST_ROUND_UP_8 (descriptor->quantization_bits) *
           descriptor->channel_count) / 8;
 
-    ret = gst_caps_new_simple ("audio/x-raw-int",
-        "signed", G_TYPE_BOOLEAN,
-        (block_align != 1), "endianness", G_TYPE_INT, G_BIG_ENDIAN, "depth",
-        G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
-        G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
-
-    mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
+    audio_format =
+        gst_audio_format_build_integer (block_align != 1, G_BIG_ENDIAN,
+        (block_align / descriptor->channel_count) * 8,
+        (block_align / descriptor->channel_count) * 8);
+    ret =
+        mxf_metadata_generic_sound_essence_descriptor_create_caps (descriptor,
+        &audio_format);
 
     codec_name =
         g_strdup_printf ("Uncompressed %u-bit big endian integer PCM audio",
@@ -1250,7 +1269,7 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
       GST_ERROR ("Invalid descriptor");
       return NULL;
     }
-    ret = gst_caps_new_simple ("audio/x-alaw", NULL);
+    ret = gst_caps_new_empty_simple ("audio/x-alaw");
     mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
 
     codec_name = g_strdup ("A-law encoded audio");
@@ -1262,7 +1281,7 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
   *handler = mxf_bwf_handle_essence_element;
 
   if (!*tags)
-    *tags = gst_tag_list_new ();
+    *tags = gst_tag_list_new_empty ();
 
   if (codec_name) {
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
@@ -1285,6 +1304,7 @@ mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
   GstCaps *ret = NULL;
   MXFMetadataWaveAudioEssenceDescriptor *wa_descriptor = NULL;
   gchar *codec_name = NULL;
+  GstAudioFormat audio_format;
   guint block_align;
 
   if (MXF_IS_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR (descriptor))
@@ -1306,20 +1326,20 @@ mxf_aes3_create_caps (MXFMetadataTimelineTrack * track,
         (GST_ROUND_UP_8 (descriptor->quantization_bits) *
         descriptor->channel_count) / 8;
 
-  ret = gst_caps_new_simple ("audio/x-raw-int",
-      "signed", G_TYPE_BOOLEAN,
-      (block_align != 1), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "depth",
-      G_TYPE_INT, (block_align / descriptor->channel_count) * 8, "width",
-      G_TYPE_INT, (block_align / descriptor->channel_count) * 8, NULL);
-
-  mxf_metadata_generic_sound_essence_descriptor_set_caps (descriptor, ret);
+  audio_format =
+      gst_audio_format_build_integer (block_align != 1, G_LITTLE_ENDIAN,
+      (block_align / descriptor->channel_count) * 8,
+      (block_align / descriptor->channel_count) * 8);
+  ret =
+      mxf_metadata_generic_sound_essence_descriptor_create_caps (descriptor,
+      &audio_format);
 
   codec_name =
       g_strdup_printf ("Uncompressed %u-bit AES3 audio",
       (block_align / descriptor->channel_count) * 8);
 
   if (!*tags)
-    *tags = gst_tag_list_new ();
+    *tags = gst_tag_list_new_empty ();
 
   gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
       codec_name, GST_TAG_BITRATE,
@@ -1400,7 +1420,7 @@ typedef struct
 } BWFMappingData;
 
 static GstFlowReturn
-mxf_bwf_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
+mxf_bwf_write_func (GstBuffer * buffer, gpointer mapping_data,
     GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
 {
   BWFMappingData *md = mapping_data;
@@ -1445,16 +1465,10 @@ mxf_bwf_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
     MXFEssenceElementWriteFunc * handler, gpointer * mapping_data)
 {
   MXFMetadataWaveAudioEssenceDescriptor *ret;
-  GstStructure *s;
   BWFMappingData *md;
-  gint width, rate, channels, endianness;
+  GstAudioInfo info;
 
-  s = gst_caps_get_structure (caps, 0);
-  if (strcmp (gst_structure_get_name (s), "audio/x-raw-int") != 0 ||
-      !gst_structure_get_int (s, "width", &width) ||
-      !gst_structure_get_int (s, "rate", &rate) ||
-      !gst_structure_get_int (s, "channels", &channels) ||
-      !gst_structure_get_int (s, "endianness", &endianness)) {
+  if (!gst_audio_info_from_caps (&info, caps)) {
     GST_ERROR ("Invalid caps %" GST_PTR_FORMAT, caps);
     return NULL;
   }
@@ -1463,16 +1477,16 @@ mxf_bwf_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
       g_object_new (MXF_TYPE_METADATA_WAVE_AUDIO_ESSENCE_DESCRIPTOR, NULL);
 
   memcpy (&ret->parent.parent.essence_container, &bwf_essence_container_ul, 16);
-  if (endianness == G_LITTLE_ENDIAN)
+  if (info.finfo->endianness == G_LITTLE_ENDIAN)
     memcpy (&ret->parent.sound_essence_compression,
         &mxf_sound_essence_compression_uncompressed, 16);
   else
     memcpy (&ret->parent.sound_essence_compression,
         &mxf_sound_essence_compression_aiff, 16);
 
-  ret->block_align = (width / 8) * channels;
-  ret->parent.quantization_bits = width;
-  ret->avg_bps = ret->block_align * rate;
+  ret->block_align = (info.finfo->width / 8) * info.channels;
+  ret->parent.quantization_bits = info.finfo->width;
+  ret->avg_bps = ret->block_align * info.rate;
 
   if (!mxf_metadata_generic_sound_essence_descriptor_from_caps (&ret->parent,
           caps)) {
@@ -1483,9 +1497,9 @@ mxf_bwf_get_descriptor (GstPadTemplate * tmpl, GstCaps * caps,
   *handler = mxf_bwf_write_func;
 
   md = g_new0 (BWFMappingData, 1);
-  md->width = width;
-  md->rate = rate;
-  md->channels = channels;
+  md->width = info.finfo->width;
+  md->rate = info.rate;
+  md->channels = info.channels;
   *mapping_data = md;
 
   return (MXFMetadataFileDescriptor *) ret;
@@ -1547,34 +1561,13 @@ static MXFEssenceElementWriter mxf_bwf_essence_element_writer = {
 };
 
 #define BWF_CAPS \
-      "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-      "width = (int) 32, " \
-      "depth = (int) 32, " \
-      "signed = (boolean) TRUE; " \
-      "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-      "width = (int) 24, " \
-      "depth = (int) 24, " \
-      "signed = (boolean) TRUE; " \
-      "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-      "width = (int) 16, " \
-      "depth = (int) 16, " \
-      "signed = (boolean) TRUE; " \
-      "audio/x-raw-int, " \
-      "rate = (int) [ 1, MAX ], " \
-      "channels = (int) [ 1, MAX ], " \
-      "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
-      "width = (int) 8, " \
-      "depth = (int) 8, " \
-      "signed = (boolean) FALSE"
+      GST_AUDIO_CAPS_MAKE ("S32LE") "; " \
+      GST_AUDIO_CAPS_MAKE ("S32BE") "; " \
+      GST_AUDIO_CAPS_MAKE ("S24LE") "; " \
+      GST_AUDIO_CAPS_MAKE ("S24BE") "; " \
+      GST_AUDIO_CAPS_MAKE ("S16LE") "; " \
+      GST_AUDIO_CAPS_MAKE ("S16BE") "; " \
+      GST_AUDIO_CAPS_MAKE ("U8")
 
 void
 mxf_aes_bwf_init (void)

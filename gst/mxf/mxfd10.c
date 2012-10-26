@@ -26,6 +26,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <string.h>
 
 #include "mxfd10.h"
@@ -101,6 +102,8 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   guint i, j, nsamples;
   const guint8 *indata;
   guint8 *outdata;
+  GstMapInfo map;
+  GstMapInfo outmap;
   MXFD10AudioMappingData *data = mapping_data;
 
   g_return_val_if_fail (data != NULL, GST_FLOW_ERROR);
@@ -113,21 +116,23 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+
   /* Now transform raw AES3 into raw audio, see SMPTE 331M */
-  if ((GST_BUFFER_SIZE (buffer) - 4) % 32 != 0) {
+  if ((map.size - 4) % 32 != 0) {
+    gst_buffer_unmap (buffer, &map);
     GST_ERROR ("Invalid D10 sound essence buffer size");
     return GST_FLOW_ERROR;
   }
 
-  nsamples = ((GST_BUFFER_SIZE (buffer) - 4) / 4) / 8;
+  nsamples = ((map.size - 4) / 4) / 8;
 
   *outbuf = gst_buffer_new_and_alloc (nsamples * data->width * data->channels);
-  gst_buffer_copy_metadata (*outbuf, buffer,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS |
-      GST_BUFFER_COPY_CAPS);
+  gst_buffer_copy_into (*outbuf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
+  gst_buffer_map (*outbuf, &outmap, GST_MAP_WRITE);
 
-  indata = GST_BUFFER_DATA (buffer);
-  outdata = GST_BUFFER_DATA (*outbuf);
+  indata = map.data;
+  outdata = outmap.data;
 
   /* Skip 32 bit header */
   indata += 4;
@@ -154,6 +159,8 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     indata += 4 * (8 - data->channels);
   }
 
+  gst_buffer_unmap (*outbuf, &outmap);
+  gst_buffer_unmap (buffer, &map);
   gst_buffer_unref (buffer);
 
   return GST_FLOW_OK;
@@ -198,10 +205,11 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   }
 
   if (!*tags)
-    *tags = gst_tag_list_new ();
+    *tags = gst_tag_list_new_empty ();
 
   if (s) {
     MXFD10AudioMappingData *data;
+    GstAudioFormat audio_format;
 
     if (s->channel_count == 0 ||
         s->quantization_bits == 0 ||
@@ -217,13 +225,12 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
     /* FIXME: set channel layout */
 
-    caps = gst_caps_new_simple ("audio/x-raw-int",
-        "signed", G_TYPE_BOOLEAN,
-        (s->quantization_bits != 8), "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
-        "depth", G_TYPE_INT, s->quantization_bits, "width", G_TYPE_INT,
-        s->quantization_bits, NULL);
-
-    mxf_metadata_generic_sound_essence_descriptor_set_caps (s, caps);
+    audio_format =
+        gst_audio_format_build_integer (s->quantization_bits != 8,
+        G_LITTLE_ENDIAN, s->quantization_bits, s->quantization_bits);
+    caps =
+        mxf_metadata_generic_sound_essence_descriptor_create_caps (s,
+        &audio_format);
 
     *handler = mxf_d10_sound_handle_essence_element;
 

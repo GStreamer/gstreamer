@@ -118,13 +118,13 @@ mxf_alaw_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   if (s && s->audio_sampling_rate.n != 0 && s->audio_sampling_rate.d != 0 &&
       s->channel_count != 0) {
 
-    caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+    caps = gst_caps_new_empty_simple ("audio/x-alaw");
     mxf_metadata_generic_sound_essence_descriptor_set_caps (s, caps);
 
     /* TODO: Handle channel layout somehow?
      * Or is alaw limited to two channels? */
     if (!*tags)
-      *tags = gst_tag_list_new ();
+      *tags = gst_tag_list_new_empty ();
 
     gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
         "A-law encoded audio", NULL);
@@ -147,7 +147,7 @@ typedef struct
 } ALawMappingData;
 
 static GstFlowReturn
-mxf_alaw_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
+mxf_alaw_write_func (GstBuffer * buffer, gpointer mapping_data,
     GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
 {
   ALawMappingData *md = mapping_data;

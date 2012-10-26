@@ -137,7 +137,7 @@ mxf_vc3_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
   *handler = mxf_vc3_handle_essence_element;
 
-  caps = gst_caps_new_simple ("video/x-dnxhd", NULL);
+  caps = gst_caps_new_empty_simple ("video/x-dnxhd");
   if (p) {
     mxf_metadata_generic_picture_essence_descriptor_set_caps (p, caps);
   } else {
@@ -145,7 +145,7 @@ mxf_vc3_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   }
 
   if (!*tags)
-    *tags = gst_tag_list_new ();
+    *tags = gst_tag_list_new_empty ();
   gst_tag_list_add (*tags, GST_TAG_MERGE_APPEND, GST_TAG_VIDEO_CODEC,
       "VC-3 Video", NULL);
 
@@ -158,7 +158,7 @@ static const MXFEssenceElementHandler mxf_vc3_essence_element_handler = {
 };
 
 static GstFlowReturn
-mxf_vc3_write_func (GstBuffer * buffer, GstCaps * caps, gpointer mapping_data,
+mxf_vc3_write_func (GstBuffer * buffer, gpointer mapping_data,
     GstAdapter * adapter, GstBuffer ** outbuf, gboolean flush)
 {
   *outbuf = buffer;
