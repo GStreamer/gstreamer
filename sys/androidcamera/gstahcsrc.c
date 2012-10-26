@@ -44,6 +44,7 @@ static gboolean gst_ahc_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_ahc_src_unlock (GstBaseSrc * bsrc);
 static gboolean gst_ahc_src_unlock_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer);
+static gboolean gst_ahc_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
 static void gst_ahc_src_close (GstAHCSrc * self);
 static void gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data);
@@ -108,6 +109,7 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   gstbasesrc_class->stop = gst_ahc_src_stop;
   gstbasesrc_class->unlock = gst_ahc_src_unlock;
   gstbasesrc_class->unlock_stop = gst_ahc_src_unlock_stop;
+  gstbasesrc_class->query = gst_ahc_src_query;
 
   gstpushsrc_class->create = gst_ahc_src_create;
 }
@@ -714,4 +716,32 @@ gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer)
   g_slice_free (GstDataQueueItem, item);
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_ahc_src_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstAHCSrc *self = GST_AHC_SRC (bsrc);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      GstClockTime min, max;
+
+      gst_query_parse_latency (query, NULL, &min, &max);
+      min = gst_util_uint64_scale (GST_SECOND, 1000, self->fps_max);
+      max = gst_util_uint64_scale (GST_SECOND, 1000, self->fps_min);
+      GST_DEBUG_OBJECT (self,
+          "Reporting latency min: %" GST_TIME_FORMAT " max: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+      gst_query_set_latency (query, TRUE, min, max);
+
+      return TRUE;
+      break;
+    }
+    default:
+      return GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+
+  g_assert_not_reached ();
 }
