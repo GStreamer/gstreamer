@@ -483,6 +483,7 @@ gst_ahc_src_buffer_free_func (gpointer priv)
   if (self->camera)
     gst_ah_camera_add_callback_buffer (self->camera, data->array);
   (*env)->DeleteGlobalRef (env, data->array);
+  gst_object_unref (self);
 
   g_slice_free (FreeFuncBuffer, data);
 }
@@ -526,7 +527,7 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   }
   //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
   malloc_data = g_slice_new0 (FreeFuncBuffer);
-  malloc_data->self = self;
+  malloc_data->self = gst_object_ref (self);
   malloc_data->array = (*env)->NewGlobalRef (env, data);
   malloc_data->data = (*env)->GetByteArrayElements (env, data, NULL);
 
