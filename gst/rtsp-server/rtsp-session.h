@@ -43,12 +43,13 @@ typedef struct _GstRTSPSessionClass GstRTSPSessionClass;
 
 /**
  * GstRTSPSession:
+ * @parent: the parent GObject
  * @sessionid: the session id of the session
  * @timeout: the timeout of the session
  * @create_time: the time when the session was created
  * @last_access: the time the session was last accessed
  * @expire_count: the expire prevention counter
- * @media: a list of #GstRTSPSessionMedia managed in this session
+ * @medias: a list of #GstRTSPSessionMedia managed in this session
  *
  * Session information kept by the server for a specific client.
  * One client session, identified with a session id, can handle multiple medias

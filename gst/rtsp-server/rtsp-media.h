@@ -63,6 +63,7 @@ typedef enum {
 
 /**
  * GstRTSPMedia:
+ * @parent: parent GObject
  * @lock: for protecting the object
  * @cond: for signaling the object
  * @shared: if this media can be shared between clients
@@ -70,11 +71,17 @@ typedef enum {
  * @protocols: the allowed lower transport for this stream
  * @reused: if this media has been reused
  * @is_ipv6: if this media is using ipv6
+ * @eos_shutdown: if EOS should be sent on shutdown
+ * @buffer_size: The UDP buffer size
+ * @auth: the authentication service in use
+ * @multicast_group: the multicast group to use
+ * @mtu: the MTU of the payloaders
  * @element: the data providing element
  * @streams: the different #GstRTSPStream provided by @element
  * @dynamic: list of dynamic elements managed by @element
  * @status: the status of the media pipeline
  * @n_active: the number of active connections
+ * @adding: when elements are added to the pipeline
  * @pipeline: the toplevel pipeline
  * @fakesink: for making state changes async
  * @source: the bus watch for pipeline messages.
@@ -140,8 +147,7 @@ struct _GstRTSPMedia {
  * @thread: the thread dispatching messages.
  * @handle_message: handle a message
  * @unprepare: the default implementation sets the pipeline's state
- *             to GST_STATE_NULL.
- * @handle_mtu: handle a mtu
+ *             to GST_STATE_NULL and removes all elements.
  *
  * The RTSP media class
  */
@@ -196,7 +202,6 @@ guint                 gst_rtsp_media_get_mtu          (GstRTSPMedia *media);
 
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
-gboolean              gst_rtsp_media_is_prepared      (GstRTSPMedia *media);
 gboolean              gst_rtsp_media_unprepare        (GstRTSPMedia *media);
 
 /* creating streams */

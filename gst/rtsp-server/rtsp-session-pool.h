@@ -43,7 +43,7 @@ typedef struct _GstRTSPSessionPoolClass GstRTSPSessionPoolClass;
  * GstRTSPSessionPool:
  * @max_sessions: the maximum number of sessions.
  * @lock: locking the session hashtable
- * @session: hashtable of sessions indexed by the session id.
+ * @sessions: hashtable of sessions indexed by the session id.
  *
  * An object that keeps track of the active sessions. This object is usually
  * attached to a #GstRTSPServer object to manage the sessions in that server.

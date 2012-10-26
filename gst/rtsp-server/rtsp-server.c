@@ -255,6 +255,14 @@ gst_rtsp_server_get_address (GstRTSPServer * server)
   return result;
 }
 
+/**
+ * gst_rtsp_server_get_bound_port:
+ * @server: a #GstRTSPServer
+ *
+ * Get the port number where the server was bound to.
+ *
+ * Returns: the port number
+ */
 int
 gst_rtsp_server_get_bound_port (GstRTSPServer * server)
 {
@@ -877,6 +885,7 @@ transfer_failed:
  * gst_rtsp_server_io_func:
  * @socket: a #GSocket
  * @condition: the condition on @source
+ * @server: a #GstRTSPServer
  *
  * A default #GSocketSourceFunc that creates a new #GstRTSPClient to accept and handle a
  * new connection on @socket or @server.

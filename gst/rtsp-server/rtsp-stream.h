@@ -62,7 +62,7 @@ typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
  * @caps_sig: the signal id for detecting caps
  * @caps: the caps of the stream
  * @n_active: the number of active transports in @transports
- * @tranports: list of #GstStreamTransport being streamed to
+ * @transports: list of #GstStreamTransport being streamed to
  *
  * The definition of a media stream. The streams are identified by @id.
  */

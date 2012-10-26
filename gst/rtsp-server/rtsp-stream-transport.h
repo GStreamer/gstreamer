@@ -47,11 +47,9 @@ typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 /**
  * GstRTSPStreamTransport:
  * @parent: parent instance
- * @idx: the stream index
+ * @stream: the GstRTSPStream we manage
  * @send_rtp: callback for sending RTP messages
  * @send_rtcp: callback for sending RTCP messages
- * @send_rtp_list: callback for sending RTP messages
- * @send_rtcp_list: callback for sending RTCP messages
  * @user_data: user data passed in the callbacks
  * @notify: free function for the user_data.
  * @keep_alive: keep alive callback

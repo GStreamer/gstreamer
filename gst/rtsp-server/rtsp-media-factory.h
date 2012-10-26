@@ -47,6 +47,7 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 
 /**
  * GstRTSPMediaFactory:
+ * @parent: the parent GObject
  * @lock: mutex protecting the datastructure.
  * @launch: the launch description
  * @shared: if media from this factory can be shared between clients

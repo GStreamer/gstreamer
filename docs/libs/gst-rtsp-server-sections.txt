@@ -31,9 +31,20 @@ gst_rtsp_media_factory_set_shared
 gst_rtsp_media_factory_is_shared
 gst_rtsp_media_factory_set_eos_shutdown
 gst_rtsp_media_factory_is_eos_shutdown
+gst_rtsp_media_factory_set_protocols
+gst_rtsp_media_factory_get_protocols
+gst_rtsp_media_factory_set_auth
+gst_rtsp_media_factory_get_auth
+gst_rtsp_media_factory_set_buffer_size
+gst_rtsp_media_factory_get_buffer_size
+gst_rtsp_media_factory_set_multicast_group
+gst_rtsp_media_factory_get_multicast_group
 gst_rtsp_media_factory_construct
-gst_rtsp_media_factory_collect_streams
+gst_rtsp_media_factory_create_element
 <SUBSECTION Standard>
+GST_RTSP_MEDIA_FACTORY_GET_LOCK
+GST_RTSP_MEDIA_FACTORY_LOCK
+GST_RTSP_MEDIA_FACTORY_UNLOCK
 GST_RTSP_MEDIA_FACTORY_CLASS
 GST_RTSP_MEDIA_FACTORY_CAST
 GST_RTSP_MEDIA_FACTORY_CLASS_CAST
@@ -48,9 +59,6 @@ GST_RTSP_MEDIA_FACTORY_GET_CLASS
 <SECTION>
 <FILE>rtsp-media-factory-uri</FILE>
 <TITLE>GstRTSPMediaFactoryURI</TITLE>
-GST_RTSP_MEDIA_FACTORY_GET_LOCK
-GST_RTSP_MEDIA_FACTORY_LOCK
-GST_RTSP_MEDIA_FACTORY_UNLOCK
 GstRTSPMediaFactoryURI
 GstRTSPMediaFactoryURIClass
 gst_rtsp_media_factory_uri_new
@@ -72,15 +80,11 @@ gst_rtsp_media_factory_uri_get_type
 <SECTION>
 <FILE>rtsp-media</FILE>
 <TITLE>GstRTSPMedia</TITLE>
-GstRTSPMediaStream
+GstRTSPMediaStatus
 GstRTSPMedia
 GstRTSPMediaClass
-GstRTSPMediaTrans
-GstRTSPSendFunc
-GstRTSPSendListFunc
-GstRTSPKeepAliveFunc
-GstRTSPMediaStatus
 gst_rtsp_media_new
+
 gst_rtsp_media_set_shared
 gst_rtsp_media_is_shared
 gst_rtsp_media_set_reusable
@@ -89,18 +93,27 @@ gst_rtsp_media_set_protocols
 gst_rtsp_media_get_protocols
 gst_rtsp_media_set_eos_shutdown
 gst_rtsp_media_is_eos_shutdown
+gst_rtsp_media_set_auth
+gst_rtsp_media_get_auth
+gst_rtsp_media_set_buffer_size
+gst_rtsp_media_get_buffer_size
+gst_rtsp_media_set_multicast_group
+gst_rtsp_media_get_multicast_group
+gst_rtsp_media_get_mtu
+gst_rtsp_media_set_mtu
+
 gst_rtsp_media_prepare
-gst_rtsp_media_is_prepared
 gst_rtsp_media_unprepare
+
+gst_rtsp_media_collect_streams
+gst_rtsp_media_create_stream
+
 gst_rtsp_media_n_streams
 gst_rtsp_media_get_stream
+
 gst_rtsp_media_seek
 gst_rtsp_media_get_range_string
-gst_rtsp_media_stream_rtp
-gst_rtsp_media_stream_rtcp
 gst_rtsp_media_set_state
-gst_rtsp_media_remove_elements
-gst_rtsp_media_trans_cleanup
 <SUBSECTION Standard>
 GST_RTSP_MEDIA_CLASS
 GST_RTSP_MEDIA_CAST
@@ -123,6 +136,7 @@ gst_rtsp_server_set_address
 gst_rtsp_server_get_address
 gst_rtsp_server_set_service
 gst_rtsp_server_get_service
+gst_rtsp_server_get_bound_port
 gst_rtsp_server_set_backlog
 gst_rtsp_server_get_backlog
 gst_rtsp_server_set_session_pool
@@ -131,11 +145,15 @@ gst_rtsp_server_set_media_mapping
 gst_rtsp_server_get_media_mapping
 gst_rtsp_server_get_auth
 gst_rtsp_server_set_auth
+gst_rtsp_server_transfer_connection
 gst_rtsp_server_io_func
-gst_rtsp_server_get_io_channel
-gst_rtsp_server_create_watch
+gst_rtsp_server_create_socket
+gst_rtsp_server_create_source
 gst_rtsp_server_attach
 <SUBSECTION Standard>
+GST_RTSP_SERVER_GET_LOCK
+GST_RTSP_SERVER_LOCK
+GST_RTSP_SERVER_UNLOCK
 GST_RTSP_SERVER_CLASS
 GST_RTSP_SERVER_CAST
 GST_RTSP_SERVER_CLASS_CAST
@@ -182,8 +200,6 @@ GST_RTSP_SESSION_POOL_GET_CLASS
 <TITLE>GstRTSPSession</TITLE>
 GstRTSPSession
 GstRTSPSessionClass
-GstRTSPSessionStream
-GstRTSPSessionMedia
 gst_rtsp_session_new
 gst_rtsp_session_get_sessionid
 gst_rtsp_session_set_timeout
@@ -196,12 +212,6 @@ gst_rtsp_session_is_expired
 gst_rtsp_session_manage_media
 gst_rtsp_session_release_media
 gst_rtsp_session_get_media
-gst_rtsp_session_media_set_state
-gst_rtsp_session_media_get_stream
-gst_rtsp_session_media_alloc_channels
-gst_rtsp_session_stream_set_transport
-gst_rtsp_session_stream_set_callbacks
-gst_rtsp_session_stream_set_keepalive
 <SUBSECTION Standard>
 GST_RTSP_SESSION_CLASS
 GST_RTSP_SESSION_CAST
@@ -215,6 +225,27 @@ GST_RTSP_SESSION_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>rtsp-session-media</FILE>
+<TITLE>GstRTSPSessionMedia</TITLE>
+GstRTSPSessionMedia
+GstRTSPSessionMediaClass
+gst_rtsp_session_media_new
+gst_rtsp_session_media_set_state
+gst_rtsp_session_media_get_transport
+gst_rtsp_session_media_alloc_channels
+<SUBSECTION Standard>
+GST_RTSP_SESSION_MEDIA_CAST
+GST_RTSP_SESSION_MEDIA_CLASS_CAST
+GST_IS_RTSP_SESSION_MEDIA
+GST_IS_RTSP_SESSION_MEDIA_CLASS
+GST_RTSP_SESSION_MEDIA
+GST_RTSP_SESSION_MEDIA_CLASS
+GST_RTSP_SESSION_MEDIA_GET_CLASS
+GST_TYPE_RTSP_SESSION_MEDIA
+gst_rtsp_session_media_get_type
+</SECTION>
+
+<SECTION>
 <FILE>rtsp-auth</FILE>
 <TITLE>GstRTSPAuth</TITLE>
 GstRTSPAuth
@@ -222,7 +253,7 @@ GstRTSPAuthClass
 gst_rtsp_auth_new
 gst_rtsp_auth_set_basic
 gst_rtsp_auth_setup_auth
-gst_rtsp_auth_check_method
+gst_rtsp_auth_check
 gst_rtsp_auth_make_basic
 <SUBSECTION Standard>
 GST_IS_RTSP_AUTH
@@ -239,6 +270,7 @@ gst_rtsp_auth_get_type
 <SECTION>
 <FILE>rtsp-client</FILE>
 <TITLE>GstRTSPClient</TITLE>
+GstRTSPClientState
 GstRTSPClient
 GstRTSPClientClass
 gst_rtsp_client_new
@@ -248,9 +280,12 @@ gst_rtsp_client_set_session_pool
 gst_rtsp_client_get_session_pool
 gst_rtsp_client_set_media_mapping
 gst_rtsp_client_get_media_mapping
+gst_rtsp_client_set_use_client_settings
+gst_rtsp_client_get_use_client_settings
 gst_rtsp_client_set_auth
 gst_rtsp_client_get_auth
 gst_rtsp_client_accept
+gst_rtsp_client_create_from_socket
 <SUBSECTION Standard>
 GST_RTSP_CLIENT_CLASS
 GST_RTSP_CLIENT_CAST
@@ -273,5 +308,55 @@ gst_rtsp_params_get
 <FILE>rtsp-sdp</FILE>
 GstSDPInfo
 gst_rtsp_sdp_from_media
+</SECTION>
+
+<SECTION>
+<FILE>rtsp-stream</FILE>
+<TITLE>GstRTSPStream</TITLE>
+GstRTSPStream
+GstRTSPStreamClass
+gst_rtsp_stream_new
+gst_rtsp_stream_get_mtu
+gst_rtsp_stream_set_mtu
+gst_rtsp_stream_join_bin
+gst_rtsp_stream_leave_bin
+gst_rtsp_stream_get_rtpinfo
+gst_rtsp_stream_recv_rtcp
+gst_rtsp_stream_recv_rtp
+gst_rtsp_stream_add_transport
+gst_rtsp_stream_remove_transport
+<SUBSECTION Standard>
+GST_RTSP_STREAM_CAST
+GST_RTSP_STREAM_CLASS_CAST
+GST_IS_RTSP_STREAM
+GST_IS_RTSP_STREAM_CLASS
+GST_RTSP_STREAM
+GST_RTSP_STREAM_CLASS
+GST_RTSP_STREAM_GET_CLASS
+GST_TYPE_RTSP_STREAM
+gst_rtsp_stream_get_type
+</SECTION>
+
+<SECTION>
+<FILE>rtsp-stream-transport</FILE>
+<TITLE>GstRTSPStreamTransport</TITLE>
+GstRTSPKeepAliveFunc
+GstRTSPSendFunc
+GstRTSPStreamTransport
+GstRTSPStreamTransportClass
+gst_rtsp_stream_transport_new
+gst_rtsp_stream_transport_set_callbacks
+gst_rtsp_stream_transport_set_keepalive
+gst_rtsp_stream_transport_set_transport
+<SUBSECTION Standard>
+GST_RTSP_STREAM_TRANSPORT_CAST
+GST_RTSP_STREAM_TRANSPORT_CLASS_CAST
+GST_IS_RTSP_STREAM_TRANSPORT
+GST_IS_RTSP_STREAM_TRANSPORT_CLASS
+GST_RTSP_STREAM_TRANSPORT
+GST_RTSP_STREAM_TRANSPORT_CLASS
+GST_RTSP_STREAM_TRANSPORT_GET_CLASS
+GST_TYPE_RTSP_STREAM_TRANSPORT
+gst_rtsp_stream_transport_get_type
 </SECTION>
 

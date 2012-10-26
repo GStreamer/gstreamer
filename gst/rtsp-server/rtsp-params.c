@@ -20,6 +20,15 @@
 
 #include "rtsp-params.h"
 
+/**
+ * gst_rtsp_params_set:
+ * @client: a #GstRTSPClient
+ * @state: a #GstRTSPClientState
+ *
+ * Set parameters (not implemented yet)
+ *
+ * Returns: a #GstRTSPResult
+ */
 GstRTSPResult
 gst_rtsp_params_set (GstRTSPClient * client, GstRTSPClientState * state)
 {
@@ -35,6 +44,15 @@ gst_rtsp_params_set (GstRTSPClient * client, GstRTSPClientState * state)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_params_get:
+ * @client: a #GstRTSPClient
+ * @state: a #GstRTSPClientState
+ *
+ * Get parameters (not implemented yet)
+ *
+ * Returns: a #GstRTSPResult
+ */
 GstRTSPResult
 gst_rtsp_params_get (GstRTSPClient * client, GstRTSPClientState * state)
 {

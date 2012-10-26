@@ -223,8 +223,9 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
 
 /**
  * gst_rtsp_session_new:
+ * @sessionid: a session id
  *
- * Create a new #GstRTSPSession instance.
+ * Create a new #GstRTSPSession instance with @sessionid.
  */
 GstRTSPSession *
 gst_rtsp_session_new (const gchar * sessionid)
@@ -301,6 +302,12 @@ gst_rtsp_session_touch (GstRTSPSession * session)
   g_get_current_time (&session->last_access);
 }
 
+/**
+ * gst_rtsp_session_prevent_expire:
+ * @session: a #GstRTSPSession
+ *
+ * Prevent @session from expiring.
+ */
 void
 gst_rtsp_session_prevent_expire (GstRTSPSession * session)
 {
@@ -309,6 +316,13 @@ gst_rtsp_session_prevent_expire (GstRTSPSession * session)
   g_atomic_int_add (&session->expire_count, 1);
 }
 
+/**
+ * gst_rtsp_session_allow_expire:
+ * @session: a #GstRTSPSession
+ *
+ * Allow @session to expire. This method must be called an equal
+ * amount of time as gst_rtsp_session_prevent_expire().
+ */
 void
 gst_rtsp_session_allow_expire (GstRTSPSession * session)
 {

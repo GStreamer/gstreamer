@@ -65,6 +65,13 @@ gst_rtsp_media_mapping_finalize (GObject * obj)
   G_OBJECT_CLASS (gst_rtsp_media_mapping_parent_class)->finalize (obj);
 }
 
+/**
+ * gst_rtsp_media_mapping_new:
+ *
+ * Make a new media mapping object.
+ *
+ * Returns: a new #GstRTSPMediaMapping
+ */
 GstRTSPMediaMapping *
 gst_rtsp_media_mapping_new (void)
 {
