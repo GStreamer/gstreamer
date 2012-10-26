@@ -1287,12 +1287,6 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
     finish_unprepare (media);
   }
 
-  media->reused = TRUE;
-
-  /* when the media is not reusable, this will effectively unref the media and
-   * recreate it */
-  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
-
   return success;
 }
 
@@ -1323,7 +1317,12 @@ finish_unprepare (GstRTSPMedia * media)
   gst_object_unref (media->pipeline);
   media->pipeline = NULL;
 
+  media->reused = TRUE;
   media->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
+
+  /* when the media is not reusable, this will effectively unref the media and
+   * recreate it */
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
 }
 
 static gboolean
