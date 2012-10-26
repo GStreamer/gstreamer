@@ -340,6 +340,7 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
     gint width, height, fps_n, fps_d;
     GList *ranges, *l;
     gint i;
+    gint range_size = G_MAXINT;
 
     if (!gst_video_format_parse_caps (caps, &format, &width, &height) ||
         !gst_video_parse_caps_framerate (caps, &fps_n, &fps_d)) {
@@ -352,6 +353,8 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
      * We *must* set a range of those returned by the camera
      * according to the API docs and can't use a subset of any
      * of those ranges.
+     * We chose the smallest range that contains the target
+     * framerate.
      */
     self->fps_max = self->fps_min = 0;
     ranges = gst_ahc_parameters_get_supported_preview_fps_range (params);
@@ -359,10 +362,11 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
     for (l = ranges; l; l = l->next) {
       int *range = l->data;
 
-      if (fps_n >= range[0] && fps_n <= range[1]) {
+      if (fps_n >= range[0] && fps_n <= range[1] &&
+          range_size > (range[1] - range[0])) {
         self->fps_min = range[0];
         self->fps_max = range[1];
-        break;
+        range_size = range[1] - range[0];
       }
     }
     gst_ahc_parameters_supported_preview_fps_range_free (ranges);
