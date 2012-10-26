@@ -1,7 +1,7 @@
 README 
 ------
 
-(Last updated on Fri 30 jan 2009, version 0.10.1.1)
+(Last updated on Fri 26 oct 2012, version 0.11.89.1)
 
 This HOWTO describes the basic usage of the GStreamer RTSP libraries and how you
 can build simple server applications with it.
@@ -10,11 +10,11 @@ can build simple server applications with it.
 
  The server relies heavily on the RTSP infrastructure of GStreamer. This includes
  all of the media acquisition, decoding, encoding, payloading and UDP/TCP
- streaming. We use the gstrtpbin element for all the session management. Most of
+ streaming. We use the rtpbin element for all the session management. Most of
  the RTSP message parsing and construction in the server is done using the RTSP
  library that comes with gst-plugins-base. 
 
- The result is that the server is rather small (a few 1000 lines of code) and easy
+ The result is that the server is rather small (a few 6000 lines of code) and easy
  to understand and extend. In its current state of development, things change
  fast, API and ABI are unstable. We encourage people to use it for their various
  use cases and participate by suggesting changes/features.
@@ -23,9 +23,11 @@ can build simple server applications with it.
  that provide reasonable default functionality but has a fair amount of hooks
  to override the default behaviour.
 
- The server currently integrates with the glib mainloop nicely. It is also a
- heavy user of multiple threads. It's currently not meant to be used in
- high-load scenarios and you should probably not put it on a public IP address.
+ The server currently integrates with the glib mainloop nicely. The network part
+ is currently single threaded but the GStreamer bits are a heavy user of multiple
+ threads. It's currently not meant to be used in high-load scenarios and because
+ no security audit has been done, you should probably not put it on a public
+ IP address.
 
 * Initialisation
 
@@ -173,7 +175,7 @@ can build simple server applications with it.
 
  A freshly created GstRTSPMedia object from the factory initially only contains a
  GstElement containing the elements to produce the RTP streams for the media and
- a GArray of GstRTSPMediaStream objects describing the payloader and its source
+ a GPtrArray of GstRTSPStream objects describing the payloader and its source
  pad. The media is unprepared in this state.
 
  Usually the url will determine what kind of pipeline should be created. You can
@@ -194,7 +196,7 @@ can build simple server applications with it.
  After creating the GstRTSPMedia object from the factory, it can be prepared
  with gst_rtsp_media_prepare(). This method will put those objects in a
  GstPipeline and will construct and link the streaming elements and the
- gstrtpbin session manager object.
+ rtpbin session manager object.
 
  The _prepare() method will then preroll the pipeline in order to figure out the
  caps on the payloaders. After the GstRTSPMedia prerolled it will be in the
@@ -205,8 +207,8 @@ can build simple server applications with it.
  used for sending and receiving RTP/RTCP from clients. These port numbers will
  have to be negotiated with the client in the SETUP requests.
 
- When preparing a GstRTSPMedia, a multifdsink is also constructed for streaming
- the stream over TCP when requested.
+ When preparing a GstRTSPMedia, an appsink and asppsrc is also constructed
+ for streaming the stream over TCP when requested.
 
 
 * the GstRTSPClient object
@@ -226,7 +228,8 @@ can build simple server applications with it.
  connection open with the server. Since is possible for a client to open and close
  the TCP connection between requests, we cannot store the state related
  to the configured RTSP session in the GstRTSPClient object. This server state
- is instead stored in the GstRTSPSession object.
+ is instead stored in the GstRTSPSession object, identified with the session
+ id.
 
 
 * GstRTSPSession
@@ -242,12 +245,13 @@ can build simple server applications with it.
  can refer to its previously configured state by sending the session id in
  further requests.
 
- A client will then use the session id to configure one or more streams,
- identified by their url. This information is kept in a GstRTSPSessionMedia
- structure that is refered to from the GstRTSPSession. 
+ A client will then use the session id to configure one or more
+ GstRTSPSessionMedia objects, identified by their url. This SessionMedia object
+ contains the configuration of a GstRTSPMedia and its configured
+ GstRTSPStreamTransport.
 
 
-* GstRTSPSessionMedia and GstRTSPSessionStream
+* GstRTSPSessionMedia and GstRTSPStreamTransport
 
  A GstRTSPSessionMedia is identified by a URL and is referenced by a
  GstRTSPSession. It is created as soon as a client performs a SETUP operation on
@@ -256,13 +260,13 @@ can build simple server applications with it.
  for each of the streams in the media.
 
  Each SETUP request performed by the client will configure a
- GstRTSPSessionStream object linked to by the GstRTSPSessionMedia structure.
+ GstRTSPStreamTransport object linked to by the GstRTSPSessionMedia structure.
  It will contain the transport information needed to send this stream to the
- client. The GstRTSPSessionStream also contains a link to the GstRTSPMediaStream
+ client. The GstRTSPStreamTransport also contains a link to the GstRTSPStream
  object that generates the actual data to be streamed to the client.
 
- Note how GstRTSPMedia and GstRTSPMediaStream (the providers of the data to
- stream) are decoupled from GstRTSPSessionMedia and GstRTSPSessionStream (the
+ Note how GstRTSPMedia and GstRTSPStream (the providers of the data to
+ stream) are decoupled from GstRTSPSessionMedia and GstRTSPStreamTransport (the
  configuration of how to send this stream to a client) in order to be able to
  send the data of one GstRTSPMedia to multiple clients.
 
@@ -270,15 +274,15 @@ can build simple server applications with it.
 * media control
 
  After a client has configured the transports for a GstRTSPMedia and its
- GstRTSPMediaStreams, the client can play/pause/stop the stream.
+ GstRTSPStreams, the client can play/pause/stop the stream.
 
  The GstRTSPMedia object was prepared in the DESCRIBE call (or during SETUP when
  the client skipped the DESCRIBE request). As seen earlier, this configures a
- couple of multiudpsink and udpsrc elements to respectively send and receive the
+ couple of udpsink and udpsrc elements to respectively send and receive the
  media to clients.
 
  When a client performs a PLAY request, its configured destination UDP ports are
- added to the GstRTSPMediaStream target destinations, at which point data will
+ added to the GstRTSPStream target destinations, at which point data will
  be sent to the client. The corresponding GstRTSPMedia object will be set to the
  PLAYING state if it was not allready in order to send the data to the
  destination.
@@ -289,7 +293,7 @@ can build simple server applications with it.
  information when it prerolled the pipeline.
 
  When a client performs a PAUSE request, the destination UDP ports are removed
- from the GstRTSPMediaStream object and the GstRTSPMedia object is set to PAUSED
+ from the GstRTSPStream object and the GstRTSPMedia object is set to PAUSED
  if no other destinations are configured anymore.
 
 
@@ -317,7 +321,7 @@ can build simple server applications with it.
  Various ways exist to detect activity from a client:
 
   - RTSP keepalive requests. When a client is receiving RTP data, the RTSP TCP
-    connection is largely unused. It is the client responsability to
+    connection is largely unused. It is the client's responsability to
     periodically send keep-alive requests over the TCP channel.
 
     Whenever a keep-alive request is received by the server (any request that
@@ -340,19 +344,86 @@ can build simple server applications with it.
     receiving RTCP exactly for this reason.
 
  If there was no activity in a particular session for a long time (by default 60
- seconds), the sessionpool will destroy the session along with all related
- objects and media as if a TEARDOWN happened from the client.
+ seconds), the application should remove the session from the pool. For this,
+ the application should periodically (say every 2 seconds) check if no sessions
+ expired and call gst_rtsp_session_pool_cleanup() to remove them.
+ 
+ When a session is removed from the sessionpool and its last reference is
+ unreffef, all related objects and media are destroyed as if a TEARDOWN happened
+ from the client.
 
 
 * TEARDOWN
 
- A TEARDOWN request will first location the GstRTSPSessionMedia of the URL. It
+ A TEARDOWN request will first locate the GstRTSPSessionMedia of the URL. It
  will then remove all transports from the streams, making sure that streaming
- stops to the client. It will then remove the GstRTSPSessionMedia and
- GstRTSPSessionStream structures. Finally the GstRTSPSession is released back
+ stops to the clients. It will then remove the GstRTSPSessionMedia and
+ GstRTSPStreamTransport objects. Finally the GstRTSPSession is released back
  into the pool.
 
  When there are no more references to the GstRTSPMedia, the media pipeline is
- shut down and destroyed.
+ shut down (with _unprepare) and destroyed. This will then also destroy the
+ GstRTSPStream objects.
+
+
+Objects
+-------
+
+GstRTSPServer
+ - Toplevel object listening for connections and creating new
+   GstRTSPClient objects
+
+GstRTSPClient
+ - Handle RTSP Requests from connected clients. All other objects
+   are called by this object.
+
+GstRTSPClientState
+ - Helper structure contaning the current state of the request
+   handled by the client.
+
+GstRTSPAuth
+ - Hooks for checking authorizations, all client activity will call this
+   object with the GstRTSPClientState structure. By default it supports
+   basic authentication.
+
+
+GstRTSPMediaMapping
+ - Maps a url to a GstRTSPMediaFactory implementation. The default
+   implementation uses a simple hashtable to map a url to a factory.
+
+GstRTSPMediaFactory
+ - Creates and caches GstRTSPMedia objects. The default implementation
+   can create GstRTSPMedia objects based on gst-launch syntax.
+
+GstRTSPMediaFactoryURI
+ - Specialized GstRTSPMediaFactory that can stream the content of any
+   URI.
+
+GstRTSPMedia
+ - The object that contains the media pipeline and various GstRTSPStream
+   objects that produce RTP packets
+
+GstRTSPStream
+ - Manages the elements to stream a stream of a GstRTSPMedia to one or
+   more GstRTSPStreamTransports.
+
+
+GstRTSPSessionPool
+ - Creates and manages GstRTSPSession objects identified by an id.
+
+GstRTSPSession
+ - An object containing the various GstRTSPSessionMedia objects managed
+   by this session.
+
+GstRTSPSessionMedia
+ - The state of a GstRTSPMedia and the configuration of a GstRTSPStream
+   objects. The configuration for the GstRTSPStream is stored in
+   GstRTSPStreamTransport objects.
+
+GstRTSPStreamTransport
+ - Configuration of how a GstRTSPStream is send to a particular client. It
+   contains the transport that was negotiated with the client in the SETUP
+   request.
+
 
 
