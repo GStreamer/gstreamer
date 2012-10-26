@@ -657,6 +657,53 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
+static void
+fill_iq_matrix_4x4(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps)
+{
+    const guint8 (* const ScalingList4x4)[6][16] = &pps->scaling_lists_4x4;
+    guint i, j;
+
+    /* There are always 6 4x4 scaling lists */
+    g_assert(G_N_ELEMENTS(iq_matrix->ScalingList4x4) == 6);
+    g_assert(G_N_ELEMENTS(iq_matrix->ScalingList4x4[0]) == 16);
+
+    if (sizeof(iq_matrix->ScalingList4x4[0][0]) == 1)
+        memcpy(iq_matrix->ScalingList4x4, *ScalingList4x4,
+               sizeof(iq_matrix->ScalingList4x4));
+    else {
+        for (i = 0; i < G_N_ELEMENTS(iq_matrix->ScalingList4x4); i++) {
+            for (j = 0; j < G_N_ELEMENTS(iq_matrix->ScalingList4x4[i]); j++)
+                iq_matrix->ScalingList4x4[i][j] = (*ScalingList4x4)[i][j];
+        }
+    }
+}
+
+static void
+fill_iq_matrix_8x8(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps)
+{
+    const guint8 (* const ScalingList8x8)[6][64] = &pps->scaling_lists_8x8;
+    const GstH264SPS * const sps = pps->sequence;
+    guint i, j, n;
+
+    /* If chroma_format_idc != 3, there are up to 2 8x8 scaling lists */
+    if (!pps->transform_8x8_mode_flag)
+        return;
+
+    g_assert(G_N_ELEMENTS(iq_matrix->ScalingList8x8) >= 2);
+    g_assert(G_N_ELEMENTS(iq_matrix->ScalingList8x8[0]) == 64);
+
+    if (sizeof(iq_matrix->ScalingList8x8[0][0]) == 1)
+        memcpy(iq_matrix->ScalingList8x8, *ScalingList8x8,
+               sizeof(iq_matrix->ScalingList8x8));
+    else {
+        n = (sps->chroma_format_idc != 3) ? 2 : 6;
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < G_N_ELEMENTS(iq_matrix->ScalingList8x8[i]); j++)
+                iq_matrix->ScalingList8x8[i][j] = (*ScalingList8x8)[i][j];
+        }
+    }
+}
+
 static GstVaapiDecoderStatus
 ensure_quant_matrix(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
@@ -665,7 +712,6 @@ ensure_quant_matrix(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     GstH264PPS * const pps = priv->pps;
     GstVaapiPicture * const base_picture = &picture->base;
     VAIQMatrixBufferH264 *iq_matrix;
-    guint i, j, n;
 
     base_picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(H264, decoder);
     if (!base_picture->iq_matrix) {
@@ -679,32 +725,9 @@ ensure_quant_matrix(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     if (sps->chroma_format_idc == 3)
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
 
-    g_assert(G_N_ELEMENTS(iq_matrix->ScalingList4x4[0]) == 16);
-    g_assert(G_N_ELEMENTS(iq_matrix->ScalingList8x8[0]) == 64);
+    fill_iq_matrix_4x4(iq_matrix, pps);
+    fill_iq_matrix_8x8(iq_matrix, pps);
 
-    if (sizeof(iq_matrix->ScalingList4x4) == sizeof(pps->scaling_lists_4x4))
-        memcpy(iq_matrix->ScalingList4x4, pps->scaling_lists_4x4,
-               sizeof(iq_matrix->ScalingList4x4));
-    else {
-        n = MIN(G_N_ELEMENTS(iq_matrix->ScalingList4x4),
-                G_N_ELEMENTS(pps->scaling_lists_4x4));
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < 16; j++)
-                iq_matrix->ScalingList4x4[i][j] = pps->scaling_lists_4x4[i][j];
-        }
-    }
-
-    if (sizeof(iq_matrix->ScalingList8x8) == sizeof(pps->scaling_lists_8x8))
-        memcpy(iq_matrix->ScalingList8x8, pps->scaling_lists_8x8,
-               sizeof(iq_matrix->ScalingList8x8));
-    else {
-        n = MIN(G_N_ELEMENTS(iq_matrix->ScalingList8x8),
-                G_N_ELEMENTS(pps->scaling_lists_8x8));
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < 16; j++)
-                iq_matrix->ScalingList8x8[i][j] = pps->scaling_lists_8x8[i][j];
-        }
-    }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
