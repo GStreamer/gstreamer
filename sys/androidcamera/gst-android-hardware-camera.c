@@ -126,7 +126,8 @@ gst_ah_camera_on_preview_frame (JNIEnv * env, jclass klass, jbyteArray data,
 {
   GstAHCPreviewCallback cb = (GstAHCPreviewCallback) (gsize) callback;
 
-  cb (data, (gpointer) (gsize) user_data);
+  if (cb)
+    cb (data, (gpointer) (gsize) user_data);
 }
 
 static void
@@ -135,7 +136,8 @@ gst_ah_camera_on_error (JNIEnv * env, jclass klass, jint error,
 {
   GstAHCErrorCallback cb = (GstAHCErrorCallback) (gsize) callback;
 
-  cb (error, (gpointer) (gsize) user_data);
+  if (cb)
+    cb (error, (gpointer) (gsize) user_data);
 }
 
 static JNINativeMethod native_methods[] = {

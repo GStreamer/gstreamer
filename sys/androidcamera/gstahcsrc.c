@@ -139,8 +139,6 @@ gst_ahc_src_dispose (GObject * object)
 {
   GstAHCSrc *self = GST_AHC_SRC (object);
 
-  gst_ahc_src_close (self);
-
   if (self->queue)
     g_object_unref (self->queue);
   self->queue = NULL;
@@ -673,6 +671,8 @@ gst_ahc_src_stop (GstBaseSrc * bsrc)
   if (self->camera) {
     gst_data_queue_flush (self->queue);
     self->start = FALSE;
+    gst_ah_camera_set_preview_callback_with_buffer (self->camera, NULL, NULL);
+    gst_ah_camera_set_error_callback (self->camera, NULL, NULL);
     return gst_ah_camera_stop_preview (self->camera);
   }
   return TRUE;
