@@ -1376,9 +1376,6 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
   switch (state) {
     case GST_STATE_NULL:
-      /* unlock the streams so that they follow the state changes from now on */
-      unlock_streams (media);
-      /* fallthrough */
     case GST_STATE_PAUSED:
       /* we're going from PLAYING to PAUSED, READY or NULL, remove */
       if (media->target_state == GST_STATE_PLAYING)
