@@ -50,21 +50,24 @@ typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
  * @is_ipv6: should this stream be IPv6
  * @buffer_size: the UDP buffer size
  * @is_joined: if the stream is joined in a bin
- * @recv_rtp_sink: sinkpad for RTP buffers
- * @recv_rtcp_sink: sinkpad for RTCP buffers
- * @send_rtp_src: srcpad for RTP buffers
- * @send_rtcp_src: srcpad for RTCP buffers
+ * @send_rtp_sink: sinkpad for sending RTP buffers
+ * @recv_sink: sinkpad for receiving RTP/RTCP buffers
+ * @send_src: srcpad for sending RTP/RTCP buffers
+ * @session: the RTP session object
  * @udpsrc: the udp source elements for RTP/RTCP
  * @udpsink: the udp sink elements for RTP/RTCP
  * @appsrc: the app source elements for RTP/RTCP
+ * @appqueue: the app queue elements for RTP/RTCP
  * @appsink: the app sink elements for RTP/RTCP
+ * @tee: tee for the sending to udpsink and appsink
+ * @funnel: tee for the receiving from udpsrc and appsrc
  * @server_port: the server ports for this stream
  * @caps_sig: the signal id for detecting caps
  * @caps: the caps of the stream
  * @n_active: the number of active transports in @transports
  * @transports: list of #GstStreamTransport being streamed to
  *
- * The definition of a media stream. The streams are identified by @id.
+ * The definition of a media stream. The streams are identified by @idx.
  */
 struct _GstRTSPStream {
   GObject       parent;
@@ -77,11 +80,9 @@ struct _GstRTSPStream {
   gboolean      is_joined;
 
   /* pads on the rtpbin */
-  GstPad       *recv_rtcp_sink;
-  GstPad       *recv_rtp_sink;
   GstPad       *send_rtp_sink;
-  GstPad       *send_rtp_src;
-  GstPad       *send_rtcp_src;
+  GstPad       *recv_sink[2];
+  GstPad       *send_src[2];
 
   /* the RTPSession object */
   GObject      *session;
@@ -96,7 +97,7 @@ struct _GstRTSPStream {
   GstElement   *appsink[2];
 
   GstElement   *tee[2];
-  GstElement   *selector[2];
+  GstElement   *funnel[2];
 
   /* server ports for sending/receiving */
   GstRTSPRange  server_port;
@@ -123,7 +124,8 @@ void              gst_rtsp_stream_set_mtu          (GstRTSPStream * stream, guin
 guint             gst_rtsp_stream_get_mtu          (GstRTSPStream * stream);
 
 gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream * stream,
-                                                    GstBin *bin, GstElement *rtpbin);
+                                                    GstBin *bin, GstElement *rtpbin,
+                                                    GstState state);
 gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream * stream,
                                                     GstBin *bin, GstElement *rtpbin);
 

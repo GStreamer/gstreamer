@@ -72,7 +72,6 @@ static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_unprepare (GstRTSPMedia * media);
-static void unlock_streams (GstRTSPMedia * media);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
@@ -896,22 +895,6 @@ weird_type:
 }
 
 static void
-unlock_streams (GstRTSPMedia * media)
-{
-  guint i;
-
-  /* unlock the udp src elements */
-  for (i = 0; i < media->streams->len; i++) {
-    GstRTSPStream *stream;
-
-    stream = g_ptr_array_index (media->streams, i);
-
-    gst_element_set_locked_state (stream->udpsrc[0], FALSE);
-    gst_element_set_locked_state (stream->udpsrc[1], FALSE);
-  }
-}
-
-static void
 gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
 {
   g_mutex_lock (&media->lock);
@@ -1075,24 +1058,21 @@ static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
   GstRTSPStream *stream;
-  gint i;
 
   stream = gst_rtsp_media_create_stream (media, element, pad);
+
   GST_INFO ("pad added %s:%s, stream %d", GST_DEBUG_PAD_NAME (pad),
       stream->idx);
 
+  /* we will be adding elements below that will cause ASYNC_DONE to be
+   * posted in the bus. We want to ignore those messages until the
+   * pipeline really prerolled. */
   media->adding = TRUE;
 
-  gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline), media->rtpbin);
-
-  for (i = 0; i < 2; i++) {
-    gst_element_set_state (stream->udpsink[i], GST_STATE_PAUSED);
-    gst_element_set_state (stream->appsink[i], GST_STATE_PAUSED);
-    gst_element_set_state (stream->appqueue[i], GST_STATE_PAUSED);
-    gst_element_set_state (stream->tee[i], GST_STATE_PAUSED);
-    gst_element_set_state (stream->selector[i], GST_STATE_PAUSED);
-    gst_element_set_state (stream->appsrc[i], GST_STATE_PAUSED);
-  }
+  /* join the element in the PAUSED state because this callback is
+   * called from the streaming thread and it is PAUSED */
+  gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline),
+      media->rtpbin, GST_STATE_PAUSED);
 
   media->adding = FALSE;
 }
@@ -1173,7 +1153,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
     stream = g_ptr_array_index (media->streams, i);
 
-    gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline), media->rtpbin);
+    gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline),
+        media->rtpbin, GST_STATE_NULL);
   }
 
   for (walk = media->dynamic; walk; walk = g_list_next (walk)) {
@@ -1208,7 +1189,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
       /* we need to go to PLAYING */
       GST_INFO ("NO_PREROLL state change: live media %p", media);
       /* FIXME we disable seeking for live streams for now. We should perform a
-       * seeking query in preroll instead and do a seeking query. */
+       * seeking query in preroll instead */
       media->seekable = FALSE;
       media->is_live = TRUE;
       ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
@@ -1219,7 +1200,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
       goto state_failed;
   }
 
-  /* now wait for all pads to be prerolled */
+  /* now wait for all pads to be prerolled, FIXME, we should somehow be
+   * able to do this async so that we don't block the server thread. */
   status = gst_rtsp_media_get_status (media);
   if (status == GST_RTSP_MEDIA_STATUS_ERROR)
     goto state_failed;
@@ -1262,7 +1244,6 @@ finish_unprepare (GstRTSPMedia * media)
 
   GST_DEBUG ("shutting down");
 
-  unlock_streams (media);
   gst_element_set_state (media->pipeline, GST_STATE_NULL);
 
   for (i = 0; i < media->streams->len; i++) {
@@ -1278,6 +1259,7 @@ finish_unprepare (GstRTSPMedia * media)
   g_ptr_array_set_size (media->streams, 0);
 
   gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
+  media->rtpbin = NULL;
 
   gst_object_unref (media->pipeline);
   media->pipeline = NULL;
