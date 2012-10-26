@@ -340,6 +340,15 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
   if (multifilesrc->index < multifilesrc->start_index) {
     multifilesrc->index = multifilesrc->start_index;
   }
+
+  if (multifilesrc->stop_index != -1 &&
+      multifilesrc->index > multifilesrc->stop_index) {
+    if (multifilesrc->loop)
+      multifilesrc->index = multifilesrc->start_index;
+    else
+      return GST_FLOW_EOS;
+  }
+
   filename = gst_multi_file_src_get_filename (multifilesrc);
 
   GST_DEBUG_OBJECT (multifilesrc, "reading from file \"%s\".", filename);
@@ -376,10 +385,6 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   multifilesrc->successful_read = TRUE;
   multifilesrc->index++;
-  if (multifilesrc->stop_index != -1 &&
-      multifilesrc->index >= multifilesrc->stop_index) {
-    multifilesrc->index = multifilesrc->start_index;
-  }
 
   buf = gst_buffer_new ();
   gst_buffer_append_memory (buf,
