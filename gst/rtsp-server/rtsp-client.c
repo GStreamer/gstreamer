@@ -506,7 +506,9 @@ link_transport (GstRTSPClient * client, GstRTSPSession * session,
   gst_rtsp_stream_transport_set_callbacks (trans,
       (GstRTSPSendFunc) do_send_data,
       (GstRTSPSendFunc) do_send_data, client, NULL);
+
   client->transports = g_list_prepend (client->transports, trans);
+
   /* make sure our session can't expire */
   gst_rtsp_session_prevent_expire (session);
 }
@@ -517,7 +519,9 @@ unlink_transport (GstRTSPClient * client, GstRTSPSession * session,
 {
   GST_DEBUG ("client %p: unlinking transport %p", client, trans);
   gst_rtsp_stream_transport_set_callbacks (trans, NULL, NULL, NULL, NULL);
+
   client->transports = g_list_remove (client->transports, trans);
+
   /* our session can now expire */
   gst_rtsp_session_allow_expire (session);
 }
@@ -971,8 +975,75 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
       gst_rtsp_media_set_mtu (media, blocksize);
     }
   }
-
   return ret;
+}
+
+static gboolean
+configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
+    GstRTSPTransport * ct)
+{
+  /* we have a valid transport now, set the destination of the client. */
+  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+    if (ct->destination == NULL || !client->use_client_settings) {
+      g_free (ct->destination);
+      ct->destination = gst_rtsp_media_get_multicast_group (state->media);
+    }
+    /* reset ttl and port if client settings are not allowed */
+    if (!client->use_client_settings) {
+      ct->port = state->stream->server_port;
+      ct->ttl = 0;
+    }
+  } else {
+    GstRTSPUrl *url;
+
+    url = gst_rtsp_connection_get_url (client->connection);
+    g_free (ct->destination);
+    ct->destination = g_strdup (url->host);
+
+    if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
+      /* check if the client selected channels for TCP */
+      if (ct->interleaved.min == -1 || ct->interleaved.max == -1) {
+        gst_rtsp_session_media_alloc_channels (state->sessmedia,
+            &ct->interleaved);
+      }
+    }
+  }
+  return TRUE;
+}
+
+static GstRTSPTransport *
+make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
+    GstRTSPTransport * ct)
+{
+  GstRTSPTransport *st;
+
+  /* prepare the server transport */
+  gst_rtsp_transport_new (&st);
+
+  st->trans = ct->trans;
+  st->profile = ct->profile;
+  st->lower_transport = ct->lower_transport;
+
+  switch (st->lower_transport) {
+    case GST_RTSP_LOWER_TRANS_UDP:
+      st->client_port = ct->client_port;
+      st->server_port = state->stream->server_port;
+      break;
+    case GST_RTSP_LOWER_TRANS_UDP_MCAST:
+      st->port = ct->port;
+      st->destination = g_strdup (ct->destination);
+      st->ttl = ct->ttl;
+      break;
+    case GST_RTSP_LOWER_TRANS_TCP:
+      st->interleaved = ct->interleaved;
+    default:
+      break;
+  }
+
+  if (state->stream->session)
+    g_object_get (state->stream->session, "internal-ssrc", &st->ssrc, NULL);
+
+  return st;
 }
 
 static gboolean
@@ -988,7 +1059,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPStreamTransport *trans;
   gchar *trans_str, *pos;
   guint streamid;
-  GstRTSPSessionMedia *media;
+  GstRTSPSessionMedia *sessmedia;
+  GstRTSPMedia *media;
+  GstRTSPStream *stream;
 
   uri = state->uri;
 
@@ -1025,6 +1098,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!parse_transport (transport, supported, ct))
     goto unsupported_transports;
 
+  /* we create the session after parsing stuff so that we don't make
+   * a session for malformed requests */
   if (client->session_pool == NULL)
     goto no_pool;
 
@@ -1034,7 +1109,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     g_object_ref (session);
     /* get a handle to the configuration of the media in the session, this can
      * return NULL if this is a new url to manage in this session. */
-    media = gst_rtsp_session_get_media (session, uri);
+    sessmedia = gst_rtsp_session_get_media (session, uri);
   } else {
     /* create a session if this fails we probably reached our session limit or
      * something. */
@@ -1044,65 +1119,49 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     state->session = session;
 
     /* we need a new media configuration in this session */
-    media = NULL;
+    sessmedia = NULL;
   }
 
   /* we have no media, find one and manage it */
-  if (media == NULL) {
-    GstRTSPMedia *m;
-
+  if (sessmedia == NULL) {
     /* get a handle to the configuration of the media in the session */
-    if ((m = find_media (client, state))) {
+    if ((media = find_media (client, state))) {
       /* manage the media in our session now */
-      media = gst_rtsp_session_manage_media (session, uri, m);
+      sessmedia = gst_rtsp_session_manage_media (session, uri, media);
     }
   }
 
   /* if we stil have no media, error */
-  if (media == NULL)
+  if (sessmedia == NULL)
     goto not_found;
 
-  state->sessmedia = media;
+  state->sessmedia = sessmedia;
+  state->media = media = sessmedia->media;
 
-  if (!handle_blocksize (media->media, state->request))
+  /* now get the stream */
+  stream = gst_rtsp_media_get_stream (media, streamid);
+  if (stream == NULL)
+    goto not_found;
+
+  state->stream = stream;
+
+  /* FIXME set only on this stream */
+  if (!handle_blocksize (media, state->request))
     goto invalid_blocksize;
 
-  /* we have a valid transport now, set the destination of the client. */
-  if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    if (ct->destination == NULL || !client->use_client_settings) {
-      g_free (ct->destination);
-      ct->destination = gst_rtsp_media_get_multicast_group (media->media);
-    }
-    /* reset ttl if client settings are not allowed */
-    if (!client->use_client_settings) {
-      ct->ttl = 0;
-    }
-  } else {
-    GstRTSPUrl *url;
+  /* update the client transport */
+  configure_client_transport (client, state, ct);
 
-    url = gst_rtsp_connection_get_url (client->connection);
-    g_free (ct->destination);
-    ct->destination = g_strdup (url->host);
-
-    if (ct->lower_transport & GST_RTSP_LOWER_TRANS_TCP) {
-      /* check if the client selected channels for TCP */
-      if (ct->interleaved.min == -1 || ct->interleaved.max == -1) {
-        gst_rtsp_session_media_alloc_channels (media, &ct->interleaved);
-      }
-    }
-  }
-
-  /* get a handle to the transport of the media in this session */
-  if (!(trans = gst_rtsp_session_media_get_transport (media, streamid)))
-    goto no_stream_transport;
-
-  st = gst_rtsp_stream_transport_set_transport (trans, ct);
+  /* set in the session media transport */
+  trans = gst_rtsp_session_media_get_transport (sessmedia, streamid);
+  gst_rtsp_stream_transport_set_transport (trans, ct);
 
   /* configure keepalive for this transport */
   gst_rtsp_stream_transport_set_keepalive (trans,
       (GstRTSPKeepAliveFunc) do_keepalive, session, NULL);
 
-  /* serialize the server transport */
+  /* create and serialize the server transport */
+  st = make_server_transport (client, state, ct);
   trans_str = gst_rtsp_transport_as_text (st);
   gst_rtsp_transport_free (st);
 
@@ -1118,14 +1177,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   send_response (client, session, state->response);
 
   /* update the state */
-  switch (media->state) {
+  switch (sessmedia->state) {
     case GST_RTSP_STATE_PLAYING:
     case GST_RTSP_STATE_RECORDING:
     case GST_RTSP_STATE_READY:
       /* no state change */
       break;
     default:
-      media->state = GST_RTSP_STATE_READY;
+      sessmedia->state = GST_RTSP_STATE_READY;
       break;
   }
   g_object_unref (session);
@@ -1151,13 +1210,6 @@ not_found:
 invalid_blocksize:
   {
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
-    g_object_unref (session);
-    gst_rtsp_transport_free (ct);
-    return FALSE;
-  }
-no_stream_transport:
-  {
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     g_object_unref (session);
     gst_rtsp_transport_free (ct);
     return FALSE;
@@ -1573,17 +1625,15 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 
   handled = FALSE;
   for (walk = client->transports; walk; walk = g_list_next (walk)) {
-    GstRTSPStreamTransport *trans = (GstRTSPStreamTransport *) walk->data;
+    GstRTSPStreamTransport *trans;
     GstRTSPStream *stream;
     GstRTSPTransport *tr;
 
-    /* get the transport, if there is no transport configured, skip this stream */
-    if (!(tr = trans->transport))
-      continue;
+    trans = walk->data;
 
-    /* we also need a media stream */
-    if (!(stream = trans->stream))
-      continue;
+    /* we only add clients with a transport to the list */
+    tr = trans->transport;
+    stream = trans->stream;
 
     /* check for TCP transport */
     if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {

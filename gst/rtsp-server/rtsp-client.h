@@ -54,7 +54,8 @@ typedef struct _GstRTSPClientState GstRTSPClientState;
  * @session: the session, can be NULL
  * @sessmedia: the session media for the url can be NULL
  * @factory: the media factory for the url, can be NULL.
- * @media: the session media for the url can be NULL
+ * @media: the media for the url can be NULL
+ * @stream: the stream for the url can be NULL
  * @response: the response
  *
  * Information passed around containing the client state of a request.
@@ -67,6 +68,7 @@ struct _GstRTSPClientState {
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMediaFactory *factory;
   GstRTSPMedia        *media;
+  GstRTSPStream       *stream;
   GstRTSPMessage      *response;
 };
 

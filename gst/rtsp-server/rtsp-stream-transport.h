@@ -91,7 +91,7 @@ GType                    gst_rtsp_stream_transport_get_type (void);
 
 GstRTSPStreamTransport * gst_rtsp_stream_transport_new           (GstRTSPStream *stream);
 
-GstRTSPTransport *       gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport *trans,
+void                     gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport *trans,
                                                                   GstRTSPTransport * ct);
 
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
