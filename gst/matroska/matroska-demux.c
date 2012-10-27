@@ -3431,9 +3431,10 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     goto data_error;
 
   if (ret == GST_FLOW_OK && readblock) {
+    gboolean invisible_frame = FALSE;
+    gboolean delta_unit = FALSE;
     guint64 duration = 0;
     gint64 lace_time = 0;
-    gboolean delta_unit;
 
     stream = g_ptr_array_index (demux->common.src, stream_num);
 
@@ -3503,8 +3504,13 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     /* For SimpleBlock, look at the keyframe bit in flags. Otherwise,
        a ReferenceBlock implies that this is not a keyframe. In either
        case, it only makes sense for video streams. */
-    delta_unit = stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
-        ((is_simpleblock && !(flags & 0x80)) || referenceblock);
+    if (stream->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+      if ((is_simpleblock && !(flags & 0x80)) || referenceblock) {
+        delta_unit = TRUE;
+        invisible_frame = ((flags & 0x08)) &&
+            (strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_VIDEO_VP8) == 0);
+      }
+    }
 
     if (delta_unit && stream->set_discont) {
       /* When doing seeks or such, we need to restart on key frames or
@@ -3568,6 +3574,9 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
       else
         GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DELTA_UNIT);
+
+      if (invisible_frame)
+        GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DECODE_ONLY);
 
       if (stream->encodings != NULL && stream->encodings->len > 0)
         sub = gst_matroska_decode_buffer (stream, sub);
