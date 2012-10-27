@@ -33,7 +33,7 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   if (argc < 2) {
-    g_message ("usage: %s <filename.ogg>", argv[0]);
+    g_message ("usage: %s <filename.mp4>", argv[0]);
     return -1;
   }
 

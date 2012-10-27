@@ -274,6 +274,8 @@ collect_media_stats (GstRTSPMedia * media)
 
   media->range.unit = GST_RTSP_RANGE_NPT;
 
+  GST_INFO ("collect media stats");
+
   if (media->is_live) {
     media->range.min.type = GST_RTSP_TIME_NOW;
     media->range.min.seconds = -1;
@@ -1059,6 +1061,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
   GstRTSPStream *stream;
 
+  /* FIXME, element is likely not a payloader, find the payloader here */
   stream = gst_rtsp_media_create_stream (media, element, pad);
 
   GST_INFO ("pad added %s:%s, stream %d", GST_DEBUG_PAD_NAME (pad),
