@@ -1630,10 +1630,26 @@ parse_debug_level (gchar * str, GstDebugLevel * level)
   if (str[0] != '\0' && str[1] == '\0'
       && str[0] >= '0' && str[0] < '0' + GST_LEVEL_COUNT) {
     *level = (GstDebugLevel) (str[0] - '0');
-    return TRUE;
-  }
+  } else if (strcmp (str, "ERROR") == 0) {
+    *level = GST_LEVEL_ERROR;
+  } else if (strncmp (str, "WARN", 4) == 0) {
+    *level = GST_LEVEL_WARNING;
+  } else if (strcmp (str, "FIXME") == 0) {
+    *level = GST_LEVEL_FIXME;
+  } else if (strcmp (str, "INFO") == 0) {
+    *level = GST_LEVEL_INFO;
+  } else if (strcmp (str, "DEBUG") == 0) {
+    *level = GST_LEVEL_DEBUG;
+  } else if (strcmp (str, "LOG") == 0) {
+    *level = GST_LEVEL_LOG;
+  } else if (strcmp (str, "TRACE") == 0) {
+    *level = GST_LEVEL_TRACE;
+  } else if (strcmp (str, "MEMDUMP") == 0) {
+    *level = GST_LEVEL_MEMDUMP;
+  } else
+    return FALSE;
 
-  return FALSE;
+  return TRUE;
 }
 
 /**
