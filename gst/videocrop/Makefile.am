@@ -6,7 +6,7 @@ plugin_LTLIBRARIES = libgstvideocrop.la
 libgstvideocrop_la_SOURCES = gstvideocrop.c gstaspectratiocrop.c
 libgstvideocrop_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
-libgstvideocrop_la_LIBADD = $(GST_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
+libgstvideocrop_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION)
 libgstvideocrop_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideocrop_la_LIBTOOLFLAGS = --tag=disable-static
 
