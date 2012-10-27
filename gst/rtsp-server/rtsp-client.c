@@ -894,6 +894,57 @@ do_keepalive (GstRTSPSession * session)
   gst_rtsp_session_touch (session);
 }
 
+/* parse @transport and return a valid transport in @tr. only transports
+ * from @supported are returned. Returns FALSE if no valid transport
+ * was found. */
+static gboolean
+parse_transport (const char *transport, GstRTSPLowerTrans supported,
+    GstRTSPTransport * tr)
+{
+  gint i;
+  gboolean res;
+  gchar **transports;
+
+  res = FALSE;
+  gst_rtsp_transport_init (tr);
+
+  GST_WARNING ("parsing transports %s", transport);
+
+  transports = g_strsplit (transport, ",", 0);
+
+  /* loop through the transports, try to parse */
+  for (i = 0; transports[i]; i++) {
+    res = gst_rtsp_transport_parse (transports[i], tr);
+    if (res != GST_RTSP_OK) {
+      /* no valid transport, search some more */
+      GST_WARNING ("could not parse transport %s", transports[i]);
+      goto next;
+    }
+
+    /* we have a transport, see if it's RTP/AVP */
+    if (tr->trans != GST_RTSP_TRANS_RTP || tr->profile != GST_RTSP_PROFILE_AVP) {
+      GST_WARNING ("invalid transport %s", transports[i]);
+      goto next;
+    }
+
+    if (!(tr->lower_transport & supported)) {
+      GST_WARNING ("unsupported transport %s", transports[i]);
+      goto next;
+    }
+
+    /* we have a valid transport */
+    GST_INFO ("found valid transport %s", transports[i]);
+    res = TRUE;
+    break;
+
+  next:
+    gst_rtsp_transport_init (tr);
+  }
+  g_strfreev (transports);
+
+  return res;
+}
+
 static gboolean
 handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
 {
@@ -930,10 +981,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPResult res;
   GstRTSPUrl *uri;
   gchar *transport;
-  gchar **transports;
-  gboolean have_transport;
   GstRTSPTransport *ct, *st;
-  gint i;
   GstRTSPLowerTrans supported;
   GstRTSPStatusCode code;
   GstRTSPSession *session;
@@ -945,7 +993,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   uri = state->uri;
 
   /* the uri contains the stream number we added in the SDP config, which is
-   * always /stream=%d so we need to strip that off 
+   * always /stream=%d so we need to strip that off
    * parse the stream we need to configure, look for the stream in the abspath
    * first and then in the query. */
   if (uri->abspath == NULL || !(pos = strstr (uri->abspath, "/stream="))) {
@@ -953,7 +1001,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
       goto bad_request;
   }
 
-  /* we can mofify the parse uri in place */
+  /* we can mofify the parsed uri in place */
   *pos = '\0';
 
   pos += strlen ("/stream=");
@@ -967,49 +1015,14 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (res != GST_RTSP_OK)
     goto no_transport;
 
-  transports = g_strsplit (transport, ",", 0);
   gst_rtsp_transport_new (&ct);
-
-  /* init transports */
-  have_transport = FALSE;
-  gst_rtsp_transport_init (ct);
 
   /* our supported transports */
   supported = GST_RTSP_LOWER_TRANS_UDP |
       GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
 
-  /* loop through the transports, try to parse */
-  for (i = 0; transports[i]; i++) {
-    res = gst_rtsp_transport_parse (transports[i], ct);
-    if (res != GST_RTSP_OK) {
-      /* no valid transport, search some more */
-      GST_WARNING ("could not parse transport %s", transports[i]);
-      goto next;
-    }
-
-    /* we have a transport, see if it's RTP/AVP */
-    if (ct->trans != GST_RTSP_TRANS_RTP || ct->profile != GST_RTSP_PROFILE_AVP) {
-      GST_WARNING ("invalid transport %s", transports[i]);
-      goto next;
-    }
-
-    if (!(ct->lower_transport & supported)) {
-      GST_WARNING ("unsupported transport %s", transports[i]);
-      goto next;
-    }
-
-    /* we have a valid transport */
-    GST_INFO ("found valid transport %s", transports[i]);
-    have_transport = TRUE;
-    break;
-
-  next:
-    gst_rtsp_transport_init (ct);
-  }
-  g_strfreev (transports);
-
-  /* we have not found anything usable, error out */
-  if (!have_transport)
+  /* parse and find a usable supported transport */
+  if (!parse_transport (transport, supported, ct))
     goto unsupported_transports;
 
   if (client->session_pool == NULL)
