@@ -910,6 +910,11 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
       GST_ERROR ("failed to parse blocksize");
       ret = FALSE;
     } else {
+      /* we don't want to change the mtu when this media
+       * can be shared because it impacts other clients */
+      if (gst_rtsp_media_is_shared (media))
+        return TRUE;
+
       if (blocksize > G_MAXUINT)
         blocksize = G_MAXUINT;
       gst_rtsp_media_set_mtu (media, blocksize);
