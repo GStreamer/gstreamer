@@ -1754,6 +1754,9 @@ gst_pulsesrc_get_time (GstClock * clock, GstPulseSrc * src)
 {
   pa_usec_t time = 0;
 
+  if (src->mainloop == NULL)
+    goto out;
+
   pa_threaded_mainloop_lock (src->mainloop);
   if (!src->stream)
     goto unlock_and_out;
@@ -1772,5 +1775,6 @@ gst_pulsesrc_get_time (GstClock * clock, GstPulseSrc * src)
 unlock_and_out:
   pa_threaded_mainloop_unlock (src->mainloop);
 
+out:
   return time;
 }
