@@ -180,8 +180,8 @@ static void
 client_unlink_session (GstRTSPClient * client, GstRTSPSession * session)
 {
   /* unlink all media managed in this session */
-  while (g_list_length (session->medias) > 0) {
-    GstRTSPSessionMedia *media = g_list_first (session->medias)->data;
+  while (session->medias) {
+    GstRTSPSessionMedia *media = session->medias->data;
 
     gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
     unlink_session_transports (client, session, media);
