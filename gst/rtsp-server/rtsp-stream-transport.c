@@ -82,21 +82,24 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
 /**
  * gst_rtsp_stream_transport_new:
  * @stream: a #GstRTSPStream
+ * @tr: (transfer full): a GstRTSPTransport
  *
  * Create a new #GstRTSPStreamTransport that can be used to manage
- * @stream.
+ * @stream with transport @tr.
  *
  * Returns: a new #GstRTSPStreamTransport
  */
 GstRTSPStreamTransport *
-gst_rtsp_stream_transport_new (GstRTSPStream * stream)
+gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
 {
   GstRTSPStreamTransport *trans;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (tr != NULL, NULL);
 
   trans = g_object_new (GST_TYPE_RTSP_STREAM_TRANSPORT, NULL);
   trans->stream = stream;
+  trans->transport = tr;
 
   return trans;
 }
@@ -150,20 +153,20 @@ gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamTransport * trans,
 /**
  * gst_rtsp_stream_transport_set_transport:
  * @trans: a #GstRTSPStreamTransport
- * @ct: a client #GstRTSPTransport
+ * @tr: (transfer full): a client #GstRTSPTransport
  *
  * Set @ct as the client transport. This function takes ownership of
- * the passed @ct.
+ * the passed @tr.
  */
 void
 gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
-    GstRTSPTransport * ct)
+    GstRTSPTransport * tr)
 {
   g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
-  g_return_if_fail (ct != NULL);
+  g_return_if_fail (tr != NULL);
 
   /* keep track of the transports in the stream. */
   if (trans->transport)
     gst_rtsp_transport_free (trans->transport);
-  trans->transport = ct;
+  trans->transport = tr;
 }

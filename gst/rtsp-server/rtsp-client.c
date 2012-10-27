@@ -537,11 +537,12 @@ unlink_session_transports (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPStreamTransport *trans;
     GstRTSPTransport *tr;
 
-    /* get the stream as configured in the session */
-    trans = gst_rtsp_session_media_get_transport (media, i);
     /* get the transport, if there is no transport configured, skip this stream */
-    if (!(tr = trans->transport))
+    trans = gst_rtsp_session_media_get_transport (media, i);
+    if (trans == NULL)
       continue;
+
+    tr = trans->transport;
 
     if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
       /* for TCP, unlink the stream from the TCP connection of the client */
@@ -815,13 +816,13 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
     gchar *uristr;
     guint rtptime, seq;
 
-    /* get the stream as configured in the session */
-    trans = gst_rtsp_session_media_get_transport (media, i);
     /* get the transport, if there is no transport configured, skip this stream */
-    if (!(tr = trans->transport)) {
+    trans = gst_rtsp_session_media_get_transport (media, i);
+    if (trans == NULL) {
       GST_INFO ("stream %d is not configured", i);
       continue;
     }
+    tr = trans->transport;
 
     if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
       /* for TCP, link the stream to the TCP connection of the client */
@@ -1153,8 +1154,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   configure_client_transport (client, state, ct);
 
   /* set in the session media transport */
-  trans = gst_rtsp_session_media_get_transport (sessmedia, streamid);
-  gst_rtsp_stream_transport_set_transport (trans, ct);
+  trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
 
   /* configure keepalive for this transport */
   gst_rtsp_stream_transport_set_keepalive (trans,

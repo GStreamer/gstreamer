@@ -117,11 +117,41 @@ gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
 }
 
 /**
+ * gst_rtsp_session_media_set_transport:
+ * @media: a #GstRTSPSessionMedia
+ * @stream: a #GstRTSPStream
+ * @tr: a #GstRTSPTransport
+ *
+ * Configure the transport for @stream to @tr in @media.
+ *
+ * Returns: the new or updated #GstRTSPStreamTransport for @stream.
+ */
+GstRTSPStreamTransport *
+gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
+    GstRTSPStream * stream, GstRTSPTransport * tr)
+{
+  GstRTSPStreamTransport *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), NULL);
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (stream->idx < media->transports->len, NULL);
+
+  result = g_ptr_array_index (media->transports, stream->idx);
+  if (result == NULL) {
+    result = gst_rtsp_stream_transport_new (stream, tr);
+    g_ptr_array_index (media->transports, stream->idx) = result;
+  } else {
+    gst_rtsp_stream_transport_set_transport (result, tr);
+  }
+  return result;
+}
+
+/**
  * gst_rtsp_session_media_get_transport:
  * @media: a #GstRTSPSessionMedia
  * @idx: the stream index
  *
- * Get a previously created or create a new #GstRTSPStreamTransport at @idx.
+ * Get a previously created #GstRTSPStreamTransport for the stream at @idx.
  *
  * Returns: a #GstRTSPStreamTransport that is valid until the session of @media
  * is unreffed.
@@ -132,30 +162,11 @@ gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)
   GstRTSPStreamTransport *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), NULL);
-  g_return_val_if_fail (media->media != NULL, NULL);
-
-  if (idx >= media->transports->len)
-    return NULL;
+  g_return_val_if_fail (idx < media->transports->len, NULL);
 
   result = g_ptr_array_index (media->transports, idx);
-  if (result == NULL) {
-    GstRTSPStream *stream;
 
-    stream = gst_rtsp_media_get_stream (media->media, idx);
-    if (stream == NULL)
-      goto no_media;
-
-    result = gst_rtsp_stream_transport_new (stream);
-
-    g_ptr_array_index (media->transports, idx) = result;
-  }
   return result;
-
-  /* ERRORS */
-no_media:
-  {
-    return NULL;
-  }
 }
 
 /**

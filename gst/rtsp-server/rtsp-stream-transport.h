@@ -89,10 +89,11 @@ struct _GstRTSPStreamTransportClass {
 
 GType                    gst_rtsp_stream_transport_get_type (void);
 
-GstRTSPStreamTransport * gst_rtsp_stream_transport_new           (GstRTSPStream *stream);
+GstRTSPStreamTransport * gst_rtsp_stream_transport_new           (GstRTSPStream *stream,
+                                                                  GstRTSPTransport *tr);
 
 void                     gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport *trans,
-                                                                  GstRTSPTransport * ct);
+                                                                  GstRTSPTransport * tr);
 
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
                                                                   GstRTSPSendFunc send_rtp,
