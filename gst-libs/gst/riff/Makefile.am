@@ -38,7 +38,7 @@ GstRiff-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_API_VERS
 		--add-include-path=$(builddir)/../audio \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
-		--library=libgstriff-@GST_API_VERSION@.la \
+		--library=gstriff-@GST_API_VERSION@ \
 		--include=GstAudio-@GST_API_VERSION@ \
 		--include=GstTag-@GST_API_VERSION@ \
 		--include=Gst-@GST_API_VERSION@ \

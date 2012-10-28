@@ -85,7 +85,7 @@ GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_AP
 		--library=$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_API_VERSION@.la \
 		--library=$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_API_VERSION@.la \
 		--library=$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_API_VERSION@.la \
-		--library=libgstpbutils-@GST_API_VERSION@.la \
+		--library=gstpbutils-@GST_API_VERSION@ \
 		--library-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=libdir gstreamer-@GST_API_VERSION@` \
 		--library=gstreamer-@GST_API_VERSION@ \
 		--include=Gst-@GST_API_VERSION@ \
