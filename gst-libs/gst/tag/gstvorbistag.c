@@ -474,6 +474,7 @@ gst_tag_list_from_vorbiscomment (const guint8 * data, gsize size,
     }
     /* we'll just ignore COVERARTMIME and typefind the image data */
     if (g_ascii_strcasecmp (cur, "COVERARTMIME") == 0) {
+      g_free (cur);
       continue;
     } else if (g_ascii_strcasecmp (cur, "COVERART") == 0) {
       gst_vorbis_tag_add_coverart (list, value, value_len);
