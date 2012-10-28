@@ -59,8 +59,7 @@ GstNet-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstnet-@GST_API_VERSIO
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
-		--library=$(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la \
-		--library=libgstnet-@GST_API_VERSION@.la \
+		--library=gstnet-@GST_API_VERSION@ \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=Gio-2.0 \
 		--libtool="$(top_builddir)/libtool" \
