@@ -1252,15 +1252,15 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
     GST_DEBUG ("Exif string isn't utf8, trying to convert from latin1: %s",
         str);
     utfstr = g_convert (str, count, "utf8", "latin1", NULL, NULL, &error);
-    g_free (str);
     if (error) {
       GST_WARNING ("Skipping tag %d:%s. Failed to convert ascii string "
           "to utf8 : %s - %s", tag->exif_tag, tag->gst_tag, str,
           error->message);
       g_error_free (error);
-      g_free (utfstr);
+      g_free (str);
       return;
     }
+    g_free (str);
   }
 
   tagtype = gst_tag_get_type (tag->gst_tag);
@@ -1276,7 +1276,7 @@ parse_exif_ascii_tag (GstExifReader * reader, const GstExifTagMatch * tag,
           tag->gst_tag, d, NULL);
       gst_date_time_unref (d);
     } else {
-      GST_WARNING ("Failed to parse %s into a datetime tag", str);
+      GST_WARNING ("Failed to parse %s into a datetime tag", utfstr);
     }
   } else if (tagtype == G_TYPE_STRING) {
     gst_tag_list_add (reader->taglist, GST_TAG_MERGE_REPLACE, tag->gst_tag,
