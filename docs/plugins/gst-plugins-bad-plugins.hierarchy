@@ -18,12 +18,14 @@ GObject
           GstFaad
           GstGSMDec
           GstMpg123AudioDec
+          GstOpusDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstCeltEnc
           GstFaac
           GstGSMEnc
+          GstOpusEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
@@ -39,6 +41,8 @@ GObject
           GstIRTSPParse
           GstMpeg4VParse
           GstMpegvParse
+          GstOpusParse
+          GstVC1Parse
         GstBaseSink
           GstChecksumSink
           GstCurlBaseSink
@@ -75,6 +79,7 @@ GObject
           GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
+            GstAccurip
             GstBPMDetect
             GstChromaprint
           GstBayer2RGB
@@ -202,6 +207,7 @@ GObject
         GstJifMux
         GstJpegParse
         GstLiveAdder
+        GstMXFDemux
         GstMimDec
         GstMimEnc
         GstModPlug
@@ -216,10 +222,12 @@ GObject
         GstPnmenc
         GstPyramidSegment
         GstRTPBaseDepayload
+          GstRTPOpusDepay
           GstRtpDTMFDepay
           GstRtpVP8Depay
         GstRTPBasePayload
           GstRtpAsfPay
+          GstRtpOPUSPay
           GstRtpVP8Pay
         GstRTPMux
           GstRTPDTMFMux
@@ -285,6 +293,78 @@ GObject
       GstTask
       GstTaskPool
   GstEncodingProfile
+  MXFMetadataBase
+    MXFDescriptiveMetadata
+      MXFDMS1
+        MXFDMS1Address
+        MXFDMS1Communications
+        MXFDMS1ContactsList
+        MXFDMS1Framework
+          MXFDMS1ProductionClipFramework
+            MXFDMS1ClipFramework
+            MXFDMS1ProductionFramework
+          MXFDMS1SceneFramework
+        MXFDMS1NameValue
+        MXFDMS1PictureFormat
+        MXFDMS1Processing
+        MXFDMS1Project
+        MXFDMS1Publication
+        MXFDMS1TextLanguage
+          MXFDMS1Branding
+          MXFDMS1CueWords
+          MXFDMS1Shot
+          MXFDMS1Thesaurus
+            MXFDMS1Annotation
+            MXFDMS1Award
+            MXFDMS1CaptionsDescription
+            MXFDMS1Classification
+            MXFDMS1Contact
+              MXFDMS1Location
+              MXFDMS1Organisation
+              MXFDMS1Person
+            MXFDMS1Contract
+            MXFDMS1DeviceParameters
+            MXFDMS1Event
+            MXFDMS1GroupRelationship
+            MXFDMS1Identification
+            MXFDMS1KeyPoint
+            MXFDMS1Participant
+            MXFDMS1Rights
+            MXFDMS1Scripting
+            MXFDMS1SettingPeriod
+          MXFDMS1Titles
+    MXFMetadata
+      MXFMetadataContentStorage
+      MXFMetadataEssenceContainerData
+      MXFMetadataGenericDescriptor
+        MXFMetadataFileDescriptor
+          MXFMetadataGenericDataEssenceDescriptor
+          MXFMetadataGenericPictureEssenceDescriptor
+            MXFMetadataCDCIPictureEssenceDescriptor
+              MXFMetadataMPEGVideoDescriptor
+            MXFMetadataRGBAPictureEssenceDescriptor
+          MXFMetadataGenericSoundEssenceDescriptor
+            MXFMetadataWaveAudioEssenceDescriptor
+              MXFMetadataAES3AudioEssenceDescriptor
+          MXFMetadataMultipleDescriptor
+      MXFMetadataGenericPackage
+        MXFMetadataMaterialPackage
+        MXFMetadataSourcePackage
+      MXFMetadataIdentification
+      MXFMetadataLocator
+        MXFMetadataNetworkLocator
+        MXFMetadataTextLocator
+      MXFMetadataPreface
+      MXFMetadataSequence
+      MXFMetadataStructuralComponent
+        MXFMetadataDMSegment
+        MXFMetadataSourceClip
+          MXFMetadataDMSourceClip
+        MXFMetadataTimecodeComponent
+      MXFMetadataTrack
+        MXFMetadataEventTrack
+        MXFMetadataStaticTrack
+        MXFMetadataTimelineTrack
 GInterface
   GTypePlugin
   GstChildProxy
@@ -293,3 +373,4 @@ GInterface
   GstTagSetter
   GstTagXmpWriter
   GstURIHandler
+  MXFDescriptiveMetadataFrameworkInterface

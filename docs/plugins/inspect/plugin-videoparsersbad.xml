@@ -114,5 +114,26 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>vc1parse</name>
+      <longname>VC1 parser</longname>
+      <class>Codec/Parser/Converter/Video</class>
+      <description>Parses VC1 streams</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-wmv, wmvversion=(int)3, format=(string){ WVC1, WMV3 }</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-wmv, wmvversion=(int)3, format=(string){ WVC1, WMV3 }, stream-format=(string){ bdu, bdu-frame, sequence-layer-bdu, sequence-layer-bdu-frame, sequence-layer-raw-frame, sequence-layer-frame-layer, asf, frame-layer }, header-format=(string){ none, asf, sequence-layer }</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

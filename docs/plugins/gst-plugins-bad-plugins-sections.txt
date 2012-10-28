@@ -1,4 +1,18 @@
 <SECTION>
+<FILE>element-accurip</FILE>
+<TITLE>accurip</TITLE>
+GstAccurip
+<SUBSECTION Standard>
+GST_ACCURIP
+GST_ACCURIP_CLASS
+GST_IS_ACCURIP
+GST_IS_ACCURIP_CLASS
+GST_TYPE_ACCURIP
+GstAccuripClass
+gst_accurip_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-aiffmux</FILE>
 <TITLE>aiffmux</TITLE>
 GstAiffMux

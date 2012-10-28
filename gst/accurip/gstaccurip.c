@@ -33,6 +33,7 @@
 
 /**
  * SECTION:element-accurip
+ * @short_desc: Computes an AccurateRip CRC
  *
  * The accurip element calculates a CRC for an audio stream which can be used
  * to match the audio stream to a database hosted on
@@ -42,7 +43,7 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch -m uridecodebin uri=file:///path/to/song.flac ! audioconvert ! accurip ! fakesink
+ * gst-launch-1.0 -m uridecodebin uri=file:///path/to/song.flac ! audioconvert ! accurip ! fakesink
  * ]|
  * </refsect2>
  */
