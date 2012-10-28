@@ -43,7 +43,6 @@ struct _GstHlsSink
   gboolean elements_created;
   GstEvent *force_key_unit_event;
 
-  GstClockTime last_stream_time;
   gchar *location;
   gchar *playlist_location;
   gchar *playlist_root;
@@ -54,6 +53,9 @@ struct _GstHlsSink
   gint target_duration;
   gint count;
   guint timeout_id;
+  GstSegment segment;
+  gboolean waiting_fku;
+  GstClockTime last_running_time;
 };
 
 struct _GstHlsSinkClass

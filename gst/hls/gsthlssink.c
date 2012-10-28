@@ -55,17 +55,22 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-GST_BOILERPLATE (GstHlsSink, gst_hls_sink, GstBin, GST_TYPE_BIN);
+#define gst_hls_sink_parent_class parent_class
+G_DEFINE_TYPE (GstHlsSink, gst_hls_sink, GST_TYPE_BIN);
 
 static void gst_hls_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
 static void gst_hls_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * spec);
 static void gst_hls_sink_handle_message (GstBin * bin, GstMessage * message);
-static gboolean gst_hls_sink_ghost_event_probe (GstPad * pad,
-    GstEvent * event, gpointer data);
+static GstPadProbeReturn gst_hls_sink_ghost_event_probe (GstPad * pad,
+    GstPadProbeInfo * info, gpointer data);
+static GstPadProbeReturn gst_hls_sink_ghost_buffer_probe (GstPad * pad,
+    GstPadProbeInfo * info, gpointer data);
+static void gst_hls_sink_reset (GstHlsSink * sink);
 static GstStateChangeReturn
 gst_hls_sink_change_state (GstElement * element, GstStateChange trans);
+static gboolean schedule_next_key_unit (GstHlsSink * sink);
 
 static void
 gst_hls_sink_dispose (GObject * object)
@@ -88,19 +93,6 @@ gst_hls_sink_finalize (GObject * object)
 }
 
 static void
-gst_hls_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_template));
-
-  gst_element_class_set_static_metadata (element_class,
-      "HTTP Live Streaming sink", "Sink", "HTTP Live Streaming sink",
-      "Alessandro Decina <alessandro.decina@gmail.com>");
-}
-
-static void
 gst_hls_sink_class_init (GstHlsSinkClass * klass)
 {
   GObjectClass *gobject_class;
@@ -111,9 +103,16 @@ gst_hls_sink_class_init (GstHlsSinkClass * klass)
   element_class = GST_ELEMENT_CLASS (klass);
   bin_class = GST_BIN_CLASS (klass);
 
-  bin_class->handle_message = gst_hls_sink_handle_message;
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&sink_template));
+
+  gst_element_class_set_static_metadata (element_class,
+      "HTTP Live Streaming sink", "Sink", "HTTP Live Streaming sink",
+      "Alessandro Decina <alessandro.d@gmail.com>");
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_sink_change_state);
+
+  bin_class->handle_message = gst_hls_sink_handle_message;
 
   gobject_class->dispose = gst_hls_sink_dispose;
   gobject_class->finalize = gst_hls_sink_finalize;
@@ -154,14 +153,16 @@ gst_hls_sink_class_init (GstHlsSinkClass * klass)
 }
 
 static void
-gst_hls_sink_init (GstHlsSink * sink, GstHlsSinkClass * sink_class)
+gst_hls_sink_init (GstHlsSink * sink)
 {
   GstPadTemplate *templ = gst_static_pad_template_get (&sink_template);
   sink->ghostpad = gst_ghost_pad_new_no_target_from_template ("sink", templ);
   gst_object_unref (templ);
   gst_element_add_pad (GST_ELEMENT_CAST (sink), sink->ghostpad);
-  gst_pad_add_event_probe (sink->ghostpad,
-      G_CALLBACK (gst_hls_sink_ghost_event_probe), sink);
+  gst_pad_add_probe (sink->ghostpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      gst_hls_sink_ghost_event_probe, sink, NULL);
+  gst_pad_add_probe (sink->ghostpad, GST_PAD_PROBE_TYPE_BUFFER,
+      gst_hls_sink_ghost_buffer_probe, sink, NULL);
 
   sink->location = g_strdup (DEFAULT_LOCATION);
   sink->playlist_location = g_strdup (DEFAULT_PLAYLIST_LOCATION);
@@ -241,20 +242,21 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       GFile *file;
       const char *filename, *title;
       char *playlist_content;
-      GstClockTime stream_time, duration;
+      GstClockTime running_time, duration;
       gboolean discont = FALSE;
       GError *error = NULL;
       gchar *entry_location;
+      const GstStructure *structure;
 
-      if (strcmp (gst_structure_get_name (message->structure),
-              "GstMultiFileSink"))
+      structure = gst_message_get_structure (message);
+      if (strcmp (gst_structure_get_name (structure), "GstMultiFileSink"))
         break;
 
-      filename = gst_structure_get_string (message->structure, "filename");
-      gst_structure_get_clock_time (message->structure, "stream-time",
-          &stream_time);
-      duration = stream_time - sink->last_stream_time;
-      sink->last_stream_time = stream_time;
+      filename = gst_structure_get_string (structure, "filename");
+      gst_structure_get_clock_time (structure, "running-time", &running_time);
+      duration = running_time - sink->last_running_time;
+      sink->last_running_time = running_time;
+
       file = g_file_new_for_path (filename);
       title = "ciao";
       GST_INFO_OBJECT (sink, "COUNT %d", sink->index);
@@ -265,6 +267,7 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
         entry_location = g_build_filename (sink->playlist_root, name, NULL);
         g_free (name);
       }
+
       gst_m3u8_playlist_add_entry (sink->playlist, entry_location, file,
           title, duration, sink->index, discont);
       g_free (entry_location);
@@ -272,6 +275,12 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
       g_file_set_contents (sink->playlist_location,
           playlist_content, -1, &error);
       g_free (playlist_content);
+
+      /* multifilesink is starting a new file. It means that upstream sent a key
+       * unit and we can schedule the next key unit now.
+       */
+      sink->waiting_fku = FALSE;
+      schedule_next_key_unit (sink);
       break;
     }
     default:
@@ -279,27 +288,6 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
   }
 
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
-}
-
-static gboolean
-send_force_key_unit_event (gpointer user_data)
-{
-  GstHlsSink *sink = GST_HLS_SINK_CAST (user_data);
-  GstPad *sinkpad = gst_element_get_static_pad (GST_ELEMENT (sink), "sink");
-
-  /* FIXME - try to make segments >= target duration in length by setting the
-   * time parameter of the force key unit event to last segment cut time +
-   * target duration */
-  sink->count++;
-  if (!gst_pad_push_event (sinkpad,
-          gst_video_event_new_upstream_force_key_unit (sink->target_duration *
-              sink->count, TRUE, sink->count))) {
-    GST_WARNING_OBJECT (sink, "Failed to push upstream force key unit event");
-  }
-
-  gst_object_unref (sinkpad);
-
-  return TRUE;
 }
 
 static GstStateChangeReturn
@@ -315,11 +303,6 @@ gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      if (sink->target_duration) {
-        sink->timeout_id =
-            g_timeout_add_seconds (sink->target_duration,
-            send_force_key_unit_event, sink);
-      }
       break;
     default:
       break;
@@ -329,10 +312,6 @@ gst_hls_sink_change_state (GstElement * element, GstStateChange trans)
 
   switch (trans) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (sink->timeout_id && !g_source_remove (sink->timeout_id)) {
-        GST_WARNING_OBJECT (sink, "Failed to remove target-duration timeout");
-      }
-      sink->timeout_id = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_hls_sink_reset (sink);
@@ -420,12 +399,22 @@ gst_hls_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_hls_sink_ghost_event_probe (GstPad * pad, GstEvent * event, gpointer data)
+static GstPadProbeReturn
+gst_hls_sink_ghost_event_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer data)
 {
   GstHlsSink *sink = GST_HLS_SINK_CAST (data);
+  GstEvent *event = gst_pad_probe_info_get_event (info);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+    {
+      gst_event_copy_segment (event, &sink->segment);
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&sink->segment, GST_FORMAT_UNDEFINED);
+      break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     {
       GstClockTime timestamp;
@@ -447,9 +436,60 @@ gst_hls_sink_ghost_event_probe (GstPad * pad, GstEvent * event, gpointer data)
       break;
   }
 
-  return TRUE;
+  return GST_PAD_PROBE_OK;
 }
 
+static gboolean
+schedule_next_key_unit (GstHlsSink * sink)
+{
+  gboolean res = TRUE;
+  GstClockTime running_time;
+  GstPad *sinkpad = gst_element_get_static_pad (GST_ELEMENT (sink), "sink");
+
+  if (sink->target_duration == 0)
+    /* target-duration == 0 means that the app schedules key units itself */
+    goto out;
+
+  running_time = sink->last_running_time + sink->target_duration * GST_SECOND;
+  GST_INFO_OBJECT (sink, "sending upstream force-key-unit, index %d "
+      "now %" GST_TIME_FORMAT " target %" GST_TIME_FORMAT,
+      sink->index + 1, GST_TIME_ARGS (sink->last_running_time),
+      GST_TIME_ARGS (running_time));
+
+  if (!(res = gst_pad_push_event (sinkpad,
+              gst_video_event_new_upstream_force_key_unit (running_time,
+                  TRUE, sink->index + 1)))) {
+    GST_ERROR_OBJECT (sink, "Failed to push upstream force key unit event");
+  }
+
+out:
+  /* mark as waiting for a fku event if the app schedules them or if we just
+   * successfully scheduled one
+   */
+  sink->waiting_fku = res;
+  gst_object_unref (sinkpad);
+  return res;
+}
+
+
+static GstPadProbeReturn
+gst_hls_sink_ghost_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer data)
+{
+  GstHlsSink *sink = GST_HLS_SINK_CAST (data);
+  GstBuffer *buffer = gst_pad_probe_info_get_buffer (info);
+  GstClockTime timestamp;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (sink->target_duration == 0 || !GST_CLOCK_TIME_IS_VALID (timestamp)
+      || sink->waiting_fku)
+    return GST_PAD_PROBE_OK;
+
+  sink->last_running_time = gst_segment_to_running_time (&sink->segment,
+      GST_FORMAT_TIME, timestamp);
+  schedule_next_key_unit (sink);
+  return GST_PAD_PROBE_OK;
+}
 
 gboolean
 gst_hls_sink_plugin_init (GstPlugin * plugin)
