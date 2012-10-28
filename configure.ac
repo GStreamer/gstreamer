@@ -329,6 +329,7 @@ GST_PLUGINS_NONPORTED=" aiff \
 AC_SUBST(GST_PLUGINS_NONPORTED)
 
 dnl these are all the gst plug-ins, compilable without additional libs
+AG_GST_CHECK_PLUGIN(accurip)
 AG_GST_CHECK_PLUGIN(adpcmdec)
 AG_GST_CHECK_PLUGIN(adpcmenc)
 AG_GST_CHECK_PLUGIN(aiff)
@@ -2013,6 +2014,7 @@ common/Makefile
 common/m4/Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/accurip/Makefile
 gst/adpcmdec/Makefile
 gst/adpcmenc/Makefile
 gst/aiff/Makefile
