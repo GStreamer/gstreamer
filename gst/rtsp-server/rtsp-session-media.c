@@ -124,7 +124,7 @@ gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
  *
  * Configure the transport for @stream to @tr in @media.
  *
- * Returns: the new or updated #GstRTSPStreamTransport for @stream.
+ * Returns: (transfer none): the new or updated #GstRTSPStreamTransport for @stream.
  */
 GstRTSPStreamTransport *
 gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
@@ -153,8 +153,8 @@ gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
  *
  * Get a previously created #GstRTSPStreamTransport for the stream at @idx.
  *
- * Returns: a #GstRTSPStreamTransport that is valid until the session of @media
- * is unreffed.
+ * Returns: (transfer none): a #GstRTSPStreamTransport that is valid until the
+ * session of @media is unreffed.
  */
 GstRTSPStreamTransport *
 gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)

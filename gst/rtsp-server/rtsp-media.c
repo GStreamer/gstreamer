@@ -690,7 +690,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
  * Create a new stream in @media that provides RTP data on @srcpad.
  * @srcpad should be a pad of an element inside @media->element.
  *
- * Returns: a new #GstRTSPStream that remains valid for as long
+ * Returns: (transfer none): a new #GstRTSPStream that remains valid for as long
  *          as @media exists.
  */
 GstRTSPStream *
@@ -747,7 +747,7 @@ gst_rtsp_media_n_streams (GstRTSPMedia * media)
  *
  * Retrieve the stream with index @idx from @media.
  *
- * Returns: the #GstRTSPStream at index @idx or %NULL when a stream with
+ * Returns: (transfer none): the #GstRTSPStream at index @idx or %NULL when a stream with
  * that index did not exist.
  */
 GstRTSPStream *

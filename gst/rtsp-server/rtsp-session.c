@@ -142,7 +142,7 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
  *
  * Ownership is taken from @media.
  *
- * Returns: a new @GstRTSPSessionMedia object.
+ * Returns: (transfer none): a new @GstRTSPSessionMedia object.
  */
 GstRTSPSessionMedia *
 gst_rtsp_session_manage_media (GstRTSPSession * sess, const GstRTSPUrl * uri,
@@ -197,7 +197,7 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
  *
  * Get the session media of the @url.
  *
- * Returns: the configuration for @url in @sess.
+ * Returns: (transfer none): the configuration for @url in @sess.
  */
 GstRTSPSessionMedia *
 gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
