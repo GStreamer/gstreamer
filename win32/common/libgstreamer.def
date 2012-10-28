@@ -784,6 +784,7 @@ EXPORTS
 	gst_plugin_error_quark
 	gst_plugin_feature_check_version
 	gst_plugin_feature_get_plugin
+	gst_plugin_feature_get_plugin_name
 	gst_plugin_feature_get_rank
 	gst_plugin_feature_get_type
 	gst_plugin_feature_list_copy

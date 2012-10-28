@@ -2087,6 +2087,7 @@ gst_plugin_feature_set_name
 gst_plugin_feature_get_rank
 gst_plugin_feature_get_name
 gst_plugin_feature_get_plugin
+gst_plugin_feature_get_plugin_name
 gst_plugin_feature_load
 gst_plugin_feature_list_copy
 gst_plugin_feature_list_free

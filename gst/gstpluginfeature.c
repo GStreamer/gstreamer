@@ -200,6 +200,28 @@ gst_plugin_feature_get_plugin (GstPluginFeature * feature)
 }
 
 /**
+ * gst_plugin_feature_get_plugin_name:
+ * @feature: a feature
+ *
+ * Get the name of the plugin that provides this feature.
+ *
+ * Returns: the name of the plugin that provides this feature, or %NULL if
+ *     the feature is not associated with a plugin.
+ *
+ * Since: 1.2.0
+ */
+const gchar *
+gst_plugin_feature_get_plugin_name (GstPluginFeature * feature)
+{
+  g_return_val_if_fail (GST_IS_PLUGIN_FEATURE (feature), NULL);
+
+  if (feature->plugin == NULL)
+    return NULL;
+
+  return gst_plugin_get_name (feature->plugin);
+}
+
+/**
  * gst_plugin_feature_list_free:
  * @list: (transfer full) (element-type Gst.PluginFeature): list
  *     of #GstPluginFeature
