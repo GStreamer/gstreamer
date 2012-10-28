@@ -91,18 +91,6 @@ dnl check for documentation tools
 AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
 
-dnl Check for Vala
-AC_ARG_ENABLE([vala],
-  AC_HELP_STRING([--enable-vala],[enable Vala bindings (default=yes)]),
-  [case "${enableval}" in
-    yes) enable_vala=yes ;;
-    no)  enable_vala=no ;;
-    *) AC_MSG_ERROR(bad value ${enableval} for --enable-vala) ;;
-   esac
-  ],
-  [enable_vala=yes]) dnl Default value
-AM_CONDITIONAL(WITH_VALA, [test "x$enable_vala" = "xyes"])
-
 dnl *** checks for libraries ***
 
 dnl *** checks for header files ***
@@ -257,8 +245,6 @@ gst/rtsp-server/Makefile
 examples/Makefile
 tests/Makefile
 tests/check/Makefile
-bindings/Makefile
-bindings/vala/Makefile
 pkgconfig/Makefile
 pkgconfig/gstreamer-rtsp-server.pc
 pkgconfig/gstreamer-rtsp-server-uninstalled.pc
@@ -275,7 +261,6 @@ Configuration
 	Source code location       : ${srcdir}
 	Prefix                     : ${prefix}
 	Compiler                   : ${CC}
-	Vala bindings              : ${enable_vala}
 
 gst-rtsp-server configured. Type 'make' to build.
 "
