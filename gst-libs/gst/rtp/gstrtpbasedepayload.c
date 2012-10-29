@@ -622,7 +622,7 @@ static gboolean
 gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
     GstEvent * event)
 {
-  GstClockTime timestamp, duration, position;
+  GstClockTime timestamp, duration;
   GstEvent *sevent;
   const GstStructure *s;
 
@@ -634,10 +634,6 @@ gst_rtp_base_depayload_packet_lost (GstRTPBaseDepayload * filter,
 
   gst_structure_get_clock_time (s, "timestamp", &timestamp);
   gst_structure_get_clock_time (s, "duration", &duration);
-
-  position = timestamp;
-  if (duration != -1)
-    position += duration;
 
   /* send GAP event */
   sevent = gst_event_new_gap (timestamp, duration);
