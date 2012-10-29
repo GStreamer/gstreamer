@@ -25,22 +25,23 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
-  jobject app;            /* Application instance, used to call its methods. A global reference is kept. */
-  GstElement *pipeline;   /* The running pipeline */
-  GMainContext *context;  /* GLib context used to run the main loop */
-  GMainLoop *main_loop;   /* GLib main loop */
-  gboolean initialized;   /* To avoid informing the UI multiple times about the initialization */
+  jobject app;                  /* Application instance, used to call its methods. A global reference is kept. */
+  GstElement *pipeline;         /* The running pipeline */
+  GMainContext *context;        /* GLib context used to run the main loop */
+  GMainLoop *main_loop;         /* GLib main loop */
+  gboolean initialized;         /* To avoid informing the UI multiple times about the initialization */
   ANativeWindow *native_window; /* The Android native window where video will be rendered */
-  GstState state, target_state;
-  gint64 duration;
-  gint64 desired_position;
-  GstClockTime last_seek_time;
-  gboolean is_live;
+  GstState state;               /* Current pipeline state */
+  GstState target_state;        /* Desired pipeline state, to be set once buffering is complete */
+  gint64 duration;              /* Cached clip duration */
+  gint64 desired_position;      /* Position to seek to, once the pipeline is running */
+  GstClockTime last_seek_time;  /* For seeking overflow prevention (throttling) */
+  gboolean is_live;             /* Live streams do not use buffering */
 } CustomData;
 
 /* playbin2 flags */
 typedef enum {
-  GST_PLAY_FLAG_TEXT          = (1 << 2)  /* We want subtitle output */
+  GST_PLAY_FLAG_TEXT = (1 << 2)  /* We want subtitle output */
 } GstPlayFlags;
 
 /* These global variables cache values which are not changing during execution */
@@ -106,6 +107,7 @@ static void set_ui_message (const gchar *message, CustomData *data) {
   (*env)->DeleteLocalRef (env, jmessage);
 }
 
+/* Tell the application what is the current position and clip duration */
 static void set_current_ui_position (gint position, gint duration, CustomData *data) {
   JNIEnv *env = get_jni_env ();
   (*env)->CallVoidMethod (env, data->app, set_current_position_method_id, position, duration);
@@ -115,6 +117,8 @@ static void set_current_ui_position (gint position, gint duration, CustomData *d
   }
 }
 
+/* If we have pipeline and it is running, query the current position and clip duration and inform
+ * the application */
 static gboolean refresh_ui (CustomData *data) {
   GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
@@ -147,6 +151,8 @@ static gboolean delayed_seek_cb (CustomData *data) {
   return FALSE;
 }
 
+/* Perform seek, if we are not too close to the previous seek. Otherwise, schedule the seek for
+ * some time in the future. */
 static void execute_seek (gint64 desired_position, CustomData *data) {
   gboolean res;
   gint64 diff;
