@@ -23,6 +23,8 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 # define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
 #endif
 
+#define SEEK_MIN_DELAY (500 * GST_MSECOND) /* Minimum time between consecutive seeks */
+
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
   jobject app;                  /* Application instance, used to call its methods. A global reference is kept. */
@@ -142,14 +144,8 @@ static gboolean refresh_ui (CustomData *data) {
   return TRUE;
 }
 
-static void execute_seek (gint64 desired_position, CustomData *data);
-
-static gboolean delayed_seek_cb (CustomData *data) {
-  GST_DEBUG ("Doing delayed seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (data->desired_position));
-  data->last_seek_time = GST_CLOCK_TIME_NONE;
-  execute_seek (data->desired_position, data);
-  return FALSE;
-}
+/* Forward declaration for the delayed seek callback */
+static gboolean delayed_seek_cb (CustomData *data);
 
 /* Perform seek, if we are not too close to the previous seek. Otherwise, schedule the seek for
  * some time in the future. */
@@ -162,24 +158,37 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
 
   diff = gst_util_get_timestamp () - data->last_seek_time;
 
-  if (GST_CLOCK_TIME_IS_VALID (data->last_seek_time) && diff < 500 * GST_MSECOND) {
+  if (GST_CLOCK_TIME_IS_VALID (data->last_seek_time) && diff < SEEK_MIN_DELAY) {
+    /* The previous seek was too close, delay this one */
     GSource *timeout_source;
 
     if (!GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
-      timeout_source = g_timeout_source_new (diff / GST_MSECOND);
+      /* There was no previous seek scheduled. Setup a timer for some time in the future */
+      timeout_source = g_timeout_source_new (SEEK_MIN_DELAY - diff / GST_MSECOND);
       g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
       g_source_attach (timeout_source, data->context);
       g_source_unref (timeout_source);
     }
+    /* Update the desired seek position. If multiple petitions are received before it is time
+     * to perform a seek, only the last one is remembered. */
     data->desired_position = desired_position;
     GST_DEBUG ("Throttling seek to %" GST_TIME_FORMAT ", will be in %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (desired_position), GST_TIME_ARGS (500 * GST_MSECOND - diff));
+        GST_TIME_ARGS (desired_position), GST_TIME_ARGS (SEEK_MIN_DELAY - diff));
   } else {
+    /* Perform the seek now */
     GST_DEBUG ("Seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (desired_position));
     res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
     data->last_seek_time = gst_util_get_timestamp ();
     data->desired_position = GST_CLOCK_TIME_NONE;
   }
+}
+
+/* Delayed seek callback. This gets called by the timer setup in the above function. */
+static gboolean delayed_seek_cb (CustomData *data) {
+  GST_DEBUG ("Doing delayed seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (data->desired_position));
+  data->last_seek_time = GST_CLOCK_TIME_NONE;
+  execute_seek (data->desired_position, data);
+  return FALSE;
 }
 
 /* Retrieve errors from the bus and show them on the UI */
