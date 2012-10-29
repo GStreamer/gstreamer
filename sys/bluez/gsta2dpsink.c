@@ -29,6 +29,8 @@
 #include <config.h>
 #endif
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <unistd.h>
 
 #include "gsta2dpsink.h"
