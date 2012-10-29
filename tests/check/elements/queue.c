@@ -630,6 +630,62 @@ GST_START_TEST (test_time_level_task_not_started)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sticky_not_linked)
+{
+  GstEvent *event;
+  GstSegment segment;
+  gboolean ret;
+  GstFlowReturn flow_ret;
+
+  GST_DEBUG ("starting");
+
+  g_object_set (queue, "max-size-buffers", 1, NULL);
+
+  UNDERRUN_LOCK ();
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  UNDERRUN_WAIT ();
+  UNDERRUN_UNLOCK ();
+
+  gst_pad_push_event (mysrcpad, gst_event_new_stream_start ("test"));
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 1 * GST_SECOND;
+  segment.stop = 5 * GST_SECOND;
+  segment.time = 0;
+  segment.position = 1 * GST_SECOND;
+
+  event = gst_event_new_segment (&segment);
+  ret = gst_pad_push_event (mysrcpad, event);
+  fail_unless (ret == TRUE);
+
+  /* the first few buffers can return OK as they are queued and gst_queue_loop
+   * is woken up, tries to push and sets ->srcresult to NOT_LINKED
+   */
+  flow_ret = GST_FLOW_OK;
+  while (flow_ret != GST_FLOW_NOT_LINKED)
+    flow_ret = gst_pad_push (mysrcpad, gst_buffer_new ());
+
+  /* send a new sticky event so that it will be pushed on the next gst_pad_push
+   */
+  event = gst_event_new_segment (&segment);
+  ret = gst_pad_push_event (mysrcpad, event);
+  fail_unless (ret == TRUE);
+
+  /* make sure that gst_queue_sink_event doesn't return FALSE if the queue is
+   * unlinked, as that would make gst_pad_push return ERROR
+   */
+  flow_ret = gst_pad_push (mysrcpad, gst_buffer_new ());
+  fail_unless_equals_int (flow_ret, GST_FLOW_NOT_LINKED);
+
+  GST_DEBUG ("stopping");
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+}
+
+GST_END_TEST;
+
 #if 0
 static gboolean
 event_equals_newsegment (GstEvent * event, gboolean update, gdouble rate,
@@ -773,6 +829,7 @@ queue_suite (void)
 #if 0
   tcase_add_test (tc_chain, test_newsegment);
 #endif
+  tcase_add_test (tc_chain, test_sticky_not_linked);
 
   return s;
 }

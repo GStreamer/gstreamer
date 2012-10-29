@@ -771,7 +771,17 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     default:
       if (GST_EVENT_IS_SERIALIZED (event)) {
         /* serialized events go in the queue */
-        GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
+        GST_QUEUE_MUTEX_LOCK (queue);
+        if (queue->srcresult != GST_FLOW_OK) {
+          /* Errors in sticky event pushing are no problem and ignored here
+           * as they will cause more meaningful errors during data flow.
+           * For EOS events, that are not followed by data flow, we still
+           * return FALSE here though.
+           */
+          if (!GST_EVENT_IS_STICKY (event) ||
+              GST_EVENT_TYPE (event) == GST_EVENT_EOS)
+            goto out_flow_error;
+        }
         /* refuse more events on EOS */
         if (queue->eos)
           goto out_eos;
@@ -798,6 +808,15 @@ out_flushing:
 out_eos:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "refusing event, we are EOS");
+    GST_QUEUE_MUTEX_UNLOCK (queue);
+    gst_event_unref (event);
+    return FALSE;
+  }
+out_flow_error:
+  {
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+        "refusing event, we have a downstream flow error: %s",
+        gst_flow_get_name (queue->srcresult));
     GST_QUEUE_MUTEX_UNLOCK (queue);
     gst_event_unref (event);
     return FALSE;
