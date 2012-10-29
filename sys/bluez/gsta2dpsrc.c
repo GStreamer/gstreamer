@@ -90,7 +90,7 @@ gst_a2dp_src_init (GstA2dpSrc * a2dpsrc, GstA2dpSrcClass * klass)
 {
   GstBin *bin = GST_BIN (a2dpsrc);
   GstElement *depay = NULL;
-  GstPad *srcpad, *depay_srcpad;
+  GstPad *srcpad = NULL, *depay_srcpad;
 
   /* FIXME: We can set up the bin elements here since we only support
    * SBC. When supporting more formats, we would need to only instantiate

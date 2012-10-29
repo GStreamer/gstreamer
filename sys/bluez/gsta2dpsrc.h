@@ -53,6 +53,8 @@ struct _GstA2dpSrc
   GstPad *srcpad;
 };
 
+GType gst_a2dp_src_get_type (void);
+
 gboolean gst_a2dp_src_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS

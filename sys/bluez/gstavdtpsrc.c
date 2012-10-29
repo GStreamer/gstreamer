@@ -25,6 +25,7 @@
 #include <config.h>
 #endif
 
+#include <unistd.h>
 #include <stdint.h>
 #include <string.h>
 #include <poll.h>
@@ -169,7 +170,7 @@ static GstCaps *
 gst_avdtp_src_getcaps (GstPad * pad)
 {
   GstAvdtpSrc *avdtpsrc = GST_AVDTP_SRC (gst_pad_get_parent_element (pad));
-  GstCaps *ret;
+  GstCaps *ret = NULL;
 
   if (avdtpsrc->dev_caps) {
     const GValue *value;
@@ -321,7 +322,7 @@ gst_avdtp_src_create (GstBaseSrc * bsrc, guint64 offset,
 
   GST_LOG_OBJECT (avdtpsrc, "Read %d bytes", ret);
 
-  if (ret < length) {
+  if (ret < (gint) length) {
     /* Create a subbuffer for as much as we've actually read */
     *outbuf = gst_buffer_create_sub (buf, 0, ret);
     gst_buffer_unref (buf);
@@ -348,6 +349,8 @@ gst_avdtp_src_unlock (GstBaseSrc * bsrc)
   g_atomic_int_set (&avdtpsrc->unlocked, TRUE);
 
   gst_poll_set_flushing (avdtpsrc->poll, TRUE);
+
+  return TRUE;
 }
 
 static gboolean
@@ -361,6 +364,8 @@ gst_avdtp_src_unlock_stop (GstBaseSrc * bsrc)
 
   /* Flush out any stale data that might be buffered */
   gst_avdtp_connection_conf_recv_stream_fd (&avdtpsrc->conn);
+
+  return TRUE;
 }
 
 gboolean
