@@ -102,7 +102,11 @@ _internal_get_supported_protocols (gpointer data)
   gint i, j;
 
   schemes = g_vfs_get_supported_uri_schemes (g_vfs_get_default ());
-  num = g_strv_length ((gchar **) schemes);
+
+  if (schemes != NULL)
+    num = g_strv_length ((gchar **) schemes);
+  else
+    num = 0;
 
   if (num == 0) {
     GST_WARNING ("No GIO supported URI schemes found");
