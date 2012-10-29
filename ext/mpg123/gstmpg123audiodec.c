@@ -212,6 +212,7 @@ gst_mpg123_audio_dec_finalize (GObject * object)
     mpg123_delete (mpg123_decoder->handle);
     mpg123_decoder->handle = NULL;
   }
+  G_OBJECT_CLASS (gst_mpg123_audio_dec_parent_class)->finalize (object);
 }
 
 
