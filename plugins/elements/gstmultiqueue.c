@@ -1845,7 +1845,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
      */
     if (sq->is_eos || IS_FILLED (sq, bytes, ssize.bytes) ||
         IS_FILLED (sq, time, sq->cur_time)) {
-      GST_LOG_OBJECT (mq, "Queue %d is filled", oq->id);
+      GST_LOG_OBJECT (mq, "Queue %d is filled EOS %d", sq->id, sq->is_eos);
       filled = TRUE;
     }
   }
