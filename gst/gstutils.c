@@ -3618,7 +3618,7 @@ gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent,
       g_checksum_free (cs);
     } else {
       /* Just get some random number if the URI query fails */
-      GST_WARNING_OBJECT (pad, "Creating random stream-id, consider "
+      GST_FIXME_OBJECT (pad, "Creating random stream-id, consider "
           "implementing a deterministic way of creating a stream-id");
       upstream_stream_id =
           g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
