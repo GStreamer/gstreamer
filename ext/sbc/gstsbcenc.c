@@ -354,7 +354,7 @@ gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
 
   enc->codesize = sbc_get_codesize (&enc->sbc);
   enc->frame_length = sbc_get_frame_length (&enc->sbc);
-  enc->frame_duration = sbc_get_frame_duration (&enc->sbc);
+  enc->frame_duration = sbc_get_frame_duration (&enc->sbc) * 1000;
 
   GST_DEBUG_OBJECT (enc, "codesize: %d, frame_length: %d, frame_duration:"
       " %d", enc->codesize, enc->frame_length, enc->frame_duration);
