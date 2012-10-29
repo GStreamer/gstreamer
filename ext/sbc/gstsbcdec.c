@@ -62,10 +62,12 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
   guint size, codesize, offset = 0;
   guint8 *data;
   GstClockTime timestamp;
+  gboolean discont;
 
   codesize = sbc_get_codesize (&dec->sbc);
 
-  if (GST_BUFFER_IS_DISCONT (buffer)) {
+  discont = GST_BUFFER_IS_DISCONT (buffer);
+  if (discont) {
     /* reset previous buffer */
     gst_buffer_unref (dec->buffer);
     dec->buffer = NULL;
@@ -155,6 +157,11 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     gst_buffer_set_caps (output, dec->outcaps);
+
+    if (discont) {
+      GST_BUFFER_FLAG_SET (output, GST_BUFFER_FLAG_DISCONT);
+      discont = FALSE;
+    }
 
     res = gst_pad_push (dec->srcpad, output);
     if (res != GST_FLOW_OK)
