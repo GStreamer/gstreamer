@@ -135,6 +135,7 @@ done:
 static GstStateChangeReturn
 sbc_dec_change_state (GstElement * element, GstStateChange transition)
 {
+  GstStateChangeReturn result;
   GstSbcDec *dec = GST_SBC_DEC (element);
 
   switch (transition) {
@@ -147,7 +148,13 @@ sbc_dec_change_state (GstElement * element, GstStateChange transition)
       sbc_init (&dec->sbc, 0);
       dec->outcaps = NULL;
       break;
+    default:
+      break;
+  }
 
+  result = parent_class->change_state (element, transition);
+
+  switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("Finish subband codec");
       if (dec->buffer) {
@@ -165,7 +172,7 @@ sbc_dec_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  return parent_class->change_state (element, transition);
+  return result;
 }
 
 static void
