@@ -82,11 +82,13 @@ GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_AP
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
+		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--add-include-path="$(top_builddir)/gst-libs/gst/tag/" \
 		--add-include-path="$(top_builddir)/gst-libs/gst/video/" \
 		--add-include-path="$(top_builddir)/gst-libs/gst/audio/" \
 		--library=libgstpbutils-@GST_API_VERSION@.la \
 		--library-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=libdir gstreamer-@GST_API_VERSION@` \
+		--library-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=libdir gstreamer-base-@GST_API_VERSION@` \
 		--library-path="$(top_builddir)/gst-libs/gst/tag/" \
 		--library-path="$(top_builddir)/gst-libs/gst/video/" \
 		--library-path="$(top_builddir)/gst-libs/gst/audio/" \
