@@ -23,7 +23,9 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 # define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(jint)data)
 #endif
 
-#define SEEK_MIN_DELAY (500 * GST_MSECOND) /* Minimum time between consecutive seeks */
+/* Do not allow seeks to be performed closer than this distance. It is visually useless, and will probably
+ * confuse some demuxers. */
+#define SEEK_MIN_DELAY (500 * GST_MSECOND)
 
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
@@ -150,7 +152,6 @@ static gboolean delayed_seek_cb (CustomData *data);
 /* Perform seek, if we are not too close to the previous seek. Otherwise, schedule the seek for
  * some time in the future. */
 static void execute_seek (gint64 desired_position, CustomData *data) {
-  gboolean res;
   gint64 diff;
 
   if (desired_position == GST_CLOCK_TIME_NONE)
@@ -162,9 +163,9 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
     /* The previous seek was too close, delay this one */
     GSource *timeout_source;
 
-    if (!GST_CLOCK_TIME_IS_VALID (data->desired_position)) {
+    if (data->desired_position == GST_CLOCK_TIME_NONE) {
       /* There was no previous seek scheduled. Setup a timer for some time in the future */
-      timeout_source = g_timeout_source_new (SEEK_MIN_DELAY - diff / GST_MSECOND);
+      timeout_source = g_timeout_source_new ((SEEK_MIN_DELAY - diff) / GST_MSECOND);
       g_source_set_callback (timeout_source, (GSourceFunc)delayed_seek_cb, data, NULL);
       g_source_attach (timeout_source, data->context);
       g_source_unref (timeout_source);
@@ -177,8 +178,8 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
   } else {
     /* Perform the seek now */
     GST_DEBUG ("Seeking to %" GST_TIME_FORMAT, GST_TIME_ARGS (desired_position));
-    res = gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
     data->last_seek_time = gst_util_get_timestamp ();
+    gst_element_seek_simple (data->pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, desired_position);
     data->desired_position = GST_CLOCK_TIME_NONE;
   }
 }
@@ -186,7 +187,6 @@ static void execute_seek (gint64 desired_position, CustomData *data) {
 /* Delayed seek callback. This gets called by the timer setup in the above function. */
 static gboolean delayed_seek_cb (CustomData *data) {
   GST_DEBUG ("Doing delayed seek to %" GST_TIME_FORMAT, GST_TIME_ARGS (data->desired_position));
-  data->last_seek_time = GST_CLOCK_TIME_NONE;
   execute_seek (data->desired_position, data);
   return FALSE;
 }
@@ -286,7 +286,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   /* Only pay attention to messages coming from the pipeline, not its children */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     data->state = new_state;
-    if (data->state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position))
+    if (old_state < GST_STATE_PAUSED && new_state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position))
       execute_seek (data->desired_position, data);
     gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
     set_ui_message(message, data);
@@ -399,6 +399,8 @@ static void *app_function (void *userdata) {
 /* Instruct the native code to create its internal data structure, pipeline and thread */
 static void gst_native_init (JNIEnv* env, jobject thiz) {
   CustomData *data = g_new0 (CustomData, 1);
+  data->desired_position = GST_CLOCK_TIME_NONE;
+  data->last_seek_time = GST_CLOCK_TIME_NONE;
   SET_CUSTOM_DATA (env, thiz, custom_data_field_id, data);
   GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-4", 0, "Android tutorial 4");
   gst_debug_set_threshold_for_name("tutorial-4", GST_LEVEL_DEBUG);
