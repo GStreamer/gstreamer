@@ -207,18 +207,20 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gst_element_set_state (data->pipeline, GST_STATE_NULL);
 }
 
+/* Called when the End Of the Stream is reached. Just move to the beginning of the media and pause. */
 static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
-  set_ui_message (GST_MESSAGE_TYPE_NAME (msg), data);
-  refresh_ui (data);
   data->target_state = GST_STATE_PAUSED;
   data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
   execute_seek (0, data);
 }
 
+/* Called when the duration of the media changes. Just mark it as unknown, so we re-query it later. */
 static void duration_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   data->duration = GST_CLOCK_TIME_NONE;
 }
 
+/* Called when buffering messages are received. We inform the UI about the current buffering level and
+ * keep the pipeline paused until 100% buffering is reached. At that point, set the desired state. */
 static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   gint percent;
 
@@ -238,6 +240,7 @@ static void buffering_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   }
 }
 
+/* Called when the clock is lost */
 static void clock_lost_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   if (data->target_state >= GST_STATE_PLAYING) {
     gst_element_set_state (data->pipeline, GST_STATE_PAUSED);
@@ -286,15 +289,18 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   /* Only pay attention to messages coming from the pipeline, not its children */
   if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->pipeline)) {
     data->state = new_state;
-    if (old_state < GST_STATE_PAUSED && new_state >= GST_STATE_PAUSED && GST_CLOCK_TIME_IS_VALID (data->desired_position))
-      execute_seek (data->desired_position, data);
     gchar *message = g_strdup_printf("State changed to %s", gst_element_state_get_name(new_state));
     set_ui_message(message, data);
     g_free (message);
 
+    /* The Ready to Paused state change is particularly interesting: */
     if (old_state == GST_STATE_READY && new_state == GST_STATE_PAUSED) {
       /* By now the sink already knows the media size */
       check_media_size(data);
+
+      /* If there was a scheduled seek, perform it now that we have moved to the Paused state */
+      if (GST_CLOCK_TIME_IS_VALID (data->desired_position))
+        execute_seek (data->desired_position, data);
     }
   }
 }
@@ -426,6 +432,7 @@ static void gst_native_finalize (JNIEnv* env, jobject thiz) {
   GST_DEBUG ("Done finalizing");
 }
 
+/* Set playbin2's URI */
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
@@ -457,6 +464,7 @@ static void gst_native_pause (JNIEnv* env, jobject thiz) {
   data->is_live = (gst_element_set_state (data->pipeline, GST_STATE_PAUSED) == GST_STATE_CHANGE_NO_PREROLL);
 }
 
+/* Instruct the pipeline to seek to a different position */
 void gst_native_set_position (JNIEnv* env, jobject thiz, int milliseconds) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data) return;
