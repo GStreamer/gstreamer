@@ -61,8 +61,17 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
   guint size, codesize, offset = 0;
   guint8 *data;
+  GstClockTime timestamp;
 
   codesize = sbc_get_codesize (&dec->sbc);
+
+  if (GST_BUFFER_IS_DISCONT (buffer)) {
+    /* reset previous buffer */
+    gst_buffer_unref (dec->buffer);
+    dec->buffer = NULL;
+    /* we need a new timestamp to lock onto */
+    dec->next_sample = -1;
+  }
 
   if (dec->buffer) {
     GstBuffer *temp = buffer;
@@ -76,11 +85,16 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+
   while (offset < size) {
     GstBuffer *output;
     GstPadTemplate *template;
     GstCaps *caps;
     int consumed;
+    GstClockTime duration;
+    gint rate, channels;
 
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
         GST_BUFFER_OFFSET_NONE, codesize, NULL, &output);
@@ -90,16 +104,46 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
 
     consumed = sbc_decode (&dec->sbc, data + offset, size - offset,
         GST_BUFFER_DATA (output), codesize, NULL);
+    GST_INFO_OBJECT (dec, "consumed %d bytes", consumed);
+
     if (consumed <= 0)
       break;
+
+    rate = gst_sbc_parse_rate_from_sbc (dec->sbc.frequency);
+    channels = gst_sbc_get_channel_number (dec->sbc.mode);
+
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* lock onto timestamp when we have one */
+      dec->next_sample = gst_util_uint64_scale_int (timestamp,
+          rate, GST_SECOND);
+    }
+    if (dec->next_sample != (guint64) - 1) {
+      /* reconstruct timestamp from our sample counter otherwise */
+      timestamp = gst_util_uint64_scale_int (dec->next_sample,
+          GST_SECOND, rate);
+    }
+    GST_BUFFER_TIMESTAMP (output) = timestamp;
+
+    /* calculate the next sample */
+    if (dec->next_sample != (guint64) - 1) {
+      /* we ave a valid sample, counter, increment it. */
+      dec->next_sample += codesize / (2 * channels);
+      duration = gst_util_uint64_scale_int (dec->next_sample,
+          GST_SECOND, rate) - timestamp;
+    } else {
+      /* otherwise calculate duration based on output size */
+      duration = gst_util_uint64_scale_int (codesize / (2 * channels),
+          GST_SECOND, rate) - timestamp;
+    }
+    GST_BUFFER_DURATION (output) = duration;
+
+    /* reset timestamp for next round */
+    timestamp = GST_CLOCK_TIME_NONE;
 
     /* we will reuse the same caps object */
     if (dec->outcaps == NULL) {
       caps = gst_caps_new_simple ("audio/x-raw-int",
-          "rate", G_TYPE_INT,
-          gst_sbc_parse_rate_from_sbc (dec->sbc.frequency),
-          "channels", G_TYPE_INT,
-          gst_sbc_get_channel_number (dec->sbc.mode), NULL);
+          "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
 
       template = gst_static_pad_template_get (&sbc_dec_src_factory);
 
@@ -111,8 +155,6 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     gst_buffer_set_caps (output, dec->outcaps);
-
-    gst_buffer_copy_metadata (output, buffer, GST_BUFFER_COPY_TIMESTAMPS);
 
     res = gst_pad_push (dec->srcpad, output);
     if (res != GST_FLOW_OK)
@@ -146,6 +188,7 @@ sbc_dec_change_state (GstElement * element, GstStateChange transition)
       }
       sbc_init (&dec->sbc, 0);
       dec->outcaps = NULL;
+      dec->next_sample = -1;
       break;
     default:
       break;

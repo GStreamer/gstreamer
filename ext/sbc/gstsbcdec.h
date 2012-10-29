@@ -53,6 +53,7 @@ struct _GstSbcDec {
 	GstCaps *outcaps;
 
 	sbc_t sbc;
+        guint64 next_sample;
 };
 
 struct _GstSbcDecClass {
