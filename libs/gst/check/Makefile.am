@@ -130,7 +130,7 @@ GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VE
 		$(gir_cincludes) \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
-		--library=gstcheck-@GST_API_VERSION@ \
+		--library=libgstcheck-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_API_VERSION@ \
