@@ -58,6 +58,7 @@ struct _GstAvdtpConnection
 
 gboolean gst_avdtp_connection_acquire (GstAvdtpConnection * conn);
 void gst_avdtp_connection_release (GstAvdtpConnection * conn);
+void gst_avdtp_connection_reset (GstAvdtpConnection * conn);
 gboolean gst_avdtp_connection_get_properties (GstAvdtpConnection * conn);
 GstCaps *gst_avdtp_connection_get_caps (GstAvdtpConnection * conn);
 void gst_avdtp_connection_set_device (GstAvdtpConnection * conn,
