@@ -318,7 +318,9 @@ gst_collect_pads_set_buffer_function_locked (GstCollectPads * pads,
  * @user_data: (closure): user data passed to the function
  *
  * Set the callback function and user data that will be called with
- * the oldest buffer when all pads have been collected.
+ * the oldest buffer when all pads have been collected, or NULL on EOS.
+ * If a buffer is passed, the callback owns a reference and must unref
+ * it.
  *
  * MT safe.
  */
