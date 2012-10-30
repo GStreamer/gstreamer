@@ -459,6 +459,7 @@ start_play_tune (GstSidDec * siddec)
 
   gst_segment_init (&segment, GST_FORMAT_TIME);
   gst_pad_push_event (siddec->srcpad, gst_event_new_segment (&segment));
+  siddec->total_bytes = 0;
 
   res = gst_pad_start_task (siddec->srcpad,
       (GstTaskFunction) play_loop, siddec->srcpad, NULL);
