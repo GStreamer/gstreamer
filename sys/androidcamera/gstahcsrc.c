@@ -324,7 +324,6 @@ static gboolean
 gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
 {
   GstAHCSrc *self = GST_AHC_SRC (src);
-  JNIEnv *env = gst_dvm_get_env ();
   gboolean ret = FALSE;
   GstAHCParameters *params = NULL;
 
@@ -337,9 +336,8 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
   if (params) {
     GstVideoFormat format;
     gint fmt;
-    gint width, height, fps_n, fps_d;
+    gint width, height, fps_n, fps_d, buffer_size;
     GList *ranges, *l;
-    gint i;
     gint range_size = G_MAXINT;
 
     if (!gst_video_format_parse_caps (caps, &format, &width, &height) ||
@@ -418,15 +416,22 @@ gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps)
     self->width = width;
     self->height = height;
     self->format = fmt;
-    self->buffer_size = width * height *
+    buffer_size = width * height *
         ((double) gst_ag_imageformat_get_bits_per_pixel (fmt) / 8);
+    if (buffer_size > self->buffer_size) {
+      JNIEnv *env = gst_dvm_get_env ();
+      gint i;
 
-    for (i = 0; i < NUM_CALLBACK_BUFFERS; i++) {
-      jbyteArray array = (*env)->NewByteArray (env, self->buffer_size);
+      for (i = 0; i < NUM_CALLBACK_BUFFERS; i++) {
+        jbyteArray array = (*env)->NewByteArray (env, buffer_size);
 
-      gst_ah_camera_add_callback_buffer (self->camera, array);
-      (*env)->DeleteLocalRef (env, array);
+        if (array) {
+          gst_ah_camera_add_callback_buffer (self->camera, array);
+          (*env)->DeleteLocalRef (env, array);
+        }
+      }
     }
+    self->buffer_size = buffer_size;
     ret = TRUE;
   }
 
@@ -518,6 +523,11 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GstClockTime duration = 0;
   GstClock *clock;
 
+  if (data == NULL) {
+    GST_DEBUG_OBJECT (self, "Size of array in queue is too small, dropping it");
+    return;
+  }
+
   if ((clock = GST_ELEMENT_CLOCK (self))) {
     GstClockTime base_time = GST_ELEMENT_CAST (self)->base_time;
     GstClockTime current_ts;
@@ -580,6 +590,7 @@ gst_ahc_src_open (GstAHCSrc * self)
 
     self->texture = gst_ag_surfacetexture_new (0);
     gst_ah_camera_set_preview_texture (self->camera, self->texture);
+    self->buffer_size = 0;
   } else {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Unable to open device '%d'.", 0), GST_ERROR_SYSTEM);
