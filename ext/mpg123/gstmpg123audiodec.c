@@ -72,7 +72,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [ 1, 2 ], " "parsed = (boolean) true ")
     );
 
-static void gst_mpg123_audio_dec_finalize (GObject * object);
 static gboolean gst_mpg123_audio_dec_start (GstAudioDecoder * dec);
 static gboolean gst_mpg123_audio_dec_stop (GstAudioDecoder * dec);
 static GstFlowReturn gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec
@@ -89,7 +88,6 @@ G_DEFINE_TYPE (GstMpg123AudioDec, gst_mpg123_audio_dec, GST_TYPE_AUDIO_DECODER);
 static void
 gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
 {
-  GObjectClass *object_class;
   GstAudioDecoderClass *base_class;
   GstElementClass *element_class;
   GstPadTemplate *src_template, *sink_template;
@@ -97,11 +95,8 @@ gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (mpg123_debug, "mpg123", 0, "mpg123 mp3 decoder");
 
-  object_class = G_OBJECT_CLASS (klass);
   base_class = GST_AUDIO_DECODER_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
-
-  object_class->finalize = gst_mpg123_audio_dec_finalize;
 
   gst_element_class_set_static_metadata (element_class,
       "mpg123 mp3 decoder",
@@ -201,18 +196,6 @@ void
 gst_mpg123_audio_dec_init (GstMpg123AudioDec * mpg123_decoder)
 {
   mpg123_decoder->handle = NULL;
-}
-
-
-static void
-gst_mpg123_audio_dec_finalize (GObject * object)
-{
-  GstMpg123AudioDec *mpg123_decoder = GST_MPG123_AUDIO_DEC (object);
-  if (G_LIKELY (mpg123_decoder->handle != NULL)) {
-    mpg123_delete (mpg123_decoder->handle);
-    mpg123_decoder->handle = NULL;
-  }
-  G_OBJECT_CLASS (gst_mpg123_audio_dec_parent_class)->finalize (object);
 }
 
 
