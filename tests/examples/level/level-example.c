@@ -21,6 +21,8 @@
 #include <string.h>
 #include <math.h>
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include <gst/gst.h>
 
 static gboolean
@@ -36,8 +38,9 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
       GstClockTime endtime;
       gdouble rms_dB, peak_dB, decay_dB;
       gdouble rms;
-      const GValue *list;
+      const GValue *array_val;
       const GValue *value;
+      GValueArray *arr;
 
       gint i;
 
@@ -45,21 +48,26 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
         g_warning ("Could not parse endtime");
       /* we can get the number of channels as the length of any of the value
        * lists */
-      list = gst_structure_get_value (s, "rms");
-      channels = gst_value_list_get_size (list);
+      array_val = gst_structure_get_value (s, "rms");
+      arr = (GValueArray *) g_value_get_boxed (array_val);
+      channels = arr->n_values;
 
       g_print ("endtime: %" GST_TIME_FORMAT ", channels: %d\n",
           GST_TIME_ARGS (endtime), channels);
       for (i = 0; i < channels; ++i) {
+
         g_print ("channel %d\n", i);
-        list = gst_structure_get_value (s, "rms");
-        value = gst_value_list_get_value (list, i);
+        array_val = gst_structure_get_value (s, "rms");
+        arr = (GValueArray *) g_value_get_boxed (array_val);
+        value = g_value_array_get_nth (arr, i);
         rms_dB = g_value_get_double (value);
-        list = gst_structure_get_value (s, "peak");
-        value = gst_value_list_get_value (list, i);
+        array_val = gst_structure_get_value (s, "peak");
+        arr = (GValueArray *) g_value_get_boxed (array_val);
+        value = g_value_array_get_nth (arr, i);
         peak_dB = g_value_get_double (value);
-        list = gst_structure_get_value (s, "decay");
-        value = gst_value_list_get_value (list, i);
+        array_val = gst_structure_get_value (s, "decay");
+        arr = (GValueArray *) g_value_get_boxed (array_val);
+        value = g_value_array_get_nth (arr, i);
         decay_dB = g_value_get_double (value);
         g_print ("    RMS: %f dB, peak: %f dB, decay: %f dB\n",
             rms_dB, peak_dB, decay_dB);
