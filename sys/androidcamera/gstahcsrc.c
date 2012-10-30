@@ -606,8 +606,11 @@ gst_ahc_src_open (GstAHCSrc * self)
 static void
 gst_ahc_src_close (GstAHCSrc * self)
 {
-  if (self->camera)
+  if (self->camera) {
+    gst_ah_camera_set_error_callback (self->camera, NULL, NULL);
+    gst_ah_camera_set_preview_callback_with_buffer (self->camera, NULL, NULL);
     gst_ah_camera_release (self->camera);
+  }
   self->camera = NULL;
 
   if (self->texture)
@@ -698,7 +701,6 @@ gst_ahc_src_stop (GstBaseSrc * bsrc)
   if (self->camera) {
     gst_data_queue_flush (self->queue);
     self->start = FALSE;
-    gst_ah_camera_set_preview_callback_with_buffer (self->camera, NULL, NULL);
     gst_ah_camera_set_error_callback (self->camera, NULL, NULL);
     return gst_ah_camera_stop_preview (self->camera);
   }
