@@ -212,6 +212,8 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
         nativeSurfaceFinalize ();
     }
 
+    // Called from native code when the size of the media changes or is first detected.
+    // Inform the video surface about the new size and recalculate the layout.
     private void onMediaSizeChanged (int width, int height) {
         Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
         final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
@@ -224,6 +226,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
         });
     }
 
+    // The Seek Bar thumb has moved, either because the user dragged it or we have called setProgress()
     public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
         if (fromUser == false) return;
         desired_position = progress;
@@ -232,10 +235,12 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
         updateTimeWidget();
     }
 
+    // The user started dragging the Seek Bar thumb
     public void onStartTrackingTouch(SeekBar sb) {
         nativePause();
     }
 
+    // The user released the Seek Bar thumb
     public void onStopTrackingTouch(SeekBar sb) {
         // If this is a remote file, scrub seeking is probably not going to work smoothly enough.
         // Therefore, perform only the seek when the slider is released.
