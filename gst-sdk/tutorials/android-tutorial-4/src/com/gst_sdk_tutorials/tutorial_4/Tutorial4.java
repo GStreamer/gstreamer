@@ -131,7 +131,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
     // Set the URI to play, and record whether it is a local or remote file
     private void setMediaUri() {
         nativeSetUri (mediaUri);
-        if (mediaUri.startsWith("file://")) is_local_media = true;
+        is_local_media = mediaUri.startsWith("file://");
     }
 
     // Called from native code. Native code calls this once it has created its pipeline and
