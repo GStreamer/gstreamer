@@ -214,7 +214,7 @@ static void eos_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   execute_seek (0, data);
 }
 
-/* Called when the duration of the media changes. Just mark it as unknown, so we re-query it later. */
+/* Called when the duration of the media changes. Just mark it as unknown, so we re-query it in the next UI refresh. */
 static void duration_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   data->duration = GST_CLOCK_TIME_NONE;
 }
