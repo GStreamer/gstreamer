@@ -571,7 +571,10 @@ gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
   item->visible = TRUE;
   item->destroy = (GDestroyNotify) _data_queue_item_free;
 
-  gst_data_queue_push (self->queue, item);
+  if (!gst_data_queue_push (self->queue, item)) {
+    /* Can't add buffer to queue. Must be flushing. */
+    _data_queue_item_free (item);
+  }
 }
 
 static void
