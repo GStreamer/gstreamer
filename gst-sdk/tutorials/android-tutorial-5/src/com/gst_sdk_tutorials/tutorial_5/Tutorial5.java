@@ -9,10 +9,12 @@ import com.lamerman.FileDialog;
 import com.lamerman.SelectionMode;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -42,6 +44,8 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
     private int desired_position;
 
     private Bundle initialization_data;
+
+    private PowerManager.WakeLock wake_lock;
     
     private String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
     static private final int PICK_FILE_CODE = 1;
@@ -62,10 +66,16 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
 
         setContentView(R.layout.main);
 
+
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wake_lock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "Android Aurena");
+        wake_lock.setReferenceCounted(false);
+
         ImageButton play = (ImageButton) this.findViewById(R.id.button_play);
         play.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 is_playing_desired = true;
+                wake_lock.acquire();
                 nativePlay();
             }
         });
@@ -74,6 +84,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         pause.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 is_playing_desired = false;
+                wake_lock.release();
                 nativePause();
             }
         });
@@ -81,10 +92,10 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         ImageButton select = (ImageButton) this.findViewById(R.id.button_select);
         select.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
-            	Intent i = new Intent(getBaseContext(), FileDialog.class);
-            	i.putExtra(FileDialog.START_PATH, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
-            	i.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
-            	startActivityForResult(i, PICK_FILE_CODE);
+                Intent i = new Intent(getBaseContext(), FileDialog.class);
+                i.putExtra(FileDialog.START_PATH, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
+                i.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
+                startActivityForResult(i, PICK_FILE_CODE);
             }
         });
 
@@ -113,6 +124,8 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
 
     protected void onDestroy() {
         nativeFinalize();
+        if (wake_lock.isHeld())
+            wake_lock.release();
         super.onDestroy();
     }
 
@@ -132,7 +145,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
     }
 
     /* Called from native code */
-    private void onGStreamerInitialized () {    	
+    private void onGStreamerInitialized () {
         if (initialization_data != null) {
             is_playing_desired = initialization_data.getBoolean("playing");
             int milliseconds = initialization_data.getInt("position");
@@ -149,8 +162,10 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         setMediaUri ();
         if (is_playing_desired) {
             nativePlay();
+            wake_lock.acquire();
         } else {
             nativePause();
+            wake_lock.release();
         }
     }
 
@@ -252,9 +267,9 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-    	if (resultCode == RESULT_OK && requestCode == PICK_FILE_CODE) {
-    		mediaUri = "file://" + data.getStringExtra(FileDialog.RESULT_PATH);
-    		setMediaUri();
-    	}
+        if (resultCode == RESULT_OK && requestCode == PICK_FILE_CODE) {
+            mediaUri = "file://" + data.getStringExtra(FileDialog.RESULT_PATH);
+            setMediaUri();
+        }
     } 
 }
