@@ -440,6 +440,7 @@ end:
     gst_ahc_parameters_free (params);
 
   if (ret && self->start) {
+    GST_DEBUG_OBJECT (self, "Starting preview");
     ret = gst_ah_camera_start_preview (self->camera);
     if (ret) {
       /* Need to reset callbacks after every startPreview */
@@ -512,7 +513,7 @@ _data_queue_item_free (GstDataQueueItem * item)
 }
 
 static void
-gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
+gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
 {
   GstAHCSrc *self = GST_AHC_SRC (user_data);
   JNIEnv *env = gst_dvm_get_env ();
@@ -523,7 +524,7 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
   GstClockTime duration = 0;
   GstClock *clock;
 
-  if (data == NULL) {
+  if (array == NULL) {
     GST_DEBUG_OBJECT (self, "Size of array in queue is too small, dropping it");
     return;
   }
@@ -542,15 +543,18 @@ gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data)
     } else {
       /* Drop the first buffer */
       self->previous_ts = current_ts;
-      gst_ah_camera_add_callback_buffer (self->camera, data);
+      gst_ah_camera_add_callback_buffer (self->camera, array);
       return;
     }
+  } else {
+    gst_ah_camera_add_callback_buffer (self->camera, array);
+    return;
   }
   //GST_WARNING_OBJECT (self, "Received data buffer %p", data);
   malloc_data = g_slice_new0 (FreeFuncBuffer);
   malloc_data->self = gst_object_ref (self);
-  malloc_data->array = (*env)->NewGlobalRef (env, data);
-  malloc_data->data = (*env)->GetByteArrayElements (env, data, NULL);
+  malloc_data->array = (*env)->NewGlobalRef (env, array);
+  malloc_data->data = (*env)->GetByteArrayElements (env, array, NULL);
 
   buffer = gst_buffer_new ();
   GST_BUFFER_DATA (buffer) = (guint8 *) malloc_data->data;
