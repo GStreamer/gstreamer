@@ -669,6 +669,8 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
 
   g_free (buf->empty_seg);
   buf->empty_seg = NULL;
+  gst_caps_replace (&buf->spec.caps, NULL);
+  gst_audio_info_init (&buf->spec.info);
   GST_DEBUG_OBJECT (buf, "released device");
 
 done:
