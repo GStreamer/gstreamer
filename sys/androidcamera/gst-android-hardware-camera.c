@@ -247,7 +247,7 @@ _init_classes (void)
     gchar *path = g_strdup_printf ("%s/GstAhcCallback.jar", g_getenv ("TMP"));
     FILE *fd = fopen (path, "wb");
 
-    GST_WARNING ("Found embedded GstAhcCallback.jar, trying to load dynamically"
+    GST_DEBUG ("Found embedded GstAhcCallback.jar, trying to load dynamically"
         "from %s", path);
     if (fd) {
       if (fwrite (gst_ahc_callback_jar, gst_ahc_callback_jar_size, 1, fd) == 1) {
@@ -310,7 +310,7 @@ _init_classes (void)
               (*env)->ExceptionClear (env);
               if (temp) {
 
-                GST_WARNING ("Successfully loaded embedded GstAhcCallback");
+                GST_DEBUG ("Successfully loaded embedded GstAhcCallback");
                 com_gstreamer_gstahccallback.klass = (*env)->NewGlobalRef (env,
                     temp);
                 (*env)->DeleteLocalRef (env, temp);
@@ -562,17 +562,19 @@ gst_ah_camera_set_error_callback (GstAHCamera * self, GstAHCErrorCallback cb,
     gpointer user_data)
 {
   JNIEnv *env = gst_dvm_get_env ();
-  jobject object;
+  jobject object = NULL;
   gboolean ret = FALSE;
 
-  object = (*env)->NewObject (env,
-      com_gstreamer_gstahccallback.klass,
-      com_gstreamer_gstahccallback.constructor,
-      *((jlong *) & cb), *((jlong *) & user_data));
-  if (!object) {
-    GST_ERROR ("Failed to create callback object");
-    (*env)->ExceptionClear (env);
-    goto done;
+  if (cb) {
+    object = (*env)->NewObject (env,
+        com_gstreamer_gstahccallback.klass,
+        com_gstreamer_gstahccallback.constructor,
+        *((jlong *) & cb), *((jlong *) & user_data));
+    if (!object) {
+      GST_ERROR ("Failed to create callback object");
+      (*env)->ExceptionClear (env);
+      goto done;
+    }
   }
 
   AHC_CALL (goto done, Void, setErrorCallback, object);
@@ -590,17 +592,19 @@ gst_ah_camera_set_preview_callback_with_buffer (GstAHCamera * self,
     GstAHCPreviewCallback cb, gpointer user_data)
 {
   JNIEnv *env = gst_dvm_get_env ();
-  jobject object;
+  jobject object = NULL;
   gboolean ret = FALSE;
 
-  object = (*env)->NewObject (env,
-      com_gstreamer_gstahccallback.klass,
-      com_gstreamer_gstahccallback.constructor,
-      *((jlong *) & cb), *((jlong *) & user_data));
-  if (!object) {
-    GST_ERROR ("Failed to create callback object");
-    (*env)->ExceptionClear (env);
-    goto done;
+  if (cb) {
+    object = (*env)->NewObject (env,
+        com_gstreamer_gstahccallback.klass,
+        com_gstreamer_gstahccallback.constructor,
+        *((jlong *) & cb), *((jlong *) & user_data));
+    if (!object) {
+      GST_ERROR ("Failed to create callback object");
+      (*env)->ExceptionClear (env);
+      goto done;
+    }
   }
 
   AHC_CALL (goto done, Void, setPreviewCallbackWithBuffer, object);
