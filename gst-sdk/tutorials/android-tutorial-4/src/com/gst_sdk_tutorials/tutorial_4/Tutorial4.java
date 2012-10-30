@@ -230,7 +230,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
     public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
         if (fromUser == false) return;
         desired_position = progress;
-        // If this is a local file, allow scrub seeking, this is, seek soon as the slider is moved.
+        // If this is a local file, allow scrub seeking, this is, seek as soon as the slider is moved.
         if (is_local_media) nativeSetPosition(desired_position);
         updateTimeWidget();
     }
