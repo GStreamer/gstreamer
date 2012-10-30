@@ -74,12 +74,35 @@ enum
 {
   PROP_0,
   PROP_DEVICE,
+  PROP_DEVICE_FACING,
+  PROP_DEVICE_ORIENTATION,
 };
 
 #define DEFAULT_DEVICE "0"
 
 GST_BOILERPLATE_FULL (GstAHCSrc, gst_ahc_src, GstPushSrc, GST_TYPE_PUSH_SRC,
     gst_ahc_src_init_interfaces);
+
+#define CAMERA_FACING_BACK 0
+#define CAMERA_FACING_FRONT 1
+
+static GType
+gst_ahc_src_facing_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue types[] = {
+    {CAMERA_FACING_BACK, "Back", "back"},
+    {CAMERA_FACING_FRONT, "Front", "front"},
+    {0, NULL, NULL}
+  };
+
+  if (!type) {
+    type = g_enum_register_static ("GstAHCSrcFacing", types);
+  }
+  return type;
+}
+
+#define GST_AHC_SRC_FACING_TYPE (gst_ahc_src_facing_get_type())
 
 static void
 gst_ahc_src_init_interfaces (GType type)
@@ -140,6 +163,17 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
       g_param_spec_string ("device", "device",
           "Device ID", DEFAULT_DEVICE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_ORIENTATION,
+      g_param_spec_int ("device-orientation", "Device orientation",
+          "The orientation of the camera image",
+          0, 360, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE_FACING,
+      g_param_spec_enum ("device-facing", "Device facing",
+          "The direction that the camera faces",
+          GST_AHC_SRC_FACING_TYPE, CAMERA_FACING_BACK,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   klass->probe_properties = NULL;
 }
@@ -214,6 +248,25 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
       gchar *dev = g_strdup_printf ("%d", self->device);
 
       g_value_take_string (value, dev);
+    }
+      break;
+    case PROP_DEVICE_FACING:{
+      GstAHCCameraInfo info;
+
+      if (gst_ah_camera_get_camera_info (self->device, &info))
+        g_value_set_enum (value, info.facing == CameraInfo_CAMERA_FACING_BACK ?
+            CAMERA_FACING_BACK : CAMERA_FACING_FRONT);
+      else
+        g_value_set_enum (value, CAMERA_FACING_BACK);
+    }
+      break;
+    case PROP_DEVICE_ORIENTATION:{
+      GstAHCCameraInfo info;
+
+      if (gst_ah_camera_get_camera_info (self->device, &info))
+        g_value_set_int (value, info.orientation);
+      else
+        g_value_set_int (value, 0);
     }
       break;
     default:
@@ -727,23 +780,6 @@ gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
     {
       gint num_cams = gst_ah_camera_get_number_of_cameras ();
-      gint i;
-
-      GST_DEBUG_OBJECT (self, "Found %d cameras on the system", num_cams);
-
-      for (i = 0; i < num_cams; i++) {
-        GstAHCCameraInfo info;
-        if (gst_ah_camera_get_camera_info (i, &info)) {
-          GST_DEBUG_OBJECT (self, "Camera info for %d", i);
-          GST_DEBUG_OBJECT (self, "    Facing: %s (%d)",
-              info.facing == CameraInfo_CAMERA_FACING_BACK ? "Back" : "Front",
-              info.facing);
-          GST_DEBUG_OBJECT (self, "    Orientation: %d degrees",
-              info.orientation);
-        } else {
-          GST_DEBUG_OBJECT (self, "Error getting camera info for %d", i);
-        }
-      }
 
       if (num_cams > 0) {
         if (!gst_ahc_src_open (self))
