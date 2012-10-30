@@ -691,7 +691,7 @@ gst_send_subtitle_frame (GstDvdSubDec * dec, GstClockTime end_ts)
   }
 
   out_buf =
-      gst_buffer_new_allocate (NULL, 4 * GST_VIDEO_INFO_SIZE (&dec->info),
+      gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&dec->info),
       &params);
   gst_video_frame_map (&frame, &dec->info, out_buf, GST_MAP_READWRITE);
 
