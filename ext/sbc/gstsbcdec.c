@@ -108,8 +108,10 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
         GST_BUFFER_DATA (output), codesize, NULL);
     GST_INFO_OBJECT (dec, "consumed %d bytes", consumed);
 
-    if (consumed <= 0)
-      break;
+    if (consumed <= 0) {
+      offset += sbc_get_frame_length (&dec->sbc);
+      continue;
+    }
 
     rate = gst_sbc_parse_rate_from_sbc (dec->sbc.frequency);
     channels = gst_sbc_get_channel_number (dec->sbc.mode);
