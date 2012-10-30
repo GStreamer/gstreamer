@@ -86,8 +86,7 @@ gst_vaapi_video_buffer_destroy_image(GstVaapiVideoBuffer *buffer)
     if (priv->image) {
         if (priv->image_pool)
             gst_vaapi_video_pool_put_object(priv->image_pool, priv->image);
-        else
-            g_object_unref(priv->image);
+        g_object_unref(priv->image);
         priv->image = NULL;
     }
 
@@ -104,8 +103,7 @@ gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
     if (priv->surface) {
         if (priv->surface_pool)
             gst_vaapi_video_pool_put_object(priv->surface_pool, priv->surface);
-        else
-            g_object_unref(priv->surface);
+        g_object_unref(priv->surface);
         priv->surface = NULL;
     }
 
