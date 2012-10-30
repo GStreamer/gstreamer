@@ -24,9 +24,14 @@
 #endif
 
 #include <gst/video/video.h>
+#include <gst/interfaces/propertyprobe.h>
 
 #include "gstahcsrc.h"
 #include "gst-dvm.h"
+
+static void gst_ahc_src_property_probe_interface_init (GstPropertyProbeInterface
+    * iface);
+static void gst_ahc_src_init_interfaces (GType type);
 
 static void gst_ahc_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -67,9 +72,27 @@ GST_DEBUG_CATEGORY_STATIC (gst_ahc_src_debug);
 
 enum
 {
-  ARG_0,
+  PROP_0,
+  PROP_DEVICE,
 };
-GST_BOILERPLATE (GstAHCSrc, gst_ahc_src, GstPushSrc, GST_TYPE_PUSH_SRC);
+
+#define DEFAULT_DEVICE "0"
+
+GST_BOILERPLATE_FULL (GstAHCSrc, gst_ahc_src, GstPushSrc, GST_TYPE_PUSH_SRC,
+    gst_ahc_src_init_interfaces);
+
+static void
+gst_ahc_src_init_interfaces (GType type)
+{
+  static const GInterfaceInfo ahcsrc_propertyprobe_info = {
+    (GInterfaceInitFunc) gst_ahc_src_property_probe_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
+      &ahcsrc_propertyprobe_info);
+}
 
 static void
 gst_ahc_src_base_init (gpointer g_class)
@@ -112,6 +135,13 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   gstbasesrc_class->query = gst_ahc_src_query;
 
   gstpushsrc_class->create = gst_ahc_src_create;
+
+  g_object_class_install_property (gobject_class, PROP_DEVICE,
+      g_param_spec_string ("device", "device",
+          "Device ID", DEFAULT_DEVICE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  klass->probe_properties = NULL;
 }
 
 static gboolean
@@ -146,6 +176,100 @@ gst_ahc_src_dispose (GObject * object)
   self->queue = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_ahc_src_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAHCSrc *self = GST_AHC_SRC (object);
+  (void) self;
+
+  switch (prop_id) {
+    case PROP_DEVICE:{
+      const gchar *dev = g_value_get_string (value);
+      gchar *endptr = NULL;
+      guint64 device;
+
+      device = g_ascii_strtoll (dev, &endptr, 10);
+      if (endptr != dev && endptr[0] == 0 && device < G_MAXINT)
+        self->device = (gint) device;
+    }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_ahc_src_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAHCSrc *self = GST_AHC_SRC (object);
+  (void) self;
+
+  switch (prop_id) {
+    case PROP_DEVICE:{
+      gchar *dev = g_strdup_printf ("%d", self->device);
+
+      g_value_take_string (value, dev);
+    }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static const GList *
+gst_ahc_src_probe_get_properties (GstPropertyProbe * probe)
+{
+  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
+  GstAHCSrcClass *ahc_class = GST_AHC_SRC_CLASS (probe);
+
+
+  if (!ahc_class->probe_properties)
+    ahc_class->probe_properties = g_list_append (NULL,
+        g_object_class_find_property (klass, "device"));
+
+  return ahc_class->probe_properties;
+}
+
+static GValueArray *
+gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
+    guint prop_id, const GParamSpec * pspec)
+{
+  GValueArray *array = NULL;
+
+  switch (prop_id) {
+    case PROP_DEVICE:{
+      GValue value = { 0 };
+      gint num_cams = gst_ah_camera_get_number_of_cameras ();
+      gint i;
+
+      array = g_value_array_new (num_cams);
+      g_value_init (&value, G_TYPE_STRING);
+      for (i = 0; i < num_cams; i++) {
+        g_value_take_string (&value, g_strdup_printf ("%d", i));
+        g_value_array_append (array, &value);
+      }
+      g_value_unset (&value);
+    }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+      break;
+  }
+
+  return array;
+}
+
+static void
+gst_ahc_src_property_probe_interface_init (GstPropertyProbeInterface * iface)
+{
+  iface->get_properties = gst_ahc_src_probe_get_properties;
+  iface->get_values = gst_ahc_src_probe_get_values;
 }
 
 static gint
@@ -454,34 +578,6 @@ end:
   return ret;
 }
 
-static void
-gst_ahc_src_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstAHCSrc *self = GST_AHC_SRC (object);
-  (void) self;
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_ahc_src_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstAHCSrc *self = GST_AHC_SRC (object);
-  (void) self;
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 typedef struct
 {
   GstAHCSrc *self;
@@ -590,7 +686,7 @@ gst_ahc_src_open (GstAHCSrc * self)
 {
   GST_DEBUG_OBJECT (self, "Openning camera");
 
-  self->camera = gst_ah_camera_open (0);
+  self->camera = gst_ah_camera_open (self->device);
 
   if (self->camera) {
     GST_DEBUG_OBJECT (self, "Opened camera");
