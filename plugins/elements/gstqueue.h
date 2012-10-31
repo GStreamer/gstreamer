@@ -134,6 +134,8 @@ struct _GstQueue {
   gboolean newseg_applied_to_src;
 
   gboolean last_query;
+
+  gboolean flush_on_eos; /* flush on EOS */
 };
 
 struct _GstQueueClass {

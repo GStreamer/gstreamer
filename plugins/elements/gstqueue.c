@@ -119,7 +119,8 @@ enum
   PROP_MIN_THRESHOLD_BYTES,
   PROP_MIN_THRESHOLD_TIME,
   PROP_LEAKY,
-  PROP_SILENT
+  PROP_SILENT,
+  PROP_FLUSH_ON_EOS
 };
 
 /* default property values */
@@ -357,6 +358,26 @@ gst_queue_class_init (GstQueueClass * klass)
   g_object_class_install_property (gobject_class, PROP_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Don't emit queue signals", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstQueue:flush-on-eos
+   *
+   * Discard all data in the queue when an EOS event is received, and pass
+   * on the EOS event as soon as possible (instead of waiting until all
+   * buffers in the queue have been processed, which is the default behaviour).
+   *
+   * Flushing the queue on EOS might be useful when capturing and encoding
+   * from a live source, to finish up the recording quickly in cases when
+   * the encoder is slow. Note that this might mean some data from the end of
+   * the recoding data might be lost though (never more than the configured
+   * max. sizes though).
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_FLUSH_ON_EOS,
+      g_param_spec_boolean ("flush-on-eos", "Flush on EOS",
+          "Discard all data in the queue when an EOS event is received", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_queue_finalize;
@@ -601,11 +622,14 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
+      GST_CAT_LOG_OBJECT (queue_dataflow, queue, "got EOS from upstream");
       /* Zero the thresholds, this makes sure the queue is completely
        * filled and we can read all data from the queue. */
-      GST_QUEUE_CLEAR_LEVEL (queue->min_threshold);
+      if (queue->flush_on_eos)
+        gst_queue_locked_flush (queue);
+      else
+        GST_QUEUE_CLEAR_LEVEL (queue->min_threshold);
       /* mark the queue as EOS. This prevents us from accepting more data. */
-      GST_CAT_LOG_OBJECT (queue_dataflow, queue, "got EOS from upstream");
       queue->eos = TRUE;
       break;
     case GST_EVENT_SEGMENT:
@@ -754,7 +778,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_queue_locked_enqueue_event (queue, event);
         GST_QUEUE_MUTEX_UNLOCK (queue);
       } else {
-        /* non-serialized events are passed upstream. */
+        /* non-serialized events are forwarded downstream immediately */
         gst_pad_push_event (queue->srcpad, event);
       }
       break;
@@ -1424,6 +1448,9 @@ gst_queue_set_property (GObject * object,
     case PROP_SILENT:
       queue->silent = g_value_get_boolean (value);
       break;
+    case PROP_FLUSH_ON_EOS:
+      queue->flush_on_eos = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1473,6 +1500,9 @@ gst_queue_get_property (GObject * object,
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, queue->silent);
+      break;
+    case PROP_FLUSH_ON_EOS:
+      g_value_set_boolean (value, queue->flush_on_eos);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

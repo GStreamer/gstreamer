@@ -599,6 +599,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstQueue::flush-on-eos</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Flush on EOS</NICK>
+<BLURB>Discard all data in the queue when an EOS event is received.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFileSink::location</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
