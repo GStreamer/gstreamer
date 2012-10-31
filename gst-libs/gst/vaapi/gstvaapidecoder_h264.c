@@ -80,13 +80,37 @@ typedef struct _GstVaapiSliceH264Class          GstVaapiSliceH264Class;
  * Extended picture flags:
  *
  * @GST_VAAPI_PICTURE_FLAG_IDR: flag that specifies an IDR picture
+ * @GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE: flag that specifies
+ *     "used for short-term reference"
+ * @GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE: flag that specifies
+ *     "used for long-term reference"
+ * @GST_VAAPI_PICTURE_FLAGS_REFERENCE: mask covering any kind of
+ *     reference picture (short-term reference or long-term reference)
  */
 enum {
     GST_VAAPI_PICTURE_FLAG_IDR = (GST_VAAPI_PICTURE_FLAG_LAST << 0),
+
+    GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE = (
+        GST_VAAPI_PICTURE_FLAG_REFERENCE),
+    GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE = (
+        GST_VAAPI_PICTURE_FLAG_REFERENCE | (GST_VAAPI_PICTURE_FLAG_LAST << 1)),
+    GST_VAAPI_PICTURE_FLAGS_REFERENCE = (
+        GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE |
+        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE),
 };
 
 #define GST_VAAPI_PICTURE_IS_IDR(picture) \
     (GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR))
+
+#define GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture)      \
+    ((GST_VAAPI_PICTURE_FLAGS(picture) &                        \
+      GST_VAAPI_PICTURE_FLAGS_REFERENCE) ==                     \
+     GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE)
+
+#define GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture)       \
+    ((GST_VAAPI_PICTURE_FLAGS(picture) &                        \
+      GST_VAAPI_PICTURE_FLAGS_REFERENCE) ==                     \
+     GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE)
 
 struct _GstVaapiPictureH264 {
     GstVaapiPicture             base;
@@ -95,9 +119,9 @@ struct _GstVaapiPictureH264 {
     gint32                      poc;
     gint32                      frame_num;              // Original frame_num from slice_header()
     gint32                      frame_num_wrap;         // Temporary for ref pic marking: FrameNumWrap
+    gint32                      long_term_frame_idx;    // Temporary for ref pic marking: LongTermFrameIdx
     gint32                      pic_num;                // Temporary for ref pic marking: PicNum
     gint32                      long_term_pic_num;      // Temporary for ref pic marking: LongTermPicNum
-    guint                       is_long_term            : 1;
     guint                       output_flag             : 1;
     guint                       output_needed           : 1;
 };
@@ -136,7 +160,6 @@ gst_vaapi_picture_h264_init(GstVaapiPictureH264 *picture)
     va_pic->BottomFieldOrderCnt = 0;
 
     picture->poc                = 0;
-    picture->is_long_term       = FALSE;
     picture->output_needed      = FALSE;
 }
 
@@ -1157,7 +1180,7 @@ compare_picture_long_term_frame_idx_inc(const void *a, const void *b)
     const GstVaapiPictureH264 * const picA = *(GstVaapiPictureH264 **)a;
     const GstVaapiPictureH264 * const picB = *(GstVaapiPictureH264 **)b;
 
-    return picA->info.frame_idx - picB->info.frame_idx;
+    return picA->long_term_frame_idx - picB->long_term_frame_idx;
 }
 
 /* 8.2.4.1 - Decoding process for picture numbers */
@@ -1201,12 +1224,12 @@ init_picture_refs_pic_num(
 
         // (8-29, 8-32, 8-33)
         if (GST_VAAPI_PICTURE_IS_FRAME(picture))
-            pic->long_term_pic_num = pic->info.frame_idx;
+            pic->long_term_pic_num = pic->long_term_frame_idx;
         else {
             if (pic->base.structure == picture->base.structure)
-                pic->long_term_pic_num = 2 * pic->info.frame_idx + 1;
+                pic->long_term_pic_num = 2 * pic->long_term_frame_idx + 1;
             else
-                pic->long_term_pic_num = 2 * pic->info.frame_idx;
+                pic->long_term_pic_num = 2 * pic->long_term_frame_idx;
         }
     }
 }
@@ -1449,10 +1472,7 @@ remove_reference_at(
     g_return_val_if_fail(index < num_pictures, FALSE);
 
     picture = pictures[index];
-    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
-    picture->is_long_term = FALSE;
-    picture->info.flags &= ~(VA_PICTURE_H264_SHORT_TERM_REFERENCE |
-                             VA_PICTURE_H264_LONG_TERM_REFERENCE);
+    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
 
     if (index != --num_pictures)
         gst_vaapi_picture_replace(&pictures[index], pictures[num_pictures]);
@@ -1580,8 +1600,9 @@ exec_picture_refs_modification_1(
                 gint32 PicNumF;
                 if (!ref_list[j])
                     continue;
-                PicNumF = ref_list[j]->is_long_term ?
-                    MaxPicNum : ref_list[j]->pic_num;
+                PicNumF =
+                    GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(ref_list[j]) ?
+                    ref_list[j]->pic_num : MaxPicNum;
                 if (PicNumF != picNum)
                     ref_list[n++] = ref_list[j];
             }
@@ -1601,7 +1622,8 @@ exec_picture_refs_modification_1(
                 gint32 LongTermPicNumF;
                 if (!ref_list[j])
                     continue;
-                LongTermPicNumF = ref_list[j]->is_long_term ?
+                LongTermPicNumF =
+                    GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(ref_list[j]) ?
                     ref_list[j]->long_term_pic_num : INT_MAX;
                 if (LongTermPicNumF != l->value.long_term_pic_num)
                     ref_list[n++] = ref_list[j];
@@ -1699,7 +1721,6 @@ init_picture(
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiPicture * const base_picture = &picture->base;
-    VAPictureH264 *pic;
 
     priv->prev_frame_num        = priv->frame_num;
     priv->frame_num             = slice_hdr->frame_num;
@@ -1715,11 +1736,6 @@ init_picture(
         clear_references(decoder, priv->short_ref, &priv->short_ref_count);
         clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
     }
-
-    /* Initialize VA picture info */
-    pic = &picture->info;
-    pic->picture_id = picture->base.surface_id;
-    pic->frame_idx  = priv->frame_num;
 
     /* Initialize slice type */
     switch (slice_hdr->type % 5) {
@@ -1751,11 +1767,14 @@ init_picture(
     if (nalu->ref_idc) {
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
             &slice_hdr->dec_ref_pic_marking;
-        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
-        if (GST_VAAPI_PICTURE_IS_IDR(picture)) {
-            if (dec_ref_pic_marking->long_term_reference_flag)
-                picture->is_long_term = TRUE;
-        }
+
+        if (GST_VAAPI_PICTURE_IS_IDR(picture) &&
+            dec_ref_pic_marking->long_term_reference_flag)
+            GST_VAAPI_PICTURE_FLAG_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
+        else
+            GST_VAAPI_PICTURE_FLAG_SET(picture,
+                GST_VAAPI_PICTURE_FLAG_SHORT_TERM_REFERENCE);
     }
 
     init_picture_poc(decoder, picture, slice_hdr);
@@ -1861,11 +1880,10 @@ exec_ref_pic_marking_adaptive_mmco_3(
 )
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    VAPictureH264 *pic;
     gint32 i, picNumX;
 
     for (i = 0; i < priv->long_ref_count; i++) {
-        if (priv->long_ref[i]->info.frame_idx == ref_pic_marking->long_term_frame_idx)
+        if (priv->long_ref[i]->long_term_frame_idx == ref_pic_marking->long_term_frame_idx)
             break;
     }
     if (i != priv->long_ref_count)
@@ -1881,12 +1899,9 @@ exec_ref_pic_marking_adaptive_mmco_3(
     gst_vaapi_picture_replace(&priv->long_ref[priv->long_ref_count++], picture);
     gst_vaapi_picture_unref(picture);
 
-    picture->is_long_term = TRUE;
-    pic = &picture->info;
-    pic->frame_idx = ref_pic_marking->long_term_frame_idx;
-    pic->flags &= ~VA_PICTURE_H264_SHORT_TERM_REFERENCE;
-    pic->flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
-    GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
+    picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
+    GST_VAAPI_PICTURE_FLAG_SET(picture,
+        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
 }
 
 /* 8.2.5.4.4. Mark pictures with LongTermFramIdx > max_long_term_frame_idx
@@ -1904,7 +1919,7 @@ exec_ref_pic_marking_adaptive_mmco_4(
     long_term_frame_idx = ref_pic_marking->max_long_term_frame_idx_plus1 - 1;
 
     for (i = 0; i < priv->long_ref_count; i++) {
-        if ((gint32)priv->long_ref[i]->info.frame_idx <= long_term_frame_idx)
+        if (priv->long_ref[i]->long_term_frame_idx <= long_term_frame_idx)
             continue;
         remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
         i--;
@@ -1949,8 +1964,9 @@ exec_ref_pic_marking_adaptive_mmco_6(
     GstH264RefPicMarking *ref_pic_marking
 )
 {
-    picture->is_long_term = TRUE;
-    picture->info.frame_idx = ref_pic_marking->long_term_frame_idx;
+    picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
+    GST_VAAPI_PICTURE_FLAG_SET(picture,
+        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
 }
 
 /* 8.2.5.4. Adaptive memory control decoded reference picture marking process */
@@ -2024,14 +2040,10 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         }
     }
 
-    if (picture->is_long_term) {
+    if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
         picture_ptr = &priv->long_ref[priv->long_ref_count++];
-        picture->info.flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
-    }
-    else {
+    else
         picture_ptr = &priv->short_ref[priv->short_ref_count++];
-        picture->info.flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
-    }
     gst_vaapi_picture_replace(picture_ptr, picture);
     return TRUE;
 }
@@ -2052,12 +2064,12 @@ vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture)
     pic->picture_id = picture->base.surface_id;
     pic->flags = 0;
 
-    if (picture->info.flags & VA_PICTURE_H264_LONG_TERM_REFERENCE) {
+    if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture)) {
         pic->flags |= VA_PICTURE_H264_LONG_TERM_REFERENCE;
-        pic->frame_idx = picture->info.frame_idx;
+        pic->frame_idx = picture->long_term_frame_idx;
     }
     else {
-        if (picture->info.flags & VA_PICTURE_H264_SHORT_TERM_REFERENCE)
+        if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
             pic->flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
         pic->frame_idx = picture->frame_num;
     }
