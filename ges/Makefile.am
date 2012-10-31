@@ -136,6 +136,10 @@ GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
 		-I$(top_builddir) \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-@GST_API_VERSION@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-audio-@GST_API_VERSION@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-video-@GST_API_VERSION@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-tag-@GST_API_VERSION@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
 		--library=libges-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
@@ -168,6 +172,10 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=$(builddir) \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-pbutils-@GST_API_VERSION@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-audio-@GST_API_VERSION@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-video-@GST_API_VERSION@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-tag-@GST_API_VERSION@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
