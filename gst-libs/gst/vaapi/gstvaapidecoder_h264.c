@@ -470,9 +470,7 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     guint i;
 
     // Remove all unused pictures
-    if (GST_VAAPI_PICTURE_IS_IDR(picture))
-        dpb_flush(decoder);
-    else {
+    if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
         i = 0;
         while (i < priv->dpb_count) {
             GstVaapiPictureH264 * const picture = priv->dpb[i];
@@ -1666,7 +1664,7 @@ init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
     priv->long_ref_count = long_ref_count;
 }
 
-static gboolean
+static void
 init_picture_refs(
     GstVaapiDecoderH264 *decoder,
     GstVaapiPictureH264 *picture,
@@ -1715,7 +1713,6 @@ init_picture_refs(
     default:
         break;
     }
-    return TRUE;
 }
 
 static gboolean
@@ -1740,6 +1737,7 @@ init_picture(
     if (nalu->type == GST_H264_NAL_SLICE_IDR) {
         GST_DEBUG("<IDR>");
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
+        dpb_flush(decoder);
     }
 
     /* Initialize slice type */
@@ -1769,6 +1767,7 @@ init_picture(
     else
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
 
+    /* Initialize reference flags */
     if (nalu->ref_idc) {
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
             &slice_hdr->dec_ref_pic_marking;
@@ -1783,14 +1782,7 @@ init_picture(
     }
 
     init_picture_poc(decoder, picture, slice_hdr);
-
-    if (GST_VAAPI_PICTURE_IS_IDR(picture))
-        dpb_flush(decoder);
-
-    if (!init_picture_refs(decoder, picture, slice_hdr)) {
-        GST_ERROR("failed to initialize references");
-        return FALSE;
-    }
+    init_picture_refs(decoder, picture, slice_hdr);
     return TRUE;
 }
 
