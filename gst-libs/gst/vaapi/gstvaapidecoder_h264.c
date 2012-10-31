@@ -304,9 +304,9 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiProfile             profile;
     GstVaapiEntrypoint          entrypoint;
     GstVaapiChromaType          chroma_type;
-    GstVaapiPictureH264        *short_ref[32];
+    GstVaapiPictureH264        *short_ref[16];
     guint                       short_ref_count;
-    GstVaapiPictureH264        *long_ref[32];
+    GstVaapiPictureH264        *long_ref[16];
     guint                       long_ref_count;
     GstVaapiPictureH264        *RefPicList0[32];
     guint                       RefPicList0_count;
@@ -332,14 +332,7 @@ struct _GstVaapiDecoderH264Private {
 };
 
 static gboolean
-decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture);
-
-static void
-clear_references(
-    GstVaapiDecoderH264  *decoder,
-    GstVaapiPictureH264 **pictures,
-    guint                *picture_count
-);
+exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture);
 
 /* Get number of reference frames to use */
 static guint
@@ -452,13 +445,22 @@ dpb_bump(GstVaapiDecoderH264 *decoder)
 }
 
 static void
-dpb_flush(GstVaapiDecoderH264 *decoder)
+dpb_clear(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    guint i;
 
+    for (i = 0; i < priv->dpb_count; i++)
+        gst_vaapi_picture_replace(&priv->dpb[i], NULL);
+    priv->dpb_count = 0;
+}
+
+static void
+dpb_flush(GstVaapiDecoderH264 *decoder)
+{
     while (dpb_bump(decoder))
         ;
-    clear_references(decoder, priv->dpb, &priv->dpb_count);
+    dpb_clear(decoder);
 }
 
 static gboolean
@@ -551,9 +553,8 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
-    clear_references(decoder, priv->short_ref, &priv->short_ref_count);
-    clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
-    clear_references(decoder, priv->dpb,       &priv->dpb_count      );
+
+    dpb_clear(decoder);
 
     if (priv->parser) {
         gst_h264_nal_parser_free(priv->parser);
@@ -822,7 +823,9 @@ decode_current_picture(GstVaapiDecoderH264 *decoder)
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    if (!decode_picture_end(decoder, picture))
+    if (!exec_ref_pic_marking(decoder, picture))
+        goto error;
+    if (!dpb_add(decoder, picture))
         goto error;
     if (!gst_vaapi_picture_decode(GST_VAAPI_PICTURE_CAST(picture)))
         goto error;
@@ -1435,21 +1438,6 @@ init_picture_refs_b_slice(
 
 #undef SORT_REF_LIST
 
-static void
-clear_references(
-    GstVaapiDecoderH264  *decoder,
-    GstVaapiPictureH264 **pictures,
-    guint                *picture_count
-)
-{
-    const guint num_pictures = *picture_count;
-    guint i;
-
-    for (i = 0; i < num_pictures; i++)
-        gst_vaapi_picture_replace(&pictures[i], NULL);
-    *picture_count = 0;
-}
-
 static gboolean
 remove_reference_at(
     GstVaapiDecoderH264  *decoder,
@@ -1467,8 +1455,8 @@ remove_reference_at(
     GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
 
     if (index != --num_pictures)
-        gst_vaapi_picture_replace(&pictures[index], pictures[num_pictures]);
-    gst_vaapi_picture_replace(&pictures[num_pictures], NULL);
+        pictures[index] = pictures[num_pictures];
+    pictures[num_pictures] = NULL;
     *picture_count = num_pictures;
     return TRUE;
 }
@@ -1652,6 +1640,32 @@ exec_picture_refs_modification(
         exec_picture_refs_modification_1(decoder, picture, slice_hdr, 1);
 }
 
+static void
+init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
+{
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    guint i, short_ref_count, long_ref_count;
+
+    short_ref_count = 0;
+    long_ref_count  = 0;
+    for (i = 0; i < priv->dpb_count; i++) {
+        GstVaapiPictureH264 * const picture = priv->dpb[i];
+
+        if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
+            priv->short_ref[short_ref_count++] = picture;
+        else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
+            priv->long_ref[long_ref_count++] = picture;
+    }
+
+    for (i = short_ref_count; i < priv->short_ref_count; i++)
+        priv->short_ref[i] = NULL;
+    priv->short_ref_count = short_ref_count;
+
+    for (i = long_ref_count; i < priv->long_ref_count; i++)
+        priv->long_ref[i] = NULL;
+    priv->long_ref_count = long_ref_count;
+}
+
 static gboolean
 init_picture_refs(
     GstVaapiDecoderH264 *decoder,
@@ -1663,6 +1677,7 @@ init_picture_refs(
     GstVaapiPicture * const base_picture = &picture->base;
     guint i, num_refs;
 
+    init_picture_ref_lists(decoder);
     init_picture_refs_pic_num(decoder, picture, slice_hdr);
 
     priv->RefPicList0_count = 0;
@@ -1725,8 +1740,6 @@ init_picture(
     if (nalu->type == GST_H264_NAL_SLICE_IDR) {
         GST_DEBUG("<IDR>");
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
-        clear_references(decoder, priv->short_ref, &priv->short_ref_count);
-        clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
     }
 
     /* Initialize slice type */
@@ -1770,6 +1783,10 @@ init_picture(
     }
 
     init_picture_poc(decoder, picture, slice_hdr);
+
+    if (GST_VAAPI_PICTURE_IS_IDR(picture))
+        dpb_flush(decoder);
+
     if (!init_picture_refs(decoder, picture, slice_hdr)) {
         GST_ERROR("failed to initialize references");
         return FALSE;
@@ -1828,7 +1845,7 @@ get_picNumX(GstVaapiPictureH264 *picture, GstH264RefPicMarking *ref_pic_marking)
     return pic_num;
 }
 
-/* 8.2.5.4.1. Mark-term reference picture as "unused for reference" */
+/* 8.2.5.4.1. Mark short-term reference picture as "unused for reference" */
 static void
 exec_ref_pic_marking_adaptive_mmco_1(
     GstVaapiDecoderH264  *decoder,
@@ -1886,10 +1903,9 @@ exec_ref_pic_marking_adaptive_mmco_3(
     if (i < 0)
         return;
 
-    picture = gst_vaapi_picture_ref(priv->short_ref[i]);
+    picture = priv->short_ref[i];
     remove_reference_at(decoder, priv->short_ref, &priv->short_ref_count, i);
-    gst_vaapi_picture_replace(&priv->long_ref[priv->long_ref_count++], picture);
-    gst_vaapi_picture_unref(picture);
+    priv->long_ref[priv->long_ref_count++] = picture;
 
     picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
     GST_VAAPI_PICTURE_FLAG_SET(picture,
@@ -1928,8 +1944,6 @@ exec_ref_pic_marking_adaptive_mmco_5(
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
 
-    clear_references(decoder, priv->short_ref, &priv->short_ref_count);
-    clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
     dpb_flush(decoder);
 
     priv->prev_pic_has_mmco5 = TRUE;
@@ -2008,7 +2022,6 @@ static gboolean
 exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstVaapiPictureH264 **picture_ptr;
 
     priv->prev_pic_has_mmco5 = FALSE;
     priv->prev_pic_structure = picture->base.structure;
@@ -2030,12 +2043,6 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
                 return FALSE;
         }
     }
-
-    if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
-        picture_ptr = &priv->long_ref[priv->long_ref_count++];
-    else
-        picture_ptr = &priv->short_ref[priv->short_ref_count++];
-    gst_vaapi_picture_replace(picture_ptr, picture);
     return TRUE;
 }
 
@@ -2271,16 +2278,6 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu, GstH264SliceH
     if (!fill_picture(decoder, picture, slice_hdr, nalu))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
-}
-
-static gboolean
-decode_picture_end(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
-{
-    if (!exec_ref_pic_marking(decoder, picture))
-        return FALSE;
-    if (!dpb_add(decoder, picture))
-        return FALSE;
-    return TRUE;
 }
 
 static inline guint
