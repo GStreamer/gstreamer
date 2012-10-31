@@ -1692,6 +1692,12 @@ scan_codecs (GstPlugin * plugin)
       goto next_codec;
     }
 
+    if (g_str_has_prefix (name_str, "OMX.ARICENT.")) {
+      GST_INFO ("Skipping possible broken codec '%s'", name_str);
+      valid_codec = FALSE;
+      goto next_codec;
+    }
+
     /* FIXME:
      *   - Vorbis: Generates clicks for multi-channel streams
      *   - *Law: Generates output with too low frequencies
