@@ -1441,6 +1441,67 @@ GST_START_TEST (test_convert_undefined_multichannel)
 
 GST_END_TEST;
 
+#define SIMPLE_CAPS_TEMPLATE_STRING    \
+    "audio/x-raw, " \
+    "format = (string) {S8, S16LE, S24LE, S32LE}, " \
+    "rate = (int) [ 1, MAX ], " \
+    "channels = (int) [ 1, MAX ]"
+
+static GstStaticPadTemplate simple_sinktemplate =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SIMPLE_CAPS_TEMPLATE_STRING)
+    );
+
+GST_START_TEST (test_preserve_width)
+{
+  static const struct _test_formats
+  {
+    int width;
+    const gchar *outf;
+  } test_formats[] = { {
+  8, "S8"}, {
+  16, "S16LE"}, {
+  24, "S24LE"}, {
+  32, "S32LE"}, {
+  0, NULL}};
+
+  gint i;
+  GstStructure *structure;
+  GstElement *audioconvert;
+  GstCaps *incaps, *convert_outcaps;
+
+  audioconvert = gst_check_setup_element ("audioconvert");
+  mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
+  mysinkpad = gst_check_setup_sink_pad (audioconvert, &simple_sinktemplate);
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  for (i = 0; test_formats[i].width; i++) {
+    gint width = test_formats[i].width;
+    incaps = get_int_caps (1, G_BIG_ENDIAN, width, width, TRUE);
+    gst_pad_set_caps (mysrcpad, incaps);
+
+    convert_outcaps = gst_pad_get_current_caps (mysinkpad);
+    structure = gst_caps_get_structure (convert_outcaps, 0);
+    fail_unless_equals_string (gst_structure_get_string (structure, "format"),
+        test_formats[i].outf);
+
+    gst_caps_unref (convert_outcaps);
+    gst_caps_unref (incaps);
+  }
+
+  cleanup_audioconvert (audioconvert);
+}
+
+GST_END_TEST;
+
 static Suite *
 audioconvert_suite (void)
 {
@@ -1455,6 +1516,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_multichannel_conversion);
   tcase_add_test (tc_chain, test_caps_negotiation);
   tcase_add_test (tc_chain, test_convert_undefined_multichannel);
+  tcase_add_test (tc_chain, test_preserve_width);
 
   return s;
 }
