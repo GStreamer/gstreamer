@@ -748,8 +748,17 @@ gst_ahc_src_open (GstAHCSrc * self)
     gst_ah_camera_set_preview_texture (self->camera, self->texture);
     self->buffer_size = 0;
   } else {
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Unable to open device '%d'.", 0), GST_ERROR_SYSTEM);
+    gint num_cams = gst_ah_camera_get_number_of_cameras ();
+    if (num_cams > 0 && self->device < num_cams) {
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+          ("Unable to open device '%d'.", self->device), GST_ERROR_SYSTEM);
+    } else if (num_cams > 0) {
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+          ("Device '%d' does not exist.", self->device), GST_ERROR_SYSTEM);
+    } else {
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+          ("There are no cameras available on this device."), GST_ERROR_SYSTEM);
+    }
   }
 
   return (self->camera != NULL);
@@ -778,19 +787,8 @@ gst_ahc_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-    {
-      gint num_cams = gst_ah_camera_get_number_of_cameras ();
-
-      if (num_cams > 0) {
-        if (!gst_ahc_src_open (self))
-          return GST_STATE_CHANGE_FAILURE;
-      } else {
-        GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-            ("There are no cameras available on this device."),
-            GST_ERROR_SYSTEM);
+      if (!gst_ahc_src_open (self))
         return GST_STATE_CHANGE_FAILURE;
-      }
-    }
       break;
     default:
       break;
