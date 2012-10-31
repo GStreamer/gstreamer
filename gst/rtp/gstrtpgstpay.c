@@ -27,6 +27,9 @@
 
 #include "gstrtpgstpay.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_rtp_pay_debug);
+#define GST_CAT_DEFAULT gst_rtp_pay_debug
+
 /*
  *  0                   1                   2                   3
  *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -94,6 +97,9 @@ gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
 
   gstrtpbasepayload_class->set_caps = gst_rtp_gst_pay_setcaps;
   gstrtpbasepayload_class->handle_buffer = gst_rtp_gst_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (gst_rtp_pay_debug, "rtpgstpay", 0,
+      "rtpgstpay element");
 }
 
 static void
