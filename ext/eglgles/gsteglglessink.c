@@ -1699,6 +1699,7 @@ gst_eglglessink_queue_buffer (GstEglGlesSink * eglglessink, GstBuffer * buf)
   if (buf)
     g_mutex_lock (&eglglessink->render_lock);
   if (!gst_data_queue_push (eglglessink->queue, item)) {
+    item->destroy (item);
     g_mutex_unlock (&eglglessink->render_lock);
     GST_DEBUG_OBJECT (eglglessink, "Flushing");
     return GST_FLOW_FLUSHING;
