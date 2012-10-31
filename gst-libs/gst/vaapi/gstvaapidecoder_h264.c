@@ -76,6 +76,18 @@ typedef struct _GstVaapiSliceH264Class          GstVaapiSliceH264Class;
                                GST_VAAPI_TYPE_PICTURE_H264,     \
                                GstVaapiPictureH264Class))
 
+/*
+ * Extended picture flags:
+ *
+ * @GST_VAAPI_PICTURE_FLAG_IDR: flag that specifies an IDR picture
+ */
+enum {
+    GST_VAAPI_PICTURE_FLAG_IDR = (GST_VAAPI_PICTURE_FLAG_LAST << 0),
+};
+
+#define GST_VAAPI_PICTURE_IS_IDR(picture) \
+    (GST_VAAPI_PICTURE_FLAG_IS_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR))
+
 struct _GstVaapiPictureH264 {
     GstVaapiPicture             base;
     VAPictureH264               info;
@@ -85,7 +97,6 @@ struct _GstVaapiPictureH264 {
     gint32                      frame_num_wrap;         // Temporary for ref pic marking: FrameNumWrap
     gint32                      pic_num;                // Temporary for ref pic marking: PicNum
     gint32                      long_term_pic_num;      // Temporary for ref pic marking: LongTermPicNum
-    guint                       is_idr                  : 1;
     guint                       is_long_term            : 1;
     guint                       output_flag             : 1;
     guint                       output_needed           : 1;
@@ -126,7 +137,6 @@ gst_vaapi_picture_h264_init(GstVaapiPictureH264 *picture)
 
     picture->poc                = 0;
     picture->is_long_term       = FALSE;
-    picture->is_idr             = FALSE;
     picture->output_needed      = FALSE;
 }
 
@@ -442,7 +452,7 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     guint i;
 
     // Remove all unused pictures
-    if (picture->is_idr)
+    if (GST_VAAPI_PICTURE_IS_IDR(picture))
         dpb_flush(decoder);
     else {
         i = 0;
@@ -892,7 +902,7 @@ init_picture_poc_0(
 
     GST_DEBUG("decode picture order count type 0");
 
-    if (picture->is_idr) {
+    if (GST_VAAPI_PICTURE_IS_IDR(picture)) {
         priv->prev_poc_msb = 0;
         priv->prev_poc_lsb = 0;
     }
@@ -960,7 +970,7 @@ init_picture_poc_1(
         prev_frame_num_offset = priv->frame_num_offset;
 
     // (8-6)
-    if (picture->is_idr)
+    if (GST_VAAPI_PICTURE_IS_IDR(picture))
         priv->frame_num_offset = 0;
     else if (priv->prev_frame_num > priv->frame_num)
         priv->frame_num_offset = prev_frame_num_offset + MaxFrameNum;
@@ -1042,7 +1052,7 @@ init_picture_poc_2(
         prev_frame_num_offset = priv->frame_num_offset;
 
     // (8-11)
-    if (picture->is_idr)
+    if (GST_VAAPI_PICTURE_IS_IDR(picture))
         priv->frame_num_offset = 0;
     else if (priv->prev_frame_num > priv->frame_num)
         priv->frame_num_offset = prev_frame_num_offset + MaxFrameNum;
@@ -1050,7 +1060,7 @@ init_picture_poc_2(
         priv->frame_num_offset = prev_frame_num_offset;
 
     // (8-12)
-    if (picture->is_idr)
+    if (GST_VAAPI_PICTURE_IS_IDR(picture))
         temp_poc = 0;
     else if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
         temp_poc = 2 * (priv->frame_num_offset + priv->frame_num) - 1;
@@ -1695,13 +1705,13 @@ init_picture(
     priv->frame_num             = slice_hdr->frame_num;
     picture->frame_num          = priv->frame_num;
     picture->frame_num_wrap     = priv->frame_num;
-    picture->is_idr             = nalu->type == GST_H264_NAL_SLICE_IDR;
     picture->output_flag        = TRUE; /* XXX: conformant to Annex A only */
     base_picture->pts           = gst_adapter_prev_timestamp(priv->adapter, NULL);
 
     /* Reset decoder state for IDR pictures */
-    if (picture->is_idr) {
+    if (nalu->type == GST_H264_NAL_SLICE_IDR) {
         GST_DEBUG("<IDR>");
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_IDR);
         clear_references(decoder, priv->short_ref, &priv->short_ref_count);
         clear_references(decoder, priv->long_ref,  &priv->long_ref_count );
     }
@@ -1742,7 +1752,7 @@ init_picture(
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
             &slice_hdr->dec_ref_pic_marking;
         GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_REFERENCE);
-        if (picture->is_idr) {
+        if (GST_VAAPI_PICTURE_IS_IDR(picture)) {
             if (dec_ref_pic_marking->long_term_reference_flag)
                 picture->is_long_term = TRUE;
         }
@@ -1999,7 +2009,7 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
         return TRUE;
 
-    if (!picture->is_idr) {
+    if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
         GstVaapiSliceH264 * const slice =
             gst_vaapi_picture_h264_get_last_slice(picture);
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
@@ -2209,11 +2219,11 @@ is_new_picture(
     }
 
     /* IdrPicFlag differs in value */
-    CHECK_EXPR(((priv->current_picture->is_idr ^
+    CHECK_EXPR(((GST_VAAPI_PICTURE_IS_IDR(priv->current_picture) ^
                  (nalu->type == GST_H264_NAL_SLICE_IDR)) == 0), "IdrPicFlag");
 
     /* IdrPicFlag is equal to 1 for both and idr_pic_id differs in value */
-    if (priv->current_picture->is_idr)
+    if (GST_VAAPI_PICTURE_IS_IDR(priv->current_picture))
         CHECK_VALUE(slice_hdr, prev_slice_hdr, idr_pic_id);
 
 #undef CHECK_EXPR
