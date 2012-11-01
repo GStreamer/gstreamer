@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbasepayload.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -43,8 +44,9 @@ struct _GstRtpGSTPay
 {
   GstRTPBasePayload payload;
 
-  gchar *capsstr;
-  guint  capslen;
+  GstAdapter *adapter;
+  guint8 flags;
+
   guint8 current_CV; /* CV field of incoming caps*/
   guint8 next_CV;
 };
