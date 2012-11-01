@@ -253,7 +253,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   \
   info = srcframe->info.finfo; \
   dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
-  dest_height = GST_VIDEO_FRAME_WIDTH (destframe); \
+  dest_height = GST_VIDEO_FRAME_HEIGHT (destframe); \
   \
   xpos = x_round (xpos); \
   ypos = y_round (ypos); \
@@ -498,7 +498,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
   \
   info = srcframe->info.finfo; \
   dest_width = GST_VIDEO_FRAME_WIDTH (destframe); \
-  dest_height = GST_VIDEO_FRAME_WIDTH (destframe); \
+  dest_height = GST_VIDEO_FRAME_HEIGHT (destframe); \
   \
   xpos = GST_ROUND_UP_2 (xpos); \
   ypos = GST_ROUND_UP_2 (ypos); \
