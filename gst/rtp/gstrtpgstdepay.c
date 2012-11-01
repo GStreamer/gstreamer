@@ -294,6 +294,7 @@ too_small:
 unknown_event:
   {
     GST_DEBUG_OBJECT (rtpgstdepay, "unknown event type");
+    gst_structure_free (s);
     return NULL;
   }
 }
