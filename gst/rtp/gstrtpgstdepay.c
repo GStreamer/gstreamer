@@ -21,9 +21,9 @@
 #  include "config.h"
 #endif
 
-#include <gst/rtp/gstrtpbuffer.h>
-
 #include <string.h>
+#include <stdlib.h>
+
 #include "gstrtpgstdepay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpgstdepay_debug);
@@ -134,11 +134,9 @@ gst_rtp_gst_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 {
   GstRtpGSTDepay *rtpgstdepay;
   GstStructure *structure;
-  GstCaps *outcaps;
   gint clock_rate;
   gboolean res;
   const gchar *capsenc;
-  gchar *capsstr;
 
   rtpgstdepay = GST_RTP_GST_DEPAY (depayload);
 
@@ -150,21 +148,37 @@ gst_rtp_gst_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   capsenc = gst_structure_get_string (structure, "caps");
   if (capsenc) {
+    GstCaps *outcaps;
     gsize out_len;
+    gchar *capsstr;
+    const gchar *capsver;
+    guint CV;
 
+    /* decode caps */
     capsstr = (gchar *) g_base64_decode (capsenc, &out_len);
     outcaps = gst_caps_from_string (capsstr);
     g_free (capsstr);
 
-    /* we have the SDP caps as output caps */
-    rtpgstdepay->current_CV = 0;
+    /* parse version */
+    capsver = gst_structure_get_string (structure, "capsversion");
+    if (capsver) {
+      CV = atoi (capsver);
+    } else {
+      /* no version, assume 0 */
+      CV = 0;
+    }
+    /* store in cache */
+    rtpgstdepay->current_CV = CV;
     gst_caps_ref (outcaps);
-    store_cache (rtpgstdepay, 0, outcaps);
+    store_cache (rtpgstdepay, CV, outcaps);
+
+    res = gst_pad_set_caps (depayload->srcpad, outcaps);
+    gst_caps_unref (outcaps);
   } else {
-    outcaps = gst_caps_new_any ();
+    GST_WARNING_OBJECT (depayload, "no caps given");
+    rtpgstdepay->current_CV = -1;
+    res = TRUE;
   }
-  res = gst_pad_set_caps (depayload->srcpad, outcaps);
-  gst_caps_unref (outcaps);
 
   return res;
 }
@@ -251,6 +265,8 @@ gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
         gst_buffer_unmap (outbuf, &map);
         goto too_small;
       }
+
+      GST_DEBUG_OBJECT (rtpgstdepay, "parsing caps %s", &map.data[offset]);
 
       /* parse and store in cache */
       outcaps = gst_caps_from_string ((gchar *) & map.data[offset]);
