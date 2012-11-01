@@ -415,7 +415,7 @@ open_codec (GstVP8Dec * dec, GstVideoCodecFrame * frame)
   if (status != VPX_CODEC_OK || !stream_info.is_kf) {
     GST_WARNING_OBJECT (dec, "No keyframe, skipping");
     gst_video_decoder_finish_frame (GST_VIDEO_DECODER (dec), frame);
-    return GST_FLOW_OK;
+    return GST_FLOW_CUSTOM_SUCCESS_1;
   }
 
   g_assert (dec->output_state == NULL);
@@ -483,8 +483,11 @@ gst_vp8_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 
   dec = GST_VP8_DEC (decoder);
 
-  if (!dec->decoder_inited)
+  if (!dec->decoder_inited) {
     ret = open_codec (dec, frame);
+    if (ret == GST_FLOW_CUSTOM_SUCCESS_1)
+      return GST_FLOW_OK;
+  }
 
   deadline = gst_video_decoder_get_max_decode_time (decoder, frame);
   if (deadline < 0) {
