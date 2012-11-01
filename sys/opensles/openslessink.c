@@ -36,6 +36,7 @@
 #  include <config.h>
 #endif
 
+#include "opensles.h"
 #include "openslessink.h"
 
 GST_DEBUG_CATEGORY_STATIC (opensles_sink_debug);
@@ -109,17 +110,10 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
   SLuint32 outputDeviceIDs[MAX_NUMBER_OUTPUT_DEVICES];
   SLAudioOutputDescriptor audioOutputDescriptor;
 
-  /* Create engine */
-  result = slCreateEngine (&engineObject, 0, NULL, 0, NULL, NULL);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (sink, "slCreateEngine failed(0x%08x)", (guint32) result);
-    goto beach;
-  }
-
-  /* Realize the engine */
-  result = (*engineObject)->Realize (engineObject, SL_BOOLEAN_FALSE);
-  if (result != SL_RESULT_SUCCESS) {
-    GST_ERROR_OBJECT (sink, "engine.Realize failed(0x%08x)", (guint32) result);
+  /* Create and realize engine */
+  engineObject = gst_opensles_get_engine ();
+  if (!engineObject) {
+    GST_ERROR_OBJECT (sink, "Getting engine failed");
     goto beach;
   }
 
@@ -171,7 +165,7 @@ _opensles_query_capabilities (GstOpenSLESSink * sink)
 beach:
   /* Destroy the engine object */
   if (engineObject) {
-    (*engineObject)->Destroy (engineObject);
+    gst_opensles_release_engine (engineObject);
   }
 
   return res;
