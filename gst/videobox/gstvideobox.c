@@ -2148,7 +2148,7 @@ fill_gray (GstVideoBoxFill fill_type, guint b_alpha,
   format = GST_VIDEO_FRAME_FORMAT (frame);
 
   width = GST_VIDEO_FRAME_WIDTH (frame);
-  height = GST_VIDEO_FRAME_WIDTH (frame);
+  height = GST_VIDEO_FRAME_HEIGHT (frame);
 
   dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
   dest_stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
