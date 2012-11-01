@@ -23,24 +23,26 @@
 #  include "config.h"
 #endif
 
+#define GST_USE_UNSTABLE_API
 #include <gst/video/video.h>
 #include <gst/interfaces/propertyprobe.h>
+#include <gst/interfaces/photography.h>
 
 #include "gstahcsrc.h"
 #include "gst-dvm.h"
 
-static void gst_ahc_src_property_probe_interface_init (GstPropertyProbeInterface
-    * iface);
-static void gst_ahc_src_init_interfaces (GType type);
-
+/* GObject */
 static void gst_ahc_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_ahc_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_ahc_src_dispose (GObject * object);
 
+/* GstElement */
 static GstStateChangeReturn gst_ahc_src_change_state (GstElement * element,
     GstStateChange transition);
+
+/* GstBaseSrc */
 static GstCaps *gst_ahc_src_getcaps (GstBaseSrc * src);
 static gboolean gst_ahc_src_setcaps (GstBaseSrc * src, GstCaps * caps);
 static void gst_ahc_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
@@ -51,6 +53,52 @@ static gboolean gst_ahc_src_unlock_stop (GstBaseSrc * bsrc);
 static GstFlowReturn gst_ahc_src_create (GstPushSrc * src, GstBuffer ** buffer);
 static gboolean gst_ahc_src_query (GstBaseSrc * bsrc, GstQuery * query);
 
+/* GstPropertyProbe */
+static void gst_ahc_src_implements_interface_init (GstImplementsInterfaceClass
+    * klass);
+static void gst_ahc_src_property_probe_interface_init (GstPropertyProbeInterface
+    * iface);
+static void gst_ahc_src_photography_interface_init (GstPhotographyInterface
+    * iface);
+static void gst_ahc_src_init_interfaces (GType type);
+
+/* GstPhotography  */
+static gboolean gst_ahc_src_get_ev_compensation (GstPhotography * photo,
+    gfloat * ev_comp);
+static gboolean gst_ahc_src_get_white_balance_mode (GstPhotography * photo,
+    GstWhiteBalanceMode * wb_mode);
+static gboolean gst_ahc_src_get_colour_tone_mode (GstPhotography * photo,
+    GstColourToneMode * tone_mode);
+static gboolean gst_ahc_src_get_scene_mode (GstPhotography * photo,
+    GstSceneMode * scene_mode);
+static gboolean gst_ahc_src_get_flash_mode (GstPhotography * photo,
+    GstFlashMode * flash_mode);
+static gboolean gst_ahc_src_get_zoom (GstPhotography * photo, gfloat * zoom);
+static gboolean gst_ahc_src_get_flicker_mode (GstPhotography * photo,
+    GstFlickerReductionMode * flicker_mode);
+static gboolean gst_ahc_src_get_focus_mode (GstPhotography * photo,
+    GstFocusMode * focus_mode);
+
+static gboolean gst_ahc_src_set_ev_compensation (GstPhotography * photo,
+    gfloat ev_comp);
+static gboolean gst_ahc_src_set_white_balance_mode (GstPhotography * photo,
+    GstWhiteBalanceMode wb_mode);
+static gboolean gst_ahc_src_set_colour_tone_mode (GstPhotography * photo,
+    GstColourToneMode tone_mode);
+static gboolean gst_ahc_src_set_scene_mode (GstPhotography * photo,
+    GstSceneMode scene_mode);
+static gboolean gst_ahc_src_set_flash_mode (GstPhotography * photo,
+    GstFlashMode flash_mode);
+static gboolean gst_ahc_src_set_zoom (GstPhotography * photo, gfloat zoom);
+static gboolean gst_ahc_src_set_flicker_mode (GstPhotography * photo,
+    GstFlickerReductionMode flicker_mode);
+static gboolean gst_ahc_src_set_focus_mode (GstPhotography * photo,
+    GstFocusMode focus_mode);
+
+static GstPhotoCaps gst_ahc_src_get_capabilities (GstPhotography * photo);
+static void gst_ahc_src_set_autofocus (GstPhotography * photo, gboolean on);
+
+/* GstAHCSrc */
 static void gst_ahc_src_close (GstAHCSrc * self);
 static void gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data);
 static void gst_ahc_src_on_error (int error, gpointer user_data);
@@ -112,9 +160,23 @@ gst_ahc_src_init_interfaces (GType type)
     NULL,
     NULL,
   };
+  static const GInterfaceInfo ahcsrc_photography_info = {
+    (GInterfaceInitFunc) gst_ahc_src_photography_interface_init,
+    NULL,
+    NULL,
+  };
+  static const GInterfaceInfo ahcsrc_implements_interface_info = {
+    (GInterfaceInitFunc) gst_ahc_src_implements_interface_init,
+    NULL,
+    NULL,
+  };
 
   g_type_add_interface_static (type, GST_TYPE_PROPERTY_PROBE,
       &ahcsrc_propertyprobe_info);
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
+      &ahcsrc_implements_interface_info);
+  g_type_add_interface_static (type, GST_TYPE_PHOTOGRAPHY,
+      &ahcsrc_photography_info);
 }
 
 static void
@@ -174,6 +236,8 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
           "The direction that the camera faces",
           GST_AHC_SRC_FACING_TYPE, CAMERA_FACING_BACK,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /* TODO: override GstPhotography properties */
 
   klass->probe_properties = NULL;
 }
@@ -275,6 +339,23 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+gst_ahc_src_interface_supported (GstImplementsInterface * iface,
+    GType iface_type)
+{
+  if (iface_type == GST_TYPE_PHOTOGRAPHY ||
+      iface_type == GST_TYPE_PROPERTY_PROBE)
+    return TRUE;
+  else
+    return FALSE;
+}
+
+static void
+gst_ahc_src_implements_interface_init (GstImplementsInterfaceClass * klass)
+{
+  klass->supported = gst_ahc_src_interface_supported;
+}
+
 static const GList *
 gst_ahc_src_probe_get_properties (GstPropertyProbe * probe)
 {
@@ -323,6 +404,726 @@ gst_ahc_src_property_probe_interface_init (GstPropertyProbeInterface * iface)
 {
   iface->get_properties = gst_ahc_src_probe_get_properties;
   iface->get_values = gst_ahc_src_probe_get_values;
+}
+
+
+static gboolean
+gst_ahc_src_get_ev_compensation (GstPhotography * photo, gfloat * ev_comp)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      gint ev, min, max;
+      gfloat step;
+
+      ev = gst_ahc_parameters_get_exposure_compensation (params);
+      min = gst_ahc_parameters_get_min_exposure_compensation (params);
+      max = gst_ahc_parameters_get_min_exposure_compensation (params);
+      step = gst_ahc_parameters_get_exposure_compensation_step (params);
+      if (step != 0.0 && min != max && ev >= min && ev <= max && step != 0.0) {
+        if (ev_comp)
+          *ev_comp = ev * step;
+        ret = TRUE;
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_white_balance_mode (GstPhotography * photo,
+    GstWhiteBalanceMode * wb_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *wb = gst_ahc_parameters_get_white_balance (params);
+      GstWhiteBalanceMode mode = GST_PHOTOGRAPHY_WB_MODE_AUTO;
+
+      ret = TRUE;
+      if (wb == Parameters_WHITE_BALANCE_AUTO)
+        mode = GST_PHOTOGRAPHY_WB_MODE_AUTO;
+      else if (wb == Parameters_WHITE_BALANCE_INCANDESCENT)
+        mode = GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN;
+      else if (wb == Parameters_WHITE_BALANCE_FLUORESCENT)
+        mode = GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT;
+      //else if (wb == Parameters_WHITE_BALANCE_WARM_FLUORESCENT)
+      else if (wb == Parameters_WHITE_BALANCE_DAYLIGHT)
+        mode = GST_PHOTOGRAPHY_WB_MODE_DAYLIGHT;
+      else if (wb == Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT)
+        mode = GST_PHOTOGRAPHY_WB_MODE_CLOUDY;
+      else if (wb == Parameters_WHITE_BALANCE_TWILIGHT)
+        mode = GST_PHOTOGRAPHY_WB_MODE_SUNSET;
+      //else if (wb == Parameters_WHITE_BALANCE_SHADE)
+      else
+        ret = FALSE;
+
+      if (ret && wb_mode)
+        *wb_mode = mode;
+
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_colour_tone_mode (GstPhotography * photo,
+    GstColourToneMode * tone_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *effect = gst_ahc_parameters_get_color_effect (params);
+      GstColourToneMode mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL;
+
+      ret = TRUE;
+      if (effect == Parameters_EFFECT_NONE)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL;
+      else if (effect == Parameters_EFFECT_MONO)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_GRAYSCALE;
+      else if (effect == Parameters_EFFECT_NEGATIVE)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NEGATIVE;
+      else if (effect == Parameters_EFFECT_SOLARIZE)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE;
+      else if (effect == Parameters_EFFECT_SEPIA)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SEPIA;
+      //else if (effect == Parameters_EFFECT_POSTERIZE)
+      //else if (effect == Parameters_EFFECT_WHITEBOARD)
+      //else if (effect == Parameters_EFFECT_BLACKBOARD)
+      //else if (effect == Parameters_EFFECT_AQUA)
+      else
+        ret = FALSE;
+
+      if (ret && tone_mode)
+        *tone_mode = mode;
+
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_scene_mode (GstPhotography * photo, GstSceneMode * scene_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (scene_mode && self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *scene = gst_ahc_parameters_get_scene_mode (params);
+      GstSceneMode mode = GST_PHOTOGRAPHY_SCENE_MODE_AUTO;
+
+      ret = TRUE;
+      if (scene == Parameters_SCENE_MODE_AUTO)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_AUTO;
+      //else if (scene == Parameters_SCENE_MODE_ACTION)
+      else if (scene == Parameters_SCENE_MODE_PORTRAIT)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_PORTRAIT;
+      else if (scene == Parameters_SCENE_MODE_LANDSCAPE)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_LANDSCAPE;
+      else if (scene == Parameters_SCENE_MODE_NIGHT)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT;
+      //else if (scene == Parameters_SCENE_MODE_NIGHT_PORTRAIT)
+      //else if (scene == Parameters_SCENE_MODE_THEATRE)
+      //else if (scene == Parameters_SCENE_MODE_BEACH)
+      //else if (scene == Parameters_SCENE_MODE_SNOW)
+      //else if (scene == Parameters_SCENE_MODE_SUNSET)
+      //else if (scene == Parameters_SCENE_MODE_STEADYPHOTO)
+      //else if (scene == Parameters_SCENE_MODE_FIREWORKS)
+      else if (scene == Parameters_SCENE_MODE_SPORTS)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_SPORT;
+      //else if (scene == Parameters_SCENE_MODE_PARTY)
+      //else if (scene == Parameters_SCENE_MODE_CANDLELIGHT)
+      //else if (scene == Parameters_SCENE_MODE_BARCODE)
+      else
+        ret = FALSE;
+
+      if (ret && scene_mode)
+        *scene_mode = mode;
+
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_flash_mode (GstPhotography * photo, GstFlashMode * flash_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *flash = gst_ahc_parameters_get_flash_mode (params);
+      GstFlashMode mode = GST_PHOTOGRAPHY_FLASH_MODE_OFF;
+
+      ret = TRUE;
+      if (flash == Parameters_FLASH_MODE_OFF)
+        mode = GST_PHOTOGRAPHY_FLASH_MODE_OFF;
+      else if (flash == Parameters_FLASH_MODE_AUTO)
+        mode = GST_PHOTOGRAPHY_FLASH_MODE_AUTO;
+      else if (flash == Parameters_FLASH_MODE_ON)
+        mode = GST_PHOTOGRAPHY_FLASH_MODE_ON;
+      else if (flash == Parameters_FLASH_MODE_RED_EYE)
+        mode = GST_PHOTOGRAPHY_FLASH_MODE_RED_EYE;
+      else if (flash == Parameters_FLASH_MODE_TORCH)
+        mode = GST_PHOTOGRAPHY_FLASH_MODE_FILL_IN;
+      else
+        ret = FALSE;
+
+      if (ret && flash_mode)
+        *flash_mode = mode;
+
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_zoom (GstPhotography * photo, gfloat * zoom)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      GList *zoom_ratios = gst_ahc_parameters_get_zoom_ratios (params);
+      gint zoom_idx = gst_ahc_parameters_get_zoom (params);
+      gint max_zoom = gst_ahc_parameters_get_max_zoom (params);
+
+      if (zoom_ratios && g_list_length (zoom_ratios) == (max_zoom + 1) &&
+          zoom_idx >= 0 && zoom_idx < max_zoom) {
+        gint zoom_value;
+
+        zoom_value = GPOINTER_TO_INT (g_list_nth_data (zoom_ratios, zoom_idx));
+        if (zoom)
+          *zoom = (gfloat) zoom_value / 100.0;
+
+        ret = TRUE;
+      }
+      gst_ahc_parameters_zoom_ratios_free (zoom_ratios);
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_flicker_mode (GstPhotography * photo,
+    GstFlickerReductionMode * flicker_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *antibanding = gst_ahc_parameters_get_antibanding (params);
+      GstFlickerReductionMode mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO;
+
+      ret = TRUE;
+      if (antibanding == Parameters_ANTIBANDING_AUTO)
+        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO;
+      else if (antibanding == Parameters_ANTIBANDING_50HZ)
+        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_50HZ;
+      else if (antibanding == Parameters_ANTIBANDING_60HZ)
+        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_60HZ;
+      else if (antibanding == Parameters_ANTIBANDING_OFF)
+        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF;
+      else
+        ret = FALSE;
+
+      if (ret && flicker_mode)
+        *flicker_mode = mode;
+
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_get_focus_mode (GstPhotography * photo, GstFocusMode * focus_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *focus = gst_ahc_parameters_get_focus_mode (params);
+      GstFocusMode mode = GST_PHOTOGRAPHY_FOCUS_MODE_AUTO;
+
+      ret = TRUE;
+      if (focus == Parameters_FOCUS_MODE_AUTO)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_AUTO;
+      else if (focus == Parameters_FOCUS_MODE_INFINITY)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY;
+      else if (focus == Parameters_FOCUS_MODE_MACRO)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_MACRO;
+      //else if (focus == Parameters_FOCUS_MODE_FIXED)
+      else if (focus == Parameters_FOCUS_MODE_EDOF)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL;
+      else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_VIDEO)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED;
+      else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_PICTURE)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL;
+      else
+        ret = FALSE;
+
+      if (ret && focus_mode)
+        *focus_mode = mode;
+
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+
+static gboolean
+gst_ahc_src_set_ev_compensation (GstPhotography * photo, gfloat ev_comp)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      gint ev, min, max;
+      gfloat step;
+
+      ev = gst_ahc_parameters_get_exposure_compensation (params);
+      min = gst_ahc_parameters_get_min_exposure_compensation (params);
+      max = gst_ahc_parameters_get_min_exposure_compensation (params);
+      step = gst_ahc_parameters_get_exposure_compensation_step (params);
+      if (step != 0.0 && min != max && step != 0.0 &&
+          ev_comp >= min && ev_comp <= max) {
+        /* TODO: error or get closest ev? */
+        ev = ev_comp / step;
+        if ((ev * step) == ev_comp) {
+          gst_ahc_parameters_set_exposure_compensation (params, ev);
+          ret = gst_ah_camera_set_parameters (self->camera, params);
+        }
+      }
+    }
+    gst_ahc_parameters_free (params);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_white_balance_mode (GstPhotography * photo,
+    GstWhiteBalanceMode wb_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *white_balance = NULL;
+
+      switch (wb_mode) {
+        case GST_PHOTOGRAPHY_WB_MODE_AUTO:
+          white_balance = Parameters_WHITE_BALANCE_AUTO;
+          break;
+        case GST_PHOTOGRAPHY_WB_MODE_DAYLIGHT:
+          white_balance = Parameters_WHITE_BALANCE_DAYLIGHT;
+          break;
+        case GST_PHOTOGRAPHY_WB_MODE_CLOUDY:
+          white_balance = Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT;
+          break;
+        case GST_PHOTOGRAPHY_WB_MODE_SUNSET:
+          white_balance = Parameters_WHITE_BALANCE_TWILIGHT;
+          break;
+        case GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN:
+          white_balance = Parameters_WHITE_BALANCE_INCANDESCENT;
+          break;
+        case GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT:
+          white_balance = Parameters_WHITE_BALANCE_FLUORESCENT;
+          break;
+        default:
+          white_balance = NULL;
+          break;
+      }
+
+      if (white_balance) {
+        gst_ahc_parameters_set_white_balance (params, white_balance);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_colour_tone_mode (GstPhotography * photo,
+    GstColourToneMode tone_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *color_effect = NULL;
+
+      switch (tone_mode) {
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL:
+          color_effect = Parameters_EFFECT_NONE;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SEPIA:
+          color_effect = Parameters_EFFECT_SEPIA;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NEGATIVE:
+          color_effect = Parameters_EFFECT_NEGATIVE;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_GRAYSCALE:
+          color_effect = Parameters_EFFECT_MONO;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE:
+          color_effect = Parameters_EFFECT_SOLARIZE;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NATURAL:
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_VIVID:
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_COLORSWAP:
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_OUT_OF_FOCUS:
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SKY_BLUE:
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_GRASS_GREEN:
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SKIN_WHITEN:
+        default:
+          color_effect = NULL;
+          break;
+      }
+
+      if (color_effect) {
+        gst_ahc_parameters_set_color_effect (params, color_effect);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_scene_mode (GstPhotography * photo, GstSceneMode scene_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *scene = NULL;
+
+      switch (scene_mode) {
+        case GST_PHOTOGRAPHY_SCENE_MODE_PORTRAIT:
+          scene = Parameters_SCENE_MODE_PORTRAIT;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_LANDSCAPE:
+          scene = Parameters_SCENE_MODE_LANDSCAPE;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_SPORT:
+          scene = Parameters_SCENE_MODE_SPORTS;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_NIGHT:
+          scene = Parameters_SCENE_MODE_NIGHT;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_AUTO:
+          scene = Parameters_SCENE_MODE_AUTO;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_MANUAL:
+        case GST_PHOTOGRAPHY_SCENE_MODE_CLOSEUP:
+        default:
+          scene = NULL;
+          break;
+      }
+
+      if (scene) {
+        gst_ahc_parameters_set_scene_mode (params, scene);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_flash_mode (GstPhotography * photo, GstFlashMode flash_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *flash = NULL;
+
+      switch (flash_mode) {
+        case GST_PHOTOGRAPHY_FLASH_MODE_AUTO:
+          flash = Parameters_FLASH_MODE_AUTO;
+          break;
+        case GST_PHOTOGRAPHY_FLASH_MODE_OFF:
+          flash = Parameters_FLASH_MODE_OFF;
+          break;
+        case GST_PHOTOGRAPHY_FLASH_MODE_ON:
+          flash = Parameters_FLASH_MODE_ON;
+          break;
+        case GST_PHOTOGRAPHY_FLASH_MODE_FILL_IN:
+          flash = Parameters_FLASH_MODE_TORCH;
+          break;
+        case GST_PHOTOGRAPHY_FLASH_MODE_RED_EYE:
+          flash = Parameters_FLASH_MODE_RED_EYE;
+          break;
+        default:
+          flash = NULL;
+          break;
+      }
+
+      if (flash) {
+        gst_ahc_parameters_set_flash_mode (params, flash);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_zoom (GstPhotography * photo, gfloat zoom)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      GList *zoom_ratios = gst_ahc_parameters_get_zoom_ratios (params);
+      gint max_zoom = gst_ahc_parameters_get_max_zoom (params);
+      gint zoom_idx = -1;
+
+      if (zoom_ratios && g_list_length (zoom_ratios) == (max_zoom + 1)) {
+        gint i;
+
+        for (i = 0; i < max_zoom + 1; i++) {
+          gint zoom_value = GPOINTER_TO_INT (g_list_nth_data (zoom_ratios, i));
+          gfloat value = (gfloat) zoom_value / 100.0;
+
+          /* TODO: error or get closest zoom? */
+          if (value == zoom)
+            zoom_idx = i;
+        }
+      }
+      if (zoom_idx != -1) {
+        gst_ahc_parameters_set_zoom (params, zoom_idx);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_flicker_mode (GstPhotography * photo,
+    GstFlickerReductionMode flicker_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *antibanding = NULL;
+
+      switch (flicker_mode) {
+        case GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF:
+          antibanding = Parameters_ANTIBANDING_OFF;
+          break;
+        case GST_PHOTOGRAPHY_FLICKER_REDUCTION_50HZ:
+          antibanding = Parameters_ANTIBANDING_50HZ;
+          break;
+        case GST_PHOTOGRAPHY_FLICKER_REDUCTION_60HZ:
+          antibanding = Parameters_ANTIBANDING_60HZ;
+          break;
+        case GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO:
+          antibanding = Parameters_ANTIBANDING_AUTO;
+          break;
+        default:
+          antibanding = NULL;
+          break;
+      }
+
+      if (antibanding) {
+        gst_ahc_parameters_set_antibanding (params, antibanding);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_ahc_src_set_focus_mode (GstPhotography * photo, GstFocusMode focus_mode)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+  gboolean ret = FALSE;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (params) {
+      const gchar *focus = NULL;
+
+      switch (focus_mode) {
+        case GST_PHOTOGRAPHY_FOCUS_MODE_AUTO:
+          focus = Parameters_FOCUS_MODE_AUTO;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_MACRO:
+          focus = Parameters_FOCUS_MODE_MACRO;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY:
+          focus = Parameters_FOCUS_MODE_INFINITY;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL:
+          focus = Parameters_FOCUS_MODE_EDOF;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL:
+          focus = Parameters_FOCUS_MODE_CONTINUOUS_PICTURE;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED:
+          focus = Parameters_FOCUS_MODE_CONTINUOUS_VIDEO;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_PORTRAIT:
+        case GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED:
+        default:
+          focus = NULL;
+          break;
+      }
+
+      if (focus) {
+        gst_ahc_parameters_set_focus_mode (params, focus);
+        ret = gst_ah_camera_set_parameters (self->camera, params);
+      }
+      gst_ahc_parameters_free (params);
+    }
+  }
+
+  return ret;
+}
+
+static GstPhotoCaps
+gst_ahc_src_get_capabilities (GstPhotography * photo)
+{
+  return GST_PHOTOGRAPHY_CAPS_EV_COMP | GST_PHOTOGRAPHY_CAPS_WB_MODE |
+      GST_PHOTOGRAPHY_CAPS_TONE | GST_PHOTOGRAPHY_CAPS_SCENE |
+      GST_PHOTOGRAPHY_CAPS_FLASH | GST_PHOTOGRAPHY_CAPS_ZOOM |
+      GST_PHOTOGRAPHY_CAPS_FOCUS;
+}
+
+static void
+gst_ahc_src_set_autofocus (GstPhotography * photo, gboolean on)
+{
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+
+  if (self->camera) {
+    /* TODO: Call the autofocus and signal when callback is called */
+  }
+
+}
+
+static void
+gst_ahc_src_photography_interface_init (GstPhotographyInterface * iface)
+{
+  iface->get_ev_compensation = gst_ahc_src_get_ev_compensation;
+  iface->get_white_balance_mode = gst_ahc_src_get_white_balance_mode;
+  iface->get_colour_tone_mode = gst_ahc_src_get_colour_tone_mode;
+  iface->get_scene_mode = gst_ahc_src_get_scene_mode;
+  iface->get_flash_mode = gst_ahc_src_get_flash_mode;
+  iface->get_zoom = gst_ahc_src_get_zoom;
+  iface->get_flicker_mode = gst_ahc_src_get_flicker_mode;
+  iface->get_focus_mode = gst_ahc_src_get_focus_mode;
+
+  iface->set_ev_compensation = gst_ahc_src_set_ev_compensation;
+  iface->set_white_balance_mode = gst_ahc_src_set_white_balance_mode;
+  iface->set_colour_tone_mode = gst_ahc_src_set_colour_tone_mode;
+  iface->set_scene_mode = gst_ahc_src_set_scene_mode;
+  iface->set_flash_mode = gst_ahc_src_set_flash_mode;
+  iface->set_zoom = gst_ahc_src_set_zoom;
+  iface->set_flicker_mode = gst_ahc_src_set_flicker_mode;
+  iface->set_focus_mode = gst_ahc_src_set_focus_mode;
+
+  iface->get_capabilities = gst_ahc_src_get_capabilities;
+  iface->set_autofocus = gst_ahc_src_set_autofocus;
 }
 
 static gint
