@@ -198,6 +198,8 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     GST_DEBUG_OBJECT (rtpgstpay, "sending inline caps");
     rtpgstpay->next_CV++;
+
+    flags |= (1 << 7);
   } else {
     capslen_prefix_len = 0;
   }
@@ -242,9 +244,6 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
     payload = gst_rtp_buffer_get_payload (&rtp);
-
-    if (capslen > 0)
-      flags |= (1 << 7);
 
     GST_DEBUG_OBJECT (basepayload, "new packet len %u, frag %u", packet_len,
         frag_offset);
