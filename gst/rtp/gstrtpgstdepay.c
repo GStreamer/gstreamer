@@ -190,7 +190,7 @@ gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstBuffer *subbuf, *outbuf = NULL;
   gint payload_len;
   guint8 *payload;
-  guint CV;
+  guint CV, frag_offset, avail;
   GstRTPBuffer rtp = { NULL };
 
   rtpgstdepay = GST_RTP_GST_DEPAY (depayload);
@@ -219,9 +219,12 @@ gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
    * |                          Frag_offset                          |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    */
-  /* frag_offset =
-   *   (payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) | payload[7];
-   */
+  frag_offset =
+      (payload[4] << 24) | (payload[5] << 16) | (payload[6] << 8) | payload[7];
+
+  avail = gst_adapter_available (rtpgstdepay->adapter);
+  if (avail != frag_offset)
+    goto wrong_frag;
 
   /* subbuffer skipping the 8 header bytes */
   subbuf = gst_rtp_buffer_get_payload_subbuffer (&rtp, 8, -1);
@@ -322,6 +325,13 @@ empty_packet:
     GST_ELEMENT_WARNING (rtpgstdepay, STREAM, DECODE,
         ("Empty Payload."), (NULL));
     gst_rtp_buffer_unmap (&rtp);
+    return NULL;
+  }
+wrong_frag:
+  {
+    gst_adapter_clear (rtpgstdepay->adapter);
+    gst_rtp_buffer_unmap (&rtp);
+    GST_LOG_OBJECT (rtpgstdepay, "wrong fragment, skipping");
     return NULL;
   }
 too_small:
