@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstrtp.la
 
 libgstrtp_la_SOURCES = \
+	dboolhuff.c \
 	fnv1hash.c \
 	gstrtp.c \
 	gstrtpchannels.c \
@@ -70,10 +71,13 @@ libgstrtp_la_SOURCES = \
 	gstrtptheorapay.c \
 	gstrtpvorbisdepay.c \
 	gstrtpvorbispay.c  \
+	gstrtpvp8depay.c \
+	gstrtpvp8pay.c \
 	gstrtpvrawdepay.c  \
 	gstrtpvrawpay.c 
 
-libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
+		$(GST_CFLAGS) -Dvp8_norm=gst_rtpvp8_vp8_norm
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 		-lgstaudio-@GST_API_VERSION@ \
 		-lgstvideo-@GST_API_VERSION@ \
@@ -86,6 +90,7 @@ libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtp_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS =			\
+		 dboolhuff.h \
 		 fnv1hash.h 		\
                  gstrtpchannels.h       \
 		 gstrtpL16depay.h 	\
@@ -154,8 +159,12 @@ noinst_HEADERS =			\
 	 	 gstrtptheorapay.h      \
 	 	 gstrtpvorbisdepay.h    \
 	 	 gstrtpvorbispay.h      \
+		 gstrtpvp8depay.c \
+		 gstrtpvp8pay.c \
 	 	 gstrtpvrawdepay.h      \
 	 	 gstrtpvrawpay.h
+
+EXTRA_DIST = dboolhuff.LICENSE
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

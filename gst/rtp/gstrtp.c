@@ -87,6 +87,8 @@
 #include "gstrtptheorapay.h"
 #include "gstrtpvorbisdepay.h"
 #include "gstrtpvorbispay.h"
+#include "gstrtpvp8depay.h"
+#include "gstrtpvp8pay.h"
 #include "gstrtpvrawdepay.h"
 #include "gstrtpvrawpay.h"
 
@@ -289,6 +291,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_vorbis_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_vp8_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_vp8_pay_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtp_vraw_depay_plugin_init (plugin))
