@@ -77,92 +77,92 @@ libgstrtp_la_SOURCES = \
 	gstrtpvrawpay.c 
 
 libgstrtp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
-		$(GST_CFLAGS) -Dvp8_norm=gst_rtpvp8_vp8_norm
+	$(GST_CFLAGS) -Dvp8_norm=gst_rtpvp8_vp8_norm
 libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
-		-lgstaudio-@GST_API_VERSION@ \
-		-lgstvideo-@GST_API_VERSION@ \
-                -lgsttag-@GST_API_VERSION@ \
-                -lgstrtp-@GST_API_VERSION@ \
-                -lgstpbutils-@GST_API_VERSION@ \
-		$(GST_BASE_LIBS) $(GST_LIBS) \
-		$(LIBM)
+	-lgstaudio-@GST_API_VERSION@ \
+	-lgstvideo-@GST_API_VERSION@ \
+	-lgsttag-@GST_API_VERSION@ \
+	-lgstrtp-@GST_API_VERSION@ \
+	-lgstpbutils-@GST_API_VERSION@ \
+	$(GST_BASE_LIBS) $(GST_LIBS) \
+	$(LIBM)
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 libgstrtp_la_LIBTOOLFLAGS = --tag=disable-static
 
 noinst_HEADERS =			\
-		 dboolhuff.h \
-		 fnv1hash.h 		\
-                 gstrtpchannels.h       \
-		 gstrtpL16depay.h 	\
-		 gstrtpL16pay.h 	\
-		 gstrtpac3depay.h 	\
-		 gstrtpac3pay.h 	\
-		 gstrtpbvdepay.h 	\
-		 gstrtpbvpay.h 	        \
-		 gstrtpceltpay.h	\
-		 gstrtpceltdepay.h	\
-		 gstrtpdvdepay.h 	\
-		 gstrtpdvpay.h 	        \
-		 gstrtpamrdepay.h 	\
-		 gstrtpamrpay.h 	\
-		 gstrtpgstdepay.h 	\
-		 gstrtpgstpay.h 	\
-		 gstrtpilbcdepay.h      \
-		 gstrtpilbcpay.h        \
-		 gstrtppcmadepay.h	\
-		 gstrtppcmudepay.h	\
-		 gstrtppcmupay.h 	\
-		 gstrtppcmapay.h 	\
-	         gstrtpg722depay.h      \
-	         gstrtpg722pay.h        \
-	         gstrtpg723depay.h      \
-	         gstrtpg723pay.h        \
-	         gstrtpg726depay.h      \
-	         gstrtpg726pay.h        \
-	         gstrtpg729depay.h      \
-	         gstrtpg729pay.h        \
-		 gstrtpgsmdepay.h 	\
-		 gstrtpgsmpay.h 	\
-		 gstrtpmpadepay.h 	\
-		 gstrtpmparobustdepay.h 	\
-		 gstrtpmpapay.h 	\
-		 gstrtpmpvdepay.h \
-		 gstrtpmpvpay.h \
-		 gstrtph263pdepay.h 	\
-		 gstrtph263ppay.h 	\
-		 gstrtph263depay.h 	\
-		 gstrtph263pay.h 	\
-		 gstrtph264depay.h 	\
-		 gstrtph264pay.h 	\
-		 gstrtpj2kdepay.h 	\
-		 gstrtpj2kpay.h 	\
-		 gstrtpjpegdepay.h 	\
-		 gstrtpjpegpay.h 	\
-		 gstrtpmp1sdepay.h 	\
-		 gstrtpmp2tdepay.h 	\
-		 gstrtpmp2tpay.h 	\
-		 gstrtpmp4vdepay.h	\
-		 gstrtpmp4vpay.h	\
-		 gstrtpmp4gdepay.h 	\
-		 gstrtpmp4gpay.h	\
-		 gstrtpmp4adepay.h      \
-		 gstrtpmp4apay.h        \
-		 gstasteriskh263.h	\
-		 gstrtpqcelpdepay.h	\
-		 gstrtpqdmdepay.h	\
-		 gstrtpsirenpay.h 	\
-		 gstrtpsirendepay.h 	\
-		 gstrtpspeexdepay.h	\
-		 gstrtpspeexpay.h	\
-		 gstrtpsv3vdepay.h	\
-	 	 gstrtptheoradepay.h    \
-	 	 gstrtptheorapay.h      \
-	 	 gstrtpvorbisdepay.h    \
-	 	 gstrtpvorbispay.h      \
-		 gstrtpvp8depay.c \
-		 gstrtpvp8pay.c \
-	 	 gstrtpvrawdepay.h      \
-	 	 gstrtpvrawpay.h
+	dboolhuff.h \
+	fnv1hash.h \
+	gstrtpchannels.h \
+	gstrtpL16depay.h \
+	gstrtpL16pay.h \
+	gstrtpac3depay.h \
+	gstrtpac3pay.h \
+	gstrtpbvdepay.h \
+	gstrtpbvpay.h \
+	gstrtpceltpay.h	\
+	gstrtpceltdepay.h \
+	gstrtpdvdepay.h \
+	gstrtpdvpay.h \
+	gstrtpamrdepay.h \
+	gstrtpamrpay.h 	\
+	gstrtpgstdepay.h \
+	gstrtpgstpay.h 	\
+	gstrtpilbcdepay.h \
+	gstrtpilbcpay.h \
+	gstrtppcmadepay.h \
+	gstrtppcmudepay.h \
+	gstrtppcmupay.h \
+	gstrtppcmapay.h \
+	gstrtpg722depay.h \
+	gstrtpg722pay.h \
+	gstrtpg723depay.h\
+	gstrtpg723pay.h \
+	gstrtpg726depay.h \
+	gstrtpg726pay.h \
+	gstrtpg729depay.h \
+	gstrtpg729pay.h \
+	gstrtpgsmdepay.h \
+	gstrtpgsmpay.h 	\
+	gstrtpmpadepay.h \
+	gstrtpmparobustdepay.h \
+	gstrtpmpapay.h \
+	gstrtpmpvdepay.h \
+	gstrtpmpvpay.h \
+	gstrtph263pdepay.h \
+	gstrtph263ppay.h \
+	gstrtph263depay.h \
+	gstrtph263pay.h \
+	gstrtph264depay.h \
+	gstrtph264pay.h \
+	gstrtpj2kdepay.h \
+	gstrtpj2kpay.h \
+	gstrtpjpegdepay.h \
+	gstrtpjpegpay.h \
+	gstrtpmp1sdepay.h \
+	gstrtpmp2tdepay.h \
+	gstrtpmp2tpay.h \
+	gstrtpmp4vdepay.h \
+	gstrtpmp4vpay.h	\
+	gstrtpmp4gdepay.h \
+	gstrtpmp4gpay.h	\
+	gstrtpmp4adepay.h \
+	gstrtpmp4apay.h \
+	gstasteriskh263.h \
+	gstrtpqcelpdepay.h \
+	gstrtpqdmdepay.h \
+	gstrtpsirenpay.h \
+	gstrtpsirendepay.h \
+	gstrtpspeexdepay.h \
+	gstrtpspeexpay.h \
+	gstrtpsv3vdepay.h \
+	gstrtptheoradepay.h \
+	gstrtptheorapay.h \
+	gstrtpvorbisdepay.h \
+	gstrtpvorbispay.h \
+	gstrtpvp8depay.c \
+	gstrtpvp8pay.c \
+	gstrtpvrawdepay.h \
+	gstrtpvrawpay.h
 
 EXTRA_DIST = dboolhuff.LICENSE
 
@@ -174,8 +174,8 @@ Android.mk: Makefile.am $(BUILT_SOURCES)
 	 -:SOURCES $(libgstrtp_la_SOURCES) \
 	 -:CFLAGS $(DEFS) $(DEFAULT_INCLUDES) $(libgstrtp_la_CFLAGS) \
 	 -:LDFLAGS $(libgstrtp_la_LDFLAGS) \
-	           $(libgstrtp_la_LIBADD) \
-	           -ldl \
+	  $(libgstrtp_la_LIBADD) \
+	  -ldl \
 	 -:PASSTHROUGH LOCAL_ARM_MODE:=arm \
-		       LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
+	      LOCAL_MODULE_PATH:='$$(TARGET_OUT)/lib/gstreamer-0.10' \
 	> $@
