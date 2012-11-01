@@ -460,6 +460,7 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
 
   in_flags = GST_AUDIO_FORMAT_INFO_FLAGS (in_info);
   in_flags &= ~(GST_AUDIO_FORMAT_FLAG_UNPACK);
+  in_flags &= ~(GST_AUDIO_FORMAT_FLAG_SIGNED);
 
   if (GST_VALUE_HOLDS_LIST (format)) {
     gint i, len;
@@ -482,6 +483,7 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
           break;
         out_flags = GST_AUDIO_FORMAT_INFO_FLAGS (t_info);
         out_flags &= ~(GST_AUDIO_FORMAT_FLAG_UNPACK);
+        out_flags &= ~(GST_AUDIO_FORMAT_FLAG_SIGNED);
         /* or another format without losing precision */
         if (in_flags == out_flags) {
           if (GST_AUDIO_FORMAT_INFO_DEPTH (t_info) ==
