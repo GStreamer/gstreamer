@@ -284,7 +284,7 @@ gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   outbuf = make_data_buffer (rtpgstpay, capsstr, capslen);
   g_free (capsstr);
 
-  /* store in adapter, we don't flush yet, buffer will follow */
+  /* store in adapter, we don't flush yet, buffer might follow */
   rtpgstpay->flags = (1 << 7) | (rtpgstpay->current_CV << 4);
   rtpgstpay->next_CV = (rtpgstpay->next_CV + 1) & 0x7;
   gst_adapter_push (rtpgstpay->adapter, outbuf);
@@ -303,30 +303,41 @@ gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 static gboolean
 gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
+  gboolean ret;
   GstRtpGSTPay *rtpgstpay;
+  guint etype;
 
   rtpgstpay = GST_RTP_GST_PAY (payload);
 
+  ret = GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
-      rtpgstpay->etype = 1;
+      etype = 1;
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
-      rtpgstpay->etype = 2;
+      etype = 2;
       break;
     case GST_EVENT_CUSTOM_BOTH:
-      rtpgstpay->etype = 2;
+      etype = 2;
       break;
     default:
+      etype = 0;
+      GST_LOG_OBJECT (rtpgstpay, "no event for %s",
+          GST_EVENT_TYPE_NAME (event));
       break;
   }
-  if (rtpgstpay->etype) {
+  if (etype) {
     const GstStructure *s;
     gchar *estr;
     guint elen;
     GstBuffer *outbuf;
 
-    GST_DEBUG_OBJECT (rtpgstpay, "make event type %d", rtpgstpay->etype);
+    /* make sure the adapter is flushed */
+    gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
+
+    GST_DEBUG_OBJECT (rtpgstpay, "make event type %d for %s",
+        etype, GST_EVENT_TYPE_NAME (event));
     s = gst_event_get_structure (event);
 
     estr = gst_structure_to_string (s);
@@ -334,12 +345,13 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     outbuf = make_data_buffer (rtpgstpay, estr, elen);
     g_free (estr);
 
+    rtpgstpay->etype = etype;
     gst_adapter_push (rtpgstpay->adapter, outbuf);
     /* flush the adapter immediately */
     gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
   }
 
-  return GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload, event);
+  return ret;
 }
 
 static GstFlowReturn
