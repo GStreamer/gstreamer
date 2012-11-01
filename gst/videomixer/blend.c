@@ -273,7 +273,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     ypos = 0; \
   } \
   /* If x or y offset are larger then the source it's outside of the picture */ \
-  if (xoffset > src_width || yoffset > src_width) { \
+  if (xoffset > src_width || yoffset > src_height) { \
     return; \
   } \
   \
@@ -518,7 +518,7 @@ blend_##format_name (GstVideoFrame * srcframe, gint xpos, gint ypos, \
     ypos = 0; \
   } \
   /* If x or y offset are larger then the source it's outside of the picture */ \
-  if (xoffset > src_width || yoffset > src_width) { \
+  if (xoffset > src_width || yoffset > src_height) { \
     return; \
   } \
   \
