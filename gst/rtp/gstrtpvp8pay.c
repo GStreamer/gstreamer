@@ -19,6 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +37,13 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_pay_debug
 
 #define DEFAULT_PICTURE_ID_MODE VP8_PAY_PICTURE_ID_7BITS
+
+static GstFlowReturn gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload,
+    GstBuffer * buffer);
+static gboolean gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload,
+    GstEvent * event);
+static gboolean gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload,
+    GstCaps * caps);
 
 G_DEFINE_TYPE (GstRtpVP8Pay, gst_rtp_vp8_pay, GST_TYPE_RTP_BASE_PAYLOAD);
 
@@ -61,14 +71,6 @@ gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj)
   else if (obj->picture_id_mode == VP8_PAY_PICTURE_ID_15BITS)
     obj->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
 }
-
-static GstFlowReturn gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload,
-    GstBuffer * buffer);
-static gboolean gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload,
-    GstEvent * event);
-static gboolean gst_rtp_vp8_pay_set_caps (GstRTPBasePayload * payload,
-    GstCaps * caps);
-
 
 static void
 gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
@@ -297,11 +299,11 @@ gst_rtp_vp8_calc_header_len (GstRtpVP8Pay * self)
   }
 }
 
-
 static gsize
 gst_rtp_vp8_calc_payload_len (GstRtpVP8Pay * self)
 {
   GstRTPBasePayload *payload = GST_RTP_BASE_PAYLOAD (self);
+
   return gst_rtp_buffer_calc_payload_len (GST_RTP_BASE_PAYLOAD_MTU (payload) -
       gst_rtp_vp8_calc_header_len (self), 0, 0);
 }

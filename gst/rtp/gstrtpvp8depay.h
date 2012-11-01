@@ -20,11 +20,27 @@
 #ifndef __GST_RTP_VP8_DEPAY_H__
 #define __GST_RTP_VP8_DEPAY_H__
 
-#include <glib-object.h>
 #include <gst/base/gstadapter.h>
 #include <gst/rtp/gstrtpbasedepayload.h>
 
-G_BEGIN_DECLS typedef struct _GstRtpVP8Depay GstRtpVP8Depay;
+G_BEGIN_DECLS
+
+#define GST_TYPE_RTP_VP8_DEPAY \
+  (gst_rtp_vp8_depay_get_type())
+#define GST_RTP_VP8_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_RTP_VP8_DEPAY, GstRtpVP8Depay))
+#define GST_RTP_VP8_DEPAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_RTP_VP8_DEPAY, \
+    GstRtpVP8DepayClass))
+#define GST_IS_RTP_VP8_DEPAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_RTP_VP8_DEPAY))
+#define GST_IS_RTP_VP8_DEPAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RTP_VP8_DEPAY))
+#define GST_RTP_VP8_DEPAY_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTP_VP8_DEPAY, \
+    GstRtpVP8DepayClass))
+
+typedef struct _GstRtpVP8Depay GstRtpVP8Depay;
 typedef struct _GstRtpVP8DepayClass GstRtpVP8DepayClass;
 
 struct _GstRtpVP8DepayClass
@@ -41,23 +57,8 @@ struct _GstRtpVP8Depay
 
 GType gst_rtp_vp8_depay_get_type (void);
 
-/* TYPE MACROS */
-#define GST_TYPE_RTP_VP8_DEPAY \
-  (gst_rtp_vp8_depay_get_type())
-#define GST_RTP_VP8_DEPAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_RTP_VP8_DEPAY, GstRtpVP8Depay))
-#define GST_RTP_VP8_DEPAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_RTP_VP8_DEPAY, \
-    GstRtpVP8DepayClass))
-#define GST_IS_RTP_VP8_DEPAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_RTP_VP8_DEPAY))
-#define GST_IS_RTP_VP8_DEPAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RTP_VP8_DEPAY))
-#define GST_RTP_VP8_DEPAY_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTP_VP8_DEPAY, \
-    GstRtpVP8DepayClass))
-
 gboolean gst_rtp_vp8_depay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
+
 #endif /* #ifndef __GST_RTP_VP8_DEPAY_H__ */

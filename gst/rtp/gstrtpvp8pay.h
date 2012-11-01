@@ -20,11 +20,24 @@
 #ifndef __GST_RTP_VP8_PAY_H__
 #define __GST_RTP_VP8_PAY_H__
 
-#include <glib-object.h>
-#include <gst/base/gstadapter.h>
 #include <gst/rtp/gstrtpbasepayload.h>
 
-G_BEGIN_DECLS typedef struct _GstRtpVP8Pay GstRtpVP8Pay;
+G_BEGIN_DECLS
+
+#define GST_TYPE_RTP_VP8_PAY \
+  (gst_rtp_vp8_pay_get_type())
+#define GST_RTP_VP8_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_RTP_VP8_PAY, GstRtpVP8Pay))
+#define GST_RTP_VP8_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_RTP_VP8_PAY, GstRtpVP8PayClass))
+#define GST_IS_RTP_VP8_PAY(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_RTP_VP8_PAY))
+#define GST_IS_RTP_VP8_PAY_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RTP_VP8_PAY))
+#define GST_RTP_VP8_PAY_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTP_VP8_PAY, GstRtpVP8PayClass))
+
+typedef struct _GstRtpVP8Pay GstRtpVP8Pay;
 typedef struct _GstRtpVP8PayClass GstRtpVP8PayClass;
 typedef enum _PictureIDMode PictureIDMode;
 
@@ -54,21 +67,8 @@ struct _GstRtpVP8Pay
 
 GType gst_rtp_vp8_pay_get_type (void);
 
-/* TYPE MACROS */
-#define GST_TYPE_RTP_VP8_PAY \
-  (gst_rtp_vp8_pay_get_type())
-#define GST_RTP_VP8_PAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_RTP_VP8_PAY, GstRtpVP8Pay))
-#define GST_RTP_VP8_PAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_RTP_VP8_PAY, GstRtpVP8PayClass))
-#define GST_IS_RTP_VP8_PAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_RTP_VP8_PAY))
-#define GST_IS_RTP_VP8_PAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_RTP_VP8_PAY))
-#define GST_RTP_VP8_PAY_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_RTP_VP8_PAY, GstRtpVP8PayClass))
-
 gboolean gst_rtp_vp8_pay_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
+
 #endif /* #ifndef __GST_RTP_VP8_PAY_H__ */

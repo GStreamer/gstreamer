@@ -1,5 +1,4 @@
-/*
- * gstrtpvp8depay.c - Source for GstRtpVP8Depay
+/* gstrtpvp8depay.c - Source for GstRtpVP8Depay
  * Copyright (C) 2011 Sjoerd Simons <sjoerd@luon.net>
  * Copyright (C) 2011 Collabora Ltd.
  *   Contact: Youness Alaoui <youness.alaoui@collabora.co.uk>
@@ -19,7 +18,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -28,6 +26,12 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_depay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_depay_debug
+
+static void gst_rtp_vp8_depay_dispose (GObject * object);
+static GstBuffer *gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depayload,
+    GstBuffer * buf);
+static gboolean gst_rtp_vp8_depay_set_caps (GstRTPBaseDepayload * depayload,
+    GstCaps * caps);
 
 G_DEFINE_TYPE (GstRtpVP8Depay, gst_rtp_vp8_depay, GST_TYPE_RTP_BASE_DEPAYLOAD);
 
@@ -53,12 +57,6 @@ gst_rtp_vp8_depay_init (GstRtpVP8Depay * self)
   self->adapter = gst_adapter_new ();
   self->started = FALSE;
 }
-
-static void gst_rtp_vp8_depay_dispose (GObject * object);
-static GstBuffer *gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depayload,
-    GstBuffer * buf);
-static gboolean gst_rtp_vp8_depay_set_caps (GstRTPBaseDepayload * depayload,
-    GstCaps * caps);
 
 static void
 gst_rtp_vp8_depay_class_init (GstRtpVP8DepayClass * gst_rtp_vp8_depay_class)
