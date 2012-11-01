@@ -591,7 +591,18 @@ HANDLE_ERROR:
 static gpointer
 render_thread_func (GstEglGlesSink * eglglessink)
 {
+  GstMessage *message;
+  GValue val = { 0 };
   GstDataQueueItem *item = NULL;
+
+  g_value_init (&val, G_TYPE_POINTER);
+  g_value_set_pointer (&val, g_thread_self ());
+  message = gst_message_new_stream_status (GST_OBJECT_CAST (eglglessink),
+      GST_STREAM_STATUS_TYPE_ENTER, GST_ELEMENT_CAST (eglglessink));
+  gst_message_set_stream_status_object (message, &val);
+  GST_DEBUG_OBJECT (eglglessink, "posting ENTER stream status");
+  gst_element_post_message (GST_ELEMENT_CAST (eglglessink), message);
+  g_value_unset (&val);
 
   while (gst_data_queue_pop (eglglessink->queue, &item)) {
     GstBuffer *buf = NULL;
@@ -649,6 +660,15 @@ render_thread_func (GstEglGlesSink * eglglessink)
     gst_caps_unref (eglglessink->configured_caps);
     eglglessink->configured_caps = NULL;
   }
+
+  g_value_init (&val, G_TYPE_POINTER);
+  g_value_set_pointer (&val, g_thread_self ());
+  message = gst_message_new_stream_status (GST_OBJECT_CAST (eglglessink),
+      GST_STREAM_STATUS_TYPE_LEAVE, GST_ELEMENT_CAST (eglglessink));
+  gst_message_set_stream_status_object (message, &val);
+  GST_DEBUG_OBJECT (eglglessink, "posting LEAVE stream status");
+  gst_element_post_message (GST_ELEMENT_CAST (eglglessink), message);
+  g_value_unset (&val);
 
   return NULL;
 }
