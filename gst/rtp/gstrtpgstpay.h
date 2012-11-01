@@ -42,6 +42,11 @@ typedef struct _GstRtpGSTPayClass GstRtpGSTPayClass;
 struct _GstRtpGSTPay
 {
   GstRTPBasePayload payload;
+
+  gchar *capsstr;
+  guint  capslen;
+  guint8 current_CV; /* CV field of incoming caps*/
+  guint8 next_CV;
 };
 
 struct _GstRtpGSTPayClass
