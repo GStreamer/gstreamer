@@ -379,7 +379,6 @@ AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(removesilence)
 AG_GST_CHECK_PLUGIN(rtpmux)
-AG_GST_CHECK_PLUGIN(rtpvp8)
 AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
@@ -2065,7 +2064,6 @@ gst/rawparse/Makefile
 gst/real/Makefile
 gst/removesilence/Makefile
 gst/rtpmux/Makefile
-gst/rtpvp8/Makefile
 gst/scaletempo/Makefile
 gst/sdi/Makefile
 gst/sdp/Makefile

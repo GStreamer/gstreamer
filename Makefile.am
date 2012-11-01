@@ -54,6 +54,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/mpeg4videoparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/qtmux/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/rtpvp8/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/selector/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
@@ -82,6 +83,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/invtelecine \
 	$(top_srcdir)/gst/mpeg4videoparse \
 	$(top_srcdir)/gst/qtmux \
+	$(top_srcdir)/gst/rtpvp8 \
 	$(top_srcdir)/gst/selector \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/gst/valve \

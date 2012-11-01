@@ -67,7 +67,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/invtelecine/Android.mk \
 	gst/hdvparse/Android.mk \
 	gst/stereo/Android.mk \
-	gst/rtpvp8/Android.mk \
 	gst/mpegdemux/Android.mk \
 	gst/ivfparse/Android.mk
 
@@ -161,6 +160,5 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/invtelecine/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/hdvparse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/stereo/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/rtpvp8/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/mpegdemux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/ivfparse/Android.mk

@@ -317,7 +317,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
-%{_libdir}/gstreamer-%{majorminor}/libgstrtpvp8.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvoamrwbenc.so
 %{_datadir}/gstreamer-%{majorminor}/presets/*.prs
 
