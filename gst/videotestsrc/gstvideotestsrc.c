@@ -924,6 +924,8 @@ gst_video_test_src_start (GstBaseSrc * basesrc)
   src->accum_frames = 0;
   src->accum_rtime = 0;
 
+  gst_video_info_init (&src->info);
+
   return TRUE;
 }
 
