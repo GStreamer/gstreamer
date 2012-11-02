@@ -1086,7 +1086,6 @@ read_line (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size)
           /* remember the original character we read and try again next time */
           if (conn->read_ahead == 0)
             conn->read_ahead = c;
-          return GST_RTSP_EINTR;
           g_clear_error (&err);
           return GST_RTSP_EINTR;
         }
