@@ -900,8 +900,6 @@ gst_video_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 
 not_negotiated:
   {
-    GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
-        ("format wasn't negotiated before get function"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 eos:
