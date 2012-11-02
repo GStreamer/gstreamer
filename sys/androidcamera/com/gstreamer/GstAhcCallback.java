@@ -2,7 +2,9 @@ package com.gstreamer;
 
 import android.hardware.Camera;
 
-public class GstAhcCallback implements Camera.PreviewCallback, Camera.ErrorCallback {
+public class GstAhcCallback implements Camera.PreviewCallback,
+                                       Camera.ErrorCallback,
+                                       Camera.AutoFocusCallback {
     public long mUserData;
     public long mCallback;
 
@@ -10,6 +12,8 @@ public class GstAhcCallback implements Camera.PreviewCallback, Camera.ErrorCallb
                                                              long callback, long user_data);
     public static native void gst_ah_camera_on_error(int error, Camera camera,
                                                      long callback, long user_data);
+    public static native void gst_ah_camera_on_auto_focus(boolean success, Camera camera,
+                                                             long callback, long user_data);
 
     public GstAhcCallback(long callback, long user_data) {
         mCallback = callback;
@@ -24,5 +28,10 @@ public class GstAhcCallback implements Camera.PreviewCallback, Camera.ErrorCallb
     @Override
     public void onError(int error, Camera camera) {
         gst_ah_camera_on_error(error, camera, mCallback, mUserData);
+    }
+
+    @Override
+    public void onAutoFocus(boolean success, Camera camera) {
+        gst_ah_camera_on_auto_focus(success, camera, mCallback, mUserData);
     }
 }

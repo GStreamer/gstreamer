@@ -101,7 +101,8 @@ static void gst_ahc_src_set_autofocus (GstPhotography * photo, gboolean on);
 /* GstAHCSrc */
 static void gst_ahc_src_close (GstAHCSrc * self);
 static void gst_ahc_src_on_preview_frame (jbyteArray data, gpointer user_data);
-static void gst_ahc_src_on_error (int error, gpointer user_data);
+static void gst_ahc_src_on_error (gint error, gpointer user_data);
+static void gst_ahc_src_on_auto_focus (gboolean success, gpointer user_data);
 
 #define NUM_CALLBACK_BUFFERS 5
 
@@ -1263,12 +1264,26 @@ gst_ahc_src_get_capabilities (GstPhotography * photo)
 }
 
 static void
+gst_ahc_src_on_auto_focus (gboolean success, gpointer user_data)
+{
+  GstAHCSrc *self = GST_AHC_SRC (user_data);
+
+  GST_WARNING_OBJECT (self, "Auto focus completed : %d", success);
+  gst_element_post_message (GST_ELEMENT (self),
+      gst_message_new_custom (GST_MESSAGE_ELEMENT, GST_OBJECT (self),
+          gst_structure_new (GST_PHOTOGRAPHY_AUTOFOCUS_DONE, NULL)));
+}
+
+static void
 gst_ahc_src_set_autofocus (GstPhotography * photo, gboolean on)
 {
   GstAHCSrc *self = GST_AHC_SRC (photo);
 
   if (self->camera) {
-    /* TODO: Call the autofocus and signal when callback is called */
+    if (on)
+      gst_ah_camera_auto_focus (self->camera, gst_ahc_src_on_auto_focus, self);
+    else
+      gst_ah_camera_cancel_auto_focus (self->camera);
   }
 
 }
@@ -1700,7 +1715,7 @@ gst_ahc_src_on_preview_frame (jbyteArray array, gpointer user_data)
 }
 
 static void
-gst_ahc_src_on_error (int error, gpointer user_data)
+gst_ahc_src_on_error (gint error, gpointer user_data)
 {
   GstAHCSrc *self = GST_AHC_SRC (user_data);
 

@@ -118,11 +118,17 @@ typedef void (*GstAHCErrorCallback) (gint error, gpointer user_data);
 /* android.hardware.Camera.PreviewCallback */
 typedef void (*GstAHCPreviewCallback) (jbyteArray data, gpointer user_data);
 
+/* android.hardware.Camera.AutoFocusCallback */
+typedef void (*GstAHCAutoFocusCallback) (gboolean success, gpointer user_data);
+
 gboolean gst_android_hardware_camera_init (void);
 void gst_android_hardware_camera_deinit (void);
 
 /* android.hardware.Camera */
 void gst_ah_camera_add_callback_buffer (GstAHCamera * self, jbyteArray buffer);
+gboolean gst_ah_camera_auto_focus (GstAHCamera * self,
+    GstAHCAutoFocusCallback cb, gpointer user_data);
+gboolean gst_ah_camera_cancel_auto_focus (GstAHCamera * self);
 gboolean gst_ah_camera_get_camera_info (gint camera_id,
     GstAHCCameraInfo * camera_info);
 gint gst_ah_camera_get_number_of_cameras (void);

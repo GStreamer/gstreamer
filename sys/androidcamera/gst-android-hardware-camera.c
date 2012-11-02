@@ -32,6 +32,8 @@ static struct
 {
   jclass klass;
   jmethodID addCallbackBuffer;
+  jmethodID autoFocus;
+  jmethodID cancelAutoFocus;
   jmethodID getCameraInfo;
   jmethodID getNumberOfCameras;
   jmethodID getParameters;
@@ -277,11 +279,23 @@ gst_ah_camera_on_error (JNIEnv * env, jclass klass, jint error,
     cb (error, (gpointer) (gsize) user_data);
 }
 
+static void
+gst_ah_camera_on_auto_focus (JNIEnv * env, jclass klass, jboolean success,
+    jobject camera, jlong callback, jlong user_data)
+{
+  GstAHCAutoFocusCallback cb = (GstAHCAutoFocusCallback) (gsize) callback;
+
+  if (cb)
+    cb (success, (gpointer) (gsize) user_data);
+}
+
 static JNINativeMethod native_methods[] = {
   {"gst_ah_camera_on_preview_frame", "([BLandroid/hardware/Camera;JJ)V",
       (void *) gst_ah_camera_on_preview_frame},
   {"gst_ah_camera_on_error", "(ILandroid/hardware/Camera;JJ)V",
-      (void *) gst_ah_camera_on_error}
+      (void *) gst_ah_camera_on_error},
+  {"gst_ah_camera_on_auto_focus", "(ZLandroid/hardware/Camera;JJ)V",
+      (void *) gst_ah_camera_on_auto_focus}
 };
 
 static gboolean
@@ -292,6 +306,9 @@ _init_classes (void)
   /* android.hardware.Camera */
   GST_DVM_GET_CLASS (android_hardware_camera, "android/hardware/Camera");
   GST_DVM_GET_METHOD (android_hardware_camera, addCallbackBuffer, "([B)V");
+  GST_DVM_GET_METHOD (android_hardware_camera, autoFocus,
+      "(Landroid/hardware/Camera$AutoFocusCallback;)V");
+  GST_DVM_GET_METHOD (android_hardware_camera, cancelAutoFocus, "()V");
   GST_DVM_GET_STATIC_METHOD (android_hardware_camera, getCameraInfo,
       "(ILandroid/hardware/Camera$CameraInfo;)V");
   GST_DVM_GET_STATIC_METHOD (android_hardware_camera, getNumberOfCameras,
@@ -1652,6 +1669,46 @@ gst_ah_camera_add_callback_buffer (GstAHCamera * self, jbyteArray buffer)
   JNIEnv *env = gst_dvm_get_env ();
 
   AHC_CALL (, Void, addCallbackBuffer, buffer);
+}
+
+gboolean
+gst_ah_camera_auto_focus (GstAHCamera * self,
+    GstAHCAutoFocusCallback cb, gpointer user_data)
+{
+  JNIEnv *env = gst_dvm_get_env ();
+  jobject object = NULL;
+  gboolean ret = FALSE;
+
+  if (cb) {
+    object = (*env)->NewObject (env,
+        com_gstreamer_gstahccallback.klass,
+        com_gstreamer_gstahccallback.constructor,
+        *((jlong *) & cb), *((jlong *) & user_data));
+    if (!object) {
+      GST_ERROR ("Failed to create callback object");
+      (*env)->ExceptionClear (env);
+      goto done;
+    }
+  }
+
+  AHC_CALL (goto done, Void, autoFocus, object);
+
+  ret = TRUE;
+done:
+  if (object)
+    (*env)->DeleteLocalRef (env, object);
+
+  return ret;
+}
+
+gboolean
+gst_ah_camera_cancel_auto_focus (GstAHCamera * self)
+{
+  JNIEnv *env = gst_dvm_get_env ();
+
+  AHC_CALL (return FALSE, Void, cancelAutoFocus);
+
+  return TRUE;
 }
 
 gboolean
