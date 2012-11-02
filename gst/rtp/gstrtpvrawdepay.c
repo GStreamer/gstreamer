@@ -301,6 +301,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   gint width, height, xinc, yinc;
   GstRTPBuffer rtp = { NULL };
   GstVideoFrame frame;
+  gboolean marker;
 
   rtpvrawdepay = GST_RTP_VRAW_DEPAY (depayload);
 
@@ -523,9 +524,10 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   }
 
   gst_video_frame_unmap (&frame);
+  marker = gst_rtp_buffer_get_marker (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  if (gst_rtp_buffer_get_marker (&rtp)) {
+  if (marker) {
     GST_LOG_OBJECT (depayload, "marker, flushing frame");
     if (rtpvrawdepay->outbuf) {
       gst_rtp_base_depayload_push (depayload, rtpvrawdepay->outbuf);
