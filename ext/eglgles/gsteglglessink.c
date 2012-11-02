@@ -2458,4 +2458,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     eglglessink,
     "EGL/GLES sink",
     eglglessink_plugin_init,
-    VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
