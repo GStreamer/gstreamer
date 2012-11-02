@@ -164,10 +164,12 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   guint dest_stride;
   guint src_stride;
   guint8 *dest_pixels;
-  guint8 *tmpbuf = g_malloc (dest_width * 8 * 4);
+  guint8 *tmpbuf;
   GstVideoFrame src_frame, dest_frame;
 
   g_return_if_fail (dest_buffer != NULL);
+
+  tmpbuf = g_malloc (dest_width * 8 * 4);
 
   gst_video_info_init (dest);
   gst_video_info_set_format (dest, GST_VIDEO_INFO_FORMAT (src),
