@@ -341,7 +341,7 @@ _opensles_player_event_cb (SLPlayItf caller, void *context, SLuint32 event)
     SLmillisecond position;
 
     (*caller)->GetPosition (caller, &position);
-    GST_LOG_OBJECT (thiz, "at position=%u ms", (guint) position);
+    GST_LOG_OBJECT (context, "at position=%u ms", (guint) position);
   }
 }
 
