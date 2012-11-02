@@ -185,7 +185,7 @@ build_reset (GstRTSPBuilder * builder)
 /**
  * gst_rtsp_connection_create:
  * @url: a #GstRTSPUrl 
- * @conn: storage for a #GstRTSPConnection
+ * @conn: (out) (transfer full): storage for a #GstRTSPConnection
  *
  * Create a newly allocated #GstRTSPConnection from @url and store it in @conn.
  * The connection will not yet attempt to connect to @url, use
@@ -227,7 +227,7 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
  * @ip: the IP address of the other end
  * @port: the port used by the other end
  * @initial_buffer: data already read from @fd
- * @conn: storage for a #GstRTSPConnection
+ * @conn: (out) (transfer full): storage for a #GstRTSPConnection
  *
  * Create a new #GstRTSPConnection for handling communication on the existing
  * socket @socket. The @initial_buffer contains any data already read from
@@ -283,7 +283,7 @@ newconn_failed:
 /**
  * gst_rtsp_connection_accept:
  * @socket: a socket
- * @conn: storage for a #GstRTSPConnection
+ * @conn: (out) (transfer full): storage for a #GstRTSPConnection
  * @cancellable: a #GCancellable to cancel the operation
  *
  * Accept a new connection on @socket and create a new #GstRTSPConnection for
@@ -3268,7 +3268,7 @@ gst_rtsp_watch_unref (GstRTSPWatch * watch)
  * @watch: a #GstRTSPWatch
  * @data: the data to queue
  * @size: the size of @data
- * @id: location for a message ID or %NULL
+ * @id: (out) (allow-none): location for a message ID or %NULL
  *
  * Write @data using the connection of the @watch. If it cannot be sent
  * immediately, it will be queued for transmission in @watch. The contents of
@@ -3352,7 +3352,7 @@ done:
  * gst_rtsp_watch_send_message:
  * @watch: a #GstRTSPWatch
  * @message: a #GstRTSPMessage
- * @id: location for a message ID or %NULL
+ * @id: (out) (allow-none): location for a message ID or %NULL
  *
  * Send a @message using the connection of the @watch. If it cannot be sent
  * immediately, it will be queued for transmission in @watch. The contents of
