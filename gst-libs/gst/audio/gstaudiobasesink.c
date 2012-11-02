@@ -703,9 +703,9 @@ gst_audio_base_sink_set_alignment_threshold (GstAudioBaseSink * sink,
 GstClockTime
 gst_audio_base_sink_get_alignment_threshold (GstAudioBaseSink * sink)
 {
-  gint64 result;
+  GstClockTime result;
 
-  g_return_val_if_fail (GST_IS_AUDIO_BASE_SINK (sink), -1);
+  g_return_val_if_fail (GST_IS_AUDIO_BASE_SINK (sink), GST_CLOCK_TIME_NONE);
 
   GST_OBJECT_LOCK (sink);
   result = sink->priv->alignment_threshold;
