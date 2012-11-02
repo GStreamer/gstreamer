@@ -392,6 +392,7 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
   /* now decode each frame, catering for unknown number of them (e.g. rtp) */
   for (i = 0; i < fpp; i++) {
     GstBuffer *outbuf;
+    gboolean corrupted = FALSE;
     gint ret;
 
     GST_LOG_OBJECT (dec, "decoding frame %d/%d, %d bits remaining", i, fpp,
@@ -425,18 +426,15 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
       } else {
         GST_WARNING_OBJECT (dec, "Unexpected end of stream found");
       }
-      gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), NULL, 1);
-      gst_buffer_unref (outbuf);
+      corrupted = TRUE;
     } else if (ret == -2) {
       GST_WARNING_OBJECT (dec, "Decoding error: corrupted stream?");
-      gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), NULL, 1);
-      gst_buffer_unref (outbuf);
+      corrupted = TRUE;
     }
 
     if (bits && speex_bits_remaining (bits) < 0) {
       GST_WARNING_OBJECT (dec, "Decoding overflow: corrupted stream?");
-      gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), NULL, 1);
-      gst_buffer_unref (outbuf);
+      corrupted = TRUE;
     }
     if (dec->header->nb_channels == 2)
       speex_decode_stereo_int ((spx_int16_t *) map.data, dec->frame_size,
@@ -444,7 +442,12 @@ gst_speex_dec_parse_data (GstSpeexDec * dec, GstBuffer * buf)
 
     gst_buffer_unmap (outbuf, &map);
 
-    res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
+    if (!corrupted) {
+      res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), outbuf, 1);
+    } else {
+      res = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (dec), NULL, 1);
+      gst_buffer_unref (outbuf);
+    }
 
     if (res != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (dec, "flow: %s", gst_flow_get_name (res));
