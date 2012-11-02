@@ -535,10 +535,17 @@ gst_ahc_src_probe_get_properties (GstPropertyProbe * probe)
   GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
   GstAHCSrcClass *ahc_class = GST_AHC_SRC_CLASS (probe);
 
-
-  if (!ahc_class->probe_properties)
+  /* FIXME: g_object_class_find_property returns overriden property with
+   * param_id == 0, so we can't switch/case the prop_id and
+   * g_param_spec_get_redirect_target() returns NULL */
+  if (!ahc_class->probe_properties) {
     ahc_class->probe_properties = g_list_append (NULL,
         g_object_class_find_property (klass, "device"));
+    ahc_class->probe_properties = g_list_append (ahc_class->probe_properties,
+        g_object_class_find_property (klass, GST_PHOTOGRAPHY_PROP_EV_COMP));
+    ahc_class->probe_properties = g_list_append (ahc_class->probe_properties,
+        g_object_class_find_property (klass, GST_PHOTOGRAPHY_PROP_ZOOM));
+  }
 
   return ahc_class->probe_properties;
 }
@@ -547,6 +554,7 @@ static GValueArray *
 gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
     guint prop_id, const GParamSpec * pspec)
 {
+  GstAHCSrc *self = GST_AHC_SRC (probe);
   GValueArray *array = NULL;
 
   switch (prop_id) {
@@ -563,6 +571,66 @@ gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
       }
       g_value_unset (&value);
     }
+      break;
+    case PROP_EV_COMP:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          gint min, max;
+          gfloat step, ev;
+
+          min = gst_ahc_parameters_get_min_exposure_compensation (params);
+          max = gst_ahc_parameters_get_max_exposure_compensation (params);
+          step = gst_ahc_parameters_get_exposure_compensation_step (params);
+
+          if (step != 0.0 && min != max) {
+            GValue value = { 0 };
+            gint i, total = 0;
+
+            total = (max - min) / step;
+
+            array = g_value_array_new (total);
+            g_value_init (&value, G_TYPE_FLOAT);
+            for (i = 0, ev = min; i < total && ev < max; i++, ev += step) {
+              g_value_set_float (&value, ev);
+              g_value_array_append (array, &value);
+            }
+            g_value_unset (&value);
+          }
+
+          gst_ahc_parameters_free (params);
+        }
+      }
+      break;
+    case PROP_ZOOM:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          GList *zoom_ratios = gst_ahc_parameters_get_zoom_ratios (params);
+          gint max_zoom = gst_ahc_parameters_get_max_zoom (params);
+
+          if (zoom_ratios && g_list_length (zoom_ratios) == (max_zoom + 1)) {
+            GValue value = { 0 };
+            GList *i;
+
+            array = g_value_array_new (max_zoom + 1);
+            g_value_init (&value, G_TYPE_FLOAT);
+            for (i = zoom_ratios; i; i = i->next) {
+              gint zoom_value = GPOINTER_TO_INT (i->data);
+              gfloat zoom = (gfloat) zoom_value / 100.0;
+
+              g_value_set_float (&value, zoom);
+              g_value_array_append (array, &value);
+            }
+            g_value_unset (&value);
+          }
+          gst_ahc_parameters_free (params);
+        }
+      }
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
@@ -596,9 +664,10 @@ gst_ahc_src_get_ev_compensation (GstPhotography * photo, gfloat * ev_comp)
 
       ev = gst_ahc_parameters_get_exposure_compensation (params);
       min = gst_ahc_parameters_get_min_exposure_compensation (params);
-      max = gst_ahc_parameters_get_min_exposure_compensation (params);
+      max = gst_ahc_parameters_get_max_exposure_compensation (params);
       step = gst_ahc_parameters_get_exposure_compensation_step (params);
-      if (step != 0.0 && min != max && ev >= min && ev <= max && step != 0.0) {
+
+      if (step != 0.0 && min != max && ev >= min && ev <= max) {
         if (ev_comp)
           *ev_comp = ev * step;
         ret = TRUE;
@@ -913,9 +982,7 @@ gst_ahc_src_set_ev_compensation (GstPhotography * photo, gfloat ev_comp)
       min = gst_ahc_parameters_get_min_exposure_compensation (params);
       max = gst_ahc_parameters_get_min_exposure_compensation (params);
       step = gst_ahc_parameters_get_exposure_compensation_step (params);
-      if (step != 0.0 && min != max && step != 0.0 &&
-          ev_comp >= min && ev_comp <= max) {
-        /* TODO: error or get closest ev? */
+      if (step != 0.0 && min != max && ev_comp >= min && ev_comp <= max) {
         ev = ev_comp / step;
         if ((ev * step) == ev_comp) {
           gst_ahc_parameters_set_exposure_compensation (params, ev);
@@ -1145,7 +1212,6 @@ gst_ahc_src_set_zoom (GstPhotography * photo, gfloat zoom)
           gint zoom_value = GPOINTER_TO_INT (g_list_nth_data (zoom_ratios, i));
           gfloat value = (gfloat) zoom_value / 100.0;
 
-          /* TODO: error or get closest zoom? */
           if (value == zoom)
             zoom_idx = i;
         }
