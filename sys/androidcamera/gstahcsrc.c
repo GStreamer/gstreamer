@@ -124,6 +124,21 @@ enum
   PROP_DEVICE,
   PROP_DEVICE_FACING,
   PROP_DEVICE_ORIENTATION,
+  PROP_WB_MODE,
+  PROP_COLOUR_TONE,
+  PROP_SCENE_MODE,
+  PROP_FLASH_MODE,
+  PROP_NOISE_REDUCTION,
+  PROP_CAPABILITIES,
+  PROP_EV_COMP,
+  PROP_ISO_SPEED,
+  PROP_APERTURE,
+  PROP_EXPOSURE,
+  PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
+  PROP_IMAGE_PREVIEW_SUPPORTED_CAPS,
+  PROP_FLICKER_MODE,
+  PROP_FOCUS_MODE,
+  PROP_ZOOM,
 };
 
 #define DEFAULT_DEVICE "0"
@@ -237,7 +252,39 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
           GST_AHC_SRC_FACING_TYPE, CAMERA_FACING_BACK,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  /* TODO: override GstPhotography properties */
+  /* Override GstPhotography properties */
+  g_object_class_override_property (gobject_class, PROP_WB_MODE,
+      GST_PHOTOGRAPHY_PROP_WB_MODE);
+  g_object_class_override_property (gobject_class, PROP_COLOUR_TONE,
+      GST_PHOTOGRAPHY_PROP_COLOUR_TONE);
+  g_object_class_override_property (gobject_class, PROP_SCENE_MODE,
+      GST_PHOTOGRAPHY_PROP_SCENE_MODE);
+  g_object_class_override_property (gobject_class, PROP_FLASH_MODE,
+      GST_PHOTOGRAPHY_PROP_FLASH_MODE);
+  g_object_class_override_property (gobject_class, PROP_NOISE_REDUCTION,
+      GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION);
+  g_object_class_override_property (gobject_class, PROP_CAPABILITIES,
+      GST_PHOTOGRAPHY_PROP_CAPABILITIES);
+  g_object_class_override_property (gobject_class, PROP_EV_COMP,
+      GST_PHOTOGRAPHY_PROP_EV_COMP);
+  g_object_class_override_property (gobject_class, PROP_ISO_SPEED,
+      GST_PHOTOGRAPHY_PROP_ISO_SPEED);
+  g_object_class_override_property (gobject_class, PROP_APERTURE,
+      GST_PHOTOGRAPHY_PROP_APERTURE);
+  g_object_class_override_property (gobject_class, PROP_EXPOSURE,
+      GST_PHOTOGRAPHY_PROP_EXPOSURE);
+  g_object_class_override_property (gobject_class,
+      PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
+      GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS);
+  g_object_class_override_property (gobject_class,
+      PROP_IMAGE_PREVIEW_SUPPORTED_CAPS,
+      GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS);
+  g_object_class_override_property (gobject_class, PROP_FLICKER_MODE,
+      GST_PHOTOGRAPHY_PROP_FLICKER_MODE);
+  g_object_class_override_property (gobject_class, PROP_FOCUS_MODE,
+      GST_PHOTOGRAPHY_PROP_FOCUS_MODE);
+  g_object_class_override_property (gobject_class, PROP_ZOOM,
+      GST_PHOTOGRAPHY_PROP_ZOOM);
 
   klass->probe_properties = NULL;
 }
@@ -294,6 +341,61 @@ gst_ahc_src_set_property (GObject * object, guint prop_id,
         self->device = (gint) device;
     }
       break;
+    case PROP_WB_MODE:{
+      GstWhiteBalanceMode wb = g_value_get_enum (value);
+
+      gst_ahc_src_set_white_balance_mode (GST_PHOTOGRAPHY (self), wb);
+    }
+      break;
+    case PROP_COLOUR_TONE:{
+      GstColourToneMode tone = g_value_get_enum (value);
+
+      gst_ahc_src_set_colour_tone_mode (GST_PHOTOGRAPHY (self), tone);
+    }
+      break;
+    case PROP_SCENE_MODE:{
+      GstSceneMode scene = g_value_get_enum (value);
+
+      gst_ahc_src_set_scene_mode (GST_PHOTOGRAPHY (self), scene);
+    }
+      break;
+    case PROP_FLASH_MODE:{
+      GstFlashMode flash = g_value_get_enum (value);
+
+      gst_ahc_src_set_flash_mode (GST_PHOTOGRAPHY (self), flash);
+    }
+      break;
+    case PROP_EV_COMP:{
+      gfloat ev = g_value_get_float (value);
+
+      gst_ahc_src_set_ev_compensation (GST_PHOTOGRAPHY (self), ev);
+    }
+      break;
+    case PROP_FLICKER_MODE:{
+      GstFlickerReductionMode flicker = g_value_get_enum (value);
+
+      gst_ahc_src_set_flicker_mode (GST_PHOTOGRAPHY (self), flicker);
+    }
+      break;
+    case PROP_FOCUS_MODE:{
+      GstFocusMode focus = g_value_get_enum (value);
+
+      gst_ahc_src_set_focus_mode (GST_PHOTOGRAPHY (self), focus);
+    }
+      break;
+    case PROP_ZOOM:{
+      gfloat zoom = g_value_get_float (value);
+
+      gst_ahc_src_set_zoom (GST_PHOTOGRAPHY (self), zoom);
+    }
+      break;
+    case PROP_NOISE_REDUCTION:
+    case PROP_ISO_SPEED:
+    case PROP_APERTURE:
+    case PROP_EXPOSURE:
+    case PROP_IMAGE_CAPTURE_SUPPORTED_CAPS:
+    case PROP_IMAGE_PREVIEW_SUPPORTED_CAPS:
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -332,6 +434,76 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
       else
         g_value_set_int (value, 0);
     }
+      break;
+    case PROP_WB_MODE:{
+      GstWhiteBalanceMode wb;
+
+      if (gst_ahc_src_get_white_balance_mode (GST_PHOTOGRAPHY (self), &wb))
+        g_value_set_enum (value, wb);
+    }
+      break;
+    case PROP_COLOUR_TONE:{
+      GstColourToneMode tone;
+
+      if (gst_ahc_src_get_colour_tone_mode (GST_PHOTOGRAPHY (self), &tone))
+        g_value_set_enum (value, tone);
+    }
+      break;
+    case PROP_SCENE_MODE:{
+      GstSceneMode scene;
+
+      if (gst_ahc_src_get_scene_mode (GST_PHOTOGRAPHY (self), &scene))
+        g_value_set_enum (value, scene);
+    }
+      break;
+    case PROP_FLASH_MODE:{
+      GstFlashMode flash;
+
+      if (gst_ahc_src_get_flash_mode (GST_PHOTOGRAPHY (self), &flash))
+        g_value_set_enum (value, flash);
+    }
+      break;
+    case PROP_CAPABILITIES:{
+      GstPhotoCaps caps;
+
+      caps = gst_ahc_src_get_capabilities (GST_PHOTOGRAPHY (self));
+      g_value_set_ulong (value, caps);
+    }
+      break;
+    case PROP_EV_COMP:{
+      gfloat ev;
+
+      if (gst_ahc_src_get_ev_compensation (GST_PHOTOGRAPHY (self), &ev))
+        g_value_set_float (value, ev);
+    }
+      break;
+    case PROP_FLICKER_MODE:{
+      GstFlickerReductionMode flicker;
+
+      if (gst_ahc_src_get_flicker_mode (GST_PHOTOGRAPHY (self), &flicker))
+        g_value_set_enum (value, flicker);
+    }
+      break;
+    case PROP_FOCUS_MODE:{
+      GstFocusMode focus;
+
+      if (gst_ahc_src_get_focus_mode (GST_PHOTOGRAPHY (self), &focus))
+        g_value_set_enum (value, focus);
+    }
+      break;
+    case PROP_ZOOM:{
+      gfloat zoom;
+
+      if (gst_ahc_src_get_zoom (GST_PHOTOGRAPHY (self), &zoom))
+        g_value_set_float (value, zoom);
+    }
+      break;
+    case PROP_IMAGE_CAPTURE_SUPPORTED_CAPS:
+    case PROP_IMAGE_PREVIEW_SUPPORTED_CAPS:
+    case PROP_NOISE_REDUCTION:
+    case PROP_ISO_SPEED:
+    case PROP_APERTURE:
+    case PROP_EXPOSURE:
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
