@@ -487,6 +487,8 @@ gst_vp8_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
     ret = open_codec (dec, frame);
     if (ret == GST_FLOW_CUSTOM_SUCCESS_1)
       return GST_FLOW_OK;
+    else if (ret != GST_FLOW_OK)
+      return ret;
   }
 
   deadline = gst_video_decoder_get_max_decode_time (decoder, frame);
