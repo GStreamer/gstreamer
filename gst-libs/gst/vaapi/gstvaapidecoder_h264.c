@@ -40,6 +40,8 @@
 /* Defined to 1 if strict ordering of DPB is needed. Only useful for debug */
 #define USE_STRICT_DPB_ORDERING 0
 
+typedef struct _GstVaapiFrameStore              GstVaapiFrameStore;
+typedef struct _GstVaapiFrameStoreClass         GstVaapiFrameStoreClass;
 typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
 typedef struct _GstVaapiPictureH264Class        GstVaapiPictureH264Class;
 typedef struct _GstVaapiSliceH264               GstVaapiSliceH264;
@@ -276,6 +278,134 @@ gst_vaapi_slice_h264_new(
 }
 
 /* ------------------------------------------------------------------------- */
+/* --- Frame Buffers (DPB)                                               --- */
+/* ------------------------------------------------------------------------- */
+
+#define GST_VAAPI_TYPE_FRAME_STORE \
+    (gst_vaapi_frame_store_get_type())
+
+#define GST_VAAPI_FRAME_STORE_CAST(obj) \
+    ((GstVaapiFrameStore *)(obj))
+
+#define GST_VAAPI_FRAME_STORE(obj)                              \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
+                                GST_VAAPI_TYPE_FRAME_STORE,     \
+                                GstVaapiFrameStore))
+
+#define GST_VAAPI_FRAME_STORE_CLASS(klass)                      \
+    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
+                             GST_VAAPI_TYPE_FRAME_STORE,        \
+                             GstVaapiFrameStoreClass))
+
+#define GST_VAAPI_IS_FRAME_STORE(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_FRAME_STORE))
+
+#define GST_VAAPI_IS_FRAME_STORE_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_FRAME_STORE))
+
+#define GST_VAAPI_FRAME_STORE_GET_CLASS(obj)                   \
+    (G_TYPE_INSTANCE_GET_CLASS((obj),                          \
+                               GST_VAAPI_TYPE_FRAME_STORE,     \
+                               GstVaapiFrameStoreClass))
+
+struct _GstVaapiFrameStore {
+    /*< private >*/
+    GstMiniObject               parent_instance;
+
+    guint                       structure;
+    GstVaapiPictureH264        *buffers[2];
+    guint                       num_buffers;
+    guint                       output_needed;
+};
+
+struct _GstVaapiFrameStoreClass {
+    /*< private >*/
+    GstMiniObjectClass          parent_class;
+};
+
+G_DEFINE_TYPE(GstVaapiFrameStore, gst_vaapi_frame_store, GST_TYPE_MINI_OBJECT)
+
+static void
+gst_vaapi_frame_store_finalize(GstMiniObject *object)
+{
+    GstVaapiFrameStore * const fs = GST_VAAPI_FRAME_STORE_CAST(object);
+    GstMiniObjectClass *parent_class;
+    guint i;
+
+    for (i = 0; i < fs->num_buffers; i++)
+        gst_vaapi_picture_replace(&fs->buffers[i], NULL);
+
+    parent_class = GST_MINI_OBJECT_CLASS(gst_vaapi_frame_store_parent_class);
+    if (parent_class->finalize)
+        parent_class->finalize(object);
+}
+
+static void
+gst_vaapi_frame_store_init(GstVaapiFrameStore *fs)
+{
+}
+
+static void
+gst_vaapi_frame_store_class_init(GstVaapiFrameStoreClass *klass)
+{
+    GstMiniObjectClass * const object_class = GST_MINI_OBJECT_CLASS(klass);
+
+    object_class->finalize = gst_vaapi_frame_store_finalize;
+}
+
+static inline gpointer
+_gst_vaapi_frame_store_new(void)
+{
+    return gst_mini_object_new(GST_VAAPI_TYPE_FRAME_STORE);
+}
+
+static GstVaapiFrameStore *
+gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
+{
+    GstVaapiFrameStore *fs;
+
+    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), NULL);
+
+    fs = _gst_vaapi_frame_store_new();
+    if (!fs)
+        return NULL;
+
+    fs->structure       = picture->base.structure;
+    fs->buffers[0]      = gst_vaapi_picture_ref(picture);
+    fs->num_buffers     = 1;
+    fs->output_needed   = picture->output_needed;
+    return fs;
+}
+
+static inline gboolean
+gst_vaapi_frame_store_has_frame(GstVaapiFrameStore *fs)
+{
+    return fs->structure == GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+}
+
+static inline gboolean
+gst_vaapi_frame_store_has_reference(GstVaapiFrameStore *fs)
+{
+    guint i;
+
+    for (i = 0; i < fs->num_buffers; i++) {
+        if (GST_VAAPI_PICTURE_IS_REFERENCE(fs->buffers[i]))
+            return TRUE;
+    }
+    return FALSE;
+}
+
+#define gst_vaapi_frame_store_ref(fs) \
+    gst_mini_object_ref(GST_MINI_OBJECT(fs))
+
+#define gst_vaapi_frame_store_unref(fs) \
+    gst_mini_object_unref(GST_MINI_OBJECT(fs))
+
+#define gst_vaapi_frame_store_replace(old_fs_p, new_fs)         \
+    gst_mini_object_replace((GstMiniObject **)(old_fs_p),       \
+                            (GstMiniObject *)(new_fs))
+
+/* ------------------------------------------------------------------------- */
 /* --- H.264 Decoder                                                     --- */
 /* ------------------------------------------------------------------------- */
 
@@ -298,7 +428,8 @@ struct _GstVaapiDecoderH264Private {
        it may not fit stack memory allocation in decode_pps() */
     GstH264PPS                  last_pps;
     GstVaapiPictureH264        *current_picture;
-    GstVaapiPictureH264        *dpb[16];
+    GstVaapiFrameStore         *prev_frame;
+    GstVaapiFrameStore         *dpb[16];
     guint                       dpb_count;
     guint                       dpb_size;
     GstVaapiProfile             profile;
@@ -398,49 +529,67 @@ static void
 dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint i, num_pictures = --priv->dpb_count;
+    guint i, num_frames = --priv->dpb_count;
 
     if (USE_STRICT_DPB_ORDERING) {
-        for (i = index; i < num_pictures; i++)
-            gst_vaapi_picture_replace(&priv->dpb[i], priv->dpb[i + 1]);
+        for (i = index; i < num_frames; i++)
+            gst_vaapi_frame_store_replace(&priv->dpb[i], priv->dpb[i + 1]);
     }
-    else if (index != num_pictures)
-        gst_vaapi_picture_replace(&priv->dpb[index], priv->dpb[num_pictures]);
-    gst_vaapi_picture_replace(&priv->dpb[num_pictures], NULL);
+    else if (index != num_frames)
+        gst_vaapi_frame_store_replace(&priv->dpb[index], priv->dpb[num_frames]);
+    gst_vaapi_frame_store_replace(&priv->dpb[num_frames], NULL);
 }
 
-static inline gboolean
-dpb_output(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
+static gboolean
+dpb_output(
+    GstVaapiDecoderH264 *decoder,
+    GstVaapiFrameStore  *fs,
+    GstVaapiPictureH264 *picture
+)
 {
-    /* XXX: update cropping rectangle */
     picture->output_needed = FALSE;
+
+    if (fs)
+        fs->output_needed--;
+
+    /* XXX: update cropping rectangle */
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
+}
+
+static inline void
+dpb_evict(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture, guint i)
+{
+    GstVaapiFrameStore * const fs = decoder->priv->dpb[i];
+
+    if (!fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
+        dpb_remove_index(decoder, i);
 }
 
 static gboolean
 dpb_bump(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint i, lowest_poc_index;
+    GstVaapiPictureH264 *found_picture = NULL;
+    guint i, j, found_index;
     gboolean success;
 
     for (i = 0; i < priv->dpb_count; i++) {
-        if (priv->dpb[i]->output_needed)
-            break;
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (!fs->output_needed)
+            continue;
+        for (j = 0; j < fs->num_buffers; j++) {
+            GstVaapiPictureH264 * const picture = fs->buffers[j];
+            if (!picture->output_needed)
+                continue;
+            if (!found_picture || found_picture->base.poc > picture->base.poc)
+                found_picture = picture, found_index = i;
+        }
     }
-    if (i == priv->dpb_count)
+    if (!found_picture)
         return FALSE;
 
-    lowest_poc_index = i++;
-    for (; i < priv->dpb_count; i++) {
-        GstVaapiPictureH264 * const picture = priv->dpb[i];
-        if (picture->output_needed && picture->base.poc < priv->dpb[lowest_poc_index]->base.poc)
-            lowest_poc_index = i;
-    }
-
-    success = dpb_output(decoder, priv->dpb[lowest_poc_index]);
-    if (!GST_VAAPI_PICTURE_IS_REFERENCE(priv->dpb[lowest_poc_index]))
-        dpb_remove_index(decoder, lowest_poc_index);
+    success = dpb_output(decoder, priv->dpb[found_index], found_picture);
+    dpb_evict(decoder, found_picture, found_index);
     return success;
 }
 
@@ -451,8 +600,10 @@ dpb_clear(GstVaapiDecoderH264 *decoder)
     guint i;
 
     for (i = 0; i < priv->dpb_count; i++)
-        gst_vaapi_picture_replace(&priv->dpb[i], NULL);
+        gst_vaapi_frame_store_replace(&priv->dpb[i], NULL);
     priv->dpb_count = 0;
+
+    gst_vaapi_frame_store_replace(&priv->prev_frame, NULL);
 }
 
 static void
@@ -467,20 +618,27 @@ static gboolean
 dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint i;
+    GstVaapiFrameStore *fs;
+    guint i, j;
 
     // Remove all unused pictures
     if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
         i = 0;
         while (i < priv->dpb_count) {
-            GstVaapiPictureH264 * const picture = priv->dpb[i];
-            if (!picture->output_needed &&
-                !GST_VAAPI_PICTURE_IS_REFERENCE(picture))
+            GstVaapiFrameStore * const fs = priv->dpb[i];
+            if (!fs->output_needed && !gst_vaapi_frame_store_has_reference(fs))
                 dpb_remove_index(decoder, i);
             else
                 i++;
         }
     }
+
+    // Create new frame store
+    fs = gst_vaapi_frame_store_new(picture);
+    if (!fs)
+        return FALSE;
+    gst_vaapi_frame_store_replace(&priv->prev_frame, fs);
+    gst_vaapi_frame_store_unref(fs);
 
     // C.4.5.1 - Storage and marking of a reference decoded picture into the DPB
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
@@ -488,9 +646,11 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
             if (!dpb_bump(decoder))
                 return FALSE;
         }
-        gst_vaapi_picture_replace(&priv->dpb[priv->dpb_count++], picture);
-        if (picture->output_flag)
+        gst_vaapi_frame_store_replace(&priv->dpb[priv->dpb_count++], fs);
+        if (picture->output_flag) {
             picture->output_needed = TRUE;
+            fs->output_needed++;
+        }
     }
 
     // C.4.5.2 - Storage and marking of a non-reference decoded picture into the DPB
@@ -498,18 +658,23 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         if (!picture->output_flag)
             return TRUE;
         while (priv->dpb_count == priv->dpb_size) {
-            for (i = 0; i < priv->dpb_count; i++) {
-                if (priv->dpb[i]->output_needed &&
-                    priv->dpb[i]->base.poc < picture->base.poc)
-                    break;
+            gboolean found_picture = FALSE;
+            for (i = 0; !found_picture && i < priv->dpb_count; i++) {
+                GstVaapiFrameStore * const fs = priv->dpb[i];
+                if (!fs->output_needed)
+                    continue;
+                for (j = 0; !found_picture && j < fs->num_buffers; j++)
+                    found_picture = fs->buffers[j]->output_needed &&
+                        fs->buffers[j]->base.poc < picture->base.poc;
             }
-            if (i == priv->dpb_count)
-                return dpb_output(decoder, picture);
+            if (!found_picture)
+                return dpb_output(decoder, NULL, picture);
             if (!dpb_bump(decoder))
                 return FALSE;
         }
-        gst_vaapi_picture_replace(&priv->dpb[priv->dpb_count++], picture);
+        gst_vaapi_frame_store_replace(&priv->dpb[priv->dpb_count++], fs);
         picture->output_needed = TRUE;
+        fs->output_needed++;
     }
     return TRUE;
 }
@@ -1646,13 +1811,18 @@ init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
 
     short_ref_count = 0;
     long_ref_count  = 0;
-    for (i = 0; i < priv->dpb_count; i++) {
-        GstVaapiPictureH264 * const picture = priv->dpb[i];
-
-        if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
-            priv->short_ref[short_ref_count++] = picture;
-        else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
-            priv->long_ref[long_ref_count++] = picture;
+    if (GST_VAAPI_PICTURE_IS_FRAME(priv->current_picture)) {
+        for (i = 0; i < priv->dpb_count; i++) {
+            GstVaapiFrameStore * const fs = priv->dpb[i];
+            GstVaapiPictureH264 *picture;
+            if (!gst_vaapi_frame_store_has_frame(fs))
+                continue;
+            picture = fs->buffers[0];
+            if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
+                priv->short_ref[short_ref_count++] = picture;
+            else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
+                priv->long_ref[long_ref_count++] = picture;
+        }
     }
 
     for (i = short_ref_count; i < priv->short_ref_count; i++)
