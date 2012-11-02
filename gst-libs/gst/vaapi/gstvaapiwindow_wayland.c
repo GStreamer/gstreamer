@@ -260,7 +260,7 @@ gst_vaapi_window_wayland_render(
 
     /* Wait for the previous frame to complete redraw */
     if (priv->redraw_pending) 
-        wl_display_iterate(wl_display, WL_DISPLAY_READABLE);
+        wl_display_dispatch(wl_display);
 
     /* XXX: use VA/VPP for other filters */
     va_flags = from_GstVaapiSurfaceRenderFlags(flags);
@@ -292,7 +292,9 @@ gst_vaapi_window_wayland_render(
         priv->opaque_region = NULL;
     }
 
-    wl_display_iterate(wl_display, WL_DISPLAY_WRITABLE);
+    wl_surface_commit(priv->surface);
+
+    wl_display_flush(wl_display);
     priv->redraw_pending = TRUE;
     priv->buffer = buffer;
 

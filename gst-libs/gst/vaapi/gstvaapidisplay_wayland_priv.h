@@ -51,12 +51,12 @@ struct _GstVaapiDisplayWaylandPrivate {
     struct wl_compositor       *compositor;
     struct wl_shell            *shell;
     struct wl_output           *output;
+    struct wl_registry         *registry;
     guint                       width;
     guint                       height;
     guint                       phys_width;
     guint                       phys_height;
     gint                        event_fd;
-    guint32                     event_mask;
     guint                       create_display  : 1;
 };
 

@@ -42,7 +42,7 @@ m4_define([gst_plugins_bad_version],
           [gst_plugins_bad_major_version.gst_plugins_bad_minor_version.gst_plugins_bad_micro_version])
 
 # Wayland minimum version number
-m4_define([wayland_api_version], [0.95.0])
+m4_define([wayland_api_version], [1.0.0])
 
 # VA-API minimum version number
 m4_define([va_api_version],     [0.30.4])

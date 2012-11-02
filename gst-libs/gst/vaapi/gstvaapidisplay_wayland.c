@@ -253,34 +253,31 @@ static const struct wl_output_listener output_listener = {
 };
 
 static void
-display_handle_global(
-    struct wl_display *display,
-    uint32_t           id,
-    const char        *interface,
-    uint32_t           version,
-    void              *data
+registry_handle_global(
+    void               *data,
+    struct wl_registry *registry,
+    uint32_t            id,
+    const char         *interface,
+    uint32_t            version
 )
 {
     GstVaapiDisplayWaylandPrivate * const priv = data;
 
     if (strcmp(interface, "wl_compositor") == 0)
-        priv->compositor = wl_display_bind(display, id, &wl_compositor_interface);
+        priv->compositor =
+          wl_registry_bind(registry, id, &wl_compositor_interface, 1);
     else if (strcmp(interface, "wl_shell") == 0)
-        priv->shell = wl_display_bind(display, id, &wl_shell_interface);
+        priv->shell = wl_registry_bind(registry, id, &wl_shell_interface, 1);
     else if (strcmp(interface, "wl_output") == 0) {
-        priv->output = wl_display_bind(display, id, &wl_output_interface);
+        priv->output = wl_registry_bind(registry, id, &wl_output_interface, 1);
         wl_output_add_listener(priv->output, &output_listener, priv);
     }
 }
 
-static int
-event_mask_update(uint32_t mask, void *data)
-{
-    GstVaapiDisplayWaylandPrivate * const priv = data;
-
-    priv->event_mask = mask;
-    return 0;
-}
+static const struct wl_registry_listener registry_listener = {
+    registry_handle_global,
+    NULL,
+};
 
 static gboolean
 gst_vaapi_display_wayland_open_display(GstVaapiDisplay * display)
@@ -296,9 +293,9 @@ gst_vaapi_display_wayland_open_display(GstVaapiDisplay * display)
         return FALSE;
 
     wl_display_set_user_data(priv->wl_display, priv);
-    wl_display_add_global_listener(priv->wl_display, display_handle_global, priv);
-    priv->event_fd = wl_display_get_fd(priv->wl_display, event_mask_update, priv);
-    wl_display_iterate(priv->wl_display, priv->event_mask);
+    priv->registry = wl_display_get_registry(priv->wl_display);
+    wl_registry_add_listener(priv->registry, &registry_listener, priv);
+    priv->event_fd = wl_display_get_fd(priv->wl_display);
     wl_display_roundtrip(priv->wl_display);
 
     if (!priv->compositor) {
@@ -477,7 +474,6 @@ gst_vaapi_display_wayland_init(GstVaapiDisplayWayland *display)
     priv->phys_width     = 0;
     priv->phys_height    = 0;
     priv->event_fd       = -1;
-    priv->event_mask     = 0;
 }
 
 /**
