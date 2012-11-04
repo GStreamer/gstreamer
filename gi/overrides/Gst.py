@@ -77,6 +77,19 @@ class Caps(Gst.Caps):
 Caps = override(Caps)
 __all__.append('Caps')
 
+class Pad(Gst.Pad):
+    def query_caps(self, filter=None):
+        return Gst.Pad.query_caps(self, filter)
+
+    def link(self, pad):
+        ret = Gst.Pad.link(self, pad)
+        if ret != Gst.PadLinkReturn.OK:
+            raise LinkError(ret)
+        return ret
+
+Pad = override(Pad)
+__all__.append('Pad')
+
 class GhostPad(Gst.GhostPad):
     def __init__(self, name, target=None, direction=None):
         if direction is None:
@@ -89,6 +102,9 @@ class GhostPad(Gst.GhostPad):
         self.construct()
         if target is not None:
             self.set_target(target)
+
+    def query_caps(self, filter=None):
+        return Gst.GhostPad.query_caps(self, filter)
 
 GhostPad = override(GhostPad)
 __all__.append('GhostPad')
@@ -136,19 +152,6 @@ class ElementFactory(Gst.ElementFactory):
     @classmethod
     def make(cls, factory_name, instance_name=None):
         return Gst.ElementFactory.make(factory_name, instance_name)
-
-class Pad(Gst.Pad):
-    def query_caps(self, filter=None):
-        return Gst.Pad.query_caps(self, filter)
-
-    def link(self, pad):
-        ret = Gst.Pad.link(self, pad)
-        if ret != Gst.PadLinkReturn.OK:
-            raise LinkError(ret)
-        return ret
-
-Pad = override(Pad)
-__all__.append('Pad')
 
 class Pipeline(Gst.Pipeline):
     def __init__(self, name=None):
