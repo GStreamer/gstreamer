@@ -19,6 +19,7 @@
  */
 
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
+#define CLUTTER_VERSION_MIN_REQUIRED CLUTTER_VERSION_1_8
 
 #include <X11/Xlib.h>
 #include <X11/extensions/Xcomposite.h>

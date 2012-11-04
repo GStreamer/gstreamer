@@ -26,6 +26,8 @@
 #endif
 
 #include <GL/gl.h>
+
+#define CLUTTER_VERSION_MIN_REQUIRED CLUTTER_VERSION_1_8
 #include <clutter/clutter.h>
 #ifndef WIN32
 #include <clutter/x11/clutter-x11.h>
