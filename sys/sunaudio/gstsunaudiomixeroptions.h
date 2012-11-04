@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  */
 
 #ifndef __GST_SUNAUDIO_MIXER_OPTIONS_H__
