@@ -49,6 +49,18 @@ python module to use with Gst 0.10"
 
     warnings.warn(warn_msg, RuntimeWarning)
 
+class Bin(Gst.Bin):
+    def __init__(self, name=None):
+        Gst.Bin.__init__(self, name=name)
+
+    def add(self, *args):
+        for arg in args:
+            if not Gst.Bin.add(self, arg):
+                raise AddError(arg)
+
+Bin = override(Bin)
+__all__.append('Bin')
+
 class Caps(Gst.Caps):
 
     def __new__(cls, *kwargs):
@@ -156,11 +168,6 @@ class ElementFactory(Gst.ElementFactory):
 class Pipeline(Gst.Pipeline):
     def __init__(self, name=None):
         Gst.Pipeline.__init__(self, name=name)
-
-    def add(self, *args):
-        for arg in args:
-            if not Gst.Pipeline.add(self, arg):
-                raise AddError(arg)
 
 Pipeline = override(Pipeline)
 __all__.append('Pipeline')
