@@ -118,7 +118,20 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         } else {
             is_playing_desired = false;
             position = duration = 0;
-            mediaUri = defaultMediaUri;
+            Intent intent = getIntent();
+            android.net.Uri uri = intent.getData();
+            if (uri == null)
+                mediaUri = defaultMediaUri;
+            else {
+                Log.i ("GStreamer", "Received URI: " + uri);
+                if (uri.getScheme().equals("content")) {
+                    android.database.Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                    cursor.moveToFirst();
+                    mediaUri = "file://" + cursor.getString(cursor.getColumnIndex(android.provider.MediaStore.Video.Media.DATA));
+                    cursor.close();
+                } else
+                    mediaUri = uri.toString();
+            }
             Log.i ("GStreamer", "Activity created with no saved state:");
         }
         is_local_media = false;

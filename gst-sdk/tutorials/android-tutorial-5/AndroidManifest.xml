@@ -19,10 +19,46 @@
         <activity
             android:name=".Tutorial5"
             android:label="@string/app_name" >
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Local files whose type is known to Android -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:mimeType="audio/*" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+            <!-- Links from the browser. The list of extensions and supported
+                 protocols can certainly be extended. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="http" />
+                <data android:pathPattern=".*\\.avi" />
+                <data android:pathPattern=".*\\.AVI" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.MKV" />
+                <data android:pathPattern=".*\\.webm" />
+                <data android:pathPattern=".*\\.WEBM" />
+                <data android:pathPattern=".*\\.ogv" />
+                <data android:pathPattern=".*\\.OGV" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.MP4" />
+                <data android:pathPattern=".*\\.qt" />
+                <data android:pathPattern=".*\\.QT" />
             </intent-filter>
         </activity>
         <activity
