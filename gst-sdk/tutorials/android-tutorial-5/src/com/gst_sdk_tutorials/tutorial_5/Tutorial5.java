@@ -285,6 +285,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
     {
         if (resultCode == RESULT_OK && requestCode == PICK_FILE_CODE) {
             mediaUri = "file://" + data.getStringExtra(FileDialog.RESULT_PATH);
+            position = 0;
             setMediaUri();
         }
     }
