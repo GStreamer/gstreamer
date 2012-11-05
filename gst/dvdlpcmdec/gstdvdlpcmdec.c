@@ -360,7 +360,7 @@ static void
 parse_header (GstDvdLpcmDec * dec, guint32 header)
 {
   GstAudioFormat format;
-  gint rate, channels;
+  gint rate, channels, width;
 
   /* We don't actually use 'dynamic range', 'mute', or 'emphasis' currently,
    * but parse them out */
@@ -374,15 +374,20 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
     case 0x8000:
       /* 24 bits in 3 bytes */
       format = GST_AUDIO_FORMAT_S24BE;
+      width = 24;
       break;
     case 0x4000:
       /* 20 bits in 3 bytes */
       format = GST_AUDIO_FORMAT_S24BE;
+      width = 20;
       break;
     default:
       format = GST_AUDIO_FORMAT_S16BE;
+      width = 16;
       break;
   }
+
+  dec->width = width;
 
   /* Only four sample rates supported */
   switch (header & 0x3000) {
