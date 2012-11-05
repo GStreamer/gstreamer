@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.gstreamer.GStreamer;
 import com.lamerman.FileDialog;
 import com.lamerman.SelectionMode;
 
@@ -25,39 +24,42 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.gstreamer.GStreamer;
+
 public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
-    private native void nativeInit();
-    private native void nativeFinalize();
-    private native void nativeSetUri(String uri);
-    private native void nativePlay();
-    private native void nativePause();
-    private native void nativeSetPosition(int milliseconds);
-    private static native boolean classInit();
-    private native void nativeSurfaceInit(Object surface);
-    private native void nativeSurfaceFinalize();
-    private long native_custom_data;
+    private native void nativeInit();     // Initialize native code, build pipeline, etc
+    private native void nativeFinalize(); // Destroy pipeline and shutdown native code
+    private native void nativeSetUri(String uri); // Set the URI of the media to play
+    private native void nativePlay();     // Set pipeline to PLAYING
+    private native void nativeSetPosition(int milliseconds); // Seek to the indicated position, in milliseconds
+    private native void nativePause();    // Set pipeline to PAUSED
+    private static native boolean nativeClassInit(); // Initialize native class: cache Method IDs for callbacks
+    private native void nativeSurfaceInit(Object surface); // A new surface is available
+    private native void nativeSurfaceFinalize(); // Surface about to be destroyed
+    private long native_custom_data;      // Native code will use this to keep private data
 
-    private boolean is_playing_desired;
-    private int position;
-    private int duration;
-    private boolean is_local_media;
-    private int desired_position;
+    private boolean is_playing_desired;   // Whether the user asked to go to PLAYING
+    private int position;                 // Current position, reported by native code
+    private int duration;                 // Current clip duration, reported by native code
+    private boolean is_local_media;       // Whether this clip is stored locally or is being streamed
+    private int desired_position;         // Position where the users wants to seek to
+    private String mediaUri;              // URI of the clip being played
 
-    private Bundle initialization_data;
+    private final String defaultMediaUri = "http://docs.gstreamer.com/media/sintel_trailer-368p.ogv";
+
+    static private final int PICK_FILE_CODE = 1;
 
     private PowerManager.WakeLock wake_lock;
-    
-    private String mediaUri = "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv";
-    static private final int PICK_FILE_CODE = 1;
-    
-    /* Called when the activity is first created. */
+
+    // Called when the activity is first created.
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
+        // Initialize GStreamer and warn if it fails
         try {
-        GStreamer.init(this);
+            GStreamer.init(this);
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
             finish(); 
@@ -88,7 +90,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
                 nativePause();
             }
         });
-        
+
         ImageButton select = (ImageButton) this.findViewById(R.id.button_select);
         select.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -106,16 +108,33 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
         sb.setOnSeekBarChangeListener(this);
 
-        initialization_data = savedInstanceState;
-        
+        // Retrieve our previous state, or initialize it to default values
+        if (savedInstanceState != null) {
+            is_playing_desired = savedInstanceState.getBoolean("playing");
+            position = savedInstanceState.getInt("position");
+            duration = savedInstanceState.getInt("duration");
+            mediaUri = savedInstanceState.getString("mediaUri");
+            Log.i ("GStreamer", "Activity created with saved state:");
+        } else {
+            is_playing_desired = false;
+            position = duration = 0;
+            mediaUri = defaultMediaUri;
+            Log.i ("GStreamer", "Activity created with no saved state:");
+        }
         is_local_media = false;
-        is_playing_desired = false;
+        Log.i ("GStreamer", "  playing:" + is_playing_desired + " position:" + position +
+                " duration: " + duration + " uri: " + mediaUri);
+
+        // Start with disabled buttons, until native code is initialized
+        this.findViewById(R.id.button_play).setEnabled(false);
+        this.findViewById(R.id.button_stop).setEnabled(false);
 
         nativeInit();
     }
-    
+
     protected void onSaveInstanceState (Bundle outState) {
-        Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired + " position:" + position + " uri: " + mediaUri);
+        Log.d ("GStreamer", "Saving state, playing:" + is_playing_desired + " position:" + position +
+                " duration: " + duration + " uri: " + mediaUri);
         outState.putBoolean("playing", is_playing_desired);
         outState.putInt("position", position);
         outState.putInt("duration", duration);
@@ -129,7 +148,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         super.onDestroy();
     }
 
-    /* Called from native code */
+    // Called from native code. This sets the content of the TextView from the UI thread.
     private void setMessage(final String message) {
         final TextView tv = (TextView) this.findViewById(R.id.textview_message);
         runOnUiThread (new Runnable() {
@@ -138,28 +157,22 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
           }
         });
     }
-    
+
+    // Set the URI to play, and record whether it is a local or remote file
     private void setMediaUri() {
         nativeSetUri (mediaUri);
-        if (mediaUri.startsWith("file://")) is_local_media = true;
+        is_local_media = mediaUri.startsWith("file://");
     }
 
-    /* Called from native code */
+    // Called from native code. Native code calls this once it has created its pipeline and
+    // the main loop is running, so it is ready to accept commands.
     private void onGStreamerInitialized () {
-        if (initialization_data != null) {
-            is_playing_desired = initialization_data.getBoolean("playing");
-            int milliseconds = initialization_data.getInt("position");
-            Log.i ("GStreamer", "Restoring state, playing:" + is_playing_desired + " position:" + milliseconds + " ms.");
-            mediaUri = initialization_data.getString ("mediaUri");
-            /* Actually, move to one millisecond in the future. Otherwise, due to rounding errors between the
-             * milliseconds used here and the nanoseconds used by GStreamer, we would be jumping a bit behind
-             * where we were before. This, combined with seeking to keyframe positions, would skip one keyframe
-             * backwards on each iteration.
-             */
-            nativeSetPosition(milliseconds + 1);
-        }
-        
+        Log.i ("GStreamer", "GStreamer initialized:");
+        Log.i ("GStreamer", "  playing:" + is_playing_desired + " position:" + position + " uri: " + mediaUri);
+
+        // Restore previous playing state
         setMediaUri ();
+        nativeSetPosition (position);
         if (is_playing_desired) {
             nativePlay();
             wake_lock.acquire();
@@ -167,11 +180,19 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
             nativePause();
             wake_lock.release();
         }
+
+        // Re-enable buttons, now that GStreamer is initialized
+        final Activity activity = this;
+        runOnUiThread(new Runnable() {
+            public void run() {
+                activity.findViewById(R.id.button_play).setEnabled(true);
+                activity.findViewById(R.id.button_stop).setEnabled(true);
+            }
+        });
     }
 
-    /* The text widget acts as an slave for the seek bar, so it reflects what the seek bar shows, whether
-     * it is an actual pipeline position or the position the user is currently dragging to.
-     */
+    // The text widget acts as an slave for the seek bar, so it reflects what the seek bar shows, whether
+    // it is an actual pipeline position or the position the user is currently dragging to.
     private void updateTimeWidget () {
         final TextView tv = (TextView) this.findViewById(R.id.textview_time);
         final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
@@ -180,14 +201,14 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
         final String message = df.format(new Date (pos)) + " / " + df.format(new Date (duration));
-        tv.setText(message);        
+        tv.setText(message);
     }
 
-    /* Called from native code */
+    // Called from native code
     private void setCurrentPosition(final int position, final int duration) {
         final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
-        
-        /* Ignore position messages from the pipeline if the seek bar is being dragged */
+
+        // Ignore position messages from the pipeline if the seek bar is being dragged
         if (sb.isPressed()) return;
 
         runOnUiThread (new Runnable() {
@@ -201,29 +222,10 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         this.duration = duration;
     }
 
-    /* Called from native code */
-    private void setCurrentState (int state) {
-        Log.d ("GStreamer", "State has changed to " + state);
-        switch (state) {
-        case 1:
-            setMessage ("NULL");
-            break;
-        case 2:
-            setMessage ("READY");
-            break;
-        case 3:
-            setMessage ("PAUSED");
-            break;
-        case 4:
-            setMessage ("PLAYING");
-            break;
-        }
-    }
-
     static {
         System.loadLibrary("gstreamer_android");
         System.loadLibrary("tutorial-5");
-        classInit();
+        nativeClassInit();
     }
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width,
@@ -242,28 +244,42 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         nativeSurfaceFinalize ();
     }
 
+    // Called from native code when the size of the media changes or is first detected.
+    // Inform the video surface about the new size and recalculate the layout.
+    private void onMediaSizeChanged (int width, int height) {
+        Log.i ("GStreamer", "Media size changed to " + width + "x" + height);
+        final GStreamerSurfaceView gsv = (GStreamerSurfaceView) this.findViewById(R.id.surface_video);
+        gsv.media_width = width;
+        gsv.media_height = height;
+        runOnUiThread(new Runnable() {
+            public void run() {
+                gsv.requestLayout();
+            }
+        });
+    }
+
+    // The Seek Bar thumb has moved, either because the user dragged it or we have called setProgress()
     public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
         if (fromUser == false) return;
         desired_position = progress;
-        /* If this is a local file, allow scrub seeking, this is, seek soon as the slider
-         * is moved.
-         */
+        // If this is a local file, allow scrub seeking, this is, seek as soon as the slider is moved.
         if (is_local_media) nativeSetPosition(desired_position);
         updateTimeWidget();
     }
 
+    // The user started dragging the Seek Bar thumb
     public void onStartTrackingTouch(SeekBar sb) {
         nativePause();
     }
 
+    // The user released the Seek Bar thumb
     public void onStopTrackingTouch(SeekBar sb) {
-        /* If this is a remote file, scrub seeking is probably not going to work smoothly enough.
-         * Therefore, perform only the seek when the slider is released.
-         */
+        // If this is a remote file, scrub seeking is probably not going to work smoothly enough.
+        // Therefore, perform only the seek when the slider is released.
         if (!is_local_media) nativeSetPosition(desired_position);
         if (is_playing_desired) nativePlay();
     }
-    
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
@@ -271,5 +287,5 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
             mediaUri = "file://" + data.getStringExtra(FileDialog.RESULT_PATH);
             setMediaUri();
         }
-    } 
+    }
 }

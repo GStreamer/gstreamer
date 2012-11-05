@@ -2,16 +2,21 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center_vertical"
     android:orientation="vertical" >
 
     <TextView
         android:id="@+id/textview_message"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dip"
+        android:gravity="center_horizontal" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dip"
+        android:gravity="center_horizontal"
         android:orientation="horizontal" >
 
         <ImageButton
@@ -29,14 +34,22 @@
             android:contentDescription="@string/button_stop"
             android:src="@android:drawable/ic_media_pause"
             android:text="@string/button_stop" />
-	    
-		<ImageButton
-		    android:id="@+id/button_select"
-		    android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:contentDescription="@string/button_select"
-		    android:src="@android:drawable/ic_media_next"
-		    android:text="@string/button_select" />
+
+        <ImageButton
+            android:id="@+id/button_select"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/button_select"
+            android:src="@android:drawable/ic_media_next"
+            android:text="@string/button_select" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dip"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal" >
 
         <TextView
             android:id="@+id/textview_time"
@@ -55,9 +68,10 @@
             android:indeterminate="false" />
     </LinearLayout>
 
-    <SurfaceView
+    <com.gst_sdk_tutorials.tutorial_5.GStreamerSurfaceView
         android:id="@+id/surface_video"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|center_horizontal" />
 
 </LinearLayout>
