@@ -76,7 +76,7 @@ key_value_foreach (GArray * array, GFunc func, gpointer user_data)
 
 /**
  * gst_rtsp_message_new:
- * @msg: a location for the new #GstRTSPMessage
+ * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  *
  * Create a new initialized #GstRTSPMessage. Free with gst_rtsp_message_free().
  *
@@ -136,7 +136,7 @@ gst_rtsp_message_get_type (GstRTSPMessage * msg)
 
 /**
  * gst_rtsp_message_new_request:
- * @msg: a location for the new #GstRTSPMessage
+ * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @method: the request method to use
  * @uri: the uri of the request
  *
@@ -193,9 +193,9 @@ gst_rtsp_message_init_request (GstRTSPMessage * msg, GstRTSPMethod method,
 /**
  * gst_rtsp_message_parse_request:
  * @msg: a #GstRTSPMessage
- * @method: location to hold the method
- * @uri: location to hold the uri
- * @version: location to hold the version
+ * @method: (out) (allow-none): location to hold the method
+ * @uri: (out) (allow-none): location to hold the uri
+ * @version: (out) (allow-none): location to hold the version
  *
  * Parse the request message @msg and store the values @method, @uri and
  * @version. The result locations can be #NULL if one is not interested in its
@@ -225,7 +225,7 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
 
 /**
  * gst_rtsp_message_new_response:
- * @msg: a location for the new #GstRTSPMessage
+ * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @code: the status code
  * @reason: the status reason or #NULL
  * @request: the request that triggered the response or #NULL
@@ -327,9 +327,9 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
 /**
  * gst_rtsp_message_parse_response:
  * @msg: a #GstRTSPMessage
- * @code: location to hold the status code
- * @reason: location to hold the status reason
- * @version: location to hold the version
+ * @code: (out) (allow-none): location to hold the status code
+ * @reason: (out) (allow-none): location to hold the status reason
+ * @version: (out) (allow-none): location to hold the version
  *
  * Parse the response message @msg and store the values @code, @reason and
  * @version. The result locations can be #NULL if one is not interested in its
@@ -359,7 +359,7 @@ gst_rtsp_message_parse_response (GstRTSPMessage * msg,
 
 /**
  * gst_rtsp_message_new_data:
- * @msg: a location for the new #GstRTSPMessage
+ * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @channel: the channel
  *
  * Create a new data #GstRTSPMessage with @channel and store the
@@ -406,7 +406,7 @@ gst_rtsp_message_init_data (GstRTSPMessage * msg, guint8 channel)
 /**
  * gst_rtsp_message_parse_data:
  * @msg: a #GstRTSPMessage
- * @channel: location to hold the channel
+ * @channel: (out): location to hold the channel
  *
  * Parse the data message @msg and store the channel in @channel.
  *
@@ -583,7 +583,7 @@ gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
  * gst_rtsp_message_get_header:
  * @msg: a #GstRTSPMessage
  * @field: a #GstRTSPHeaderField
- * @value: pointer to hold the result
+ * @value: (out) (transfer none): pointer to hold the result
  * @indx: the index of the header
  *
  * Get the @indx header value with key @field from @msg. The result in @value
@@ -696,8 +696,8 @@ gst_rtsp_message_take_body (GstRTSPMessage * msg, guint8 * data, guint size)
 /**
  * gst_rtsp_message_get_body:
  * @msg: a #GstRTSPMessage
- * @data: location for the data
- * @size: location for the size of @data
+ * @data: (out) (transfer none) (array length=size): location for the data
+ * @size: (out): location for the size of @data
  *
  * Get the body of @msg. @data remains valid for as long as @msg is valid and
  * unchanged.
@@ -721,8 +721,8 @@ gst_rtsp_message_get_body (const GstRTSPMessage * msg, guint8 ** data,
 /**
  * gst_rtsp_message_steal_body:
  * @msg: a #GstRTSPMessage
- * @data: location for the data
- * @size: location for the size of @data
+ * @data: (out) (transfer full) (array length=size): location for the data
+ * @size: (out): location for the size of @data
  *
  * Take the body of @msg and store it in @data and @size. After this method,
  * the body and size of @msg will be set to #NULL and 0 respectively.
