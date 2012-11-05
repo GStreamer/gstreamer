@@ -622,6 +622,7 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_chain));
   gst_pad_set_query_function (overlay->video_sinkpad,
       GST_DEBUG_FUNCPTR (gst_base_text_overlay_video_query));
+  GST_PAD_SET_PROXY_ALLOCATION (overlay->video_sinkpad);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->video_sinkpad);
 
   template =
