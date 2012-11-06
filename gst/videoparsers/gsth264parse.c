@@ -1599,10 +1599,15 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
             if ((codec_nal = h264parse->sps_nals[i])) {
               gsize nal_size = gst_buffer_get_size (codec_nal);
               GST_DEBUG_OBJECT (h264parse, "inserting SPS nal");
-              ok &= gst_byte_writer_put_uint32_be (&bw,
-                  bs ? 1 : (nal_size << (nls * 8)));
-              ok &= gst_byte_writer_set_pos (&bw,
-                  gst_byte_writer_get_pos (&bw) - nls);
+              if (bs) {
+                ok &= gst_byte_writer_put_uint32_be (&bw, 1);
+              } else {
+                ok &= gst_byte_writer_put_uint32_be (&bw,
+                    (nal_size << (nls * 8)));
+                ok &= gst_byte_writer_set_pos (&bw,
+                    gst_byte_writer_get_pos (&bw) - nls);
+              }
+
               ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
               h264parse->last_report = new_ts;
             }
@@ -1611,10 +1616,14 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
             if ((codec_nal = h264parse->pps_nals[i])) {
               gsize nal_size = gst_buffer_get_size (codec_nal);
               GST_DEBUG_OBJECT (h264parse, "inserting PPS nal");
-              ok &= gst_byte_writer_put_uint32_be (&bw,
-                  bs ? 1 : (nal_size << (nls * 8)));
-              ok &= gst_byte_writer_set_pos (&bw,
-                  gst_byte_writer_get_pos (&bw) - nls);
+              if (bs) {
+                ok &= gst_byte_writer_put_uint32_be (&bw, 1);
+              } else {
+                ok &= gst_byte_writer_put_uint32_be (&bw,
+                    (nal_size << (nls * 8)));
+                ok &= gst_byte_writer_set_pos (&bw,
+                    gst_byte_writer_get_pos (&bw) - nls);
+              }
               ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
               h264parse->last_report = new_ts;
             }
