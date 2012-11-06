@@ -190,7 +190,7 @@ print_factory_details_info (GstElementFactory * factory)
 
   rank = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory));
   n_print ("Factory Details:\n");
-  n_print ("  Rank:\t\t%s (%d)\n", get_rank_name (s, rank), rank);
+  n_print ("  %-25s%s (%d)\n", "Rank", get_rank_name (s, rank), rank);
 
   keys = gst_element_factory_get_metadata_keys (factory);
   if (keys != NULL) {
@@ -200,7 +200,7 @@ print_factory_details_info (GstElementFactory * factory)
 
       val = gst_element_factory_get_metadata (factory, key);
       key[0] = g_ascii_toupper (key[0]);
-      n_print ("  %s:\t\t%s\n", key, val);
+      n_print ("  %-25s%s\n", key, val);
     }
     g_strfreev (keys);
   }
@@ -1159,12 +1159,12 @@ print_plugin_info (GstPlugin * plugin)
   const gchar *filename = gst_plugin_get_filename (plugin);
 
   n_print ("Plugin Details:\n");
-  n_print ("  Name:\t\t\t%s\n", gst_plugin_get_name (plugin));
-  n_print ("  Description:\t\t%s\n", gst_plugin_get_description (plugin));
-  n_print ("  Filename:\t\t%s\n", (filename != NULL) ? filename : "(null)");
-  n_print ("  Version:\t\t%s\n", gst_plugin_get_version (plugin));
-  n_print ("  License:\t\t%s\n", gst_plugin_get_license (plugin));
-  n_print ("  Source module:\t%s\n", gst_plugin_get_source (plugin));
+  n_print ("  %-25s%s\n", "Name", gst_plugin_get_name (plugin));
+  n_print ("  %-25s%s\n", "Description", gst_plugin_get_description (plugin));
+  n_print ("  %-25s%s\n", "Filename", (filename != NULL) ? filename : "(null)");
+  n_print ("  %-25s%s\n", "Version", gst_plugin_get_version (plugin));
+  n_print ("  %-25s%s\n", "License", gst_plugin_get_license (plugin));
+  n_print ("  %-25s%s\n", "Source module", gst_plugin_get_source (plugin));
 
   if (release_date != NULL) {
     const gchar *tz = "(UTC)";
@@ -1182,11 +1182,11 @@ print_plugin_info (GstPlugin * plugin)
     } else {
       tz = "";
     }
-    n_print ("  Source release date:\t%s%s\n", str, tz);
+    n_print ("  %-25s%s%s\n", "Source release date", str, tz);
     g_free (str);
   }
-  n_print ("  Binary package:\t%s\n", gst_plugin_get_package (plugin));
-  n_print ("  Origin URL:\t\t%s\n", gst_plugin_get_origin (plugin));
+  n_print ("  %-25s%s\n", "Binary package", gst_plugin_get_package (plugin));
+  n_print ("  %-25s%s\n", "Origin URL", gst_plugin_get_origin (plugin));
   n_print ("\n");
 }
 
