@@ -314,6 +314,17 @@ The variable takes a comma-separated list of tracing options to enable.
   </para>
 </formalpara>
 
+<formalpara id="GST_DEBUG_FILE">
+  <title><envar>GST_DEBUG_FILE</envar></title>
+
+  <para>
+  Set this variable to a file path to redirect all GStreamer debug
+  messages to this file. If left unset, debug messages with be output
+  unto the standard error.
+  </para>
+
+</formalpara>
+
 <formalpara id="ORC_CODE">
   <title><envar>ORC_CODE</envar></title>
 

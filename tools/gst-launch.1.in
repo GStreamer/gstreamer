@@ -446,6 +446,11 @@ Specifies a list of plugins that are always loaded by default.  If not set,
 this defaults to the system-installed path, and the plugins installed in the
 user's home directory
 .TP
+\fBGST_DEBUG_FILE\fR
+Set this variable to a file path to redirect all GStreamer debug
+messages to this file. If left unset, debug messages with be output
+unto the standard error.
+.TP
 \fBORC_CODE\fR
 Useful Orc environment variable. Set ORC_CODE=debug to enable debuggers
 such as gdb to create useful backtraces from Orc-generated code.  Set
