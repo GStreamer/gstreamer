@@ -51,6 +51,11 @@ struct _GstVideoCrop
   GstVideoFilter parent;
 
   /*< private >*/
+  gint prop_left;
+  gint prop_right;
+  gint prop_top;
+  gint prop_bottom;
+
   gint crop_left;
   gint crop_right;
   gint crop_top;
