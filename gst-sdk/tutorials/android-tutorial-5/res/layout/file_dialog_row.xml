@@ -15,10 +15,10 @@
         android:layout_height="36dp"
         android:layout_weight="1"
         android:ellipsize="marquee"
-        android:marqueeRepeatLimit="marquee_forever"
         android:gravity="center_vertical"
-        android:singleLine="true"
+        android:marqueeRepeatLimit="marquee_forever"
         android:scrollHorizontally="true"
+        android:singleLine="true"
         android:textSize="23dp" />
 
 </LinearLayout>
