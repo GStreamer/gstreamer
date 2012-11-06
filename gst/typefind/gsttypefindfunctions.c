@@ -2796,6 +2796,12 @@ qt_type_find (GstTypeFind * tf, gpointer unused)
       break;
     }
 
+    if (STRNCMP (&data[4], "ftypisml", 8) == 0) {
+      tip = GST_TYPE_FIND_MAXIMUM;
+      variant = "iso-fragmented";
+      break;
+    }
+
     /* box/atom types that are in common with ISO base media file format */
     if (STRNCMP (&data[4], "moov", 4) == 0 ||
         STRNCMP (&data[4], "mdat", 4) == 0 ||
