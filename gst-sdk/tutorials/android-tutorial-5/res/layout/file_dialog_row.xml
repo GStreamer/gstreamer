@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent" >
+    android:layout_height="wrap_content" >
 
     <ImageView
         android:id="@+id/fdrowimage"
         android:layout_width="wrap_content"
         android:layout_height="36dp"
-        android:layout_alignParentLeft="true"
         android:contentDescription="@string/icon" />
 
     <TextView
         android:id="@+id/fdrowtext"
-        android:layout_width="wrap_content"
+        android:layout_width="0dip"
         android:layout_height="36dp"
-        android:layout_alignBottom="@+id/fdrowimage"
-        android:layout_alignTop="@+id/fdrowimage"
-        android:layout_toRightOf="@+id/fdrowimage"
+        android:layout_weight="1"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
         android:gravity="center_vertical"
+        android:singleLine="true"
+        android:scrollHorizontally="true"
         android:textSize="23dp" />
 
-</RelativeLayout>
+</LinearLayout>
