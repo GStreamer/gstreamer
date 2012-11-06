@@ -1602,7 +1602,7 @@ again:
 
   /* set port */
   tmp_rtcp = tmp_rtp + 1;
-  if (src->client_port_range.max > 0 && tmp_rtcp >= src->client_port_range.max)
+  if (src->client_port_range.max > 0 && tmp_rtcp > src->client_port_range.max)
     goto no_ports;
 
   g_object_set (G_OBJECT (udpsrc1), "port", tmp_rtcp, "reuse", FALSE, NULL);
