@@ -1633,6 +1633,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
                   bs ? 1 : (nal_size << (nls * 8)));
               ok &= gst_byte_writer_set_pos (&bw,
                   gst_byte_writer_get_pos (&bw) - nls);
+              ok &= gst_byte_writer_put_buffer (&bw, codec_nal, 0, nal_size);
               h264parse->last_report = new_ts;
             }
           }
