@@ -55,262 +55,269 @@ import com.gst_sdk_tutorials.tutorial_5.R;
  */
 public class FileDialog extends ListActivity {
 
-	/**
-	 * Chave de um item da lista de paths.
-	 */
-	private static final String ITEM_KEY = "key";
+    /**
+     * Chave de um item da lista de paths.
+     */
+    private static final String ITEM_KEY = "key";
 
-	/**
-	 * Imagem de um item da lista de paths (diretorio ou arquivo).
-	 */
-	private static final String ITEM_IMAGE = "image";
+    /**
+     * Imagem de um item da lista de paths (diretorio ou arquivo).
+     */
+    private static final String ITEM_IMAGE = "image";
 
-	/**
-	 * Diretorio raiz.
-	 */
-	private static final String ROOT = "/";
+    /**
+     * Diretorio raiz.
+     */
+    private static final String ROOT = "/";
 
-	/**
-	 * Parametro de entrada da Activity: path inicial. Padrao: ROOT.
-	 */
-	public static final String START_PATH = "START_PATH";
+    /**
+     * Parametro de entrada da Activity: path inicial. Padrao: ROOT.
+     */
+    public static final String START_PATH = "START_PATH";
 
-	/**
-	 * Parametro de entrada da Activity: filtro de formatos de arquivos. Padrao:
-	 * null.
-	 */
-	public static final String FORMAT_FILTER = "FORMAT_FILTER";
+    /**
+     * Parametro de entrada da Activity: filtro de formatos de arquivos. Padrao:
+     * null.
+     */
+    public static final String FORMAT_FILTER = "FORMAT_FILTER";
 
-	/**
-	 * Parametro de saida da Activity: path escolhido. Padrao: null.
-	 */
-	public static final String RESULT_PATH = "RESULT_PATH";
+    /**
+     * Parametro de saida da Activity: path escolhido. Padrao: null.
+     */
+    public static final String RESULT_PATH = "RESULT_PATH";
 
+    private List<String> path = null;
+    private TextView myPath;
+    private ArrayList<HashMap<String, Object>> mList;
 
-	private List<String> path = null;
-	private TextView myPath;
-	private ArrayList<HashMap<String, Object>> mList;
+    private Button selectButton;
 
-	private Button selectButton;
+    private String parentPath;
+    private String currentPath = ROOT;
 
-	private String parentPath;
-	private String currentPath = ROOT;
+    private String[] formatFilter = null;
 
-	private String[] formatFilter = null;
+    private File selectedFile;
+    private HashMap<String, Integer> lastPositions = new HashMap<String, Integer>();
 
-	private File selectedFile;
-	private HashMap<String, Integer> lastPositions = new HashMap<String, Integer>();
+    /**
+     * Called when the activity is first created. Configura todos os parametros
+     * de entrada e das VIEWS..
+     */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setResult(RESULT_CANCELED, getIntent());
 
-	/**
-	 * Called when the activity is first created. Configura todos os parametros
-	 * de entrada e das VIEWS..
-	 */
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setResult(RESULT_CANCELED, getIntent());
+        setContentView(R.layout.file_dialog_main);
+        myPath = (TextView) findViewById(R.id.path);
 
-		setContentView(R.layout.file_dialog_main);
-		myPath = (TextView) findViewById(R.id.path);
+        selectButton = (Button) findViewById(R.id.fdButtonSelect);
+        selectButton.setEnabled(false);
+        selectButton.setOnClickListener(new OnClickListener() {
 
-		selectButton = (Button) findViewById(R.id.fdButtonSelect);
-		selectButton.setEnabled(false);
-		selectButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                if (selectedFile != null) {
+                    getIntent().putExtra(RESULT_PATH, selectedFile.getPath());
+                    setResult(RESULT_OK, getIntent());
+                    finish();
+                }
+            }
+        });
 
-			public void onClick(View v) {
-				if (selectedFile != null) {
-					getIntent().putExtra(RESULT_PATH, selectedFile.getPath());
-					setResult(RESULT_OK, getIntent());
-					finish();
-				}
-			}
-		});
+        formatFilter = getIntent().getStringArrayExtra(FORMAT_FILTER);
 
-		formatFilter = getIntent().getStringArrayExtra(FORMAT_FILTER);
+        final Button cancelButton = (Button) findViewById(R.id.fdButtonCancel);
+        cancelButton.setOnClickListener(new OnClickListener() {
 
-		final Button cancelButton = (Button) findViewById(R.id.fdButtonCancel);
-		cancelButton.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                setResult(RESULT_CANCELED);
+                finish();
+            }
 
-			public void onClick(View v) {
-			    setResult(RESULT_CANCELED);
-			    finish();
-			}
+        });
 
-		});
+        String startPath = getIntent().getStringExtra(START_PATH);
+        startPath = startPath != null ? startPath : ROOT;
+        getDir(startPath);
 
-		String startPath = getIntent().getStringExtra(START_PATH);
-		startPath = startPath != null ? startPath : ROOT;
-		getDir(startPath);
+        ListView lv = (ListView) findViewById(android.R.id.list);
+        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+    }
 
-		ListView lv = (ListView) findViewById (android.R.id.list);
-		lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-	}
+    private void getDir(String dirPath) {
 
-	private void getDir(String dirPath) {
+        boolean useAutoSelection = dirPath.length() < currentPath.length();
 
-		boolean useAutoSelection = dirPath.length() < currentPath.length();
+        Integer position = lastPositions.get(parentPath);
 
-		Integer position = lastPositions.get(parentPath);
+        getDirImpl(dirPath);
 
-		getDirImpl(dirPath);
+        if (position != null && useAutoSelection) {
+            getListView().setSelection(position);
+        }
 
-		if (position != null && useAutoSelection) {
-			getListView().setSelection(position);
-		}
+    }
 
-	}
+    /**
+     * Monta a estrutura de arquivos e diretorios filhos do diretorio fornecido.
+     *
+     * @param dirPath
+     *            Diretorio pai.
+     */
+    private void getDirImpl(final String dirPath) {
 
-	/**
-	 * Monta a estrutura de arquivos e diretorios filhos do diretorio fornecido.
-	 * 
-	 * @param dirPath
-	 *            Diretorio pai.
-	 */
-	private void getDirImpl(final String dirPath) {
+        currentPath = dirPath;
 
-		currentPath = dirPath;
+        final List<String> item = new ArrayList<String>();
+        path = new ArrayList<String>();
+        mList = new ArrayList<HashMap<String, Object>>();
 
-		final List<String> item = new ArrayList<String>();
-		path = new ArrayList<String>();
-		mList = new ArrayList<HashMap<String, Object>>();
+        File f = new File(currentPath);
+        File[] files = f.listFiles();
+        if (files == null) {
+            currentPath = ROOT;
+            f = new File(currentPath);
+            files = f.listFiles();
+        }
+        myPath.setText(getText(R.string.location) + ": " + currentPath);
 
-		File f = new File(currentPath);
-		File[] files = f.listFiles();
-		if (files == null) {
-			currentPath = ROOT;
-			f = new File(currentPath);
-			files = f.listFiles();
-		}
-		myPath.setText(getText(R.string.location) + ": " + currentPath);
+        if (!currentPath.equals(ROOT)) {
 
-		if (!currentPath.equals(ROOT)) {
+            item.add(ROOT);
+            addItem(ROOT, R.drawable.folder);
+            path.add(ROOT);
 
-			item.add(ROOT);
-			addItem(ROOT, R.drawable.folder);
-			path.add(ROOT);
+            item.add("../");
+            addItem("../", R.drawable.folder);
+            path.add(f.getParent());
+            parentPath = f.getParent();
 
-			item.add("../");
-			addItem("../", R.drawable.folder);
-			path.add(f.getParent());
-			parentPath = f.getParent();
+        }
 
-		}
+        TreeMap<String, String> dirsMap = new TreeMap<String, String>();
+        TreeMap<String, String> dirsPathMap = new TreeMap<String, String>();
+        TreeMap<String, String> filesMap = new TreeMap<String, String>();
+        TreeMap<String, String> filesPathMap = new TreeMap<String, String>();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                String dirName = file.getName();
+                dirsMap.put(dirName, dirName);
+                dirsPathMap.put(dirName, file.getPath());
+            } else {
+                final String fileName = file.getName();
+                final String fileNameLwr = fileName.toLowerCase();
+                // se ha um filtro de formatos, utiliza-o
+                if (formatFilter != null) {
+                    boolean contains = false;
+                    for (int i = 0; i < formatFilter.length; i++) {
+                        final String formatLwr = formatFilter[i].toLowerCase();
+                        if (fileNameLwr.endsWith(formatLwr)) {
+                            contains = true;
+                            break;
+                        }
+                    }
+                    if (contains) {
+                        filesMap.put(fileName, fileName);
+                        filesPathMap.put(fileName, file.getPath());
+                    }
+                    // senao, adiciona todos os arquivos
+                } else {
+                    filesMap.put(fileName, fileName);
+                    filesPathMap.put(fileName, file.getPath());
+                }
+            }
+        }
+        item.addAll(dirsMap.tailMap("").values());
+        item.addAll(filesMap.tailMap("").values());
+        path.addAll(dirsPathMap.tailMap("").values());
+        path.addAll(filesPathMap.tailMap("").values());
 
-		TreeMap<String, String> dirsMap = new TreeMap<String, String>();
-		TreeMap<String, String> dirsPathMap = new TreeMap<String, String>();
-		TreeMap<String, String> filesMap = new TreeMap<String, String>();
-		TreeMap<String, String> filesPathMap = new TreeMap<String, String>();
-		for (File file : files) {
-			if (file.isDirectory()) {
-				String dirName = file.getName();
-				dirsMap.put(dirName, dirName);
-				dirsPathMap.put(dirName, file.getPath());
-			} else {
-				final String fileName = file.getName();
-				final String fileNameLwr = fileName.toLowerCase();
-				// se ha um filtro de formatos, utiliza-o
-				if (formatFilter != null) {
-					boolean contains = false;
-					for (int i = 0; i < formatFilter.length; i++) {
-						final String formatLwr = formatFilter[i].toLowerCase();
-						if (fileNameLwr.endsWith(formatLwr)) {
-							contains = true;
-							break;
-						}
-					}
-					if (contains) {
-						filesMap.put(fileName, fileName);
-						filesPathMap.put(fileName, file.getPath());
-					}
-					// senao, adiciona todos os arquivos
-				} else {
-					filesMap.put(fileName, fileName);
-					filesPathMap.put(fileName, file.getPath());
-				}
-			}
-		}
-		item.addAll(dirsMap.tailMap("").values());
-		item.addAll(filesMap.tailMap("").values());
-		path.addAll(dirsPathMap.tailMap("").values());
-		path.addAll(filesPathMap.tailMap("").values());
+        SimpleAdapter fileList = new SimpleAdapter(this, mList,
+                R.layout.file_dialog_row,
+                new String[] { ITEM_KEY, ITEM_IMAGE }, new int[] {
+                        R.id.fdrowtext, R.id.fdrowimage });
 
-		SimpleAdapter fileList = new SimpleAdapter(this, mList, R.layout.file_dialog_row, new String[] {
-				ITEM_KEY, ITEM_IMAGE }, new int[] { R.id.fdrowtext, R.id.fdrowimage });
+        for (String dir : dirsMap.tailMap("").values()) {
+            addItem(dir, R.drawable.folder);
+        }
 
-		for (String dir : dirsMap.tailMap("").values()) {
-			addItem(dir, R.drawable.folder);
-		}
+        for (String file : filesMap.tailMap("").values()) {
+            addItem(file, R.drawable.file);
+        }
 
-		for (String file : filesMap.tailMap("").values()) {
-			addItem(file, R.drawable.file);
-		}
+        fileList.notifyDataSetChanged();
 
-		fileList.notifyDataSetChanged();
+        setListAdapter(fileList);
 
-		setListAdapter(fileList);
+    }
 
-	}
+    private void addItem(String fileName, int imageId) {
+        HashMap<String, Object> item = new HashMap<String, Object>();
+        item.put(ITEM_KEY, fileName);
+        item.put(ITEM_IMAGE, imageId);
+        mList.add(item);
+    }
 
-	private void addItem(String fileName, int imageId) {
-		HashMap<String, Object> item = new HashMap<String, Object>();
-		item.put(ITEM_KEY, fileName);
-		item.put(ITEM_IMAGE, imageId);
-		mList.add(item);
-	}
+    /**
+     * Quando clica no item da lista, deve-se: 1) Se for diretorio, abre seus
+     * arquivos filhos; 2) Se puder escolher diretorio, define-o como sendo o
+     * path escolhido. 3) Se for arquivo, define-o como path escolhido. 4) Ativa
+     * botao de selecao.
+     */
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
 
-	/**
-	 * Quando clica no item da lista, deve-se: 1) Se for diretorio, abre seus
-	 * arquivos filhos; 2) Se puder escolher diretorio, define-o como sendo o
-	 * path escolhido. 3) Se for arquivo, define-o como path escolhido. 4) Ativa
-	 * botao de selecao.
-	 */
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
+        File file = new File(path.get(position));
 
-		File file = new File(path.get(position));
+        if (file.isDirectory()) {
+            selectButton.setEnabled(false);
+            if (file.canRead()) {
+                lastPositions.put(currentPath, position);
+                getDir(path.get(position));
+            } else {
+                new AlertDialog.Builder(this)
+                        .setIcon(android.R.drawable.stat_sys_warning)
+                        .setTitle(
+                                "[" + file.getName() + "] "
+                                        + getText(R.string.cant_read_folder))
+                        .setPositiveButton("OK",
+                                new DialogInterface.OnClickListener() {
 
-		if (file.isDirectory()) {
-			selectButton.setEnabled(false);
-			if (file.canRead()) {
-				lastPositions.put(currentPath, position);
-				getDir(path.get(position));
-			} else {
-				new AlertDialog.Builder(this).setIcon(android.R.drawable.stat_sys_warning)
-						.setTitle("[" + file.getName() + "] " + getText(R.string.cant_read_folder))
-						.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog,
+                                            int which) {
 
-							public void onClick(DialogInterface dialog, int which) {
-
-							}
-						}).show();
-			}
-		} else {
-		    if (selectedFile != null && selectedFile.getPath().equals(file.getPath())) {
+                                    }
+                                }).show();
+            }
+        } else {
+            if (selectedFile != null
+                    && selectedFile.getPath().equals(file.getPath())) {
                 getIntent().putExtra(RESULT_PATH, selectedFile.getPath());
                 setResult(RESULT_OK, getIntent());
                 finish();
-		    }
-			selectedFile = file;
-			l.setItemChecked(position, true);
-			selectButton.setEnabled(true);
-		}
-	}
+            }
+            selectedFile = file;
+            l.setItemChecked(position, true);
+            selectButton.setEnabled(true);
+        }
+    }
 
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-			selectButton.setEnabled(false);
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            selectButton.setEnabled(false);
 
-			if (!currentPath.equals(ROOT)) {
-				getDir(parentPath);
-			} else {
-				return super.onKeyDown(keyCode, event);
-			}
+            if (!currentPath.equals(ROOT)) {
+                getDir(parentPath);
+            } else {
+                return super.onKeyDown(keyCode, event);
+            }
 
-			return true;
-		} else {
-			return super.onKeyDown(keyCode, event);
-		}
-	}
+            return true;
+        } else {
+            return super.onKeyDown(keyCode, event);
+        }
+    }
 
 }
