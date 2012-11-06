@@ -285,6 +285,11 @@ public class FileDialog extends ListActivity {
 						}).show();
 			}
 		} else {
+		    if (selectedFile != null && selectedFile.getPath().equals(file.getPath())) {
+                getIntent().putExtra(RESULT_PATH, selectedFile.getPath());
+                setResult(RESULT_OK, getIntent());
+                finish();
+		    }
 			selectedFile = file;
 			l.setItemChecked(position, true);
 			selectButton.setEnabled(true);
