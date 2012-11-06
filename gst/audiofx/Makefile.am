@@ -20,7 +20,8 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audiowsincband.c \
 	audiowsinclimit.c \
 	audiofirfilter.c \
-	audioecho.c
+	audioecho.c \
+	gstscaletempo.c
 
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
@@ -50,6 +51,7 @@ noinst_HEADERS = audiopanorama.h \
         audiowsinclimit.h \
 	audiofirfilter.h \
 	audioecho.h \
+	gstscaletempo.h \
 	math_compat.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)

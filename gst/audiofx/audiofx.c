@@ -36,6 +36,7 @@
 #include "audiowsinclimit.h"
 #include "audiofirfilter.h"
 #include "audioecho.h"
+#include "gstscaletempo.h"
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
@@ -68,7 +69,9 @@ plugin_init (GstPlugin * plugin)
       gst_element_register (plugin, "audiofirfilter", GST_RANK_NONE,
           GST_TYPE_AUDIO_FIR_FILTER) &&
       gst_element_register (plugin, "audioecho", GST_RANK_NONE,
-          GST_TYPE_AUDIO_ECHO));
+          GST_TYPE_AUDIO_ECHO) &&
+      gst_element_register (plugin, "scaletempo", GST_RANK_NONE,
+          GST_TYPE_SCALETEMPO));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
