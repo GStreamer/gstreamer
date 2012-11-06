@@ -1,19 +1,17 @@
 package com.gst_sdk_tutorials.tutorial_5;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import com.lamerman.FileDialog;
-import com.lamerman.SelectionMode;
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -25,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.gstreamer.GStreamer;
+import com.lamerman.FileDialog;
 
 public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSeekBarChangeListener {
     private native void nativeInit();     // Initialize native code, build pipeline, etc
@@ -48,6 +47,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
     private final String defaultMediaUri = "http://docs.gstreamer.com/media/sintel_trailer-368p.ogv";
 
     static private final int PICK_FILE_CODE = 1;
+    private String last_folder;
 
     private PowerManager.WakeLock wake_lock;
 
@@ -68,6 +68,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
 
         setContentView(R.layout.main);
 
+        last_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wake_lock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "Android Aurena");
@@ -95,8 +96,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         select.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
                 Intent i = new Intent(getBaseContext(), FileDialog.class);
-                i.putExtra(FileDialog.START_PATH, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath());
-                i.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
+                i.putExtra(FileDialog.START_PATH, last_folder);
                 startActivityForResult(i, PICK_FILE_CODE);
             }
         });
@@ -299,6 +299,8 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         if (resultCode == RESULT_OK && requestCode == PICK_FILE_CODE) {
             mediaUri = "file://" + data.getStringExtra(FileDialog.RESULT_PATH);
             position = 0;
+            last_folder = new File (data.getStringExtra(FileDialog.RESULT_PATH)).getParent();
+            Log.i("GStreamer", "Setting last_folder to " + last_folder);
             setMediaUri();
         }
     }

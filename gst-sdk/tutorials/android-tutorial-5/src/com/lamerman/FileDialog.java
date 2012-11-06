@@ -1,4 +1,4 @@
-// From http://code.google.com/p/android-file-dialog/
+// Based on http://code.google.com/p/android-file-dialog/
 //
 // Copyright (c) 2011, 2012, Alexander Ponomarev <alexander.ponomarev.1@gmail.com>
 // All rights reserved.
@@ -33,8 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
-import com.gst_sdk_tutorials.tutorial_5.R;
-
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
@@ -42,13 +40,12 @@ import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+
+import com.gst_sdk_tutorials.tutorial_5.R;
 
 /**
  * Activity para escolha de arquivos/diretorios.
@@ -89,38 +86,17 @@ public class FileDialog extends ListActivity {
 	 */
 	public static final String RESULT_PATH = "RESULT_PATH";
 
-	/**
-	 * Parametro de entrada da Activity: tipo de selecao: pode criar novos paths
-	 * ou nao. Padrao: nao permite.
-	 * 
-	 * @see {@link SelectionMode}
-	 */
-	public static final String SELECTION_MODE = "SELECTION_MODE";
-
-	/**
-	 * Parametro de entrada da Activity: se e permitido escolher diretorios.
-	 * Padrao: falso.
-	 */
-	public static final String CAN_SELECT_DIR = "CAN_SELECT_DIR";
 
 	private List<String> path = null;
 	private TextView myPath;
-	private EditText mFileName;
 	private ArrayList<HashMap<String, Object>> mList;
 
 	private Button selectButton;
 
-	private LinearLayout layoutSelect;
-	private LinearLayout layoutCreate;
-	private InputMethodManager inputManager;
 	private String parentPath;
 	private String currentPath = ROOT;
 
-	private int selectionMode = SelectionMode.MODE_CREATE;
-
 	private String[] formatFilter = null;
-
-	private boolean canSelectDir = false;
 
 	private File selectedFile;
 	private HashMap<String, Integer> lastPositions = new HashMap<String, Integer>();
@@ -136,9 +112,6 @@ public class FileDialog extends ListActivity {
 
 		setContentView(R.layout.file_dialog_main);
 		myPath = (TextView) findViewById(R.id.path);
-		mFileName = (EditText) findViewById(R.id.fdEditTextFile);
-
-		inputManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
 
 		selectButton = (Button) findViewById(R.id.fdButtonSelect);
 		selectButton.setEnabled(false);
@@ -153,58 +126,20 @@ public class FileDialog extends ListActivity {
 			}
 		});
 
-		final Button newButton = (Button) findViewById(R.id.fdButtonNew);
-		newButton.setOnClickListener(new OnClickListener() {
-
-			public void onClick(View v) {
-				setCreateVisible(v);
-
-				mFileName.setText("");
-				mFileName.requestFocus();
-			}
-		});
-
-		selectionMode = getIntent().getIntExtra(SELECTION_MODE, SelectionMode.MODE_CREATE);
-
 		formatFilter = getIntent().getStringArrayExtra(FORMAT_FILTER);
-
-		canSelectDir = getIntent().getBooleanExtra(CAN_SELECT_DIR, false);
-
-		if (selectionMode == SelectionMode.MODE_OPEN) {
-			newButton.setEnabled(false);
-		}
-
-		layoutSelect = (LinearLayout) findViewById(R.id.fdLinearLayoutSelect);
-		layoutCreate = (LinearLayout) findViewById(R.id.fdLinearLayoutCreate);
-		layoutCreate.setVisibility(View.GONE);
 
 		final Button cancelButton = (Button) findViewById(R.id.fdButtonCancel);
 		cancelButton.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				setSelectVisible(v);
+			    setResult(RESULT_CANCELED);
+			    finish();
 			}
 
-		});
-		final Button createButton = (Button) findViewById(R.id.fdButtonCreate);
-		createButton.setOnClickListener(new OnClickListener() {
-
-			public void onClick(View v) {
-				if (mFileName.getText().length() > 0) {
-					getIntent().putExtra(RESULT_PATH, currentPath + "/" + mFileName.getText());
-					setResult(RESULT_OK, getIntent());
-					finish();
-				}
-			}
 		});
 
 		String startPath = getIntent().getStringExtra(START_PATH);
 		startPath = startPath != null ? startPath : ROOT;
-		if (canSelectDir) {
-			File file = new File(startPath);
-			selectedFile = file;
-			selectButton.setEnabled(true);
-		}
 		getDir(startPath);
 
 		ListView lv = (ListView) findViewById (android.R.id.list);
@@ -334,20 +269,13 @@ public class FileDialog extends ListActivity {
 
 		File file = new File(path.get(position));
 
-		setSelectVisible(v);
-
 		if (file.isDirectory()) {
 			selectButton.setEnabled(false);
 			if (file.canRead()) {
 				lastPositions.put(currentPath, position);
 				getDir(path.get(position));
-				if (canSelectDir) {
-					selectedFile = file;
-					v.setSelected(true);
-					selectButton.setEnabled(true);
-				}
 			} else {
-				new AlertDialog.Builder(this).setIcon(R.drawable.gst_sdk_icon)
+				new AlertDialog.Builder(this).setIcon(android.R.drawable.stat_sys_warning)
 						.setTitle("[" + file.getName() + "] " + getText(R.string.cant_read_folder))
 						.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 
@@ -368,15 +296,10 @@ public class FileDialog extends ListActivity {
 		if ((keyCode == KeyEvent.KEYCODE_BACK)) {
 			selectButton.setEnabled(false);
 
-			if (layoutCreate.getVisibility() == View.VISIBLE) {
-				layoutCreate.setVisibility(View.GONE);
-				layoutSelect.setVisibility(View.VISIBLE);
+			if (!currentPath.equals(ROOT)) {
+				getDir(parentPath);
 			} else {
-				if (!currentPath.equals(ROOT)) {
-					getDir(parentPath);
-				} else {
-					return super.onKeyDown(keyCode, event);
-				}
+				return super.onKeyDown(keyCode, event);
 			}
 
 			return true;
@@ -385,29 +308,4 @@ public class FileDialog extends ListActivity {
 		}
 	}
 
-	/**
-	 * Define se o botao de CREATE e visivel.
-	 * 
-	 * @param v
-	 */
-	private void setCreateVisible(View v) {
-		layoutCreate.setVisibility(View.VISIBLE);
-		layoutSelect.setVisibility(View.GONE);
-
-		inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
-		selectButton.setEnabled(false);
-	}
-
-	/**
-	 * Define se o botao de SELECT e visivel.
-	 * 
-	 * @param v
-	 */
-	private void setSelectVisible(View v) {
-		layoutCreate.setVisibility(View.GONE);
-		layoutSelect.setVisibility(View.VISIBLE);
-
-		inputManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
-		selectButton.setEnabled(false);
-	}
 }
