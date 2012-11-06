@@ -1684,7 +1684,9 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
             ypos, ypos + overlay->image_height);
         break;
       default:
-        g_assert_not_reached ();
+        GST_FIXME_OBJECT (overlay, "implement background shading for format %s",
+            gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (&frame)));
+        break;
     }
   }
 
