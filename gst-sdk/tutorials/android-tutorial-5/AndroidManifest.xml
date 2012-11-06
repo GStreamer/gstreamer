@@ -26,7 +26,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Local files whose type is known to Android -->
+            <!-- Local files whose MIME type is known to Android -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -38,8 +38,32 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
 
-            <!-- Links from the browser. The list of extensions and supported
-                 protocols can certainly be extended. -->
+            <!-- Local files with unknown MIME type.
+                 The list of extensions and supported protocols can certainly be extended. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.avi" />
+                <data android:pathPattern=".*\\.AVI" />
+                <data android:pathPattern=".*\\.mkv" />
+                <data android:pathPattern=".*\\.MKV" />
+                <data android:pathPattern=".*\\.webm" />
+                <data android:pathPattern=".*\\.WEBM" />
+                <data android:pathPattern=".*\\.ogv" />
+                <data android:pathPattern=".*\\.OGV" />
+                <data android:pathPattern=".*\\.mp4" />
+                <data android:pathPattern=".*\\.MP4" />
+                <data android:pathPattern=".*\\.mov" />
+                <data android:pathPattern=".*\\.MOV" />
+            </intent-filter>
+
+            <!-- Remote files. These typically have unknown MIME type.
+                 The list of extensions and supported protocols can certainly be extended. -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -57,8 +81,8 @@
                 <data android:pathPattern=".*\\.OGV" />
                 <data android:pathPattern=".*\\.mp4" />
                 <data android:pathPattern=".*\\.MP4" />
-                <data android:pathPattern=".*\\.qt" />
-                <data android:pathPattern=".*\\.QT" />
+                <data android:pathPattern=".*\\.mov" />
+                <data android:pathPattern=".*\\.MOV" />
             </intent-filter>
         </activity>
         <activity
