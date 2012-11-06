@@ -28,6 +28,7 @@
 
 #define M3U8_HEADER_TAG "#EXTM3U\n"
 #define M3U8_VERSION_TAG "#EXT-X-VERSION:%d\n"
+#define M3U8_ALLOW_CACHE_TAG "#EXT-X-ALLOW-CACHE:%s\n"
 #define M3U8_TARGETDURATION_TAG "#EXT-X-TARGETDURATION:%d\n"
 #define M3U8_MEDIA_SEQUENCE_TAG "#EXT-X-MEDIA-SEQUENCE:%d\n"
 #define M3U8_DISCONTINUITY_TAG "#EXT-X-DISCONTINUITY\n"
@@ -189,6 +190,9 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
   /* #EXT-X-VERSION */
 //  g_string_append_printf (playlist->playlist_str, M3U8_VERSION_TAG,
 //      playlist->version);
+  /* #EXT-X-ALLOW_CACHE */
+  g_string_append_printf (playlist->playlist_str, M3U8_ALLOW_CACHE_TAG,
+      playlist->allow_cache ? "YES" : "NO");
   /* #EXT-X-MEDIA-SEQUENCE */
   g_string_append_printf (playlist->playlist_str, M3U8_MEDIA_SEQUENCE_TAG,
       playlist->sequence_number - playlist->entries->length);
