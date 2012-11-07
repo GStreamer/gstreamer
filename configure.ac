@@ -1,13 +1,11 @@
-AC_PREREQ(2.62)
+AC_PREREQ([2.68])
 
 dnl please read gstreamer/docs/random/autotools before changing this file
 
 dnl initialize autoconf
 dnl releases only do -Wall, cvs and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for cvs/prerelease
-AC_INIT(GStreamer Ugly Plug-ins, 1.1.0.1,
-    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-plugins-ugly)
+AC_INIT([GStreamer Ugly Plug-ins],[1.1.0.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-ugly])
 
 AG_GST_INIT
 
@@ -292,16 +290,12 @@ AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
     LAME_LIBS="-lmp3lame $LIBM"
     dnl is lame presets available
     LAME_CFLAGS=""
-    AC_TRY_COMPILE([#include <lame/lame.h>], [ int preset = MEDIUM ],
-      [LAME_CFLAGS="-DGSTLAME_PRESET"],
-      [LAME_CFLAGS=""]
-    )
-    AC_TRY_COMPILE([#include <lame/lame.h>], [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lame/lame.h>]], [[ int preset = MEDIUM ]])],[LAME_CFLAGS="-DGSTLAME_PRESET"],[LAME_CFLAGS=""
+    ])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <lame/lame.h>]], [[
         void *ptr = &lame_set_VBR_quality
-      ],
-      [LAME_CFLAGS="$LAME_CFLAGS -DHAVE_LAME_SET_VBR_QUALITY"],
-      [LAME_CFLAGS="$LAME_CFLAGS"]
-    )
+      ]])],[LAME_CFLAGS="$LAME_CFLAGS -DHAVE_LAME_SET_VBR_QUALITY"],[LAME_CFLAGS="$LAME_CFLAGS"
+    ])
   AC_SUBST(LAME_CFLAGS)
   AC_SUBST(LAME_LIBS)
   ])
