@@ -1326,10 +1326,24 @@ gst_ahc_src_set_focus_mode (GstPhotography * photo, GstFocusMode focus_mode)
 static GstPhotoCaps
 gst_ahc_src_get_capabilities (GstPhotography * photo)
 {
-  return GST_PHOTOGRAPHY_CAPS_EV_COMP | GST_PHOTOGRAPHY_CAPS_WB_MODE |
-      GST_PHOTOGRAPHY_CAPS_TONE | GST_PHOTOGRAPHY_CAPS_SCENE |
-      GST_PHOTOGRAPHY_CAPS_FLASH | GST_PHOTOGRAPHY_CAPS_ZOOM |
-      GST_PHOTOGRAPHY_CAPS_FOCUS;
+  GstAHCSrc *self = GST_AHC_SRC (photo);
+
+  GstPhotoCaps caps = GST_PHOTOGRAPHY_CAPS_EV_COMP |
+      GST_PHOTOGRAPHY_CAPS_WB_MODE | GST_PHOTOGRAPHY_CAPS_TONE |
+      GST_PHOTOGRAPHY_CAPS_SCENE | GST_PHOTOGRAPHY_CAPS_FLASH |
+      GST_PHOTOGRAPHY_CAPS_FOCUS | GST_PHOTOGRAPHY_CAPS_ZOOM;
+
+  if (self->camera) {
+    GstAHCParameters *params;
+
+    params = gst_ah_camera_get_parameters (self->camera);
+    if (!gst_ahc_parameters_is_zoom_supported (params))
+      caps &= ~GST_PHOTOGRAPHY_CAPS_ZOOM;
+
+    gst_ahc_parameters_free (params);
+  }
+
+  return caps;
 }
 
 static void
