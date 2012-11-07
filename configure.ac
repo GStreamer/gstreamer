@@ -1,13 +1,11 @@
-AC_PREREQ(2.62)
+AC_PREREQ([2.68])
 
 dnl please read gstreamer/docs/random/autotools before changing this file
 
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/pre
-AC_INIT(GStreamer Good Plug-ins, 1.1.0.1,
-    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-plugins-good)
+AC_INIT([GStreamer Good Plug-ins],[1.1.0.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-good])
 
 AG_GST_INIT
 
@@ -24,7 +22,7 @@ dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/law/alaw.c])
 
 dnl define the output header for config
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE([enable])
@@ -465,7 +463,7 @@ dnl renamed to GST_V4L2 because of some conflict with kernel headers
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
 AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   AC_MSG_CHECKING([Checking for up to date v4l2 installation])
-  AC_TRY_COMPILE([
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #ifdef __sun /* Solaris */
 #include <sys/types.h>
@@ -479,12 +477,12 @@ AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
 #if defined(V4L2_MAJOR_VERSION) || defined(V4L2_MINOR_VERSION)
 #error too early v4l2 version or no v4l2 at all
 #endif
-    ], [
+    ]], [[
 return 0;
-    ], [
+    ]])],[
       HAVE_GST_V4L2="yes"
       AC_MSG_RESULT(yes)
-    ], [
+    ],[
       HAVE_GST_V4L2="no"
       AC_MSG_RESULT(no)
 
@@ -506,7 +504,7 @@ return 0;
     dnl check for missing v4l2_buffer declaration (see #135919)
     MISSING_DECL=0
     AC_MSG_CHECKING(struct v4l2_buffer declaration)
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #ifdef __sun /* Solaris */
 #include <sys/types.h>
@@ -517,11 +515,11 @@ return 0;
 #define __user
 #include <linux/videodev2.h>
 #endif
-    ],[
+    ]], [[
 struct v4l2_buffer buf;
 buf.index = 0;
 return 0;
-    ], [ AC_MSG_RESULT(yes) ], [ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
+    ]])],[ AC_MSG_RESULT(yes) ],[ MISSING_DECL=1 && AC_MSG_RESULT(no) ])
     if [ test x$MISSING_DECL = x1 ]; then
       AC_DEFINE(GST_V4L2_MISSING_BUFDECL, 1, [struct v4l2_buffer missing])
     fi
@@ -533,8 +531,7 @@ return 0;
 
 # Optional gudev for device probing
 AC_ARG_WITH([gudev],
-  AC_HELP_STRING([--with-gudev],
-    [device detection with gudev]),
+  AS_HELP_STRING([--with-gudev],[device detection with gudev]),
   [],
   [with_gudev=check])
 if test x$HAVE_GST_V4L2 = xyes; then
@@ -556,8 +553,7 @@ AC_SUBST(GUDEV_LIBS)
 
 # Make libv4l2 non-automagic
 AC_ARG_WITH([libv4l2],
-  AC_HELP_STRING([--with-libv4l2],
-    [support video buffer conversion using libv4l2]),
+  AS_HELP_STRING([--with-libv4l2],[support video buffer conversion using libv4l2]),
   [],
   [with_libv4l2=check])
 if test x$HAVE_GST_V4L2 = xyes; then
