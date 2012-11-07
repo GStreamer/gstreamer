@@ -159,8 +159,8 @@ noinst_HEADERS =			\
 	gstrtptheorapay.h \
 	gstrtpvorbisdepay.h \
 	gstrtpvorbispay.h \
-	gstrtpvp8depay.c \
-	gstrtpvp8pay.c \
+	gstrtpvp8depay.h \
+	gstrtpvp8pay.h \
 	gstrtpvrawdepay.h \
 	gstrtpvrawpay.h
 
