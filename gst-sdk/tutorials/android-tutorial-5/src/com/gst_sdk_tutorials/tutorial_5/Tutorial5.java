@@ -68,8 +68,6 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
 
         setContentView(R.layout.main);
 
-        last_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
-
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wake_lock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "GStreamer tutorial 5");
         wake_lock.setReferenceCounted(false);
@@ -119,6 +117,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         } else {
             is_playing_desired = false;
             position = duration = 0;
+            last_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
             Intent intent = getIntent();
             android.net.Uri uri = intent.getData();
             if (uri == null)
