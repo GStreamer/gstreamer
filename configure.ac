@@ -153,8 +153,7 @@ GOBJECT_INTROSPECTION_CHECK([1.31.1])
 
 dnl check for documentation tools
 GTK_DOC_CHECK([1.12])
-AS_PATH_PYTHON([2.1])
-AG_GST_PLUGIN_DOCS([1.3],[2.1])
+AG_GST_PLUGIN_DOCS([1.12])
 
 dnl *** checks for libraries ***
 
