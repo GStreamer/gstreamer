@@ -1,13 +1,11 @@
-AC_PREREQ(2.62)
+AC_PREREQ([2.68])
 
 dnl please read gstreamer/docs/random/autotools before changing this file
 
 dnl initialize autoconf
 dnl releases only do -Wall, git and prerelease does -Werror too
 dnl use a three digit version number for releases, and four for git/prerelease
-AC_INIT(GStreamer Base Plug-ins, 1.1.0.1,
-    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-plugins-base)
+AC_INIT([GStreamer Base Plug-ins],[1.1.0.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-base])
 
 AG_GST_INIT
 
@@ -24,7 +22,7 @@ dnl can autoconf find the source ?
 AC_CONFIG_SRCDIR([gst/audiotestsrc/gstaudiotestsrc.c])
 
 dnl define the output header for config
-AM_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
 AM_MAINTAINER_MODE([enable])
@@ -88,8 +86,7 @@ AG_GST_PKG_CONFIG_PATH
 
 dnl let distro override plugin install helper path
 AC_ARG_WITH(install-plugins-helper,
-  AC_HELP_STRING([--with-install-plugins-helper],
-    [specify path of helper script to call to install plugins]),
+  AS_HELP_STRING([--with-install-plugins-helper],[specify path of helper script to call to install plugins]),
   [
     case "${withval}" in
       yes) AC_MSG_ERROR(bad value ${withval} for --with-install-plugins-helper) ;;
@@ -140,7 +137,7 @@ AC_PROG_CXX
 dnl CXX may be set to some default even if no c++ compiler is available
 dnl (thanks autotools!), so just try to compile some c++ code to make sure
 AC_LANG_PUSH([C++])
-AC_TRY_COMPILE([ class Foo { int bar; };], , working_cxx=yes, working_cxx=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ class Foo { int bar; };]], [[]])],[working_cxx=yes],[working_cxx=no])
 AC_LANG_POP([C++])
 AC_MSG_NOTICE([working c++ compiler found: $working_cxx])
 AM_CONDITIONAL(HAVE_CXX, test "x$working_cxx" = "xyes")
@@ -322,16 +319,15 @@ AM_CONDITIONAL(HAVE_LINUX_JOYSTICK_HEADERS, test "x$HAVE_LINUX_JOYSTICK_HEADERS"
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
-              [AC_HELP_STRING([--disable-Bsymbolic],
-                              [avoid linking with -Bsymbolic])],,
+              [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
               [SAVED_LDFLAGS="${LDFLAGS}"
                AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
                LDFLAGS=-Wl,-Bsymbolic-functions
-               AC_TRY_LINK([], [int main (void) { return 0; }],
+               AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int main (void) { return 0; }]])],[
                            AC_MSG_RESULT(yes)
-                           enable_Bsymbolic=yes,
+                           enable_Bsymbolic=yes],[
                            AC_MSG_RESULT(no)
-                           enable_Bsymbolic=no)
+                           enable_Bsymbolic=no])
                LDFLAGS="${SAVED_LDFLAGS}"])
 
 
@@ -433,7 +429,7 @@ fi
 
 dnl iso-codes is optional, used by libgsttag
 AC_ARG_ENABLE(iso-codes,
-AC_HELP_STRING([--enable-iso-codes],[use iso-codes if installed]),
+AS_HELP_STRING([--enable-iso-codes],[use iso-codes if installed]),
 [case "${enableval}" in
   yes) enable_iso_codes=yes ;;
   no)  enable_iso_codes=no ;;
