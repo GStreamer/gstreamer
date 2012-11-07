@@ -249,7 +249,7 @@ gst_video_blend (GstVideoFrame * dest,
   guint8 *tmpdestline = NULL, *tmpsrcline = NULL;
   gboolean src_premultiplied_alpha, dest_premultiplied_alpha;
   void (*matrix) (guint8 * tmpline, guint width);
-  const GstVideoFormatInfo *sinfo, *dinfo;
+  const GstVideoFormatInfo *sinfo, *dinfo, *dunpackinfo, *sunpackinfo;
 
   g_assert (dest != NULL);
   g_assert (src != NULL);
@@ -271,9 +271,6 @@ gst_video_blend (GstVideoFrame * dest,
   dest_width = GST_VIDEO_FRAME_WIDTH (dest);
   dest_height = GST_VIDEO_FRAME_HEIGHT (dest);
 
-  tmpdestline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
-  tmpsrcline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
-
   ensure_debug_category ();
 
   dinfo = gst_video_format_get_info (GST_VIDEO_FRAME_FORMAT (dest));
@@ -281,6 +278,20 @@ gst_video_blend (GstVideoFrame * dest,
 
   if (!sinfo || !dinfo)
     goto failed;
+
+  dunpackinfo = gst_video_format_get_info (dinfo->unpack_format);
+  sunpackinfo = gst_video_format_get_info (sinfo->unpack_format);
+
+  if (dunpackinfo == NULL || sunpackinfo == NULL)
+    goto failed;
+
+  g_assert (GST_VIDEO_FORMAT_INFO_BITS (sunpackinfo) == 8);
+
+  if (GST_VIDEO_FORMAT_INFO_BITS (dunpackinfo) != 8)
+    goto unpack_format_not_supported;
+
+  tmpdestline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
+  tmpsrcline = g_malloc (sizeof (guint8) * (dest_width + 8) * 4);
 
   matrix = matrix_identity;
   if (GST_VIDEO_INFO_IS_RGB (&src->info) != GST_VIDEO_INFO_IS_RGB (&dest->info)) {
@@ -388,9 +399,14 @@ gst_video_blend (GstVideoFrame * dest,
   return TRUE;
 
 failed:
-  GST_WARNING ("Could not do the blending");
-  g_free (tmpdestline);
-  g_free (tmpsrcline);
-
-  return FALSE;
+  {
+    GST_WARNING ("Could not do the blending");
+    return FALSE;
+  }
+unpack_format_not_supported:
+  {
+    GST_FIXME ("video format %s not supported yet for blending",
+        gst_video_format_to_string (dinfo->unpack_format));
+    return FALSE;
+  }
 }
