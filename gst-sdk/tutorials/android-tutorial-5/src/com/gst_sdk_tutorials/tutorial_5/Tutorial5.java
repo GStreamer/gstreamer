@@ -114,6 +114,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
             position = savedInstanceState.getInt("position");
             duration = savedInstanceState.getInt("duration");
             mediaUri = savedInstanceState.getString("mediaUri");
+            last_folder = savedInstanceState.getString("last_folder");
             Log.i ("GStreamer", "Activity created with saved state:");
         } else {
             is_playing_desired = false;
@@ -152,6 +153,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         outState.putInt("position", position);
         outState.putInt("duration", duration);
         outState.putString("mediaUri", mediaUri);
+        outState.putString("last_folder", last_folder);
     }
 
     protected void onDestroy() {
