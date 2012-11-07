@@ -2680,26 +2680,29 @@ gst_ahc_parameters_get_supported_antibanding (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedAntibanding);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject str = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (str) {
-        const gchar *value = _antibanding_to_gchar (env, str);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject str = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, (gchar *) value);
-        (*env)->DeleteLocalRef (env, str);
+        if (str) {
+          const gchar *value = _antibanding_to_gchar (env, str);
+
+          ret = g_list_append (ret, (gchar *) value);
+          (*env)->DeleteLocalRef (env, str);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2715,26 +2718,29 @@ gst_ahc_parameters_get_supported_color_effects (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedColorEffects);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject str = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (str) {
-        const gchar *value = _color_effect_to_gchar (env, str);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject str = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, (gchar *) value);
-        (*env)->DeleteLocalRef (env, str);
+        if (str) {
+          const gchar *value = _color_effect_to_gchar (env, str);
+
+          ret = g_list_append (ret, (gchar *) value);
+          (*env)->DeleteLocalRef (env, str);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2750,26 +2756,29 @@ gst_ahc_parameters_get_supported_flash_modes (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedFlashModes);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject str = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (str) {
-        const gchar *value = _flash_mode_to_gchar (env, str);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject str = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, (gchar *) value);
-        (*env)->DeleteLocalRef (env, str);
+        if (str) {
+          const gchar *value = _flash_mode_to_gchar (env, str);
+
+          ret = g_list_append (ret, (gchar *) value);
+          (*env)->DeleteLocalRef (env, str);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2785,26 +2794,29 @@ gst_ahc_parameters_get_supported_focus_modes (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedFocusModes);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject str = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (str) {
-        const gchar *value = _focus_mode_to_gchar (env, str);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject str = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, (gchar *) value);
-        (*env)->DeleteLocalRef (env, str);
+        if (str) {
+          const gchar *value = _focus_mode_to_gchar (env, str);
+
+          ret = g_list_append (ret, (gchar *) value);
+          (*env)->DeleteLocalRef (env, str);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2820,26 +2832,29 @@ gst_ahc_parameters_get_supported_preview_formats (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedPreviewFormats);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject integer = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (integer) {
-        jint value = java_lang_integer_int_value (env, integer);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject integer = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, GINT_TO_POINTER (value));
-        (*env)->DeleteLocalRef (env, integer);
+        if (integer) {
+          jint value = java_lang_integer_int_value (env, integer);
+
+          ret = g_list_append (ret, GINT_TO_POINTER (value));
+          (*env)->DeleteLocalRef (env, integer);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2855,27 +2870,30 @@ gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedPreviewFpsRange);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jintArray range = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (range) {
-        jint *fps = malloc (sizeof (jint) * 2);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jintArray range = java_util_iterator_next (env, iterator);
 
-        (*env)->GetIntArrayRegion (env, range, 0, 2, fps);
-        ret = g_list_append (ret, fps);
-        (*env)->DeleteLocalRef (env, range);
+        if (range) {
+          jint *fps = malloc (sizeof (jint) * 2);
+
+          (*env)->GetIntArrayRegion (env, range, 0, 2, fps);
+          ret = g_list_append (ret, fps);
+          (*env)->DeleteLocalRef (env, range);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2891,31 +2909,34 @@ gst_ahc_parameters_get_supported_preview_sizes (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedPreviewSizes);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject jsize = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (jsize) {
-        jint width, height;
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject jsize = java_util_iterator_next (env, iterator);
 
-        width = (*env)->GetIntField (env, jsize,
-            android_hardware_camera_size.width);
-        height = (*env)->GetIntField (env, jsize,
-            android_hardware_camera_size.height);
+        if (jsize) {
+          jint width, height;
 
-        ret = g_list_append (ret, gst_ahc_size_new (width, height));
-        (*env)->DeleteLocalRef (env, jsize);
+          width = (*env)->GetIntField (env, jsize,
+              android_hardware_camera_size.width);
+          height = (*env)->GetIntField (env, jsize,
+              android_hardware_camera_size.height);
+
+          ret = g_list_append (ret, gst_ahc_size_new (width, height));
+          (*env)->DeleteLocalRef (env, jsize);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2931,26 +2952,29 @@ gst_ahc_parameters_get_supported_scene_modes (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedSceneModes);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject str = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (str) {
-        const gchar *value = _scene_mode_to_gchar (env, str);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject str = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, (gchar *) value);
-        (*env)->DeleteLocalRef (env, str);
+        if (str) {
+          const gchar *value = _scene_mode_to_gchar (env, str);
+
+          ret = g_list_append (ret, (gchar *) value);
+          (*env)->DeleteLocalRef (env, str);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -2966,26 +2990,29 @@ gst_ahc_parameters_get_supported_white_balance (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getSupportedWhiteBalance);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject str = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (str) {
-        const gchar *value = _white_balance_to_gchar (env, str);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject str = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, (gchar *) value);
-        (*env)->DeleteLocalRef (env, str);
+        if (str) {
+          const gchar *value = _white_balance_to_gchar (env, str);
+
+          ret = g_list_append (ret, (gchar *) value);
+          (*env)->DeleteLocalRef (env, str);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
@@ -3040,26 +3067,29 @@ gst_ahc_parameters_get_zoom_ratios (GstAHCParameters * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject list = NULL;
-  jobject iterator = NULL;
   GList *ret = NULL;
 
   list = AHCP_CALL (return NULL, Object, getZoomRatios);
 
-  iterator = java_util_list_iterator (env, list);
-  if (iterator) {
-    while (java_util_iterator_has_next (env, iterator)) {
-      jobject integer = java_util_iterator_next (env, iterator);
+  if (list) {
+    jobject iterator = NULL;
 
-      if (integer) {
-        jint value = java_lang_integer_int_value (env, integer);
+    iterator = java_util_list_iterator (env, list);
+    if (iterator) {
+      while (java_util_iterator_has_next (env, iterator)) {
+        jobject integer = java_util_iterator_next (env, iterator);
 
-        ret = g_list_append (ret, GINT_TO_POINTER (value));
-        (*env)->DeleteLocalRef (env, integer);
+        if (integer) {
+          jint value = java_lang_integer_int_value (env, integer);
+
+          ret = g_list_append (ret, GINT_TO_POINTER (value));
+          (*env)->DeleteLocalRef (env, integer);
+        }
       }
+      (*env)->DeleteLocalRef (env, iterator);
     }
-    (*env)->DeleteLocalRef (env, iterator);
+    (*env)->DeleteLocalRef (env, list);
   }
-  (*env)->DeleteLocalRef (env, list);
 
   return ret;
 }
