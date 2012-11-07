@@ -1432,9 +1432,6 @@ gst_base_text_overlay_render_pangocairo (GstBaseTextOverlay * overlay,
   gst_base_text_overlay_set_composition (overlay);
 }
 
-#define BOX_XPAD         6
-#define BOX_YPAD         6
-
 static inline void
 gst_base_text_overlay_shade_planar_Y (GstBaseTextOverlay * overlay,
     GstVideoFrame * dest, gint x0, gint x1, gint y0, gint y1)
@@ -1444,12 +1441,6 @@ gst_base_text_overlay_shade_planar_Y (GstBaseTextOverlay * overlay,
 
   dest_stride = dest->info.stride[0];
   dest_ptr = dest->data[0];
-
-  x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
-  x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
-
-  y0 = CLAMP (y0 - BOX_YPAD, 0, overlay->height);
-  y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);
 
   for (i = y0; i < y1; ++i) {
     for (j = x0; j < x1; ++j) {
@@ -1471,12 +1462,6 @@ gst_base_text_overlay_shade_packed_Y (GstBaseTextOverlay * overlay,
   dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (dest, 0);
   dest_ptr = GST_VIDEO_FRAME_COMP_DATA (dest, 0);
   pixel_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (dest, 0);
-
-  x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
-  x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
-
-  y0 = CLAMP (y0 - BOX_YPAD, 0, overlay->height);
-  y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);
 
   if (x0 != 0)
     x0 = GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (dest->info.finfo, 0, x0);
@@ -1513,12 +1498,6 @@ gst_base_text_overlay_shade_xRGB (GstBaseTextOverlay * overlay,
 
   dest_ptr = dest->data[0];
 
-  x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
-  x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
-
-  y0 = CLAMP (y0 - BOX_YPAD, 0, overlay->height);
-  y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);
-
   for (i = y0; i < y1; i++) {
     for (j = x0; j < x1; j++) {
       gint y, y_pos, k;
@@ -1541,12 +1520,6 @@ gint x0, gint x1, gint y0, gint y1) \
   guint8 *dest_ptr;\
   \
   dest_ptr = dest->data[0];\
-  \
-  x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);\
-  x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);\
-  \
-  y0 = CLAMP (y0 - BOX_YPAD, 0, overlay->height);\
-  y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);\
   \
   for (i = y0; i < y1; i++) {\
     for (j = x0; j < x1; j++) {\
@@ -1598,10 +1571,20 @@ gst_base_text_overlay_render_text (GstBaseTextOverlay * overlay,
   overlay->need_render = FALSE;
 }
 
+/* FIXME: should probably be relative to width/height (adjusted for PAR) */
+#define BOX_XPAD  6
+#define BOX_YPAD  6
+
 static void
 gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
     GstVideoFrame * frame, gint x0, gint x1, gint y0, gint y1)
 {
+  x0 = CLAMP (x0 - BOX_XPAD, 0, overlay->width);
+  x1 = CLAMP (x1 + BOX_XPAD, 0, overlay->width);
+
+  y0 = CLAMP (y0 - BOX_YPAD, 0, overlay->height);
+  y1 = CLAMP (y1 + BOX_YPAD, 0, overlay->height);
+
   switch (overlay->format) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_NV12:
