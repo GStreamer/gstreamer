@@ -1598,11 +1598,55 @@ gst_base_text_overlay_render_text (GstBaseTextOverlay * overlay,
   overlay->need_render = FALSE;
 }
 
+static void
+gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
+    GstVideoFrame * frame, gint x0, gint x1, gint y0, gint y1)
+{
+  switch (overlay->format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      gst_base_text_overlay_shade_planar_Y (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_UYVY:
+      gst_base_text_overlay_shade_packed_Y (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+      gst_base_text_overlay_shade_xRGB (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      gst_base_text_overlay_shade_xBGR (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      gst_base_text_overlay_shade_BGRx (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_RGBx:
+      gst_base_text_overlay_shade_RGBx (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+      gst_base_text_overlay_shade_ARGB (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      gst_base_text_overlay_shade_ABGR (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      gst_base_text_overlay_shade_RGBA (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      gst_base_text_overlay_shade_BGRA (overlay, frame, x0, x1, y0, y1);
+      break;
+    default:
+      GST_FIXME_OBJECT (overlay, "implement background shading for format %s",
+          gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (frame)));
+      break;
+  }
+}
+
 static GstFlowReturn
 gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
     GstBuffer * video_frame)
 {
-  gint xpos, ypos;
   GstVideoFrame frame;
 
   if (overlay->composition == NULL)
@@ -1625,69 +1669,14 @@ gst_base_text_overlay_push_frame (GstBaseTextOverlay * overlay,
           GST_MAP_READWRITE))
     goto invalid_frame;
 
-  gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
-
   /* shaded background box */
   if (overlay->want_shading) {
-    switch (overlay->format) {
-      case GST_VIDEO_FORMAT_I420:
-      case GST_VIDEO_FORMAT_NV12:
-      case GST_VIDEO_FORMAT_NV21:
-        gst_base_text_overlay_shade_planar_Y (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_AYUV:
-      case GST_VIDEO_FORMAT_UYVY:
-        gst_base_text_overlay_shade_packed_Y (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_xRGB:
-        gst_base_text_overlay_shade_xRGB (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_xBGR:
-        gst_base_text_overlay_shade_xBGR (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_BGRx:
-        gst_base_text_overlay_shade_BGRx (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_RGBx:
-        gst_base_text_overlay_shade_RGBx (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_ARGB:
-        gst_base_text_overlay_shade_ARGB (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_ABGR:
-        gst_base_text_overlay_shade_ABGR (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_RGBA:
-        gst_base_text_overlay_shade_RGBA (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      case GST_VIDEO_FORMAT_BGRA:
-        gst_base_text_overlay_shade_BGRA (overlay, &frame,
-            xpos, xpos + overlay->image_width,
-            ypos, ypos + overlay->image_height);
-        break;
-      default:
-        GST_FIXME_OBJECT (overlay, "implement background shading for format %s",
-            gst_video_format_to_string (GST_VIDEO_FRAME_FORMAT (&frame)));
-        break;
-    }
+    gint xpos, ypos;
+
+    gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
+
+    gst_base_text_overlay_shade_background (overlay, &frame,
+        xpos, xpos + overlay->image_width, ypos, ypos + overlay->image_height);
   }
 
   gst_video_overlay_composition_blend (overlay->composition, &frame);
