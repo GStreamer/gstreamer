@@ -71,7 +71,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
         last_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath();
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wake_lock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "Android Aurena");
+        wake_lock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, "GStreamer tutorial 5");
         wake_lock.setReferenceCounted(false);
 
         ImageButton play = (ImageButton) this.findViewById(R.id.button_play);
