@@ -1540,6 +1540,34 @@ gst_base_text_overlay_shade_rgb24 (GstBaseTextOverlay * overlay,
   }
 }
 
+static void
+gst_base_text_overlay_shade_IYU1 (GstBaseTextOverlay * overlay,
+    GstVideoFrame * frame, gint x0, gint x1, gint y0, gint y1)
+{
+  gint y, x, stride, shading_val, tmp;
+  guint8 *p;
+
+  shading_val = overlay->shading_value;
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  /* IYU1: packed 4:1:1 YUV (Cb-Y0-Y1-Cr-Y2-Y3 ...) */
+  for (y = y0; y < y1; ++y) {
+    p = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    /* move to Y0 or Y1 (we pretend the chroma is the last of the 3 bytes) */
+    /* FIXME: we're not pixel-exact here if x0 is an odd number, but it's
+     * unlikely anyone will notice.. */
+    p += (y * stride) + ((x0 / 2) * 3) + 1;
+    for (x = x0; x < x1; x += 2) {
+      tmp = *p + shading_val;
+      *p++ = CLAMP (tmp, 0, 255);
+      tmp = *p + shading_val;
+      *p++ = CLAMP (tmp, 0, 255);
+      /* skip chroma */
+      p++;
+    }
+  }
+}
+
 #define ARGB_SHADE_FUNCTION(name, OFFSET)	\
 static inline void \
 gst_base_text_overlay_shade_##name (GstBaseTextOverlay * overlay, GstVideoFrame * dest, \
@@ -1660,6 +1688,9 @@ gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_RGB:
       gst_base_text_overlay_shade_rgb24 (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_IYU1:
+      gst_base_text_overlay_shade_IYU1 (overlay, frame, x0, x1, y0, y1);
       break;
     default:
       GST_FIXME_OBJECT (overlay, "implement background shading for format %s",
