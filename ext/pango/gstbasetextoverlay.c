@@ -191,7 +191,7 @@ enum
 
 #define VIDEO_FORMATS "{ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, \
     I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, \
-    Y800, Y16, NV12, NV21, UYVP, A420, YUV9, IYU1 }"
+    NV12, NV21, UYVP, A420, YUV9, IYU1, GRAY8, GRAY16_LE, GRAY16_BE }"
 
 static GstStaticPadTemplate src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -1595,6 +1595,7 @@ gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
+    case GST_VIDEO_FORMAT_GRAY8:
       gst_base_text_overlay_shade_planar_Y (overlay, frame, x0, x1, y0, y1);
       break;
     case GST_VIDEO_FORMAT_AYUV:
