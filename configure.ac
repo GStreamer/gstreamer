@@ -1,11 +1,9 @@
-AC_PREREQ(2.62)
+AC_PREREQ([2.68])
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(GStreamer Bad Plug-ins, 1.1.0.1,
-    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-plugins-bad)
+AC_INIT([GStreamer Bad Plug-ins],[1.1.0.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gst-plugins-bad])
 
 AG_GST_INIT
 
@@ -216,8 +214,7 @@ GTK3_REQ=2.91.3
 if test "x$BUILD_EXAMPLES" = "xyes"; then
   AC_MSG_CHECKING([which gtk+ version to compile examples against (optional)])
   AC_ARG_WITH([gtk],
-    AC_HELP_STRING([--with-gtk=3.0|2.0],
-                   [which gtk+ version to compile against (default: 2.0)]),
+    AS_HELP_STRING([--with-gtk=3.0|2.0],[which gtk+ version to compile against (default: 2.0)]),
     [case "$with_gtk" in
         2.0) GTK_REQ=$GTK2_REQ ;;
         3.0) GTK_REQ=$GTK3_REQ ;;
@@ -661,7 +658,7 @@ AG_GST_CHECK_FEATURE(AVC, [AVC Video Services], avcsrc, [
   CPPFLAGS="$CPPFLAGS -framework AVCVideoServices -framework CoreFoundation"
   save_LIBS="$LIBS"
   LIBS="$LIBS -framework AVCVideoServices -framework CoreFoundation"
-  AC_TRY_LINK([], [], [HAVE_AVC=yes], [HAVE_AVC=no])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[]])],[HAVE_AVC=yes],[HAVE_AVC=no])
   LIBS=$save_LIBS
   CPPFLAGS=$save_CPPFLAGS
   AC_LANG_POP([C++])
@@ -1010,7 +1007,7 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   fi
   if test $HAVE_FAAD = "yes"; then
     AC_MSG_CHECKING([Checking for FAAD >= 2.0])
-    AC_TRY_COMPILE([#include <faad.h>], [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <faad.h>]], [[
         #if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
         #error Not faad2
         #else
@@ -1018,7 +1015,7 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
          * was added only in 2.0 final and does not exist in 2.0-RC3 */
         faacDecConfiguration conf; conf.dontUpSampleImplicitSBR = 1;
         #endif
-    ], [
+    ]])],[
       HAVE_FAAD="yes"
 
       AC_MSG_CHECKING([Checking FAAD2 version in $faad_hdr])
@@ -1038,7 +1035,7 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
         AC_MSG_RESULT([2.$faad2_minor_version])
         AC_DEFINE_UNQUOTED([FAAD2_MINOR_VERSION], [$faad2_minor_version], [The x in 2.x])
       fi
-    ], [
+    ],[
       HAVE_FAAD="no"
     ])
   fi
@@ -1224,7 +1221,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
       dnl HACK because mpeg2enc 1.8.0 header files have a spurious 'include config.h'
       touch config.h
       dnl switch over to c++ to test things
-      AC_LANG_CPLUSPLUS
+      AC_LANG([C++])
       OLD_CPPFLAGS="$CPPFLAGS"
       dnl HACK as above
       CPPFLAGS_GOOD="$CPPFLAGS $MPEG2ENC_CFLAGS"
@@ -1236,7 +1233,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
         OLD_LIBS="$LIBS"
         LIBS="$LIBS $MPEG2ENC_LIBS"
         AC_MSG_CHECKING([for valid mpeg2enc objects])
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
           #include <mpeg2encoder.hh>
           #include <mpeg2encoptions.hh>
 
@@ -1248,7 +1245,7 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
             MPEG2Encoder *encoder = new MPEG2Encoder (*options);
             return 0;
           }
-        ],[
+        ]])],[
           AC_MSG_RESULT(yes)
           dnl so far so good, let's check more things:
           dnl mjpegtools-1.8.0 does not install the required
@@ -1270,14 +1267,14 @@ AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
           CPPFLAGS="$CPPFLAGS_GOOD"
           AC_SUBST(MPEG2ENC_CFLAGS)
           AC_SUBST(MPEG2ENC_LIBS)
-        ], [
+        ],[
           AC_MSG_RESULT(no)
-        ])
+        ],[])
         LIBS="$OLD_LIBS"
       ])
 
       CPPFLAGS="$OLD_CPPFLAGS"
-      AC_LANG_C
+      AC_LANG([C])
     ], [
       HAVE_MPEG2ENC="no"
     ])
@@ -1306,7 +1303,7 @@ AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
       dnl HACK because mplex 2.0.0 header files have a spurious 'include config.h'
       touch config.h
       dnl switch over to c++ to test things
-      AC_LANG_CPLUSPLUS
+      AC_LANG([C++])
       OLD_CPPFLAGS="$CPPFLAGS"
       dnl HACK as above
       CPPFLAGS_GOOD="$CPPFLAGS $MPLEX_CFLAGS"
@@ -1320,7 +1317,7 @@ AG_GST_CHECK_FEATURE(MPLEX, [mplex], mplex, [
         dnl older libmplex uses off_t SegmentSize (), which leads to fuzzy ABI;
         dnl don't want this here
         AC_MSG_CHECKING([for valid mplex objects])
-        AC_TRY_RUN([
+        AC_RUN_IFELSE([AC_LANG_SOURCE([[
 
 #include <interact.hpp>
 #include <outputstrm.hpp>
@@ -1345,19 +1342,19 @@ main (int   argc,
   Multiplexor *mux = new Multiplexor(*job, *out, NULL);
   return 0;
 }
-        ],[
+        ]])],[
           HAVE_MPLEX="yes"
           CPPFLAGS="$CPPFLAGS_GOOD"
           AC_SUBST(MPLEX_CFLAGS)
           AC_SUBST(MPLEX_LIBS)
           AC_SUBST(MPLEX_LDFLAGS)
           AC_MSG_RESULT(yes)
-        ], AC_MSG_RESULT(no))
+        ],[AC_MSG_RESULT(no)],[])
         LIBS="$OLD_LIBS"
         LDFLAGS="$OLD_LDFLAGS"
       ])
       CPPFLAGS="$OLD_CPPFLAGS"
-      AC_LANG_C
+      AC_LANG([C])
     ], HAVE_MPLEX="no")
   fi
 ])
@@ -1452,12 +1449,12 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   dnl causes.)
   PKG_CHECK_MODULES(OPENCV, opencv >= 2.0.0 opencv <= 2.4.2 , [
     AC_PROG_CXX
-    AC_LANG_CPLUSPLUS
+    AC_LANG([C++])
     OLD_CPPFLAGS=$CPPFLAGS
     CPPFLAGS=$OPENCV_CFLAGS
     AC_CHECK_HEADERS([highgui.h opencv2/highgui/highgui_c.h])
     CPPFLAGS=$OLD_CPPFLAGS
-    AC_LANG_C
+    AC_LANG([C])
 
     if test $ac_cv_header_highgui_h = "yes" -o $ac_cv_header_opencv2_highgui_highgui_c_h = "yes" ; then
       HAVE_OPENCV="yes"
@@ -1497,7 +1494,7 @@ AG_GST_CHECK_FEATURE(PVR, [pvrvideosink], pvr, [
 ])
 
  AC_ARG_WITH([pvr-external-headers],
-              AC_HELP_STRING([--with-pvr-external-headers], [Use system installed PVR2D headers]),
+              AS_HELP_STRING([--with-pvr-external-headers],[Use system installed PVR2D headers]),
               [AS_IF([test "x$with_pvr_external_headers" = "xno"],
                      [PVR_CFLAGS="$PVR_CFLAGS -I\$(srcdir)/pvr_includes"])],
               [PVR_CFLAGS="$PVR_CFLAGS -I\$(srcdir)/pvr_includes"])
@@ -1712,18 +1709,18 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
           AC_MSG_CHECKING([for uptodate XviD API version])
-          AC_TRY_COMPILE([#include <xvid.h>], [
+          AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <xvid.h>]], [[
               #if XVID_API_MAJOR(XVID_API) != 4
               #error "Incompatible XviD API version"
               #endif
 	      #if XVID_API_MAJOR(XVID_API) == 4 && XVID_API_MINOR(XVID_API) < 3
               #error "Incompatible XviD API version"
 	      #endif
-          ],[ AC_MSG_RESULT(yes)
+          ]])],[ AC_MSG_RESULT(yes)
             XVID_LIBS="-lxvidcore $LIBM"
             AC_SUBST(XVID_LIBS)
             HAVE_XVID=yes
-          ], AC_MSG_RESULT(no) )
+          ],[AC_MSG_RESULT(no) ])
         ], )
       ], )
     ], )
