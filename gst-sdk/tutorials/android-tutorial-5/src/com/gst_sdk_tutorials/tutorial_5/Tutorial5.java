@@ -207,13 +207,13 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
     // The text widget acts as an slave for the seek bar, so it reflects what the seek bar shows, whether
     // it is an actual pipeline position or the position the user is currently dragging to.
     private void updateTimeWidget () {
-        final TextView tv = (TextView) this.findViewById(R.id.textview_time);
-        final SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
-        final int pos = sb.getProgress();
+        TextView tv = (TextView) this.findViewById(R.id.textview_time);
+        SeekBar sb = (SeekBar) this.findViewById(R.id.seek_bar);
+        int pos = sb.getProgress();
 
         SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("UTC"));
-        final String message = df.format(new Date (pos)) + " / " + df.format(new Date (duration));
+        String message = df.format(new Date (pos)) + " / " + df.format(new Date (duration));
         tv.setText(message);
     }
 
