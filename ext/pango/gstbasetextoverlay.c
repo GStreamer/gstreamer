@@ -1514,6 +1514,32 @@ gst_base_text_overlay_shade_xRGB (GstBaseTextOverlay * overlay,
   }
 }
 
+/* FIXME: orcify */
+static void
+gst_base_text_overlay_shade_rgb24 (GstBaseTextOverlay * overlay,
+    GstVideoFrame * frame, gint x0, gint x1, gint y0, gint y1)
+{
+  const int pstride = 3;
+  gint y, x, stride, shading_val, tmp;
+  guint8 *p;
+
+  shading_val = overlay->shading_value;
+  stride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  for (y = y0; y < y1; ++y) {
+    p = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+    p += (y * stride) + (x0 * pstride);
+    for (x = x0; x < x1; ++x) {
+      tmp = *p + shading_val;
+      *p++ = CLAMP (tmp, 0, 255);
+      tmp = *p + shading_val;
+      *p++ = CLAMP (tmp, 0, 255);
+      tmp = *p + shading_val;
+      *p++ = CLAMP (tmp, 0, 255);
+    }
+  }
+}
+
 #define ARGB_SHADE_FUNCTION(name, OFFSET)	\
 static inline void \
 gst_base_text_overlay_shade_##name (GstBaseTextOverlay * overlay, GstVideoFrame * dest, \
@@ -1630,6 +1656,10 @@ gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
       break;
     case GST_VIDEO_FORMAT_BGRA:
       gst_base_text_overlay_shade_BGRA (overlay, frame, x0, x1, y0, y1);
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_RGB:
+      gst_base_text_overlay_shade_rgb24 (overlay, frame, x0, x1, y0, y1);
       break;
     default:
       GST_FIXME_OBJECT (overlay, "implement background shading for format %s",
