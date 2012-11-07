@@ -1,12 +1,10 @@
-AC_PREREQ(2.62)
+AC_PREREQ([2.68])
 
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, git and prerelease does Werror too
 dnl
-AC_INIT(GStreamer, 1.1.0.1,
-    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gstreamer)
+AC_INIT([GStreamer],[1.1.0.1],[http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],[gstreamer])
 AG_GST_INIT
 
 dnl initialize automake (we require GNU make)
@@ -130,7 +128,7 @@ AG_GST_SET_PACKAGE_RELEASE_DATETIME_WITH_NANO([$PACKAGE_VERSION_NANO],
 
 dnl building of tests
 AC_ARG_ENABLE(tests,
-  AC_HELP_STRING([--disable-tests], [disable building test apps]),
+  AS_HELP_STRING([--disable-tests],[disable building test apps]),
   [
     case "${enableval}" in
       yes) BUILD_TESTS=yes ;;
@@ -143,8 +141,7 @@ AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 
 dnl tests known to fail
 AC_ARG_ENABLE(failing-tests,
-  AC_HELP_STRING([--disable-failing-tests],
-    [disable building tests known to fail]),
+  AS_HELP_STRING([--disable-failing-tests],[disable building tests known to fail]),
   [
     case "${enableval}" in
       yes) BUILD_FAILING_TESTS=yes ;;
@@ -162,7 +159,7 @@ fi
 
 dnl building of benchmarks
 AC_ARG_ENABLE(benchmarks,
-  AC_HELP_STRING([--disable-benchmarks], [disable building benchmarks apps]),
+  AS_HELP_STRING([--disable-benchmarks],[disable building benchmarks apps]),
   [
     case "${enableval}" in
       yes) BUILD_BENCHMARKS=yes ;;
@@ -175,7 +172,7 @@ AM_CONDITIONAL(BUILD_BENCHMARKS, test "x$BUILD_BENCHMARKS" = "xyes")
 
 dnl building of tools
 AC_ARG_ENABLE(tools,
-  AC_HELP_STRING([--disable-tools], [disable building tools]),
+  AS_HELP_STRING([--disable-tools],[disable building tools]),
   [
     case "${enableval}" in
       yes) BUILD_TOOLS=yes ;;
@@ -188,8 +185,7 @@ AM_CONDITIONAL(BUILD_TOOLS, test "x$BUILD_TOOLS" = "xyes")
 
 dnl poison destroyed objects
 AC_ARG_ENABLE(poisoning,
-  AC_HELP_STRING([--enable-poisoning],
-    [enable poisoning of deallocated objects]),
+  AS_HELP_STRING([--enable-poisoning],[enable poisoning of deallocated objects]),
   [
     case "${enableval}" in
       yes) USE_POISONING=yes ;;
@@ -251,7 +247,7 @@ AC_PROG_CXX
 dnl CXX may be set to some default even if no c++ compiler is available
 dnl (thanks autotools!), so just try to compile some c++ code to make sure
 AC_LANG_PUSH([C++])
-AC_TRY_COMPILE([ class Foo { int bar; };], , working_cxx=yes, working_cxx=no)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[ class Foo { int bar; };]], [[]])],[working_cxx=yes],[working_cxx=no])
 AC_LANG_POP([C++])
 AC_MSG_NOTICE([working c++ compiler found: $working_cxx])
 AM_CONDITIONAL(HAVE_CXX, test "x$working_cxx" = "xyes")
@@ -357,14 +353,14 @@ dnl check if the compiler supports __uint128_t (gcc)
 dnl Actually check for 128-bit division, since that's what we use
 dnl uint128_t for.
 AC_CACHE_CHECK(for __uint128_t, gst_cv_uint128_t,
-    AC_TRY_LINK([ ], [
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[ ]], [[
       static __uint128_t v1 = 100;
       static __uint128_t v2 = 10;
       static __uint128_t u;
       u = v1 / v2;
-    ], [
+    ]])],[
       gst_cv_uint128_t=yes
-    ], [
+    ],[
       gst_cv_uint128_t=no
     ])
 )
@@ -458,18 +454,18 @@ AC_CHECK_FUNCS(clock_gettime, [], [
 ])
 
 AC_CACHE_CHECK(for posix timers, gst_cv_posix_timers,
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <time.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-    ], [
+    ]], [[
 #if !defined(_POSIX_TIMERS) || _POSIX_TIMERS < 0 || !defined(CLOCK_REALTIME)
 #error Either _POSIX_TIMERS or CLOCK_REALTIME not defined
 #endif
-    ], [
+    ]])],[
       gst_cv_posix_timers=yes
-    ], [
+    ],[
       gst_cv_posix_timers=no
     ])
 )
@@ -484,18 +480,18 @@ AC_SUBST(GST_HAVE_POSIX_TIMERS_DEFINE)
 AM_CONDITIONAL(GST_HAVE_POSIX_TIMERS, test "$gst_cv_posix_timers" = "yes")
 
 AC_CACHE_CHECK(for monotonic clock, gst_cv_monotonic_clock,
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <time.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-    ], [
+    ]], [[
 #if !defined(_POSIX_MONOTONIC_CLOCK) || _POSIX_MONOTONIC_CLOCK < 0 || !defined(CLOCK_MONOTONIC)
 #error Either _POSIX_MONOTONIC_CLOCK or CLOCK_MONOTONIC not defined
 #endif
-    ], [
+    ]])],[
       gst_cv_monotonic_clock=yes
-    ], [
+    ],[
       gst_cv_monotonic_clock=no
     ])
 )
@@ -551,7 +547,7 @@ AC_SUBST(GLIB_PREFIX)
 
 dnl building of unit test libraries
 AC_ARG_ENABLE(check,
-  AC_HELP_STRING([--disable-check], [disable building unit test libraries]),
+  AS_HELP_STRING([--disable-check],[disable building unit test libraries]),
   [
     case "${enableval}" in
       yes) BUILD_CHECK=yes ;;
@@ -591,16 +587,15 @@ AC_ARG_WITH([memory-alignment],
 dnl Check for -Bsymbolic-functions linker flag used to avoid
 dnl intra-library PLT jumps, if available.
 AC_ARG_ENABLE(Bsymbolic,
-              [AC_HELP_STRING([--disable-Bsymbolic],
-                              [avoid linking with -Bsymbolic])],,
+              [AS_HELP_STRING([--disable-Bsymbolic],[avoid linking with -Bsymbolic])],,
               [SAVED_LDFLAGS="${LDFLAGS}"
                AC_MSG_CHECKING([for -Bsymbolic-functions linker flag])
                LDFLAGS=-Wl,-Bsymbolic-functions
-               AC_TRY_LINK([], [int main (void) { return 0; }],
+               AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[int main (void) { return 0; }]])],[
                            AC_MSG_RESULT(yes)
-                           enable_Bsymbolic=yes,
+                           enable_Bsymbolic=yes],[
                            AC_MSG_RESULT(no)
-                           enable_Bsymbolic=no)
+                           enable_Bsymbolic=no])
                LDFLAGS="${SAVED_LDFLAGS}"])
 
 
