@@ -189,9 +189,12 @@ enum
   PROP_LAST
 };
 
+/* FIXME: video-blend.c doesn't support formats with more than 8 bit per
+ * component (which get unpacked into ARGB64 or AYUV64) yet, such as:
+ *  v210, v216, UYVP, GRAY16_LE, GRAY16_BE */
 #define VIDEO_FORMATS "{ BGRx, RGBx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR, \
-    I420, YV12, AYUV, YUY2, UYVY, v308, v210, v216, Y41B, Y42B, Y444, \
-    NV12, NV21, UYVP, A420, YUV9, IYU1, GRAY8, GRAY16_LE, GRAY16_BE }"
+    I420, YV12, AYUV, YUY2, UYVY, v308, Y41B, Y42B, Y444, \
+    NV12, NV21, A420, YUV9, IYU1, GRAY8 }"
 
 static GstStaticPadTemplate src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
