@@ -1587,12 +1587,20 @@ gst_base_text_overlay_shade_background (GstBaseTextOverlay * overlay,
 
   switch (overlay->format) {
     case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_Y41B:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YVU9:
       gst_base_text_overlay_shade_planar_Y (overlay, frame, x0, x1, y0, y1);
       break;
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_v308:
       gst_base_text_overlay_shade_packed_Y (overlay, frame, x0, x1, y0, y1);
       break;
     case GST_VIDEO_FORMAT_xRGB:
