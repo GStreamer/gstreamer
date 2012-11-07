@@ -135,14 +135,18 @@ static gboolean refresh_ui (CustomData *data) {
   /* If we didn't know it yet, query the stream duration */
   if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
     if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
-      GST_WARNING ("Could not query current duration");
+      GST_WARNING ("Could not query current duration (normal for still pictures)");
+      data->duration = 0;
     }
   }
 
-  if (gst_element_query_position (data->pipeline, &fmt, &position)) {
-    /* Java expects these values in milliseconds, and GStreamer provides nanoseconds */
-    set_current_ui_position (position / GST_MSECOND, data->duration / GST_MSECOND, data);
+  if (!gst_element_query_position (data->pipeline, &fmt, &position)) {
+    GST_WARNING ("Could not query current position (normal for still pictures)");
+    position = 0;
   }
+
+  /* Java expects these values in milliseconds, and GStreamer provides nanoseconds */
+  set_current_ui_position (position / GST_MSECOND, data->duration / GST_MSECOND, data);
   return TRUE;
 }
 
