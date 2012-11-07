@@ -229,6 +229,7 @@ public class Tutorial5 extends Activity implements SurfaceHolder.Callback, OnSee
             sb.setMax(duration);
             sb.setProgress(position);
             updateTimeWidget();
+            sb.setEnabled(duration != 0);
           }
         });
         this.position = position;
