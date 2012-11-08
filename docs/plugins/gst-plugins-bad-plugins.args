@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>5.17441e-317</DEFAULT>
+<DEFAULT>7.7486e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26940,7 +26940,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>5.17484e-317</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26950,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>6.79039e-313</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26990,7 +26990,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>1.53064e-18</DEFAULT>
+<DEFAULT>3.06544e-115</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27000,7 +27000,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>7.06238e-304</DEFAULT>
+<DEFAULT>7.91244e-05</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27030,7 +27030,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>0.011489</DEFAULT>
+<DEFAULT>9.33458e-15</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27380,7 +27380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.71685e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27570,7 +27570,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>1.37429e-309</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27580,7 +27580,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>3.40905e-322</DEFAULT>
+<DEFAULT>1.56483e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27760,7 +27760,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.71552e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59451,5 +59451,25 @@
 <NICK>Last track</NICK>
 <BLURB>Indicate to the CRC calculation algorithm that this is the last track of a set.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEglGlesSink::create-window</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Create Window</NICK>
+<BLURB>If set to true, the sink will attempt to create it's own window to render to if none is provided. This is currently only supported when the sink is used under X11.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstEglGlesSink::force-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Respect aspect ratio when scaling</NICK>
+<BLURB>If set to true, the sink will attempt to preserve the incoming frame's geometry while scaling, taking both the storage's and display's pixel aspect ratio into account.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

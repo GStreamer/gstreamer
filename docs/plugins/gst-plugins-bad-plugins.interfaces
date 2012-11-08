@@ -18,6 +18,7 @@ GstCeltEnc GstTagSetter GstPreset
 GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstDiracEnc GstPreset
+GstEglGlesSink GstVideoOverlay
 GstFPSDisplaySink GstChildProxy
 GstFaac GstPreset
 GstFaceOverlay GstChildProxy

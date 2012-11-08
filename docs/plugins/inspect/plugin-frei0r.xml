@@ -640,27 +640,6 @@
       </pads>
     </element>
     <element>
-      <name>frei0r-filter-opencvfacedetect</name>
-      <longname>opencvfacedetect</longname>
-      <class>Filter/Effect/Video</class>
-      <description>detect faces</description>
-      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;, binarymillenium</author>
-      <pads>
-        <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-raw, format=(string)BGRA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-        <caps>
-          <name>src</name>
-          <direction>source</direction>
-          <presence>always</presence>
-          <details>video/x-raw, format=(string)BGRA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
-        </caps>
-      </pads>
-    </element>
-    <element>
       <name>frei0r-filter-perspective</name>
       <longname>Perspective</longname>
       <class>Filter/Effect/Video</class>

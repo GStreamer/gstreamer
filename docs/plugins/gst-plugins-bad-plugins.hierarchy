@@ -57,7 +57,7 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
-            GstWaylandSink
+            GstEglGlesSink
         GstBaseSrc
           GstDTMFSrc
           GstDataURISrc
@@ -79,9 +79,7 @@ GObject
           GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
-            GstAccurip
             GstBPMDetect
-            GstChromaprint
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect
@@ -114,15 +112,6 @@ GObject
               GstMirror
               GstRotate
               GstSquare
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstFaceDetect
             GstSmooth
             GstSolarize
             GstZBar
@@ -156,7 +145,6 @@ GObject
             frei0r-filter-mask0mate
             frei0r-filter-nervous
             frei0r-filter-nosync0r
-            frei0r-filter-opencvfacedetect
             frei0r-filter-perspective
             frei0r-filter-pixeliz0r
             frei0r-filter-primaries
@@ -195,8 +183,6 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
-        GstEdgeDetect
-        GstFaceBlur
         GstFestival
         GstFieldAnalysis
         GstGDPDepay
@@ -207,20 +193,14 @@ GObject
         GstJifMux
         GstJpegParse
         GstLiveAdder
-        GstMXFDemux
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
-        GstMpeg2enc
         GstMpegPSDemux
-        GstMplex
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
-        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpDTMFDepay
@@ -237,12 +217,10 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
-        GstSpanPlc
         GstSpeed
         GstSrtEnc
         GstTagMux
           GstId3Mux
-        GstTemplateMatch
         GstVideoDecoder
           GstSchroDec
         GstVideoEncoder
@@ -293,78 +271,6 @@ GObject
       GstTask
       GstTaskPool
   GstEncodingProfile
-  MXFMetadataBase
-    MXFDescriptiveMetadata
-      MXFDMS1
-        MXFDMS1Address
-        MXFDMS1Communications
-        MXFDMS1ContactsList
-        MXFDMS1Framework
-          MXFDMS1ProductionClipFramework
-            MXFDMS1ClipFramework
-            MXFDMS1ProductionFramework
-          MXFDMS1SceneFramework
-        MXFDMS1NameValue
-        MXFDMS1PictureFormat
-        MXFDMS1Processing
-        MXFDMS1Project
-        MXFDMS1Publication
-        MXFDMS1TextLanguage
-          MXFDMS1Branding
-          MXFDMS1CueWords
-          MXFDMS1Shot
-          MXFDMS1Thesaurus
-            MXFDMS1Annotation
-            MXFDMS1Award
-            MXFDMS1CaptionsDescription
-            MXFDMS1Classification
-            MXFDMS1Contact
-              MXFDMS1Location
-              MXFDMS1Organisation
-              MXFDMS1Person
-            MXFDMS1Contract
-            MXFDMS1DeviceParameters
-            MXFDMS1Event
-            MXFDMS1GroupRelationship
-            MXFDMS1Identification
-            MXFDMS1KeyPoint
-            MXFDMS1Participant
-            MXFDMS1Rights
-            MXFDMS1Scripting
-            MXFDMS1SettingPeriod
-          MXFDMS1Titles
-    MXFMetadata
-      MXFMetadataContentStorage
-      MXFMetadataEssenceContainerData
-      MXFMetadataGenericDescriptor
-        MXFMetadataFileDescriptor
-          MXFMetadataGenericDataEssenceDescriptor
-          MXFMetadataGenericPictureEssenceDescriptor
-            MXFMetadataCDCIPictureEssenceDescriptor
-              MXFMetadataMPEGVideoDescriptor
-            MXFMetadataRGBAPictureEssenceDescriptor
-          MXFMetadataGenericSoundEssenceDescriptor
-            MXFMetadataWaveAudioEssenceDescriptor
-              MXFMetadataAES3AudioEssenceDescriptor
-          MXFMetadataMultipleDescriptor
-      MXFMetadataGenericPackage
-        MXFMetadataMaterialPackage
-        MXFMetadataSourcePackage
-      MXFMetadataIdentification
-      MXFMetadataLocator
-        MXFMetadataNetworkLocator
-        MXFMetadataTextLocator
-      MXFMetadataPreface
-      MXFMetadataSequence
-      MXFMetadataStructuralComponent
-        MXFMetadataDMSegment
-        MXFMetadataSourceClip
-          MXFMetadataDMSourceClip
-        MXFMetadataTimecodeComponent
-      MXFMetadataTrack
-        MXFMetadataEventTrack
-        MXFMetadataStaticTrack
-        MXFMetadataTimelineTrack
 GInterface
   GTypePlugin
   GstChildProxy
@@ -373,4 +279,4 @@ GInterface
   GstTagSetter
   GstTagXmpWriter
   GstURIHandler
-  MXFDescriptiveMetadataFrameworkInterface
+  GstVideoOverlay
