@@ -704,14 +704,16 @@ gst_ahc_src_get_white_balance_mode (GstPhotography * photo,
         mode = GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN;
       else if (wb == Parameters_WHITE_BALANCE_FLUORESCENT)
         mode = GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT;
-      //else if (wb == Parameters_WHITE_BALANCE_WARM_FLUORESCENT)
+      else if (wb == Parameters_WHITE_BALANCE_WARM_FLUORESCENT)
+        mode = GST_PHOTOGRAPHY_WB_MODE_WARM_FLUORESCENT;
       else if (wb == Parameters_WHITE_BALANCE_DAYLIGHT)
         mode = GST_PHOTOGRAPHY_WB_MODE_DAYLIGHT;
       else if (wb == Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT)
         mode = GST_PHOTOGRAPHY_WB_MODE_CLOUDY;
       else if (wb == Parameters_WHITE_BALANCE_TWILIGHT)
         mode = GST_PHOTOGRAPHY_WB_MODE_SUNSET;
-      //else if (wb == Parameters_WHITE_BALANCE_SHADE)
+      else if (wb == Parameters_WHITE_BALANCE_SHADE)
+        mode = GST_PHOTOGRAPHY_WB_MODE_SHADE;
       else
         ret = FALSE;
 
@@ -751,10 +753,14 @@ gst_ahc_src_get_colour_tone_mode (GstPhotography * photo,
         mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE;
       else if (effect == Parameters_EFFECT_SEPIA)
         mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SEPIA;
-      //else if (effect == Parameters_EFFECT_POSTERIZE)
-      //else if (effect == Parameters_EFFECT_WHITEBOARD)
-      //else if (effect == Parameters_EFFECT_BLACKBOARD)
-      //else if (effect == Parameters_EFFECT_AQUA)
+      else if (effect == Parameters_EFFECT_POSTERIZE)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_POSTERIZE;
+      else if (effect == Parameters_EFFECT_WHITEBOARD)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_WHITEBOARD;
+      else if (effect == Parameters_EFFECT_BLACKBOARD)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_BLACKBOARD;
+      else if (effect == Parameters_EFFECT_AQUA)
+        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_AQUA;
       else
         ret = FALSE;
 
@@ -785,25 +791,36 @@ gst_ahc_src_get_scene_mode (GstPhotography * photo, GstSceneMode * scene_mode)
       ret = TRUE;
       if (scene == Parameters_SCENE_MODE_AUTO)
         mode = GST_PHOTOGRAPHY_SCENE_MODE_AUTO;
-      //else if (scene == Parameters_SCENE_MODE_ACTION)
+      else if (scene == Parameters_SCENE_MODE_ACTION)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_ACTION;
       else if (scene == Parameters_SCENE_MODE_PORTRAIT)
         mode = GST_PHOTOGRAPHY_SCENE_MODE_PORTRAIT;
       else if (scene == Parameters_SCENE_MODE_LANDSCAPE)
         mode = GST_PHOTOGRAPHY_SCENE_MODE_LANDSCAPE;
       else if (scene == Parameters_SCENE_MODE_NIGHT)
         mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT;
-      //else if (scene == Parameters_SCENE_MODE_NIGHT_PORTRAIT)
-      //else if (scene == Parameters_SCENE_MODE_THEATRE)
-      //else if (scene == Parameters_SCENE_MODE_BEACH)
-      //else if (scene == Parameters_SCENE_MODE_SNOW)
-      //else if (scene == Parameters_SCENE_MODE_SUNSET)
-      //else if (scene == Parameters_SCENE_MODE_STEADYPHOTO)
-      //else if (scene == Parameters_SCENE_MODE_FIREWORKS)
+      else if (scene == Parameters_SCENE_MODE_NIGHT_PORTRAIT)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT_PORTRAIT;
+      else if (scene == Parameters_SCENE_MODE_THEATRE)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_THEATRE;
+      else if (scene == Parameters_SCENE_MODE_BEACH)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_BEACH;
+      else if (scene == Parameters_SCENE_MODE_SNOW)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_SNOW;
+      else if (scene == Parameters_SCENE_MODE_SUNSET)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_SUNSET;
+      else if (scene == Parameters_SCENE_MODE_STEADYPHOTO)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_STEADY_PHOTO;
+      else if (scene == Parameters_SCENE_MODE_FIREWORKS)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_FIREWORKS;
       else if (scene == Parameters_SCENE_MODE_SPORTS)
         mode = GST_PHOTOGRAPHY_SCENE_MODE_SPORT;
-      //else if (scene == Parameters_SCENE_MODE_PARTY)
-      //else if (scene == Parameters_SCENE_MODE_CANDLELIGHT)
-      //else if (scene == Parameters_SCENE_MODE_BARCODE)
+      else if (scene == Parameters_SCENE_MODE_PARTY)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_PARTY;
+      else if (scene == Parameters_SCENE_MODE_CANDLELIGHT)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_CANDLELIGHT;
+      else if (scene == Parameters_SCENE_MODE_BARCODE)
+        mode = GST_PHOTOGRAPHY_SCENE_MODE_BARCODE;
       else
         ret = FALSE;
 
@@ -946,9 +963,10 @@ gst_ahc_src_get_focus_mode (GstPhotography * photo, GstFocusMode * focus_mode)
         mode = GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY;
       else if (focus == Parameters_FOCUS_MODE_MACRO)
         mode = GST_PHOTOGRAPHY_FOCUS_MODE_MACRO;
-      //else if (focus == Parameters_FOCUS_MODE_FIXED)
-      else if (focus == Parameters_FOCUS_MODE_EDOF)
+      else if (focus == Parameters_FOCUS_MODE_FIXED)
         mode = GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL;
+      else if (focus == Parameters_FOCUS_MODE_EDOF)
+        mode = GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED;
       else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_VIDEO)
         mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED;
       else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_PICTURE)
@@ -1032,6 +1050,12 @@ gst_ahc_src_set_white_balance_mode (GstPhotography * photo,
         case GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT:
           white_balance = Parameters_WHITE_BALANCE_FLUORESCENT;
           break;
+        case GST_PHOTOGRAPHY_WB_MODE_WARM_FLUORESCENT:
+          white_balance = Parameters_WHITE_BALANCE_WARM_FLUORESCENT;
+          break;
+        case GST_PHOTOGRAPHY_WB_MODE_SHADE:
+          white_balance = Parameters_WHITE_BALANCE_SHADE;
+          break;
         default:
           white_balance = NULL;
           break;
@@ -1077,6 +1101,18 @@ gst_ahc_src_set_colour_tone_mode (GstPhotography * photo,
           break;
         case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE:
           color_effect = Parameters_EFFECT_SOLARIZE;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_POSTERIZE:
+          color_effect = Parameters_EFFECT_POSTERIZE;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_WHITEBOARD:
+          color_effect = Parameters_EFFECT_WHITEBOARD;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_BLACKBOARD:
+          color_effect = Parameters_EFFECT_BLACKBOARD;
+          break;
+        case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_AQUA:
+          color_effect = Parameters_EFFECT_AQUA;
           break;
         case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NATURAL:
         case GST_PHOTOGRAPHY_COLOUR_TONE_MODE_VIVID:
@@ -1129,6 +1165,39 @@ gst_ahc_src_set_scene_mode (GstPhotography * photo, GstSceneMode scene_mode)
           break;
         case GST_PHOTOGRAPHY_SCENE_MODE_AUTO:
           scene = Parameters_SCENE_MODE_AUTO;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_ACTION:
+          scene = Parameters_SCENE_MODE_ACTION;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_NIGHT_PORTRAIT:
+          scene = Parameters_SCENE_MODE_NIGHT_PORTRAIT;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_THEATRE:
+          scene = Parameters_SCENE_MODE_THEATRE;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_BEACH:
+          scene = Parameters_SCENE_MODE_BEACH;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_SNOW:
+          scene = Parameters_SCENE_MODE_SNOW;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_SUNSET:
+          scene = Parameters_SCENE_MODE_SUNSET;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_STEADY_PHOTO:
+          scene = Parameters_SCENE_MODE_STEADYPHOTO;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_FIREWORKS:
+          scene = Parameters_SCENE_MODE_FIREWORKS;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_PARTY:
+          scene = Parameters_SCENE_MODE_PARTY;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_CANDLELIGHT:
+          scene = Parameters_SCENE_MODE_CANDLELIGHT;
+          break;
+        case GST_PHOTOGRAPHY_SCENE_MODE_BARCODE:
+          scene = Parameters_SCENE_MODE_BARCODE;
           break;
         case GST_PHOTOGRAPHY_SCENE_MODE_MANUAL:
         case GST_PHOTOGRAPHY_SCENE_MODE_CLOSEUP:
@@ -1297,7 +1366,7 @@ gst_ahc_src_set_focus_mode (GstPhotography * photo, GstFocusMode focus_mode)
           focus = Parameters_FOCUS_MODE_INFINITY;
           break;
         case GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL:
-          focus = Parameters_FOCUS_MODE_EDOF;
+          focus = Parameters_FOCUS_MODE_FIXED;
           break;
         case GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL:
           focus = Parameters_FOCUS_MODE_CONTINUOUS_PICTURE;
@@ -1305,8 +1374,10 @@ gst_ahc_src_set_focus_mode (GstPhotography * photo, GstFocusMode focus_mode)
         case GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED:
           focus = Parameters_FOCUS_MODE_CONTINUOUS_VIDEO;
           break;
-        case GST_PHOTOGRAPHY_FOCUS_MODE_PORTRAIT:
         case GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED:
+          focus = Parameters_FOCUS_MODE_EDOF;
+          break;
+        case GST_PHOTOGRAPHY_FOCUS_MODE_PORTRAIT:
         default:
           focus = NULL;
           break;
