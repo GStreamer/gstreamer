@@ -70,6 +70,8 @@
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
+#include "gstvaapivideobufferpool.h"
+#include "gstvaapivideomemory.h"
 
 #define GST_PLUGIN_NAME "vaapisink"
 #define GST_PLUGIN_DESC "A VA-API based videosink"
@@ -589,6 +591,66 @@ end:
 }
 
 static gboolean
+gst_vaapisink_ensure_video_buffer_pool(GstVaapiSink *sink, GstCaps *caps)
+{
+    GstBufferPool *pool;
+    GstCaps *pool_caps;
+    GstStructure *config;
+    GstVideoInfo vi;
+    gboolean need_pool;
+
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+
+    if (sink->video_buffer_pool) {
+        config = gst_buffer_pool_get_config(sink->video_buffer_pool);
+        gst_buffer_pool_config_get_params(config, &pool_caps, NULL, NULL, NULL);
+        need_pool = !gst_caps_is_equal(caps, pool_caps);
+        gst_structure_free(config);
+        if (!need_pool)
+            return TRUE;
+        g_clear_object(&sink->video_buffer_pool);
+        sink->video_buffer_size = 0;
+    }
+
+    pool = gst_vaapi_video_buffer_pool_new(sink->display);
+    if (!pool)
+        goto error_create_pool;
+
+    gst_video_info_init(&vi);
+    gst_video_info_from_caps(&vi, caps);
+    if (GST_VIDEO_INFO_FORMAT(&vi) == GST_VIDEO_FORMAT_ENCODED) {
+        GST_DEBUG("assume video buffer pool format is NV12");
+        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12,
+            GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
+    }
+    sink->video_buffer_size = vi.size;
+
+    config = gst_buffer_pool_get_config(pool);
+    gst_buffer_pool_config_set_params(config, caps, sink->video_buffer_size,
+        0, 0);
+    gst_buffer_pool_config_add_option(config,
+        GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
+    if (!gst_buffer_pool_set_config(pool, config))
+        goto error_pool_config;
+    sink->video_buffer_pool = pool;
+    return TRUE;
+
+    /* ERRORS */
+error_create_pool:
+    {
+        GST_ERROR("failed to create buffer pool");
+        return FALSE;
+    }
+error_pool_config:
+    {
+        GST_ERROR("failed to reset buffer pool config");
+        g_object_unref(pool);
+        return FALSE;
+    }
+}
+
+static gboolean
 gst_vaapisink_start(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
@@ -608,6 +670,7 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
     gst_buffer_replace(&sink->video_buffer, NULL);
+    g_clear_object(&sink->video_buffer_pool);
     g_clear_object(&sink->window);
     g_clear_object(&sink->display);
     g_clear_object(&sink->uploader);
@@ -644,6 +707,9 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_DRM)
         return TRUE;
 #endif
+
+    if (!gst_vaapisink_ensure_video_buffer_pool(sink, caps))
+        return FALSE;
 
     if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
@@ -954,7 +1020,41 @@ error:
     return GST_FLOW_EOS;
 }
 
-#if !GST_CHECK_VERSION(1,0,0)
+#if GST_CHECK_VERSION(1,0,0)
+static gboolean
+gst_vaapisink_propose_allocation(GstBaseSink *base_sink, GstQuery *query)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstCaps *caps = NULL;
+    gboolean need_pool;
+
+    gst_query_parse_allocation(query, &caps, &need_pool);
+
+    if (need_pool) {
+        if (!caps)
+            goto error_no_caps;
+        if (!gst_vaapisink_ensure_video_buffer_pool(sink, caps))
+            return FALSE;
+        gst_query_add_allocation_pool(query, sink->video_buffer_pool,
+            sink->video_buffer_size, 0, 0);
+    }
+
+    gst_query_add_allocation_meta(query,
+        GST_VAAPI_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta(query,
+        GST_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta(query,
+        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
+    return TRUE;
+
+    /* ERRORS */
+error_no_caps:
+    {
+        GST_ERROR("no caps specified");
+        return FALSE;
+    }
+}
+#else
 static GstFlowReturn
 gst_vaapisink_buffer_alloc(
     GstBaseSink        *base_sink,
@@ -1104,7 +1204,9 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;
     basesink_class->query        = gst_vaapisink_query;
-#if !GST_CHECK_VERSION(1,0,0)
+#if GST_CHECK_VERSION(1,0,0)
+    basesink_class->propose_allocation = gst_vaapisink_propose_allocation;
+#else
     basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
 #endif
 

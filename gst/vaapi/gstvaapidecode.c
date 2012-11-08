@@ -35,6 +35,8 @@
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
+#include "gstvaapivideobufferpool.h"
+#include "gstvaapivideomemory.h"
 
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>
@@ -154,7 +156,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
     GstVideoCodecState *state;
-    GstVideoInfo *vi;
+    GstVideoInfo *vi, vis;
 
     state = gst_video_decoder_set_output_state(vdec,
         GST_VIDEO_INFO_FORMAT(&ref_state->info),
@@ -163,6 +165,12 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
         return FALSE;
 
     vi = &state->info;
+    if (GST_VIDEO_INFO_FORMAT(vi) == GST_VIDEO_FORMAT_ENCODED) {
+        gst_video_info_init(&vis);
+        gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_NV12,
+            GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
+        vi->size = vis.size;
+    }
     gst_video_codec_state_unref(state);
 
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
@@ -263,6 +271,7 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiSurfaceProxy *proxy;
     GstVaapiDecoderStatus status;
+    GstVaapiVideoMeta *meta;
     GstVideoCodecFrame *out_frame;
     GstFlowReturn ret;
 
@@ -278,10 +287,21 @@ gst_vaapidecode_push_decoded_frames(GstVideoDecoder *vdec)
             gst_vaapi_surface_proxy_set_user_data(proxy,
                 decode, (GDestroyNotify)gst_vaapidecode_release);
 
+#if GST_CHECK_VERSION(1,0,0)
+            ret = gst_video_decoder_allocate_output_frame(vdec, out_frame);
+            if (ret != GST_FLOW_OK)
+                goto error_create_buffer;
+
+            meta = gst_buffer_get_vaapi_video_meta(out_frame->output_buffer);
+            if (!meta)
+                goto error_get_meta;
+            gst_vaapi_video_meta_set_surface_proxy(meta, proxy);
+#else
             out_frame->output_buffer =
                 gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
             if (!out_frame->output_buffer)
                 goto error_create_buffer;
+#endif
         }
 
         ret = gst_video_decoder_finish_frame(vdec, out_frame);
@@ -303,6 +323,13 @@ error_create_buffer:
         GST_ERROR("video sink failed to create video buffer for proxy'ed "
                   "surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(surface_id));
+        gst_video_decoder_drop_frame(vdec, out_frame);
+        gst_video_codec_frame_unref(out_frame);
+        return GST_FLOW_EOS;
+    }
+error_get_meta:
+    {
+        GST_ERROR("failed to get vaapi video meta attached to video buffer");
         gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
         return GST_FLOW_EOS;
@@ -342,6 +369,78 @@ error_flush:
     {
         GST_ERROR("failed to flush decoder (status %d)", status);
         return GST_FLOW_EOS;
+    }
+}
+
+static gboolean
+gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+    GstCaps *caps = NULL;
+    GstBufferPool *pool;
+    GstStructure *config;
+    GstVideoInfo vi;
+    guint size, min, max;
+    gboolean need_pool, update_pool;
+
+    gst_query_parse_allocation(query, &caps, &need_pool);
+
+    if (!caps)
+        goto error_no_caps;
+
+    gst_video_info_init(&vi);
+    gst_video_info_from_caps(&vi, caps);
+    if (GST_VIDEO_INFO_FORMAT(&vi) == GST_VIDEO_FORMAT_ENCODED)
+        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12,
+            GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
+
+    g_return_val_if_fail(decode->display != NULL, FALSE);
+
+    if (gst_query_get_n_allocation_pools(query) > 0) {
+        gst_query_parse_nth_allocation_pool(query, 0, &pool, &size, &min, &max);
+        size = MAX(size, vi.size);
+        update_pool = TRUE;
+    }
+    else {
+        pool = NULL;
+        size = vi.size;
+        min = max = 0;
+        update_pool = FALSE;
+    }
+
+    if (!pool || !gst_buffer_pool_has_option(pool,
+            GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
+        GST_INFO("no pool or doesn't support GstVaapiVideoMeta, "
+            "making new pool");
+        pool = gst_vaapi_video_buffer_pool_new(decode->display);
+        if (!pool)
+            goto error_create_pool;
+
+        config = gst_buffer_pool_get_config(pool);
+        gst_buffer_pool_config_set_params(config, caps, size, min, max);
+        gst_buffer_pool_config_add_option(config,
+            GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
+        gst_buffer_pool_set_config(pool, config);
+    }
+
+    if (update_pool)
+        gst_query_set_nth_allocation_pool(query, 0, pool, size, min, max);
+    else
+        gst_query_add_allocation_pool(query, pool, size, min, max);
+    if (pool)
+        g_object_unref(pool);
+    return TRUE;
+
+    /* ERRORS */
+error_no_caps:
+    {
+        GST_ERROR("no caps specified");
+        return FALSE;
+    }
+error_create_pool:
+    {
+        GST_ERROR("failed to create buffer pool");
+        return FALSE;
     }
 }
 
@@ -565,6 +664,9 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     vdec_class->parse        = GST_DEBUG_FUNCPTR(gst_vaapidecode_parse);
     vdec_class->handle_frame = GST_DEBUG_FUNCPTR(gst_vaapidecode_handle_frame);
     vdec_class->finish       = GST_DEBUG_FUNCPTR(gst_vaapidecode_finish);
+
+    vdec_class->decide_allocation =
+        GST_DEBUG_FUNCPTR(gst_vaapidecode_decide_allocation);
 
     gst_element_class_set_static_metadata(element_class,
         "VA-API decoder",

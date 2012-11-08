@@ -76,6 +76,8 @@ struct _GstVaapiSink {
     guint               window_width;
     guint               window_height;
     GstVaapiTexture    *texture;
+    GstBufferPool      *video_buffer_pool;
+    guint               video_buffer_size;
     GstBuffer          *video_buffer;
     guint               video_width;
     guint               video_height;
