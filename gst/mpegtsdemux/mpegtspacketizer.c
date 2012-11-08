@@ -3672,7 +3672,8 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer, GstClockTime pts,
     if (G_UNLIKELY (pts < pcrtable->first_pcr_ts))
       pts += MPEGTIME_TO_GSTTIME (PTS_DTS_MAX_VALUE);
     res = pts - pcrtable->first_pcr_ts;
-  }
+  } else
+    GST_WARNING ("Not enough information to calculate proper timestamp");
 
   GST_DEBUG ("Returning timestamp %" GST_TIME_FORMAT " for pts %"
       GST_TIME_FORMAT " pcr_pid:0x%04x", GST_TIME_ARGS (res),
