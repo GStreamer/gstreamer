@@ -660,7 +660,7 @@ gst_buffer_pool_get_config (GstBufferPool * pool)
 
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), NULL);
 
-  GST_BUFFER_POOL_UNLOCK (pool);
+  GST_BUFFER_POOL_LOCK (pool);
   result = gst_structure_copy (pool->priv->config);
   GST_BUFFER_POOL_UNLOCK (pool);
 
