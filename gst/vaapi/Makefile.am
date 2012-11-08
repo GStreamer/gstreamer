@@ -53,6 +53,16 @@ libgstvaapi_source_c		+= gstvaapivideoconverter_glx.c
 libgstvaapi_source_h		+= gstvaapivideoconverter_glx.h
 endif
 
+libgstvaapi_source_c += \
+	gstvaapivideobufferpool.c \
+	gstvaapivideomemory.c	\
+	$(NULL)
+
+libgstvaapi_source_h += \
+	gstvaapivideobufferpool.h \
+	gstvaapivideomemory.h	\
+	$(NULL)
+
 libgstvaapi_la_SOURCES		= $(libgstvaapi_source_c)
 noinst_HEADERS			= $(libgstvaapi_source_h)
 
