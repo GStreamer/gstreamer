@@ -1926,6 +1926,18 @@ AG_GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
+dnl **** Smooth Streaming ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_SMOOTHSTREAMING, true)
+AG_GST_CHECK_FEATURE(SMOOTHSTREAMING, [Smooth Streaming plug-in], smoothstreaming, [
+  PKG_CHECK_MODULES(LIBXML2, libxml-2.0 >= 2.4,
+    [HAVE_LIBXML2="yes"
+     HAVE_SMOOTHSTREAMING="yes"],
+    [HAVE_LIBXML2="no"
+     HAVE_SMOOTHSTREAMING="no"])
+  AC_SUBST(LIBXML2_CFLAGS)
+  AC_SUBST(LIBXML2_LIBS)
+])
+
 dnl *** sndfile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SNDFILE, true)
 AG_GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
@@ -2230,6 +2242,7 @@ AM_CONDITIONAL(USE_RSVG, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_SDL, false)
+AM_CONDITIONAL(USE_SMOOTHSTREAMING, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_SPANDSP, false)
@@ -2492,6 +2505,7 @@ ext/rtmp/Makefile
 ext/sbc/Makefile
 ext/schroedinger/Makefile
 ext/sdl/Makefile
+ext/smoothstreaming/Makefile
 ext/sndfile/Makefile
 ext/soundtouch/Makefile
 ext/spandsp/Makefile

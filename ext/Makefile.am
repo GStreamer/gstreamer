@@ -292,6 +292,12 @@ else
 SDL_DIR=
 endif
 
+if USE_SMOOTHSTREAMING
+SMOOTHSTREAMING_DIR = smoothstreaming
+else
+SMOOTHSTREAMING_DIR =
+endif
+
 # if USE_SMOOTHWAVE
 # SMOOTHWAVE_DIR=smoothwave
 # else
@@ -426,6 +432,7 @@ SUBDIRS=\
 	$(SBC_DIR) \
 	$(SCHRO_DIR) \
 	$(SDL_DIR) \
+	$(SMOOTHSTREAMING_DIR) \
 	$(SMOOTHWAVE_DIR) \
 	$(SNDFILE_DIR) \
 	$(SNDIO_DIR) \
@@ -486,6 +493,7 @@ DIST_SUBDIRS = \
 	sbc \
 	schroedinger \
 	sdl \
+	smoothstreaming \
 	sndfile \
 	sndio \
 	soundtouch \
