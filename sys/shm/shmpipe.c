@@ -759,6 +759,7 @@ sp_client_open (const char *path)
 {
   ShmPipe *self = spalloc_new (ShmPipe);
   struct sockaddr_un sock_un;
+  int flags;
 
   memset (self, 0, sizeof (ShmPipe));
 
@@ -766,6 +767,13 @@ sp_client_open (const char *path)
   self->use_count = 1;
 
   if (self->main_socket < 0)
+    goto error;
+
+  flags = fcntl (self->main_socket, F_GETFL, 0);
+  if (flags < 0)
+    goto error;
+
+  if (fcntl (self->main_socket, F_SETFL, flags | FD_CLOEXEC) < 0)
     goto error;
 
   sock_un.sun_family = AF_UNIX;
