@@ -1,16 +1,21 @@
 
 plugin_LTLIBRARIES = libgstsmoothstreaming.la
 
-libgstsmoothstreaming_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+libgstsmoothstreaming_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
+    $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstsmoothstreaming_la_LIBADD = \
+    $(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-$(GST_MAJORMINOR).la \
     $(GST_PLUGINS_BASE_LIBS) \
     -lgsttag-@GST_MAJORMINOR@ \
     $(GST_BASE_LIBS) $(GST_LIBS) $(ZLIB_LIBS)
 libgstsmoothstreaming_la_LDFLAGS = ${GST_PLUGIN_LDFLAGS}
-libgstsmoothstreaming_la_SOURCES = gstsmoothstreaming-plugin.c
+libgstsmoothstreaming_la_SOURCES = gstsmoothstreaming-plugin.c \
+	gstmssdemux.c \
+	gstmssmanifest.c \
 libgstsmoothstreaming_la_LIBTOOLFLAGS = --tag=disable-static
 
-#noinst_HEADERS =
+noinst_HEADERS = gstmssdemux.h \
+	gstmssmanifest.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
