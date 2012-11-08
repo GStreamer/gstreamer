@@ -17,17 +17,22 @@ libgstvaapi_codecparsers_libs =			\
 	$(GST_LIBS)				\
 	$(NULL)
 
-gen_source_c =
-gen_source_h =
+gen_source_c = parserutils.c
+gen_source_h = parserutils.h
 
 if USE_LOCAL_CODEC_PARSERS_JPEG
 gen_source_c += gstjpegparser.c
 gen_source_h += gstjpegparser.h
 endif
 
+if USE_LOCAL_CODEC_PARSERS_MPEG2
+gen_source_c += gstmpegvideoparser.c
+gen_source_h += gstmpegvideoparser.h
+endif
+
 if USE_LOCAL_CODEC_PARSERS_H264
-gen_source_c += gsth264parser.c parserutils.c
-gen_source_h += gsth264parser.h parserutils.h
+gen_source_c += gsth264parser.c
+gen_source_h += gsth264parser.h
 endif
 
 GENFILES = \

@@ -519,11 +519,9 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
     pts_set_framerate(&priv->tsg, priv->fps_n, priv->fps_d);
     gst_vaapi_decoder_set_framerate(base_decoder, priv->fps_n, priv->fps_d);
 
-    gst_vaapi_decoder_set_pixel_aspect_ratio(
-        base_decoder,
-        seq_hdr->par_w,
-        seq_hdr->par_h
-    );
+    if (gst_mpeg_video_finalise_mpeg2_sequence_header(seq_hdr, NULL, NULL))
+        gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder,
+            seq_hdr->par_w, seq_hdr->par_h);
 
     priv->width                 = seq_hdr->width;
     priv->height                = seq_hdr->height;
@@ -539,6 +537,7 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
 {
     GstVaapiDecoder * const base_decoder = GST_VAAPI_DECODER(decoder);
     GstVaapiDecoderMpeg2Private * const priv = decoder->priv;
+    GstMpegVideoSequenceHdr * const seq_hdr = &priv->seq_hdr;
     GstMpegVideoSequenceExt * const seq_ext = &priv->seq_ext;
     GstVaapiProfile profile;
     guint width, height;
@@ -590,6 +589,11 @@ decode_sequence_ext(GstVaapiDecoderMpeg2 *decoder, guchar *buf, guint buf_size)
         priv->profile = profile;
         priv->profile_changed = TRUE;
     }
+
+    if (gst_mpeg_video_finalise_mpeg2_sequence_header(seq_hdr, seq_ext, NULL))
+        gst_vaapi_decoder_set_pixel_aspect_ratio(base_decoder,
+            seq_hdr->par_w, seq_hdr->par_h);
+
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 

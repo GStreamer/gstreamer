@@ -214,6 +214,30 @@ dnl ... bitstream parsers
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_MAJORMINOR >= gst_plugins_bad_version])
 
+dnl ... MPEG-2 parser, with the required extensions
+AC_CACHE_CHECK([for MPEG-2 parser],
+    ac_cv_have_gst_mpeg2_parser, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <gst/codecparsers/gstmpegvideoparser.h>]],
+            [[GstMpegVideoSequenceHdr seq_hdr;
+              GstMpegVideoSequenceExt seq_ext;
+              GstMpegVideoSequenceDisplayExt seq_dpy;
+              gst_mpeg_video_finalise_mpeg2_sequence_header(&seq_hdr,
+                  &seq_ext, &seq_dpy);]])],
+        [ac_cv_have_gst_mpeg2_parser="yes"],
+        [ac_cv_have_gst_mpeg2_parser="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_MPEG2],
+    [test "$ac_cv_have_gst_mpeg2_parser" != "yes"])
+
 dnl ... H.264 parser, with the required extensions
 AC_CACHE_CHECK([for H.264 parser],
     ac_cv_have_gst_h264_parser, [
