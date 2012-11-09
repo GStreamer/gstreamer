@@ -514,9 +514,9 @@ gst_vp8_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   gst_buffer_unmap (frame->input_buffer, &minfo);
 
   if (status) {
-    GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
-        ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)));
-    return GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (decoder, 1, LIBRARY, ENCODE,
+        ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)), ret);
+    return ret;
   }
 
   img = vpx_codec_get_frame (&dec->decoder, &iter);
