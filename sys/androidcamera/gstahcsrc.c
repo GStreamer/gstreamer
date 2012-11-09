@@ -582,7 +582,7 @@ gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
           params = gst_ah_camera_get_parameters (self->camera);
           if (params) {
             gint min, max;
-            gfloat step, ev;
+            gfloat step;
 
             min = gst_ahc_parameters_get_min_exposure_compensation (params);
             max = gst_ahc_parameters_get_max_exposure_compensation (params);
@@ -590,14 +590,14 @@ gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
 
             if (step != 0.0 && min != max) {
               GValue value = { 0 };
-              gint i, total = 0;
+              gint i;
 
-              total = (max - min) / step;
-
-              array = g_value_array_new (total);
+              /* Min and Max are inclusive */
+              array = g_value_array_new (max - min + 1);
               g_value_init (&value, G_TYPE_FLOAT);
-              for (i = 0, ev = min; i < total && ev < max; i++, ev += step) {
-                g_value_set_float (&value, ev);
+              for (i = min; i <= max; i++) {
+                /* floats are bad... :( */
+                g_value_set_float (&value, step * i);
                 g_value_array_append (array, &value);
               }
               g_value_unset (&value);
@@ -670,7 +670,7 @@ gst_ahc_src_get_ev_compensation (GstPhotography * photo, gfloat * ev_comp)
       max = gst_ahc_parameters_get_max_exposure_compensation (params);
       step = gst_ahc_parameters_get_exposure_compensation_step (params);
 
-      if (step != 0.0 && min != max && ev >= min && ev <= max) {
+      if (step != 0.0 && min != max && min <= ev && ev <= max) {
         if (ev_comp)
           *ev_comp = ev * step;
         ret = TRUE;
@@ -1001,9 +1001,10 @@ gst_ahc_src_set_ev_compensation (GstPhotography * photo, gfloat ev_comp)
 
       ev = gst_ahc_parameters_get_exposure_compensation (params);
       min = gst_ahc_parameters_get_min_exposure_compensation (params);
-      max = gst_ahc_parameters_get_min_exposure_compensation (params);
+      max = gst_ahc_parameters_get_max_exposure_compensation (params);
       step = gst_ahc_parameters_get_exposure_compensation_step (params);
-      if (step != 0.0 && min != max && ev_comp >= min && ev_comp <= max) {
+      if (step != 0.0 && min != max &&
+          (min * step) <= ev_comp && ev_comp <= (max * step)) {
         ev = ev_comp / step;
         if ((ev * step) == ev_comp) {
           gst_ahc_parameters_set_exposure_compensation (params, ev);
