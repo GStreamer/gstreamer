@@ -673,6 +673,8 @@ gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
           }
           g_value_unset (&value);
         }
+
+        gst_ahc_parameters_zoom_ratios_free (zoom_ratios);
         gst_ahc_parameters_free (params);
       }
     }
@@ -937,6 +939,7 @@ gst_ahc_src_get_zoom (GstPhotography * photo, gfloat * zoom)
 
         ret = TRUE;
       }
+
       gst_ahc_parameters_zoom_ratios_free (zoom_ratios);
       gst_ahc_parameters_free (params);
     }
@@ -1329,10 +1332,13 @@ gst_ahc_src_set_zoom (GstPhotography * photo, gfloat zoom)
             zoom_idx = i;
         }
       }
+
       if (zoom_idx != -1) {
         gst_ahc_parameters_set_zoom (params, zoom_idx);
         ret = gst_ah_camera_set_parameters (self->camera, params);
       }
+
+      gst_ahc_parameters_zoom_ratios_free (zoom_ratios);
       gst_ahc_parameters_free (params);
     }
   }
@@ -1655,8 +1661,8 @@ gst_ahc_src_getcaps (GstBaseSrc * src)
       gst_ahc_parameters_supported_preview_formats_free (formats);
       gst_ahc_parameters_supported_preview_sizes_free (sizes);
       gst_ahc_parameters_supported_preview_fps_range_free (ranges);
+      gst_ahc_parameters_free (params);
     }
-    gst_ahc_parameters_free (params);
 
     return ret;
   } else {
