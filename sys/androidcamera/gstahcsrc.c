@@ -140,7 +140,10 @@ enum
   PROP_FLICKER_MODE,
   PROP_FOCUS_MODE,
   PROP_ZOOM,
+  PROP_LAST
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 #define DEFAULT_DEVICE "0"
 
@@ -237,54 +240,104 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
 
   gstpushsrc_class->create = gst_ahc_src_create;
 
+  properties[PROP_DEVICE] = g_param_spec_string ("device",
+      "device", "Device ID", DEFAULT_DEVICE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_string ("device", "device",
-          "Device ID", DEFAULT_DEVICE,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+      properties[PROP_DEVICE]);
 
+  properties[PROP_DEVICE_ORIENTATION] = g_param_spec_int ("device-orientation",
+      "Device orientation", "The orientation of the camera image",
+      0, 360, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE_ORIENTATION,
-      g_param_spec_int ("device-orientation", "Device orientation",
-          "The orientation of the camera image",
-          0, 360, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      properties[PROP_DEVICE_ORIENTATION]);
 
+  properties[PROP_DEVICE_FACING] = g_param_spec_enum ("device-facing",
+      "Device facing", "The direction that the camera faces",
+      GST_AHC_SRC_FACING_TYPE, CAMERA_FACING_BACK,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE_FACING,
-      g_param_spec_enum ("device-facing", "Device facing",
-          "The direction that the camera faces",
-          GST_AHC_SRC_FACING_TYPE, CAMERA_FACING_BACK,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      properties[PROP_DEVICE_FACING]);
 
   /* Override GstPhotography properties */
   g_object_class_override_property (gobject_class, PROP_WB_MODE,
       GST_PHOTOGRAPHY_PROP_WB_MODE);
+  properties[PROP_WB_MODE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_WB_MODE);
+
   g_object_class_override_property (gobject_class, PROP_COLOUR_TONE,
       GST_PHOTOGRAPHY_PROP_COLOUR_TONE);
+  properties[PROP_COLOUR_TONE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_COLOUR_TONE);
+
   g_object_class_override_property (gobject_class, PROP_SCENE_MODE,
       GST_PHOTOGRAPHY_PROP_SCENE_MODE);
+  properties[PROP_SCENE_MODE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_SCENE_MODE);
+
   g_object_class_override_property (gobject_class, PROP_FLASH_MODE,
       GST_PHOTOGRAPHY_PROP_FLASH_MODE);
+  properties[PROP_FLASH_MODE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_FLASH_MODE);
+
   g_object_class_override_property (gobject_class, PROP_NOISE_REDUCTION,
       GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION);
+  properties[PROP_NOISE_REDUCTION] =
+      g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_NOISE_REDUCTION);
+
   g_object_class_override_property (gobject_class, PROP_CAPABILITIES,
       GST_PHOTOGRAPHY_PROP_CAPABILITIES);
+  properties[PROP_CAPABILITIES] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_CAPABILITIES);
+
   g_object_class_override_property (gobject_class, PROP_EV_COMP,
       GST_PHOTOGRAPHY_PROP_EV_COMP);
+  properties[PROP_EV_COMP] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_EV_COMP);
+
   g_object_class_override_property (gobject_class, PROP_ISO_SPEED,
       GST_PHOTOGRAPHY_PROP_ISO_SPEED);
+  properties[PROP_ISO_SPEED] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_ISO_SPEED);
+
   g_object_class_override_property (gobject_class, PROP_APERTURE,
       GST_PHOTOGRAPHY_PROP_APERTURE);
+  properties[PROP_APERTURE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_APERTURE);
+
   g_object_class_override_property (gobject_class, PROP_EXPOSURE,
       GST_PHOTOGRAPHY_PROP_EXPOSURE);
+  properties[PROP_EXPOSURE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_EXPOSURE);
+
   g_object_class_override_property (gobject_class,
       PROP_IMAGE_CAPTURE_SUPPORTED_CAPS,
       GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS);
+  properties[PROP_IMAGE_CAPTURE_SUPPORTED_CAPS] =
+      g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_IMAGE_CAPTURE_SUPPORTED_CAPS);
+
   g_object_class_override_property (gobject_class,
       PROP_IMAGE_PREVIEW_SUPPORTED_CAPS,
       GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS);
+  properties[PROP_IMAGE_PREVIEW_SUPPORTED_CAPS] =
+      g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_IMAGE_PREVIEW_SUPPORTED_CAPS);
+
   g_object_class_override_property (gobject_class, PROP_FLICKER_MODE,
       GST_PHOTOGRAPHY_PROP_FLICKER_MODE);
+  properties[PROP_FLICKER_MODE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_FLICKER_MODE);
+
   g_object_class_override_property (gobject_class, PROP_FOCUS_MODE,
       GST_PHOTOGRAPHY_PROP_FOCUS_MODE);
+  properties[PROP_FOCUS_MODE] = g_object_class_find_property (gobject_class,
+      GST_PHOTOGRAPHY_PROP_FOCUS_MODE);
+
   g_object_class_override_property (gobject_class, PROP_ZOOM,
+      GST_PHOTOGRAPHY_PROP_ZOOM);
+  properties[PROP_ZOOM] = g_object_class_find_property (gobject_class,
       GST_PHOTOGRAPHY_PROP_ZOOM);
 
   klass->probe_properties = NULL;
@@ -532,19 +585,16 @@ gst_ahc_src_implements_interface_init (GstImplementsInterfaceClass * klass)
 static const GList *
 gst_ahc_src_probe_get_properties (GstPropertyProbe * probe)
 {
-  GObjectClass *klass = G_OBJECT_GET_CLASS (probe);
   GstAHCSrcClass *ahc_class = GST_AHC_SRC_CLASS (probe);
+  GList **list = &ahc_class->probe_properties;
 
-  if (!ahc_class->probe_properties) {
-    ahc_class->probe_properties = g_list_append (NULL,
-        g_object_class_find_property (klass, "device"));
-    ahc_class->probe_properties = g_list_append (ahc_class->probe_properties,
-        g_object_class_find_property (klass, GST_PHOTOGRAPHY_PROP_EV_COMP));
-    ahc_class->probe_properties = g_list_append (ahc_class->probe_properties,
-        g_object_class_find_property (klass, GST_PHOTOGRAPHY_PROP_ZOOM));
+  if (!*list) {
+    *list = g_list_append (*list, properties[PROP_DEVICE]);
+    *list = g_list_append (*list, properties[PROP_EV_COMP]);
+    *list = g_list_append (*list, properties[PROP_ZOOM]);
   }
 
-  return ahc_class->probe_properties;
+  return *list;
 }
 
 static GValueArray *
@@ -554,90 +604,80 @@ gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
   GstAHCSrc *self = GST_AHC_SRC (probe);
   GValueArray *array = NULL;
 
-  switch (prop_id) {
-    case PROP_DEVICE:{
-      GValue value = { 0 };
-      gint num_cams = gst_ah_camera_get_number_of_cameras ();
-      gint i;
+  /* g_object_class_find_property returns overriden property with
+   * param_id == 0, so we can't switch/case the prop_id and
+   * we need to check the pspec instead */
+  if (pspec == properties[PROP_DEVICE]) {
+    GValue value = { 0 };
+    gint num_cams = gst_ah_camera_get_number_of_cameras ();
+    gint i;
 
-      array = g_value_array_new (num_cams);
-      g_value_init (&value, G_TYPE_STRING);
-      for (i = 0; i < num_cams; i++) {
-        g_value_take_string (&value, g_strdup_printf ("%d", i));
-        g_value_array_append (array, &value);
-      }
-      g_value_unset (&value);
+    array = g_value_array_new (num_cams);
+    g_value_init (&value, G_TYPE_STRING);
+    for (i = 0; i < num_cams; i++) {
+      g_value_take_string (&value, g_strdup_printf ("%d", i));
+      g_value_array_append (array, &value);
     }
-      break;
-    default:
-      /* g_object_class_find_property returns overriden property with
-       * param_id == 0, so we can't switch/case the prop_id and
-       * g_param_spec_get_redirect_target() returns NULL, so we need to
-       * do a strcmp on the property's name instead */
-      if (!g_strcmp0 (pspec->name, GST_PHOTOGRAPHY_PROP_EV_COMP)) {
-        //case PROP_EV_COMP:
-        if (self->camera) {
-          GstAHCParameters *params;
+    g_value_unset (&value);
+  } else if (pspec == properties[PROP_EV_COMP]) {
+    if (self->camera) {
+      GstAHCParameters *params;
 
-          params = gst_ah_camera_get_parameters (self->camera);
-          if (params) {
-            gint min, max;
-            gfloat step;
+      params = gst_ah_camera_get_parameters (self->camera);
+      if (params) {
+        gint min, max;
+        gfloat step;
 
-            min = gst_ahc_parameters_get_min_exposure_compensation (params);
-            max = gst_ahc_parameters_get_max_exposure_compensation (params);
-            step = gst_ahc_parameters_get_exposure_compensation_step (params);
+        min = gst_ahc_parameters_get_min_exposure_compensation (params);
+        max = gst_ahc_parameters_get_max_exposure_compensation (params);
+        step = gst_ahc_parameters_get_exposure_compensation_step (params);
 
-            if (step != 0.0 && min != max) {
-              GValue value = { 0 };
-              gint i;
+        if (step != 0.0 && min != max) {
+          GValue value = { 0 };
+          gint i;
 
-              /* Min and Max are inclusive */
-              array = g_value_array_new (max - min + 1);
-              g_value_init (&value, G_TYPE_FLOAT);
-              for (i = min; i <= max; i++) {
-                /* floats are bad... :( */
-                g_value_set_float (&value, step * i);
-                g_value_array_append (array, &value);
-              }
-              g_value_unset (&value);
-            }
-
-            gst_ahc_parameters_free (params);
+          /* Min and Max are inclusive */
+          array = g_value_array_new (max - min + 1);
+          g_value_init (&value, G_TYPE_FLOAT);
+          for (i = min; i <= max; i++) {
+            g_value_set_float (&value, step * i);
+            g_value_array_append (array, &value);
           }
+          g_value_unset (&value);
         }
-      } else if (!g_strcmp0 (pspec->name, GST_PHOTOGRAPHY_PROP_ZOOM)) {
-        //case PROP_ZOOM:
-        if (self->camera) {
-          GstAHCParameters *params;
 
-          params = gst_ah_camera_get_parameters (self->camera);
-          if (params) {
-            GList *zoom_ratios = gst_ahc_parameters_get_zoom_ratios (params);
-            gint max_zoom = gst_ahc_parameters_get_max_zoom (params);
-
-            if (zoom_ratios && g_list_length (zoom_ratios) == (max_zoom + 1)) {
-              GValue value = { 0 };
-              GList *i;
-
-              array = g_value_array_new (max_zoom + 1);
-              g_value_init (&value, G_TYPE_FLOAT);
-              for (i = zoom_ratios; i; i = i->next) {
-                gint zoom_value = GPOINTER_TO_INT (i->data);
-                gfloat zoom = (gfloat) zoom_value / 100.0;
-
-                g_value_set_float (&value, zoom);
-                g_value_array_append (array, &value);
-              }
-              g_value_unset (&value);
-            }
-            gst_ahc_parameters_free (params);
-          }
-        }
-      } else {
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
+        gst_ahc_parameters_free (params);
       }
-      break;
+    }
+  } else if (pspec == properties[PROP_ZOOM]) {
+    if (self->camera) {
+      GstAHCParameters *params;
+
+      params = gst_ah_camera_get_parameters (self->camera);
+      if (params) {
+        GList *zoom_ratios = gst_ahc_parameters_get_zoom_ratios (params);
+        gint max_zoom = gst_ahc_parameters_get_max_zoom (params);
+
+        if (zoom_ratios && g_list_length (zoom_ratios) == (max_zoom + 1)) {
+          GValue value = { 0 };
+          GList *i;
+
+          array = g_value_array_new (max_zoom + 1);
+          g_value_init (&value, G_TYPE_FLOAT);
+          for (i = zoom_ratios; i; i = i->next) {
+            gint zoom_value = GPOINTER_TO_INT (i->data);
+            gfloat zoom = (gfloat) zoom_value / 100.0;
+
+            g_value_set_float (&value, zoom);
+            g_value_array_append (array, &value);
+          }
+          g_value_unset (&value);
+        }
+        gst_ahc_parameters_free (params);
+      }
+    }
+  } else {
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
   }
 
   return array;
