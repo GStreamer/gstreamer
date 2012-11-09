@@ -30,9 +30,21 @@
 G_BEGIN_DECLS
 
 typedef struct _GstMssManifest GstMssManifest;
+typedef struct _GstMssManifestStream GstMssManifestStream;
 
-GstMssManifest * gst_mss_manifest_new (GstBuffer * data); 
+typedef enum _GstMssManifestStreamType {
+  MSS_STREAM_TYPE_UNKNOWN = 0,
+  MSS_STREAM_TYPE_VIDEO = 1,
+  MSS_STREAM_TYPE_AUDIO = 2
+} GstMssManifestStreamType;
+
+GstMssManifest * gst_mss_manifest_new (const GstBuffer * data);
 void gst_mss_manifest_free (GstMssManifest * manifest);
+GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
+
+GstMssManifestStreamType gst_mss_manifest_stream_get_type (GstMssManifestStream *stream);
+
+const gchar * gst_mss_manifest_stream_type_name (GstMssManifestStreamType streamtype);
 
 G_END_DECLS
 #endif /* __GST_MSS_MANIFEST_H__ */

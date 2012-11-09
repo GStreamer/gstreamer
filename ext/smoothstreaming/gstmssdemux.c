@@ -211,11 +211,51 @@ gst_mss_demux_event (GstPad * pad, GstEvent * event)
 }
 
 static void
+gst_mss_demux_create_streams (GstMssDemux * mssdemux)
+{
+  GSList *streams = gst_mss_manifest_get_streams (mssdemux->manifest);
+  GSList *iter;
+
+  if (streams == NULL) {
+    GST_INFO_OBJECT (mssdemux, "No streams found in the manifest");
+    /* TODO  post eos? */
+  }
+
+  for (iter = streams; iter; iter = g_slist_next (iter)) {
+    GstMssManifestStream *manifeststream = iter->data;
+    GstMssManifestStreamType streamtype;
+
+    streamtype = gst_mss_manifest_stream_get_type (manifeststream);
+    GST_DEBUG_OBJECT (mssdemux, "Found stream of type: %s",
+        gst_mss_manifest_stream_type_name (streamtype));
+  }
+}
+
+static void
 gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
 {
+  GstQuery *query;
+  gchar *uri = NULL;
+  gboolean ret;
+
   g_return_if_fail (mssdemux->manifest_buffer != NULL);
   g_return_if_fail (mssdemux->manifest == NULL);
 
+  query = gst_query_new_uri ();
+  ret = gst_pad_peer_query (mssdemux->sinkpad, query);
+  if (ret) {
+    gst_query_parse_uri (query, &uri);
+    /* TODO use this to get the base url for the fragments */
+    g_free (uri);
+  }
+  gst_query_unref (query);
+
   mssdemux->manifest = gst_mss_manifest_new (mssdemux->manifest_buffer);
-  /* TODO */
+  if (!mssdemux->manifest) {
+    GST_ELEMENT_ERROR (mssdemux, STREAM, FORMAT, ("Bad manifest file"),
+        ("Xml manifest file couldn't be parsed"));
+    return;
+  }
+
+  gst_mss_demux_create_streams (mssdemux);
 }
