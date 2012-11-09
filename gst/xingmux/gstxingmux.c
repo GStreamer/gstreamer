@@ -318,6 +318,7 @@ generate_xing_header (GstXingMux * xing)
      * SamplesPerFrame and SamplingRate are values for the current frame. 
      */
     number_of_frames = gst_util_uint64_scale (duration, rate, GST_SECOND) / spf;
+    number_of_frames += 1;      /* Xing Header Frame */
     GST_DEBUG ("Setting number of frames to %u", number_of_frames);
     number_of_frames = GUINT32_TO_BE (number_of_frames);
     memcpy (data, &number_of_frames, 4);
@@ -555,7 +556,7 @@ gst_xing_mux_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     seek_entry->byte = (seek_entry->timestamp == 0) ? 0 : xing->byte_count;
     xing->seek_table = g_list_append (xing->seek_table, seek_entry);
 
-    duration = gst_util_uint64_scale (spf, GST_SECOND, rate);
+    duration = gst_util_uint64_scale_ceil (spf, GST_SECOND, rate);
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         (xing->duration == GST_CLOCK_TIME_NONE) ? 0 : xing->duration;
