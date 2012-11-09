@@ -1280,12 +1280,12 @@ gst_ahc_src_set_zoom (GstPhotography * photo, gfloat zoom)
 
       if (zoom_ratios && g_list_length (zoom_ratios) == (max_zoom + 1)) {
         gint i;
+        gint value = zoom * 100;
 
         for (i = 0; i < max_zoom + 1; i++) {
           gint zoom_value = GPOINTER_TO_INT (g_list_nth_data (zoom_ratios, i));
-          gfloat value = (gfloat) zoom_value / 100.0;
 
-          if (value == zoom)
+          if (value == zoom_value)
             zoom_idx = i;
         }
       }
