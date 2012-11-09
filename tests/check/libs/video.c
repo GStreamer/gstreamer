@@ -403,6 +403,80 @@ GST_START_TEST (test_video_formats_all)
 
 GST_END_TEST;
 
+#define WIDTH 77
+#define HEIGHT 20
+
+GST_START_TEST (test_video_formats_pack_unpack)
+{
+  guint n, num_formats;
+
+  num_formats = 100;
+  fail_unless (gst_video_format_to_string (num_formats) == NULL);
+  while (gst_video_format_to_string (num_formats) == NULL)
+    --num_formats;
+  GST_INFO ("number of known video formats: %d", num_formats);
+
+  for (n = GST_VIDEO_FORMAT_ENCODED + 1; n < num_formats; ++n) {
+    const GstVideoFormatInfo *vfinfo, *unpackinfo;
+    GstVideoFormat fmt = n;
+    GstVideoInfo vinfo;
+    gpointer data[GST_VIDEO_MAX_PLANES];
+    gint stride[GST_VIDEO_MAX_PLANES];
+    guint8 *vdata, *unpack_data;
+    gsize vsize, unpack_size;
+    guint p;
+
+    GST_INFO ("testing %s", gst_video_format_to_string (fmt));
+
+    vfinfo = gst_video_format_get_info (fmt);
+    fail_unless (vfinfo != NULL);
+
+    unpackinfo = gst_video_format_get_info (vfinfo->unpack_format);
+    fail_unless (unpackinfo != NULL);
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_set_format (&vinfo, fmt, WIDTH, HEIGHT);
+    vsize = GST_VIDEO_INFO_SIZE (&vinfo);
+    vdata = g_malloc (vsize);
+    memset (vdata, 0x99, vsize);
+
+    g_assert (vfinfo->pack_lines == 1);
+
+    unpack_size =
+        GST_VIDEO_FORMAT_INFO_BITS (unpackinfo) *
+        GST_VIDEO_FORMAT_INFO_N_COMPONENTS (unpackinfo) *
+        GST_ROUND_UP_16 (WIDTH);
+    unpack_data = g_malloc (unpack_size);
+
+    for (p = 0; p < GST_VIDEO_INFO_N_PLANES (&vinfo); ++p) {
+      data[p] = vdata + GST_VIDEO_INFO_PLANE_OFFSET (&vinfo, p);
+      stride[p] = GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, p);
+    }
+
+    /* now unpack */
+    vfinfo->unpack_func (vfinfo, GST_VIDEO_PACK_FLAG_NONE, unpack_data, data,
+        stride, 0, 0, WIDTH);
+
+    /* and pack */
+    vfinfo->pack_func (vfinfo, GST_VIDEO_PACK_FLAG_NONE, unpack_data,
+        unpack_size, data, stride, GST_VIDEO_CHROMA_SITE_UNKNOWN, 0, WIDTH);
+
+    /* now unpack */
+    vfinfo->unpack_func (vfinfo, GST_VIDEO_PACK_FLAG_NONE, unpack_data, data,
+        stride, 0, HEIGHT - 1, WIDTH);
+
+    /* and pack */
+    vfinfo->pack_func (vfinfo, GST_VIDEO_PACK_FLAG_NONE, unpack_data,
+        unpack_size, data, stride, GST_VIDEO_CHROMA_SITE_UNKNOWN, HEIGHT - 1,
+        WIDTH);
+
+    g_free (unpack_data);
+    g_free (vdata);
+  }
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_video_formats)
 {
   guint i;
@@ -1592,6 +1666,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_formats);
   tcase_add_test (tc_chain, test_video_formats_rgb);
   tcase_add_test (tc_chain, test_video_formats_all);
+  tcase_add_test (tc_chain, test_video_formats_pack_unpack);
   tcase_add_test (tc_chain, test_dar_calc);
   tcase_add_test (tc_chain, test_parse_caps_rgb);
   tcase_add_test (tc_chain, test_events);
