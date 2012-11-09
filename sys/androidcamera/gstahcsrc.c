@@ -65,17 +65,26 @@ static void gst_ahc_src_init_interfaces (GType type);
 /* GstPhotography  */
 static gboolean gst_ahc_src_get_ev_compensation (GstPhotography * photo,
     gfloat * ev_comp);
+static gboolean _white_balance_to_enum (const gchar * white_balance,
+    GstWhiteBalanceMode * mode);
 static gboolean gst_ahc_src_get_white_balance_mode (GstPhotography * photo,
     GstWhiteBalanceMode * wb_mode);
+static gboolean _color_effects_to_enum (const gchar * color_effect,
+    GstColourToneMode * mode);
 static gboolean gst_ahc_src_get_colour_tone_mode (GstPhotography * photo,
     GstColourToneMode * tone_mode);
+static gboolean _scene_modes_to_enum (const gchar * scene, GstSceneMode * mode);
 static gboolean gst_ahc_src_get_scene_mode (GstPhotography * photo,
     GstSceneMode * scene_mode);
+static gboolean _flash_modes_to_enum (const gchar * flash, GstFlashMode * mode);
 static gboolean gst_ahc_src_get_flash_mode (GstPhotography * photo,
     GstFlashMode * flash_mode);
 static gboolean gst_ahc_src_get_zoom (GstPhotography * photo, gfloat * zoom);
+static gboolean _antibanding_to_enum (const gchar * antibanding,
+    GstFlickerReductionMode * mode);
 static gboolean gst_ahc_src_get_flicker_mode (GstPhotography * photo,
     GstFlickerReductionMode * flicker_mode);
+static gboolean _focus_modes_to_enum (const gchar * focus, GstFocusMode * mode);
 static gboolean gst_ahc_src_get_focus_mode (GstPhotography * photo,
     GstFocusMode * focus_mode);
 
@@ -694,6 +703,158 @@ gst_ahc_src_property_probe_interface_init (GstPropertyProbeInterface * iface)
 
 
 static gboolean
+_antibanding_to_enum (const gchar * antibanding, GstFlickerReductionMode * mode)
+{
+  if (antibanding == Parameters_ANTIBANDING_AUTO)
+    *mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO;
+  else if (antibanding == Parameters_ANTIBANDING_50HZ)
+    *mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_50HZ;
+  else if (antibanding == Parameters_ANTIBANDING_60HZ)
+    *mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_60HZ;
+  else if (antibanding == Parameters_ANTIBANDING_OFF)
+    *mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+_white_balance_to_enum (const gchar * white_balance, GstWhiteBalanceMode * mode)
+{
+  if (white_balance == Parameters_WHITE_BALANCE_AUTO)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_AUTO;
+  else if (white_balance == Parameters_WHITE_BALANCE_INCANDESCENT)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN;
+  else if (white_balance == Parameters_WHITE_BALANCE_FLUORESCENT)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT;
+  else if (white_balance == Parameters_WHITE_BALANCE_WARM_FLUORESCENT)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_WARM_FLUORESCENT;
+  else if (white_balance == Parameters_WHITE_BALANCE_DAYLIGHT)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_DAYLIGHT;
+  else if (white_balance == Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_CLOUDY;
+  else if (white_balance == Parameters_WHITE_BALANCE_TWILIGHT)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_SUNSET;
+  else if (white_balance == Parameters_WHITE_BALANCE_SHADE)
+    *mode = GST_PHOTOGRAPHY_WB_MODE_SHADE;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+_color_effects_to_enum (const gchar * color_effect, GstColourToneMode * mode)
+{
+  if (color_effect == Parameters_EFFECT_NONE)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL;
+  else if (color_effect == Parameters_EFFECT_MONO)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_GRAYSCALE;
+  else if (color_effect == Parameters_EFFECT_NEGATIVE)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NEGATIVE;
+  else if (color_effect == Parameters_EFFECT_SOLARIZE)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE;
+  else if (color_effect == Parameters_EFFECT_SEPIA)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SEPIA;
+  else if (color_effect == Parameters_EFFECT_POSTERIZE)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_POSTERIZE;
+  else if (color_effect == Parameters_EFFECT_WHITEBOARD)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_WHITEBOARD;
+  else if (color_effect == Parameters_EFFECT_BLACKBOARD)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_BLACKBOARD;
+  else if (color_effect == Parameters_EFFECT_AQUA)
+    *mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_AQUA;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+_scene_modes_to_enum (const gchar * scene, GstSceneMode * mode)
+{
+  if (scene == Parameters_SCENE_MODE_AUTO)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_AUTO;
+  else if (scene == Parameters_SCENE_MODE_ACTION)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_ACTION;
+  else if (scene == Parameters_SCENE_MODE_PORTRAIT)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_PORTRAIT;
+  else if (scene == Parameters_SCENE_MODE_LANDSCAPE)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_LANDSCAPE;
+  else if (scene == Parameters_SCENE_MODE_NIGHT)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT;
+  else if (scene == Parameters_SCENE_MODE_NIGHT_PORTRAIT)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT_PORTRAIT;
+  else if (scene == Parameters_SCENE_MODE_THEATRE)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_THEATRE;
+  else if (scene == Parameters_SCENE_MODE_BEACH)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_BEACH;
+  else if (scene == Parameters_SCENE_MODE_SNOW)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_SNOW;
+  else if (scene == Parameters_SCENE_MODE_SUNSET)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_SUNSET;
+  else if (scene == Parameters_SCENE_MODE_STEADYPHOTO)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_STEADY_PHOTO;
+  else if (scene == Parameters_SCENE_MODE_FIREWORKS)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_FIREWORKS;
+  else if (scene == Parameters_SCENE_MODE_SPORTS)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_SPORT;
+  else if (scene == Parameters_SCENE_MODE_PARTY)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_PARTY;
+  else if (scene == Parameters_SCENE_MODE_CANDLELIGHT)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_CANDLELIGHT;
+  else if (scene == Parameters_SCENE_MODE_BARCODE)
+    *mode = GST_PHOTOGRAPHY_SCENE_MODE_BARCODE;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+_flash_modes_to_enum (const gchar * flash, GstFlashMode * mode)
+{
+  if (flash == Parameters_FLASH_MODE_OFF)
+    *mode = GST_PHOTOGRAPHY_FLASH_MODE_OFF;
+  else if (flash == Parameters_FLASH_MODE_AUTO)
+    *mode = GST_PHOTOGRAPHY_FLASH_MODE_AUTO;
+  else if (flash == Parameters_FLASH_MODE_ON)
+    *mode = GST_PHOTOGRAPHY_FLASH_MODE_ON;
+  else if (flash == Parameters_FLASH_MODE_RED_EYE)
+    *mode = GST_PHOTOGRAPHY_FLASH_MODE_RED_EYE;
+  else if (flash == Parameters_FLASH_MODE_TORCH)
+    *mode = GST_PHOTOGRAPHY_FLASH_MODE_FILL_IN;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+_focus_modes_to_enum (const gchar * focus, GstFocusMode * mode)
+{
+  if (focus == Parameters_FOCUS_MODE_AUTO)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_AUTO;
+  else if (focus == Parameters_FOCUS_MODE_INFINITY)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY;
+  else if (focus == Parameters_FOCUS_MODE_MACRO)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_MACRO;
+  else if (focus == Parameters_FOCUS_MODE_FIXED)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL;
+  else if (focus == Parameters_FOCUS_MODE_EDOF)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED;
+  else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_VIDEO)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED;
+  else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_PICTURE)
+    *mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL;
+  else
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_ahc_src_get_ev_compensation (GstPhotography * photo, gfloat * ev_comp)
 {
   GstAHCSrc *self = GST_AHC_SRC (photo);
@@ -739,28 +900,12 @@ gst_ahc_src_get_white_balance_mode (GstPhotography * photo,
       const gchar *wb = gst_ahc_parameters_get_white_balance (params);
       GstWhiteBalanceMode mode = GST_PHOTOGRAPHY_WB_MODE_AUTO;
 
-      ret = TRUE;
-      if (wb == Parameters_WHITE_BALANCE_AUTO)
-        mode = GST_PHOTOGRAPHY_WB_MODE_AUTO;
-      else if (wb == Parameters_WHITE_BALANCE_INCANDESCENT)
-        mode = GST_PHOTOGRAPHY_WB_MODE_TUNGSTEN;
-      else if (wb == Parameters_WHITE_BALANCE_FLUORESCENT)
-        mode = GST_PHOTOGRAPHY_WB_MODE_FLUORESCENT;
-      else if (wb == Parameters_WHITE_BALANCE_WARM_FLUORESCENT)
-        mode = GST_PHOTOGRAPHY_WB_MODE_WARM_FLUORESCENT;
-      else if (wb == Parameters_WHITE_BALANCE_DAYLIGHT)
-        mode = GST_PHOTOGRAPHY_WB_MODE_DAYLIGHT;
-      else if (wb == Parameters_WHITE_BALANCE_CLOUDY_DAYLIGHT)
-        mode = GST_PHOTOGRAPHY_WB_MODE_CLOUDY;
-      else if (wb == Parameters_WHITE_BALANCE_TWILIGHT)
-        mode = GST_PHOTOGRAPHY_WB_MODE_SUNSET;
-      else if (wb == Parameters_WHITE_BALANCE_SHADE)
-        mode = GST_PHOTOGRAPHY_WB_MODE_SHADE;
-      else
-        ret = FALSE;
+      if (_white_balance_to_enum (wb, &mode)) {
+        ret = TRUE;
 
-      if (ret && wb_mode)
-        *wb_mode = mode;
+        if (wb_mode)
+          *wb_mode = mode;
+      }
 
       gst_ahc_parameters_free (params);
     }
@@ -784,30 +929,12 @@ gst_ahc_src_get_colour_tone_mode (GstPhotography * photo,
       const gchar *effect = gst_ahc_parameters_get_color_effect (params);
       GstColourToneMode mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL;
 
-      ret = TRUE;
-      if (effect == Parameters_EFFECT_NONE)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NORMAL;
-      else if (effect == Parameters_EFFECT_MONO)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_GRAYSCALE;
-      else if (effect == Parameters_EFFECT_NEGATIVE)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_NEGATIVE;
-      else if (effect == Parameters_EFFECT_SOLARIZE)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SOLARIZE;
-      else if (effect == Parameters_EFFECT_SEPIA)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_SEPIA;
-      else if (effect == Parameters_EFFECT_POSTERIZE)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_POSTERIZE;
-      else if (effect == Parameters_EFFECT_WHITEBOARD)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_WHITEBOARD;
-      else if (effect == Parameters_EFFECT_BLACKBOARD)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_BLACKBOARD;
-      else if (effect == Parameters_EFFECT_AQUA)
-        mode = GST_PHOTOGRAPHY_COLOUR_TONE_MODE_AQUA;
-      else
-        ret = FALSE;
+      if (_color_effects_to_enum (effect, &mode)) {
+        ret = TRUE;
 
-      if (ret && tone_mode)
-        *tone_mode = mode;
+        if (tone_mode)
+          *tone_mode = mode;
+      }
 
       gst_ahc_parameters_free (params);
     }
@@ -830,44 +957,12 @@ gst_ahc_src_get_scene_mode (GstPhotography * photo, GstSceneMode * scene_mode)
       const gchar *scene = gst_ahc_parameters_get_scene_mode (params);
       GstSceneMode mode = GST_PHOTOGRAPHY_SCENE_MODE_AUTO;
 
-      ret = TRUE;
-      if (scene == Parameters_SCENE_MODE_AUTO)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_AUTO;
-      else if (scene == Parameters_SCENE_MODE_ACTION)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_ACTION;
-      else if (scene == Parameters_SCENE_MODE_PORTRAIT)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_PORTRAIT;
-      else if (scene == Parameters_SCENE_MODE_LANDSCAPE)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_LANDSCAPE;
-      else if (scene == Parameters_SCENE_MODE_NIGHT)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT;
-      else if (scene == Parameters_SCENE_MODE_NIGHT_PORTRAIT)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_NIGHT_PORTRAIT;
-      else if (scene == Parameters_SCENE_MODE_THEATRE)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_THEATRE;
-      else if (scene == Parameters_SCENE_MODE_BEACH)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_BEACH;
-      else if (scene == Parameters_SCENE_MODE_SNOW)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_SNOW;
-      else if (scene == Parameters_SCENE_MODE_SUNSET)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_SUNSET;
-      else if (scene == Parameters_SCENE_MODE_STEADYPHOTO)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_STEADY_PHOTO;
-      else if (scene == Parameters_SCENE_MODE_FIREWORKS)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_FIREWORKS;
-      else if (scene == Parameters_SCENE_MODE_SPORTS)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_SPORT;
-      else if (scene == Parameters_SCENE_MODE_PARTY)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_PARTY;
-      else if (scene == Parameters_SCENE_MODE_CANDLELIGHT)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_CANDLELIGHT;
-      else if (scene == Parameters_SCENE_MODE_BARCODE)
-        mode = GST_PHOTOGRAPHY_SCENE_MODE_BARCODE;
-      else
-        ret = FALSE;
+      if (_scene_modes_to_enum (scene, &mode)) {
+        ret = TRUE;
 
-      if (ret && scene_mode)
-        *scene_mode = mode;
+        if (scene_mode)
+          *scene_mode = mode;
+      }
 
       gst_ahc_parameters_free (params);
     }
@@ -890,22 +985,12 @@ gst_ahc_src_get_flash_mode (GstPhotography * photo, GstFlashMode * flash_mode)
       const gchar *flash = gst_ahc_parameters_get_flash_mode (params);
       GstFlashMode mode = GST_PHOTOGRAPHY_FLASH_MODE_OFF;
 
-      ret = TRUE;
-      if (flash == Parameters_FLASH_MODE_OFF)
-        mode = GST_PHOTOGRAPHY_FLASH_MODE_OFF;
-      else if (flash == Parameters_FLASH_MODE_AUTO)
-        mode = GST_PHOTOGRAPHY_FLASH_MODE_AUTO;
-      else if (flash == Parameters_FLASH_MODE_ON)
-        mode = GST_PHOTOGRAPHY_FLASH_MODE_ON;
-      else if (flash == Parameters_FLASH_MODE_RED_EYE)
-        mode = GST_PHOTOGRAPHY_FLASH_MODE_RED_EYE;
-      else if (flash == Parameters_FLASH_MODE_TORCH)
-        mode = GST_PHOTOGRAPHY_FLASH_MODE_FILL_IN;
-      else
-        ret = FALSE;
+      if (_flash_modes_to_enum (flash, &mode)) {
+        ret = TRUE;
 
-      if (ret && flash_mode)
-        *flash_mode = mode;
+        if (flash_mode)
+          *flash_mode = mode;
+      }
 
       gst_ahc_parameters_free (params);
     }
@@ -963,20 +1048,12 @@ gst_ahc_src_get_flicker_mode (GstPhotography * photo,
       const gchar *antibanding = gst_ahc_parameters_get_antibanding (params);
       GstFlickerReductionMode mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO;
 
-      ret = TRUE;
-      if (antibanding == Parameters_ANTIBANDING_AUTO)
-        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_AUTO;
-      else if (antibanding == Parameters_ANTIBANDING_50HZ)
-        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_50HZ;
-      else if (antibanding == Parameters_ANTIBANDING_60HZ)
-        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_60HZ;
-      else if (antibanding == Parameters_ANTIBANDING_OFF)
-        mode = GST_PHOTOGRAPHY_FLICKER_REDUCTION_OFF;
-      else
-        ret = FALSE;
+      if (_antibanding_to_enum (antibanding, &mode)) {
+        ret = TRUE;
 
-      if (ret && flicker_mode)
-        *flicker_mode = mode;
+        if (flicker_mode)
+          *flicker_mode = mode;
+      }
 
       gst_ahc_parameters_free (params);
     }
@@ -999,26 +1076,12 @@ gst_ahc_src_get_focus_mode (GstPhotography * photo, GstFocusMode * focus_mode)
       const gchar *focus = gst_ahc_parameters_get_focus_mode (params);
       GstFocusMode mode = GST_PHOTOGRAPHY_FOCUS_MODE_AUTO;
 
-      ret = TRUE;
-      if (focus == Parameters_FOCUS_MODE_AUTO)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_AUTO;
-      else if (focus == Parameters_FOCUS_MODE_INFINITY)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_INFINITY;
-      else if (focus == Parameters_FOCUS_MODE_MACRO)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_MACRO;
-      else if (focus == Parameters_FOCUS_MODE_FIXED)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_HYPERFOCAL;
-      else if (focus == Parameters_FOCUS_MODE_EDOF)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_EXTENDED;
-      else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_VIDEO)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_EXTENDED;
-      else if (focus == Parameters_FOCUS_MODE_CONTINUOUS_PICTURE)
-        mode = GST_PHOTOGRAPHY_FOCUS_MODE_CONTINUOUS_NORMAL;
-      else
-        ret = FALSE;
+      if (_focus_modes_to_enum (focus, &mode)) {
+        ret = TRUE;
 
-      if (ret && focus_mode)
-        *focus_mode = mode;
+        if (focus_mode)
+          *focus_mode = mode;
+      }
 
       gst_ahc_parameters_free (params);
     }
