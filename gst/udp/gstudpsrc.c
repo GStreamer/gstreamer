@@ -451,8 +451,18 @@ no_select:
       g_socket_receive_from (udpsrc->used_socket, &saddr, (gchar *) info.data,
       info.size, udpsrc->cancellable, &err);
 
-  if (G_UNLIKELY (res < 0))
+  if (G_UNLIKELY (res < 0)) {
+    /* EHOSTUNREACH for a UDP socket means that a packet sent with udpsink
+     * generated a "port unreachable" ICMP response. We ignore that and try
+     * again. */
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_HOST_UNREACHABLE)) {
+      gst_buffer_unmap (outbuf, &info);
+      gst_buffer_unref (outbuf);
+      outbuf = NULL;
+      goto retry;
+    }
     goto receive_error;
+  }
 
   /* patch offset and size when stripping off the headers */
   if (G_UNLIKELY (udpsrc->skip_first_bytes != 0)) {
