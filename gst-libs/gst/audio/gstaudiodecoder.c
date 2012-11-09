@@ -1106,7 +1106,7 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
 
   /* we got data, so note things are looking up */
   if (G_UNLIKELY (dec->priv->error_count))
-    dec->priv->error_count--;
+    dec->priv->error_count = 0;
 
   ret = gst_audio_decoder_output (dec, buf);
 
