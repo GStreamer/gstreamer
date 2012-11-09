@@ -500,7 +500,7 @@ gst_rtsp_message_free (GstRTSPMessage * msg)
  * gst_rtsp_message_take_header:
  * @msg: a #GstRTSPMessage
  * @field: a #GstRTSPHeaderField
- * @value: the value of the header
+ * @value: (transfer full): the value of the header
  *
  * Add a header with key @field and @value to @msg. This function takes
  * ownership of @value.
@@ -651,7 +651,7 @@ gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
 /**
  * gst_rtsp_message_set_body:
  * @msg: a #GstRTSPMessage
- * @data: the data
+ * @data: (array length=size): the data
  * @size: the size of @data
  *
  * Set the body of @msg to a copy of @data.
@@ -670,7 +670,7 @@ gst_rtsp_message_set_body (GstRTSPMessage * msg, const guint8 * data,
 /**
  * gst_rtsp_message_take_body:
  * @msg: a #GstRTSPMessage
- * @data: the data
+ * @data: (array length=size) (transfer full): the data
  * @size: the size of @data
  *
  * Set the body of @msg to @data and @size. This method takes ownership of
