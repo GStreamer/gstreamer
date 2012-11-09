@@ -80,7 +80,7 @@ enum
 #define VIDEO_CROP_CAPS                                \
   GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, "    \
       "RGBA, ARGB, BGRA, ABGR, RGB, BGR, AYUV, YUY2, " \
-      "YVYU, UYVY, I420, RGB16, RGB15, GRAY8 }")
+      "YVYU, UYVY, I420, RGB16, RGB15, GRAY8, NV12, NV21 }")
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -373,6 +373,47 @@ gst_video_crop_transform_planar (GstVideoCrop * vcrop,
   }
 }
 
+static void
+gst_video_crop_transform_semi_planar (GstVideoCrop * vcrop,
+    GstVideoFrame * in_frame, GstVideoFrame * out_frame)
+{
+  gint width, height;
+  guint8 *y_out, *uv_out;
+  guint8 *y_in, *uv_in;
+  guint i, dx;
+
+  width = GST_VIDEO_FRAME_WIDTH (out_frame);
+  height = GST_VIDEO_FRAME_HEIGHT (out_frame);
+
+  /* Y plane */
+  y_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
+  y_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+
+  /* UV plane */
+  uv_in = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 1);
+  uv_out = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 1);
+
+  y_in += vcrop->crop_top * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0) +
+      vcrop->crop_left;
+  dx = width;
+
+  for (i = 0; i < height; ++i) {
+    memcpy (y_out, y_in, dx);
+    y_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 0);
+    y_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
+  }
+
+  uv_in += (vcrop->crop_top / 2) * GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 1);
+  uv_in += GST_ROUND_DOWN_2 (vcrop->crop_left);
+  dx = GST_ROUND_UP_2 (width);
+
+  for (i = 0; i < GST_ROUND_UP_2 (height) / 2; i++) {
+    memcpy (uv_out, uv_in, dx);
+    uv_in += GST_VIDEO_FRAME_PLANE_STRIDE (in_frame, 1);
+    uv_out += GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 1);
+  }
+}
+
 static GstFlowReturn
 gst_video_crop_transform_frame (GstVideoFilter * vfilter,
     GstVideoFrame * in_frame, GstVideoFrame * out_frame)
@@ -389,6 +430,9 @@ gst_video_crop_transform_frame (GstVideoFilter * vfilter,
       break;
     case VIDEO_CROP_PIXEL_FORMAT_PLANAR:
       gst_video_crop_transform_planar (vcrop, in_frame, out_frame);
+      break;
+    case VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR:
+      gst_video_crop_transform_semi_planar (vcrop, in_frame, out_frame);
       break;
     default:
       g_assert_not_reached ();
@@ -656,6 +700,10 @@ gst_video_crop_set_info (GstVideoFilter * vfilter, GstCaps * in,
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
         crop->packing = VIDEO_CROP_PIXEL_FORMAT_PLANAR;
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV21:
+        crop->packing = VIDEO_CROP_PIXEL_FORMAT_SEMI_PLANAR;
         break;
       default:
         goto unknown_format;
