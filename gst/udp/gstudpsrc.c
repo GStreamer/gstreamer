@@ -459,6 +459,7 @@ no_select:
       gst_buffer_unmap (outbuf, &info);
       gst_buffer_unref (outbuf);
       outbuf = NULL;
+      g_clear_error (&err);
       goto retry;
     }
     goto receive_error;
