@@ -3158,6 +3158,34 @@ gst_video_decoder_get_max_decode_time (GstVideoDecoder *
   return deadline;
 }
 
+/**
+ * gst_video_decoder_get_qos_info:
+ * @decoder: a #GstVideoDecoder
+ * @proportion: (out) (allow-none): address of variable in which to store the
+ *     current QoS proportion, or %NULL
+ * @earliest_time: (out) (allow-none): address of variable in which to store the
+ *     QoS earliest_time, or %NULL
+ *
+ * Returns: TRUE on success
+ *
+ * Since: 1.0.3
+ */
+gboolean
+gst_video_decoder_get_qos_info (GstVideoDecoder * decoder, gdouble * proportion,
+    GstClockTime * earliest_time)
+{
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+
+  GST_OBJECT_LOCK (decoder);
+  if (proportion != NULL)
+    *proportion = decoder->priv->proportion;
+  if (earliest_time != NULL)
+    *earliest_time = decoder->priv->earliest_time;
+  GST_OBJECT_UNLOCK (decoder);
+
+  return TRUE;
+}
+
 GstFlowReturn
 _gst_video_decoder_error (GstVideoDecoder * dec, gint weight,
     GQuark domain, gint code, gchar * txt, gchar * dbg, const gchar * file,
