@@ -265,6 +265,12 @@ struct _GstBaseSinkPrivate
   /* for throttling and QoS */
   GstClockTime earliest_in_time;
   GstClockTime throttle_time;
+
+  /* for rate control */
+  guint64 max_bitrate;
+  GstClockTime rc_time;
+  GstClockTime rc_next;
+  gsize rc_accumulated;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -292,6 +298,7 @@ struct _GstBaseSinkPrivate
 #define DEFAULT_RENDER_DELAY        0
 #define DEFAULT_ENABLE_LAST_SAMPLE  TRUE
 #define DEFAULT_THROTTLE_TIME       0
+#define DEFAULT_MAX_BITRATE         0
 
 enum
 {
@@ -306,6 +313,7 @@ enum
   PROP_BLOCKSIZE,
   PROP_RENDER_DELAY,
   PROP_THROTTLE_TIME,
+  PROP_MAX_BITRATE,
   PROP_LAST
 };
 
@@ -511,8 +519,23 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_THROTTLE_TIME,
       g_param_spec_uint64 ("throttle-time", "Throttle time",
-          "The time to keep between rendered buffers", 0, G_MAXUINT64,
-          DEFAULT_THROTTLE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The time to keep between rendered buffers (0 = disabled)", 0,
+          G_MAXUINT64, DEFAULT_THROTTLE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstBaseSink:max-bitrate:
+   *
+   * Control the maximum amount of bits that will be rendered per second.
+   * Setting this property to a value bigger than 0 will make the sink delay
+   * rendering of the buffers when it would exceed to max-bitrate.
+   *
+   * Since: 1.1.1
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
+      g_param_spec_uint64 ("max-bitrate", "Max Bitrate",
+          "The maximum bits per second to render (0 = disabled)", 0,
+          G_MAXUINT64, DEFAULT_MAX_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -643,6 +666,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   priv->cached_clock_id = NULL;
   g_atomic_int_set (&priv->enable_last_sample, DEFAULT_ENABLE_LAST_SAMPLE);
   priv->throttle_time = DEFAULT_THROTTLE_TIME;
+  priv->max_bitrate = DEFAULT_MAX_BITRATE;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_FLAG_SINK);
 }
@@ -1249,6 +1273,50 @@ gst_base_sink_get_throttle_time (GstBaseSink * sink)
   return res;
 }
 
+/**
+ * gst_base_sink_set_max_bitrate:
+ * @sink: a #GstBaseSink
+ * @max_bitrate: the max_bitrate in bits per second
+ *
+ * Set the maximum amount of bits per second that the sink will render.
+ *
+ * Since: 1.1.1
+ */
+void
+gst_base_sink_set_max_bitrate (GstBaseSink * sink, guint64 max_bitrate)
+{
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->max_bitrate = max_bitrate;
+  GST_LOG_OBJECT (sink, "set max_bitrate to %" G_GUINT64_FORMAT, max_bitrate);
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_get_max_bitrate:
+ * @sink: a #GstBaseSink
+ *
+ * Get the maximum amount of bits per second that the sink will render.
+ *
+ * Returns: the maximum number of bits per second @sink will render.
+ *
+ * Since: 1.1.1
+ */
+guint64
+gst_base_sink_get_max_bitrate (GstBaseSink * sink)
+{
+  guint64 res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), 0);
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->priv->max_bitrate;
+  GST_OBJECT_UNLOCK (sink);
+
+  return res;
+}
+
 static void
 gst_base_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1282,6 +1350,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_THROTTLE_TIME:
       gst_base_sink_set_throttle_time (sink, g_value_get_uint64 (value));
+      break;
+    case PROP_MAX_BITRATE:
+      gst_base_sink_set_max_bitrate (sink, g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1325,6 +1396,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_THROTTLE_TIME:
       g_value_set_uint64 (value, gst_base_sink_get_throttle_time (sink));
+      break;
+    case PROP_MAX_BITRATE:
+      g_value_set_uint64 (value, gst_base_sink_get_max_bitrate (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2362,6 +2436,18 @@ again:
   /* adjust for latency */
   stime = gst_base_sink_adjust_time (basesink, rstart);
 
+  /* adjust for rate control */
+  if (priv->rc_next == -1 || (stime != -1 && stime >= priv->rc_next)) {
+    GST_DEBUG_OBJECT (basesink, "reset rc_time to time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (stime));
+    priv->rc_time = stime;
+    priv->rc_accumulated = 0;
+  } else {
+    GST_DEBUG_OBJECT (basesink, "rate control next %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->rc_next));
+    stime = priv->rc_next;
+  }
+
   /* preroll done, we can sync since we are in PLAYING now. */
   GST_DEBUG_OBJECT (basesink, "possibly waiting for clock to reach %"
       GST_TIME_FORMAT ", adjusted %" GST_TIME_FORMAT,
@@ -3085,6 +3171,13 @@ gst_base_sink_needs_preroll (GstBaseSink * basesink)
   return res;
 }
 
+static gboolean
+count_list_bytes (GstBuffer ** buffer, guint idx, GstBaseSinkPrivate * priv)
+{
+  priv->rc_accumulated += gst_buffer_get_size (*buffer);
+  return TRUE;
+}
+
 /* with STREAM_LOCK, PREROLL_LOCK
  *
  * Takes a buffer and compare the timestamps with the last segment.
@@ -3193,6 +3286,17 @@ again:
   /* drop late buffers unconditionally, let's hope it's unlikely */
   if (G_UNLIKELY (late))
     goto dropped;
+
+  if (priv->max_bitrate) {
+    if (is_list) {
+      gst_buffer_list_foreach (GST_BUFFER_LIST_CAST (obj),
+          (GstBufferListFunc) count_list_bytes, priv);
+    } else {
+      priv->rc_accumulated += gst_buffer_get_size (GST_BUFFER_CAST (obj));
+    }
+    priv->rc_next = priv->rc_time + gst_util_uint64_scale (priv->rc_accumulated,
+        8 * GST_SECOND, priv->max_bitrate);
+  }
 
   /* read once, to get same value before and after */
   do_qos = g_atomic_int_get (&priv->qos_enabled);
@@ -4669,6 +4773,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->eos = FALSE;
       priv->received_eos = FALSE;
       gst_base_sink_reset_qos (basesink);
+      priv->rc_next = -1;
       priv->commited = FALSE;
       priv->call_preroll = TRUE;
       priv->current_step.valid = FALSE;

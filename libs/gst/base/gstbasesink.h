@@ -245,6 +245,10 @@ guint           gst_base_sink_get_blocksize     (GstBaseSink *sink);
 void            gst_base_sink_set_throttle_time (GstBaseSink *sink, guint64 throttle);
 guint64         gst_base_sink_get_throttle_time (GstBaseSink *sink);
 
+/* max-bitrate */
+void            gst_base_sink_set_max_bitrate   (GstBaseSink *sink, guint64 max_bitrate);
+guint64         gst_base_sink_get_max_bitrate   (GstBaseSink *sink);
+
 GstClockReturn  gst_base_sink_wait_clock        (GstBaseSink *sink, GstClockTime time,
                                                  GstClockTimeDiff * jitter);
 GstFlowReturn   gst_base_sink_wait              (GstBaseSink *sink, GstClockTime time,
