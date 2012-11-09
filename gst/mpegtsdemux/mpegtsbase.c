@@ -1362,6 +1362,7 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     case GST_EVENT_FLUSH_START:
+      MPEGTSBASE_SET_FLUSHING (base, TRUE);
       mpegts_packetizer_flush (base->packetizer);
       mpegts_base_flush (base);
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
@@ -1369,6 +1370,9 @@ mpegts_base_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
       base->seen_pat = FALSE;
+      res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
+      MPEGTSBASE_SET_FLUSHING (base, FALSE);
+      break;
       /* Passthrough */
     default:
       res = GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, event);
@@ -1398,6 +1402,11 @@ mpegts_base_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
     MpegTSPacketizerSection * section)
 {
   MpegTSBaseClass *klass = GST_MPEGTS_BASE_GET_CLASS (base);
+
+  if (G_UNLIKELY (MPEGTSBASE_IS_FLUSHING (base))) {
+    GST_LOG_OBJECT (base, "Dropping because flushing");
+    return GST_FLOW_FLUSHING;
+  }
 
   /* Call implementation */
   if (G_UNLIKELY (klass->push == NULL)) {

@@ -119,6 +119,7 @@ struct _MpegTSBase {
   guint8 *is_pes;
 
   gboolean disposed;
+  gboolean flushing;              /* ATOMIC */
 
   /* size of the MpegTSBaseProgram structure, can be overridden
    * by subclasses if they have their own MpegTSBaseProgram subclasses. */
@@ -182,6 +183,9 @@ struct _MpegTSBaseClass {
 #define MPEGTS_BIT_SET(field, offs)    ((field)[(offs) >> 3] |=  (1 << ((offs) & 0x7)))
 #define MPEGTS_BIT_UNSET(field, offs)  ((field)[(offs) >> 3] &= ~(1 << ((offs) & 0x7)))
 #define MPEGTS_BIT_IS_SET(field, offs) ((field)[(offs) >> 3] &   (1 << ((offs) & 0x7)))
+
+#define MPEGTSBASE_IS_FLUSHING(self)        (g_atomic_int_get (&((self)->flushing)))
+#define MPEGTSBASE_SET_FLUSHING(self,state) (g_atomic_int_set (&((self)->flushing),state))
 
 G_GNUC_INTERNAL GType mpegts_base_get_type(void);
 
