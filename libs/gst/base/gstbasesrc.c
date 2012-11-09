@@ -3348,7 +3348,7 @@ gst_base_src_stop (GstBaseSrc * basesrc)
 
 was_stopped:
   {
-    GST_DEBUG_OBJECT (basesrc, "was started");
+    GST_DEBUG_OBJECT (basesrc, "was stopped");
     GST_OBJECT_UNLOCK (basesrc);
     return TRUE;
   }
