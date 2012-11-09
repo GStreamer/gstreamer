@@ -2490,7 +2490,7 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
   /* we got data, so note things are looking up again, reduce
    * the error count, if there is one */
   if (G_UNLIKELY (priv->error_count))
-    priv->error_count--;
+    priv->error_count = 0;
 
   ret = gst_pad_push (decoder->srcpad, buf);
 
