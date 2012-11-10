@@ -478,6 +478,7 @@ fill_planes (GstVideoInfo * info)
       info->size = (info->stride[0] + GST_ROUND_UP_8 (width)) * height;
       break;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
       info->stride[0] = GST_ROUND_UP_4 (width);
       info->stride[1] = info->stride[0];
       info->stride[2] = info->stride[0];
@@ -544,6 +545,8 @@ fill_planes (GstVideoInfo * info)
       break;
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_10BE:
       info->stride[0] = GST_ROUND_UP_4 (width * 2);
       info->stride[1] = info->stride[0];
       info->stride[2] = info->stride[0];
