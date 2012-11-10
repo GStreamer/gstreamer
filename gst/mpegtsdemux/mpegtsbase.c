@@ -1674,7 +1674,6 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     /* First try if upstream supports seeking in TIME format */
     if (gst_pad_push_event (base->sinkpad, gst_event_ref (event))) {
       GST_DEBUG ("upstream handled SEEK event");
-      gst_event_unref (event);
       return TRUE;
     }
     /* FIXME : Actually ... it is supported, we just need to convert
