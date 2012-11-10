@@ -586,10 +586,12 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       if (multifilesink->file == NULL) {
         if (!gst_multi_file_sink_open_next_file (multifilesink))
           goto stdio_write_error;
-      }
 
-      if (!gst_multi_file_sink_write_stream_headers (multifilesink))
-        goto stdio_write_error;
+        /* we don't need to write stream headers here, they will be inserted in
+         * the stream by upstream elements if key unit events have
+         * all_headers=true set
+         */
+      }
 
       ret = fwrite (map.data, map.size, 1, multifilesink->file);
 
