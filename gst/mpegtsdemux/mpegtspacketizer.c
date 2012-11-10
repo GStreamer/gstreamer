@@ -2624,7 +2624,6 @@ mpegts_packetizer_next_packet (MpegTSPacketizer2 * packetizer,
       priv->mapped =
           (guint8 *) gst_adapter_map (packetizer->adapter, priv->mapped_size);
       priv->offset = 0;
-      g_return_val_if_fail (priv->mapped, PACKET_NEED_MORE);
     }
     packet->data_start = priv->mapped + priv->offset;
 
