@@ -797,14 +797,6 @@ done:
   return TRUE;
 
   /* ERRORS */
-out_flushing:
-  {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "refusing event, we are flushing");
-    GST_QUEUE_MUTEX_UNLOCK (queue);
-    gst_event_unref (event);
-    return FALSE;
-  }
 out_eos:
   {
     GST_CAT_LOG_OBJECT (queue_dataflow, queue, "refusing event, we are EOS");
