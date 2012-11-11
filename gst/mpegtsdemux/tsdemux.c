@@ -1092,6 +1092,9 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream)
   stream->fixed_dts = 0;
   stream->nb_pts_rollover = 0;
   stream->nb_dts_rollover = 0;
+  if (stream->flow_return == GST_FLOW_FLUSHING) {
+    stream->flow_return = GST_FLOW_OK;
+  }
 }
 
 static void
