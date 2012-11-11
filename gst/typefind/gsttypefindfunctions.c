@@ -1696,7 +1696,7 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
   blocksize = GST_READ_UINT32_LE (data + 4);
   GST_LOG ("wavpack header, blocksize=0x%04x", blocksize);
   offset = 32;
-  while (offset < 32 + blocksize) {
+  while (offset < 8 + blocksize) {
     guint32 sublen;
 
     /* get chunk header */
@@ -1711,7 +1711,7 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
     } else {
       sublen += 1 + 1;          /* id + length */
     }
-    if (sublen > blocksize - offset + 32) {
+    if (offset + sublen > 8 + blocksize) {
       GST_LOG ("chunk length too big (%u > %" G_GUINT64_FORMAT ")", sublen,
           blocksize - offset);
       break;
