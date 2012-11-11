@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
 
 static gboolean plugin_init (GstPlugin * plugin);
 
@@ -31,7 +32,7 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     cdio,
     "Read audio from audio CDs",
-    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+    plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
 #include "gstcdio.h"
 #include "gstcdiocddasrc.h"
@@ -44,7 +45,9 @@ void
 gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext, track_t track,
     cdtext_field_t field, const gchar * gst_tag, GstTagList ** p_tags)
 {
+  const gchar *vars[] = { "GST_CDTEXT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
   const gchar *txt;
+  gchar *txt_utf8;
 
 #if LIBCDIO_VERSION_NUM > 83
   txt = cdtext_get_const (cdtext, field, track);
@@ -56,19 +59,26 @@ gst_cdio_add_cdtext_field (GstObject * src, cdtext_t * cdtext, track_t track,
     return;
   }
 
-  /* FIXME: beautify strings (they might be all uppercase for example)? */
-  /* FIXME: what encoding are these strings in? Let's hope ASCII or UTF-8 */
-  if (!g_utf8_validate (txt, -1, NULL)) {
-    GST_WARNING_OBJECT (src, "CD-TEXT string is not UTF-8! (%s)", gst_tag);
+  /* The character encoding is not specified, and there is no provision
+   * for indicating in the CD-Text data which encoding is in use.. */
+  txt_utf8 = gst_tag_freeform_string_to_utf8 (txt, -1, vars);
+
+  if (txt_utf8 == NULL) {
+    GST_WARNING_OBJECT (src, "CD-TEXT %s could not be converted to UTF-8, "
+        "try setting the GST_CDTEXT_TAG_ENCODING or GST_TAG_ENCODING "
+        "environment variable", gst_tag);
     return;
   }
+
+  /* FIXME: beautify strings (they might be all uppercase for example)? */
 
   if (*p_tags == NULL)
     *p_tags = gst_tag_list_new_empty ();
 
-  gst_tag_list_add (*p_tags, GST_TAG_MERGE_REPLACE, gst_tag, txt, NULL);
+  gst_tag_list_add (*p_tags, GST_TAG_MERGE_REPLACE, gst_tag, txt_utf8, NULL);
 
-  GST_DEBUG_OBJECT (src, "CD-TEXT: %s = %s", gst_tag, txt);
+  GST_DEBUG_OBJECT (src, "CD-TEXT: %s = %s", gst_tag, txt_utf8);
+  g_free (txt_utf8);
 }
 
 GstTagList *

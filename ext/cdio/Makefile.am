@@ -11,7 +11,7 @@ libgstcdio_la_CFLAGS = \
 	$(CDIO_CFLAGS)
 
 libgstcdio_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) \
+	$(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_API_VERSION) -lgsttag-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) \
 	$(CDIO_LIBS)
 
