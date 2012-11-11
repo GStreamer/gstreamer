@@ -289,6 +289,20 @@ get_pcr_table (MpegTSPacketizer2 * packetizer, guint16 pid)
   return res;
 }
 
+static void
+flush_observations (MpegTSPacketizer2 * packetizer)
+{
+  MpegTSPacketizerPrivate *priv = packetizer->priv;
+  gint i;
+
+  for (i = 0; i < priv->lastobsid; i++) {
+    g_free (priv->observations[i]);
+    priv->observations[i] = NULL;
+  }
+  memset (priv->pcrtablelut, 0xff, 0x200);
+  priv->lastobsid = 0;
+}
+
 static gint
 mpegts_packetizer_stream_subtable_compare (gconstpointer a, gconstpointer b)
 {
@@ -425,6 +439,7 @@ mpegts_packetizer_dispose (GObject * object)
       if (packetizer->priv->iconvs[i] != (GIConv) - 1)
         g_iconv_close (packetizer->priv->iconvs[i]);
 
+    flush_observations (packetizer);
   }
 
   if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose)
@@ -2478,6 +2493,7 @@ mpegts_packetizer_flush (MpegTSPacketizer2 * packetizer)
   packetizer->priv->offset = 0;
   packetizer->priv->mapped_size = 0;
   packetizer->priv->last_in_time = GST_CLOCK_TIME_NONE;
+  flush_observations (packetizer);
 }
 
 void
