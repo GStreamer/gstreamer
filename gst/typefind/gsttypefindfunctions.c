@@ -845,6 +845,90 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
 #endif
 }
 
+/* TODO: we could probably make a generic function for this.. */
+static gint
+aac_type_find_scan_loas_frames_ep (GstTypeFind * tf, DataScanCtx * scan_ctx,
+    gint max_frames)
+{
+  DataScanCtx c = *scan_ctx;
+  guint16 snc;
+  guint len;
+  gint count = 0;
+
+  do {
+    if (!data_scan_ctx_ensure_data (tf, &c, 5))
+      break;
+
+    /* EPAudioSyncStream */
+    len = ((c.data[2] & 0x0f) << 9) | (c.data[3] << 1) |
+        ((c.data[4] & 0x80) >> 7);
+
+    if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+      GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+      break;
+    }
+
+    /* check length of frame  */
+    snc = GST_READ_UINT16_BE (c.data + len);
+    if (snc != 0x4de1) {
+      GST_DEBUG ("No sync found at 0x%" G_GINT64_MODIFIER "x", c.offset + len);
+      break;
+    }
+
+    ++count;
+
+    GST_DEBUG ("Found LOAS syncword #%d at offset 0x%" G_GINT64_MODIFIER "x, "
+        "framelen %u", count, c.offset, len);
+
+    data_scan_ctx_advance (tf, &c, len);
+  } while (count < max_frames && (c.offset - scan_ctx->offset) < 64 * 1024);
+
+  GST_DEBUG ("found %d consecutive frames", count);
+  return count;
+}
+
+static gint
+aac_type_find_scan_loas_frames (GstTypeFind * tf, DataScanCtx * scan_ctx,
+    gint max_frames)
+{
+  DataScanCtx c = *scan_ctx;
+  guint16 snc;
+  guint len;
+  gint count = 0;
+
+  do {
+    if (!data_scan_ctx_ensure_data (tf, &c, 3))
+      break;
+
+    /* AudioSyncStream */
+    len = ((c.data[1] & 0x1f) << 8) | c.data[2];
+    /* add size of sync stream header */
+    len += 3;
+
+    if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len)) {
+      GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+      break;
+    }
+
+    /* check length of frame  */
+    snc = GST_READ_UINT16_BE (c.data + len);
+    if ((snc & 0xffe0) != 0x56e0) {
+      GST_DEBUG ("No sync found at 0x%" G_GINT64_MODIFIER "x", c.offset + len);
+      break;
+    }
+
+    ++count;
+
+    GST_DEBUG ("Found LOAS syncword #%d at offset 0x%" G_GINT64_MODIFIER "x, "
+        "framelen %u", count, c.offset, len);
+
+    data_scan_ctx_advance (tf, &c, len);
+  } while (count < max_frames && (c.offset - scan_ctx->offset) < 64 * 1024);
+
+  GST_DEBUG ("found %d consecutive frames", count);
+  return count;
+}
+
 /*** audio/mpeg version 2, 4 ***/
 
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, "
@@ -854,8 +938,10 @@ static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, "
 static void
 aac_type_find (GstTypeFind * tf, gpointer unused)
 {
-  /* LUT to convert the AudioObjectType from the ADTS header to a string */
   DataScanCtx c = { 0, NULL, 0 };
+  GstTypeFindProbability best_probability = GST_TYPE_FIND_NONE;
+  GstCaps *best_caps = NULL;
+  guint best_count = 0;
 
   while (c.offset < AAC_AMOUNT) {
     guint snc, len;
@@ -941,45 +1027,29 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
       }
 
       GST_DEBUG ("No next frame found... (should have been at 0x%x)", len);
-    } else if (G_UNLIKELY (((snc & 0xffe0) == 0x56e0) || (snc == 0x4de1))) {
+    } else if (G_UNLIKELY ((snc & 0xffe0) == 0x56e0 || snc == 0x4de1)) {
+      gint count;
+
       /* LOAS frame */
+      GST_INFO ("Possible LOAS syncword at offset 0x%" G_GINT64_MODIFIER
+          "x, scanning for more frames...", c.offset);
 
-      GST_DEBUG ("Found one LOAS syncword at offset 0x%" G_GINT64_MODIFIER
-          "x, tracing next...", c.offset);
+      if (snc == 0x4de1)
+        count = aac_type_find_scan_loas_frames_ep (tf, &c, 20);
+      else
+        count = aac_type_find_scan_loas_frames (tf, &c, 20);
 
-      /* check length of frame for each type of detectable LOAS streams */
-      if (snc == 0x4de1) {
-        /* EPAudioSyncStream */
-        len = ((c.data[2] & 0x0f) << 9) | (c.data[3] << 1) |
-            ((c.data[4] & 0x80) >> 7);
-        /* add size of EP sync stream header */
-        len += 7;
-      } else {
-        /* AudioSyncStream */
-        len = ((c.data[1] & 0x1f) << 8) | c.data[2];
-        /* add size of sync stream header */
-        len += 3;
-      }
-
-      if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
-        GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
-        goto next;
-      }
-
-      /* check if there's a second LOAS frame */
-      snc = GST_READ_UINT16_BE (c.data + len);
-      if (((snc & 0xffe0) == 0x56e0) || (snc == 0x4de1)) {
-        GST_DEBUG ("Found second LOAS syncword at offset 0x%"
-            G_GINT64_MODIFIER "x, framelen %u", c.offset, len);
-
-        gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
+      if (count >= 3 && count > best_count) {
+        gst_caps_unref (best_caps);
+        best_caps = gst_caps_new_simple ("audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
             "mpegversion", G_TYPE_INT, 4,
             "stream-format", G_TYPE_STRING, "loas", NULL);
-        break;
+        best_count = count;
+        best_probability = GST_TYPE_FIND_POSSIBLE - 10 + count * 3;
+        if (best_probability >= GST_TYPE_FIND_LIKELY)
+          break;
       }
-
-      GST_DEBUG ("No next frame found... (should have been at 0x%x)", len);
     } else if (!memcmp (c.data, "ADIF", 4)) {
       /* ADIF header */
       gst_type_find_suggest_simple (tf, GST_TYPE_FIND_LIKELY, "audio/mpeg",
@@ -991,6 +1061,11 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
   next:
 
     data_scan_ctx_advance (tf, &c, 1);
+  }
+
+  if (best_probability > GST_TYPE_FIND_NONE) {
+    gst_type_find_suggest (tf, best_probability, best_caps);
+    gst_caps_unref (best_caps);
   }
 }
 
