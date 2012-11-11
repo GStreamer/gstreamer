@@ -4464,6 +4464,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
       /* Remove sticky EOS events */
       GST_LOG_OBJECT (pad, "Removing pending EOS events");
       remove_event_by_type (pad, GST_EVENT_EOS);
+      remove_event_by_type (pad, GST_EVENT_SEGMENT);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
 
       type |= GST_PAD_PROBE_TYPE_EVENT_FLUSH;
@@ -4751,8 +4752,9 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
         GST_CAT_DEBUG_OBJECT (GST_CAT_EVENT, pad, "cleared flush flag");
       }
       /* Remove pending EOS events */
-      GST_LOG_OBJECT (pad, "Removing pending EOS events");
+      GST_LOG_OBJECT (pad, "Removing pending EOS and SEGMENT events");
       remove_event_by_type (pad, GST_EVENT_EOS);
+      remove_event_by_type (pad, GST_EVENT_SEGMENT);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
 
       GST_OBJECT_UNLOCK (pad);
