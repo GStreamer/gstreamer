@@ -45,6 +45,9 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_GET_CLASS(obj) \
   (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE, GESTimelineClass))
 
+#define GES_TIMELINE_GET_TRACKS(obj) (GES_TIMELINE (obj)->tracks)
+#define GES_TIMELINE_GET_LAYERS(obj) (GES_TIMELINE (obj)->layers)
+
 typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
 /**
@@ -53,6 +56,12 @@ typedef struct _GESTimelinePrivate GESTimelinePrivate;
  */
 struct _GESTimeline {
   GstBin parent;
+
+  /* <readonly> */
+  /* A list of GESTimelineLayer sorted by priority */
+  GList *layers;
+  /* A list of private track data */
+  GList *tracks;
 
   /*< private >*/
   GESTimelinePrivate *priv;

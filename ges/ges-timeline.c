@@ -111,9 +111,6 @@ struct _MoveContext
 
 struct _GESTimelinePrivate
 {
-  GList *layers;                /* A list of GESTimelineLayer sorted by priority */
-  GList *tracks;                /* A list of private track data */
-
   /* The duration of the timeline */
   gint64 duration;
 
@@ -184,7 +181,7 @@ ges_timeline_enable_update_internal (GESTimeline * timeline, gboolean enabled)
 
   GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
 
-  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
     if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
       res = FALSE;
   }
@@ -239,10 +236,11 @@ ges_timeline_set_property (GObject * object, guint property_id,
 static void
 ges_timeline_dispose (GObject * object)
 {
-  GESTimelinePrivate *priv = GES_TIMELINE (object)->priv;
+  GESTimeline *tl = GES_TIMELINE (object);
+  GESTimelinePrivate *priv = tl->priv;
 
-  while (priv->layers) {
-    GESTimelineLayer *layer = (GESTimelineLayer *) priv->layers->data;
+  while (tl->layers) {
+    GESTimelineLayer *layer = (GESTimelineLayer *) tl->layers->data;
     ges_timeline_remove_layer (GES_TIMELINE (object), layer);
   }
 
@@ -251,8 +249,8 @@ ges_timeline_dispose (GObject * object)
    * objects aren't notified that their gnlobjects have been destroyed.
    */
 
-  while (priv->tracks) {
-    TrackPrivate *tr_priv = (TrackPrivate *) priv->tracks->data;
+  while (tl->tracks) {
+    TrackPrivate *tr_priv = (TrackPrivate *) tl->tracks->data;
     ges_timeline_remove_track (GES_TIMELINE (object), tr_priv->track);
   }
 
@@ -435,7 +433,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
 static void
 ges_timeline_init (GESTimeline * self)
 {
-  GESTimelinePrivate *priv;
+  GESTimelinePrivate *priv = self->priv;
 
   GST_DEBUG_CATEGORY_INIT (ges_timeline_debug, "gestimeline",
       GST_DEBUG_FG_YELLOW, "ges timeline");
@@ -444,8 +442,8 @@ ges_timeline_init (GESTimeline * self)
       GES_TYPE_TIMELINE, GESTimelinePrivate);
 
   priv = self->priv;
-  priv->layers = NULL;
-  priv->tracks = NULL;
+  self->layers = NULL;
+  self->tracks = NULL;
   priv->duration = 0;
   priv->snapping_distance = 0;
 
@@ -1356,7 +1354,7 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
       prio = ges_timeline_layer_get_priority (layer);
 
       /* We know that the layer exists as we created it */
-      new_layer = GES_TIMELINE_LAYER (g_list_nth_data (timeline->priv->layers,
+      new_layer = GES_TIMELINE_LAYER (g_list_nth_data (timeline->layers,
               prio + offset));
 
       if (new_layer == NULL) {
@@ -1394,7 +1392,7 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
 {
   GList *tmp;
 
-  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
     GESTrack *track = tr_priv->track;
 
@@ -1423,7 +1421,7 @@ static void
 layer_priority_changed_cb (GESTimelineLayer * layer,
     GParamSpec * arg G_GNUC_UNUSED, GESTimeline * timeline)
 {
-  timeline->priv->layers = g_list_sort (timeline->priv->layers, (GCompareFunc)
+  timeline->layers = g_list_sort (timeline->layers, (GCompareFunc)
       sort_layers);
 }
 
@@ -1449,7 +1447,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTrackObject *trobj = (GESTrackObject *) tmp->data;
 
     GST_DEBUG ("Trying to remove TrackObject %p", trobj);
-    if (G_LIKELY (g_list_find_custom (timeline->priv->tracks,
+    if (G_LIKELY (g_list_find_custom (timeline->tracks,
                 ges_track_object_get_track (trobj),
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
@@ -1549,7 +1547,7 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   tr_priv->pad = pad;
 
   no_more = TRUE;
-  for (tmp = tr_priv->timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = tr_priv->timeline->tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
 
     if (!tr_priv->pad) {
@@ -1692,11 +1690,10 @@ GESTimelineLayer *
 ges_timeline_append_layer (GESTimeline * timeline)
 {
   guint32 priority;
-  GESTimelinePrivate *priv = timeline->priv;
   GESTimelineLayer *layer;
 
   layer = ges_timeline_layer_new ();
-  priority = g_list_length (priv->layers);
+  priority = g_list_length (timeline->layers);
   ges_timeline_layer_set_priority (layer, priority);
 
   ges_timeline_add_layer (timeline, layer);
@@ -1718,7 +1715,6 @@ gboolean
 ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
   GList *objects, *tmp;
-  GESTimelinePrivate *priv = timeline->priv;
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
@@ -1729,13 +1725,13 @@ ges_timeline_add_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   }
 
   /* Add to the list of layers, make sure we don't already control it */
-  if (G_UNLIKELY (g_list_find (priv->layers, (gconstpointer) layer))) {
+  if (G_UNLIKELY (g_list_find (timeline->layers, (gconstpointer) layer))) {
     GST_WARNING ("Layer is already controlled by this timeline");
     return FALSE;
   }
 
   g_object_ref_sink (layer);
-  priv->layers = g_list_insert_sorted (priv->layers, layer,
+  timeline->layers = g_list_insert_sorted (timeline->layers, layer,
       (GCompareFunc) sort_layers);
 
   /* Inform the layer that it belongs to a new timeline */
@@ -1780,11 +1776,10 @@ gboolean
 ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
 {
   GList *layer_objects, *tmp;
-  GESTimelinePrivate *priv = timeline->priv;
 
   GST_DEBUG ("timeline:%p, layer:%p", timeline, layer);
 
-  if (G_UNLIKELY (!g_list_find (priv->layers, layer))) {
+  if (G_UNLIKELY (!g_list_find (timeline->layers, layer))) {
     GST_WARNING ("Layer doesn't belong to this timeline");
     return FALSE;
   }
@@ -1805,7 +1800,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESTimelineLayer * layer)
   g_signal_handlers_disconnect_by_func (layer, layer_object_removed_cb,
       timeline);
 
-  priv->layers = g_list_remove (priv->layers, layer);
+  timeline->layers = g_list_remove (timeline->layers, layer);
 
   ges_timeline_layer_set_timeline (layer, NULL);
 
@@ -1835,13 +1830,12 @@ gboolean
 ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
 {
   TrackPrivate *tr_priv;
-  GESTimelinePrivate *priv = timeline->priv;
   GList *tmp;
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* make sure we don't already control it */
-  if (G_UNLIKELY (g_list_find_custom (priv->tracks, (gconstpointer) track,
+  if (G_UNLIKELY (g_list_find_custom (timeline->tracks, (gconstpointer) track,
               (GCompareFunc) custom_find_track))) {
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
@@ -1859,7 +1853,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   tr_priv->track = track;
 
   /* Add the track to the list of tracks we track */
-  priv->tracks = g_list_append (priv->tracks, tr_priv);
+  timeline->tracks = g_list_append (timeline->tracks, tr_priv);
 
   /* Listen to pad-added/-removed */
   g_signal_connect (track, "pad-added", (GCallback) pad_added_cb, tr_priv);
@@ -1882,7 +1876,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   g_signal_connect (G_OBJECT (track), "track-object-removed",
       G_CALLBACK (track_object_removed_cb), timeline);
 
-  for (tmp = priv->layers; tmp; tmp = tmp->next) {
+  for (tmp = timeline->layers; tmp; tmp = tmp->next) {
     GList *objects, *obj;
     objects = ges_timeline_layer_get_objects (tmp->data);
 
@@ -1919,19 +1913,18 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
   GList *tmp;
   TrackPrivate *tr_priv;
-  GESTimelinePrivate *priv = timeline->priv;
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   if (G_UNLIKELY (!(tmp =
-              g_list_find_custom (priv->tracks, (gconstpointer) track,
+              g_list_find_custom (timeline->tracks, (gconstpointer) track,
                   (GCompareFunc) custom_find_track)))) {
     GST_WARNING ("Track doesn't belong to this timeline");
     return FALSE;
   }
 
   tr_priv = tmp->data;
-  priv->tracks = g_list_remove (priv->tracks, tr_priv);
+  timeline->tracks = g_list_remove (timeline->tracks, tr_priv);
 
   ges_track_set_timeline (track, NULL);
 
@@ -1987,7 +1980,7 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 {
   GList *tmp;
 
-  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
     if (pad == tr_priv->ghostpad)
       return tr_priv->track;
@@ -2010,7 +2003,7 @@ ges_timeline_get_tracks (GESTimeline * timeline)
 {
   GList *tmp, *res = NULL;
 
-  for (tmp = timeline->priv->tracks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
     res = g_list_append (res, g_object_ref (tr_priv->track));
   }
@@ -2033,7 +2026,7 @@ ges_timeline_get_layers (GESTimeline * timeline)
 {
   GList *tmp, *res = NULL;
 
-  for (tmp = timeline->priv->layers; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = timeline->layers; tmp; tmp = g_list_next (tmp)) {
     res = g_list_insert_sorted (res, g_object_ref (tmp->data),
         (GCompareFunc) sort_layers);
   }
@@ -2056,7 +2049,7 @@ ges_timeline_is_updating (GESTimeline * timeline)
 
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
 
-  for (tmp = timeline->priv->tracks; tmp; tmp = tmp->next) {
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
     if (!ges_track_is_updating (((TrackPrivate *) tmp->data)->track))
       return FALSE;
   }
