@@ -53,6 +53,7 @@ gst_rtsp_session_media_class_init (GstRTSPSessionMediaClass * klass)
 static void
 gst_rtsp_session_media_init (GstRTSPSessionMedia * media)
 {
+  g_mutex_init (&media->lock);
   media->state = GST_RTSP_STATE_INIT;
 }
 
@@ -71,6 +72,7 @@ gst_rtsp_session_media_finalize (GObject * obj)
 
   gst_rtsp_url_free (media->url);
   g_object_unref (media->media);
+  g_mutex_clear (&media->lock);
 
   G_OBJECT_CLASS (gst_rtsp_session_media_parent_class)->finalize (obj);
 }
@@ -136,13 +138,17 @@ gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (stream->idx < media->transports->len, NULL);
 
+  g_mutex_lock (&media->lock);
   result = g_ptr_array_index (media->transports, stream->idx);
   if (result == NULL) {
     result = gst_rtsp_stream_transport_new (stream, tr);
     g_ptr_array_index (media->transports, stream->idx) = result;
+    g_mutex_unlock (&media->lock);
   } else {
     gst_rtsp_stream_transport_set_transport (result, tr);
+    g_mutex_unlock (&media->lock);
   }
+
   return result;
 }
 
@@ -164,7 +170,9 @@ gst_rtsp_session_media_get_transport (GstRTSPSessionMedia * media, guint idx)
   g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), NULL);
   g_return_val_if_fail (idx < media->transports->len, NULL);
 
+  g_mutex_lock (&media->lock);
   result = g_ptr_array_index (media->transports, idx);
+  g_mutex_unlock (&media->lock);
 
   return result;
 }
@@ -185,8 +193,10 @@ gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia * media,
 {
   g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), FALSE);
 
+  g_mutex_lock (&media->lock);
   range->min = media->counter++;
   range->max = media->counter++;
+  g_mutex_unlock (&media->lock);
 
   return TRUE;
 }
@@ -207,7 +217,9 @@ gst_rtsp_session_media_set_state (GstRTSPSessionMedia * media, GstState state)
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), FALSE);
 
+  g_mutex_lock (&media->lock);
   ret = gst_rtsp_media_set_state (media->media, state, media->transports);
+  g_mutex_unlock (&media->lock);
 
   return ret;
 }

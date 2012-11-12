@@ -53,6 +53,7 @@ struct _GstRTSPSessionMedia
 {
   GObject  parent;
 
+  GMutex        lock;
   GstRTSPUrl   *url;
   GstRTSPMedia *media;
   GstRTSPState  state;
