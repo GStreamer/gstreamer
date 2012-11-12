@@ -73,8 +73,8 @@ struct _GstAmcAudioDec
   GstClockTime last_upstream_ts;
 
   /* Draining state */
-  GMutex *drain_lock;
-  GCond *drain_cond;
+  GMutex drain_lock;
+  GCond drain_cond;
   /* TRUE if EOS buffers shouldn't be forwarded */
   gboolean draining;
 
