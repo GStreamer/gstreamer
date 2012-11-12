@@ -153,6 +153,7 @@ enum
   PROP_FLICKER_MODE,
   PROP_FOCUS_MODE,
   PROP_ZOOM,
+  PROP_SMOOTH_ZOOM,
   PROP_LAST
 };
 
@@ -298,6 +299,12 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_VIDEO_STABILIZATION,
       properties[PROP_VIDEO_STABILIZATION]);
+
+  properties[PROP_SMOOTH_ZOOM] = g_param_spec_boolean ("smooth-zoom",
+      "Smooth Zoom", "Use smooth zoom when available",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_SMOOTH_ZOOM,
+      properties[PROP_SMOOTH_ZOOM]);
 
   /* Override GstPhotography properties */
   g_object_class_override_property (gobject_class, PROP_WB_MODE,
@@ -448,6 +455,9 @@ gst_ahc_src_set_property (GObject * object, guint prop_id,
         }
       }
       break;
+    case PROP_SMOOTH_ZOOM:
+      self->smooth_zoom = g_value_get_boolean (value);
+      break;
     case PROP_WB_MODE:{
       GstWhiteBalanceMode wb = g_value_get_enum (value);
 
@@ -589,6 +599,9 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
           gst_ahc_parameters_free (params);
         }
       }
+      break;
+    case PROP_SMOOTH_ZOOM:
+      g_value_set_boolean (value, self->smooth_zoom);
       break;
     case PROP_WB_MODE:{
       GstWhiteBalanceMode wb;
@@ -1542,8 +1555,15 @@ gst_ahc_src_set_zoom (GstPhotography * photo, gfloat zoom)
       }
 
       if (zoom_idx != -1) {
-        gst_ahc_parameters_set_zoom (params, zoom_idx);
-        ret = gst_ah_camera_set_parameters (self->camera, params);
+        if (self->smooth_zoom &&
+            gst_ahc_parameters_is_smooth_zoom_supported (params)) {
+          // First, we need to cancel any previous smooth zoom operation
+          gst_ah_camera_stop_smooth_zoom (self->camera);
+          ret = gst_ah_camera_start_smooth_zoom (self->camera, zoom_idx);
+        } else {
+          gst_ahc_parameters_set_zoom (params, zoom_idx);
+          ret = gst_ah_camera_set_parameters (self->camera, params);
+        }
       }
 
       gst_ahc_parameters_zoom_ratios_free (zoom_ratios);

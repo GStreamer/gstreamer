@@ -61,6 +61,7 @@ struct _GstAHCSrc
   gint fps_min;
   gint fps_max;
   gboolean start;
+  gboolean smooth_zoom;
 
   /* Properties */
   gint device;
