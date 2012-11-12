@@ -104,10 +104,12 @@ static struct
   jmethodID getSupportedSceneModes;
   jmethodID getSupportedWhiteBalance;
   jmethodID getVerticalViewAngle;
+  jmethodID getVideoStabilization;
   jmethodID getWhiteBalance;
   jmethodID getZoom;
   jmethodID getZoomRatios;
   jmethodID isSmoothZoomSupported;
+  jmethodID isVideoStabilizationSupported;
   jmethodID isZoomSupported;
   jmethodID setAntibanding;
   jmethodID setColorEffect;
@@ -118,6 +120,7 @@ static struct
   jmethodID setPreviewFpsRange;
   jmethodID setPreviewSize;
   jmethodID setSceneMode;
+  jmethodID setVideoStabilization;
   jmethodID setWhiteBalance;
   jmethodID setZoom;
   jmethodID unflatten;
@@ -371,6 +374,8 @@ _init_classes (void)
       getExposureCompensationStep, "()F");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, getFlashMode,
       "()Ljava/lang/String;");
+  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getFocalLength,
+      "()F");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, getFocusMode,
       "()Ljava/lang/String;");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters,
@@ -408,6 +413,8 @@ _init_classes (void)
       getSupportedWhiteBalance, "()Ljava/util/List;");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, getVerticalViewAngle,
       "()F");
+  GST_DVM_GET_METHOD (android_hardware_camera_parameters, getVideoStabilization,
+      "()Z");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, getWhiteBalance,
       "()Ljava/lang/String;");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, getZoom, "()I");
@@ -415,6 +422,8 @@ _init_classes (void)
       "()Ljava/util/List;");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, isSmoothZoomSupported,
       "()Z");
+  GST_DVM_GET_METHOD (android_hardware_camera_parameters,
+      isVideoStabilizationSupported, "()Z");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, isZoomSupported,
       "()Z");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, setAntibanding,
@@ -437,6 +446,8 @@ _init_classes (void)
       "(Ljava/lang/String;)V");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, setWhiteBalance,
       "(Ljava/lang/String;)V");
+  GST_DVM_GET_METHOD (android_hardware_camera_parameters, setVideoStabilization,
+      "(Z)V");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, setZoom, "(I)V");
   GST_DVM_GET_METHOD (android_hardware_camera_parameters, unflatten,
       "(Ljava/lang/String;)V");
@@ -3034,6 +3045,17 @@ gst_ahc_parameters_get_vertical_view_angle (GstAHCParameters * self)
   return angle;
 }
 
+gboolean
+gst_ahc_parameters_get_video_stabilization (GstAHCParameters * self)
+{
+  JNIEnv *env = gst_dvm_get_env ();
+  gboolean ret;
+
+  ret = AHCP_CALL (return FALSE, Boolean, getVideoStabilization);
+
+  return ret;
+}
+
 const gchar *
 gst_ahc_parameters_get_white_balance (GstAHCParameters * self)
 {
@@ -3107,6 +3129,17 @@ gst_ahc_parameters_is_smooth_zoom_supported (GstAHCParameters * self)
   gboolean supported;
 
   supported = AHCP_CALL (return FALSE, Boolean, isSmoothZoomSupported);
+
+  return supported;
+}
+
+gboolean
+gst_ahc_parameters_is_video_stabilization_supported (GstAHCParameters * self)
+{
+  JNIEnv *env = gst_dvm_get_env ();
+  gboolean supported;
+
+  supported = AHCP_CALL (return FALSE, Boolean, isVideoStabilizationSupported);
 
   return supported;
 }
@@ -3238,6 +3271,18 @@ gst_ahc_parameters_set_scene_mode (GstAHCParameters * self, const gchar * value)
     return FALSE;
 
   AHCP_CALL (return FALSE, Void, setSceneMode, scene_mode);
+
+  return TRUE;
+}
+
+
+gboolean
+gst_ahc_parameters_set_video_stabilization (GstAHCParameters * self,
+    gboolean toggle)
+{
+  JNIEnv *env = gst_dvm_get_env ();
+
+  AHCP_CALL (return FALSE, Void, setVideoStabilization, toggle);
 
   return TRUE;
 }

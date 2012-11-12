@@ -204,12 +204,15 @@ void gst_ahc_parameters_supported_scene_modes_free (GList * list);
 GList *gst_ahc_parameters_get_supported_white_balance (GstAHCParameters * self);
 void gst_ahc_parameters_supported_white_balance_free (GList * list);
 gfloat gst_ahc_parameters_get_vertical_view_angle (GstAHCParameters * self);
+gboolean gst_ahc_parameters_get_video_stabilization (GstAHCParameters * self);
 const gchar *gst_ahc_parameters_get_white_balance (GstAHCParameters * self);
 gint gst_ahc_parameters_get_zoom (GstAHCParameters * self);
 /* GList <int> */
 GList *gst_ahc_parameters_get_zoom_ratios (GstAHCParameters * self);
 void gst_ahc_parameters_zoom_ratios_free (GList * list);
 gboolean gst_ahc_parameters_is_smooth_zoom_supported (GstAHCParameters * self);
+gboolean gst_ahc_parameters_is_video_stabilization_supported (
+    GstAHCParameters * self);
 gboolean gst_ahc_parameters_is_zoom_supported (GstAHCParameters * self);
 gboolean gst_ahc_parameters_set_antibanding (GstAHCParameters * self,
     const gchar * antibanding);
@@ -231,6 +234,8 @@ gboolean gst_ahc_parameters_set_scene_mode (GstAHCParameters * self,
     const gchar * value);
 gboolean gst_ahc_parameters_set_white_balance (GstAHCParameters * self,
     const gchar * value);
+gboolean gst_ahc_parameters_set_video_stabilization (GstAHCParameters * self,
+    gboolean toggle);
 gboolean gst_ahc_parameters_set_zoom (GstAHCParameters * self, gint value);
 gboolean gst_ahc_parameters_unflatten (GstAHCParameters * self,
     const gchar * flattened);
