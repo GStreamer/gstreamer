@@ -524,11 +524,9 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
     GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
 
     if (GST_ELEMENT_CAST (sink) == stream->appsink[0]) {
-      if (tr->send_rtp)
-        tr->send_rtp (buffer, tr->transport->interleaved.min, tr->user_data);
+      gst_rtsp_stream_transport_send_rtp (tr, buffer);
     } else {
-      if (tr->send_rtcp)
-        tr->send_rtcp (buffer, tr->transport->interleaved.max, tr->user_data);
+      gst_rtsp_stream_transport_send_rtcp (tr, buffer);
     }
   }
   gst_sample_unref (sample);

@@ -105,6 +105,11 @@ void                     gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamT
                                                                   gpointer user_data,
                                                                   GDestroyNotify  notify);
 
+gboolean                 gst_rtsp_stream_transport_send_rtp      (GstRTSPStreamTransport *trans,
+                                                                  GstBuffer *buffer);
+gboolean                 gst_rtsp_stream_transport_send_rtcp     (GstRTSPStreamTransport *trans,
+                                                                  GstBuffer *buffer);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_STREAM_TRANSPORT_H__ */

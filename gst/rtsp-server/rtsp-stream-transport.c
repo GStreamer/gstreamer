@@ -170,3 +170,49 @@ gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
     gst_rtsp_transport_free (trans->transport);
   trans->transport = tr;
 }
+
+/**
+ * gst_rtsp_stream_transport_send_rtp:
+ * @trans: a #GstRTSPStreamTransport
+ * @buffer: a #GstBuffer
+ *
+ * Send @buffer to the installed RTP callback for @trans.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_rtsp_stream_transport_send_rtp (GstRTSPStreamTransport * trans,
+    GstBuffer * buffer)
+{
+  gboolean res = FALSE;
+
+  if (trans->send_rtp)
+    res =
+        trans->send_rtp (buffer, trans->transport->interleaved.min,
+        trans->user_data);
+
+  return res;
+}
+
+/**
+ * gst_rtsp_stream_transport_send_rtcp:
+ * @trans: a #GstRTSPStreamTransport
+ * @buffer: a #GstBuffer
+ *
+ * Send @buffer to the installed RTCP callback for @trans.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
+    GstBuffer * buffer)
+{
+  gboolean res = FALSE;
+
+  if (trans->send_rtcp)
+    res =
+        trans->send_rtcp (buffer, trans->transport->interleaved.max,
+        trans->user_data);
+
+  return res;
+}
