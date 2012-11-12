@@ -312,8 +312,8 @@ gst_vp8_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
   GST_DEBUG_OBJECT (gst_vp8_dec, "set_format");
 
-  if (decoder->decoder_inited)
-    vpx_codec_destroy (&decoder->decoder);
+  if (gst_vp8_dec->decoder_inited)
+    vpx_codec_destroy (&gst_vp8_dec->decoder);
   gst_vp8_dec->decoder_inited = FALSE;
 
   if (gst_vp8_dec->input_state)
