@@ -137,7 +137,12 @@ public class FileDialog extends ListActivity {
 
         });
 
-        String startPath = getIntent().getStringExtra(START_PATH);
+        String startPath;
+        if (savedInstanceState != null) {
+            startPath = savedInstanceState.getString("currentPath");
+        } else {
+            startPath = getIntent().getStringExtra(START_PATH);
+        }
         startPath = startPath != null ? startPath : ROOT;
         getDir(startPath);
 
@@ -318,6 +323,12 @@ public class FileDialog extends ListActivity {
         } else {
             return super.onKeyDown(keyCode, event);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("currentPath", currentPath);
+        super.onSaveInstanceState(outState);
     }
 
 }
