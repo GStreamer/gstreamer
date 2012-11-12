@@ -344,7 +344,8 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 
       if (diff_ticks > MAX_FRAME_DIST_TICKS
           || diff_frames > MAX_FRAME_DIST_FRAMES) {
-        finish_frames = g_list_prepend (finish_frames, tmp);
+        finish_frames =
+            g_list_prepend (finish_frames, gst_video_codec_frame_ref (tmp));
       }
     }
   }
