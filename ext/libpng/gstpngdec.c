@@ -417,17 +417,6 @@ gst_pngdec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
   return TRUE;
 }
 
-
-/* Clean up the libpng structures */
-static gboolean
-gst_pngdec_reset (GstVideoDecoder * decoder, gboolean hard)
-{
-  gst_pngdec_stop (decoder);
-  gst_pngdec_start (decoder);
-
-  return TRUE;
-}
-
 static gboolean
 gst_pngdec_libpng_init (GstPngDec * pngdec)
 {
@@ -476,20 +465,10 @@ endinfo_failed:
   }
 }
 
-static gboolean
-gst_pngdec_start (GstVideoDecoder * decoder)
+
+static void
+gst_pngdec_libpng_clear (GstPngDec * pngdec)
 {
-  GstPngDec *pngdec = (GstPngDec *) decoder;
-
-  gst_pngdec_libpng_init (pngdec);
-
-  return TRUE;
-}
-
-static gboolean
-gst_pngdec_stop (GstVideoDecoder * decoder)
-{
-  GstPngDec *pngdec = (GstPngDec *) decoder;
   png_infopp info = NULL, endinfo = NULL;
 
   GST_LOG ("cleaning up libpng structures");
@@ -510,6 +489,24 @@ gst_pngdec_stop (GstVideoDecoder * decoder)
   }
 
   pngdec->color_type = -1;
+}
+
+static gboolean
+gst_pngdec_start (GstVideoDecoder * decoder)
+{
+  GstPngDec *pngdec = (GstPngDec *) decoder;
+
+  gst_pngdec_libpng_init (pngdec);
+
+  return TRUE;
+}
+
+static gboolean
+gst_pngdec_stop (GstVideoDecoder * decoder)
+{
+  GstPngDec *pngdec = (GstPngDec *) decoder;
+
+  gst_pngdec_libpng_clear (pngdec);
 
   if (pngdec->input_state) {
     gst_video_codec_state_unref (pngdec->input_state);
@@ -519,6 +516,16 @@ gst_pngdec_stop (GstVideoDecoder * decoder)
     gst_video_codec_state_unref (pngdec->output_state);
     pngdec->output_state = NULL;
   }
+
+  return TRUE;
+}
+
+/* Clean up the libpng structures */
+static gboolean
+gst_pngdec_reset (GstVideoDecoder * decoder, gboolean hard)
+{
+  gst_pngdec_libpng_clear (decoder);
+  gst_pngdec_libpng_init (decoder);
 
   return TRUE;
 }
