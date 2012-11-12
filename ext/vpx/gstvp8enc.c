@@ -1807,6 +1807,7 @@ gst_vp8_enc_process (GstVP8Enc * encoder)
 
     if (invisible) {
       user_data->invisible = g_list_append (user_data->invisible, buffer);
+      gst_video_codec_frame_unref (frame);
     } else {
       frame->output_buffer = buffer;
       g_mutex_unlock (&encoder->encoder_lock);
