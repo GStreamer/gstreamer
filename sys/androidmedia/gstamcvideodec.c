@@ -454,8 +454,8 @@ gst_amc_video_dec_init (GstAmcVideoDec * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
 
-  self->drain_lock = g_mutex_new ();
-  self->drain_cond = g_cond_new ();
+  g_mutex_init (&self->drain_lock);
+  g_cond_init (&self->drain_cond);
 }
 
 static gboolean
@@ -501,8 +501,8 @@ gst_amc_video_dec_finalize (GObject * object)
 {
   GstAmcVideoDec *self = GST_AMC_VIDEO_DEC (object);
 
-  g_mutex_free (self->drain_lock);
-  g_cond_free (self->drain_cond);
+  g_mutex_clear (&self->drain_lock);
+  g_cond_clear (&self->drain_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -530,10 +530,10 @@ gst_amc_video_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       self->flushing = TRUE;
       gst_amc_codec_flush (self->codec);
-      g_mutex_lock (self->drain_lock);
+      g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
-      g_cond_broadcast (self->drain_cond);
-      g_mutex_unlock (self->drain_lock);
+      g_cond_broadcast (&self->drain_cond);
+      g_mutex_unlock (&self->drain_lock);
       break;
     default:
       break;
@@ -1092,16 +1092,16 @@ retry:
 
   if (is_eos || flow_ret == GST_FLOW_EOS) {
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    g_mutex_lock (self->drain_lock);
+    g_mutex_lock (&self->drain_lock);
     if (self->draining) {
       GST_DEBUG_OBJECT (self, "Drained");
       self->draining = FALSE;
-      g_cond_broadcast (self->drain_cond);
+      g_cond_broadcast (&self->drain_cond);
     } else if (flow_ret == GST_FLOW_OK) {
       GST_DEBUG_OBJECT (self, "Component signalled EOS");
       flow_ret = GST_FLOW_EOS;
     }
-    g_mutex_unlock (self->drain_lock);
+    g_mutex_unlock (&self->drain_lock);
     GST_VIDEO_DECODER_STREAM_LOCK (self);
   } else {
     GST_DEBUG_OBJECT (self, "Finished frame: %s", gst_flow_get_name (flow_ret));
@@ -1236,10 +1236,10 @@ gst_amc_video_dec_stop (GstVideoDecoder * decoder)
 
   self->downstream_flow_ret = GST_FLOW_FLUSHING;
   self->eos = FALSE;
-  g_mutex_lock (self->drain_lock);
+  g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
-  g_cond_broadcast (self->drain_cond);
-  g_mutex_unlock (self->drain_lock);
+  g_cond_broadcast (&self->drain_cond);
+  g_mutex_unlock (&self->drain_lock);
   g_free (self->codec_data);
   self->codec_data_size = 0;
   if (self->input_state)
@@ -1647,7 +1647,7 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
     GstAmcBufferInfo buffer_info;
 
     GST_VIDEO_DECODER_STREAM_UNLOCK (self);
-    g_mutex_lock (self->drain_lock);
+    g_mutex_lock (&self->drain_lock);
     self->draining = TRUE;
 
     memset (&buffer_info, 0, sizeof (buffer_info));
@@ -1658,7 +1658,7 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
 
     if (gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info)) {
       GST_DEBUG_OBJECT (self, "Waiting until codec is drained");
-      g_cond_wait (self->drain_cond, self->drain_lock);
+      g_cond_wait (&self->drain_cond, &self->drain_lock);
       GST_DEBUG_OBJECT (self, "Drained codec");
       ret = GST_FLOW_OK;
     } else {
@@ -1666,7 +1666,7 @@ gst_amc_video_dec_drain (GstAmcVideoDec * self, gboolean at_eos)
       ret = GST_FLOW_ERROR;
     }
 
-    g_mutex_unlock (self->drain_lock);
+    g_mutex_unlock (&self->drain_lock);
     GST_VIDEO_DECODER_STREAM_LOCK (self);
   } else if (idx >= self->n_input_buffers) {
     GST_ERROR_OBJECT (self, "Invalid input buffer index %d of %d",
