@@ -49,6 +49,7 @@ struct _GstRTSPAuth {
   GObject       parent;
 
   /*< private >*/
+  GMutex        lock;
   gchar        *basic;
   GstRTSPMethod methods;
 };

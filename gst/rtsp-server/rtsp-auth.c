@@ -63,6 +63,7 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
 static void
 gst_rtsp_auth_init (GstRTSPAuth * auth)
 {
+  g_mutex_init (&auth->lock);
   /* bitwise or of all methods that need authentication */
   auth->methods = GST_RTSP_DESCRIBE |
       GST_RTSP_ANNOUNCE |
@@ -79,6 +80,7 @@ gst_rtsp_auth_finalize (GObject * obj)
 
   GST_INFO ("finalize auth %p", auth);
   g_free (auth->basic);
+  g_mutex_clear (&auth->lock);
 
   G_OBJECT_CLASS (gst_rtsp_auth_parent_class)->finalize (obj);
 }
@@ -130,8 +132,12 @@ gst_rtsp_auth_new (void)
 void
 gst_rtsp_auth_set_basic (GstRTSPAuth * auth, const gchar * basic)
 {
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+
+  g_mutex_lock (&auth->lock);
   g_free (auth->basic);
   auth->basic = g_strdup (basic);
+  g_mutex_unlock (&auth->lock);
 }
 
 static gboolean
@@ -166,6 +172,10 @@ gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
 
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), FALSE);
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
+  g_return_val_if_fail (state != NULL, FALSE);
+
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
   GST_DEBUG_OBJECT (auth, "setup auth");
@@ -197,8 +207,10 @@ default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
     /* parse type */
     if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
       GST_DEBUG_OBJECT (auth, "check Basic auth");
+      g_mutex_lock (&auth->lock);
       if (auth->basic && strcmp (&authorization[6], auth->basic) == 0)
         result = TRUE;
+      g_mutex_unlock (&auth->lock);
     } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
       GST_DEBUG_OBJECT (auth, "check Digest auth");
       /* not implemented yet */
@@ -232,6 +244,10 @@ gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
 
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), FALSE);
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
+  g_return_val_if_fail (state != NULL, FALSE);
+
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
   GST_DEBUG_OBJECT (auth, "check state");
@@ -257,6 +273,9 @@ gst_rtsp_auth_make_basic (const gchar * user, const gchar * pass)
 {
   gchar *user_pass;
   gchar *result;
+
+  g_return_val_if_fail (user != NULL, NULL);
+  g_return_val_if_fail (pass != NULL, NULL);
 
   user_pass = g_strjoin (":", user, pass, NULL);
   result = g_base64_encode ((guchar *) user_pass, strlen (user_pass));
