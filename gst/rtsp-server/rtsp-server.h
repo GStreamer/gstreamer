@@ -61,6 +61,7 @@ struct _GstRTSPServer {
   gchar       *address;
   gchar       *service;
   gint         backlog;
+  gint         max_threads;
 
   GSocket     *socket;
 
@@ -121,6 +122,9 @@ GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *serve
 
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
+
+void                  gst_rtsp_server_set_max_threads      (GstRTSPServer *server, gint max_threads);
+gint                  gst_rtsp_server_get_max_threads      (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
                                                             const gchar * ip, gint port,

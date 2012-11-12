@@ -28,6 +28,7 @@
 /* #define DEFAULT_ADDRESS         "::0" */
 #define DEFAULT_SERVICE         "8554"
 #define DEFAULT_BACKLOG         5
+#define DEFAULT_MAX_THREADS     0
 
 /* Define to use the SO_LINGER option so that the server sockets can be resused
  * sooner. Disabled for now because it is not very well implemented by various
@@ -44,6 +45,7 @@ enum
 
   PROP_SESSION_POOL,
   PROP_MEDIA_MAPPING,
+  PROP_MAX_THREADS,
   PROP_LAST
 };
 
@@ -153,6 +155,18 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           "The media mapping to use for client session",
           GST_TYPE_RTSP_MEDIA_MAPPING,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRTSPServer::max-threads:
+   *
+   * The maximum amount of threads to use for client connections. A value of
+   * 0 means to use only the mainloop, -1 means an unlimited amount of
+   * threads.
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_THREADS,
+      g_param_spec_int ("max-threads", "Max Threads",
+          "The maximum amount of threads to use for client connections "
+          "(0 = only mainloop, -1 = unlimited)", -1, G_MAXINT,
+          DEFAULT_MAX_THREADS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED] =
       g_signal_new ("client-connected", G_TYPE_FROM_CLASS (gobject_class),
@@ -531,6 +545,49 @@ gst_rtsp_server_get_auth (GstRTSPServer * server)
   return result;
 }
 
+/**
+ * gst_rtsp_server_set_max_threads:
+ * @server: a #GstRTSPServer
+ * @max_threads: maximum threads
+ *
+ * Set the maximum threads used by the server to handle client requests.
+ * A value of 0 will use the server mainloop, a value of -1 will use an
+ * unlimited number of threads.
+ */
+void
+gst_rtsp_server_set_max_threads (GstRTSPServer * server, gint max_threads)
+{
+  g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  GST_RTSP_SERVER_LOCK (server);
+  server->max_threads = max_threads;
+  GST_RTSP_SERVER_UNLOCK (server);
+}
+
+/**
+ * gst_rtsp_server_get_max_threads:
+ * @server: a #GstRTSPServer
+ *
+ * Get the maximum number of threads used for client connections.
+ * See gst_rtsp_server_set_max_threads().
+ *
+ * Returns: the maximum number of threads.
+ */
+gint
+gst_rtsp_server_get_max_threads (GstRTSPServer * server)
+{
+  gint res;
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), -1);
+
+  GST_RTSP_SERVER_LOCK (server);
+  res = server->max_threads;
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return res;
+}
+
+
 static void
 gst_rtsp_server_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
@@ -555,6 +612,9 @@ gst_rtsp_server_get_property (GObject * object, guint propid,
       break;
     case PROP_MEDIA_MAPPING:
       g_value_take_object (value, gst_rtsp_server_get_media_mapping (server));
+      break;
+    case PROP_MAX_THREADS:
+      g_value_set_int (value, gst_rtsp_server_get_max_threads (server));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -582,6 +642,9 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
       break;
     case PROP_MEDIA_MAPPING:
       gst_rtsp_server_set_media_mapping (server, g_value_get_object (value));
+      break;
+    case PROP_MAX_THREADS:
+      gst_rtsp_server_set_max_threads (server, g_value_get_int (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -819,8 +882,7 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
   ctx = g_slice_new0 (ClientContext);
   ctx->server = server;
   ctx->client = client;
-#if 1
-  {
+  if (server->max_threads == 0) {
     GSource *source;
 
     /* find the context to add the watch */
@@ -828,12 +890,10 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
       ctx->context = g_main_context_ref (g_source_get_context (source));
     else
       ctx->context = NULL;
+  } else {
+    ctx->context = g_main_context_new ();
+    ctx->loop = g_main_loop_new (ctx->context, TRUE);
   }
-#else
-  ctx->context = g_main_context_new ();
-  ctx->loop = g_main_loop_new (ctx->context, TRUE);
-  ctx->dothread = TRUE;
-#endif
   gst_rtsp_client_attach (client, ctx->context);
 
   GST_RTSP_SERVER_LOCK (server);
