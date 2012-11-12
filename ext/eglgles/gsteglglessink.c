@@ -595,8 +595,8 @@ render_thread_func (GstEglGlesSink * eglglessink)
   GValue val = { 0 };
   GstDataQueueItem *item = NULL;
 
-  g_value_init (&val, G_TYPE_POINTER);
-  g_value_set_pointer (&val, g_thread_self ());
+  g_value_init (&val, GST_TYPE_G_THREAD);
+  g_value_set_boxed (&val, g_thread_self ());
   message = gst_message_new_stream_status (GST_OBJECT_CAST (eglglessink),
       GST_STREAM_STATUS_TYPE_ENTER, GST_ELEMENT_CAST (eglglessink));
   gst_message_set_stream_status_object (message, &val);
@@ -661,8 +661,8 @@ render_thread_func (GstEglGlesSink * eglglessink)
     eglglessink->configured_caps = NULL;
   }
 
-  g_value_init (&val, G_TYPE_POINTER);
-  g_value_set_pointer (&val, g_thread_self ());
+  g_value_init (&val, GST_TYPE_G_THREAD);
+  g_value_set_boxed (&val, g_thread_self ());
   message = gst_message_new_stream_status (GST_OBJECT_CAST (eglglessink),
       GST_STREAM_STATUS_TYPE_LEAVE, GST_ELEMENT_CAST (eglglessink));
   gst_message_set_stream_status_object (message, &val);
