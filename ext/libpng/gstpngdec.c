@@ -85,6 +85,7 @@ gst_pngdec_class_init (GstPngDecClass * klass)
       "Wim Taymans <wim@fluendo.com>");
 
   vdec_class->start = gst_pngdec_start;
+  vdec_class->stop = gst_pngdec_stop;
   vdec_class->reset = gst_pngdec_reset;
   vdec_class->set_format = gst_pngdec_set_format;
   vdec_class->handle_frame = gst_pngdec_handle_frame;
@@ -524,8 +525,8 @@ gst_pngdec_stop (GstVideoDecoder * decoder)
 static gboolean
 gst_pngdec_reset (GstVideoDecoder * decoder, gboolean hard)
 {
-  gst_pngdec_libpng_clear (decoder);
-  gst_pngdec_libpng_init (decoder);
+  gst_pngdec_libpng_clear ((GstPngDec *) decoder);
+  gst_pngdec_libpng_init ((GstPngDec *) decoder);
 
   return TRUE;
 }
