@@ -134,6 +134,10 @@ enum
   PROP_DEVICE,
   PROP_DEVICE_FACING,
   PROP_DEVICE_ORIENTATION,
+  PROP_FOCAL_LENGTH,
+  PROP_HORIZONTAL_VIEW_ANGLE,
+  PROP_VERTICAL_VIEW_ANGLE,
+  PROP_VIDEO_STABILIZATION,
   PROP_WB_MODE,
   PROP_COLOUR_TONE,
   PROP_SCENE_MODE,
@@ -267,6 +271,33 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE_FACING,
       properties[PROP_DEVICE_FACING]);
+
+  properties[PROP_FOCAL_LENGTH] = g_param_spec_float ("focal-length",
+      "Focal length", "Gets the focal length (in millimeter) of the camera",
+      -G_MAXFLOAT, G_MAXFLOAT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_FOCAL_LENGTH,
+      properties[PROP_FOCAL_LENGTH]);
+
+  properties[PROP_HORIZONTAL_VIEW_ANGLE] =
+      g_param_spec_float ("horizontal-view-angle", "Horizontal view angle",
+      "Gets the horizontal angle of view in degrees",
+      -G_MAXFLOAT, G_MAXFLOAT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_HORIZONTAL_VIEW_ANGLE,
+      properties[PROP_HORIZONTAL_VIEW_ANGLE]);
+
+  properties[PROP_VERTICAL_VIEW_ANGLE] =
+      g_param_spec_float ("vertical-view-angle", "Vertical view angle",
+      "Gets the vertical angle of view in degrees",
+      -G_MAXFLOAT, G_MAXFLOAT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_VERTICAL_VIEW_ANGLE,
+      properties[PROP_VERTICAL_VIEW_ANGLE]);
+
+  properties[PROP_VIDEO_STABILIZATION] =
+      g_param_spec_boolean ("video-stabilization", "Video stabilization",
+      "Video stabilization reduces the shaking due to the motion of the camera",
+      FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_VIDEO_STABILIZATION,
+      properties[PROP_VIDEO_STABILIZATION]);
 
   /* Override GstPhotography properties */
   g_object_class_override_property (gobject_class, PROP_WB_MODE,
@@ -404,6 +435,19 @@ gst_ahc_src_set_property (GObject * object, guint prop_id,
         self->device = (gint) device;
     }
       break;
+    case PROP_VIDEO_STABILIZATION:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          gst_ahc_parameters_set_video_stabilization (params,
+              g_value_get_boolean (value));
+          gst_ah_camera_set_parameters (self->camera, params);
+          gst_ahc_parameters_free (params);
+        }
+      }
+      break;
     case PROP_WB_MODE:{
       GstWhiteBalanceMode wb = g_value_get_enum (value);
 
@@ -497,6 +541,54 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
       else
         g_value_set_int (value, 0);
     }
+      break;
+    case PROP_FOCAL_LENGTH:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          g_value_set_float (value,
+              gst_ahc_parameters_get_focal_length (params));
+          gst_ahc_parameters_free (params);
+        }
+      }
+      break;
+    case PROP_HORIZONTAL_VIEW_ANGLE:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          g_value_set_float (value,
+              gst_ahc_parameters_get_horizontal_view_angle (params));
+          gst_ahc_parameters_free (params);
+        }
+      }
+      break;
+    case PROP_VERTICAL_VIEW_ANGLE:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          g_value_set_float (value,
+              gst_ahc_parameters_get_vertical_view_angle (params));
+          gst_ahc_parameters_free (params);
+        }
+      }
+      break;
+    case PROP_VIDEO_STABILIZATION:
+      if (self->camera) {
+        GstAHCParameters *params;
+
+        params = gst_ah_camera_get_parameters (self->camera);
+        if (params) {
+          g_value_set_boolean (value,
+              gst_ahc_parameters_get_video_stabilization (params));
+          gst_ahc_parameters_free (params);
+        }
+      }
       break;
     case PROP_WB_MODE:{
       GstWhiteBalanceMode wb;
