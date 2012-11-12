@@ -216,12 +216,12 @@ audioringbuffer_thread_func (GstAudioRingBuffer * buf)
   if ((readfunc = csrc->read) == NULL)
     goto no_function;
 
-  /* FIXME: maybe we should at least use a custom pointer type here? */
-  g_value_init (&val, G_TYPE_POINTER);
-  g_value_set_pointer (&val, src->thread);
   message = gst_message_new_stream_status (GST_OBJECT_CAST (buf),
       GST_STREAM_STATUS_TYPE_ENTER, GST_ELEMENT_CAST (src));
+  g_value_init (&val, GST_TYPE_G_THREAD);
+  g_value_set_boxed (&val, src->thread);
   gst_message_set_stream_status_object (message, &val);
+  g_value_unset (&val);
   GST_DEBUG_OBJECT (src, "posting ENTER stream status");
   gst_element_post_message (GST_ELEMENT_CAST (src), message);
 
@@ -291,7 +291,10 @@ stop_running:
     GST_DEBUG ("stop running, exit thread");
     message = gst_message_new_stream_status (GST_OBJECT_CAST (buf),
         GST_STREAM_STATUS_TYPE_LEAVE, GST_ELEMENT_CAST (src));
+    g_value_init (&val, GST_TYPE_G_THREAD);
+    g_value_set_boxed (&val, src->thread);
     gst_message_set_stream_status_object (message, &val);
+    g_value_unset (&val);
     GST_DEBUG_OBJECT (src, "posting LEAVE stream status");
     gst_element_post_message (GST_ELEMENT_CAST (src), message);
     return;
