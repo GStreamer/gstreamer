@@ -230,8 +230,8 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
  * @conn: (out) (transfer full): storage for a #GstRTSPConnection
  *
  * Create a new #GstRTSPConnection for handling communication on the existing
- * socket @socket. The @initial_buffer contains any data already read from
- * @socket which should be used before starting to read new data.
+ * socket @socket. The @initial_buffer contains zero terminated data already
+ * read from @socket which should be used before starting to read new data.
  *
  * Returns: #GST_RTSP_OK when @conn contains a valid connection.
  */
