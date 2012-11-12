@@ -1978,7 +1978,7 @@ gst_debug_is_colored (void)
 }
 
 void
-gst_debug_set_threshold_from_string (const gchar * list)
+gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)
 {
 }
 
