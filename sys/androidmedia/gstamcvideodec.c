@@ -628,7 +628,8 @@ _find_nearest_frame (GstAmcVideoDec * self, GstClockTime reference_timestamp)
 
       if (diff_time > MAX_FRAME_DIST_TIME
           || diff_frames > MAX_FRAME_DIST_FRAMES) {
-        finish_frames = g_list_prepend (finish_frames, tmp);
+        finish_frames =
+            g_list_prepend (finish_frames, gst_video_codec_frame_ref (tmp));
       }
     }
   }
