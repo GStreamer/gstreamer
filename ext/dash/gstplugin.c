@@ -103,6 +103,6 @@ fragmented_init (GstPlugin * plugin)
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "fragmented",
-    "Fragmented streaming plugins",
+    "dashdemux",
+    "DASH demuxer plugin",
     fragmented_init, VERSION, "LGPL", PACKAGE_NAME, "http://www.gstreamer.org/")
