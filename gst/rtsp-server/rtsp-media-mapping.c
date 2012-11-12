@@ -49,6 +49,7 @@ gst_rtsp_media_mapping_init (GstRTSPMediaMapping * mapping)
 {
   GST_DEBUG_OBJECT (mapping, "created");
 
+  g_mutex_init (&mapping->lock);
   mapping->mappings = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, g_object_unref);
 }
@@ -61,6 +62,7 @@ gst_rtsp_media_mapping_finalize (GObject * obj)
   GST_DEBUG_OBJECT (mapping, "finalized");
 
   g_hash_table_unref (mapping->mappings);
+  g_mutex_clear (&mapping->lock);
 
   G_OBJECT_CLASS (gst_rtsp_media_mapping_parent_class)->finalize (obj);
 }
@@ -87,12 +89,14 @@ find_factory (GstRTSPMediaMapping * mapping, const GstRTSPUrl * url)
 {
   GstRTSPMediaFactory *result;
 
+  g_mutex_lock (&mapping->lock);
   /* find the location of the media in the hashtable we only use the absolute
    * path of the uri to find a mapping. If the mapping depends on other
    * properties found in the url, this method should be overridden. */
   result = g_hash_table_lookup (mapping->mappings, url->abspath);
   if (result)
     g_object_ref (result);
+  g_mutex_unlock (&mapping->lock);
 
   GST_INFO ("found media %p for url abspath %s", result, url->abspath);
 
@@ -147,7 +151,9 @@ gst_rtsp_media_mapping_add_factory (GstRTSPMediaMapping * mapping,
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
   g_return_if_fail (path != NULL);
 
+  g_mutex_lock (&mapping->lock);
   g_hash_table_insert (mapping->mappings, g_strdup (path), factory);
+  g_mutex_unlock (&mapping->lock);
 }
 
 /**
@@ -164,5 +170,7 @@ gst_rtsp_media_mapping_remove_factory (GstRTSPMediaMapping * mapping,
   g_return_if_fail (GST_IS_RTSP_MEDIA_MAPPING (mapping));
   g_return_if_fail (path != NULL);
 
+  g_mutex_lock (&mapping->lock);
   g_hash_table_remove (mapping->mappings, path);
+  g_mutex_unlock (&mapping->lock);
 }

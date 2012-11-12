@@ -50,6 +50,7 @@ typedef struct _GstRTSPMediaMappingClass GstRTSPMediaMappingClass;
 struct _GstRTSPMediaMapping {
   GObject       parent;
 
+  GMutex        lock;
   GHashTable   *mappings;
 };
 
