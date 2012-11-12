@@ -933,7 +933,9 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   if ((running_time = arrival->running_time) == GST_CLOCK_TIME_NONE)
     goto no_time;
 
-  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
+    goto invalid_packet;
+
   pt = gst_rtp_buffer_get_payload_type (&rtp);
 
   GST_LOG ("SSRC %08x got payload %d", src->ssrc, pt);
@@ -980,6 +982,11 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
 no_time:
   {
     GST_WARNING ("cannot get current running_time");
+    return;
+  }
+invalid_packet:
+  {
+    GST_WARNING ("invalid RTP packet");
     return;
   }
 no_clock_rate:
@@ -1063,7 +1070,9 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
 
   stats = &src->stats;
 
-  gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
+    goto invalid_packet;
+
   seqnr = gst_rtp_buffer_get_seq (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
@@ -1155,6 +1164,12 @@ done:
   return result;
 
   /* ERRORS */
+invalid_packet:
+  {
+    GST_WARNING ("invalid packet received");
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
 bad_sequence:
   {
     GST_WARNING ("unacceptable seqnum received");
@@ -1199,9 +1214,10 @@ set_ssrc (GstBuffer ** buffer, guint idx, RTPSource * src)
   GstRTPBuffer rtp = { NULL };
 
   *buffer = gst_buffer_make_writable (*buffer);
-  gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp);
-  gst_rtp_buffer_set_ssrc (&rtp, src->ssrc);
-  gst_rtp_buffer_unmap (&rtp);
+  if (gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp)) {
+    gst_rtp_buffer_set_ssrc (&rtp, src->ssrc);
+    gst_rtp_buffer_unmap (&rtp);
+  }
   return TRUE;
 }
 
@@ -1257,7 +1273,10 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
     /* Each group makes up a network packet. */
     packets = gst_buffer_list_length (list);
     for (i = 0, len = 0; i < packets; i++) {
-      gst_rtp_buffer_map (gst_buffer_list_get (list, i), GST_MAP_READ, &rtp);
+      if (!gst_rtp_buffer_map (gst_buffer_list_get (list, i), GST_MAP_READ,
+              &rtp))
+        goto invalid_packet;
+
       len += gst_rtp_buffer_get_payload_len (&rtp);
       gst_rtp_buffer_unmap (&rtp);
     }
@@ -1265,7 +1284,9 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
     gst_rtp_buffer_map (gst_buffer_list_get (list, 0), GST_MAP_READ, &rtp);
   } else {
     packets = 1;
-    gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+    if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
+      goto invalid_packet;
+
     len = gst_rtp_buffer_get_payload_len (&rtp);
   }
 
@@ -1334,6 +1355,12 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   return result;
 
   /* ERRORS */
+invalid_packet:
+  {
+    GST_WARNING ("invalid packet received");
+    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    return GST_FLOW_OK;
+  }
 no_buffer:
   {
     GST_WARNING ("no buffers in buffer list");
