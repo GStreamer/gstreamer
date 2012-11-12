@@ -132,6 +132,7 @@ static const FormatInfo formats[] = {
   {"audio/x-nellymoser", "Nellymoser Asao", 0},
   {"audio/x-nist", "Sphere NIST", 0},
   {"audio/x-nsf", "Nintendo NSF", 0},
+  {"audio/x-opus", "Opus", 0},
   {"audio/x-paris", "Ensoniq PARIS", 0},
   {"audio/x-qdm", "QDesign Music (QDM)", 0},
   {"audio/x-qdm2", "QDesign Music (QDM) 2", 0},
