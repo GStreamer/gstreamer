@@ -1097,7 +1097,7 @@ GSource *
 gst_rtsp_server_create_source (GstRTSPServer * server,
     GCancellable * cancellable, GError ** error)
 {
-  GSocket *socket;
+  GSocket *socket, *old;
   GSource *source;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
@@ -1105,7 +1105,14 @@ gst_rtsp_server_create_source (GstRTSPServer * server,
   socket = gst_rtsp_server_create_socket (server, NULL, error);
   if (socket == NULL)
     goto no_socket;
+
+  GST_RTSP_SERVER_LOCK (server);
+  old = server->socket;
   server->socket = g_object_ref (socket);
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  if (old)
+    g_object_unref (old);
 
   /* create a watch for reads (new connections) and possible errors */
   source = g_socket_create_source (socket, G_IO_IN |
