@@ -38,6 +38,7 @@ EXPORTS
 	gst_base_sink_get_blocksize
 	gst_base_sink_get_last_sample
 	gst_base_sink_get_latency
+	gst_base_sink_get_max_bitrate
 	gst_base_sink_get_max_lateness
 	gst_base_sink_get_render_delay
 	gst_base_sink_get_sync
@@ -51,6 +52,7 @@ EXPORTS
 	gst_base_sink_set_async_enabled
 	gst_base_sink_set_blocksize
 	gst_base_sink_set_last_sample_enabled
+	gst_base_sink_set_max_bitrate
 	gst_base_sink_set_max_lateness
 	gst_base_sink_set_qos_enabled
 	gst_base_sink_set_render_delay

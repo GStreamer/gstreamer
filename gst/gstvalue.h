@@ -284,6 +284,16 @@ G_BEGIN_DECLS
 #define GST_TYPE_BITMASK                 gst_bitmask_get_type ()
 
 /**
+ * GST_TYPE_G_THREAD:
+ *
+ * a boxed #GValue type for #GThread that represents a thread.
+ *
+ * Returns: the #GType of GstGThread
+ */
+
+#define GST_TYPE_G_THREAD                gst_g_thread_get_type ()
+
+/**
  * GST_VALUE_LESS_THAN:
  *
  * Indicates that the first value provided to a comparison function
@@ -380,6 +390,7 @@ GType gst_fraction_get_type (void);
 GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
 GType gst_bitmask_get_type (void);
+GType gst_g_thread_get_type (void);
 
 GType gst_date_time_get_type (void);
 

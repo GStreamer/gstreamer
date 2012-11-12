@@ -489,6 +489,7 @@ EXPORTS
 	gst_formats_contains
 	gst_fraction_get_type
 	gst_fraction_range_get_type
+	gst_g_thread_get_type
 	gst_ghost_pad_activate_mode_default
 	gst_ghost_pad_construct
 	gst_ghost_pad_get_target
