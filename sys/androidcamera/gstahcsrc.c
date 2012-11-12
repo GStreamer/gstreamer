@@ -601,10 +601,48 @@ gst_ahc_src_probe_get_properties (GstPropertyProbe * probe)
     *list = g_list_append (*list, properties[PROP_DEVICE]);
     *list = g_list_append (*list, properties[PROP_EV_COMP]);
     *list = g_list_append (*list, properties[PROP_ZOOM]);
+    *list = g_list_append (*list, properties[PROP_WB_MODE]);
+    *list = g_list_append (*list, properties[PROP_COLOUR_TONE]);
+    *list = g_list_append (*list, properties[PROP_FLASH_MODE]);
+    *list = g_list_append (*list, properties[PROP_FOCUS_MODE]);
+    *list = g_list_append (*list, properties[PROP_SCENE_MODE]);
+    *list = g_list_append (*list, properties[PROP_FLICKER_MODE]);
   }
 
   return *list;
 }
+
+#define PROBE_GET_ENUM_VALUES(name, type, struct_name)                  \
+  if (self->camera) {                                                   \
+    GstAHCParameters *params;                                           \
+                                                                        \
+    params = gst_ah_camera_get_parameters (self->camera);               \
+    if (params) {                                                       \
+      GList *list = gst_ahc_parameters_get_supported_##name (params);   \
+                                                                        \
+      if (list) {                                                       \
+          GValue value = { 0 };                                         \
+          GList *i;                                                     \
+                                                                        \
+          array = g_value_array_new (g_list_length (list));             \
+          g_value_init (&value, type);                                  \
+          for (i = list; i; i = i->next) {                              \
+            struct_name mode;                                           \
+            const gchar *name = i->data;                                \
+                                                                        \
+            if (_##name##_to_enum (name, &mode)) {                      \
+              g_value_set_enum (&value, mode);                          \
+              g_value_array_append (array, &value);                     \
+            }                                                           \
+          }                                                             \
+          g_value_unset (&value);                                       \
+      }                                                                 \
+                                                                        \
+      gst_ahc_parameters_supported_##name##_free (list);                \
+      gst_ahc_parameters_free (params);                                 \
+    }                                                                   \
+  }
+
 
 static GValueArray *
 gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
@@ -687,6 +725,21 @@ gst_ahc_src_probe_get_values (GstPropertyProbe * probe,
         gst_ahc_parameters_free (params);
       }
     }
+  } else if (pspec == properties[PROP_WB_MODE]) {
+    PROBE_GET_ENUM_VALUES (white_balance, GST_TYPE_WHITE_BALANCE_MODE,
+        GstWhiteBalanceMode);
+  } else if (pspec == properties[PROP_COLOUR_TONE]) {
+    PROBE_GET_ENUM_VALUES (color_effects, GST_TYPE_COLOUR_TONE_MODE,
+        GstColourToneMode);
+  } else if (pspec == properties[PROP_FLASH_MODE]) {
+    PROBE_GET_ENUM_VALUES (flash_modes, GST_TYPE_FLASH_MODE, GstFlashMode);
+  } else if (pspec == properties[PROP_FOCUS_MODE]) {
+    PROBE_GET_ENUM_VALUES (focus_modes, GST_TYPE_FOCUS_MODE, GstFocusMode);
+  } else if (pspec == properties[PROP_SCENE_MODE]) {
+    PROBE_GET_ENUM_VALUES (scene_modes, GST_TYPE_SCENE_MODE, GstSceneMode);
+  } else if (pspec == properties[PROP_FLICKER_MODE]) {
+    PROBE_GET_ENUM_VALUES (antibanding, GST_TYPE_FLICKER_REDUCTION_MODE,
+        GstFlickerReductionMode);
   } else {
     G_OBJECT_WARN_INVALID_PROPERTY_ID (probe, prop_id, pspec);
   }
