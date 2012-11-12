@@ -118,8 +118,8 @@ gst_omx_video_dec_init (GstOMXVideoDec * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
 
-  self->drain_lock = g_mutex_new ();
-  self->drain_cond = g_cond_new ();
+  g_mutex_init (&self->drain_lock);
+  g_cond_init (&self->drain_cond);
 }
 
 static gboolean
@@ -205,8 +205,8 @@ gst_omx_video_dec_finalize (GObject * object)
 {
   GstOMXVideoDec *self = GST_OMX_VIDEO_DEC (object);
 
-  g_mutex_free (self->drain_lock);
-  g_cond_free (self->drain_cond);
+  g_mutex_clear (&self->drain_lock);
+  g_cond_clear (&self->drain_cond);
 
   G_OBJECT_CLASS (gst_omx_video_dec_parent_class)->finalize (object);
 }
@@ -241,10 +241,10 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
       if (self->out_port)
         gst_omx_port_set_flushing (self->out_port, TRUE);
 
-      g_mutex_lock (self->drain_lock);
+      g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
-      g_cond_broadcast (self->drain_cond);
-      g_mutex_unlock (self->drain_lock);
+      g_cond_broadcast (&self->drain_cond);
+      g_mutex_unlock (&self->drain_lock);
       break;
     default:
       break;
@@ -658,16 +658,16 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     }
 
     if (is_eos || flow_ret == GST_FLOW_EOS) {
-      g_mutex_lock (self->drain_lock);
+      g_mutex_lock (&self->drain_lock);
       if (self->draining) {
         GST_DEBUG_OBJECT (self, "Drained");
         self->draining = FALSE;
-        g_cond_broadcast (self->drain_cond);
+        g_cond_broadcast (&self->drain_cond);
       } else if (flow_ret == GST_FLOW_OK) {
         GST_DEBUG_OBJECT (self, "Component signalled EOS");
         flow_ret = GST_FLOW_EOS;
       }
-      g_mutex_unlock (self->drain_lock);
+      g_mutex_unlock (&self->drain_lock);
     } else {
       GST_DEBUG_OBJECT (self, "Finished frame: %s",
           gst_flow_get_name (flow_ret));
@@ -805,10 +805,10 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
   self->started = FALSE;
   self->eos = FALSE;
 
-  g_mutex_lock (self->drain_lock);
+  g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
-  g_cond_broadcast (self->drain_cond);
-  g_mutex_unlock (self->drain_lock);
+  g_cond_broadcast (&self->drain_cond);
+  g_mutex_unlock (&self->drain_lock);
 
   gst_omx_component_get_state (self->component, 5 * GST_SECOND);
 
@@ -1378,7 +1378,7 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
     return GST_FLOW_ERROR;
   }
 
-  g_mutex_lock (self->drain_lock);
+  g_mutex_lock (&self->drain_lock);
   self->draining = TRUE;
   buf->omx_buf->nFilledLen = 0;
   buf->omx_buf->nTimeStamp =
@@ -1390,19 +1390,19 @@ gst_omx_video_dec_drain (GstOMXVideoDec * self, gboolean is_eos)
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
 
   if (G_UNLIKELY (self->component->hacks & GST_OMX_HACK_DRAIN_MAY_NOT_RETURN)) {
-    GTimeVal tv = {.tv_sec = 0,.tv_usec = 500000 };
+    gint64 wait_until = g_get_monotonic_time () + G_TIME_SPAN_SECOND / 2;
 
-    if (!g_cond_timed_wait (self->drain_cond, self->drain_lock, &tv))
+    if (!g_cond_wait_until (&self->drain_cond, &self->drain_lock, wait_until))
       GST_WARNING_OBJECT (self, "Drain timed out");
     else
       GST_DEBUG_OBJECT (self, "Drained component");
 
   } else {
-    g_cond_wait (self->drain_cond, self->drain_lock);
+    g_cond_wait (&self->drain_cond, &self->drain_lock);
     GST_DEBUG_OBJECT (self, "Drained component");
   }
 
-  g_mutex_unlock (self->drain_lock);
+  g_mutex_unlock (&self->drain_lock);
   GST_VIDEO_DECODER_STREAM_LOCK (self);
 
   self->started = FALSE;

@@ -95,8 +95,8 @@ gst_omx_audio_enc_class_init (GstOMXAudioEncClass * klass)
 static void
 gst_omx_audio_enc_init (GstOMXAudioEnc * self)
 {
-  self->drain_lock = g_mutex_new ();
-  self->drain_cond = g_cond_new ();
+  g_mutex_init (&self->drain_lock);
+  g_cond_init (&self->drain_cond);
 }
 
 static gboolean
@@ -172,8 +172,8 @@ gst_omx_audio_enc_finalize (GObject * object)
 {
   GstOMXAudioEnc *self = GST_OMX_AUDIO_ENC (object);
 
-  g_mutex_free (self->drain_lock);
-  g_cond_free (self->drain_cond);
+  g_mutex_clear (&self->drain_lock);
+  g_cond_clear (&self->drain_cond);
 
   G_OBJECT_CLASS (gst_omx_audio_enc_parent_class)->finalize (object);
 }
@@ -211,10 +211,10 @@ gst_omx_audio_enc_change_state (GstElement * element, GstStateChange transition)
       if (self->out_port)
         gst_omx_port_set_flushing (self->out_port, TRUE);
 
-      g_mutex_lock (self->drain_lock);
+      g_mutex_lock (&self->drain_lock);
       self->draining = FALSE;
-      g_cond_broadcast (self->drain_cond);
-      g_mutex_unlock (self->drain_lock);
+      g_cond_broadcast (&self->drain_cond);
+      g_mutex_unlock (&self->drain_lock);
       break;
     default:
       break;
@@ -392,16 +392,16 @@ gst_omx_audio_enc_loop (GstOMXAudioEnc * self)
     }
 
     if (is_eos || flow_ret == GST_FLOW_EOS) {
-      g_mutex_lock (self->drain_lock);
+      g_mutex_lock (&self->drain_lock);
       if (self->draining) {
         GST_DEBUG_OBJECT (self, "Drained");
         self->draining = FALSE;
-        g_cond_broadcast (self->drain_cond);
+        g_cond_broadcast (&self->drain_cond);
       } else if (flow_ret == GST_FLOW_OK) {
         GST_DEBUG_OBJECT (self, "Component signalled EOS");
         flow_ret = GST_FLOW_EOS;
       }
-      g_mutex_unlock (self->drain_lock);
+      g_mutex_unlock (&self->drain_lock);
     } else {
       GST_DEBUG_OBJECT (self, "Finished frame: %s",
           gst_flow_get_name (flow_ret));
@@ -523,10 +523,10 @@ gst_omx_audio_enc_stop (GstAudioEncoder * encoder)
   self->started = FALSE;
   self->eos = FALSE;
 
-  g_mutex_lock (self->drain_lock);
+  g_mutex_lock (&self->drain_lock);
   self->draining = FALSE;
-  g_cond_broadcast (self->drain_cond);
-  g_mutex_unlock (self->drain_lock);
+  g_cond_broadcast (&self->drain_cond);
+  g_mutex_unlock (&self->drain_lock);
 
   gst_omx_component_get_state (self->component, 5 * GST_SECOND);
 
@@ -887,7 +887,7 @@ gst_omx_audio_enc_sink_event (GstAudioEncoder * encoder, GstEvent * event)
       /* Insert a NULL into the queue to signal EOS */
       gst_omx_rec_mutex_lock (&self->out_port->port_lock);
       g_queue_push_tail (self->out_port->pending_buffers, NULL);
-      g_cond_broadcast (self->out_port->port_cond);
+      g_cond_broadcast (&self->out_port->port_cond);
       gst_omx_rec_mutex_unlock (&self->out_port->port_lock);
       return TRUE;
     }
@@ -966,7 +966,7 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
     return GST_FLOW_ERROR;
   }
 
-  g_mutex_lock (self->drain_lock);
+  g_mutex_lock (&self->drain_lock);
   self->draining = TRUE;
   buf->omx_buf->nFilledLen = 0;
   buf->omx_buf->nTimeStamp =
@@ -976,9 +976,9 @@ gst_omx_audio_enc_drain (GstOMXAudioEnc * self)
   buf->omx_buf->nFlags |= OMX_BUFFERFLAG_EOS;
   gst_omx_port_release_buffer (self->in_port, buf);
   GST_DEBUG_OBJECT (self, "Waiting until component is drained");
-  g_cond_wait (self->drain_cond, self->drain_lock);
+  g_cond_wait (&self->drain_cond, &self->drain_lock);
   GST_DEBUG_OBJECT (self, "Drained component");
-  g_mutex_unlock (self->drain_lock);
+  g_mutex_unlock (&self->drain_lock);
   GST_AUDIO_ENCODER_STREAM_LOCK (self);
 
   self->started = FALSE;

@@ -78,13 +78,13 @@ typedef struct _GstOMXRecMutex GstOMXRecMutex;
 
 struct _GstOMXRecMutex {
   /* The master lock */
-  GMutex *lock;
+  GMutex lock;
 
   /* This lock is taken when recursing.
    * The master lock must always be taken before this one,
    * by the caller of _begin_recursion().
    */
-  GMutex *recursion_lock;
+  GMutex recursion_lock;
 
   /* Indicates whether recursion is allowed.
    * When it is allowed, _recursive_lock() takes

@@ -106,7 +106,7 @@ struct _GstOMXCore {
 
   /* Current number of users, transitions from/to 0
    * call init/deinit */
-  GMutex *lock;
+  GMutex lock;
   gint user_count; /* LOCK */
 
   /* OpenMAX core library functions, protected with LOCK */
@@ -141,7 +141,7 @@ struct _GstOMXPort {
    * the component's state lock if both are needed!
    */
   GstOMXRecMutex port_lock;
-  GCond *port_cond;
+  GCond port_cond;
   OMX_PARAM_PORTDEFINITIONTYPE port_def;
   GPtrArray *buffers; /* Contains GstOMXBuffer* */
   GQueue *pending_buffers; /* Contains GstOMXBuffer* */
@@ -174,7 +174,7 @@ struct _GstOMXComponent {
    * Signalled if one of them changes
    */
   GstOMXRecMutex state_lock;
-  GCond *state_cond;
+  GCond state_cond;
   OMX_STATETYPE state;
   /* OMX_StateInvalid if no pending state */
   OMX_STATETYPE pending_state;

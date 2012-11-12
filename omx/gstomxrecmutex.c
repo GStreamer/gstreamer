@@ -27,58 +27,58 @@
 void
 gst_omx_rec_mutex_init (GstOMXRecMutex * mutex)
 {
-  mutex->lock = g_mutex_new ();
-  mutex->recursion_lock = g_mutex_new ();
+  g_mutex_init (&mutex->lock);
+  g_mutex_init (&mutex->recursion_lock);
   mutex->recursion_allowed = FALSE;
 }
 
 void
 gst_omx_rec_mutex_clear (GstOMXRecMutex * mutex)
 {
-  g_mutex_free (mutex->lock);
-  g_mutex_free (mutex->recursion_lock);
+  g_mutex_clear (&mutex->lock);
+  g_mutex_clear (&mutex->recursion_lock);
 }
 
 void
 gst_omx_rec_mutex_lock (GstOMXRecMutex * mutex)
 {
-  g_mutex_lock (mutex->lock);
+  g_mutex_lock (&mutex->lock);
 }
 
 void
 gst_omx_rec_mutex_unlock (GstOMXRecMutex * mutex)
 {
-  g_mutex_unlock (mutex->lock);
+  g_mutex_unlock (&mutex->lock);
 }
 
 /* must be called with mutex->lock taken */
 void
 gst_omx_rec_mutex_begin_recursion (GstOMXRecMutex * mutex)
 {
-  g_mutex_lock (mutex->recursion_lock);
+  g_mutex_lock (&mutex->recursion_lock);
   g_assert (mutex->recursion_allowed == FALSE);
   mutex->recursion_allowed = TRUE;
-  g_mutex_unlock (mutex->recursion_lock);
+  g_mutex_unlock (&mutex->recursion_lock);
 }
 
 /* must be called with mutex->lock taken */
 void
 gst_omx_rec_mutex_end_recursion (GstOMXRecMutex * mutex)
 {
-  g_mutex_lock (mutex->recursion_lock);
+  g_mutex_lock (&mutex->recursion_lock);
   g_assert (mutex->recursion_allowed == TRUE);
   mutex->recursion_allowed = FALSE;
-  g_mutex_unlock (mutex->recursion_lock);
+  g_mutex_unlock (&mutex->recursion_lock);
 }
 
 void
 gst_omx_rec_mutex_recursive_lock (GstOMXRecMutex * mutex)
 {
-  g_mutex_lock (mutex->recursion_lock);
+  g_mutex_lock (&mutex->recursion_lock);
   if (!mutex->recursion_allowed) {
     /* no recursion allowed, lock the proper mutex */
-    g_mutex_unlock (mutex->recursion_lock);
-    g_mutex_lock (mutex->lock);
+    g_mutex_unlock (&mutex->recursion_lock);
+    g_mutex_lock (&mutex->lock);
   }
 }
 
@@ -90,8 +90,8 @@ gst_omx_rec_mutex_recursive_unlock (GstOMXRecMutex * mutex)
    * either lock protects it from being changed.
    */
   if (mutex->recursion_allowed) {
-    g_mutex_unlock (mutex->recursion_lock);
+    g_mutex_unlock (&mutex->recursion_lock);
   } else {
-    g_mutex_unlock (mutex->lock);
+    g_mutex_unlock (&mutex->lock);
   }
 }
