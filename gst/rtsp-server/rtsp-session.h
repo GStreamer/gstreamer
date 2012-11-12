@@ -58,6 +58,7 @@ typedef struct _GstRTSPSessionClass GstRTSPSessionClass;
 struct _GstRTSPSession {
   GObject       parent;
 
+  GMutex        lock;
   gchar        *sessionid;
 
   guint         timeout;

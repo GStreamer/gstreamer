@@ -71,6 +71,7 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
 static void
 gst_rtsp_session_init (GstRTSPSession * session)
 {
+  g_mutex_init (&session->lock);
   session->timeout = DEFAULT_TIMEOUT;
   g_get_current_time (&session->create_time);
   gst_rtsp_session_touch (session);
@@ -90,6 +91,7 @@ gst_rtsp_session_finalize (GObject * obj)
 
   /* free session id */
   g_free (session->sessionid);
+  g_mutex_clear (&session->lock);
 
   G_OBJECT_CLASS (gst_rtsp_session_parent_class)->finalize (obj);
 }
@@ -157,7 +159,9 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const GstRTSPUrl * uri,
 
   result = gst_rtsp_session_media_new (uri, media);
 
+  g_mutex_lock (&sess->lock);
   sess->medias = g_list_prepend (sess->medias, result);
+  g_mutex_unlock (&sess->lock);
 
   GST_INFO ("manage new media %p in session %p", media, result);
 
@@ -178,16 +182,22 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
     GstRTSPSessionMedia * media)
 {
   GList *find;
+  gboolean more;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), FALSE);
   g_return_val_if_fail (media != NULL, FALSE);
 
+  g_mutex_lock (&sess->lock);
   find = g_list_find (sess->medias, media);
-  if (find) {
-    g_object_unref (find->data);
+  if (find)
     sess->medias = g_list_delete_link (sess->medias, find);
-  }
-  return (sess->medias != NULL);
+  more = (sess->medias != NULL);
+  g_mutex_unlock (&sess->lock);
+
+  if (find)
+    g_object_unref (media);
+
+  return more;
 }
 
 /**
@@ -210,6 +220,7 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
 
   result = NULL;
 
+  g_mutex_lock (&sess->lock);
   for (walk = sess->medias; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionMedia *) walk->data;
 
@@ -218,6 +229,8 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
 
     result = NULL;
   }
+  g_mutex_unlock (&sess->lock);
+
   return result;
 }
 
@@ -271,11 +284,13 @@ gst_rtsp_session_get_header (GstRTSPSession * session)
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), NULL);
 
+  g_mutex_lock (&session->lock);
   if (session->timeout != 60)
     result = g_strdup_printf ("%s; timeout=%d", session->sessionid,
         session->timeout);
   else
     result = g_strdup (session->sessionid);
+  g_mutex_unlock (&session->lock);
 
   return result;
 }
@@ -293,7 +308,9 @@ gst_rtsp_session_set_timeout (GstRTSPSession * session, guint timeout)
 {
   g_return_if_fail (GST_IS_RTSP_SESSION (session));
 
+  g_mutex_lock (&session->lock);
   session->timeout = timeout;
+  g_mutex_unlock (&session->lock);
 }
 
 /**
@@ -307,9 +324,15 @@ gst_rtsp_session_set_timeout (GstRTSPSession * session, guint timeout)
 guint
 gst_rtsp_session_get_timeout (GstRTSPSession * session)
 {
+  guint res;
+
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), 0);
 
-  return session->timeout;
+  g_mutex_lock (&session->lock);
+  res = session->timeout;
+  g_mutex_unlock (&session->lock);
+
+  return res;
 }
 
 /**
@@ -323,7 +346,9 @@ gst_rtsp_session_touch (GstRTSPSession * session)
 {
   g_return_if_fail (GST_IS_RTSP_SESSION (session));
 
+  g_mutex_lock (&session->lock);
   g_get_current_time (&session->last_access);
+  g_mutex_unlock (&session->lock);
 }
 
 /**
@@ -371,6 +396,7 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), -1);
   g_return_val_if_fail (now != NULL, -1);
 
+  g_mutex_lock (&session->lock);
   if (g_atomic_int_get (&session->expire_count) != 0) {
     /* touch session when the expire count is not 0 */
     g_get_current_time (&session->last_access);
@@ -379,6 +405,7 @@ gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
   last_access = GST_TIMEVAL_TO_TIME (session->last_access);
   /* add timeout allow for 5 seconds of extra time */
   last_access += session->timeout * GST_SECOND + (5 * GST_SECOND);
+  g_mutex_unlock (&session->lock);
 
   now_ns = GST_TIMEVAL_TO_TIME (*now);
 
