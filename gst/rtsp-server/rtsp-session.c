@@ -257,6 +257,30 @@ gst_rtsp_session_get_sessionid (GstRTSPSession * session)
 }
 
 /**
+ * gst_rtsp_session_get_header:
+ * @session: a #GstRTSPSession
+ *
+ * Get the string that can be placed in the Session header field.
+ *
+ * Returns: (transfer full): the Session header of @session. g_free() after usage.
+ */
+gchar *
+gst_rtsp_session_get_header (GstRTSPSession * session)
+{
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (session), NULL);
+
+  if (session->timeout != 60)
+    result = g_strdup_printf ("%s; timeout=%d", session->sessionid,
+        session->timeout);
+  else
+    result = g_strdup (session->sessionid);
+
+  return result;
+}
+
+/**
  * gst_rtsp_session_set_timeout:
  * @session: a #GstRTSPSession
  * @timeout: the new timeout

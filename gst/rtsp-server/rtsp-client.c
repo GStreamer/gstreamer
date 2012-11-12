@@ -310,16 +310,8 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
 
   /* add the new session header for new session ids */
   if (session) {
-    gchar *str;
-
-    if (session->timeout != 60)
-      str =
-          g_strdup_printf ("%s; timeout=%d", session->sessionid,
-          session->timeout);
-    else
-      str = g_strdup (session->sessionid);
-
-    gst_rtsp_message_take_header (response, GST_RTSP_HDR_SESSION, str);
+    gst_rtsp_message_take_header (response, GST_RTSP_HDR_SESSION,
+        gst_rtsp_session_get_header (session));
   }
 
   if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {

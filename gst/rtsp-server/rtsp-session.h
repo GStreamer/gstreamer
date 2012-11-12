@@ -79,6 +79,8 @@ GstRTSPSession *       gst_rtsp_session_new                  (const gchar *sessi
 
 const gchar *          gst_rtsp_session_get_sessionid        (GstRTSPSession *session);
 
+gchar *                gst_rtsp_session_get_header           (GstRTSPSession *session);
+
 void                   gst_rtsp_session_set_timeout          (GstRTSPSession *session, guint timeout);
 guint                  gst_rtsp_session_get_timeout          (GstRTSPSession *session);
 
