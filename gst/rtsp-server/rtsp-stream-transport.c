@@ -216,3 +216,16 @@ gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
 
   return res;
 }
+
+/**
+ * gst_rtsp_stream_transport_keep_alive:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Signal the installed keep_alive callback for @trans.
+ */
+void
+gst_rtsp_stream_transport_keep_alive (GstRTSPStreamTransport * trans)
+{
+  if (trans->keep_alive)
+    trans->keep_alive (trans->ka_user_data);
+}

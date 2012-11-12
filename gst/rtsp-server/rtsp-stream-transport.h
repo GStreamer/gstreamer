@@ -110,6 +110,8 @@ gboolean                 gst_rtsp_stream_transport_send_rtp      (GstRTSPStreamT
 gboolean                 gst_rtsp_stream_transport_send_rtcp     (GstRTSPStreamTransport *trans,
                                                                   GstBuffer *buffer);
 
+void                     gst_rtsp_stream_transport_keep_alive    (GstRTSPStreamTransport *trans);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_STREAM_TRANSPORT_H__ */

@@ -455,12 +455,10 @@ on_ssrc_active (GObject * session, GObject * source, GstRTSPStream * stream)
 
   trans = check_transport (source, stream);
 
-  if (trans)
+  if (trans) {
     GST_INFO ("%p: source %p in transport %p is active", stream, source, trans);
-
-  if (trans && trans->keep_alive)
-    trans->keep_alive (trans->ka_user_data);
-
+    gst_rtsp_stream_transport_keep_alive (trans);
+  }
 #ifdef DUMP_STATS
   {
     GstStructure *stats;
