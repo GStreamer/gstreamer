@@ -493,15 +493,15 @@ gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
 
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
-  old = factory->auth;
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  if ((old = factory->auth) != auth)
+    factory->auth = auth ? g_object_ref (auth) : NULL;
+  else
+    old = NULL;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
-  if (old != auth) {
-    if (auth)
-      g_object_ref (auth);
-    factory->auth = auth;
-    if (old)
-      g_object_unref (old);
-  }
+  if (old)
+    g_object_unref (old);
 }
 
 /**
@@ -520,8 +520,10 @@ gst_rtsp_media_factory_get_auth (GstRTSPMediaFactory * factory)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
 
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   if ((result = factory->auth))
     g_object_ref (result);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }
@@ -539,7 +541,9 @@ gst_rtsp_media_factory_set_protocols (GstRTSPMediaFactory * factory,
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   factory->protocols = protocols;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 }
 
 /**
@@ -553,10 +557,16 @@ gst_rtsp_media_factory_set_protocols (GstRTSPMediaFactory * factory,
 GstRTSPLowerTrans
 gst_rtsp_media_factory_get_protocols (GstRTSPMediaFactory * factory)
 {
+  GstRTSPLowerTrans res;
+
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory),
       GST_RTSP_LOWER_TRANS_UNKNOWN);
 
-  return factory->protocols;
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  res = factory->protocols;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return res;
 }
 
 static gboolean
