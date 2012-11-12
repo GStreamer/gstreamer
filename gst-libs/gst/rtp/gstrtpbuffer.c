@@ -327,6 +327,9 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   g_return_val_if_fail (rtp != NULL, FALSE);
   g_return_val_if_fail (rtp->buffer == NULL, FALSE);
 
+  if (gst_buffer_n_memory (buffer) < 1)
+    goto no_memory;
+
   /* map first memory, this should be the header */
   if (!gst_buffer_map_range (buffer, 0, 1, &rtp->map[0], flags))
     goto map_failed;
@@ -420,6 +423,11 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   return TRUE;
 
   /* ERRORS */
+no_memory:
+  {
+    GST_ERROR ("buffer without memory");
+    return FALSE;
+  }
 map_failed:
   {
     GST_ERROR ("failed to map memory");
