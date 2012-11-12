@@ -2132,7 +2132,7 @@ no_address:
 }
 
 /**
- * gst_rtsp_client_create_from_socket:
+ * gst_rtsp_client_use_socket:
  * @client: a #GstRTSPClient
  * @socket: a #GSocket
  * @ip: the IP address of the remote client

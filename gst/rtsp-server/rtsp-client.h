@@ -155,7 +155,7 @@ gboolean              gst_rtsp_client_accept            (GstRTSPClient *client,
                                                          GCancellable *cancellable,
                                                          GError **error);
 
-gboolean              gst_rtsp_client_create_from_socket(GstRTSPClient * client,
+gboolean              gst_rtsp_client_use_socket        (GstRTSPClient * client,
                                                          GSocket *socket,
                                                          const gchar * ip,
                                                          gint port,
