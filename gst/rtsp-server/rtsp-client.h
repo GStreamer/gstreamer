@@ -77,7 +77,6 @@ struct _GstRTSPClientState {
  *
  * @connection: the connection object handling the client request.
  * @watch: watch for the connection
- * @watchid: id of the watch
  * @ip: ip address used by the client to connect to us
  * @use_client_settings: whether to allow client transport settings for multicast
  * @session_pool: handle to the session pool used by the client.
@@ -94,7 +93,6 @@ struct _GstRTSPClient {
 
   GstRTSPConnection *connection;
   GstRTSPWatch      *watch;
-  guint              watchid;
   gchar             *server_ip;
   gboolean           is_ipv6;
   gboolean           use_client_settings;
@@ -163,6 +161,10 @@ gboolean              gst_rtsp_client_create_from_socket(GstRTSPClient * client,
                                                          gint port,
                                                          const gchar *initial_buffer,
                                                          GError **error);
+
+guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
+                                                         GMainContext *context);
+
 
 G_END_DECLS
 

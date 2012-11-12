@@ -214,7 +214,7 @@ gst_rtsp_client_finalize (GObject * obj)
 
   GST_INFO ("finalize client %p", client);
 
-  if (client->watchid)
+  if (client->watch)
     g_source_destroy ((GSource *) client->watch);
 
   client_cleanup_sessions (client);
@@ -2081,20 +2081,17 @@ static void
 client_watch_notify (GstRTSPClient * client)
 {
   GST_INFO ("client %p: watch destroyed", client);
-  client->watchid = 0;
   client->watch = NULL;
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
 }
 
 static gboolean
-attach_client (GstRTSPClient * client, GSocket * socket,
+setup_client (GstRTSPClient * client, GSocket * socket,
     GstRTSPConnection * conn, GError ** error)
 {
   GSocket *read_socket;
   GSocketAddress *address;
-  GSource *source;
-  GMainContext *context;
   GstRTSPUrl *url;
 
   read_socket = gst_rtsp_connection_get_read_socket (conn);
@@ -2124,21 +2121,6 @@ attach_client (GstRTSPClient * client, GSocket * socket,
 
   client->connection = conn;
 
-  /* create watch for the connection and attach */
-  client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
-      g_object_ref (client), (GDestroyNotify) client_watch_notify);
-
-  /* find the context to add the watch */
-  if ((source = g_main_current_source ()))
-    context = g_source_get_context (source);
-  else
-    context = NULL;
-
-  GST_INFO ("attaching to context %p", context);
-
-  client->watchid = gst_rtsp_watch_attach (client->watch, context);
-  gst_rtsp_watch_unref (client->watch);
-
   return TRUE;
 
   /* ERRORS */
@@ -2155,7 +2137,8 @@ no_address:
  * @socket: a #GSocket
  * @ip: the IP address of the remote client
  * @port: the port used by the other end
- * @initial_buffer: any initial data that was already read from the socket
+ * @initial_buffer: any zero terminated initial data that was already read from
+ *     the socket
  * @error: a #GError
  *
  * Take an existing network socket and use it for an RTSP connection.
@@ -2163,7 +2146,7 @@ no_address:
  * Returns: %TRUE on success.
  */
 gboolean
-gst_rtsp_client_create_from_socket (GstRTSPClient * client, GSocket * socket,
+gst_rtsp_client_use_socket (GstRTSPClient * client, GSocket * socket,
     const gchar * ip, gint port, const gchar * initial_buffer, GError ** error)
 {
   GstRTSPConnection *conn;
@@ -2172,7 +2155,7 @@ gst_rtsp_client_create_from_socket (GstRTSPClient * client, GSocket * socket,
   GST_RTSP_CHECK (gst_rtsp_connection_create_from_socket (socket, ip, port,
           initial_buffer, &conn), no_connection);
 
-  return attach_client (client, socket, conn, error);
+  return setup_client (client, socket, conn, error);
 
   /* ERRORS */
 no_connection:
@@ -2189,13 +2172,11 @@ no_connection:
  * gst_rtsp_client_accept:
  * @client: a #GstRTSPClient
  * @socket: a #GSocket
+ * @context: the context to run in
  * @cancellable: a #GCancellable
  * @error: a #GError
  *
  * Accept a new connection for @client on @socket.
- *
- * This function should be called when the client properties and urls are fully
- * configured and the client is ready to start.
  *
  * Returns: %TRUE if the client could be accepted.
  */
@@ -2210,7 +2191,7 @@ gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
   GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, cancellable),
       accept_failed);
 
-  return attach_client (client, socket, conn, error);
+  return setup_client (client, socket, conn, error);
 
   /* ERRORS */
 accept_failed:
@@ -2221,4 +2202,37 @@ accept_failed:
     g_free (str);
     return FALSE;
   }
+}
+
+/**
+ * gst_rtsp_client_attach:
+ * @client: a #GstRTSPClient
+ * @context: (allow-none): a #GMainContext
+ *
+ * Attaches @client to @context. When the mainloop for @context is run, the
+ * client will be dispatched. When @context is NULL, the default context will be
+ * used).
+ *
+ * This function should be called when the client properties and urls are fully
+ * configured and the client is ready to start.
+ *
+ * Returns: the ID (greater than 0) for the source within the GMainContext.
+ */
+guint
+gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
+{
+  guint res;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), 0);
+  g_return_val_if_fail (client->watch == NULL, 0);
+
+  /* create watch for the connection and attach */
+  client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
+      g_object_ref (client), (GDestroyNotify) client_watch_notify);
+
+  GST_INFO ("attaching to context %p", context);
+  res = gst_rtsp_watch_attach (client->watch, context);
+  gst_rtsp_watch_unref (client->watch);
+
+  return res;
 }

@@ -749,34 +749,99 @@ close_error:
   }
 }
 
-static void
-unmanage_client (GstRTSPClient * client, GstRTSPServer * server)
+typedef struct
 {
+  GstRTSPServer *server;
+  GMainLoop *loop;
+  GMainContext *context;
+  GstRTSPClient *client;
+} ClientContext;
+
+static void
+free_client_context (ClientContext * ctx)
+{
+  g_main_context_unref (ctx->context);
+  if (ctx->loop)
+    g_main_loop_unref (ctx->loop);
+  g_object_unref (ctx->client);
+  g_slice_free (ClientContext, ctx);
+}
+
+static gpointer
+do_loop (ClientContext * ctx)
+{
+  GST_INFO ("enter mainloop");
+  g_main_loop_run (ctx->loop);
+  GST_INFO ("exit mainloop");
+
+  free_client_context (ctx);
+
+  return NULL;
+}
+
+static void
+unmanage_client (GstRTSPClient * client, ClientContext * ctx)
+{
+  GstRTSPServer *server = ctx->server;
+
   GST_DEBUG_OBJECT (server, "unmanage client %p", client);
 
   g_object_ref (server);
   gst_rtsp_client_set_server (client, NULL);
 
   GST_RTSP_SERVER_LOCK (server);
-  server->clients = g_list_remove (server->clients, client);
+  server->clients = g_list_remove (server->clients, ctx);
   GST_RTSP_SERVER_UNLOCK (server);
-  g_object_unref (server);
 
-  g_object_unref (client);
+  if (ctx->loop)
+    g_main_loop_quit (ctx->loop);
+  else
+    free_client_context (ctx);
+
+  g_object_unref (server);
 }
 
-/* add the client to the active list of clients, takes ownership of
- * the client */
+/* add the client context to the active list of clients, takes ownership
+ * of client */
 static void
 manage_client (GstRTSPServer * server, GstRTSPClient * client)
 {
+  ClientContext *ctx;
+
   GST_DEBUG_OBJECT (server, "manage client %p", client);
   gst_rtsp_client_set_server (client, server);
 
+  ctx = g_slice_new0 (ClientContext);
+  ctx->server = server;
+  ctx->client = client;
+#if 1
+  {
+    GSource *source;
+
+    /* find the context to add the watch */
+    if ((source = g_main_current_source ()))
+      ctx->context = g_main_context_ref (g_source_get_context (source));
+    else
+      ctx->context = NULL;
+  }
+#else
+  ctx->context = g_main_context_new ();
+  ctx->loop = g_main_loop_new (ctx->context, TRUE);
+  ctx->dothread = TRUE;
+#endif
+  gst_rtsp_client_attach (client, ctx->context);
+
   GST_RTSP_SERVER_LOCK (server);
-  g_signal_connect (client, "closed", (GCallback) unmanage_client, server);
-  server->clients = g_list_prepend (server->clients, client);
+  g_signal_connect (client, "closed", (GCallback) unmanage_client, ctx);
+  server->clients = g_list_prepend (server->clients, ctx);
   GST_RTSP_SERVER_UNLOCK (server);
+
+  if (ctx->loop) {
+    GThread *thread;
+
+    thread = g_thread_new ("MainLoop Thread", (GThreadFunc) do_loop, ctx);
+    g_thread_unref (thread);
+  }
 }
 
 static GstRTSPClient *
@@ -853,8 +918,8 @@ gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
     goto client_failed;
 
   /* a new client connected, create a client object to handle the client. */
-  if (!gst_rtsp_client_create_from_socket (client, socket, ip, port,
-          initial_buffer, &error)) {
+  if (!gst_rtsp_client_use_socket (client, socket, ip,
+          port, initial_buffer, &error)) {
     goto transfer_failed;
   }
 
@@ -876,7 +941,7 @@ transfer_failed:
   {
     GST_ERROR_OBJECT (server, "failed to accept client: %s", error->message);
     g_error_free (error);
-    gst_object_unref (client);
+    g_object_unref (client);
     return FALSE;
   }
 }
@@ -935,7 +1000,7 @@ accept_failed:
   {
     GST_ERROR_OBJECT (server, "failed to accept client: %s", error->message);
     g_error_free (error);
-    gst_object_unref (client);
+    g_object_unref (client);
     return FALSE;
   }
 }
