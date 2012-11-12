@@ -58,6 +58,8 @@ G_DEFINE_TYPE (GstRTSPServer, gst_rtsp_server, G_TYPE_OBJECT);
 GST_DEBUG_CATEGORY_STATIC (rtsp_server_debug);
 #define GST_CAT_DEFAULT rtsp_server_debug
 
+typedef struct _ClientContext ClientContext;
+
 static guint gst_rtsp_server_signals[SIGNAL_LAST] = { 0 };
 
 static void gst_rtsp_server_get_property (GObject * object, guint propid,
@@ -66,6 +68,7 @@ static void gst_rtsp_server_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_server_finalize (GObject * object);
 
+static gpointer do_loop (ClientContext * ctx);
 static GstRTSPClient *default_create_client (GstRTSPServer * server);
 static gboolean default_accept_client (GstRTSPServer * server,
     GstRTSPClient * client, GSocket * socket, GError ** error);
@@ -159,6 +162,8 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 
   klass->create_client = default_create_client;
   klass->accept_client = default_accept_client;
+
+  klass->pool = g_thread_pool_new ((GFunc) do_loop, klass, -1, FALSE, NULL);
 
   GST_DEBUG_CATEGORY_INIT (rtsp_server_debug, "rtspserver", 0, "GstRTSPServer");
 }
@@ -749,13 +754,13 @@ close_error:
   }
 }
 
-typedef struct
+struct _ClientContext
 {
   GstRTSPServer *server;
   GMainLoop *loop;
   GMainContext *context;
   GstRTSPClient *client;
-} ClientContext;
+};
 
 static void
 free_client_context (ClientContext * ctx)
@@ -837,10 +842,9 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (ctx->loop) {
-    GThread *thread;
+    GstRTSPServerClass *klass = GST_RTSP_SERVER_GET_CLASS (server);
 
-    thread = g_thread_new ("MainLoop Thread", (GThreadFunc) do_loop, ctx);
-    g_thread_unref (thread);
+    g_thread_pool_push (klass->pool, ctx, NULL);
   }
 }
 

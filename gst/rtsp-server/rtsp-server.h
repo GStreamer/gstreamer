@@ -89,6 +89,8 @@ struct _GstRTSPServer {
 struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 
+  GThreadPool *pool;
+
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
   gboolean        (*accept_client)      (GstRTSPServer *server, GstRTSPClient *client,
                                          GSocket *socket, GError **error);
