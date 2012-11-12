@@ -1109,13 +1109,13 @@ mainloop_enter_defer_cb (pa_mainloop_api * api, void *userdata)
   GstMessage *message;
   GValue val = { 0 };
 
-  g_value_init (&val, G_TYPE_POINTER);
-  g_value_set_pointer (&val, g_thread_self ());
-
   GST_DEBUG_OBJECT (pulsesink, "posting ENTER stream status");
   message = gst_message_new_stream_status (GST_OBJECT (pulsesink),
       GST_STREAM_STATUS_TYPE_ENTER, GST_ELEMENT (pulsesink));
+  g_value_init (&val, GST_TYPE_G_THREAD);
+  g_value_set_boxed (&val, g_thread_self ());
   gst_message_set_stream_status_object (message, &val);
+  g_value_unset (&val);
 
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
@@ -1188,13 +1188,14 @@ mainloop_leave_defer_cb (pa_mainloop_api * api, void *userdata)
   GstMessage *message;
   GValue val = { 0 };
 
-  g_value_init (&val, G_TYPE_POINTER);
-  g_value_set_pointer (&val, g_thread_self ());
-
   GST_DEBUG_OBJECT (pulsesink, "posting LEAVE stream status");
   message = gst_message_new_stream_status (GST_OBJECT (pulsesink),
       GST_STREAM_STATUS_TYPE_LEAVE, GST_ELEMENT (pulsesink));
+  g_value_init (&val, GST_TYPE_G_THREAD);
+  g_value_set_boxed (&val, g_thread_self ());
   gst_message_set_stream_status_object (message, &val);
+  g_value_unset (&val);
+
   gst_element_post_message (GST_ELEMENT (pulsesink), message);
 
   g_return_if_fail (pulsesink->defer_pending);
