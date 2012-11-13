@@ -181,6 +181,18 @@ gst_vaapi_picture_h264_new(GstVaapiDecoderH264 *decoder)
     return GST_VAAPI_PICTURE_H264_CAST(object);
 }
 
+static inline void
+gst_vaapi_picture_h264_set_reference(
+    GstVaapiPictureH264 *picture,
+    guint                reference_flags
+)
+{
+    g_return_if_fail(GST_VAAPI_IS_PICTURE_H264(picture));
+
+    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
+    GST_VAAPI_PICTURE_FLAG_SET(picture, reference_flags);
+}
+
 static inline GstVaapiSliceH264 *
 gst_vaapi_picture_h264_get_last_slice(GstVaapiPictureH264 *picture)
 {
@@ -525,6 +537,46 @@ get_max_dec_frame_buffering(GstH264SPS *sps)
         max_dec_frame_buffering = sps->num_ref_frames;
     return MAX(1, max_dec_frame_buffering);
 }
+
+static void
+array_remove_index_fast(void *array, guint *array_length_ptr, guint index)
+{
+    gpointer * const entries = array;
+    guint num_entries = *array_length_ptr;
+
+    g_return_if_fail(index < num_entries);
+
+    if (index != --num_entries)
+        entries[index] = entries[num_entries];
+    entries[num_entries] = NULL;
+    *array_length_ptr = num_entries;
+}
+
+#if 1
+static inline void
+array_remove_index(void *array, guint *array_length_ptr, guint index)
+{
+    array_remove_index_fast(array, array_length_ptr, index);
+}
+#else
+static void
+array_remove_index(void *array, guint *array_length_ptr, guint index)
+{
+    gpointer * const entries = array;
+    const guint num_entries = *array_length_ptr - 1;
+    guint i;
+
+    g_return_if_fail(index <= num_entries);
+
+    for (i = index; i < num_entries; i++)
+        entries[i] = entries[i + 1];
+    entries[num_entries] = NULL;
+    *array_length_ptr = num_entries;
+}
+#endif
+
+#define ARRAY_REMOVE_INDEX(array, index) \
+    array_remove_index(array, &array##_count, index)
 
 static void
 dpb_remove_index(GstVaapiDecoderH264 *decoder, guint index)
@@ -1602,29 +1654,6 @@ init_picture_refs_b_slice(
 
 #undef SORT_REF_LIST
 
-static gboolean
-remove_reference_at(
-    GstVaapiDecoderH264  *decoder,
-    GstVaapiPictureH264 **pictures,
-    guint                *picture_count,
-    guint                 index
-)
-{
-    guint num_pictures = *picture_count;
-    GstVaapiPictureH264 *picture;
-
-    g_return_val_if_fail(index < num_pictures, FALSE);
-
-    picture = pictures[index];
-    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
-
-    if (index != --num_pictures)
-        pictures[index] = pictures[num_pictures];
-    pictures[num_pictures] = NULL;
-    *picture_count = num_pictures;
-    return TRUE;
-}
-
 static gint
 find_short_term_reference(GstVaapiDecoderH264 *decoder, gint32 pic_num)
 {
@@ -1966,8 +1995,8 @@ exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstH264PPS * const pps = priv->current_picture->pps;
     GstH264SPS * const sps = pps->sequence;
-    guint i, max_num_ref_frames, lowest_frame_num_index;
-    gint32 lowest_frame_num;
+    GstVaapiPictureH264 *ref_picture;
+    guint i, m, max_num_ref_frames;
 
     GST_DEBUG("reference picture marking process (sliding window)");
 
@@ -1980,20 +2009,15 @@ exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder)
     if (priv->short_ref_count < 1)
         return FALSE;
 
-    lowest_frame_num = priv->short_ref[0]->frame_num_wrap;
-    lowest_frame_num_index = 0;
-    for (i = 1; i < priv->short_ref_count; i++) {
-        if (priv->short_ref[i]->frame_num_wrap < lowest_frame_num) {
-            lowest_frame_num = priv->short_ref[i]->frame_num_wrap;
-            lowest_frame_num_index = i;
-        }
+    for (m = 0, i = 1; i < priv->short_ref_count; i++) {
+        GstVaapiPictureH264 * const picture = priv->short_ref[i];
+        if (picture->frame_num_wrap < priv->short_ref[m]->frame_num_wrap)
+            m = i;
     }
 
-    remove_reference_at(
-        decoder,
-        priv->short_ref, &priv->short_ref_count,
-        lowest_frame_num_index
-    );
+    ref_picture = priv->short_ref[m];
+    gst_vaapi_picture_h264_set_reference(ref_picture, 0);
+    ARRAY_REMOVE_INDEX(priv->short_ref, m);
     return TRUE;
 }
 
@@ -2025,7 +2049,9 @@ exec_ref_pic_marking_adaptive_mmco_1(
     i = find_short_term_reference(decoder, picNumX);
     if (i < 0)
         return;
-    remove_reference_at(decoder, priv->short_ref, &priv->short_ref_count, i);
+
+    gst_vaapi_picture_h264_set_reference(priv->short_ref[i], 0);
+    ARRAY_REMOVE_INDEX(priv->short_ref, i);
 }
 
 /* 8.2.5.4.2. Mark long-term reference picture as "unused for reference" */
@@ -2042,7 +2068,9 @@ exec_ref_pic_marking_adaptive_mmco_2(
     i = find_long_term_reference(decoder, ref_pic_marking->long_term_pic_num);
     if (i < 0)
         return;
-    remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
+
+    gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0);
+    ARRAY_REMOVE_INDEX(priv->long_ref, i);
 }
 
 /* 8.2.5.4.3. Assign LongTermFrameIdx to a short-term reference picture */
@@ -2054,26 +2082,29 @@ exec_ref_pic_marking_adaptive_mmco_3(
 )
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiPictureH264 *ref_picture;
     gint32 i, picNumX;
 
     for (i = 0; i < priv->long_ref_count; i++) {
         if (priv->long_ref[i]->long_term_frame_idx == ref_pic_marking->long_term_frame_idx)
             break;
     }
-    if (i != priv->long_ref_count)
-        remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
+    if (i != priv->long_ref_count) {
+        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0);
+        ARRAY_REMOVE_INDEX(priv->long_ref, i);
+    }
 
     picNumX = get_picNumX(picture, ref_pic_marking);
     i = find_short_term_reference(decoder, picNumX);
     if (i < 0)
         return;
 
-    picture = priv->short_ref[i];
-    remove_reference_at(decoder, priv->short_ref, &priv->short_ref_count, i);
-    priv->long_ref[priv->long_ref_count++] = picture;
+    ref_picture = priv->short_ref[i];
+    ARRAY_REMOVE_INDEX(priv->short_ref, i);
+    priv->long_ref[priv->long_ref_count++] = ref_picture;
 
-    picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
-    GST_VAAPI_PICTURE_FLAG_SET(picture,
+    ref_picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
+    gst_vaapi_picture_h264_set_reference(ref_picture,
         GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
 }
 
@@ -2094,7 +2125,8 @@ exec_ref_pic_marking_adaptive_mmco_4(
     for (i = 0; i < priv->long_ref_count; i++) {
         if (priv->long_ref[i]->long_term_frame_idx <= long_term_frame_idx)
             continue;
-        remove_reference_at(decoder, priv->long_ref, &priv->long_ref_count, i);
+        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0);
+        ARRAY_REMOVE_INDEX(priv->long_ref, i);
         i--;
     }
 }
@@ -2135,7 +2167,7 @@ exec_ref_pic_marking_adaptive_mmco_6(
 )
 {
     picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
-    GST_VAAPI_PICTURE_FLAG_SET(picture,
+    gst_vaapi_picture_h264_set_reference(picture,
         GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
 }
 
