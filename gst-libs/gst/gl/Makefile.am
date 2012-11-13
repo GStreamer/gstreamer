@@ -2,8 +2,6 @@
 lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
 EXTRA_DIST = \
-	gstglwindow_x11.c \
-	gstglwindow_x11ES2.c \
 	gstglwindow_win32.c \
 	gstglwindow_winCE.c \
 	gstglwindow_cocoa.m
@@ -17,19 +15,25 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglshader.c \
         gstglshadervariables.c \
         gstgldownload.c \
-        gstglupload.c
+        gstglupload.c \
+        gstglwindow.c
 
-if GL_BACKEND_WIN32
+#SUBDIRS = 
+if HAVE_WINDOW_WIN32
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_win32.c
 endif
-if GL_BACKEND_COCOA
+if HAVE_WINDOW_COCOA
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_cocoa.m
 endif
-if GL_BACKEND_X11
+if HAVE_WINDOW_X11
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_x11.c
+if USE_GLX
+libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_x11_glx.c
 endif
-if GL_BACKEND_X11ES2
-libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_x11ES2.c
+if USE_EGL
+libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_x11_egl.c
+endif
+#SUBDIRS += x11
 endif
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
@@ -42,7 +46,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglfilter.h \
 	gstglmixer.h \
 	gstglmixerpad.h \
-        gstglshadervariables.h \
+    gstglshadervariables.h \
 	gstglshader.h \
 	gstgldownload.h \
 	gstglupload.h
@@ -62,7 +66,7 @@ libgstgl_@GST_API_VERSION@_la_OBJCFLAGS = \
 libgstgl_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
-if GL_BACKEND_COCOA
+if HAVE_WINDOW_COCOA
 libgstgl_@GST_API_VERSION@_la_LIBTOOLFLAGS = --tag=OBJC
 else
 libgstgl_@GST_API_VERSION@_la_LIBTOOLFLAGS = --tag=CC
