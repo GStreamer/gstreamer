@@ -1007,6 +1007,7 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
   return result;
 }
 
+/* called with state-lock */
 static gboolean
 default_handle_message (GstRTSPMedia * media, GstMessage * message)
 {
@@ -1027,7 +1028,6 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       if (media->is_live)
         break;
 
-      g_rec_mutex_lock (&media->state_lock);
       if (percent == 100) {
         /* a 100% message means buffering is done */
         media->buffering = FALSE;
@@ -1050,7 +1050,6 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
           }
         }
         media->buffering = TRUE;
-        g_rec_mutex_unlock (&media->state_lock);
       }
       break;
     }
@@ -1088,7 +1087,6 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
-      g_rec_mutex_lock (&media->state_lock);
       if (!media->adding) {
         /* when we are dynamically adding pads, the addition of the udpsrc will
          * temporarily produce ASYNC_DONE messages. We have to ignore them and
@@ -1100,18 +1098,15 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       } else {
         GST_INFO ("%p: ignoring ASYNC_DONE", media);
       }
-      g_rec_mutex_unlock (&media->state_lock);
       break;
     case GST_MESSAGE_EOS:
       GST_INFO ("%p: got EOS", media);
 
-      g_rec_mutex_lock (&media->state_lock);
       if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARING) {
         GST_DEBUG ("shutting down after EOS");
         finish_unprepare (media);
         g_object_unref (media);
       }
-      g_rec_mutex_unlock (&media->state_lock);
       break;
     default:
       GST_INFO ("%p: got message type %s", media,
@@ -1129,10 +1124,12 @@ bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
 
+  g_rec_mutex_lock (&media->state_lock);
   if (klass->handle_message)
     ret = klass->handle_message (media, message);
   else
     ret = FALSE;
+  g_rec_mutex_unlock (&media->state_lock);
 
   return ret;
 }
@@ -1208,6 +1205,9 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   g_rec_mutex_lock (&media->state_lock);
   if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED)
     goto was_prepared;
+
+  if (media->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
+    goto not_unprepared;
 
   if (!media->reusable && media->reused)
     goto is_reused;
@@ -1309,10 +1309,17 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   /* OK */
 was_prepared:
   {
+    GST_LOG ("media %p was prepared", media);
     g_rec_mutex_unlock (&media->state_lock);
     return TRUE;
   }
   /* ERRORS */
+not_unprepared:
+  {
+    GST_WARNING ("media %p was not unprepared", media);
+    g_rec_mutex_unlock (&media->state_lock);
+    return FALSE;
+  }
 is_reused:
   {
     g_rec_mutex_unlock (&media->state_lock);
