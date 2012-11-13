@@ -52,10 +52,6 @@ G_BEGIN_DECLS
 #define GST_BUFFER_TIMESTAMP          GST_BUFFER_PTS
 #define GST_BUFFER_TIMESTAMP_IS_VALID GST_BUFFER_PTS_IS_VALID
 
-#define gst_adapter_prev_timestamp    gst_adapter_prev_pts
-
-#define gst_tag_list_free(taglist)    gst_tag_list_unref(taglist)
-
 static inline gboolean
 gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 {
@@ -77,6 +73,10 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
 
 
 #ifndef GST_DISABLE_DEPRECATED
+
+#define gst_adapter_prev_timestamp    gst_adapter_prev_pts
+
+#define gst_tag_list_free(taglist)    gst_tag_list_unref(taglist)
 
 #define GST_MESSAGE_DURATION GST_MESSAGE_DURATION_CHANGED
 #define gst_message_new_duration(src,fmt,dur) \

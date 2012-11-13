@@ -376,7 +376,7 @@ GST_START_TEST (test_timestamp)
   fail_unless (avail == 100);
 
   /* timestamp is now undefined */
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 0);
 
@@ -385,7 +385,7 @@ GST_START_TEST (test_timestamp)
   fail_unless (avail == 50);
 
   /* still undefined, dist changed, though */
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 50);
 
@@ -398,7 +398,7 @@ GST_START_TEST (test_timestamp)
   fail_unless (avail == 150);
 
   /* timestamp is still undefined */
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 50);
 
@@ -407,7 +407,7 @@ GST_START_TEST (test_timestamp)
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 100);
 
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 1 * GST_SECOND);
   fail_unless (dist == 0);
 
@@ -416,7 +416,7 @@ GST_START_TEST (test_timestamp)
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 50);
 
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 1 * GST_SECOND);
   fail_unless (dist == 50);
 
@@ -433,7 +433,7 @@ GST_START_TEST (test_timestamp)
   fail_unless (avail == 250);
 
   /* timestamp still as it was before the push */
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 1 * GST_SECOND);
   fail_unless (dist == 50);
 
@@ -441,7 +441,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_flush (adapter, 50);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 200);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 1 * GST_SECOND);
   fail_unless (dist == 100);
 
@@ -449,7 +449,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_flush (adapter, 50);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 150);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 1 * GST_SECOND);
   fail_unless (dist == 150);
 
@@ -457,7 +457,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_flush (adapter, 50);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 100);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 2 * GST_SECOND);
   fail_unless (dist == 0);
 
@@ -465,7 +465,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_flush (adapter, 100);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 0);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 2 * GST_SECOND);
   fail_unless (dist == 100);
 
@@ -473,7 +473,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_clear (adapter);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 0);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == GST_CLOCK_TIME_NONE);
   fail_unless (dist == 0);
 
@@ -483,7 +483,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_push (adapter, buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 0);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 2 * GST_SECOND);
   fail_unless (dist == 0);
 
@@ -493,7 +493,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_push (adapter, buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 0);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 2 * GST_SECOND);
   fail_unless (dist == 0);
 
@@ -503,14 +503,14 @@ GST_START_TEST (test_timestamp)
   gst_adapter_push (adapter, buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 100);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 2 * GST_SECOND);
   fail_unless (dist == 0);
 
   gst_adapter_flush (adapter, 1);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 99);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 4 * GST_SECOND);
   fail_unless (dist == 1);
 
@@ -520,7 +520,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_push (adapter, buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 99);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 4 * GST_SECOND);
   fail_unless (dist == 1);
 
@@ -529,7 +529,7 @@ GST_START_TEST (test_timestamp)
   gst_adapter_push (adapter, buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 199);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 4 * GST_SECOND);
   fail_unless (dist == 1);
 
@@ -540,7 +540,7 @@ GST_START_TEST (test_timestamp)
   gst_buffer_unref (buffer);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 100);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 5 * GST_SECOND);
   fail_unless (dist == 0);
 
@@ -554,7 +554,7 @@ GST_START_TEST (test_timestamp)
   g_free (data);
   avail = gst_adapter_available (adapter);
   fail_unless (avail == 50);
-  timestamp = gst_adapter_prev_timestamp (adapter, &dist);
+  timestamp = gst_adapter_prev_pts (adapter, &dist);
   fail_unless (timestamp == 5 * GST_SECOND);
   fail_unless (dist == 50);
 

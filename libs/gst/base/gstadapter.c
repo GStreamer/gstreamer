@@ -84,7 +84,7 @@
  *
  * The adapter will keep track of the timestamps of the buffers
  * that were pushed. The last seen timestamp before the current position
- * can be queried with gst_adapter_prev_timestamp(). This function can
+ * can be queried with gst_adapter_prev_pts(). This function can
  * optionally return the amount of bytes between the start of the buffer that
  * carried the timestamp and the current adapter position. The distance is
  * useful when dealing with, for example, raw audio samples because it allows
