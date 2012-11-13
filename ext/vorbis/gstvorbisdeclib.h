@@ -43,8 +43,6 @@
 
 #define GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH           (32)
 
-#define GST_VORBIS_DEC_GLIB_TYPE_NAME      GstVorbisDec
-
 #else /* TREMOR */
 
 #define GST_VORBIS_DEC_DESCRIPTION "decode raw vorbis streams to integer audio"
@@ -61,9 +59,6 @@
 #define GST_VORBIS_DEC_DEFAULT_SAMPLE_WIDTH           (16)
 
 /* we need a different type name here */
-#define GST_VORBIS_DEC_GLIB_TYPE_NAME      GstIVorbisDec
-
-/* and still have it compile */
 #define GstVorbisDec GstIVorbisDec
 #define GstVorbisDecClass GstIVorbisDecClass
 
