@@ -93,8 +93,6 @@ static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
 {
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
-
-  gst_gl_window_init_platform ();
 }
 
 
@@ -217,7 +215,7 @@ gst_gl_display_finalize (GObject * object)
 
     GST_INFO ("send quit gl window loop");
 
-    gst_gl_window_quit_loop (display->gl_window,
+    gst_gl_window_quit (display->gl_window,
         GST_GL_WINDOW_CB (gst_gl_display_thread_destroy_context), display);
 
     GST_INFO ("quit sent to gl window loop");
@@ -303,7 +301,9 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   GLenum err = GLEW_OK;
 
   gst_gl_display_lock (display);
-  display->gl_window = gst_gl_window_new (display->external_gl_context);
+  display->gl_window =
+      gst_gl_window_new (GST_GL_RENDERER_API_OPENGL,
+      display->external_gl_context);
 
   if (!display->gl_window) {
     gst_gl_display_set_error (display, "Failed to create gl window");
@@ -385,7 +385,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   //setup callbacks
   gst_gl_window_set_resize_callback (display->gl_window,
-      GST_GL_WINDOW_CB2 (gst_gl_display_on_resize), display);
+      GST_GL_WINDOW_RESIZE_CB (gst_gl_display_on_resize), display);
   gst_gl_window_set_draw_callback (display->gl_window,
       GST_GL_WINDOW_CB (gst_gl_display_on_draw), display);
   gst_gl_window_set_close_callback (display->gl_window,
@@ -395,7 +395,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   gst_gl_display_unlock (display);
 
-  gst_gl_window_run_loop (display->gl_window);
+  gst_gl_window_run (display->gl_window);
 
   GST_INFO ("loop exited\n");
 
@@ -1302,10 +1302,10 @@ gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
 
 /* Called by the glimagesink */
 void
-gst_gl_display_set_window_id (GstGLDisplay * display, gulong window_id)
+gst_gl_display_set_window_id (GstGLDisplay * display, guintptr window_id)
 {
   gst_gl_display_lock (display);
-  gst_gl_window_set_external_window_id (display->gl_window, window_id);
+  gst_gl_window_set_window_handle (display->gl_window, window_id);
   gst_gl_display_unlock (display);
 }
 
@@ -1342,8 +1342,7 @@ gst_gl_display_get_internal_gl_context (GstGLDisplay * display)
 {
   gulong external_gl_context = 0;
   gst_gl_display_lock (display);
-  external_gl_context =
-      gst_gl_window_get_internal_gl_context (display->gl_window);
+  external_gl_context = gst_gl_window_get_gl_context (display->gl_window);
   gst_gl_display_unlock (display);
   return external_gl_context;
 }
@@ -1353,7 +1352,7 @@ gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate)
 {
   if (!activate)
     gst_gl_display_lock (display);
-  gst_gl_window_activate_gl_context (display->gl_window, activate);
+  gst_gl_window_activate (display->gl_window, activate);
   if (activate)
     gst_gl_display_unlock (display);
 }

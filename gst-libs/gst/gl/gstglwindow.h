@@ -21,25 +21,6 @@
 #ifndef __GST_GL_WINDOW_H__
 #define __GST_GL_WINDOW_H__
 
-/* OpenGL 2.0 for Embedded Systems */
-#ifdef OPENGL_ES2
-#undef UNICODE
-#include <EGL/egl.h>
-#define UNICODE
-#include <GLES2/gl2.h>
-#include "gstgles2.h"
-/* OpenGL for usual systems */
-#else
-#if __APPLE__
-#include <GL/glew.h>
-#include <OpenGL/OpenGL.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
-#endif
-
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -51,13 +32,38 @@ G_BEGIN_DECLS
 #define GST_GL_IS_WINDOW_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WINDOW))
 #define GST_GL_WINDOW_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WINDOW, GstGLWindowClass))
 
+#define GST_GL_WINDOW_LOCK(w) \
+  do { \
+    if (GST_GL_WINDOW(w)->need_lock) \
+      g_mutex_lock (&GST_GL_WINDOW(w)->lock); \
+  } while (0)
+
+#define GST_GL_WINDOW_UNLOCK(w) \
+  do { \
+    if (GST_GL_WINDOW(w)->need_lock) \
+      g_mutex_unlock (&GST_GL_WINDOW(w)->lock); \
+  } while (0)
+
+#define GST_GL_WINDOW_GET_LOCK(w) (&GST_GL_WINDOW(w)->lock)
+
 #define GST_GL_WINDOW_ERROR (gst_gl_window_error_quark ())
 
-typedef void (* GstGLWindowCB) ( gpointer );
-typedef void (* GstGLWindowCB2) ( gpointer, gint, gint );
+typedef void (*GstGLWindowCB) (gpointer data);
+typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
 
 #define	GST_GL_WINDOW_CB(f)			 ((GstGLWindowCB) (f))
-#define	GST_GL_WINDOW_CB2(f)		 ((GstGLWindowCB2) (f))
+#define	GST_GL_WINDOW_RESIZE_CB(f)		 ((GstGLWindowResizeCB) (f))
+
+typedef enum
+{
+  GST_GL_PLATFORM_UNKNOWN = 0,
+  GST_GL_PLATFORM_EGL,
+  GST_GL_PLATFORM_GLX,
+  GST_GL_PLATFORM_WGL,
+  GST_GL_PLATFORM_CGL,
+  
+  GST_GL_PLATFORM_LAST = 255
+} GstGLPlatform;
 
 typedef struct _GstGLWindow        GstGLWindow;
 typedef struct _GstGLWindowPrivate GstGLWindowPrivate;
@@ -66,38 +72,66 @@ typedef struct _GstGLWindowClass   GstGLWindowClass;
 struct _GstGLWindow {
   /*< private >*/
   GObject parent;
-  GstGLWindowPrivate *priv;
+
+  /*< public >*/
+  GMutex        lock;
+  gboolean      need_lock;
+
+  guintptr      external_gl_context;
+
+  GstGLWindowCB         draw;
+  gpointer              draw_data;
+  GstGLWindowCB         close;
+  gpointer              close_data;
+  GstGLWindowResizeCB   resize;
+  gpointer              resize_data;
+
+  /*< private >*/
+  gpointer _reserved[GST_PADDING];
 };
 
 struct _GstGLWindowClass {
   /*< private >*/
   GObjectClass parent_class;
+  
+  guintptr      (*get_gl_context)     (GstGLWindow *window);
+  gboolean      (*activate)           (GstGLWindow *window, gboolean activate);
+  void          (*set_window_handle)  (GstGLWindow *window, guintptr id);
+  guintptr      (*get_window_handle)  (GstGLWindow *window);
+  void          (*draw_unlocked)      (GstGLWindow *window, guint width, guint height);
+  void          (*draw)               (GstGLWindow *window, guint width, guint height);
+  void          (*run)                (GstGLWindow *window);
+  void          (*quit)               (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+  void          (*send_message)       (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+  GstGLPlatform (*get_platform)       (GstGLWindow *window);
+
+  /*< private >*/
+  gpointer _reserved[GST_PADDING];
 };
 
 /* methods */
 
 GQuark gst_gl_window_error_quark (void);
-GType gst_gl_window_get_type (void);
+GType gst_gl_window_get_type     (void);
 
-GstGLWindow * gst_gl_window_new (guintptr external_gl_context);
+GstGLWindow * gst_gl_window_new  (GstGLRendererAPI render_api, guintptr external_gl_context);
 
-guintptr gst_gl_window_get_internal_gl_context (GstGLWindow *window);
-void gst_gl_window_activate_gl_context (GstGLWindow *window, gboolean activate);
+void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data);
+void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+void     gst_gl_window_set_need_lock        (GstGLWindow *window, gboolean need_lock);
 
-void gst_gl_window_set_external_window_id (GstGLWindow *window, guintptr id);
-void gst_gl_window_set_draw_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
-void gst_gl_window_set_resize_callback (GstGLWindow *window, GstGLWindowCB2 callback, gpointer data);
-void gst_gl_window_set_close_callback (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+guintptr gst_gl_window_get_gl_context       (GstGLWindow *window);
+gboolean  gst_gl_window_activate            (GstGLWindow *window, gboolean activate);
+void     gst_gl_window_set_window_handle    (GstGLWindow *window, guintptr handle);
+guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);
+void     gst_gl_window_draw_unlocked        (GstGLWindow *window, guint width, guint height);
+void     gst_gl_window_draw                 (GstGLWindow *window, guint width, guint height);
+void     gst_gl_window_run                  (GstGLWindow *window);
+void     gst_gl_window_quit                 (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
-void gst_gl_window_draw_unlocked (GstGLWindow *window, gint width, gint height);
-void gst_gl_window_draw (GstGLWindow *window, gint width, gint height);
-void gst_gl_window_run_loop (GstGLWindow *window);
-void gst_gl_window_quit_loop (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
-
-void gst_gl_window_send_message (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
-
-/* helper */
-void gst_gl_window_init_platform ();
+GstGLPlatform gst_gl_window_get_platform (GstGLWindow *window);
 
 G_END_DECLS
 
