@@ -121,6 +121,7 @@ enum {
 struct _GstVaapiPictureH264 {
     GstVaapiPicture             base;
     GstH264PPS                 *pps;
+    guint                       structure;
     gint32                      field_poc[2];
     gint32                      frame_num;              // Original frame_num from slice_header()
     gint32                      frame_num_wrap;         // Temporary for ref pic marking: FrameNumWrap
@@ -370,7 +371,7 @@ gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
     if (!fs)
         return NULL;
 
-    fs->structure       = picture->base.structure;
+    fs->structure       = picture->structure;
     fs->buffers[0]      = gst_vaapi_picture_ref(picture);
     fs->num_buffers     = 1;
     fs->output_needed   = picture->output_needed;
@@ -1111,7 +1112,7 @@ init_picture_poc_0(
         priv->poc_msb = priv->prev_poc_msb;
 
     temp_poc = priv->poc_msb + priv->poc_lsb;
-    switch (picture->base.structure) {
+    switch (picture->structure) {
     case GST_VAAPI_PICTURE_STRUCTURE_FRAME:
         // (8-4, 8-5)
         priv->field_poc[TOP_FIELD] = temp_poc;
@@ -1192,7 +1193,7 @@ init_picture_poc_1(
         expected_poc += sps->offset_for_non_ref_pic;
 
     // (8-10)
-    switch (picture->base.structure) {
+    switch (picture->structure) {
     case GST_VAAPI_PICTURE_STRUCTURE_FRAME:
         priv->field_poc[TOP_FIELD] = expected_poc +
             slice_hdr->delta_pic_order_cnt[0];
@@ -1250,9 +1251,9 @@ init_picture_poc_2(
         temp_poc = 2 * (priv->frame_num_offset + priv->frame_num);
 
     // (8-13)
-    if (picture->base.structure != GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
+    if (picture->structure != GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
         priv->field_poc[TOP_FIELD] = temp_poc;
-    if (picture->base.structure != GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
+    if (picture->structure != GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
         priv->field_poc[BOTTOM_FIELD] = temp_poc;
 }
 
@@ -1280,9 +1281,9 @@ init_picture_poc(
         break;
     }
 
-    if (picture->base.structure != GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
+    if (picture->structure != GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
         picture->field_poc[TOP_FIELD] = priv->field_poc[TOP_FIELD];
-    if (picture->base.structure != GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
+    if (picture->structure != GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
         picture->field_poc[BOTTOM_FIELD] = priv->field_poc[BOTTOM_FIELD];
     picture->base.poc = MIN(picture->field_poc[0], picture->field_poc[1]);
 }
@@ -1370,7 +1371,7 @@ init_picture_refs_pic_num(
         if (GST_VAAPI_PICTURE_IS_FRAME(picture))
             pic->pic_num = pic->frame_num_wrap;
         else {
-            if (pic->base.structure == picture->base.structure)
+            if (pic->structure == picture->structure)
                 pic->pic_num = 2 * pic->frame_num_wrap + 1;
             else
                 pic->pic_num = 2 * pic->frame_num_wrap;
@@ -1384,7 +1385,7 @@ init_picture_refs_pic_num(
         if (GST_VAAPI_PICTURE_IS_FRAME(picture))
             pic->long_term_pic_num = pic->long_term_frame_idx;
         else {
-            if (pic->base.structure == picture->base.structure)
+            if (pic->structure == picture->structure)
                 pic->long_term_pic_num = 2 * pic->long_term_frame_idx + 1;
             else
                 pic->long_term_pic_num = 2 * pic->long_term_frame_idx;
@@ -1822,6 +1823,7 @@ init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
                 priv->short_ref[short_ref_count++] = picture;
             else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
                 priv->long_ref[long_ref_count++] = picture;
+            picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
         }
     }
 
@@ -1936,6 +1938,7 @@ init_picture(
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
     else
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+    picture->structure = base_picture->structure;
 
     /* Initialize reference flags */
     if (nalu->ref_idc) {
@@ -2116,9 +2119,9 @@ exec_ref_pic_marking_adaptive_mmco_5(
     picture->frame_num = 0;
 
     /* Update TopFieldOrderCnt and BottomFieldOrderCnt (8.2.1) */
-    if (picture->base.structure != GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
+    if (picture->structure != GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD)
         picture->field_poc[TOP_FIELD] -= picture->base.poc;
-    if (picture->base.structure != GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
+    if (picture->structure != GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD)
         picture->field_poc[BOTTOM_FIELD] -= picture->base.poc;
     picture->base.poc = 0;
 }
@@ -2186,7 +2189,7 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
 
     priv->prev_pic_has_mmco5 = FALSE;
-    priv->prev_pic_structure = picture->base.structure;
+    priv->prev_pic_structure = picture->structure;
 
     if (!GST_VAAPI_PICTURE_IS_REFERENCE(picture))
         return TRUE;
@@ -2234,7 +2237,7 @@ vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture)
         pic->frame_idx = picture->frame_num;
     }
 
-    switch (picture->base.structure) {
+    switch (picture->structure) {
     case GST_VAAPI_PICTURE_STRUCTURE_FRAME:
         pic->TopFieldOrderCnt = picture->field_poc[TOP_FIELD];
         pic->BottomFieldOrderCnt = picture->field_poc[BOTTOM_FIELD];
