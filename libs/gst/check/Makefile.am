@@ -108,7 +108,7 @@ print-check-symbols:
 	  echo $$s; \
 	done;
 
-$(SYMBOLS_FILE):
+$(SYMBOLS_FILE): $(libgstcheck_@GST_API_VERSION@include_HEADERS) libcheck/check.h
 	$(AM_V_GEN)rm -f $(SYMBOLS_FILE) 2>/dev/null; \
 	for s in $(LIBGSTCHECK_EXPORTED_SYMBOLS) $(CHECK_SYMS); do \
 	  echo $$s >> $(SYMBOLS_FILE); \
