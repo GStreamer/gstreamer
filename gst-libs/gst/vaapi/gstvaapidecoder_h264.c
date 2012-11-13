@@ -128,6 +128,7 @@ struct _GstVaapiPictureH264 {
     gint32                      long_term_frame_idx;    // Temporary for ref pic marking: LongTermFrameIdx
     gint32                      pic_num;                // Temporary for ref pic marking: PicNum
     gint32                      long_term_pic_num;      // Temporary for ref pic marking: LongTermPicNum
+    GstVaapiPictureH264        *other_field;            // Temporary for ref pic marking: other field in the same frame store
     guint                       output_flag             : 1;
     guint                       output_needed           : 1;
 };
@@ -191,6 +192,19 @@ gst_vaapi_picture_h264_set_reference(
 
     GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
     GST_VAAPI_PICTURE_FLAG_SET(picture, reference_flags);
+}
+
+static inline GstVaapiPictureH264 *
+gst_vaapi_picture_h264_new_field(GstVaapiPictureH264 *picture)
+{
+    GstVaapiPicture *base_picture;
+
+    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), NULL);
+
+    base_picture = gst_vaapi_picture_new_field(&picture->base);
+    if (!base_picture)
+        return NULL;
+    return GST_VAAPI_PICTURE_H264_CAST(base_picture);
 }
 
 static inline GstVaapiSliceH264 *
@@ -390,6 +404,61 @@ gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
     return fs;
 }
 
+static gboolean
+gst_vaapi_frame_store_add(GstVaapiFrameStore *fs, GstVaapiPictureH264 *picture)
+{
+    guint field;
+
+    g_return_val_if_fail(GST_VAAPI_IS_FRAME_STORE(fs), FALSE);
+    g_return_val_if_fail(fs->num_buffers == 1, FALSE);
+    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), FALSE);
+    g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FRAME(picture), FALSE);
+
+    gst_vaapi_picture_replace(&fs->buffers[fs->num_buffers++], picture);
+    if (picture->output_flag) {
+        picture->output_needed = TRUE;
+        fs->output_needed++;
+    }
+
+    fs->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+
+    field = picture->structure == GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD ?
+        TOP_FIELD : BOTTOM_FIELD;
+    g_return_val_if_fail(fs->buffers[0]->field_poc[field] == G_MAXINT32, FALSE);
+    fs->buffers[0]->field_poc[field] = picture->field_poc[field];
+    g_return_val_if_fail(picture->field_poc[!field] == G_MAXINT32, FALSE);
+    picture->field_poc[!field] = fs->buffers[0]->field_poc[!field];
+    return TRUE;
+}
+
+static gboolean
+gst_vaapi_frame_store_split_fields(GstVaapiFrameStore *fs)
+{
+    GstVaapiPictureH264 * const first_field = fs->buffers[0];
+    GstVaapiPictureH264 *second_field;
+
+    g_return_val_if_fail(fs->num_buffers == 1, FALSE);
+
+    first_field->base.structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+    GST_VAAPI_PICTURE_FLAG_SET(first_field, GST_VAAPI_PICTURE_FLAG_INTERLACED);
+
+    second_field = gst_vaapi_picture_h264_new_field(first_field);
+    if (!second_field)
+        return FALSE;
+    gst_vaapi_picture_replace(&fs->buffers[fs->num_buffers++], second_field);
+    gst_vaapi_picture_unref(second_field);
+
+    second_field->frame_num    = first_field->frame_num;
+    second_field->field_poc[0] = first_field->field_poc[0];
+    second_field->field_poc[1] = first_field->field_poc[1];
+    second_field->output_flag  = first_field->output_flag;
+    if (second_field->output_flag) {
+        second_field->output_needed = TRUE;
+        fs->output_needed++;
+    }
+    return TRUE;
+}
+
 static inline gboolean
 gst_vaapi_frame_store_has_frame(GstVaapiFrameStore *fs)
 {
@@ -448,9 +517,9 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiProfile             profile;
     GstVaapiEntrypoint          entrypoint;
     GstVaapiChromaType          chroma_type;
-    GstVaapiPictureH264        *short_ref[16];
+    GstVaapiPictureH264        *short_ref[32];
     guint                       short_ref_count;
-    GstVaapiPictureH264        *long_ref[16];
+    GstVaapiPictureH264        *long_ref[32];
     guint                       long_ref_count;
     GstVaapiPictureH264        *RefPicList0[32];
     guint                       RefPicList0_count;
@@ -473,6 +542,7 @@ struct _GstVaapiDecoderH264Private {
     guint                       is_opened               : 1;
     guint                       is_avc                  : 1;
     guint                       has_context             : 1;
+    guint                       progressive_sequence    : 1;
 };
 
 static gboolean
@@ -602,8 +672,11 @@ dpb_output(
 {
     picture->output_needed = FALSE;
 
-    if (fs)
-        fs->output_needed--;
+    if (fs) {
+        if (--fs->output_needed > 0)
+            return TRUE;
+        picture = fs->buffers[0];
+    }
 
     /* XXX: update cropping rectangle */
     return gst_vaapi_picture_output(GST_VAAPI_PICTURE_CAST(picture));
@@ -686,12 +759,26 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         }
     }
 
-    // Create new frame store
+    // Check if picture is the second field and the first field is still in DPB
+    fs = priv->prev_frame;
+    if (fs && !gst_vaapi_frame_store_has_frame(fs)) {
+        g_return_val_if_fail(fs->num_buffers == 1, FALSE);
+        g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FRAME(picture), FALSE);
+        g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture), FALSE);
+        return gst_vaapi_frame_store_add(fs, picture);
+    }
+
+    // Create new frame store, and split fields if necessary
     fs = gst_vaapi_frame_store_new(picture);
     if (!fs)
         return FALSE;
     gst_vaapi_frame_store_replace(&priv->prev_frame, fs);
     gst_vaapi_frame_store_unref(fs);
+
+    if (!priv->progressive_sequence && gst_vaapi_frame_store_has_frame(fs)) {
+        if (!gst_vaapi_frame_store_split_fields(fs))
+            return FALSE;
+    }
 
     // C.4.5.1 - Storage and marking of a reference decoded picture into the DPB
     if (GST_VAAPI_PICTURE_IS_REFERENCE(picture)) {
@@ -928,6 +1015,12 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         priv->height  = sps->height;
     }
 
+    priv->progressive_sequence = sps->frame_mbs_only_flag;
+#if 0
+    /* XXX: we only output complete frames for now */
+    gst_vaapi_decoder_set_interlaced(base_decoder, !priv->progressive_sequence);
+#endif
+
     gst_vaapi_decoder_set_pixel_aspect_ratio(
         base_decoder,
         sps->vui_parameters.par_n,
@@ -1045,10 +1138,12 @@ decode_current_picture(GstVaapiDecoderH264 *decoder)
         goto error;
     if (!gst_vaapi_picture_decode(GST_VAAPI_PICTURE_CAST(picture)))
         goto error;
-    gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    if (priv->prev_frame && gst_vaapi_frame_store_has_frame(priv->prev_frame))
+        gst_vaapi_picture_replace(&priv->current_picture, NULL);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
 error:
+    /* XXX: fix for cases where first field failed to be decoded */
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
     return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 }
@@ -1449,6 +1544,59 @@ init_picture_refs_pic_num(
     qsort(list, n, sizeof(*(list)), compare_picture_##compare_func)
 
 static void
+init_picture_refs_fields_1(
+    guint                picture_structure,
+    GstVaapiPictureH264 *RefPicList[32],
+    guint               *RefPicList_count,
+    GstVaapiPictureH264 *ref_list[32],
+    guint                ref_list_count
+)
+{
+    guint i, j, n;
+
+    i = 0;
+    j = 0;
+    n = *RefPicList_count;
+    do {
+        g_assert(n < 32);
+        for (; i < ref_list_count; i++) {
+            if (ref_list[i]->structure == picture_structure) {
+                RefPicList[n++] = ref_list[i++];
+                break;
+            }
+        }
+        for (; j < ref_list_count; j++) {
+            if (ref_list[j]->structure != picture_structure) {
+                RefPicList[n++] = ref_list[j++];
+                break;
+            }
+        }
+    } while (i < ref_list_count || j < ref_list_count);
+    *RefPicList_count = n;
+}
+
+static inline void
+init_picture_refs_fields(
+    GstVaapiPictureH264 *picture,
+    GstVaapiPictureH264 *RefPicList[32],
+    guint               *RefPicList_count,
+    GstVaapiPictureH264 *short_ref[32],
+    guint                short_ref_count,
+    GstVaapiPictureH264 *long_ref[32],
+    guint                long_ref_count
+)
+{
+    guint n = 0;
+
+    /* 8.2.4.2.5 - reference picture lists in fields */
+    init_picture_refs_fields_1(picture->structure, RefPicList, &n,
+        short_ref, short_ref_count);
+    init_picture_refs_fields_1(picture->structure, RefPicList, &n,
+        long_ref, long_ref_count);
+    *RefPicList_count = n;
+}
+
+static void
 init_picture_refs_p_slice(
     GstVaapiDecoderH264 *decoder,
     GstVaapiPictureH264 *picture,
@@ -1486,8 +1634,6 @@ init_picture_refs_p_slice(
         GstVaapiPictureH264 *long_ref[32];
         guint long_ref_count = 0;
 
-        // XXX: handle second field if current field is marked as
-        // "used for short-term reference"
         if (priv->short_ref_count > 0) {
             for (i = 0; i < priv->short_ref_count; i++)
                 short_ref[i] = priv->short_ref[i];
@@ -1495,8 +1641,6 @@ init_picture_refs_p_slice(
             short_ref_count = i;
         }
 
-        // XXX: handle second field if current field is marked as
-        // "used for long-term reference"
         if (priv->long_ref_count > 0) {
             for (i = 0; i < priv->long_ref_count; i++)
                 long_ref[i] = priv->long_ref[i];
@@ -1504,7 +1648,12 @@ init_picture_refs_p_slice(
             long_ref_count = i;
         }
 
-        // XXX: handle 8.2.4.2.5
+        init_picture_refs_fields(
+            picture,
+            priv->RefPicList0, &priv->RefPicList0_count,
+            short_ref,          short_ref_count,
+            long_ref,           long_ref_count
+        );
     }
 }
 
@@ -1637,8 +1786,20 @@ init_picture_refs_b_slice(
             long_ref_count = i;
         }
 
-        // XXX: handle 8.2.4.2.5
-    }
+        init_picture_refs_fields(
+            picture,
+            priv->RefPicList0, &priv->RefPicList0_count,
+            short_ref0,         short_ref0_count,
+            long_ref,           long_ref_count
+        );
+
+        init_picture_refs_fields(
+            picture,
+            priv->RefPicList1, &priv->RefPicList1_count,
+            short_ref1,         short_ref1_count,
+            long_ref,           long_ref_count
+        );
+   }
 
     /* Check whether RefPicList1 is identical to RefPicList0, then
        swap if necessary */
@@ -1837,7 +1998,7 @@ static void
 init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    guint i, short_ref_count, long_ref_count;
+    guint i, j, short_ref_count, long_ref_count;
 
     short_ref_count = 0;
     long_ref_count  = 0;
@@ -1853,6 +2014,21 @@ init_picture_ref_lists(GstVaapiDecoderH264 *decoder)
             else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
                 priv->long_ref[long_ref_count++] = picture;
             picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
+            picture->other_field = fs->buffers[1];
+        }
+    }
+    else {
+        for (i = 0; i < priv->dpb_count; i++) {
+            GstVaapiFrameStore * const fs = priv->dpb[i];
+            for (j = 0; j < fs->num_buffers; j++) {
+                GstVaapiPictureH264 * const picture = fs->buffers[j];
+                if (GST_VAAPI_PICTURE_IS_SHORT_TERM_REFERENCE(picture))
+                    priv->short_ref[short_ref_count++] = picture;
+                else if (GST_VAAPI_PICTURE_IS_LONG_TERM_REFERENCE(picture))
+                    priv->long_ref[long_ref_count++] = picture;
+                picture->structure = picture->base.structure;
+                picture->other_field = fs->buffers[j ^ 1];
+            }
         }
     }
 
@@ -1963,10 +2139,13 @@ init_picture(
     /* Initialize picture structure */
     if (!slice_hdr->field_pic_flag)
         base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    else if (!slice_hdr->bottom_field_flag)
-        base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
-    else
-        base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+    else {
+        GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_INTERLACED);
+        if (!slice_hdr->bottom_field_flag)
+            base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+        else
+            base_picture->structure = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+    }
     picture->structure = base_picture->structure;
 
     /* Initialize reference flags */
@@ -2000,9 +2179,14 @@ exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder)
 
     GST_DEBUG("reference picture marking process (sliding window)");
 
+    if (!GST_VAAPI_PICTURE_IS_FIRST_FIELD(priv->current_picture))
+        return TRUE;
+
     max_num_ref_frames = sps->num_ref_frames;
     if (max_num_ref_frames == 0)
         max_num_ref_frames = 1;
+    if (!GST_VAAPI_PICTURE_IS_FRAME(priv->current_picture))
+        max_num_ref_frames <<= 1;
 
     if (priv->short_ref_count + priv->long_ref_count < max_num_ref_frames)
         return TRUE;
@@ -2018,6 +2202,18 @@ exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder)
     ref_picture = priv->short_ref[m];
     gst_vaapi_picture_h264_set_reference(ref_picture, 0);
     ARRAY_REMOVE_INDEX(priv->short_ref, m);
+
+    /* Both fields need to be marked as "unused for reference" */
+    if (ref_picture->other_field)
+        gst_vaapi_picture_h264_set_reference(ref_picture->other_field, 0);
+    if (!GST_VAAPI_PICTURE_IS_FRAME(priv->current_picture)) {
+        for (i = 0; i < priv->short_ref_count; i++) {
+            if (priv->short_ref[i] == ref_picture->other_field) {
+                ARRAY_REMOVE_INDEX(priv->short_ref, i);
+                break;
+            }
+        }
+    }
     return TRUE;
 }
 
@@ -2455,12 +2651,24 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu, GstH264SliceH
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    picture = gst_vaapi_picture_h264_new(decoder);
-    if (!picture) {
-        GST_ERROR("failed to allocate picture");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    if (priv->current_picture) {
+        /* Re-use current picture where the first field was decoded */
+        picture = gst_vaapi_picture_h264_new_field(priv->current_picture);
+        if (!picture) {
+            GST_ERROR("failed to allocate field picture");
+            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+        }
     }
-    priv->current_picture = picture;
+    else {
+        /* Create new picture */
+        picture = gst_vaapi_picture_h264_new(decoder);
+        if (!picture) {
+            GST_ERROR("failed to allocate picture");
+            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+        }
+    }
+    gst_vaapi_picture_replace(&priv->current_picture, picture);
+    gst_vaapi_picture_unref(picture);
 
     picture->pps = pps;
 
@@ -2986,6 +3194,7 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->is_opened             = FALSE;
     priv->is_avc                = FALSE;
     priv->has_context           = FALSE;
+    priv->progressive_sequence  = TRUE;
 
     memset(priv->dpb, 0, sizeof(priv->dpb));
     memset(priv->short_ref, 0, sizeof(priv->short_ref));
