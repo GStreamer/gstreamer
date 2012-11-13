@@ -192,6 +192,7 @@ gst_rtsp_server_init (GstRTSPServer * server)
   server->backlog = DEFAULT_BACKLOG;
   server->session_pool = gst_rtsp_session_pool_new ();
   server->media_mapping = gst_rtsp_media_mapping_new ();
+  server->max_threads = DEFAULT_MAX_THREADS;
 }
 
 static void
