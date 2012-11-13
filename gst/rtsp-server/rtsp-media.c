@@ -1206,6 +1206,9 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED)
     goto was_prepared;
 
+  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+    goto wait_status;
+
   if (media->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
     goto not_unprepared;
 
@@ -1292,6 +1295,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
     case GST_STATE_CHANGE_FAILURE:
       goto state_failed;
   }
+wait_status:
   g_rec_mutex_unlock (&media->state_lock);
 
   /* now wait for all pads to be prerolled, FIXME, we should somehow be
