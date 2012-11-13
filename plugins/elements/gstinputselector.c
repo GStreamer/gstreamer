@@ -686,6 +686,8 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
           cur_running_time -= base_time;
         else
           cur_running_time = 0;
+
+        gst_object_unref (clock);
       }
     } else {
       GstSegment *active_seg;
