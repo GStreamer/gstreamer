@@ -1,5 +1,4 @@
-/*
- * A deterministic clock for GStreamer unit tests
+/* GstTestClock - A deterministic clock for GStreamer unit tests
  *
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
  * Copyright (C) 2012 Sebastian Rasmussen <sebastian.rasmussen@axis.com>
@@ -27,7 +26,6 @@
 
 G_BEGIN_DECLS
 
-/* --- standard type macros --- */
 #define GST_TYPE_TEST_CLOCK (gst_test_clock_get_type ())
 #define GST_TEST_CLOCK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj),\
     GST_TYPE_TEST_CLOCK, GstTestClock))
@@ -50,6 +48,8 @@ typedef struct _GstTestClockPrivate GstTestClockPrivate;
  *
  * A #GstTestClock structure which is based on a #GstClock along with some
  * private data.
+ *
+ * Since: 1.2
  */
 struct _GstTestClock
 {
@@ -64,32 +64,42 @@ struct _GstTestClock
  * @parent_class: the parent class structure
  *
  * The class of a #GstTestClock, which has no virtual methods to override.
+ *
+ * Since: 1.2
  */
 struct _GstTestClockClass
 {
   GstClockClass parent_class;
 };
 
-GType gst_test_clock_get_type (void);
+GType         gst_test_clock_get_type (void);
 
-GstClock *gst_test_clock_new (void);
-GstClock *gst_test_clock_new_with_start_time (GstClockTime start_time);
+GstClock *    gst_test_clock_new (void);
 
-void gst_test_clock_set_time (GstTestClock * test_clock, GstClockTime new_time);
-void gst_test_clock_advance_time (GstTestClock * test_clock,
-    GstClockTimeDiff delta);
+GstClock *    gst_test_clock_new_with_start_time (GstClockTime start_time);
 
-guint gst_test_clock_peek_id_count (GstTestClock * test_clock);
-gboolean gst_test_clock_has_id (GstTestClock * test_clock, GstClockID id);
-gboolean gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
-    GstClockID * pending_id);
-void gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
-    GstClockID * pending_id);
-void gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
-    guint count);
+void          gst_test_clock_set_time     (GstTestClock * test_clock,
+                                           GstClockTime new_time);
 
-GstClockID gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
-GstClockTime gst_test_clock_get_next_entry_time (GstTestClock * test_clock);
+void          gst_test_clock_advance_time (GstTestClock * test_clock,
+                                           GstClockTimeDiff delta);
+
+guint         gst_test_clock_peek_id_count (GstTestClock * test_clock);
+
+gboolean      gst_test_clock_has_id (GstTestClock * test_clock, GstClockID id);
+
+gboolean      gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
+                                                   GstClockID   * pending_id);
+
+void          gst_test_clock_wait_for_next_pending_id  (GstTestClock * test_clock,
+                                                        GstClockID   * pending_id);
+
+void          gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
+                                                        guint          count);
+
+GstClockID    gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
+
+GstClockTime  gst_test_clock_get_next_entry_time   (GstTestClock * test_clock);
 
 G_END_DECLS
 
