@@ -116,6 +116,7 @@ struct _GstRTSPMedia {
   guint              mtu;
 
   GstElement        *element;
+  GRecMutex          state_lock;
   GPtrArray         *streams;
   GList             *dynamic;
   GstRTSPMediaStatus status;
