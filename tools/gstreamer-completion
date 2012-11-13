@@ -2,26 +2,12 @@
 # Put this in /etc/bash_completion.d/
 #
 
-_gst_launch()
-{
-  local cur
+_gst_launch() {
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    COMPREPLY=( $(compgen -W "$(_gst_elements)" -- "$cur") )
+} &&
+complete -F _gst_launch -o default gst-launch-1.0
 
-  : ${GST_REGISTRY:=~/.gstreamer-1.0/registry.xml}
-  : ${GST_COMPLETE:=~/.gstreamer-1.0/complete}
-
-  if [ ! -f "${GST_REGISTRY}" ] ; then
-    return 0
-  fi
-
-  if [ ! -f "${GST_COMPLETE}" \
-       -o "${GST_REGISTRY}" -nt "${GST_COMPLETE}" ] ; then
-    sed -n 's/^..<name>\(.*\)<\/name>/\1/ p' ${GST_REGISTRY} >${GST_COMPLETE}
-  fi
-
-  cur=${COMP_WORDS[COMP_CWORD]}
-  COMPREPLY=( $(grep ^$cur $GST_COMPLETE) )
-
-  return 0
+_gst_elements() {
+    gst-inspect-1.0 | grep -v 'Total count' | awk -F': +' '{print $2}'
 }
-complete -F _gst_launch -o default gst-launch
-
