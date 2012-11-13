@@ -57,18 +57,17 @@
   (gpointer)(((guint8*)GET_COMP_DATA (comp)) + \
       GET_COMP_STRIDE(comp) * (line))
 
-#define GET_STRIDE()                 GET_PLANE_STRIDE (0)
 #define GET_LINE(line)               GET_PLANE_LINE (0, line)
 
 #define GET_Y_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_Y, line)
 #define GET_U_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_U, line)
 #define GET_V_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_V, line)
-#define GET_A_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_A, line)
 
-#define GET_Y_STRIDE()               GET_COMP_STRIDE(GST_VIDEO_COMP_Y)
-#define GET_U_STRIDE()               GET_COMP_STRIDE(GST_VIDEO_COMP_U)
-#define GET_V_STRIDE()               GET_COMP_STRIDE(GST_VIDEO_COMP_V)
-#define GET_A_STRIDE()               GET_COMP_STRIDE(GST_VIDEO_COMP_A)
+#define GET_R_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_R, line)
+#define GET_G_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_G, line)
+#define GET_B_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_B, line)
+
+#define GET_A_LINE(line)             GET_COMP_LINE(GST_VIDEO_COMP_A, line)
 
 #define PACK_420 GST_VIDEO_FORMAT_AYUV, unpack_planar_420, 1, pack_planar_420
 static void
@@ -463,8 +462,8 @@ unpack_GBR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_Y444 (dest, GET_Y_LINE (y), GET_U_LINE (y),
-      GET_V_LINE (y), width);
+  video_orc_unpack_Y444 (dest, GET_R_LINE (y), GET_G_LINE (y),
+      GET_B_LINE (y), width);
 }
 
 static void
@@ -473,7 +472,7 @@ pack_GBR (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  video_orc_pack_Y444 (GET_Y_LINE (y), GET_U_LINE (y), GET_V_LINE (y), src,
+  video_orc_pack_Y444 (GET_R_LINE (y), GET_G_LINE (y), GET_B_LINE (y), src,
       width);
 }
 
@@ -1251,9 +1250,9 @@ unpack_GBR_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  guint16 *srcG = GET_Y_LINE (y);
-  guint16 *srcB = GET_U_LINE (y);
-  guint16 *srcR = GET_V_LINE (y);
+  guint16 *srcG = GET_G_LINE (y);
+  guint16 *srcB = GET_B_LINE (y);
+  guint16 *srcR = GET_R_LINE (y);
   guint16 *d = dest, G, B, R;
 
   for (i = 0; i < width; i++) {
@@ -1275,9 +1274,9 @@ pack_GBR_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *destG = GET_Y_LINE (y);
-  guint16 *destB = GET_U_LINE (y);
-  guint16 *destR = GET_V_LINE (y);
+  guint16 *destG = GET_G_LINE (y);
+  guint16 *destB = GET_B_LINE (y);
+  guint16 *destR = GET_R_LINE (y);
   guint16 G, B, R;
   const guint16 *s = src;
 
@@ -1299,9 +1298,9 @@ unpack_GBR_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   int i;
-  guint16 *srcG = GET_Y_LINE (y);
-  guint16 *srcB = GET_U_LINE (y);
-  guint16 *srcR = GET_V_LINE (y);
+  guint16 *srcG = GET_G_LINE (y);
+  guint16 *srcB = GET_B_LINE (y);
+  guint16 *srcR = GET_R_LINE (y);
   guint16 *d = dest, G, B, R;
 
   for (i = 0; i < width; i++) {
@@ -1323,9 +1322,9 @@ pack_GBR_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint y, gint width)
 {
   int i;
-  guint16 *destG = GET_Y_LINE (y);
-  guint16 *destB = GET_U_LINE (y);
-  guint16 *destR = GET_V_LINE (y);
+  guint16 *destG = GET_G_LINE (y);
+  guint16 *destB = GET_B_LINE (y);
+  guint16 *destR = GET_R_LINE (y);
   guint16 G, B, R;
   const guint16 *s = src;
 
@@ -1743,7 +1742,7 @@ typedef struct
 #define PSTR488           { 4, 8, 8, 0 }
 #define PSTR8888          { 8, 8, 8, 8 }
 
-/* planes */
+/* planes, in what plane do we find component N */
 #define PLANE_NA          0, { 0, 0, 0, 0 }
 #define PLANE0            1, { 0, 0, 0, 0 }
 #define PLANE01           2, { 0, 1, 0, 0 }
@@ -1751,6 +1750,7 @@ typedef struct
 #define PLANE012          3, { 0, 1, 2, 0 }
 #define PLANE0123         4, { 0, 1, 2, 3 }
 #define PLANE021          3, { 0, 2, 1, 0 }
+#define PLANE201          3, { 2, 0, 1, 0 }
 
 /* offsets */
 #define OFFS0             { 0, 0, 0, 0 }
@@ -1935,12 +1935,12 @@ static VideoFormat formats[] = {
       PSTR222, PLANE012, OFFS0, SUB444, PACK_Y444_10BE),
   MAKE_YUV_LE_FORMAT (Y444_10LE, "raw video", 0x00000000, DPTH10_10_10,
       PSTR222, PLANE012, OFFS0, SUB444, PACK_Y444_10LE),
-  MAKE_RGB_FORMAT (GBR, "raw video", DPTH888, PSTR111, PLANE012, OFFS0, SUB444,
+  MAKE_RGB_FORMAT (GBR, "raw video", DPTH888, PSTR111, PLANE201, OFFS0, SUB444,
       PACK_GBR),
-  MAKE_RGB_FORMAT (GBR_10BE, "raw video", DPTH10_10_10, PSTR222, PLANE012,
+  MAKE_RGB_FORMAT (GBR_10BE, "raw video", DPTH10_10_10, PSTR222, PLANE201,
       OFFS0, SUB444,
       PACK_GBR_10BE),
-  MAKE_RGB_LE_FORMAT (GBR_10LE, "raw video", DPTH10_10_10, PSTR222, PLANE012,
+  MAKE_RGB_LE_FORMAT (GBR_10LE, "raw video", DPTH10_10_10, PSTR222, PLANE201,
       OFFS0, SUB444,
       PACK_GBR_10LE),
 };
