@@ -69,8 +69,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define gst_vorbis_dec_parent_class parent_class
-G_DEFINE_TYPE (GST_VORBIS_DEC_GLIB_TYPE_NAME, gst_vorbis_dec,
-    GST_TYPE_AUDIO_DECODER);
+G_DEFINE_TYPE (GstVorbisDec, gst_vorbis_dec, GST_TYPE_AUDIO_DECODER);
 
 static void vorbis_dec_finalize (GObject * object);
 
