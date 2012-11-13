@@ -44,6 +44,7 @@ typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
 /**
  * GstRTSPStream:
  * @parent: the parent instance
+ * @lock: mutex protecting the stream
  * @idx: the stream index
  * @srcpad: the srcpad of the stream
  * @payloader: the payloader of the format
@@ -72,6 +73,7 @@ typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
 struct _GstRTSPStream {
   GObject       parent;
 
+  GMutex        lock;
   guint         idx;
   GstPad       *srcpad;
   GstElement   *payloader;
