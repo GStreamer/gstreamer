@@ -1170,7 +1170,7 @@ decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
-    priv->got_pps = TRUE;
+    priv->got_sps = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1188,7 +1188,7 @@ decode_pps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
-    priv->got_sps = TRUE;
+    priv->got_pps = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
