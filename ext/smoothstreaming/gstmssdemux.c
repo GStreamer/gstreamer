@@ -122,12 +122,26 @@ gst_mss_demux_init (GstMssDemux * mssdemux, GstMssDemuxClass * klass)
 static void
 gst_mss_demux_reset (GstMssDemux * mssdemux)
 {
+  GSList *iter;
   if (mssdemux->manifest_buffer) {
     gst_buffer_unref (mssdemux->manifest_buffer);
+    mssdemux->manifest_buffer = NULL;
   }
+
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream = iter->data;
+    gst_element_remove_pad (GST_ELEMENT_CAST (mssdemux), stream->pad);
+    g_free (stream);
+  }
+  g_slist_free (mssdemux->streams);
+  mssdemux->streams = NULL;
+
   if (mssdemux->manifest) {
     gst_mss_manifest_free (mssdemux->manifest);
+    mssdemux->manifest = NULL;
   }
+
+  mssdemux->n_videos = mssdemux->n_audios = 0;
 }
 
 static void
@@ -222,12 +236,62 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
   }
 
   for (iter = streams; iter; iter = g_slist_next (iter)) {
+    gchar *name;
+    GstPad *srcpad = NULL;
+    GstMssDemuxStream *stream = NULL;
     GstMssManifestStream *manifeststream = iter->data;
     GstMssManifestStreamType streamtype;
 
     streamtype = gst_mss_manifest_stream_get_type (manifeststream);
     GST_DEBUG_OBJECT (mssdemux, "Found stream of type: %s",
         gst_mss_manifest_stream_type_name (streamtype));
+
+    /* TODO use stream's name as the pad name? */
+    if (streamtype == MSS_STREAM_TYPE_VIDEO) {
+      name = g_strdup_printf ("video_%02u", mssdemux->n_videos++);
+      srcpad =
+          gst_pad_new_from_static_template (&gst_mss_demux_videosrc_template,
+          name);
+      g_free (name);
+    } else if (streamtype == MSS_STREAM_TYPE_AUDIO) {
+      name = g_strdup_printf ("audio_%02u", mssdemux->n_audios++);
+      srcpad =
+          gst_pad_new_from_static_template (&gst_mss_demux_audiosrc_template,
+          name);
+      g_free (name);
+    }
+
+    if (!srcpad) {
+      GST_WARNING_OBJECT (mssdemux, "Ignoring unknown type stream");
+      continue;
+    }
+
+    stream = g_new (GstMssDemuxStream, 1);
+    stream->pad = srcpad;
+    stream->manifest_stream = manifeststream;
+    mssdemux->streams = g_slist_append (mssdemux->streams, stream);
+
+  }
+}
+
+static void
+gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
+{
+  GstCaps *caps;
+  GstPad *pad = stream->pad;
+
+  caps = gst_mss_manifest_stream_get_caps (stream->manifest_stream);
+
+  if (caps) {
+    gst_pad_set_caps (pad, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_set_active (pad, TRUE);
+    GST_INFO_OBJECT (mssdemux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
+        GST_DEBUG_PAD_NAME (pad), caps);
+    gst_element_add_pad (GST_ELEMENT_CAST (mssdemux), pad);
+  } else {
+    GST_WARNING_OBJECT (mssdemux, "Not exposing stream of unrecognized format");
   }
 }
 
@@ -237,6 +301,7 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   GstQuery *query;
   gchar *uri = NULL;
   gboolean ret;
+  GSList *iter;
 
   g_return_if_fail (mssdemux->manifest_buffer != NULL);
   g_return_if_fail (mssdemux->manifest == NULL);
@@ -258,4 +323,7 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   }
 
   gst_mss_demux_create_streams (mssdemux);
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    gst_mss_demux_expose_stream (mssdemux, iter->data);
+  }
 }

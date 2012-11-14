@@ -45,8 +45,15 @@ GST_DEBUG_CATEGORY_EXTERN (mssdemux_debug);
 
 #define GST_MSS_DEMUX_CAST(obj) ((GstMssDemux *)(obj))
 
+typedef struct _GstMssDemuxStream GstMssDemuxStream;
 typedef struct _GstMssDemux GstMssDemux;
 typedef struct _GstMssDemuxClass GstMssDemuxClass;
+
+struct _GstMssDemuxStream {
+  GstPad *pad;
+
+  GstMssManifestStream *manifest_stream;
+};
 
 struct _GstMssDemux {
   GstElement element;
@@ -57,6 +64,10 @@ struct _GstMssDemux {
   GstBuffer *manifest_buffer;
 
   GstMssManifest *manifest;
+
+  GSList *streams;
+  guint n_videos;
+  guint n_audios;
 };
 
 struct _GstMssDemuxClass {

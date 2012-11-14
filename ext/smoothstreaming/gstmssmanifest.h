@@ -43,6 +43,7 @@ void gst_mss_manifest_free (GstMssManifest * manifest);
 GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
 
 GstMssManifestStreamType gst_mss_manifest_stream_get_type (GstMssManifestStream *stream);
+GstCaps * gst_mss_manifest_stream_get_caps (GstMssManifestStream * stream);
 
 const gchar * gst_mss_manifest_stream_type_name (GstMssManifestStreamType streamtype);
 

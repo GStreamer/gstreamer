@@ -30,6 +30,8 @@
 struct _GstMssManifestStream
 {
   xmlNodePtr xmlnode;
+
+  gint selectedQualityIndex;
 };
 
 struct _GstMssManifest
@@ -96,6 +98,133 @@ gst_mss_manifest_stream_get_type (GstMssManifestStream * stream)
   }
   xmlFree (prop);
   return ret;
+}
+
+static GstCaps *
+_gst_mss_manifest_stream_video_caps_from_fourcc (gchar * fourcc)
+{
+  if (!fourcc)
+    return NULL;
+
+  if (strcmp (fourcc, "H264") == 0) {
+    return gst_caps_new_simple ("video/x-h264", NULL);
+  }
+  return NULL;
+}
+
+static GstCaps *
+_gst_mss_manifest_stream_audio_caps_from_fourcc (gchar * fourcc)
+{
+  if (!fourcc)
+    return NULL;
+
+  if (strcmp (fourcc, "AACL") == 0) {
+    return gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
+        NULL);
+  }
+  return NULL;
+}
+
+static GstCaps *
+_gst_mss_manifest_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+  gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
+  gchar *max_width = (gchar *) xmlGetProp (node, (xmlChar *) "MaxWidth");
+  gchar *max_height = (gchar *) xmlGetProp (node, (xmlChar *) "MaxHeight");
+  gchar *codec_data =
+      (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
+
+  caps = _gst_mss_manifest_stream_video_caps_from_fourcc (fourcc);
+  if (!caps)
+    goto end;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (max_width)
+    gst_structure_set (structure, "width", G_TYPE_INT, atoi (max_width), NULL);
+  if (max_height)
+    gst_structure_set (structure, "height", G_TYPE_INT, atoi (max_height),
+        NULL);
+
+  if (codec_data) {
+    GValue *value = g_new0 (GValue, 1);
+    g_value_init (value, GST_TYPE_BUFFER);
+    gst_value_deserialize (value, (gchar *) codec_data);
+    gst_structure_take_value (structure, "codec_data", value);
+  }
+
+end:
+  g_free (fourcc);
+  g_free (max_width);
+  g_free (max_height);
+  g_free (codec_data);
+
+  return caps;
+}
+
+static GstCaps *
+_gst_mss_manifest_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+  gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
+  gchar *channels = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
+  gchar *rate = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
+  gchar *codec_data =
+      (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
+
+  caps = _gst_mss_manifest_stream_audio_caps_from_fourcc (fourcc);
+  if (!caps)
+    goto end;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (channels)
+    gst_structure_set (structure, "channels", G_TYPE_INT, atoi (channels),
+        NULL);
+  if (rate)
+    gst_structure_set (structure, "rate", G_TYPE_INT, atoi (rate), NULL);
+
+  if (codec_data) {
+    GValue *value = g_new0 (GValue, 1);
+    g_value_init (value, GST_TYPE_BUFFER);
+    gst_value_deserialize (value, (gchar *) codec_data);
+    gst_structure_take_value (structure, "codec_data", value);
+  }
+
+end:
+  g_free (fourcc);
+  g_free (channels);
+  g_free (rate);
+  g_free (codec_data);
+
+  return caps;
+}
+
+GstCaps *
+gst_mss_manifest_stream_get_caps (GstMssManifestStream * stream)
+{
+  GstMssManifestStreamType streamtype =
+      gst_mss_manifest_stream_get_type (stream);
+
+  /* TODO properly get the stream */
+  xmlNodePtr qualitylevel = stream->xmlnode->children;
+  while (strcmp ((gchar *) qualitylevel->name, "QualityLevel")) {
+    qualitylevel = qualitylevel->next;
+  }
+
+  if (streamtype == MSS_STREAM_TYPE_VIDEO)
+    return
+        _gst_mss_manifest_stream_video_caps_from_qualitylevel_xml
+        (qualitylevel);
+  else if (streamtype == MSS_STREAM_TYPE_AUDIO)
+    return
+        _gst_mss_manifest_stream_audio_caps_from_qualitylevel_xml
+        (qualitylevel);
+
+  return NULL;
 }
 
 const gchar *
