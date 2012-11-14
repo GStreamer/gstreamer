@@ -2912,7 +2912,8 @@ gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
 void
 gst_ahc_parameters_supported_preview_fps_range_free (GList * list)
 {
-  g_list_free_full (list, (GDestroyNotify) g_free);
+  g_list_foreach (list, (GFunc) g_free, NULL);
+  g_list_free (list);
 }
 
 GList *
@@ -2955,7 +2956,8 @@ gst_ahc_parameters_get_supported_preview_sizes (GstAHCParameters * self)
 void
 gst_ahc_parameters_supported_preview_sizes_free (GList * list)
 {
-  g_list_free_full (list, (GDestroyNotify) gst_ahc_size_free);
+  g_list_foreach (list, (GFunc) gst_ahc_size_free, NULL);
+  g_list_free (list);
 }
 
 GList *
