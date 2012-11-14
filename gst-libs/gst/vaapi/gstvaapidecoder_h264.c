@@ -547,6 +547,8 @@ struct _GstVaapiDecoderH264Private {
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
     guint                       is_avc                  : 1;
+    guint                       got_sps                 : 1;
+    guint                       got_pps                 : 1;
     guint                       has_context             : 1;
     guint                       progressive_sequence    : 1;
 };
@@ -1168,6 +1170,7 @@ decode_sps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
+    priv->got_pps = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1185,6 +1188,7 @@ decode_pps(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     if (result != GST_H264_PARSER_OK)
         return get_status(result);
 
+    priv->got_sps = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2910,12 +2914,15 @@ scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
 static GstVaapiDecoderStatus
 decode_nalu(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
 {
+    GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiDecoderStatus status;
 
     switch (nalu->type) {
     case GST_H264_NAL_SLICE_IDR:
         /* fall-through. IDR specifics are handled in init_picture() */
     case GST_H264_NAL_SLICE:
+        if (!priv->got_sps || !priv->got_pps)
+            return GST_VAAPI_DECODER_STATUS_SUCCESS;
         status = decode_slice(decoder, nalu);
         break;
     case GST_H264_NAL_SPS:
