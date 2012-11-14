@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,6 +23,8 @@
 #define __GST_GL_WINDOW_H__
 
 #include <gst/gst.h>
+
+#include "gstglrenderer.h"
 
 G_BEGIN_DECLS
 
@@ -61,7 +64,8 @@ typedef enum
   GST_GL_PLATFORM_GLX,
   GST_GL_PLATFORM_WGL,
   GST_GL_PLATFORM_CGL,
-  
+
+  GST_GL_PLATFORM_ANY = 254,
   GST_GL_PLATFORM_LAST = 255
 } GstGLPlatform;
 
@@ -93,17 +97,16 @@ struct _GstGLWindow {
 struct _GstGLWindowClass {
   /*< private >*/
   GObjectClass parent_class;
-  
+
   guintptr      (*get_gl_context)     (GstGLWindow *window);
   gboolean      (*activate)           (GstGLWindow *window, gboolean activate);
   void          (*set_window_handle)  (GstGLWindow *window, guintptr id);
-  guintptr      (*get_window_handle)  (GstGLWindow *window);
+  gboolean      (*share_context)      (GstGLWindow *window, guintptr external_gl_context);
   void          (*draw_unlocked)      (GstGLWindow *window, guint width, guint height);
   void          (*draw)               (GstGLWindow *window, guint width, guint height);
   void          (*run)                (GstGLWindow *window);
   void          (*quit)               (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
   void          (*send_message)       (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
-  GstGLPlatform (*get_platform)       (GstGLWindow *window);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];

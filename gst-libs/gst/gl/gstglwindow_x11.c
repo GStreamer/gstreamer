@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -64,7 +65,6 @@ guintptr gst_gl_window_x11_get_gl_context (GstGLWindow * window);
 gboolean gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate);
 void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
     guintptr handle);
-guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
 void gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
     guint height);
 void gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height);
@@ -196,8 +196,6 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_x11_activate);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_window_handle);
-  window_class->get_window_handle =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_window_handle);
   window_class->draw_unlocked =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw_unlocked);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
@@ -323,7 +321,7 @@ gst_gl_window_x11_open_device (GstGLWindowX11 * window_x11,
 
   window_x11->connection = ConnectionNumber (window_x11->device);
 
-  if (!window_class->choose_visual (window_x11)) {
+  if (!window_class->choose_format (window_x11)) {
     GST_WARNING ("Failed to choose XVisual");
     goto failure;
   }
@@ -450,12 +448,6 @@ gst_gl_window_x11_get_gl_context (GstGLWindow * window)
   window_class = GST_GL_WINDOW_X11_GET_CLASS (window);
 
   return window_class->get_gl_context (GST_GL_WINDOW_X11 (window));
-}
-
-guintptr
-gst_gl_window_x11_get_window_handle (GstGLWindow * window)
-{
-  return (guintptr) GST_GL_WINDOW_X11 (window)->internal_win_id;
 }
 
 static void

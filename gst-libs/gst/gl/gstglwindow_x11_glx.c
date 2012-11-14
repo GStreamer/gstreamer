@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,7 +46,7 @@ static gboolean gst_gl_window_x11_glx_activate (GstGLWindowX11 * window_x11,
 static gboolean gst_gl_window_x11_glx_create_context (GstGLWindowX11 *
     window_x11, GstGLRendererAPI render_api, guintptr external_gl_context);
 static void gst_gl_window_x11_glx_destroy_context (GstGLWindowX11 * window_x11);
-static gboolean gst_gl_window_x11_glx_choose_visual (GstGLWindowX11 *
+static gboolean gst_gl_window_x11_glx_choose_format (GstGLWindowX11 *
     window_x11);
 
 static void
@@ -61,8 +62,8 @@ gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_create_context);
   window_x11_class->destroy_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_destroy_context);
-  window_x11_class->choose_visual =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_choose_visual);
+  window_x11_class->choose_format =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_choose_format);
   window_x11_class->swap_buffers =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_swap_buffers);
 }
@@ -123,7 +124,7 @@ gst_gl_window_x11_glx_destroy_context (GstGLWindowX11 * window_x11)
 }
 
 static gboolean
-gst_gl_window_x11_glx_choose_visual (GstGLWindowX11 * window_x11)
+gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11)
 {
   gint error_base;
   gint event_base;
