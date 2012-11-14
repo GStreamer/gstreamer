@@ -64,6 +64,7 @@ GType                  gst_rtsp_address_pool_get_type        (void);
 /* create a new address pool */
 GstRTSPAddressPool *   gst_rtsp_address_pool_new             (void);
 
+void                   gst_rtsp_address_pool_clear           (GstRTSPAddressPool * pool);
 void                   gst_rtsp_address_pool_dump            (GstRTSPAddressPool * pool);
 
 gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool * pool,

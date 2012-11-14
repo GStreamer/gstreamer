@@ -120,6 +120,29 @@ gst_rtsp_address_pool_new (void)
   return pool;
 }
 
+/**
+ * gst_rtsp_address_pool_clear:
+ * @pool: a #GstRTSPAddressPool
+ *
+ * Clear all addresses in @pool. There should be no outstanding
+ * allocations.
+ */
+void
+gst_rtsp_address_pool_clear (GstRTSPAddressPool * pool)
+{
+  GstRTSPAddressPoolPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool));
+  g_return_if_fail (pool->priv->allocated == NULL);
+
+  priv = pool->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_list_free_full (priv->addresses, (GDestroyNotify) free_range);
+  priv->addresses = NULL;
+  g_mutex_unlock (&priv->lock);
+}
+
 static gboolean
 fill_address (const gchar * address, guint16 port, Addr * addr)
 {
