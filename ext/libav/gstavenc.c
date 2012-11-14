@@ -391,7 +391,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   gst_buffer_unmap (outbuf, &map);
   gst_buffer_resize (outbuf, 0, res);
 
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_PTS (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
   if (discont)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
@@ -428,7 +428,7 @@ gst_ffmpegaudenc_chain_audio (GstPad * pad, GstObject * parent,
   ctx = ffmpegaudenc->context;
 
   size = gst_buffer_get_size (inbuf);
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
+  timestamp = GST_BUFFER_PTS (inbuf);
   duration = GST_BUFFER_DURATION (inbuf);
   discont = GST_BUFFER_IS_DISCONT (inbuf);
 
@@ -475,8 +475,7 @@ gst_ffmpegaudenc_chain_audio (GstPad * pad, GstObject * parent,
        * forego some timestamp perfection in favour of upstream syncing
        * (particularly in case these do not happen to come in multiple
        * of frame size) */
-      upstream_time =
-          gst_adapter_prev_timestamp (ffmpegaudenc->adapter, &bytes);
+      upstream_time = gst_adapter_prev_pts (ffmpegaudenc->adapter, &bytes);
       if (GST_CLOCK_TIME_IS_VALID (upstream_time)) {
         GstClockTimeDiff diff;
 
