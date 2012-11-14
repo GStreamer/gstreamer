@@ -197,8 +197,8 @@ struct _GstTestClockPrivate
   GstClockTime start_time;
   GstClockTime internal_time;
   GList *entry_contexts;
-  GCond *entry_added_cond;
-  GCond *entry_processed_cond;
+  GCond entry_added_cond;
+  GCond entry_processed_cond;
 };
 
 #define GST_TEST_CLOCK_GET_PRIVATE(obj) ((GST_TEST_CLOCK_CAST (obj))->priv)
@@ -297,8 +297,8 @@ gst_test_clock_init (GstTestClock * test_clock)
 
   priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
-  priv->entry_added_cond = g_cond_new ();
-  priv->entry_processed_cond = g_cond_new ();
+  g_cond_init (&priv->entry_added_cond);
+  g_cond_init (&priv->entry_processed_cond);
 
   GST_OBJECT_FLAG_SET (test_clock,
       GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC |
@@ -342,8 +342,8 @@ gst_test_clock_finalize (GObject * object)
   GstTestClock *test_clock = GST_TEST_CLOCK (object);
   GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
-  g_cond_free (priv->entry_added_cond);
-  g_cond_free (priv->entry_processed_cond);
+  g_cond_clear (&priv->entry_added_cond);
+  g_cond_clear (&priv->entry_processed_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -429,7 +429,7 @@ gst_test_clock_wait (GstClock * clock,
   GST_CLOCK_ENTRY_STATUS (entry) = GST_CLOCK_BUSY;
 
   while (GST_CLOCK_ENTRY_STATUS (entry) == GST_CLOCK_BUSY)
-    g_cond_wait (priv->entry_processed_cond, GST_OBJECT_GET_LOCK (test_clock));
+    g_cond_wait (&priv->entry_processed_cond, GST_OBJECT_GET_LOCK (test_clock));
 
   GST_OBJECT_UNLOCK (test_clock);
 
@@ -520,7 +520,7 @@ gst_test_clock_add_entry (GstTestClock * test_clock,
   priv->entry_contexts = g_list_insert_sorted (priv->entry_contexts, ctx,
       gst_clock_entry_context_compare_func);
 
-  g_cond_broadcast (priv->entry_added_cond);
+  g_cond_broadcast (&priv->entry_added_cond);
 }
 
 static void
@@ -535,7 +535,7 @@ gst_test_clock_remove_entry (GstTestClock * test_clock, GstClockEntry * entry)
     priv->entry_contexts = g_list_remove (priv->entry_contexts, ctx);
     g_slice_free (GstClockEntryContext, ctx);
 
-    g_cond_broadcast (priv->entry_processed_cond);
+    g_cond_broadcast (&priv->entry_processed_cond);
   }
 }
 
@@ -783,7 +783,7 @@ gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
   GST_OBJECT_LOCK (test_clock);
 
   while (priv->entry_contexts == NULL)
-    g_cond_wait (priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
+    g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
 
   g_assert (gst_test_clock_peek_next_pending_id_unlocked (test_clock,
           pending_id));
@@ -815,7 +815,7 @@ gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
   GST_OBJECT_LOCK (test_clock);
 
   while (gst_test_clock_peek_id_count_unlocked (test_clock) < count)
-    g_cond_wait (priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
+    g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
 
   GST_OBJECT_UNLOCK (test_clock);
 }
