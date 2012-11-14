@@ -137,6 +137,20 @@ fill_address (const gchar * address, guint16 port, Addr * addr)
   return TRUE;
 }
 
+static gchar *
+get_address_string (Addr * addr)
+{
+  gchar *res;
+  GInetAddress *inet;
+
+  inet = g_inet_address_new_from_bytes (addr->bytes,
+      addr->size == 4 ? G_SOCKET_FAMILY_IPV4 : G_SOCKET_FAMILY_IPV6);
+  res = g_inet_address_to_string (inet);
+  g_object_unref (inet);
+
+  return res;
+}
+
 /**
  * gst_rtsp_address_pool_add_range:
  * @pool: a #GstRTSPAddressPool
@@ -326,14 +340,7 @@ gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
   g_mutex_unlock (&priv->lock);
 
   if (result) {
-    GInetAddress *inet;
-
-    inet = g_inet_address_new_from_bytes (result->min.bytes,
-        result->min.size == 4 ? G_SOCKET_FAMILY_IPV4 : G_SOCKET_FAMILY_IPV6);
-
-    *address = g_inet_address_to_string (inet);
-    g_object_unref (inet);
-
+    *address = get_address_string (&result->min);
     *port = result->min.port;
     *ttl = result->ttl;
 
@@ -377,39 +384,35 @@ gst_rtsp_address_pool_release_address (GstRTSPAddressPool * pool, gpointer id)
   /* ERRORS */
 not_found:
   {
+    g_warning ("Released unknown id %p", id);
     g_mutex_unlock (&priv->lock);
     return;
   }
 }
 
 static void
-dump_range (GstRTSPAddressPool * pool, AddrRange * range)
+dump_range (AddrRange * range, GstRTSPAddressPool * pool)
 {
-  GInetAddress *inet;
   gchar *addr1, *addr2;
 
-  inet = g_inet_address_new_from_bytes (range->min.bytes,
-      range->max.size == 4 ? G_SOCKET_FAMILY_IPV4 : G_SOCKET_FAMILY_IPV6);
-  addr1 = g_inet_address_to_string (inet);
-  g_object_unref (inet);
-
-  inet = g_inet_address_new_from_bytes (range->max.bytes,
-      range->max.size == 4 ? G_SOCKET_FAMILY_IPV4 : G_SOCKET_FAMILY_IPV6);
-  addr2 = g_inet_address_to_string (inet);
-  g_object_unref (inet);
-
+  addr1 = get_address_string (&range->min);
+  addr2 = get_address_string (&range->max);
   g_print ("  address %s-%s, port %u-%u, ttl %u\n", addr1, addr2,
       range->min.port, range->max.port, range->ttl);
-
   g_free (addr1);
   g_free (addr2);
 }
 
+/**
+ * gst_rtsp_address_pool_dump:
+ * @pool: a #GstRTSPAddressPool
+ *
+ * Dump the free and allocated addresses to stdout.
+ */
 void
 gst_rtsp_address_pool_dump (GstRTSPAddressPool * pool)
 {
   GstRTSPAddressPoolPrivate *priv;
-  GList *walk;
 
   g_return_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool));
 
@@ -417,12 +420,8 @@ gst_rtsp_address_pool_dump (GstRTSPAddressPool * pool)
 
   g_mutex_lock (&priv->lock);
   g_print ("free:\n");
-  for (walk = priv->addresses; walk; walk = walk->next) {
-    dump_range (pool, (AddrRange *) walk->data);
-  }
+  g_list_foreach (priv->addresses, (GFunc) dump_range, pool);
   g_print ("allocated:\n");
-  for (walk = priv->allocated; walk; walk = walk->next) {
-    dump_range (pool, (AddrRange *) walk->data);
-  }
+  g_list_foreach (priv->allocated, (GFunc) dump_range, pool);
   g_mutex_unlock (&priv->lock);
 }
