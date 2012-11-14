@@ -38,7 +38,7 @@
  * might sometimes be needed to create a #GstTask manually if it is not related to
  * a #GstPad.
  *
- * Before the #GstTask can be run, it needs a #GStaticRecMutex that can be set with
+ * Before the #GstTask can be run, it needs a #GRecMutex that can be set with
  * gst_task_set_lock().
  *
  * The task can be started, paused and stopped with gst_task_start(), gst_task_pause()
@@ -386,7 +386,7 @@ gst_task_cleanup_all (void)
  * This function will not yet create and start a thread. Use gst_task_start() or
  * gst_task_pause() to create and start the GThread.
  *
- * Before the task can be used, a #GStaticRecMutex must be configured using the
+ * Before the task can be used, a #GRecMutex must be configured using the
  * gst_task_set_lock() function. This lock will always be acquired while
  * @func is called.
  *
