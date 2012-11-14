@@ -2458,8 +2458,12 @@ vaapi_init_picture(VAPictureH264 *pic)
 }
 
 static void
-vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture)
+vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture,
+    guint picture_structure)
 {
+    if (!picture_structure)
+        picture_structure = picture->structure;
+
     pic->picture_id = picture->base.surface_id;
     pic->flags = 0;
 
@@ -2473,7 +2477,7 @@ vaapi_fill_picture(VAPictureH264 *pic, GstVaapiPictureH264 *picture)
         pic->frame_idx = picture->frame_num;
     }
 
-    switch (picture->structure) {
+    switch (picture_structure) {
     case GST_VAAPI_PICTURE_STRUCTURE_FRAME:
         pic->TopFieldOrderCnt = picture->field_poc[TOP_FIELD];
         pic->BottomFieldOrderCnt = picture->field_poc[BOTTOM_FIELD];
@@ -2507,11 +2511,14 @@ fill_picture(
     guint i, n;
 
     /* Fill in VAPictureParameterBufferH264 */
-    vaapi_fill_picture(&pic_param->CurrPic, picture);
-    for (i = 0, n = 0; i < priv->short_ref_count; i++, n++)
-        vaapi_fill_picture(&pic_param->ReferenceFrames[n], priv->short_ref[i]);
-    for (i = 0; i < priv->long_ref_count; i++, n++)
-        vaapi_fill_picture(&pic_param->ReferenceFrames[n], priv->long_ref[i]);
+    vaapi_fill_picture(&pic_param->CurrPic, picture, 0);
+
+    for (i = 0, n = 0; i < priv->dpb_count; i++) {
+        GstVaapiFrameStore * const fs = priv->dpb[i];
+        if (gst_vaapi_frame_store_has_reference(fs))
+            vaapi_fill_picture(&pic_param->ReferenceFrames[n++],
+                fs->buffers[0], fs->structure);
+    }
     for (; n < G_N_ELEMENTS(pic_param->ReferenceFrames); n++)
         vaapi_init_picture(&pic_param->ReferenceFrames[n]);
 
@@ -2793,7 +2800,7 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
         slice_hdr->num_ref_idx_l0_active_minus1;
 
     for (i = 0; i < priv->RefPicList0_count && priv->RefPicList0[i]; i++)
-        vaapi_fill_picture(&slice_param->RefPicList0[i], priv->RefPicList0[i]);
+        vaapi_fill_picture(&slice_param->RefPicList0[i], priv->RefPicList0[i], 0);
     for (; i <= slice_param->num_ref_idx_l0_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList0[i]);
 
@@ -2804,7 +2811,7 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
         slice_hdr->num_ref_idx_l1_active_minus1;
 
     for (i = 0; i < priv->RefPicList1_count && priv->RefPicList1[i]; i++)
-        vaapi_fill_picture(&slice_param->RefPicList1[i], priv->RefPicList1[i]);
+        vaapi_fill_picture(&slice_param->RefPicList1[i], priv->RefPicList1[i], 0);
     for (; i <= slice_param->num_ref_idx_l1_active_minus1; i++)
         vaapi_init_picture(&slice_param->RefPicList1[i]);
     return TRUE;
