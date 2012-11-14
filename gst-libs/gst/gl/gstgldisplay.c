@@ -302,8 +302,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   gst_gl_display_lock (display);
   display->gl_window =
-      gst_gl_window_new (GST_GL_RENDERER_API_OPENGL,
-      display->external_gl_context);
+      gst_gl_window_new (GST_GL_RENDERER_API_ANY, display->external_gl_context);
 
   if (!display->gl_window) {
     gst_gl_display_set_error (display, "Failed to create gl window");

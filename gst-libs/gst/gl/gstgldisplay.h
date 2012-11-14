@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 #include "gstglwindow.h"
+#include "gstglrenderer.h"
 #include "gstglshader.h"
 #include "gstglupload.h"
 #include "gstgldownload.h"
@@ -261,7 +262,7 @@ gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
     const gchar * shader_fragment_source, GstGLShader ** shader);
 void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
 
-void gst_gl_display_set_window_id (GstGLDisplay * display, gulong window_id);
+void gst_gl_display_set_window_id (GstGLDisplay * display, guintptr window_id);
 void gst_gl_display_set_client_reshape_callback (GstGLDisplay * display,
     CRCB cb);
 void gst_gl_display_set_client_draw_callback (GstGLDisplay * display, CDCB cb);
