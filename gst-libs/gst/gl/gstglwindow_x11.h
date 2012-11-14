@@ -80,7 +80,7 @@ struct _GstGLWindowX11Class {
   /*< private >*/
   GstGLWindowClass parent_class;
 
-  gboolean (*choose_visual)    (GstGLWindowX11 *window);
+  gboolean (*choose_format)    (GstGLWindowX11 *window);
   gboolean (*create_context)   (GstGLWindowX11 *window, GstGLRendererAPI render_api,
                                 guintptr external_gl_context);
   void     (*swap_buffers)     (GstGLWindowX11 *window);

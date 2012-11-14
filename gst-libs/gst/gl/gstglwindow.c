@@ -90,19 +90,6 @@ gst_gl_window_new (GstGLRendererAPI render_api, guintptr external_gl_context)
   return window;
 }
 
-GstGLPlatform
-gst_gl_window_get_platform (GstGLWindow * window)
-{
-  GstGLWindowClass *window_class;
-
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-
-  g_return_val_if_fail (window_class->get_platform != NULL,
-      GST_GL_PLATFORM_UNKNOWN);
-
-  return window_class->get_platform (window);
-}
-
 guintptr
 gst_gl_window_get_gl_context (GstGLWindow * window)
 {
@@ -150,23 +137,6 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
   GST_GL_WINDOW_LOCK (window);
   window_class->set_window_handle (window, handle);
   GST_GL_WINDOW_UNLOCK (window);
-}
-
-guintptr
-gst_gl_window_get_window_handle (GstGLWindow * window)
-{
-  GstGLWindowClass *window_class;
-  guintptr result;
-
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (window_class->get_window_handle != NULL, FALSE);
-
-  GST_GL_WINDOW_LOCK (window);
-  result = window_class->get_window_handle (window);
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return result;
 }
 
 void
