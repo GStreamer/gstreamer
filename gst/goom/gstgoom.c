@@ -545,7 +545,7 @@ gst_goom_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     GST_DEBUG_OBJECT (goom, "processing buffer");
 
     /* get timestamp of the current adapter byte */
-    timestamp = gst_adapter_prev_timestamp (goom->adapter, &dist);
+    timestamp = gst_adapter_prev_pts (goom->adapter, &dist);
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       /* convert bytes to time */
       dist /= goom->bps;

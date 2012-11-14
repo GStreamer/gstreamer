@@ -325,7 +325,7 @@ gst_rtp_mp4a_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     GstClockTime timestamp;
 
     avail = gst_adapter_available (rtpmp4adepay->adapter);
-    timestamp = gst_adapter_prev_timestamp (rtpmp4adepay->adapter, NULL);
+    timestamp = gst_adapter_prev_pts (rtpmp4adepay->adapter, NULL);
 
     GST_LOG_OBJECT (rtpmp4adepay, "have marker and %u available", avail);
 

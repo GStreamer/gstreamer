@@ -716,7 +716,7 @@ gst_rtp_mpa_robust_depay_process (GstRTPBaseDepayload * depayload,
         av += gst_buffer_get_size (buf);
         gst_adapter_push (rtpmpadepay->adapter, buf);
         if (av == size) {
-          timestamp = gst_adapter_prev_timestamp (rtpmpadepay->adapter, NULL);
+          timestamp = gst_adapter_prev_pts (rtpmpadepay->adapter, NULL);
           buf = gst_adapter_take_buffer (rtpmpadepay->adapter, size);
           GST_BUFFER_TIMESTAMP (buf) = timestamp;
           gst_rtp_mpa_robust_depay_submit_adu (rtpmpadepay, buf);
