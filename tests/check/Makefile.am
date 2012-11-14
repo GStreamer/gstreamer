@@ -26,35 +26,26 @@ $(CHECK_REGISTRY):
 TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
-	gst/rtspserver
+	gst/rtspserver \
+	gst/addresspool
 
 # these tests don't even pass
 noinst_PROGRAMS =
 
-AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
+AM_CFLAGS = -I$(top_srcdir)/gst/rtsp-server \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_BASE_CFLAGS) \
+        $(GIO_CFLAGS) \
+	$(GST_CFLAGS) \
+	$(GST_CHECK_CFLAGS) \
 	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 AM_CXXFLAGS = $(GST_CXXFLAGS) $(GST_CHECK_CFLAGS) \
 	-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 	-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
-LDADD = $(GST_LIBS) $(GST_CHECK_LIBS) $(GST_RTSP_SERVER_LIBS)
-
-SUPPRESSIONS = $(top_srcdir)/common/gst.supp
-
-gst_rtspserver_SOURCES = gst/rtspserver.c \
-	$(top_srcdir)/gst/rtsp-server/rtsp-server.h
-
-gst_rtspserver_CFLAGS = \
-	-I$(top_srcdir)/gst/rtsp-server \
-	$(GST_PLUGINS_GOOD_CFLAGS) \
-	$(GST_PLUGINS_BASE_CFLAGS) \
-	$(GST_BASE_CFLAGS) \
-	$(GIO_CFLAGS) \
-	$(AM_CFLAGS)
-
-gst_rtspserver_LDADD = \
-	$(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la \
-	$(GST_PLUGINS_GOOD_LIBS) \
+LDADD = $(top_builddir)/gst/rtsp-server/libgstrtspserver-@GST_API_VERSION@.la \
 	$(GST_BASE_LIBS) -lgstrtsp-@GST_API_VERSION@ -lgstsdp-@GST_API_VERSION@ \
 	$(GIO_LIBS) \
-	$(LDADD)
+	$(GST_LIBS) $(GST_CHECK_LIBS) $(GST_RTSP_SERVER_LIBS)
+
+SUPPRESSIONS = $(top_srcdir)/common/gst.supp
