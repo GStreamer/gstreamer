@@ -31,7 +31,6 @@
 //#define DEFAULT_PROTOCOLS      GST_RTSP_LOWER_TRANS_UDP_MCAST
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_BUFFER_SIZE     0x80000
-#define DEFAULT_MULTICAST_GROUP "224.2.0.1"
 #define DEFAULT_MTU             0
 
 /* define to dump received RTCP packets */
@@ -45,7 +44,6 @@ enum
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
-  PROP_MULTICAST_GROUP,
   PROP_MTU,
   PROP_LAST
 };
@@ -113,11 +111,6 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
-      g_param_spec_string ("multicast-group", "Multicast Group",
-          "The Multicast group to send media to",
-          DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   g_object_class_install_property (gobject_class, PROP_MTU,
       g_param_spec_uint ("mtu", "MTU",
           "The MTU for the payloaders (0 = default)",
@@ -163,7 +156,6 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   media->protocols = DEFAULT_PROTOCOLS;
   media->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   media->buffer_size = DEFAULT_BUFFER_SIZE;
-  media->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 }
 
 static void
@@ -185,7 +177,10 @@ gst_rtsp_media_finalize (GObject * obj)
     g_source_destroy (media->source);
     g_source_unref (media->source);
   }
-  g_free (media->multicast_group);
+  if (media->auth)
+    g_object_unref (media->auth);
+  if (media->pool)
+    g_object_unref (media->pool);
   g_mutex_clear (&media->lock);
   g_cond_clear (&media->cond);
   g_rec_mutex_clear (&media->state_lock);
@@ -214,9 +209,6 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
       break;
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value, gst_rtsp_media_get_buffer_size (media));
-      break;
-    case PROP_MULTICAST_GROUP:
-      g_value_take_string (value, gst_rtsp_media_get_multicast_group (media));
       break;
     case PROP_MTU:
       g_value_set_uint (value, gst_rtsp_media_get_mtu (media));
@@ -247,9 +239,6 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_set_buffer_size (media, g_value_get_uint (value));
-      break;
-    case PROP_MULTICAST_GROUP:
-      gst_rtsp_media_set_multicast_group (media, g_value_get_string (value));
       break;
     case PROP_MTU:
       gst_rtsp_media_set_mtu (media, g_value_get_uint (value));
@@ -540,46 +529,6 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 }
 
 /**
- * gst_rtsp_media_set_multicast_group:
- * @media: a #GstRTSPMedia
- * @mc: the new multicast group
- *
- * Set the multicast group that media from @media will be streamed to.
- */
-void
-gst_rtsp_media_set_multicast_group (GstRTSPMedia * media, const gchar * mc)
-{
-  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
-
-  g_mutex_lock (&media->lock);
-  g_free (media->multicast_group);
-  media->multicast_group = g_strdup (mc);
-  g_mutex_unlock (&media->lock);
-}
-
-/**
- * gst_rtsp_media_get_multicast_group:
- * @media: (transfer full): a #GstRTSPMedia
- *
- * Get the multicast group that media from @media will be streamed to.
- *
- * Returns: the multicast group, g_free after usage.
- */
-gchar *
-gst_rtsp_media_get_multicast_group (GstRTSPMedia * media)
-{
-  gchar *result;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
-
-  g_mutex_lock (&media->lock);
-  result = g_strdup (media->multicast_group);
-  g_mutex_unlock (&media->lock);
-
-  return result;
-}
-
-/**
  * gst_rtsp_media_set_auth:
  * @media: a #GstRTSPMedia
  * @auth: a #GstRTSPAuth
@@ -622,6 +571,56 @@ gst_rtsp_media_get_auth (GstRTSPMedia * media)
 
   g_mutex_lock (&media->lock);
   if ((result = media->auth))
+    g_object_ref (result);
+  g_mutex_unlock (&media->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_set_address_pool:
+ * @media: a #GstRTSPMedia
+ * @pool: a #GstRTSPAddressPool
+ *
+ * configure @pool to be used as the address pool of @media.
+ */
+void
+gst_rtsp_media_set_address_pool (GstRTSPMedia * media,
+    GstRTSPAddressPool * pool)
+{
+  GstRTSPAddressPool *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  g_mutex_lock (&media->lock);
+  if ((old = media->pool) != pool)
+    media->pool = pool ? g_object_ref (pool) : NULL;
+  else
+    old = NULL;
+  g_mutex_unlock (&media->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_media_get_address_pool:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the #GstRTSPAddressPool used as the address pool of @media.
+ *
+ * Returns: (transfer full): the #GstRTSPAddressPool of @media. g_object_unref() after
+ * usage.
+ */
+GstRTSPAddressPool *
+gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
+{
+  GstRTSPAddressPool *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  g_mutex_lock (&media->lock);
+  if ((result = media->pool))
     g_object_ref (result);
   g_mutex_unlock (&media->lock);
 

@@ -978,13 +978,26 @@ configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     if (ct->destination == NULL || !client->use_client_settings) {
+      GstRTSPAddressPool *pool;
+      gchar *address;
+      guint16 port;
+      guint8 ttl;
+      gpointer id;
+
+      pool = gst_rtsp_media_get_address_pool (state->media);
+      if (pool == NULL)
+        goto no_pool;
+
+      id = gst_rtsp_address_pool_acquire_address (pool,
+          GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2, &address, &port, &ttl);
+      if (id == NULL)
+        goto no_address;
+
       g_free (ct->destination);
-      ct->destination = gst_rtsp_media_get_multicast_group (state->media);
-    }
-    /* reset ttl and port if client settings are not allowed */
-    if (!client->use_client_settings) {
-      ct->port = state->stream->server_port;
-      ct->ttl = 0;
+      ct->destination = address;
+      ct->port.min = port;
+      ct->port.max = port + 1;
+      ct->ttl = ttl;
     }
   } else {
     GstRTSPUrl *url;
@@ -1002,6 +1015,16 @@ configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
     }
   }
   return TRUE;
+
+  /* ERRORS */
+no_pool:
+  {
+    return FALSE;
+  }
+no_address:
+  {
+    return FALSE;
+  }
 }
 
 static GstRTSPTransport *
@@ -1143,7 +1166,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto invalid_blocksize;
 
   /* update the client transport */
-  configure_client_transport (client, state, ct);
+  if (!configure_client_transport (client, state, ct))
+    goto unsupported_client_transport;
 
   /* set in the session media transport */
   trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
@@ -1206,6 +1230,13 @@ invalid_blocksize:
     gst_rtsp_transport_free (ct);
     return FALSE;
   }
+unsupported_client_transport:
+  {
+    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
+    g_object_unref (session);
+    gst_rtsp_transport_free (ct);
+    return FALSE;
+  }
 no_transport:
   {
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
@@ -1262,7 +1293,11 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   info.server_proto = proto;
   protocols = gst_rtsp_media_get_protocols (media);
   if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
+#if 0
     info.server_ip = gst_rtsp_media_get_multicast_group (media);
+#else
+    info.server_ip = g_strdup (client->server_ip);
+#endif
   else
     info.server_ip = g_strdup (client->server_ip);
 

@@ -24,7 +24,6 @@
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
-#define DEFAULT_MULTICAST_GROUP "224.2.0.1"
 
 enum
 {
@@ -34,7 +33,6 @@ enum
   PROP_EOS_SHUTDOWN,
   PROP_PROTOCOLS,
   PROP_BUFFER_SIZE,
-  PROP_MULTICAST_GROUP,
   PROP_LAST
 };
 
@@ -121,11 +119,6 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_MULTICAST_GROUP,
-      g_param_spec_string ("multicast-group", "Multicast Group",
-          "The Multicast group to send media to",
-          DEFAULT_MULTICAST_GROUP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED] =
       g_signal_new ("media-constructed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPMediaFactoryClass,
@@ -156,7 +149,6 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
   factory->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   factory->protocols = DEFAULT_PROTOCOLS;
   factory->buffer_size = DEFAULT_BUFFER_SIZE;
-  factory->multicast_group = g_strdup (DEFAULT_MULTICAST_GROUP);
 
   g_mutex_init (&factory->lock);
   g_mutex_init (&factory->medias_lock);
@@ -172,10 +164,11 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   g_hash_table_unref (factory->medias);
   g_mutex_clear (&factory->medias_lock);
   g_free (factory->launch);
-  g_free (factory->multicast_group);
   g_mutex_clear (&factory->lock);
   if (factory->auth)
     g_object_unref (factory->auth);
+  if (factory->pool)
+    g_object_unref (factory->pool);
 
   G_OBJECT_CLASS (gst_rtsp_media_factory_parent_class)->finalize (obj);
 }
@@ -203,10 +196,6 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_BUFFER_SIZE:
       g_value_set_uint (value,
           gst_rtsp_media_factory_get_buffer_size (factory));
-      break;
-    case PROP_MULTICAST_GROUP:
-      g_value_take_string (value,
-          gst_rtsp_media_factory_get_multicast_group (factory));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -236,10 +225,6 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
     case PROP_BUFFER_SIZE:
       gst_rtsp_media_factory_set_buffer_size (factory,
           g_value_get_uint (value));
-      break;
-    case PROP_MULTICAST_GROUP:
-      gst_rtsp_media_factory_set_multicast_group (factory,
-          g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -438,41 +423,50 @@ gst_rtsp_media_factory_get_buffer_size (GstRTSPMediaFactory * factory)
 }
 
 /**
- * gst_rtsp_media_factory_set_multicast_group:
- * @factory: a #GstRTSPMedia
- * @mc: the new multicast group
+ * gst_rtsp_media_factory_set_address_pool:
+ * @factory: a #GstRTSPMediaFactory
+ * @pool: a #GstRTSPAddressPool
  *
- * Set the multicast group that media from @factory will be streamed to.
+ * configure @pool to be used as the address pool of @factory.
  */
 void
-gst_rtsp_media_factory_set_multicast_group (GstRTSPMediaFactory * factory,
-    const gchar * mc)
+gst_rtsp_media_factory_set_address_pool (GstRTSPMediaFactory * factory,
+    GstRTSPAddressPool * pool)
 {
+  GstRTSPAddressPool *old;
+
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  g_free (factory->multicast_group);
-  factory->multicast_group = g_strdup (mc);
+  if ((old = factory->pool) != pool)
+    factory->pool = pool ? g_object_ref (pool) : NULL;
+  else
+    old = NULL;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  if (old)
+    g_object_unref (old);
 }
 
 /**
- * gst_rtsp_media_factory_get_multicast_group:
- * @factory: a #GstRTSPMedia
+ * gst_rtsp_media_factory_get_address_pool:
+ * @factory: a #GstRTSPMediaFactory
  *
- * Get the multicast group that media from @factory will be streamed to.
+ * Get the #GstRTSPAddressPool used as the address pool of @factory.
  *
- * Returns: the multicast group
+ * Returns: (transfer full): the #GstRTSPAddressPool of @factory. g_object_unref() after
+ * usage.
  */
-gchar *
-gst_rtsp_media_factory_get_multicast_group (GstRTSPMediaFactory * factory)
+GstRTSPAddressPool *
+gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
 {
-  gchar *result;
+  GstRTSPAddressPool *result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  result = g_strdup (factory->multicast_group);
+  if ((result = factory->pool))
+    g_object_ref (result);
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
@@ -808,7 +802,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   guint size;
   GstRTSPAuth *auth;
   GstRTSPLowerTrans protocols;
-  gchar *mc;
+  GstRTSPAddressPool *pool;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -827,9 +821,9 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
     gst_rtsp_media_set_auth (media, auth);
     g_object_unref (auth);
   }
-  if ((mc = gst_rtsp_media_factory_get_multicast_group (factory))) {
-    gst_rtsp_media_set_multicast_group (media, mc);
-    g_free (mc);
+  if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
+    gst_rtsp_media_set_address_pool (media, pool);
+    g_object_unref (pool);
   }
 }
 

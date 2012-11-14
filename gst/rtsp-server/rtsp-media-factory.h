@@ -22,6 +22,7 @@
 
 #include "rtsp-media.h"
 #include "rtsp-auth.h"
+#include "rtsp-address-pool.h"
 
 #ifndef __GST_RTSP_MEDIA_FACTORY_H__
 #define __GST_RTSP_MEDIA_FACTORY_H__
@@ -55,7 +56,7 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
  * @protocols: allowed transport protocols
  * @auth: the authentication manager
  * @buffer_size: the kernel udp buffer size
- * @multicast_group: the multicast group to send to
+ * @pool: the multicast address pool to use
  * @medias_lock: mutex protecting the medias.
  * @medias: hashtable of shared media
  *
@@ -72,7 +73,7 @@ struct _GstRTSPMediaFactory {
   GstRTSPLowerTrans  protocols;
   GstRTSPAuth       *auth;
   guint              buffer_size;
-  gchar             *multicast_group;
+  GstRTSPAddressPool *pool;
 
   GMutex             medias_lock;
   GHashTable        *medias;
@@ -139,11 +140,12 @@ GstRTSPLowerTrans     gst_rtsp_media_factory_get_protocols  (GstRTSPMediaFactory
 void                  gst_rtsp_media_factory_set_auth     (GstRTSPMediaFactory *factory, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_media_factory_get_auth     (GstRTSPMediaFactory *factory);
 
+void                  gst_rtsp_media_factory_set_address_pool   (GstRTSPMediaFactory * factory,
+                                                                 GstRTSPAddressPool * pool);
+GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool   (GstRTSPMediaFactory * factory);
+
 void                  gst_rtsp_media_factory_set_buffer_size    (GstRTSPMediaFactory * factory, guint size);
 guint                 gst_rtsp_media_factory_get_buffer_size    (GstRTSPMediaFactory * factory);
-
-void                  gst_rtsp_media_factory_set_multicast_group (GstRTSPMediaFactory * factory, const gchar *mc);
-gchar *               gst_rtsp_media_factory_get_multicast_group (GstRTSPMediaFactory * factory);
 
 /* creating the media from the factory and a url */
 GstRTSPMedia *        gst_rtsp_media_factory_construct       (GstRTSPMediaFactory *factory,

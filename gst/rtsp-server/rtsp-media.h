@@ -41,6 +41,7 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 
 #include "rtsp-stream.h"
 #include "rtsp-auth.h"
+#include "rtsp-address-pool.h"
 
 /**
  * GstRTSPMediaStatus:
@@ -112,7 +113,7 @@ struct _GstRTSPMedia {
   gboolean           eos_shutdown;
   guint              buffer_size;
   GstRTSPAuth       *auth;
-  gchar             *multicast_group;
+  GstRTSPAddressPool*pool;
   guint              mtu;
 
   GstElement        *element;
@@ -191,11 +192,11 @@ gboolean              gst_rtsp_media_is_eos_shutdown  (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_auth         (GstRTSPMedia *media, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_media_get_auth         (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_address_pool (GstRTSPMedia *media, GstRTSPAddressPool *pool);
+GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
+
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
 guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
-
-void                  gst_rtsp_media_set_multicast_group (GstRTSPMedia *media, const gchar * mc);
-gchar *               gst_rtsp_media_get_multicast_group (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_mtu          (GstRTSPMedia *media, guint mtu);
 guint                 gst_rtsp_media_get_mtu          (GstRTSPMedia *media);
