@@ -907,7 +907,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
     GstVideoFrame outframe;
 
     /* get timestamp of the current adapter content */
-    ts = gst_adapter_prev_timestamp (scope->adapter, &dist);
+    ts = gst_adapter_prev_pts (scope->adapter, &dist);
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
       /* convert bytes to time */
       dist /= bps;

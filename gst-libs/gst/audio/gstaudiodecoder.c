@@ -1229,7 +1229,7 @@ gst_audio_decoder_push_buffers (GstAudioDecoder * dec, gboolean force)
         len = av;
       }
       /* track upstream ts, but do not get stuck if nothing new upstream */
-      ts = gst_adapter_prev_timestamp (priv->adapter, &distance);
+      ts = gst_adapter_prev_pts (priv->adapter, &distance);
       if (ts != priv->prev_ts || distance <= priv->prev_distance) {
         priv->prev_ts = ts;
         priv->prev_distance = distance;

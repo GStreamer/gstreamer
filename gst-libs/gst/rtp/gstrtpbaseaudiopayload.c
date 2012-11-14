@@ -583,7 +583,7 @@ gst_rtp_base_audio_payload_flush (GstRTPBaseAudioPayload * baseaudiopayload,
 
   if (timestamp == -1) {
     /* calculate the timestamp */
-    timestamp = gst_adapter_prev_timestamp (adapter, &distance);
+    timestamp = gst_adapter_prev_pts (adapter, &distance);
 
     GST_LOG_OBJECT (baseaudiopayload,
         "last timestamp %" GST_TIME_FORMAT ", distance %" G_GUINT64_FORMAT,

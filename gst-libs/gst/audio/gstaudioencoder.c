@@ -674,7 +674,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
     if (!enc->priv->perfect_ts) {
       guint64 ts, distance;
 
-      ts = gst_adapter_prev_timestamp (priv->adapter, &distance);
+      ts = gst_adapter_prev_pts (priv->adapter, &distance);
       g_assert (distance % ctx->info.bpf == 0);
       distance /= ctx->info.bpf;
       GST_LOG_OBJECT (enc, "%" G_GUINT64_FORMAT " samples past prev_ts %"
