@@ -1329,13 +1329,14 @@ mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
   else
     align *= packet_size;
 
+  /* FIXME: what about DTS here? */
   GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
   if (G_LIKELY ((align <= av) && av)) {
     GST_LOG_OBJECT (mux, "pushing %d aligned bytes", av - (av % align));
-    ts = gst_adapter_prev_timestamp (mux->out_adapter, NULL);
+    ts = gst_adapter_prev_pts (mux->out_adapter, NULL);
     buf = gst_adapter_take_buffer (mux->out_adapter, av - (av % align));
     g_assert (buf);
-    GST_BUFFER_TIMESTAMP (buf) = ts;
+    GST_BUFFER_PTS (buf) = ts;
 
     ret = gst_pad_push (mux->srcpad, buf);
     av = av % align;
@@ -1351,11 +1352,11 @@ mpegtsmux_push_packets (MpegTsMux * mux, gboolean force)
     buf = gst_buffer_new_and_alloc (align);
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
-    ts = gst_adapter_prev_timestamp (mux->out_adapter, NULL);
+    ts = gst_adapter_prev_pts (mux->out_adapter, NULL);
 
     gst_adapter_copy (mux->out_adapter, data, 0, av);
     gst_adapter_clear (mux->out_adapter);
-    GST_BUFFER_TIMESTAMP (buf) = ts;
+    GST_BUFFER_PTS (buf) = ts;
 
     data += av;
     header = GST_READ_UINT32_BE (data - packet_size);
@@ -1469,12 +1470,13 @@ new_packet_m2ts (MpegTsMux * mux, GstBuffer * buf, gint64 new_pcr)
             gst_util_uint64_scale (mux->previous_offset - offset,
             mux->pcr_rate_num, mux->pcr_rate_den);
 
-      ts = gst_adapter_prev_timestamp (mux->adapter, NULL);
+      /* FIXME: what about DTS here? */
+      ts = gst_adapter_prev_pts (mux->adapter, NULL);
       out_buf = gst_adapter_take_buffer (mux->adapter, M2TS_PACKET_LENGTH);
       g_assert (out_buf);
       offset += M2TS_PACKET_LENGTH;
 
-      GST_BUFFER_TIMESTAMP (out_buf) = ts;
+      GST_BUFFER_PTS (out_buf) = ts;
 
       gst_buffer_map (out_buf, &map, GST_MAP_WRITE);
 
