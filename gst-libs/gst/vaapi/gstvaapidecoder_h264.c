@@ -185,11 +185,17 @@ gst_vaapi_picture_h264_new(GstVaapiDecoderH264 *decoder)
 static inline void
 gst_vaapi_picture_h264_set_reference(
     GstVaapiPictureH264 *picture,
-    guint                reference_flags
+    guint                reference_flags,
+    gboolean             other_field
 )
 {
     g_return_if_fail(GST_VAAPI_IS_PICTURE_H264(picture));
 
+    GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
+    GST_VAAPI_PICTURE_FLAG_SET(picture, reference_flags);
+
+    if (!other_field || !(picture = picture->other_field))
+        return;
     GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
     GST_VAAPI_PICTURE_FLAG_SET(picture, reference_flags);
 }
@@ -2200,13 +2206,12 @@ exec_ref_pic_marking_sliding_window(GstVaapiDecoderH264 *decoder)
     }
 
     ref_picture = priv->short_ref[m];
-    gst_vaapi_picture_h264_set_reference(ref_picture, 0);
+    gst_vaapi_picture_h264_set_reference(ref_picture, 0, TRUE);
     ARRAY_REMOVE_INDEX(priv->short_ref, m);
 
-    /* Both fields need to be marked as "unused for reference" */
-    if (ref_picture->other_field)
-        gst_vaapi_picture_h264_set_reference(ref_picture->other_field, 0);
-    if (!GST_VAAPI_PICTURE_IS_FRAME(priv->current_picture)) {
+    /* Both fields need to be marked as "unused for reference", so
+       remove the other field from the short_ref[] list as well */
+    if (!GST_VAAPI_PICTURE_IS_FRAME(priv->current_picture) && ref_picture->other_field) {
         for (i = 0; i < priv->short_ref_count; i++) {
             if (priv->short_ref[i] == ref_picture->other_field) {
                 ARRAY_REMOVE_INDEX(priv->short_ref, i);
@@ -2246,7 +2251,8 @@ exec_ref_pic_marking_adaptive_mmco_1(
     if (i < 0)
         return;
 
-    gst_vaapi_picture_h264_set_reference(priv->short_ref[i], 0);
+    gst_vaapi_picture_h264_set_reference(priv->short_ref[i], 0,
+        GST_VAAPI_PICTURE_IS_FRAME(picture));
     ARRAY_REMOVE_INDEX(priv->short_ref, i);
 }
 
@@ -2265,7 +2271,8 @@ exec_ref_pic_marking_adaptive_mmco_2(
     if (i < 0)
         return;
 
-    gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0);
+    gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0,
+        GST_VAAPI_PICTURE_IS_FRAME(picture));
     ARRAY_REMOVE_INDEX(priv->long_ref, i);
 }
 
@@ -2286,7 +2293,7 @@ exec_ref_pic_marking_adaptive_mmco_3(
             break;
     }
     if (i != priv->long_ref_count) {
-        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0);
+        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0, TRUE);
         ARRAY_REMOVE_INDEX(priv->long_ref, i);
     }
 
@@ -2301,7 +2308,8 @@ exec_ref_pic_marking_adaptive_mmco_3(
 
     ref_picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
     gst_vaapi_picture_h264_set_reference(ref_picture,
-        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
+        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE,
+        GST_VAAPI_PICTURE_IS_FRAME(picture));
 }
 
 /* 8.2.5.4.4. Mark pictures with LongTermFramIdx > max_long_term_frame_idx
@@ -2321,7 +2329,7 @@ exec_ref_pic_marking_adaptive_mmco_4(
     for (i = 0; i < priv->long_ref_count; i++) {
         if (priv->long_ref[i]->long_term_frame_idx <= long_term_frame_idx)
             continue;
-        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0);
+        gst_vaapi_picture_h264_set_reference(priv->long_ref[i], 0, FALSE);
         ARRAY_REMOVE_INDEX(priv->long_ref, i);
         i--;
     }
@@ -2364,7 +2372,7 @@ exec_ref_pic_marking_adaptive_mmco_6(
 {
     picture->long_term_frame_idx = ref_pic_marking->long_term_frame_idx;
     gst_vaapi_picture_h264_set_reference(picture,
-        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE);
+        GST_VAAPI_PICTURE_FLAG_LONG_TERM_REFERENCE, FALSE);
 }
 
 /* 8.2.5.4. Adaptive memory control decoded reference picture marking process */
