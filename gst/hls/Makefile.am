@@ -1,7 +1,6 @@
 
 plugin_LTLIBRARIES = libgstfragmented.la
 
-# FIXME: hlssink
 libgstfragmented_la_SOURCES =			\
 	m3u8.c					\
 	gsthlsdemux.c				\
@@ -18,13 +17,12 @@ libgstfragmented_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -no-undefined
 libgstfragmented_la_LIBTOOLFLAGS = --tag=disable-static
 
 # headers we need but don't want installed
-#
-#	gstm3u8playlist.h
-#	gsthlssink.h
 noinst_HEADERS = 			\
 	gstfragmented.h			\
 	gstfragment.h			\
 	gsthlsdemux.h			\
+	gsthlssink.h			\
+	gstm3u8playlist.h		\
 	gsturidownloader.h		\
 	m3u8.h
 
