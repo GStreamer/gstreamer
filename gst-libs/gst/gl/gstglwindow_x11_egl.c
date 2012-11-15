@@ -48,16 +48,11 @@ static gboolean gst_gl_window_x11_egl_create_context (GstGLWindowX11 *
 static void gst_gl_window_x11_egl_destroy_context (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_egl_choose_format (GstGLWindowX11 *
     window_x11);
-static GstGLPlatform gst_gl_window_x11_egl_get_platform (GstGLWindow * window);
 
 static void
 gst_gl_window_x11_egl_class_init (GstGLWindowX11EGLClass * klass)
 {
-  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
   GstGLWindowX11Class *window_x11_class = (GstGLWindowX11Class *) klass;
-
-  window_class->get_platform =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_egl_get_platform);
 
   window_x11_class->get_gl_context =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_egl_get_gl_context);
@@ -89,12 +84,6 @@ gst_gl_window_x11_egl_new (GstGLRendererAPI render_api,
       external_gl_context);
 
   return window;
-}
-
-static GstGLPlatform
-gst_gl_window_x11_egl_get_platform (GstGLWindow * window)
-{
-  return GST_GL_PLATFORM_EGL;
 }
 
 static gboolean
