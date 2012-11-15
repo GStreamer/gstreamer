@@ -40,6 +40,7 @@ typedef struct _GstRTSPStream GstRTSPStream;
 typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
 
 #include "rtsp-stream-transport.h"
+#include "rtsp-address-pool.h"
 
 /**
  * GstRTSPStream:
@@ -63,6 +64,8 @@ typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
  * @tee: tee for the sending to udpsink and appsink
  * @funnel: tee for the receiving from udpsrc and appsrc
  * @server_port: the server ports for this stream
+ * @pool: the address pool for this stream
+ * @addr: the address for this stream
  * @caps_sig: the signal id for detecting caps
  * @caps: the caps of the stream
  * @n_active: the number of active transports in @transports
@@ -104,6 +107,10 @@ struct _GstRTSPStream {
   /* server ports for sending/receiving */
   GstRTSPRange  server_port;
 
+  /* multicast addresses */
+  GstRTSPAddressPool *pool;
+  GstRTSPAddress     *addr;
+
   /* the caps of the stream */
   gulong        caps_sig;
   GstCaps      *caps;
@@ -124,6 +131,12 @@ GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *paylo
 
 void              gst_rtsp_stream_set_mtu          (GstRTSPStream * stream, guint mtu);
 guint             gst_rtsp_stream_get_mtu          (GstRTSPStream * stream);
+
+void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRTSPAddressPool *pool);
+GstRTSPAddressPool *
+                  gst_rtsp_stream_get_address_pool (GstRTSPStream *stream);
+
+GstRTSPAddress *  gst_rtsp_stream_get_address      (GstRTSPStream *stream);
 
 gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream * stream,
                                                     GstBin *bin, GstElement *rtpbin,

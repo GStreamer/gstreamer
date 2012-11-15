@@ -72,6 +72,10 @@ gst_rtsp_stream_finalize (GObject * obj)
   /* we really need to be unjoined now */
   g_return_if_fail (!stream->is_joined);
 
+  if (stream->addr)
+    gst_rtsp_address_free (stream->addr);
+  if (stream->pool)
+    g_object_unref (stream->pool);
   gst_object_unref (stream->payloader);
   gst_object_unref (stream->srcpad);
   g_mutex_clear (&stream->lock);
@@ -140,6 +144,100 @@ gst_rtsp_stream_get_mtu (GstRTSPStream * stream)
   g_object_get (G_OBJECT (stream->payloader), "mtu", &mtu, NULL);
 
   return mtu;
+}
+
+/**
+ * gst_rtsp_stream_set_address_pool:
+ * @stream: a #GstRTSPStream
+ * @pool: a #GstRTSPAddressPool
+ *
+ * configure @pool to be used as the address pool of @stream.
+ */
+void
+gst_rtsp_stream_set_address_pool (GstRTSPStream * stream,
+    GstRTSPAddressPool * pool)
+{
+  GstRTSPAddressPool *old;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  g_mutex_lock (&stream->lock);
+  if ((old = stream->pool) != pool)
+    stream->pool = pool ? g_object_ref (pool) : NULL;
+  else
+    old = NULL;
+  g_mutex_unlock (&stream->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_stream_get_address_pool:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the #GstRTSPAddressPool used as the address pool of @stream.
+ *
+ * Returns: (transfer full): the #GstRTSPAddressPool of @stream. g_object_unref() after
+ * usage.
+ */
+GstRTSPAddressPool *
+gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
+{
+  GstRTSPAddressPool *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  g_mutex_lock (&stream->lock);
+  if ((result = stream->pool))
+    g_object_ref (result);
+  g_mutex_unlock (&stream->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_stream_get_address:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the multicast address of @stream.
+ *
+ * Returns: the #GstRTSPAddress of @stream or %NULL when no address could be
+ * allocated. gst_rtsp_address_free() after usage.
+ */
+GstRTSPAddress *
+gst_rtsp_stream_get_address (GstRTSPStream * stream)
+{
+  GstRTSPAddress *result;
+
+  g_mutex_lock (&stream->lock);
+  if (stream->addr == NULL) {
+    if (stream->pool == NULL)
+      goto no_pool;
+
+    stream->addr = gst_rtsp_address_pool_acquire_address (stream->pool,
+        GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
+    if (stream->addr == NULL)
+      goto no_address;
+  }
+  result = gst_rtsp_address_copy (stream->addr);
+  g_mutex_unlock (&stream->lock);
+
+  return result;
+
+  /* ERRORS */
+no_pool:
+  {
+    GST_ERROR_OBJECT (stream, "no address pool specified");
+    g_mutex_unlock (&stream->lock);
+    return NULL;
+  }
+no_address:
+  {
+    GST_ERROR_OBJECT (stream, "failed to acquire address from pool");
+    g_mutex_unlock (&stream->lock);
+    return NULL;
+  }
 }
 
 /* must be called with lock */
