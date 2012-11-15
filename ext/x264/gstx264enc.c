@@ -389,11 +389,53 @@ gst_x264_enc_build_tunings_string (GstX264Enc * x264enc)
         x264enc->tunings->str);
 }
 
+#if X264_BIT_DEPTH == 8
+# if X264_CHROMA_FORMAT == 0
+#  define COLOR_FORMATS "I420, YV12, Y42B, Y444, NV12"
+# elif X264_CHROMA_FORMAT == X264_CSP_I420
+#  define COLOR_FORMATS "I420, YV12, NV12"
+# elif X264_CHROMA_FORMAT == X264_CSP_I422
+#  define COLOR_FORMATS "Y42B"
+# elif X264_CHROMA_FORMAT == X264_CSP_I444
+#  define COLOR_FORMATS "Y444"
+# else
+#  error "Unsupported chroma format"
+# endif
+#elif X264_BIT_DEPTH == 10
+# if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#  if X264_CHROMA_FORMAT == 0
+#   define COLOR_FORMATS "I420_10LE, I422_10LE, Y444_10LE"
+#  elif X264_CHROMA_FORMAT == X264_CSP_I420
+#   define COLOR_FORMATS "I420_10LE"
+#  elif X264_CHROMA_FORMAT == X264_CSP_I422
+#   define COLOR_FORMATS "I422_10LE"
+#  elif X264_CHROMA_FORMAT == X264_CSP_I444
+#   define COLOR_FORMATS "Y444_10LE"
+#  else
+#   error "Unsupported chroma format"
+#  endif
+# else
+#  if X264_CHROMA_FORMAT == 0
+#   define COLOR_FORMATS "I420_10BE, I422_10BE, Y444_10BE"
+#  elif X264_CHROMA_FORMAT == X264_CSP_I420
+#   define COLOR_FORMATS "I420_10BE"
+#  elif X264_CHROMA_FORMAT == X264_CSP_I422
+#   define COLOR_FORMATS "I422_10BE"
+#  elif X264_CHROMA_FORMAT == X264_CSP_I444
+#   define COLOR_FORMATS "Y444_10BE"
+#  else
+#   error "Unsupported chroma format"
+#  endif
+# endif
+#else
+# error "Only 8-bit and 10-bit supported"
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420, YV12, Y42B, Y444, NV12 }, "
+        "format = (string) { " COLOR_FORMATS " }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
     );
@@ -984,15 +1026,33 @@ gst_x264_enc_gst_to_x264_video_format (GstVideoFormat format, gint * nplanes)
         *nplanes = 3;
       return X264_CSP_I420;
       break;
+    case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_10LE:
+      if (nplanes)
+        *nplanes = 3;
+      return X264_CSP_I420 | X264_CSP_HIGH_DEPTH;
+      break;
     case GST_VIDEO_FORMAT_Y42B:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I422;
       break;
+    case GST_VIDEO_FORMAT_I422_10BE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+      if (nplanes)
+        *nplanes = 3;
+      return X264_CSP_I422 | X264_CSP_HIGH_DEPTH;
+      break;
     case GST_VIDEO_FORMAT_Y444:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I444;
+      break;
+    case GST_VIDEO_FORMAT_Y444_10BE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+      if (nplanes)
+        *nplanes = 3;
+      return X264_CSP_I444 | X264_CSP_HIGH_DEPTH;
       break;
     case GST_VIDEO_FORMAT_NV12:
       if (nplanes)
