@@ -246,7 +246,7 @@ again:
   if (!udpsink0)
     goto no_udp_protocol;
 
-  g_object_get (G_OBJECT (udpsrc0), "socket", &socket, NULL);
+  g_object_get (G_OBJECT (udpsrc0), "used-socket", &socket, NULL);
   g_object_set (G_OBJECT (udpsink0), "socket", socket, NULL);
   g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
 
@@ -271,7 +271,7 @@ again:
     GST_WARNING ("multiudpsink version found without buffer-size property");
   }
 
-  g_object_get (G_OBJECT (udpsrc1), "socket", &socket, NULL);
+  g_object_get (G_OBJECT (udpsrc1), "used-socket", &socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "socket", socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
