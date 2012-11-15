@@ -393,7 +393,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420, YV12 }, "
+        "format = (string) { I420, YV12, Y42B, Y444, NV12 }, "
         "framerate = (fraction) [0, MAX], "
         "width = (int) [ 16, MAX ], " "height = (int) [ 16, MAX ]")
     );
@@ -974,6 +974,38 @@ gst_x264_enc_parse_options (GstX264Enc * encoder, const gchar * str)
   return !ret;
 }
 
+static gint
+gst_x264_enc_gst_to_x264_video_format (GstVideoFormat format, gint * nplanes)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+      if (nplanes)
+        *nplanes = 3;
+      return X264_CSP_I420;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      if (nplanes)
+        *nplanes = 3;
+      return X264_CSP_I422;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      if (nplanes)
+        *nplanes = 3;
+      return X264_CSP_I444;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      if (nplanes)
+        *nplanes = 2;
+      return X264_CSP_NV12;
+      break;
+    default:
+      g_assert_not_reached ();
+      return GST_VIDEO_FORMAT_UNKNOWN;
+      break;
+  }
+}
+
 /*
  * gst_x264_enc_init_encoder
  * @encoder:  Encoder which should be initialized.
@@ -1052,6 +1084,8 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   }
 
   /* set up encoder parameters */
+  encoder->x264param.i_csp =
+      gst_x264_enc_gst_to_x264_video_format (info->finfo->format, NULL);
   encoder->x264param.i_fps_num = info->fps_n;
   encoder->x264param.i_fps_den = info->fps_d;
   encoder->x264param.i_width = info->width;
@@ -1415,7 +1449,8 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
   if (encoder->x264enc) {
     GstVideoInfo *old = &encoder->input_state->info;
 
-    if (info->width == old->width && info->height == old->height
+    if (info->finfo->format == old->finfo->format
+        && info->width == old->width && info->height == old->height
         && info->fps_n == old->fps_n && info->fps_d == old->fps_d
         && info->par_n == old->par_n && info->par_d == old->par_d) {
       gst_video_codec_state_unref (encoder->input_state);
@@ -1575,6 +1610,7 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
   x264_picture_t pic_in;
   gint i_nal, i;
   FrameData *fdata;
+  gint nplanes;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     goto not_inited;
@@ -1589,9 +1625,10 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
   if (!fdata)
     goto invalid_frame;
 
-  pic_in.img.i_csp = X264_CSP_I420;
-  pic_in.img.i_plane = 3;
-  for (i = 0; i < 3; i++) {
+  pic_in.img.i_csp =
+      gst_x264_enc_gst_to_x264_video_format (info->finfo->format, &nplanes);
+  pic_in.img.i_plane = nplanes;
+  for (i = 0; i < nplanes; i++) {
     pic_in.img.plane[i] = GST_VIDEO_FRAME_PLANE_DATA (&fdata->vframe, i);
     pic_in.img.i_stride[i] = GST_VIDEO_FRAME_COMP_STRIDE (&fdata->vframe, i);
   }
