@@ -81,7 +81,6 @@ struct _GstRTSPStreamTransport {
   gboolean             timeout;
 
   GstRTSPTransport    *transport;
-  GstRTSPAddress      *addr;
 
   GObject             *rtpsource;
 };
@@ -93,12 +92,10 @@ struct _GstRTSPStreamTransportClass {
 GType                    gst_rtsp_stream_transport_get_type (void);
 
 GstRTSPStreamTransport * gst_rtsp_stream_transport_new           (GstRTSPStream *stream,
-                                                                  GstRTSPTransport *tr,
-                                                                  GstRTSPAddress *addr);
+                                                                  GstRTSPTransport *tr);
 
 void                     gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport *trans,
-                                                                  GstRTSPTransport * tr,
-                                                                  GstRTSPAddress *addr);
+                                                                  GstRTSPTransport * tr);
 
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
                                                                   GstRTSPSendFunc send_rtp,

@@ -595,6 +595,8 @@ gst_rtsp_media_set_address_pool (GstRTSPMedia * media,
     media->pool = pool ? g_object_ref (pool) : NULL;
   else
     old = NULL;
+  g_ptr_array_foreach (media->streams, (GFunc) gst_rtsp_stream_set_address_pool,
+      pool);
   g_mutex_unlock (&media->lock);
 
   if (old)

@@ -78,8 +78,7 @@ gboolean                 gst_rtsp_session_media_set_state      (GstRTSPSessionMe
 /* get stream transport config */
 GstRTSPStreamTransport * gst_rtsp_session_media_set_transport  (GstRTSPSessionMedia *media,
                                                                 GstRTSPStream *stream,
-                                                                GstRTSPTransport *tr,
-                                                                GstRTSPAddress *addr);
+                                                                GstRTSPTransport *tr);
 GstRTSPStreamTransport * gst_rtsp_session_media_get_transport  (GstRTSPSessionMedia *media,
                                                                 guint idx);
 

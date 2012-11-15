@@ -974,30 +974,22 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPStream * stream,
 
 static gboolean
 configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
-    GstRTSPTransport * ct, GstRTSPAddress ** addr)
+    GstRTSPTransport * ct)
 {
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     if (ct->destination == NULL || !client->use_client_settings) {
-      GstRTSPAddressPool *pool;
-      GstRTSPAddress *ad;
+      GstRTSPAddress *addr;
 
-      pool = gst_rtsp_media_get_address_pool (state->media);
-      if (pool == NULL)
-        goto no_pool;
-
-      ad = gst_rtsp_address_pool_acquire_address (pool,
-          GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
-      if (ad == NULL)
+      addr = gst_rtsp_stream_get_address (state->stream);
+      if (addr == NULL)
         goto no_address;
 
       g_free (ct->destination);
-      ct->destination = g_strdup (ad->address);
-      ct->port.min = ad->port;
-      ct->port.max = ad->port + 1;
-      ct->ttl = ad->ttl;
-
-      *addr = ad;
+      ct->destination = g_strdup (addr->address);
+      ct->port.min = addr->port;
+      ct->port.max = addr->port + addr->n_ports - 1;
+      ct->ttl = addr->ttl;
     }
   } else {
     GstRTSPUrl *url;
@@ -1017,14 +1009,9 @@ configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
   return TRUE;
 
   /* ERRORS */
-no_pool:
-  {
-    GST_ERROR_OBJECT (client, "no address pool specified");
-    return FALSE;
-  }
 no_address:
   {
-    GST_ERROR_OBJECT (client, "failed to acquire address from pool");
+    GST_ERROR_OBJECT (client, "failed to acquire address for stream");
     return FALSE;
   }
 }
@@ -1080,7 +1067,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMedia *media;
   GstRTSPStream *stream;
-  GstRTSPAddress *addr;
 
   uri = state->uri;
 
@@ -1169,12 +1155,11 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto invalid_blocksize;
 
   /* update the client transport */
-  addr = NULL;
-  if (!configure_client_transport (client, state, ct, &addr))
+  if (!configure_client_transport (client, state, ct))
     goto unsupported_client_transport;
 
   /* set in the session media transport */
-  trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct, addr);
+  trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
 
   /* configure keepalive for this transport */
   gst_rtsp_stream_transport_set_keepalive (trans,

@@ -123,7 +123,6 @@ gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
  * @media: a #GstRTSPSessionMedia
  * @stream: a #GstRTSPStream
  * @tr: a #GstRTSPTransport
- * @addr: (transfer full) (allow none): an optional #GstRTSPAddress
  *
  * Configure the transport for @stream to @tr in @media.
  *
@@ -131,7 +130,7 @@ gst_rtsp_session_media_new (const GstRTSPUrl * url, GstRTSPMedia * media)
  */
 GstRTSPStreamTransport *
 gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
-    GstRTSPStream * stream, GstRTSPTransport * tr, GstRTSPAddress * addr)
+    GstRTSPStream * stream, GstRTSPTransport * tr)
 {
   GstRTSPStreamTransport *result;
 
@@ -142,11 +141,11 @@ gst_rtsp_session_media_set_transport (GstRTSPSessionMedia * media,
   g_mutex_lock (&media->lock);
   result = g_ptr_array_index (media->transports, stream->idx);
   if (result == NULL) {
-    result = gst_rtsp_stream_transport_new (stream, tr, addr);
+    result = gst_rtsp_stream_transport_new (stream, tr);
     g_ptr_array_index (media->transports, stream->idx) = result;
     g_mutex_unlock (&media->lock);
   } else {
-    gst_rtsp_stream_transport_set_transport (result, tr, addr);
+    gst_rtsp_stream_transport_set_transport (result, tr);
     g_mutex_unlock (&media->lock);
   }
 
