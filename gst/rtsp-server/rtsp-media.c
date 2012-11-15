@@ -493,6 +493,8 @@ gst_rtsp_media_set_buffer_size (GstRTSPMedia * media, guint size)
 {
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
+  GST_LOG_OBJECT (media, "set buffer size %u", size);
+
   g_mutex_lock (&media->lock);
   media->buffer_size = size;
   g_mutex_unlock (&media->lock);
@@ -533,6 +535,8 @@ gst_rtsp_media_set_auth (GstRTSPMedia * media, GstRTSPAuth * auth)
   GstRTSPAuth *old;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  GST_LOG_OBJECT (media, "set auth %p", auth);
 
   g_mutex_lock (&media->lock);
   if ((old = media->auth) != auth)
@@ -583,6 +587,8 @@ gst_rtsp_media_set_address_pool (GstRTSPMedia * media,
   GstRTSPAddressPool *old;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  GST_LOG_OBJECT (media, "set address pool %p", pool);
 
   g_mutex_lock (&media->lock);
   if ((old = media->pool) != pool)

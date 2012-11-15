@@ -905,7 +905,7 @@ parse_transport (const char *transport, GstRTSPLowerTrans supported,
   res = FALSE;
   gst_rtsp_transport_init (tr);
 
-  GST_WARNING ("parsing transports %s", transport);
+  GST_DEBUG ("parsing transports %s", transport);
 
   transports = g_strsplit (transport, ",", 0);
 

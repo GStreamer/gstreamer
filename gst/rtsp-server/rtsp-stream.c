@@ -123,6 +123,8 @@ gst_rtsp_stream_set_mtu (GstRTSPStream * stream, guint mtu)
 {
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
 
+  GST_LOG_OBJECT (stream, "set MTU %u", mtu);
+
   g_object_set (G_OBJECT (stream->payloader), "mtu", mtu, NULL);
 }
 
@@ -160,6 +162,8 @@ gst_rtsp_stream_set_address_pool (GstRTSPStream * stream,
   GstRTSPAddressPool *old;
 
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  GST_LOG_OBJECT (stream, "set address pool %p", pool);
 
   g_mutex_lock (&stream->lock);
   if ((old = stream->pool) != pool)
