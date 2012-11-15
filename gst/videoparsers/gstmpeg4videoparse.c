@@ -43,6 +43,9 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
         "mpegversion = (int) 4, "
+        "width = (int)[ 0, max ], "
+        "height = (int)[ 0, max ], "
+        "framerate = (fraction)[ 0, max ]"
         "parsed = (boolean) true, " "systemstream = (boolean) false")
     );
 
