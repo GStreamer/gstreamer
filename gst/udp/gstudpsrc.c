@@ -743,6 +743,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     if (!addr) {
       GList *results;
 
+      GST_DEBUG_OBJECT (src, "resolving IP address for host %s", src->host);
       resolver = g_resolver_get_default ();
       results =
           g_resolver_lookup_by_name (resolver, src->host, src->cancellable,
@@ -902,27 +903,27 @@ no_socket:
   }
 bind_error:
   {
-    gst_udpsrc_stop (GST_BASE_SRC (src));
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("bind failed: %s", err->message));
     g_clear_error (&err);
     g_object_unref (bind_saddr);
+    gst_udpsrc_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 membership:
   {
-    gst_udpsrc_stop (GST_BASE_SRC (src));
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("could add membership: %s", err->message));
     g_clear_error (&err);
+    gst_udpsrc_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 getsockname_error:
   {
-    gst_udpsrc_stop (GST_BASE_SRC (src));
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("getsockname failed: %s", err->message));
     g_clear_error (&err);
+    gst_udpsrc_stop (GST_BASE_SRC (src));
     return FALSE;
   }
 }
