@@ -709,6 +709,8 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   g_free (name);
 
   stream = gst_rtsp_stream_new (idx, payloader, srcpad);
+  if (media->pool)
+    gst_rtsp_stream_set_address_pool (stream, media->pool);
 
   g_ptr_array_add (media->streams, stream);
   g_mutex_unlock (&media->lock);
