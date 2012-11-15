@@ -164,6 +164,8 @@ struct _GstRTSPMediaClass {
   gboolean        (*unprepare)       (GstRTSPMedia *media);
 
   /* signals */
+  gboolean        (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);
+
   gboolean        (*prepared)        (GstRTSPMedia *media);
   gboolean        (*unprepared)      (GstRTSPMedia *media);
 

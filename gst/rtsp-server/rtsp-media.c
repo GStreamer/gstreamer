@@ -48,6 +48,7 @@ enum
 
 enum
 {
+  SIGNAL_NEW_STREAM,
   SIGNAL_PREPARED,
   SIGNAL_UNPREPARED,
   SIGNAL_NEW_STATE,
@@ -108,6 +109,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_param_spec_uint ("buffer-size", "Buffer Size",
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
+      g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstRTSPMediaClass, new_stream), NULL, NULL,
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, GST_TYPE_RTSP_STREAM);
 
   gst_rtsp_media_signals[SIGNAL_PREPARED] =
       g_signal_new ("prepared", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -714,6 +720,9 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 
   g_ptr_array_add (media->streams, stream);
   g_mutex_unlock (&media->lock);
+
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STREAM], 0, stream,
+      NULL);
 
   return stream;
 }
