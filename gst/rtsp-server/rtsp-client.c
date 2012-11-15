@@ -1281,14 +1281,7 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
 
   info.server_proto = proto;
   protocols = gst_rtsp_media_get_protocols (media);
-  if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST)
-#if 0
-    info.server_ip = gst_rtsp_media_get_multicast_group (media);
-#else
-    info.server_ip = g_strdup (client->server_ip);
-#endif
-  else
-    info.server_ip = g_strdup (client->server_ip);
+  info.server_ip = g_strdup (client->server_ip);
 
   /* create an SDP for the media object */
   if (!gst_rtsp_sdp_from_media (sdp, &info, media))

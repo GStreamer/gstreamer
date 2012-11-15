@@ -1,4 +1,3 @@
 
- - implement multicast and TCP transports
  - use a config file to configure the server
  - error recovery

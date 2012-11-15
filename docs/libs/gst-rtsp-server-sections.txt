@@ -37,8 +37,6 @@ gst_rtsp_media_factory_set_auth
 gst_rtsp_media_factory_get_auth
 gst_rtsp_media_factory_set_buffer_size
 gst_rtsp_media_factory_get_buffer_size
-gst_rtsp_media_factory_set_multicast_group
-gst_rtsp_media_factory_get_multicast_group
 gst_rtsp_media_factory_construct
 gst_rtsp_media_factory_create_element
 <SUBSECTION Standard>
@@ -97,8 +95,6 @@ gst_rtsp_media_set_auth
 gst_rtsp_media_get_auth
 gst_rtsp_media_set_buffer_size
 gst_rtsp_media_get_buffer_size
-gst_rtsp_media_set_multicast_group
-gst_rtsp_media_get_multicast_group
 
 gst_rtsp_media_prepare
 gst_rtsp_media_unprepare
