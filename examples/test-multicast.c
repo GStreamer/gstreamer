@@ -65,6 +65,8 @@ main (int argc, char *argv[])
       "audiotestsrc ! audio/x-raw,rate=8000 ! "
       "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
 
+  gst_rtsp_media_factory_set_shared (factory, TRUE);
+
   /* make a new address pool */
   pool = gst_rtsp_address_pool_new ();
   gst_rtsp_address_pool_add_range (pool,
