@@ -943,7 +943,8 @@ parse_transport (const char *transport, GstRTSPLowerTrans supported,
 }
 
 static gboolean
-handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
+handle_blocksize (GstRTSPMedia * media, GstRTSPStream * stream,
+    GstRTSPMessage * request)
 {
   gchar *blocksize_str;
   gboolean ret = TRUE;
@@ -965,7 +966,7 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPMessage * request)
 
       if (blocksize > G_MAXUINT)
         blocksize = G_MAXUINT;
-      gst_rtsp_media_set_mtu (media, blocksize);
+      gst_rtsp_stream_set_mtu (stream, blocksize);
     }
   }
   return ret;
@@ -1163,8 +1164,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   state->stream = stream;
 
-  /* FIXME set only on this stream */
-  if (!handle_blocksize (media, state->request))
+  /* set blocksize on this stream */
+  if (!handle_blocksize (media, stream, state->request))
     goto invalid_blocksize;
 
   /* update the client transport */
