@@ -1076,6 +1076,8 @@ static void
 watch_destroyed (GstRTSPServer * server)
 {
   GST_DEBUG_OBJECT (server, "source destroyed");
+  g_object_unref (server->socket);
+  server->socket = NULL;
   g_object_unref (server);
 }
 
