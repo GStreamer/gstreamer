@@ -28,7 +28,7 @@
 #include "gstglwindow_x11.h"
 #endif
 #ifdef HAVE_WINDOW_WIN32
-#include "win32/gstglwindow_win32.h"
+#include "gstglwindow_win32.h"
 #endif
 #ifdef HAVE_WINDOW_COCOA
 #include "osx/gstglwindow_cocoa.h"

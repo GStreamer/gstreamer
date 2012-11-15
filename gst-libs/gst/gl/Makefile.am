@@ -2,9 +2,19 @@
 lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
 EXTRA_DIST = \
+	gstglwindow_x11.c \
+	gstglwindow_x11_glx.c \
+	gstglwindow_x11_egl.c \
 	gstglwindow_win32.c \
-	gstglwindow_winCE.c \
-	gstglwindow_cocoa.m
+	gstglwindow_win32_wgl.c \
+	gstglwindow_win32_egl.c \
+	gstglwindow_cocoa.m \
+	gstglwindow_win32.h \
+	gstglwindow_win32_wgl.h \
+	gstglwindow_win32_egl.h \
+	gstglwindow_x11.h \
+	gstglwindow_x11_glx.h \
+	gstglwindow_x11_wgl.h
 
 libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstgldisplay.c \
@@ -21,10 +31,19 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
 #SUBDIRS = 
 if HAVE_WINDOW_WIN32
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_win32.c
+if USE_WGL
+libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_win32_wgl.c
 endif
+if USE_EGL
+libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_win32_egl.c
+endif
+#SUBDIRS += win32
+endif
+
 if HAVE_WINDOW_COCOA
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_cocoa.m
 endif
+
 if HAVE_WINDOW_X11
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglwindow_x11.c
 if USE_GLX

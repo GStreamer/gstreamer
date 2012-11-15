@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2008 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,87 +23,70 @@
 #include "config.h"
 #endif
 
-#undef UNICODE
-#include <windows.h>
-#define UNICODE
+#include "gstglwindow_win32.h"
 
-#include "gstglwindow.h"
-
+#include "gstglwindow_win32_wgl.h"
 
 #define WM_GST_GL_WINDOW_CUSTOM (WM_APP+1)
 #define WM_GST_GL_WINDOW_QUIT (WM_APP+2)
 
-void gst_gl_window_set_pixel_format (GstGLWindow * window);
+void gst_gl_window_set_pixel_format (GstGLWindowWin32 * window);
 LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 
-#define GST_GL_WINDOW_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
+#define GST_GL_WINDOW_WIN32_GET_PRIVATE(o)  \
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_WIN32, GstGLWindowWin32Private))
 
 enum
 {
   PROP_0
 };
 
-struct _GstGLWindowPrivate
+struct _GstGLWindowWin32Private
 {
-  HWND internal_win_id;
-  HDC device;
-  HGLRC gl_context;
-  HGLRC external_gl_context;
-  GstGLWindowCB draw_cb;
-  gpointer draw_data;
-  GstGLWindowCB2 resize_cb;
-  gpointer resize_data;
-  GstGLWindowCB close_cb;
-  gpointer close_data;
-  gboolean is_closed;
-  gboolean visible;
+  GstGLRendererAPI render_api;
+  guintptr external_gl_context;
+  gboolean activate;
+  gboolean activate_result;
 };
 
-G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
+#define GST_CAT_DEFAULT gst_gl_window_x11_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "GstGLWindow"
-
-gboolean _gst_gl_window_debug = FALSE;
-
-void
-gst_gl_window_init_platform ()
-{
-}
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
+#define gst_gl_window_win32_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32, gst_gl_window_win32,
+    GST_GL_TYPE_WINDOW, DEBUG_INIT);
 
 HHOOK hHook;
 
-/* Must be called in the gl thread */
-static void
-gst_gl_window_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
-}
+guintptr gst_gl_window_win32_get_gl_context (GstGLWindow * window);
+gboolean gst_gl_window_win32_activate (GstGLWindow * window, gboolean activate);
+void gst_gl_window_win32_set_window_handle (GstGLWindow * window,
+    guintptr handle);
+void gst_gl_window_win32_draw_unlocked (GstGLWindow * window, guint width,
+    guint height);
+void gst_gl_window_win32_draw (GstGLWindow * window, guint width, guint height);
+void gst_gl_window_win32_run (GstGLWindow * window);
+void gst_gl_window_win32_quit (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data);
+void gst_gl_window_win32_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data);
 
 static void
-gst_gl_window_log_handler (const gchar * domain, GLogLevelFlags flags,
-    const gchar * message, gpointer user_data)
+gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
 {
-  if (_gst_gl_window_debug) {
-    g_log_default_handler (domain, flags, message, user_data);
-  }
-}
-
-static void
-gst_gl_window_class_init (GstGLWindowClass * klass)
-{
-  GObjectClass *obj_class = G_OBJECT_CLASS (klass);
+  GstGLWindowClass *window_class;
   WNDCLASS wc;
   ATOM atom = 0;
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
-  g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
+  window_class = (GstGLWindowClass *) klass;
 
-  obj_class->finalize = gst_gl_window_finalize;
+  g_type_class_add_private (klass, sizeof (GstGLWindowWin32Private));
 
   atom = GetClassInfo (hinstance, "GSTGL", &wc);
 
@@ -123,29 +107,50 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
     atom = RegisterClass (&wc);
 
     if (atom == 0)
-      g_error ("Failed to register window class %lud\n", GetLastError ());
+      GST_WARNING ("Failed to register window class %lud\n", GetLastError ());
   }
+
+  window_class->get_gl_context =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_gl_context);
+  window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_win32_activate);
+  window_class->set_window_handle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_set_window_handle);
+  window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
+  window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
+  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_win32_run);
+  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_win32_quit);
+  window_class->send_message =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_send_message);
 }
 
 static void
-gst_gl_window_init (GstGLWindow * window)
+gst_gl_window_win32_init (GstGLWindowWin32 * window)
 {
-  window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
+  window->priv = GST_GL_WINDOW_WIN32_GET_PRIVATE (window);
 
-  if (g_getenv ("GST_GL_WINDOW_DEBUG") != NULL)
-    _gst_gl_window_debug = TRUE;
-
-  g_log_set_handler ("GstGLWindow", G_LOG_LEVEL_DEBUG,
-      gst_gl_window_log_handler, NULL);
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 }
 
 /* Must be called in the gl thread */
-GstGLWindow *
-gst_gl_window_new (guintptr external_gl_context)
+GstGLWindowWin32 *
+gst_gl_window_win32_new (GstGLRendererAPI render_api,
+    guintptr external_gl_context)
 {
-  GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowWin32 *window = NULL;
 
+  window =
+      GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (render_api,
+          external_gl_context));
+
+  window->priv->render_api = render_api;
+  window->priv->external_gl_context = external_gl_context;
+
+  return window;
+}
+
+gboolean
+gst_gl_window_win32_open_device (GstGLWindowWin32 * window_win32)
+{
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
   static gint x = 0;
@@ -154,112 +159,107 @@ gst_gl_window_new (guintptr external_gl_context)
   x += 20;
   y += 20;
 
-  priv->internal_win_id = 0;
-  priv->device = 0;
-  priv->gl_context = 0;
-  priv->external_gl_context = (HGLRC) external_gl_context;
-  priv->draw_cb = NULL;
-  priv->draw_data = NULL;
-  priv->resize_cb = NULL;
-  priv->resize_data = NULL;
-  priv->close_cb = NULL;
-  priv->close_data = NULL;
-  priv->is_closed = FALSE;
-  priv->visible = FALSE;
+  window_win32->internal_win_id = 0;
+  window_win32->device = 0;
+  window_win32->is_closed = FALSE;
+  window_win32->visible = FALSE;
 
-  priv->internal_win_id = CreateWindowEx (0,
+  window_win32->internal_win_id = CreateWindowEx (0,
       "GSTGL",
       "OpenGL renderer",
       WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW,
-      x, y, 0, 0, (HWND) NULL, (HMENU) NULL, hinstance, window);
+      x, y, 0, 0, (HWND) NULL, (HMENU) NULL, hinstance, window_win32);
 
-  if (!priv->internal_win_id) {
-    g_debug ("failed to create gl window\n");
+  if (!window_win32->internal_win_id) {
+    GST_DEBUG ("failed to create gl window\n");
     goto failure;
   }
 
-  g_debug ("gl window created: %" G_GUINTPTR_FORMAT "\n",
-      (guintptr) priv->internal_win_id);
+  GST_DEBUG ("gl window created: %" G_GUINTPTR_FORMAT "\n",
+      (guintptr) window_win32->internal_win_id);
 
   //device is set in the window_proc
-  if (!priv->device) {
-    g_debug ("failed to create device\n");
+  if (!window_win32->device) {
+    GST_DEBUG ("failed to create device\n");
     goto failure;
   }
 
   ShowCursor (TRUE);
 
-  return window;
+  return TRUE;
 
 failure:
-  g_object_unref (G_OBJECT (window));
-  return NULL;
-}
-
-GQuark
-gst_gl_window_error_quark (void)
-{
-  return g_quark_from_static_string ("gst-gl-window-error");
+  return FALSE;
 }
 
 guintptr
-gst_gl_window_get_internal_gl_context (GstGLWindow * window)
+gst_gl_window_win32_get_gl_context (GstGLWindow * window)
 {
-  GstGLWindowPrivate *priv = window->priv;
-  return (guintptr) priv->gl_context;
+  GstGLWindowWin32Class *window_class;
+
+  window_class = GST_GL_WINDOW_WIN32_GET_CLASS (window);
+
+  return window_class->get_gl_context (GST_GL_WINDOW_WIN32 (window));
+}
+
+static void
+callback_activate (GstGLWindow * window)
+{
+  GstGLWindowWin32Class *window_class;
+  GstGLWindowWin32Private *priv;
+  GstGLWindowWin32 *window_win32;
+
+  window_win32 = GST_GL_WINDOW_WIN32 (window);
+  window_class = GST_GL_WINDOW_WIN32_GET_CLASS (window_win32);
+  priv = window_win32->priv;
+
+  priv->activate_result = window_class->activate (window_win32, priv->activate);
+}
+
+gboolean
+gst_gl_window_win32_activate (GstGLWindow * window, gboolean activate)
+{
+  GstGLWindowWin32 *window_win32;
+  GstGLWindowWin32Private *priv;
+
+  window_win32 = GST_GL_WINDOW_WIN32 (window);
+  priv = window_win32->priv;
+  priv->activate = activate;
+
+  gst_gl_window_win32_send_message (window,
+      GST_GL_WINDOW_CB (callback_activate), window_win32);
+
+  return priv->activate_result;
 }
 
 void
-callback_activate_gl_context (GstGLWindowPrivate * priv)
+gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 {
-  if (!wglMakeCurrent (priv->device, priv->gl_context))
-    g_debug ("failed to activate opengl context %lud\n", GetLastError ());
-}
+  GstGLWindowWin32 *window_win32;
+  HWND parent_id;
 
-void
-callback_inactivate_gl_context (GstGLWindowPrivate * priv)
-{
-  if (!wglMakeCurrent (NULL, NULL))
-    g_debug ("failed to inactivate opengl context %lud\n", GetLastError ());
-}
-
-void
-gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
-{
-  GstGLWindowPrivate *priv = window->priv;
-  if (activate)
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (callback_activate_gl_context), priv);
-  else
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (callback_inactivate_gl_context), priv);
-}
-
-void
-gst_gl_window_set_external_window_id (GstGLWindow * window, guintptr id)
-{
-  GstGLWindowPrivate *priv = window->priv;
+  window_win32 = GST_GL_WINDOW_WIN32 (window);
 
   //retrieve parent if previously set
-  HWND parent_id = GetProp (priv->internal_win_id, "gl_window_parent_id");
+  parent_id = GetProp (window_win32->internal_win_id, "gl_window_parent_id");
 
-  if (priv->visible) {
-    ShowWindow (priv->internal_win_id, SW_HIDE);
-    priv->visible = FALSE;
+  if (window_win32->visible) {
+    ShowWindow (window_win32->internal_win_id, SW_HIDE);
+    window_win32->visible = FALSE;
   }
 
   if (parent_id) {
     WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
-    g_debug ("release parent %" G_GUINTPTR_FORMAT "\n", (guintptr) parent_id);
+    GST_DEBUG ("release parent %" G_GUINTPTR_FORMAT "\n", (guintptr) parent_id);
 
     g_return_if_fail (parent_proc);
 
     SetWindowLongPtr (parent_id, GWLP_WNDPROC, (LONG_PTR) parent_proc);
-    SetParent (priv->internal_win_id, NULL);
+    SetParent (window_win32->internal_win_id, NULL);
 
     RemoveProp (parent_id, "gl_window_parent_proc");
-    RemoveProp (priv->internal_win_id, "gl_window_parent_id");
+    RemoveProp (window_win32->internal_win_id, "gl_window_parent_id");
   }
   //not 0
   if (id) {
@@ -267,143 +267,117 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guintptr id)
         (WNDPROC) GetWindowLongPtr ((HWND) id, GWLP_WNDPROC);
     RECT rect;
 
-    g_debug ("set parent %" G_GUINTPTR_FORMAT "\n", id);
+    GST_DEBUG ("set parent %" G_GUINTPTR_FORMAT "\n", id);
 
-    SetProp (priv->internal_win_id, "gl_window_parent_id", (HWND) id);
-    SetProp ((HWND) id, "gl_window_id", priv->internal_win_id);
+    SetProp (window_win32->internal_win_id, "gl_window_parent_id", (HWND) id);
+    SetProp ((HWND) id, "gl_window_id", window_win32->internal_win_id);
     SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
     SetWindowLongPtr ((HWND) id, GWLP_WNDPROC, (LONG_PTR) sub_class_proc);
 
-    SetWindowLongPtr (priv->internal_win_id, GWL_STYLE, WS_CHILD | WS_MAXIMIZE);
-    SetParent (priv->internal_win_id, (HWND) id);
+    SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
+        WS_CHILD | WS_MAXIMIZE);
+    SetParent (window_win32->internal_win_id, (HWND) id);
 
     //take changes into account: SWP_FRAMECHANGED
     GetClientRect ((HWND) id, &rect);
-    SetWindowPos (priv->internal_win_id, HWND_TOP, rect.left, rect.top,
+    SetWindowPos (window_win32->internal_win_id, HWND_TOP, rect.left, rect.top,
         rect.right, rect.bottom,
         SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
         SWP_FRAMECHANGED | SWP_NOACTIVATE);
-    MoveWindow (priv->internal_win_id, rect.left, rect.top, rect.right,
+    MoveWindow (window_win32->internal_win_id, rect.left, rect.top, rect.right,
         rect.bottom, FALSE);
   } else {
     //no parent so the internal window needs borders and system menu
-    SetWindowLongPtr (priv->internal_win_id, GWL_STYLE,
+    SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
   }
 }
 
-/* Must be called in the gl thread */
-void
-gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
-{
-  GstGLWindowPrivate *priv = window->priv;
-
-  priv->draw_cb = callback;
-  priv->draw_data = data;
-}
-
-/* Must be called in the gl thread */
-void
-gst_gl_window_set_resize_callback (GstGLWindow * window,
-    GstGLWindowCB2 callback, gpointer data)
-{
-  GstGLWindowPrivate *priv = window->priv;
-
-  priv->resize_cb = callback;
-  priv->resize_data = data;
-}
-
-/* Must be called in the gl thread */
-void
-gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
-{
-  GstGLWindowPrivate *priv = window->priv;
-
-  priv->close_cb = callback;
-  priv->close_data = data;
-}
-
-void
-gst_gl_window_draw_unlocked (GstGLWindow * window, gint width, gint height)
-{
-  gst_gl_window_draw (window, width, height);
-}
-
 /* Thread safe */
 void
-gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
+gst_gl_window_win32_draw (GstGLWindow * window, guint width, guint height)
 {
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
-  if (!priv->visible) {
-    HWND parent_id = GetProp (priv->internal_win_id, "gl_window_parent_id");
+  if (!window_win32->visible) {
+    HWND parent_id =
+        GetProp (window_win32->internal_win_id, "gl_window_parent_id");
     /* if no parent the real size has to be set now because this has not been done
      * when at window creation */
     if (!parent_id) {
       RECT rect;
-      GetClientRect (priv->internal_win_id, &rect);
+      GetClientRect (window_win32->internal_win_id, &rect);
       width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
       height +=
           2 * GetSystemMetrics (SM_CYSIZEFRAME) +
           GetSystemMetrics (SM_CYCAPTION);
-      MoveWindow (priv->internal_win_id, rect.left, rect.top, width, height,
-          FALSE);
+      MoveWindow (window_win32->internal_win_id, rect.left, rect.top, width,
+          height, FALSE);
     }
-    ShowWindowAsync (priv->internal_win_id, SW_SHOW);
+    ShowWindowAsync (window_win32->internal_win_id, SW_SHOW);
 
-    priv->visible = TRUE;
+    window_win32->visible = TRUE;
   }
 
-  RedrawWindow (priv->internal_win_id, NULL, NULL,
+  RedrawWindow (window_win32->internal_win_id, NULL, NULL,
       RDW_NOERASE | RDW_INTERNALPAINT | RDW_INVALIDATE);
 }
 
 void
-gst_gl_window_run_loop (GstGLWindow * window)
+gst_gl_window_win32_run (GstGLWindow * window)
 {
-  gboolean running = TRUE;
-  gboolean bRet = FALSE;
+  gint bRet;
   MSG msg;
 
-  g_debug ("begin loop\n");
+  GST_INFO ("begin message loop\n");
 
-  while (running && (bRet = GetMessage (&msg, NULL, 0, 0)) != 0) {
-    if (bRet == -1) {
-      g_error ("Failed to get message %lud\n", GetLastError ());
-      running = FALSE;
+  while (TRUE) {
+    bRet = GetMessage (&msg, NULL, 0, 0);
+    if (bRet == 0)
+      break;
+    else if (bRet == -1) {
+      GST_WARNING ("Failed to get message %lud\n", GetLastError ());
+      break;
     } else {
+      GST_TRACE ("handle message");
       TranslateMessage (&msg);
       DispatchMessage (&msg);
     }
   }
 
-  g_debug ("end loop\n");
+  GST_INFO ("end message loop\n");
 }
 
 /* Thread safe */
 void
-gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
+gst_gl_window_win32_quit (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data)
 {
-  if (window) {
-    GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = PostMessage (priv->internal_win_id, WM_GST_GL_WINDOW_QUIT,
+  GstGLWindowWin32 *window_win32;
+
+  window_win32 = GST_GL_WINDOW_WIN32 (window);
+
+  if (window_win32 && window_win32->internal_win_id) {
+    LRESULT res =
+        PostMessage (window_win32->internal_win_id, WM_GST_GL_WINDOW_QUIT,
         (WPARAM) data, (LPARAM) callback);
+    GST_DEBUG ("end loop requested");
     g_return_if_fail (SUCCEEDED (res));
-    g_debug ("end loop requested\n");
   }
 }
 
 /* Thread safe */
 void
-gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
+gst_gl_window_win32_send_message (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data)
 {
-  if (window) {
-    GstGLWindowPrivate *priv = window->priv;
-    LRESULT res = SendMessage (priv->internal_win_id, WM_GST_GL_WINDOW_CUSTOM,
+  GstGLWindowWin32 *window_win32;
+
+  window_win32 = GST_GL_WINDOW_WIN32 (window);
+
+  if (window_win32) {
+    LRESULT res =
+        SendMessage (window_win32->internal_win_id, WM_GST_GL_WINDOW_CUSTOM,
         (WPARAM) data, (LPARAM) callback);
     g_return_if_fail (SUCCEEDED (res));
   }
@@ -411,128 +385,95 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 
 /* PRIVATE */
 
-void
-gst_gl_window_set_pixel_format (GstGLWindow * window)
-{
-  GstGLWindowPrivate *priv = window->priv;
-  PIXELFORMATDESCRIPTOR pfd;
-  gint pixelformat = 0;
-  gboolean res = FALSE;
-
-  pfd.nSize = sizeof (PIXELFORMATDESCRIPTOR);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cColorBits = 24;
-  pfd.cRedBits = 8;
-  pfd.cRedShift = 0;
-  pfd.cGreenBits = 8;
-  pfd.cGreenShift = 0;
-  pfd.cBlueBits = 8;
-  pfd.cBlueShift = 0;
-  pfd.cAlphaBits = 0;
-  pfd.cAlphaShift = 0;
-  pfd.cAccumBits = 0;
-  pfd.cAccumRedBits = 0;
-  pfd.cAccumGreenBits = 0;
-  pfd.cAccumBlueBits = 0;
-  pfd.cAccumAlphaBits = 0;
-  pfd.cDepthBits = 24;
-  pfd.cStencilBits = 8;
-  pfd.cAuxBuffers = 0;
-  pfd.iLayerType = PFD_MAIN_PLANE;
-  pfd.bReserved = 0;
-  pfd.dwLayerMask = 0;
-  pfd.dwVisibleMask = 0;
-  pfd.dwDamageMask = 0;
-
-  pfd.cColorBits = (BYTE) GetDeviceCaps (priv->device, BITSPIXEL);
-
-  pixelformat = ChoosePixelFormat (priv->device, &pfd);
-
-  g_return_if_fail (pixelformat);
-
-  res = SetPixelFormat (priv->device, pixelformat, &pfd);
-
-  g_return_if_fail (res);
-}
-
 LRESULT CALLBACK
 window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+  GstGLWindowWin32 *window_win32;
+  GstGLWindowWin32Class *window_class;
+  GstGLWindowWin32Private *priv;
+
   if (uMsg == WM_CREATE) {
+    window_win32 =
+        GST_GL_WINDOW_WIN32 (((LPCREATESTRUCT) lParam)->lpCreateParams);
+    window_class = GST_GL_WINDOW_WIN32_GET_CLASS (window_win32);
 
-    GstGLWindow *window =
-        (GstGLWindow *) (((LPCREATESTRUCT) lParam)->lpCreateParams);
-
-    g_debug ("WM_CREATE\n");
-
-    g_assert (window);
+    GST_DEBUG ("WM_CREATE\n");
 
     {
-      GstGLWindowPrivate *priv = window->priv;
-      priv->device = GetDC (hWnd);
-      gst_gl_window_set_pixel_format (window);
-      priv->gl_context = wglCreateContext (priv->device);
+      priv = window_win32->priv;
+      window_win32->device = GetDC (hWnd);
+
+//      gst_gl_window_set_pixel_format (window_win32);
+      window_class->choose_format (window_win32);
+
+      window_class->create_context (window_win32, priv->render_api,
+          priv->external_gl_context);
+
+/*      priv->gl_context = wglCreateContext (priv->device);
       if (priv->gl_context)
-        g_debug ("gl context created: %" G_GUINTPTR_FORMAT "\n",
+        GST_DEBUG ("gl context created: %" G_GUINTPTR_FORMAT "\n",
             (guintptr) priv->gl_context);
       else
-        g_debug ("failed to create glcontext %" G_GUINTPTR_FORMAT ", %lud\n",
+        GST_DEBUG ("failed to create glcontext %" G_GUINTPTR_FORMAT ", %lud\n",
             (guintptr) hWnd, GetLastError ());
-      g_assert (priv->gl_context);
-      ReleaseDC (hWnd, priv->device);
-      if (!wglMakeCurrent (priv->device, priv->gl_context))
-        g_debug ("failed to make opengl context current %" G_GUINTPTR_FORMAT
-            ", %lud\n", (guintptr) hWnd, GetLastError ());
+      g_assert (priv->gl_context);*/
+      ReleaseDC (hWnd, window_win32->device);
 
+      window_class->activate (window_win32, TRUE);
+
+/*      if (!wglMakeCurrent (priv->device, priv->gl_context))
+        GST_DEBUG ("failed to make opengl context current %" G_GUINTPTR_FORMAT
+            ", %lud\n", (guintptr) hWnd, GetLastError ());
+*/
+      if (priv->external_gl_context)
+        window_class->share_context (window_win32, priv->external_gl_context);
+/*
       if (priv->external_gl_context) {
         if (!wglShareLists (priv->external_gl_context, priv->gl_context))
-          g_debug ("failed to share opengl context %" G_GUINTPTR_FORMAT
+          GST_DEBUG ("failed to share opengl context %" G_GUINTPTR_FORMAT
               " with %" G_GUINTPTR_FORMAT "\n", (guintptr) priv->gl_context,
               (guintptr) priv->external_gl_context);
         else
-          g_debug ("share opengl context succeed %" G_GUINTPTR_FORMAT "\n",
+          GST_DEBUG ("share opengl context succeed %" G_GUINTPTR_FORMAT "\n",
               (guintptr) priv->external_gl_context);
-      }
+      }*/
     }
 
-    SetProp (hWnd, "gl_window", window);
+    SetProp (hWnd, "gl_window", window_win32);
 
     return 0;
   } else if (GetProp (hWnd, "gl_window")) {
+    GstGLWindow *window;
 
-    GstGLWindow *window = GetProp (hWnd, "gl_window");
-    GstGLWindowPrivate *priv = NULL;
+    window_win32 = GST_GL_WINDOW_WIN32 (GetProp (hWnd, "gl_window"));
+    window_class = GST_GL_WINDOW_WIN32_GET_CLASS (window_win32);
+    window = GST_GL_WINDOW (window_win32);
+    priv = window_win32->priv;
 
-    g_assert (window);
+    g_assert (window_win32->internal_win_id == hWnd);
 
-    priv = window->priv;
-
-    g_assert (priv);
-
-    g_assert (priv->internal_win_id == hWnd);
-
-    g_assert (!wglGetCurrentContext ()
+/*    g_assert (!wglGetCurrentContext ()
         || priv->gl_context == wglGetCurrentContext ());
-
+*/
     switch (uMsg) {
 
       case WM_SIZE:
       {
-        if (priv->resize_cb) {
-          priv->resize_cb (priv->resize_data, LOWORD (lParam), HIWORD (lParam));
+        if (window->resize) {
+          window->resize (window->resize_data, LOWORD (lParam),
+              HIWORD (lParam));
         }
         break;
       }
 
       case WM_PAINT:
       {
-        if (priv->draw_cb) {
+        if (window->draw) {
           PAINTSTRUCT ps;
           BeginPaint (hWnd, &ps);
-          priv->draw_cb (priv->draw_data);
-          SwapBuffers (priv->device);
+          window->draw (window->draw_data);
+          window_class->swap_buffers (window_win32);
+//          SwapBuffers (priv->device);
           EndPaint (hWnd, &ps);
         }
         break;
@@ -540,17 +481,12 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       case WM_CLOSE:
       {
-        ShowWindowAsync (priv->internal_win_id, SW_HIDE);
+        ShowWindowAsync (window_win32->internal_win_id, SW_HIDE);
 
-        if (priv->close_cb)
-          priv->close_cb (priv->close_data);
+        GST_DEBUG ("WM_CLOSE\n");
 
-        priv->draw_cb = NULL;
-        priv->draw_data = NULL;
-        priv->resize_cb = NULL;
-        priv->resize_data = NULL;
-        priv->close_cb = NULL;
-        priv->close_data = NULL;
+        if (window->close)
+          window->close (window->close_data);
         break;
       }
 
@@ -559,7 +495,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         HWND parent_id = 0;
         GstGLWindowCB destroy_cb = (GstGLWindowCB) lParam;
 
-        g_debug ("WM_CLOSE\n");
+        GST_DEBUG ("WM_GST_GL_WINDOW_QUIT\n");
 
         destroy_cb ((gpointer) wParam);
 
@@ -576,23 +512,27 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           RemoveProp (hWnd, "gl_window_parent_id");
         }
 
-        priv->is_closed = TRUE;
+        window_win32->is_closed = TRUE;
         RemoveProp (hWnd, "gl_window");
 
-        if (!wglMakeCurrent (NULL, NULL))
-          g_debug ("failed to make current %" G_GUINTPTR_FORMAT ", %lud\n",
+        window_class->activate (window_win32, FALSE);
+
+        window_class->destroy_context (window_win32);
+
+/*        if (!wglMakeCurrent (NULL, NULL))
+          GST_DEBUG ("failed to make current %" G_GUINTPTR_FORMAT ", %lud\n",
               (guintptr) hWnd, GetLastError ());
 
         if (priv->gl_context) {
           if (!wglDeleteContext (priv->gl_context))
-            g_debug ("failed to destroy context %" G_GUINTPTR_FORMAT ", %lud\n",
+            GST_DEBUG ("failed to destroy context %" G_GUINTPTR_FORMAT ", %lud\n",
                 (guintptr) priv->gl_context, GetLastError ());
         }
-
-        if (priv->internal_win_id) {
-          if (!DestroyWindow (priv->internal_win_id))
-            g_debug ("failed to destroy window %" G_GUINTPTR_FORMAT ", %lud\n",
-                (guintptr) hWnd, GetLastError ());
+*/
+        if (window_win32->internal_win_id) {
+          if (!DestroyWindow (window_win32->internal_win_id))
+            GST_DEBUG ("failed to destroy window %" G_GUINTPTR_FORMAT
+                ", %lud\n", (guintptr) hWnd, GetLastError ());
         }
 
         PostQuitMessage (0);
@@ -601,15 +541,15 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       case WM_CAPTURECHANGED:
       {
-        g_debug ("WM_CAPTURECHANGED\n");
-        if (priv->draw_cb)
-          priv->draw_cb (priv->draw_data);
+        GST_DEBUG ("WM_CAPTURECHANGED\n");
+        if (window->draw)
+          window->draw (window->draw_data);
         break;
       }
 
       case WM_GST_GL_WINDOW_CUSTOM:
       {
-        if (!priv->is_closed) {
+        if (!window_win32->is_closed) {
           GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
           custom_cb ((gpointer) wParam);
         }
