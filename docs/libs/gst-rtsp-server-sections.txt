@@ -99,8 +99,6 @@ gst_rtsp_media_set_buffer_size
 gst_rtsp_media_get_buffer_size
 gst_rtsp_media_set_multicast_group
 gst_rtsp_media_get_multicast_group
-gst_rtsp_media_get_mtu
-gst_rtsp_media_set_mtu
 
 gst_rtsp_media_prepare
 gst_rtsp_media_unprepare

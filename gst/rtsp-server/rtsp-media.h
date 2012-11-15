@@ -76,7 +76,6 @@ typedef enum {
  * @buffer_size: The UDP buffer size
  * @auth: the authentication service in use
  * @multicast_group: the multicast group to use
- * @mtu: the MTU of the payloaders
  * @element: the data providing element
  * @streams: the different #GstRTSPStream provided by @element
  * @dynamic: list of dynamic elements managed by @element
@@ -114,7 +113,6 @@ struct _GstRTSPMedia {
   guint              buffer_size;
   GstRTSPAuth       *auth;
   GstRTSPAddressPool*pool;
-  guint              mtu;
 
   GstElement        *element;
   GRecMutex          state_lock;
@@ -197,9 +195,6 @@ GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_buffer_size  (GstRTSPMedia *media, guint size);
 guint                 gst_rtsp_media_get_buffer_size  (GstRTSPMedia *media);
-
-void                  gst_rtsp_media_set_mtu          (GstRTSPMedia *media, guint mtu);
-guint                 gst_rtsp_media_get_mtu          (GstRTSPMedia *media);
 
 
 /* prepare the media for playback */
