@@ -118,6 +118,7 @@ gst_alsasink_finalise (GObject * object)
 
   g_free (sink->device);
   g_mutex_clear (&sink->alsa_lock);
+  g_mutex_clear (&sink->delay_lock);
 
   g_mutex_lock (&output_mutex);
   --output_ref;
@@ -255,6 +256,7 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   alsasink->handle = NULL;
   alsasink->cached_caps = NULL;
   g_mutex_init (&alsasink->alsa_lock);
+  g_mutex_init (&alsasink->delay_lock);
 
   g_mutex_lock (&output_mutex);
   if (output_ref == 0) {
@@ -1011,7 +1013,9 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     if (err < 0) {
       GST_DEBUG_OBJECT (asink, "wait error, %d", err);
     } else {
+      GST_DELAY_SINK_LOCK (asink);
       err = snd_pcm_writei (alsa->handle, ptr, cptr);
+      GST_DELAY_SINK_UNLOCK (asink);
     }
 
     GST_DEBUG_OBJECT (asink, "written %d frames out of %d", err, cptr);
@@ -1057,7 +1061,9 @@ gst_alsasink_delay (GstAudioSink * asink)
 
   alsa = GST_ALSA_SINK (asink);
 
+  GST_DELAY_SINK_LOCK (asink);
   res = snd_pcm_delay (alsa->handle, &delay);
+  GST_DELAY_SINK_UNLOCK (asink);
   if (G_UNLIKELY (res < 0)) {
     /* on errors, report 0 delay */
     GST_DEBUG_OBJECT (alsa, "snd_pcm_delay returned %d", res);
