@@ -22,6 +22,43 @@
 
 #include "rtsp-address-pool.h"
 
+GstRTSPAddress *
+gst_rtsp_address_copy (GstRTSPAddress * addr)
+{
+  GstRTSPAddress *copy;
+
+  g_return_val_if_fail (addr != NULL, NULL);
+
+  copy = g_slice_dup (GstRTSPAddress, addr);
+  /* only release to the pool when the original is freed. It's a bit
+   * weird but this will do for now as it avoid us to use refcounting. */
+  copy->pool = NULL;
+  copy->address = g_strdup (copy->address);
+
+  return copy;
+}
+
+static void gst_rtsp_address_pool_release_address (GstRTSPAddressPool * pool,
+    GstRTSPAddress * addr);
+
+void
+gst_rtsp_address_free (GstRTSPAddress * addr)
+{
+  g_return_if_fail (addr != NULL);
+
+  if (addr->pool) {
+    /* unrefs the pool and sets it to NULL */
+    gst_rtsp_address_pool_release_address (addr->pool, addr);
+  }
+  g_free (addr->address);
+  g_slice_free (GstRTSPAddress, addr);
+}
+
+
+G_DEFINE_BOXED_TYPE (GstRTSPAddress, gst_rtsp_address,
+    (GBoxedCopyFunc) gst_rtsp_address_copy,
+    (GBoxedFreeFunc) gst_rtsp_address_free);
+
 GST_DEBUG_CATEGORY_STATIC (rtsp_address_pool_debug);
 #define GST_CAT_DEFAULT rtsp_address_pool_debug
 
@@ -298,35 +335,29 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, gint skip,
  * @pool: a #GstRTSPAddressPool
  * @flags: flags
  * @n_ports: the amount of ports
- * @address: result address
- * @port: result port
- * @ttl: result TTL
  *
  * Take an address and ports from @pool. @flags can be used to control the
  * allocation. @n_ports consecutive ports will be allocated of which the first
  * one can be found in @port.
  *
- * Returns: a pointer that should be used to release the address with
- *   gst_rtsp_address_pool_release_address() after usage or %NULL when no
- *   address could be acquired.
+ * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
+ *   after use or %NULL when no address could be acquired.
  */
-gpointer
+GstRTSPAddress *
 gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
-    GstRTSPAddressFlags flags, gint n_ports, gchar ** address,
-    guint16 * port, guint8 * ttl)
+    GstRTSPAddressFlags flags, gint n_ports)
 {
   GstRTSPAddressPoolPrivate *priv;
   GList *walk, *next;
   AddrRange *result;
+  GstRTSPAddress *addr;
 
   g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool), NULL);
   g_return_val_if_fail (n_ports > 0, NULL);
-  g_return_val_if_fail (address != NULL, NULL);
-  g_return_val_if_fail (port != NULL, NULL);
-  g_return_val_if_fail (ttl != NULL, NULL);
 
   priv = pool->priv;
   result = NULL;
+  addr = NULL;
 
   g_mutex_lock (&priv->lock);
   /* go over available ranges */
@@ -363,13 +394,19 @@ gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
   g_mutex_unlock (&priv->lock);
 
   if (result) {
-    *address = get_address_string (&result->min);
-    *port = result->min.port;
-    *ttl = result->ttl;
+    addr = g_slice_new0 (GstRTSPAddress);
+    addr->pool = g_object_ref (pool);
+    addr->address = get_address_string (&result->min);
+    addr->n_ports = n_ports;
+    addr->port = result->min.port;
+    addr->ttl = result->ttl;
+    addr->priv = result;
 
-    GST_DEBUG_OBJECT (pool, "got address %s:%u ttl %u", *address, *port, *ttl);
+    GST_DEBUG_OBJECT (pool, "got address %s:%u ttl %u", addr->address,
+        addr->port, addr->ttl);
   }
-  return result;
+
+  return addr;
 }
 
 /**
@@ -380,34 +417,44 @@ gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
  * Release a previously acquired address (with
  * gst_rtsp_address_pool_acquire_address()) back into @pool.
  */
-void
-gst_rtsp_address_pool_release_address (GstRTSPAddressPool * pool, gpointer id)
+static void
+gst_rtsp_address_pool_release_address (GstRTSPAddressPool * pool,
+    GstRTSPAddress * addr)
 {
   GstRTSPAddressPoolPrivate *priv;
   GList *find;
+  AddrRange *range;
 
   g_return_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool));
-  g_return_if_fail (id != NULL);
+  g_return_if_fail (addr != NULL);
+  g_return_if_fail (addr->pool == pool);
 
   priv = pool->priv;
+  range = addr->priv;
+
+  /* we don't want to free twice */
+  addr->priv = NULL;
+  addr->pool = NULL;
 
   g_mutex_lock (&priv->lock);
-  find = g_list_find (priv->allocated, id);
+  find = g_list_find (priv->allocated, range);
   if (find == NULL)
     goto not_found;
 
   priv->allocated = g_list_delete_link (priv->allocated, find);
 
   /* FIXME, merge and do something clever */
-  priv->addresses = g_list_prepend (priv->addresses, id);
+  priv->addresses = g_list_prepend (priv->addresses, range);
   g_mutex_unlock (&priv->lock);
+
+  g_object_unref (pool);
 
   return;
 
   /* ERRORS */
 not_found:
   {
-    g_warning ("Released unknown id %p", id);
+    g_warning ("Released unknown address %p", addr);
     g_mutex_unlock (&priv->lock);
     return;
   }

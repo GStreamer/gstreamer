@@ -70,6 +70,8 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
 
   if (trans->transport)
     gst_rtsp_transport_free (trans->transport);
+  if (trans->addr)
+    gst_rtsp_address_free (trans->addr);
 
 #if 0
   if (trans->rtpsource)
@@ -83,6 +85,7 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
  * gst_rtsp_stream_transport_new:
  * @stream: a #GstRTSPStream
  * @tr: (transfer full): a GstRTSPTransport
+ * @addr: (transfer full) (allow none): an optional GstRTSPAddress
  *
  * Create a new #GstRTSPStreamTransport that can be used to manage
  * @stream with transport @tr.
@@ -90,7 +93,8 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
  * Returns: a new #GstRTSPStreamTransport
  */
 GstRTSPStreamTransport *
-gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
+gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr,
+    GstRTSPAddress * addr)
 {
   GstRTSPStreamTransport *trans;
 
@@ -100,6 +104,7 @@ gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
   trans = g_object_new (GST_TYPE_RTSP_STREAM_TRANSPORT, NULL);
   trans->stream = stream;
   trans->transport = tr;
+  trans->addr = addr;
 
   return trans;
 }
@@ -154,13 +159,14 @@ gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamTransport * trans,
  * gst_rtsp_stream_transport_set_transport:
  * @trans: a #GstRTSPStreamTransport
  * @tr: (transfer full): a client #GstRTSPTransport
+ * @addr: (transfer full) (allow none): a ##GstRTSPAddress
  *
- * Set @ct as the client transport. This function takes ownership of
- * the passed @tr.
+ * Set @tr and the optional @addr as the client transport. This function
+ * takes ownership of the passed @tr and @addr.
  */
 void
 gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
-    GstRTSPTransport * tr)
+    GstRTSPTransport * tr, GstRTSPAddress * addr)
 {
   g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
   g_return_if_fail (tr != NULL);
@@ -169,6 +175,9 @@ gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
   if (trans->transport)
     gst_rtsp_transport_free (trans->transport);
   trans->transport = tr;
+  if (trans->addr)
+    gst_rtsp_address_free (trans->addr);
+  trans->addr = addr;
 }
 
 /**

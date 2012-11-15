@@ -23,11 +23,8 @@
 
 GST_START_TEST (test_pool)
 {
-  gpointer id;
   GstRTSPAddressPool *pool;
-  gchar *address;
-  guint16 port;
-  guint8 ttl;
+  GstRTSPAddress *addr;
 
   pool = gst_rtsp_address_pool_new ();
 
@@ -44,23 +41,18 @@ GST_START_TEST (test_pool)
           "233.255.0.0", "233.255.0.0", 5020, 5020, 1));
 
   /* should fail, we can't allocate a block of 256 ports */
-  id = gst_rtsp_address_pool_acquire_address (pool,
-      0, 256, &address, &port, &ttl);
-  fail_unless (id == NULL);
+  addr = gst_rtsp_address_pool_acquire_address (pool, 0, 256);
+  fail_unless (addr == NULL);
 
-  id = gst_rtsp_address_pool_acquire_address (pool,
-      0, 2, &address, &port, &ttl);
-  fail_unless (id != NULL);
+  addr = gst_rtsp_address_pool_acquire_address (pool, 0, 2);
+  fail_unless (addr != NULL);
 
-  gst_rtsp_address_pool_release_address (pool, id);
-  g_free (address);
+  gst_rtsp_address_free (addr);
 
-  id = gst_rtsp_address_pool_acquire_address (pool,
-      0, 4, &address, &port, &ttl);
-  fail_unless (id != NULL);
+  addr = gst_rtsp_address_pool_acquire_address (pool, 0, 4);
+  fail_unless (addr != NULL);
 
-  gst_rtsp_address_pool_release_address (pool, id);
-  g_free (address);
+  gst_rtsp_address_free (addr);
 
   g_object_unref (pool);
 }

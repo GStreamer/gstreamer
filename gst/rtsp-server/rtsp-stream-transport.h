@@ -40,6 +40,7 @@ typedef struct _GstRTSPStreamTransport GstRTSPStreamTransport;
 typedef struct _GstRTSPStreamTransportClass GstRTSPStreamTransportClass;
 
 #include "rtsp-stream.h"
+#include "rtsp-address-pool.h"
 
 typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
 typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
@@ -58,6 +59,7 @@ typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
  * @active: if we are actively sending
  * @timeout: if we timed out
  * @transport: a transport description
+ * @addr: an optional address
  * @rtpsource: the receiver rtp source object
  *
  * A Transport description for stream @idx
@@ -79,6 +81,7 @@ struct _GstRTSPStreamTransport {
   gboolean             timeout;
 
   GstRTSPTransport    *transport;
+  GstRTSPAddress      *addr;
 
   GObject             *rtpsource;
 };
@@ -90,10 +93,12 @@ struct _GstRTSPStreamTransportClass {
 GType                    gst_rtsp_stream_transport_get_type (void);
 
 GstRTSPStreamTransport * gst_rtsp_stream_transport_new           (GstRTSPStream *stream,
-                                                                  GstRTSPTransport *tr);
+                                                                  GstRTSPTransport *tr,
+                                                                  GstRTSPAddress *addr);
 
 void                     gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport *trans,
-                                                                  GstRTSPTransport * tr);
+                                                                  GstRTSPTransport * tr,
+                                                                  GstRTSPAddress *addr);
 
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
                                                                   GstRTSPSendFunc send_rtp,

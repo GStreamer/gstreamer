@@ -33,9 +33,28 @@ G_BEGIN_DECLS
 #define GST_RTSP_ADDRESS_POOL_CAST(obj)         ((GstRTSPAddressPool*)(obj))
 #define GST_RTSP_ADDRESS_POOL_CLASS_CAST(klass) ((GstRTSPAddressPoolClass*)(klass))
 
+typedef struct _GstRTSPAddress GstRTSPAddress;
+typedef struct _GstRTSPAddressClass GstRTSPAddressClass;
+
 typedef struct _GstRTSPAddressPool GstRTSPAddressPool;
 typedef struct _GstRTSPAddressPoolClass GstRTSPAddressPoolClass;
 typedef struct _GstRTSPAddressPoolPrivate GstRTSPAddressPoolPrivate;
+
+struct _GstRTSPAddress {
+  GstRTSPAddressPool *pool;
+
+  gchar *address;
+  guint16 port;
+  gint n_ports;
+  guint8 ttl;
+
+  gpointer priv;
+};
+
+GType gst_rtsp_address_get_type        (void);
+
+GstRTSPAddress * gst_rtsp_address_copy (GstRTSPAddress *addr);
+void             gst_rtsp_address_free (GstRTSPAddress *addr);
 
 typedef enum {
   GST_RTSP_ADDRESS_FLAG_NONE      = 0,
@@ -74,13 +93,9 @@ gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool
                                                               guint16 max_port,
                                                               guint8 ttl);
 
-gpointer               gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
+GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
                                                               GstRTSPAddressFlags flags,
-                                                              gint n_ports,
-                                                              gchar **address,
-                                                              guint16 *port, guint8 *ttl);
-void                   gst_rtsp_address_pool_release_address (GstRTSPAddressPool * pool,
-                                                              gpointer);
+                                                              gint n_ports);
 G_END_DECLS
 
 #endif /* __GST_RTSP_ADDRESS_POOL_H__ */
