@@ -1065,7 +1065,7 @@ _init_classes (void)
   GST_DVM_GET_METHOD (java_lang_integer, intValue, "()I");
 
   /* com.gstreamer.GstAhcCallback */
-  if (gst_ahc_callback_jar) {
+  if (gst_ahc_callback_jar && g_getenv ("TMP")) {
     jclass dex_loader = NULL;
     gchar *path = g_strdup_printf ("%s/GstAhcCallback.jar", g_getenv ("TMP"));
     FILE *fd = fopen (path, "wb");
@@ -1095,7 +1095,10 @@ _init_classes (void)
         jstring optimized_directory = NULL;
 
         dex_path = (*env)->NewStringUTF (env, path);
-        optimized_directory = (*env)->NewStringUTF (env, g_getenv ("TMP"));
+        if (g_getenv ("DEX"))
+          optimized_directory = (*env)->NewStringUTF (env, g_getenv ("DEX"));
+        else
+          optimized_directory = (*env)->NewStringUTF (env, g_getenv ("TMP"));
         (*env)->ExceptionClear (env);
         if (dex_path && optimized_directory) {
           jobject loader;
