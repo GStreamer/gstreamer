@@ -8,7 +8,6 @@ EXTRA_DIST = \
 	gstglwindow_win32.c \
 	gstglwindow_win32_wgl.c \
 	gstglwindow_win32_egl.c \
-	gstglwindow_cocoa.m \
 	gstglwindow_win32.h \
 	gstglwindow_win32_wgl.h \
 	gstglwindow_win32_egl.h \

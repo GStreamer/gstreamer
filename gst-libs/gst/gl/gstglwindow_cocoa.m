@@ -22,9 +22,9 @@
 #include "config.h"
 #endif
 
-#include "gstglwindow.h"
+#include "gstglwindow_cocoa.h"
 
-#import <Cocoa/Cocoa.h>
+#include <Cocoa/Cocoa.h>
 
 
 /* =============================================================*/
@@ -35,13 +35,13 @@
 
 @interface GstGLNSWindow: NSWindow {
   BOOL m_isClosed;
-  GstGLWindowPrivate *m_priv;
+  GstGLWindowCocoa *m_cocoa;
 }
 - (id)initWithContentRect:(NSRect)contentRect
     styleMask: (unsigned int) styleMask
     backing: (NSBackingStoreType) bufferingType
     defer: (BOOL) flag screen: (NSScreen *) aScreen
-    gstWin: (GstGLWindowPrivate *) priv;
+    gstWin: (GstGLWindowCocoa *) window;
 - (void) setClosed;
 - (BOOL) isClosed;
 - (BOOL) canBecomeMainWindow;
@@ -55,11 +55,11 @@
 /* =============================================================*/
 
 @interface GstGLNSOpenGLView: NSOpenGLView {
-  GstGLWindowPrivate *m_priv;
+  GstGLWindowCocoa *m_cocoa;
   gint m_resizeCount;
 }
-- (id) initWithFrame:(NSRect)contentRect pixelFormat:(NSOpenGLPixelFormat *)fmt 
-  private: (GstGLWindowPrivate *) priv;
+- (id) initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect
+    pixelFormat:(NSOpenGLPixelFormat *)fmt;
 @end
 
 
@@ -71,17 +71,17 @@
 
 /* Perform actions in the Application thread */
 @interface AppThreadPerformer : NSObject {
-  GstGLWindowPrivate *m_priv;
+  GstGLWindowCocoa *m_cocoa;
   GstGLWindowCB m_callback;
-  GstGLWindowCB2 m_callback2;
+  GstGLWindowResizeCB m_callback2;
   gpointer m_data;
   gint m_width;
   gint m_height;
 }
-- (id) initWithPrivate: (GstGLWindowPrivate *) priv;
-- (id) initWithCallback: (GstGLWindowCB) callback userData: (gpointer) data;
-- (id) initWithSize: (GstGLWindowCB2) callback userData: (gpointer) data toSize: (NSSize) size private: (GstGLWindowPrivate *) priv;
-- (id) initWithAll: (GstGLWindowCB) callback userData: (gpointer) data private: (GstGLWindowPrivate *) priv;
+- (id) init: (GstGLWindowCocoa *)window;
+- (id) initWithCallback:(GstGLWindowCocoa *)window callback:(GstGLWindowCB)callback userData:(gpointer) data;
+- (id) initWithSize: (GstGLWindowCocoa *)window callback:(GstGLWindowResizeCB)callback userData:(gpointer)data toSize:(NSSize)size;
+- (id) initWithAll: (GstGLWindowCocoa *)window callback:(GstGLWindowCB)callback userData:(gpointer) data;
 - (void) updateWindow;
 - (void) sendToApp;
 - (void) setWindow;
@@ -100,25 +100,35 @@ static BOOL GSRegisterCurrentThread(void) { return TRUE; };
 static void GSUnregisterCurrentThread(void) {};
 #endif
 
-#define GST_GL_WINDOW_GET_PRIVATE(o)  \
-  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
+#define GST_GL_WINDOW_COCOA_GET_PRIVATE(o)  \
+  (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_COCOA, GstGLWindowCocoaPrivate))
 
-enum
-{
-  PROP_0
-};
+#define GST_CAT_DEFAULT gst_gl_window_cocoa_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-struct _GstGLWindowPrivate
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
+#define gst_gl_window_cocoa_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstGLWindowCocoa, gst_gl_window_cocoa, GST_GL_TYPE_WINDOW, DEBUG_INIT);
+
+guintptr gst_gl_window_cocoa_get_gl_context (GstGLWindow * window);
+gboolean gst_gl_window_cocoa_activate (GstGLWindow * window, gboolean activate);
+void gst_gl_window_cocoa_set_window_handle (GstGLWindow * window,
+    guintptr handle);
+void gst_gl_window_cocoa_draw_unlocked (GstGLWindow * window, guint width,
+    guint height);
+void gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height);
+void gst_gl_window_cocoa_run (GstGLWindow * window);
+void gst_gl_window_cocoa_quit (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data);
+void gst_gl_window_cocoa_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data);
+
+struct _GstGLWindowCocoaPrivate
 {
   GstGLNSWindow *internal_win_id;
   NSOpenGLContext *gl_context;
   NSOpenGLContext *external_gl_context;
-  GstGLWindowCB draw_cb;
-  gpointer draw_data;
-  GstGLWindowCB2 resize_cb;
-  gpointer resize_data;
-  GstGLWindowCB close_cb;
-  gpointer close_data;
   gboolean visible;
   NSWindow *parent;
   NSThread *thread;
@@ -126,41 +136,8 @@ struct _GstGLWindowPrivate
   guint source_id;
 };
 
-G_DEFINE_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
-
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "GstGLWindow"
-
-gboolean _gst_gl_window_debug = FALSE;
-
-void gst_gl_window_init_platform ()
-{
-#ifndef GNUSTEP
-  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
-  [NSApplication sharedApplication];
-  
-  [pool release];
-#endif
-}
-
-/* Must be called in the gl thread */
-static void
-gst_gl_window_finalize (GObject * object)
-{
-  G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
-}
-
-static void
-gst_gl_window_log_handler (const gchar * domain, GLogLevelFlags flags,
-    const gchar * message, gpointer user_data)
-{
-  if (_gst_gl_window_debug) {
-    g_log_default_handler (domain, flags, message, user_data);
-  }
-}
-
 gboolean
-gst_gl_window_nsapp_iteration (gpointer data)
+gst_gl_window_cocoa_nsapp_iteration (gpointer data)
 {  
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   
@@ -181,50 +158,58 @@ gst_gl_window_nsapp_iteration (gpointer data)
 }
 
 static void
-gst_gl_window_class_init (GstGLWindowClass * klass)
+gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 {
-  GObjectClass *obj_class = G_OBJECT_CLASS (klass);
-  
-  g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
+  GstGLWindowClass *window_class;
 
-  obj_class->finalize = gst_gl_window_finalize;
+  window_class = (GstGLWindowClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstGLWindowCocoaPrivate));
+
+  window_class->get_gl_context =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_get_gl_context);
+  window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_activate);
+  window_class->set_window_handle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_set_window_handle);
+  window_class->draw_unlocked = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_draw);
+  window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_draw);
+  window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_run);
+  window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_quit);
+  window_class->send_message =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message);
+
+#ifndef GNUSTEP
+  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  [NSApplication sharedApplication];
+  
+  [pool release];
+#endif
 }
 
 static void
-gst_gl_window_init (GstGLWindow * window)
+gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 {
-  window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
-
-  if (g_getenv ("GST_GL_WINDOW_DEBUG") != NULL)
-    _gst_gl_window_debug = TRUE;
-
-  g_log_set_handler ("GstGLWindow", G_LOG_LEVEL_DEBUG,
-      gst_gl_window_log_handler, NULL);
+  window->priv = GST_GL_WINDOW_COCOA_GET_PRIVATE (window);
 }
 
 /* Must be called in the gl thread */
-GstGLWindow *
-gst_gl_window_new (guintptr external_gl_context)
+GstGLWindowCocoa *
+gst_gl_window_cocoa_new (GstGLRendererAPI render_api, guintptr external_gl_context)
 {
-  GstGLWindow *window = g_object_new (GST_GL_TYPE_WINDOW, NULL);
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowCocoa *window = g_object_new (GST_GL_TYPE_WINDOW_COCOA, NULL);
+  GstGLWindowCocoaPrivate *priv = window->priv;
   NSRect rect;
-
-  NSAutoreleasePool *pool = nil;
+  NSAutoreleasePool *pool;
 
   priv->internal_win_id = nil;
   priv->gl_context = nil;
   priv->external_gl_context = (NSOpenGLContext *) external_gl_context;
-  priv->draw_cb = NULL;
-  priv->draw_data = NULL;
-  priv->resize_cb = NULL;
-  priv->resize_data = NULL;
-  priv->close_cb = NULL;
-  priv->close_data = NULL;
   priv->visible = FALSE;
   priv->parent = nil;
   priv->thread = nil;
   priv->running = TRUE;
+
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 
   GSRegisterCurrentThread();
   
@@ -242,72 +227,64 @@ gst_gl_window_new (guintptr external_gl_context)
   priv->internal_win_id =[[GstGLNSWindow alloc] initWithContentRect:rect styleMask: 
     (NSTitledWindowMask | NSClosableWindowMask |
     NSResizableWindowMask | NSMiniaturizableWindowMask)
-    backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: priv];
+    backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window];
 
-  g_debug ("NSWindow id: %lud\n", (gulong) priv->internal_win_id);
+  GST_DEBUG ("NSWindow id: %lud\n", (gulong) priv->internal_win_id);
 
   priv->thread = [NSThread currentThread];
-  
+
   [NSApp setDelegate: priv->internal_win_id];
 
   [pool release];
   
 #ifndef GNUSTEP
-  priv->source_id = g_timeout_add_seconds (1, gst_gl_window_nsapp_iteration, NULL);
+  priv->source_id = g_timeout_add_seconds (1, gst_gl_window_cocoa_nsapp_iteration, NULL);
 #endif
 
   return window;
 }
 
-GQuark
-gst_gl_window_error_quark (void)
-{
-  return g_quark_from_static_string ("gst-gl-window-error");
-}
-
 guintptr
-gst_gl_window_get_internal_gl_context (GstGLWindow * window)
+gst_gl_window_cocoa_get_gl_context (GstGLWindow * window)
 {
-  GstGLWindowPrivate *priv = window->priv;
-  return (guintptr) priv->gl_context;
+  return (guintptr) GST_GL_WINDOW_COCOA (window)->priv->gl_context;
 }
 
-void
-callback_activate_gl_context (GstGLWindowPrivate * priv)
+gboolean
+gst_gl_window_cocoa_activate (GstGLWindow * window, gboolean activate)
 {
-  [priv->gl_context makeCurrentContext];
-}
+  GstGLWindowCocoa *window_cocoa;
+  GstGLWindowCocoaPrivate *priv;
 
-void
-callback_inactivate_gl_context (GstGLWindowPrivate * priv)
-{
-  //FIXME: [priv->gl_context clearCurrentContext];
-}
+  window_cocoa = GST_GL_WINDOW_COCOA (window);
+  priv = window_cocoa->priv;
 
-void
-gst_gl_window_activate_gl_context (GstGLWindow * window, gboolean activate)
-{
-  GstGLWindowPrivate *priv = window->priv;
   if (activate)
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (callback_activate_gl_context), priv);
+    [priv->gl_context makeCurrentContext];
+#if 0
   else
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (callback_inactivate_gl_context), priv);
+    /* FIXME */
+    [priv->gl_context clearCurrentContext];
+#endif
+  return TRUE;
 }
 
 void
-gst_gl_window_set_external_window_id (GstGLWindow * window, guintptr id)
+gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
 {
-  GstGLWindowPrivate *priv = window->priv;
-  
+  GstGLWindowCocoa *window_cocoa;
+  GstGLWindowCocoaPrivate *priv;
+
+  window_cocoa = GST_GL_WINDOW_COCOA (window);
+  priv = window_cocoa->priv;
+
   g_source_remove (priv->source_id);
 
   if (GSRegisterCurrentThread()) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] initWithPrivate:priv];
-    priv->parent = (NSWindow*) id;
+    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
+    priv->parent = (NSWindow*) handle;
     [app_thread_performer performSelectorOnMainThread:@selector(setWindow) 
         withObject:0 waitUntilDone:YES];
 
@@ -316,58 +293,23 @@ gst_gl_window_set_external_window_id (GstGLWindow * window, guintptr id)
     GSUnregisterCurrentThread();
   }
   else
-    g_debug ("failed to register current thread, cannot set external window id\n");
-}
-
-/* Must be called in the gl thread */
-void
-gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
-{
-  GstGLWindowPrivate *priv = window->priv;
-
-  priv->draw_cb = callback;
-  priv->draw_data = data;
-}
-
-/* Must be called in the gl thread */
-void
-gst_gl_window_set_resize_callback (GstGLWindow * window,
-    GstGLWindowCB2 callback, gpointer data)
-{
-  GstGLWindowPrivate *priv = window->priv;
-
-  priv->resize_cb = callback;
-  priv->resize_data = data;
-}
-
-/* Must be called in the gl thread */
-void
-gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
-{
-  GstGLWindowPrivate *priv = window->priv;
-
-  priv->close_cb = callback;
-  priv->close_data = data;
-}
-
-void
-gst_gl_window_draw_unlocked (GstGLWindow * window, gint width, gint height)
-{
-  gst_gl_window_draw (window, width, height);
+    GST_DEBUG ("failed to register current thread, cannot set external window id\n");
 }
 
 /* Thread safe */
 void
-gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
+gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
 {
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowCocoa *window_cocoa;
+  GstGLWindowCocoaPrivate *priv;
+
+  window_cocoa = GST_GL_WINDOW_COCOA (window);
+  priv = window_cocoa->priv;
 
   if (GSRegisterCurrentThread()) {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] initWithPrivate:priv];
+    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
     [app_thread_performer performSelector:@selector(updateWindow) 
       onThread:priv->thread withObject:nil waitUntilDone:YES];
     
@@ -378,27 +320,29 @@ gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
       NSRect mainRect = [[NSScreen mainScreen] visibleFrame];
       NSRect windowRect = [priv->internal_win_id frame];
 
-      g_debug ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x, (int) mainRect.origin.y, 
+      GST_DEBUG ("main screen rect: %d %d %d %d\n", (int) mainRect.origin.x, (int) mainRect.origin.y, 
         (int) mainRect.size.width, (int) mainRect.size.height);
 
       windowRect.origin.x += x;
       windowRect.origin.y += mainRect.size.height > y ? (mainRect.size.height - y) * 0.5 : y;
       windowRect.size.width = width;
       windowRect.size.height = height;
-      [priv->internal_win_id setFrame:windowRect display:NO];
 
-      g_debug ("window rect: %d %d %d %d\n", (int) windowRect.origin.x, (int) windowRect.origin.y, 
+      GST_DEBUG ("window rect: %d %d %d %d\n", (int) windowRect.origin.x, (int) windowRect.origin.y, 
         (int) windowRect.size.width, (int) windowRect.size.height);
 
       x += 20;
       y += 20;
 
 #ifndef GNUSTEP
-      g_debug ("make the window available\n");
+      [priv->internal_win_id setFrame:windowRect display:NO];
+      GST_DEBUG ("make the window available\n");
       [priv->internal_win_id makeMainWindow];
 #endif
-      [priv->internal_win_id orderFront:priv->internal_win_id];
-      //[priv->internal_win_id setViewsNeedDisplay:YES];
+      [app_thread_performer performSelector:@selector(orderFront)
+          onThread:priv->thread withObject:nil waitUntilDone:YES];
+
+      /*[priv->internal_win_id setViewsNeedDisplay:YES]; */
       priv->visible = TRUE;
     }
 
@@ -407,19 +351,23 @@ gst_gl_window_draw (GstGLWindow * window, gint width, gint height)
     GSUnregisterCurrentThread();
   }
   else
-    g_debug ("failed to register current thread, cannot draw\n");
+    GST_DEBUG ("failed to register current thread, cannot draw\n");
 }
 
 void
-gst_gl_window_run_loop (GstGLWindow * window)
+gst_gl_window_cocoa_run (GstGLWindow * window)
 {
-  GstGLWindowPrivate *priv = window->priv;
+  GstGLWindowCocoa *window_cocoa;
+  GstGLWindowCocoaPrivate *priv;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 #ifndef GNUSTEP
   NSRunLoop *run_loop = [NSRunLoop currentRunLoop];
 #endif
 
-  g_debug ("begin loop\n");
+  window_cocoa = GST_GL_WINDOW_COCOA (window);
+  priv = window_cocoa->priv;
+
+  GST_DEBUG ("begin loop\n");
   
   if (priv->internal_win_id != nil) {
 #ifndef GNUSTEP
@@ -428,29 +376,33 @@ gst_gl_window_run_loop (GstGLWindow * window)
 #else
     [NSApp run];
 #endif
-  
+
     [priv->internal_win_id release];
     priv->internal_win_id = nil;
   }
 
   [pool release];
 
-  g_debug ("end loop\n");
+  GST_DEBUG ("end loop\n");
 }
 
 /* Thread safe */
 void
-gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
+gst_gl_window_cocoa_quit (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data)
 {
-  
+  GstGLWindowCocoa *window_cocoa;
+  GstGLWindowCocoaPrivate *priv;
+
+  window_cocoa = GST_GL_WINDOW_COCOA (window);
+  priv = window_cocoa->priv;
+
   if (window) {
     if (GSRegisterCurrentThread() || 1) {
-      GstGLWindowPrivate *priv = window->priv;
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
       
-      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] initWithAll:callback 
-        userData:data private:priv];
+      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
+          initWithAll:window_cocoa callback:callback userData:data];
         
       [app_thread_performer performSelector:@selector(stopApp) onThread:priv->thread 
         withObject:nil waitUntilDone:YES];
@@ -460,22 +412,27 @@ gst_gl_window_quit_loop (GstGLWindow * window, GstGLWindowCB callback,
       GSUnregisterCurrentThread();
     }
     else
-      g_debug ("failed to register current thread, application thread is lost\n");
+      GST_DEBUG ("failed to register current thread, application thread is lost\n");
   }
 }
 
 /* Thread safe */
 void
-gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
+gst_gl_window_cocoa_send_message (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data)
 {
+  GstGLWindowCocoa *window_cocoa;
+  GstGLWindowCocoaPrivate *priv;
+
+  window_cocoa = GST_GL_WINDOW_COCOA (window);
+  priv = window_cocoa->priv;
+
   if (window) {
-    GstGLWindowPrivate *priv = window->priv;
     if (GSRegisterCurrentThread()) {
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] initWithAll:callback 
-        userData:data private:priv];
+      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
+          initWithAll:window_cocoa callback:callback userData:data];
       
       [app_thread_performer performSelector:@selector(sendToApp) onThread:priv->thread
         withObject:nil waitUntilDone:YES];
@@ -485,7 +442,7 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
       GSUnregisterCurrentThread();
     }
     else
-      g_debug ("failed to register current thread, cannot send message\n");
+      GST_DEBUG ("failed to register current thread, cannot send message\n");
   }
 }
 
@@ -502,19 +459,19 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
         styleMask: (unsigned int) styleMask
     backing: (NSBackingStoreType) bufferingType
     defer: (BOOL) flag screen: (NSScreen *) aScreen
-    gstWin: (GstGLWindowPrivate *) priv {
+    gstWin: (GstGLWindowCocoa *) cocoa {
 
   GstGLNSOpenGLView *glView = nil;
   NSOpenGLPixelFormat *fmt = nil;
   NSOpenGLContext *glContext = nil;
   NSOpenGLPixelFormatAttribute attribs[] = {
     NSOpenGLPFADoubleBuffer,
-    NSOpenGLPFADepthSize, 32,
+    NSOpenGLPFAAccumSize, 32,
     0
   };
 
   m_isClosed = NO;
-  m_priv = priv;
+  m_cocoa = cocoa;
 
   self = [super initWithContentRect: contentRect
         styleMask: styleMask backing: bufferingType
@@ -522,26 +479,26 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 
   [self setReleasedWhenClosed:NO];
 
-  g_debug ("initializing GstGLNSWindow\n");
+  GST_DEBUG ("initializing GstGLNSWindow\n");
 
   glView = [GstGLNSOpenGLView alloc];
 
   fmt = [[NSOpenGLPixelFormat alloc] initWithAttributes:attribs];
 
   if (!fmt) {
-    g_warning ("cannot create NSOpenGLPixelFormat");
+    GST_WARNING ("cannot create NSOpenGLPixelFormat");
     return nil;
   }
 
-  glView = [glView initWithFrame:contentRect pixelFormat:fmt private: m_priv];
+  glView = [glView initWithFrame:m_cocoa rect:contentRect pixelFormat:fmt];
   
   [self setContentView:glView];
   
 #ifndef GNUSTEP
   glContext = [[NSOpenGLContext alloc] initWithFormat:fmt 
-    shareContext:m_priv->external_gl_context];
+    shareContext:m_cocoa->priv->external_gl_context];
 
-  g_debug ("NSOpenGL context created: %lud\n", (gulong) glContext);
+  GST_DEBUG ("NSOpenGL context created: %lud\n", (gulong) glContext);
 
   priv->gl_context = glContext;
   
@@ -570,18 +527,18 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
       [[glView openGLContext] setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
     }
   } NS_HANDLER {
-     g_debug ("your back-end does not implement NSOpenglContext::setValues\n");
+     GST_DEBUG ("your back-end does not implement NSOpenglContext::setValues\n");
   }
   NS_ENDHANDLER
 
-  g_debug ("opengl GstGLNSWindow initialized: %d x %d\n",
+  GST_DEBUG ("opengl GstGLNSWindow initialized: %d x %d\n",
     (gint) contentRect.size.width, (gint) contentRect.size.height);
 
   [self setTitle:@"OpenGL renderer"];
   
   [self setBackgroundColor:[NSColor clearColor]];
   
-  [self orderOut:m_priv->internal_win_id];
+  [self orderOut:m_cocoa->priv->internal_win_id];
 
   return self;
 }
@@ -607,11 +564,11 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] 
-    initWithPrivate:m_priv];
+    init:m_cocoa];
     
-  g_debug ("user clicked the close button\n");
+  GST_DEBUG ("user clicked the close button\n");
   
-  [app_thread_performer performSelector:@selector(closeWindow) onThread:m_priv->thread
+  [app_thread_performer performSelector:@selector(closeWindow) onThread:m_cocoa->priv->thread
     withObject:nil waitUntilDone:YES];
   
   [pool release];
@@ -644,11 +601,11 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 
 @implementation GstGLNSOpenGLView
 
-- (id)initWithFrame:(NSRect)contentRect pixelFormat:(NSOpenGLPixelFormat *)fmt private: (GstGLWindowPrivate *) priv  {
+- (id)initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect pixelFormat:(NSOpenGLPixelFormat *)fmt {
   
   self = [super initWithFrame: contentRect pixelFormat: fmt];
   
-  m_priv = priv;
+  m_cocoa = window;
   m_resizeCount = 0;
   
 #ifndef GNUSTEP
@@ -659,18 +616,21 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 - (void)reshape {
+  GstGLWindow *window;
+
+  window = GST_GL_WINDOW (m_cocoa);
 
   if (m_resizeCount % 5 == 0) {
     m_resizeCount = 0;
-    if (m_priv->resize_cb) {
+    if (window->resize) {
       
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
       NSRect bounds = [self bounds];
       AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
-        initWithSize:m_priv->resize_cb userData:m_priv->resize_data 
-        toSize:bounds.size private:m_priv];
-    
-      [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_priv->thread 
+        initWithSize:m_cocoa callback:window->resize userData:window->resize_data 
+        toSize:bounds.size];
+
+      [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_cocoa->priv->thread 
         withObject:nil waitUntilDone:YES];
 
       [pool release];
@@ -692,8 +652,8 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 
 @implementation AppThreadPerformer
 
-- (id) initWithPrivate: (GstGLWindowPrivate *) priv {
-  m_priv = priv;
+- (id) init: (GstGLWindowCocoa *) window {
+  m_cocoa = window;
   m_callback = NULL;
   m_callback2 = NULL;
   m_data = NULL;
@@ -702,8 +662,8 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   return self;
 }
 
-- (id) initWithCallback: (GstGLWindowCB) callback userData: (gpointer) data {
-  m_priv = NULL;
+- (id) initWithCallback:(GstGLWindowCocoa *)window callback:(GstGLWindowCB)callback userData:(gpointer)data {
+  m_cocoa = window;
   m_callback = callback;
   m_callback2 = NULL;
   m_data = data;
@@ -712,9 +672,10 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   return self;
 }
 
-- (id) initWithSize: (GstGLWindowCB2) callback userData: (gpointer) data 
-  toSize: (NSSize) size private: (GstGLWindowPrivate *) priv  {
-  m_priv = priv;
+- (id) initWithSize: (GstGLWindowCocoa *) window
+    callback:(GstGLWindowResizeCB)callback userData:(gpointer)data
+  toSize:(NSSize)size {
+  m_cocoa = window;
   m_callback = NULL;
   m_callback2 = callback;
   m_data = data;
@@ -723,9 +684,9 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   return self;
 }
 
-- (id) initWithAll: (GstGLWindowCB) callback userData: (gpointer) data
-  private: (GstGLWindowPrivate *) priv {
-  m_priv = priv;
+- (id) initWithAll: (GstGLWindowCocoa *) window
+    callback:(GstGLWindowCB) callback userData: (gpointer) data {
+  m_cocoa = window;
   m_callback = callback;
   m_callback2 = NULL;
   m_data = data;
@@ -735,15 +696,15 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 - (void) updateWindow {
-  if (m_priv->running) {
+  if (m_cocoa->priv->running) {
 
-    if (![m_priv->internal_win_id isClosed]) {
+    if (![m_cocoa->priv->internal_win_id isClosed]) {
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
       /* draw opengl scene in the back buffer */
-      m_priv->draw_cb (m_priv->draw_data);
+      GST_GL_WINDOW (m_cocoa)->draw (GST_GL_WINDOW (m_cocoa)->draw_data);
       /* Copy the back buffer to the front buffer */
-      [[[m_priv->internal_win_id contentView] openGLContext] flushBuffer];
+      [[[m_cocoa->priv->internal_win_id contentView] openGLContext] flushBuffer];
 
       [pool release];
     }
@@ -751,36 +712,38 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 - (void) resizeWindow {
-  if (m_priv->running && ![m_priv->internal_win_id isClosed]) {
+  if (m_cocoa->priv->running && ![m_cocoa->priv->internal_win_id isClosed]) {
     m_callback2 (m_data, m_width, m_height);
-    [[[m_priv->internal_win_id contentView] openGLContext] update];
-    m_priv->draw_cb (m_priv->draw_data);
-    [[[m_priv->internal_win_id contentView] openGLContext] flushBuffer];
+    [[[m_cocoa->priv->internal_win_id contentView] openGLContext] update];
+      GST_GL_WINDOW (m_cocoa)->draw (GST_GL_WINDOW (m_cocoa)->draw_data);
+    [[[m_cocoa->priv->internal_win_id contentView] openGLContext] flushBuffer];
   }
 }
 
 - (void) sendToApp {
-  if (m_priv->running && ![m_priv->internal_win_id isClosed])
+  if (m_cocoa->priv->running && ![m_cocoa->priv->internal_win_id isClosed])
     m_callback (m_data);
 }
 
 - (void) setWindow {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-  NSWindow *window = m_priv->parent;
+  NSWindow *window = m_cocoa->priv->parent;
   
-  [m_priv->internal_win_id orderOut:m_priv->internal_win_id];
+  [m_cocoa->priv->internal_win_id orderOut:m_cocoa->priv->internal_win_id];
   
-  [window setContentView: [m_priv->internal_win_id contentView]];
+  [window setContentView: [m_cocoa->priv->internal_win_id contentView]];
 
   [pool release];
 }
 
 - (void) stopApp {
-  m_priv->running = FALSE;
+  NSAutoreleasePool *pool;
+
+  m_cocoa->priv->running = FALSE;
   m_callback (m_data);
  
- #ifdef GNUSTEP
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+#ifdef GNUSTEP
+  pool = [[NSAutoreleasePool alloc] init];
   if ([NSApp isRunning])
     [NSApp stop:self];
   [pool release];
@@ -788,16 +751,18 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 - (void) closeWindow {
-  [m_priv->internal_win_id setClosed];
-  if (m_priv->close_cb) {
-    m_priv->close_cb (m_priv->close_data);
+  GstGLWindow *window;
+
+  window = GST_GL_WINDOW (m_cocoa);
+
+  [m_cocoa->priv->internal_win_id setClosed];
+  if (window->close) {
+    window->close (window->close_data);
   }
-  m_priv->draw_cb = NULL;
-  m_priv->draw_data = NULL;
-  m_priv->resize_cb = NULL;
-  m_priv->resize_data = NULL;
-  m_priv->close_cb = NULL;
-  m_priv->close_data = NULL;
+}
+
+- (void) orderFront {
+  [m_cocoa->priv->internal_win_id orderFront:m_cocoa->priv->internal_win_id];
 }
 
 @end

@@ -31,7 +31,7 @@
 #include "gstglwindow_win32.h"
 #endif
 #ifdef HAVE_WINDOW_COCOA
-#include "osx/gstglwindow_cocoa.h"
+#include "gstglwindow_cocoa.h"
 #endif
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
