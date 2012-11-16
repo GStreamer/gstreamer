@@ -2548,6 +2548,7 @@ gst_rtspsrc_stream_free_udp (GstRTSPStream * stream)
 
   for (i = 0; i < 2; i++) {
     if (stream->udpsrc[i]) {
+      GST_DEBUG ("free UDP source %d for stream %p", i, stream);
       gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
       gst_object_unref (stream->udpsrc[i]);
       stream->udpsrc[i] = NULL;
@@ -4929,6 +4930,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
   /* ERRORS */
 failed:
   {
+    GST_ERROR ("extension gave error %d", res);
     return res;
   }
 }
@@ -5004,6 +5006,7 @@ done:
   /* ERRORS */
 failed:
   {
+    GST_ERROR ("failed to allocate udp ports");
     return GST_RTSP_ERROR;
   }
 }
