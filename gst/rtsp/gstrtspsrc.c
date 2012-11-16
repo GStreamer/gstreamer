@@ -1568,6 +1568,7 @@ again:
       GST_DEBUG_OBJECT (src, "free RTP udpsrc");
       gst_element_set_state (udpsrc0, GST_STATE_NULL);
       gst_object_unref (udpsrc0);
+      udpsrc0 = NULL;
 
       GST_DEBUG_OBJECT (src, "retry %d", count);
       goto again;
@@ -1589,6 +1590,7 @@ again:
     GST_DEBUG_OBJECT (src, "free RTP udpsrc");
     gst_element_set_state (udpsrc0, GST_STATE_NULL);
     gst_object_unref (udpsrc0);
+    udpsrc0 = NULL;
 
     GST_DEBUG_OBJECT (src, "retry %d", count);
     tmp_rtp++;
@@ -1619,6 +1621,7 @@ again:
     GST_DEBUG_OBJECT (src, "free RTP udpsrc");
     gst_element_set_state (udpsrc0, GST_STATE_NULL);
     gst_object_unref (udpsrc0);
+    udpsrc0 = NULL;
 
     GST_DEBUG_OBJECT (src, "free RTCP udpsrc");
     gst_element_set_state (udpsrc1, GST_STATE_NULL);
