@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include "gstmssmanifest.h"
+#include "gsturidownloader.h"
 
 G_BEGIN_DECLS
 
@@ -52,7 +53,15 @@ typedef struct _GstMssDemuxClass GstMssDemuxClass;
 struct _GstMssDemuxStream {
   GstPad *pad;
 
+  GstMssDemux *parent;
+
   GstMssManifestStream *manifest_stream;
+
+  GstUriDownloader *downloader;
+
+  /* Streaming task */
+  GstTask *stream_task;
+  GStaticRecMutex stream_lock;
 };
 
 struct _GstMssDemux {
