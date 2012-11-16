@@ -1247,6 +1247,10 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     gst_sdp_message_free (src->sdp);
     src->sdp = NULL;
   }
+  if (src->start_segment) {
+    gst_event_unref (src->start_segment);
+    src->start_segment = NULL;
+  }
 }
 
 #define PARSE_INT(p, del, res)          \
@@ -1923,11 +1927,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* now create the newsegment */
   GST_DEBUG_OBJECT (src, "Creating newsegment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, src->segment.position, stop);
-
-  /* store the newsegment event so it can be sent from the streaming thread. */
-  if (src->start_segment)
-    gst_event_unref (src->start_segment);
-  src->start_segment = gst_event_new_segment (&src->segment);
 
   /* mark discont */
   GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
@@ -3577,6 +3576,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf;
   gboolean is_rtcp, have_data;
+  GstEvent *event;
 
   /* here we are only interested in data messages */
   have_data = FALSE;
@@ -3706,6 +3706,10 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   if (src->need_activate) {
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
+  }
+  if ((event = src->start_segment) != NULL) {
+    src->start_segment = NULL;
+    gst_rtspsrc_push_event (src, event);
   }
 
   if (src->base_time == -1) {
@@ -6197,6 +6201,11 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
 
       gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
       g_free (hval);
+
+      /* store the newsegment event so it can be sent from the streaming thread. */
+      if (src->start_segment)
+        gst_event_unref (src->start_segment);
+      src->start_segment = gst_event_new_segment (&src->segment);
     }
 
     if (segment->rate != 1.0) {
