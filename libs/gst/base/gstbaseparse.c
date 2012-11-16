@@ -1120,6 +1120,12 @@ gst_base_parse_sink_default (GstBaseParse * parse, GstEvent * event)
       /* See if any bitrate tags were posted */
       gst_base_parse_handle_tag (parse, event);
       break;
+
+    case GST_EVENT_STREAM_START:
+      if (parse->priv->pad_mode != GST_PAD_MODE_PULL)
+        forward_immediate = TRUE;
+      break;
+
     default:
       break;
   }
