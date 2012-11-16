@@ -610,7 +610,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
         if (multifilesink->file != NULL) {
           first_file = FALSE;
-          gst_multi_file_sink_close_file (multifilesink, NULL);
+          gst_multi_file_sink_close_file (multifilesink, buffer);
         }
       }
 
