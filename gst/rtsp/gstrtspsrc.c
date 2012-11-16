@@ -2227,7 +2227,7 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   gchar *name;
   GstPadTemplate *template;
   gint id, ssrc, pt;
-  GList *lstream;
+  GList *ostreams;
   GstRTSPStream *stream;
   gboolean all_added;
 
@@ -2239,11 +2239,31 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   if (sscanf (name, "recv_rtp_src_%u_%u_%u", &id, &ssrc, &pt) != 3)
     goto unknown_stream;
 
-  GST_DEBUG_OBJECT (src, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
+  GST_DEBUG_OBJECT (src, "stream: %u, SSRC %08x, PT %d", id, ssrc, pt);
 
   stream = find_stream (src, &id, (gpointer) find_stream_by_id);
   if (stream == NULL)
     goto unknown_stream;
+
+  /* we'll add it later see below */
+  stream->added = TRUE;
+
+  /* check if we added all streams */
+  all_added = TRUE;
+  for (ostreams = src->streams; ostreams; ostreams = g_list_next (ostreams)) {
+    GstRTSPStream *ostream = (GstRTSPStream *) ostreams->data;
+
+    GST_DEBUG_OBJECT (src, "stream %p, container %d, disabled %d, added %d",
+        ostream, ostream->container, ostream->disabled, ostream->added);
+
+    /* a container stream only needs one pad added. Also disabled streams don't
+     * count */
+    if (!ostream->container && !ostream->disabled && !ostream->added) {
+      all_added = FALSE;
+      break;
+    }
+  }
+  GST_RTSP_STATE_UNLOCK (src);
 
   /* create a new pad we will use to stream to */
   template = gst_static_pad_template_get (&rtptemplate);
@@ -2251,28 +2271,10 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   gst_object_unref (template);
   g_free (name);
 
-  stream->added = TRUE;
   gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
   gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
   gst_pad_set_active (stream->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
-
-  /* check if we added all streams */
-  all_added = TRUE;
-  for (lstream = src->streams; lstream; lstream = g_list_next (lstream)) {
-    stream = (GstRTSPStream *) lstream->data;
-
-    GST_DEBUG_OBJECT (src, "stream %p, container %d, disabled %d, added %d",
-        stream, stream->container, stream->disabled, stream->added);
-
-    /* a container stream only needs one pad added. Also disabled streams don't
-     * count */
-    if (!stream->container && !stream->disabled && !stream->added) {
-      all_added = FALSE;
-      break;
-    }
-  }
-  GST_RTSP_STATE_UNLOCK (src);
 
   if (all_added) {
     GST_DEBUG_OBJECT (src, "We added all streams");
