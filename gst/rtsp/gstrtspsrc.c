@@ -3278,7 +3278,7 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
   gboolean res = TRUE;
 
   /* only streams that have a connection to the outside world */
-  if (stream->srcpad == NULL)
+  if (stream->container || stream->disabled)
     goto done;
 
   if (stream->udpsrc[0]) {
