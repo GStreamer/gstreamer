@@ -532,8 +532,8 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiPictureH264        *RefPicList1[32];
     guint                       RefPicList1_count;
     guint                       nal_length_size;
-    guint                       width;
-    guint                       height;
+    guint                       mb_width;
+    guint                       mb_height;
     gint32                      field_poc[2];           // 0:TopFieldOrderCnt / 1:BottomFieldOrderCnt
     gint32                      poc_msb;                // PicOrderCntMsb
     gint32                      poc_lsb;                // pic_order_cnt_lsb (from slice_header())
@@ -991,6 +991,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     GstVaapiProfile profile;
     GstVaapiChromaType chroma_type;
     gboolean reset_context = FALSE;
+    guint mb_width, mb_height;
 
     profile = get_profile(decoder, sps);
     if (!profile) {
@@ -1016,11 +1017,14 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         priv->chroma_type = chroma_type;
     }
 
-    if (priv->width != sps->width || priv->height != sps->height) {
+    mb_width  = sps->pic_width_in_mbs_minus1 + 1;
+    mb_height = (sps->pic_height_in_map_units_minus1 + 1) <<
+        !sps->frame_mbs_only_flag;
+    if (priv->mb_width != mb_width || priv->mb_height != mb_height) {
         GST_DEBUG("size changed");
-        reset_context = TRUE;
-        priv->width   = sps->width;
-        priv->height  = sps->height;
+        reset_context   = TRUE;
+        priv->mb_width  = mb_width;
+        priv->mb_height = mb_height;
     }
 
     priv->progressive_sequence = sps->frame_mbs_only_flag;
@@ -1038,10 +1042,11 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     if (!reset_context && priv->has_context)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
+    /* XXX: fix surface size when cropping is implemented */
     info.profile    = priv->profile;
     info.entrypoint = priv->entrypoint;
-    info.width      = priv->width;
-    info.height     = priv->height;
+    info.width      = sps->width;
+    info.height     = sps->height;
     info.ref_frames = get_max_dec_frame_buffering(sps);
 
     if (!gst_vaapi_decoder_ensure_context(GST_VAAPI_DECODER(decoder), &info))
@@ -2532,8 +2537,8 @@ fill_picture(
 #define COPY_BFM(a, s, f) \
     pic_param->a.bits.f = (s)->f
 
-    pic_param->picture_width_in_mbs_minus1  = ((priv->width + 15) >> 4)  - 1;
-    pic_param->picture_height_in_mbs_minus1 = ((priv->height + 15) >> 4) - 1;
+    pic_param->picture_width_in_mbs_minus1  = priv->mb_width - 1;
+    pic_param->picture_height_in_mbs_minus1 = priv->mb_height - 1;
     pic_param->frame_num                    = priv->frame_num;
 
     COPY_FIELD(sps, bit_depth_luma_minus8);
@@ -3198,8 +3203,6 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
     priv->RefPicList0_count     = 0;
     priv->RefPicList1_count     = 0;
     priv->nal_length_size       = 0;
-    priv->width                 = 0;
-    priv->height                = 0;
     priv->adapter               = NULL;
     priv->field_poc[0]          = 0;
     priv->field_poc[1]          = 0;
