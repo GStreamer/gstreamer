@@ -134,7 +134,7 @@ payloader_filter (GstPluginFeature * feature, FilterData * data)
 
   fact = GST_ELEMENT_FACTORY_CAST (feature);
 
-  klass = gst_element_factory_get_klass (fact);
+  klass = gst_element_factory_get_metadata (fact, GST_ELEMENT_METADATA_KLASS);
 
   if (strstr (klass, "Decoder"))
     list = &data->decode;
@@ -314,7 +314,8 @@ find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
 
       for (walk = list; walk; walk = walk->next) {
         factory = GST_ELEMENT_FACTORY (walk->data);
-        klass = gst_element_factory_get_klass (factory);
+        klass = gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_KLASS);
         if (strstr (klass, "Parser"))
           /* caps have parsed=true, so skip this parser to avoid loops */
           continue;
