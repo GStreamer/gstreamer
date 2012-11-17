@@ -122,7 +122,8 @@ ges_track_effect_get_props_hashtable (GESTrackObject * self)
         GstElement *child = g_value_get_object (&item);
 
         factory = gst_element_get_factory (child);
-        klass = gst_element_factory_get_klass (factory);
+        klass = gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_KLASS);
 
         GST_DEBUG ("Looking at element '%s' of klass '%s'",
             GST_ELEMENT_NAME (child), klass);
