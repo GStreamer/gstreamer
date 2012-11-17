@@ -107,6 +107,8 @@ struct _GstRTSPClient {
 
   GList *transports;
   GList *sessions;
+
+  guint teardown_response_seq;
 };
 
 struct _GstRTSPClientClass {
