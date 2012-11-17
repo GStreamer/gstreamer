@@ -229,7 +229,8 @@ gst_gl_window_x11_new (GstGLRendererAPI render_api,
 #ifdef HAVE_EGL
   /* try GLX first for Desktop OpenGL */
   if (render_api == GST_GL_RENDERER_API_OPENGL
-      || render_api == GST_GL_RENDERER_API_OPENGL3) {
+      || render_api == GST_GL_RENDERER_API_OPENGL3
+      || render_api == GST_GL_RENDERER_API_ANY) {
     if (!window && user_glx)
       window =
           GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new (render_api,
