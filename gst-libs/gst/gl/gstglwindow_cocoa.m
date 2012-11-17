@@ -588,6 +588,17 @@ gst_gl_window_cocoa_send_message (GstGLWindow * window, GstGLWindowCB callback,
 }
 
 - (void) applicationWillTerminate:(NSNotification *)aNotification {
+#ifdef GNUSTEP
+  /* fixes segfault with gst-launch-1.0 -e ... and sending SIGINT (Ctrl-C)
+   * which causes GNUstep to run a signal handler in the main thread.
+   * However that thread has never been 'registered' with GNUstep so
+   * the autorelease magic of objective-c causes a segfault from accessing
+   * a null NSThread object somewhere deep in GNUstep.
+   *
+   * I put it here because this is the first time we can register the thread.
+   */
+  GSRegisterCurrentThread();
+#endif
 }
 
 @end
