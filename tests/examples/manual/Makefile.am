@@ -40,7 +40,6 @@ EXAMPLES = \
 	appsink \
 	dynformat \
 	effectswitch \
-	testrtpool \
 	norebuffer \
 	playbin \
 	decodebin \
@@ -61,10 +60,14 @@ BUILT_SOURCES = \
 	appsink.c \
 	dynformat.c \
 	effectswitch.c \
-	testrtpool.c \
 	norebuffer.c \
 	playbin.c decodebin.c \
 	playsink.c
+
+if HAVE_PTHREAD
+BUILT_SOURCES += testrtpool.c
+EXAMPLES += testrtpool
+endif
 
 CLEANFILES = core core.* test-registry.* *.gcno *.gcda $(BUILT_SOURCES)
 
