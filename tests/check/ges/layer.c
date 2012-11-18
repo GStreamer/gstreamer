@@ -165,12 +165,18 @@ GST_START_TEST (test_layer_priorities)
   object1 =
       GES_TIMELINE_OBJECT (ges_custom_timeline_source_new (my_fill_track_func,
           NULL));
+  ges_timeline_object_set_supported_formats (object1,
+      GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
   object2 =
       GES_TIMELINE_OBJECT (ges_custom_timeline_source_new (my_fill_track_func,
           NULL));
+  ges_timeline_object_set_supported_formats (object2,
+      GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
   object3 =
       GES_TIMELINE_OBJECT (ges_custom_timeline_source_new (my_fill_track_func,
           NULL));
+  ges_timeline_object_set_supported_formats (object3,
+      GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
   fail_unless (object1 != NULL);
   fail_unless (object2 != NULL);
   fail_unless (object3 != NULL);

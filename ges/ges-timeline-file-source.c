@@ -58,6 +58,7 @@ enum
   PROP_URI,
   PROP_MUTE,
   PROP_IS_IMAGE,
+  PROP_SUPPORTED_FORMATS,
 };
 
 
@@ -86,6 +87,11 @@ ges_timeline_filesource_get_property (GObject * object, guint property_id,
     case PROP_IS_IMAGE:
       g_value_set_boolean (value, priv->is_image);
       break;
+    case PROP_SUPPORTED_FORMATS:
+      g_value_set_flags (value,
+          ges_timeline_object_get_supported_formats (GES_TIMELINE_OBJECT
+              (object)));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -106,6 +112,10 @@ ges_timeline_filesource_set_property (GObject * object, guint property_id,
       break;
     case PROP_IS_IMAGE:
       ges_timeline_filesource_set_is_image (tfs, g_value_get_boolean (value));
+      break;
+    case PROP_SUPPORTED_FORMATS:
+      ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (tfs),
+          g_value_get_flags (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -164,6 +174,14 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
           "Whether the timeline object represents a still image or not",
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  /* Redefine the supported formats property so the default value is UNKNOWN
+   * and not AUDIO | VIDEO */
+  g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
+      g_param_spec_flags ("supported-formats",
+          "Supported formats", "Formats supported by the file",
+          GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   timobj_class->create_track_object =
       ges_timeline_filesource_create_track_object;
   timobj_class->set_max_duration = filesource_set_max_duration;
@@ -183,7 +201,7 @@ extractable_check_id (GType type, const gchar * id)
 static GParameter *
 extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
-  GParameter *params = g_new0 (GParameter, 3);
+  GParameter *params = g_new0 (GParameter, 2);
 
   params[0].name = g_strdup ("uri");
   g_value_init (&params[0].value, G_TYPE_STRING);
@@ -417,12 +435,6 @@ ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
 {
   GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (obj)->priv;
   GESTrackObject *res;
-
-  if (!(ges_timeline_object_get_supported_formats (obj) & track->type)) {
-    GST_DEBUG ("We don't support this track format (caps %" GST_PTR_FORMAT
-        ")", ges_track_get_caps (track));
-    return NULL;
-  }
 
   if (priv->is_image) {
     if (track->type != GES_TRACK_TYPE_VIDEO) {

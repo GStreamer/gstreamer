@@ -65,8 +65,8 @@ static GParameter *
 extractable_get_parameters_from_id (const gchar * id, guint * n_params)
 {
   gchar **func_udata;
-  GParameter *params = g_new0 (GParameter, 2);
-  *n_params = 2;
+  GParameter *params = g_new0 (GParameter, 3);
+  *n_params = 3;
 
   /* We already know that we have a valid ID here */
   func_udata = g_strsplit (id, "!", -1);
@@ -80,6 +80,10 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   g_value_init (&params[1].value, G_TYPE_POINTER);
   g_value_set_pointer (&params[1].value,
       GUINT_TO_POINTER (g_ascii_strtoll (func_udata[1], NULL, 10)));
+
+  params[2].name = g_strdup ("supported-formats");
+  g_value_init (&params[2].value, G_TYPE_ENUM);
+  g_value_set_enum (&params[2].value, GES_TRACK_TYPE_CUSTOM);
 
   g_strfreev (func_udata);
 
@@ -231,7 +235,8 @@ ges_custom_timeline_source_new (GESFillTrackObjectUserFunc func,
 {
   GESCustomTimelineSource *src;
 
-  src = g_object_new (GES_TYPE_CUSTOM_TIMELINE_SOURCE, NULL);
+  src = g_object_new (GES_TYPE_CUSTOM_TIMELINE_SOURCE, "supported-formats",
+      GES_TRACK_TYPE_CUSTOM, NULL);
   src->priv->filltrackobjectfunc = func;
   src->priv->user_data = user_data;
 

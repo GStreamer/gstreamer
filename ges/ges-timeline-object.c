@@ -314,7 +314,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
    */
   properties[PROP_SUPPORTED_FORMATS] = g_param_spec_flags ("supported-formats",
       "Supported formats", "Formats supported by the file",
-      GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
+      GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
 
   g_object_class_install_property (object_class, PROP_SUPPORTED_FORMATS,
@@ -472,6 +472,13 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
   g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+
+  if (!(track->type & object->priv->supportedformats)) {
+    GST_DEBUG ("We don't support this track format (supported: %i caps %"
+        GST_PTR_FORMAT ")", object->priv->supportedformats,
+        ges_track_get_caps (track));
+    return NULL;
+  }
 
   class = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
