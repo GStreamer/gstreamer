@@ -64,17 +64,17 @@ gchar *
 ges_test_file_uri (const gchar * filename)
 {
   gchar *uri;
-  GFile *cfile, *fdir, *f_xptv;
+  GFile *cfile, *fdir, *f;
 
   cfile = g_file_new_for_path (__FILE__);
   fdir = g_file_get_parent (cfile);
 
-  f_xptv = g_file_get_child (fdir, filename);
-  uri = g_file_get_uri (f_xptv);
+  f = g_file_get_child (fdir, filename);
+  uri = g_file_get_uri (f);
 
   g_object_unref (cfile);
   g_object_unref (fdir);
-  g_object_unref (f_xptv);
+  g_object_unref (f);
 
   return uri;
 }
