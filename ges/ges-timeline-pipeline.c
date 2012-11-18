@@ -96,11 +96,11 @@ ges_timeline_pipeline_get_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_AUDIO_SINK:
       g_object_get_property (G_OBJECT (self->priv->playsink), "audio-sink",
-                             value);
+          value);
       break;
     case PROP_VIDEO_SINK:
       g_object_get_property (G_OBJECT (self->priv->playsink), "video-sink",
-                             value);
+          value);
       break;
     case PROP_TIMELINE:
       g_value_set_object (value, self->priv->timeline);
@@ -122,19 +122,19 @@ ges_timeline_pipeline_set_property (GObject * object, guint property_id,
   switch (property_id) {
     case PROP_AUDIO_SINK:
       g_object_set_property (G_OBJECT (self->priv->playsink), "audio-sink",
-                             value);
+          value);
       break;
     case PROP_VIDEO_SINK:
       g_object_set_property (G_OBJECT (self->priv->playsink), "video-sink",
-                             value);
+          value);
       break;
     case PROP_TIMELINE:
       ges_timeline_pipeline_add_timeline (GES_TIMELINE_PIPELINE (object),
-                                          g_value_get_object(value));
+          g_value_get_object (value));
       break;
     case PROP_MODE:
       ges_timeline_pipeline_set_mode (GES_TIMELINE_PIPELINE (object),
-                                      g_value_get_flags(value));
+          g_value_get_flags (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -183,7 +183,7 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
   object_class->set_property = ges_timeline_pipeline_set_property;
 
   /**
-   * GESTimelinePipeline:audio-sink
+   * GESTimelinePipeline:audio-sink:
    *
    * Audio sink for the preview.
    */
@@ -194,7 +194,7 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
       properties[PROP_AUDIO_SINK]);
 
   /**
-   * GESTimelinePipeline:video-sink
+   * GESTimelinePipeline:video-sink:
    *
    * Video sink for the preview.
    */
@@ -205,7 +205,7 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
       properties[PROP_VIDEO_SINK]);
 
   /**
-   * GESTimelinePipeline:timeline
+   * GESTimelinePipeline:timeline:
    *
    * Timeline to use in this pipeline. See also
    * ges_timeline_pipeline_add_timeline() for more info.
@@ -218,7 +218,7 @@ ges_timeline_pipeline_class_init (GESTimelinePipelineClass * klass)
       properties[PROP_TIMELINE]);
 
   /**
-   * GESTimelinePipeline:mode
+   * GESTimelinePipeline:mode:
    *
    * Pipeline mode. See ges_timeline_pipeline_set_mode() for more
    * info.
@@ -384,8 +384,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->priv->
-          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->
+          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
