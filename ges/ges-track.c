@@ -645,8 +645,26 @@ GESTrack *
 ges_track_new (GESTrackType type, GstCaps * caps)
 {
   GESTrack *track;
+  GstCaps *tmpcaps;
 
   track = g_object_new (GES_TYPE_TRACK, "caps", caps, "track-type", type, NULL);
+  if (type == GES_TRACK_TYPE_VIDEO) {
+    tmpcaps = gst_caps_new_empty_simple ("video/x-raw");
+
+    if (gst_caps_is_equal (caps, tmpcaps))
+      ges_track_set_create_element_for_gap_func (track,
+          create_element_for_raw_video_gap);
+
+    gst_caps_unref (tmpcaps);
+  } else if (type == GES_TRACK_TYPE_AUDIO) {
+    tmpcaps = gst_caps_new_empty_simple ("audio/x-raw");
+
+    if (gst_caps_is_equal (caps, tmpcaps))
+      ges_track_set_create_element_for_gap_func (track,
+          create_element_for_raw_audio_gap);
+
+    gst_caps_unref (tmpcaps);
+  }
   gst_caps_unref (caps);
 
   return track;
