@@ -213,7 +213,7 @@ parse_smpte_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
     time->type = GST_RTSP_TIME_END;
     return GST_RTSP_OK;
   } else {
-    if (sscanf (str, "%02d:%2d:%02d", &hours, &mins, &secs) != 3)
+    if (sscanf (str, "%2d:%2d:%2d", &hours, &mins, &secs) != 3)
       return GST_RTSP_EINVAL;
 
     time->type = GST_RTSP_TIME_FRAMES;
