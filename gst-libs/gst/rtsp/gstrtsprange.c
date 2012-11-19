@@ -86,7 +86,9 @@ parse_npt_time (const gchar * str, GstRTSPTime * time)
   } else if (strstr (str, ":")) {
     gint hours, mins;
 
-    sscanf (str, "%2d:%2d:", &hours, &mins);
+    if (sscanf (str, "%2d:%2d:", &hours, &mins) != 2)
+      return GST_RTSP_EINVAL;
+
     str = strchr (str, ':') + 1;
     str = strchr (str, ':') + 1;
     time->type = GST_RTSP_TIME_SECONDS;
