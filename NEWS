@@ -1,16 +1,30 @@
-gst-vaapi NEWS -- summary of changes.  2012-08-DD
+gst-vaapi NEWS -- summary of changes.  2012-12-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.4.0 - DD.Aug.2012
+Version 0.5.0 - DD.Dec.2012
+* Require glib >= 2.31.2
+
+Version 0.4.1 - 20.Nov.2012
+* Add support for H.264 interlaced streams
+* Add support for Wayland 1.0 protocol (Robert Bradford)
+* Add upstream bitstream parsers library (codecparsers)
+* Fix build with the GNU gold linker
+* Fix detection of H.264 picture boundaries
+* Fix memory leak in MPEG-2 decoder for empty user-data packets
+* Fix H.264 decoder with MMCO-based reference picture marking process
+* Decode pending packets when an end-of-stream is received (+Feng Yuan)
+* Use pixel-aspect-ratio from bitstream parsers (Simon Farnsworth)
+
+Version 0.4.0 - 05.Oct.2012
 * Add support for video rotation
 * Add new video display APIs: Wayland and raw DRM for headless pipelines
 * Drop FFmpeg-based decoders, only use codecparsers-based ones
 * Only reset decoder if meaningful caps changed, e.g. size
 * Allocate the minimal number of video surfaces useful for decoding
 * Fix vaapisink to scale video down to fit the screen dimensions
-* Fix vaapidecode crash when trying to release an inexisten lock (Philip Lorenz)
+* Fix vaapidecode crash when trying to release inexistent lock (Philip Lorenz)
 
 Version 0.3.8 - 20.Sep.2012
 * Disable FFmpeg-based decoders by default
