@@ -26,7 +26,7 @@ OVERVIEW
 * The source for the documentation is:
   - one or more .xml files, with the main one being gstreamer-(whatever).xml
   - image files
-    - in .fig
+    - in .svg
     - in .png (and maybe others)
 * We want to generate docs in HTML, PS and PDF
 * We want to use xml to to generate these
@@ -387,7 +387,6 @@ Gtkdoc:
 gtk-doc
 
 Other stuff:
-transfig
 pdftops
 
 DEVHELP INTEGRATION
