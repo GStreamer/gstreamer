@@ -199,9 +199,59 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->max.seconds == 15.001);
   gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=20:34.23-",
+          &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("npt=10:20;34.23-",
+          &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("npt=0:4.23-", &range) == GST_RTSP_EINVAL);
+
+  fail_unless (gst_rtsp_range_parse ("npt=20:12:34.23-21:45:00.01",
+          &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->min.seconds == 72754.23);
+  fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->max.seconds == 78300.01);
+  gst_rtsp_range_free (range);
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_rtsp_range_smpte)
+{
+  GstRTSPTimeRange *range;
+
+  fail_unless (gst_rtsp_range_parse ("smpte=", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("smpte=0", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("smpte=-", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("smpte=-12:09:34",
+          &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("smpte=12:09:34",
+          &range) == GST_RTSP_EINVAL);
+
+  fail_unless (gst_rtsp_range_parse ("smpte=00:00:00-", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_SMPTE);
+  fail_unless (range->min.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->min.seconds == 0.0);
+  fail_unless (range->min.frames == 0.0);
+  fail_unless (range->max.type == GST_RTSP_TIME_END);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte=10:34:23-20:12:09:20.89",
+          &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_SMPTE);
+  fail_unless (range->min.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->min.seconds == 38063.0);
+  fail_unless (range->min.frames == 0.0);
+  fail_unless (range->max.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->max.seconds == 72729.0);
+  fail_unless (range->max.frames == 20.89);
+  gst_rtsp_range_free (range);
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rtsp_suite (void)
@@ -215,6 +265,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_url_components_2);
   tcase_add_test (tc_chain, test_rtsp_url_components_3);
   tcase_add_test (tc_chain, test_rtsp_range_npt);
+  tcase_add_test (tc_chain, test_rtsp_range_smpte);
 
   return s;
 }

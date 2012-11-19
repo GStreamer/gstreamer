@@ -132,16 +132,62 @@ done:
   return res;
 }
 
+
 static GstRTSPResult
 parse_clock_range (const gchar * str, GstRTSPTimeRange * range)
 {
   return GST_RTSP_ENOTIMPL;
 }
 
+/* smpte-time   =   1*2DIGIT ":" 1*2DIGIT ":" 1*2DIGIT [ ":" 1*2DIGIT ]
+ *                     [ "." 1*2DIGIT ]
+ *  hours:minutes:seconds:frames.subframes
+*/
+static GstRTSPResult
+parse_smpte_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
+{
+  gint hours, mins, secs;
+
+  if (str[0] == '\0') {
+    time->type = GST_RTSP_TIME_END;
+    return GST_RTSP_OK;
+  } else {
+    if (sscanf (str, "%02d:%2d:%02d", &hours, &mins, &secs) != 3)
+      return GST_RTSP_EINVAL;
+
+    time->type = GST_RTSP_TIME_FRAMES;
+    time->seconds = ((hours * 60) + mins) * 60 + secs;
+    str = strchr (str, ':');
+    str = strchr (str + 1, ':');
+    str = strchr (str + 1, ':');
+    if (str && (limit == NULL || str < limit))
+      time->frames = gst_strtod (str + 1);
+  }
+  return GST_RTSP_OK;
+}
+
+/* smpte-range  =   smpte-type "=" smpte-time "-" [ smpte-time ]
+ */
 static GstRTSPResult
 parse_smpte_range (const gchar * str, GstRTSPTimeRange * range)
 {
-  return GST_RTSP_ENOTIMPL;
+  GstRTSPResult res;
+  gchar *p;
+
+  range->unit = GST_RTSP_RANGE_SMPTE;
+
+  /* find '-' separator, can't have a single - */
+  p = strstr (str, "-");
+  if (p == NULL || p == str)
+    return GST_RTSP_EINVAL;
+
+  if ((res = parse_smpte_time (str, &range->min, p)) != GST_RTSP_OK)
+    goto done;
+
+  res = parse_smpte_time (p + 1, &range->max, NULL);
+
+done:
+  return res;
 }
 
 /**

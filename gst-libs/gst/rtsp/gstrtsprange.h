@@ -76,25 +76,30 @@ typedef struct _GstRTSPTime GstRTSPTime;
  * @GST_RTSP_TIME_SECONDS: seconds
  * @GST_RTSP_TIME_NOW: now
  * @GST_RTSP_TIME_END: end
+ * @GST_RTSP_TIME_FRAMES: frames and subframes
  *
  * Possible time types.
  */
 typedef enum {
   GST_RTSP_TIME_SECONDS,
   GST_RTSP_TIME_NOW,
-  GST_RTSP_TIME_END
+  GST_RTSP_TIME_END,
+  GST_RTSP_TIME_FRAMES
 } GstRTSPTimeType;
 
 /**
  * GstRTSPTime:
  * @type: the time of the time
- * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS
+ * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS and
+ *           GST_RTSP_TIME_FRAMES
+ * @frames: frames and subframes when @type is GST_RTSP_TIME_FRAMES
  *
  * A time indication.
  */
 struct _GstRTSPTime {
   GstRTSPTimeType type;
   gdouble         seconds;
+  gdouble         frames;
 };
 
 /**
