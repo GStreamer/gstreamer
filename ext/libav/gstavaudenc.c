@@ -35,7 +35,7 @@
 #include "gstav.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"
-#include "gstavenc.h"
+#include "gstavaudenc.h"
 
 #define DEFAULT_AUDIO_BITRATE 128000
 

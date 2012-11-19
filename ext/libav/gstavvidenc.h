@@ -26,7 +26,9 @@
 
 G_BEGIN_DECLS
 
+#include <gst/gst.h>
 #include <gst/video/gstvideoencoder.h>
+#include <libavcodec/avcodec.h>
 
 typedef struct _GstFFMpegVidEnc GstFFMpegVidEnc;
 

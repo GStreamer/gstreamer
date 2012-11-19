@@ -35,72 +35,11 @@
 #include "gstav.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"
+#include "gstavviddec.h"
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 
-typedef struct _GstFFMpegVidDec GstFFMpegVidDec;
-
 #define MAX_TS_MASK 0xff
-
-struct _GstFFMpegVidDec
-{
-  GstVideoDecoder parent;
-
-  GstVideoCodecState *input_state;
-  GstVideoCodecState *output_state;
-
-  /* decoding */
-  AVCodecContext *context;
-  AVFrame *picture;
-  gboolean opened;
-
-  /* current context */
-  enum PixelFormat ctx_pix_fmt;
-  gint ctx_width;
-  gint ctx_height;
-  gint ctx_par_n;
-  gint ctx_par_d;
-  gint ctx_ticks;
-  gint ctx_time_d;
-  gint ctx_time_n;
-  gint ctx_interlaced;
-
-  guint8 *padded;
-  guint padded_size;
-
-  gboolean current_dr;          /* if direct rendering is enabled */
-
-  /* some properties */
-  enum AVDiscard skip_frame;
-  gint lowres;
-  gboolean direct_rendering;
-  gboolean debug_mv;
-  int max_threads;
-
-  gboolean is_realvideo;
-
-  GstCaps *last_caps;
-};
-
-typedef struct _GstFFMpegVidDecClass GstFFMpegVidDecClass;
-
-struct _GstFFMpegVidDecClass
-{
-  GstVideoDecoderClass parent_class;
-
-  AVCodec *in_plugin;
-};
-
-#define GST_TYPE_FFMPEGDEC \
-  (gst_ffmpegviddec_get_type())
-#define GST_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGDEC,GstFFMpegVidDec))
-#define GST_FFMPEGVIDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGDEC,GstFFMpegVidDecClass))
-#define GST_IS_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGDEC))
-#define GST_IS_FFMPEGVIDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEC))
 
 #define DEFAULT_LOWRES			0
 #define DEFAULT_SKIPFRAME		0

@@ -31,76 +31,9 @@
 #include "gstav.h"
 #include "gstavcodecmap.h"
 #include "gstavutils.h"
+#include "gstavauddec.h"
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
-
-typedef struct _GstFFMpegAudDec GstFFMpegAudDec;
-
-#define MAX_TS_MASK 0xff
-
-/* for each incomming buffer we keep all timing info in a structure like this.
- * We keep a circular array of these structures around to store the timing info.
- * The index in the array is what we pass as opaque data (to pictures) and
- * pts (to parsers) so that ffmpeg can remember them for us. */
-typedef struct
-{
-  gint idx;
-  GstClockTime dts;
-  GstClockTime pts;
-  GstClockTime duration;
-  gint64 offset;
-} GstTSInfo;
-
-struct _GstFFMpegAudDec
-{
-  GstElement element;
-
-  /* We need to keep track of our pads, so we do so here. */
-  GstPad *srcpad;
-  GstPad *sinkpad;
-
-  /* decoding */
-  AVCodecContext *context;
-  gboolean opened;
-
-  /* current output format */
-  gint channels, samplerate, depth;
-  GstAudioChannelPosition ffmpeg_layout[64], gst_layout[64];
-
-  gboolean discont;
-  gboolean clear_ts;
-
-  /* for tracking DTS/PTS */
-  GstClockTime next_out;
-
-  /* parsing */
-  gboolean turnoff_parser;      /* used for turning off aac raw parsing
-                                 * See bug #566250 */
-  AVCodecParserContext *pctx;
-  GstBuffer *pcache;
-
-  /* clipping segment */
-  GstSegment segment;
-
-  GstTSInfo ts_info[MAX_TS_MASK + 1];
-  gint ts_idx;
-
-  /* reverse playback queue */
-  GList *queued;
-
-  /* prevent reopening the decoder on GST_EVENT_CAPS when caps are same as last time. */
-  GstCaps *last_caps;
-};
-
-typedef struct _GstFFMpegAudDecClass GstFFMpegAudDecClass;
-
-struct _GstFFMpegAudDecClass
-{
-  GstElementClass parent_class;
-
-  AVCodec *in_plugin;
-  GstPadTemplate *srctempl, *sinktempl;
-};
 
 #define GST_TS_INFO_NONE &ts_info_none
 static const GstTSInfo ts_info_none = { -1, -1, -1, -1 };
@@ -128,17 +61,6 @@ gst_ts_info_get (GstFFMpegAudDec * dec, gint idx)
 
   return &dec->ts_info[idx];
 }
-
-#define GST_TYPE_FFMPEGDEC \
-  (gst_ffmpegauddec_get_type())
-#define GST_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGDEC,GstFFMpegAudDec))
-#define GST_FFMPEGAUDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGDEC,GstFFMpegAudDecClass))
-#define GST_IS_FFMPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGDEC))
-#define GST_IS_FFMPEGAUDDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGDEC))
 
 /* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegauddec_base_init (GstFFMpegAudDecClass * klass);

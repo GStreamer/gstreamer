@@ -10,9 +10,9 @@ libgstlibav_la_SOURCES = gstav.c	\
 			  gstavprotocol.c	\
 			  gstavcodecmap.c	\
 			  gstavutils.c	\
-			  gstavenc.c	\
+			  gstavaudenc.c	\
 			  gstavvidenc.c	\
-			  gstavdec.c	\
+			  gstavauddec.c	\
 			  gstavviddec.c	\
 			  gstavcfg.c	\
 			  gstavdemux.c	\
@@ -40,7 +40,9 @@ noinst_HEADERS = \
 	gstav.h \
 	gstavcodecmap.h \
 	gstavutils.h \
-	gstavenc.h \
+	gstavauddec.h \
+	gstavviddec.h \
+	gstavaudenc.h \
 	gstavvidenc.h \
 	gstavcfg.h \
 	gstavpipe.h
