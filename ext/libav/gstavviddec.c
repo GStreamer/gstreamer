@@ -371,7 +371,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     gst_ffmpegviddec_close (ffmpegdec);
 
     /* and reset the defaults that were set when a context is created */
-    avcodec_get_context_defaults (ffmpegdec->context);
+    avcodec_get_context_defaults3 (ffmpegdec->context, NULL);
   }
 
   /* set buffer functions */

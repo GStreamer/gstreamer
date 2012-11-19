@@ -167,7 +167,7 @@ static void
 gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc)
 {
   /* ffmpeg objects */
-  ffmpegaudenc->context = avcodec_alloc_context ();
+  ffmpegaudenc->context = avcodec_alloc_context3 (NULL);
   ffmpegaudenc->opened = FALSE;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (ffmpegaudenc), TRUE);
@@ -243,7 +243,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   }
 
   /* set defaults */
-  avcodec_get_context_defaults (ffmpegaudenc->context);
+  avcodec_get_context_defaults3 (ffmpegaudenc->context, NULL);
 
   /* if we set it in _getcaps we should set it also in _link */
   ffmpegaudenc->context->strict_std_compliance = -1;

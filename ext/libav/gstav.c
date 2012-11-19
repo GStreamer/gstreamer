@@ -45,7 +45,7 @@ gst_ffmpeg_avcodec_open (AVCodecContext * avctx, AVCodec * codec)
   int ret;
 
   g_static_mutex_lock (&gst_avcodec_mutex);
-  ret = avcodec_open (avctx, codec);
+  ret = avcodec_open2 (avctx, codec, NULL);
   g_static_mutex_unlock (&gst_avcodec_mutex);
 
   return ret;
@@ -69,7 +69,7 @@ gst_ffmpeg_av_find_stream_info (AVFormatContext * ic)
   int ret;
 
   g_static_mutex_lock (&gst_avcodec_mutex);
-  ret = av_find_stream_info (ic);
+  ret = avformat_find_stream_info (ic, NULL);
   g_static_mutex_unlock (&gst_avcodec_mutex);
 
   return ret;

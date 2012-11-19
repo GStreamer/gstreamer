@@ -656,7 +656,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     }
 
     /* now open the mux format */
-    if (av_write_header (ffmpegmux->context) < 0) {
+    if (avformat_write_header (ffmpegmux->context, NULL) < 0) {
       GST_ELEMENT_ERROR (ffmpegmux, LIBRARY, SETTINGS, (NULL),
           ("Failed to write file header - check codec settings"));
       return GST_FLOW_ERROR;

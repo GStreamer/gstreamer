@@ -236,7 +236,7 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
   ffmpegenc->lmax = 31;
   ffmpegenc->max_key_interval = 0;
 
-  gst_ffmpeg_cfg_set_defaults (ffmpegenc);
+  gst_ffmpeg_cfg_set_defaults3 (ffmpegenc, NULL);
 }
 
 static void
@@ -398,7 +398,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
 
   /* set defaults */
-  avcodec_get_context_defaults (ffmpegenc->context);
+  avcodec_get_context_defaults3 (ffmpegenc->context, NULL);
 
   /* if we set it in _getcaps we should set it also in _link */
   ffmpegenc->context->strict_std_compliance = -1;

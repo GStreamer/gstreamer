@@ -750,9 +750,9 @@ gst_ffmpeg_cfg_install_property (GstFFMpegVidEncClass * klass, guint base)
   prop_id = base;
   g_return_if_fail (base > 0);
 
-  ctx = avcodec_alloc_context ();
+  ctx = avcodec_alloc_context3 (NULL);
   if (ctx)
-    avcodec_get_context_defaults (ctx);
+    avcodec_get_context_defaults3 (ctx, NULL);
   else
     g_warning ("could not get context");
 

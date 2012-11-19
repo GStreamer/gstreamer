@@ -203,7 +203,7 @@ gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
   gst_ffmpegdeinterlace_update_passthrough (deinterlace);
 
-  ctx = avcodec_alloc_context ();
+  ctx = avcodec_alloc_context3 (NULL);
   ctx->width = deinterlace->width;
   ctx->height = deinterlace->height;
   ctx->pix_fmt = PIX_FMT_NB;

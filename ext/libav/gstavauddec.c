@@ -313,7 +313,7 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     gst_ffmpegauddec_close (ffmpegdec);
 
     /* and reset the defaults that were set when a context is created */
-    avcodec_get_context_defaults (ffmpegdec->context);
+    avcodec_get_context_defaults3 (ffmpegdec->context, NULL);
   }
 
   /* get size and so */
