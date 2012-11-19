@@ -1088,6 +1088,13 @@ bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
   return ret;
 }
 
+static void
+watch_destroyed (GstRTSPMedia * media)
+{
+  GST_DEBUG_OBJECT (media, "source destroyed");
+  gst_object_unref (media);
+}
+
 /* called from streaming threads */
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
@@ -1188,7 +1195,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   media->source = gst_bus_create_watch (bus);
   gst_object_unref (bus);
 
-  g_source_set_callback (media->source, (GSourceFunc) bus_message, media, NULL);
+  g_source_set_callback (media->source, (GSourceFunc) bus_message,
+      gst_object_ref (media), (GDestroyNotify) watch_destroyed);
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
   media->id = g_source_attach (media->source, klass->context);
@@ -1386,6 +1394,11 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
       success = klass->unprepare (media);
   } else {
     finish_unprepare (media);
+  }
+  if (media->source) {
+    g_source_destroy (media->source);
+    g_source_unref (media->source);
+    media->source = NULL;
   }
   g_rec_mutex_unlock (&media->state_lock);
 

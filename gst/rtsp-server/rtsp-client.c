@@ -230,8 +230,10 @@ gst_rtsp_client_finalize (GObject * obj)
 
   if (client->uri)
     gst_rtsp_url_free (client->uri);
-  if (client->media)
+  if (client->media) {
+    gst_rtsp_media_unprepare (client->media);
     g_object_unref (client->media);
+  }
 
   g_free (client->server_ip);
 
@@ -377,8 +379,10 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
     if (client->uri)
       gst_rtsp_url_free (client->uri);
     client->uri = NULL;
-    if (client->media)
+    if (client->media) {
+      gst_rtsp_media_unprepare (client->media);
       g_object_unref (client->media);
+    }
     client->media = NULL;
 
     if (!client->media_mapping)
