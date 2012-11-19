@@ -81,7 +81,7 @@ parse_npt_time (const gchar * str, GstRTSPTime * time)
 {
   if (strncmp (str, "now", 3) == 0) {
     time->type = GST_RTSP_TIME_NOW;
-  } else if (str[0] == '\0') {
+  } else if (str[0] == '\0' || str[0] == '-') {
     time->type = GST_RTSP_TIME_END;
   } else if (strstr (str, ":")) {
     gint hours, mins;
