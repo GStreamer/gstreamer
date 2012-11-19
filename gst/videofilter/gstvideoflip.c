@@ -68,8 +68,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
-            "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx,xBGR, BGRx, "
-            "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21 }"))
+            "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, xBGR, BGRx, "
+            "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21, "
+            "GRAY8, GRAY16_BE, GRAY16_LE }"))
     );
 
 static GstStaticPadTemplate gst_video_flip_sink_template =
@@ -77,8 +78,9 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV, "
-            "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx,xBGR, BGRx, "
-            "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21 }"))
+            "ARGB, BGRA, ABGR, RGBA, Y444, xRGB, RGBx, xBGR, BGRx, "
+            "RGB, BGR, I420, YV12, IYUV, YUY2, UYVY, YVYU, NV12, NV21, "
+            "GRAY8, GRAY16_BE, GRAY16_LE }"))
     );
 
 #define GST_TYPE_VIDEO_FLIP_METHOD (gst_video_flip_method_get_type())
@@ -1013,6 +1015,9 @@ gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_GRAY8:
+    case GST_VIDEO_FORMAT_GRAY16_BE:
+    case GST_VIDEO_FORMAT_GRAY16_LE:
       vf->process = gst_video_flip_packed_simple;
       break;
     case GST_VIDEO_FORMAT_NV12:
