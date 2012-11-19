@@ -218,12 +218,8 @@ gst_gl_window_x11_new (GstGLRendererAPI render_api,
 {
   GstGLWindowX11 *window = NULL;
   const gchar *user_choice;
-  gboolean user_glx;
-  gboolean user_egl;
 
   user_choice = g_getenv ("GST_GL_PLATFORM");
-  user_glx = !user_choice || g_strstr_len (user_choice, 3, "glx") != NULL;
-  user_egl = !user_choice || g_strstr_len (user_choice, 3, "egl") != NULL;
 
 #ifdef HAVE_GLX
 #ifdef HAVE_EGL
