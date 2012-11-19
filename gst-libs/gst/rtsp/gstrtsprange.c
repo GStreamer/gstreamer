@@ -89,10 +89,13 @@ parse_npt_time (const gchar * str, GstRTSPTime * time)
     if (sscanf (str, "%2d:%2d:", &hours, &mins) != 2)
       return GST_RTSP_EINVAL;
 
-    str = strchr (str, ':') + 1;
-    str = strchr (str, ':') + 1;
+    str = strchr (str, ':');
+    str = strchr (str + 1, ':');
+    if (str == NULL)
+      return GST_RTSP_EINVAL;
+
     time->type = GST_RTSP_TIME_SECONDS;
-    time->seconds = ((hours * 60) + mins) * 60 + gst_strtod (str);
+    time->seconds = ((hours * 60) + mins) * 60 + gst_strtod (str + 1);
   } else {
     time->type = GST_RTSP_TIME_SECONDS;
     time->seconds = gst_strtod (str);
