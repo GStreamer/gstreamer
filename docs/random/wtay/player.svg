@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="646.72247"
+   height="373.33456"
+   id="svg2"
+   version="1.1"
+   inkscape:version="0.48.3.1 r9886"
+   sodipodi:docname="state-diagram.svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="446.39199"
+     inkscape:cy="185.85481"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     borderlayer="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1600"
+     inkscape:window-height="841"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-340.10968,-560.63668)">
+    <g
+       id="g3143"
+       style="fill:none;stroke-width:0.025in"
+       transform="matrix(0.07514786,0,0,0.07514786,301.40853,507.73259)">
+      <!-- Line: box -->
+      <rect
+         id="rect3145"
+         style="fill:#ffff00;stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+         rx="0"
+         height="1795"
+         width="2692"
+         y="3637"
+         x="6188" />
+      <!-- Line: box -->
+      <rect
+         id="rect3147"
+         style="stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+         rx="0"
+         height="3543"
+         width="3921"
+         y="2031"
+         x="5149" />
+      <!-- Line: box -->
+      <rect
+         id="rect3149"
+         style="stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+         rx="0"
+         height="3543"
+         width="2314"
+         y="2031"
+         x="2740" />
+      <!-- Line: box -->
+      <rect
+         id="rect3151"
+         style="stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+         rx="0"
+         height="4960"
+         width="8598"
+         y="708"
+         x="519" />
+      <!-- Line: box -->
+      <rect
+         id="rect3153"
+         style="stroke:#000000;stroke-width:8;stroke-linecap:butt;stroke-linejoin:miter"
+         rx="0"
+         height="1606"
+         width="1842"
+         y="2031"
+         x="708" />
+      <!-- Text -->
+      <text
+         id="text3155"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="4110"
+         x="6519"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">GstPlay</text>
+      <!-- Text -->
+      <text
+         id="text3157"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="4677"
+         x="6803"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- GStreamer (glib2)</text>
+      <!-- Text -->
+      <text
+         id="text3159"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2362"
+         x="5385"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">Bonobo Component</text>
+      <!-- Text -->
+      <text
+         id="text3161"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2834"
+         x="5385"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times"> - sliders/buttons</text>
+      <!-- Text -->
+      <text
+         id="text3163"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="3070"
+         x="5385"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- Gtk/Gnome etc</text>
+      <!-- Text -->
+      <text
+         id="text3165"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="3307"
+         x="5385"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- uses libgstplay</text>
+      <!-- Text -->
+      <text
+         id="text3167"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="992"
+         x="2834"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">GstMediaPlay</text>
+      <!-- Text -->
+      <text
+         id="text3169"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="1228"
+         x="2881"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- app using components</text>
+      <!-- Text -->
+      <text
+         id="text3171"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2267"
+         x="2834"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">Bonobo component</text>
+      <!-- Text -->
+      <text
+         id="text3173"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2740"
+         x="2834"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- playlist etc..</text>
+      <!-- Text -->
+      <text
+         id="text3175"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2267"
+         x="897"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">Other components</text>
+      <!-- Text -->
+      <text
+         id="text3177"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2740"
+         x="897"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- encoder</text>
+      <!-- Text -->
+      <text
+         id="text3179"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="2976"
+         x="897"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- editor</text>
+      <!-- Text -->
+      <text
+         id="text3181"
+         font-size="152"
+         font-weight="normal"
+         font-style="normal"
+         y="3212"
+         x="897"
+         xml:space="preserve"
+         style="font-size:152px;font-style:normal;font-weight:normal;text-anchor:start;fill:#000000;font-family:Times">- ...</text>
+    </g>
+  </g>
+</svg>
