@@ -94,6 +94,8 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo *info,
 GstVideoFormat gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt);
 enum PixelFormat gst_ffmpeg_videoformat_to_pixfmt (GstVideoFormat format);
 
+GstAudioFormat gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt);
+
 /*
  * _formatid_to_caps () is meant for muxers/demuxers, it
  * transforms a name (ffmpeg way of ID'ing these, why don't

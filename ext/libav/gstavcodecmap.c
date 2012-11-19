@@ -1787,6 +1787,29 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
   return caps;
 }
 
+GstAudioFormat
+gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt)
+{
+  switch (sample_fmt) {
+    case AV_SAMPLE_FMT_S16:
+      return GST_AUDIO_FORMAT_S16;
+      break;
+    case AV_SAMPLE_FMT_S32:
+      return GST_AUDIO_FORMAT_S32;
+      break;
+    case AV_SAMPLE_FMT_FLT:
+      return GST_AUDIO_FORMAT_F32;
+      break;
+    case AV_SAMPLE_FMT_DBL:
+      return GST_AUDIO_FORMAT_F64;
+      break;
+    default:
+      /* .. */
+      return GST_AUDIO_FORMAT_UNKNOWN;
+      break;
+  }
+}
+
 /* Convert a FFMPEG Sample Format and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps
@@ -1801,24 +1824,7 @@ gst_ffmpeg_smpfmt_to_caps (enum AVSampleFormat sample_fmt,
   GstCaps *caps = NULL;
   GstAudioFormat format;
 
-  switch (sample_fmt) {
-    case AV_SAMPLE_FMT_S16:
-      format = GST_AUDIO_FORMAT_S16;
-      break;
-    case AV_SAMPLE_FMT_S32:
-      format = GST_AUDIO_FORMAT_S32;
-      break;
-    case AV_SAMPLE_FMT_FLT:
-      format = GST_AUDIO_FORMAT_F32;
-      break;
-    case AV_SAMPLE_FMT_DBL:
-      format = GST_AUDIO_FORMAT_F64;
-      break;
-    default:
-      /* .. */
-      format = GST_AUDIO_FORMAT_UNKNOWN;
-      break;
-  }
+  format = gst_ffmpeg_smpfmt_to_audioformat (sample_fmt);
 
   if (format != GST_AUDIO_FORMAT_UNKNOWN) {
     caps = gst_ff_aud_caps_new (context, codec_id, TRUE, "audio/x-raw",
