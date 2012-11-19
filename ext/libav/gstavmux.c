@@ -89,12 +89,6 @@ enum
 
 enum
 {
-  ARG_0,
-  /* FILL ME */
-};
-
-enum
-{
   PROP_0,
   PROP_PRELOAD,
   PROP_MAXDELAY

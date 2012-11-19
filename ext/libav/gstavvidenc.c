@@ -56,13 +56,13 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_BIT_RATE,
-  ARG_GOP_SIZE,
-  ARG_ME_METHOD,
-  ARG_BUFSIZE,
-  ARG_RTP_PAYLOAD_SIZE,
-  ARG_CFG_BASE
+  PROP_0,
+  PROP_BIT_RATE,
+  PROP_GOP_SIZE,
+  PROP_ME_METHOD,
+  PROP_BUFSIZE,
+  PROP_RTP_PAYLOAD_SIZE,
+  PROP_CFG_BASE
 };
 
 #define GST_TYPE_ME_METHOD (gst_ffmpegvidenc_me_method_get_type())
@@ -178,30 +178,30 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
 
   /* FIXME: could use -1 for a sensible per-codec default based on
    * e.g. input resolution and framerate */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BIT_RATE,
       g_param_spec_int ("bitrate", "Bit Rate",
           "Target Video Bitrate", 0, G_MAXINT, DEFAULT_VIDEO_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_GOP_SIZE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_GOP_SIZE,
       g_param_spec_int ("gop-size", "GOP Size",
           "Number of frames within one GOP", 0, G_MAXINT,
           DEFAULT_VIDEO_GOP_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ME_METHOD,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ME_METHOD,
       g_param_spec_enum ("me-method", "ME Method", "Motion Estimation Method",
           GST_TYPE_ME_METHOD, ME_EPZS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BUFSIZE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BUFSIZE,
       g_param_spec_int ("buffer-size", "Buffer Size",
           "Size of the video buffers", 0, G_MAXINT, 0,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      ARG_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
+      PROP_RTP_PAYLOAD_SIZE, g_param_spec_int ("rtp-payload-size",
           "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* register additional properties, possibly dependent on the exact CODEC */
-  gst_ffmpeg_cfg_install_property (klass, ARG_CFG_BASE);
+  gst_ffmpeg_cfg_install_property (klass, PROP_CFG_BASE);
 
   venc_class->stop = gst_ffmpegvidenc_stop;
   venc_class->finish = gst_ffmpegvidenc_finish;
@@ -835,18 +835,18 @@ gst_ffmpegvidenc_set_property (GObject * object,
 
   /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
-    case ARG_BIT_RATE:
+    case PROP_BIT_RATE:
       ffmpegenc->bitrate = g_value_get_int (value);
       break;
-    case ARG_GOP_SIZE:
+    case PROP_GOP_SIZE:
       ffmpegenc->gop_size = g_value_get_int (value);
       break;
-    case ARG_ME_METHOD:
+    case PROP_ME_METHOD:
       ffmpegenc->me_method = g_value_get_enum (value);
       break;
-    case ARG_BUFSIZE:
+    case PROP_BUFSIZE:
       break;
-    case ARG_RTP_PAYLOAD_SIZE:
+    case PROP_RTP_PAYLOAD_SIZE:
       ffmpegenc->rtp_payload_size = g_value_get_int (value);
       break;
     default:
@@ -867,19 +867,19 @@ gst_ffmpegvidenc_get_property (GObject * object,
   ffmpegenc = (GstFFMpegVidEnc *) (object);
 
   switch (prop_id) {
-    case ARG_BIT_RATE:
+    case PROP_BIT_RATE:
       g_value_set_int (value, ffmpegenc->bitrate);
       break;
-    case ARG_GOP_SIZE:
+    case PROP_GOP_SIZE:
       g_value_set_int (value, ffmpegenc->gop_size);
       break;
-    case ARG_ME_METHOD:
+    case PROP_ME_METHOD:
       g_value_set_enum (value, ffmpegenc->me_method);
       break;
-    case ARG_BUFSIZE:
+    case PROP_BUFSIZE:
       g_value_set_int (value, ffmpegenc->buffer_size);
       break;
-    case ARG_RTP_PAYLOAD_SIZE:
+    case PROP_RTP_PAYLOAD_SIZE:
       g_value_set_int (value, ffmpegenc->rtp_payload_size);
       break;
     default:

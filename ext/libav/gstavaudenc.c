@@ -47,10 +47,10 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_BIT_RATE,
-  ARG_BUFSIZE,
-  ARG_RTP_PAYLOAD_SIZE,
+  PROP_0,
+  PROP_BIT_RATE,
+  PROP_BUFSIZE,
+  PROP_RTP_PAYLOAD_SIZE,
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
@@ -151,7 +151,7 @@ gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass)
   gobject_class->get_property = gst_ffmpegaudenc_get_property;
 
   /* FIXME: could use -1 for a sensible per-codec defaults */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_BIT_RATE,
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BIT_RATE,
       g_param_spec_int ("bitrate", "Bit Rate",
           "Target Audio Bitrate", 0, G_MAXINT, DEFAULT_AUDIO_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -657,12 +657,12 @@ gst_ffmpegaudenc_set_property (GObject * object,
 
   /* Check the argument id to see which argument we're setting. */
   switch (prop_id) {
-    case ARG_BIT_RATE:
+    case PROP_BIT_RATE:
       ffmpegaudenc->bitrate = g_value_get_int (value);
       break;
-    case ARG_BUFSIZE:
+    case PROP_BUFSIZE:
       break;
-    case ARG_RTP_PAYLOAD_SIZE:
+    case PROP_RTP_PAYLOAD_SIZE:
       ffmpegaudenc->rtp_payload_size = g_value_get_int (value);
       break;
     default:
@@ -682,14 +682,14 @@ gst_ffmpegaudenc_get_property (GObject * object,
   ffmpegaudenc = (GstFFMpegAudEnc *) (object);
 
   switch (prop_id) {
-    case ARG_BIT_RATE:
+    case PROP_BIT_RATE:
       g_value_set_int (value, ffmpegaudenc->bitrate);
       break;
       break;
-    case ARG_BUFSIZE:
+    case PROP_BUFSIZE:
       g_value_set_int (value, ffmpegaudenc->buffer_size);
       break;
-    case ARG_RTP_PAYLOAD_SIZE:
+    case PROP_RTP_PAYLOAD_SIZE:
       g_value_set_int (value, ffmpegaudenc->rtp_payload_size);
       break;
     default:
