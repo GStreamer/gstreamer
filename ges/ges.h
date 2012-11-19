@@ -49,6 +49,8 @@
 #include <ges/ges-asset-file-source.h>
 #include <ges/ges-project.h>
 #include <ges/ges-extractable.h>
+#include <ges/ges-base-xml-formatter.h>
+#include <ges/ges-xml-formatter.h>
 
 #include <ges/ges-track.h>
 #include <ges/ges-track-object.h>

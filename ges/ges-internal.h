@@ -28,6 +28,7 @@
 #include "ges-track-object.h"
 
 #include "ges-asset.h"
+#include "ges-base-xml-formatter.h"
 
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
@@ -103,7 +104,11 @@ ges_extractable_get_real_extractable_type_for_id (GType type, const gchar * id);
 
 gboolean ges_extractable_register_metas          (GType extractable_type, GESAsset *asset);
 
-/* GESFormatter internal methods */
+/************************************************
+ *                                              *
+ *        GESFormatter internal methods         *
+ *                                              *
+ ************************************************/
 void
 ges_formatter_set_project                        (GESFormatter *formatter,
                                                   GESProject *project);
@@ -111,12 +116,92 @@ GESProject *
 ges_formatter_get_project                        (GESFormatter *formatter);
 GESAsset * _find_formatter_asset_for_uri         (const gchar *uri);
 
-/* GESProject internal methods */
+
+
+/************************************************
+ *                                              *
+ *        GESProject internal methods           *
+ *                                              *
+ ************************************************/
+
+/* FIXME This should probably become public, but we need to make sure it
+ * is the right API before doing so*/
 gboolean ges_project_set_loaded                  (GESProject * project,
                                                   GESFormatter *formatter);
 gchar * ges_project_try_updating_id              (GESProject *self,
                                                   GESAsset *asset,
                                                   GError *error);
 
-void _init_formatter_assets                      (void);
-#endif
+/************************************************
+ *                                              *
+ *   GESBaseXmlFormatter internal methods       *
+ *                                              *
+ ************************************************/
+
+/* FIXME GESBaseXmlFormatter is all internal for now, the API is not stable
+ * fo now, so do not expose it */
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_timeline_object (GESBaseXmlFormatter * self,
+                                                                 const gchar *id,
+                                                                 const char *asset_id,
+                                                                 GType type,
+                                                                 GstClockTime start,
+                                                                 GstClockTime inpoint,
+                                                                 GstClockTime duration,
+                                                                 gdouble rate,
+                                                                 guint layer_prio,
+                                                                 GESTrackType track_types,
+                                                                 GstStructure *properties,
+                                                                 const gchar *metadatas,
+                                                                 GError **error);
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_asset        (GESBaseXmlFormatter * self,
+                                                                 const gchar * id,
+                                                                 GType extractable_type,
+                                                                 GstStructure *properties,
+                                                                 const gchar *metadatas,
+                                                                 GError **error);
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_layer           (GESBaseXmlFormatter *self,
+                                                                 GType extractable_type,
+                                                                 guint priority,
+                                                                 GstStructure *properties,
+                                                                 const gchar *metadatas,
+                                                                 GError **error);
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_track           (GESBaseXmlFormatter *self,
+                                                                 GESTrackType track_type,
+                                                                 GstCaps *caps,
+                                                                 const gchar *id,
+                                                                 GstStructure *properties,
+                                                                 const gchar *metadatas,
+                                                                 GError **error);
+void ges_base_xml_formatter_add_encoding_profile               (GESBaseXmlFormatter * self,
+                                                                 const gchar *type,
+                                                                 const gchar *parent,
+                                                                 const gchar * name,
+                                                                 const gchar * description,
+                                                                 GstCaps * format,
+                                                                 const gchar * preset,
+                                                                 const gchar * preset_name,
+                                                                 guint id,
+                                                                 guint presence,
+                                                                 GstCaps * restriction,
+                                                                 guint pass,
+                                                                 gboolean variableframerate,
+                                                                 GstStructure * properties,
+                                                                 GError ** error);
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_object    (GESBaseXmlFormatter *self,
+                                                                 GType effect_type,
+                                                                 const gchar *asset_id,
+                                                                 const gchar * track_id,
+                                                                 const gchar *timeline_obj_id,
+                                                                 GstStructure *children_properties,
+                                                                 GstStructure *properties,
+                                                                 const gchar *metadatas,
+                                                                 GError **error);
+G_GNUC_INTERNAL void set_property_foreach                       (GQuark field_id,
+                                                                 const GValue * value,
+                                                                 GObject * object);;
+
+/* Function to initialise GES */
+G_GNUC_INTERNAL void _init_standard_transition_assets        (void);
+G_GNUC_INTERNAL void _init_formatter_assets                  (void);
+
+#endif /* __GES_INTERNAL_H__ */

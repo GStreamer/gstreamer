@@ -1,0 +1,955 @@
+/* Gstreamer Editing Services
+ *
+ * Copyright (C) <2012> Thibault Saunier <thibault.saunier@collabora.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#include "ges.h"
+#include "ges-internal.h"
+
+/* TODO:
+ *  + Handle Groups
+ **/
+#define parent_class ges_base_xml_formatter_parent_class
+G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
+    GES_TYPE_FORMATTER);
+
+#define _GET_PRIV(o)\
+  (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_BASE_XML_FORMATTER, GESBaseXmlFormatterPrivate))
+
+typedef struct PendingEffects
+{
+  gchar *track_id;
+  GESTrackObject *tckobj;
+  GstStructure *children_properties;
+  GstStructure *properties;
+
+} PendingEffects;
+
+typedef struct PendingTimelineObject
+{
+  gchar *id;
+  gdouble rate;
+  guint layer_prio;
+  GstClockTime start;
+  GstClockTime inpoint;
+  GESAsset *asset;
+  GstClockTime duration;
+  GESTrackType track_types;
+  GESTimelineLayer *layer;
+
+  GstStructure *properties;
+  gchar *metadatas;
+
+  GList *effects;
+
+  /* TODO Implement asset effect management
+   * PendingTrackObjects *track_objects; */
+} PendingTimelineObject;
+
+typedef struct LayerEntry
+{
+  GESTimelineLayer *layer;
+  gboolean auto_trans;
+} LayerEntry;
+
+typedef struct PendingAsset
+{
+  GESFormatter *formatter;
+  gchar *metadatas;
+  GstStructure *properties;
+} PendingAsset;
+
+struct _GESBaseXmlFormatterPrivate
+{
+  GMarkupParseContext *parsecontext;
+  gboolean check_only;
+
+  /* Asset.id -> PendingTimelineObject */
+  GHashTable *assetid_pendingtlobjs;
+
+  /* TimelineObject.ID -> Pending */
+  GHashTable *tlobjid_pendings;
+
+  /* TimelineObject.ID -> TimelineObject */
+  GHashTable *timeline_objects;
+
+  /* ID -> track */
+  GHashTable *tracks;
+
+  /* layer.prio -> LayerEntry */
+  GHashTable *layers;
+
+  /* List of asset waited to be created */
+  GList *pending_assets;
+};
+
+static void
+_free_layer_entry (LayerEntry * entry)
+{
+  gst_object_unref (entry->layer);
+  g_slice_free (LayerEntry, entry);
+}
+
+/*
+enum
+{
+  PROP_0,
+  PROP_LAST
+};
+static GParamSpec *properties[PROP_LAST];
+
+enum
+{
+  LAST_SIGNAL
+};
+static guint signals[LAST_SIGNAL];
+*/
+
+static GMarkupParseContext *
+create_parser_context (GESBaseXmlFormatter * self, const gchar * uri,
+    GError ** error)
+{
+  GFile *file;
+  gsize xmlsize;
+  gchar *xmlcontent;
+  GMarkupParseContext *parsecontext = NULL;
+  GESBaseXmlFormatterClass *self_class =
+      GES_BASE_XML_FORMATTER_GET_CLASS (self);
+
+  GError *err = NULL;
+
+  if ((file = g_file_new_for_uri (uri)) == NULL)
+    goto wrong_uri;
+
+  /* TODO Handle GCancellable */
+  if (!g_file_load_contents (file, NULL, &xmlcontent, &xmlsize, NULL, &err))
+    goto failed;
+
+  parsecontext = g_markup_parse_context_new (&self_class->content_parser,
+      G_MARKUP_TREAT_CDATA_AS_TEXT, self, NULL);
+
+  if (g_markup_parse_context_parse (parsecontext, xmlcontent, xmlsize,
+          &err) == FALSE)
+    goto failed;
+
+  return parsecontext;
+
+wrong_uri:
+  GST_WARNING ("%s wrong uri", uri);
+  return NULL;
+
+failed:
+  g_propagate_error (error, err);
+
+  if (parsecontext)
+    g_markup_parse_context_free (parsecontext);
+
+  g_object_unref (file);
+
+  return NULL;
+}
+
+/***********************************************
+ *                                             *
+ * GESFormatter virtual methods implementation *
+ *                                             *
+ ***********************************************/
+
+static gboolean
+_can_load_uri (GESFormatterClass * class, const gchar * uri, GError ** error)
+{
+  GMarkupParseContext *ctx;
+
+  /* we create a temporary object so we can use it as a context */
+  GESBaseXmlFormatter *self = g_object_new (G_OBJECT_CLASS_TYPE (class), NULL);
+  _GET_PRIV (self)->check_only = TRUE;
+
+
+  ctx = create_parser_context (self, uri, error);
+  if (!ctx)
+    return FALSE;
+
+  g_markup_parse_context_free (ctx);
+
+  return TRUE;
+}
+
+static gboolean
+_load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
+    GError ** error)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  priv->parsecontext =
+      create_parser_context (GES_BASE_XML_FORMATTER (self), uri, error);
+
+  if (!priv->parsecontext)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+_save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
+    const gchar * uri, gboolean overwrite, GError ** error)
+{
+  GFile *file;
+  gboolean ret;
+  GString *str;
+  GOutputStream *stream;
+  GError *lerror = NULL;
+
+  g_return_val_if_fail (formatter->project, FALSE);
+
+  file = g_file_new_for_uri (uri);
+  stream = G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_NONE, NULL,
+          &lerror));
+  if (stream == NULL) {
+    if (overwrite && lerror->code == G_IO_ERROR_EXISTS) {
+      g_clear_error (&lerror);
+      stream = G_OUTPUT_STREAM (g_file_replace (file, NULL, FALSE,
+              G_FILE_CREATE_NONE, NULL, &lerror));
+    }
+
+    if (stream == NULL)
+      goto failed_opening_file;
+  }
+
+  str = GES_BASE_XML_FORMATTER_GET_CLASS (formatter)->save (formatter,
+      timeline, error);
+
+  if (str == NULL)
+    goto serialization_failed;
+
+  ret = g_output_stream_write_all (stream, str->str, str->len, NULL,
+      NULL, &lerror);
+  ret = g_output_stream_close (stream, NULL, &lerror);
+
+  if (ret == FALSE)
+    GST_WARNING_OBJECT (formatter, "Could not save %s because: %s", uri,
+        lerror->message);
+
+  g_string_free (str, TRUE);
+  g_object_unref (file);
+  g_object_unref (stream);
+
+  if (lerror)
+    g_propagate_error (error, lerror);
+
+  return ret;
+
+serialization_failed:
+  g_object_unref (file);
+
+  g_output_stream_close (stream, NULL, NULL);
+  g_object_unref (stream);
+  if (lerror)
+    g_propagate_error (error, lerror);
+
+  return FALSE;
+
+failed_opening_file:
+  g_object_unref (file);
+
+  GST_WARNING_OBJECT (formatter, "Could not open %s because: %s", uri,
+      lerror->message);
+
+  if (lerror)
+    g_propagate_error (error, lerror);
+
+  return FALSE;
+}
+
+/***********************************************
+ *                                             *
+ *   GOBject virtual methods implementation    *
+ *                                             *
+ ***********************************************/
+
+static void
+_dispose (GObject * object)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
+
+  g_clear_pointer (&priv->assetid_pendingtlobjs,
+      (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->timeline_objects,
+      (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->tlobjid_pendings,
+      (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->tracks, (GDestroyNotify) g_hash_table_unref);
+  g_clear_pointer (&priv->layers, (GDestroyNotify) g_hash_table_unref);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+_finalize (GObject * object)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (object);
+
+  if (priv->parsecontext != NULL)
+    g_markup_parse_context_free (priv->parsecontext);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  priv->check_only = FALSE;
+  priv->parsecontext = NULL;
+  priv->pending_assets = NULL;
+
+  /* The PendingTimelineObject are owned by the assetid_pendingtlobjs table */
+  priv->assetid_pendingtlobjs = g_hash_table_new_full (g_str_hash,
+      g_str_equal, g_free, NULL);
+  priv->tlobjid_pendings = g_hash_table_new_full (g_str_hash,
+      g_str_equal, g_free, NULL);
+  priv->timeline_objects = g_hash_table_new_full (g_str_hash,
+      g_str_equal, g_free, gst_object_unref);
+  priv->tracks = g_hash_table_new_full (g_str_hash,
+      g_str_equal, g_free, gst_object_unref);
+  priv->layers = g_hash_table_new_full (g_direct_hash,
+      g_direct_equal, NULL, (GDestroyNotify) _free_layer_entry);
+}
+
+static void
+ges_base_xml_formatter_class_init (GESBaseXmlFormatterClass * self_class)
+{
+  GESFormatterClass *formatter_klass = GES_FORMATTER_CLASS (self_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (self_class);
+
+  g_type_class_add_private (self_class, sizeof (GESBaseXmlFormatterPrivate));
+  object_class->dispose = _dispose;
+  object_class->finalize = _finalize;
+
+  formatter_klass->can_load_uri = _can_load_uri;
+  formatter_klass->load_from_uri = _load_from_uri;
+  formatter_klass->save_to_uri = _save_to_uri;
+
+  self_class->save = NULL;
+}
+
+/***********************************************
+ *                                             *
+ *             Private methods                 *
+ *                                             *
+ ***********************************************/
+
+static void
+_set_auto_transition (gpointer prio, LayerEntry * entry, gpointer udata)
+{
+  ges_timeline_layer_set_auto_transition (entry->layer, entry->auto_trans);
+}
+
+static void
+_loading_done (GESFormatter * self)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->parsecontext)
+    g_markup_parse_context_free (priv->parsecontext);
+  priv->parsecontext = NULL;
+
+  g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
+  ges_project_set_loaded (self->project, self);
+}
+
+static void
+_set_child_property (GQuark field_id, const GValue * value,
+    GESTrackObject * effect)
+{
+  GParamSpec *pspec;
+  GstElement *element;
+
+  if (!ges_track_object_lookup_child (effect,
+          g_quark_to_string (field_id), &element, &pspec))
+    return;
+
+  g_object_set_property (G_OBJECT (element), pspec->name, value);
+  g_param_spec_unref (pspec);
+  g_object_unref (element);
+}
+
+void
+set_property_foreach (GQuark field_id, const GValue * value, GObject * object)
+{
+  g_object_set_property (object, g_quark_to_string (field_id), value);
+}
+
+static inline GESTimelineObject *
+_add_object_to_layer (GESBaseXmlFormatterPrivate * priv, const gchar * id,
+    GESTimelineLayer * layer, GESAsset * asset, GstClockTime start,
+    GstClockTime inpoint, GstClockTime duration, gdouble rate,
+    GESTrackType track_types, const gchar * metadatas,
+    GstStructure * properties)
+{
+  GESTimelineObject *tlobj = ges_timeline_layer_add_asset (layer,
+      asset, start, inpoint, duration, rate, track_types);
+
+  if (tlobj == NULL) {
+    GST_WARNING_OBJECT ("Could not add object from asset: %s",
+        ges_asset_get_id (asset));
+
+    return NULL;
+  }
+
+  if (metadatas)
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (tlobj),
+        metadatas);
+
+  if (properties)
+    gst_structure_foreach (properties,
+        (GstStructureForeachFunc) set_property_foreach, tlobj);
+
+  g_hash_table_insert (priv->timeline_objects, g_strdup (id),
+      gst_object_ref (tlobj));
+  return tlobj;
+}
+
+static void
+_add_track_object (GESFormatter * self, GESTimelineObject * tlobj,
+    GESTrackObject * tckobj, const gchar * track_id,
+    GstStructure * children_properties, GstStructure * properties)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESTrack *track = g_hash_table_lookup (priv->tracks, track_id);
+
+  if (track == NULL) {
+    GST_WARNING_OBJECT (self, "No track with id %s, can not add tckobj",
+        track_id);
+    gst_object_unref (tckobj);
+    return;
+  }
+
+  GST_DEBUG_OBJECT (self, "Adding track_object: %" GST_PTR_FORMAT
+      " To : %" GST_PTR_FORMAT, tckobj, tlobj);
+
+  ges_timeline_object_add_track_object (tlobj, tckobj);
+  ges_track_add_object (track, tckobj);
+  gst_structure_foreach (children_properties,
+      (GstStructureForeachFunc) _set_child_property, tckobj);
+}
+
+static void
+_free_pending_effect (PendingEffects * pend)
+{
+  g_free (pend->track_id);
+  gst_object_unref (pend->tckobj);
+  if (pend->children_properties)
+    gst_structure_free (pend->children_properties);
+  if (pend->properties)
+    gst_structure_free (pend->properties);
+
+  g_slice_free (PendingEffects, pend);
+}
+
+static void
+_free_pending_timeline_object (GESBaseXmlFormatterPrivate * priv,
+    PendingTimelineObject * pend)
+{
+  g_free (pend->id);
+  gst_object_unref (pend->layer);
+  if (pend->properties)
+    gst_structure_free (pend->properties);
+  g_list_free_full (pend->effects, (GDestroyNotify) _free_pending_effect);
+  g_hash_table_remove (priv->tlobjid_pendings, pend->id);
+  g_slice_free (PendingTimelineObject, pend);
+}
+
+static void
+_free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
+{
+  if (passet->metadatas)
+    g_free (passet->metadatas);
+  if (passet->properties)
+    gst_structure_free (passet->properties);
+  g_slice_free (PendingAsset, passet);
+
+  priv->pending_assets = g_list_remove (priv->pending_assets, passet);
+}
+
+static void
+new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
+{
+  GError *error = NULL;
+  gchar *possible_id = NULL;
+  GList *tmp, *pendings = NULL;
+  GESFormatter *self = passet->formatter;
+  const gchar *id = ges_asset_get_id (source);
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESAsset *asset = ges_asset_request_finish (res, &error);
+
+  if (error) {
+    GST_LOG_OBJECT (self, "Error %s creating asset id: %s", error->message, id);
+
+    /* We set the metas on the Asset to give hints to the user */
+    if (passet->metadatas)
+      ges_meta_container_add_metas_from_string (GES_META_CONTAINER (source),
+          passet->metadatas);
+    if (passet->properties)
+      gst_structure_foreach (passet->properties,
+          (GstStructureForeachFunc) set_property_foreach, source);
+
+    possible_id = ges_project_try_updating_id (GES_FORMATTER (self)->project,
+        source, error);
+
+    if (possible_id == NULL) {
+      GST_WARNING_OBJECT (self, "Abandoning creation of asset %s with ID %s"
+          "- Error: %s", g_type_name (G_OBJECT_TYPE (source)), id,
+          error->message);
+
+      pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
+      for (tmp = pendings; tmp; tmp = tmp->next)
+        _free_pending_timeline_object (priv,
+            (PendingTimelineObject *) tmp->data);
+
+      _free_pending_asset (priv, passet);
+      goto done;
+    }
+
+    /* We got a possible ID replacement for that asset, create it, and
+     * make sure the assetid_pendingtlobjs will use it */
+    ges_asset_request_async (ges_asset_get_extractable_type (source),
+        possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, passet);
+
+    pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
+    if (pendings) {
+      g_hash_table_remove (priv->assetid_pendingtlobjs, id);
+      g_hash_table_insert (priv->assetid_pendingtlobjs,
+          g_strdup (possible_id), pendings);
+
+      /* pendings should no be freed */
+      pendings = NULL;
+    }
+    goto done;
+  }
+
+  /* now that we have the GESAsset, we create the GESTimelineObjects */
+  pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, id);
+  GST_DEBUG_OBJECT (self, "Asset created with ID %s, now creating pending "
+      " TimelineObjects, nb pendings: %i", id, g_list_length (pendings));
+  for (tmp = pendings; tmp; tmp = tmp->next) {
+    GList *tmpeffect;
+    GESTimelineObject *tlobj;
+    PendingTimelineObject *pend = (PendingTimelineObject *) tmp->data;
+
+    tlobj =
+        _add_object_to_layer (priv, pend->id, pend->layer, asset,
+        pend->start, pend->inpoint, pend->duration, pend->rate,
+        pend->track_types, pend->metadatas, pend->properties);
+
+    if (tlobj == NULL)
+      continue;
+
+    GST_DEBUG_OBJECT (self, "Adding %i effect to new object",
+        g_list_length (pend->effects));
+    for (tmpeffect = pend->effects; tmpeffect; tmpeffect = tmpeffect->next) {
+      PendingEffects *peffect = (PendingEffects *) tmpeffect->data;
+
+      /* We keep a ref as _free_pending_effect unrefs it */
+      _add_track_object (self, tlobj, gst_object_ref (peffect->tckobj),
+          peffect->track_id, peffect->children_properties, peffect->properties);
+    }
+    _free_pending_timeline_object (priv, pend);
+  }
+
+  /* And now add to the project */
+  ges_project_add_asset (self->project, asset);
+
+  gst_object_unref (self);
+
+  _free_pending_asset (priv, passet);
+
+done:
+  if (asset)
+    gst_object_unref (asset);
+  if (possible_id)
+    g_free (possible_id);
+
+  if (pendings) {
+    g_hash_table_remove (priv->assetid_pendingtlobjs, id);
+    g_list_free (pendings);
+  }
+
+  if (g_hash_table_size (priv->assetid_pendingtlobjs) == 0 &&
+      priv->pending_assets == NULL)
+    _loading_done (self);
+}
+
+static GstEncodingProfile *
+_create_profile (GESBaseXmlFormatter * self,
+    const gchar * type, const gchar * parent, const gchar * name,
+    const gchar * description, GstCaps * format, const gchar * preset,
+    const gchar * preset_name, gint id, guint presence, GstCaps * restriction,
+    guint pass, gboolean variableframerate)
+{
+  GstEncodingProfile *profile = NULL;
+
+  if (!g_strcmp0 (type, "container")) {
+    profile = GST_ENCODING_PROFILE (gst_encoding_container_profile_new (name,
+            description, format, preset));
+    gst_encoding_profile_set_preset_name (profile, preset_name);
+
+    return profile;
+  } else if (!g_strcmp0 (type, "video")) {
+    GstEncodingVideoProfile *sprof = gst_encoding_video_profile_new (format,
+        preset, restriction, presence);
+
+    gst_encoding_video_profile_set_variableframerate (sprof, variableframerate);
+    gst_encoding_video_profile_set_pass (sprof, pass);
+
+    profile = GST_ENCODING_PROFILE (sprof);
+  } else if (!g_strcmp0 (type, "audio")) {
+    profile = GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (format,
+            preset, restriction, presence));
+  } else {
+    GST_ERROR_OBJECT (self, "Unknown profile format '%s'", type);
+
+    return NULL;
+  }
+
+  gst_encoding_profile_set_name (profile, name);
+  gst_encoding_profile_set_description (profile, description);
+  gst_encoding_profile_set_preset_name (profile, preset_name);
+
+  return profile;
+}
+
+/***********************************************
+ *                                             *
+ *              Public methods                 *
+ *                                             *
+ ***********************************************/
+
+void
+ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
+    const gchar * id, GType extractable_type, GstStructure * properties,
+    const gchar * metadatas, GError ** error)
+{
+  PendingAsset *passet;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  passet = g_slice_new0 (PendingAsset);
+  passet->metadatas = g_strdup (metadatas);
+  passet->formatter = gst_object_ref (self);
+  if (properties)
+    passet->properties = gst_structure_copy (properties);
+  ges_asset_request_async (extractable_type, id, NULL,
+      (GAsyncReadyCallback) new_asset_cb, passet);
+  priv->pending_assets = g_list_prepend (priv->pending_assets, passet);
+}
+
+void
+ges_base_xml_formatter_add_timeline_object (GESBaseXmlFormatter * self,
+    const gchar * id, const char *asset_id, GType type, GstClockTime start,
+    GstClockTime inpoint, GstClockTime duration, gdouble rate,
+    guint layer_prio, GESTrackType track_types, GstStructure * properties,
+    const gchar * metadatas, GError ** error)
+{
+  GESAsset *asset;
+  GESTimelineObject *nobj;
+  LayerEntry *entry;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  entry = g_hash_table_lookup (priv->layers, GINT_TO_POINTER (layer_prio));
+  if (entry == NULL) {
+    g_set_error (error, GES_ERROR_DOMAIN, 0,
+        "We got a TimelineObject in a layer"
+        " that does not exist, something is wrong either in the project file or"
+        " in %s", g_type_name (G_OBJECT_TYPE (self)));
+  }
+
+  /* We do not want the properties that are passed to layer-add_asset to be reset */
+  if (properties)
+    gst_structure_remove_fields (properties, "supported-formats", "rate",
+        "inpoint", "start", "ducation", NULL);
+
+  asset = ges_asset_request (type, asset_id, NULL);
+  if (asset == NULL) {
+    gchar *real_id;
+    PendingTimelineObject *ptlobj;
+    GList *pendings;
+
+    real_id = ges_extractable_type_check_id (type, asset_id, error);
+    if (real_id == NULL) {
+      if (*error == NULL)
+        g_set_error (error, G_MARKUP_ERROR,
+            G_MARKUP_ERROR_INVALID_CONTENT,
+            "Object type '%s' with Asset id: %s not be created'",
+            g_type_name (type), asset_id);
+
+      return;
+    }
+
+    pendings = g_hash_table_lookup (priv->assetid_pendingtlobjs, asset_id);
+
+    ptlobj = g_slice_new0 (PendingTimelineObject);
+    GST_DEBUG_OBJECT (self, "Adding pending %p for %s, currently: %i",
+        ptlobj, asset_id, g_list_length (pendings));
+
+    ptlobj->id = g_strdup (id);
+    ptlobj->rate = rate;
+    ptlobj->track_types = track_types;
+    ptlobj->duration = duration;
+    ptlobj->inpoint = inpoint;
+    ptlobj->start = start;
+    ptlobj->layer = gst_object_ref (entry->layer);
+
+    ptlobj->properties = properties ? gst_structure_copy (properties) : NULL;
+    ptlobj->metadatas = g_strdup (metadatas);
+
+    /* Add the new pending object to the hashtable */
+    g_hash_table_insert (priv->assetid_pendingtlobjs, real_id,
+        g_list_append (pendings, ptlobj));
+    g_hash_table_insert (priv->tlobjid_pendings, g_strdup (id), ptlobj);
+
+    return;
+  }
+
+  nobj = _add_object_to_layer (priv, id, entry->layer,
+      asset, start, inpoint, duration, rate, track_types, metadatas,
+      properties);
+
+  if (!nobj)
+    return;
+}
+
+void
+ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
+    GType extractable_type, guint priority, GstStructure * properties,
+    const gchar * metadatas, GError ** error)
+{
+  LayerEntry *entry;
+  GESAsset *asset;
+  GESTimelineLayer *layer;
+  gboolean auto_transition = FALSE;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  if (extractable_type == G_TYPE_NONE)
+    layer = ges_timeline_layer_new ();
+  else {
+    asset = ges_asset_request (extractable_type, NULL, error);
+    if (asset == NULL) {
+      if (error && *error == NULL) {
+        g_set_error (error, G_MARKUP_ERROR,
+            G_MARKUP_ERROR_INVALID_CONTENT,
+            "Layer type %s could not be created'",
+            g_type_name (extractable_type));
+        return;
+      }
+    }
+    layer = GES_TIMELINE_LAYER (ges_asset_extract (asset, error));
+  }
+
+  ges_timeline_layer_set_priority (layer, priority);
+  ges_timeline_add_layer (GES_FORMATTER (self)->timeline, layer);
+  if (properties) {
+    if (gst_structure_get_boolean (properties, "auto-transition",
+            &auto_transition))
+      gst_structure_remove_field (properties, "auto-transition");
+
+    gst_structure_foreach (properties,
+        (GstStructureForeachFunc) set_property_foreach, layer);
+  }
+
+  if (metadatas)
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (layer),
+        metadatas);
+
+  entry = g_slice_new0 (LayerEntry);
+  entry->layer = gst_object_ref (layer);
+  entry->auto_trans = auto_transition;
+
+  g_hash_table_insert (priv->layers, GINT_TO_POINTER (priority), entry);
+}
+
+void
+ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
+    GESTrackType track_type, GstCaps * caps, const gchar * id,
+    GstStructure * properties, const gchar * metadatas, GError ** error)
+{
+  GESTrack *track;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  track = ges_track_new (track_type, caps);
+  ges_timeline_add_track (GES_FORMATTER (self)->timeline, track);
+  if (properties)
+    gst_structure_foreach (properties,
+        (GstStructureForeachFunc) set_property_foreach, track);
+
+  g_hash_table_insert (priv->tracks, g_strdup (id), gst_object_ref (track));
+  if (metadatas)
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (track),
+        metadatas);
+}
+
+void
+ges_base_xml_formatter_add_track_object (GESBaseXmlFormatter * self,
+    GType track_object_type, const gchar * asset_id, const gchar * track_id,
+    const gchar * timeline_obj_id, GstStructure * children_properties,
+    GstStructure * properties, const gchar * metadatas, GError ** error)
+{
+  GESTrackObject *tckobj;
+
+  GError *err = NULL;
+  GESAsset *asset = NULL;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  if (g_type_is_a (track_object_type, GES_TYPE_TRACK_OBJECT) == FALSE) {
+    GST_DEBUG_OBJECT (self, "%s is not a TrackObject, can not create it",
+        g_type_name (track_object_type));
+    goto out;
+  }
+
+  if (g_type_is_a (track_object_type, GES_TYPE_TRACK_EFFECT) == FALSE) {
+    GST_FIXME_OBJECT (self, "%s currently not supported",
+        g_type_name (track_object_type));
+    goto out;
+  }
+
+  asset = ges_asset_request (track_object_type, asset_id, &err);
+  if (asset == NULL) {
+    GST_DEBUG_OBJECT (self, "Can not create tckobj %s", asset_id);
+    GST_FIXME_OBJECT (self, "Check if missing plugins etc %s",
+        err ? err->message : "");
+
+    goto out;
+  }
+
+  tckobj = GES_TRACK_OBJECT (ges_asset_extract (asset, NULL));
+  if (tckobj) {
+    GESTimelineObject *tlobj;
+    if (metadatas)
+      ges_meta_container_add_metas_from_string (GES_META_CONTAINER (tckobj),
+          metadatas);
+
+    tlobj = g_hash_table_lookup (priv->timeline_objects, timeline_obj_id);
+    if (tlobj) {
+      _add_track_object (GES_FORMATTER (self), tlobj, tckobj, track_id,
+          children_properties, properties);
+    } else {
+      PendingEffects *peffect;
+      PendingTimelineObject *pend = g_hash_table_lookup (priv->tlobjid_pendings,
+          timeline_obj_id);
+      if (pend == NULL) {
+        GST_WARNING_OBJECT (self, "No TimelineObject with id: %s can not "
+            "add TrackObject", timeline_obj_id);
+        goto out;
+      }
+
+      peffect = g_slice_new0 (PendingEffects);
+
+      peffect->tckobj = tckobj;
+      peffect->track_id = g_strdup (track_id);
+      peffect->properties = properties ? gst_structure_copy (properties) : NULL;
+      peffect->children_properties = children_properties ?
+          gst_structure_copy (children_properties) : NULL;
+
+      pend->effects = g_list_append (pend->effects, peffect);
+    }
+  }
+
+  ges_project_add_asset (GES_FORMATTER (self)->project, asset);
+
+out:
+  if (asset)
+    gst_object_unref (asset);
+  if (err)
+    g_error_free (err);
+
+  return;
+}
+
+void
+ges_base_xml_formatter_add_encoding_profile (GESBaseXmlFormatter * self,
+    const gchar * type, const gchar * parent, const gchar * name,
+    const gchar * description, GstCaps * format, const gchar * preset,
+    const gchar * preset_name, guint id, guint presence, GstCaps * restriction,
+    guint pass, gboolean variableframerate, GstStructure * properties,
+    GError ** error)
+{
+  const GList *tmp;
+  GstEncodingProfile *profile;
+  GstEncodingContainerProfile *parent_profile = NULL;
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  if (priv->check_only)
+    return;
+
+  if (parent == NULL) {
+    profile =
+        _create_profile (self, type, parent, name, description, format, preset,
+        preset_name, id, presence, restriction, pass, variableframerate);
+    ges_project_add_encoding_profile (GES_FORMATTER (self)->project, profile);
+    gst_object_unref (profile);
+
+    return;
+  }
+
+  for (tmp = ges_project_list_encoding_profiles (GES_FORMATTER (self)->project);
+      tmp; tmp = tmp->next) {
+    GstEncodingProfile *tmpprofile = GST_ENCODING_PROFILE (tmp->data);
+
+    if (g_strcmp0 (gst_encoding_profile_get_name (tmpprofile),
+            gst_encoding_profile_get_name (tmpprofile)) == 0) {
+
+      if (!GST_IS_ENCODING_CONTAINER_PROFILE (tmpprofile)) {
+        g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+            "Profile '%s' parent %s is not a container...'", name, parent);
+        return;
+      }
+
+      parent_profile = GST_ENCODING_CONTAINER_PROFILE (tmpprofile);
+      break;
+    }
+  }
+
+  if (parent_profile == NULL) {
+    g_set_error (error, G_MARKUP_ERROR, G_MARKUP_ERROR_INVALID_CONTENT,
+        "Profile '%s' parent %s does not exist'", name, parent);
+    return;
+  }
+
+  profile =
+      _create_profile (self, type, parent, name, description, format, preset,
+      preset_name, id, presence, restriction, pass, variableframerate);
+
+  if (profile == NULL)
+    return;
+
+  gst_encoding_container_profile_add_profile (parent_profile, profile);
+}

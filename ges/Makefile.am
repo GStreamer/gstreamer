@@ -51,6 +51,8 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-asset-file-source.c \
 	ges-extractable.c \
 	ges-project.c \
+	ges-base-xml-formatter.c \
+	ges-xml-formatter.c \
 	ges-utils.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -99,6 +101,8 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-asset-file-source.h \
 	ges-extractable.h \
 	ges-project.h \
+	ges-base-xml-formatter.h \
+	ges-xml-formatter.h \
 	ges-utils.h
 
 noinst_HEADERS = \
@@ -153,6 +157,7 @@ GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
 		--library=libges-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstPbutils-@GST_API_VERSION@ \
+		--include=Gio-2.0 \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-pbutils-@GST_API_VERSION@ \

@@ -72,6 +72,10 @@ ges_init (void)
 
   /* register formatter types with the system */
   GES_TYPE_PITIVI_FORMATTER;
+  GES_TYPE_XML_FORMATTER;
+
+  /* Register track effect */
+  GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT;
 
   GES_TYPE_META_CONTAINER;
 
