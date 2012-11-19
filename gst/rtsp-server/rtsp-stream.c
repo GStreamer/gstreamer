@@ -350,6 +350,7 @@ again:
 
   g_object_get (G_OBJECT (udpsrc0), "used-socket", &socket, NULL);
   g_object_set (G_OBJECT (udpsink0), "socket", socket, NULL);
+  g_object_unref (socket);
   g_object_set (G_OBJECT (udpsink0), "close-socket", FALSE, NULL);
 
   udpsink1 = gst_element_factory_make ("multiudpsink", NULL);
@@ -375,6 +376,7 @@ again:
 
   g_object_get (G_OBJECT (udpsrc1), "used-socket", &socket, NULL);
   g_object_set (G_OBJECT (udpsink1), "socket", socket, NULL);
+  g_object_unref (socket);
   g_object_set (G_OBJECT (udpsink1), "close-socket", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "sync", FALSE, NULL);
   g_object_set (G_OBJECT (udpsink1), "async", FALSE, NULL);
