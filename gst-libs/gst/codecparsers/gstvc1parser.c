@@ -924,30 +924,38 @@ parse_frame_header_advanced (GstBitReader * br, GstVC1FrameHdr * framehdr,
         case 0x00:
         case 0x02:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_I;
+          break;
         case 0x01:
         case 0x03:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_P;
+          break;
         case 0x04:
         case 0x06:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_B;
+          break;
         case 0x05:
         case 0x07:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
+          break;
       }
     } else {
       switch (pic->fptype) {
         case 0x00:
         case 0x01:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_I;
+          break;
         case 0x02:
         case 0x03:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_P;
+          break;
         case 0x04:
         case 0x05:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_B;
+          break;
         case 0x06:
         case 0x07:
           framehdr->ptype = GST_VC1_PICTURE_TYPE_BI;
+          break;
       }
     }
   } else
