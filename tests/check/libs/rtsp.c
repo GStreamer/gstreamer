@@ -223,7 +223,8 @@ GST_START_TEST (test_rtsp_range_smpte)
   GstRTSPTimeRange *range;
 
   fail_unless (gst_rtsp_range_parse ("smpte=", &range) == GST_RTSP_EINVAL);
-  fail_unless (gst_rtsp_range_parse ("smpte=0", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("smpte=10:34:23",
+          &range) == GST_RTSP_EINVAL);
   fail_unless (gst_rtsp_range_parse ("smpte=-", &range) == GST_RTSP_EINVAL);
   fail_unless (gst_rtsp_range_parse ("smpte=-12:09:34",
           &range) == GST_RTSP_EINVAL);
@@ -252,6 +253,45 @@ GST_START_TEST (test_rtsp_range_smpte)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_range_clock)
+{
+  GstRTSPTimeRange *range;
+
+  fail_unless (gst_rtsp_range_parse ("clock=", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("clock=20001010T120023Z",
+          &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("clock=-", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("clock=-20001010T120934Z",
+          &range) == GST_RTSP_EINVAL);
+
+  fail_unless (gst_rtsp_range_parse ("clock=20001010T122345Z-",
+          &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_CLOCK);
+  fail_unless (range->min.type == GST_RTSP_TIME_UTC);
+  fail_unless (range->min.year == 2000);
+  fail_unless (range->min.month == 10);
+  fail_unless (range->min.day == 10);
+  fail_unless (range->min.seconds == 44625.0);
+  fail_unless (range->max.type == GST_RTSP_TIME_END);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse
+      ("clock=19700101T103423Z-30001230T201209.89Z", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_CLOCK);
+  fail_unless (range->min.type == GST_RTSP_TIME_UTC);
+  fail_unless (range->min.year == 1970);
+  fail_unless (range->min.month == 1);
+  fail_unless (range->min.day == 1);
+  fail_unless (range->min.seconds == 38063.0);
+  fail_unless (range->max.type == GST_RTSP_TIME_UTC);
+  fail_unless (range->max.year == 3000);
+  fail_unless (range->max.month == 12);
+  fail_unless (range->max.day == 30);
+  fail_unless (range->max.seconds == 72729.89);
+  gst_rtsp_range_free (range);
+}
+
+GST_END_TEST;
 
 static Suite *
 rtsp_suite (void)
@@ -266,6 +306,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_url_components_3);
   tcase_add_test (tc_chain, test_rtsp_range_npt);
   tcase_add_test (tc_chain, test_rtsp_range_smpte);
+  tcase_add_test (tc_chain, test_rtsp_range_clock);
 
   return s;
 }

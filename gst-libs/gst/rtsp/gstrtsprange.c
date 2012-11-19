@@ -132,11 +132,72 @@ done:
   return res;
 }
 
-
+/*   utc-time     =   utc-date "T" utc-time "Z"
+ *   utc-date     =   8DIGIT                    ; < YYYYMMDD >
+ *   utc-time     =   6DIGIT [ "." fraction ]   ; < HHMMSS.fraction >
+ *
+ *   Example for November 8, 1996 at 14h37 and 20 and a quarter seconds
+ *   UTC:
+ *
+ *   19961108T143720.25Z
+ */
 static GstRTSPResult
-parse_clock_range (const gchar * str, GstRTSPTimeRange * range)
+parse_utc_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
 {
-  return GST_RTSP_ENOTIMPL;
+
+  if (str[0] == '\0') {
+    time->type = GST_RTSP_TIME_END;
+    return GST_RTSP_OK;
+  } else {
+    gint year, month, day;
+    gint hours, mins;
+    gdouble secs;
+    gchar *T, *Z;
+
+    T = strchr (str, 'T');
+    if (T == NULL || T != str + 8)
+      return GST_RTSP_EINVAL;
+
+    Z = strchr (T + 1, 'Z');
+    if (Z == NULL)
+      return GST_RTSP_EINVAL;
+
+    time->type = GST_RTSP_TIME_UTC;
+
+    if (sscanf (str, "%4d%2d%2dT%2d%2d%lfZ", &year, &month, &day, &hours,
+            &mins, &secs) != 6)
+      return GST_RTSP_EINVAL;
+
+    time->year = year;
+    time->month = month;
+    time->day = day;
+    time->seconds = ((hours * 60) + mins) * 60 + secs;
+  }
+  return GST_RTSP_OK;
+}
+
+/*   utc-range    =   "clock" "=" utc-time "-" [ utc-time ]
+ */
+static GstRTSPResult
+parse_utc_range (const gchar * str, GstRTSPTimeRange * range)
+{
+  GstRTSPResult res;
+  gchar *p;
+
+  range->unit = GST_RTSP_RANGE_CLOCK;
+
+  /* find '-' separator, can't have a single - */
+  p = strstr (str, "-");
+  if (p == NULL || p == str)
+    return GST_RTSP_EINVAL;
+
+  if ((res = parse_utc_time (str, &range->min, p)) != GST_RTSP_OK)
+    goto done;
+
+  res = parse_utc_time (p + 1, &range->max, NULL);
+
+done:
+  return res;
 }
 
 /* smpte-time   =   1*2DIGIT ":" 1*2DIGIT ":" 1*2DIGIT [ ":" 1*2DIGIT ]
@@ -216,7 +277,7 @@ gst_rtsp_range_parse (const gchar * rangestr, GstRTSPTimeRange ** range)
   if (g_str_has_prefix (p, "npt=")) {
     ret = parse_npt_range (p + 4, res);
   } else if (g_str_has_prefix (p, "clock=")) {
-    ret = parse_clock_range (p + 6, res);
+    ret = parse_utc_range (p + 6, res);
   } else if (g_str_has_prefix (p, "smpte=")) {
     res->unit = GST_RTSP_RANGE_SMPTE;
     ret = parse_smpte_range (p + 6, res);

@@ -84,15 +84,19 @@ typedef enum {
   GST_RTSP_TIME_SECONDS,
   GST_RTSP_TIME_NOW,
   GST_RTSP_TIME_END,
-  GST_RTSP_TIME_FRAMES
+  GST_RTSP_TIME_FRAMES,
+  GST_RTSP_TIME_UTC
 } GstRTSPTimeType;
 
 /**
  * GstRTSPTime:
  * @type: the time of the time
- * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS and
- *           GST_RTSP_TIME_FRAMES
+ * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS,
+ *           GST_RTSP_TIME_UTC and GST_RTSP_TIME_FRAMES
  * @frames: frames and subframes when @type is GST_RTSP_TIME_FRAMES
+ * @year: year when @type is GST_RTSP_TIME_UTC
+ * @month: month when @type is GST_RTSP_TIME_UTC
+ * @day: day when @type is GST_RTSP_TIME_UTC
  *
  * A time indication.
  */
@@ -100,6 +104,9 @@ struct _GstRTSPTime {
   GstRTSPTimeType type;
   gdouble         seconds;
   gdouble         frames;
+  guint           year;
+  guint           month;
+  guint           day;
 };
 
 /**
