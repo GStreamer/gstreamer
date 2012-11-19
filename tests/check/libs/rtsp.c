@@ -25,6 +25,7 @@
 #include <gst/check/gstcheck.h>
 
 #include <gst/rtsp/gstrtspurl.h>
+#include <gst/rtsp/gstrtsprange.h>
 #include <string.h>
 
 GST_START_TEST (test_rtsp_url_basic)
@@ -120,6 +121,88 @@ GST_START_TEST (test_rtsp_url_components_3)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtsp_range_npt)
+{
+  GstRTSPTimeRange *range;
+
+  fail_unless (gst_rtsp_range_parse ("npt=", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("npt=0", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("npt=-", &range) == GST_RTSP_EINVAL);
+  fail_unless (gst_rtsp_range_parse ("npt=now", &range) == GST_RTSP_EINVAL);
+
+  fail_unless (gst_rtsp_range_parse ("npt=-now", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_END);
+  fail_unless (range->max.type == GST_RTSP_TIME_NOW);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=now-now", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_NOW);
+  fail_unless (range->max.type == GST_RTSP_TIME_NOW);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=now-", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_NOW);
+  fail_unless (range->max.type == GST_RTSP_TIME_END);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=now-34.12", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_NOW);
+  fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->max.seconds == 34.12);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=23,89-now", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->min.seconds == 23.89);
+  fail_unless (range->max.type == GST_RTSP_TIME_NOW);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=-12.09", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_END);
+  fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->max.seconds == 12.09);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=0-", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->min.seconds == 0.0);
+  fail_unless (range->max.type == GST_RTSP_TIME_END);
+  gst_rtsp_range_free (range);
+
+
+  fail_unless (gst_rtsp_range_parse ("npt=1.123-", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->min.seconds == 1.123);
+  fail_unless (range->max.type == GST_RTSP_TIME_END);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=10,20-20.10", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->min.seconds == 10.20);
+  fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->max.seconds == 20.10);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("npt=500-15.001", &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_NPT);
+  fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->min.seconds == 500);
+  fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
+  fail_unless (range->max.seconds == 15.001);
+  gst_rtsp_range_free (range);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtsp_suite (void)
 {
@@ -131,6 +214,7 @@ rtsp_suite (void)
   tcase_add_test (tc_chain, test_rtsp_url_components_1);
   tcase_add_test (tc_chain, test_rtsp_url_components_2);
   tcase_add_test (tc_chain, test_rtsp_url_components_3);
+  tcase_add_test (tc_chain, test_rtsp_range_npt);
 
   return s;
 }
