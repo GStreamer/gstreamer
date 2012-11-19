@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright (C) 2009 Julien Isorce <julien.isorce@gmail.com>
+ * Copyright (C) 2012 Matthew Waters <ystreet00@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,7 +23,9 @@
 #include "config.h"
 #endif
 
-#include "gstglwindow.h"
+#include <gst/gst.h>
+
+#include "gstglwindow_win32_egl.h"
 
 static guintptr gst_gl_window_win32_wgl_get_gl_context (GstGLWindowWin32 *
     window_win32);
@@ -137,32 +140,32 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
 
   window_egl->display = eglGetDisplay (window_win32->device);
   if (priv->display != EGL_NO_DISPLAY)
-    g_debug ("display retrieved: %d\n", window_egl->display);
+    GST_DEBUG ("display retrieved: %d\n", window_egl->display);
   else {
-    g_debug ("failed to retrieve display %s\n", EGLErrorString ());
+    GST_DEBUG ("failed to retrieve display %s\n", EGLErrorString ());
     goto failure;
   }
 
   if (eglInitialize (priv->display, &majorVersion, &minorVersion))
-    g_debug ("egl initialized: %d.%d\n", majorVersion, minorVersion);
+    GST_DEBUG ("egl initialized: %d.%d\n", majorVersion, minorVersion);
   else {
-    g_debug ("failed to initialize egl %d, %s\n", priv->display,
+    GST_DEBUG ("failed to initialize egl %d, %s\n", priv->display,
         EGLErrorString ());
     goto failure;
   }
 
   if (eglGetConfigs (window_egl->display, NULL, 0, &numConfigs))
-    g_debug ("configs retrieved: %d\n", numConfigs);
+    GST_DEBUG ("configs retrieved: %d\n", numConfigs);
   else {
-    g_debug ("failed to retrieve configs %d, %s\n", window_egl->display,
+    GST_DEBUG ("failed to retrieve configs %d, %s\n", window_egl->display,
         EGLErrorString ());
     goto failure;
   }
 
   if (eglChooseConfig (priv->display, attribList, &config, 1, &numConfigs))
-    g_debug ("config set: %d, %d\n", config, numConfigs);
+    GST_DEBUG ("config set: %d, %d\n", config, numConfigs);
   else {
-    g_debug ("failed to set config %d, %s\n", window_egl->display,
+    GST_DEBUG ("failed to set config %d, %s\n", window_egl->display,
         EGLErrorString ());
     goto failure;
   }
@@ -171,25 +174,24 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
       eglCreateWindowSurface (window_egl->display, config,
       (EGLNativeWindowType) WindowFromDC (window_win32->device), NULL);
   if (priv->surface != EGL_NO_SURFACE)
-    g_debug ("surface created: %d\n", window_egl->surface);
+    GST_DEBUG ("surface created: %d\n", window_egl->surface);
   else {
-    g_debug ("failed to create surface %d, %d, %s\n", window_egl->display,
+    GST_DEBUG ("failed to create surface %d, %d, %s\n", window_egl->display,
         window_egl->surface, EGLErrorString ());
     goto failure;
   }
 
   window_egl->egl_context =
-      eglCreateContext (window_egl->display, config,
-      window_egl->external_gl_context, contextAttribs);
+      eglCreateContext (window_egl->display, config, external_gl_context,
+      contextAttribs);
   if (window_egl->egl_context != EGL_NO_CONTEXT)
-    g_debug ("gl context created: %lud, external: %lud\n",
-        (gulong) window_egl->egl_context,
-        (gulong) window_egl->external_gl_context);
+    GST_DEBUG ("gl context created: %lud, external: %lud\n",
+        (gulong) window_egl->egl_context, (gulong) external_gl_context);
   else {
-    g_debug
+    GST_DEBUG
         ("failed to create glcontext %lud, extenal: %lud, %s\n",
-        (gulong) window_egl->egl_context,
-        (gulong) window_egl->external_gl_context, EGLErrorString ());
+        (gulong) window_egl->egl_context, (gulong) external_gl_context,
+        EGLErrorString ());
     goto failure;
   }
 
@@ -208,21 +210,21 @@ gst_gl_window_win32_egl_destroy_context (GstGLWindowWin32 * window_win32)
 
   if (window_egl->egl_context) {
     if (!eglDestroyContext (window_egl->display, window_egl->egl_context))
-      g_debug ("failed to destroy context %d, %s\n", window_egl->egl_context,
+      GST_DEBUG ("failed to destroy context %d, %s\n", window_egl->egl_context,
           EGLErrorString ());
     window_egl->egl_context = NULL;
   }
 
   if (window_egl->surface) {
     if (!eglDestroySurface (window_egl->display, window_egl->surface))
-      g_debug ("failed to destroy surface %d, %s\n", window_egl->surface,
+      GST_DEBUG ("failed to destroy surface %d, %s\n", window_egl->surface,
           EGLErrorString ());
     window_egl->surface = NULL;
   }
 
   if (window_egl->display) {
     if (!eglTerminate (window_egl->display))
-      g_debug ("failed to terminate display %d, %s\n", window_egl->display,
+      GST_DEBUG ("failed to terminate display %d, %s\n", window_egl->display,
           EGLErrorString ());
     window_egl->display = NULL;
   }

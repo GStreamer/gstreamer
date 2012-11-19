@@ -25,13 +25,13 @@
 #include "gstglwindow.h"
 
 #ifdef HAVE_WINDOW_X11
-#include "gstglwindow_x11.h"
+#include "x11/gstglwindow_x11.h"
 #endif
 #ifdef HAVE_WINDOW_WIN32
-#include "gstglwindow_win32.h"
+#include "win32/gstglwindow_win32.h"
 #endif
 #ifdef HAVE_WINDOW_COCOA
-#include "gstglwindow_cocoa.h"
+#include "cocoa/gstglwindow_cocoa.h"
 #endif
 
 #define GST_CAT_DEFAULT gst_gl_window_debug

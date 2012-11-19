@@ -142,10 +142,27 @@ gst_gl_window_win32_new (GstGLRendererAPI render_api,
     guintptr external_gl_context)
 {
   GstGLWindowWin32 *window = NULL;
+  const gchar *user_choice;
 
-  window =
-      GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (render_api,
-          external_gl_context));
+  user_choice = g_getenv ("GST_GL_PLATFORM");
+
+#if HAVE_WGL
+  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "wgl")))
+    window =
+        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (render_api,
+            external_gl_context));
+#endif
+#if HAVE_EGL
+  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
+    window =
+        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_egl_new (render_api,
+            external_gl_context));
+#endif
+  if (!window) {
+    GST_WARNING ("Failed to create x11 window, user_choice:%s",
+        user_choice ? user_choice : "NULL");
+    return NULL;
+  }
 
   window->priv->render_api = render_api;
   window->priv->external_gl_context = external_gl_context;
@@ -408,7 +425,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       priv = window_win32->priv;
       window_win32->device = GetDC (hWnd);
 
-//      gst_gl_window_set_pixel_format (window_win32);
       window_class->choose_format (window_win32);
 
       window_class->create_context (window_win32, priv->render_api,
