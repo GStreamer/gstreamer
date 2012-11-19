@@ -30,6 +30,7 @@
 #include "libxml/encoding.h"
 #include "libxml/xmlwriter.h"
 
+#include "ges-internal.h"
 #include <ges/ges.h>
 #include <inttypes.h>
 #include <unistd.h>
@@ -37,22 +38,13 @@
 
 G_DEFINE_TYPE (GESPitiviFormatter, ges_pitivi_formatter, GES_TYPE_FORMATTER);
 
+#undef GST_CAT_DEFAULT
 GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 #define GST_CAT_DEFAULT ges_pitivi_formatter_debug
 
 /* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
 #define VERSION "0.2"
 
-
-/* FIXME Properly set the GError when needed */
-static gboolean save_pitivi_timeline_to_uri (GESFormatter * formatter,
-    GESTimeline * timeline, const gchar * uri, GError ** error);
-static gboolean load_pitivi_file_from_uri (GESFormatter * self,
-    GESTimeline * timeline, const gchar * uri, GError ** error);
-static void ges_pitivi_formatter_finalize (GObject * object);
-static gboolean pitivi_formatter_update_source_uri (GESFormatter * formatter,
-    GESTimelineFileSource * tfs, gchar * new_uri);
-static gboolean pitivi_can_load_uri (const gchar * uri, GError ** error);
 
 typedef struct SrcMapping
 {
@@ -141,95 +133,6 @@ pitivi_can_load_uri (const gchar * uri, GError ** error)
   xmlXPathFreeContext (xpathCtx);
 
   return ret;
-}
-
-/* Object functions */
-static void
-ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
-{
-  GESFormatterClass *formatter_klass;
-  GObjectClass *object_class;
-
-  GST_DEBUG_CATEGORY_INIT (ges_pitivi_formatter_debug, "ges_pitivi_formatter",
-      GST_DEBUG_FG_YELLOW, "ges pitivi formatter");
-
-  object_class = G_OBJECT_CLASS (klass);
-  formatter_klass = GES_FORMATTER_CLASS (klass);
-  g_type_class_add_private (klass, sizeof (GESPitiviFormatterPrivate));
-
-  formatter_klass->can_load_uri = pitivi_can_load_uri;
-  formatter_klass->save_to_uri = save_pitivi_timeline_to_uri;
-  formatter_klass->load_from_uri = load_pitivi_file_from_uri;
-  formatter_klass->update_source_uri = pitivi_formatter_update_source_uri;
-  object_class->finalize = ges_pitivi_formatter_finalize;
-}
-
-static void
-ges_pitivi_formatter_init (GESPitiviFormatter * self)
-{
-  GESPitiviFormatterPrivate *priv;
-
-  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_PITIVI_FORMATTER, GESPitiviFormatterPrivate);
-
-  priv = self->priv;
-
-  priv->track_objects_table =
-      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-      (GDestroyNotify) g_hash_table_destroy);
-
-  priv->timeline_objects_table =
-      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
-
-  priv->layers_table =
-      g_hash_table_new_full (g_int_hash, g_str_equal, g_free, g_object_unref);
-
-  priv->sources_table =
-      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-      (GDestroyNotify) g_hash_table_destroy);
-
-  priv->source_uris =
-      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
-
-  priv->sources_to_load = NULL;
-
-  /* Saving context */
-  priv->saving_source_table =
-      g_hash_table_new_full (g_str_hash, g_int_equal, g_free, g_free);
-  priv->nb_sources = 1;
-}
-
-static void
-ges_pitivi_formatter_finalize (GObject * object)
-{
-  GESPitiviFormatter *self = GES_PITIVI_FORMATTER (object);
-  GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
-
-  g_hash_table_destroy (priv->sources_table);
-  g_hash_table_destroy (priv->source_uris);
-
-  g_hash_table_destroy (priv->saving_source_table);
-  g_list_free (priv->sources_to_load);
-
-  if (priv->timeline_objects_table != NULL) {
-    g_hash_table_foreach (priv->timeline_objects_table,
-        (GHFunc) list_table_destroyer, NULL);
-  }
-
-  if (priv->layers_table != NULL)
-    g_hash_table_destroy (priv->layers_table);
-
-  if (priv->track_objects_table != NULL) {
-    g_hash_table_destroy (priv->track_objects_table);
-  }
-
-  G_OBJECT_CLASS (ges_pitivi_formatter_parent_class)->finalize (object);
-}
-
-GESPitiviFormatter *
-ges_pitivi_formatter_new (void)
-{
-  return g_object_new (GES_TYPE_PITIVI_FORMATTER, NULL);
 }
 
 /* Project saving functions */
@@ -1171,6 +1074,96 @@ pitivi_formatter_update_source_uri (GESFormatter * formatter,
   g_object_unref (tlobj);
 
   return ret;
+}
+
+/* Object functions */
+
+static void
+ges_pitivi_formatter_finalize (GObject * object)
+{
+  GESPitiviFormatter *self = GES_PITIVI_FORMATTER (object);
+  GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (self)->priv;
+
+  g_hash_table_destroy (priv->sources_table);
+  g_hash_table_destroy (priv->source_uris);
+
+  g_hash_table_destroy (priv->saving_source_table);
+  g_list_free (priv->sources_to_load);
+
+  if (priv->timeline_objects_table != NULL) {
+    g_hash_table_foreach (priv->timeline_objects_table,
+        (GHFunc) list_table_destroyer, NULL);
+  }
+
+  if (priv->layers_table != NULL)
+    g_hash_table_destroy (priv->layers_table);
+
+  if (priv->track_objects_table != NULL) {
+    g_hash_table_destroy (priv->track_objects_table);
+  }
+
+  G_OBJECT_CLASS (ges_pitivi_formatter_parent_class)->finalize (object);
+}
+
+static void
+ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
+{
+  GESFormatterClass *formatter_klass;
+  GObjectClass *object_class;
+
+  GST_DEBUG_CATEGORY_INIT (ges_pitivi_formatter_debug, "ges_pitivi_formatter",
+      GST_DEBUG_FG_YELLOW, "ges pitivi formatter");
+
+  object_class = G_OBJECT_CLASS (klass);
+  formatter_klass = GES_FORMATTER_CLASS (klass);
+  g_type_class_add_private (klass, sizeof (GESPitiviFormatterPrivate));
+
+  formatter_klass->can_load_uri = pitivi_can_load_uri;
+  formatter_klass->save_to_uri = save_pitivi_timeline_to_uri;
+  formatter_klass->load_from_uri = load_pitivi_file_from_uri;
+  formatter_klass->update_source_uri = pitivi_formatter_update_source_uri;
+  object_class->finalize = ges_pitivi_formatter_finalize;
+}
+
+static void
+ges_pitivi_formatter_init (GESPitiviFormatter * self)
+{
+  GESPitiviFormatterPrivate *priv;
+
+  self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_PITIVI_FORMATTER, GESPitiviFormatterPrivate);
+
+  priv = self->priv;
+
+  priv->track_objects_table =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) g_hash_table_destroy);
+
+  priv->timeline_objects_table =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
+
+  priv->layers_table =
+      g_hash_table_new_full (g_int_hash, g_str_equal, g_free, g_object_unref);
+
+  priv->sources_table =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) g_hash_table_destroy);
+
+  priv->source_uris =
+      g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
+  priv->sources_to_load = NULL;
+
+  /* Saving context */
+  priv->saving_source_table =
+      g_hash_table_new_full (g_str_hash, g_int_equal, g_free, g_free);
+  priv->nb_sources = 1;
+}
+
+GESPitiviFormatter *
+ges_pitivi_formatter_new (void)
+{
+  return g_object_new (GES_TYPE_PITIVI_FORMATTER, NULL);
 }
 
 /* API */
