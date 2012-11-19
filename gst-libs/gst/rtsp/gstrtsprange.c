@@ -118,6 +118,11 @@ parse_npt_range (const gchar * str, GstRTSPTimeRange * range)
 
   res = parse_npt_time (p + 1, &range->max);
 
+  /* a single - is not allowed */
+  if (range->min.type == GST_RTSP_TIME_END
+      && range->max.type == GST_RTSP_TIME_END)
+    return GST_RTSP_EINVAL;
+
 done:
   return res;
 }
