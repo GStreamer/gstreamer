@@ -38,14 +38,14 @@
 
 /* TODO check if atoi is successful? */
 
-typedef struct _GstMssManifestStreamFragment
+typedef struct _GstMssStreamFragment
 {
   guint number;
   guint64 time;
   guint64 duration;
-} GstMssManifestStreamFragment;
+} GstMssStreamFragment;
 
-struct _GstMssManifestStream
+struct _GstMssStream
 {
   xmlNodePtr xmlnode;
 
@@ -79,10 +79,10 @@ node_has_type (xmlNodePtr node, const gchar * name)
 }
 
 static void
-_gst_mss_manifest_stream_init (GstMssManifestStream * stream, xmlNodePtr node)
+_gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 {
   xmlNodePtr iter;
-  GstMssManifestStreamFragment *previous_fragment = NULL;
+  GstMssStreamFragment *previous_fragment = NULL;
   guint fragment_number = 0;
   guint fragment_time_accum = 0;
   GError *gerror = NULL;
@@ -97,8 +97,7 @@ _gst_mss_manifest_stream_init (GstMssManifestStream * stream, xmlNodePtr node)
       gchar *duration_str;
       gchar *time_str;
       gchar *seqnum_str;
-      GstMssManifestStreamFragment *fragment =
-          g_new (GstMssManifestStreamFragment, 1);
+      GstMssStreamFragment *fragment = g_new (GstMssStreamFragment, 1);
 
       duration_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_DURATION);
       time_str = (gchar *) xmlGetProp (iter, (xmlChar *) MSS_PROP_TIME);
@@ -171,10 +170,10 @@ gst_mss_manifest_new (const GstBuffer * data)
   for (nodeiter = root->children; nodeiter; nodeiter = nodeiter->next) {
     if (nodeiter->type == XML_ELEMENT_NODE
         && (strcmp ((const char *) nodeiter->name, "StreamIndex") == 0)) {
-      GstMssManifestStream *stream = g_new0 (GstMssManifestStream, 1);
+      GstMssStream *stream = g_new0 (GstMssStream, 1);
 
       manifest->streams = g_slist_append (manifest->streams, stream);
-      _gst_mss_manifest_stream_init (stream, nodeiter);
+      _gst_mss_stream_init (stream, nodeiter);
     }
   }
 
@@ -182,7 +181,7 @@ gst_mss_manifest_new (const GstBuffer * data)
 }
 
 static void
-gst_mss_manifest_stream_free (GstMssManifestStream * stream)
+gst_mss_stream_free (GstMssStream * stream)
 {
   g_list_free_full (stream->fragments, g_free);
   g_list_free (stream->qualities);
@@ -197,8 +196,7 @@ gst_mss_manifest_free (GstMssManifest * manifest)
 {
   g_return_if_fail (manifest != NULL);
 
-  g_slist_free_full (manifest->streams,
-      (GDestroyNotify) gst_mss_manifest_stream_free);
+  g_slist_free_full (manifest->streams, (GDestroyNotify) gst_mss_stream_free);
 
   xmlFreeDoc (manifest->xml);
   g_free (manifest);
@@ -210,11 +208,11 @@ gst_mss_manifest_get_streams (GstMssManifest * manifest)
   return manifest->streams;
 }
 
-GstMssManifestStreamType
-gst_mss_manifest_stream_get_type (GstMssManifestStream * stream)
+GstMssStreamType
+gst_mss_stream_get_type (GstMssStream * stream)
 {
   gchar *prop = (gchar *) xmlGetProp (stream->xmlnode, (xmlChar *) "Type");
-  GstMssManifestStreamType ret = MSS_STREAM_TYPE_UNKNOWN;
+  GstMssStreamType ret = MSS_STREAM_TYPE_UNKNOWN;
 
   if (strcmp (prop, "video") == 0) {
     ret = MSS_STREAM_TYPE_VIDEO;
@@ -226,7 +224,7 @@ gst_mss_manifest_stream_get_type (GstMssManifestStream * stream)
 }
 
 static GstCaps *
-_gst_mss_manifest_stream_video_caps_from_fourcc (gchar * fourcc)
+_gst_mss_stream_video_caps_from_fourcc (gchar * fourcc)
 {
   if (!fourcc)
     return NULL;
@@ -238,7 +236,7 @@ _gst_mss_manifest_stream_video_caps_from_fourcc (gchar * fourcc)
 }
 
 static GstCaps *
-_gst_mss_manifest_stream_audio_caps_from_fourcc (gchar * fourcc)
+_gst_mss_stream_audio_caps_from_fourcc (gchar * fourcc)
 {
   if (!fourcc)
     return NULL;
@@ -251,7 +249,7 @@ _gst_mss_manifest_stream_audio_caps_from_fourcc (gchar * fourcc)
 }
 
 static GstCaps *
-_gst_mss_manifest_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
+_gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
 {
   GstCaps *caps;
   GstStructure *structure;
@@ -261,7 +259,7 @@ _gst_mss_manifest_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
   gchar *codec_data =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
 
-  caps = _gst_mss_manifest_stream_video_caps_from_fourcc (fourcc);
+  caps = _gst_mss_stream_video_caps_from_fourcc (fourcc);
   if (!caps)
     goto end;
 
@@ -290,7 +288,7 @@ end:
 }
 
 static GstCaps *
-_gst_mss_manifest_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
+_gst_mss_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
 {
   GstCaps *caps;
   GstStructure *structure;
@@ -300,7 +298,7 @@ _gst_mss_manifest_stream_audio_caps_from_qualitylevel_xml (xmlNodePtr node)
   gchar *codec_data =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
 
-  caps = _gst_mss_manifest_stream_audio_caps_from_fourcc (fourcc);
+  caps = _gst_mss_stream_audio_caps_from_fourcc (fourcc);
   if (!caps)
     goto end;
 
@@ -329,32 +327,26 @@ end:
 }
 
 GstCaps *
-gst_mss_manifest_stream_get_caps (GstMssManifestStream * stream)
+gst_mss_stream_get_caps (GstMssStream * stream)
 {
-  GstMssManifestStreamType streamtype =
-      gst_mss_manifest_stream_get_type (stream);
+  GstMssStreamType streamtype = gst_mss_stream_get_type (stream);
   xmlNodePtr qualitylevel = stream->current_quality->data;
 
   if (streamtype == MSS_STREAM_TYPE_VIDEO)
-    return
-        _gst_mss_manifest_stream_video_caps_from_qualitylevel_xml
-        (qualitylevel);
+    return _gst_mss_stream_video_caps_from_qualitylevel_xml (qualitylevel);
   else if (streamtype == MSS_STREAM_TYPE_AUDIO)
-    return
-        _gst_mss_manifest_stream_audio_caps_from_qualitylevel_xml
-        (qualitylevel);
+    return _gst_mss_stream_audio_caps_from_qualitylevel_xml (qualitylevel);
 
   return NULL;
 }
 
 GstFlowReturn
-gst_mss_manifest_stream_get_fragment_url (GstMssManifestStream * stream,
-    gchar ** url)
+gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
 {
   gchar *tmp;
   gchar *bitrate_str;
   gchar *start_time_str;
-  GstMssManifestStreamFragment *fragment = stream->current_fragment->data;
+  GstMssStreamFragment *fragment = stream->current_fragment->data;
 
   if (stream->current_fragment == NULL) /* stream is over */
     return GST_FLOW_UNEXPECTED;
@@ -376,7 +368,7 @@ gst_mss_manifest_stream_get_fragment_url (GstMssManifestStream * stream,
 }
 
 GstFlowReturn
-gst_mss_manifest_stream_advance_fragment (GstMssManifestStream * stream)
+gst_mss_stream_advance_fragment (GstMssStream * stream)
 {
   if (stream->current_fragment == NULL)
     return GST_FLOW_UNEXPECTED;
@@ -388,7 +380,7 @@ gst_mss_manifest_stream_advance_fragment (GstMssManifestStream * stream)
 }
 
 const gchar *
-gst_mss_manifest_stream_type_name (GstMssManifestStreamType streamtype)
+gst_mss_stream_type_name (GstMssStreamType streamtype)
 {
   switch (streamtype) {
     case MSS_STREAM_TYPE_VIDEO:

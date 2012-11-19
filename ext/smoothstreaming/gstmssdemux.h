@@ -55,7 +55,7 @@ struct _GstMssDemuxStream {
 
   GstMssDemux *parent;
 
-  GstMssManifestStream *manifest_stream;
+  GstMssStream *manifest_stream;
 
   GstUriDownloader *downloader;
 
@@ -73,6 +73,7 @@ struct _GstMssDemux {
   GstBuffer *manifest_buffer;
 
   GstMssManifest *manifest;
+  gchar *base_url;
 
   GSList *streams;
   guint n_videos;

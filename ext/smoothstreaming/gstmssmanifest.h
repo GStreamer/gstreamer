@@ -30,24 +30,24 @@
 G_BEGIN_DECLS
 
 typedef struct _GstMssManifest GstMssManifest;
-typedef struct _GstMssManifestStream GstMssManifestStream;
+typedef struct _GstMssStream GstMssStream;
 
-typedef enum _GstMssManifestStreamType {
+typedef enum _GstMssStreamType {
   MSS_STREAM_TYPE_UNKNOWN = 0,
   MSS_STREAM_TYPE_VIDEO = 1,
   MSS_STREAM_TYPE_AUDIO = 2
-} GstMssManifestStreamType;
+} GstMssStreamType;
 
 GstMssManifest * gst_mss_manifest_new (const GstBuffer * data);
 void gst_mss_manifest_free (GstMssManifest * manifest);
 GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
 
-GstMssManifestStreamType gst_mss_manifest_stream_get_type (GstMssManifestStream *stream);
-GstCaps * gst_mss_manifest_stream_get_caps (GstMssManifestStream * stream);
-GstFlowReturn gst_mss_manifest_stream_get_fragment_url (GstMssManifestStream * stream, gchar ** url);
-GstFlowReturn gst_mss_manifest_stream_advance_fragment (GstMssManifestStream * stream);
+GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
+GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
+GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);
+GstFlowReturn gst_mss_stream_advance_fragment (GstMssStream * stream);
 
-const gchar * gst_mss_manifest_stream_type_name (GstMssManifestStreamType streamtype);
+const gchar * gst_mss_stream_type_name (GstMssStreamType streamtype);
 
 G_END_DECLS
 #endif /* __GST_MSS_MANIFEST_H__ */

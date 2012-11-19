@@ -123,7 +123,7 @@ gst_mss_demux_init (GstMssDemux * mssdemux, GstMssDemuxClass * klass)
 
 static GstMssDemuxStream *
 gst_mss_demux_stream_new (GstMssDemux * mssdemux,
-    GstMssManifestStream * manifeststream, GstPad * srcpad)
+    GstMssStream * manifeststream, GstPad * srcpad)
 {
   GstMssDemuxStream *stream;
 
@@ -190,6 +190,8 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
   }
 
   mssdemux->n_videos = mssdemux->n_audios = 0;
+  g_free (mssdemux->base_url);
+  mssdemux->base_url = NULL;
 }
 
 static void
@@ -242,6 +244,18 @@ gst_mss_demux_chain (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
+static void
+gst_mss_demux_start (GstMssDemux * mssdemux)
+{
+  GSList *iter;
+
+  GST_INFO_OBJECT (mssdemux, "Starting streams' tasks");
+  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+    GstMssDemuxStream *stream = iter->data;
+    gst_task_start (stream->stream_task);
+  }
+}
+
 static gboolean
 gst_mss_demux_event (GstPad * pad, GstEvent * event)
 {
@@ -257,6 +271,7 @@ gst_mss_demux_event (GstPad * pad, GstEvent * event)
       }
 
       gst_mss_demux_process_manifest (mssdemux);
+      gst_mss_demux_start (mssdemux);
       forward = FALSE;
       break;
     default:
@@ -287,12 +302,12 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
     gchar *name;
     GstPad *srcpad = NULL;
     GstMssDemuxStream *stream = NULL;
-    GstMssManifestStream *manifeststream = iter->data;
-    GstMssManifestStreamType streamtype;
+    GstMssStream *manifeststream = iter->data;
+    GstMssStreamType streamtype;
 
-    streamtype = gst_mss_manifest_stream_get_type (manifeststream);
+    streamtype = gst_mss_stream_get_type (manifeststream);
     GST_DEBUG_OBJECT (mssdemux, "Found stream of type: %s",
-        gst_mss_manifest_stream_type_name (streamtype));
+        gst_mss_stream_type_name (streamtype));
 
     /* TODO use stream's name as the pad name? */
     if (streamtype == MSS_STREAM_TYPE_VIDEO) {
@@ -325,7 +340,7 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
   GstCaps *caps;
   GstPad *pad = stream->pad;
 
-  caps = gst_mss_manifest_stream_get_caps (stream->manifest_stream);
+  caps = gst_mss_stream_get_caps (stream->manifest_stream);
 
   if (caps) {
     gst_pad_set_caps (pad, caps);
@@ -354,9 +369,19 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
   query = gst_query_new_uri ();
   ret = gst_pad_peer_query (mssdemux->sinkpad, query);
   if (ret) {
+    gchar *baseurl_end;
     gst_query_parse_uri (query, &uri);
-    /* TODO use this to get the base url for the fragments */
-    g_free (uri);
+    GST_INFO_OBJECT (mssdemux, "Upstream is using URI: %s", uri);
+
+    baseurl_end = g_strrstr (uri, "/Manifest");
+    if (baseurl_end) {
+      /* set the new end of the string */
+      baseurl_end[0] = '\0';
+    } else {
+      GST_WARNING_OBJECT (mssdemux, "Stream's URI didn't end with /manifest");
+    }
+
+    mssdemux->base_url = uri;
   }
   gst_query_unref (query);
 
@@ -376,27 +401,33 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
 static void
 gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
 {
+  GstMssDemux *mssdemux = stream->parent;
+  gchar *path;
   gchar *url;
   GstFragment *fragment;
   GstBufferList *buflist;
   GstFlowReturn ret;
 
-  ret = gst_mss_manifest_stream_get_fragment_url (stream->manifest_stream,
-      &url);
+  GST_DEBUG_OBJECT (mssdemux, "Getting url for stream %p", stream);
+  ret = gst_mss_stream_get_fragment_url (stream->manifest_stream, &path);
   switch (ret) {
     default:
       break;
   }
-  if (!url) {
+  if (!path) {
     /* TODO */
   }
+  GST_DEBUG_OBJECT (mssdemux, "Got url path '%s' for stream %p", path, stream);
+
+  url = g_strdup_printf ("%s/%s", mssdemux->base_url, path);
 
   fragment = gst_uri_downloader_fetch_uri (stream->downloader, url);
+  g_free (path);
   g_free (url);
 
   buflist = gst_fragment_get_buffer_list (fragment);
 
   ret = gst_pad_push_list (stream->pad, buflist);       /* TODO check return */
 
-  ret = gst_mss_manifest_stream_advance_fragment (stream->manifest_stream);
+  ret = gst_mss_stream_advance_fragment (stream->manifest_stream);
 }
