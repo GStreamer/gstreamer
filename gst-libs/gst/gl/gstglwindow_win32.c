@@ -25,7 +25,12 @@
 
 #include "gstglwindow_win32.h"
 
+#if HAVE_WGL
 #include "gstglwindow_win32_wgl.h"
+#endif
+#if HAVE_EGL
+#include "gstglwindow_win32_egl.h"
+#endif
 
 #define WM_GST_GL_WINDOW_CUSTOM (WM_APP+1)
 #define WM_GST_GL_WINDOW_QUIT (WM_APP+2)
