@@ -34,6 +34,19 @@ timeout (GstRTSPServer * server)
   return TRUE;
 }
 
+static gboolean
+remove_map (GstRTSPServer * server)
+{
+  GstRTSPMediaMapping *mapping;
+
+  g_print ("removing /test mapping\n");
+  mapping = gst_rtsp_server_get_media_mapping (server);
+  gst_rtsp_media_mapping_remove_factory (mapping, "/test");
+  g_object_unref (mapping);
+
+  return FALSE;
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -79,7 +92,11 @@ main (int argc, char *argv[])
   if (gst_rtsp_server_attach (server, NULL) == 0)
     goto failed;
 
+  /* do session cleanup every 2 seconds */
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
+  /* remove the mapping after 10 seconds, new clients won't be able to use the
+   * /test url anymore */
+  g_timeout_add_seconds (10, (GSourceFunc) remove_map, server);
 
   /* start serving */
   g_print ("stream ready at rtsp://127.0.0.1:8554/test\n");
