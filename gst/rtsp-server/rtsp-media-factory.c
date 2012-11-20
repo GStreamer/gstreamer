@@ -653,8 +653,8 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
       if (!gst_rtsp_media_is_reusable (media)) {
         /* when not reusable, connect to the unprepare signal to remove the item
          * from our cache when it gets unprepared */
-        g_signal_connect (media, "unprepared", (GCallback) media_unprepared,
-            factory);
+        g_signal_connect_object (media, "unprepared",
+            (GCallback) media_unprepared, factory, 0);
       }
     }
   }
