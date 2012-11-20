@@ -51,7 +51,6 @@ enum
 {
   PROP_0,
   PROP_BIT_RATE,
-  PROP_BUFSIZE,
   PROP_RTP_PAYLOAD_SIZE,
 };
 
@@ -344,7 +343,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
 static GstFlowReturn
 gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
-    guint8 * audio_in, guint in_size, guint max_size)
+    guint8 * audio_in, guint in_size)
 {
   AVCodecContext *ctx;
   gint res;
@@ -356,10 +355,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   ctx = ffmpegaudenc->context;
 
-  /* We need to provide at least ffmpegs minimal buffer size */
-  GST_LOG_OBJECT (ffmpegaudenc, "encoding buffer of max size %d", max_size);
-  if (ffmpegaudenc->buffer_size != max_size)
-    ffmpegaudenc->buffer_size = max_size;
+  GST_LOG_OBJECT (ffmpegaudenc, "encoding buffer ");
 
   memset (&pkt, 0, sizeof (pkt));
   memset (&frame, 0, sizeof (frame));
@@ -401,7 +397,6 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   GstFFMpegAudEnc *ffmpegaudenc;
   gsize size;
   GstFlowReturn ret;
-  gint out_size;
   guint8 *in_data;
   GstMapInfo map;
 
@@ -411,20 +406,16 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
     goto not_negotiated;
 
   inbuf = gst_buffer_ref (inbuf);
-  size = gst_buffer_get_size (inbuf);
 
   GST_DEBUG_OBJECT (ffmpegaudenc,
       "Received time %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
       ", size %" G_GSIZE_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
-      GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)), size);
-
-  /* 4 times the input size should be big enough... */
-  out_size = size * 4;
+      GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)), gst_buffer_get_size (inbuf));
 
   gst_buffer_map (inbuf, &map, GST_MAP_READ);
   in_data = map.data;
   size = map.size;
-  ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, in_data, size, out_size);
+  ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, in_data, size);
   gst_buffer_unmap (inbuf, &map);
   gst_buffer_unref (inbuf);
 
@@ -469,8 +460,6 @@ gst_ffmpegaudenc_set_property (GObject * object,
     case PROP_BIT_RATE:
       ffmpegaudenc->bitrate = g_value_get_int (value);
       break;
-    case PROP_BUFSIZE:
-      break;
     case PROP_RTP_PAYLOAD_SIZE:
       ffmpegaudenc->rtp_payload_size = g_value_get_int (value);
       break;
@@ -494,9 +483,6 @@ gst_ffmpegaudenc_get_property (GObject * object,
     case PROP_BIT_RATE:
       g_value_set_int (value, ffmpegaudenc->bitrate);
       break;
-      break;
-    case PROP_BUFSIZE:
-      g_value_set_int (value, ffmpegaudenc->buffer_size);
       break;
     case PROP_RTP_PAYLOAD_SIZE:
       g_value_set_int (value, ffmpegaudenc->rtp_payload_size);

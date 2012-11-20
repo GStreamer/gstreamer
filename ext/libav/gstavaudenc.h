@@ -41,7 +41,6 @@ struct _GstFFMpegAudEnc
 
   /* cache */
   gint bitrate;
-  gint buffer_size;
   gint rtp_payload_size;
 
   /* other settings are copied over straight,
