@@ -5846,6 +5846,9 @@ FUNC_VALUE_GET_TYPE (bitmask, "GstBitmask");
 GType
 gst_g_thread_get_type (void)
 {
+#if GLIB_CHECK_VERSION(2,35,3)
+  return G_TYPE_THREAD;
+#else
   static volatile gsize type_id = 0;
 
   if (g_once_init_enter (&type_id)) {
@@ -5857,6 +5860,7 @@ gst_g_thread_get_type (void)
   }
 
   return type_id;
+#endif
 }
 
 void
