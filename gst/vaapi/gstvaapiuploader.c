@@ -333,6 +333,7 @@ gst_vaapi_uploader_ensure_caps(
         return FALSE;
 
     priv = uploader->priv;
+    priv->direct_rendering = 0;
 
     structure = gst_caps_get_structure(src_caps, 0);
     if (!structure)
