@@ -170,7 +170,7 @@ gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc)
   ffmpegaudenc->context = avcodec_alloc_context ();
   ffmpegaudenc->opened = FALSE;
 
-  gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (ffmpegaudenc), FALSE);
+  gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (ffmpegaudenc), TRUE);
 }
 
 static void
@@ -355,7 +355,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
 
 static GstFlowReturn
 gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
-    guint8 * audio_in, guint in_size)
+    guint8 * audio_in, guint in_size, gint * have_data)
 {
   AVCodecContext *ctx;
   gint res;
@@ -363,7 +363,6 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   GstAudioInfo *info;
   AVPacket pkt;
   AVFrame frame;
-  gint got_output;
 
   ctx = ffmpegaudenc->context;
 
@@ -377,14 +376,14 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   frame.linesize[0] = in_size;
   frame.nb_samples = in_size / info->bpf;
 
-  res = avcodec_encode_audio2 (ctx, &pkt, &frame, &got_output);
+  res = avcodec_encode_audio2 (ctx, &pkt, &frame, have_data);
   if (res < 0) {
     GST_ERROR_OBJECT (ffmpegaudenc, "Failed to encode buffer: %d", res);
     return GST_FLOW_OK;
   }
   GST_LOG_OBJECT (ffmpegaudenc, "got output size %d", res);
 
-  if (got_output) {
+  if (*have_data) {
     GstBuffer *outbuf;
 
     GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt.size);
@@ -403,6 +402,29 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   return ret;
 }
 
+static void
+gst_ffmpegaudenc_drain (GstFFMpegAudEnc * ffmpegaudenc)
+{
+  GstFFMpegAudEncClass *oclass;
+
+  oclass = (GstFFMpegAudEncClass *) (G_OBJECT_GET_CLASS (ffmpegaudenc));
+
+  if (oclass->in_plugin->capabilities & CODEC_CAP_DELAY) {
+    gint have_data, try = 0;
+
+    GST_LOG_OBJECT (ffmpegaudenc,
+        "codec has delay capabilities, calling until libav has drained everything");
+
+    do {
+      GstFlowReturn ret;
+
+      ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, NULL, 0, &have_data);
+      if (ret != GST_FLOW_OK || have_data == 0)
+        break;
+    } while (try++ < 10);
+  }
+}
+
 static GstFlowReturn
 gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
 {
@@ -411,11 +433,17 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   GstFlowReturn ret;
   guint8 *in_data;
   GstMapInfo map;
+  gint have_data;
 
   ffmpegaudenc = (GstFFMpegAudEnc *) encoder;
 
   if (G_UNLIKELY (!ffmpegaudenc->opened))
     goto not_negotiated;
+
+  if (!inbuf) {
+    gst_ffmpegaudenc_drain (ffmpegaudenc);
+    return GST_FLOW_OK;
+  }
 
   inbuf = gst_buffer_ref (inbuf);
 
@@ -427,7 +455,7 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
   gst_buffer_map (inbuf, &map, GST_MAP_READ);
   in_data = map.data;
   size = map.size;
-  ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, in_data, size);
+  ret = gst_ffmpegaudenc_encode_audio (ffmpegaudenc, in_data, size, &have_data);
   gst_buffer_unmap (inbuf, &map);
   gst_buffer_unref (inbuf);
 
