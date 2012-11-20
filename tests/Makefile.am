@@ -1,4 +1,4 @@
-noinst_PROGRAMS = test-cleanup
+noinst_PROGRAMS = test-cleanup test-reuse
 
 INCLUDES = -I$(top_srcdir) -I$(srcdir)
 
