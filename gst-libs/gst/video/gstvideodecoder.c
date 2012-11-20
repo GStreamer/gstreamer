@@ -3161,25 +3161,24 @@ gst_video_decoder_get_max_decode_time (GstVideoDecoder *
 /**
  * gst_video_decoder_get_qos_proportion:
  * @decoder: a #GstVideoDecoder
- * @proportion: (out) (allow-none): address of variable in which to store the
  *     current QoS proportion, or %NULL
  *
- * Returns: TRUE on success
+ * Returns: The current QoS proportion.
  *
  * Since: 1.0.3
  */
-gboolean
-gst_video_decoder_get_qos_proportion (GstVideoDecoder * decoder,
-    gdouble * proportion)
+gdouble
+gst_video_decoder_get_qos_proportion (GstVideoDecoder * decoder)
 {
-  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
+  gdouble proportion;
+
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), 1.0);
 
   GST_OBJECT_LOCK (decoder);
-  if (proportion != NULL)
-    *proportion = decoder->priv->proportion;
+  proportion = decoder->priv->proportion;
   GST_OBJECT_UNLOCK (decoder);
 
-  return TRUE;
+  return proportion;
 }
 
 GstFlowReturn
