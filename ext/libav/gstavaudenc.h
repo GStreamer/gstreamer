@@ -27,25 +27,17 @@
 G_BEGIN_DECLS
 
 #include <gst/gst.h>
-#include <gst/base/gstadapter.h>
+#include <gst/audio/gstaudioencoder.h>
 #include <libavcodec/avcodec.h>
 
 typedef struct _GstFFMpegAudEnc GstFFMpegAudEnc;
 
 struct _GstFFMpegAudEnc
 {
-  GstElement element;
-
-  /* We need to keep track of our pads, so we do so here. */
-  GstPad *srcpad;
-  GstPad *sinkpad;
+  GstAudioEncoder parent;
 
   AVCodecContext *context;
   gboolean opened;
-  GstClockTime adapter_ts;
-  guint64 adapter_consumed;
-  GstAdapter *adapter;
-  gboolean discont;
 
   /* cache */
   gint bitrate;
@@ -61,7 +53,7 @@ typedef struct _GstFFMpegAudEncClass GstFFMpegAudEncClass;
 
 struct _GstFFMpegAudEncClass
 {
-  GstElementClass parent_class;
+  GstAudioEncoderClass parent_class;
 
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;

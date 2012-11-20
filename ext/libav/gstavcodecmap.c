@@ -2241,6 +2241,30 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
       gst_ffmpeg_videoformat_to_pixfmt (GST_VIDEO_INFO_FORMAT (info));
 }
 
+void
+gst_ffmpeg_audioinfo_to_context (GstAudioInfo * info, AVCodecContext * context)
+{
+  context->channels = info->channels;
+  context->sample_rate = info->rate;
+
+  switch (info->finfo->format) {
+    case GST_AUDIO_FORMAT_F32:
+      context->sample_fmt = AV_SAMPLE_FMT_FLT;
+      break;
+    case GST_AUDIO_FORMAT_F64:
+      context->sample_fmt = AV_SAMPLE_FMT_DBL;
+      break;
+    case GST_AUDIO_FORMAT_S32:
+      context->sample_fmt = AV_SAMPLE_FMT_S32;
+      break;
+    case GST_AUDIO_FORMAT_S16:
+      context->sample_fmt = AV_SAMPLE_FMT_S16;
+      break;
+    default:
+      break;
+  }
+}
+
 /* Convert a GstCaps and a FFMPEG codec Type to a
  * AVCodecContext. If the context is ommitted, no fixed values
  * for video/audio size will be included in the context
