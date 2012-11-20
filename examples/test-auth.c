@@ -21,9 +21,29 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
+static gboolean
+remove_func (GstRTSPSessionPool * pool, GstRTSPSession * session,
+    GstRTSPServer * server)
+{
+  return GST_RTSP_FILTER_REMOVE;
+}
 
 static gboolean
-timeout (GstRTSPServer * server, gboolean ignored)
+remove_sessions (GstRTSPServer * server)
+{
+  GstRTSPSessionPool *pool;
+
+  g_print ("removing all sessions\n");
+  pool = gst_rtsp_server_get_session_pool (server);
+  gst_rtsp_session_pool_filter (pool, (GstRTSPSessionFilterFunc) remove_func,
+      server);
+  g_object_unref (pool);
+
+  return FALSE;
+}
+
+static gboolean
+timeout (GstRTSPServer * server)
 {
   GstRTSPSessionPool *pool;
 
@@ -100,8 +120,11 @@ main (int argc, char *argv[])
     goto failed;
 
   g_timeout_add_seconds (2, (GSourceFunc) timeout, server);
+  g_timeout_add_seconds (10, (GSourceFunc) remove_sessions, server);
 
   /* start serving */
+  g_print ("stream with user:admin ready at rtsp://127.0.0.1:8554/test\n");
+  g_print ("stream with user2:admin2 ready at rtsp://127.0.0.1:8554/test2\n");
   g_main_loop_run (loop);
 
   return 0;
