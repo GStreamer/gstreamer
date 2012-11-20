@@ -147,7 +147,7 @@ payloader_filter (GstPluginFeature * feature, FilterData * data)
 
   if (list) {
     GST_DEBUG ("adding %s", GST_OBJECT_NAME (fact));
-    *list = g_list_prepend (*list, fact);
+    *list = g_list_prepend (*list, gst_object_ref (fact));
   }
 
   return FALSE;
