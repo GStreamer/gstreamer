@@ -546,16 +546,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     gst_caps_unref (icaps);
     return FALSE;
   }
-
-  if (gst_caps_get_size (icaps) > 1) {
-    GstCaps *newcaps;
-
-    newcaps =
-        gst_caps_new_full (gst_structure_copy (gst_caps_get_structure (icaps,
-                0)), NULL);
-    gst_caps_unref (icaps);
-    icaps = newcaps;
-  }
+  icaps = gst_caps_truncate (icaps);
 
   /* Store input state and set output state */
   if (ffmpegenc->input_state)
