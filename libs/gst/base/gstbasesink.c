@@ -2788,6 +2788,7 @@ gst_base_sink_flush_stop (GstBaseSink * basesink, GstPad * pad,
     basesink->have_newsegment = FALSE;
     if (reset_time) {
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
+      GST_ELEMENT_START_TIME (basesink) = 0;
     }
   }
   GST_OBJECT_UNLOCK (basesink);
