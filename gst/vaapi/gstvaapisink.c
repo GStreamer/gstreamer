@@ -72,12 +72,18 @@ static const GstElementDetails gst_vaapisink_details =
         "Gwenole Beauchesne <gwenole.beauchesne@intel.com>");
 
 /* Default template */
+static const char gst_vaapisink_sink_caps_str[] =
+    "video/x-raw-yuv, "
+    "width  = (int) [ 1, MAX ], "
+    "height = (int) [ 1, MAX ]; "
+    GST_VAAPI_SURFACE_CAPS;
+
 static GstStaticPadTemplate gst_vaapisink_sink_factory =
     GST_STATIC_PAD_TEMPLATE(
         "sink",
         GST_PAD_SINK,
         GST_PAD_ALWAYS,
-        GST_STATIC_CAPS(GST_VAAPI_SURFACE_CAPS));
+        GST_STATIC_CAPS(gst_vaapisink_sink_caps_str));
 
 static void
 gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface);
@@ -228,6 +234,7 @@ gst_vaapisink_destroy(GstVaapiSink *sink)
     gst_buffer_replace(&sink->video_buffer, NULL);
     g_clear_object(&sink->texture);
     g_clear_object(&sink->display);
+    g_clear_object(&sink->uploader);
 
     gst_caps_replace(&sink->caps, NULL);
 }
@@ -561,7 +568,13 @@ gst_vaapisink_start(GstBaseSink *base_sink)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
-    return gst_vaapisink_ensure_display(sink);
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+
+    sink->uploader = gst_vaapi_uploader_new(sink->display);
+    if (!sink->uploader)
+        return FALSE;
+    return TRUE;
 }
 
 static gboolean
@@ -572,6 +585,7 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
     gst_buffer_replace(&sink->video_buffer, NULL);
     g_clear_object(&sink->window);
     g_clear_object(&sink->display);
+    g_clear_object(&sink->uploader);
 
     return TRUE;
 }
@@ -597,6 +611,9 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         return FALSE;
     sink->video_width  = video_width;
     sink->video_height = video_height;
+
+    if (gst_structure_has_name(structure, "video/x-raw-yuv"))
+        sink->use_video_raw = TRUE;
 
     gst_video_parse_caps_pixel_aspect_ratio(caps, &video_par_n, &video_par_d);
     sink->video_par_n  = video_par_n;
@@ -808,12 +825,31 @@ static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
-    GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
+    GstVaapiVideoBuffer *vbuffer;
     GstVaapiSurface *surface;
     guint flags;
     gboolean success;
     GstVideoOverlayComposition * const composition =
         gst_video_buffer_get_overlay_composition(buffer);
+
+    if (!sink->use_video_raw)
+        buffer = gst_buffer_ref(buffer);
+    else {
+        GstBuffer * const src_buffer = buffer;
+        if (GST_VAAPI_IS_VIDEO_BUFFER(buffer))
+            buffer = gst_buffer_ref(src_buffer);
+        else if (GST_VAAPI_IS_VIDEO_BUFFER(buffer->parent))
+            buffer = gst_buffer_ref(src_buffer->parent);
+        else {
+            buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
+            if (!buffer)
+                return GST_FLOW_UNEXPECTED;
+        }
+        if (!gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer))
+            goto error;
+    }
+    vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
+    g_return_val_if_fail(vbuffer != NULL, GST_FLOW_UNEXPECTED);
 
     if (sink->display != gst_vaapi_video_buffer_get_display (vbuffer)) {
       g_clear_object(&sink->display);
@@ -821,13 +857,13 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
     }
 
     if (!sink->window)
-        return GST_FLOW_UNEXPECTED;
+        goto error;
 
     gst_vaapisink_ensure_rotation(sink, TRUE);
 
     surface = gst_vaapi_video_buffer_get_surface(vbuffer);
     if (!surface)
-        return GST_FLOW_UNEXPECTED;
+        goto error;
 
     GST_DEBUG("render surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
@@ -865,11 +901,50 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
         break;
     }
     if (!success)
-        return GST_FLOW_UNEXPECTED;
+        goto error;
 
     /* Retain VA surface until the next one is displayed */
     if (sink->use_overlay)
         gst_buffer_replace(&sink->video_buffer, buffer);
+    gst_buffer_unref(buffer);
+    return GST_FLOW_OK;
+
+error:
+    gst_buffer_unref(buffer);
+    return GST_FLOW_UNEXPECTED;
+}
+
+static GstFlowReturn
+gst_vaapisink_buffer_alloc(
+    GstBaseSink        *base_sink,
+    guint64             offset,
+    guint               size,
+    GstCaps            *caps,
+    GstBuffer         **pbuf
+)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstStructure *structure;
+    GstBuffer *buf;
+
+    *pbuf = NULL;
+
+    structure = gst_caps_get_structure(caps, 0);
+    if (!gst_structure_has_name(structure, "video/x-raw-yuv"))
+        return GST_FLOW_OK;
+
+    if (!gst_vaapi_uploader_ensure_display(sink->uploader, sink->display))
+        return GST_FLOW_NOT_SUPPORTED;
+    if (!gst_vaapi_uploader_ensure_caps(sink->uploader, caps, NULL))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    buf = gst_vaapi_uploader_get_buffer(sink->uploader);
+    if (!buf) {
+        GST_WARNING("failed to allocate resources for raw YUV buffer");
+        return GST_FLOW_NOT_SUPPORTED;
+    }
+
+    *pbuf = buf;
     return GST_FLOW_OK;
 }
 
@@ -974,6 +1049,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;
     basesink_class->query        = gst_vaapisink_query;
+    basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
 
     gst_element_class_set_details_simple(
         element_class,

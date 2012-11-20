@@ -38,6 +38,7 @@ libgstvaapi_la_SOURCES =	\
 	gstvaapipostproc.c	\
 	gstvaapisink.c		\
 	gstvaapiupload.c	\
+	gstvaapiuploader.c	\
 	$(NULL)
 
 noinst_HEADERS =		\
@@ -48,6 +49,7 @@ noinst_HEADERS =		\
 	gstvaapipostproc.h	\
 	gstvaapisink.h		\
 	gstvaapiupload.h	\
+	gstvaapiuploader.h	\
 	$(NULL)
 
 libgstvaapi_la_CFLAGS =	\
