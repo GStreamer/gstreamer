@@ -171,10 +171,6 @@ gst_rtsp_media_finalize (GObject * obj)
 
   g_list_free_full (media->dynamic, gst_object_unref);
 
-  if (media->source) {
-    g_source_destroy (media->source);
-    g_source_unref (media->source);
-  }
   if (media->auth)
     g_object_unref (media->auth);
   if (media->pool)
@@ -1339,6 +1335,12 @@ finish_unprepare (GstRTSPMedia * media)
   media->reused = TRUE;
   media->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
 
+  if (media->source) {
+    g_source_destroy (media->source);
+    g_source_unref (media->source);
+    media->source = NULL;
+  }
+
   /* when the media is not reusable, this will effectively unref the media and
    * recreate it */
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
@@ -1394,11 +1396,6 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
       success = klass->unprepare (media);
   } else {
     finish_unprepare (media);
-  }
-  if (media->source) {
-    g_source_destroy (media->source);
-    g_source_unref (media->source);
-    media->source = NULL;
   }
   g_rec_mutex_unlock (&media->state_lock);
 
