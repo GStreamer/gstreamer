@@ -657,6 +657,7 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
 {
   GstPulseSink *psink;
   GstPulseRingBuffer *pbuf;
+  GstAudioRingBuffer *ringbuf;
   const pa_timing_info *info;
   pa_usec_t sink_usec;
 
@@ -664,11 +665,26 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
 
   pbuf = GST_PULSERING_BUFFER_CAST (userdata);
   psink = GST_PULSESINK_CAST (GST_OBJECT_PARENT (pbuf));
+  ringbuf = GST_AUDIO_RING_BUFFER (pbuf);
 
   if (!info) {
     GST_LOG_OBJECT (psink, "latency update (information unknown)");
     return;
   }
+
+  if (!info->read_index_corrupt) {
+    /* Update segdone based on the read index. segdone is of segment
+     * granularity, while the read index is at byte granularity. We take the
+     * ceiling while converting the latter to the former since it is more
+     * conservative to report that we've read more than we have than to report
+     * less. One concern here is that latency updates happen every 100ms, which
+     * means segdone is not updated very often, but increasing the update
+     * frequency would mean more communication overhead. */
+    g_atomic_int_set (&ringbuf->segdone,
+        (int) gst_util_uint64_scale_ceil (info->read_index, 1,
+            ringbuf->spec.segsize));
+  }
+
   sink_usec = info->configured_sink_usec;
 
   GST_LOG_OBJECT (psink,
