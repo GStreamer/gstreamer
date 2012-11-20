@@ -379,7 +379,7 @@ gst_encoding_profile_set_presence (GstEncodingProfile * profile, guint presence)
 /**
  * gst_encoding_profile_set_restriction:
  * @profile: a #GstEncodingProfile
- * @restriction: the restriction to apply
+ * @restriction: (transfer full): the restriction to apply
  *
  * Set the restriction #GstCaps to apply before the encoder
  * that will be used in the profile. See gst_encoding_profile_set_restriction()
