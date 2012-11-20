@@ -390,7 +390,11 @@ GType gst_fraction_get_type (void);
 GType gst_value_list_get_type (void);
 GType gst_value_array_get_type (void);
 GType gst_bitmask_get_type (void);
+
+/* Hide this compatibility type from introspection */
+#ifndef __GI_SCANNER__
 GType gst_g_thread_get_type (void);
+#endif
 
 GType gst_date_time_get_type (void);
 
