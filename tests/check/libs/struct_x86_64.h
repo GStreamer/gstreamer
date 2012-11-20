@@ -53,7 +53,7 @@ GstCheckABIStruct list[] = {
   {"GstRTSPMessage", sizeof (GstRTSPMessage), 88},
   {"GstRTSPRange", sizeof (GstRTSPRange), 8},
   {"GstRTSPTime", sizeof (GstRTSPTime), 16},
-  {"GstRTSPTimeRange", sizeof (GstRTSPTimeRange), 40},
+  {"GstRTSPTimeRange", sizeof (GstRTSPTimeRange), 88},
   {"GstRTSPTransport", sizeof (GstRTSPTransport), 120},
   {"GstRTSPUrl", sizeof (GstRTSPUrl), 56},
   {"GstRTSPWatchFuncs", sizeof (GstRTSPWatchFuncs), 96},
