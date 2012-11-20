@@ -17,6 +17,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-hlssink
+ *
+ * HTTP Live Streaming sink/server
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch-1.0 videotestsrc is-live=true ! x264enc ! mpegtsmux ! hlssink max-files=5
+ * ]|
+ * </refsect2>
+ */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
