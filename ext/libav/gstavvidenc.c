@@ -98,6 +98,8 @@ static gboolean gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
 static gboolean gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
+static gboolean gst_ffmpegvidenc_reset (GstVideoEncoder * encoder,
+    gboolean hard);
 
 static GstCaps *gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder,
     GstCaps * filter);
@@ -209,6 +211,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
   venc_class->getcaps = gst_ffmpegvidenc_getcaps;
   venc_class->set_format = gst_ffmpegvidenc_set_format;
   venc_class->propose_allocation = gst_ffmpegvidenc_propose_allocation;
+  venc_class->reset = gst_ffmpegvidenc_reset;
 
   gobject_class->finalize = gst_ffmpegvidenc_finalize;
 }
@@ -882,6 +885,18 @@ gst_ffmpegvidenc_get_property (GObject * object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_ffmpegvidenc_reset (GstVideoEncoder * encoder, gboolean hard)
+{
+  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
+
+  if (ffmpegenc->opened) {
+    avcodec_flush_buffers (ffmpegenc->context);
+  }
+
+  return TRUE;
 }
 
 static gboolean

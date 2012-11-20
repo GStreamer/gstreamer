@@ -201,10 +201,10 @@ gst_ffmpegaudenc_stop (GstAudioEncoder * encoder)
 static void
 gst_ffmpegaudenc_flush (GstAudioEncoder * encoder)
 {
-  GstFFMpegAudEnc *ffmpegauddec = (GstFFMpegAudEnc *) encoder;
+  GstFFMpegAudEnc *ffmpegaudenc = (GstFFMpegAudEnc *) encoder;
 
-  if (ffmpegauddec->opened) {
-    avcodec_flush_buffers (ffmpegauddec->context);
+  if (ffmpegaudenc->opened) {
+    avcodec_flush_buffers (ffmpegaudenc->context);
   }
 }
 
