@@ -787,24 +787,28 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
             (("Could not write to file \"%s\"."), ffmpegenc->filename),
             GST_ERROR_SYSTEM);
 
-    if (gst_video_encoder_allocate_output_frame (GST_VIDEO_ENCODER (ffmpegenc),
-            frame, ret_size) != GST_FLOW_OK) {
+    if (send) {
+      if (gst_video_encoder_allocate_output_frame (GST_VIDEO_ENCODER
+              (ffmpegenc), frame, ret_size) != GST_FLOW_OK) {
 #ifndef GST_DISABLE_GST_DEBUG
-      GstFFMpegVidEncClass *oclass =
-          (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
-      GST_WARNING_OBJECT (ffmpegenc,
-          "avenc_%s: failed to allocate buffer", oclass->in_plugin->name);
+        GstFFMpegVidEncClass *oclass =
+            (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
+        GST_WARNING_OBJECT (ffmpegenc,
+            "avenc_%s: failed to allocate buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
+        gst_video_codec_frame_unref (frame);
+        break;
+      }
+      outbuf = frame->output_buffer;
+      gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
+
+      if (ffmpegenc->context->coded_frame->key_frame)
+        GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+
+      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
+    } else {
       gst_video_codec_frame_unref (frame);
-      break;
     }
-    outbuf = frame->output_buffer;
-    gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
-
-    if (ffmpegenc->context->coded_frame->key_frame)
-      GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
-
-    gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
   }
 }
 
