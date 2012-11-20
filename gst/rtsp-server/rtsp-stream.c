@@ -813,6 +813,10 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     gst_pad_link (pad, stream->recv_sink[i]);
     gst_object_unref (pad);
 
+    /* we set and keep these to playing so that they don't cause NO_PREROLL return
+     * values */
+    gst_element_set_state (stream->udpsrc[i], GST_STATE_PLAYING);
+    gst_element_set_locked_state (stream->udpsrc[i], TRUE);
     /* add udpsrc */
     gst_bin_add (bin, stream->udpsrc[i]);
     /* and link to the funnel */
@@ -841,10 +845,6 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       gst_element_set_state (stream->funnel[i], state);
       gst_element_set_state (stream->appsrc[i], state);
     }
-    /* we set and keep these to playing so that they don't cause NO_PREROLL return
-     * values */
-    gst_element_set_state (stream->udpsrc[i], GST_STATE_PLAYING);
-    gst_element_set_locked_state (stream->udpsrc[i], TRUE);
   }
 
   /* be notified of caps changes */
