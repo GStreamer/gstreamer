@@ -330,6 +330,20 @@ gst_vaapisink_ensure_display(GstVaapiSink *sink)
 }
 
 static gboolean
+gst_vaapisink_ensure_uploader(GstVaapiSink *sink)
+{
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+
+    if (!sink->uploader) {
+        sink->uploader = gst_vaapi_uploader_new(sink->display);
+        if (!sink->uploader)
+            return FALSE;
+    }
+    return TRUE;
+}
+
+static gboolean
 gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
 {
     GstVaapiRectangle * const display_rect = &sink->display_rect;
@@ -588,6 +602,24 @@ gst_vaapisink_stop(GstBaseSink *base_sink)
     g_clear_object(&sink->uploader);
 
     return TRUE;
+}
+
+static GstCaps *
+gst_vaapisink_get_caps(GstBaseSink *base_sink)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstCaps *out_caps, *yuv_caps;
+
+    out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS);
+    if (!out_caps)
+        return NULL;
+
+    if (gst_vaapisink_ensure_uploader(sink)) {
+        yuv_caps = gst_vaapi_uploader_get_caps(sink->uploader);
+        if (yuv_caps)
+            gst_caps_append(out_caps, gst_caps_copy(yuv_caps));
+    }
+    return out_caps;
 }
 
 static gboolean
@@ -1045,6 +1077,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 
     basesink_class->start        = gst_vaapisink_start;
     basesink_class->stop         = gst_vaapisink_stop;
+    basesink_class->get_caps     = gst_vaapisink_get_caps;
     basesink_class->set_caps     = gst_vaapisink_set_caps;
     basesink_class->preroll      = gst_vaapisink_show_frame;
     basesink_class->render       = gst_vaapisink_show_frame;

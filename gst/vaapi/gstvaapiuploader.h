@@ -99,6 +99,10 @@ gst_vaapi_uploader_process(
 );
 
 G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_uploader_get_caps(GstVaapiUploader *uploader);
+
+G_GNUC_INTERNAL
 GstBuffer *
 gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader);
 

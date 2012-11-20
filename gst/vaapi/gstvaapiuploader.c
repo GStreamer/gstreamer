@@ -21,6 +21,7 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <string.h>
 #include <gst/video/video.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
@@ -48,6 +49,7 @@ G_DEFINE_TYPE(GstVaapiUploader, gst_vaapi_uploader, G_TYPE_OBJECT)
 
 struct _GstVaapiUploaderPrivate {
     GstVaapiDisplay    *display;
+    GstCaps            *allowed_caps;
     GstVaapiVideoPool  *images;
     GstCaps            *image_caps;
     guint               image_width;
@@ -70,6 +72,8 @@ gst_vaapi_uploader_destroy(GstVaapiUploader *uploader)
     GstVaapiUploaderPrivate * const priv = uploader->priv;
 
     gst_caps_replace(&priv->image_caps, NULL);
+    gst_caps_replace(&priv->allowed_caps, NULL);
+
     g_clear_object(&priv->images);
     g_clear_object(&priv->surfaces);
     g_clear_object(&priv->display);
@@ -87,6 +91,88 @@ ensure_display(GstVaapiUploader *uploader, GstVaapiDisplay *display)
     if (display)
         priv->display = g_object_ref(display);
     return TRUE;
+}
+
+static gboolean
+ensure_image(GstVaapiImage *image)
+{
+    guint i, num_planes, width, height;
+
+    /* Make the image fully dirty */
+    if (!gst_vaapi_image_map(image))
+        return FALSE;
+
+    gst_vaapi_image_get_size(image, &width, &height);
+
+    num_planes = gst_vaapi_image_get_plane_count(image);
+    for (i = 0; i < num_planes; i++) {
+        guchar * const plane = gst_vaapi_image_get_plane(image, i);
+        if (plane)
+            memset(plane, 0, height * gst_vaapi_image_get_pitch(image, i));
+    }
+
+    if (!gst_vaapi_image_unmap(image))
+        gst_vaapi_image_unmap(image);
+    return TRUE;
+}
+
+static gboolean
+ensure_allowed_caps(GstVaapiUploader *uploader)
+{
+    GstVaapiUploaderPrivate * const priv = uploader->priv;
+    GstVaapiSurface *surface = NULL;
+    GstCaps *out_caps, *image_caps = NULL;
+    guint i, n_structures;
+    gboolean success = FALSE;
+
+    enum { WIDTH = 64, HEIGHT = 64 };
+
+    if (priv->allowed_caps)
+        return TRUE;
+
+    out_caps = gst_caps_new_empty();
+    if (!out_caps)
+        return FALSE;
+
+    image_caps = gst_vaapi_display_get_image_caps(priv->display);
+    if (!image_caps)
+        goto end;
+
+    surface = gst_vaapi_surface_new(priv->display,
+        GST_VAAPI_CHROMA_TYPE_YUV420, WIDTH, HEIGHT);
+    if (!surface)
+        goto end;
+
+    n_structures = gst_caps_get_size(image_caps);
+    for (i = 0; i < n_structures; i++) {
+        GstStructure * const structure = gst_caps_get_structure(image_caps, i);
+        GstVaapiImage *image;
+        GstVaapiImageFormat format;
+        guint32 fourcc;
+
+        if (!gst_structure_get_fourcc(structure, "format", &fourcc))
+            continue;
+        format = gst_vaapi_image_format_from_fourcc(fourcc);
+        if (!format)
+            continue;
+        image = gst_vaapi_image_new(priv->display, format, WIDTH, HEIGHT);
+        if (!image)
+            continue;
+        if (ensure_image(image) && gst_vaapi_surface_put_image(surface, image))
+            gst_caps_append_structure(out_caps, gst_structure_copy(structure));
+        gst_object_unref(image);
+    }
+
+    gst_caps_replace(&priv->allowed_caps, out_caps);
+    success = TRUE;
+
+end:
+    gst_caps_unref(out_caps);
+    if (image_caps)
+        gst_caps_unref(image_caps);
+    if (surface)
+        gst_object_unref(surface);
+    return success;
 }
 
 static gboolean
@@ -338,6 +424,16 @@ gst_vaapi_uploader_process(
     if (!gst_vaapi_image_map(image))
         return FALSE;
     return TRUE;
+}
+
+GstCaps *
+gst_vaapi_uploader_get_caps(GstVaapiUploader *uploader)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), NULL);
+
+    if (!ensure_allowed_caps(uploader))
+        return NULL;
+    return uploader->priv->allowed_caps;
 }
 
 GstBuffer *
