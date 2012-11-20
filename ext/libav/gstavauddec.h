@@ -41,6 +41,7 @@ struct _GstFFMpegAudDec
   /* current output format */
   GstAudioInfo info;
   GstAudioChannelPosition ffmpeg_layout[64];
+  gboolean needs_reorder;
 };
 
 typedef struct _GstFFMpegAudDecClass GstFFMpegAudDecClass;

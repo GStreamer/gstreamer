@@ -221,6 +221,69 @@ could_not_open:
   }
 }
 
+typedef struct
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+} BufferInfo;
+
+/* called when ffmpeg wants us to allocate a buffer to write the decoded frame
+ * into. We try to give it memory from our pool */
+static int
+gst_ffmpegauddec_get_buffer (AVCodecContext * context, AVFrame * frame)
+{
+  GstFFMpegAudDec *ffmpegdec;
+  GstAudioInfo *info;
+  BufferInfo *buffer_info = g_slice_new (BufferInfo);
+
+  ffmpegdec = (GstFFMpegAudDec *) context->opaque;
+  if (G_UNLIKELY (!gst_ffmpegauddec_negotiate (ffmpegdec, FALSE)))
+    goto negotiate_failed;
+
+  info = gst_audio_decoder_get_audio_info (GST_AUDIO_DECODER (ffmpegdec));
+
+  buffer_info->buffer =
+      gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (ffmpegdec),
+      frame->nb_samples * info->bpf);
+  gst_buffer_map (buffer_info->buffer, &buffer_info->map, GST_MAP_WRITE);
+  frame->opaque = buffer_info;
+  frame->data[0] = buffer_info->map.data;
+  frame->linesize[0] = buffer_info->map.size;
+  frame->type = FF_BUFFER_TYPE_USER;
+
+  return 0;
+  /* fallbacks */
+negotiate_failed:
+  {
+    GST_DEBUG_OBJECT (ffmpegdec, "negotiate failed");
+    goto fallback;
+  }
+fallback:
+  {
+    return avcodec_default_get_buffer (context, frame);
+  }
+}
+
+static void
+gst_ffmpegauddec_release_buffer (AVCodecContext * context, AVFrame * frame)
+{
+  GstFFMpegAudDec *ffmpegdec;
+  BufferInfo *buffer_info;
+
+  ffmpegdec = (GstFFMpegAudDec *) context->opaque;
+  buffer_info = frame->opaque;
+  /* check if it was our buffer */
+  if (frame->type != FF_BUFFER_TYPE_USER) {
+    GST_DEBUG_OBJECT (ffmpegdec, "default release buffer");
+    avcodec_default_release_buffer (context, frame);
+  } else if (buffer_info) {
+    gst_buffer_unmap (buffer_info->buffer, &buffer_info->map);
+    gst_buffer_unref (buffer_info->buffer);
+    g_slice_free (BufferInfo, buffer_info);
+  }
+  frame->opaque = NULL;
+}
+
 static gboolean
 gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 {
@@ -260,6 +323,11 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
   ffmpegdec->context->error_recognition = 1;
+
+  ffmpegdec->context->opaque = ffmpegdec;
+  ffmpegdec->context->get_buffer = gst_ffmpegauddec_get_buffer;
+  ffmpegdec->context->reget_buffer = NULL;
+  ffmpegdec->context->release_buffer = gst_ffmpegauddec_release_buffer;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -315,6 +383,9 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec, gboolean force)
   /* Get GStreamer channel layout */
   gst_audio_channel_positions_to_valid_order (pos,
       ffmpegdec->context->channels);
+  ffmpegdec->needs_reorder =
+      memcmp (pos, ffmpegdec->ffmpeg_layout,
+      sizeof (pos[0]) * ffmpegdec->context->channels) != 0;
   gst_audio_info_set_format (&ffmpegdec->info, format,
       ffmpegdec->context->sample_rate, ffmpegdec->context->channels, pos);
 
@@ -370,31 +441,30 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 {
   gint len = -1;
   gint have_data = AVCODEC_MAX_AUDIO_FRAME_SIZE;
-  GstMapInfo map;
-  int16_t *odata;
   AVPacket packet;
+  AVFrame frame;
 
   GST_DEBUG_OBJECT (ffmpegdec, "size: %d", size);
 
-  *outbuf =
-      gst_audio_decoder_allocate_output_buffer (GST_AUDIO_DECODER (ffmpegdec),
-      AVCODEC_MAX_AUDIO_FRAME_SIZE);
-
-  gst_buffer_map (*outbuf, &map, GST_MAP_WRITE);
-  odata = (int16_t *) map.data;
-
   gst_avpacket_init (&packet, data, size);
-  len = avcodec_decode_audio3 (ffmpegdec->context, odata, &have_data, &packet);
+  memset (&frame, 0, sizeof (frame));
+  len = avcodec_decode_audio4 (ffmpegdec->context, &frame, &have_data, &packet);
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
   if (len >= 0 && have_data > 0) {
-    /* Buffer size */
-    gst_buffer_unmap (*outbuf, &map);
-    gst_buffer_resize (*outbuf, 0, have_data);
+    BufferInfo *buffer_info = frame.opaque;
 
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
+    if (buffer_info) {
+      *outbuf = gst_buffer_ref (buffer_info->buffer);
+    } else {
+      *outbuf = gst_buffer_new_and_alloc (frame.linesize[0]);
+      gst_buffer_fill (*outbuf, 0, frame.data[0], frame.linesize[0]);
+    }
+    ffmpegdec->context->release_buffer (ffmpegdec->context, &frame);
+
     if (!gst_ffmpegauddec_negotiate (ffmpegdec, FALSE)) {
       gst_buffer_unref (*outbuf);
       *outbuf = NULL;
@@ -405,13 +475,13 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     GST_DEBUG_OBJECT (ffmpegdec, "Buffer created. Size: %d", have_data);
 
     /* Reorder channels to the GStreamer channel order */
-    /* Only the width really matters here... and it's stored as depth */
-    gst_audio_buffer_reorder_channels (*outbuf, ffmpegdec->info.finfo->format,
-        ffmpegdec->info.channels, ffmpegdec->ffmpeg_layout,
-        ffmpegdec->info.position);
+    if (ffmpegdec->needs_reorder) {
+      *outbuf = gst_buffer_make_writable (*outbuf);
+      gst_audio_buffer_reorder_channels (*outbuf, ffmpegdec->info.finfo->format,
+          ffmpegdec->info.channels, ffmpegdec->ffmpeg_layout,
+          ffmpegdec->info.position);
+    }
   } else {
-    gst_buffer_unmap (*outbuf, &map);
-    gst_buffer_unref (*outbuf);
     *outbuf = NULL;
   }
 
