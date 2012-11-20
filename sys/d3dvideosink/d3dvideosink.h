@@ -35,7 +35,7 @@
 #   else
 #    define DECLARE_INTERFACE_IID_(i,b,d) _COM_interface i : public b
 #   endif
-#  else
+#  elif !defined(DECLARE_INTERFACE_IID_)
 #   define DECLARE_INTERFACE_IID_(i,b,d) DECLARE_INTERFACE(i)
 #  endif
 # endif
