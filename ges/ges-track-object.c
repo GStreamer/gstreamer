@@ -34,15 +34,19 @@
 #include "ges-extractable.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
+#include "ges-meta-container.h"
 #include <gobject/gvaluecollector.h>
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
+static void ges_meta_container_interface_init
+    (GESMetaContainerInterface * iface);
 
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackObject, ges_track_object,
     G_TYPE_INITIALLY_UNOWNED,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
+        ges_meta_container_interface_init));
 
 struct _GESTrackObjectPrivate
 {
@@ -380,6 +384,12 @@ ges_track_object_init (GESTrackObject * self)
 static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
+}
+
+static void
+ges_meta_container_interface_init (GESMetaContainerInterface * iface)
+{
+
 }
 
 static inline gboolean
