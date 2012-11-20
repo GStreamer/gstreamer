@@ -4355,16 +4355,24 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
         last = start;
       else
         last = stop;
+
+      GST_DEBUG_OBJECT (basesink, "in PAUSED using last %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (last));
     } else {
       /* in playing, use last stop time as upper bound */
       if (start == -1 || segment->rate > 0.0)
         last = stop;
       else
         last = start;
+
+      GST_DEBUG_OBJECT (basesink, "in PLAYING using last %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (last));
     }
   } else {
     /* convert last stop to stream time */
     last = gst_segment_to_stream_time (segment, oformat, segment->position);
+
+    GST_DEBUG_OBJECT (basesink, "in using last %" G_GINT64_FORMAT, last);
   }
 
   if (in_paused) {
