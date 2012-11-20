@@ -67,6 +67,7 @@ static gboolean gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder,
 static GstFlowReturn gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder,
     GstBuffer * inbuf);
 static gboolean gst_ffmpegaudenc_stop (GstAudioEncoder * encoder);
+static void gst_ffmpegaudenc_flush (GstAudioEncoder * encoder);
 
 static void gst_ffmpegaudenc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -155,6 +156,7 @@ gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass)
 
   gstaudioencoder_class->stop = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_stop);
   gstaudioencoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_getcaps);
+  gstaudioencoder_class->flush = GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_flush);
   gstaudioencoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_ffmpegaudenc_set_format);
   gstaudioencoder_class->handle_frame =
@@ -194,6 +196,16 @@ gst_ffmpegaudenc_stop (GstAudioEncoder * encoder)
   }
 
   return TRUE;
+}
+
+static void
+gst_ffmpegaudenc_flush (GstAudioEncoder * encoder)
+{
+  GstFFMpegAudEnc *ffmpegauddec = (GstFFMpegAudEnc *) encoder;
+
+  if (ffmpegauddec->opened) {
+    avcodec_flush_buffers (ffmpegauddec->context);
+  }
 }
 
 static GstCaps *
