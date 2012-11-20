@@ -753,12 +753,11 @@ _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
 {
     GstVaapiImagePrivate * const priv = image->priv;
     GstVaapiDisplay *display;
-    void *image_data;
     VAStatus status;
     guint i;
 
     if (_gst_vaapi_image_is_mapped(image))
-        return TRUE;
+        goto map_success;
 
     display = GST_VAAPI_OBJECT_DISPLAY(image);
     if (!display)
@@ -767,15 +766,14 @@ _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaMapBuffer(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        image->priv->image.buf,
-        &image_data
+        priv->image.buf,
+        (void **)&priv->image_data
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaMapBuffer()"))
         return FALSE;
 
-    image->priv->image_data = image_data;
-
+map_success:
     if (raw_image) {
         const VAImage * const va_image = &priv->image;
         raw_image->format     = priv->format;
@@ -783,7 +781,8 @@ _gst_vaapi_image_map(GstVaapiImage *image, GstVaapiImageRaw *raw_image)
         raw_image->height     = va_image->height;
         raw_image->num_planes = va_image->num_planes;
         for (i = 0; i < raw_image->num_planes; i++) {
-            raw_image->pixels[i] = (guchar *)image_data + va_image->offsets[i];
+            raw_image->pixels[i] = (guchar *)priv->image_data +
+                va_image->offsets[i];
             raw_image->stride[i] = va_image->pitches[i];
         }
     }
@@ -815,7 +814,7 @@ _gst_vaapi_image_unmap(GstVaapiImage *image)
     VAStatus status;
 
     if (!_gst_vaapi_image_is_mapped(image))
-        return FALSE;
+        return TRUE;
 
     display = GST_VAAPI_OBJECT_DISPLAY(image);
     if (!display)
