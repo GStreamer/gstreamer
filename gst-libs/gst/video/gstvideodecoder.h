@@ -353,9 +353,8 @@ gboolean         gst_video_decoder_negotiate           (GstVideoDecoder * decode
 GstClockTimeDiff gst_video_decoder_get_max_decode_time (GstVideoDecoder *decoder,
 							GstVideoCodecFrame *frame);
 
-gboolean         gst_video_decoder_get_qos_info (GstVideoDecoder * decoder,
-                                                 gdouble *proportion,
-                                                 GstClockTime *earliest_time);
+gboolean         gst_video_decoder_get_qos_proportion (GstVideoDecoder * decoder,
+                                                       gdouble         * proportion);
 
 GstFlowReturn    gst_video_decoder_finish_frame (GstVideoDecoder *decoder,
 						 GstVideoCodecFrame *frame);
