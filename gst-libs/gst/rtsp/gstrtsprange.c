@@ -142,7 +142,8 @@ done:
  *   19961108T143720.25Z
  */
 static GstRTSPResult
-parse_utc_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
+parse_utc_time (const gchar * str, GstRTSPTime * time, GstRTSPTime2 * time2,
+    const gchar * limit)
 {
 
   if (str[0] == '\0') {
@@ -168,9 +169,9 @@ parse_utc_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
             &mins, &secs) != 6)
       return GST_RTSP_EINVAL;
 
-    time->year = year;
-    time->month = month;
-    time->day = day;
+    time2->year = year;
+    time2->month = month;
+    time2->day = day;
     time->seconds = ((hours * 60) + mins) * 60 + secs;
   }
   return GST_RTSP_OK;
@@ -191,10 +192,10 @@ parse_utc_range (const gchar * str, GstRTSPTimeRange * range)
   if (p == NULL || p == str)
     return GST_RTSP_EINVAL;
 
-  if ((res = parse_utc_time (str, &range->min, p)) != GST_RTSP_OK)
+  if ((res = parse_utc_time (str, &range->min, &range->min2, p)) != GST_RTSP_OK)
     goto done;
 
-  res = parse_utc_time (p + 1, &range->max, NULL);
+  res = parse_utc_time (p + 1, &range->max, &range->max2, NULL);
 
 done:
   return res;
@@ -205,7 +206,8 @@ done:
  *  hours:minutes:seconds:frames.subframes
 */
 static GstRTSPResult
-parse_smpte_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
+parse_smpte_time (const gchar * str, GstRTSPTime * time, GstRTSPTime2 * time2,
+    const gchar * limit)
 {
   gint hours, mins, secs;
 
@@ -222,7 +224,7 @@ parse_smpte_time (const gchar * str, GstRTSPTime * time, const gchar * limit)
     str = strchr (str + 1, ':');
     str = strchr (str + 1, ':');
     if (str && (limit == NULL || str < limit))
-      time->frames = gst_strtod (str + 1);
+      time2->frames = gst_strtod (str + 1);
   }
   return GST_RTSP_OK;
 }
@@ -242,10 +244,11 @@ parse_smpte_range (const gchar * str, GstRTSPTimeRange * range)
   if (p == NULL || p == str)
     return GST_RTSP_EINVAL;
 
-  if ((res = parse_smpte_time (str, &range->min, p)) != GST_RTSP_OK)
+  if ((res =
+          parse_smpte_time (str, &range->min, &range->min2, p)) != GST_RTSP_OK)
     goto done;
 
-  res = parse_smpte_time (p + 1, &range->max, NULL);
+  res = parse_smpte_time (p + 1, &range->max, &range->max2, NULL);
 
 done:
   return res;

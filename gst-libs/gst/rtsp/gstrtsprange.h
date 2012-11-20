@@ -70,6 +70,7 @@ typedef enum
 
 typedef struct _GstRTSPTimeRange GstRTSPTimeRange;
 typedef struct _GstRTSPTime GstRTSPTime;
+typedef struct _GstRTSPTime2 GstRTSPTime2;
 
 /**
  * GstRTSPTimeType:
@@ -93,16 +94,25 @@ typedef enum {
  * @type: the time of the time
  * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS,
  *           GST_RTSP_TIME_UTC and GST_RTSP_TIME_FRAMES
- * @frames: frames and subframes when @type is GST_RTSP_TIME_FRAMES
- * @year: year when @type is GST_RTSP_TIME_UTC
- * @month: month when @type is GST_RTSP_TIME_UTC
- * @day: day when @type is GST_RTSP_TIME_UTC
  *
  * A time indication.
  */
 struct _GstRTSPTime {
   GstRTSPTimeType type;
   gdouble         seconds;
+};
+
+/**
+ * GstRTSPTime2:
+ * @frames: frames and subframes when type in GstRTSPTime is
+ *          GST_RTSP_TIME_FRAMES
+ * @year: year when type is GST_RTSP_TIME_UTC
+ * @month: month when type is GST_RTSP_TIME_UTC
+ * @day: day when type is GST_RTSP_TIME_UTC
+ *
+ * A time indication.
+ */
+struct _GstRTSPTime2 {
   gdouble         frames;
   guint           year;
   guint           month;
@@ -120,8 +130,10 @@ struct _GstRTSPTime {
 struct _GstRTSPTimeRange {
   GstRTSPRangeUnit unit;
 
-  GstRTSPTime min;
-  GstRTSPTime max;
+  GstRTSPTime  min;
+  GstRTSPTime  max;
+  GstRTSPTime2 min2;
+  GstRTSPTime2 max2;
 };
 
 GstRTSPResult   gst_rtsp_range_parse        (const gchar *rangestr, GstRTSPTimeRange **range);
