@@ -47,10 +47,13 @@ typedef struct _MoveContext MoveContext;
 
 static inline void init_movecontext (MoveContext * mv_ctx);
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
+static void ges_meta_container_interface_init
+    (GESMetaContainerInterface * iface);
 
 G_DEFINE_TYPE_WITH_CODE (GESTimeline, ges_timeline, GST_TYPE_BIN,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
+        ges_meta_container_interface_init));
 
 
 GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
@@ -211,6 +214,11 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->asset_type = GES_TYPE_PROJECT;
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_id = extractable_get_id;
+}
+
+static void
+ges_meta_container_interface_init (GESMetaContainerInterface * iface)
+{
 }
 
 /* Internal methods */
