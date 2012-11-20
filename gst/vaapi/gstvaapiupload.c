@@ -350,13 +350,12 @@ gst_vaapiupload_transform_caps(
         if (!gst_structure_has_name(structure, GST_VAAPI_SURFACE_CAPS_NAME))
             return NULL;
         out_caps = gst_caps_from_string(gst_vaapiupload_yuv_caps_str);
-        if (upload->display) {
+        if (gst_vaapiupload_ensure_uploader(upload)) {
             GstCaps *allowed_caps, *inter_caps;
-            allowed_caps = gst_vaapi_display_get_image_caps(upload->display);
+            allowed_caps = gst_vaapi_uploader_get_caps(upload->uploader);
             if (!allowed_caps)
                 return NULL;
             inter_caps = gst_caps_intersect(out_caps, allowed_caps);
-            gst_caps_unref(allowed_caps);
             gst_caps_unref(out_caps);
             out_caps = inter_caps;
         }
