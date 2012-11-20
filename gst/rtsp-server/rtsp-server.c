@@ -204,6 +204,7 @@ gst_rtsp_server_finalize (GObject * object)
 
   g_free (server->address);
   g_free (server->service);
+
   if (server->socket)
     g_object_unref (server->socket);
 
@@ -718,6 +719,7 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
     if (socket == NULL) {
       GST_DEBUG_OBJECT (server, "failed to make socket (%s), try next",
           sock_error->message);
+      g_object_unref (sockaddr);
       continue;
     }
 
