@@ -465,40 +465,46 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG) {
-    GstTagList *tl = NULL, *tmp;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:{
+      GstTagList *tl = NULL, *tmp;
 
-    gst_event_parse_tag (event, &tl);
-    GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tl);
-    DISCO_LOCK (ps->dc);
-    /* If preroll is complete, drop these tags - the collected information is
-     * possibly already being processed and adding more tags would be racy */
-    if (G_LIKELY (ps->dc->priv->processing)) {
-      GST_DEBUG_OBJECT (pad, "private stream %p old tags %" GST_PTR_FORMAT, ps,
-          ps->tags);
-      tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
-      if (ps->tags)
-        gst_tag_list_unref (ps->tags);
-      ps->tags = tmp;
-      GST_DEBUG_OBJECT (pad, "private stream %p new tags %" GST_PTR_FORMAT, ps,
-          tmp);
-    } else
-      GST_DEBUG_OBJECT (pad, "Dropping tags since preroll is done");
-    DISCO_UNLOCK (ps->dc);
-  }
+      gst_event_parse_tag (event, &tl);
+      GST_DEBUG_OBJECT (pad, "tags %" GST_PTR_FORMAT, tl);
+      DISCO_LOCK (ps->dc);
+      /* If preroll is complete, drop these tags - the collected information is
+       * possibly already being processed and adding more tags would be racy */
+      if (G_LIKELY (ps->dc->priv->processing)) {
+        GST_DEBUG_OBJECT (pad, "private stream %p old tags %" GST_PTR_FORMAT,
+            ps, ps->tags);
+        tmp = gst_tag_list_merge (ps->tags, tl, GST_TAG_MERGE_APPEND);
+        if (ps->tags)
+          gst_tag_list_unref (ps->tags);
+        ps->tags = tmp;
+        GST_DEBUG_OBJECT (pad, "private stream %p new tags %" GST_PTR_FORMAT,
+            ps, tmp);
+      } else
+        GST_DEBUG_OBJECT (pad, "Dropping tags since preroll is done");
+      DISCO_UNLOCK (ps->dc);
+      break;
+    }
+    case GST_EVENT_TOC:{
+      GstToc *tmp;
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_TOC) {
-    GstToc *tmp;
-
-    gst_event_parse_toc (event, &tmp, NULL);
-    GST_DEBUG_OBJECT (pad, "toc %" GST_PTR_FORMAT, tmp);
-    DISCO_LOCK (ps->dc);
-    ps->toc = tmp;
-    if (G_LIKELY (ps->dc->priv->processing)) {
-      GST_DEBUG_OBJECT (pad, "private stream %p toc %" GST_PTR_FORMAT, ps, tmp);
-    } else
-      GST_DEBUG_OBJECT (pad, "Dropping toc since preroll is done");
-    DISCO_UNLOCK (ps->dc);
+      gst_event_parse_toc (event, &tmp, NULL);
+      GST_DEBUG_OBJECT (pad, "toc %" GST_PTR_FORMAT, tmp);
+      DISCO_LOCK (ps->dc);
+      ps->toc = tmp;
+      if (G_LIKELY (ps->dc->priv->processing)) {
+        GST_DEBUG_OBJECT (pad, "private stream %p toc %" GST_PTR_FORMAT, ps,
+            tmp);
+      } else
+        GST_DEBUG_OBJECT (pad, "Dropping toc since preroll is done");
+      DISCO_UNLOCK (ps->dc);
+      break;
+    }
+    default:
+      break;
   }
 
   return GST_PAD_PROBE_OK;
