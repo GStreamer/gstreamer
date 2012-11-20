@@ -1,5 +1,5 @@
 /*
- *  gstvaapiupload.h - VA-API video uploader
+ *  gstvaapiupload.h - VA-API video upload element
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
  *  Copyright (C) 2011-2012 Intel Corporation
@@ -24,11 +24,7 @@
 #define GST_VAAPIUPLOAD_H
 
 #include <gst/base/gstbasetransform.h>
-#include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapisurface.h>
-#include <gst/vaapi/gstvaapiimagepool.h>
-#include <gst/vaapi/gstvaapisurfacepool.h>
-#include <gst/vaapi/gstvaapivideobuffer.h>
+#include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
 
@@ -59,24 +55,12 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiUpload                  GstVaapiUpload;
 typedef struct _GstVaapiUploadClass             GstVaapiUploadClass;
 
-/* Max output surfaces */
-#define GST_VAAPIUPLOAD_MAX_SURFACES 2
-
 struct _GstVaapiUpload {
     /*< private >*/
     GstBaseTransform    parent_instance;
 
     GstVaapiDisplay    *display;
-    GstVaapiVideoPool  *images;
-    guint               image_width;
-    guint               image_height;
-    GstVaapiVideoPool  *surfaces;
-    guint               surface_width;
-    guint               surface_height;
-    guint               direct_rendering_caps;
-    guint               direct_rendering;
-    unsigned int        images_reset    : 1;
-    unsigned int        surfaces_reset  : 1;
+    GstVaapiUploader   *uploader;
 };
 
 struct _GstVaapiUploadClass {
