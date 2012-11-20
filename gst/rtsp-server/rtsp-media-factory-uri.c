@@ -158,6 +158,8 @@ gst_rtsp_media_factory_uri_init (GstRTSPMediaFactoryURI * factory)
 {
   FilterData data = { NULL, NULL, NULL };
 
+  GST_DEBUG_OBJECT (factory, "new");
+
   factory->uri = g_strdup (DEFAULT_URI);
   factory->use_gstpay = DEFAULT_USE_GSTPAY;
 
@@ -180,6 +182,8 @@ static void
 gst_rtsp_media_factory_uri_finalize (GObject * obj)
 {
   GstRTSPMediaFactoryURI *factory = GST_RTSP_MEDIA_FACTORY_URI (obj);
+
+  GST_DEBUG_OBJECT (factory, "finalize");
 
   g_free (factory->uri);
   gst_plugin_feature_list_free (factory->demuxers);
