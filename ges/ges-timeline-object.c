@@ -79,11 +79,14 @@ static GESTimelineObject *ges_timeline_object_copy (GESTimelineObject * object,
     gboolean * deep);
 
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
+static void ges_meta_container_interface_init (GESMetaContainerInterface *
+    iface);
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTimelineObject, ges_timeline_object,
     G_TYPE_INITIALLY_UNOWNED,
-    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
-        ges_extractable_interface_init));
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, ges_extractable_interface_init)
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
+        ges_meta_container_interface_init));
 
 /* Mapping of relationship between a TimelineObject and the TrackObjects
  * it controls
@@ -440,6 +443,11 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->set_asset = extractable_set_asset;
   iface->register_metas = _register_metas;
+}
+
+static void
+ges_meta_container_interface_init (GESMetaContainerInterface * iface)
+{
 }
 
 /**
