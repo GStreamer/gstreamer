@@ -89,6 +89,8 @@ struct _GESTrackObject {
 
   GESTrackObjectPrivate *priv;
 
+  GESAsset *asset;
+
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
@@ -113,7 +115,7 @@ struct _GESTrackObject {
  *
  * Subclasses can override the @create_gnl_object method to override what type
  * of GNonLin object will be created.
- */ 
+ */
 struct _GESTrackObjectClass {
   /*< private >*/
   GInitiallyUnownedClass parent_class;

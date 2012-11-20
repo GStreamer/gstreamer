@@ -24,12 +24,17 @@
  */
 
 #include "ges-internal.h"
+#include "ges-extractable.h"
 #include "ges-track-object.h"
 #include "ges-track-effect.h"
 #include "ges-track-parse-launch-effect.h"
 
-G_DEFINE_TYPE (GESTrackParseLaunchEffect, ges_track_parse_launch_effect,
-    GES_TYPE_TRACK_EFFECT);
+static void ges_extractable_interface_init (GESExtractableInterface * iface);
+
+G_DEFINE_TYPE_WITH_CODE (GESTrackParseLaunchEffect,
+    ges_track_parse_launch_effect, GES_TYPE_TRACK_EFFECT,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static void ges_track_parse_launch_effect_dispose (GObject * object);
 static void ges_track_parse_launch_effect_finalize (GObject * object);
@@ -46,6 +51,46 @@ enum
   PROP_0,
   PROP_BIN_DESCRIPTION,
 };
+
+static gchar *
+extractable_check_id (GType type, const gchar * id, GError ** error)
+{
+  GstElement *effect = gst_parse_bin_from_description (id, TRUE, error);
+
+  if (effect == NULL)
+    return NULL;
+
+  gst_object_unref (effect);
+  return g_strdup (id);
+}
+
+static GParameter *
+extractable_get_parameters_from_id (const gchar * id, guint * n_params)
+{
+  GParameter *params = g_new0 (GParameter, 2);
+
+  params[0].name = g_strdup ("bin-description");
+  g_value_init (&params[0].value, G_TYPE_STRING);
+  g_value_set_string (&params[0].value, id);
+
+  *n_params = 1;
+
+  return params;
+}
+
+static gchar *
+extractable_get_id (GESExtractable * self)
+{
+  return g_strdup (GES_TRACK_PARSE_LAUNCH_EFFECT (self)->priv->bin_description);
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->check_id = (GESExtractableCheckId) extractable_check_id;
+  iface->get_parameters_from_id = extractable_get_parameters_from_id;
+  iface->get_id = extractable_get_id;
+}
 
 static void
 ges_track_parse_launch_effect_get_property (GObject * object,

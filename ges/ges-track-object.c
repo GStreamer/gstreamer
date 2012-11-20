@@ -31,12 +31,18 @@
  */
 
 #include "ges-internal.h"
+#include "ges-extractable.h"
 #include "ges-track-object.h"
 #include "ges-timeline-object.h"
 #include <gobject/gvaluecollector.h>
 
-G_DEFINE_ABSTRACT_TYPE (GESTrackObject, ges_track_object,
-    G_TYPE_INITIALLY_UNOWNED);
+static void ges_extractable_interface_init (GESExtractableInterface * iface);
+
+
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackObject, ges_track_object,
+    G_TYPE_INITIALLY_UNOWNED,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 struct _GESTrackObjectPrivate
 {
@@ -369,6 +375,11 @@ ges_track_object_init (GESTrackObject * self)
   priv->locked = TRUE;
   priv->properties_hashtable = NULL;
   priv->maxduration = GST_CLOCK_TIME_NONE;
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
 }
 
 static inline gboolean
