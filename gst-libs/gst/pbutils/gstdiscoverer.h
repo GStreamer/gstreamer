@@ -62,6 +62,7 @@ GstDiscovererStreamInfo* gst_discoverer_stream_info_get_next(GstDiscovererStream
 GstCaps*                 gst_discoverer_stream_info_get_caps(GstDiscovererStreamInfo* info);
 const GstTagList*        gst_discoverer_stream_info_get_tags(GstDiscovererStreamInfo* info);
 const GstToc*            gst_discoverer_stream_info_get_toc(GstDiscovererStreamInfo* info);
+const gchar*             gst_discoverer_stream_info_get_stream_id(GstDiscovererStreamInfo* info);
 const GstStructure*      gst_discoverer_stream_info_get_misc(GstDiscovererStreamInfo* info);
 const gchar *            gst_discoverer_stream_info_get_stream_type_nick(GstDiscovererStreamInfo* info);
 

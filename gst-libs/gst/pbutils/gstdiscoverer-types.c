@@ -70,6 +70,8 @@ gst_discoverer_stream_info_finalize (GObject * object)
   if (info->toc)
     gst_toc_unref (info->toc);
 
+  g_free (info->stream_id);
+
   if (info->misc)
     gst_structure_free (info->misc);
 }
@@ -131,6 +133,9 @@ gst_discoverer_info_copy_int (GstDiscovererStreamInfo * info,
 
   if (info->toc)
     ret->toc = gst_toc_ref (info->toc);
+
+  if (info->stream_id)
+    ret->stream_id = g_strdup (info->stream_id);
 
   if (info->misc)
     ret->misc = gst_structure_copy (info->misc);
@@ -661,6 +666,21 @@ gst_discoverer_stream_info_get_toc (GstDiscovererStreamInfo * info)
   g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (info), NULL);
 
   return info->toc;
+}
+
+/**
+ * gst_discoverer_stream_info_get_stream_id:
+ * @info: a #GstDiscovererStreamInfo
+ *
+ * Returns: (transfer none): the stream ID of this stream. If you wish to
+ * use the stream ID after the life-time of @info you will need to copy it.
+ */
+const gchar *
+gst_discoverer_stream_info_get_stream_id (GstDiscovererStreamInfo * info)
+{
+  g_return_val_if_fail (GST_IS_DISCOVERER_STREAM_INFO (info), NULL);
+
+  return info->stream_id;
 }
 
 /**

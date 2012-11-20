@@ -27,6 +27,7 @@ struct _GstDiscovererStreamInfo {
   GstCaps               *caps;
   GstTagList            *tags;
   GstToc                *toc;
+  gchar                 *stream_id;
   GstStructure          *misc;
 
   gpointer _gst_reserved[GST_PADDING];

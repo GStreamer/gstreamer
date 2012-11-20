@@ -54,6 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (discoverer_debug);
 static GQuark _CAPS_QUARK;
 static GQuark _TAGS_QUARK;
 static GQuark _TOC_QUARK;
+static GQuark _STREAM_ID_QUARK;
 static GQuark _MISSING_PLUGIN_QUARK;
 static GQuark _STREAM_TOPOLOGY_QUARK;
 static GQuark _TOPOLOGY_PAD_QUARK;
@@ -67,6 +68,7 @@ typedef struct
   GstElement *sink;
   GstTagList *tags;
   GstToc *toc;
+  gchar *stream_id;
 } PrivateStream;
 
 struct _GstDiscovererPrivate
@@ -134,7 +136,8 @@ _do_init (void)
 
   _CAPS_QUARK = g_quark_from_static_string ("caps");
   _TAGS_QUARK = g_quark_from_static_string ("tags");
-  _TOC_QUARK = g_quark_from_static_string ("toc");
+  _TOC_QUARK = g_quark_from_static_string ("stream-id");
+  _STREAM_ID_QUARK = g_quark_from_static_string ("toc");
   _MISSING_PLUGIN_QUARK = g_quark_from_static_string ("missing-plugin");
   _STREAM_TOPOLOGY_QUARK = g_quark_from_static_string ("stream-topology");
   _TOPOLOGY_PAD_QUARK = g_quark_from_static_string ("pad");
@@ -503,6 +506,15 @@ _event_probe (GstPad * pad, GstPadProbeInfo * info, PrivateStream * ps)
       DISCO_UNLOCK (ps->dc);
       break;
     }
+    case GST_EVENT_STREAM_START:{
+      const gchar *stream_id;
+
+      gst_event_parse_stream_start (event, &stream_id);
+
+      g_free (ps->stream_id);
+      ps->stream_id = stream_id ? g_strdup (stream_id) : NULL;
+      break;
+    }
     default:
       break;
   }
@@ -691,6 +703,7 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
   if (ps->toc) {
     gst_toc_unref (ps->toc);
   }
+  g_free (ps->stream_id);
 
   g_slice_free (PrivateStream, ps);
 
@@ -725,6 +738,9 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
     gst_structure_id_set (st, _TAGS_QUARK, GST_TYPE_TAG_LIST, ps->tags, NULL);
   if (ps->toc)
     gst_structure_id_set (st, _TOC_QUARK, GST_TYPE_TOC, ps->toc, NULL);
+  if (ps->stream_id)
+    gst_structure_id_set (st, _STREAM_ID_QUARK, G_TYPE_STRING, ps->stream_id,
+        NULL);
 
   return st;
 }
@@ -758,6 +774,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
   GstTagList *tags_st;
   GstToc *toc_st;
   const gchar *name;
+  gchar *stream_id;
   int tmp;
   guint utmp;
 
@@ -822,6 +839,12 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.toc = toc_st;
     }
 
+    if (gst_structure_id_has_field (st, _STREAM_ID_QUARK)) {
+      gst_structure_id_get (st, _STREAM_ID_QUARK, G_TYPE_STRING, &stream_id,
+          NULL);
+      info->parent.stream_id = stream_id;
+    }
+
     if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
       gchar *language;
       if (gst_tag_list_get_string (((GstDiscovererStreamInfo *) info)->tags,
@@ -881,6 +904,12 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.toc = toc_st;
     }
 
+    if (gst_structure_id_has_field (st, _STREAM_ID_QUARK)) {
+      gst_structure_id_get (st, _STREAM_ID_QUARK, G_TYPE_STRING, &stream_id,
+          NULL);
+      info->parent.stream_id = stream_id;
+    }
+
     gst_caps_unref (caps);
     return (GstDiscovererStreamInfo *) info;
 
@@ -914,6 +943,12 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->parent.toc = toc_st;
     }
 
+    if (gst_structure_id_has_field (st, _STREAM_ID_QUARK)) {
+      gst_structure_id_get (st, _STREAM_ID_QUARK, G_TYPE_STRING, &stream_id,
+          NULL);
+      info->parent.stream_id = stream_id;
+    }
+
     if (!info->language && ((GstDiscovererStreamInfo *) info)->tags) {
       gchar *language;
       if (gst_tag_list_get_string (((GstDiscovererStreamInfo *) info)->tags,
@@ -944,6 +979,11 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
 
     if (gst_structure_id_get (st, _TOC_QUARK, GST_TYPE_TOC, &toc_st, NULL)) {
       info->toc = toc_st;
+    }
+
+    if (gst_structure_id_get (st, _STREAM_ID_QUARK, G_TYPE_STRING, &stream_id,
+            NULL)) {
+      info->stream_id = stream_id;
     }
 
     gst_caps_unref (caps);

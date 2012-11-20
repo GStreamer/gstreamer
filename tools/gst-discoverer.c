@@ -83,6 +83,9 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
     my_g_string_append_printf (s, depth, "  None\n");
   }
 
+  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
+      gst_discoverer_stream_info_get_stream_id (info));
+
   audio_info = (GstDiscovererAudioInfo *) info;
   ctmp = gst_discoverer_audio_info_get_language (audio_info);
   my_g_string_append_printf (s, depth, "Language: %s\n",
@@ -146,6 +149,9 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
   } else {
     my_g_string_append_printf (s, depth, "  None\n");
   }
+
+  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
+      gst_discoverer_stream_info_get_stream_id (info));
 
   video_info = (GstDiscovererVideoInfo *) info;
   my_g_string_append_printf (s, depth, "Width: %u\n",
@@ -217,6 +223,9 @@ gst_stream_subtitle_information_to_string (GstDiscovererStreamInfo * info,
   } else {
     my_g_string_append_printf (s, depth, "  None\n");
   }
+
+  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
+      gst_discoverer_stream_info_get_stream_id (info));
 
   subtitle_info = (GstDiscovererSubtitleInfo *) info;
   ctmp = gst_discoverer_subtitle_info_get_language (subtitle_info);
