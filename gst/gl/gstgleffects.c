@@ -260,7 +260,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
           "Switch video texture left to right, useful with webcams",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Gstreamer OpenGL Effects", "Filter/Effect",
       "GL Shading Language effects",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");

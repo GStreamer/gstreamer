@@ -89,7 +89,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   gobject_class->set_property = gst_gl_colorscale_set_property;
   gobject_class->get_property = gst_gl_colorscale_get_property;
 
-  gst_element_class_set_details_simple (element_class, "OpenGL color scale",
+  gst_element_class_set_metadata (element_class, "OpenGL color scale",
       "Filter/Effect", "Colorspace converter and video scaler",
       "Julien Isorce <julien.isorce@gmail.com>");
 

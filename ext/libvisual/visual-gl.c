@@ -221,7 +221,7 @@ gst_visual_gl_class_init (gpointer g_class, gpointer class_data)
     gst_element_class_add_pad_template (element_class,
         gst_static_pad_template_get (&sink_template));
 
-    gst_element_class_set_details_simple (element_class,
+    gst_element_class_set_metadata (element_class,
         longname, "Visualization", klass->plugin->info->about,
         "Benjamin Otte <otte@gnome.org>");
 

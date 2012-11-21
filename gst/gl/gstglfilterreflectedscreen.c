@@ -134,7 +134,7 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
           "Specifies the distance from the viewer to the far clipping plane",
           0.0, 1000.0, 100.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "OpenGL Reflected Screen filter", "Filter/Effect",
       "Reflected Screen Filter", "Pierre POUZOL <pierre.pouzol@hotmail.fr>");
 }

@@ -124,7 +124,7 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
   gobject_class->set_property = gst_gl_mosaic_set_property;
   gobject_class->get_property = gst_gl_mosaic_get_property;
 
-  gst_element_class_set_details_simple (element_class, "OpenGL mosaic",
+  gst_element_class_set_metadata (element_class, "OpenGL mosaic",
       "Filter/Effect", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
 

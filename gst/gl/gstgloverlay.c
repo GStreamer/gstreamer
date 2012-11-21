@@ -220,7 +220,7 @@ gst_gl_overlay_class_init (GstGLOverlayClass * klass)
           "choose ratio video between 0 and 3\n \t\t\t0 : Default ratio\n\t\t\t1 : 4 / 3\n\t\t\t2 : 16 / 9\n\t\t\t3 : 16 / 10",
           0, 3, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Gstreamer OpenGL Overlay", "Filter/Effect",
       "Overlay GL video texture with a PNG image",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");

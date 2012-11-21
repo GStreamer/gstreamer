@@ -104,7 +104,7 @@ gst_gl_filter_app_class_init (GstGLFilterAppClass * klass)
           "Pass data to the draw and reshape callbacks",
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "OpenGL application filter", "Filter/Effect",
       "Use client callbacks to define the scene",
       "Julien Isorce <julien.isorce@gmail.com>");

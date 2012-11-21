@@ -102,7 +102,7 @@ gst_gl_filterblur_class_init (GstGLFilterBlurClass * klass)
   gobject_class->set_property = gst_gl_filterblur_set_property;
   gobject_class->get_property = gst_gl_filterblur_get_property;
 
-  gst_element_class_set_details_simple (element_class, "Gstreamer OpenGL Blur",
+  gst_element_class_set_metadata (element_class, "Gstreamer OpenGL Blur",
       "Filter/Effect", "Blur with 9x9 separable convolution",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 

@@ -130,7 +130,7 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
           "Invert colors to get dark edges on bright background",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "Gstreamer OpenGL Sobel", "Filter/Effect", "Sobel edge detection",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }

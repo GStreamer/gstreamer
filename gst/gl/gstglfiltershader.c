@@ -132,7 +132,7 @@ gst_gl_filtershader_class_init (GstGLFilterShaderClass * klass)
           "Set the shader uniform variables", NULL,
           G_PARAM_WRITABLE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_details_simple (element_class,
+  gst_element_class_set_metadata (element_class,
       "OpenGL fragment shader filter", "Filter/Effect",
       "Load GLSL fragment shader from file", "<luc.deschenaux@freesurf.ch>");
 
