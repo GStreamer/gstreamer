@@ -92,6 +92,8 @@ typedef enum {
  * @target_state: the desired target state of the pipeline
  * @rtpbin: the rtpbin
  * @range: the range of the media being streamed
+ * @range_start: range start in #GstClockTime
+ * @range_stop: range stop in #GstClockTime
  *
  * A class that contains the GStreamer element along with a list of
  * #GstRTSPStream objects that can produce data.
@@ -138,6 +140,8 @@ struct _GstRTSPMedia {
 
   /* the range of media */
   GstRTSPTimeRange   range;
+  GstClockTime       range_start;
+  GstClockTime       range_stop;
 };
 
 /**
