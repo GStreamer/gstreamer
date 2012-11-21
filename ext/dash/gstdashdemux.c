@@ -175,10 +175,10 @@ enum
 };
 
 /* Default values for properties */
-#define DEFAULT_MIN_BUFFERING_TIME        5  /* in seconds */
-#define DEFAULT_MAX_BUFFERING_TIME       30  /* in seconds */
-#define DEFAULT_BANDWIDTH_USAGE         0.8  /* 0 to 1     */
-#define DEFAULT_MAX_BITRATE        24000000  /* in bit/s  */
+#define DEFAULT_MIN_BUFFERING_TIME        5     /* in seconds */
+#define DEFAULT_MAX_BUFFERING_TIME       30     /* in seconds */
+#define DEFAULT_BANDWIDTH_USAGE         0.8     /* 0 to 1     */
+#define DEFAULT_MAX_BITRATE        24000000     /* in bit/s  */
 
 #define DEFAULT_FAILED_COUNT 3
 
@@ -597,7 +597,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_dash_demux_setup_all_streams (GstDashDemux *demux)
+gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 {
   GList *listLang = NULL;
   guint i, nb_audio;
@@ -609,7 +609,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux *demux)
   if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_VIDEO, ""))
     GST_INFO_OBJECT (demux, "No video adaptation set found");
 
-  nb_audio = gst_mpdparser_get_list_and_nb_of_audio_language (demux->client, &listLang);
+  nb_audio =
+      gst_mpdparser_get_list_and_nb_of_audio_language (demux->client,
+      &listLang);
   if (nb_audio == 0)
     nb_audio = 1;
   GST_INFO_OBJECT (demux, "Number of language is=%d", nb_audio);
@@ -617,11 +619,13 @@ gst_dash_demux_setup_all_streams (GstDashDemux *demux)
   for (i = 0; i < nb_audio; i++) {
     lang = (gchar *) g_list_nth_data (listLang, i);
     if (gst_mpdparser_get_nb_adaptationSet (demux->client) > 1)
-      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO, lang))
+      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_AUDIO,
+              lang))
         GST_INFO_OBJECT (demux, "No audio adaptation set found");
 
     if (gst_mpdparser_get_nb_adaptationSet (demux->client) > nb_audio)
-      if (!gst_mpd_client_setup_streaming (demux->client, GST_STREAM_APPLICATION, lang))
+      if (!gst_mpd_client_setup_streaming (demux->client,
+              GST_STREAM_APPLICATION, lang))
         GST_INFO_OBJECT (demux, "No application adaptation set found");
   }
 
@@ -688,16 +692,19 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
         return FALSE;
       /* Send duration message */
       if (!gst_mpd_client_is_live (demux->client)) {
-        GstClockTime duration = gst_mpd_client_get_media_presentation_duration (demux->client);
+        GstClockTime duration =
+            gst_mpd_client_get_media_presentation_duration (demux->client);
 
         if (duration != GST_CLOCK_TIME_NONE) {
-          GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
+          GST_DEBUG_OBJECT (demux,
+              "Sending duration message : %" GST_TIME_FORMAT,
               GST_TIME_ARGS (duration));
           gst_element_post_message (GST_ELEMENT (demux),
-              gst_message_new_duration (GST_OBJECT (demux),
-                  GST_FORMAT_TIME, duration));
+              gst_message_new_duration (GST_OBJECT (demux), GST_FORMAT_TIME,
+                  duration));
         } else {
-          GST_DEBUG_OBJECT (demux, "mediaPresentationDuration unknown, can not send the duration message");
+          GST_DEBUG_OBJECT (demux,
+              "mediaPresentationDuration unknown, can not send the duration message");
         }
       }
       gst_dash_demux_resume_download_task (demux);
@@ -734,7 +741,8 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_duration (query, &fmt, NULL);
       if (fmt == GST_FORMAT_TIME) {
-        duration = gst_mpd_client_get_media_presentation_duration (dashdemux->client);
+        duration =
+            gst_mpd_client_get_media_presentation_duration (dashdemux->client);
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0) {
           gst_query_set_duration (query, GST_FORMAT_TIME, duration);
           ret = TRUE;
@@ -755,7 +763,8 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
       if (fmt == GST_FORMAT_TIME) {
         GstClockTime duration;
 
-        duration = gst_mpd_client_get_media_presentation_duration (dashdemux->client);
+        duration =
+            gst_mpd_client_get_media_presentation_duration (dashdemux->client);
         if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
           stop = duration;
 
@@ -1166,7 +1175,8 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       if (demux->end_of_period) {
         GST_INFO_OBJECT (demux, "Reached the end of the Period");
         /* load the next Period in the Media Presentation */
-        if (!gst_mpd_client_get_next_period (demux->client) || !gst_dash_demux_setup_all_streams (demux)) {
+        if (!gst_mpd_client_get_next_period (demux->client)
+            || !gst_dash_demux_setup_all_streams (demux)) {
           GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
           demux->end_of_manifest = TRUE;
           if (GST_STATE (demux) != GST_STATE_PLAYING) {
@@ -1537,7 +1547,7 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
     if (stream == NULL)
       return FALSE;
     /* FIXME: we should'nt fiddle with stream internals like that */
-    download->index = stream->segment_idx -1;
+    download->index = stream->segment_idx - 1;
 
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
 
@@ -1572,7 +1582,8 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
   g_get_current_time (&now);
   diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (start));
   demux->dnl_rate = (size_buffer * 8) / ((double) diff / GST_SECOND);
-  GST_INFO_OBJECT (demux, "Download rate = %" PRIu64 " Kbits/s (%" PRIu64 " Ko in %.2f s)",
+  GST_INFO_OBJECT (demux,
+      "Download rate = %" PRIu64 " Kbits/s (%" PRIu64 " Ko in %.2f s)",
       demux->dnl_rate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
   return TRUE;
 }
