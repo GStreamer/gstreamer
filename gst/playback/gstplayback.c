@@ -30,6 +30,7 @@
 #include "gstplayback.h"
 #include "gstplaysink.h"
 #include "gstsubtitleoverlay.h"
+#include "gststreamsynchronizer.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -48,6 +49,7 @@ plugin_init (GstPlugin * plugin)
   res = gst_play_bin2_plugin_init (plugin);
   res &= gst_play_sink_plugin_init (plugin);
   res &= gst_subtitle_overlay_plugin_init (plugin);
+  res &= gst_stream_synchronizer_plugin_init (plugin);
 
   res &= gst_decode_bin_plugin_init (plugin);
   res &= gst_uri_decode_bin_plugin_init (plugin);

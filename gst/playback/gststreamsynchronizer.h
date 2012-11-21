@@ -61,6 +61,8 @@ struct _GstStreamSynchronizerClass
 
 GType gst_stream_synchronizer_get_type (void);
 
+gboolean gst_stream_synchronizer_plugin_init (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_STREAM_SYNCHRONIZER_H__ */
