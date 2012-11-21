@@ -306,15 +306,16 @@ invalid:
 }
 
 static gboolean
-npt_time_string (const GstRTSPTime * time, GString * string)
+time_to_string (const GstRTSPTime * t1, const GstRTSPTime2 * t2,
+    GString * string)
 {
   gchar dstrbuf[G_ASCII_DTOSTR_BUF_SIZE] = { 0, };
   gboolean res = TRUE;;
 
-  switch (time->type) {
+  switch (t1->type) {
     case GST_RTSP_TIME_SECONDS:
       /* need to format floating point value strings as in C locale */
-      g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, time->seconds);
+      g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, t1->seconds);
       g_string_append (string, dstrbuf);
       break;
     case GST_RTSP_TIME_NOW:
@@ -322,6 +323,30 @@ npt_time_string (const GstRTSPTime * time, GString * string)
       break;
     case GST_RTSP_TIME_END:
       break;
+    case GST_RTSP_TIME_FRAMES:
+    {
+      gint64 sec = t1->seconds;
+
+      /* need to format floating point value strings as in C locale */
+      g_string_append_printf (string, "%d:%02d:%02d:", (gint) sec / 60 * 60,
+          (gint) sec / 60, (gint) sec % 60);
+
+      if (t2->frames > 0.0) {
+        g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, t2->frames);
+        g_string_append (string, dstrbuf);
+      }
+      break;
+    }
+    case GST_RTSP_TIME_UTC:
+    {
+      gint64 sec = t1->seconds;
+
+      g_ascii_dtostr (dstrbuf, G_ASCII_DTOSTR_BUF_SIZE, t1->seconds - sec);
+      g_string_append_printf (string, "%04d%02d%02dT%02d%02d%02d%sZ",
+          t2->year, t2->month, t2->day, (gint) sec / 60 * 60,
+          (gint) sec / 60, (gint) sec % 60, dstrbuf);
+      break;
+    }
     default:
       res = FALSE;
       break;
@@ -330,16 +355,16 @@ npt_time_string (const GstRTSPTime * time, GString * string)
 }
 
 static gboolean
-npt_range_string (const GstRTSPTimeRange * range, GString * string)
+range_to_string (const GstRTSPTimeRange * range, GString * string)
 {
   gboolean res;
 
-  if (!(res = npt_time_string (&range->min, string)))
+  if (!(res = time_to_string (&range->min, &range->min2, string)))
     goto done;
 
   g_string_append (string, "-");
 
-  if (!(res = npt_time_string (&range->max, string)))
+  if (!(res = time_to_string (&range->max, &range->max2, string)))
     goto done;
 
 done:
@@ -357,35 +382,44 @@ done:
 gchar *
 gst_rtsp_range_to_string (const GstRTSPTimeRange * range)
 {
-  gchar *result = NULL;
   GString *string;
 
   g_return_val_if_fail (range != NULL, NULL);
 
-  string = g_string_new ("");
-
   switch (range->unit) {
     case GST_RTSP_RANGE_NPT:
-      g_string_append (string, "npt=");
-      if (!npt_range_string (range, string)) {
-        g_string_free (string, TRUE);
-        string = NULL;
-      }
+      string = g_string_new ("npt=");
       break;
     case GST_RTSP_RANGE_SMPTE:
     case GST_RTSP_RANGE_SMPTE_30_DROP:
-    case GST_RTSP_RANGE_SMPTE_25:
-    case GST_RTSP_RANGE_CLOCK:
-    default:
-      g_warning ("time range unit not yet implemented");
-      g_string_free (string, TRUE);
-      string = NULL;
+      string = g_string_new ("smpte=");
       break;
+    case GST_RTSP_RANGE_SMPTE_25:
+      string = g_string_new ("smpte-25=");
+      break;
+    case GST_RTSP_RANGE_CLOCK:
+      string = g_string_new ("clock=");
+      break;
+    default:
+      goto not_implemented;
   }
-  if (string)
-    result = g_string_free (string, FALSE);
 
-  return result;
+  if (!range_to_string (range, string))
+    goto format_failed;
+
+  return g_string_free (string, FALSE);
+
+  /* ERRORS */
+not_implemented:
+  {
+    g_warning ("time range unit not yet implemented");
+    return NULL;
+  }
+format_failed:
+  {
+    g_string_free (string, TRUE);
+    return NULL;
+  }
 }
 
 /**
