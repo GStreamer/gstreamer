@@ -32,8 +32,10 @@
 #include "ges-internal.h"
 #include "ges-track.h"
 #include "ges-track-object.h"
+#include "ges-meta-container.h"
 
-G_DEFINE_TYPE (GESTrack, ges_track, GST_TYPE_BIN);
+G_DEFINE_TYPE_WITH_CODE (GESTrack, ges_track, GST_TYPE_BIN,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER, NULL));
 
 /* Structure that represents gaps and keep knowledge
  * of the gaps filled in the track */
