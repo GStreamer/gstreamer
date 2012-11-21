@@ -1,9 +1,353 @@
-=== release 1.0.2 ===
+=== release 1.0.3 ===
 
-2012-10-25  Tim-Philipp Müller <tim@centricular.net>
+2012-11-21  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.0.3
+
+2012-11-20 12:21:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideodecoder.h:
+	  videodecoder: Return the proportion directly
+
+2012-11-20 12:08:26 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideodecoder.h:
+	* win32/common/libgstvideo.def:
+	  videodecoder: Rename from get_qos_info() to get_qos_proportion()
+	  And only return the proportion. The earliest time already can be
+	  retrieved from get_max_decode_time() and by renaming we allow this
+	  to be more extensible in the future.
+
+2012-11-20 07:17:00 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst-libs/gst/pbutils/encoding-profile.c:
+	  pbutils: fix transfer annotation for gst_encoding_profile_set_restriction
+
+2012-11-09 15:37:57 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideodecoder.h:
+	* win32/common/libgstvideo.def:
+	  videodecoder: add getter for QoS proportion and earliest_time
+	  Add a getter for the QoS proportion and earliest_time to help
+	  subclasses do better estimations based on the proportion.
+	  API: gst_video_decoder_get_qos_info()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687991
+
+2012-11-12 12:44:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: improve docs
+
+2012-11-12 12:57:35 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add description for Opus audio codec
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688151
+
+2012-11-12 11:17:56 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  rtpbuffer: protect against empty buffers
+
+2012-11-13 16:11:42 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisdeclib.h:
+	  Revert "vorbisdec: Fix GType name conflict if tremor and libvorbis decoder are used in the same process"
+	  This reverts commit 858392f88a1221afa29e6b08b283d5472be69b62.
+	  A similar, cleaner fix was already in place.
+
+2012-11-13 15:40:14 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisdec.c:
+	* ext/vorbis/gstvorbisdeclib.h:
+	  vorbisdec: Fix GType name conflict if tremor and libvorbis decoder are used in the same process
+
+2012-11-11 16:33:32 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: improve AAC LOAS typefinding
+	  Make AAC LOAS typefinding a bit more reliable; don't report
+	  a LIKELY probability already after just two sync points, but
+	  scan for a few more consecutive frames and determine probability
+	  based on how many we found. Fixes mis-detection of wavpack file.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687674
+
+2012-11-11 19:44:31 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: fix block size calculation in wavpack typefinder
+	  The blocksize includes part of the header, just not the sync
+	  marker and the four size bytes.
+
+2012-11-11 20:04:40 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: improve wavpack typefinder
+	  Check for second block sync and return different
+	  probabilities depending on what we found (trumping
+	  the AAC loas typefinder's LIKELY probability after
+	  finding a second frame sync in this particular case).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687674
+
+2012-11-09 16:48:54 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: Reset error count to 0 after successfully decoding a frame
+
+2012-11-09 16:46:15 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Reset the error count to 0 after successfully decoding a frame
+
+2012-11-01 16:44:05 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	  audioconvert: Always prefer the input format if possible
+	  Previously we could've chosen another format with the same
+	  depth even if the input format was possible.
+	  Also make sure to chose according to the order in the
+	  caps.
+
+2012-11-01 14:31:29 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	  audioconvert: Also ignore the SIGNED flag when matching an output format
+
+2012-10-31 20:01:05 +0100  Rasmus Rohde <rohde@duff.dk>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	* tests/check/elements/audioconvert.c:
+	  audioconvert: Prefer output formats with the same depth or at least a higher depth
+	  Enhance current code to prefer an exact match on sample depth if
+	  possible. Also ignore GST_AUDIO_FORMAT_FLAG_UNPACK when checking
+	  equality on the flags.
+
+2012-11-07 13:25:13 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: also draw shaded backgrounds for RGB and BGR
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687817
+
+2012-11-07 11:36:42 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: we can do YVU9 as well
+
+2012-11-07 11:32:50 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: don't advertise 10-16-bit formats we can't blend text onto yet
+	  We can't blend stuff on top of video formats that unpack into
+	  ARGB64 or AYUV64 yet, so don't advertise them in our template caps.
+
+2012-11-07 11:17:14 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/video/video-blend.c:
+	  video: don't crash when blending onto video formats that unpack to 64 bits per pixel
+	  We only allocate 8 bits per component for our temp buffers, which
+	  causes invalid memory accesses if we try to unpack formats that
+	  unpack into a format with 16 bits per component such as e.g. v210.
+	  We don't support blending onto those yet, so just bail out.
+
+2012-11-07 09:46:50 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: fix up names of old gray formats
+	  Y800 -> GRAY8, Y16 -> GRAY16_{LE,BE}
+
+2012-11-07 09:34:11 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: draw shaded background for some more video formats
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687817
+
+2012-11-07 00:57:18 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: clamp shaded background box coordinates in one place
+
+2012-11-07 00:54:29 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: move background shading into separate function
+
+2012-11-06 15:21:16 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: isml is iso-fragmented video/quicktime
+	  Add isml typefinding to the video/quicktime function
+
+2012-11-06 23:38:13 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: don't abort if we don't know how to paint shaded background for a format
+	  It's not a very nice thing to do.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687666
+
+2012-11-05 14:35:56 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  textoverlay: forward allocation queries on video sink pad instead of discarding them
+	  This allows the upstream elements to use the allocation parameters
+	  or pools from the downstream elements like videosink.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687459
+
+2012-11-05 09:59:16 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspmessage.c:
+	  rtsp: fix GstRTSPMessage g-i annotations for out parameters
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687620
+
+2012-11-02 20:13:07 +0100  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: remove extra return and fix GError leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687473
+
+2012-11-02 11:05:20 +0100  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: fix g-i annotations for out parameters
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687421
+
+2012-10-30 10:19:59 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  audioringbuffer: reset spec on _release
+	  Reset the caps and the audioinfo when releasing the ringbuffer.
+	  Fixed a bug with reusing pulsesink.
+
+2012-10-28 21:07:16 +1100  Jonathan Liu <net147@gmail.com>
+
+	* ext/ogg/gstoggstream.c:
+	  oggstream: fix crash with 0 byte ogg packets
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687030
+
+2012-10-28 19:59:41 +0100  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* gst-libs/gst/tag/gstexiftag.c:
+	  exiftag: fix use after free and memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687055
+
+2012-10-28 20:01:17 +0100  Miguel Angel Cabrera Moya <madmac2501@gmail.com>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  vorbistag: fix memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687057
+
+2012-10-25 17:16:21 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add caps description for Apple ProRes video
+
+2012-10-25 17:14:32 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  pango: avoid unnecessary pango attribute list copy
+	  We just want to keep it alive, not modify it, so a
+	  simple ref should be enough.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686841
+
+2012-10-26 00:29:11 +0900  Jihyun Cho <jihyun.jo@gmail.com>
+
+	* ext/pango/gstbasetextoverlay.c:
+	  pango: delete foreground color in shadow text
+	  This makes colored text have gray drop shadows
+	  instead of colored ones, which looks much better.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686841
+
+2012-10-25 09:19:21 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtsp: Don't use invalid sockets
+	  return false from dispatch () if the read and write sockets have been
+	  unset in tunnel_complete ()
+	  Setting up HTTP tunnels causes segfaults since the watch for the second
+	  connection is not destroyed anymore in tunnel_complete () and the connection
+	  will still be used even though it is not valid anymore.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686276
+
+2012-10-25 12:26:52 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.2 ===
+
+2012-10-25 00:54:24 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-base-plugins.args:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.2
 
 2012-10-24 14:05:56 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 

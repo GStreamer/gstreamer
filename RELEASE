@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.0.2
+Release notes for GStreamer Base Plugins 1.0.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,33 +60,33 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
-      * alsa: fix probing of supported formats, and advertise non-native-endianness formats as fallback
-      * audiobasesink: properly handle GAP events (fixing some isses with e.g. certain DVD menus)
-      * audioconvert: try harder to not convert or to preserve input format precision
-      * audiodecoder: leak fixes and refcounting fixes
-      * audioresample: re-enable the SSE/SSE2 code paths for better performance
-      * riff: fix paletted RGB formats and msvideo mapping
-      * rtsp: make formatting and parsing of range floating-point values locale-independent
-      * playbin: streamsynchronizer fixes, esp. for handling corner-cases near EOS
-      * tcpserver{sink,src}: add 'current-port' property and signal actually used port
-      * videoconvert: fix handling of paletted RGB formats
-      * videodecoder: don't leak message strings when error is not fatal
-      * videodecoder: finetune missing timestamp estimating
-      * videotestsrc: add palette for paletted RGB formats
-      * vorbistag: fix writing of image tags into vorbis comments
+      * typefind: detect isml ftyp as iso-fragmented video/quicktime
+      * typefinding improvements fixing playback of some wavpack files
+      * textoverlay rendering fixes
+      * gobject-introspection annotation fixes
 
 Bugs fixed in this release
      
-      * 580093 : tcpserversink,src: add 'current-port' property and signal actually used port when port=0 was set
-      * 680904 : alsasink: no supported formats detected with using USB sound card on big-endian system
-      * 683098 : videodecoder: log failure message if acquire_buffer failed
-      * 684411 : rtsp: range in SDP formatted according to locale
-      * 685273 : Pre-rolling on GAP events doesn't work properly for audio sinks
-      * 685711 : audio, video: update docs for virtual functions that require chaining up
-      * 685938 : [decodebin] Issues with group switching algorithm
-      * 686081 : adder: all unit tests crash now after collectpads changes
-      * 686298 : Cannot decode some AVI files with Microsoft Video 1
+      * 686276 : rtsp: http tunneling does not work
+      * 687030 : ogg: crash checking header of empty ogg packet
+      * 687055 : exiftag: fix use after free and memory leak
+      * 687057 : vorbistag: fix memory leak
+      * 687421 : GstRTSPConnection: a number of methods not annotated correctly
+      * 687459 : textoverlay:forward allocation queries instead of discarding
+      * 687473 : rtspconnection: remove extra 'return'
+      * 687620 : GstRTSPMessage: fix GI annotations
+      * 687666 : textoverlay: aborts when shading is enabled but not supported for the current video format
+      * 687674 : typefinding: some WavPack files are mis-detected as AAC and fail to play
+      * 687991 : videodecoder: add getter for QoS proportion
+      * 687994 : rtsp: missing g-i annotation for gst_rtsp_message_set_body
+      * 688151 : pbutils missing description for Opus codec
+      * 686841 : pango: fix shadow text color
+
+API changes in this release
+     
+ - API additions:
+    
+      * gst_video_decoder_get_qos_proportion()
 
 ==== Download ====
 
@@ -123,13 +123,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexandre Relange
+      * Alessandro Decina
       * Andoni Morales Alastruey
-      * Carlos Rafael Giani
-      * David Corvoysier
-      * Josep Torra
-      * Mark Nauwelaerts
+      * Jihyun Cho
+      * Jonathan Liu
+      * Miguel Angel Cabrera Moya
+      * Ognyan Tonchev
+      * Rasmus Rohde
       * Sebastian Dröge
+      * Sreerenj Balachandran
       * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
