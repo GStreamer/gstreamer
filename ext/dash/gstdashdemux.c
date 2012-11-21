@@ -768,16 +768,7 @@ gst_dash_demux_src_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:{
-      GstPad *peer;
-
-      if ((peer = gst_pad_get_peer (dashdemux->sinkpad))) {
-        /* Try to query upstream */
-        ret = gst_pad_query (peer, query);
-        gst_object_unref (peer);
-      } else {
-        /* no peer, we don't know */
-        ret = FALSE;
-      }
+      // By default, do not forward queries upstream
       break;
     }
   }
