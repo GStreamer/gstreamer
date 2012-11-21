@@ -48,7 +48,7 @@ main (int argc, char *argv[])
   mapping = gst_rtsp_server_get_media_mapping (server);
 
   /* make a media factory for a test stream. The default media factory can use
-   * gst-launch syntax to create pipelines. 
+   * gst-launch syntax to create pipelines.
    * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
