@@ -1,9 +1,376 @@
-=== release 1.0.2 ===
+=== release 1.0.3 ===
 
-2012-10-25  Tim-Philipp Müller <tim@centricular.net>
+2012-11-21  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.0.3
+
+2012-11-16 09:09:38 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/multifile/gstmultifilesink.c:
+	  multifilesink: post messages in max-size mode as well
+	  No reason not to really.
+
+2012-11-16 15:38:29 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: handle segment event
+	  Make a segment event when we send a new range header to a client (first PLAY
+	  request or after a seek). Send the segment event in interleaved mode.
+	  Clean the segment event on cleanup
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=688382
+
+2012-11-16 15:18:07 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix check for active streams
+	  A stream can be active without a srcpad yet and we want to send
+	  events on those streams as well.
+
+2012-11-16 13:31:04 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: create and add pads outside of lock
+	  Create and add the ghostpad for the new stream outside of the lock because it
+	  is not needed and causes deadlocks.
+
+2012-11-16 12:16:05 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: clear variables before retrying
+	  Else we might unref an old udpsrc twice in cleanup.
+
+2012-11-16 12:00:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: propose ports in multicast
+	  When the user configured a port-range, propose ports from this range
+	  as the multicast ports. The server is free to ignore this request but if it
+	  honours it, increment our ports so that we suggest the next port pair for the
+	  next stream.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=639420
+
+2012-11-16 11:58:53 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: add more debug
+
+2012-11-15 14:37:44 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: post error before stopping
+
+2012-11-12 11:14:34 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c:
+	  rtpsource: protect against invalid RTP packets
+
+2012-11-12 13:01:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8enc.c:
+	  vp8enc: Don't leak GstVideoCodecFrames that cause the creation of invisible frames
+	  Fixes bug #682714.
+
+2012-11-12 10:44:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpng/gstpngdec.c:
+	  pngdec: Actually use the stop() vfunc implementation
+
+2012-11-12 10:31:59 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Fix last commit
+
+2012-11-09 11:22:30 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: Also clear GError
+
+2012-11-09 11:20:27 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: Don't error out if we get an ICMP destination-unreachable message when trying to read packets
+	  See bug #529454 and #687782 and commit
+	  751f2bb3646f2beff3698c9f09900dbd0ea08abb
+
+2012-11-09 16:31:05 +0100  Debarshi Ray <rishi@gnu.org>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Don't give up so easily if failed to decode a frame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687436
+
+2012-11-12 09:48:45 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Don't clear input state in reset()
+	  The input state is still valid after flushing until
+	  new caps arrive.
+	  Fixes bug #688092.
+
+2012-11-12 10:08:57 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Also destroy decoder in set_format() if it was created already
+	  Fixes a memory leak.
+
+2012-11-12 10:10:15 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpng/gstpngdec.c:
+	  pngdec: Keep the input state in reset()
+	  It's still valid after a flush and we might not get a new one.
+
+2012-11-02 16:39:28 +0100  Debarshi Ray <rishi@gnu.org>
+
+	* ext/speex/gstspeexdec.c:
+	  speexdec: Don't unmap or finish_frame an invalid GstBuffer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687464
+
+2012-11-06 13:22:58 +0100  Marc Leeman <marc.leeman@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtsp: the RTCP port number is inclusive
+	  The configured port number pair has its upper bound set to the maximum
+	  allowed RTCP port, inclusive.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=639420
+
+2012-11-02 18:47:26 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  vrawdepay: don't access rtp buffer after unmap
+	  Read the marker bit before we unmap the rtp packet.
+
+2012-11-02 09:34:25 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Immediately return if opening the decoder failed
+	  Instead of ignoring any errors.
+
+2012-11-01 22:02:39 +0100  Debarshi Ray <rishi@gnu.org>
+
+	* ext/vpx/gstvp8dec.c:
+	  vp8dec: Short circuit gst_vp8_dec_handle_frame if keyframe is missing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687376
+
+2012-11-01 13:03:44 +0000  Douglas Bagnall <douglas@paradise.net.nz>
+
+	* gst/videomixer/blend.c:
+	  videomixer: get height via GST_VIDEO_FRAME_HEIGHT, not _WIDTH
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687330
+
+2012-11-01 13:02:16 +0000  Douglas Bagnall <douglas@paradise.net.nz>
+
+	* gst/videobox/gstvideobox.c:
+	  videbox: fix border filling for gray formats
+	  Get the height via GST_VIDEO_FRAME_HEIGHT, not _WIDTH.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687330
+
+2012-11-02 10:53:57 +1300  Douglas Bagnall <douglas@paradise.net.nz>
+
+	* gst/videomixer/blend.c:
+	  videoconvert: Compare y offset with height, not width, when testing for overlap
+	  This could have prevented images showing that should have when the
+	  source height is greater than its width.
+	  When width exceeds height, as is common, it probably only caused a
+	  miniscule amount of unnecessary work.  I haven't tested.
+
+2012-10-28 00:07:46 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pulse/pulsesrc.c:
+	  pulsesrc: don't assert in get_time() when called after shutdown
+	  Which might happen if the source gets set to NULL state before
+	  the rest of the pipeline.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686985
+
+2012-10-30 11:10:49 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/examples/level/level-example.c:
+	  tests: fix level example
+	  Use the GValueArray in the message.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=687154
+
+2012-10-27 23:22:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/auparse/Makefile.am:
+	* gst/level/Makefile.am:
+	* gst/y4m/Makefile.am:
+	  gst: fix variable order in some Makefile.am
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687013
+
+2012-10-27 17:27:16 -0400  Antoine Tremblay <hexa00@gmail.com>
+
+	* ext/libcaca/Makefile.am:
+	* gst/auparse/Makefile.am:
+	* gst/level/Makefile.am:
+	* gst/videocrop/Makefile.am:
+	* gst/y4m/Makefile.am:
+	  gst: add various missing GST_PLUGINS_BASE_LIBS in Makefile.am
+	  Those plugins depend on either libgstaudio or libgstvideo,
+	  which are in gst-plugins-base.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687013
+
+2012-10-25 00:44:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: the new get_caps already does the filter intersection
+	  It should be faster to pass the caps to intersect as the filter caps,
+	  rather than using NULL and intersecting 'manually' later.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686837
+
+2012-10-25 00:43:51 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/imagefreeze/gstimagefreeze.c:
+	  imagefreeze: avoid assertion when using accept caps query
+	  This query must receive a fixed caps, so imagefreeze should
+	  fixate its framerate before sending the query downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=686837
+
+2012-10-25 12:32:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.2 ===
+
+2012-10-25 01:01:09 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.0.2
 
 2012-10-24 13:50:00 +0200  Arnaud Vrac <avrac@freebox.fr>
 

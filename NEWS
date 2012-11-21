@@ -1,4 +1,22 @@
-This is GStreamer Good Plugins 1.0.2
+This is GStreamer Good Plugins 1.0.3
+
+Changes since 1.0.2:
+
+      * rtspsrc: numerous improvements
+      * build fix for gst-plugins-base installed in non-default prefix
+      * multifilesink: post messages in max-size mode as well
+      * vp8dec: improve robustness on decoding errors, e.g. for videocalls over RTP
+
+Bugs fixed since 1.0.2:
+
+      * 639420 : RTSP setup, add client_ports
+      * 686837 : imagefreeze: improve caps negotiation
+      * 686985 : [pulsesrc] Assertion 'm' failed at pulse/thread-mainloop.c:166, function pa_threaded_mainloop_lock(). Aborting.
+      * 687013 : auparse,level,videocrop,y4m,caca: Fix missing GST_PLUGINS_BASE_LIBS dependency in Makefile.am
+      * 687154 : examples: error in level plugin example code
+      * 687330 : videobox, videomixer: height obtained using _WIDTH macros
+      * 687464 : speexdec: Don't unmap or finish_frame an invalid GstBuffer
+      * 688382 : rtspsrc doesn't work with the interleaved protocols
 
 Changes since 1.0.1:
 
