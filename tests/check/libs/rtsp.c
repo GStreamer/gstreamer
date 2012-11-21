@@ -124,6 +124,7 @@ GST_END_TEST;
 GST_START_TEST (test_rtsp_range_npt)
 {
   GstRTSPTimeRange *range;
+  GstClockTime min, max;
 
   fail_unless (gst_rtsp_range_parse ("npt=", &range) == GST_RTSP_EINVAL);
   fail_unless (gst_rtsp_range_parse ("npt=0", &range) == GST_RTSP_EINVAL);
@@ -134,6 +135,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->unit == GST_RTSP_RANGE_NPT);
   fail_unless (range->min.type == GST_RTSP_TIME_END);
   fail_unless (range->max.type == GST_RTSP_TIME_NOW);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == GST_CLOCK_TIME_NONE);
+  fail_unless (max == GST_CLOCK_TIME_NONE);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=now-now", &range) == GST_RTSP_OK);
@@ -153,6 +157,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_NOW);
   fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->max.seconds == 34.12);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == GST_CLOCK_TIME_NONE);
+  fail_unless (max == 34120000000);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=23,89-now", &range) == GST_RTSP_OK);
@@ -160,6 +167,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->min.seconds == 23.89);
   fail_unless (range->max.type == GST_RTSP_TIME_NOW);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 23890000000);
+  fail_unless (max == GST_CLOCK_TIME_NONE);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=-12.09", &range) == GST_RTSP_OK);
@@ -167,6 +177,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_END);
   fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->max.seconds == 12.09);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == GST_CLOCK_TIME_NONE);
+  fail_unless (max == 12090000000);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=0-", &range) == GST_RTSP_OK);
@@ -174,6 +187,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->min.seconds == 0.0);
   fail_unless (range->max.type == GST_RTSP_TIME_END);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 0);
+  fail_unless (max == GST_CLOCK_TIME_NONE);
   gst_rtsp_range_free (range);
 
 
@@ -182,6 +198,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->min.seconds == 1.123);
   fail_unless (range->max.type == GST_RTSP_TIME_END);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 1123000000);
+  fail_unless (max == GST_CLOCK_TIME_NONE);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=10,20-20.10", &range) == GST_RTSP_OK);
@@ -190,6 +209,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.seconds == 10.20);
   fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->max.seconds == 20.10);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 10200000000);
+  fail_unless (max == 20100000000);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=500-15.001", &range) == GST_RTSP_OK);
@@ -198,6 +220,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.seconds == 500);
   fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->max.seconds == 15.001);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 500000000000);
+  fail_unless (max == 15001000000);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("npt=20:34.23-",
@@ -213,6 +238,9 @@ GST_START_TEST (test_rtsp_range_npt)
   fail_unless (range->min.seconds == 72754.23);
   fail_unless (range->max.type == GST_RTSP_TIME_SECONDS);
   fail_unless (range->max.seconds == 78300.01);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 72754230000000);
+  fail_unless (max == 78300010000000);
   gst_rtsp_range_free (range);
 }
 
@@ -220,6 +248,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtsp_range_smpte)
 {
+  GstClockTime min, max;
   GstRTSPTimeRange *range;
 
   fail_unless (gst_rtsp_range_parse ("smpte=", &range) == GST_RTSP_EINVAL);
@@ -237,6 +266,9 @@ GST_START_TEST (test_rtsp_range_smpte)
   fail_unless (range->min.seconds == 0.0);
   fail_unless (range->min2.frames == 0.0);
   fail_unless (range->max.type == GST_RTSP_TIME_END);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 0);
+  fail_unless (max == GST_CLOCK_TIME_NONE);
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_range_parse ("smpte=10:34:23-20:12:09:20.89",
@@ -248,6 +280,26 @@ GST_START_TEST (test_rtsp_range_smpte)
   fail_unless (range->max.type == GST_RTSP_TIME_FRAMES);
   fail_unless (range->max.seconds == 72729.0);
   fail_unless (range->max2.frames == 20.89);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 38063000000000);
+  /* 20.89 * GST_SECOND * 1001 / 30003 */
+  fail_unless (max == 72729000000000 + 696959970);
+  gst_rtsp_range_free (range);
+
+  fail_unless (gst_rtsp_range_parse ("smpte-25=10:34:23-20:12:09:20.89",
+          &range) == GST_RTSP_OK);
+  fail_unless (range->unit == GST_RTSP_RANGE_SMPTE_25);
+  fail_unless (range->min.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->min.seconds == 38063.0);
+  fail_unless (range->min2.frames == 0.0);
+  fail_unless (range->max.type == GST_RTSP_TIME_FRAMES);
+  fail_unless (range->max.seconds == 72729.0);
+  fail_unless (range->max2.frames == 20.89);
+  fail_unless (gst_rtsp_range_get_times (range, &min, &max));
+  fail_unless (min == 38063000000000);
+  GST_DEBUG ("%" GST_TIME_FORMAT, GST_TIME_ARGS (max));
+  /* 20.89 * GST_SECOND * 1 / 25 */
+  fail_unless (max == 72729000000000 + 835600000);
   gst_rtsp_range_free (range);
 }
 

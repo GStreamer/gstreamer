@@ -44,6 +44,7 @@
 #define __GST_RTSP_RANGE_H__
 
 #include <glib.h>
+#include <gst/gst.h>
 
 #include <gst/rtsp/gstrtspdefs.h>
 
@@ -144,6 +145,9 @@ struct _GstRTSPTimeRange {
 GstRTSPResult   gst_rtsp_range_parse        (const gchar *rangestr, GstRTSPTimeRange **range);
 gchar *         gst_rtsp_range_to_string    (const GstRTSPTimeRange *range);
 void            gst_rtsp_range_free         (GstRTSPTimeRange *range);
+
+gboolean        gst_rtsp_range_get_times     (const GstRTSPTimeRange *range,
+                                              GstClockTime *min, GstClockTime *max);
 
 G_END_DECLS
 

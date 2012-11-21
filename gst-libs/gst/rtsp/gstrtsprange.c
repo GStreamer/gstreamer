@@ -401,3 +401,108 @@ gst_rtsp_range_free (GstRTSPTimeRange * range)
 
   g_free (range);
 }
+
+static GstClockTime
+get_seconds (const GstRTSPTime * t)
+{
+  gint num, denom;
+  /* don't do direct multiply with GST_SECOND to avoid rounding
+   * errors */
+  gst_util_double_to_fraction (t->seconds, &num, &denom);
+  return gst_util_uint64_scale_int (GST_SECOND, num, denom);
+}
+
+static GstClockTime
+get_frames (const GstRTSPTime2 * t, GstRTSPRangeUnit unit)
+{
+  gint num, denom;
+
+  gst_util_double_to_fraction (t->frames, &num, &denom);
+
+  switch (unit) {
+    case GST_RTSP_RANGE_SMPTE_25:
+      denom *= 25;
+      break;
+    case GST_RTSP_RANGE_SMPTE:
+    case GST_RTSP_RANGE_SMPTE_30_DROP:
+    default:
+      num *= 1001;
+      denom *= 30003;
+      break;
+  }
+  return gst_util_uint64_scale_int (GST_SECOND, num, denom);
+}
+
+static GstClockTime
+get_time (GstRTSPRangeUnit unit, const GstRTSPTime * t1,
+    const GstRTSPTime2 * t2)
+{
+  GstClockTime res;
+
+  switch (t1->type) {
+    case GST_RTSP_TIME_SECONDS:
+    {
+      res = get_seconds (t1);
+      break;
+    }
+    case GST_RTSP_TIME_UTC:
+    {
+      GDateTime *dt, *bt;
+      GTimeSpan span;
+
+      /* make time base, we use 1900 */
+      bt = g_date_time_new_utc (1900, 1, 1, 0, 0, 0.0);
+      /* convert to GDateTime without the seconds */
+      dt = g_date_time_new_utc (t2->year, t2->month, t2->day, 0, 0, 0.0);
+      /* get amount of microseconds */
+      span = g_date_time_difference (bt, dt);
+      g_date_time_unref (bt);
+      g_date_time_unref (dt);
+      /* add seconds */
+      res = get_seconds (t1) + (span * 1000);
+      break;
+    }
+    case GST_RTSP_TIME_FRAMES:
+      res = get_seconds (t1);
+      res += get_frames (t2, unit);
+      break;
+    default:
+    case GST_RTSP_TIME_NOW:
+    case GST_RTSP_TIME_END:
+      res = GST_CLOCK_TIME_NONE;
+      break;
+  }
+  return res;
+}
+
+/**
+ * gst_rtsp_range_get_times:
+ * @range: a #GstRTSPTimeRange
+ * @min: result minimum #GstClockTime
+ * @max: result maximum #GstClockTime
+ *
+ * Retrieve the minimum and maximum values from @range converted to
+ * #GstClockTime in @min and @max.
+ *
+ * A value of %GST_CLOCK_TIME_NONE will be used to signal #GST_RTSP_TIME_NOW
+ * and #GST_RTSP_TIME_END for @min and @max respectively.
+ *
+ * UTC times will be converted to nanoseconds since 1900.
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.1.1
+ */
+gboolean
+gst_rtsp_range_get_times (const GstRTSPTimeRange * range,
+    GstClockTime * min, GstClockTime * max)
+{
+  g_return_val_if_fail (range != NULL, FALSE);
+
+  if (min)
+    *min = get_time (range->unit, &range->min, &range->min2);
+  if (max)
+    *max = get_time (range->unit, &range->max, &range->max2);
+
+  return TRUE;
+}
