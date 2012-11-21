@@ -36,7 +36,7 @@ maintainer-clean: distclean
 maintainerclean: maintainer-clean
 
 dist-local:
-	GIT_DIR=libav/.git git checkout-index --prefix=$(TMP_DIST_DIR)/libav/ -a
+	GIT_DIR=libav/.git git checkout-index --prefix=../$(TMP_DIST_DIR)/libav/ -a
 	touch $(TMP_DIST_DIR)/libav/config.mak
 	echo "Patching libav ./configure"
 	sed -e '/Unknown option/ {N;N;s/exit 1//; }' $(TMP_DIST_DIR)/libav/configure > $(TMP_DIST_DIR)/libav/configure.tmp
