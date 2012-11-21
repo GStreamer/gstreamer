@@ -78,6 +78,7 @@ typedef struct _GstRTSPTime2 GstRTSPTime2;
  * @GST_RTSP_TIME_NOW: now
  * @GST_RTSP_TIME_END: end
  * @GST_RTSP_TIME_FRAMES: frames and subframes
+ * @GST_RTSP_TIME_UTC: UTC time
  *
  * Possible time types.
  */
@@ -110,7 +111,9 @@ struct _GstRTSPTime {
  * @month: month when type is GST_RTSP_TIME_UTC
  * @day: day when type is GST_RTSP_TIME_UTC
  *
- * A time indication.
+ * Extra fields for a time indication.
+ *
+ * Since: 1.1.1
  */
 struct _GstRTSPTime2 {
   gdouble         frames;
@@ -124,6 +127,8 @@ struct _GstRTSPTime2 {
  * @unit: the time units used
  * @min: the minimum interval
  * @max: the maximum interval
+ * @min2: extra fields in the minimum interval (Since: 1.1.1)
+ * @max2: extra fields in the maximum interval (Since: 1.1.1)
  *
  * A time range.
  */
