@@ -399,5 +399,7 @@ gst_rtsp_range_to_string (const GstRTSPTimeRange * range)
 void
 gst_rtsp_range_free (GstRTSPTimeRange * range)
 {
+  g_return_if_fail (range != NULL);
+
   g_free (range);
 }
