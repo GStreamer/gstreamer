@@ -237,8 +237,6 @@ parse_smpte_range (const gchar * str, GstRTSPTimeRange * range)
   GstRTSPResult res;
   gchar *p;
 
-  range->unit = GST_RTSP_RANGE_SMPTE;
-
   /* find '-' separator, can't have a single - */
   p = strstr (str, "-");
   if (p == NULL || p == str)
