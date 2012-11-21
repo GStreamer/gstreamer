@@ -3,10 +3,10 @@
   <description>videoparsers</description>
   <filename>../../gst/videoparsers/.libs/libgstvideoparsersbad.so</filename>
   <basename>libgstvideoparsersbad.so</basename>
-  <version>1.0.2.1</version>
+  <version>1.0.3</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins git</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -89,7 +89,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/mpeg, mpegversion=(int)4, parsed=(boolean)true, systemstream=(boolean)false</details>
+          <details>video/mpeg, mpegversion=(int)4, width=(int)[ 0, 2147483647 ], height=(int)[ 0, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ], parsed=(boolean)true, systemstream=(boolean)false</details>
         </caps>
       </pads>
     </element>

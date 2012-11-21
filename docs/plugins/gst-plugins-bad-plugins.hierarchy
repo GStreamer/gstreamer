@@ -18,12 +18,14 @@ GObject
           GstFaad
           GstGSMDec
           GstMpg123AudioDec
+          GstOpusDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
           GstCeltEnc
           GstFaac
           GstGSMEnc
+          GstOpusEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
@@ -39,6 +41,7 @@ GObject
           GstIRTSPParse
           GstMpeg4VParse
           GstMpegvParse
+          GstOpusParse
         GstBaseSink
           GstChecksumSink
           GstCurlBaseSink
@@ -214,10 +217,12 @@ GObject
         GstPnmenc
         GstPyramidSegment
         GstRTPBaseDepayload
+          GstRTPOpusDepay
           GstRtpDTMFDepay
           GstRtpVP8Depay
         GstRTPBasePayload
           GstRtpAsfPay
+          GstRtpOPUSPay
           GstRtpVP8Pay
         GstRTPMux
           GstRTPDTMFMux

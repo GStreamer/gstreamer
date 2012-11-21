@@ -1,4 +1,21 @@
-This is GStreamer Bad Plugins 1.0.2
+This is GStreamer Bad Plugins 1.0.3
+
+Changes since 1.0.2:
+
+      * mpegtsmux: fix DTS/PTS confusion
+      * tsdemux, tsparse: seeking fixes
+      * tsdemux, tsparse: fix timestamping with push-based input
+      * h264parse: fix PPS insertion
+      * mpg123audiodec: fix leaks from not chaining up in the finalize function
+
+Bugs fixed since 1.0.2:
+
+      * 686871 : A number of errors in directsoundsrc
+      * 687178 : tsdemux produces buffers without timestamps when activated in push mode
+      * 687806 : mpegtsmux: Fix PTS being incorrectly created
+      * 688091 : tsdemux: multiple seeking-related fixes
+      * 688626 : codecparsers: vc1: fix PTYPE for interlaced frames
+      * 688510 : d3dvideosink: " DECLARE_INTERFACE_IID_ " redefined compiler warning
 
 Changes since 1.0.1:
 
