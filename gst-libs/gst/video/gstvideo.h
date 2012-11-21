@@ -24,8 +24,6 @@
 
 #include <gst/video/colorbalancechannel.h>
 #include <gst/video/colorbalance.h>
-#include <gst/video/gstsurfaceconverter.h>
-#include <gst/video/gstsurfacemeta.h>
 #include <gst/video/gstvideodecoder.h>
 #include <gst/video/gstvideoencoder.h>
 #include <gst/video/gstvideofilter.h>
@@ -36,7 +34,6 @@
 #include <gst/video/navigation.h>
 #include <gst/video/video-blend.h>
 #include <gst/video/video-color.h>
-#include <gst/video/videocontext.h>
 #include <gst/video/video-enumtypes.h>
 #include <gst/video/video-event.h>
 #include <gst/video/video-format.h>

@@ -39,7 +39,7 @@ libgstfft_@GST_API_VERSION@_la_SOURCES = \
 	kiss_fftr_f64.c
 
 libgstfft_@GST_API_VERSION@_la_LIBADD = $(GST_LIBS) $(LIBM)
-libgstfft_@GST_API_VERSION@_la_CFLAGS = $(GST_CFLAGS)
+libgstfft_@GST_API_VERSION@_la_CFLAGS =  $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstfft_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 EXTRA_DIST = kiss_version
@@ -58,6 +58,8 @@ GstFft-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstfft-@GST_API_VERSIO
 		--strip-prefix=Gst \
 		--warn-all \
 		--c-include "gst/fft/gstfft.h" \
+		-I$(top_srcdir)/gst-libs \
+		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--library=libgstfft-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
