@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.2
+Release notes for GStreamer Ugly Plugins 1.0.3
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -58,14 +58,14 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
-      * dvdreadsrc: correctly set next cell when seeking to sector
-      * dvdreadsrc: update dvd event to enhanced approach as used in mpegpsdemux
-      * dvdsubparse: send src caps when receiving sink caps
+      * cdio: try to handle CD-TEXT in non-UTF8 encodings
+      * xingmux, siddec, dvdlpcmdec and dvdsubdec fixes
 
 Bugs fixed in this release
      
-      * 686748 : Makefile.am: Fix build script typo for generating the Android.mk file.
+      * 686931 : siddec does not reset total_bytes when state is set to stopped
+      * 687192 : dvdsubdec: allocates buffer 4 times the size needed
+      * 687927 : xingmux: doesn't compute the right number of frames
 
 ==== Download ====
 
@@ -102,7 +102,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Scott Fan
+      * Andreas Frisch
+      * Gautier Portet
+      * Michael Smith
+      * Sebastian Dröge
       * Tim-Philipp Müller
+      * Wim Taymans
  

@@ -1,9 +1,100 @@
-=== release 1.0.2 ===
+=== release 1.0.3 ===
 
-2012-10-25  Tim-Philipp Müller <tim@centricular.net>
+2012-11-21  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.0.3
+
+2012-11-16 13:32:00 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/xingmux_testdata.h:
+	  xingmux: Fix unit test after change to correctly calculate number of frames
+
+2012-11-11 20:42:42 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/cdio/Makefile.am:
+	* ext/cdio/gstcdio.c:
+	  cdio: use gst_tag_freeform_string_to_utf8() for CD-TEXT strings
+	  They're probably not going to be UTF-8, but ISO-8859-1 or somesuch
+	  if they're not plain ASCII.
+
+2012-11-09 11:33:40 +0100  Gautier Portet <kassoulet@gmail.com>
+
+	* gst/xingmux/gstxingmux.c:
+	  xingmux: Properly calculate the number of frames
+	  First, the xing header frame is never added to the count,
+	  we have to increment the count.
+	  Secondly, there is a rounding error when calculating the
+	  frame duration, as spf*GST_SECOND/rate is not an integer
+	  (26122448.9) an it must be 26122449.
+
+2012-11-05 13:16:52 -0800  Michael Smith <msmith@rdio.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	  dvdlpcmdec: Fix parsing of headers to set correct width to allow decode.
+
+2012-10-30 13:39:52 +0100  Andreas Frisch <fraxinas@opendreambox.org>
+
+	* gst/dvdsub/gstdvdsubdec.c:
+	  dvdsubdec: allocate correct amount of memory for bitmap
+	  https://bugzilla.gnome.org/show_bug.cgi?id=687192
+
+2012-10-30 09:20:04 +0000  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	  siddec: reset bytes counter
+	  Reset the total_bytes counter so that we get timestamps correct.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=686931
+
+2012-10-25 12:35:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.2 ===
+
+2012-10-25 01:11:10 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.0.2
 
 2012-10-24 20:10:03 +0800  Scott Fan <fanchp@neusoft.com>
 
