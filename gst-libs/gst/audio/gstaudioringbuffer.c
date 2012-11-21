@@ -1955,8 +1955,6 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
  * Set a new timestamp on the buffer.
  *
  * MT safe.
- *
- * Since:
  */
 void
 gst_audio_ring_buffer_set_timestamp (GstAudioRingBuffer * buf, gint readseg,
