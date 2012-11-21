@@ -19,6 +19,52 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-ahcsrc
+ *
+ * ahcsrc can be used to capture video from android devices. It uses the
+ * android.hardware.Camera Java API to capture from the system's cameras.
+ *
+ * In order for the plugin to get registered, it must be able to find its
+ * Java callbacks class. That class is embedded as a jar file inside the source
+ * element (if properly compiled) and will be written to a temporary directory
+ * so it can be loaded into the virtual machine.
+ * In order for it to work, an environment variable must be set to a writable
+ * directory.
+ * The source will look for the environment variable “TMP” which must contain
+ * the absolute path to a writable directory.
+ * It can be retreived using the following Java code :
+ * |[
+ *   context.getCacheDir().getAbsolutePath();
+ * ]|
+ * Where the @context variable is an object of type android.content.Context
+ * (including its subclasses android.app.Activity or android.app.Application).
+ * Another optional environment variable can be set for pointing to the
+ * optimized dex classes directory. If the environment variable “DEX” is
+ * available, it will be used, otherwise, the directory in the “TMP” environment
+ * variable will be used for the optimized dex directory.
+ * The system dex directory can be obtained using the following Java code :
+ * |[
+ *   context.getDir(“dex”, 0).getAbsolutePath();
+ * ]|
+ *
+ * <note>
+ * Those environment variable must be set before gst_init is called from
+ * the native code.
+ * </note>
+ *
+ * <note>
+ * If the “TMP” environment variable is not available or the directory is not
+ * writable or any other issue happens while trying to load the embedded jar
+ * file, then the source will fallback on trying to load the class directly
+ * from the running application.
+ * The file com/gstreamer/GstAhcCallback.java in the source's directory can be
+ * copied into the Android application so it can be loaded at runtime
+ * as a fallback mechanism.
+ * </note>
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -254,18 +300,40 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
 
   gstpushsrc_class->create = gst_ahc_src_create;
 
+  /**
+   * GstAHCSrc:device:
+   *
+   * The Device ID of the camera to capture from
+   */
   properties[PROP_DEVICE] = g_param_spec_string ("device",
       "device", "Device ID", DEFAULT_DEVICE,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       properties[PROP_DEVICE]);
 
+  /**
+   * GstAHCSrc:device-orientation:
+   *
+   * The orientation of the currently set camera @device.
+   * The value is the angle that the camera image needs to be rotated clockwise
+   * so it shows correctly on the display in its natural orientation.
+   * It should be 0, 90, 180, or 270.
+   */
   properties[PROP_DEVICE_ORIENTATION] = g_param_spec_int ("device-orientation",
       "Device orientation", "The orientation of the camera image",
       0, 360, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE_ORIENTATION,
       properties[PROP_DEVICE_ORIENTATION]);
 
+  /**
+   * GstAHCSrc:device-facing:
+   *
+   * The direction that the currently select camera @device faces.
+   *
+   * A value of 0 means the camera is facing the opposite direction as the
+   * screen while a value of 1 means the camera is facing the same direction
+   * as the screen.
+   */
   properties[PROP_DEVICE_FACING] = g_param_spec_enum ("device-facing",
       "Device facing", "The direction that the camera faces",
       GST_AHC_SRC_FACING_TYPE, CAMERA_FACING_BACK,
@@ -273,12 +341,22 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE_FACING,
       properties[PROP_DEVICE_FACING]);
 
+  /**
+   * GstAHCSrc:focal-length:
+   *
+   * Gets the focal length (in millimeter) of the camera.
+   */
   properties[PROP_FOCAL_LENGTH] = g_param_spec_float ("focal-length",
       "Focal length", "Gets the focal length (in millimeter) of the camera",
       -G_MAXFLOAT, G_MAXFLOAT, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_FOCAL_LENGTH,
       properties[PROP_FOCAL_LENGTH]);
 
+  /**
+   * GstAHCSrc:horizontal-view-angle:
+   *
+   * Gets the horizontal angle of view in degrees.
+   */
   properties[PROP_HORIZONTAL_VIEW_ANGLE] =
       g_param_spec_float ("horizontal-view-angle", "Horizontal view angle",
       "Gets the horizontal angle of view in degrees",
@@ -286,6 +364,11 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_HORIZONTAL_VIEW_ANGLE,
       properties[PROP_HORIZONTAL_VIEW_ANGLE]);
 
+  /**
+   * GstAHCSrc:vertical-view-angle:
+   *
+   * Gets the vertical angle of view in degrees.
+   */
   properties[PROP_VERTICAL_VIEW_ANGLE] =
       g_param_spec_float ("vertical-view-angle", "Vertical view angle",
       "Gets the vertical angle of view in degrees",
@@ -293,6 +376,11 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_VERTICAL_VIEW_ANGLE,
       properties[PROP_VERTICAL_VIEW_ANGLE]);
 
+  /**
+   * GstAHCSrc:video-stabilizatio:
+   *
+   * Video stabilization reduces the shaking due to the motion of the camera.
+   */
   properties[PROP_VIDEO_STABILIZATION] =
       g_param_spec_boolean ("video-stabilization", "Video stabilization",
       "Video stabilization reduces the shaking due to the motion of the camera",
@@ -300,6 +388,13 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_VIDEO_STABILIZATION,
       properties[PROP_VIDEO_STABILIZATION]);
 
+  /**
+   * GstAHCSrc:smooth-zoom:
+   *
+   * If enabled, then smooth zooming will be used when the @zoom property is
+   * changed. In that case, the @zoom property can be queried to know the
+   * current zoom level while the smooth zoom is in progress.
+   */
   properties[PROP_SMOOTH_ZOOM] = g_param_spec_boolean ("smooth-zoom",
       "Smooth Zoom", "Use smooth zoom when available",
       FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);

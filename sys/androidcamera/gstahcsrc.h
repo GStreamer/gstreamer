@@ -45,8 +45,14 @@ G_BEGIN_DECLS
 typedef struct _GstAHCSrc GstAHCSrc;
 typedef struct _GstAHCSrcClass GstAHCSrcClass;
 
+/**
+ * GstAHCSrc:
+ *
+ * Opaque data structure.
+ */
 struct _GstAHCSrc
 {
+  /*< private >*/
   GstPushSrc parent;
 
   GstAHCamera *camera;
