@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.0.2
+Release notes for GStreamer 1.0.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,21 +42,18 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
-      * collectpads: ensure all timestamps are in same time domain
-      * gobject-introspection: fix GstSample annotations
-      * add GstElement::post_message() vfunc
-      * info: allow gst_debug_add_log_function() to be called before gst_init()
-      * event: allow GST_CLOCK_TIME_NONE as duration for GAP events
-      * documentation: new chapters and updates for the application development manual and the plugin writer's guide
+      * bufferpool: fix deadlock
+      * baseparse: forward stream-start event in push mode, fixing issues with streamsynchronizer
+      * basesink: reset START_TIME when needed, fixing position reporting after seeking beyond end
 
 Bugs fixed in this release
      
-      * 686456 : g_type_init is no longer required
-      * 686658 : allocator: fix memory leak in _fallback_mem_copy
-      * 686659 : preset: remove variable not read
-      * 686723 : basesrc: generic/states test in -base now hangs with appsrc
-      * 686787 : testrtpool must be linked to pthreads
+      * 666053 : baseparse: prevent excessively high memory usage with large streams
+      * 687896 : bufferpool: deadlock in GstBufferPool
+      * 688477 : inputselector: fix clock leak in wait_running_time
+      * 688511 : Windows compilers without pthreads still have testrtpool.c being built in tests
+      * 688655 : baseparse: stream-start events not sent in push mode
+      * 685870 : Regression with position when seeking beyond the media duration
 
 ==== Download ====
 
@@ -93,11 +90,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Michael Smith
-      * Miguel Angel Cabrera Moya
-      * Sebastian Dröge
+      * Arnaud Vrac
+      * Jan Schmidt
+      * Matthew Waters
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
-      * Руслан Ижбулатов
  

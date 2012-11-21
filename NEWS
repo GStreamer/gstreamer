@@ -1,4 +1,19 @@
-This is GStreamer 1.0.2
+This is GStreamer 1.0.3
+
+Changes since 1.0.2:
+
+      * bufferpool: fix deadlock
+      * baseparse: forward stream-start event in push mode, fixing issues with streamsynchronizer
+      * basesink: reset START_TIME when needed, fixing position reporting after seeking beyond end
+
+Bugs fixed since 1.0.2:
+
+      * 666053 : baseparse: prevent excessively high memory usage with large streams
+      * 687896 : bufferpool: deadlock in GstBufferPool
+      * 688477 : inputselector: fix clock leak in wait_running_time
+      * 688511 : Windows compilers without pthreads still have testrtpool.c being built in tests
+      * 688655 : baseparse: stream-start events not sent in push mode
+      * 685870 : Regression with position when seeking beyond the media duration
 
 Changes since 1.0.1:
 

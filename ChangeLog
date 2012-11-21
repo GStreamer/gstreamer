@@ -1,9 +1,95 @@
-=== release 1.0.2 ===
+=== release 1.0.3 ===
 
-2012-10-24  Tim-Philipp Müller <tim@centricular.net>
+2012-11-21  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.0.3
+
+2012-11-20 16:19:52 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: add some debug
+
+2012-11-20 16:19:16 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: reset START_TIME when needed
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=685870
+
+2012-11-16 19:41:48 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: forward stream-start event in push mode
+
+2012-11-17 10:27:11 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/examples/manual/Makefile.am:
+	  examples: don't compile testrtpool example if pthreads are not available like on win32
+	  Based on patch by: italarab@gmail.com
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688511
+
+2012-11-13 21:13:00 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: fix clock leak in wait_running_time
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688477
+
+2012-11-08 15:33:01 +1100  Matthew Waters <ystreet00@gmail.com>
+
+	* gst/gstbufferpool.c:
+	  bufferpool: lock before unlock in _get_config
+	  Fixes deadlock on Windows
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=687896
+
+2012-10-30 10:04:44 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Clarify docs about the buffer handler callback.
+	  Clarify that the callback owns a ref on a passed buffer.
+
+2012-10-30 10:04:14 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Add EOS status to debug output about filled/unfilled
+
+2012-10-29 11:30:30 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstutils.c:
+	  pad: downgrade 'creating random stream-id' debug log message
+	  No need for it to be a warning.
+
+2012-06-13 13:02:48 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: prevent excessively high memory usage with long streams
+	  Large streams would index one frame every second, which can get quite
+	  large with multi-hour streams, so add an additional byte-based
+	  minimum distance as well, which will kick in for long streams
+	  and make sure we never have more than a couple of thousand index
+	  entries.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=666053
+
+2012-10-25 12:03:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Back to development (bug-fixing)
+
+=== release 1.0.2 ===
+
+2012-10-25 00:04:49 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.0.2
 
 2012-10-24 16:13:34 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
 
