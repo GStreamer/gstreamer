@@ -49,6 +49,7 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-format.h \
 	audio-channels.h \
 	audio-info.h \
+	gstaudio.h \
 	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
@@ -82,8 +83,6 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_API_VERSION@include_HEA
 gir_headers+=$(patsubst %,$(builddir)/%, $(built_headers))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstaudio_@GST_API_VERSION@_la_SOURCES))
 gir_sources+=$(patsubst %,$(builddir)/%, $(built_sources))
-gir_cincludes=$(patsubst %,--c-include='gst/audio/%',$(libgstaudio_@GST_API_VERSION@include_HEADERS))
-gir_cincludes+=$(patsubst %,--c-include='gst/audio/%',$(nodist_libgstaudio_@GST_API_VERSION@include_HEADERS))
 
 GstAudio-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -94,7 +93,7 @@ GstAudio-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_API_VE
 		--strip-prefix=Gst \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		$(gir_cincludes) \
+		--c-include "gst/audio/gstaudio.h" \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--add-include-path="$(top_builddir)/gst-libs/gst/tag/" \

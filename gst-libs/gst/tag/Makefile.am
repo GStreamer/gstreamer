@@ -2,7 +2,7 @@ libgsttagincludedir = \
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/tag
 
 libgsttaginclude_HEADERS = \
-	tag.h gsttagdemux.h gsttagmux.h xmpwriter.h
+	tag.h gsttag.h gsttagdemux.h gsttagmux.h xmpwriter.h
 
 lib_LTLIBRARIES = libgsttag-@GST_API_VERSION@.la
 
@@ -28,7 +28,6 @@ BUILT_GIRSOURCES = GstTag-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgsttaginclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgsttag_@GST_API_VERSION@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/tag/%',$(libgsttaginclude_HEADERS))
 
 GstTag-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -37,7 +36,7 @@ GstTag-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgsttag-@GST_API_VERSIO
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		$(gir_cincludes) \
+		--c-include "gst/tag/gsttag.h" \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--library=libgsttag-@GST_API_VERSION@.la \

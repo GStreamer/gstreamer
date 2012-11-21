@@ -1,7 +1,7 @@
-/* GStreamer RTSP extension
- * Copyright (C) 2007 Wim Taymans <wim.taymans@gmail.com>
+/* GStreamer
+ * Copyright (C) 2012 GStreamer developers
  *
- * rtsp.h: Generic include to pull in defs
+ * gstpbutils.h: single include header for gst-pbutils library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,16 +18,19 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifndef __GST_RTSP_H__
-#define __GST_RTSP_H__
 
-#include <gst/rtsp/gstrtspconnection.h>
-#include <gst/rtsp/gstrtspdefs.h>
-#include <gst/rtsp/gstrtsp-enumtypes.h>
-#include <gst/rtsp/gstrtspextension.h>
-#include <gst/rtsp/gstrtspmessage.h>
-#include <gst/rtsp/gstrtsprange.h>
-#include <gst/rtsp/gstrtsptransport.h>
-#include <gst/rtsp/gstrtspurl.h>
+#ifndef __GST_PB_UTILS_GST_PB_UTILS_H__
+#define __GST_PB_UTILS_GST_PB_UTILS_H__
 
-#endif /* __GST_RTSP_H__ */
+#include <gst/pbutils/codec-utils.h>
+#include <gst/pbutils/descriptions.h>
+#include <gst/pbutils/encoding-profile.h>
+#include <gst/pbutils/encoding-target.h>
+#include <gst/pbutils/gstdiscoverer.h>
+#include <gst/pbutils/gstpluginsbaseversion.h>
+#include <gst/pbutils/install-plugins.h>
+#include <gst/pbutils/missing-plugins.h>
+#include <gst/pbutils/pbutils-enumtypes.h>
+#include <gst/pbutils/pbutils.h>
+
+#endif /* __GST_PB_UTILS_GST_PB_UTILS_H__ */

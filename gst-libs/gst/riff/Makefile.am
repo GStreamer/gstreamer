@@ -7,6 +7,7 @@ libgstriff_@GST_API_VERSION@_la_SOURCES = \
 
 libgstriff_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/riff
 libgstriff_@GST_API_VERSION@include_HEADERS = \
+	gstriff.h \
 	riff-ids.h \
 	riff-media.h \
 	riff-read.h
@@ -24,7 +25,6 @@ BUILT_GIRSOURCES = GstRiff-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstriff_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstriff_@GST_API_VERSION@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/riff/%',$(libgstriff_@GST_API_VERSION@include_HEADERS))
 
 GstRiff-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -33,7 +33,7 @@ GstRiff-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_API_VERS
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		$(gir_cincludes) \
+		--c-include "gst/riff/gstriff.h" \
 		--add-include-path=$(builddir)/../tag \
 		--add-include-path=$(builddir)/../audio \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \

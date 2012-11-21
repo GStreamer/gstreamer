@@ -50,4 +50,9 @@ gint gst_fft_next_fast_length (gint n) G_GNUC_CONST;
 
 G_END_DECLS
 
+#include <gst/fft/gstffts16.h>
+#include <gst/fft/gstffts32.h>
+#include <gst/fft/gstfftf32.h>
+#include <gst/fft/gstfftf64.h>
+
 #endif /* __GST_FFT_H__ */

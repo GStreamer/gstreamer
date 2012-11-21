@@ -1,7 +1,7 @@
-/* GStreamer RTSP extension
- * Copyright (C) 2007 Wim Taymans <wim.taymans@gmail.com>
+/* GStreamer
+ * Copyright (C) 2012 GStreamer developers
  *
- * rtsp.h: Generic include to pull in defs
+ * gstriff.h: single include header for gst-riff library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,16 +18,12 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifndef __GST_RTSP_H__
-#define __GST_RTSP_H__
 
-#include <gst/rtsp/gstrtspconnection.h>
-#include <gst/rtsp/gstrtspdefs.h>
-#include <gst/rtsp/gstrtsp-enumtypes.h>
-#include <gst/rtsp/gstrtspextension.h>
-#include <gst/rtsp/gstrtspmessage.h>
-#include <gst/rtsp/gstrtsprange.h>
-#include <gst/rtsp/gstrtsptransport.h>
-#include <gst/rtsp/gstrtspurl.h>
+#ifndef __GST_RIFF_H__
+#define __GST_RIFF_H__
 
-#endif /* __GST_RTSP_H__ */
+#include <gst/riff/riff-ids.h>
+#include <gst/riff/riff-media.h>
+#include <gst/riff/riff-read.h>
+
+#endif /* __GST_RIFF_H__ */

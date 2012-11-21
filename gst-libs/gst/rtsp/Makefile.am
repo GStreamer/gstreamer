@@ -1,6 +1,8 @@
 libgstrtspincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtsp
 
-libgstrtspinclude_HEADERS = gstrtsptransport.h \
+libgstrtspinclude_HEADERS = \
+			    gstrtsp.h \
+			    gstrtsptransport.h \
 			    gstrtspurl.h \
 			    gstrtspmessage.h    \
 			    gstrtspconnection.h \
@@ -27,8 +29,6 @@ libgstrtsp_@GST_API_VERSION@_la_SOURCES = gstrtsptransport.c \
 nodist_libgstrtsp_@GST_API_VERSION@_la_SOURCES = $(built_sources)
 nodist_libgstrtspinclude_HEADERS = gstrtsp-enumtypes.h
 
-noinst_HEADERS = gstrtsp.h
-
 #gstrtspextwms.c  
 #rtspextreal.c    
 
@@ -54,8 +54,6 @@ gir_headers=$(patsubst %,$(srcdir)/%, $(libgstrtspinclude_HEADERS))
 gir_headers+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtspinclude_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstrtsp_@GST_API_VERSION@_la_SOURCES))
 gir_sources+=$(patsubst %,$(builddir)/%, $(nodist_libgstrtsp_@GST_API_VERSION@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/rtsp/%',$(libgstrtspinclude_HEADERS))
-gir_cincludes+=$(patsubst %,--c-include='gst/rtsp/%',$(nodist_libgstrtspinclude_HEADERS))
 
 GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -64,7 +62,7 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		$(gir_cincludes) \
+		--c-include "gst/rtsp/gstrtsp.h" \
 		-I$(top_builddir)/gst-libs \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=$(builddir)/../sdp \
