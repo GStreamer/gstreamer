@@ -293,7 +293,7 @@ collect_media_stats (GstRTSPMedia * media)
     if (duration == -1) {
       media->range.max.type = GST_RTSP_TIME_END;
       media->range.max.seconds = -1;
-      media->range_start = -1;
+      media->range_stop = -1;
     } else {
       media->range.max.type = GST_RTSP_TIME_SECONDS;
       media->range.max.seconds = ((gdouble) duration) / GST_SECOND;
@@ -848,6 +848,11 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 
   if (!gst_rtsp_range_get_times (range, &start, &stop))
     goto not_supported;
+
+  GST_INFO ("got %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+  GST_INFO ("current %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (media->range_start), GST_TIME_ARGS (media->range_stop));
 
   if (media->range_start == start)
     start = GST_CLOCK_TIME_NONE;
