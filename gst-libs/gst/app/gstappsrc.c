@@ -1501,7 +1501,7 @@ eos:
 /**
  * gst_app_src_push_buffer:
  * @appsrc: a #GstAppSrc
- * @buffer: a #GstBuffer to push
+ * @buffer: (transfer full): a #GstBuffer to push
  *
  * Adds a buffer to the queue of buffers that the appsrc element will
  * push to its source pad.  This function takes ownership of the buffer.
