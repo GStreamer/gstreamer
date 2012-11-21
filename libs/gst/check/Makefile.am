@@ -127,8 +127,6 @@ BUILT_GIRSOURCES = GstCheck-@GST_API_VERSION@.gir
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@include_HEADERS)) \
     $(patsubst %,$(builddir)/%, $(nodist_libgstcheck_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/check/%',$(libgstcheck_@GST_API_VERSION@include_HEADERS)) \
-    $(patsubst %,--c-include='gst/check/%',$(nodist_libgstcheck_@GST_API_VERSION@include_HEADERS))
 
 GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -141,7 +139,7 @@ GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VE
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \
 		-I$(top_builddir)/libs \
-		$(gir_cincludes) \
+		--c-include "gst/check/gstcheck.h" \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
 		--library=libgstcheck-@GST_API_VERSION@.la \

@@ -26,6 +26,7 @@ libgstbase_@GST_API_VERSION@includedir =		\
 
 libgstbase_@GST_API_VERSION@include_HEADERS =	\
 	gstadapter.h		\
+	gstbase.h		\
 	gstbaseparse.h		\
 	gstbasesink.h		\
 	gstbasesrc.h		\
@@ -71,7 +72,6 @@ BUILT_GIRSOURCES = GstBase-@GST_API_VERSION@.gir
 
 gir_headers=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstbase_@GST_API_VERSION@_la_SOURCES))
-gir_cincludes=$(patsubst %,--c-include='gst/base/%',$(libgstbase_@GST_API_VERSION@include_HEADERS))
 
 GstBase-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_API_VERSION@.la
 	$(AM_V_GEN)PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" \
@@ -84,7 +84,7 @@ GstBase-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_API_VERS
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \
 		-I$(top_builddir)/libs \
-		$(gir_cincludes) \
+		--c-include "gst/base/gstbase.h" \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
 		--library=libgstbase-@GST_API_VERSION@.la \

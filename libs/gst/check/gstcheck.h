@@ -33,6 +33,10 @@
 
 #include <gst/gst.h>
 
+#include <gst/check/gstbufferstraw.h>
+#include <gst/check/gstconsistencychecker.h>
+#include <gst/check/gsttestclock.h>
+
 G_BEGIN_DECLS
 
 GST_DEBUG_CATEGORY_EXTERN (check_debug);

@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
+ * Copyright (C) 2012 GStreamer developers
+ *
+ * gstcontroller.h: single include header for gst-controller library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,13 +19,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_CONTROLLER_H__
+#define __GST_CONTROLLER_H__
 
-#ifndef __GST_NET_H__
-#define __GST_NET_H__
+#include <gst/controller/gstargbcontrolbinding.h>
+#include <gst/controller/gstdirectcontrolbinding.h>
+#include <gst/controller/gsttimedvaluecontrolsource.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gsttriggercontrolsource.h>
+#include <gst/controller/gstlfocontrolsource.h>
 
-#include <gst/net/gstnetaddressmeta.h>
-#include <gst/net/gstnetclientclock.h>
-#include <gst/net/gstnettimepacket.h>
-#include <gst/net/gstnettimeprovider.h>
-
-#endif /* __GST_NET_H__ */
+#endif /* __GST_CONTROLLER_H__ */
