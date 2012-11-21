@@ -1,9 +1,36 @@
-=== release 1.0.2 ===
+=== release 1.0.3 ===
 
-2012-10-25  Tim-Philipp Müller <tim@centricular.net>
+2012-11-21  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.2
+	  releasing 1.0.3
+
+2012-11-19 14:10:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Y41B is YUV411P, not YUV410P
+
+2012-10-29 14:12:03 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Remove redundant function to map PixelFormat to GstVideoFormat
+	  And merge everything into a single one.
+
+2012-10-25 12:54:40 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development (bug fixing)
+
+=== release 1.0.2 ===
+
+2012-10-25 01:34:32 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.2
 
 2012-10-24 16:01:36 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

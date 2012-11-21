@@ -1,4 +1,8 @@
-This is GStreamer Libav Plugins 1.0.2
+This is GStreamer Libav Plugins 1.0.3
+
+Changes since 1.0.2:
+
+      * avcodecmap: Y41B is YUV411P, not YUV410P
 
 Changes since 1.0.1:
 

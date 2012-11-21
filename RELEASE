@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.0.2
+Release notes for GStreamer libav Plugins 1.0.3
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -38,8 +38,7 @@ contains a set of less supported plugins that haven't passed the
 
 Features of this release
     
-      * Parallel installability with 0.10.x series
-      * Update internal libav snapshot to 0.8.4 release which includes many crasher and CVE fixes
+      * avcodecmap: Y41B is YUV411P, not YUV410P
 
 There were no bugs fixed in this release
     
@@ -79,7 +78,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andoni Morales Alastruey
       * Sebastian Dröge
       * Tim-Philipp Müller
  
