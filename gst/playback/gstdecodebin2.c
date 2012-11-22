@@ -2009,6 +2009,16 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Stop filtering errors. */
     remove_error_filter (dbin, element);
 
+    /* check if we still accept the caps on the pad after setting
+     * the element to READY */
+    if (!gst_pad_query_accept_caps (sinkpad, caps)) {
+      GST_WARNING_OBJECT (dbin, "Element %s does not accept caps",
+          GST_ELEMENT_NAME (element));
+      gst_object_unref (sinkpad);
+      gst_bin_remove (GST_BIN (dbin), element);
+      continue;
+    }
+
     gst_object_unref (sinkpad);
     GST_LOG_OBJECT (dbin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
@@ -3285,7 +3295,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
   if (G_UNLIKELY (chain->drained)) {
     goto beach;
   }
-  
+
   if (chain->endpad) {
     /* Check if we're reached the target endchain */
     if (chain == drainpad->chain) {
@@ -3326,7 +3336,7 @@ drain_and_switch_chains (GstDecodeChain * chain, GstDecodePad * drainpad,
       } else {
         GST_DEBUG ("Group %p was the last in chain %p", chain->active_group,
             chain);
-        chain->drained = TRUE;	
+        chain->drained = TRUE;
         /* We're drained ! */
       }
     }
