@@ -411,6 +411,12 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   GST_DEBUG_OBJECT (mssdemux, "Getting url for stream %p", stream);
   ret = gst_mss_stream_get_fragment_url (stream->manifest_stream, &path);
   switch (ret) {
+    case GST_FLOW_OK:
+      break;                    /* all is good, let's go */
+    case GST_FLOW_UNEXPECTED:  /* EOS */
+      goto eos;
+    case GST_FLOW_ERROR:
+      goto error;
     default:
       break;
   }
@@ -428,6 +434,34 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   buflist = gst_fragment_get_buffer_list (fragment);
 
   ret = gst_pad_push_list (stream->pad, buflist);       /* TODO check return */
+  switch (ret) {
+    case GST_FLOW_UNEXPECTED:
+      goto eos;                 /* EOS ? */
+    case GST_FLOW_ERROR:
+      goto error;
+    case GST_FLOW_NOT_LINKED:
+      break;                    /* TODO what to do here? pause the task or just keep pushing? */
+    case GST_FLOW_OK:
+    default:
+      break;
+  }
 
-  ret = gst_mss_stream_advance_fragment (stream->manifest_stream);
+  gst_mss_stream_advance_fragment (stream->manifest_stream);
+  return;
+
+eos:
+  {
+    GstEvent *eos = gst_event_new_eos ();
+    GST_DEBUG_OBJECT (mssdemux, "Pushing EOS on pad %s:%s",
+        GST_DEBUG_PAD_NAME (stream->pad));
+    gst_pad_push_event (stream->pad, eos);
+    gst_task_stop (stream->stream_task);
+    return;
+  }
+error:
+  {
+    GST_WARNING_OBJECT (mssdemux, "Error while pushing fragment");
+    gst_task_stop (stream->stream_task);
+    return;
+  }
 }
