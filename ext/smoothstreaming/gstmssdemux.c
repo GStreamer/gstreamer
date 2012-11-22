@@ -153,7 +153,9 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
       gst_task_stop (stream->stream_task);
       g_static_rec_mutex_lock (&stream->stream_lock);
       g_static_rec_mutex_unlock (&stream->stream_lock);
+      GST_LOG_OBJECT (stream->parent, "Waiting for task to finish");
       gst_task_join (stream->stream_task);
+      GST_LOG_OBJECT (stream->parent, "Finished");
     }
     gst_object_unref (stream->stream_task);
     g_static_rec_mutex_free (&stream->stream_lock);
@@ -163,6 +165,10 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
   if (stream->downloader != NULL) {
     g_object_unref (stream->downloader);
     stream->downloader = NULL;
+  }
+  if (stream->pad) {
+    gst_object_unref (stream->pad);
+    stream->pad = NULL;
   }
   g_free (stream);
 }
@@ -210,9 +216,9 @@ gst_mss_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_mss_demux_reset (mssdemux);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_mss_demux_reset (mssdemux);
       break;
     default:
       break;
@@ -349,6 +355,7 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
     gst_pad_set_active (pad, TRUE);
     GST_INFO_OBJECT (mssdemux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (pad), caps);
+    gst_object_ref (pad);
     gst_element_add_pad (GST_ELEMENT_CAST (mssdemux), pad);
   } else {
     GST_WARNING_OBJECT (mssdemux, "Not exposing stream of unrecognized format");
