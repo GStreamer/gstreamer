@@ -2014,6 +2014,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     if (!gst_pad_query_accept_caps (sinkpad, caps)) {
       GST_WARNING_OBJECT (dbin, "Element %s does not accept caps",
           GST_ELEMENT_NAME (element));
+      gst_element_set_state (element, GST_STATE_NULL);
       gst_object_unref (sinkpad);
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
