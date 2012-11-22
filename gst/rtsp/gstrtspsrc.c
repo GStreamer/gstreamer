@@ -4218,6 +4218,7 @@ pause:
           ("streaming task paused, reason %s (%d)", reason, ret));
       gst_rtspsrc_push_event (src, gst_event_new_eos ());
     }
+    gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_LOOP);
     return FALSE;
   }
 }
