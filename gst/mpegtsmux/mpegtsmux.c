@@ -1172,9 +1172,7 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
     }
   }
   /* flush packet cache */
-  mpegtsmux_push_packets (mux, FALSE);
-
-  return ret;
+  return mpegtsmux_push_packets (mux, FALSE);
 
   /* ERRORS */
 write_fail:
