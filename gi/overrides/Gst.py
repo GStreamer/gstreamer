@@ -172,6 +172,12 @@ class Pipeline(Gst.Pipeline):
 Pipeline = override(Pipeline)
 __all__.append('Pipeline')
 
+class Structure(Gst.Structure):
+    def __getitem__(self, key):
+        return self.get_value(key)
+Structure = override(Structure)
+__all__.append('Structure')
+
 ElementFactory = override(ElementFactory)
 __all__.append('ElementFactory')
 
