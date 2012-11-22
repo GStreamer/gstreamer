@@ -346,10 +346,12 @@ gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url)
   gchar *tmp;
   gchar *bitrate_str;
   gchar *start_time_str;
-  GstMssStreamFragment *fragment = stream->current_fragment->data;
+  GstMssStreamFragment *fragment;
 
   if (stream->current_fragment == NULL) /* stream is over */
     return GST_FLOW_UNEXPECTED;
+
+  fragment = stream->current_fragment->data;
 
   bitrate_str =
       (gchar *) xmlGetProp (stream->current_quality->data,
