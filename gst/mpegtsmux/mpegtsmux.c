@@ -1163,12 +1163,12 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
       }
     }
     /* flush packet cache */
-    mpegtsmux_push_packets (mux, FALSE);
+    ret = mpegtsmux_push_packets (mux, FALSE);
   } else {
     /* EOS */
     /* drain some possibly cached data */
     new_packet_m2ts (mux, NULL, -1);
-    mpegtsmux_push_packets (mux, TRUE);
+    ret = mpegtsmux_push_packets (mux, TRUE);
     gst_pad_push_event (mux->srcpad, gst_event_new_eos ());
   }
 
