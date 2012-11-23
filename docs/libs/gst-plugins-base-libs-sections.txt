@@ -380,15 +380,17 @@ GST_TYPE_AUDIO_BASE_SRC_SLAVE_METHOD
 </SECTION>
 
 <SECTION>
-<FILE>gstmultichannel</FILE>
-<INCLUDE>gst/audio/multichannel.h</INCLUDE>
+<FILE>gstaudiochannels</FILE>
+<INCLUDE>gst/audio/audio-channels.h</INCLUDE>
 GstAudioChannelPosition
-gst_audio_fixate_channel_positions
-gst_audio_get_channel_positions
-gst_audio_set_caps_channel_positions_list
-gst_audio_set_channel_positions
-gst_audio_set_structure_channel_positions_list
-gst_audio_check_channel_positions
+GST_AUDIO_CHANNEL_POSITION_MASK
+gst_audio_channel_positions_to_mask
+gst_audio_channel_positions_from_mask
+gst_audio_channel_positions_to_valid_order
+gst_audio_check_valid_channel_positions
+gst_audio_buffer_reorder_channels
+gst_audio_reorder_channels
+gst_audio_get_channel_reorder_map
 <SUBSECTION Standard>
 GST_TYPE_AUDIO_CHANNEL_POSITION
 gst_audio_channel_position_get_type
