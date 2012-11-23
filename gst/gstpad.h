@@ -448,6 +448,16 @@ typedef gboolean		(*GstPadForwardFunction)	(GstPad *pad, gpointer user_data);
  * @GST_PAD_PROBE_TYPE_QUERY_UPSTREAM: probe upstream queries
  * @GST_PAD_PROBE_TYPE_PUSH: probe push
  * @GST_PAD_PROBE_TYPE_PULL: probe pull
+ * @GST_PAD_PROBE_TYPE_BLOCKING: probe and block at the next opportunity, at data flow or when idle
+ * @GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM: probe downstream data (buffers, buffer lists, and events)
+ * @GST_PAD_PROBE_TYPE_DATA_UPSTREAM: probe upstream data (events)
+ * @GST_PAD_PROBE_TYPE_DATA_BOTH: probe upstream and downstream data (buffers, buffer lists, and events)
+ * @GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM: probe and block downstream data (buffers, buffer lists, and events)
+ * @GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM: probe and block upstream data (events)
+ * @GST_PAD_PROBE_TYPE_EVENT_BOTH: probe upstream and downstream events
+ * @GST_PAD_PROBE_TYPE_QUERY_BOTH: probe upstream and downstream queries
+ * @GST_PAD_PROBE_TYPE_ALL_BOTH: probe upstream events and queries and downstream buffers, buffer lists, events and queries
+ * @GST_PAD_PROBE_TYPE_SCHEDULING: probe push and pull
  *
  * The different probing types that can occur. When either one of
  * @GST_PAD_PROBE_TYPE_IDLE or @GST_PAD_PROBE_TYPE_BLOCK is used, the probe will be a
