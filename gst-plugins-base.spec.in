@@ -156,7 +156,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-frame.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-info.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/video-overlay-composition.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtphdrext.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/audio.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudiofilter.h
 %{_includedir}/gstreamer-%{majorminor}/gst/riff/riff-ids.h
@@ -222,6 +222,14 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/video/colorbalancechannel.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/videoorientation.h
 %{_includedir}/gstreamer-%{majorminor}/gst/video/videooverlay.h
+%{_includedir}/gstreamer-%{majorminor}/gst/app/gstapp.h
+%{_includedir}/gstreamer-%{majorminor}/gst/audio/gstaudio.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/gstpbutils.h
+%{_includedir}/gstreamer-%{majorminor}/gst/riff/gstriff.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtp.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtsp.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tag/gsttag.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/gstvideo.h
 
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
