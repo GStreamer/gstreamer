@@ -233,7 +233,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstrtpmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsegmentclip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
-%{_libdir}/gstreamer-%{majorminor}/libgstscaletempoplugin.so
 %{_libdir}/gstreamer-%{majorminor}/libgstshm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsdpelem.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
@@ -248,6 +247,13 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcurl.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaccurip.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfieldanalysis.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
+%{_libdir}/gstreamer-%{majorminor}/libgstscaletempo.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
+%{_libdir}/libgstbasecamerabinsrc-1.0.so.0.2.0
+
 
 # %{_libdir}/gstreamer-%{majorminor}/libgstdecklink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvbsuboverlay.so
@@ -284,7 +290,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsoundtouch.so
 %{_libdir}/libgstbasecamerabinsrc-1.0.so.0
-%{_libdir}/libgstbasecamerabinsrc-1.0.so.0.0.0
+# %{_libdir}/libgstbasecamerabinsrc-1.0.so.0.0.0
 
 
 
