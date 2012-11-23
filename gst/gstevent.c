@@ -1411,7 +1411,7 @@ gst_event_new_stream_start (const gchar * stream_id)
 /**
  * gst_event_parse_stream_start:
  * @event: a stream-start event.
- * @stream_id: (out): pointer to store the stream-id
+ * @stream_id: (out) (transfer none): pointer to store the stream-id
  *
  * Parse a stream-id @event and store the result in the given @stream_id
  * location. The string stored in @stream_id must not be modified and will
