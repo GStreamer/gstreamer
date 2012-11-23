@@ -22,7 +22,7 @@
 #ifndef __GST_TEST_CLOCK_H__
 #define __GST_TEST_CLOCK_H__
 
-#include <gst/check/gstcheck.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
