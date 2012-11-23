@@ -22,24 +22,24 @@
 typedef struct
 {
   GstClock parent;
-} GstTestClock;
+} TestClock;
 
 typedef struct
 {
   GstClockClass parent_class;
-} GstTestClockClass;
+} TestClockClass;
 
-#define GST_TYPE_TEST_CLOCK                   (gst_test_clock_get_type ())
-#define GST_TEST_CLOCK(obj)                   (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_TEST_CLOCK, GstTestClock))
-#define GST_TEST_CLOCK_CAST(obj)              ((GstTestClock *)(obj))
-#define GST_IS_TEST_CLOCK(obj)                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_TEST_CLOCK))
-#define GST_TEST_CLOCK_CLASS(klass)           (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_TEST_CLOCK, GstTestClockClass))
-#define GST_IS_TEST_CLOCK_CLASS(klass)        (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_TEST_CLOCK))
-#define GST_TEST_CLOCK_GET_CLASS(obj)         (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_TEST_CLOCK, GstTestClockClass))
+#define TYPE_TEST_CLOCK                   (test_clock_get_type ())
+#define TEST_CLOCK(obj)                   (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_TEST_CLOCK, TestClock))
+#define TEST_CLOCK_CAST(obj)              ((TestClock *)(obj))
+#define IS_TEST_CLOCK(obj)                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_TEST_CLOCK))
+#define TEST_CLOCK_CLASS(klass)           (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_TEST_CLOCK, TestClockClass))
+#define IS_TEST_CLOCK_CLASS(klass)        (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_TEST_CLOCK))
+#define TEST_CLOCK_GET_CLASS(obj)         (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_TEST_CLOCK, TestClockClass))
 
 
-GType gst_test_clock_get_type (void);
-G_DEFINE_TYPE (GstTestClock, gst_test_clock, GST_TYPE_CLOCK);
+GType test_clock_get_type (void);
+G_DEFINE_TYPE (TestClock, test_clock, GST_TYPE_CLOCK);
 
 static GstClockReturn
 fake_wait_async (GstClock * clock, GstClockEntry * entry)
@@ -48,7 +48,7 @@ fake_wait_async (GstClock * clock, GstClockEntry * entry)
 }
 
 static void
-gst_test_clock_class_init (GstTestClockClass * klass)
+test_clock_class_init (TestClockClass * klass)
 {
   GstClockClass *clock_class;
 
@@ -58,7 +58,7 @@ gst_test_clock_class_init (GstTestClockClass * klass)
 }
 
 static void
-gst_test_clock_init (GstTestClock * clock)
+test_clock_init (TestClock * clock)
 {
 }
 
@@ -75,8 +75,8 @@ GST_START_TEST (test_set_master_refcount)
   gboolean master_alive = TRUE;
 
   /* create master and slave */
-  master = g_object_new (GST_TYPE_TEST_CLOCK, "name", "TestClockMaster", NULL);
-  slave = g_object_new (GST_TYPE_TEST_CLOCK, "name", "TestClockMaster", NULL);
+  master = g_object_new (TYPE_TEST_CLOCK, "name", "TestClockMaster", NULL);
+  slave = g_object_new (TYPE_TEST_CLOCK, "name", "TestClockMaster", NULL);
   GST_OBJECT_FLAG_SET (slave, GST_CLOCK_FLAG_CAN_SET_MASTER);
 
   fail_unless_equals_int (GST_OBJECT_REFCOUNT (master), 1);
