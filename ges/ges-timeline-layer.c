@@ -643,7 +643,7 @@ track_removed_cb (GESTrack * track, GESTrackObject * track_object,
 }
 
 static void
-track_added_cb (GESTrack * track, GESTrackObject * track_object,
+track_added_cb (GESTimeline * timeline, GESTrack * track,
     GESTimelineLayer * layer)
 {
   g_signal_connect (track, "track-object-removed",
