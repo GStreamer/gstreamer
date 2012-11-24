@@ -742,7 +742,8 @@ track_object_added_cb (GESTimelineObject * object,
 
     priv->sources_to_load = g_list_remove (priv->sources_to_load, object);
     if (!priv->sources_to_load)
-      ges_formatter_emit_loaded (GES_FORMATTER (formatter));
+      /* ges_formatter_emit_loaded (GES_FORMATTER (formatter)); */
+      GST_FIXME ("This should be reimplemented");
   }
 
   if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
@@ -1036,7 +1037,8 @@ load_pitivi_file_from_uri (GESFormatter * self,
    * 'project-loaded' signal.
    */
   if (!g_hash_table_size (priv->timeline_objects_table)) {
-    ges_formatter_emit_loaded (self);
+    /*ges_formatter_emit_loaded (self); */
+    GST_FIXME ("This should be reimplemented");
   } else {
     if (!make_timeline_objects (self)) {
       GST_ERROR ("Couldn't deserialise the project properly");
@@ -1049,35 +1051,7 @@ load_pitivi_file_from_uri (GESFormatter * self,
   return ret;
 }
 
-static gboolean
-pitivi_formatter_update_source_uri (GESFormatter * formatter,
-    GESTimelineFileSource * tfs, gchar * new_uri)
-{
-  GESTimelineObject *tlobj = GES_TIMELINE_OBJECT (tfs);
-  GESTimelineLayer *layer = ges_timeline_object_get_layer (tlobj);
-  const gchar *uri = ges_timeline_filesource_get_uri (tfs);
-  GESPitiviFormatterPrivate *priv = GES_PITIVI_FORMATTER (formatter)->priv;
-  gboolean ret;
-
-  /*Keep a ref to it as we don't want it to be destroyed! */
-  g_object_ref (tlobj);
-
-  ges_timeline_layer_remove_object (layer, tlobj);
-
-  g_object_set (tfs, "uri", new_uri, NULL);
-  ret = ges_timeline_layer_add_object (layer, tlobj);
-
-  /* FIXME handle the case of source uri updated more than 1 time */
-  g_hash_table_insert (priv->source_uris, g_strdup (uri), g_strdup (new_uri));
-
-  /* We do not need our reference anymore */
-  g_object_unref (tlobj);
-
-  return ret;
-}
-
 /* Object functions */
-
 static void
 ges_pitivi_formatter_finalize (GObject * object)
 {
@@ -1121,7 +1095,6 @@ ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
   formatter_klass->can_load_uri = pitivi_can_load_uri;
   formatter_klass->save_to_uri = save_pitivi_timeline_to_uri;
   formatter_klass->load_from_uri = load_pitivi_file_from_uri;
-  formatter_klass->update_source_uri = pitivi_formatter_update_source_uri;
   object_class->finalize = ges_pitivi_formatter_finalize;
 }
 

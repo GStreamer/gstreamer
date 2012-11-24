@@ -99,38 +99,6 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
 typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
                GESTimeline *timeline,
                const gchar * uri, GError **error);
-typedef gboolean (*GESFormatterSaveMethod) (GESFormatter * formatter,
-                GESTimeline * timeline);
-typedef gboolean (*GESFormatterLoadMethod) (GESFormatter * formatter,
-                GESTimeline * timeline);
-
-/**
- * GESFormatterSourceMovedMethod:
- * @formatter: a #GESFormatter
- * @tfs: a #GESTimelineFileSource
- * @new_uri: the new URI of @tfs
- *
- * Virtual method for changing the URI of a #GESTimelineFileSource that has been
- * moved between the saving and the loading of the timeline.
- *
- * This virtual method is not 100% necessary to be implemented as it is an
- * extra feature.
- *
- * Returns: %TRUE if the source URI could be modified properly, %FALSE otherwize.
- */
-typedef gboolean (*GESFormatterSourceMovedMethod)        (GESFormatter *formatter,
-             GESTimelineFileSource *tfs, gchar *new_uri);
-
-/**
- * GESFormatterLoadedMethod:
- * @formatter: The #GESFormatter that is done loading
- * @timeline: The #GESTimeline that has finnished to load
- *
- *  This method should be called by sublcasses when they are done
- *  loading @timeline
- */
-typedef gboolean (*GESFormatterLoadedMethod) (GESFormatter *formatter,
-    GESTimeline *timeline);
 
 /**
  * GESFormatterClass:
@@ -152,15 +120,11 @@ struct _GESFormatterClass {
   GESFormatterCanSaveURIMethod can_save_uri;
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
-  GESFormatterSourceMovedMethod update_source_uri;
 
   /*< private >*/
   /* FIXME : formatter name */
   /* FIXME : formatter description */
   /* FIXME : format name/mime-type */
-
-  GESFormatterSaveMethod save;
-  GESFormatterLoadMethod load;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -181,27 +145,5 @@ gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
                                          GESTimeline *timeline,
                                          const gchar *uri,
                                          GError **error);
-
-gboolean
-ges_formatter_update_source_uri         (GESFormatter * formatter,
-                                         GESTimelineFileSource * source,
-                                         gchar * new_uri);
-
-/*< protected >*/
-gboolean
-ges_formatter_emit_loaded       (GESFormatter * formatter);
-
-/* Non-standard methods. WILL BE DEPRECATED */
-gboolean ges_formatter_load             (GESFormatter * formatter,
-           GESTimeline * timeline);
-gboolean ges_formatter_save             (GESFormatter * formatter,
-           GESTimeline * timeline);
-
-void ges_formatter_set_data             (GESFormatter * formatter,
-           void *data, gsize length);
-void *ges_formatter_get_data            (GESFormatter *formatter,
-           gsize *length);
-void ges_formatter_clear_data           (GESFormatter *formatter);
-
 
 #endif /* _GES_FORMATTER */
