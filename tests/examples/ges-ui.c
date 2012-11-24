@@ -1377,6 +1377,8 @@ fail:
 static gboolean
 load_file_async (App * app)
 {
+
+#if 0
   GESFormatter *formatter;
   g_printf ("%s\n", app->pending_uri);
 
@@ -1386,6 +1388,9 @@ load_file_async (App * app)
 
   g_free (app->pending_uri);
   app->pending_uri = NULL;
+#endif
+
+  GST_FIXME ("This should be reimplemented");
 
   return FALSE;
 }

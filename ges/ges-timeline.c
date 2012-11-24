@@ -1940,29 +1940,8 @@ gboolean
 ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri,
     GError ** error)
 {
-  GESFormatter *p = NULL;
-  gboolean ret = FALSE;
-
-  /* FIXME : we should have a GError** argument so the user can know why
-   * it wasn't able to load the uri
-   */
-
-  if (!(p = ges_formatter_new_for_uri (uri))) {
-    GST_ERROR ("unsupported uri '%s'", uri);
-    goto fail;
-  }
-
-  if (!ges_formatter_load_from_uri (p, timeline, uri, error)) {
-    GST_ERROR ("error deserializing formatter");
-    goto fail;
-  }
-
-  ret = TRUE;
-
-fail:
-  if (p)
-    g_object_unref (p);
-  return ret;
+  GST_FIXME ("This should be reimplemented");
+  return FALSE;
 }
 
 /**
@@ -1980,32 +1959,8 @@ gboolean
 ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
     GError ** error)
 {
-  GESFormatter *p = NULL;
-  gboolean ret = FALSE;
-
-  /* FIXME : How will the user be able to chose the format he
-   * wishes to store to ? */
-
-  /* FIXME : How will we ensure a timeline loaded with a certain format
-   * will be saved with the same one by default ? We need to make this
-   * easy from an API perspective */
-
-  if (!(p = ges_formatter_new_for_uri (uri))) {
-    GST_ERROR ("unsupported uri '%s'", uri);
-    goto fail;
-  }
-
-  if (!ges_formatter_save_to_uri (p, timeline, uri, error)) {
-    GST_ERROR ("error serializing formatter");
-    goto fail;
-  }
-
-  ret = TRUE;
-
-fail:
-  if (p)
-    g_object_unref (p);
-  return ret;
+  GST_FIXME ("This should be reimplemented");
+  return FALSE;
 }
 
 /**

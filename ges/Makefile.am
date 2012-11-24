@@ -45,7 +45,6 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-track-parse-launch-effect.c		\
 	ges-screenshot.c			\
 	ges-formatter.c				\
-	ges-keyfile-formatter.c			\
 	ges-pitivi-formatter.c			\
 	ges-utils.c
 
@@ -89,7 +88,6 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-track-text-overlay.h		\
 	ges-screenshot.h			\
 	ges-formatter.h				\
-	ges-keyfile-formatter.h			\
 	ges-pitivi-formatter.h			\
 	ges-utils.h
 

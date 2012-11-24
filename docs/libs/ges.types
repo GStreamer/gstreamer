@@ -3,7 +3,6 @@
 
 ges_custom_timeline_source_get_type
 ges_formatter_get_type
-ges_keyfile_formatter_get_type
 ges_simple_timeline_layer_get_type
 %ges_text_halign_get_type
 %ges_text_valign_get_type

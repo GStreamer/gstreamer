@@ -48,7 +48,6 @@
 #include <stdlib.h>
 
 #include "ges-formatter.h"
-#include "ges-keyfile-formatter.h"
 #include "ges-internal.h"
 #include "ges.h"
 
@@ -166,39 +165,6 @@ ges_formatter_find_for_uri (const gchar * uri)
   g_free (formatters);
 
   return ret;
-}
-
-/**
- * ges_formatter_new_for_uri:
- * @uri: a #gchar * pointing to the uri
- *
- * Creates a #GESFormatter that can handle the given URI.
- *
- * Returns: A GESFormatter that can load the given uri, or NULL if
- * the uri is not supported.
- */
-
-GESFormatter *
-ges_formatter_new_for_uri (const gchar * uri)
-{
-  if (ges_formatter_can_load_uri (uri, NULL))
-    return GES_FORMATTER (ges_keyfile_formatter_new ());
-  return NULL;
-}
-
-/**
- * ges_default_formatter_new:
- *
- * Creates a new instance of the default GESFormatter type on this system
- * (currently #GESKeyfileFormatter).
- *
- * Returns: (transfer full): a #GESFormatter instance or %NULL
- */
-
-GESFormatter *
-ges_default_formatter_new (void)
-{
-  return GES_FORMATTER (ges_keyfile_formatter_new ());
 }
 
 static gboolean

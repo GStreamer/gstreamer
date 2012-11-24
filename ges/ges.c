@@ -72,7 +72,6 @@ ges_init (void)
 
   /* register formatter types with the system */
   GES_TYPE_PITIVI_FORMATTER;
-  GES_TYPE_KEYFILE_FORMATTER;
 
   /* check the gnonlin elements are available */
   if (!ges_check_gnonlin_availability ())
