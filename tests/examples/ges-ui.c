@@ -1239,7 +1239,7 @@ app_add_transition (App * app)
 static void
 app_save_to_uri (App * app, gchar * uri)
 {
-  ges_timeline_save_to_uri (app->timeline, uri, NULL);
+  ges_timeline_save_to_uri (app->timeline, uri, NULL, FALSE, NULL);
 }
 
 static void
@@ -1377,20 +1377,10 @@ fail:
 static gboolean
 load_file_async (App * app)
 {
-
-#if 0
-  GESFormatter *formatter;
-  g_printf ("%s\n", app->pending_uri);
-
-  formatter = ges_formatter_new_for_uri (app->pending_uri);
-  ges_formatter_load_from_uri (formatter, app->timeline, app->pending_uri,
-      NULL);
+  ges_timeline_load_from_uri (app->timeline, app->pending_uri, NULL);
 
   g_free (app->pending_uri);
   app->pending_uri = NULL;
-#endif
-
-  GST_FIXME ("This should be reimplemented");
 
   return FALSE;
 }

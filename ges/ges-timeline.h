@@ -48,6 +48,13 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_GET_TRACKS(obj) (GES_TIMELINE (obj)->tracks)
 #define GES_TIMELINE_GET_LAYERS(obj) (GES_TIMELINE (obj)->layers)
 
+/**
+ * ges_timeline_get_project:
+ *
+ * Helper macro to retrieve the project from which a #GESTimeline as been extracted
+ */
+#define ges_timeline_get_project(obj) (GES_TIMELINE (ges_extractable_get_asset (obj))
+
 typedef struct _GESTimelinePrivate GESTimelinePrivate;
 
 /**
@@ -95,8 +102,8 @@ GESTimeline* ges_timeline_new (void);
 GESTimeline* ges_timeline_new_from_uri (const gchar *uri, GError **error);
 
 gboolean ges_timeline_load_from_uri (GESTimeline *timeline, const gchar *uri, GError **error);
-gboolean ges_timeline_save_to_uri (GESTimeline *timeline, const gchar *uri, GError **error);
-
+gboolean ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
+    GESAsset *formatter_asset, gboolean overwrite, GError ** error);
 gboolean ges_timeline_add_layer (GESTimeline *timeline, GESTimelineLayer *layer);
 GESTimelineLayer * ges_timeline_append_layer (GESTimeline * timeline);
 gboolean ges_timeline_remove_layer (GESTimeline *timeline, GESTimelineLayer *layer);

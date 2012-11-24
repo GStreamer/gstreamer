@@ -275,7 +275,7 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
       g_error ("couldn't create uri for '%s", save_path);
       goto failure;
     }
-    ges_timeline_save_to_uri (timeline, uri, NULL);
+    ges_timeline_save_to_uri (timeline, uri, NULL, TRUE, NULL);
     g_free (uri);
   }
 

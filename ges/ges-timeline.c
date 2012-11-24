@@ -32,8 +32,6 @@
  *
  * To save/load a timeline, you can use the ges_timeline_load_from_uri() and
  * ges_timeline_save_to_uri() methods to use the default format. If you wish
- * to specify the format to save/load the timeline from, please consult the
- * documentation about #GESFormatter.
  */
 
 #include "ges-internal.h"
@@ -1653,26 +1651,17 @@ ges_timeline_new (void)
  * Returns: A new timeline if the uri was loaded successfully, or NULL if the
  * uri could not be loaded
  */
-
 GESTimeline *
 ges_timeline_new_from_uri (const gchar * uri, GError ** error)
 {
   GESTimeline *ret;
+  GESProject *project = ges_project_new (uri);
 
-  /* FIXME : we should have a GError** argument so the user can know why
-   * it wasn't able to load the uri
-   */
-
-  ret = ges_timeline_new ();
-
-  if (!ges_timeline_load_from_uri (ret, uri, error)) {
-    g_object_unref (ret);
-    return NULL;
-  }
+  ret = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), error));
+  gst_object_unref (ret);
 
   return ret;
 }
-
 
 /**
  * ges_timeline_load_from_uri:
@@ -1684,32 +1673,62 @@ ges_timeline_new_from_uri (const gchar * uri, GError ** error)
  * Returns: TRUE if the timeline was loaded successfully, or FALSE if the uri
  * could not be loaded.
  */
-
 gboolean
 ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri,
     GError ** error)
 {
-  GST_FIXME ("This should be reimplemented");
-  return FALSE;
+  GESProject *project;
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  g_return_val_if_fail ((ges_extractable_get_asset (GES_EXTRACTABLE
+              (timeline)) == NULL), FALSE);
+
+  project = ges_project_new (uri);
+  ret = ges_project_load (project, timeline, error);
+  gst_object_unref (project);
+
+  return ret;
 }
 
 /**
  * ges_timeline_save_to_uri:
  * @timeline: a #GESTimeline
  * @uri: The location to save to
+ * @formatter_asset: (allow-none): The formatter asset to use or %NULL. If %NULL,
+ * will try to save in the same format as the one from which the timeline as been loaded
+ * or default to the formatter with highest rank
+ * @overwrite: %TRUE to overwrite file if it exists
+ * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Saves the timeline to the given location
  *
  * Returns: TRUE if the timeline was successfully saved to the given location,
  * else FALSE.
  */
-
 gboolean
 ges_timeline_save_to_uri (GESTimeline * timeline, const gchar * uri,
-    GError ** error)
+    GESAsset * formatter_asset, gboolean overwrite, GError ** error)
 {
-  GST_FIXME ("This should be reimplemented");
-  return FALSE;
+  gboolean ret, created_proj;
+  GESProject *project;
+
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
+  project =
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
+
+  if (project == NULL) {
+    project = ges_project_new (NULL);
+    created_proj = TRUE;
+  }
+
+  ret = ges_project_save (project, timeline, uri, formatter_asset, overwrite,
+      error);
+
+  if (created_proj)
+    gst_object_unref (project);
+
+  return ret;
 }
 
 /**
