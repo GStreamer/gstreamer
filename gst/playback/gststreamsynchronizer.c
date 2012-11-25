@@ -26,18 +26,18 @@
 GST_DEBUG_CATEGORY_STATIC (stream_synchronizer_debug);
 #define GST_CAT_DEFAULT stream_synchronizer_debug
 
-#define GST_STREAM_SYNCHRONIZER_LOCK(obj) G_STMT_START {                   \
-    GST_LOG_OBJECT (obj,                                                \
+#define GST_STREAM_SYNCHRONIZER_LOCK(obj) G_STMT_START {                \
+    GST_TRACE_OBJECT (obj,                                              \
                     "locking from thread %p",                           \
                     g_thread_self ());                                  \
-    g_mutex_lock (&GST_STREAM_SYNCHRONIZER_CAST(obj)->lock);                \
-    GST_LOG_OBJECT (obj,                                                \
+    g_mutex_lock (&GST_STREAM_SYNCHRONIZER_CAST(obj)->lock);            \
+    GST_TRACE_OBJECT (obj,                                              \
                     "locked from thread %p",                            \
                     g_thread_self ());                                  \
 } G_STMT_END
 
-#define GST_STREAM_SYNCHRONIZER_UNLOCK(obj) G_STMT_START {                 \
-    GST_LOG_OBJECT (obj,                                                \
+#define GST_STREAM_SYNCHRONIZER_UNLOCK(obj) G_STMT_START {              \
+    GST_TRACE_OBJECT (obj,                                              \
                     "unlocking from thread %p",                         \
                     g_thread_self ());                                  \
     g_mutex_unlock (&GST_STREAM_SYNCHRONIZER_CAST(obj)->lock);              \
