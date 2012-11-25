@@ -2204,12 +2204,6 @@ no_supported_capture_method:
   }
 }
 
-
-/* Note about fraction simplification
- *  * n1/d1 == n2/d2  is also written as  n1 == ( n2 * d1 ) / d2
- *   */
-#define fractions_are_equal(n1,d1,n2,d2) ((n1) == gst_util_uint64_scale_int((n2), (d1), (d2)))
-
 gboolean
 gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 {
