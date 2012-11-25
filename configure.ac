@@ -615,9 +615,6 @@ AC_DEFINE_UNQUOTED(GST_DATADIR, "$DATADIR", [data dir])
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
-GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
-AC_SUBST(GST_PKG_DEPS)
-
 dnl make sure it doesn't complain about unused variables if debugging is disabled
 NO_WARNINGS=""
 if test "x${GST_DISABLE_GST_DEBUG}" = "xyes"; then
