@@ -77,11 +77,11 @@ struct _GstDataQueuePrivate
 };
 
 #define GST_DATA_QUEUE_MUTEX_LOCK(q) G_STMT_START {                     \
-    GST_CAT_LOG (data_queue_dataflow,                                   \
+    GST_CAT_TRACE (data_queue_dataflow,                                 \
       "locking qlock from thread %p",                                   \
       g_thread_self ());                                                \
   g_mutex_lock (&q->priv->qlock);                                       \
-  GST_CAT_LOG (data_queue_dataflow,                                     \
+  GST_CAT_TRACE (data_queue_dataflow,                                   \
       "locked qlock from thread %p",                                    \
       g_thread_self ());                                                \
 } G_STMT_END
@@ -93,7 +93,7 @@ struct _GstDataQueuePrivate
   } G_STMT_END
 
 #define GST_DATA_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                   \
-    GST_CAT_LOG (data_queue_dataflow,                                   \
+    GST_CAT_TRACE (data_queue_dataflow,                                 \
       "unlocking qlock from thread %p",                                 \
       g_thread_self ());                                                \
   g_mutex_unlock (&q->priv->qlock);                                     \
