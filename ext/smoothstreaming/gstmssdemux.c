@@ -412,7 +412,7 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   gchar *path;
   gchar *url;
   GstFragment *fragment;
-  GstBufferList *buflist;
+  GstBuffer *buffer;
   GstFlowReturn ret;
 
   GST_DEBUG_OBJECT (mssdemux, "Getting url for stream %p", stream);
@@ -438,9 +438,11 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   g_free (path);
   g_free (url);
 
-  buflist = gst_fragment_get_buffer_list (fragment);
+  buffer = gst_fragment_get_buffer (fragment);
+  buffer = gst_buffer_make_metadata_writable (buffer);
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (stream->pad));
 
-  ret = gst_pad_push_list (stream->pad, buflist);       /* TODO check return */
+  ret = gst_pad_push (stream->pad, buffer);     /* TODO check return */
   switch (ret) {
     case GST_FLOW_UNEXPECTED:
       goto eos;                 /* EOS ? */
