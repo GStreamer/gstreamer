@@ -9615,10 +9615,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
-      char *s;
+      char *s, fourstr[5];
 
-      s = g_strdup_printf ("video/x-gst-fourcc-%" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (fourcc));
+      g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      s = g_strdup_printf ("video/x-gst-fourcc-%s", g_strstrip (fourstr));
       caps = gst_caps_new_empty_simple (s);
       break;
     }
@@ -9825,10 +9825,10 @@ qtdemux_audio_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       /* ? */
     default:
     {
-      char *s;
+      char *s, fourstr[5];
 
-      s = g_strdup_printf ("audio/x-gst-fourcc-%" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (fourcc));
+      g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      s = g_strdup_printf ("audio/x-gst-fourcc-%s", g_strstrip (fourstr));
       caps = gst_caps_new_empty_simple (s);
       break;
     }
@@ -9878,10 +9878,10 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     default:
     {
-      char *s;
+      char *s, fourstr[5];
 
-      s = g_strdup_printf ("text/x-gst-fourcc-%" GST_FOURCC_FORMAT,
-          GST_FOURCC_ARGS (fourcc));
+      g_snprintf (fourstr, 5, "%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      s = g_strdup_printf ("text/x-gst-fourcc-%s", g_strstrip (fourstr));
       caps = gst_caps_new_empty_simple (s);
       break;
     }
