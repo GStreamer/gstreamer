@@ -71,9 +71,6 @@
  *       N_("Output tags (also known as metadata)"), NULL},
  *   {NULL}
  *  };
- *  // must initialise the threading system before using any other GLib funtion
- *  if (!g_thread_supported ())
- *    g_thread_init (NULL);
  *  ctx = g_option_context_new ("[ADDITIONAL ARGUMENTS]");
  *  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
  *  g_option_context_add_group (ctx, gst_init_get_option_group ());
@@ -388,10 +385,6 @@ gst_init_get_option_group (void)
  * for some reason.  If you want your program to fail fatally,
  * use gst_init() instead.
  *
- * This function should be called before calling any other GLib functions. If
- * this is not an option, your program must initialise the GLib thread system
- * using g_thread_init() before any other GLib functions are called.
- *
  * Returns: %TRUE if GStreamer could be initialized.
  */
 gboolean
@@ -445,10 +438,6 @@ gst_init_check (int *argc, char **argv[], GError ** err)
  * details and section
  * <link linkend="gst-running">Running GStreamer Applications</link>
  * for how to disable automatic registry updates.
- *
- * This function should be called before calling any other GLib functions. If
- * this is not an option, your program must initialise the GLib thread system
- * using g_thread_init() before any other GLib functions are called.
  *
  * <note><para>
  * This function will terminate your program if it was unable to initialize
