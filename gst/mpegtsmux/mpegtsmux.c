@@ -354,7 +354,6 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
   mux->last_ts = 0;
   mux->is_delta = TRUE;
 
-  mux->streamheader = NULL;
   mux->streamheader_sent = FALSE;
   mux->force_key_unit_event = NULL;
   mux->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
@@ -373,6 +372,8 @@ mpegtsmux_reset (MpegTsMux * mux, gboolean alloc)
     tsmux_free (mux->tsmux);
     mux->tsmux = NULL;
   }
+
+  memset (mux->programs, 0, sizeof (mux->programs));
 
   if (mux->streamheader) {
     GstBuffer *buf;
