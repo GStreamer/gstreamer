@@ -1909,15 +1909,21 @@ void
 gst_rtsp_client_set_send_func (GstRTSPClient * client,
     GstRTSPClientSendFunc func, gpointer user_data, GDestroyNotify notify)
 {
+  GstRTSPClientSendFunc old_func;
+  gpointer old_data;
+
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
   g_mutex_lock (&client->lock);
   client->send_func = func;
-  if (client->send_notify)
-    client->send_notify (client->send_data);
-  client->send_data = user_data;
+  old_func = client->send_notify;
+  old_data = client->send_data;
   client->send_notify = notify;
+  client->send_data = user_data;
   g_mutex_unlock (&client->lock);
+
+  if (old_func)
+    old_func (old_data);
 }
 
 /**
