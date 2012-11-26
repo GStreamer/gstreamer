@@ -279,7 +279,6 @@ Gst-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstreamer-@GST_API_VERSIO
 		--pkg glib-2.0 \
 		--pkg gobject-2.0 \
 		--pkg gmodule-no-export-2.0 \
-		--pkg gthread-2.0 \
 		--pkg-export gstreamer-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL, NULL);" \
 		--output $@ \

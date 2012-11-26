@@ -12,7 +12,7 @@ typelibdir=@abs_top_builddir@/gst
 Name: GStreamer Uninstalled
 Description: Streaming media framework, Not Installed
 Version: @VERSION@
-Requires: glib-2.0, gobject-2.0, gthread-2.0
+Requires: glib-2.0, gobject-2.0
 Requires.private: gmodule-no-export-2.0
 Libs: @abs_top_builddir@/gst/libgstreamer-@GST_API_VERSION@.la
 # FIXME: the libs dir doesn't really belong here
