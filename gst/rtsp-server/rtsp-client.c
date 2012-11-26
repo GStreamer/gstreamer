@@ -173,6 +173,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
+  g_mutex_init (&client->lock);
   client->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
   client->close_response_seq = 0;
 }
@@ -236,6 +237,7 @@ gst_rtsp_client_finalize (GObject * obj)
   }
 
   g_free (client->server_ip);
+  g_mutex_clear (&client->lock);
 
   G_OBJECT_CLASS (gst_rtsp_client_parent_class)->finalize (obj);
 }
@@ -1710,14 +1712,18 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
 {
   GstRTSPSessionPool *old;
 
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  if (pool)
+    g_object_ref (pool);
+
+  g_mutex_lock (&client->lock);
   old = client->session_pool;
-  if (old != pool) {
-    if (pool)
-      g_object_ref (pool);
-    client->session_pool = pool;
-    if (old)
-      g_object_unref (old);
-  }
+  client->session_pool = pool;
+  g_mutex_unlock (&client->lock);
+
+  if (old)
+    g_object_unref (old);
 }
 
 /**
@@ -1733,8 +1739,12 @@ gst_rtsp_client_get_session_pool (GstRTSPClient * client)
 {
   GstRTSPSessionPool *result;
 
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+
+  g_mutex_lock (&client->lock);
   if ((result = client->session_pool))
     g_object_ref (result);
+  g_mutex_unlock (&client->lock);
 
   return result;
 }
@@ -1751,14 +1761,18 @@ gst_rtsp_client_set_server (GstRTSPClient * client, GstRTSPServer * server)
 {
   GstRTSPServer *old;
 
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  if (server)
+    g_object_ref (server);
+
+  g_mutex_lock (&client->lock);
   old = client->server;
-  if (old != server) {
-    if (server)
-      g_object_ref (server);
-    client->server = server;
-    if (old)
-      g_object_unref (old);
-  }
+  client->server = server;
+  g_mutex_unlock (&client->lock);
+
+  if (old)
+    g_object_unref (old);
 }
 
 /**
@@ -1774,8 +1788,12 @@ gst_rtsp_client_get_server (GstRTSPClient * client)
 {
   GstRTSPServer *result;
 
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+
+  g_mutex_lock (&client->lock);
   if ((result = client->server))
     g_object_ref (result);
+  g_mutex_unlock (&client->lock);
 
   return result;
 }
@@ -1795,15 +1813,18 @@ gst_rtsp_client_set_mount_points (GstRTSPClient * client,
 {
   GstRTSPMountPoints *old;
 
-  old = client->mount_points;
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
-  if (old != mounts) {
-    if (mounts)
-      g_object_ref (mounts);
-    client->mount_points = mounts;
-    if (old)
-      g_object_unref (old);
-  }
+  if (mounts)
+    g_object_ref (mounts);
+
+  g_mutex_lock (&client->lock);
+  old = client->mount_points;
+  client->mount_points = mounts;
+  g_mutex_unlock (&client->lock);
+
+  if (old)
+    g_object_unref (old);
 }
 
 /**
@@ -1819,8 +1840,12 @@ gst_rtsp_client_get_mount_points (GstRTSPClient * client)
 {
   GstRTSPMountPoints *result;
 
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+
+  g_mutex_lock (&client->lock);
   if ((result = client->mount_points))
     g_object_ref (result);
+  g_mutex_unlock (&client->lock);
 
   return result;
 }
@@ -1838,7 +1863,11 @@ void
 gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
     gboolean use_client_settings)
 {
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  g_mutex_lock (&client->lock);
   client->use_client_settings = use_client_settings;
+  g_mutex_unlock (&client->lock);
 }
 
 /**
@@ -1851,7 +1880,15 @@ gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
 gboolean
 gst_rtsp_client_get_use_client_settings (GstRTSPClient * client)
 {
-  return client->use_client_settings;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
+
+  g_mutex_lock (&client->lock);
+  res = client->use_client_settings;
+  g_mutex_unlock (&client->lock);
+
+  return res;
 }
 
 /**
@@ -1868,15 +1905,16 @@ gst_rtsp_client_set_auth (GstRTSPClient * client, GstRTSPAuth * auth)
 
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
-  old = client->auth;
+  if (auth)
+    g_object_ref (auth);
 
-  if (old != auth) {
-    if (auth)
-      g_object_ref (auth);
-    client->auth = auth;
-    if (old)
-      g_object_unref (old);
-  }
+  g_mutex_lock (&client->lock);
+  old = client->auth;
+  client->auth = auth;
+  g_mutex_unlock (&client->lock);
+
+  if (old)
+    g_object_unref (old);
 }
 
 
@@ -1896,8 +1934,10 @@ gst_rtsp_client_get_auth (GstRTSPClient * client)
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
 
+  g_mutex_lock (&client->lock);
   if ((result = client->auth))
     g_object_ref (result);
+  g_mutex_unlock (&client->lock);
 
   return result;
 }
@@ -2204,6 +2244,9 @@ gst_rtsp_client_use_socket (GstRTSPClient * client, GSocket * socket,
   GstRTSPConnection *conn;
   GstRTSPResult res;
 
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
+  g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
+
   GST_RTSP_CHECK (gst_rtsp_connection_create_from_socket (socket, ip, port,
           initial_buffer, &conn), no_connection);
 
@@ -2238,6 +2281,9 @@ gst_rtsp_client_accept (GstRTSPClient * client, GSocket * socket,
 {
   GstRTSPConnection *conn;
   GstRTSPResult res;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
+  g_return_val_if_fail (G_IS_SOCKET (socket), FALSE);
 
   /* a new client connected. */
   GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, cancellable),

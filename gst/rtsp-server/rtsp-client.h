@@ -91,6 +91,7 @@ struct _GstRTSPClientState {
 struct _GstRTSPClient {
   GObject       parent;
 
+  GMutex             lock;
   GstRTSPConnection *connection;
   GstRTSPWatch      *watch;
   gchar             *server_ip;
