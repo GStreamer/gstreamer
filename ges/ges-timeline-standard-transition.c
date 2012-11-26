@@ -26,8 +26,8 @@
  * Creates an object that mixes together the two underlying objects, A and B.
  * The A object is assumed to have a higher prioirity (lower number) than the
  * B object. At the transition in point, only A will be visible, and by the
- * end only B will be visible. 
- * 
+ * end only B will be visible.
+ *
  * The shape of the video transition depends on the value of the "vtype"
  * property. The default value is "crossfade". For audio, only "crossfade" is
  * supported.
@@ -35,6 +35,10 @@
  * #GESSimpleTimelineLayer will automatically manage the priorities of sources
  * and transitions. If you use #GESTimelineStandardTransitions in another type of
  * #GESTimelineLayer, you will need to manage priorities yourself.
+ *
+ * The ID of the ExtractableType is the nickname of the vtype property value. Note
+ * that this value can be changed after creation and the GESExtractable.asset value
+ * will be updated when needed.
  */
 
 #include <ges/ges.h>
@@ -43,15 +47,14 @@
 struct _GESTimelineStandardTransitionPrivate
 {
   GSList *track_video_transitions;
+
+  const gchar *vtype_name;
 };
 
 enum
 {
   PROP_VTYPE = 5,
 };
-
-G_DEFINE_TYPE (GESTimelineStandardTransition, ges_timeline_standard_transition,
-    GES_TYPE_TIMELINE_TRANSITION);
 
 static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
     * self, GESTrack * track);
@@ -62,13 +65,32 @@ static void
 ges_timeline_standard_transition_track_object_released (GESTimelineObject * obj,
     GESTrackObject * tckobj);
 
+/* Internal methods */
 static void
 ges_timeline_standard_transition_update_vtype_internal (GESTimelineObject *
-    self, GESVideoStandardTransitionType value)
+    self, GESVideoStandardTransitionType value, gboolean set_asset)
 {
   GSList *tmp;
+  guint index;
+  GEnumClass *enum_class;
+  const gchar *asset_id = NULL;
   GESTimelineStandardTransition *trself =
       GES_TIMELINE_STANDARD_TRANSITION (self);
+
+  enum_class = g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+  for (index = 0; index < enum_class->n_values; index++) {
+    if (enum_class->values[index].value == value) {
+      asset_id = enum_class->values[index].value_nick;
+      break;
+    }
+  }
+
+  if (asset_id == NULL) {
+    GST_WARNING_OBJECT (self, "Wrong transition type value: %i can not set it",
+        value);
+
+    return;
+  }
 
   for (tmp = trself->priv->track_video_transitions; tmp; tmp = tmp->next) {
     if (!ges_track_video_transition_set_transition_type
@@ -77,7 +99,106 @@ ges_timeline_standard_transition_update_vtype_internal (GESTimelineObject *
   }
 
   trself->vtype = value;
+  trself->priv->vtype_name = asset_id;
+
+  if (set_asset) {
+    /* We already checked the value, so we can be sure no error will accured */
+    ges_extractable_set_asset (GES_EXTRACTABLE (self),
+        ges_asset_request (GES_TYPE_TIMELINE_STANDARD_TRANSITION,
+            asset_id, NULL));
+  }
 }
+
+/* GESExtractable interface overrides */
+static GParameter *
+extractable_get_parameters_from_id (const gchar * id, guint * n_params)
+{
+  GEnumClass *enum_class =
+      g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+  GParameter *params = g_new0 (GParameter, 1);
+  GEnumValue *value = g_enum_get_value_by_nick (enum_class, id);
+
+  params[0].name = g_strdup ("vtype");
+  g_value_init (&params[0].value, GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+  g_value_set_enum (&params[0].value, value->value);
+  *n_params = 1;
+
+  return params;
+}
+
+static gchar *
+extractable_check_id (GType type, const gchar * id)
+{
+  guint index;
+  GEnumClass *enum_class;
+  enum_class = g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+
+  for (index = 0; index < enum_class->n_values; index++) {
+    if (g_strcmp0 (enum_class->values[index].value_nick, id) == 0)
+      return g_strdup (id);
+  }
+
+  return NULL;
+}
+
+static gchar *
+extractable_get_id (GESExtractable * self)
+{
+  guint index;
+  GEnumClass *enum_class;
+  guint value = GES_TIMELINE_STANDARD_TRANSITION (self)->vtype;
+
+  enum_class = g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+  for (index = 0; index < enum_class->n_values; index++) {
+    if (enum_class->values[index].value == value)
+      return g_strdup (enum_class->values[index].value_nick);
+  }
+
+  return NULL;
+}
+
+static void
+extractable_set_asset (GESExtractable * self, GESAsset * asset)
+{
+  GEnumClass *enum_class;
+  GESVideoStandardTransitionType value;
+  GESTimelineStandardTransition *trans =
+      GES_TIMELINE_STANDARD_TRANSITION (self);
+  const gchar *vtype = ges_asset_get_id (asset);
+
+  /* Update the transition type if we actually changed it */
+  if (g_strcmp0 (vtype, trans->priv->vtype_name)) {
+    guint index;
+
+    value = GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE;
+    enum_class = g_type_class_peek (GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE);
+
+    /* Find the in value in use */
+    for (index = 0; index < enum_class->n_values; index++) {
+      if (g_strcmp0 (enum_class->values[index].value_nick, vtype) == 0) {
+        value = enum_class->values[index].value;
+        break;
+      }
+    }
+    ges_timeline_standard_transition_update_vtype_internal
+        (GES_TIMELINE_OBJECT (self), value, FALSE);
+  }
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->check_id = (GESExtractableCheckId) extractable_check_id;
+  iface->get_id = extractable_get_id;
+  iface->get_parameters_from_id = extractable_get_parameters_from_id;
+  iface->can_update_asset = TRUE;
+  iface->set_asset = extractable_set_asset;
+}
+
+G_DEFINE_TYPE_WITH_CODE (GESTimelineStandardTransition,
+    ges_timeline_standard_transition, GES_TYPE_TIMELINE_TRANSITION,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 static void
 ges_timeline_standard_transition_get_property (GObject * object,
@@ -103,7 +224,7 @@ ges_timeline_standard_transition_set_property (GObject * object,
   switch (property_id) {
     case PROP_VTYPE:
       ges_timeline_standard_transition_update_vtype_internal (self,
-          g_value_get_enum (value));
+          g_value_get_enum (value), TRUE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -153,6 +274,7 @@ ges_timeline_standard_transition_init (GESTimelineStandardTransition * self)
       GESTimelineStandardTransitionPrivate);
 
   self->vtype = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
+  self->priv->vtype_name = NULL;
 }
 
 static void
