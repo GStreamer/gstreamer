@@ -871,10 +871,10 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         /* If we only have audio or only video in the previous source,
          * set it has such */
         if (a_avail) {
-          ges_timeline_filesource_set_supported_formats (src,
+          ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
               GES_TRACK_TYPE_VIDEO);
         } else if (v_avail) {
-          ges_timeline_filesource_set_supported_formats (src,
+          ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
               GES_TRACK_TYPE_AUDIO);
         }
 
@@ -957,9 +957,11 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
   }
 
   if (a_avail) {
-    ges_timeline_filesource_set_supported_formats (src, GES_TRACK_TYPE_VIDEO);
+    ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
+        GES_TRACK_TYPE_VIDEO);
   } else if (v_avail) {
-    ges_timeline_filesource_set_supported_formats (src, GES_TRACK_TYPE_AUDIO);
+    ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (src),
+        GES_TRACK_TYPE_AUDIO);
   }
 }
 

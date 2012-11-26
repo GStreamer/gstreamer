@@ -330,22 +330,6 @@ filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration)
 }
 
 /**
- * ges_timeline_filesource_set_supported_formats:
- * @self: the #GESTimelineFileSource to set supported formats on
- * @supportedformats: the #GESTrackType defining formats supported by @self
- *
- * Sets the formats supported by the file.
- *
- */
-void
-ges_timeline_filesource_set_supported_formats (GESTimelineFileSource * self,
-    GESTrackType supportedformats)
-{
-  ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (self),
-      supportedformats);
-}
-
-/**
  * ges_timeline_filesource_set_is_image:
  * @self: the #GESTimelineFileSource 
  * @is_image: %TRUE if @self is a still image, %FALSE otherwise
@@ -413,20 +397,6 @@ const gchar *
 ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
 {
   return self->priv->uri;
-}
-
-/**
- * ges_timeline_filesource_get_supported_formats:
- * @self: the #GESTimelineFileSource 
- *
- * Get the formats supported by @self.
- *
- * Returns: The formats supported by @self.
- */
-GESTrackType
-ges_timeline_filesource_get_supported_formats (GESTimelineFileSource * self)
-{
-  return ges_timeline_object_get_supported_formats (GES_TIMELINE_OBJECT (self));
 }
 
 static GESTrackObject *
