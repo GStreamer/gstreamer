@@ -175,7 +175,7 @@ gst_rtsp_client_init (GstRTSPClient * client)
 {
   g_mutex_init (&client->lock);
   client->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
-  client->close_response_seq = 0;
+  client->close_seq = 0;
 }
 
 static void
@@ -329,7 +329,7 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
   /* send the response and store the seq number so we can wait until it's
    * written to the client to close the connection */
   gst_rtsp_watch_send_message (client->watch, response, close ?
-      &client->close_response_seq : NULL);
+      &client->close_seq : NULL);
   gst_rtsp_message_unset (response);
 }
 
@@ -1917,11 +1917,10 @@ message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
 static GstRTSPResult
 message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
-  GstRTSPClient *client;
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
 
-  client = GST_RTSP_CLIENT (user_data);
-  if (client->close_response_seq && client->close_response_seq == cseq) {
-    client->close_response_seq = 0;
+  if (client->close_seq && client->close_seq == cseq) {
+    client->close_seq = 0;
     close_connection (client);
   }
 

@@ -77,7 +77,7 @@ struct _GstRTSPClientState {
  * @lock: lock protecting the client object
  * @connection: the connection object handling the client request.
  * @watch: watch for the connection
- * @close_response_seq: sequence number of message with close header
+ * @close_seq: sequence number of message with close header
  * @server_ip: ip address of the server
  * @is_ipv6: if we are IPv6
  * @use_client_settings: whether to allow client transport settings for multicast
@@ -97,7 +97,7 @@ struct _GstRTSPClient {
   GMutex             lock;
   GstRTSPConnection *connection;
   GstRTSPWatch      *watch;
-  guint              close_response_seq;
+  guint              close_seq;
   gchar             *server_ip;
   gboolean           is_ipv6;
   gboolean           use_client_settings;
