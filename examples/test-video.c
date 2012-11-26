@@ -45,7 +45,7 @@ main (int argc, char *argv[])
 {
   GMainLoop *loop;
   GstRTSPServer *server;
-  GstRTSPMediaMapping *mapping;
+  GstRTSPMountPoints *mounts;
   GstRTSPMediaFactory *factory;
 #ifdef WITH_AUTH
   GstRTSPAuth *auth;
@@ -59,9 +59,9 @@ main (int argc, char *argv[])
   /* create a server instance */
   server = gst_rtsp_server_new ();
 
-  /* get the mapping for this server, every server has a default mapper object
+  /* get the mount points for this server, every server has a default object
    * that be used to map uri mount points to media factories */
-  mapping = gst_rtsp_server_get_media_mapping (server);
+  mounts = gst_rtsp_server_get_mount_points (server);
 
 #ifdef WITH_AUTH
   /* make a new authentication manager. it can be added to control access to all
@@ -86,10 +86,10 @@ main (int argc, char *argv[])
       "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
 
   /* attach the test factory to the /test url */
-  gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
+  gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
 
   /* don't need the ref to the mapper anymore */
-  g_object_unref (mapping);
+  g_object_unref (mounts);
 
   /* attach the server to the default maincontext */
   if (gst_rtsp_server_attach (server, NULL) == 0)

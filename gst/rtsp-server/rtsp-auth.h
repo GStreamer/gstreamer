@@ -26,8 +26,6 @@ typedef struct _GstRTSPAuth GstRTSPAuth;
 typedef struct _GstRTSPAuthClass GstRTSPAuthClass;
 
 #include "rtsp-client.h"
-#include "rtsp-media-mapping.h"
-#include "rtsp-session-pool.h"
 
 G_BEGIN_DECLS
 

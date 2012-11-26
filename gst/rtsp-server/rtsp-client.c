@@ -28,14 +28,14 @@ static GMutex tunnels_lock;
 static GHashTable *tunnels;
 
 #define DEFAULT_SESSION_POOL            NULL
-#define DEFAULT_MEDIA_MAPPING           NULL
+#define DEFAULT_MOUNT_POINTS            NULL
 #define DEFAULT_USE_CLIENT_SETTINGS     FALSE
 
 enum
 {
   PROP_0,
   PROP_SESSION_POOL,
-  PROP_MEDIA_MAPPING,
+  PROP_MOUNT_POINTS,
   PROP_USE_CLIENT_SETTINGS,
   PROP_LAST
 };
@@ -93,10 +93,10 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
           GST_TYPE_RTSP_SESSION_POOL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_MEDIA_MAPPING,
-      g_param_spec_object ("media-mapping", "Media Mapping",
-          "The media mapping to use for client session",
-          GST_TYPE_RTSP_MEDIA_MAPPING,
+  g_object_class_install_property (gobject_class, PROP_MOUNT_POINTS,
+      g_param_spec_object ("mount-points", "Mount Points",
+          "The mount points to use for client session",
+          GST_TYPE_RTSP_MOUNT_POINTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_USE_CLIENT_SETTINGS,
@@ -223,8 +223,8 @@ gst_rtsp_client_finalize (GObject * obj)
   gst_rtsp_connection_free (client->connection);
   if (client->session_pool)
     g_object_unref (client->session_pool);
-  if (client->media_mapping)
-    g_object_unref (client->media_mapping);
+  if (client->mount_points)
+    g_object_unref (client->mount_points);
   if (client->auth)
     g_object_unref (client->auth);
 
@@ -250,8 +250,8 @@ gst_rtsp_client_get_property (GObject * object, guint propid,
     case PROP_SESSION_POOL:
       g_value_take_object (value, gst_rtsp_client_get_session_pool (client));
       break;
-    case PROP_MEDIA_MAPPING:
-      g_value_take_object (value, gst_rtsp_client_get_media_mapping (client));
+    case PROP_MOUNT_POINTS:
+      g_value_take_object (value, gst_rtsp_client_get_mount_points (client));
       break;
     case PROP_USE_CLIENT_SETTINGS:
       g_value_set_boolean (value,
@@ -272,8 +272,8 @@ gst_rtsp_client_set_property (GObject * object, guint propid,
     case PROP_SESSION_POOL:
       gst_rtsp_client_set_session_pool (client, g_value_get_object (value));
       break;
-    case PROP_MEDIA_MAPPING:
-      gst_rtsp_client_set_media_mapping (client, g_value_get_object (value));
+    case PROP_MOUNT_POINTS:
+      gst_rtsp_client_set_mount_points (client, g_value_get_object (value));
       break;
     case PROP_USE_CLIENT_SETTINGS:
       gst_rtsp_client_set_use_client_settings (client,
@@ -385,12 +385,12 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
     }
     client->media = NULL;
 
-    if (!client->media_mapping)
-      goto no_mapping;
+    if (!client->mount_points)
+      goto no_mount_points;
 
     /* find the factory for the uri first */
     if (!(factory =
-            gst_rtsp_media_mapping_find_factory (client->media_mapping,
+            gst_rtsp_mount_points_find_factory (client->mount_points,
                 state->uri)))
       goto no_factory;
 
@@ -436,7 +436,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
   return media;
 
   /* ERRORS */
-no_mapping:
+no_mount_points:
   {
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
@@ -1752,45 +1752,45 @@ gst_rtsp_client_get_server (GstRTSPClient * client)
 }
 
 /**
- * gst_rtsp_client_set_media_mapping:
+ * gst_rtsp_client_set_mount_points:
  * @client: a #GstRTSPClient
- * @mapping: a #GstRTSPMediaMapping
+ * @mounts: a #GstRTSPMountPoints
  *
- * Set @mapping as the media mapping for @client which it will use to map urls
- * to media streams. These mapping is usually inherited from the server that
+ * Set @mounts as the mount points for @client which it will use to map urls
+ * to media streams. These mount points are usually inherited from the server that
  * created the client but can be overriden later.
  */
 void
-gst_rtsp_client_set_media_mapping (GstRTSPClient * client,
-    GstRTSPMediaMapping * mapping)
+gst_rtsp_client_set_mount_points (GstRTSPClient * client,
+    GstRTSPMountPoints * mounts)
 {
-  GstRTSPMediaMapping *old;
+  GstRTSPMountPoints *old;
 
-  old = client->media_mapping;
+  old = client->mount_points;
 
-  if (old != mapping) {
-    if (mapping)
-      g_object_ref (mapping);
-    client->media_mapping = mapping;
+  if (old != mounts) {
+    if (mounts)
+      g_object_ref (mounts);
+    client->mount_points = mounts;
     if (old)
       g_object_unref (old);
   }
 }
 
 /**
- * gst_rtsp_client_get_media_mapping:
+ * gst_rtsp_client_get_mount_points:
  * @client: a #GstRTSPClient
  *
- * Get the #GstRTSPMediaMapping object that @client uses to manage its sessions.
+ * Get the #GstRTSPMountPoints object that @client uses to manage its sessions.
  *
- * Returns: (transfer full): a #GstRTSPMediaMapping, unref after usage.
+ * Returns: (transfer full): a #GstRTSPMountPoints, unref after usage.
  */
-GstRTSPMediaMapping *
-gst_rtsp_client_get_media_mapping (GstRTSPClient * client)
+GstRTSPMountPoints *
+gst_rtsp_client_get_mount_points (GstRTSPClient * client)
 {
-  GstRTSPMediaMapping *result;
+  GstRTSPMountPoints *result;
 
-  if ((result = client->media_mapping))
+  if ((result = client->mount_points))
     g_object_ref (result);
 
   return result;

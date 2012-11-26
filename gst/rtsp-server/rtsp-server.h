@@ -28,7 +28,7 @@ typedef struct _GstRTSPServer GstRTSPServer;
 typedef struct _GstRTSPServerClass GstRTSPServerClass;
 
 #include "rtsp-session-pool.h"
-#include "rtsp-media-mapping.h"
+#include "rtsp-mount-points.h"
 #include "rtsp-media-factory-uri.h"
 #include "rtsp-client.h"
 #include "rtsp-auth.h"
@@ -68,8 +68,8 @@ struct _GstRTSPServer {
   /* sessions on this server */
   GstRTSPSessionPool  *session_pool;
 
-  /* media mapper for this server */
-  GstRTSPMediaMapping *media_mapping;
+  /* mount points for this server */
+  GstRTSPMountPoints *mount_points;
 
   /* authentication manager */
   GstRTSPAuth *auth;
@@ -117,8 +117,8 @@ gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *serve
 void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
 GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
 
-void                  gst_rtsp_server_set_media_mapping    (GstRTSPServer *server, GstRTSPMediaMapping *mapping);
-GstRTSPMediaMapping * gst_rtsp_server_get_media_mapping    (GstRTSPServer *server);
+void                  gst_rtsp_server_set_mount_points     (GstRTSPServer *server, GstRTSPMountPoints *mounts);
+GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *server);
 
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);

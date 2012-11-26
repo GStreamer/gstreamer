@@ -136,19 +136,19 @@ get_client_ports (GstRTSPRange * range)
 static void
 start_server ()
 {
-  GstRTSPMediaMapping *mapping;
+  GstRTSPMountPoints *mounts;
   gchar *service;
   GstRTSPMediaFactory *factory;
 
-  mapping = gst_rtsp_server_get_media_mapping (server);
+  mounts = gst_rtsp_server_get_mount_points (server);
 
   factory = gst_rtsp_media_factory_new ();
 
   gst_rtsp_media_factory_set_launch (factory,
       "( " VIDEO_PIPELINE "  " AUDIO_PIPELINE " )");
 
-  gst_rtsp_media_mapping_add_factory (mapping, TEST_MOUNT_POINT, factory);
-  g_object_unref (mapping);
+  gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
+  g_object_unref (mounts);
 
   /* set port */
   test_port = get_unused_port (SOCK_STREAM);
@@ -700,7 +700,9 @@ GST_START_TEST (test_bind_already_in_use)
   service = g_socket_service_new ();
 
   /* bind service to port */
-  port = g_socket_listener_add_any_inet_port (G_SOCKET_LISTENER (service), NULL, &error);
+  port =
+      g_socket_listener_add_any_inet_port (G_SOCKET_LISTENER (service), NULL,
+      &error);
   g_assert_no_error (error);
 
   port_str = g_strdup_printf ("%d\n", port);

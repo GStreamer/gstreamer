@@ -117,7 +117,7 @@ typedef enum
  *
  * Returns: a #GstRTSPFilterResult.
  */
-typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSessionPool *pool, 
+typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSessionPool *pool,
                                                           GstRTSPSession *session,
                                                           gpointer user_data);
 

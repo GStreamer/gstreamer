@@ -3,8 +3,8 @@
 #include <gst/rtsp-server/rtsp-auth.h>
 gst_rtsp_auth_get_type
 
-#include <gst/rtsp-server/rtsp-media-mapping.h>
-gst_rtsp_media_mapping_get_type
+#include <gst/rtsp-server/rtsp-mount-points.h>
+gst_rtsp_mount_points_get_type
 
 #include <gst/rtsp-server/rtsp-media-factory.h>
 gst_rtsp_media_factory_get_type

@@ -94,7 +94,7 @@ can build simple server applications with it.
    }
 
  The server manages two other objects: GstRTSPSessionPool and
- GstRTSPMediaMapping. 
+ GstRTSPMountPoints. 
 
  The GstRTSPSessionPool is an object that keeps track of all the active sessions
  in the server. A session will usually be kept for each client that performed a
@@ -104,13 +104,13 @@ can build simple server applications with it.
  The default implementation of the session pool is usually sufficient but
  alternative implementation can be used by the server.
 
- The GstRTSPMediaMapping object is more interesting and needs more configuration
+ The GstRTSPMountPoints object is more interesting and needs more configuration
  before the server object is useful. This object manages the mapping from a
  request URL to a specific stream and its configuration. We explain in the next
  topic how to configure this object.
 
 
-* Making url mappings
+* Making url mount points
 
  Next we need to define what media is attached to a particular URL. What we want
  to achieve is that when the user asks our server for a specific URL, say /test,
@@ -141,19 +141,19 @@ can build simple server applications with it.
                 "( videotestsrc ! x264enc ! rtph264pay pt=96 name=pay0 )");
 
  Now that we have the media factory, we can attach it to a specific url. To do
- this we get the default GstRTSPMediaMapping from our server and add the url to
- factory mapping to it like this:
+ this we get the default GstRTSPMountPoints from our server and add the url to
+ factory mount points to it like this:
 
-   GstRTSPMediaMapping *mapping;
+   GstRTSPMountPoints *mounts;
 
    ...create server..create factory..
 
-   /* get the default mapping from the server */
-   mapping = gst_rtsp_server_get_media_mapping (server);
+   /* get the default mount points from the server */
+   mounts = gst_rtsp_server_get_mount_points (server);
 
    /* attach the video test signal to the "/test" URL */
-   gst_rtsp_media_mapping_add_factory (mapping, "/test", factory);
-   g_object_unref (mapping);
+   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
+   g_object_unref (mounts);
 
  When starting the server now and directing an RTP client to the URL (like with 
  vlc, mplayer or gstreamer):
@@ -387,7 +387,7 @@ GstRTSPAuth
    basic authentication.
 
 
-GstRTSPMediaMapping
+GstRTSPMountPoints
  - Maps a url to a GstRTSPMediaFactory implementation. The default
    implementation uses a simple hashtable to map a url to a factory.
 

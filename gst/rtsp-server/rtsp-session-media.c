@@ -20,10 +20,6 @@
 
 #include "rtsp-session.h"
 
-#undef DEBUG
-
-#define DEFAULT_TIMEOUT	60
-
 enum
 {
   PROP_0,

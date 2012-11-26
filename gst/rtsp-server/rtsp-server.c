@@ -44,7 +44,7 @@ enum
   PROP_BACKLOG,
 
   PROP_SESSION_POOL,
-  PROP_MEDIA_MAPPING,
+  PROP_MOUNT_POINTS,
   PROP_MAX_THREADS,
   PROP_LAST
 };
@@ -145,15 +145,15 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           GST_TYPE_RTSP_SESSION_POOL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPServer::media-mapping:
+   * GstRTSPServer::mount-points:
    *
-   * The media mapping to use for this server. By default the server has no
-   * media mapping and thus cannot map urls to media streams.
+   * The mount points to use for this server. By default the server has no
+   * mount points and thus cannot map urls to media streams.
    */
-  g_object_class_install_property (gobject_class, PROP_MEDIA_MAPPING,
-      g_param_spec_object ("media-mapping", "Media Mapping",
-          "The media mapping to use for client session",
-          GST_TYPE_RTSP_MEDIA_MAPPING,
+  g_object_class_install_property (gobject_class, PROP_MOUNT_POINTS,
+      g_param_spec_object ("mount-points", "Mount Points",
+          "The mount points to use for client session",
+          GST_TYPE_RTSP_MOUNT_POINTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRTSPServer::max-threads:
@@ -191,7 +191,7 @@ gst_rtsp_server_init (GstRTSPServer * server)
   server->socket = NULL;
   server->backlog = DEFAULT_BACKLOG;
   server->session_pool = gst_rtsp_session_pool_new ();
-  server->media_mapping = gst_rtsp_media_mapping_new ();
+  server->mount_points = gst_rtsp_mount_points_new ();
   server->max_threads = DEFAULT_MAX_THREADS;
 }
 
@@ -209,7 +209,7 @@ gst_rtsp_server_finalize (GObject * object)
     g_object_unref (server->socket);
 
   g_object_unref (server->session_pool);
-  g_object_unref (server->media_mapping);
+  g_object_unref (server->mount_points);
 
   if (server->auth)
     g_object_unref (server->auth);
@@ -445,26 +445,26 @@ gst_rtsp_server_get_session_pool (GstRTSPServer * server)
 }
 
 /**
- * gst_rtsp_server_set_media_mapping:
+ * gst_rtsp_server_set_mount_points:
  * @server: a #GstRTSPServer
- * @mapping: a #GstRTSPMediaMapping
+ * @mounts: a #GstRTSPMountPoints
  *
- * configure @mapping to be used as the media mapping of @server.
+ * configure @mounts to be used as the mount points of @server.
  */
 void
-gst_rtsp_server_set_media_mapping (GstRTSPServer * server,
-    GstRTSPMediaMapping * mapping)
+gst_rtsp_server_set_mount_points (GstRTSPServer * server,
+    GstRTSPMountPoints * mounts)
 {
-  GstRTSPMediaMapping *old;
+  GstRTSPMountPoints *old;
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
-  if (mapping)
-    g_object_ref (mapping);
+  if (mounts)
+    g_object_ref (mounts);
 
   GST_RTSP_SERVER_LOCK (server);
-  old = server->media_mapping;
-  server->media_mapping = mapping;
+  old = server->mount_points;
+  server->mount_points = mounts;
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (old)
@@ -473,23 +473,23 @@ gst_rtsp_server_set_media_mapping (GstRTSPServer * server,
 
 
 /**
- * gst_rtsp_server_get_media_mapping:
+ * gst_rtsp_server_get_mount_points:
  * @server: a #GstRTSPServer
  *
- * Get the #GstRTSPMediaMapping used as the media mapping of @server.
+ * Get the #GstRTSPMountPoints used as the mount points of @server.
  *
- * Returns: (transfer full): the #GstRTSPMediaMapping of @server. g_object_unref() after
+ * Returns: (transfer full): the #GstRTSPMountPoints of @server. g_object_unref() after
  * usage.
  */
-GstRTSPMediaMapping *
-gst_rtsp_server_get_media_mapping (GstRTSPServer * server)
+GstRTSPMountPoints *
+gst_rtsp_server_get_mount_points (GstRTSPServer * server)
 {
-  GstRTSPMediaMapping *result;
+  GstRTSPMountPoints *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
   GST_RTSP_SERVER_LOCK (server);
-  if ((result = server->media_mapping))
+  if ((result = server->mount_points))
     g_object_ref (result);
   GST_RTSP_SERVER_UNLOCK (server);
 
@@ -612,8 +612,8 @@ gst_rtsp_server_get_property (GObject * object, guint propid,
     case PROP_SESSION_POOL:
       g_value_take_object (value, gst_rtsp_server_get_session_pool (server));
       break;
-    case PROP_MEDIA_MAPPING:
-      g_value_take_object (value, gst_rtsp_server_get_media_mapping (server));
+    case PROP_MOUNT_POINTS:
+      g_value_take_object (value, gst_rtsp_server_get_mount_points (server));
       break;
     case PROP_MAX_THREADS:
       g_value_set_int (value, gst_rtsp_server_get_max_threads (server));
@@ -642,8 +642,8 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
     case PROP_SESSION_POOL:
       gst_rtsp_server_set_session_pool (server, g_value_get_object (value));
       break;
-    case PROP_MEDIA_MAPPING:
-      gst_rtsp_server_set_media_mapping (server, g_value_get_object (value));
+    case PROP_MOUNT_POINTS:
+      gst_rtsp_server_set_mount_points (server, g_value_get_object (value));
       break;
     case PROP_MAX_THREADS:
       gst_rtsp_server_set_max_threads (server, g_value_get_int (value));
@@ -922,8 +922,8 @@ default_create_client (GstRTSPServer * server)
   /* set the session pool that this client should use */
   GST_RTSP_SERVER_LOCK (server);
   gst_rtsp_client_set_session_pool (client, server->session_pool);
-  /* set the media mapping that this client should use */
-  gst_rtsp_client_set_media_mapping (client, server->media_mapping);
+  /* set the mount points that this client should use */
+  gst_rtsp_client_set_mount_points (client, server->mount_points);
   /* set authentication manager */
   gst_rtsp_client_set_auth (client, server->auth);
   GST_RTSP_SERVER_UNLOCK (server);

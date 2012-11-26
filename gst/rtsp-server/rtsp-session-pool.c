@@ -19,8 +19,6 @@
 
 #include "rtsp-session-pool.h"
 
-#undef DEBUG
-
 #define DEFAULT_MAX_SESSIONS 0
 
 enum

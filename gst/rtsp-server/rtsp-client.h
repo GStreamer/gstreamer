@@ -31,7 +31,7 @@ typedef struct _GstRTSPClientState GstRTSPClientState;
 
 #include "rtsp-server.h"
 #include "rtsp-media.h"
-#include "rtsp-media-mapping.h"
+#include "rtsp-mount-points.h"
 #include "rtsp-session-pool.h"
 #include "rtsp-session-media.h"
 #include "rtsp-auth.h"
@@ -80,7 +80,7 @@ struct _GstRTSPClientState {
  * @ip: ip address used by the client to connect to us
  * @use_client_settings: whether to allow client transport settings for multicast
  * @session_pool: handle to the session pool used by the client.
- * @media_mapping: handle to the media mapping used by the client.
+ * @mount_points: handle to the mount points used by the client.
  * @uri: cached uri
  * @media: cached media
  * @transports: a list of #GstRTSPStreamTransport using @connection.
@@ -99,7 +99,7 @@ struct _GstRTSPClient {
 
   GstRTSPServer        *server;
   GstRTSPSessionPool   *session_pool;
-  GstRTSPMediaMapping  *media_mapping;
+  GstRTSPMountPoints   *mount_points;
   GstRTSPAuth          *auth;
 
   GstRTSPUrl     *uri;
@@ -140,9 +140,9 @@ void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);
 GstRTSPSessionPool *  gst_rtsp_client_get_session_pool  (GstRTSPClient *client);
 
-void                  gst_rtsp_client_set_media_mapping (GstRTSPClient *client,
-                                                         GstRTSPMediaMapping *mapping);
-GstRTSPMediaMapping * gst_rtsp_client_get_media_mapping (GstRTSPClient *client);
+void                  gst_rtsp_client_set_mount_points  (GstRTSPClient *client,
+                                                         GstRTSPMountPoints *mounts);
+GstRTSPMountPoints *  gst_rtsp_client_get_mount_points  (GstRTSPClient *client);
 
 void                  gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
                                                                gboolean use_client_settings);
