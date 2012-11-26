@@ -322,8 +322,7 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
   }
 
   if (close) {
-    gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_CONNECTION,
-        "close");
+    gst_rtsp_message_add_header (response, GST_RTSP_HDR_CONNECTION, "close");
   }
   /* send the response and store the seq number so we can wait until it's
    * written to the client to close the connection */
