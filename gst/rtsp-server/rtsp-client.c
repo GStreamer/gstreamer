@@ -1909,7 +1909,7 @@ void
 gst_rtsp_client_set_send_func (GstRTSPClient * client,
     GstRTSPClientSendFunc func, gpointer user_data, GDestroyNotify notify)
 {
-  GstRTSPClientSendFunc old_func;
+  GDestroyNotify old_func;
   gpointer old_data;
 
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
