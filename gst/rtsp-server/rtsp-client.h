@@ -29,7 +29,6 @@ typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPClientClass GstRTSPClientClass;
 typedef struct _GstRTSPClientState GstRTSPClientState;
 
-#include "rtsp-server.h"
 #include "rtsp-media.h"
 #include "rtsp-mount-points.h"
 #include "rtsp-session-pool.h"
