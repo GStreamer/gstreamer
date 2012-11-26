@@ -268,8 +268,6 @@ GstRTSPClientState
 GstRTSPClient
 GstRTSPClientClass
 gst_rtsp_client_new
-gst_rtsp_client_set_server
-gst_rtsp_client_get_server
 gst_rtsp_client_set_session_pool
 gst_rtsp_client_get_session_pool
 gst_rtsp_client_set_mount_points

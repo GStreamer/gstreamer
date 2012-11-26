@@ -74,13 +74,16 @@ struct _GstRTSPClientState {
 
 /**
  * GstRTSPClient:
- *
+ * @lock: lock protecting the client object
  * @connection: the connection object handling the client request.
  * @watch: watch for the connection
- * @ip: ip address used by the client to connect to us
+ * @close_response_seq: sequence number of message with close header
+ * @server_ip: ip address of the server
+ * @is_ipv6: if we are IPv6
  * @use_client_settings: whether to allow client transport settings for multicast
  * @session_pool: handle to the session pool used by the client.
  * @mount_points: handle to the mount points used by the client.
+ * @auth: authorization object
  * @uri: cached uri
  * @media: cached media
  * @transports: a list of #GstRTSPStreamTransport using @connection.
@@ -94,11 +97,11 @@ struct _GstRTSPClient {
   GMutex             lock;
   GstRTSPConnection *connection;
   GstRTSPWatch      *watch;
+  guint              close_response_seq;
   gchar             *server_ip;
   gboolean           is_ipv6;
   gboolean           use_client_settings;
 
-  GstRTSPServer        *server;
   GstRTSPSessionPool   *session_pool;
   GstRTSPMountPoints   *mount_points;
   GstRTSPAuth          *auth;
@@ -108,8 +111,6 @@ struct _GstRTSPClient {
 
   GList *transports;
   GList *sessions;
-
-  guint close_response_seq;
 };
 
 struct _GstRTSPClientClass {
@@ -133,9 +134,6 @@ struct _GstRTSPClientClass {
 GType                 gst_rtsp_client_get_type          (void);
 
 GstRTSPClient *       gst_rtsp_client_new               (void);
-
-void                  gst_rtsp_client_set_server        (GstRTSPClient * client, GstRTSPServer * server);
-GstRTSPServer *       gst_rtsp_client_get_server        (GstRTSPClient * client);
 
 void                  gst_rtsp_client_set_session_pool  (GstRTSPClient *client,
                                                          GstRTSPSessionPool *pool);

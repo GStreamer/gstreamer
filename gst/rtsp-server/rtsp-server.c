@@ -858,7 +858,6 @@ unmanage_client (GstRTSPClient * client, ClientContext * ctx)
   GST_DEBUG_OBJECT (server, "unmanage client %p", client);
 
   g_object_ref (server);
-  gst_rtsp_client_set_server (client, NULL);
 
   GST_RTSP_SERVER_LOCK (server);
   server->clients = g_list_remove (server->clients, ctx);
@@ -880,7 +879,6 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
   ClientContext *ctx;
 
   GST_DEBUG_OBJECT (server, "manage client %p", client);
-  gst_rtsp_client_set_server (client, server);
 
   ctx = g_slice_new0 (ClientContext);
   ctx->server = server;

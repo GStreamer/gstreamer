@@ -1750,55 +1750,6 @@ gst_rtsp_client_get_session_pool (GstRTSPClient * client)
 }
 
 /**
- * gst_rtsp_client_set_server:
- * @client: a #GstRTSPClient
- * @server: a #GstRTSPServer
- *
- * Set @server as the server that created @client.
- */
-void
-gst_rtsp_client_set_server (GstRTSPClient * client, GstRTSPServer * server)
-{
-  GstRTSPServer *old;
-
-  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
-
-  if (server)
-    g_object_ref (server);
-
-  g_mutex_lock (&client->lock);
-  old = client->server;
-  client->server = server;
-  g_mutex_unlock (&client->lock);
-
-  if (old)
-    g_object_unref (old);
-}
-
-/**
- * gst_rtsp_client_get_server:
- * @client: a #GstRTSPClient
- *
- * Get the #GstRTSPServer object that @client was created from.
- *
- * Returns: (transfer full): a #GstRTSPServer, unref after usage.
- */
-GstRTSPServer *
-gst_rtsp_client_get_server (GstRTSPClient * client)
-{
-  GstRTSPServer *result;
-
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
-
-  g_mutex_lock (&client->lock);
-  if ((result = client->server))
-    g_object_ref (result);
-  g_mutex_unlock (&client->lock);
-
-  return result;
-}
-
-/**
  * gst_rtsp_client_set_mount_points:
  * @client: a #GstRTSPClient
  * @mounts: a #GstRTSPMountPoints
