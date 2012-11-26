@@ -65,6 +65,7 @@
 #include <ges/ges-formatter.h>
 #include <ges/ges-pitivi-formatter.h>
 #include <ges/ges-utils.h>
+#include <ges/ges-meta-container.h>
 
 G_BEGIN_DECLS
 

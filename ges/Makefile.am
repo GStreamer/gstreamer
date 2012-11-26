@@ -12,6 +12,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges.c					\
 	ges-enums.c				\
 	ges-custom-timeline-source.c		\
+	ges-meta-container.c        \
 	ges-simple-timeline-layer.c		\
 	ges-timeline.c				\
 	ges-timeline-layer.c			\
@@ -55,6 +56,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges.h					\
 	ges-enums.h				\
 	ges-custom-timeline-source.h		\
+	ges-meta-container.h        \
 	ges-simple-timeline-layer.h		\
 	ges-timeline.h				\
 	ges-timeline-layer.h			\

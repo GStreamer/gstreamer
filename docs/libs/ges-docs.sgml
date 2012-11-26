@@ -89,6 +89,11 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-formatter.xml"/>
     <xi:include href="xml/ges-pitivi-formatter.xml"/>
   </chapter>
+  
+  <chapter>
+    <title>Interfaces</title>
+    <xi:include href="xml/ges-meta-container.xml"/>
+  </chapter>
 
   <chapter id="ges-hierarchy">
     <title>Object Hierarchy</title>
