@@ -444,16 +444,19 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 no_mount_points:
   {
+    GST_ERROR ("client %p: no mount points configured", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
   }
 no_factory:
   {
+    GST_ERROR ("client %p: no factory for uri", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
   }
 not_allowed:
   {
+    GST_ERROR ("client %p: unauthorized request", client);
     handle_unauthorized_request (client, auth, state);
     g_object_unref (factory);
     g_object_unref (auth);
@@ -461,12 +464,14 @@ not_allowed:
   }
 no_media:
   {
+    GST_ERROR ("client %p: can't create media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (factory);
     return NULL;
   }
 no_prepare:
   {
+    GST_ERROR ("client %p: can't prepare media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (media);
     return NULL;
@@ -622,11 +627,13 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 no_session:
   {
+    GST_ERROR ("client %p: no session", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     return FALSE;
   }
 not_found:
   {
+    GST_ERROR ("client %p: no media for uri", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return FALSE;
   }
@@ -663,6 +670,7 @@ handle_get_param_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 bad_request:
   {
+    GST_ERROR ("client %p: bad request", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     return FALSE;
   }
@@ -699,6 +707,7 @@ handle_set_param_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 bad_request:
   {
+    GST_ERROR ("client %p: bad request", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     return FALSE;
   }
@@ -750,16 +759,19 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 no_session:
   {
+    GST_ERROR ("client %p: no seesion", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     return FALSE;
   }
 not_found:
   {
+    GST_ERROR ("client %p: no media for uri", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return FALSE;
   }
 invalid_state:
   {
+    GST_ERROR ("client %p: not PLAYING or RECORDING", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         state);
     return FALSE;
@@ -874,16 +886,19 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 no_session:
   {
+    GST_ERROR ("client %p: no session", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     return FALSE;
   }
 not_found:
   {
+    GST_ERROR ("client %p: media not found", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return FALSE;
   }
 invalid_state:
   {
+    GST_ERROR ("client %p: not PLAYING or READY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         state);
     return FALSE;
@@ -1208,11 +1223,13 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 bad_request:
   {
+    GST_ERROR ("client %p: bad request", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     return FALSE;
   }
 not_found:
   {
+    GST_ERROR ("client %p: media not found", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     g_object_unref (session);
     gst_rtsp_transport_free (ct);
@@ -1220,6 +1237,7 @@ not_found:
   }
 invalid_blocksize:
   {
+    GST_ERROR ("client %p: invalid blocksize", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     g_object_unref (session);
     gst_rtsp_transport_free (ct);
@@ -1227,6 +1245,7 @@ invalid_blocksize:
   }
 unsupported_client_transport:
   {
+    GST_ERROR ("client %p: unsupported client transport", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     g_object_unref (session);
     gst_rtsp_transport_free (ct);
@@ -1234,23 +1253,27 @@ unsupported_client_transport:
   }
 no_transport:
   {
+    GST_ERROR ("client %p: no transport", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     return FALSE;
   }
 unsupported_transports:
   {
+    GST_ERROR ("client %p: unsupported transports", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, state);
     gst_rtsp_transport_free (ct);
     return FALSE;
   }
 no_pool:
   {
+    GST_ERROR ("client %p: no session pool configured", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     gst_rtsp_transport_free (ct);
     return FALSE;
   }
 service_unavailable:
   {
+    GST_ERROR ("client %p: can't create session", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     gst_rtsp_transport_free (ct);
     return FALSE;
@@ -1298,6 +1321,7 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   /* ERRORS */
 no_sdp:
   {
+    GST_ERROR ("client %p: could not create SDP", client);
     g_free (info.server_ip);
     gst_sdp_message_free (sdp);
     return NULL;
@@ -1384,11 +1408,13 @@ handle_describe_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* ERRORS */
 no_media:
   {
+    GST_ERROR ("client %p: no media", client);
     /* error reply is already sent */
     return FALSE;
   }
 no_sdp:
   {
+    GST_ERROR ("client %p: can't create SDP", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (media);
     return FALSE;
@@ -1601,16 +1627,19 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   /* ERRORS */
 no_pool:
   {
+    GST_ERROR ("client %p: no pool configured", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, &state);
     return;
   }
 session_not_found:
   {
+    GST_ERROR ("client %p: session not found", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, &state);
     return;
   }
 not_authorized:
   {
+    GST_ERROR ("client %p: not allowed", client);
     handle_unauthorized_request (client, client->auth, &state);
     return;
   }
@@ -2022,7 +2051,7 @@ tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
 
   client = GST_RTSP_CLIENT (user_data);
 
-  GST_INFO ("client %p: tunnel lost (connection %p)", client,
+  GST_WARNING ("client %p: tunnel lost (connection %p)", client,
       client->connection);
 
   /* ignore error, it'll only be a problem when the client does a POST again */
@@ -2071,19 +2100,19 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   /* ERRORS */
 no_tunnelid:
   {
-    GST_INFO ("client %p: no tunnelid provided", client);
+    GST_ERROR ("client %p: no tunnelid provided", client);
     return GST_RTSP_ERROR;
   }
 no_tunnel:
   {
     g_mutex_unlock (&tunnels_lock);
-    GST_INFO ("client %p: tunnel session %s not found", client, tunnelid);
+    GST_ERROR ("client %p: tunnel session %s not found", client, tunnelid);
     return GST_RTSP_ERROR;
   }
 tunnel_closed:
   {
     g_mutex_unlock (&tunnels_lock);
-    GST_INFO ("client %p: tunnel session %s was closed", client, tunnelid);
+    GST_ERROR ("client %p: tunnel session %s was closed", client, tunnelid);
     g_object_unref (oclient);
     return GST_RTSP_ERROR;
   }
