@@ -219,6 +219,9 @@ gst_rtsp_client_finalize (GObject * obj)
   if (client->watch)
     g_source_destroy ((GSource *) client->watch);
 
+  if (client->send_notify)
+    client->send_notify (client->send_data);
+
   client_cleanup_sessions (client);
 
   gst_rtsp_connection_free (client->connection);
@@ -323,13 +326,12 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
     gst_rtsp_message_dump (response);
   }
 
-  if (close) {
+  if (close)
     gst_rtsp_message_add_header (response, GST_RTSP_HDR_CONNECTION, "close");
-  }
-  /* send the response and store the seq number so we can wait until it's
-   * written to the client to close the connection */
-  gst_rtsp_watch_send_message (client->watch, response, close ?
-      &client->close_seq : NULL);
+
+  if (client->send_func)
+    client->send_func (client, response, close, client->send_data);
+
   gst_rtsp_message_unset (response);
 }
 
@@ -496,9 +498,8 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 
   gst_rtsp_message_take_body (&message, map_info.data, map_info.size);
 
-  /* FIXME, client->watch could have been finalized here, we need to keep an
-   * extra refcount to the watch.  */
-  gst_rtsp_watch_send_message (client->watch, &message, NULL);
+  if (client->send_func)
+    client->send_func (client, &message, FALSE, client->send_data);
 
   gst_rtsp_message_steal_body (&message, &data, &usize);
   gst_buffer_unmap (buffer, &map_info);
@@ -1893,11 +1894,47 @@ gst_rtsp_client_get_auth (GstRTSPClient * client)
   return result;
 }
 
-static GstRTSPResult
-message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
-    gpointer user_data)
+/**
+ * gst_rtsp_client_set_send_func:
+ * @client: a #GstRTSPClient
+ * @func: a #GstRTSPClientSendFunc
+ * @user_data: user data passed to @func
+ * @notify: called when @user_data is no longer in use
+ *
+ * Set @func as the callback that will be called when a new message needs to be
+ * sent to the client. @user_data is passed to @func and @notify is called when
+ * @user_data is no longer in use.
+ */
+void
+gst_rtsp_client_set_send_func (GstRTSPClient * client,
+    GstRTSPClientSendFunc func, gpointer user_data, GDestroyNotify notify)
 {
-  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  g_mutex_lock (&client->lock);
+  client->send_func = func;
+  if (client->send_notify)
+    client->send_notify (client->send_data);
+  client->send_data = user_data;
+  client->send_notify = notify;
+  g_mutex_unlock (&client->lock);
+}
+
+/**
+ * gst_rtsp_client_handle_message:
+ * @client: a #GstRTSPClient
+ * @message: an #GstRTSPMessage
+ *
+ * Let the client handle @message.
+ *
+ * Returns: a #GstRTSPResult.
+ */
+GstRTSPResult
+gst_rtsp_client_handle_message (GstRTSPClient * client,
+    GstRTSPMessage * message)
+{
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), GST_RTSP_EINVAL);
+  g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
   switch (message->type) {
     case GST_RTSP_MESSAGE_REQUEST:
@@ -1912,6 +1949,23 @@ message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
       break;
   }
   return GST_RTSP_OK;
+}
+
+static GstRTSPResult
+do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
+    gboolean close, gpointer user_data)
+{
+  /* send the response and store the seq number so we can wait until it's
+   * written to the client to close the connection */
+  return gst_rtsp_watch_send_message (client->watch, message, close ?
+      &client->close_seq : NULL);
+}
+
+static GstRTSPResult
+message_received (GstRTSPWatch * watch, GstRTSPMessage * message,
+    gpointer user_data)
+{
+  return gst_rtsp_client_handle_message (GST_RTSP_CLIENT (user_data), message);
 }
 
 static GstRTSPResult
@@ -2277,6 +2331,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
   /* create watch for the connection and attach */
   client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
+  gst_rtsp_client_set_send_func (client, do_send_message, NULL, NULL);
 
   GST_INFO ("attaching to context %p", context);
   res = gst_rtsp_watch_attach (client->watch, context);

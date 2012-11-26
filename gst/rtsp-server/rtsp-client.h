@@ -73,6 +73,23 @@ struct _GstRTSPClientState {
 };
 
 /**
+ * GstRTSPClientSendFunc:
+ * @client: a #GstRTSPClient
+ * @message: a #GstRTSPMessage
+ * @close: close the connection
+ * @user_data: user data when registering the callback
+ *
+ * This callback is called when @client wants to send @message. When @close is
+ * %TRUE, the connection should be closed when the message has been sent.
+ *
+ * Returns: %TRUE on success.
+ */
+typedef gboolean (*GstRTSPClientSendFunc)      (GstRTSPClient *client,
+                                                GstRTSPMessage *message,
+                                                gboolean close,
+                                                gpointer user_data);
+
+/**
  * GstRTSPClient:
  * @lock: lock protecting the client object
  * @connection: the connection object handling the client request.
@@ -81,6 +98,10 @@ struct _GstRTSPClientState {
  * @server_ip: ip address of the server
  * @is_ipv6: if we are IPv6
  * @use_client_settings: whether to allow client transport settings for multicast
+ * @send_func: a #GstRTSPClientSendFunc called when an RTSP message needs to be
+ *             sent to the client.
+ * @send_data: user data passed to @send_func
+ * @send_notify: notify called when @send_data is no longer used.
  * @session_pool: handle to the session pool used by the client.
  * @mount_points: handle to the mount points used by the client.
  * @auth: authorization object
@@ -101,6 +122,10 @@ struct _GstRTSPClient {
   gchar             *server_ip;
   gboolean           is_ipv6;
   gboolean           use_client_settings;
+
+  GstRTSPClientSendFunc send_func;
+  gpointer              send_data;
+  GDestroyNotify        send_notify;
 
   GstRTSPSessionPool   *session_pool;
   GstRTSPMountPoints   *mount_points;
@@ -150,6 +175,12 @@ gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * c
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
+void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
+                                                         GstRTSPClientSendFunc func,
+                                                         gpointer user_data,
+                                                         GDestroyNotify notify);
+GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,
+                                                         GstRTSPMessage *message);
 
 gboolean              gst_rtsp_client_accept            (GstRTSPClient *client,
                                                          GSocket *socket,
