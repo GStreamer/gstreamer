@@ -27,6 +27,12 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_OSX
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL SO_NOSIGPIPE
+#endif
+#endif
+
 #include "shmpipe.h"
 
 #include <sys/types.h>
@@ -278,7 +284,11 @@ sp_open_shm (char *path, int id, mode_t perms, size_t size)
   if (path)
     flags = O_RDONLY;
   else
+#ifdef HAVE_OSX
+    flags = O_RDWR | O_CREAT | O_EXCL;
+#else
     flags = O_RDWR | O_CREAT | O_TRUNC | O_EXCL;
+#endif
 
   area->shm_fd = -1;
 
