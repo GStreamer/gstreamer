@@ -38,6 +38,8 @@ struct _GstCdioCddaSrc
 
   gint           read_speed;    /* ATOMIC */
 
+  gboolean       swap_le_be;    /* Drive produces samples in other endianness */
+
   CdIo          *cdio;          /* NULL if not open */
 };
 

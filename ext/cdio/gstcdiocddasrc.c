@@ -85,6 +85,8 @@
 #include <string.h>
 #include <errno.h>
 
+#define SAMPLES_PER_SECTOR (CDIO_CD_FRAMESIZE_RAW / sizeof (gint16))
+
 #define DEFAULT_READ_SPEED   -1
 
 enum
@@ -179,6 +181,14 @@ gst_cdio_cdda_src_read_sector (GstAudioCdSrc * audiocdsrc, gint sector)
   if (cdio_read_audio_sector (src->cdio, data, sector) != 0)
     goto read_failed;
 
+  if (src->swap_le_be) {
+    gint16 *pcm_data = (gint16 *) data;
+    gint i;
+
+    for (i = 0; i < SAMPLES_PER_SECTOR; ++i)
+      pcm_data[i] = GUINT16_SWAP_LE_BE (pcm_data[i]);
+  }
+
   return gst_buffer_new_wrapped (data, CDIO_CD_FRAMESIZE_RAW);
 
   /* ERRORS */
@@ -195,6 +205,106 @@ read_failed:
 }
 
 static gboolean
+gst_cdio_cdda_src_do_detect_drive_endianness (GstCdioCddaSrc * src, gint from,
+    gint to)
+{
+  gint16 pcm_data[SAMPLES_PER_SECTOR], last_pcm_ne, last_pcm_oe;
+  gdouble ne_sumd0, ne_sumd1, ne_factor;
+  gdouble oe_sumd0, oe_sumd1, oe_factor;
+  gdouble diff;
+  gint sector;
+  gint i;
+
+  ne_sumd0 = ne_sumd1 = 0.0;
+  oe_sumd0 = oe_sumd1 = 0.0;
+  last_pcm_ne = 0;
+  last_pcm_oe = 0;
+
+  GST_LOG_OBJECT (src, "checking sector %d to %d", from, to);
+
+  for (sector = from; sector < to; ++sector) {
+    if (cdio_read_audio_sector (src->cdio, pcm_data, sector) != 0)
+      goto read_failed;
+
+    /* only evaluate samples for left channel */
+    for (i = 0; i < SAMPLES_PER_SECTOR; i += 2) {
+      gint16 pcm;
+
+      /* Native endianness first */
+      pcm = pcm_data[i];
+      ne_sumd0 += abs (pcm);
+      ne_sumd1 += abs (pcm - last_pcm_ne);
+      last_pcm_ne = pcm;
+
+      /* other endianness next */
+      pcm = GUINT16_SWAP_LE_BE (pcm);
+      oe_sumd0 += abs (pcm);
+      oe_sumd1 += abs (pcm - last_pcm_oe);
+      last_pcm_oe = pcm;
+    }
+
+  }
+
+  ne_factor = (ne_sumd1 / ne_sumd0);
+  oe_factor = (oe_sumd1 / oe_sumd0);
+  diff = ne_factor - oe_factor;
+
+  GST_DEBUG_OBJECT (src, "Native: %.2f, Other: %.2f, diff: %.2f",
+      ne_factor, oe_factor, diff);
+
+  if (diff > 0.5) {
+    GST_INFO_OBJECT (src, "Drive produces samples in other endianness");
+    src->swap_le_be = TRUE;
+    return TRUE;
+  } else if (diff < -0.5) {
+    GST_INFO_OBJECT (src, "Drive produces samples in host endianness");
+    src->swap_le_be = FALSE;
+    return TRUE;
+  } else {
+    GST_INFO_OBJECT (src, "Inconclusive, assuming host endianness");
+    src->swap_le_be = FALSE;
+    return FALSE;
+  }
+
+/* ERRORS */
+read_failed:
+  {
+    GST_WARNING_OBJECT (src, "could not read sector %d", sector);
+    src->swap_le_be = FALSE;
+    return FALSE;
+  }
+}
+
+static void
+gst_cdio_cdda_src_detect_drive_endianness (GstCdioCddaSrc * src, gint first,
+    gint last)
+{
+  gint from, to;
+
+  GST_INFO ("Detecting drive endianness");
+
+  /* try middle of disc first */
+  from = (first + last) / 2;
+  to = MIN (from + 10, last);
+  if (gst_cdio_cdda_src_do_detect_drive_endianness (src, from, to))
+    return;
+
+  /* if that was inconclusive, try other places */
+  from = (first + last) / 4;
+  to = MIN (from + 10, last);
+  if (gst_cdio_cdda_src_do_detect_drive_endianness (src, from, to))
+    return;
+
+  from = (first + last) * 3 / 4;
+  to = MIN (from + 10, last);
+  if (gst_cdio_cdda_src_do_detect_drive_endianness (src, from, to))
+    return;
+
+  /* if that's still inconclusive, we give up and assume host endianness */
+  return;
+}
+
+static gboolean
 notcdio_track_is_audio_track (const CdIo * p_cdio, track_t i_track)
 {
   return (cdio_get_track_format (p_cdio, i_track) == TRACK_FORMAT_AUDIO);
@@ -206,6 +316,7 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
   GstCdioCddaSrc *src;
   discmode_t discmode;
   gint first_track, num_tracks, i;
+  gint first_audio_sector = 0, last_audio_sector = 0;
 #if LIBCDIO_VERSION_NUM > 83
   cdtext_t *cdtext;
 #endif
@@ -263,6 +374,11 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
      * the right thing here (for cddb id calculations etc. as well) */
     track.start = cdio_get_track_lsn (src->cdio, i + first_track);
     track.end = track.start + len_sectors - 1;  /* -1? */
+
+    if (track.is_audio) {
+      first_audio_sector = MIN (first_audio_sector, track.start);
+      last_audio_sector = MAX (last_audio_sector, track.end);
+    }
 #if LIBCDIO_VERSION_NUM > 83
     if (NULL != cdtext)
       track.tags = gst_cdio_get_cdtext (GST_OBJECT (src), cdtext,
@@ -274,6 +390,13 @@ gst_cdio_cdda_src_open (GstAudioCdSrc * audiocdsrc, const gchar * device)
 
     gst_audio_cd_src_add_track (GST_AUDIO_CD_SRC (src), &track);
   }
+
+  /* Try to detect if we need to byte-order swap the samples coming from the
+   * drive, which might be the case if the CD drive operates in a different
+   * endianness than the host CPU's endianness (happens on e.g. Powerbook G4) */
+  gst_cdio_cdda_src_detect_drive_endianness (src, first_audio_sector,
+      last_audio_sector);
+
   return TRUE;
 
   /* ERRORS */
