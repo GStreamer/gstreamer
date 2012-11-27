@@ -27,6 +27,7 @@ TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS = \
 	gst/rtspserver \
+	gst/client \
 	gst/addresspool
 
 # these tests don't even pass
