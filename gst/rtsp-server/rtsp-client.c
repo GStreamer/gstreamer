@@ -1525,10 +1525,10 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
 {
   GstRTSPMethod method;
   const gchar *uristr;
-  GstRTSPUrl *uri;
+  GstRTSPUrl *uri = NULL;
   GstRTSPVersion version;
   GstRTSPResult res;
-  GstRTSPSession *session;
+  GstRTSPSession *session = NULL;
   GstRTSPClientState state = { NULL };
   GstRTSPMessage response = { 0 };
   gchar *sessid;
@@ -1544,23 +1544,15 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
 
   gst_rtsp_message_parse_request (request, &method, &uristr, &version);
 
-  if (version != GST_RTSP_VERSION_1_0) {
-    /* we can only handle 1.0 requests */
-    send_generic_response (client, GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
-        &state);
-    return;
-  }
+  /* we can only handle 1.0 requests */
+  if (version != GST_RTSP_VERSION_1_0)
+    goto not_supported;
+
   state.method = method;
 
   /* we always try to parse the url first */
-  if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK) {
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &state);
-    return;
-  }
-
-  /* sanitize the uri */
-  sanitize_uri (uri);
-  state.uri = uri;
+  if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK)
+    goto bad_request;
 
   /* get the session if there is any */
   res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);
@@ -1576,9 +1568,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
      * disappears because it times out, we will be notified. If all sessions are
      * gone, we will close the connection */
     client_watch_session (client, session);
-  } else
-    session = NULL;
+  }
 
+  /* sanitize the uri */
+  sanitize_uri (uri);
+  state.uri = uri;
   state.session = session;
 
   if (client->auth) {
@@ -1622,30 +1616,45 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
       send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &state);
       break;
   }
+
+done:
   if (session)
     g_object_unref (session);
-
-  gst_rtsp_url_free (uri);
+  if (uri)
+    gst_rtsp_url_free (uri);
   return;
 
   /* ERRORS */
+not_supported:
+  {
+    GST_ERROR ("client %p: version %d not supported", client, version);
+    send_generic_response (client, GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
+        &state);
+    goto done;
+  }
+bad_request:
+  {
+    GST_ERROR ("client %p: bad request", client);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &state);
+    goto done;
+  }
 no_pool:
   {
     GST_ERROR ("client %p: no pool configured", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, &state);
-    return;
+    goto done;
   }
 session_not_found:
   {
     GST_ERROR ("client %p: session not found", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, &state);
-    return;
+    goto done;
   }
 not_authorized:
   {
     GST_ERROR ("client %p: not allowed", client);
     handle_unauthorized_request (client, client->auth, &state);
-    return;
+    goto done;
   }
 }
 
