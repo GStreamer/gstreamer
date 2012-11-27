@@ -1271,7 +1271,7 @@ unsupported_transports:
 no_pool:
   {
     GST_ERROR ("client %p: no session pool configured", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     gst_rtsp_transport_free (ct);
     return FALSE;
   }
@@ -1632,7 +1632,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
 no_pool:
   {
     GST_ERROR ("client %p: no pool configured", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, &state);
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, &state);
     return;
   }
 session_not_found:
