@@ -28,22 +28,12 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_OBJECT ges_timeline_object_get_type()
-
-#define GES_TIMELINE_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObject))
-
-#define GES_TIMELINE_OBJECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
-
-#define GES_IS_TIMELINE_OBJECT(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_OBJECT))
-
-#define GES_IS_TIMELINE_OBJECT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_OBJECT))
-
-#define GES_TIMELINE_OBJECT_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
+#define GES_TYPE_TIMELINE_OBJECT             ges_timeline_object_get_type()
+#define GES_TIMELINE_OBJECT(obj)            (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObject))
+#define GES_TIMELINE_OBJECT_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
+#define GES_IS_TIMELINE_OBJECT(obj)         (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_OBJECT))
+#define GES_IS_TIMELINE_OBJECT_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_OBJECT))
+#define GES_TIMELINE_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
 typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
 
@@ -61,9 +51,9 @@ typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
  *
  * Returns: TRUE if the implementer succesfully filled the @gnlobj, else #FALSE.
  */
-typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject * object,
-                    GESTrackObject * trobject,
-                    GstElement * gnlobj);
+typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject *object,
+                                            GESTrackObject *trobject,
+                                            GstElement *gnlobj);
 
 /**
  * GESCreateTrackObjectFunc:
@@ -88,8 +78,9 @@ typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject * object,
  * Returns: the #GESTrackObject to be used, or %NULL if it can't provide one
  * for the given @track.
  */
-typedef GESTrackObject* (*GESCreateTrackObjectFunc) (GESTimelineObject * object,
-                         GESTrack * track);
+typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESTimelineObject *
+                                                     object,
+                                                     GESTrack *track);
 
 /**
  * GESCreateTrackObjectsFunc:
@@ -107,8 +98,8 @@ typedef GESTrackObject* (*GESCreateTrackObjectFunc) (GESTimelineObject * object,
  *
  * Returns: %TRUE on success %FALSE on failure.
  */
-typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject * object,
-                                            GESTrack *track);
+typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject *object,
+                                               GESTrack *track);
 
 /**
  * GES_TIMELINE_OBJECT_START:
@@ -155,7 +146,8 @@ typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject * object,
  *
  * The #GESTimelineObject base class.
  */
-struct _GESTimelineObject {
+struct _GESTimelineObject
+{
   GInitiallyUnowned parent;
 
   /*< readonly >*/
@@ -165,13 +157,14 @@ struct _GESTimelineObject {
 
   /* We don't add those properties to the priv struct for optimization purposes
    * start, inpoint, duration and fullduration are in nanoseconds */
-  guint64 start;    /* position (in time) of the object in the layer */
-  guint64 inpoint;  /* in-point */
-  guint64 duration; /* duration of the object used in the layer */
-  guint32 priority; /* priority of the object in the layer (0:top priority) */
-  guint32 height;       /* the span of priorities this object needs */
+  guint64 start;                /* position (in time) of the object in the layer */
+  guint64 inpoint;              /* in-point */
+  guint64 duration;             /* duration of the object used in the layer */
+  guint32 priority;             /* priority of the object in the layer (0:top priority) */
+  guint32 height;               /* the span of priorities this object needs */
 
-  guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
+  guint64 fullduration;         /* Full usable duration of the object (-1: no duration) */
+
   GESAsset *asset;
 
   /*< private >*/
@@ -200,16 +193,17 @@ struct _GESTimelineObject {
  *
  * Subclasses can override the @create_track_object and @fill_track_object methods.
  */
-struct _GESTimelineObjectClass {
-  /*< private >*/
+struct _GESTimelineObjectClass
+{
+  /*< private > */
   GInitiallyUnownedClass parent_class;
 
-  /*< public >*/
+  /*< public > */
   GESCreateTrackObjectFunc create_track_object;
   GESCreateTrackObjectsFunc create_track_objects;
 
   /* FIXME : might need a release_track_object */
-  GESFillTrackObjectFunc  fill_track_object;
+  GESFillTrackObjectFunc fill_track_object;
   gboolean need_fill_track;
   gboolean snaps;
 
@@ -225,116 +219,59 @@ struct _GESTimelineObjectClass {
   gpointer _ges_reserved[GES_PADDING_LARGE];
 };
 
-GType ges_timeline_object_get_type          (void);
+GType ges_timeline_object_get_type (void);
 
 /* Setters */
-void ges_timeline_object_set_start          (GESTimelineObject * object,
-				       guint64 start);
-void ges_timeline_object_set_inpoint        (GESTimelineObject * object,
-				       guint64 inpoint);
-void ges_timeline_object_set_duration       (GESTimelineObject * object,
-				       guint64 duration);
-void ges_timeline_object_set_max_duration   (GESTimelineObject * object,
-				       guint64 maxduration);
-void ges_timeline_object_set_priority       (GESTimelineObject * object,
-				       guint priority);
+void ges_timeline_object_set_start            (GESTimelineObject *object,
+                                               guint64 start);
+void ges_timeline_object_set_inpoint          (GESTimelineObject *object,
+                                               guint64 inpoint);
+void ges_timeline_object_set_duration         (GESTimelineObject *object,
+                                               guint64 duration);
+void ges_timeline_object_set_max_duration     (GESTimelineObject *object,
+                                               guint64 maxduration);
+void ges_timeline_object_set_priority         (GESTimelineObject *object,
+                                               guint priority);
 
-guint64 ges_timeline_object_get_max_duration (GESTimelineObject * object);
+guint64 ges_timeline_object_get_max_duration  (GESTimelineObject *object);
 
-void ges_timeline_object_set_layer          (GESTimelineObject * object,
-				       GESTimelineLayer * layer);
+void ges_timeline_object_set_layer            (GESTimelineObject *object,
+                                               GESTimelineLayer  *layer);
 
 /* TrackObject handling */
-GESTrackObject *
-ges_timeline_object_create_track_object     (GESTimelineObject * object,
-					  GESTrack * track);
-
-gboolean
-ges_timeline_object_create_track_objects    (GESTimelineObject * object,
-					  GESTrack * track);
-
-gboolean
-ges_timeline_object_release_track_object    (GESTimelineObject * object,
-					  GESTrackObject * trackobject);
+GList* ges_timeline_object_get_track_objects            (GESTimelineObject *object);
+GESTrackType ges_timeline_object_get_supported_formats  (GESTimelineObject *object);
+GESTrackObject *ges_timeline_object_create_track_object (GESTimelineObject *object, GESTrack          *track);
+gboolean ges_timeline_object_create_track_objects       (GESTimelineObject *object, GESTrack          *track);
+gboolean ges_timeline_object_release_track_object       (GESTimelineObject *object, GESTrackObject    *trackobject);
+void ges_timeline_object_set_supported_formats          (GESTimelineObject *object, GESTrackType       supportedformats);
 gboolean ges_timeline_object_add_asset               (GESTimelineObject *object, GESAsset       *asset);
+gboolean ges_timeline_object_add_track_object           (GESTimelineObject *object, GESTrackObject    *trobj);
+gboolean ges_timeline_object_fill_track_object          (GESTimelineObject *object, GESTrackObject    *trackobj, GstElement *gnlobj);
+GESTrackObject *ges_timeline_object_find_track_object   (GESTimelineObject *object, GESTrack          *track,    GType      type);
 
-gboolean
-ges_timeline_object_fill_track_object       (GESTimelineObject * object,
-					  GESTrackObject * trackobj, GstElement * gnlobj);
-
-GESTrackObject *
-ges_timeline_object_find_track_object       (GESTimelineObject * object,
-					  GESTrack * track, GType type);
-
-GList *
-ges_timeline_object_get_track_objects       (GESTimelineObject *object);
-
-gboolean
-ges_timeline_object_add_track_object        (GESTimelineObject *object,
-					  GESTrackObject *trobj);
 
 /* Layer */
-GESTimelineLayer *
-ges_timeline_object_get_layer               (GESTimelineObject *object);
-
-gboolean
-ges_timeline_object_move_to_layer           (GESTimelineObject *object,
-					     GESTimelineLayer *layer);
-
-gboolean
-ges_timeline_object_is_moving_from_layer    (GESTimelineObject *object);
-
-void
-ges_timeline_object_set_moving_from_layer   (GESTimelineObject * object,
-					     gboolean is_moving);
+GESTimelineLayer *ges_timeline_object_get_layer   (GESTimelineObject *object);
+gboolean ges_timeline_object_is_moving_from_layer (GESTimelineObject *object);
+gboolean ges_timeline_object_move_to_layer        (GESTimelineObject *object, GESTimelineLayer  *layer);
+void ges_timeline_object_set_moving_from_layer    (GESTimelineObject *object, gboolean is_moving);
 
 /* Effects */
-GList *
-ges_timeline_object_get_top_effects         (GESTimelineObject *object);
+GList* ges_timeline_object_get_top_effects           (GESTimelineObject *object);
+gint   ges_timeline_object_get_top_effect_position   (GESTimelineObject *object, GESTrackEffect *effect);
+gboolean ges_timeline_object_set_top_effect_priority (GESTimelineObject *object, GESTrackEffect *effect, guint newpriority);
 
-gint 
-ges_timeline_object_get_top_effect_position (GESTimelineObject *object,
-					     GESTrackEffect *effect);
-
-gboolean
-ges_timeline_object_set_top_effect_priority (GESTimelineObject *object,
-					     GESTrackEffect *effect,
-					     guint newpriority);
-
-GESTrackType
-ges_timeline_object_get_supported_formats   (GESTimelineObject * object);
-
-void
-ges_timeline_object_set_supported_formats   (GESTimelineObject * object,
-					    GESTrackType supportedformats);
-
-GESTimelineObject *
-ges_timeline_object_split                   (GESTimelineObject * object, guint64 position);
-
-gboolean
-ges_timeline_object_edit                    (GESTimelineObject * object,
-                                             GList *layers, gint new_layer_priority,
-                                             GESEditMode mode, GESEdge edge,
-                                             guint64 position);
-
-void
-ges_timeline_object_objects_set_locked      (GESTimelineObject * object, gboolean locked);
-
-gboolean ges_timeline_object_ripple         (GESTimelineObject *object,
-                                             guint64 start);
-
-gboolean ges_timeline_object_ripple_end     (GESTimelineObject *object,
-                                             guint64 end);
-
-gboolean ges_timeline_object_roll_start     (GESTimelineObject *object,
-                                             guint64 start);
-
-gboolean ges_timeline_object_roll_end       (GESTimelineObject *object,
-                                             guint64 end);
-
-gboolean ges_timeline_object_trim_start     (GESTimelineObject *object,
-                                             guint64 start);
+/* Editing */
+GESTimelineObject *ges_timeline_object_split  (GESTimelineObject *object, guint64  position);
+void ges_timeline_object_objects_set_locked   (GESTimelineObject *object, gboolean locked);
+gboolean ges_timeline_object_ripple           (GESTimelineObject *object, guint64  start);
+gboolean ges_timeline_object_ripple_end       (GESTimelineObject *object, guint64  end);
+gboolean ges_timeline_object_roll_start       (GESTimelineObject *object, guint64  start);
+gboolean ges_timeline_object_roll_end         (GESTimelineObject *object, guint64  end);
+gboolean ges_timeline_object_trim_start       (GESTimelineObject *object, guint64  start);
+gboolean ges_timeline_object_edit             (GESTimelineObject *object, GList   *layers,
+                                               gint  new_layer_priority, GESEditMode mode,
+                                               GESEdge edge, guint64 position);
 G_END_DECLS
-
 #endif /* _GES_TIMELINE_OBJECT */
-
