@@ -224,7 +224,8 @@ gst_rtsp_client_finalize (GObject * obj)
 
   client_cleanup_sessions (client);
 
-  gst_rtsp_connection_free (client->connection);
+  if (client->connection)
+    gst_rtsp_connection_free (client->connection);
   if (client->session_pool)
     g_object_unref (client->session_pool);
   if (client->mount_points)
