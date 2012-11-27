@@ -686,15 +686,24 @@ AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
 dnl check for shm_open (for shm plugin)
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHM, true)
 AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
-  if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
-    AC_CHECK_LIB([rt], [shm_open],
-       AC_CHECK_DECL([MSG_NOSIGNAL], HAVE_SHM=yes, HAVE_SHM=no, [
-#include <sys/socket.h>
-	 ]),
-	 HAVE_SHM=no)
-  else
-    HAVE_SHM=no
-  fi
+    if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
+        case $host in
+        *-darwin* | *-macos10*)
+            AM_CONDITIONAL([HAVE_OSX], true)
+            AC_DEFINE(HAVE_OSX,[1],[Apple Mac OS X operating system detected])
+            HAVE_SHM=yes
+            ;;
+        *)
+            AC_CHECK_LIB([rt], [shm_open],
+                AC_CHECK_DECL([MSG_NOSIGNAL], HAVE_SHM=yes, HAVE_SHM=no, [
+                #include <sys/socket.h>
+  	            ]),
+                HAVE_SHM=no)
+            ;;
+        esac
+    else
+        HAVE_SHM=no
+    fi
 ])
 
 dnl check for Video CD
