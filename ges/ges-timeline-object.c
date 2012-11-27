@@ -572,15 +572,18 @@ gboolean
 ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
     * trobj)
 {
-  ObjectMapping *mapping;
   GList *tmp;
+  gboolean is_effect;
+  ObjectMapping *mapping;
   guint max_prio, min_prio;
-  GESTimelineObjectPrivate *priv = object->priv;
-  gboolean is_effect = GES_IS_TRACK_EFFECT (trobj);
-  GESTimelineObjectClass *klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
+  GESTimelineObjectClass *klass;
+  GESTimelineObjectPrivate *priv;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
   g_return_val_if_fail (GES_IS_TRACK_OBJECT (trobj), FALSE);
+
+  priv = object->priv;
+  is_effect = GES_IS_TRACK_EFFECT (trobj);
 
   GST_LOG ("Got a TrackObject : %p , setting the timeline object as its"
       "creator. Is a TrackEffect %i", trobj, is_effect);
@@ -637,6 +640,7 @@ ges_timeline_object_add_track_object (GESTimelineObject * object, GESTrackObject
   ges_track_object_set_inpoint (trobj, object->inpoint);
   ges_track_object_set_max_duration (trobj, object->priv->maxduration);
 
+  klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
   if (klass->track_object_added) {
     GST_DEBUG ("Calling track_object_added subclass method");
     klass->track_object_added (object, trobj);
@@ -1940,6 +1944,34 @@ ges_timeline_object_trim_start (GESTimelineObject * object, guint64 start)
   g_list_free_full (tckobjs, g_object_unref);
 
   return ret;
+}
+
+/**
+ * ges_timeline_object_add_asset:
+ * @object: a #GESTimelineObject
+ * @asset: a #GESAsset with #GES_TYPE_TRACK_OBJECT as extractable_type
+ *
+ * Extracts a #GESTrackObject from @asset and adds it to the @object.
+ * Should only be called in order to add operations to a #GESTimelineObject,
+ * ni other cases TrackObject are added automatically when adding the
+ * #GESTimelineObject/#GESAsset to a layer.
+ *
+ * Takes a reference on @trobj.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ */
+
+gboolean
+ges_timeline_object_add_asset (GESTimelineObject * object,
+    GESAsset * asset)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
+  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
+  g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
+          (asset), GES_TYPE_TRACK_OBJECT), FALSE);
+
+  return ges_timeline_object_add_track_object (object,
+      GES_TRACK_OBJECT (ges_asset_extract (asset, NULL)));
 }
 
 static void

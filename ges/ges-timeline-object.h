@@ -256,6 +256,7 @@ ges_timeline_object_create_track_objects    (GESTimelineObject * object,
 gboolean
 ges_timeline_object_release_track_object    (GESTimelineObject * object,
 					  GESTrackObject * trackobject);
+gboolean ges_timeline_object_add_asset               (GESTimelineObject *object, GESAsset       *asset);
 
 gboolean
 ges_timeline_object_fill_track_object       (GESTimelineObject * object,
