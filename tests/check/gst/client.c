@@ -24,7 +24,7 @@
 static gint cseq;
 
 static gboolean
-test_option_response (GstRTSPClient * client, GstRTSPMessage * response,
+test_option_response_200 (GstRTSPClient * client, GstRTSPMessage * response,
     gboolean close, gpointer user_data)
 {
   GstRTSPStatusCode code;
@@ -63,6 +63,28 @@ test_option_response (GstRTSPClient * client, GstRTSPMessage * response,
   return TRUE;
 }
 
+static gboolean
+test_option_response_454 (GstRTSPClient * client, GstRTSPMessage * response,
+    gboolean close, gpointer user_data)
+{
+  GstRTSPStatusCode code;
+  const gchar *reason;
+  GstRTSPVersion version;
+
+  fail_unless (gst_rtsp_message_get_type (response) ==
+      GST_RTSP_MESSAGE_RESPONSE);
+  gst_rtsp_message_dump (response);
+
+  fail_unless (gst_rtsp_message_parse_response (response, &code, &reason,
+          &version)
+      == GST_RTSP_OK);
+  fail_unless (code == GST_RTSP_STS_SESSION_NOT_FOUND);
+  fail_unless (g_str_equal (reason, "Session Not Found"));
+  fail_unless (version == GST_RTSP_VERSION_1_0);
+
+  return TRUE;
+}
+
 GST_START_TEST (test_options)
 {
   GstRTSPClient *client;
@@ -71,13 +93,28 @@ GST_START_TEST (test_options)
 
   client = gst_rtsp_client_new ();
 
+  /* simple OPTIONS */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
           "rtsp://localhost/test") == GST_RTSP_OK);
   str = g_strdup_printf ("%d", cseq);
   gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
   g_free (str);
 
-  gst_rtsp_client_set_send_func (client, test_option_response, NULL, NULL);
+  gst_rtsp_client_set_send_func (client, test_option_response_200, NULL, NULL);
+  gst_rtsp_message_dump (&request);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* OPTIONS with unknown session id */
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "rtsp://localhost/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SESSION, "foobar");
+
+  gst_rtsp_client_set_send_func (client, test_option_response_454, NULL, NULL);
   gst_rtsp_message_dump (&request);
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
