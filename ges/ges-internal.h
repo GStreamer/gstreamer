@@ -33,35 +33,35 @@
 GST_DEBUG_CATEGORY_EXTERN (_ges_debug);
 #define GST_CAT_DEFAULT _ges_debug
 
-gboolean
+G_GNUC_INTERNAL gboolean
 timeline_ripple_object         (GESTimeline *timeline, GESTrackObject *obj,
                                     GList * layers, GESEdge edge,
                                     guint64 position);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 timeline_slide_object          (GESTimeline *timeline, GESTrackObject *obj,
                                     GList * layers, GESEdge edge, guint64 position);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 timeline_roll_object           (GESTimeline *timeline, GESTrackObject *obj,
                                     GList * layers, GESEdge edge, guint64 position);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 timeline_trim_object           (GESTimeline *timeline, GESTrackObject * object,
                                     GList * layers, GESEdge edge, guint64 position);
-gboolean
+G_GNUC_INTERNAL gboolean
 ges_timeline_trim_object_simple (GESTimeline * timeline, GESTrackObject * obj,
                                  GList * layers, GESEdge edge, guint64 position, gboolean snapping);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 ges_timeline_move_object_simple (GESTimeline * timeline, GESTrackObject * object,
                                  GList * layers, GESEdge edge, guint64 position);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 timeline_move_object           (GESTimeline *timeline, GESTrackObject * object,
                                     GList * layers, GESEdge edge, guint64 position);
 
-gboolean
+G_GNUC_INTERNAL gboolean
 timeline_context_to_layer      (GESTimeline *timeline, gint offset);
 
 G_GNUC_INTERNAL void
@@ -90,31 +90,33 @@ ges_asset_request_id_update (GESAsset *asset, gchar **proposed_id,
  *
  * FIXME Check if that should be public later
  */
-GType
+G_GNUC_INTERNAL GType
 ges_extractable_type_get_asset_type              (GType type);
 
 G_GNUC_INTERNAL gchar *
 ges_extractable_type_check_id                    (GType type, const gchar *id, GError **error);
 
-GParameter *
+G_GNUC_INTERNAL GParameter *
 ges_extractable_type_get_parameters_from_id      (GType type, const gchar *id,
                                                   guint *n_params);
-GType
+G_GNUC_INTERNAL GType
 ges_extractable_get_real_extractable_type_for_id (GType type, const gchar * id);
 
-gboolean ges_extractable_register_metas          (GType extractable_type, GESAsset *asset);
+G_GNUC_INTERNAL gboolean
+ges_extractable_register_metas                   (GType extractable_type, GESAsset *asset);
 
 /************************************************
  *                                              *
  *        GESFormatter internal methods         *
  *                                              *
  ************************************************/
-void
+G_GNUC_INTERNAL void
 ges_formatter_set_project                        (GESFormatter *formatter,
                                                   GESProject *project);
-GESProject *
+G_GNUC_INTERNAL GESProject *
 ges_formatter_get_project                        (GESFormatter *formatter);
-GESAsset * _find_formatter_asset_for_uri         (const gchar *uri);
+G_GNUC_INTERNAL  GESAsset *
+_find_formatter_asset_for_uri                    (const gchar *uri);
 
 
 
@@ -125,12 +127,12 @@ GESAsset * _find_formatter_asset_for_uri         (const gchar *uri);
  ************************************************/
 
 /* FIXME This should probably become public, but we need to make sure it
- * is the right API before doing so*/
-gboolean ges_project_set_loaded                  (GESProject * project,
-                                                  GESFormatter *formatter);
-gchar * ges_project_try_updating_id              (GESProject *self,
-                                                  GESAsset *asset,
-                                                  GError *error);
+ * is the right API before doing so */
+G_GNUC_INTERNAL  gboolean ges_project_set_loaded                  (GESProject * project,
+                                                                   GESFormatter *formatter);
+G_GNUC_INTERNAL  gchar * ges_project_try_updating_id              (GESProject *self,
+                                                                   GESAsset *asset,
+                                                                   GError *error);
 
 /************************************************
  *                                              *
