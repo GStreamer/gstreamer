@@ -551,6 +551,7 @@ ges_asset_cache_init (void)
       NULL, (GDestroyNotify) g_hash_table_unref);
 
   _init_formatter_assets ();
+  _init_standard_transition_assets ();
 }
 
 gboolean

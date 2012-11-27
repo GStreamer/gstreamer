@@ -21,6 +21,8 @@
 #ifndef _GES_TIMELINE_TRANSITION
 #define _GES_TIMELINE_TRANSITION
 
+#include "ges-timeline-operation.h"
+
 #include <glib-object.h>
 #include <ges/ges-types.h>
 

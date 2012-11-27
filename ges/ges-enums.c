@@ -24,6 +24,10 @@
  */
 
 #include "ges-enums.h"
+#include "ges-internal.h"
+#include "ges-asset.h"
+#include "ges-meta-container.h"
+#include "ges-timeline-standard-transition.h"
 
 #define C_ENUM(v) ((guint) v)
 static void
@@ -500,6 +504,22 @@ static GEnumValue transition_types[] = {
   ,
   {0, NULL, NULL}
 };
+
+void
+_init_standard_transition_assets (void)
+{
+  guint i;
+
+  for (i = 1; i < G_N_ELEMENTS (transition_types) - 1; i++) {
+    GESAsset *asset = ges_asset_request (GES_TYPE_TIMELINE_STANDARD_TRANSITION,
+        transition_types[i].value_nick, NULL);
+
+    ges_meta_container_register_meta_string (GES_META_CONTAINER (asset),
+        GES_META_READABLE, GES_META_DESCRIPTION,
+        transition_types[i].value_name);
+  }
+
+}
 
 GType
 ges_video_standard_transition_type_get_type (void)
