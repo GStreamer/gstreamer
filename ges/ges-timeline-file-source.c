@@ -21,7 +21,7 @@
 /**
  * SECTION:ges-timeline-filesource
  * @short_description: An object for manipulating media files in a GESTimeline
- * 
+ *
  * Represents all the output streams from a particular uri. It is assumed that
  * the URI points to a file of some type.
  */
@@ -331,7 +331,7 @@ filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration)
 
 /**
  * ges_timeline_filesource_set_is_image:
- * @self: the #GESTimelineFileSource 
+ * @self: the #GESTimelineFileSource
  * @is_image: %TRUE if @self is a still image, %FALSE otherwise
  *
  * Sets whether the timeline object is a still image or not.
@@ -345,7 +345,7 @@ ges_timeline_filesource_set_is_image (GESTimelineFileSource * self,
 
 /**
  * ges_timeline_filesource_is_muted:
- * @self: the #GESTimelineFileSource 
+ * @self: the #GESTimelineFileSource
  *
  * Lets you know if the audio track of @self is muted or not.
  *
@@ -359,7 +359,7 @@ ges_timeline_filesource_is_muted (GESTimelineFileSource * self)
 
 /**
  * ges_timeline_filesource_get_max_duration:
- * @self: the #GESTimelineFileSource 
+ * @self: the #GESTimelineFileSource
  *
  * Get the duration of the object.
  *
@@ -373,7 +373,7 @@ ges_timeline_filesource_get_max_duration (GESTimelineFileSource * self)
 
 /**
  * ges_timeline_filesource_is_image:
- * @self: the #GESTimelineFileSource 
+ * @self: the #GESTimelineFileSource
  *
  * Lets you know if @self is an image or not.
  *
@@ -387,7 +387,7 @@ ges_timeline_filesource_is_image (GESTimelineFileSource * self)
 
 /**
  * ges_timeline_filesource_get_uri:
- * @self: the #GESTimelineFileSource 
+ * @self: the #GESTimelineFileSource
  *
  * Get the location of the resource.
  *
