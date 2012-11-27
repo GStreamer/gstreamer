@@ -27,6 +27,8 @@
 
 GST_DEBUG_CATEGORY (_ges_debug);
 
+static gboolean ges_initialized = FALSE;
+
 /**
  * SECTION:ges-common
  * @short_description: Initialization.
@@ -62,6 +64,11 @@ ges_init (void)
   GST_DEBUG_CATEGORY_INIT (_ges_debug, "ges", GST_DEBUG_FG_YELLOW,
       "GStreamer Editing Services");
 
+  if (ges_initialized) {
+    GST_DEBUG ("already initialized ges");
+    return TRUE;
+  }
+
   /* register timeline object classes with the system */
 
   GES_TYPE_TIMELINE_TEST_SOURCE;
@@ -86,6 +93,7 @@ ges_init (void)
     return FALSE;
 
   /* TODO: user-defined types? */
+  ges_initialized = TRUE;
 
   GST_DEBUG ("GStreamer Editing Services initialized");
 
