@@ -178,6 +178,7 @@ enum
 {
   PROP_0,
   PROP_DEVICE,
+  PROP_DEVICE_NAME,
   PROP_DEVICE_FACING,
   PROP_DEVICE_ORIENTATION,
   PROP_FOCAL_LENGTH,
@@ -306,10 +307,21 @@ gst_ahc_src_class_init (GstAHCSrcClass * klass)
    * The Device ID of the camera to capture from
    */
   properties[PROP_DEVICE] = g_param_spec_string ("device",
-      "device", "Device ID", DEFAULT_DEVICE,
+      "Device", "Device ID", DEFAULT_DEVICE,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       properties[PROP_DEVICE]);
+
+  /**
+   * GstAHCSrc:device-name:
+   *
+   * A user-friendly name for the camera device
+   */
+  properties[PROP_DEVICE_NAME] = g_param_spec_string ("device-name",
+      "Device name", "Device name", NULL,
+      G_PARAM_READABLE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
+      properties[PROP_DEVICE_NAME]);
 
   /**
    * GstAHCSrc:device-orientation:
@@ -624,6 +636,19 @@ gst_ahc_src_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:{
       gchar *dev = g_strdup_printf ("%d", self->device);
+
+      g_value_take_string (value, dev);
+    }
+      break;
+    case PROP_DEVICE_NAME:{
+      GstAHCCameraInfo info;
+      gchar *dev;
+
+      if (gst_ah_camera_get_camera_info (self->device, &info))
+        dev = g_strdup_printf ("#%d %s", self->device,
+            info.facing == CameraInfo_CAMERA_FACING_BACK ? "Back" : "Front");
+      else
+        dev = g_strdup_printf ("#%d", self->device);
 
       g_value_take_string (value, dev);
     }
