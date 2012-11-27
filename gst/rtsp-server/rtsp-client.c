@@ -1609,12 +1609,10 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
     case GST_RTSP_ANNOUNCE:
     case GST_RTSP_RECORD:
     case GST_RTSP_REDIRECT:
-      send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, &state);
-      break;
+      goto not_implemented;
     case GST_RTSP_INVALID:
     default:
-      send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &state);
-      break;
+      goto bad_request;
   }
 
 done:
@@ -1654,6 +1652,12 @@ not_authorized:
   {
     GST_ERROR ("client %p: not allowed", client);
     handle_unauthorized_request (client, client->auth, &state);
+    goto done;
+  }
+not_implemented:
+  {
+    GST_ERROR ("client %p: method %d not implemented", client, method);
+    send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, &state);
     goto done;
   }
 }
