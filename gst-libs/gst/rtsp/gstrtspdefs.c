@@ -466,6 +466,46 @@ gst_rtsp_options_as_text (GstRTSPMethod options)
 }
 
 /**
+ * gst_rtsp_options_from_text:
+ * @options: a comma separated list of options
+ *
+ * Convert the comma separated list @options to a #GstRTSPMethod bitwise or
+ * of methods. This functions is the reverse of gst_rtsp_options_as_text().
+ *
+ * Returns: a #GstRTSPMethod
+ *
+ * Since: 1.1.1
+ */
+GstRTSPMethod
+gst_rtsp_options_from_text (const gchar * options)
+{
+  GstRTSPMethod methods;
+  gchar **ostr;
+  gint i;
+
+  /* The string is like:
+   * OPTIONS, DESCRIBE, ANNOUNCE, PLAY, SETUP, ...
+   */
+  ostr = g_strsplit (options, ",", 0);
+
+  methods = 0;
+  for (i = 0; ostr[i]; i++) {
+    gchar *stripped;
+    GstRTSPMethod method;
+
+    stripped = g_strstrip (ostr[i]);
+    method = gst_rtsp_find_method (stripped);
+
+    /* keep bitfield of supported methods */
+    if (method != GST_RTSP_INVALID)
+      methods |= method;
+  }
+  g_strfreev (ostr);
+
+  return methods;
+}
+
+/**
  * gst_rtsp_header_allow_multiple:
  * @field: a #GstRTSPHeaderField
  *
