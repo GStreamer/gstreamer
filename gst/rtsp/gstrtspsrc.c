@@ -4807,9 +4807,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
 {
   GstRTSPHeaderField field;
   gchar *respoptions;
-  gchar **options;
   gint indx = 0;
-  gint i;
 
   /* reset supported methods */
   src->methods = 0;
@@ -4827,25 +4825,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
     if (!respoptions)
       break;
 
-    /* If we get here, the server gave a list of supported methods, parse
-     * them here. The string is like:
-     *
-     * OPTIONS, DESCRIBE, ANNOUNCE, PLAY, SETUP, ...
-     */
-    options = g_strsplit (respoptions, ",", 0);
-
-    for (i = 0; options[i]; i++) {
-      gchar *stripped;
-      gint method;
-
-      stripped = g_strstrip (options[i]);
-      method = gst_rtsp_find_method (stripped);
-
-      /* keep bitfield of supported methods */
-      if (method != GST_RTSP_INVALID)
-        src->methods |= method;
-    }
-    g_strfreev (options);
+    src->methods |= gst_rtsp_options_from_text (respoptions);
 
     indx++;
   }
