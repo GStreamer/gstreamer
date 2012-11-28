@@ -136,6 +136,8 @@ void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB 
 
 GstGLPlatform gst_gl_window_get_platform (GstGLWindow *window);
 
+GST_DEBUG_CATEGORY_EXTERN (gst_gl_window_debug);
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_H__ */
