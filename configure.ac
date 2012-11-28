@@ -685,7 +685,6 @@ AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
     if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
         case $host in
         *-darwin* | *-macos10*)
-            AM_CONDITIONAL([HAVE_OSX], true)
             AC_DEFINE(HAVE_OSX,[1],[Apple Mac OS X operating system detected])
             HAVE_SHM=yes
             ;;
@@ -695,6 +694,7 @@ AG_GST_CHECK_FEATURE(SHM, [POSIX shared memory source and sink], shm, [
                 #include <sys/socket.h>
   	            ]),
                 HAVE_SHM=no)
+            AC_SUBST(SHM_LIBS, "-lrt")
             ;;
         esac
     else
