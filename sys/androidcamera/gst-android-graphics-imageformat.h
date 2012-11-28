@@ -26,6 +26,7 @@
 #include <jni.h>
 
 
+G_BEGIN_DECLS
 
 /* android.graphics.ImageFormat */
 extern gint ImageFormat_JPEG;
@@ -41,6 +42,7 @@ void gst_android_graphics_imageformat_deinit (void);
 
 gint gst_ag_imageformat_get_bits_per_pixel (gint format);
 
+G_END_DECLS
 
 #endif /* __GST_ANDROID_GRAPHICS_IMAGEFORMAT_H__ */
 

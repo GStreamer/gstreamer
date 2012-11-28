@@ -28,6 +28,8 @@
 #include "gst-android-graphics-surfacetexture.h"
 #include "gst-android-graphics-imageformat.h"
 
+G_BEGIN_DECLS
+
 typedef struct _GstAHCamera GstAHCamera;
 typedef struct _GstAHCCameraInfo GstAHCCameraInfo;
 typedef struct _GstAHCSize GstAHCSize;
@@ -241,5 +243,6 @@ gboolean gst_ahc_parameters_unflatten (GstAHCParameters * self,
     const gchar * flattened);
 void gst_ahc_parameters_free (GstAHCParameters * self);
 
+G_END_DECLS
 
 #endif /* __GST_ANDROID_HARDWARE_CAMERA_H__ */

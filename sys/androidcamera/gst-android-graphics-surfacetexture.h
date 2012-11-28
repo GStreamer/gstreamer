@@ -26,6 +26,8 @@
 #include <jni.h>
 
 
+G_BEGIN_DECLS
+
 typedef struct _GstAGSurfaceTexture GstAGSurfaceTexture;
 
 /* android.graphics.SurfaceTexture */
@@ -42,6 +44,7 @@ void gst_android_graphics_surfacetexture_deinit (void);
 GstAGSurfaceTexture *gst_ag_surfacetexture_new (gint texture_id);
 void gst_ag_surfacetexture_release (GstAGSurfaceTexture *self);
 
+G_END_DECLS
 
 #endif /* __GST_ANDROID_GRAPHICS_SURFACETEXTURE_H__ */
 
