@@ -1,6 +1,8 @@
 GStreamer 0.10 to 1.0 porting guide
 -----------------------------------
 
+PREFACE
+
 * All deprecated methods were removed. Recompile against 0.10 with
   DISABLE_DEPRECATED and fix issues before attempting to port to 1.0.
 
@@ -9,6 +11,16 @@ GStreamer 0.10 to 1.0 porting guide
 
 * Other changes are a bit more subtle. See checklist at the bottom
   for some "soft" changes which the compiler will not warn about.
+
+* python developers may find https://wiki.ubuntu.com/Novacut/GStreamer1.0
+  useful
+
+* application developers may first want to have a look at the list of changes
+  affecting applications in the Application Development Manual:
+  http://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/chapter-porting-1.0.html
+
+
+CHANGES
 
 * GST_BOILERPLATE is gone, use G_DEFINE_TYPE instead.
 
