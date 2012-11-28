@@ -665,7 +665,7 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       pad = gst_element_get_static_pad (elem, "src");
       /* create the stream */
       gst_rtsp_media_create_stream (media, elem, pad);
-      g_object_unref (pad);
+      gst_object_unref (pad);
 
       gst_object_unref (elem);
 

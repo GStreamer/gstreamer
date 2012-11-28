@@ -580,7 +580,7 @@ rtsp_media_factory_uri_create_element (GstRTSPMediaFactory * factory,
 no_uridecodebin:
   {
     g_critical ("can't create uridecodebin element");
-    g_object_unref (element);
+    gst_object_unref (element);
     return NULL;
   }
 }
