@@ -20,6 +20,7 @@
 #include <gst/gst.h>
 
 #include <gst/rtsp-server/rtsp-server.h>
+#include <gst/rtsp-server/rtsp-media-factory-uri.h>
 
 
 static gboolean
