@@ -792,7 +792,8 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
  * @media: a #GstRTSPMedia
  * @play: for the PLAY request
  *
- * Get the current range as a string.
+ * Get the current range as a string. @media must be prepared with
+ * gst_rtsp_media_prepare ().
  *
  * Returns: The range as a string, g_free() after usage.
  */
@@ -801,6 +802,12 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
 {
   gchar *result;
   GstRTSPTimeRange range;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  g_rec_mutex_lock (&media->state_lock);
+  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
 
   g_mutex_lock (&media->lock);
   /* make copy */
@@ -811,10 +818,19 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
     range.min.seconds = -1;
   }
   g_mutex_unlock (&media->lock);
+  g_rec_mutex_unlock (&media->state_lock);
 
   result = gst_rtsp_range_to_string (&range);
 
   return result;
+
+  /* ERRORS */
+not_prepared:
+  {
+    GST_WARNING ("media %p was not prepared", media);
+    g_rec_mutex_unlock (&media->state_lock);
+    return NULL;
+  }
 }
 
 /**
@@ -822,7 +838,8 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
  * @media: a #GstRTSPMedia
  * @range: a #GstRTSPTimeRange
  *
- * Seek the pipeline to @range.
+ * Seek the pipeline of @media to @range. @media must be prepared with
+ * gst_rtsp_media_prepare().
  *
  * Returns: %TRUE on success.
  */
@@ -838,6 +855,9 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   g_return_val_if_fail (range != NULL, FALSE);
 
   g_rec_mutex_lock (&media->state_lock);
+  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
+
   if (!media->seekable)
     goto not_seekable;
 
@@ -887,6 +907,12 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   return res;
 
   /* ERRORS */
+not_prepared:
+  {
+    g_rec_mutex_unlock (&media->state_lock);
+    GST_INFO ("media %p is not prepared", media);
+    return FALSE;
+  }
 not_seekable:
   {
     g_rec_mutex_unlock (&media->state_lock);
@@ -1139,6 +1165,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   GstBus *bus;
   GList *walk;
 
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
   g_rec_mutex_lock (&media->state_lock);
   if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED)
     goto was_prepared;
@@ -1360,6 +1388,8 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
 {
   gboolean success;
 
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
   g_rec_mutex_lock (&media->state_lock);
   if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
     goto was_unprepared;
@@ -1397,6 +1427,8 @@ was_unprepared:
  *
  * Set the state of @media to @state and for the transports in @transports.
  *
+ * @media must be prepared with gst_rtsp_media_prepare();
+ *
  * Returns: %TRUE on success.
  */
 gboolean
@@ -1411,6 +1443,8 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   g_return_val_if_fail (transports != NULL, FALSE);
 
   g_rec_mutex_lock (&media->state_lock);
+  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
 
   /* NULL and READY are the same */
   if (state == GST_STATE_READY)
@@ -1493,4 +1527,12 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   g_rec_mutex_unlock (&media->state_lock);
 
   return TRUE;
+
+  /* ERRORS */
+not_prepared:
+  {
+    GST_WARNING ("media %p was not prepared", media);
+    g_rec_mutex_unlock (&media->state_lock);
+    return FALSE;
+  }
 }
