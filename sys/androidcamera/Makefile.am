@@ -2,7 +2,6 @@ plugin_LTLIBRARIES = libgstandroidcamera.la
 
 libgstandroidcamera_la_SOURCES = \
 	gst-androidcamera.c \
-	gst-dvm.c \
 	gst-android-hardware-camera.c \
 	gst-android-graphics-surfacetexture.c \
 	gst-android-graphics-imageformat.c \
@@ -12,7 +11,6 @@ libgstandroidcamera_la_SOURCES = \
 JAVA_SOURCE = com/gstreamer/GstAhcCallback.java
 
 noinst_HEADERS = \
-	gst-dvm.h \
 	gstahcsrc.h \
 	gstahccallback.h \
 	gst-android-hardware-camera.h \

@@ -73,9 +73,9 @@
 #include <gst/video/video.h>
 #include <gst/interfaces/propertyprobe.h>
 #include <gst/interfaces/photography.h>
+#include <gst/dvm/gst-dvm.h>
 
 #include "gstahcsrc.h"
-#include "gst-dvm.h"
 
 /* GObject */
 static void gst_ahc_src_set_property (GObject * object, guint prop_id,

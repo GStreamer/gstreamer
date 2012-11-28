@@ -23,7 +23,8 @@
 #include "config.h"
 #endif
 
-#include "gst-dvm.h"
+#include <gst/dvm/gst-dvm.h>
+
 #include "gst-android-graphics-surfacetexture.h"
 
 

@@ -23,8 +23,8 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/dvm/gst-dvm.h>
 
-#include "gst-dvm.h"
 #include "gst-android-hardware-camera.h"
 #include "gstahcsrc.h"
 
