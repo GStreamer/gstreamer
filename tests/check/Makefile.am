@@ -30,6 +30,7 @@ check_PROGRAMS = \
 	gst/client \
 	gst/mountpoints \
 	gst/mediafactory \
+	gst/media \
 	gst/addresspool
 
 # these tests don't even pass
