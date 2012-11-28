@@ -171,6 +171,8 @@ gst_rtsp_media_finalize (GObject * obj)
 
   g_list_free_full (media->dynamic, gst_object_unref);
 
+  if (media->pipeline)
+    gst_object_unref (media->pipeline);
   if (media->auth)
     g_object_unref (media->auth);
   if (media->pool)
@@ -666,7 +668,6 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
       /* create the stream */
       gst_rtsp_media_create_stream (media, elem, pad);
       gst_object_unref (pad);
-
       gst_object_unref (elem);
 
       have_elem = TRUE;

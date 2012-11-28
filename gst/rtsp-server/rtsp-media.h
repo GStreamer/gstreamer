@@ -76,7 +76,7 @@ typedef enum {
  * @buffer_size: The UDP buffer size
  * @auth: the authentication service in use
  * @multicast_group: the multicast group to use
- * @element: the data providing element
+ * @element: the data providing element, owned by @pipeline
  * @streams: the different #GstRTSPStream provided by @element
  * @dynamic: list of dynamic elements managed by @element
  * @status: the status of the media pipeline
