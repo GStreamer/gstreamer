@@ -29,6 +29,7 @@ check_PROGRAMS = \
 	gst/rtspserver \
 	gst/client \
 	gst/mountpoints \
+	gst/mediafactory \
 	gst/addresspool
 
 # these tests don't even pass
