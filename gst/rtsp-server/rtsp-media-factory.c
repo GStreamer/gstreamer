@@ -849,6 +849,7 @@ gst_rtsp_media_factory_create_element (GstRTSPMediaFactory * factory,
   GstElement *result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
 
   klass = GST_RTSP_MEDIA_FACTORY_GET_CLASS (factory);
 
