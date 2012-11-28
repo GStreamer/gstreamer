@@ -16,8 +16,10 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglwindow.c
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) \
-	$(GST_BASE_LIBS) $(GST_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstvideo-$(GST_API_VERSION) \
+	$(GST_BASE_LIBS) \
+	$(GST_LIBS) \
 	$(GL_LIBS)
 
 if HAVE_WINDOW_WIN32
@@ -33,6 +35,11 @@ endif
 if HAVE_WINDOW_X11
 SUBDIRS += x11
 libgstgl_@GST_API_VERSION@_la_LIBADD += x11/libgstgl-x11.la
+endif
+
+if HAVE_WINDOW_WAYLAND
+SUBDIRS += wayland
+libgstgl_@GST_API_VERSION@_la_LIBADD += wayland/libgstgl-wayland.la
 endif
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
@@ -55,7 +62,8 @@ libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS)
+	$(GST_CFLAGS) \
+	$(GL_CFLAGS)
 
 libgstgl_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \

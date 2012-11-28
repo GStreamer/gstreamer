@@ -33,15 +33,15 @@
 #ifdef HAVE_WINDOW_COCOA
 #include "cocoa/gstglwindow_cocoa.h"
 #endif
+#ifdef HAVE_WINDOW_WAYLAND
+#include "wayland/gstglwindow_wayland_egl.h"
+#endif
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0, "glwindow element");
 #define gst_gl_window_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT,
-    DEBUG_INIT);
+G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 
 static void
 gst_gl_window_init (GstGLWindow * window)
@@ -60,8 +60,17 @@ gst_gl_window_new (GstGLRendererAPI render_api, guintptr external_gl_context)
 {
   GstGLWindow *window = NULL;
   const gchar *user_choice;
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0,
+        "glwindow element");
+    g_once_init_leave (&_init, 1);
+  }
 
   user_choice = g_getenv ("GST_GL_WINDOW");
+  GST_INFO ("creating a window, user choice:%s", user_choice);
+
 #ifdef HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
     window =
@@ -77,6 +86,12 @@ gst_gl_window_new (GstGLRendererAPI render_api, guintptr external_gl_context)
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
     window =
         GST_GL_WINDOW (gst_gl_window_cocoa_new (render_api,
+            external_gl_context));
+#endif
+#ifdef HAVE_WINDOW_WAYLAND
+  if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
+    window =
+        GST_GL_WINDOW (gst_gl_window_wayland_egl_new (render_api,
             external_gl_context));
 #endif
   if (!window) {

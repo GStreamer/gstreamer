@@ -21,6 +21,7 @@ libgstgl_cocoa_la_CFLAGS = \
 
 libgstgl_cocoa_la_OBJCFLAGS = \
 	$(GL_CFLAGS) \
+	$(GL_OBJCFLAGS) \
 	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
