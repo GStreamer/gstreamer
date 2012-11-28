@@ -120,6 +120,9 @@ gst_rtsp_mount_points_find_factory (GstRTSPMountPoints * mounts,
   GstRTSPMediaFactory *result;
   GstRTSPMountPointsClass *klass;
 
+  g_return_val_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
+
   klass = GST_RTSP_MOUNT_POINTS_GET_CLASS (mounts);
 
   if (klass->find_factory)
