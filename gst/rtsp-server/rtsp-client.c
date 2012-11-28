@@ -405,13 +405,14 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
                 state->uri)))
       goto no_factory;
 
-    state->factory = factory;
-
     /* check if we have access to the factory */
     if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
+      state->factory = factory;
+
       if (!gst_rtsp_auth_check (auth, client, 0, state))
         goto not_allowed;
 
+      state->factory = NULL;
       g_object_unref (auth);
     }
 
@@ -421,12 +422,9 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
 
     g_object_unref (factory);
     factory = NULL;
-    state->factory = NULL;
 
     /* set ipv6 on the media before preparing */
     media->is_ipv6 = client->is_ipv6;
-    state->media = media;
-
     /* prepare the media */
     if (!(gst_rtsp_media_prepare (media)))
       goto no_prepare;
@@ -434,6 +432,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
     /* now keep track of the uri and the media */
     client->uri = gst_rtsp_url_copy (state->uri);
     client->media = media;
+    state->media = media;
   } else {
     /* we have seen this uri before, used cached media */
     media = client->media;
@@ -464,6 +463,7 @@ not_allowed:
     GST_ERROR ("client %p: unauthorized request", client);
     handle_unauthorized_request (client, auth, state);
     g_object_unref (factory);
+    state->factory = NULL;
     g_object_unref (auth);
     return NULL;
   }
