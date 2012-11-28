@@ -47,8 +47,16 @@ dnl - library source changed -> increment REVISION
 dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
+dnl
+dnl Keep CURRENT as MINOR * 100 + MICRO
+dnl Ex : 1.0.0 => 0
+dnl      1.0.3 => 3
+dnl      1.1.0 => 100
+dnl      1.2.5 => 205
+dnl      1.10.9 (who knows) => 1009
+dnl
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 2, 0, 2)
+AS_LIBTOOL(GST, 100, 0, 100)
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=1.1.0
