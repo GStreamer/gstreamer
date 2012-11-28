@@ -29,7 +29,6 @@ typedef struct _GstRTSPServerClass GstRTSPServerClass;
 
 #include "rtsp-session-pool.h"
 #include "rtsp-mount-points.h"
-#include "rtsp-media-factory-uri.h"
 #include "rtsp-client.h"
 #include "rtsp-auth.h"
 
