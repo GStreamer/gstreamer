@@ -59,6 +59,8 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 static void
 gst_rtsp_stream_init (GstRTSPStream * stream)
 {
+  GST_DEBUG ("new stream %p", stream);
+
   g_mutex_init (&stream->lock);
 }
 
@@ -68,6 +70,8 @@ gst_rtsp_stream_finalize (GObject * obj)
   GstRTSPStream *stream;
 
   stream = GST_RTSP_STREAM (obj);
+
+  GST_DEBUG ("finalize stream %p", stream);
 
   /* we really need to be unjoined now */
   g_return_if_fail (!stream->is_joined);
