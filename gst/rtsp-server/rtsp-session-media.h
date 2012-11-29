@@ -72,7 +72,6 @@ gboolean                 gst_rtsp_session_media_matches_url    (GstRTSPSessionMe
 GstRTSPMedia *           gst_rtsp_session_media_get_media      (GstRTSPSessionMedia *media);
 
 /* control media */
-
 gboolean                 gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media,
                                                                 GstState state);
 
