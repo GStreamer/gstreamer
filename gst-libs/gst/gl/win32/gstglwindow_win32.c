@@ -57,7 +57,7 @@ struct _GstGLWindowWin32Private
   gboolean activate_result;
 };
 
-#define GST_CAT_DEFAULT gst_gl_window_x11_debug
+#define GST_CAT_DEFAULT gst_gl_window_win32_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define DEBUG_INIT \
