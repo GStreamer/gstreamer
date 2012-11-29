@@ -38,6 +38,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPMedia GstRTSPMedia;
 typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
+typedef struct _GstRTSPMediaPrivate GstRTSPMediaPrivate;
 
 #include "rtsp-stream.h"
 #include "rtsp-auth.h"
@@ -64,36 +65,6 @@ typedef enum {
 
 /**
  * GstRTSPMedia:
- * @parent: parent GObject
- * @lock: for protecting the object
- * @cond: for signaling the object
- * @shared: if this media can be shared between clients
- * @reusable: if this media can be reused after an unprepare
- * @protocols: the allowed lower transport for this stream
- * @reused: if this media has been reused
- * @is_ipv6: if this media is using ipv6
- * @eos_shutdown: if EOS should be sent on shutdown
- * @buffer_size: The UDP buffer size
- * @auth: the authentication service in use
- * @multicast_group: the multicast group to use
- * @element: the data providing element, owned by @pipeline
- * @streams: the different #GstRTSPStream provided by @element
- * @dynamic: list of dynamic elements managed by @element
- * @status: the status of the media pipeline
- * @n_active: the number of active connections
- * @adding: when elements are added to the pipeline
- * @pipeline: the toplevel pipeline
- * @fakesink: for making state changes async
- * @source: the bus watch for pipeline messages.
- * @id: the id of the watch
- * @is_live: if the pipeline is live
- * @seekable: if the pipeline can perform a seek
- * @buffering: if the pipeline is buffering
- * @target_state: the desired target state of the pipeline
- * @rtpbin: the rtpbin
- * @range: the range of the media being streamed
- * @range_start: range start in #GstClockTime
- * @range_stop: range stop in #GstClockTime
  *
  * A class that contains the GStreamer element along with a list of
  * #GstRTSPStream objects that can produce data.
@@ -103,45 +74,7 @@ typedef enum {
 struct _GstRTSPMedia {
   GObject            parent;
 
-  GMutex             lock;
-  GCond              cond;
-
-  gboolean           shared;
-  gboolean           reusable;
-  GstRTSPLowerTrans  protocols;
-  gboolean           reused;
-  gboolean           is_ipv6;
-  gboolean           eos_shutdown;
-  guint              buffer_size;
-  GstRTSPAuth       *auth;
-  GstRTSPAddressPool*pool;
-
-  GstElement        *element;
-  GRecMutex          state_lock;
-  GPtrArray         *streams;
-  GList             *dynamic;
-  GstRTSPMediaStatus status;
-  gint               n_active;
-  gboolean           adding;
-
-  /* the pipeline for the media */
-  GstElement        *pipeline;
-  GstElement        *fakesink;
-  GSource           *source;
-  guint              id;
-
-  gboolean           is_live;
-  gboolean           seekable;
-  gboolean           buffering;
-  GstState           target_state;
-
-  /* RTP session manager */
-  GstElement        *rtpbin;
-
-  /* the range of media */
-  GstRTSPTimeRange   range;
-  GstClockTime       range_start;
-  GstClockTime       range_stop;
+  GstRTSPMediaPrivate *priv;
 };
 
 /**
@@ -179,7 +112,11 @@ struct _GstRTSPMediaClass {
 GType                 gst_rtsp_media_get_type         (void);
 
 /* creating the media */
-GstRTSPMedia *        gst_rtsp_media_new              (void);
+GstRTSPMedia *        gst_rtsp_media_new              (GstElement *element);
+
+void                  gst_rtsp_media_take_pipeline    (GstRTSPMedia *media, GstPipeline *pipeline);
+
+GstRTSPMediaStatus    gst_rtsp_media_get_status       (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);

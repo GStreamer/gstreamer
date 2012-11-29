@@ -21,6 +21,16 @@
 
 #include "rtsp-auth.h"
 
+#define GST_RTSP_AUTH_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_AUTH, GstRTSPAuthPrivate))
+
+struct _GstRTSPAuthPrivate
+{
+  GMutex lock;
+  gchar *basic;
+  GstRTSPMethod methods;
+};
+
 enum
 {
   PROP_0,
@@ -48,6 +58,8 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (GstRTSPAuthPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->get_property = gst_rtsp_auth_get_property;
@@ -63,9 +75,11 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
 static void
 gst_rtsp_auth_init (GstRTSPAuth * auth)
 {
-  g_mutex_init (&auth->lock);
+  auth->priv = GST_RTSP_AUTH_GET_PRIVATE (auth);
+
+  g_mutex_init (&auth->priv->lock);
   /* bitwise or of all methods that need authentication */
-  auth->methods = GST_RTSP_DESCRIBE |
+  auth->priv->methods = GST_RTSP_DESCRIBE |
       GST_RTSP_ANNOUNCE |
       GST_RTSP_GET_PARAMETER |
       GST_RTSP_SET_PARAMETER |
@@ -77,10 +91,11 @@ static void
 gst_rtsp_auth_finalize (GObject * obj)
 {
   GstRTSPAuth *auth = GST_RTSP_AUTH (obj);
+  GstRTSPAuthPrivate *priv = auth->priv;
 
   GST_INFO ("finalize auth %p", auth);
-  g_free (auth->basic);
-  g_mutex_clear (&auth->lock);
+  g_free (priv->basic);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_auth_parent_class)->finalize (obj);
 }
@@ -132,12 +147,16 @@ gst_rtsp_auth_new (void)
 void
 gst_rtsp_auth_set_basic (GstRTSPAuth * auth, const gchar * basic)
 {
+  GstRTSPAuthPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_AUTH (auth));
 
-  g_mutex_lock (&auth->lock);
-  g_free (auth->basic);
-  auth->basic = g_strdup (basic);
-  g_mutex_unlock (&auth->lock);
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_free (priv->basic);
+  priv->basic = g_strdup (basic);
+  g_mutex_unlock (&priv->lock);
 }
 
 static gboolean
@@ -190,10 +209,11 @@ static gboolean
 default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
     GQuark hint, GstRTSPClientState * state)
 {
+  GstRTSPAuthPrivate *priv = auth->priv;
   gboolean result = TRUE;
   GstRTSPResult res;
 
-  if ((state->method & auth->methods) != 0) {
+  if ((state->method & priv->methods) != 0) {
     gchar *authorization;
 
     result = FALSE;
@@ -207,10 +227,10 @@ default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
     /* parse type */
     if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
       GST_DEBUG_OBJECT (auth, "check Basic auth");
-      g_mutex_lock (&auth->lock);
-      if (auth->basic && strcmp (&authorization[6], auth->basic) == 0)
+      g_mutex_lock (&priv->lock);
+      if (priv->basic && strcmp (&authorization[6], priv->basic) == 0)
         result = TRUE;
-      g_mutex_unlock (&auth->lock);
+      g_mutex_unlock (&priv->lock);
     } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
       GST_DEBUG_OBJECT (auth, "check Digest auth");
       /* not implemented yet */

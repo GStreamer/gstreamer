@@ -24,6 +24,7 @@
 
 typedef struct _GstRTSPAuth GstRTSPAuth;
 typedef struct _GstRTSPAuthClass GstRTSPAuthClass;
+typedef struct _GstRTSPAuthPrivate GstRTSPAuthPrivate;
 
 #include "rtsp-client.h"
 
@@ -46,10 +47,7 @@ G_BEGIN_DECLS
 struct _GstRTSPAuth {
   GObject       parent;
 
-  /*< private >*/
-  GMutex        lock;
-  gchar        *basic;
-  GstRTSPMethod methods;
+  GstRTSPAuthPrivate *priv;
 };
 
 struct _GstRTSPAuthClass {

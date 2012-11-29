@@ -23,6 +23,38 @@
 #include "rtsp-server.h"
 #include "rtsp-client.h"
 
+#define GST_RTSP_SERVER_GET_PRIVATE(obj)  \
+       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_SERVER, GstRTSPServerPrivate))
+
+#define GST_RTSP_SERVER_GET_LOCK(server)  (&(GST_RTSP_SERVER_CAST(server)->priv->lock))
+#define GST_RTSP_SERVER_LOCK(server)      (g_mutex_lock(GST_RTSP_SERVER_GET_LOCK(server)))
+#define GST_RTSP_SERVER_UNLOCK(server)    (g_mutex_unlock(GST_RTSP_SERVER_GET_LOCK(server)))
+
+struct _GstRTSPServerPrivate
+{
+  GMutex lock;
+
+  /* server information */
+  gchar *address;
+  gchar *service;
+  gint backlog;
+  gint max_threads;
+
+  GSocket *socket;
+
+  /* sessions on this server */
+  GstRTSPSessionPool *session_pool;
+
+  /* mount points for this server */
+  GstRTSPMountPoints *mount_points;
+
+  /* authentication manager */
+  GstRTSPAuth *auth;
+
+  /* the clients that are connected */
+  GList *clients;
+};
+
 #define DEFAULT_ADDRESS         "0.0.0.0"
 #define DEFAULT_BOUND_PORT      -1
 /* #define DEFAULT_ADDRESS         "::0" */
@@ -79,6 +111,8 @@ static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 {
   GObjectClass *gobject_class;
+
+  g_type_class_add_private (klass, sizeof (GstRTSPServerPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -185,36 +219,41 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
 static void
 gst_rtsp_server_init (GstRTSPServer * server)
 {
-  g_mutex_init (&server->lock);
-  server->address = g_strdup (DEFAULT_ADDRESS);
-  server->service = g_strdup (DEFAULT_SERVICE);
-  server->socket = NULL;
-  server->backlog = DEFAULT_BACKLOG;
-  server->session_pool = gst_rtsp_session_pool_new ();
-  server->mount_points = gst_rtsp_mount_points_new ();
-  server->max_threads = DEFAULT_MAX_THREADS;
+  GstRTSPServerPrivate *priv = GST_RTSP_SERVER_GET_PRIVATE (server);
+
+  server->priv = priv;
+
+  g_mutex_init (&priv->lock);
+  priv->address = g_strdup (DEFAULT_ADDRESS);
+  priv->service = g_strdup (DEFAULT_SERVICE);
+  priv->socket = NULL;
+  priv->backlog = DEFAULT_BACKLOG;
+  priv->session_pool = gst_rtsp_session_pool_new ();
+  priv->mount_points = gst_rtsp_mount_points_new ();
+  priv->max_threads = DEFAULT_MAX_THREADS;
 }
 
 static void
 gst_rtsp_server_finalize (GObject * object)
 {
   GstRTSPServer *server = GST_RTSP_SERVER (object);
+  GstRTSPServerPrivate *priv = server->priv;
 
   GST_DEBUG_OBJECT (server, "finalize server");
 
-  g_free (server->address);
-  g_free (server->service);
+  g_free (priv->address);
+  g_free (priv->service);
 
-  if (server->socket)
-    g_object_unref (server->socket);
+  if (priv->socket)
+    g_object_unref (priv->socket);
 
-  g_object_unref (server->session_pool);
-  g_object_unref (server->mount_points);
+  g_object_unref (priv->session_pool);
+  g_object_unref (priv->mount_points);
 
-  if (server->auth)
-    g_object_unref (server->auth);
+  if (priv->auth)
+    g_object_unref (priv->auth);
 
-  g_mutex_clear (&server->lock);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_server_parent_class)->finalize (object);
 }
@@ -246,12 +285,16 @@ gst_rtsp_server_new (void)
 void
 gst_rtsp_server_set_address (GstRTSPServer * server, const gchar * address)
 {
+  GstRTSPServerPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
   g_return_if_fail (address != NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  g_free (server->address);
-  server->address = g_strdup (address);
+  g_free (priv->address);
+  priv->address = g_strdup (address);
   GST_RTSP_SERVER_UNLOCK (server);
 }
 
@@ -266,11 +309,15 @@ gst_rtsp_server_set_address (GstRTSPServer * server, const gchar * address)
 gchar *
 gst_rtsp_server_get_address (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   gchar *result;
+
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  result = g_strdup (server->address);
+  result = g_strdup (priv->address);
   GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
@@ -287,16 +334,19 @@ gst_rtsp_server_get_address (GstRTSPServer * server)
 int
 gst_rtsp_server_get_bound_port (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   GSocketAddress *address;
   int result = -1;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), result);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  if (server->socket == NULL)
+  if (priv->socket == NULL)
     goto out;
 
-  address = g_socket_get_local_address (server->socket, NULL);
+  address = g_socket_get_local_address (priv->socket, NULL);
   result = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (address));
   g_object_unref (address);
 
@@ -320,12 +370,16 @@ out:
 void
 gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
 {
+  GstRTSPServerPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
   g_return_if_fail (service != NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  g_free (server->service);
-  server->service = g_strdup (service);
+  g_free (priv->service);
+  priv->service = g_strdup (service);
   GST_RTSP_SERVER_UNLOCK (server);
 }
 
@@ -340,12 +394,15 @@ gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
 gchar *
 gst_rtsp_server_get_service (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   gchar *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  result = g_strdup (server->service);
+  result = g_strdup (priv->service);
   GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
@@ -364,10 +421,14 @@ gst_rtsp_server_get_service (GstRTSPServer * server)
 void
 gst_rtsp_server_set_backlog (GstRTSPServer * server, gint backlog)
 {
+  GstRTSPServerPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  server->backlog = backlog;
+  priv->backlog = backlog;
   GST_RTSP_SERVER_UNLOCK (server);
 }
 
@@ -382,12 +443,15 @@ gst_rtsp_server_set_backlog (GstRTSPServer * server, gint backlog)
 gint
 gst_rtsp_server_get_backlog (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   gint result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), -1);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  result = server->backlog;
+  result = priv->backlog;
   GST_RTSP_SERVER_UNLOCK (server);
 
   return result;
@@ -404,16 +468,19 @@ void
 gst_rtsp_server_set_session_pool (GstRTSPServer * server,
     GstRTSPSessionPool * pool)
 {
+  GstRTSPServerPrivate *priv;
   GstRTSPSessionPool *old;
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  priv = server->priv;
 
   if (pool)
     g_object_ref (pool);
 
   GST_RTSP_SERVER_LOCK (server);
-  old = server->session_pool;
-  server->session_pool = pool;
+  old = priv->session_pool;
+  priv->session_pool = pool;
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (old)
@@ -432,12 +499,15 @@ gst_rtsp_server_set_session_pool (GstRTSPServer * server,
 GstRTSPSessionPool *
 gst_rtsp_server_get_session_pool (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   GstRTSPSessionPool *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  if ((result = server->session_pool))
+  if ((result = priv->session_pool))
     g_object_ref (result);
   GST_RTSP_SERVER_UNLOCK (server);
 
@@ -455,16 +525,19 @@ void
 gst_rtsp_server_set_mount_points (GstRTSPServer * server,
     GstRTSPMountPoints * mounts)
 {
+  GstRTSPServerPrivate *priv;
   GstRTSPMountPoints *old;
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  priv = server->priv;
 
   if (mounts)
     g_object_ref (mounts);
 
   GST_RTSP_SERVER_LOCK (server);
-  old = server->mount_points;
-  server->mount_points = mounts;
+  old = priv->mount_points;
+  priv->mount_points = mounts;
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (old)
@@ -484,12 +557,15 @@ gst_rtsp_server_set_mount_points (GstRTSPServer * server,
 GstRTSPMountPoints *
 gst_rtsp_server_get_mount_points (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   GstRTSPMountPoints *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  if ((result = server->mount_points))
+  if ((result = priv->mount_points))
     g_object_ref (result);
   GST_RTSP_SERVER_UNLOCK (server);
 
@@ -506,16 +582,19 @@ gst_rtsp_server_get_mount_points (GstRTSPServer * server)
 void
 gst_rtsp_server_set_auth (GstRTSPServer * server, GstRTSPAuth * auth)
 {
+  GstRTSPServerPrivate *priv;
   GstRTSPAuth *old;
 
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
+
+  priv = server->priv;
 
   if (auth)
     g_object_ref (auth);
 
   GST_RTSP_SERVER_LOCK (server);
-  old = server->auth;
-  server->auth = auth;
+  old = priv->auth;
+  priv->auth = auth;
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (old)
@@ -535,12 +614,15 @@ gst_rtsp_server_set_auth (GstRTSPServer * server, GstRTSPAuth * auth)
 GstRTSPAuth *
 gst_rtsp_server_get_auth (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   GstRTSPAuth *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  if ((result = server->auth))
+  if ((result = priv->auth))
     g_object_ref (result);
   GST_RTSP_SERVER_UNLOCK (server);
 
@@ -559,10 +641,14 @@ gst_rtsp_server_get_auth (GstRTSPServer * server)
 void
 gst_rtsp_server_set_max_threads (GstRTSPServer * server, gint max_threads)
 {
+  GstRTSPServerPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_SERVER (server));
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  server->max_threads = max_threads;
+  priv->max_threads = max_threads;
   GST_RTSP_SERVER_UNLOCK (server);
 }
 
@@ -578,12 +664,15 @@ gst_rtsp_server_set_max_threads (GstRTSPServer * server, gint max_threads)
 gint
 gst_rtsp_server_get_max_threads (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv;
   gint res;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), -1);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  res = server->max_threads;
+  res = priv->max_threads;
   GST_RTSP_SERVER_UNLOCK (server);
 
   return res;
@@ -668,6 +757,7 @@ GSocket *
 gst_rtsp_server_create_socket (GstRTSPServer * server,
     GCancellable * cancellable, GError ** error)
 {
+  GstRTSPServerPrivate *priv;
   GSocketConnectable *conn;
   GSocketAddressEnumerator *enumerator;
   GSocket *socket = NULL;
@@ -680,16 +770,18 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
 
+  priv = server->priv;
+
   GST_RTSP_SERVER_LOCK (server);
-  GST_DEBUG_OBJECT (server, "getting address info of %s/%s", server->address,
-      server->service);
+  GST_DEBUG_OBJECT (server, "getting address info of %s/%s", priv->address,
+      priv->service);
 
   /* resolve the server IP address */
-  port = atoi (server->service);
-  if (port != 0 || !strcmp (server->service, "0"))
-    conn = g_network_address_new (server->address, port);
+  port = atoi (priv->service);
+  if (port != 0 || !strcmp (priv->service, "0"))
+    conn = g_network_address_new (priv->address, port);
   else
-    conn = g_network_service_new (server->service, "tcp", server->address);
+    conn = g_network_service_new (priv->service, "tcp", priv->address);
 
   enumerator = g_socket_connectable_enumerate (conn);
   g_object_unref (conn);
@@ -764,13 +856,13 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
   g_socket_set_blocking (socket, FALSE);
 
   /* set listen backlog */
-  g_socket_set_listen_backlog (socket, server->backlog);
+  g_socket_set_listen_backlog (socket, priv->backlog);
 
   if (!g_socket_listen (socket, error))
     goto listen_failed;
 
   GST_DEBUG_OBJECT (server, "listening on server socket %p with queue of %d",
-      socket, server->backlog);
+      socket, priv->backlog);
 
   GST_RTSP_SERVER_UNLOCK (server);
 
@@ -854,13 +946,14 @@ static void
 unmanage_client (GstRTSPClient * client, ClientContext * ctx)
 {
   GstRTSPServer *server = ctx->server;
+  GstRTSPServerPrivate *priv = server->priv;
 
   GST_DEBUG_OBJECT (server, "unmanage client %p", client);
 
   g_object_ref (server);
 
   GST_RTSP_SERVER_LOCK (server);
-  server->clients = g_list_remove (server->clients, ctx);
+  priv->clients = g_list_remove (priv->clients, ctx);
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (ctx->loop)
@@ -877,13 +970,14 @@ static void
 manage_client (GstRTSPServer * server, GstRTSPClient * client)
 {
   ClientContext *ctx;
+  GstRTSPServerPrivate *priv = server->priv;
 
   GST_DEBUG_OBJECT (server, "manage client %p", client);
 
   ctx = g_slice_new0 (ClientContext);
   ctx->server = server;
   ctx->client = client;
-  if (server->max_threads == 0) {
+  if (priv->max_threads == 0) {
     GSource *source;
 
     /* find the context to add the watch */
@@ -899,7 +993,7 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
 
   GST_RTSP_SERVER_LOCK (server);
   g_signal_connect (client, "closed", (GCallback) unmanage_client, ctx);
-  server->clients = g_list_prepend (server->clients, ctx);
+  priv->clients = g_list_prepend (priv->clients, ctx);
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (ctx->loop) {
@@ -913,17 +1007,18 @@ static GstRTSPClient *
 default_create_client (GstRTSPServer * server)
 {
   GstRTSPClient *client;
+  GstRTSPServerPrivate *priv = server->priv;
 
   /* a new client connected, create a session to handle the client. */
   client = gst_rtsp_client_new ();
 
   /* set the session pool that this client should use */
   GST_RTSP_SERVER_LOCK (server);
-  gst_rtsp_client_set_session_pool (client, server->session_pool);
+  gst_rtsp_client_set_session_pool (client, priv->session_pool);
   /* set the mount points that this client should use */
-  gst_rtsp_client_set_mount_points (client, server->mount_points);
+  gst_rtsp_client_set_mount_points (client, priv->mount_points);
   /* set authentication manager */
-  gst_rtsp_client_set_auth (client, server->auth);
+  gst_rtsp_client_set_auth (client, priv->auth);
   GST_RTSP_SERVER_UNLOCK (server);
 
   return client;
@@ -1073,9 +1168,12 @@ accept_failed:
 static void
 watch_destroyed (GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv = server->priv;
+
   GST_DEBUG_OBJECT (server, "source destroyed");
-  g_object_unref (server->socket);
-  server->socket = NULL;
+
+  g_object_unref (priv->socket);
+  priv->socket = NULL;
   g_object_unref (server);
 }
 
@@ -1100,18 +1198,21 @@ GSource *
 gst_rtsp_server_create_source (GstRTSPServer * server,
     GCancellable * cancellable, GError ** error)
 {
+  GstRTSPServerPrivate *priv;
   GSocket *socket, *old;
   GSource *source;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
+
+  priv = server->priv;
 
   socket = gst_rtsp_server_create_socket (server, NULL, error);
   if (socket == NULL)
     goto no_socket;
 
   GST_RTSP_SERVER_LOCK (server);
-  old = server->socket;
-  server->socket = g_object_ref (socket);
+  old = priv->socket;
+  priv->socket = g_object_ref (socket);
   GST_RTSP_SERVER_UNLOCK (server);
 
   if (old)

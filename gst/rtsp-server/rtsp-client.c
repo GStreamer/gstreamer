@@ -24,6 +24,34 @@
 #include "rtsp-sdp.h"
 #include "rtsp-params.h"
 
+#define GST_RTSP_CLIENT_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_CLIENT, GstRTSPClientPrivate))
+
+struct _GstRTSPClientPrivate
+{
+  GMutex lock;
+  GstRTSPConnection *connection;
+  GstRTSPWatch *watch;
+  guint close_seq;
+  gchar *server_ip;
+  gboolean is_ipv6;
+  gboolean use_client_settings;
+
+  GstRTSPClientSendFunc send_func;
+  gpointer send_data;
+  GDestroyNotify send_notify;
+
+  GstRTSPSessionPool *session_pool;
+  GstRTSPMountPoints *mount_points;
+  GstRTSPAuth *auth;
+
+  GstRTSPUrl *uri;
+  GstRTSPMedia *media;
+
+  GList *transports;
+  GList *sessions;
+};
+
 static GMutex tunnels_lock;
 static GHashTable *tunnels;
 
@@ -78,6 +106,8 @@ static void
 gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 {
   GObjectClass *gobject_class;
+
+  g_type_class_add_private (klass, sizeof (GstRTSPClientPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -173,39 +203,50 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
 static void
 gst_rtsp_client_init (GstRTSPClient * client)
 {
-  g_mutex_init (&client->lock);
-  client->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
-  client->close_seq = 0;
+  GstRTSPClientPrivate *priv = GST_RTSP_CLIENT_GET_PRIVATE (client);
+
+  client->priv = priv;
+
+  g_mutex_init (&priv->lock);
+  priv->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
+  priv->close_seq = 0;
+}
+
+static GstRTSPFilterResult
+filter_session (GstRTSPSession * sess, GstRTSPSessionMedia * media,
+    gpointer user_data)
+{
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+
+  gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
+  unlink_session_transports (client, sess, media);
+
+  /* unmanage the media in the session */
+  return GST_RTSP_FILTER_REMOVE;
 }
 
 static void
 client_unlink_session (GstRTSPClient * client, GstRTSPSession * session)
 {
   /* unlink all media managed in this session */
-  while (session->medias) {
-    GstRTSPSessionMedia *media = session->medias->data;
-
-    gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
-    unlink_session_transports (client, session, media);
-    /* unmanage the media in the session. this will modify session->medias */
-    gst_rtsp_session_release_media (session, media);
-  }
+  gst_rtsp_session_filter (session, filter_session, client);
 }
 
 static void
 client_cleanup_sessions (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GList *sessions;
 
   /* remove weak-ref from sessions */
-  for (sessions = client->sessions; sessions; sessions = g_list_next (sessions)) {
+  for (sessions = priv->sessions; sessions; sessions = g_list_next (sessions)) {
     GstRTSPSession *session = (GstRTSPSession *) sessions->data;
     g_object_weak_unref (G_OBJECT (session),
         (GWeakNotify) client_session_finalized, client);
     client_unlink_session (client, session);
   }
-  g_list_free (client->sessions);
-  client->sessions = NULL;
+  g_list_free (priv->sessions);
+  priv->sessions = NULL;
 }
 
 /* A client is finalized when the connection is broken */
@@ -213,35 +254,36 @@ static void
 gst_rtsp_client_finalize (GObject * obj)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (obj);
+  GstRTSPClientPrivate *priv = client->priv;
 
   GST_INFO ("finalize client %p", client);
 
-  if (client->watch)
-    g_source_destroy ((GSource *) client->watch);
+  if (priv->watch)
+    g_source_destroy ((GSource *) priv->watch);
 
-  if (client->send_notify)
-    client->send_notify (client->send_data);
+  if (priv->send_notify)
+    priv->send_notify (priv->send_data);
 
   client_cleanup_sessions (client);
 
-  if (client->connection)
-    gst_rtsp_connection_free (client->connection);
-  if (client->session_pool)
-    g_object_unref (client->session_pool);
-  if (client->mount_points)
-    g_object_unref (client->mount_points);
-  if (client->auth)
-    g_object_unref (client->auth);
+  if (priv->connection)
+    gst_rtsp_connection_free (priv->connection);
+  if (priv->session_pool)
+    g_object_unref (priv->session_pool);
+  if (priv->mount_points)
+    g_object_unref (priv->mount_points);
+  if (priv->auth)
+    g_object_unref (priv->auth);
 
-  if (client->uri)
-    gst_rtsp_url_free (client->uri);
-  if (client->media) {
-    gst_rtsp_media_unprepare (client->media);
-    g_object_unref (client->media);
+  if (priv->uri)
+    gst_rtsp_url_free (priv->uri);
+  if (priv->media) {
+    gst_rtsp_media_unprepare (priv->media);
+    g_object_unref (priv->media);
   }
 
-  g_free (client->server_ip);
-  g_mutex_clear (&client->lock);
+  g_free (priv->server_ip);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_client_parent_class)->finalize (obj);
 }
@@ -311,6 +353,8 @@ static void
 send_response (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPMessage * response, gboolean close)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   gst_rtsp_message_add_header (response, GST_RTSP_HDR_SERVER,
       "GStreamer RTSP server");
 
@@ -330,8 +374,8 @@ send_response (GstRTSPClient * client, GstRTSPSession * session,
   if (close)
     gst_rtsp_message_add_header (response, GST_RTSP_HDR_CONNECTION, "close");
 
-  if (client->send_func)
-    client->send_func (client, response, close, client->send_data);
+  if (priv->send_func)
+    priv->send_func (client, response, close, priv->send_data);
 
   gst_rtsp_message_unset (response);
 }
@@ -380,28 +424,29 @@ compare_uri (const GstRTSPUrl * uri1, const GstRTSPUrl * uri2)
 static GstRTSPMedia *
 find_media (GstRTSPClient * client, GstRTSPClientState * state)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
   GstRTSPAuth *auth;
 
-  if (!compare_uri (client->uri, state->uri)) {
+  if (!compare_uri (priv->uri, state->uri)) {
     /* remove any previously cached values before we try to construct a new
      * media for uri */
-    if (client->uri)
-      gst_rtsp_url_free (client->uri);
-    client->uri = NULL;
-    if (client->media) {
-      gst_rtsp_media_unprepare (client->media);
-      g_object_unref (client->media);
+    if (priv->uri)
+      gst_rtsp_url_free (priv->uri);
+    priv->uri = NULL;
+    if (priv->media) {
+      gst_rtsp_media_unprepare (priv->media);
+      g_object_unref (priv->media);
     }
-    client->media = NULL;
+    priv->media = NULL;
 
-    if (!client->mount_points)
+    if (!priv->mount_points)
       goto no_mount_points;
 
     /* find the factory for the uri first */
     if (!(factory =
-            gst_rtsp_mount_points_find_factory (client->mount_points,
+            gst_rtsp_mount_points_find_factory (priv->mount_points,
                 state->uri)))
       goto no_factory;
 
@@ -423,19 +468,17 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
     g_object_unref (factory);
     factory = NULL;
 
-    /* set ipv6 on the media before preparing */
-    media->is_ipv6 = client->is_ipv6;
     /* prepare the media */
     if (!(gst_rtsp_media_prepare (media)))
       goto no_prepare;
 
     /* now keep track of the uri and the media */
-    client->uri = gst_rtsp_url_copy (state->uri);
-    client->media = media;
+    priv->uri = gst_rtsp_url_copy (state->uri);
+    priv->media = media;
     state->media = media;
   } else {
     /* we have seen this uri before, used cached media */
-    media = client->media;
+    media = priv->media;
     state->media = media;
     GST_INFO ("reusing cached media %p", media);
   }
@@ -486,6 +529,7 @@ no_prepare:
 static gboolean
 do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMessage message = { 0 };
   GstMapInfo map_info;
   guint8 *data;
@@ -499,8 +543,8 @@ do_send_data (GstBuffer * buffer, guint8 channel, GstRTSPClient * client)
 
   gst_rtsp_message_take_body (&message, map_info.data, map_info.size);
 
-  if (client->send_func)
-    client->send_func (client, &message, FALSE, client->send_data);
+  if (priv->send_func)
+    priv->send_func (client, &message, FALSE, priv->send_data);
 
   gst_rtsp_message_steal_body (&message, &data, &usize);
   gst_buffer_unmap (buffer, &map_info);
@@ -514,12 +558,15 @@ static void
 link_transport (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPStreamTransport * trans)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   GST_DEBUG ("client %p: linking transport %p", client, trans);
+
   gst_rtsp_stream_transport_set_callbacks (trans,
       (GstRTSPSendFunc) do_send_data,
       (GstRTSPSendFunc) do_send_data, client, NULL);
 
-  client->transports = g_list_prepend (client->transports, trans);
+  priv->transports = g_list_prepend (priv->transports, trans);
 
   /* make sure our session can't expire */
   gst_rtsp_session_prevent_expire (session);
@@ -529,10 +576,13 @@ static void
 unlink_transport (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPStreamTransport * trans)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   GST_DEBUG ("client %p: unlinking transport %p", client, trans);
+
   gst_rtsp_stream_transport_set_callbacks (trans, NULL, NULL, NULL, NULL);
 
-  client->transports = g_list_remove (client->transports, trans);
+  priv->transports = g_list_remove (priv->transports, trans);
 
   /* our session can now expire */
   gst_rtsp_session_allow_expire (session);
@@ -544,17 +594,18 @@ unlink_session_transports (GstRTSPClient * client, GstRTSPSession * session,
 {
   guint n_streams, i;
 
-  n_streams = gst_rtsp_media_n_streams (media->media);
+  n_streams =
+      gst_rtsp_media_n_streams (gst_rtsp_session_media_get_media (media));
   for (i = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *trans;
-    GstRTSPTransport *tr;
+    const GstRTSPTransport *tr;
 
     /* get the transport, if there is no transport configured, skip this stream */
     trans = gst_rtsp_session_media_get_transport (media, i);
     if (trans == NULL)
       continue;
 
-    tr = trans->transport;
+    tr = gst_rtsp_stream_transport_get_transport (trans);
 
     if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
       /* for TCP, unlink the stream from the TCP connection of the client */
@@ -566,23 +617,25 @@ unlink_session_transports (GstRTSPClient * client, GstRTSPSession * session,
 static void
 close_connection (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   const gchar *tunnelid;
 
   GST_DEBUG ("client %p: closing connection", client);
 
-  if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
+  if ((tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection))) {
     g_mutex_lock (&tunnels_lock);
     /* remove from tunnelids */
     g_hash_table_remove (tunnels, tunnelid);
     g_mutex_unlock (&tunnels_lock);
   }
 
-  gst_rtsp_connection_close (client->connection);
+  gst_rtsp_connection_close (priv->connection);
 }
 
 static gboolean
 handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPSession *session;
   GstRTSPSessionMedia *media;
   GstRTSPStatusCode code;
@@ -605,7 +658,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* remove the session from the watched sessions */
   g_object_weak_unref (G_OBJECT (session),
       (GWeakNotify) client_session_finalized, client);
-  client->sessions = g_list_remove (client->sessions, session);
+  priv->sessions = g_list_remove (priv->sessions, session);
 
   gst_rtsp_session_media_set_state (media, GST_STATE_NULL);
 
@@ -613,7 +666,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
    * are torn down. */
   if (!gst_rtsp_session_release_media (session, media)) {
     /* remove the session */
-    gst_rtsp_session_pool_remove (client->session_pool, session);
+    gst_rtsp_session_pool_remove (priv->session_pool, session);
   }
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -723,6 +776,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPSession *session;
   GstRTSPSessionMedia *media;
   GstRTSPStatusCode code;
+  GstRTSPState rtspstate;
 
   if (!(session = state->session))
     goto no_session;
@@ -734,9 +788,10 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   state->sessmedia = media;
 
+  rtspstate = gst_rtsp_session_media_get_rtsp_state (media);
   /* the session state must be playing or recording */
-  if (media->state != GST_RTSP_STATE_PLAYING &&
-      media->state != GST_RTSP_STATE_RECORDING)
+  if (rtspstate != GST_RTSP_STATE_PLAYING &&
+      rtspstate != GST_RTSP_STATE_RECORDING)
     goto invalid_state;
 
   /* unlink the all TCP callbacks */
@@ -753,7 +808,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   send_response (client, session, state->response, FALSE);
 
   /* the state is now READY */
-  media->state = GST_RTSP_STATE_READY;
+  gst_rtsp_session_media_set_rtsp_state (media, GST_RTSP_STATE_READY);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PAUSE_REQUEST],
       0, state);
@@ -793,6 +848,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   gchar *str;
   GstRTSPTimeRange *range;
   GstRTSPResult res;
+  GstRTSPState rtspstate;
 
   if (!(session = state->session))
     goto no_session;
@@ -805,8 +861,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   state->sessmedia = media;
 
   /* the session state must be playing or ready */
-  if (media->state != GST_RTSP_STATE_PLAYING &&
-      media->state != GST_RTSP_STATE_READY)
+  rtspstate = gst_rtsp_session_media_get_rtsp_state (media);
+  if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
     goto invalid_state;
 
   /* parse the range header if we have one */
@@ -815,7 +871,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (res == GST_RTSP_OK) {
     if (gst_rtsp_range_parse (str, &range) == GST_RTSP_OK) {
       /* we have a range, seek to the position */
-      gst_rtsp_media_seek (media->media, range);
+      gst_rtsp_media_seek (gst_rtsp_session_media_get_media (media), range);
       gst_rtsp_range_free (range);
     }
   }
@@ -823,10 +879,12 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
 
-  n_streams = gst_rtsp_media_n_streams (media->media);
+  n_streams =
+      gst_rtsp_media_n_streams (gst_rtsp_session_media_get_media (media));
   for (i = 0, infocount = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *trans;
-    GstRTSPTransport *tr;
+    GstRTSPStream *stream;
+    const GstRTSPTransport *tr;
     gchar *uristr;
     guint rtptime, seq;
 
@@ -836,14 +894,15 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
       GST_INFO ("stream %d is not configured", i);
       continue;
     }
-    tr = trans->transport;
+    tr = gst_rtsp_stream_transport_get_transport (trans);
 
     if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
       /* for TCP, link the stream to the TCP connection of the client */
       link_transport (client, session, trans);
     }
 
-    if (gst_rtsp_stream_get_rtpinfo (trans->stream, &rtptime, &seq)) {
+    stream = gst_rtsp_stream_transport_get_stream (trans);
+    if (gst_rtsp_stream_get_rtpinfo (stream, &rtptime, &seq)) {
       if (infocount > 0)
         g_string_append (rtpinfo, ", ");
 
@@ -872,7 +931,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   }
 
   /* add the range */
-  str = gst_rtsp_media_get_range_string (media->media, TRUE);
+  str =
+      gst_rtsp_media_get_range_string (gst_rtsp_session_media_get_media (media),
+      TRUE);
   gst_rtsp_message_take_header (state->response, GST_RTSP_HDR_RANGE, str);
 
   send_response (client, session, state->response, FALSE);
@@ -880,7 +941,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   /* start playing after sending the request */
   gst_rtsp_session_media_set_state (media, GST_STATE_PLAYING);
 
-  media->state = GST_RTSP_STATE_PLAYING;
+  gst_rtsp_session_media_set_rtsp_state (media, GST_RTSP_STATE_PLAYING);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_PLAY_REQUEST],
       0, state);
@@ -1001,9 +1062,11 @@ static gboolean
 configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
     GstRTSPTransport * ct)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    if (ct->destination == NULL || !client->use_client_settings) {
+    if (ct->destination == NULL || !priv->use_client_settings) {
       GstRTSPAddress *addr;
 
       addr = gst_rtsp_stream_get_address (state->stream);
@@ -1019,7 +1082,7 @@ configure_client_transport (GstRTSPClient * client, GstRTSPClientState * state,
   } else {
     GstRTSPUrl *url;
 
-    url = gst_rtsp_connection_get_url (client->connection);
+    url = gst_rtsp_connection_get_url (priv->connection);
     g_free (ct->destination);
     ct->destination = g_strdup (url->host);
 
@@ -1057,7 +1120,7 @@ make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
   switch (st->lower_transport) {
     case GST_RTSP_LOWER_TRANS_UDP:
       st->client_port = ct->client_port;
-      st->server_port = state->stream->server_port;
+      gst_rtsp_stream_get_server_port (state->stream, &st->server_port);
       break;
     case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       st->port = ct->port;
@@ -1070,8 +1133,7 @@ make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
       break;
   }
 
-  if (state->stream->session)
-    g_object_get (state->stream->session, "internal-ssrc", &st->ssrc, NULL);
+  gst_rtsp_stream_get_ssrc (state->stream, &st->ssrc);
 
   return st;
 }
@@ -1079,6 +1141,7 @@ make_server_transport (GstRTSPClient * client, GstRTSPClientState * state,
 static gboolean
 handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPResult res;
   GstRTSPUrl *uri;
   gchar *transport;
@@ -1092,6 +1155,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMedia *media;
   GstRTSPStream *stream;
+  GstRTSPState rtspstate;
 
   uri = state->uri;
 
@@ -1130,7 +1194,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
 
   /* we create the session after parsing stuff so that we don't make
    * a session for malformed requests */
-  if (client->session_pool == NULL)
+  if (priv->session_pool == NULL)
     goto no_pool;
 
   session = state->session;
@@ -1143,7 +1207,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   } else {
     /* create a session if this fails we probably reached our session limit or
      * something. */
-    if (!(session = gst_rtsp_session_pool_create (client->session_pool)))
+    if (!(session = gst_rtsp_session_pool_create (priv->session_pool)))
       goto service_unavailable;
 
     state->session = session;
@@ -1166,7 +1230,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
     goto not_found;
 
   state->sessmedia = sessmedia;
-  state->media = media = sessmedia->media;
+  state->media = media = gst_rtsp_session_media_get_media (sessmedia);
 
   /* now get the stream */
   stream = gst_rtsp_media_get_stream (media, streamid);
@@ -1207,14 +1271,15 @@ handle_setup_request (GstRTSPClient * client, GstRTSPClientState * state)
   send_response (client, session, state->response, FALSE);
 
   /* update the state */
-  switch (sessmedia->state) {
+  rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
+  switch (rtspstate) {
     case GST_RTSP_STATE_PLAYING:
     case GST_RTSP_STATE_RECORDING:
     case GST_RTSP_STATE_READY:
       /* no state change */
       break;
     default:
-      sessmedia->state = GST_RTSP_STATE_READY;
+      gst_rtsp_session_media_set_rtsp_state (sessmedia, GST_RTSP_STATE_READY);
       break;
   }
   g_object_unref (session);
@@ -1287,6 +1352,7 @@ service_unavailable:
 static GstSDPMessage *
 create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstSDPMessage *sdp;
   GstSDPInfo info;
   const gchar *proto;
@@ -1296,13 +1362,13 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   /* some standard things first */
   gst_sdp_message_set_version (sdp, "0");
 
-  if (client->is_ipv6)
+  if (priv->is_ipv6)
     proto = "IP6";
   else
     proto = "IP4";
 
   gst_sdp_message_set_origin (sdp, "-", "1188340656180883", "1", "IN", proto,
-      client->server_ip);
+      priv->server_ip);
 
   gst_sdp_message_set_session_name (sdp, "Session streamed with GStreamer");
   gst_sdp_message_set_information (sdp, "rtsp-server");
@@ -1312,7 +1378,7 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   gst_sdp_message_add_attribute (sdp, "control", "*");
 
   info.server_proto = proto;
-  info.server_ip = g_strdup (client->server_ip);
+  info.server_ip = g_strdup (priv->server_ip);
 
   /* create an SDP for the media object */
   if (!gst_rtsp_sdp_from_media (sdp, &info, media))
@@ -1484,13 +1550,15 @@ sanitize_uri (GstRTSPUrl * uri)
 static void
 client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   GST_INFO ("client %p: session %p finished", client, session);
 
   /* unlink all media managed in this session */
   client_unlink_session (client, session);
 
   /* remove the session */
-  if (!(client->sessions = g_list_remove (client->sessions, session))) {
+  if (!(priv->sessions = g_list_remove (priv->sessions, session))) {
     GST_INFO ("client %p: all sessions finalized, close the connection",
         client);
     close_connection (client);
@@ -1500,9 +1568,10 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
 static void
 client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GList *walk;
 
-  for (walk = client->sessions; walk; walk = g_list_next (walk)) {
+  for (walk = priv->sessions; walk; walk = g_list_next (walk)) {
     GstRTSPSession *msession = (GstRTSPSession *) walk->data;
 
     /* we already know about this session */
@@ -1514,7 +1583,7 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 
   g_object_weak_ref (G_OBJECT (session), (GWeakNotify) client_session_finalized,
       client);
-  client->sessions = g_list_prepend (client->sessions, session);
+  priv->sessions = g_list_prepend (priv->sessions, session);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_NEW_SESSION], 0,
       session);
@@ -1523,6 +1592,7 @@ client_watch_session (GstRTSPClient * client, GstRTSPSession * session)
 static void
 handle_request (GstRTSPClient * client, GstRTSPMessage * request)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMethod method;
   const gchar *uristr;
   GstRTSPUrl *uri = NULL;
@@ -1557,11 +1627,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   /* get the session if there is any */
   res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);
   if (res == GST_RTSP_OK) {
-    if (client->session_pool == NULL)
+    if (priv->session_pool == NULL)
       goto no_pool;
 
     /* we had a session in the request, find it again */
-    if (!(session = gst_rtsp_session_pool_find (client->session_pool, sessid)))
+    if (!(session = gst_rtsp_session_pool_find (priv->session_pool, sessid)))
       goto session_not_found;
 
     /* we add the session to the client list of watched sessions. When a session
@@ -1575,8 +1645,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.uri = uri;
   state.session = session;
 
-  if (client->auth) {
-    if (!gst_rtsp_auth_check (client->auth, client, 0, &state))
+  if (priv->auth) {
+    if (!gst_rtsp_auth_check (priv->auth, client, 0, &state))
       goto not_authorized;
   }
 
@@ -1651,7 +1721,7 @@ session_not_found:
 not_authorized:
   {
     GST_ERROR ("client %p: not allowed", client);
-    handle_unauthorized_request (client, client->auth, &state);
+    handle_unauthorized_request (client, priv->auth, &state);
     goto done;
   }
 not_implemented:
@@ -1665,6 +1735,7 @@ not_implemented:
 static void
 handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPResult res;
   guint8 channel;
   GList *walk;
@@ -1683,16 +1754,15 @@ handle_data (GstRTSPClient * client, GstRTSPMessage * message)
   buffer = gst_buffer_new_wrapped (data, size);
 
   handled = FALSE;
-  for (walk = client->transports; walk; walk = g_list_next (walk)) {
+  for (walk = priv->transports; walk; walk = g_list_next (walk)) {
     GstRTSPStreamTransport *trans;
     GstRTSPStream *stream;
-    GstRTSPTransport *tr;
+    const GstRTSPTransport *tr;
 
     trans = walk->data;
 
-    /* we only add clients with a transport to the list */
-    tr = trans->transport;
-    stream = trans->stream;
+    tr = gst_rtsp_stream_transport_get_transport (trans);
+    stream = gst_rtsp_stream_transport_get_stream (trans);
 
     /* check for TCP transport */
     if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
@@ -1726,16 +1796,19 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
     GstRTSPSessionPool * pool)
 {
   GstRTSPSessionPool *old;
+  GstRTSPClientPrivate *priv;
 
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  priv = client->priv;
 
   if (pool)
     g_object_ref (pool);
 
-  g_mutex_lock (&client->lock);
-  old = client->session_pool;
-  client->session_pool = pool;
-  g_mutex_unlock (&client->lock);
+  g_mutex_lock (&priv->lock);
+  old = priv->session_pool;
+  priv->session_pool = pool;
+  g_mutex_unlock (&priv->lock);
 
   if (old)
     g_object_unref (old);
@@ -1752,14 +1825,17 @@ gst_rtsp_client_set_session_pool (GstRTSPClient * client,
 GstRTSPSessionPool *
 gst_rtsp_client_get_session_pool (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv;
   GstRTSPSessionPool *result;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
 
-  g_mutex_lock (&client->lock);
-  if ((result = client->session_pool))
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->session_pool))
     g_object_ref (result);
-  g_mutex_unlock (&client->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -1777,17 +1853,20 @@ void
 gst_rtsp_client_set_mount_points (GstRTSPClient * client,
     GstRTSPMountPoints * mounts)
 {
+  GstRTSPClientPrivate *priv;
   GstRTSPMountPoints *old;
 
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
+  priv = client->priv;
+
   if (mounts)
     g_object_ref (mounts);
 
-  g_mutex_lock (&client->lock);
-  old = client->mount_points;
-  client->mount_points = mounts;
-  g_mutex_unlock (&client->lock);
+  g_mutex_lock (&priv->lock);
+  old = priv->mount_points;
+  priv->mount_points = mounts;
+  g_mutex_unlock (&priv->lock);
 
   if (old)
     g_object_unref (old);
@@ -1804,14 +1883,17 @@ gst_rtsp_client_set_mount_points (GstRTSPClient * client,
 GstRTSPMountPoints *
 gst_rtsp_client_get_mount_points (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv;
   GstRTSPMountPoints *result;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
 
-  g_mutex_lock (&client->lock);
-  if ((result = client->mount_points))
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->mount_points))
     g_object_ref (result);
-  g_mutex_unlock (&client->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -1829,11 +1911,15 @@ void
 gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
     gboolean use_client_settings)
 {
+  GstRTSPClientPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
-  g_mutex_lock (&client->lock);
-  client->use_client_settings = use_client_settings;
-  g_mutex_unlock (&client->lock);
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->use_client_settings = use_client_settings;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -1846,13 +1932,16 @@ gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
 gboolean
 gst_rtsp_client_get_use_client_settings (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
 
-  g_mutex_lock (&client->lock);
-  res = client->use_client_settings;
-  g_mutex_unlock (&client->lock);
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->use_client_settings;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -1867,17 +1956,20 @@ gst_rtsp_client_get_use_client_settings (GstRTSPClient * client)
 void
 gst_rtsp_client_set_auth (GstRTSPClient * client, GstRTSPAuth * auth)
 {
+  GstRTSPClientPrivate *priv;
   GstRTSPAuth *old;
 
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
+  priv = client->priv;
+
   if (auth)
     g_object_ref (auth);
 
-  g_mutex_lock (&client->lock);
-  old = client->auth;
-  client->auth = auth;
-  g_mutex_unlock (&client->lock);
+  g_mutex_lock (&priv->lock);
+  old = priv->auth;
+  priv->auth = auth;
+  g_mutex_unlock (&priv->lock);
 
   if (old)
     g_object_unref (old);
@@ -1896,14 +1988,17 @@ gst_rtsp_client_set_auth (GstRTSPClient * client, GstRTSPAuth * auth)
 GstRTSPAuth *
 gst_rtsp_client_get_auth (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv;
   GstRTSPAuth *result;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
 
-  g_mutex_lock (&client->lock);
-  if ((result = client->auth))
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->auth))
     g_object_ref (result);
-  g_mutex_unlock (&client->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -1923,18 +2018,21 @@ void
 gst_rtsp_client_set_send_func (GstRTSPClient * client,
     GstRTSPClientSendFunc func, gpointer user_data, GDestroyNotify notify)
 {
+  GstRTSPClientPrivate *priv;
   GDestroyNotify old_notify;
   gpointer old_data;
 
   g_return_if_fail (GST_IS_RTSP_CLIENT (client));
 
-  g_mutex_lock (&client->lock);
-  client->send_func = func;
-  old_notify = client->send_notify;
-  old_data = client->send_data;
-  client->send_notify = notify;
-  client->send_data = user_data;
-  g_mutex_unlock (&client->lock);
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->send_func = func;
+  old_notify = priv->send_notify;
+  old_data = priv->send_data;
+  priv->send_notify = notify;
+  priv->send_data = user_data;
+  g_mutex_unlock (&priv->lock);
 
   if (old_notify)
     old_notify (old_data);
@@ -1975,10 +2073,12 @@ static GstRTSPResult
 do_send_message (GstRTSPClient * client, GstRTSPMessage * message,
     gboolean close, gpointer user_data)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   /* send the response and store the seq number so we can wait until it's
    * written to the client to close the connection */
-  return gst_rtsp_watch_send_message (client->watch, message, close ?
-      &client->close_seq : NULL);
+  return gst_rtsp_watch_send_message (priv->watch, message, close ?
+      &priv->close_seq : NULL);
 }
 
 static GstRTSPResult
@@ -1992,9 +2092,10 @@ static GstRTSPResult
 message_sent (GstRTSPWatch * watch, guint cseq, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClientPrivate *priv = client->priv;
 
-  if (client->close_seq && client->close_seq == cseq) {
-    client->close_seq = 0;
+  if (priv->close_seq && priv->close_seq == cseq) {
+    priv->close_seq = 0;
     close_connection (client);
   }
 
@@ -2005,11 +2106,12 @@ static GstRTSPResult
 closed (GstRTSPWatch * watch, gpointer user_data)
 {
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClientPrivate *priv = client->priv;
   const gchar *tunnelid;
 
   GST_INFO ("client %p: connection closed", client);
 
-  if ((tunnelid = gst_rtsp_connection_get_tunnelid (client->connection))) {
+  if ((tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection))) {
     g_mutex_lock (&tunnels_lock);
     /* remove from tunnelids */
     g_hash_table_remove (tunnels, tunnelid);
@@ -2051,10 +2153,11 @@ error_full (GstRTSPWatch * watch, GstRTSPResult result,
 static gboolean
 remember_tunnel (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   const gchar *tunnelid;
 
   /* store client in the pending tunnels */
-  tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
+  tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection);
   if (tunnelid == NULL)
     goto no_tunnelid;
 
@@ -2088,12 +2191,11 @@ tunnel_existed:
 static GstRTSPStatusCode
 tunnel_start (GstRTSPWatch * watch, gpointer user_data)
 {
-  GstRTSPClient *client;
-
-  client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClientPrivate *priv = client->priv;
 
   GST_INFO ("client %p: tunnel start (connection %p)", client,
-      client->connection);
+      priv->connection);
 
   if (!remember_tunnel (client))
     goto tunnel_error;
@@ -2111,12 +2213,11 @@ tunnel_error:
 static GstRTSPResult
 tunnel_lost (GstRTSPWatch * watch, gpointer user_data)
 {
-  GstRTSPClient *client;
-
-  client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClientPrivate *priv = client->priv;
 
   GST_WARNING ("client %p: tunnel lost (connection %p)", client,
-      client->connection);
+      priv->connection);
 
   /* ignore error, it'll only be a problem when the client does a POST again */
   remember_tunnel (client);
@@ -2129,12 +2230,14 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
 {
   const gchar *tunnelid;
   GstRTSPClient *client = GST_RTSP_CLIENT (user_data);
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPClient *oclient;
+  GstRTSPClientPrivate *opriv;
 
   GST_INFO ("client %p: tunnel complete", client);
 
   /* find previous tunnel */
-  tunnelid = gst_rtsp_connection_get_tunnelid (client->connection);
+  tunnelid = gst_rtsp_connection_get_tunnelid (priv->connection);
   if (tunnelid == NULL)
     goto no_tunnelid;
 
@@ -2147,16 +2250,18 @@ tunnel_complete (GstRTSPWatch * watch, gpointer user_data)
   g_object_ref (oclient);
   g_hash_table_remove (tunnels, tunnelid);
 
-  if (oclient->watch == NULL)
+  opriv = oclient->priv;
+
+  if (opriv->watch == NULL)
     goto tunnel_closed;
   g_mutex_unlock (&tunnels_lock);
 
   GST_INFO ("client %p: found tunnel %p (old %p, new %p)", client, oclient,
-      oclient->connection, client->connection);
+      opriv->connection, priv->connection);
 
   /* merge the tunnels into the first client */
-  gst_rtsp_connection_do_tunnel (oclient->connection, client->connection);
-  gst_rtsp_watch_reset (oclient->watch);
+  gst_rtsp_connection_do_tunnel (opriv->connection, priv->connection);
+  gst_rtsp_watch_reset (opriv->watch);
   g_object_unref (oclient);
 
   return GST_RTSP_OK;
@@ -2196,8 +2301,10 @@ static GstRTSPWatchFuncs watch_funcs = {
 static void
 client_watch_notify (GstRTSPClient * client)
 {
+  GstRTSPClientPrivate *priv = client->priv;
+
   GST_INFO ("client %p: watch destroyed", client);
-  client->watch = NULL;
+  priv->watch = NULL;
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_CLOSED], 0, NULL);
   g_object_unref (client);
 }
@@ -2206,36 +2313,37 @@ static gboolean
 setup_client (GstRTSPClient * client, GSocket * socket,
     GstRTSPConnection * conn, GError ** error)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GSocket *read_socket;
   GSocketAddress *address;
   GstRTSPUrl *url;
 
   read_socket = gst_rtsp_connection_get_read_socket (conn);
-  client->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
+  priv->is_ipv6 = g_socket_get_family (socket) == G_SOCKET_FAMILY_IPV6;
 
   if (!(address = g_socket_get_remote_address (read_socket, error)))
     goto no_address;
 
-  g_free (client->server_ip);
+  g_free (priv->server_ip);
   /* keep the original ip that the client connected to */
   if (G_IS_INET_SOCKET_ADDRESS (address)) {
     GInetAddress *iaddr;
 
     iaddr = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (address));
 
-    client->server_ip = g_inet_address_to_string (iaddr);
+    priv->server_ip = g_inet_address_to_string (iaddr);
     g_object_unref (address);
   } else {
-    client->server_ip = g_strdup ("unknown");
+    priv->server_ip = g_strdup ("unknown");
   }
 
   GST_INFO ("client %p connected to server ip %s, ipv6 = %d", client,
-      client->server_ip, client->is_ipv6);
+      priv->server_ip, priv->is_ipv6);
 
   url = gst_rtsp_connection_get_url (conn);
   GST_INFO ("added new client %p ip %s:%d", client, url->host, url->port);
 
-  client->connection = conn;
+  priv->connection = conn;
 
   return TRUE;
 
@@ -2343,19 +2451,21 @@ accept_failed:
 guint
 gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 {
+  GstRTSPClientPrivate *priv;
   guint res;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), 0);
-  g_return_val_if_fail (client->watch == NULL, 0);
+  priv = client->priv;
+  g_return_val_if_fail (priv->watch == NULL, 0);
 
   /* create watch for the connection and attach */
-  client->watch = gst_rtsp_watch_new (client->connection, &watch_funcs,
+  priv->watch = gst_rtsp_watch_new (priv->connection, &watch_funcs,
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
   gst_rtsp_client_set_send_func (client, do_send_message, NULL, NULL);
 
   GST_INFO ("attaching to context %p", context);
-  res = gst_rtsp_watch_attach (client->watch, context);
-  gst_rtsp_watch_unref (client->watch);
+  res = gst_rtsp_watch_attach (priv->watch, context);
+  gst_rtsp_watch_unref (priv->watch);
 
   return res;
 }

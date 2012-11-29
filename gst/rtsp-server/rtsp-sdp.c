@@ -38,12 +38,12 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
   guint i, n_streams;
   gchar *rangestr;
 
-  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
-    goto not_prepared;
-
   n_streams = gst_rtsp_media_n_streams (media);
 
   rangestr = gst_rtsp_media_get_range_string (media, FALSE);
+  if (rangestr == NULL)
+    goto not_prepared;
+
   gst_sdp_message_add_attribute (sdp, "range", rangestr);
   g_free (rangestr);
 
@@ -57,16 +57,19 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     guint n_fields, j;
     gboolean first;
     GString *fmtp;
+    GstCaps *caps;
 
     stream = gst_rtsp_media_get_stream (media, i);
+    caps = gst_rtsp_stream_get_caps (stream);
 
-    if (stream->caps == NULL) {
+    if (caps == NULL) {
       g_warning ("ignoring stream %d without media type", i);
       continue;
     }
 
-    s = gst_caps_get_structure (stream->caps, 0);
+    s = gst_caps_get_structure (caps, 0);
     if (s == NULL) {
+      gst_caps_unref (caps);
       g_warning ("ignoring stream %d without media type", i);
       continue;
     }
@@ -152,6 +155,7 @@ gst_rtsp_sdp_from_media (GstSDPMessage * sdp, GstSDPInfo * info,
     }
     gst_sdp_message_add_media (sdp, smedia);
     gst_sdp_media_free (smedia);
+    gst_caps_unref (caps);
   }
 
   return TRUE;

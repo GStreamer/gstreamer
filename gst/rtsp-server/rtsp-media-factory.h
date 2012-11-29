@@ -41,24 +41,11 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPMediaFactory GstRTSPMediaFactory;
 typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
-
-#define GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)       (&(GST_RTSP_MEDIA_FACTORY_CAST(f)->lock))
-#define GST_RTSP_MEDIA_FACTORY_LOCK(f)           (g_mutex_lock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
-#define GST_RTSP_MEDIA_FACTORY_UNLOCK(f)         (g_mutex_unlock(GST_RTSP_MEDIA_FACTORY_GET_LOCK(f)))
+typedef struct _GstRTSPMediaFactoryPrivate GstRTSPMediaFactoryPrivate;
 
 /**
  * GstRTSPMediaFactory:
  * @parent: the parent GObject
- * @lock: mutex protecting the datastructure.
- * @launch: the launch description
- * @shared: if media from this factory can be shared between clients
- * @eos_shutdown: if shutdown should first send EOS to the pipeline
- * @protocols: allowed transport protocols
- * @auth: the authentication manager
- * @buffer_size: the kernel udp buffer size
- * @pool: the multicast address pool to use
- * @medias_lock: mutex protecting the medias.
- * @medias: hashtable of shared media
  *
  * The definition and logic for constructing the pipeline for a media. The media
  * can contain multiple streams like audio and video.
@@ -66,17 +53,7 @@ typedef struct _GstRTSPMediaFactoryClass GstRTSPMediaFactoryClass;
 struct _GstRTSPMediaFactory {
   GObject            parent;
 
-  GMutex             lock;
-  gchar             *launch;
-  gboolean           shared;
-  gboolean           eos_shutdown;
-  GstRTSPLowerTrans  protocols;
-  GstRTSPAuth       *auth;
-  guint              buffer_size;
-  GstRTSPAddressPool *pool;
-
-  GMutex             medias_lock;
-  GHashTable        *medias;
+  GstRTSPMediaFactoryPrivate *priv;
 };
 
 /**

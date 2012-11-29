@@ -93,7 +93,7 @@ GST_START_TEST (test_media)
 {
   GstRTSPMedia *media;
 
-  media = gst_rtsp_media_new ();
+  media = gst_rtsp_media_new (NULL);
   fail_unless (GST_IS_RTSP_MEDIA (media));
   g_object_unref (media);
 }

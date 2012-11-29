@@ -39,6 +39,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPMountPoints GstRTSPMountPoints;
 typedef struct _GstRTSPMountPointsClass GstRTSPMountPointsClass;
+typedef struct _GstRTSPMountPointsPrivate GstRTSPMountPointsPrivate;
 
 /**
  * GstRTSPMountPoints:
@@ -50,8 +51,7 @@ typedef struct _GstRTSPMountPointsClass GstRTSPMountPointsClass;
 struct _GstRTSPMountPoints {
   GObject       parent;
 
-  GMutex        lock;
-  GHashTable   *mounts;
+  GstRTSPMountPointsPrivate *priv;
 };
 
 /**

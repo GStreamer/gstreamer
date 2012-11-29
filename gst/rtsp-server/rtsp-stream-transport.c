@@ -20,10 +20,30 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <gst/app/gstappsrc.h>
-#include <gst/app/gstappsink.h>
-
 #include "rtsp-stream-transport.h"
+
+#define GST_RTSP_STREAM_TRANSPORT_GET_PRIVATE(obj)  \
+       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_STREAM_TRANSPORT, GstRTSPStreamTransportPrivate))
+
+struct _GstRTSPStreamTransportPrivate
+{
+  GstRTSPStream *stream;
+
+  GstRTSPSendFunc send_rtp;
+  GstRTSPSendFunc send_rtcp;
+  gpointer user_data;
+  GDestroyNotify notify;
+
+  GstRTSPKeepAliveFunc keep_alive;
+  gpointer ka_user_data;
+  GDestroyNotify ka_notify;
+  gboolean active;
+  gboolean timed_out;
+
+  GstRTSPTransport *transport;
+
+  GObject *rtpsource;
+};
 
 enum
 {
@@ -44,6 +64,8 @@ gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (GstRTSPStreamTransportPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_stream_transport_finalize;
@@ -55,25 +77,31 @@ gst_rtsp_stream_transport_class_init (GstRTSPStreamTransportClass * klass)
 static void
 gst_rtsp_stream_transport_init (GstRTSPStreamTransport * trans)
 {
+  GstRTSPStreamTransportPrivate *priv =
+      GST_RTSP_STREAM_TRANSPORT_GET_PRIVATE (trans);
+
+  trans->priv = priv;
 }
 
 static void
 gst_rtsp_stream_transport_finalize (GObject * obj)
 {
+  GstRTSPStreamTransportPrivate *priv;
   GstRTSPStreamTransport *trans;
 
   trans = GST_RTSP_STREAM_TRANSPORT (obj);
+  priv = trans->priv;
 
   /* remove callbacks now */
   gst_rtsp_stream_transport_set_callbacks (trans, NULL, NULL, NULL, NULL);
   gst_rtsp_stream_transport_set_keepalive (trans, NULL, NULL, NULL);
 
-  if (trans->transport)
-    gst_rtsp_transport_free (trans->transport);
+  if (priv->transport)
+    gst_rtsp_transport_free (priv->transport);
 
 #if 0
-  if (trans->rtpsource)
-    g_object_set_qdata (trans->rtpsource, ssrc_stream_map_key, NULL);
+  if (priv->rtpsource)
+    g_object_set_qdata (priv->rtpsource, ssrc_stream_map_key, NULL);
 #endif
 
   G_OBJECT_CLASS (gst_rtsp_stream_transport_parent_class)->finalize (obj);
@@ -92,16 +120,34 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
 GstRTSPStreamTransport *
 gst_rtsp_stream_transport_new (GstRTSPStream * stream, GstRTSPTransport * tr)
 {
+  GstRTSPStreamTransportPrivate *priv;
   GstRTSPStreamTransport *trans;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
   g_return_val_if_fail (tr != NULL, NULL);
 
   trans = g_object_new (GST_TYPE_RTSP_STREAM_TRANSPORT, NULL);
-  trans->stream = stream;
-  trans->transport = tr;
+  priv = trans->priv;
+  priv->stream = stream;
+  priv->transport = tr;
 
   return trans;
+}
+
+/**
+ * gst_rtsp_stream_transport_get_stream:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Get the #GstRTSPStream used when constructing @trans.
+ *
+ * Returns: (transfer none): the stream used when constructing @trans.
+ */
+GstRTSPStream *
+gst_rtsp_stream_transport_get_stream (GstRTSPStreamTransport * trans)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), NULL);
+
+  return trans->priv->stream;
 }
 
 /**
@@ -120,12 +166,18 @@ gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport * trans,
     GstRTSPSendFunc send_rtp, GstRTSPSendFunc send_rtcp,
     gpointer user_data, GDestroyNotify notify)
 {
-  trans->send_rtp = send_rtp;
-  trans->send_rtcp = send_rtcp;
-  if (trans->notify)
-    trans->notify (trans->user_data);
-  trans->user_data = user_data;
-  trans->notify = notify;
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  priv->send_rtp = send_rtp;
+  priv->send_rtcp = send_rtcp;
+  if (priv->notify)
+    priv->notify (priv->user_data);
+  priv->user_data = user_data;
+  priv->notify = notify;
 }
 
 /**
@@ -142,11 +194,17 @@ void
 gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamTransport * trans,
     GstRTSPKeepAliveFunc keep_alive, gpointer user_data, GDestroyNotify notify)
 {
-  trans->keep_alive = keep_alive;
-  if (trans->ka_notify)
-    trans->ka_notify (trans->ka_user_data);
-  trans->ka_user_data = user_data;
-  trans->ka_notify = notify;
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  priv->keep_alive = keep_alive;
+  if (priv->ka_notify)
+    priv->ka_notify (priv->ka_user_data);
+  priv->ka_user_data = user_data;
+  priv->ka_notify = notify;
 }
 
 
@@ -162,13 +220,100 @@ void
 gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport * trans,
     GstRTSPTransport * tr)
 {
+  GstRTSPStreamTransportPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
   g_return_if_fail (tr != NULL);
 
+  priv = trans->priv;
+
   /* keep track of the transports in the stream. */
-  if (trans->transport)
-    gst_rtsp_transport_free (trans->transport);
-  trans->transport = tr;
+  if (priv->transport)
+    gst_rtsp_transport_free (priv->transport);
+  priv->transport = tr;
+}
+
+/**
+ * gst_rtsp_stream_transport_get_transport:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Get the transport configured in @trans.
+ *
+ * Returns: (transfer none): the transport configured in @trans. It remains
+ *     valid for as long as @trans is valid.
+ */
+const GstRTSPTransport *
+gst_rtsp_stream_transport_get_transport (GstRTSPStreamTransport * trans)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), NULL);
+
+  return trans->priv->transport;
+}
+
+/**
+ * gst_rtsp_stream_transport_set_active:
+ * @trans: a #GstRTSPStreamTransport
+ * @active: new state of @trans
+ *
+ * Activate or deactivate datatransfer configured in @trans.
+ *
+ * Returns: %TRUE when the state was changed.
+ */
+gboolean
+gst_rtsp_stream_transport_set_active (GstRTSPStreamTransport * trans,
+    gboolean active)
+{
+  GstRTSPStreamTransportPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), FALSE);
+
+  priv = trans->priv;
+
+  if (priv->active == active)
+    return FALSE;
+
+  if (active)
+    res = gst_rtsp_stream_add_transport (priv->stream, trans);
+  else
+    res = gst_rtsp_stream_remove_transport (priv->stream, trans);
+
+  if (res)
+    priv->active = active;
+
+  return res;
+}
+
+/**
+ * gst_rtsp_stream_transport_set_timed_out:
+ * @trans: a #GstRTSPStreamTransport
+ * @timedout: timed out value
+ *
+ * Set the timed out state of @trans to @timedout
+ */
+void
+gst_rtsp_stream_transport_set_timed_out (GstRTSPStreamTransport * trans,
+    gboolean timedout)
+{
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  trans->priv->timed_out = timedout;
+}
+
+/**
+ * gst_rtsp_stream_transport_is_timed_out:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Check if @trans is timed out.
+ *
+ * Returns: %TRUE if @trans timed out.
+ */
+gboolean
+gst_rtsp_stream_transport_is_timed_out (GstRTSPStreamTransport * trans)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), FALSE);
+
+  return trans->priv->timed_out;
 }
 
 /**
@@ -184,12 +329,15 @@ gboolean
 gst_rtsp_stream_transport_send_rtp (GstRTSPStreamTransport * trans,
     GstBuffer * buffer)
 {
+  GstRTSPStreamTransportPrivate *priv;
   gboolean res = FALSE;
 
-  if (trans->send_rtp)
+  priv = trans->priv;
+
+  if (priv->send_rtp)
     res =
-        trans->send_rtp (buffer, trans->transport->interleaved.min,
-        trans->user_data);
+        priv->send_rtp (buffer, priv->transport->interleaved.min,
+        priv->user_data);
 
   return res;
 }
@@ -207,12 +355,15 @@ gboolean
 gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
     GstBuffer * buffer)
 {
+  GstRTSPStreamTransportPrivate *priv;
   gboolean res = FALSE;
 
-  if (trans->send_rtcp)
+  priv = trans->priv;
+
+  if (priv->send_rtcp)
     res =
-        trans->send_rtcp (buffer, trans->transport->interleaved.max,
-        trans->user_data);
+        priv->send_rtcp (buffer, priv->transport->interleaved.max,
+        priv->user_data);
 
   return res;
 }
@@ -226,6 +377,10 @@ gst_rtsp_stream_transport_send_rtcp (GstRTSPStreamTransport * trans,
 void
 gst_rtsp_stream_transport_keep_alive (GstRTSPStreamTransport * trans)
 {
-  if (trans->keep_alive)
-    trans->keep_alive (trans->ka_user_data);
+  GstRTSPStreamTransportPrivate *priv;
+
+  priv = trans->priv;
+
+  if (priv->keep_alive)
+    priv->keep_alive (priv->ka_user_data);
 }

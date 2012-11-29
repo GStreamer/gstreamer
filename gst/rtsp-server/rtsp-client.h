@@ -28,6 +28,7 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPClientClass GstRTSPClientClass;
 typedef struct _GstRTSPClientState GstRTSPClientState;
+typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 
 #include "rtsp-media.h"
 #include "rtsp-mount-points.h"
@@ -90,51 +91,13 @@ typedef gboolean (*GstRTSPClientSendFunc)      (GstRTSPClient *client,
 
 /**
  * GstRTSPClient:
- * @lock: lock protecting the client object
- * @connection: the connection object handling the client request.
- * @watch: watch for the connection
- * @close_seq: sequence number of message with close header
- * @server_ip: ip address of the server
- * @is_ipv6: if we are IPv6
- * @use_client_settings: whether to allow client transport settings for multicast
- * @send_func: a #GstRTSPClientSendFunc called when an RTSP message needs to be
- *             sent to the client.
- * @send_data: user data passed to @send_func
- * @send_notify: notify called when @send_data is no longer used.
- * @session_pool: handle to the session pool used by the client.
- * @mount_points: handle to the mount points used by the client.
- * @auth: authorization object
- * @uri: cached uri
- * @media: cached media
- * @transports: a list of #GstRTSPStreamTransport using @connection.
- * @sessions: a list of sessions managed by @connection.
  *
  * The client structure.
  */
 struct _GstRTSPClient {
   GObject       parent;
 
-  GMutex             lock;
-  GstRTSPConnection *connection;
-  GstRTSPWatch      *watch;
-  guint              close_seq;
-  gchar             *server_ip;
-  gboolean           is_ipv6;
-  gboolean           use_client_settings;
-
-  GstRTSPClientSendFunc send_func;
-  gpointer              send_data;
-  GDestroyNotify        send_notify;
-
-  GstRTSPSessionPool   *session_pool;
-  GstRTSPMountPoints   *mount_points;
-  GstRTSPAuth          *auth;
-
-  GstRTSPUrl     *uri;
-  GstRTSPMedia   *media;
-
-  GList *transports;
-  GList *sessions;
+  GstRTSPClientPrivate *priv;
 };
 
 struct _GstRTSPClientClass {

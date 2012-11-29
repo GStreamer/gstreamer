@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPSessionPool GstRTSPSessionPool;
 typedef struct _GstRTSPSessionPoolClass GstRTSPSessionPoolClass;
+typedef struct _GstRTSPSessionPoolPrivate GstRTSPSessionPoolPrivate;
 
 #include "rtsp-session.h"
 
@@ -51,10 +52,7 @@ typedef struct _GstRTSPSessionPoolClass GstRTSPSessionPoolClass;
 struct _GstRTSPSessionPool {
   GObject       parent;
 
-  guint         max_sessions;
-
-  GMutex        lock;
-  GHashTable   *sessions;
+  GstRTSPSessionPoolPrivate *priv;
 };
 
 /**
@@ -83,22 +81,7 @@ struct _GstRTSPSessionPoolClass {
 typedef gboolean (*GstRTSPSessionPoolFunc)  (GstRTSPSessionPool *pool, gpointer user_data);
 
 /**
- * GstRTSPFilterResult:
- * @GST_RTSP_FILTER_REMOVE: Remove session
- * @GST_RTSP_FILTER_KEEP: Keep session in the pool
- * @GST_RTSP_FILTER_REF: Ref session in the result list
- *
- * Possible return values for gst_rtsp_session_pool_filter().
- */
-typedef enum
-{
-  GST_RTSP_FILTER_REMOVE,
-  GST_RTSP_FILTER_KEEP,
-  GST_RTSP_FILTER_REF,
-} GstRTSPFilterResult;
-
-/**
- * GstRTSPSessionFilterFunc:
+ * GstRTSPSessionPoolFilterFunc:
  * @pool: a #GstRTSPSessionPool object
  * @session: a #GstRTSPSession in @pool
  * @user_data: user data that has been given to gst_rtsp_session_pool_filter()
@@ -117,9 +100,9 @@ typedef enum
  *
  * Returns: a #GstRTSPFilterResult.
  */
-typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSessionPool *pool,
-                                                          GstRTSPSession *session,
-                                                          gpointer user_data);
+typedef GstRTSPFilterResult (*GstRTSPSessionPoolFilterFunc)  (GstRTSPSessionPool *pool,
+                                                              GstRTSPSession *session,
+                                                              gpointer user_data);
 
 
 GType                 gst_rtsp_session_pool_get_type          (void);
@@ -142,7 +125,7 @@ gboolean              gst_rtsp_session_pool_remove            (GstRTSPSessionPoo
 
 /* perform session maintenance */
 GList *               gst_rtsp_session_pool_filter            (GstRTSPSessionPool *pool,
-                                                               GstRTSPSessionFilterFunc func,
+                                                               GstRTSPSessionPoolFilterFunc func,
                                                                gpointer user_data);
 guint                 gst_rtsp_session_pool_cleanup           (GstRTSPSessionPool *pool);
 GSource *             gst_rtsp_session_pool_create_watch      (GstRTSPSessionPool *pool);

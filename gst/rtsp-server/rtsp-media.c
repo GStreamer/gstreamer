@@ -25,6 +25,51 @@
 
 #include "rtsp-media.h"
 
+#define GST_RTSP_MEDIA_GET_PRIVATE(obj)  \
+     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_MEDIA, GstRTSPMediaPrivate))
+
+struct _GstRTSPMediaPrivate
+{
+  GMutex lock;
+  GCond cond;
+
+  gboolean shared;
+  gboolean reusable;
+  GstRTSPLowerTrans protocols;
+  gboolean reused;
+  gboolean eos_shutdown;
+  guint buffer_size;
+  GstRTSPAuth *auth;
+  GstRTSPAddressPool *pool;
+
+  GstElement *element;
+  GRecMutex state_lock;
+  GPtrArray *streams;
+  GList *dynamic;
+  GstRTSPMediaStatus status;
+  gint n_active;
+  gboolean adding;
+
+  /* the pipeline for the media */
+  GstElement *pipeline;
+  GstElement *fakesink;
+  GSource *source;
+  guint id;
+
+  gboolean is_live;
+  gboolean seekable;
+  gboolean buffering;
+  GstState target_state;
+
+  /* RTP session manager */
+  GstElement *rtpbin;
+
+  /* the range of media */
+  GstRTSPTimeRange range;
+  GstClockTime range_start;
+  GstClockTime range_stop;
+};
+
 #define DEFAULT_SHARED          FALSE
 #define DEFAULT_REUSABLE        FALSE
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
@@ -78,6 +123,8 @@ static void
 gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 {
   GObjectClass *gobject_class;
+
+  g_type_class_add_private (klass, sizeof (GstRTSPMediaPrivate));
 
   gobject_class = G_OBJECT_CLASS (klass);
 
@@ -144,42 +191,48 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
 static void
 gst_rtsp_media_init (GstRTSPMedia * media)
 {
-  media->streams = g_ptr_array_new_with_free_func (g_object_unref);
-  g_mutex_init (&media->lock);
-  g_cond_init (&media->cond);
-  g_rec_mutex_init (&media->state_lock);
+  GstRTSPMediaPrivate *priv = GST_RTSP_MEDIA_GET_PRIVATE (media);
 
-  media->shared = DEFAULT_SHARED;
-  media->reusable = DEFAULT_REUSABLE;
-  media->protocols = DEFAULT_PROTOCOLS;
-  media->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
-  media->buffer_size = DEFAULT_BUFFER_SIZE;
+  media->priv = priv;
+
+  priv->streams = g_ptr_array_new_with_free_func (g_object_unref);
+  g_mutex_init (&priv->lock);
+  g_cond_init (&priv->cond);
+  g_rec_mutex_init (&priv->state_lock);
+
+  priv->shared = DEFAULT_SHARED;
+  priv->reusable = DEFAULT_REUSABLE;
+  priv->protocols = DEFAULT_PROTOCOLS;
+  priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
+  priv->buffer_size = DEFAULT_BUFFER_SIZE;
 }
 
 static void
 gst_rtsp_media_finalize (GObject * obj)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPMedia *media;
 
   media = GST_RTSP_MEDIA (obj);
+  priv = media->priv;
 
   GST_INFO ("finalize media %p", media);
 
   gst_rtsp_media_unprepare (media);
 
-  g_ptr_array_unref (media->streams);
+  g_ptr_array_unref (priv->streams);
 
-  g_list_free_full (media->dynamic, gst_object_unref);
+  g_list_free_full (priv->dynamic, gst_object_unref);
 
-  if (media->pipeline)
-    gst_object_unref (media->pipeline);
-  if (media->auth)
-    g_object_unref (media->auth);
-  if (media->pool)
-    g_object_unref (media->pool);
-  g_mutex_clear (&media->lock);
-  g_cond_clear (&media->cond);
-  g_rec_mutex_clear (&media->state_lock);
+  if (priv->pipeline)
+    gst_object_unref (priv->pipeline);
+  if (priv->auth)
+    g_object_unref (priv->auth);
+  if (priv->pool)
+    g_object_unref (priv->pool);
+  g_mutex_clear (&priv->lock);
+  g_cond_clear (&priv->cond);
+  g_rec_mutex_clear (&priv->state_lock);
 
   G_OBJECT_CLASS (gst_rtsp_media_parent_class)->finalize (obj);
 }
@@ -252,29 +305,30 @@ do_loop (GstRTSPMediaClass * klass)
 static void
 collect_media_stats (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   gint64 position, duration;
 
-  media->range.unit = GST_RTSP_RANGE_NPT;
+  priv->range.unit = GST_RTSP_RANGE_NPT;
 
   GST_INFO ("collect media stats");
 
-  if (media->is_live) {
-    media->range.min.type = GST_RTSP_TIME_NOW;
-    media->range.min.seconds = -1;
-    media->range_start = -1;
-    media->range.max.type = GST_RTSP_TIME_END;
-    media->range.max.seconds = -1;
-    media->range_stop = -1;
+  if (priv->is_live) {
+    priv->range.min.type = GST_RTSP_TIME_NOW;
+    priv->range.min.seconds = -1;
+    priv->range_start = -1;
+    priv->range.max.type = GST_RTSP_TIME_END;
+    priv->range.max.seconds = -1;
+    priv->range_stop = -1;
   } else {
     /* get the position */
-    if (!gst_element_query_position (media->pipeline, GST_FORMAT_TIME,
+    if (!gst_element_query_position (priv->pipeline, GST_FORMAT_TIME,
             &position)) {
       GST_INFO ("position query failed");
       position = 0;
     }
 
     /* get the duration */
-    if (!gst_element_query_duration (media->pipeline, GST_FORMAT_TIME,
+    if (!gst_element_query_duration (priv->pipeline, GST_FORMAT_TIME,
             &duration)) {
       GST_INFO ("duration query failed");
       duration = -1;
@@ -284,43 +338,78 @@ collect_media_stats (GstRTSPMedia * media)
         GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
 
     if (position == -1) {
-      media->range.min.type = GST_RTSP_TIME_NOW;
-      media->range.min.seconds = -1;
-      media->range_start = -1;
+      priv->range.min.type = GST_RTSP_TIME_NOW;
+      priv->range.min.seconds = -1;
+      priv->range_start = -1;
     } else {
-      media->range.min.type = GST_RTSP_TIME_SECONDS;
-      media->range.min.seconds = ((gdouble) position) / GST_SECOND;
-      media->range_start = position;
+      priv->range.min.type = GST_RTSP_TIME_SECONDS;
+      priv->range.min.seconds = ((gdouble) position) / GST_SECOND;
+      priv->range_start = position;
     }
     if (duration == -1) {
-      media->range.max.type = GST_RTSP_TIME_END;
-      media->range.max.seconds = -1;
-      media->range_stop = -1;
+      priv->range.max.type = GST_RTSP_TIME_END;
+      priv->range.max.seconds = -1;
+      priv->range_stop = -1;
     } else {
-      media->range.max.type = GST_RTSP_TIME_SECONDS;
-      media->range.max.seconds = ((gdouble) duration) / GST_SECOND;
-      media->range_stop = duration;
+      priv->range.max.type = GST_RTSP_TIME_SECONDS;
+      priv->range.max.seconds = ((gdouble) duration) / GST_SECOND;
+      priv->range_stop = duration;
     }
   }
 }
 
 /**
  * gst_rtsp_media_new:
+ * @element: (transfer full): a #GstElement
  *
- * Create a new #GstRTSPMedia instance. The #GstRTSPMedia object contains the
+ * Create a new #GstRTSPMedia instance. @element is the bin element that
+ * provides the different streams. The #GstRTSPMedia object contains the
  * element to produce RTP data for one or more related (audio/video/..)
  * streams.
+ *
+ * Ownership is taken of @element.
  *
  * Returns: a new #GstRTSPMedia object.
  */
 GstRTSPMedia *
-gst_rtsp_media_new (void)
+gst_rtsp_media_new (GstElement * element)
 {
   GstRTSPMedia *result;
 
   result = g_object_new (GST_TYPE_RTSP_MEDIA, NULL);
+  result->priv->element = element;
 
   return result;
+}
+
+/**
+ * gst_rtsp_media_take_element:
+ * @media: a #GstRTSPMedia
+ * @pipeline: (transfer full): a #GstPipeline
+ *
+ * Set @pipeline as the #GstPipeline for @media. Ownership is
+ * taken of @pipeline.
+ */
+void
+gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
+{
+  GstRTSPMediaPrivate *priv;
+  GstElement *old;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+  g_return_if_fail (GST_IS_PIPELINE (pipeline));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  old = priv->pipeline;
+  priv->pipeline = GST_ELEMENT_CAST (pipeline);
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    gst_object_unref (old);
+
+  gst_bin_add (GST_BIN_CAST (pipeline), priv->element);
 }
 
 /**
@@ -335,11 +424,15 @@ gst_rtsp_media_new (void)
 void
 gst_rtsp_media_set_shared (GstRTSPMedia * media, gboolean shared)
 {
+  GstRTSPMediaPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
-  g_mutex_lock (&media->lock);
-  media->shared = shared;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->shared = shared;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -353,13 +446,16 @@ gst_rtsp_media_set_shared (GstRTSPMedia * media, gboolean shared)
 gboolean
 gst_rtsp_media_is_shared (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
-  g_mutex_lock (&media->lock);
-  res = media->shared;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->shared;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -375,11 +471,15 @@ gst_rtsp_media_is_shared (GstRTSPMedia * media)
 void
 gst_rtsp_media_set_reusable (GstRTSPMedia * media, gboolean reusable)
 {
+  GstRTSPMediaPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
-  g_mutex_lock (&media->lock);
-  media->reusable = reusable;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->reusable = reusable;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -393,13 +493,16 @@ gst_rtsp_media_set_reusable (GstRTSPMedia * media, gboolean reusable)
 gboolean
 gst_rtsp_media_is_reusable (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
-  g_mutex_lock (&media->lock);
-  res = media->reusable;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->reusable;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -414,11 +517,15 @@ gst_rtsp_media_is_reusable (GstRTSPMedia * media)
 void
 gst_rtsp_media_set_protocols (GstRTSPMedia * media, GstRTSPLowerTrans protocols)
 {
+  GstRTSPMediaPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
-  g_mutex_lock (&media->lock);
-  media->protocols = protocols;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->protocols = protocols;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -432,14 +539,17 @@ gst_rtsp_media_set_protocols (GstRTSPMedia * media, GstRTSPLowerTrans protocols)
 GstRTSPLowerTrans
 gst_rtsp_media_get_protocols (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPLowerTrans res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media),
       GST_RTSP_LOWER_TRANS_UNKNOWN);
 
-  g_mutex_lock (&media->lock);
-  res = media->protocols;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->protocols;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -455,11 +565,15 @@ gst_rtsp_media_get_protocols (GstRTSPMedia * media)
 void
 gst_rtsp_media_set_eos_shutdown (GstRTSPMedia * media, gboolean eos_shutdown)
 {
+  GstRTSPMediaPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
-  g_mutex_lock (&media->lock);
-  media->eos_shutdown = eos_shutdown;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->eos_shutdown = eos_shutdown;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -474,13 +588,16 @@ gst_rtsp_media_set_eos_shutdown (GstRTSPMedia * media, gboolean eos_shutdown)
 gboolean
 gst_rtsp_media_is_eos_shutdown (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
-  g_mutex_lock (&media->lock);
-  res = media->eos_shutdown;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->eos_shutdown;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -495,13 +612,17 @@ gst_rtsp_media_is_eos_shutdown (GstRTSPMedia * media)
 void
 gst_rtsp_media_set_buffer_size (GstRTSPMedia * media, guint size)
 {
+  GstRTSPMediaPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
   GST_LOG_OBJECT (media, "set buffer size %u", size);
 
-  g_mutex_lock (&media->lock);
-  media->buffer_size = size;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->buffer_size = size;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -515,13 +636,16 @@ gst_rtsp_media_set_buffer_size (GstRTSPMedia * media, guint size)
 guint
 gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   guint res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
-  g_mutex_unlock (&media->lock);
-  res = media->buffer_size;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_unlock (&priv->lock);
+  res = priv->buffer_size;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -536,18 +660,21 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 void
 gst_rtsp_media_set_auth (GstRTSPMedia * media, GstRTSPAuth * auth)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPAuth *old;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
+  priv = media->priv;
+
   GST_LOG_OBJECT (media, "set auth %p", auth);
 
-  g_mutex_lock (&media->lock);
-  if ((old = media->auth) != auth)
-    media->auth = auth ? g_object_ref (auth) : NULL;
+  g_mutex_lock (&priv->lock);
+  if ((old = priv->auth) != auth)
+    priv->auth = auth ? g_object_ref (auth) : NULL;
   else
     old = NULL;
-  g_mutex_unlock (&media->lock);
+  g_mutex_unlock (&priv->lock);
 
   if (old)
     g_object_unref (old);
@@ -565,14 +692,17 @@ gst_rtsp_media_set_auth (GstRTSPMedia * media, GstRTSPAuth * auth)
 GstRTSPAuth *
 gst_rtsp_media_get_auth (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPAuth *result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
-  g_mutex_lock (&media->lock);
-  if ((result = media->auth))
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->auth))
     g_object_ref (result);
-  g_mutex_unlock (&media->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -588,20 +718,23 @@ void
 gst_rtsp_media_set_address_pool (GstRTSPMedia * media,
     GstRTSPAddressPool * pool)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPAddressPool *old;
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
+  priv = media->priv;
+
   GST_LOG_OBJECT (media, "set address pool %p", pool);
 
-  g_mutex_lock (&media->lock);
-  if ((old = media->pool) != pool)
-    media->pool = pool ? g_object_ref (pool) : NULL;
+  g_mutex_lock (&priv->lock);
+  if ((old = priv->pool) != pool)
+    priv->pool = pool ? g_object_ref (pool) : NULL;
   else
     old = NULL;
-  g_ptr_array_foreach (media->streams, (GFunc) gst_rtsp_stream_set_address_pool,
+  g_ptr_array_foreach (priv->streams, (GFunc) gst_rtsp_stream_set_address_pool,
       pool);
-  g_mutex_unlock (&media->lock);
+  g_mutex_unlock (&priv->lock);
 
   if (old)
     g_object_unref (old);
@@ -619,14 +752,17 @@ gst_rtsp_media_set_address_pool (GstRTSPMedia * media,
 GstRTSPAddressPool *
 gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPAddressPool *result;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
-  g_mutex_lock (&media->lock);
-  if ((result = media->pool))
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->pool))
     g_object_ref (result);
-  g_mutex_unlock (&media->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -644,6 +780,7 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
 void
 gst_rtsp_media_collect_streams (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   GstElement *element, *elem;
   GstPad *pad;
   gint i;
@@ -651,7 +788,8 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
 
   g_return_if_fail (GST_IS_RTSP_MEDIA (media));
 
-  element = media->element;
+  priv = media->priv;
+  element = priv->element;
 
   have_elem = TRUE;
   for (i = 0; have_elem; i++) {
@@ -680,9 +818,9 @@ gst_rtsp_media_collect_streams (GstRTSPMedia * media)
 
       GST_INFO ("found dynamic element %d, %p", i, elem);
 
-      g_mutex_lock (&media->lock);
-      media->dynamic = g_list_prepend (media->dynamic, elem);
-      g_mutex_unlock (&media->lock);
+      g_mutex_lock (&priv->lock);
+      priv->dynamic = g_list_prepend (priv->dynamic, elem);
+      g_mutex_unlock (&priv->lock);
 
       have_elem = TRUE;
     }
@@ -706,6 +844,7 @@ GstRTSPStream *
 gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
     GstPad * pad)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPStream *stream;
   GstPad *srcpad;
   gchar *name;
@@ -716,21 +855,25 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
 
-  g_mutex_lock (&media->lock);
-  idx = media->streams->len;
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  idx = priv->streams->len;
+
+  GST_DEBUG ("media %p: creating stream with index %d", media, idx);
 
   name = g_strdup_printf ("src_%u", idx);
   srcpad = gst_ghost_pad_new (name, pad);
   gst_pad_set_active (srcpad, TRUE);
-  gst_element_add_pad (media->element, srcpad);
+  gst_element_add_pad (priv->element, srcpad);
   g_free (name);
 
   stream = gst_rtsp_stream_new (idx, payloader, srcpad);
-  if (media->pool)
-    gst_rtsp_stream_set_address_pool (stream, media->pool);
+  if (priv->pool)
+    gst_rtsp_stream_set_address_pool (stream, priv->pool);
 
-  g_ptr_array_add (media->streams, stream);
-  g_mutex_unlock (&media->lock);
+  g_ptr_array_add (priv->streams, stream);
+  g_mutex_unlock (&priv->lock);
 
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STREAM], 0, stream,
       NULL);
@@ -749,13 +892,16 @@ gst_rtsp_media_create_stream (GstRTSPMedia * media, GstElement * payloader,
 guint
 gst_rtsp_media_n_streams (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   guint res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), 0);
 
-  g_mutex_lock (&media->lock);
-  res = media->streams->len;
-  g_mutex_unlock (&media->lock);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->streams->len;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -773,16 +919,19 @@ gst_rtsp_media_n_streams (GstRTSPMedia * media)
 GstRTSPStream *
 gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
 {
+  GstRTSPMediaPrivate *priv;
   GstRTSPStream *res;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
-  g_mutex_lock (&media->lock);
-  if (idx < media->streams->len)
-    res = g_ptr_array_index (media->streams, idx);
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (idx < priv->streams->len)
+    res = g_ptr_array_index (priv->streams, idx);
   else
     res = NULL;
-  g_mutex_unlock (&media->lock);
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -800,25 +949,28 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
 gchar *
 gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
 {
+  GstRTSPMediaPrivate *priv;
   gchar *result;
   GstRTSPTimeRange range;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
 
-  g_rec_mutex_lock (&media->state_lock);
-  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
     goto not_prepared;
 
-  g_mutex_lock (&media->lock);
+  g_mutex_lock (&priv->lock);
   /* make copy */
-  range = media->range;
+  range = priv->range;
 
-  if (!play && media->n_active > 0) {
+  if (!play && priv->n_active > 0) {
     range.min.type = GST_RTSP_TIME_NOW;
     range.min.seconds = -1;
   }
-  g_mutex_unlock (&media->lock);
-  g_rec_mutex_unlock (&media->state_lock);
+  g_mutex_unlock (&priv->lock);
+  g_rec_mutex_unlock (&priv->state_lock);
 
   result = gst_rtsp_range_to_string (&range);
 
@@ -828,7 +980,7 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play)
 not_prepared:
   {
     GST_WARNING ("media %p was not prepared", media);
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     return NULL;
   }
 }
@@ -846,6 +998,7 @@ not_prepared:
 gboolean
 gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 {
+  GstRTSPMediaPrivate *priv;
   GstSeekFlags flags;
   gboolean res;
   GstClockTime start, stop;
@@ -854,11 +1007,13 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (range != NULL, FALSE);
 
-  g_rec_mutex_lock (&media->state_lock);
-  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
     goto not_prepared;
 
-  if (!media->seekable)
+  if (!priv->seekable)
     goto not_seekable;
 
   /* depends on the current playing state of the pipeline. We might need to
@@ -873,14 +1028,14 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   GST_INFO ("got %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
       GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
   GST_INFO ("current %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (media->range_start), GST_TIME_ARGS (media->range_stop));
+      GST_TIME_ARGS (priv->range_start), GST_TIME_ARGS (priv->range_stop));
 
-  if (media->range_start == start)
+  if (priv->range_start == start)
     start = GST_CLOCK_TIME_NONE;
   else if (start != GST_CLOCK_TIME_NONE)
     start_type = GST_SEEK_TYPE_SET;
 
-  if (media->range_stop == stop)
+  if (priv->range_stop == stop)
     stop = GST_CLOCK_TIME_NONE;
   else if (stop != GST_CLOCK_TIME_NONE)
     stop_type = GST_SEEK_TYPE_SET;
@@ -889,12 +1044,12 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
 
-    res = gst_element_seek (media->pipeline, 1.0, GST_FORMAT_TIME,
+    res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
         flags, start_type, start, stop_type, stop);
 
     /* and block for the seek to complete */
     GST_INFO ("done seeking %d", res);
-    gst_element_get_state (media->pipeline, NULL, NULL, -1);
+    gst_element_get_state (priv->pipeline, NULL, NULL, -1);
     GST_INFO ("prerolled again");
 
     collect_media_stats (media);
@@ -902,26 +1057,26 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
     GST_INFO ("no seek needed");
     res = TRUE;
   }
-  g_rec_mutex_unlock (&media->state_lock);
+  g_rec_mutex_unlock (&priv->state_lock);
 
   return res;
 
   /* ERRORS */
 not_prepared:
   {
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("media %p is not prepared", media);
     return FALSE;
   }
 not_seekable:
   {
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("pipeline is not seekable");
     return TRUE;
   }
 not_supported:
   {
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("seek unit %d not supported", range->unit);
     return FALSE;
   }
@@ -930,35 +1085,47 @@ not_supported:
 static void
 gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
 {
-  g_mutex_lock (&media->lock);
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
   /* never overwrite the error status */
-  if (media->status != GST_RTSP_MEDIA_STATUS_ERROR)
-    media->status = status;
+  if (priv->status != GST_RTSP_MEDIA_STATUS_ERROR)
+    priv->status = status;
   GST_DEBUG ("setting new status to %d", status);
-  g_cond_broadcast (&media->cond);
-  g_mutex_unlock (&media->lock);
+  g_cond_broadcast (&priv->cond);
+  g_mutex_unlock (&priv->lock);
 }
 
-static GstRTSPMediaStatus
+/**
+ * gst_rtsp_media_get_status:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the status of @media. When @media is busy preparing, this function waits
+ * until @media is prepared or in error.
+ *
+ * Returns: the status of @media.
+ */
+GstRTSPMediaStatus
 gst_rtsp_media_get_status (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   GstRTSPMediaStatus result;
   gint64 end_time;
 
-  g_mutex_lock (&media->lock);
+  g_mutex_lock (&priv->lock);
   end_time = g_get_monotonic_time () + 20 * G_TIME_SPAN_SECOND;
   /* while we are preparing, wait */
-  while (media->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
+  while (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING) {
     GST_DEBUG ("waiting for status change");
-    if (!g_cond_wait_until (&media->cond, &media->lock, end_time)) {
+    if (!g_cond_wait_until (&priv->cond, &priv->lock, end_time)) {
       GST_DEBUG ("timeout, assuming error status");
-      media->status = GST_RTSP_MEDIA_STATUS_ERROR;
+      priv->status = GST_RTSP_MEDIA_STATUS_ERROR;
     }
   }
   /* could be success or error */
-  result = media->status;
+  result = priv->status;
   GST_DEBUG ("got status %d", result);
-  g_mutex_unlock (&media->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -967,6 +1134,7 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
 static gboolean
 default_handle_message (GstRTSPMedia * media, GstMessage * message)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   GstMessageType type;
 
   type = GST_MESSAGE_TYPE (message);
@@ -981,37 +1149,37 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       gst_message_parse_buffering (message, &percent);
 
       /* no state management needed for live pipelines */
-      if (media->is_live)
+      if (priv->is_live)
         break;
 
       if (percent == 100) {
         /* a 100% message means buffering is done */
-        media->buffering = FALSE;
+        priv->buffering = FALSE;
         /* if the desired state is playing, go back */
-        if (media->target_state == GST_STATE_PLAYING) {
+        if (priv->target_state == GST_STATE_PLAYING) {
           GST_INFO ("Buffering done, setting pipeline to PLAYING");
-          gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
+          gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
         } else {
           GST_INFO ("Buffering done");
         }
       } else {
         /* buffering busy */
-        if (media->buffering == FALSE) {
-          if (media->target_state == GST_STATE_PLAYING) {
+        if (priv->buffering == FALSE) {
+          if (priv->target_state == GST_STATE_PLAYING) {
             /* we were not buffering but PLAYING, PAUSE  the pipeline. */
             GST_INFO ("Buffering, setting pipeline to PAUSED ...");
-            gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
+            gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
           } else {
             GST_INFO ("Buffering ...");
           }
         }
-        media->buffering = TRUE;
+        priv->buffering = TRUE;
       }
       break;
     }
     case GST_MESSAGE_LATENCY:
     {
-      gst_bin_recalculate_latency (GST_BIN_CAST (media->pipeline));
+      gst_bin_recalculate_latency (GST_BIN_CAST (priv->pipeline));
       break;
     }
     case GST_MESSAGE_ERROR:
@@ -1043,7 +1211,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
-      if (!media->adding) {
+      if (!priv->adding) {
         /* when we are dynamically adding pads, the addition of the udpsrc will
          * temporarily produce ASYNC_DONE messages. We have to ignore them and
          * wait for the final ASYNC_DONE after everything prerolled */
@@ -1058,7 +1226,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
     case GST_MESSAGE_EOS:
       GST_INFO ("%p: got EOS", media);
 
-      if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARING) {
+      if (priv->status == GST_RTSP_MEDIA_STATUS_UNPREPARING) {
         GST_DEBUG ("shutting down after EOS");
         finish_unprepare (media);
         g_object_unref (media);
@@ -1075,17 +1243,18 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
 static gboolean
 bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   GstRTSPMediaClass *klass;
   gboolean ret;
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
 
-  g_rec_mutex_lock (&media->state_lock);
+  g_rec_mutex_lock (&priv->state_lock);
   if (klass->handle_message)
     ret = klass->handle_message (media, message);
   else
     ret = FALSE;
-  g_rec_mutex_unlock (&media->state_lock);
+  g_rec_mutex_unlock (&priv->state_lock);
 
   return ret;
 }
@@ -1101,42 +1270,43 @@ watch_destroyed (GstRTSPMedia * media)
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   GstRTSPStream *stream;
 
   /* FIXME, element is likely not a payloader, find the payloader here */
   stream = gst_rtsp_media_create_stream (media, element, pad);
 
-  GST_INFO ("pad added %s:%s, stream %d", GST_DEBUG_PAD_NAME (pad),
-      stream->idx);
+  GST_INFO ("pad added %s:%s, stream %s", GST_DEBUG_PAD_NAME (pad), stream);
 
-  g_rec_mutex_lock (&media->state_lock);
+  g_rec_mutex_lock (&priv->state_lock);
   /* we will be adding elements below that will cause ASYNC_DONE to be
    * posted in the bus. We want to ignore those messages until the
    * pipeline really prerolled. */
-  media->adding = TRUE;
+  priv->adding = TRUE;
 
   /* join the element in the PAUSED state because this callback is
    * called from the streaming thread and it is PAUSED */
-  gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline),
-      media->rtpbin, GST_STATE_PAUSED);
+  gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
+      priv->rtpbin, GST_STATE_PAUSED);
 
-  media->adding = FALSE;
-  g_rec_mutex_unlock (&media->state_lock);
+  priv->adding = FALSE;
+  g_rec_mutex_unlock (&priv->state_lock);
 }
 
 static void
 no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   GstElement *fakesink;
 
-  g_mutex_lock (&media->lock);
+  g_mutex_lock (&priv->lock);
   GST_INFO ("no more pads");
-  if ((fakesink = media->fakesink)) {
+  if ((fakesink = priv->fakesink)) {
     gst_object_ref (fakesink);
-    media->fakesink = NULL;
-    g_mutex_unlock (&media->lock);
+    priv->fakesink = NULL;
+    g_mutex_unlock (&priv->lock);
 
-    gst_bin_remove (GST_BIN (media->pipeline), fakesink);
+    gst_bin_remove (GST_BIN (priv->pipeline), fakesink);
     gst_element_set_state (fakesink, GST_STATE_NULL);
     gst_object_unref (fakesink);
     GST_INFO ("removed fakesink");
@@ -1158,6 +1328,7 @@ no_more_pads_cb (GstElement * element, GstRTSPMedia * media)
 gboolean
 gst_rtsp_media_prepare (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   GstStateChangeReturn ret;
   GstRTSPMediaStatus status;
   guint i;
@@ -1167,59 +1338,61 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
-  g_rec_mutex_lock (&media->state_lock);
-  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED)
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED)
     goto was_prepared;
 
-  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
     goto wait_status;
 
-  if (media->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
+  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
     goto not_unprepared;
 
-  if (!media->reusable && media->reused)
+  if (!priv->reusable && priv->reused)
     goto is_reused;
 
-  media->rtpbin = gst_element_factory_make ("rtpbin", NULL);
-  if (media->rtpbin == NULL)
+  priv->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  if (priv->rtpbin == NULL)
     goto no_rtpbin;
 
   GST_INFO ("preparing media %p", media);
 
   /* reset some variables */
-  media->is_live = FALSE;
-  media->seekable = FALSE;
-  media->buffering = FALSE;
+  priv->is_live = FALSE;
+  priv->seekable = FALSE;
+  priv->buffering = FALSE;
   /* we're preparing now */
-  media->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+  priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
 
-  bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (media->pipeline));
+  bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
 
   /* add the pipeline bus to our custom mainloop */
-  media->source = gst_bus_create_watch (bus);
+  priv->source = gst_bus_create_watch (bus);
   gst_object_unref (bus);
 
-  g_source_set_callback (media->source, (GSourceFunc) bus_message,
+  g_source_set_callback (priv->source, (GSourceFunc) bus_message,
       gst_object_ref (media), (GDestroyNotify) watch_destroyed);
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
-  media->id = g_source_attach (media->source, klass->context);
+  priv->id = g_source_attach (priv->source, klass->context);
 
   /* add stuff to the bin */
-  gst_bin_add (GST_BIN (media->pipeline), media->rtpbin);
+  gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);
 
   /* link streams we already have, other streams might appear when we have
    * dynamic elements */
-  for (i = 0; i < media->streams->len; i++) {
+  for (i = 0; i < priv->streams->len; i++) {
     GstRTSPStream *stream;
 
-    stream = g_ptr_array_index (media->streams, i);
+    stream = g_ptr_array_index (priv->streams, i);
 
-    gst_rtsp_stream_join_bin (stream, GST_BIN (media->pipeline),
-        media->rtpbin, GST_STATE_NULL);
+    gst_rtsp_stream_join_bin (stream, GST_BIN (priv->pipeline),
+        priv->rtpbin, GST_STATE_NULL);
   }
 
-  for (walk = media->dynamic; walk; walk = g_list_next (walk)) {
+  for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;
 
     GST_INFO ("adding callbacks for dynamic element %p", elem);
@@ -1229,32 +1402,32 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
 
     /* we add a fakesink here in order to make the state change async. We remove
      * the fakesink again in the no-more-pads callback. */
-    media->fakesink = gst_element_factory_make ("fakesink", "fakesink");
-    gst_bin_add (GST_BIN (media->pipeline), media->fakesink);
+    priv->fakesink = gst_element_factory_make ("fakesink", "fakesink");
+    gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
   }
 
   GST_INFO ("setting pipeline to PAUSED for media %p", media);
   /* first go to PAUSED */
-  ret = gst_element_set_state (media->pipeline, GST_STATE_PAUSED);
-  media->target_state = GST_STATE_PAUSED;
+  ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+  priv->target_state = GST_STATE_PAUSED;
 
   switch (ret) {
     case GST_STATE_CHANGE_SUCCESS:
       GST_INFO ("SUCCESS state change for media %p", media);
-      media->seekable = TRUE;
+      priv->seekable = TRUE;
       break;
     case GST_STATE_CHANGE_ASYNC:
       GST_INFO ("ASYNC state change for media %p", media);
-      media->seekable = TRUE;
+      priv->seekable = TRUE;
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       /* we need to go to PLAYING */
       GST_INFO ("NO_PREROLL state change: live media %p", media);
       /* FIXME we disable seeking for live streams for now. We should perform a
        * seeking query in preroll instead */
-      media->seekable = FALSE;
-      media->is_live = TRUE;
-      ret = gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
+      priv->seekable = FALSE;
+      priv->is_live = TRUE;
+      ret = gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
       break;
@@ -1262,7 +1435,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
       goto state_failed;
   }
 wait_status:
-  g_rec_mutex_unlock (&media->state_lock);
+  g_rec_mutex_unlock (&priv->state_lock);
 
   /* now wait for all pads to be prerolled, FIXME, we should somehow be
    * able to do this async so that we don't block the server thread. */
@@ -1280,25 +1453,25 @@ wait_status:
 was_prepared:
   {
     GST_LOG ("media %p was prepared", media);
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     return TRUE;
   }
   /* ERRORS */
 not_unprepared:
   {
     GST_WARNING ("media %p was not unprepared", media);
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 is_reused:
   {
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("can not reuse media %p", media);
     return FALSE;
   }
 no_rtpbin:
   {
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("no rtpbin element");
     g_warning ("failed to create element 'rtpbin', check your installation");
     return FALSE;
@@ -1307,7 +1480,7 @@ state_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
     gst_rtsp_media_unprepare (media);
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 }
@@ -1316,37 +1489,37 @@ state_failed:
 static void
 finish_unprepare (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv = media->priv;
   gint i;
 
   GST_DEBUG ("shutting down");
 
-  gst_element_set_state (media->pipeline, GST_STATE_NULL);
+  gst_element_set_state (priv->pipeline, GST_STATE_NULL);
 
-  for (i = 0; i < media->streams->len; i++) {
+  for (i = 0; i < priv->streams->len; i++) {
     GstRTSPStream *stream;
 
     GST_INFO ("Removing elements of stream %d from pipeline", i);
 
-    stream = g_ptr_array_index (media->streams, i);
+    stream = g_ptr_array_index (priv->streams, i);
 
-    gst_rtsp_stream_leave_bin (stream, GST_BIN (media->pipeline),
-        media->rtpbin);
+    gst_rtsp_stream_leave_bin (stream, GST_BIN (priv->pipeline), priv->rtpbin);
   }
-  g_ptr_array_set_size (media->streams, 0);
+  g_ptr_array_set_size (priv->streams, 0);
 
-  gst_bin_remove (GST_BIN (media->pipeline), media->rtpbin);
-  media->rtpbin = NULL;
+  gst_bin_remove (GST_BIN (priv->pipeline), priv->rtpbin);
+  priv->rtpbin = NULL;
 
-  gst_object_unref (media->pipeline);
-  media->pipeline = NULL;
+  gst_object_unref (priv->pipeline);
+  priv->pipeline = NULL;
 
-  media->reused = TRUE;
-  media->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
+  priv->reused = TRUE;
+  priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
 
-  if (media->source) {
-    g_source_destroy (media->source);
-    g_source_unref (media->source);
-    media->source = NULL;
+  if (priv->source) {
+    g_source_destroy (priv->source);
+    g_source_unref (priv->source);
+    priv->source = NULL;
   }
 
   /* when the media is not reusable, this will effectively unref the media and
@@ -1358,15 +1531,17 @@ finish_unprepare (GstRTSPMedia * media)
 static gboolean
 default_unprepare (GstRTSPMedia * media)
 {
-  if (media->eos_shutdown) {
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  if (priv->eos_shutdown) {
     GST_DEBUG ("sending EOS for shutdown");
     /* ref so that we don't disappear */
     g_object_ref (media);
-    gst_element_send_event (media->pipeline, gst_event_new_eos ());
+    gst_element_send_event (priv->pipeline, gst_event_new_eos ());
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
-    gst_element_set_state (media->pipeline, GST_STATE_PLAYING);
-    media->status = GST_RTSP_MEDIA_STATUS_UNPREPARING;
+    gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
+    priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARING;
   } else {
     finish_unprepare (media);
   }
@@ -1386,19 +1561,22 @@ default_unprepare (GstRTSPMedia * media)
 gboolean
 gst_rtsp_media_unprepare (GstRTSPMedia * media)
 {
+  GstRTSPMediaPrivate *priv;
   gboolean success;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
 
-  g_rec_mutex_lock (&media->state_lock);
-  if (media->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
     goto was_unprepared;
 
   GST_INFO ("unprepare media %p", media);
-  media->target_state = GST_STATE_NULL;
+  priv->target_state = GST_STATE_NULL;
   success = TRUE;
 
-  if (media->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED) {
     GstRTSPMediaClass *klass;
 
     klass = GST_RTSP_MEDIA_GET_CLASS (media);
@@ -1407,13 +1585,13 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   } else {
     finish_unprepare (media);
   }
-  g_rec_mutex_unlock (&media->state_lock);
+  g_rec_mutex_unlock (&priv->state_lock);
 
   return success;
 
 was_unprepared:
   {
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("media %p was already unprepared", media);
     return TRUE;
   }
@@ -1435,22 +1613,25 @@ gboolean
 gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     GPtrArray * transports)
 {
+  GstRTSPMediaPrivate *priv;
   gint i;
-  gboolean add, remove, do_state;
+  gboolean activate, deactivate, do_state;
   gint old_active;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (transports != NULL, FALSE);
 
-  g_rec_mutex_lock (&media->state_lock);
-  if (media->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
     goto not_prepared;
 
   /* NULL and READY are the same */
   if (state == GST_STATE_READY)
     state = GST_STATE_NULL;
 
-  add = remove = FALSE;
+  activate = deactivate = FALSE;
 
   GST_INFO ("going to state %s media %p", gst_element_state_get_name (state),
       media);
@@ -1458,18 +1639,18 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
   switch (state) {
     case GST_STATE_NULL:
     case GST_STATE_PAUSED:
-      /* we're going from PLAYING to PAUSED, READY or NULL, remove */
-      if (media->target_state == GST_STATE_PLAYING)
-        remove = TRUE;
+      /* we're going from PLAYING to PAUSED, READY or NULL, deactivate */
+      if (priv->target_state == GST_STATE_PLAYING)
+        deactivate = TRUE;
       break;
     case GST_STATE_PLAYING:
-      /* we're going to PLAYING, add */
-      add = TRUE;
+      /* we're going to PLAYING, activate */
+      activate = TRUE;
       break;
     default:
       break;
   }
-  old_active = media->n_active;
+  old_active = priv->n_active;
 
   for (i = 0; i < transports->len; i++) {
     GstRTSPStreamTransport *trans;
@@ -1479,40 +1660,36 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     if (trans == NULL)
       continue;
 
-    /* we need a transport */
-    if (!trans->transport)
-      continue;
-
-    if (add) {
-      if (gst_rtsp_stream_add_transport (trans->stream, trans))
-        media->n_active++;
-    } else if (remove) {
-      if (gst_rtsp_stream_remove_transport (trans->stream, trans))
-        media->n_active--;
+    if (activate) {
+      if (gst_rtsp_stream_transport_set_active (trans, TRUE))
+        priv->n_active++;
+    } else if (deactivate) {
+      if (gst_rtsp_stream_transport_set_active (trans, FALSE))
+        priv->n_active--;
     }
   }
 
-  /* we just added the first media, do the playing state change */
-  if (old_active == 0 && add)
+  /* we just activated the first media, do the playing state change */
+  if (old_active == 0 && activate)
     do_state = TRUE;
   /* if we have no more active media, do the downward state changes */
-  else if (media->n_active == 0)
+  else if (priv->n_active == 0)
     do_state = TRUE;
   else
     do_state = FALSE;
 
-  GST_INFO ("state %d active %d media %p do_state %d", state, media->n_active,
+  GST_INFO ("state %d active %d media %p do_state %d", state, priv->n_active,
       media, do_state);
 
-  if (media->target_state != state) {
+  if (priv->target_state != state) {
     if (do_state) {
       if (state == GST_STATE_NULL) {
         gst_rtsp_media_unprepare (media);
       } else {
         GST_INFO ("state %s media %p", gst_element_state_get_name (state),
             media);
-        media->target_state = state;
-        gst_element_set_state (media->pipeline, state);
+        priv->target_state = state;
+        gst_element_set_state (priv->pipeline, state);
       }
     }
     g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
@@ -1521,10 +1698,10 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
   /* remember where we are */
   if (state != GST_STATE_NULL && (state == GST_STATE_PAUSED ||
-          old_active != media->n_active))
+          old_active != priv->n_active))
     collect_media_stats (media);
 
-  g_rec_mutex_unlock (&media->state_lock);
+  g_rec_mutex_unlock (&priv->state_lock);
 
   return TRUE;
 
@@ -1532,7 +1709,7 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 not_prepared:
   {
     GST_WARNING ("media %p was not prepared", media);
-    g_rec_mutex_unlock (&media->state_lock);
+    g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 }

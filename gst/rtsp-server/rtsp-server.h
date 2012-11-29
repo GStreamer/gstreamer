@@ -26,6 +26,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPServer GstRTSPServer;
 typedef struct _GstRTSPServerClass GstRTSPServerClass;
+typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
 
 #include "rtsp-session-pool.h"
 #include "rtsp-mount-points.h"
@@ -41,10 +42,6 @@ typedef struct _GstRTSPServerClass GstRTSPServerClass;
 #define GST_RTSP_SERVER_CAST(obj)         ((GstRTSPServer*)(obj))
 #define GST_RTSP_SERVER_CLASS_CAST(klass) ((GstRTSPServerClass*)(klass))
 
-#define GST_RTSP_SERVER_GET_LOCK(server)  (&(GST_RTSP_SERVER_CAST(server)->lock))
-#define GST_RTSP_SERVER_LOCK(server)      (g_mutex_lock(GST_RTSP_SERVER_GET_LOCK(server)))
-#define GST_RTSP_SERVER_UNLOCK(server)    (g_mutex_unlock(GST_RTSP_SERVER_GET_LOCK(server)))
-
 /**
  * GstRTSPServer:
  *
@@ -54,27 +51,7 @@ typedef struct _GstRTSPServerClass GstRTSPServerClass;
 struct _GstRTSPServer {
   GObject      parent;
 
-  GMutex       lock;
-
-  /* server information */
-  gchar       *address;
-  gchar       *service;
-  gint         backlog;
-  gint         max_threads;
-
-  GSocket     *socket;
-
-  /* sessions on this server */
-  GstRTSPSessionPool  *session_pool;
-
-  /* mount points for this server */
-  GstRTSPMountPoints *mount_points;
-
-  /* authentication manager */
-  GstRTSPAuth *auth;
-
-  /* the clients that are connected */
-  GList   *clients;
+  GstRTSPServerPrivate *priv;
 };
 
 /**

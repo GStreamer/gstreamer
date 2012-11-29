@@ -38,6 +38,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPStream GstRTSPStream;
 typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
+typedef struct _GstRTSPStreamPrivate GstRTSPStreamPrivate;
 
 #include "rtsp-stream-transport.h"
 #include "rtsp-address-pool.h"
@@ -45,79 +46,13 @@ typedef struct _GstRTSPStreamClass GstRTSPStreamClass;
 /**
  * GstRTSPStream:
  * @parent: the parent instance
- * @lock: mutex protecting the stream
- * @idx: the stream index
- * @srcpad: the srcpad of the stream
- * @payloader: the payloader of the format
- * @is_ipv6: should this stream be IPv6
- * @buffer_size: the UDP buffer size
- * @is_joined: if the stream is joined in a bin
- * @send_rtp_sink: sinkpad for sending RTP buffers
- * @recv_sink: sinkpad for receiving RTP/RTCP buffers
- * @send_src: srcpad for sending RTP/RTCP buffers
- * @session: the RTP session object
- * @udpsrc: the udp source elements for RTP/RTCP
- * @udpsink: the udp sink elements for RTP/RTCP
- * @appsrc: the app source elements for RTP/RTCP
- * @appqueue: the app queue elements for RTP/RTCP
- * @appsink: the app sink elements for RTP/RTCP
- * @tee: tee for the sending to udpsink and appsink
- * @funnel: tee for the receiving from udpsrc and appsrc
- * @server_port: the server ports for this stream
- * @pool: the address pool for this stream
- * @addr: the address for this stream
- * @caps_sig: the signal id for detecting caps
- * @caps: the caps of the stream
- * @n_active: the number of active transports in @transports
- * @transports: list of #GstStreamTransport being streamed to
  *
- * The definition of a media stream. The streams are identified by @idx.
+ * The definition of a media stream.
  */
 struct _GstRTSPStream {
   GObject       parent;
 
-  GMutex        lock;
-  guint         idx;
-  GstPad       *srcpad;
-  GstElement   *payloader;
-  gboolean      is_ipv6;
-  guint         buffer_size;
-  gboolean      is_joined;
-
-  /* pads on the rtpbin */
-  GstPad       *send_rtp_sink;
-  GstPad       *recv_sink[2];
-  GstPad       *send_src[2];
-
-  /* the RTPSession object */
-  GObject      *session;
-
-  /* sinks used for sending and receiving RTP and RTCP, they share
-   * sockets */
-  GstElement   *udpsrc[2];
-  GstElement   *udpsink[2];
-  /* for TCP transport */
-  GstElement   *appsrc[2];
-  GstElement   *appqueue[2];
-  GstElement   *appsink[2];
-
-  GstElement   *tee[2];
-  GstElement   *funnel[2];
-
-  /* server ports for sending/receiving */
-  GstRTSPRange  server_port;
-
-  /* multicast addresses */
-  GstRTSPAddressPool *pool;
-  GstRTSPAddress     *addr;
-
-  /* the caps of the stream */
-  gulong        caps_sig;
-  GstCaps      *caps;
-
-  /* transports we stream to */
-  guint         n_active;
-  GList        *transports;
+  GstRTSPStreamPrivate *priv;
 };
 
 struct _GstRTSPStreamClass {
@@ -128,9 +63,10 @@ GType             gst_rtsp_stream_get_type         (void);
 
 GstRTSPStream *   gst_rtsp_stream_new              (guint idx, GstElement *payloader,
                                                     GstPad *srcpad);
+guint             gst_rtsp_stream_get_index        (GstRTSPStream *stream);
 
-void              gst_rtsp_stream_set_mtu          (GstRTSPStream * stream, guint mtu);
-guint             gst_rtsp_stream_get_mtu          (GstRTSPStream * stream);
+void              gst_rtsp_stream_set_mtu          (GstRTSPStream *stream, guint mtu);
+guint             gst_rtsp_stream_get_mtu          (GstRTSPStream *stream);
 
 void              gst_rtsp_stream_set_address_pool (GstRTSPStream *stream, GstRTSPAddressPool *pool);
 GstRTSPAddressPool *
@@ -138,14 +74,20 @@ GstRTSPAddressPool *
 
 GstRTSPAddress *  gst_rtsp_stream_get_address      (GstRTSPStream *stream);
 
-gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream * stream,
+gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin,
                                                     GstState state);
-gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream * stream,
+gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin);
 
-gboolean          gst_rtsp_stream_get_rtpinfo      (GstRTSPStream * stream,
-                                                    guint *rtptime, guint * seq);
+void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
+                                                    GstRTSPRange *server_port);
+void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
+                                                    guint *ssrc);
+
+gboolean          gst_rtsp_stream_get_rtpinfo      (GstRTSPStream *stream,
+                                                    guint *rtptime, guint *seq);
+GstCaps *         gst_rtsp_stream_get_caps         (GstRTSPStream *stream);
 
 GstFlowReturn     gst_rtsp_stream_recv_rtp         (GstRTSPStream *stream,
                                                     GstBuffer *buffer);

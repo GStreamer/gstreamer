@@ -38,9 +38,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPStreamTransport GstRTSPStreamTransport;
 typedef struct _GstRTSPStreamTransportClass GstRTSPStreamTransportClass;
+typedef struct _GstRTSPStreamTransportPrivate GstRTSPStreamTransportPrivate;
 
 #include "rtsp-stream.h"
-#include "rtsp-address-pool.h"
 
 typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
 typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
@@ -48,41 +48,13 @@ typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 /**
  * GstRTSPStreamTransport:
  * @parent: parent instance
- * @stream: the GstRTSPStream we manage
- * @send_rtp: callback for sending RTP messages
- * @send_rtcp: callback for sending RTCP messages
- * @user_data: user data passed in the callbacks
- * @notify: free function for the user_data.
- * @keep_alive: keep alive callback
- * @ka_user_data: data passed to @keep_alive
- * @ka_notify: called when @ka_user_data is freed
- * @active: if we are actively sending
- * @timeout: if we timed out
- * @transport: a transport description
- * @addr: an optional address
- * @rtpsource: the receiver rtp source object
  *
- * A Transport description for stream @idx
+ * A Transport description for a stream
  */
 struct _GstRTSPStreamTransport {
   GObject              parent;
 
-  GstRTSPStream       *stream;
-
-  GstRTSPSendFunc      send_rtp;
-  GstRTSPSendFunc      send_rtcp;
-  gpointer             user_data;
-  GDestroyNotify       notify;
-
-  GstRTSPKeepAliveFunc keep_alive;
-  gpointer             ka_user_data;
-  GDestroyNotify       ka_notify;
-  gboolean             active;
-  gboolean             timeout;
-
-  GstRTSPTransport    *transport;
-
-  GObject             *rtpsource;
+  GstRTSPStreamTransportPrivate *priv;
 };
 
 struct _GstRTSPStreamTransportClass {
@@ -94,8 +66,11 @@ GType                    gst_rtsp_stream_transport_get_type (void);
 GstRTSPStreamTransport * gst_rtsp_stream_transport_new           (GstRTSPStream *stream,
                                                                   GstRTSPTransport *tr);
 
+GstRTSPStream *          gst_rtsp_stream_transport_get_stream    (GstRTSPStreamTransport *trans);
+
 void                     gst_rtsp_stream_transport_set_transport (GstRTSPStreamTransport *trans,
                                                                   GstRTSPTransport * tr);
+const GstRTSPTransport * gst_rtsp_stream_transport_get_transport (GstRTSPStreamTransport *trans);
 
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
                                                                   GstRTSPSendFunc send_rtp,
@@ -106,6 +81,15 @@ void                     gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamT
                                                                   GstRTSPKeepAliveFunc keep_alive,
                                                                   gpointer user_data,
                                                                   GDestroyNotify  notify);
+
+gboolean                 gst_rtsp_stream_transport_set_active    (GstRTSPStreamTransport *trans,
+                                                                  gboolean active);
+
+void                     gst_rtsp_stream_transport_set_timed_out (GstRTSPStreamTransport *trans,
+                                                                  gboolean timedout);
+gboolean                 gst_rtsp_stream_transport_is_timed_out  (GstRTSPStreamTransport *trans);
+
+
 
 gboolean                 gst_rtsp_stream_transport_send_rtp      (GstRTSPStreamTransport *trans,
                                                                   GstBuffer *buffer);

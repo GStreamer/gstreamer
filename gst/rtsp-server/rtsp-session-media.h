@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPSessionMedia GstRTSPSessionMedia;
 typedef struct _GstRTSPSessionMediaClass GstRTSPSessionMediaClass;
+typedef struct _GstRTSPSessionMediaPrivate GstRTSPSessionMediaPrivate;
 
 /**
  * GstRTSPSessionMedia:
@@ -53,13 +54,7 @@ struct _GstRTSPSessionMedia
 {
   GObject  parent;
 
-  GMutex        lock;
-  GstRTSPUrl   *url;
-  GstRTSPMedia *media;
-  GstRTSPState  state;
-  guint         counter;
-
-  GPtrArray    *transports;
+  GstRTSPSessionMediaPrivate *priv;
 };
 
 struct _GstRTSPSessionMediaClass
@@ -71,9 +66,19 @@ GType                    gst_rtsp_session_media_get_type       (void);
 
 GstRTSPSessionMedia *    gst_rtsp_session_media_new            (const GstRTSPUrl *url,
                                                                 GstRTSPMedia *media);
+
+gboolean                 gst_rtsp_session_media_matches_url    (GstRTSPSessionMedia *media,
+                                                                const GstRTSPUrl *url);
+GstRTSPMedia *           gst_rtsp_session_media_get_media      (GstRTSPSessionMedia *media);
+
 /* control media */
+
 gboolean                 gst_rtsp_session_media_set_state      (GstRTSPSessionMedia *media,
                                                                 GstState state);
+
+void                     gst_rtsp_session_media_set_rtsp_state (GstRTSPSessionMedia *media,
+                                                                GstRTSPState state);
+GstRTSPState             gst_rtsp_session_media_get_rtsp_state (GstRTSPSessionMedia *media);
 
 /* get stream transport config */
 GstRTSPStreamTransport * gst_rtsp_session_media_set_transport  (GstRTSPSessionMedia *media,

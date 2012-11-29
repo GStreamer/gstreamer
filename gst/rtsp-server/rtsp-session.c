@@ -20,6 +20,22 @@
 
 #include "rtsp-session.h"
 
+#define GST_RTSP_SESSION_GET_PRIVATE(obj)  \
+       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_SESSION, GstRTSPSessionPrivate))
+
+struct _GstRTSPSessionPrivate
+{
+  GMutex lock;
+  gchar *sessionid;
+
+  guint timeout;
+  GTimeVal create_time;
+  GTimeVal last_access;
+  gint expire_count;
+
+  GList *medias;
+};
+
 #undef DEBUG
 
 #define DEFAULT_TIMEOUT	60
@@ -48,6 +64,8 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (GstRTSPSessionPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->get_property = gst_rtsp_session_get_property;
@@ -71,9 +89,13 @@ gst_rtsp_session_class_init (GstRTSPSessionClass * klass)
 static void
 gst_rtsp_session_init (GstRTSPSession * session)
 {
-  g_mutex_init (&session->lock);
-  session->timeout = DEFAULT_TIMEOUT;
-  g_get_current_time (&session->create_time);
+  GstRTSPSessionPrivate *priv = GST_RTSP_SESSION_GET_PRIVATE (session);
+
+  session->priv = priv;
+
+  g_mutex_init (&priv->lock);
+  priv->timeout = DEFAULT_TIMEOUT;
+  g_get_current_time (&priv->create_time);
   gst_rtsp_session_touch (session);
 }
 
@@ -81,17 +103,19 @@ static void
 gst_rtsp_session_finalize (GObject * obj)
 {
   GstRTSPSession *session;
+  GstRTSPSessionPrivate *priv;
 
   session = GST_RTSP_SESSION (obj);
+  priv = session->priv;
 
   GST_INFO ("finalize session %p", session);
 
   /* free all media */
-  g_list_free_full (session->medias, g_object_unref);
+  g_list_free_full (priv->medias, g_object_unref);
 
   /* free session id */
-  g_free (session->sessionid);
-  g_mutex_clear (&session->lock);
+  g_free (priv->sessionid);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_session_parent_class)->finalize (obj);
 }
@@ -101,10 +125,11 @@ gst_rtsp_session_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
 {
   GstRTSPSession *session = GST_RTSP_SESSION (object);
+  GstRTSPSessionPrivate *priv = session->priv;
 
   switch (propid) {
     case PROP_SESSIONID:
-      g_value_set_string (value, session->sessionid);
+      g_value_set_string (value, priv->sessionid);
       break;
     case PROP_TIMEOUT:
       g_value_set_uint (value, gst_rtsp_session_get_timeout (session));
@@ -119,11 +144,12 @@ gst_rtsp_session_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec)
 {
   GstRTSPSession *session = GST_RTSP_SESSION (object);
+  GstRTSPSessionPrivate *priv = session->priv;
 
   switch (propid) {
     case PROP_SESSIONID:
-      g_free (session->sessionid);
-      session->sessionid = g_value_dup_string (value);
+      g_free (priv->sessionid);
+      priv->sessionid = g_value_dup_string (value);
       break;
     case PROP_TIMEOUT:
       gst_rtsp_session_set_timeout (session, g_value_get_uint (value));
@@ -150,18 +176,22 @@ GstRTSPSessionMedia *
 gst_rtsp_session_manage_media (GstRTSPSession * sess, const GstRTSPUrl * uri,
     GstRTSPMedia * media)
 {
+  GstRTSPSessionPrivate *priv;
   GstRTSPSessionMedia *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
-  g_return_val_if_fail (media->status == GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
+  g_return_val_if_fail (gst_rtsp_media_get_status (media) ==
+      GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
+
+  priv = sess->priv;
 
   result = gst_rtsp_session_media_new (uri, media);
 
-  g_mutex_lock (&sess->lock);
-  sess->medias = g_list_prepend (sess->medias, result);
-  g_mutex_unlock (&sess->lock);
+  g_mutex_lock (&priv->lock);
+  priv->medias = g_list_prepend (priv->medias, result);
+  g_mutex_unlock (&priv->lock);
 
   GST_INFO ("manage new media %p in session %p", media, result);
 
@@ -181,18 +211,21 @@ gboolean
 gst_rtsp_session_release_media (GstRTSPSession * sess,
     GstRTSPSessionMedia * media)
 {
+  GstRTSPSessionPrivate *priv;
   GList *find;
   gboolean more;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), FALSE);
   g_return_val_if_fail (media != NULL, FALSE);
 
-  g_mutex_lock (&sess->lock);
-  find = g_list_find (sess->medias, media);
+  priv = sess->priv;
+
+  g_mutex_lock (&priv->lock);
+  find = g_list_find (priv->medias, media);
   if (find)
-    sess->medias = g_list_delete_link (sess->medias, find);
-  more = (sess->medias != NULL);
-  g_mutex_unlock (&sess->lock);
+    priv->medias = g_list_delete_link (priv->medias, find);
+  more = (priv->medias != NULL);
+  g_mutex_unlock (&priv->lock);
 
   if (find)
     g_object_unref (media);
@@ -212,24 +245,87 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
 GstRTSPSessionMedia *
 gst_rtsp_session_get_media (GstRTSPSession * sess, const GstRTSPUrl * url)
 {
+  GstRTSPSessionPrivate *priv;
   GstRTSPSessionMedia *result;
   GList *walk;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
   g_return_val_if_fail (url != NULL, NULL);
 
+  priv = sess->priv;
   result = NULL;
 
-  g_mutex_lock (&sess->lock);
-  for (walk = sess->medias; walk; walk = g_list_next (walk)) {
+  g_mutex_lock (&priv->lock);
+  for (walk = priv->medias; walk; walk = g_list_next (walk)) {
     result = (GstRTSPSessionMedia *) walk->data;
 
-    if (g_str_equal (result->url->abspath, url->abspath))
+    if (gst_rtsp_session_media_matches_url (result, url))
       break;
 
     result = NULL;
   }
-  g_mutex_unlock (&sess->lock);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_session_filter:
+ * @sess: a #GstRTSPSession
+ * @func: (scope call): a callback
+ * @user_data: user data passed to @func
+ *
+ * Call @func for each media in @sess. The result value of @func determines
+ * what happens to the media. @func will be called with @sess
+ * locked so no further actions on @sess can be performed from @func.
+ *
+ * If @func returns #GST_RTSP_FILTER_REMOVE, the media will be removed from
+ * @sess.
+ *
+ * If @func returns #GST_RTSP_FILTER_KEEP, the media will remain in @sess.
+ *
+ * If @func returns #GST_RTSP_FILTER_REF, the media will remain in @sess but
+ * will also be added with an additional ref to the result #GList of this
+ * function..
+ *
+ * Returns: (element-type GstRTSPSessionMedia) (transfer full): a GList with all
+ * media for which @func returned #GST_RTSP_FILTER_REF. After usage, each
+ * element in the #GList should be unreffed before the list is freed.
+ */
+GList *
+gst_rtsp_session_filter (GstRTSPSession * sess,
+    GstRTSPSessionFilterFunc func, gpointer user_data)
+{
+  GstRTSPSessionPrivate *priv;
+  GList *result, *walk, *next;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
+  g_return_val_if_fail (func != NULL, NULL);
+
+  priv = sess->priv;
+
+  result = NULL;
+
+  g_mutex_lock (&priv->lock);
+  for (walk = priv->medias; walk; walk = next) {
+    GstRTSPSessionMedia *media = walk->data;
+
+    next = g_list_next (walk);
+
+    switch (func (sess, media, user_data)) {
+      case GST_RTSP_FILTER_REMOVE:
+        g_object_unref (media);
+        priv->medias = g_list_delete_link (priv->medias, walk);
+        break;
+      case GST_RTSP_FILTER_REF:
+        result = g_list_prepend (result, g_object_ref (media));
+        break;
+      case GST_RTSP_FILTER_KEEP:
+      default:
+        break;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -266,7 +362,7 @@ gst_rtsp_session_get_sessionid (GstRTSPSession * session)
 {
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), NULL);
 
-  return session->sessionid;
+  return session->priv->sessionid;
 }
 
 /**
@@ -280,17 +376,19 @@ gst_rtsp_session_get_sessionid (GstRTSPSession * session)
 gchar *
 gst_rtsp_session_get_header (GstRTSPSession * session)
 {
+  GstRTSPSessionPrivate *priv;
   gchar *result;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), NULL);
 
-  g_mutex_lock (&session->lock);
-  if (session->timeout != 60)
-    result = g_strdup_printf ("%s; timeout=%d", session->sessionid,
-        session->timeout);
+  priv = session->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->timeout != 60)
+    result = g_strdup_printf ("%s; timeout=%d", priv->sessionid, priv->timeout);
   else
-    result = g_strdup (session->sessionid);
-  g_mutex_unlock (&session->lock);
+    result = g_strdup (priv->sessionid);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -306,11 +404,15 @@ gst_rtsp_session_get_header (GstRTSPSession * session)
 void
 gst_rtsp_session_set_timeout (GstRTSPSession * session, guint timeout)
 {
+  GstRTSPSessionPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_SESSION (session));
 
-  g_mutex_lock (&session->lock);
-  session->timeout = timeout;
-  g_mutex_unlock (&session->lock);
+  priv = session->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->timeout = timeout;
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -324,13 +426,16 @@ gst_rtsp_session_set_timeout (GstRTSPSession * session, guint timeout)
 guint
 gst_rtsp_session_get_timeout (GstRTSPSession * session)
 {
+  GstRTSPSessionPrivate *priv;
   guint res;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), 0);
 
-  g_mutex_lock (&session->lock);
-  res = session->timeout;
-  g_mutex_unlock (&session->lock);
+  priv = session->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->timeout;
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -344,11 +449,15 @@ gst_rtsp_session_get_timeout (GstRTSPSession * session)
 void
 gst_rtsp_session_touch (GstRTSPSession * session)
 {
+  GstRTSPSessionPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_SESSION (session));
 
-  g_mutex_lock (&session->lock);
-  g_get_current_time (&session->last_access);
-  g_mutex_unlock (&session->lock);
+  priv = session->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_get_current_time (&priv->last_access);
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -362,7 +471,7 @@ gst_rtsp_session_prevent_expire (GstRTSPSession * session)
 {
   g_return_if_fail (GST_IS_RTSP_SESSION (session));
 
-  g_atomic_int_add (&session->expire_count, 1);
+  g_atomic_int_add (&session->priv->expire_count, 1);
 }
 
 /**
@@ -375,7 +484,7 @@ gst_rtsp_session_prevent_expire (GstRTSPSession * session)
 void
 gst_rtsp_session_allow_expire (GstRTSPSession * session)
 {
-  g_atomic_int_add (&session->expire_count, -1);
+  g_atomic_int_add (&session->priv->expire_count, -1);
 }
 
 /**
@@ -390,22 +499,25 @@ gst_rtsp_session_allow_expire (GstRTSPSession * session)
 gint
 gst_rtsp_session_next_timeout (GstRTSPSession * session, GTimeVal * now)
 {
+  GstRTSPSessionPrivate *priv;
   gint res;
   GstClockTime last_access, now_ns;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (session), -1);
   g_return_val_if_fail (now != NULL, -1);
 
-  g_mutex_lock (&session->lock);
-  if (g_atomic_int_get (&session->expire_count) != 0) {
+  priv = session->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (g_atomic_int_get (&priv->expire_count) != 0) {
     /* touch session when the expire count is not 0 */
-    g_get_current_time (&session->last_access);
+    g_get_current_time (&priv->last_access);
   }
 
-  last_access = GST_TIMEVAL_TO_TIME (session->last_access);
+  last_access = GST_TIMEVAL_TO_TIME (priv->last_access);
   /* add timeout allow for 5 seconds of extra time */
-  last_access += session->timeout * GST_SECOND + (5 * GST_SECOND);
-  g_mutex_unlock (&session->lock);
+  last_access += priv->timeout * GST_SECOND + (5 * GST_SECOND);
+  g_mutex_unlock (&priv->lock);
 
   now_ns = GST_TIMEVAL_TO_TIME (*now);
 

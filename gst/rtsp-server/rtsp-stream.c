@@ -27,6 +27,56 @@
 
 #include "rtsp-stream.h"
 
+#define GST_RTSP_STREAM_GET_PRIVATE(obj)  \
+     (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_STREAM, GstRTSPStreamPrivate))
+
+struct _GstRTSPStreamPrivate
+{
+  GMutex lock;
+  guint idx;
+  GstPad *srcpad;
+  GstElement *payloader;
+  gboolean is_ipv6;
+  guint buffer_size;
+  gboolean is_joined;
+
+  /* pads on the rtpbin */
+  GstPad *send_rtp_sink;
+  GstPad *recv_sink[2];
+  GstPad *send_src[2];
+
+  /* the RTPSession object */
+  GObject *session;
+
+  /* sinks used for sending and receiving RTP and RTCP, they share
+   * sockets */
+  GstElement *udpsrc[2];
+  GstElement *udpsink[2];
+  /* for TCP transport */
+  GstElement *appsrc[2];
+  GstElement *appqueue[2];
+  GstElement *appsink[2];
+
+  GstElement *tee[2];
+  GstElement *funnel[2];
+
+  /* server ports for sending/receiving */
+  GstRTSPRange server_port;
+
+  /* multicast addresses */
+  GstRTSPAddressPool *pool;
+  GstRTSPAddress *addr;
+
+  /* the caps of the stream */
+  gulong caps_sig;
+  GstCaps *caps;
+
+  /* transports we stream to */
+  guint n_active;
+  GList *transports;
+};
+
+
 enum
 {
   PROP_0,
@@ -47,6 +97,8 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (GstRTSPStreamPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_stream_finalize;
@@ -59,30 +111,36 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
 static void
 gst_rtsp_stream_init (GstRTSPStream * stream)
 {
+  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+
   GST_DEBUG ("new stream %p", stream);
 
-  g_mutex_init (&stream->lock);
+  stream->priv = priv;
+
+  g_mutex_init (&priv->lock);
 }
 
 static void
 gst_rtsp_stream_finalize (GObject * obj)
 {
   GstRTSPStream *stream;
+  GstRTSPStreamPrivate *priv;
 
   stream = GST_RTSP_STREAM (obj);
+  priv = stream->priv;
 
   GST_DEBUG ("finalize stream %p", stream);
 
   /* we really need to be unjoined now */
-  g_return_if_fail (!stream->is_joined);
+  g_return_if_fail (!priv->is_joined);
 
-  if (stream->addr)
-    gst_rtsp_address_free (stream->addr);
-  if (stream->pool)
-    g_object_unref (stream->pool);
-  gst_object_unref (stream->payloader);
-  gst_object_unref (stream->srcpad);
-  g_mutex_clear (&stream->lock);
+  if (priv->addr)
+    gst_rtsp_address_free (priv->addr);
+  if (priv->pool)
+    g_object_unref (priv->pool);
+  gst_object_unref (priv->payloader);
+  gst_object_unref (priv->srcpad);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_stream_parent_class)->finalize (obj);
 }
@@ -101,6 +159,7 @@ gst_rtsp_stream_finalize (GObject * obj)
 GstRTSPStream *
 gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * srcpad)
 {
+  GstRTSPStreamPrivate *priv;
   GstRTSPStream *stream;
 
   g_return_val_if_fail (GST_IS_ELEMENT (payloader), NULL);
@@ -108,11 +167,28 @@ gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * srcpad)
   g_return_val_if_fail (GST_PAD_IS_SRC (srcpad), NULL);
 
   stream = g_object_new (GST_TYPE_RTSP_STREAM, NULL);
-  stream->idx = idx;
-  stream->payloader = gst_object_ref (payloader);
-  stream->srcpad = gst_object_ref (srcpad);
+  priv = stream->priv;
+  priv->idx = idx;
+  priv->payloader = gst_object_ref (payloader);
+  priv->srcpad = gst_object_ref (srcpad);
 
   return stream;
+}
+
+/**
+ * gst_rtsp_stream_get_index:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the stream index.
+ *
+ * Return: the stream index.
+ */
+guint
+gst_rtsp_stream_get_index (GstRTSPStream * stream)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), -1);
+
+  return stream->priv->idx;
 }
 
 /**
@@ -125,11 +201,15 @@ gst_rtsp_stream_new (guint idx, GstElement * payloader, GstPad * srcpad)
 void
 gst_rtsp_stream_set_mtu (GstRTSPStream * stream, guint mtu)
 {
+  GstRTSPStreamPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
 
   GST_LOG_OBJECT (stream, "set MTU %u", mtu);
 
-  g_object_set (G_OBJECT (stream->payloader), "mtu", mtu, NULL);
+  g_object_set (G_OBJECT (priv->payloader), "mtu", mtu, NULL);
 }
 
 /**
@@ -143,11 +223,14 @@ gst_rtsp_stream_set_mtu (GstRTSPStream * stream, guint mtu)
 guint
 gst_rtsp_stream_get_mtu (GstRTSPStream * stream)
 {
+  GstRTSPStreamPrivate *priv;
   guint mtu;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), 0);
 
-  g_object_get (G_OBJECT (stream->payloader), "mtu", &mtu, NULL);
+  priv = stream->priv;
+
+  g_object_get (G_OBJECT (priv->payloader), "mtu", &mtu, NULL);
 
   return mtu;
 }
@@ -163,18 +246,21 @@ void
 gst_rtsp_stream_set_address_pool (GstRTSPStream * stream,
     GstRTSPAddressPool * pool)
 {
+  GstRTSPStreamPrivate *priv;
   GstRTSPAddressPool *old;
 
   g_return_if_fail (GST_IS_RTSP_STREAM (stream));
 
+  priv = stream->priv;
+
   GST_LOG_OBJECT (stream, "set address pool %p", pool);
 
-  g_mutex_lock (&stream->lock);
-  if ((old = stream->pool) != pool)
-    stream->pool = pool ? g_object_ref (pool) : NULL;
+  g_mutex_lock (&priv->lock);
+  if ((old = priv->pool) != pool)
+    priv->pool = pool ? g_object_ref (pool) : NULL;
   else
     old = NULL;
-  g_mutex_unlock (&stream->lock);
+  g_mutex_unlock (&priv->lock);
 
   if (old)
     g_object_unref (old);
@@ -192,14 +278,17 @@ gst_rtsp_stream_set_address_pool (GstRTSPStream * stream,
 GstRTSPAddressPool *
 gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
 {
+  GstRTSPStreamPrivate *priv;
   GstRTSPAddressPool *result;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
 
-  g_mutex_lock (&stream->lock);
-  if ((result = stream->pool))
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->pool))
     g_object_ref (result);
-  g_mutex_unlock (&stream->lock);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 }
@@ -216,20 +305,25 @@ gst_rtsp_stream_get_address_pool (GstRTSPStream * stream)
 GstRTSPAddress *
 gst_rtsp_stream_get_address (GstRTSPStream * stream)
 {
+  GstRTSPStreamPrivate *priv;
   GstRTSPAddress *result;
 
-  g_mutex_lock (&stream->lock);
-  if (stream->addr == NULL) {
-    if (stream->pool == NULL)
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->addr == NULL) {
+    if (priv->pool == NULL)
       goto no_pool;
 
-    stream->addr = gst_rtsp_address_pool_acquire_address (stream->pool,
+    priv->addr = gst_rtsp_address_pool_acquire_address (priv->pool,
         GST_RTSP_ADDRESS_FLAG_EVEN_PORT, 2);
-    if (stream->addr == NULL)
+    if (priv->addr == NULL)
       goto no_address;
   }
-  result = gst_rtsp_address_copy (stream->addr);
-  g_mutex_unlock (&stream->lock);
+  result = gst_rtsp_address_copy (priv->addr);
+  g_mutex_unlock (&priv->lock);
 
   return result;
 
@@ -237,13 +331,13 @@ gst_rtsp_stream_get_address (GstRTSPStream * stream)
 no_pool:
   {
     GST_ERROR_OBJECT (stream, "no address pool specified");
-    g_mutex_unlock (&stream->lock);
+    g_mutex_unlock (&priv->lock);
     return NULL;
   }
 no_address:
   {
     GST_ERROR_OBJECT (stream, "failed to acquire address from pool");
-    g_mutex_unlock (&stream->lock);
+    g_mutex_unlock (&priv->lock);
     return NULL;
   }
 }
@@ -252,6 +346,7 @@ no_address:
 static gboolean
 alloc_ports (GstRTSPStream * stream)
 {
+  GstRTSPStreamPrivate *priv = stream->priv;
   GstStateChangeReturn ret;
   GstElement *udpsrc0, *udpsrc1;
   GstElement *udpsink0, *udpsink1;
@@ -260,8 +355,6 @@ alloc_ports (GstRTSPStream * stream)
   gint rtpport, rtcpport;
   GSocket *socket;
   const gchar *host;
-
-  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
 
   udpsrc0 = NULL;
   udpsrc1 = NULL;
@@ -272,7 +365,7 @@ alloc_ports (GstRTSPStream * stream)
   /* Start with random port */
   tmp_rtp = 0;
 
-  if (stream->is_ipv6)
+  if (priv->is_ipv6)
     host = "udp://[::0]";
   else
     host = "udp://0.0.0.0";
@@ -372,8 +465,7 @@ again:
 
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (udpsink0),
           "buffer-size")) {
-    g_object_set (G_OBJECT (udpsink0), "buffer-size", stream->buffer_size,
-        NULL);
+    g_object_set (G_OBJECT (udpsink0), "buffer-size", priv->buffer_size, NULL);
   } else {
     GST_WARNING ("multiudpsink version found without buffer-size property");
   }
@@ -391,12 +483,12 @@ again:
 
   /* we keep these elements, we will further configure them when the
    * client told us to really use the UDP ports. */
-  stream->udpsrc[0] = udpsrc0;
-  stream->udpsrc[1] = udpsrc1;
-  stream->udpsink[0] = udpsink0;
-  stream->udpsink[1] = udpsink1;
-  stream->server_port.min = rtpport;
-  stream->server_port.max = rtcpport;
+  priv->udpsrc[0] = udpsrc0;
+  priv->udpsrc[1] = udpsrc1;
+  priv->udpsink[0] = udpsink0;
+  priv->udpsink[1] = udpsink1;
+  priv->server_port.min = rtpport;
+  priv->server_port.max = rtcpport;
 
   return TRUE;
 
@@ -439,10 +531,58 @@ cleanup:
   }
 }
 
+/**
+ * gst_rtsp_stream_get_server_port:
+ * @stream: a #GstRTSPStream
+ * @server_port: (out): result server port
+ *
+ * Fill @server_port with the port pair used by the server. This function can
+ * only be called when @stream has been joined.
+ */
+void
+gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
+    GstRTSPRange * server_port)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  priv = stream->priv;
+  g_return_if_fail (priv->is_joined);
+
+  g_mutex_lock (&priv->lock);
+  if (server_port)
+    *server_port = priv->server_port;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_get_ssrc:
+ * @stream: a #GstRTSPStream
+ * @ssrc: (out): result ssrc
+ *
+ * Get the SSRC used by the RTP session of this stream. This function can only
+ * be called when @stream has been joined.
+ */
+void
+gst_rtsp_stream_get_ssrc (GstRTSPStream * stream, guint * ssrc)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  priv = stream->priv;
+  g_return_if_fail (priv->is_joined);
+
+  g_mutex_lock (&priv->lock);
+  if (ssrc && priv->session)
+    g_object_get (priv->session, "internal-ssrc", ssrc, NULL);
+  g_mutex_unlock (&priv->lock);
+}
+
 /* executed from streaming thread */
 static void
 caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPStream * stream)
 {
+  GstRTSPStreamPrivate *priv = stream->priv;
   GstCaps *newcaps, *oldcaps;
 
   newcaps = gst_pad_get_current_caps (pad);
@@ -450,10 +590,10 @@ caps_notify (GstPad * pad, GParamSpec * unused, GstRTSPStream * stream)
   GST_INFO ("stream %p received caps %p, %" GST_PTR_FORMAT, stream, newcaps,
       newcaps);
 
-  g_mutex_lock (&stream->lock);
-  oldcaps = stream->caps;
-  stream->caps = newcaps;
-  g_mutex_unlock (&stream->lock);
+  g_mutex_lock (&priv->lock);
+  oldcaps = priv->caps;
+  priv->caps = newcaps;
+  g_mutex_unlock (&priv->lock);
 
   if (oldcaps)
     gst_caps_unref (oldcaps);
@@ -472,6 +612,7 @@ dump_structure (const GstStructure * s)
 static GstRTSPStreamTransport *
 find_transport (GstRTSPStream * stream, const gchar * rtcp_from)
 {
+  GstRTSPStreamPrivate *priv = stream->priv;
   GList *walk;
   GstRTSPStreamTransport *result = NULL;
   const gchar *tmp;
@@ -488,24 +629,26 @@ find_transport (GstRTSPStream * stream, const gchar * rtcp_from)
   port = atoi (tmp + 1);
   dest = g_strndup (rtcp_from, tmp - rtcp_from);
 
-  g_mutex_lock (&stream->lock);
+  g_mutex_lock (&priv->lock);
   GST_INFO ("finding %s:%d in %d transports", dest, port,
-      g_list_length (stream->transports));
+      g_list_length (priv->transports));
 
-  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
+  for (walk = priv->transports; walk; walk = g_list_next (walk)) {
     GstRTSPStreamTransport *trans = walk->data;
+    const GstRTSPTransport *tr;
     gint min, max;
 
-    min = trans->transport->client_port.min;
-    max = trans->transport->client_port.max;
+    tr = gst_rtsp_stream_transport_get_transport (trans);
 
-    if ((strcmp (trans->transport->destination, dest) == 0) && (min == port
-            || max == port)) {
+    min = tr->client_port.min;
+    max = tr->client_port.max;
+
+    if ((strcmp (tr->destination, dest) == 0) && (min == port || max == port)) {
       result = trans;
       break;
     }
   }
-  g_mutex_unlock (&stream->lock);
+  g_mutex_unlock (&priv->lock);
 
   g_free (dest);
 
@@ -531,16 +674,11 @@ check_transport (GObject * source, GstRTSPStream * stream)
       if ((trans = find_transport (stream, rtcp_from))) {
         GST_INFO ("%p: found transport %p for source  %p", stream, trans,
             source);
-
-        /* keep ref to the source */
-        trans->rtpsource = source;
-
         g_object_set_qdata (source, ssrc_stream_map_key, trans);
       }
       gst_structure_free (stats);
     }
   }
-
   return trans;
 }
 
@@ -601,8 +739,7 @@ on_bye_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
   GST_INFO ("%p: source %p bye timeout", stream, source);
 
   if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
-    trans->rtpsource = NULL;
-    trans->timeout = TRUE;
+    gst_rtsp_stream_transport_set_timed_out (trans, TRUE);
   }
 }
 
@@ -614,14 +751,14 @@ on_timeout (GObject * session, GObject * source, GstRTSPStream * stream)
   GST_INFO ("%p: source %p timeout", stream, source);
 
   if ((trans = g_object_get_qdata (source, ssrc_stream_map_key))) {
-    trans->rtpsource = NULL;
-    trans->timeout = TRUE;
+    gst_rtsp_stream_transport_set_timed_out (trans, TRUE);
   }
 }
 
 static GstFlowReturn
 handle_new_sample (GstAppSink * sink, gpointer user_data)
 {
+  GstRTSPStreamPrivate *priv;
   GList *walk;
   GstSample *sample;
   GstBuffer *buffer;
@@ -632,19 +769,20 @@ handle_new_sample (GstAppSink * sink, gpointer user_data)
     return GST_FLOW_OK;
 
   stream = (GstRTSPStream *) user_data;
+  priv = stream->priv;
   buffer = gst_sample_get_buffer (sample);
 
-  g_mutex_lock (&stream->lock);
-  for (walk = stream->transports; walk; walk = g_list_next (walk)) {
+  g_mutex_lock (&priv->lock);
+  for (walk = priv->transports; walk; walk = g_list_next (walk)) {
     GstRTSPStreamTransport *tr = (GstRTSPStreamTransport *) walk->data;
 
-    if (GST_ELEMENT_CAST (sink) == stream->appsink[0]) {
+    if (GST_ELEMENT_CAST (sink) == priv->appsink[0]) {
       gst_rtsp_stream_transport_send_rtp (tr, buffer);
     } else {
       gst_rtsp_stream_transport_send_rtcp (tr, buffer);
     }
   }
-  g_mutex_unlock (&stream->lock);
+  g_mutex_unlock (&priv->lock);
 
   gst_sample_unref (sample);
 
@@ -675,6 +813,7 @@ gboolean
 gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     GstElement * rtpbin, GstState state)
 {
+  GstRTSPStreamPrivate *priv;
   gint i, idx;
   gchar *name;
   GstPad *pad, *teepad, *queuepad, *selpad;
@@ -684,12 +823,14 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (rtpbin), FALSE);
 
-  g_mutex_lock (&stream->lock);
-  if (stream->is_joined)
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->is_joined)
     goto was_joined;
 
   /* create a session with the same index as the stream */
-  idx = stream->idx;
+  idx = priv->idx;
 
   GST_INFO ("stream %p joining bin as session %d", stream, idx);
 
@@ -698,43 +839,43 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
 
   /* get a pad for sending RTP */
   name = g_strdup_printf ("send_rtp_sink_%u", idx);
-  stream->send_rtp_sink = gst_element_get_request_pad (rtpbin, name);
+  priv->send_rtp_sink = gst_element_get_request_pad (rtpbin, name);
   g_free (name);
   /* link the RTP pad to the session manager, it should not really fail unless
    * this is not really an RTP pad */
-  ret = gst_pad_link (stream->srcpad, stream->send_rtp_sink);
+  ret = gst_pad_link (priv->srcpad, priv->send_rtp_sink);
   if (ret != GST_PAD_LINK_OK)
     goto link_failed;
 
   /* get pads from the RTP session element for sending and receiving
    * RTP/RTCP*/
   name = g_strdup_printf ("send_rtp_src_%u", idx);
-  stream->send_src[0] = gst_element_get_static_pad (rtpbin, name);
+  priv->send_src[0] = gst_element_get_static_pad (rtpbin, name);
   g_free (name);
   name = g_strdup_printf ("send_rtcp_src_%u", idx);
-  stream->send_src[1] = gst_element_get_request_pad (rtpbin, name);
+  priv->send_src[1] = gst_element_get_request_pad (rtpbin, name);
   g_free (name);
   name = g_strdup_printf ("recv_rtp_sink_%u", idx);
-  stream->recv_sink[0] = gst_element_get_request_pad (rtpbin, name);
+  priv->recv_sink[0] = gst_element_get_request_pad (rtpbin, name);
   g_free (name);
   name = g_strdup_printf ("recv_rtcp_sink_%u", idx);
-  stream->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
+  priv->recv_sink[1] = gst_element_get_request_pad (rtpbin, name);
   g_free (name);
 
   /* get the session */
-  g_signal_emit_by_name (rtpbin, "get-internal-session", idx, &stream->session);
+  g_signal_emit_by_name (rtpbin, "get-internal-session", idx, &priv->session);
 
-  g_signal_connect (stream->session, "on-new-ssrc", (GCallback) on_new_ssrc,
+  g_signal_connect (priv->session, "on-new-ssrc", (GCallback) on_new_ssrc,
       stream);
-  g_signal_connect (stream->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
+  g_signal_connect (priv->session, "on-ssrc-sdes", (GCallback) on_ssrc_sdes,
       stream);
-  g_signal_connect (stream->session, "on-ssrc-active",
+  g_signal_connect (priv->session, "on-ssrc-active",
       (GCallback) on_ssrc_active, stream);
-  g_signal_connect (stream->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
+  g_signal_connect (priv->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
       stream);
-  g_signal_connect (stream->session, "on-bye-timeout",
+  g_signal_connect (priv->session, "on-bye-timeout",
       (GCallback) on_bye_timeout, stream);
-  g_signal_connect (stream->session, "on-timeout", (GCallback) on_timeout,
+  g_signal_connect (priv->session, "on-timeout", (GCallback) on_timeout,
       stream);
 
   for (i = 0; i < 2; i++) {
@@ -754,44 +895,44 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
      *                 '-----'    '---------'    '---------'
      */
     /* make tee for RTP/RTCP */
-    stream->tee[i] = gst_element_factory_make ("tee", NULL);
-    gst_bin_add (bin, stream->tee[i]);
+    priv->tee[i] = gst_element_factory_make ("tee", NULL);
+    gst_bin_add (bin, priv->tee[i]);
 
     /* and link to rtpbin send pad */
-    pad = gst_element_get_static_pad (stream->tee[i], "sink");
-    gst_pad_link (stream->send_src[i], pad);
+    pad = gst_element_get_static_pad (priv->tee[i], "sink");
+    gst_pad_link (priv->send_src[i], pad);
     gst_object_unref (pad);
 
     /* add udpsink */
-    gst_bin_add (bin, stream->udpsink[i]);
+    gst_bin_add (bin, priv->udpsink[i]);
 
     /* link tee to udpsink */
-    teepad = gst_element_get_request_pad (stream->tee[i], "src_%u");
-    pad = gst_element_get_static_pad (stream->udpsink[i], "sink");
+    teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
+    pad = gst_element_get_static_pad (priv->udpsink[i], "sink");
     gst_pad_link (teepad, pad);
     gst_object_unref (pad);
     gst_object_unref (teepad);
 
     /* make queue */
-    stream->appqueue[i] = gst_element_factory_make ("queue", NULL);
-    gst_bin_add (bin, stream->appqueue[i]);
+    priv->appqueue[i] = gst_element_factory_make ("queue", NULL);
+    gst_bin_add (bin, priv->appqueue[i]);
     /* and link to tee */
-    teepad = gst_element_get_request_pad (stream->tee[i], "src_%u");
-    pad = gst_element_get_static_pad (stream->appqueue[i], "sink");
+    teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
+    pad = gst_element_get_static_pad (priv->appqueue[i], "sink");
     gst_pad_link (teepad, pad);
     gst_object_unref (pad);
     gst_object_unref (teepad);
 
     /* make appsink */
-    stream->appsink[i] = gst_element_factory_make ("appsink", NULL);
-    g_object_set (stream->appsink[i], "async", FALSE, "sync", FALSE, NULL);
-    g_object_set (stream->appsink[i], "emit-signals", FALSE, NULL);
-    gst_bin_add (bin, stream->appsink[i]);
-    gst_app_sink_set_callbacks (GST_APP_SINK_CAST (stream->appsink[i]),
+    priv->appsink[i] = gst_element_factory_make ("appsink", NULL);
+    g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
+    g_object_set (priv->appsink[i], "emit-signals", FALSE, NULL);
+    gst_bin_add (bin, priv->appsink[i]);
+    gst_app_sink_set_callbacks (GST_APP_SINK_CAST (priv->appsink[i]),
         &sink_cb, stream, NULL);
     /* and link to queue */
-    queuepad = gst_element_get_static_pad (stream->appqueue[i], "src");
-    pad = gst_element_get_static_pad (stream->appsink[i], "sink");
+    queuepad = gst_element_get_static_pad (priv->appqueue[i], "src");
+    pad = gst_element_get_static_pad (priv->appsink[i], "sink");
     gst_pad_link (queuepad, pad);
     gst_object_unref (pad);
     gst_object_unref (queuepad);
@@ -810,74 +951,74 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
      * '--------'     '--------'
      */
     /* make funnel for the RTP/RTCP receivers */
-    stream->funnel[i] = gst_element_factory_make ("funnel", NULL);
-    gst_bin_add (bin, stream->funnel[i]);
+    priv->funnel[i] = gst_element_factory_make ("funnel", NULL);
+    gst_bin_add (bin, priv->funnel[i]);
 
-    pad = gst_element_get_static_pad (stream->funnel[i], "src");
-    gst_pad_link (pad, stream->recv_sink[i]);
+    pad = gst_element_get_static_pad (priv->funnel[i], "src");
+    gst_pad_link (pad, priv->recv_sink[i]);
     gst_object_unref (pad);
 
     /* we set and keep these to playing so that they don't cause NO_PREROLL return
      * values */
-    gst_element_set_state (stream->udpsrc[i], GST_STATE_PLAYING);
-    gst_element_set_locked_state (stream->udpsrc[i], TRUE);
+    gst_element_set_state (priv->udpsrc[i], GST_STATE_PLAYING);
+    gst_element_set_locked_state (priv->udpsrc[i], TRUE);
     /* add udpsrc */
-    gst_bin_add (bin, stream->udpsrc[i]);
+    gst_bin_add (bin, priv->udpsrc[i]);
     /* and link to the funnel */
-    selpad = gst_element_get_request_pad (stream->funnel[i], "sink_%u");
-    pad = gst_element_get_static_pad (stream->udpsrc[i], "src");
+    selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+    pad = gst_element_get_static_pad (priv->udpsrc[i], "src");
     gst_pad_link (pad, selpad);
     gst_object_unref (pad);
     gst_object_unref (selpad);
 
     /* make and add appsrc */
-    stream->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
-    gst_bin_add (bin, stream->appsrc[i]);
+    priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
+    gst_bin_add (bin, priv->appsrc[i]);
     /* and link to the funnel */
-    selpad = gst_element_get_request_pad (stream->funnel[i], "sink_%u");
-    pad = gst_element_get_static_pad (stream->appsrc[i], "src");
+    selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+    pad = gst_element_get_static_pad (priv->appsrc[i], "src");
     gst_pad_link (pad, selpad);
     gst_object_unref (pad);
     gst_object_unref (selpad);
 
     /* check if we need to set to a special state */
     if (state != GST_STATE_NULL) {
-      gst_element_set_state (stream->udpsink[i], state);
-      gst_element_set_state (stream->appsink[i], state);
-      gst_element_set_state (stream->appqueue[i], state);
-      gst_element_set_state (stream->tee[i], state);
-      gst_element_set_state (stream->funnel[i], state);
-      gst_element_set_state (stream->appsrc[i], state);
+      gst_element_set_state (priv->udpsink[i], state);
+      gst_element_set_state (priv->appsink[i], state);
+      gst_element_set_state (priv->appqueue[i], state);
+      gst_element_set_state (priv->tee[i], state);
+      gst_element_set_state (priv->funnel[i], state);
+      gst_element_set_state (priv->appsrc[i], state);
     }
   }
 
   /* be notified of caps changes */
-  stream->caps_sig = g_signal_connect (stream->send_rtp_sink, "notify::caps",
+  priv->caps_sig = g_signal_connect (priv->send_rtp_sink, "notify::caps",
       (GCallback) caps_notify, stream);
 
-  stream->is_joined = TRUE;
-  g_mutex_unlock (&stream->lock);
+  priv->is_joined = TRUE;
+  g_mutex_unlock (&priv->lock);
 
   return TRUE;
 
   /* ERRORS */
 was_joined:
   {
-    g_mutex_unlock (&stream->lock);
+    g_mutex_unlock (&priv->lock);
     return TRUE;
   }
 no_ports:
   {
-    g_mutex_unlock (&stream->lock);
+    g_mutex_unlock (&priv->lock);
     GST_WARNING ("failed to allocate ports %d", idx);
     return FALSE;
   }
 link_failed:
   {
     GST_WARNING ("failed to link stream %d", idx);
-    gst_object_unref (stream->send_rtp_sink);
-    stream->send_rtp_sink = NULL;
-    g_mutex_unlock (&stream->lock);
+    gst_object_unref (priv->send_rtp_sink);
+    priv->send_rtp_sink = NULL;
+    g_mutex_unlock (&priv->lock);
     return FALSE;
   }
 }
@@ -897,67 +1038,70 @@ gboolean
 gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     GstElement * rtpbin)
 {
+  GstRTSPStreamPrivate *priv;
   gint i;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
   g_return_val_if_fail (GST_IS_BIN (bin), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (rtpbin), FALSE);
 
-  g_mutex_lock (&stream->lock);
-  if (!stream->is_joined)
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (!priv->is_joined)
     goto was_not_joined;
 
   /* all transports must be removed by now */
-  g_return_val_if_fail (stream->transports == NULL, FALSE);
+  g_return_val_if_fail (priv->transports == NULL, FALSE);
 
   GST_INFO ("stream %p leaving bin", stream);
 
-  gst_pad_unlink (stream->srcpad, stream->send_rtp_sink);
-  g_signal_handler_disconnect (stream->send_rtp_sink, stream->caps_sig);
-  gst_element_release_request_pad (rtpbin, stream->send_rtp_sink);
-  gst_object_unref (stream->send_rtp_sink);
-  stream->send_rtp_sink = NULL;
+  gst_pad_unlink (priv->srcpad, priv->send_rtp_sink);
+  g_signal_handler_disconnect (priv->send_rtp_sink, priv->caps_sig);
+  gst_element_release_request_pad (rtpbin, priv->send_rtp_sink);
+  gst_object_unref (priv->send_rtp_sink);
+  priv->send_rtp_sink = NULL;
 
   for (i = 0; i < 2; i++) {
     /* and set udpsrc to NULL now before removing */
-    gst_element_set_locked_state (stream->udpsrc[i], FALSE);
-    gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
+    gst_element_set_locked_state (priv->udpsrc[i], FALSE);
+    gst_element_set_state (priv->udpsrc[i], GST_STATE_NULL);
 
     /* removing them should also nicely release the request
      * pads when they finalize */
-    gst_bin_remove (bin, stream->udpsrc[i]);
-    gst_bin_remove (bin, stream->udpsink[i]);
-    gst_bin_remove (bin, stream->appsrc[i]);
-    gst_bin_remove (bin, stream->appsink[i]);
-    gst_bin_remove (bin, stream->appqueue[i]);
-    gst_bin_remove (bin, stream->tee[i]);
-    gst_bin_remove (bin, stream->funnel[i]);
+    gst_bin_remove (bin, priv->udpsrc[i]);
+    gst_bin_remove (bin, priv->udpsink[i]);
+    gst_bin_remove (bin, priv->appsrc[i]);
+    gst_bin_remove (bin, priv->appsink[i]);
+    gst_bin_remove (bin, priv->appqueue[i]);
+    gst_bin_remove (bin, priv->tee[i]);
+    gst_bin_remove (bin, priv->funnel[i]);
 
-    gst_element_release_request_pad (rtpbin, stream->recv_sink[i]);
-    gst_object_unref (stream->recv_sink[i]);
-    stream->recv_sink[i] = NULL;
+    gst_element_release_request_pad (rtpbin, priv->recv_sink[i]);
+    gst_object_unref (priv->recv_sink[i]);
+    priv->recv_sink[i] = NULL;
 
-    stream->udpsrc[i] = NULL;
-    stream->udpsink[i] = NULL;
-    stream->appsrc[i] = NULL;
-    stream->appsink[i] = NULL;
-    stream->appqueue[i] = NULL;
-    stream->tee[i] = NULL;
-    stream->funnel[i] = NULL;
+    priv->udpsrc[i] = NULL;
+    priv->udpsink[i] = NULL;
+    priv->appsrc[i] = NULL;
+    priv->appsink[i] = NULL;
+    priv->appqueue[i] = NULL;
+    priv->tee[i] = NULL;
+    priv->funnel[i] = NULL;
   }
-  gst_object_unref (stream->send_src[0]);
-  stream->send_src[0] = NULL;
+  gst_object_unref (priv->send_src[0]);
+  priv->send_src[0] = NULL;
 
-  gst_element_release_request_pad (rtpbin, stream->send_src[1]);
-  gst_object_unref (stream->send_src[1]);
-  stream->send_src[1] = NULL;
+  gst_element_release_request_pad (rtpbin, priv->send_src[1]);
+  gst_object_unref (priv->send_src[1]);
+  priv->send_src[1] = NULL;
 
-  g_object_unref (stream->session);
-  if (stream->caps)
-    gst_caps_unref (stream->caps);
+  g_object_unref (priv->session);
+  if (priv->caps)
+    gst_caps_unref (priv->caps);
 
-  stream->is_joined = FALSE;
-  g_mutex_unlock (&stream->lock);
+  priv->is_joined = FALSE;
+  g_mutex_unlock (&priv->lock);
 
   return TRUE;
 
@@ -982,17 +1126,51 @@ gboolean
 gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
     guint * rtptime, guint * seq)
 {
+  GstRTSPStreamPrivate *priv;
   GObjectClass *payobjclass;
 
-  payobjclass = G_OBJECT_GET_CLASS (stream->payloader);
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  g_return_val_if_fail (rtptime != NULL, FALSE);
+  g_return_val_if_fail (seq != NULL, FALSE);
+
+  priv = stream->priv;
+
+  payobjclass = G_OBJECT_GET_CLASS (priv->payloader);
 
   if (!g_object_class_find_property (payobjclass, "seqnum") ||
       !g_object_class_find_property (payobjclass, "timestamp"))
     return FALSE;
 
-  g_object_get (stream->payloader, "seqnum", seq, "timestamp", rtptime, NULL);
+  g_object_get (priv->payloader, "seqnum", seq, "timestamp", rtptime, NULL);
 
   return TRUE;
+}
+
+/**
+ * gst_rtsp_stream_get_caps:
+ * @stream: a #GstRTSPStream
+ *
+ * Retrieve the current caps of @stream.
+ *
+ * Returns: (transfer full): the #GstCaps of @stream. use gst_caps_unref()
+ *    after usage.
+ */
+GstCaps *
+gst_rtsp_stream_get_caps (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GstCaps *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->caps))
+    gst_caps_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
 }
 
 /**
@@ -1010,16 +1188,18 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
 GstFlowReturn
 gst_rtsp_stream_recv_rtp (GstRTSPStream * stream, GstBuffer * buffer)
 {
+  GstRTSPStreamPrivate *priv;
   GstFlowReturn ret;
   GstElement *element;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), GST_FLOW_ERROR);
+  priv = stream->priv;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
-  g_return_val_if_fail (stream->is_joined, FALSE);
+  g_return_val_if_fail (priv->is_joined, FALSE);
 
-  g_mutex_lock (&stream->lock);
-  element = gst_object_ref (stream->appsrc[0]);
-  g_mutex_unlock (&stream->lock);
+  g_mutex_lock (&priv->lock);
+  element = gst_object_ref (priv->appsrc[0]);
+  g_mutex_unlock (&priv->lock);
 
   ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
 
@@ -1043,16 +1223,18 @@ gst_rtsp_stream_recv_rtp (GstRTSPStream * stream, GstBuffer * buffer)
 GstFlowReturn
 gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
 {
+  GstRTSPStreamPrivate *priv;
   GstFlowReturn ret;
   GstElement *element;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), GST_FLOW_ERROR);
+  priv = stream->priv;
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
-  g_return_val_if_fail (stream->is_joined, FALSE);
+  g_return_val_if_fail (priv->is_joined, FALSE);
 
-  g_mutex_lock (&stream->lock);
-  element = gst_object_ref (stream->appsrc[1]);
-  g_mutex_unlock (&stream->lock);
+  g_mutex_lock (&priv->lock);
+  element = gst_object_ref (priv->appsrc[1]);
+  g_mutex_unlock (&priv->lock);
 
   ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
 
@@ -1066,12 +1248,10 @@ static gboolean
 update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
     gboolean add)
 {
-  GstRTSPTransport *tr;
-  gboolean updated;
+  GstRTSPStreamPrivate *priv = stream->priv;
+  const GstRTSPTransport *tr;
 
-  updated = FALSE;
-
-  tr = trans->transport;
+  tr = gst_rtsp_stream_transport_get_transport (trans);
 
   switch (tr->lower_transport) {
     case GST_RTSP_LOWER_TRANS_UDP:
@@ -1091,46 +1271,44 @@ update_transport (GstRTSPStream * stream, GstRTSPStreamTransport * trans,
         max = tr->client_port.max;
       }
 
-      if (add && !trans->active) {
+      if (add) {
         GST_INFO ("adding %s:%d-%d", dest, min, max);
-        g_signal_emit_by_name (stream->udpsink[0], "add", dest, min, NULL);
-        g_signal_emit_by_name (stream->udpsink[1], "add", dest, max, NULL);
+        g_signal_emit_by_name (priv->udpsink[0], "add", dest, min, NULL);
+        g_signal_emit_by_name (priv->udpsink[1], "add", dest, max, NULL);
         if (ttl > 0) {
           GST_INFO ("setting ttl-mc %d", ttl);
-          g_object_set (G_OBJECT (stream->udpsink[0]), "ttl-mc", ttl, NULL);
-          g_object_set (G_OBJECT (stream->udpsink[1]), "ttl-mc", ttl, NULL);
+          g_object_set (G_OBJECT (priv->udpsink[0]), "ttl-mc", ttl, NULL);
+          g_object_set (G_OBJECT (priv->udpsink[1]), "ttl-mc", ttl, NULL);
         }
-        stream->transports = g_list_prepend (stream->transports, trans);
-        trans->active = TRUE;
-        updated = TRUE;
-      } else if (trans->active) {
+        priv->transports = g_list_prepend (priv->transports, trans);
+      } else {
         GST_INFO ("removing %s:%d-%d", dest, min, max);
-        g_signal_emit_by_name (stream->udpsink[0], "remove", dest, min, NULL);
-        g_signal_emit_by_name (stream->udpsink[1], "remove", dest, max, NULL);
-        stream->transports = g_list_remove (stream->transports, trans);
-        trans->active = FALSE;
-        updated = TRUE;
+        g_signal_emit_by_name (priv->udpsink[0], "remove", dest, min, NULL);
+        g_signal_emit_by_name (priv->udpsink[1], "remove", dest, max, NULL);
+        priv->transports = g_list_remove (priv->transports, trans);
       }
       break;
     }
     case GST_RTSP_LOWER_TRANS_TCP:
-      if (add && !trans->active) {
+      if (add) {
         GST_INFO ("adding TCP %s", tr->destination);
-        stream->transports = g_list_prepend (stream->transports, trans);
-        trans->active = TRUE;
-        updated = TRUE;
-      } else if (trans->active) {
+        priv->transports = g_list_prepend (priv->transports, trans);
+      } else {
         GST_INFO ("removing TCP %s", tr->destination);
-        stream->transports = g_list_remove (stream->transports, trans);
-        trans->active = FALSE;
-        updated = TRUE;
+        priv->transports = g_list_remove (priv->transports, trans);
       }
       break;
     default:
-      GST_INFO ("Unknown transport %d", tr->lower_transport);
-      break;
+      goto unknown_transport;
   }
-  return updated;
+  return TRUE;
+
+  /* ERRORS */
+unknown_transport:
+  {
+    GST_INFO ("Unknown transport %d", tr->lower_transport);
+    return FALSE;
+  }
 }
 
 
@@ -1152,16 +1330,17 @@ gboolean
 gst_rtsp_stream_add_transport (GstRTSPStream * stream,
     GstRTSPStreamTransport * trans)
 {
+  GstRTSPStreamPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  priv = stream->priv;
   g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), FALSE);
-  g_return_val_if_fail (stream->is_joined, FALSE);
-  g_return_val_if_fail (trans->transport != NULL, FALSE);
+  g_return_val_if_fail (priv->is_joined, FALSE);
 
-  g_mutex_lock (&stream->lock);
+  g_mutex_lock (&priv->lock);
   res = update_transport (stream, trans, TRUE);
-  g_mutex_unlock (&stream->lock);
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }
@@ -1184,16 +1363,17 @@ gboolean
 gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
     GstRTSPStreamTransport * trans)
 {
+  GstRTSPStreamPrivate *priv;
   gboolean res;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+  priv = stream->priv;
   g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), FALSE);
-  g_return_val_if_fail (stream->is_joined, FALSE);
-  g_return_val_if_fail (trans->transport != NULL, FALSE);
+  g_return_val_if_fail (priv->is_joined, FALSE);
 
-  g_mutex_lock (&stream->lock);
+  g_mutex_lock (&priv->lock);
   res = update_transport (stream, trans, FALSE);
-  g_mutex_unlock (&stream->lock);
+  g_mutex_unlock (&priv->lock);
 
   return res;
 }

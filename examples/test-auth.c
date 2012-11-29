@@ -35,8 +35,8 @@ remove_sessions (GstRTSPServer * server)
 
   g_print ("removing all sessions\n");
   pool = gst_rtsp_server_get_session_pool (server);
-  gst_rtsp_session_pool_filter (pool, (GstRTSPSessionFilterFunc) remove_func,
-      server);
+  gst_rtsp_session_pool_filter (pool,
+      (GstRTSPSessionPoolFilterFunc) remove_func, server);
   g_object_unref (pool);
 
   return FALSE;

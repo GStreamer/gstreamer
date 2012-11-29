@@ -37,19 +37,28 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPSession GstRTSPSession;
 typedef struct _GstRTSPSessionClass GstRTSPSessionClass;
+typedef struct _GstRTSPSessionPrivate GstRTSPSessionPrivate;
+
+/**
+ * GstRTSPFilterResult:
+ * @GST_RTSP_FILTER_REMOVE: Remove session
+ * @GST_RTSP_FILTER_KEEP: Keep session in the pool
+ * @GST_RTSP_FILTER_REF: Ref session in the result list
+ *
+ * Possible return values for gst_rtsp_session_pool_filter().
+ */
+typedef enum
+{
+  GST_RTSP_FILTER_REMOVE,
+  GST_RTSP_FILTER_KEEP,
+  GST_RTSP_FILTER_REF,
+} GstRTSPFilterResult;
 
 #include "rtsp-media.h"
 #include "rtsp-session-media.h"
 
 /**
  * GstRTSPSession:
- * @parent: the parent GObject
- * @sessionid: the session id of the session
- * @timeout: the timeout of the session
- * @create_time: the time when the session was created
- * @last_access: the time the session was last accessed
- * @expire_count: the expire prevention counter
- * @medias: a list of #GstRTSPSessionMedia managed in this session
  *
  * Session information kept by the server for a specific client.
  * One client session, identified with a session id, can handle multiple medias
@@ -58,15 +67,7 @@ typedef struct _GstRTSPSessionClass GstRTSPSessionClass;
 struct _GstRTSPSession {
   GObject       parent;
 
-  GMutex        lock;
-  gchar        *sessionid;
-
-  guint         timeout;
-  GTimeVal      create_time;
-  GTimeVal      last_access;
-  gint          expire_count;
-
-  GList        *medias;
+  GstRTSPSessionPrivate *priv;
 };
 
 struct _GstRTSPSessionClass {
@@ -101,6 +102,35 @@ gboolean               gst_rtsp_session_release_media        (GstRTSPSession *se
 /* get media in a session */
 GstRTSPSessionMedia *  gst_rtsp_session_get_media            (GstRTSPSession *sess,
                                                               const GstRTSPUrl *url);
+
+/**
+ * GstRTSPSessionFilterFunc:
+ * @sess: a #GstRTSPSession object
+ * @media: a #GstRTSPSessionMedia in @sess
+ * @user_data: user data that has been given to gst_rtsp_session_filter()
+ *
+ * This function will be called by the gst_rtsp_session_filter(). An
+ * implementation should return a value of #GstRTSPFilterResult.
+ *
+ * When this function returns #GST_RTSP_FILTER_REMOVE, @media will be removed
+ * from @sess.
+ *
+ * A return value of #GST_RTSP_FILTER_KEEP will leave @media untouched in
+ * @sess.
+ *
+ * A value of GST_RTSP_FILTER_REF will add @media to the result #GList of
+ * gst_rtsp_session_filter().
+ *
+ * Returns: a #GstRTSPFilterResult.
+ */
+typedef GstRTSPFilterResult (*GstRTSPSessionFilterFunc)  (GstRTSPSession *sess,
+                                                          GstRTSPSessionMedia *media,
+                                                          gpointer user_data);
+
+GList *                gst_rtsp_session_filter           (GstRTSPSession *sess,
+                                                          GstRTSPSessionFilterFunc func,
+                                                          gpointer user_data);
+
 
 G_END_DECLS
 

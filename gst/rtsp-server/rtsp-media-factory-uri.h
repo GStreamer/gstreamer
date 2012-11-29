@@ -38,24 +38,17 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPMediaFactoryURI GstRTSPMediaFactoryURI;
 typedef struct _GstRTSPMediaFactoryURIClass GstRTSPMediaFactoryURIClass;
+typedef struct _GstRTSPMediaFactoryURIPrivate GstRTSPMediaFactoryURIPrivate;
 
 /**
  * GstRTSPMediaFactoryURI:
- * @uri: the uri
  *
  * A media factory that creates a pipeline to play and uri.
  */
 struct _GstRTSPMediaFactoryURI {
   GstRTSPMediaFactory   parent;
 
-  gchar *uri;
-  gboolean use_gstpay;
-
-  GstCaps *raw_vcaps;
-  GstCaps *raw_acaps;
-  GList *demuxers;
-  GList *payloaders;
-  GList *decoders;
+  GstRTSPMediaFactoryURIPrivate *priv;
 };
 
 /**

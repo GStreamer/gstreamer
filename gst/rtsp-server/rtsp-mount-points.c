@@ -19,6 +19,15 @@
 
 #include "rtsp-mount-points.h"
 
+#define GST_RTSP_MOUNT_POINTS_GET_PRIVATE(obj)  \
+       (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTSP_MOUNT_POINTS, GstRTSPMountPointsPrivate))
+
+struct _GstRTSPMountPointsPrivate
+{
+  GMutex lock;
+  GHashTable *mounts;
+};
+
 G_DEFINE_TYPE (GstRTSPMountPoints, gst_rtsp_mount_points, G_TYPE_OBJECT);
 
 GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
@@ -34,6 +43,8 @@ gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
 {
   GObjectClass *gobject_class;
 
+  g_type_class_add_private (klass, sizeof (GstRTSPMountPointsPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_mount_points_finalize;
@@ -47,10 +58,14 @@ gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
 static void
 gst_rtsp_mount_points_init (GstRTSPMountPoints * mounts)
 {
+  GstRTSPMountPointsPrivate *priv = GST_RTSP_MOUNT_POINTS_GET_PRIVATE (mounts);
+
   GST_DEBUG_OBJECT (mounts, "created");
 
-  g_mutex_init (&mounts->lock);
-  mounts->mounts = g_hash_table_new_full (g_str_hash, g_str_equal,
+  mounts->priv = priv;
+
+  g_mutex_init (&priv->lock);
+  priv->mounts = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, g_object_unref);
 }
 
@@ -58,11 +73,12 @@ static void
 gst_rtsp_mount_points_finalize (GObject * obj)
 {
   GstRTSPMountPoints *mounts = GST_RTSP_MOUNT_POINTS (obj);
+  GstRTSPMountPointsPrivate *priv = mounts->priv;
 
   GST_DEBUG_OBJECT (mounts, "finalized");
 
-  g_hash_table_unref (mounts->mounts);
-  g_mutex_clear (&mounts->lock);
+  g_hash_table_unref (priv->mounts);
+  g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_mount_points_parent_class)->finalize (obj);
 }
@@ -87,16 +103,17 @@ gst_rtsp_mount_points_new (void)
 static GstRTSPMediaFactory *
 find_factory (GstRTSPMountPoints * mounts, const GstRTSPUrl * url)
 {
+  GstRTSPMountPointsPrivate *priv = mounts->priv;
   GstRTSPMediaFactory *result;
 
-  g_mutex_lock (&mounts->lock);
+  g_mutex_lock (&priv->lock);
   /* find the location of the media in the hashtable we only use the absolute
    * path of the uri to find a media factory. If the factory depends on other
    * properties found in the url, this method should be overridden. */
-  result = g_hash_table_lookup (mounts->mounts, url->abspath);
+  result = g_hash_table_lookup (priv->mounts, url->abspath);
   if (result)
     g_object_ref (result);
-  g_mutex_unlock (&mounts->lock);
+  g_mutex_unlock (&priv->lock);
 
   GST_INFO ("found media factory %p for url abspath %s", result, url->abspath);
 
@@ -150,13 +167,17 @@ void
 gst_rtsp_mount_points_add_factory (GstRTSPMountPoints * mounts,
     const gchar * path, GstRTSPMediaFactory * factory)
 {
+  GstRTSPMountPointsPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts));
   g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
   g_return_if_fail (path != NULL);
 
-  g_mutex_lock (&mounts->lock);
-  g_hash_table_insert (mounts->mounts, g_strdup (path), factory);
-  g_mutex_unlock (&mounts->lock);
+  priv = mounts->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_hash_table_insert (priv->mounts, g_strdup (path), factory);
+  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -170,10 +191,14 @@ void
 gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints * mounts,
     const gchar * path)
 {
+  GstRTSPMountPointsPrivate *priv;
+
   g_return_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts));
   g_return_if_fail (path != NULL);
 
-  g_mutex_lock (&mounts->lock);
-  g_hash_table_remove (mounts->mounts, path);
-  g_mutex_unlock (&mounts->lock);
+  priv = mounts->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_hash_table_remove (priv->mounts, path);
+  g_mutex_unlock (&priv->lock);
 }

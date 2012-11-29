@@ -313,6 +313,7 @@ gst_rtsp_stream_set_mtu
 gst_rtsp_stream_join_bin
 gst_rtsp_stream_leave_bin
 gst_rtsp_stream_get_rtpinfo
+gst_rtsp_stream_get_caps
 gst_rtsp_stream_recv_rtcp
 gst_rtsp_stream_recv_rtp
 gst_rtsp_stream_add_transport
