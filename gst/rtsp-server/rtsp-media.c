@@ -226,6 +226,7 @@ gst_rtsp_media_finalize (GObject * obj)
 
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
+  gst_object_unref (priv->element);
   if (priv->auth)
     g_object_unref (priv->auth);
   if (priv->pool)
@@ -411,6 +412,7 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
   if (old)
     gst_object_unref (old);
 
+  gst_object_ref (priv->element);
   gst_bin_add (GST_BIN_CAST (pipeline), priv->element);
 }
 

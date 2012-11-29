@@ -92,8 +92,22 @@ GST_END_TEST;
 GST_START_TEST (test_media)
 {
   GstRTSPMedia *media;
+  GstElement *bin, *e1, *e2;
 
-  media = gst_rtsp_media_new (NULL);
+  bin = gst_bin_new ("bin");
+  fail_if (bin == NULL);
+
+  e1 = gst_element_factory_make ("videotestsrc", NULL);
+  fail_if (e1 == NULL);
+
+  e2 = gst_element_factory_make ("rtpvrawpay", "pay0");
+  fail_if (e2 == NULL);
+  g_object_set (e2, "pt", 96, NULL);
+
+  gst_bin_add_many (GST_BIN_CAST (bin), e1, e2, NULL);
+  gst_element_link_many (e1, e2, NULL);
+
+  media = gst_rtsp_media_new (bin);
   fail_unless (GST_IS_RTSP_MEDIA (media));
   g_object_unref (media);
 }
