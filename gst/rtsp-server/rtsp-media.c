@@ -376,6 +376,8 @@ gst_rtsp_media_new (GstElement * element)
 {
   GstRTSPMedia *result;
 
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
   result = g_object_new (GST_TYPE_RTSP_MEDIA, NULL);
   result->priv->element = element;
 
