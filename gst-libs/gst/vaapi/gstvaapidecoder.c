@@ -787,3 +787,50 @@ gst_vaapi_decoder_check_status(GstVaapiDecoder *decoder)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame *base_frame, GstAdapter *adapter, gboolean at_eos,
+    guint *got_unit_size_ptr, gboolean *got_frame_ptr)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(base_frame != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(adapter != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(got_unit_size_ptr != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(got_frame_ptr != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+
+    return do_parse(decoder, base_frame, adapter, at_eos,
+        got_unit_size_ptr, got_frame_ptr);
+}
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_decode(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame *base_frame, GstVaapiSurfaceProxy **out_proxy_ptr)
+{
+    GstVaapiDecoderStatus status;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(base_frame != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(base_frame->user_data != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(out_proxy_ptr != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+
+    status = gst_vaapi_decoder_check_status(decoder);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
+
+    status = do_decode(decoder, base_frame);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
+
+    *out_proxy_ptr = pop_surface(decoder);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}

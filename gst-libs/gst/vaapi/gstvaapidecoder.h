@@ -73,6 +73,7 @@ typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
  * @GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER: Invalid or unsupported bitstream data.
  * @GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE: Unsupported codec profile.
  * @GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT: Unsupported chroma format.
+ * @GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER: Unsupported parameter.
  * @GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN: Unknown error.
  *
  * Decoder status for gst_vaapi_decoder_get_surface().
@@ -89,6 +90,7 @@ typedef enum {
     GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER,
     GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE,
     GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT,
+    GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER,
     GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN = -1
 } GstVaapiDecoderStatus;
 
@@ -140,6 +142,15 @@ gst_vaapi_decoder_get_surface(
     GstVaapiDecoder       *decoder,
     GstVaapiDecoderStatus *pstatus
 );
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame *frame, GstAdapter *adapter, gboolean at_eos,
+    guint *got_unit_size_ptr, gboolean *got_frame_ptr);
+
+GstVaapiDecoderStatus
+gst_vaapi_decoder_decode(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame *frame, GstVaapiSurfaceProxy **out_proxy_ptr);
 
 G_END_DECLS
 

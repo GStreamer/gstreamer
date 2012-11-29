@@ -163,6 +163,10 @@ gst_vaapi_picture_create(
     picture->slices = g_ptr_array_new();
     if (!picture->slices)
         return FALSE;
+
+    gst_vaapi_mini_object_set_user_data(
+        GST_VAAPI_MINI_OBJECT(picture->proxy),
+        GST_VAAPI_DECODER_CODEC_FRAME(GET_DECODER(picture)), NULL);
     return TRUE;
 }
 
