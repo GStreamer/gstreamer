@@ -44,7 +44,7 @@ static void ges_meta_container_interface_init
     (GESMetaContainerInterface * iface);
 
 G_DEFINE_TYPE_WITH_CODE (GESTimelineLayer, ges_timeline_layer,
-    G_TYPE_INITIALLY_UNOWNED,
+    G_TYPE_INITIALLY_UNOWNED, G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE, NULL)
     G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
         ges_meta_container_interface_init));
 
