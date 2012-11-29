@@ -42,7 +42,7 @@ static void gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 *
 
 const gchar *EGLErrorString ();
 
-#define GST_CAT_DEFAULT gst_gl_window_win32_wgl_debug
+#define GST_CAT_DEFAULT gst_gl_window_win32_egl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define DEBUG_INIT \
