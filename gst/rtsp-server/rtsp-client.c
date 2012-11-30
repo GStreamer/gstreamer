@@ -278,6 +278,7 @@ gst_rtsp_client_finalize (GObject * obj)
   if (priv->uri)
     gst_rtsp_url_free (priv->uri);
   if (priv->media) {
+    gst_rtsp_media_unprepare (priv->media);
     g_object_unref (priv->media);
   }
 
@@ -435,6 +436,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state)
       gst_rtsp_url_free (priv->uri);
     priv->uri = NULL;
     if (priv->media) {
+      gst_rtsp_media_unprepare (priv->media);
       g_object_unref (priv->media);
     }
     priv->media = NULL;
