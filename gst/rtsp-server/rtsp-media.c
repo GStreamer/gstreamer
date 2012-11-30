@@ -1240,7 +1240,7 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       }
       break;
     default:
-      GST_INFO ("%p: got message type %s", media,
+      GST_INFO ("%p: got message type %d (%s)", media, type,
           gst_message_type_get_name (type));
       break;
   }
