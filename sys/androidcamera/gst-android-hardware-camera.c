@@ -1790,15 +1790,16 @@ gst_ah_camera_get_parameters (GstAHCamera * self)
   GstAHCParameters *params = NULL;
 
   object = AHC_CALL (return NULL, Object, getParameters);
-
-  params = g_slice_new0 (GstAHCParameters);
-  params->object = (*env)->NewGlobalRef (env, object);
-  (*env)->DeleteLocalRef (env, object);
-  if (!params->object) {
-    GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
-    g_slice_free (GstAHCParameters, params);
-    return NULL;
+  if (object) {
+    params = g_slice_new0 (GstAHCParameters);
+    params->object = (*env)->NewGlobalRef (env, object);
+    (*env)->DeleteLocalRef (env, object);
+    if (!params->object) {
+      GST_ERROR ("Failed to create global reference");
+      (*env)->ExceptionClear (env);
+      g_slice_free (GstAHCParameters, params);
+      return NULL;
+    }
   }
 
   return params;
@@ -1822,20 +1823,20 @@ gst_ah_camera_open (gint camera_id)
   GstAHCamera *camera = NULL;
 
   object = AHC_STATIC_CALL (goto done, Object, open, camera_id);
-
-  camera = g_slice_new0 (GstAHCamera);
-  camera->object = (*env)->NewGlobalRef (env, object);
-  (*env)->DeleteLocalRef (env, object);
-  if (!camera->object) {
-    GST_ERROR ("Failed to create global reference");
-    (*env)->ExceptionClear (env);
-    g_slice_free (GstAHCamera, camera);
-    goto done;
+  if (object) {
+    camera = g_slice_new0 (GstAHCamera);
+    camera->object = (*env)->NewGlobalRef (env, object);
+    (*env)->DeleteLocalRef (env, object);
+    if (!camera->object) {
+      GST_ERROR ("Failed to create global reference");
+      (*env)->ExceptionClear (env);
+      g_slice_free (GstAHCamera, camera);
+      camera = NULL;
+    }
   }
 
-  return camera;
 done:
-  return NULL;
+  return camera;
 }
 
 gboolean
