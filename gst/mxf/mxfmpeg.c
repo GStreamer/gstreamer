@@ -19,12 +19,14 @@
 
 /* Implementation of SMPTE 381M - Mapping MPEG streams into the MXF
  * Generic Container
+ *
+ * RP 2008 - Mapping AVC Streams into the MXF Generic Container
+ *
  */
 
 /* TODO:
  * - Handle PES streams
  * - Fix TS/PS demuxers to forward timestamps
- * - h264 support (see SMPTE RP2008)
  * - AAC support
  */
 
@@ -419,10 +421,12 @@ mxf_is_mpeg_essence_track (const MXFMetadataTimelineTrack * track)
 
     key = &d->essence_container;
     /* SMPTE 381M 7 */
+    /* SMPTE RP2008 8.1 */
     if (mxf_is_generic_container_essence_container_label (key) &&
         key->u[12] == 0x02 &&
         (key->u[13] == 0x04 ||
-            key->u[13] == 0x07 || key->u[13] == 0x08 || key->u[13] == 0x09))
+            key->u[13] == 0x07 || key->u[13] == 0x08 || key->u[13] == 0x09 ||
+            key->u[13] == 0x0f || key->u[13] == 0x10))
       return TRUE;
   }
 
@@ -849,7 +853,9 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     GST_DEBUG ("Found h264 NAL unit stream");
     /* RP 2008 */
     /* TODO: What about codec_data? */
-    caps = gst_caps_new_empty_simple ("video/x-h264");
+    caps =
+        gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
+        "avc", NULL);
 
     if (!*tags)
       *tags = gst_tag_list_new_empty ();
@@ -858,7 +864,9 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   } else if (f->essence_container.u[13] == 0x10) {
     GST_DEBUG ("Found h264 byte stream stream");
     /* RP 2008 */
-    caps = gst_caps_new_empty_simple ("video/x-h264");
+    caps =
+        gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
+        "byte-stream", NULL);
 
     if (!*tags)
       *tags = gst_tag_list_new_empty ();
