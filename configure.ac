@@ -467,12 +467,12 @@ AG_GST_CHECK_FEATURE(WASAPI, [WASAPI plug-in], wasapi, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -lole32 -lwinmm -lksuser"
   AC_MSG_CHECKING(for WASAPI LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <stdio.h>
 #include <mmsystem.h>
 #include <mmdeviceapi.h>
-
+]], [[
 int main ()
 {
     HRESULT hr = S_OK;
@@ -489,7 +489,7 @@ int main ()
     CoUninitialize();
     return result;
 }
-],
+]])],
     [HAVE_WASAPI="yes"],
     [HAVE_WASAPI="no"])
   AC_MSG_RESULT($HAVE_WASAPI)
