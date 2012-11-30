@@ -31,14 +31,11 @@
 
 const gchar *WlEGLErrorString ();
 
-#define GST_CAT_DEFAULT gst_gl_window_wayland_egl_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+#define GST_CAT_DEFAULT gst_gl_window_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_wayland_egl_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowWaylandEGL, gst_gl_window_wayland_egl,
-    GST_GL_TYPE_WINDOW, DEBUG_INIT);
+G_DEFINE_TYPE (GstGLWindowWaylandEGL, gst_gl_window_wayland_egl,
+    GST_GL_TYPE_WINDOW);
 
 static guintptr gst_gl_window_wayland_egl_get_gl_context (GstGLWindow * window);
 static gboolean gst_gl_window_wayland_egl_activate (GstGLWindow * window,
@@ -59,6 +56,83 @@ static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL
 
 static void gst_gl_window_wayland_egl_finalize (GObject * object);
 
+
+
+static void
+pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
+    struct wl_surface *surface, wl_fixed_t sx_w, wl_fixed_t sy_w)
+{
+  GstGLWindowWaylandEGL *window_egl = data;
+  window_egl->display.serial = serial;
+}
+
+static void
+pointer_handle_leave (void *data, struct wl_pointer *pointer, uint32_t serial,
+    struct wl_surface *surface)
+{
+  GstGLWindowWaylandEGL *window_egl = data;
+  window_egl->display.serial = serial;
+}
+
+static void
+pointer_handle_motion (void *data, struct wl_pointer *pointer, uint32_t time,
+    wl_fixed_t sx_w, wl_fixed_t sy_w)
+{
+}
+
+static void
+pointer_handle_button (void *data, struct wl_pointer *pointer, uint32_t serial,
+    uint32_t time, uint32_t button, uint32_t state_w)
+{
+  GstGLWindowWaylandEGL *window_egl = data;
+  window_egl->display.serial = serial;
+}
+
+static void
+pointer_handle_axis (void *data, struct wl_pointer *pointer, uint32_t time,
+    uint32_t axis, wl_fixed_t value)
+{
+}
+
+static const struct wl_pointer_listener pointer_listener = {
+  pointer_handle_enter,
+  pointer_handle_leave,
+  pointer_handle_motion,
+  pointer_handle_button,
+  pointer_handle_axis,
+};
+
+static void
+seat_handle_capabilities (void *data, struct wl_seat *seat,
+    enum wl_seat_capability caps)
+{
+  GstGLWindowWaylandEGL *window_egl = data;
+  struct display *display = &window_egl->display;
+
+  if ((caps & WL_SEAT_CAPABILITY_POINTER) && !display->pointer) {
+    display->pointer = wl_seat_get_pointer (seat);
+    wl_pointer_set_user_data (display->pointer, window_egl);
+    wl_pointer_add_listener (display->pointer, &pointer_listener, window_egl);
+  } else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && display->pointer) {
+    wl_pointer_destroy (display->pointer);
+    display->pointer = NULL;
+  }
+#if 0
+  if ((caps & WL_SEAT_CAPABILITY_KEYBOARD) && !input->keyboard) {
+    input->keyboard = wl_seat_get_keyboard (seat);
+    wl_keyboard_set_user_data (input->keyboard, input);
+    wl_keyboard_add_listener (input->keyboard, &keyboard_listener, input);
+  } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && input->keyboard) {
+    wl_keyboard_destroy (input->keyboard);
+    input->keyboard = NULL;
+  }
+#endif
+}
+
+static const struct wl_seat_listener seat_listener = {
+  seat_handle_capabilities,
+};
+
 static void
 handle_ping (void *data, struct wl_shell_surface *shell_surface,
     uint32_t serial)
@@ -66,18 +140,22 @@ handle_ping (void *data, struct wl_shell_surface *shell_surface,
   wl_shell_surface_pong (shell_surface, serial);
 }
 
+static void window_resize (GstGLWindowWaylandEGL * window_egl, guint width,
+    guint height);
+
 static void
 handle_configure (void *data, struct wl_shell_surface *shell_surface,
     uint32_t edges, int32_t width, int32_t height)
 {
   GstGLWindowWaylandEGL *window_egl = data;
-  struct window window = window_egl->window;
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
 
-  if (window.native)
-    wl_egl_window_resize (window.native, width, height, 0, 0);
+  GST_DEBUG ("configure event %ix%i", width, height);
 
-  window.window_width = width;
-  window.window_height = height;
+  window_resize (window_egl, width, height);
+
+  if (window->resize)
+    window->resize (window->resize_data, width, height);
 }
 
 static void
@@ -94,38 +172,40 @@ static const struct wl_shell_surface_listener shell_surface_listener = {
 static gboolean
 create_surface (GstGLWindowWaylandEGL * window_egl)
 {
-  struct display display = window_egl->display;
-  struct window window = window_egl->window;
   EGLBoolean ret;
 
-  window.surface = wl_compositor_create_surface (display.compositor);
-  window.shell_surface = wl_shell_get_shell_surface (display.shell,
-      window.surface);
+  window_egl->window.surface =
+      wl_compositor_create_surface (window_egl->display.compositor);
+  window_egl->window.shell_surface =
+      wl_shell_get_shell_surface (window_egl->display.shell,
+      window_egl->window.surface);
 
-  wl_shell_surface_add_listener (window.shell_surface,
+  wl_shell_surface_add_listener (window_egl->window.shell_surface,
       &shell_surface_listener, window_egl);
 
-  if (!window.window_width)
-    window.window_width = 320;
-  if (!window.window_height)
-    window.window_height = 240;
+  if (window_egl->window.window_width <= 0)
+    window_egl->window.window_width = 320;
+  if (window_egl->window.window_height <= 0)
+    window_egl->window.window_height = 240;
 
-  window.native =
-      wl_egl_window_create (window.surface, window.window_width,
-      window.window_height);
+  window_egl->window.native =
+      wl_egl_window_create (window_egl->window.surface,
+      window_egl->window.window_width, window_egl->window.window_height);
   window_egl->egl_surface =
       eglCreateWindowSurface (window_egl->egl_display, window_egl->egl_config,
-      window.native, NULL);
+      window_egl->window.native, NULL);
 
-  wl_shell_surface_set_title (window.shell_surface, "OpenGL Renderer");
+  wl_shell_surface_set_title (window_egl->window.shell_surface,
+      "OpenGL Renderer");
 
   ret =
       eglMakeCurrent (window_egl->egl_display, window_egl->egl_surface,
       window_egl->egl_surface, window_egl->egl_context);
 
-  wl_shell_surface_set_toplevel (window.shell_surface);
-  handle_configure (window_egl, window.shell_surface, 0,
-      window_egl->window.window_width, window_egl->window.window_height);
+  wl_shell_surface_set_toplevel (window_egl->window.shell_surface);
+
+  wl_shell_surface_set_fullscreen (window_egl->window.shell_surface,
+      WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, NULL);
 
   return ret == EGL_TRUE;
 }
@@ -157,10 +237,10 @@ registry_handle_global (void *data, struct wl_registry *registry,
         wl_registry_bind (registry, name, &wl_compositor_interface, 1);
   } else if (g_strcmp0 (interface, "wl_shell") == 0) {
     d->shell = wl_registry_bind (registry, name, &wl_shell_interface, 1);
-/*  } else if (strcmp(interface, "wl_seat") == 0) {
-    d->seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
-    wl_seat_add_listener(d->seat, &seat_listener, d);
-*/ } else if (g_strcmp0 (interface, "wl_shm") == 0) {
+  } else if (g_strcmp0 (interface, "wl_seat") == 0) {
+    d->seat = wl_registry_bind (registry, name, &wl_seat_interface, 1);
+    wl_seat_add_listener (d->seat, &seat_listener, d);
+  } else if (g_strcmp0 (interface, "wl_shm") == 0) {
     d->shm = wl_registry_bind (registry, name, &wl_shm_interface, 1);
     d->cursor_theme = wl_cursor_theme_load (NULL, 32, d->shm);
     d->default_cursor =
@@ -205,8 +285,11 @@ GstGLWindowWaylandEGL *
 gst_gl_window_wayland_egl_new (GstGLRendererAPI render_api,
     guintptr external_gl_context)
 {
-  GstGLWindowWaylandEGL *window =
-      g_object_new (GST_GL_TYPE_WINDOW_WAYLAND_EGL, NULL);
+  GstGLWindowWaylandEGL *window;
+
+  GST_DEBUG ("creating Wayland EGL window");
+
+  window = g_object_new (GST_GL_TYPE_WINDOW_WAYLAND_EGL, NULL);
 
   gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 
@@ -219,9 +302,7 @@ gst_gl_window_wayland_egl_new (GstGLRendererAPI render_api,
 
   wl_display_dispatch (window->display.display);
 
-//  init_egl(&display, window.opaque);
   create_surface (window);
-//  init_gl(&window);
 
   window->display.cursor_surface =
       wl_compositor_create_surface (window->display.compositor);
@@ -246,7 +327,6 @@ gst_gl_window_wayland_egl_finalize (GObject * object)
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (object);
 
   gst_gl_window_wayland_egl_destroy_context (window_egl);
-//  fini_egl(&display);
 
   wl_surface_destroy (window_egl->display.cursor_surface);
   if (window_egl->display.cursor_theme)
@@ -481,6 +561,26 @@ gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
 {
 }
 
+static void
+window_resize (GstGLWindowWaylandEGL * window_egl, guint width, guint height)
+{
+  GST_DEBUG ("resizing window from %ux%u to %ux%u",
+      window_egl->window.window_width, window_egl->window.window_height, width,
+      height);
+
+  if (window_egl->window.native) {
+    wl_egl_window_resize (window_egl->window.native, width, height, 0, 0);
+  }
+
+  window_egl->window.window_width = width;
+  window_egl->window.window_height = height;
+
+#if 0
+  wl_shell_surface_resize (window_egl->window.shell_surface,
+      window_egl->display.seat, window_egl->display.serial, 0);
+#endif
+}
+
 struct draw
 {
   GstGLWindowWaylandEGL *window;
@@ -491,7 +591,16 @@ static void
 draw_cb (gpointer data)
 {
   struct draw *draw_data = data;
-  GstGLWindow *window = GST_GL_WINDOW (draw_data->window);
+  GstGLWindowWaylandEGL *window_egl = draw_data->window;
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+
+  if (window_egl->window.window_width != draw_data->width
+      || window_egl->window.window_height != draw_data->height) {
+    GST_DEBUG ("dimensions don't match, attempting resize");
+#if 0
+    window_resize (window_egl, draw_data->width, draw_data->height);
+#endif
+  }
 
   if (window->draw)
     window->draw (window->draw_data);

@@ -49,13 +49,14 @@ struct display {
   struct wl_compositor   *compositor;
   struct wl_shell        *shell;
   struct wl_seat         *seat;
-/*  struct wl_pointer      *pointer;
-  struct wl_keyboard     *keyboard;*/
+  struct wl_pointer      *pointer;
+  struct wl_keyboard     *keyboard;
   struct wl_shm          *shm;
   struct wl_cursor_theme *cursor_theme;
   struct wl_cursor       *default_cursor;
   struct wl_surface      *cursor_surface;
   struct window          *window;
+  guint32                 serial;
 };
 
 struct window {
