@@ -55,6 +55,7 @@ libgstvaapi_source_c =				\
 	gstvaapiimage.c				\
 	gstvaapiimageformat.c			\
 	gstvaapiimagepool.c			\
+	gstvaapiminiobject.c			\
 	gstvaapiobject.c			\
 	gstvaapiparamspecs.c			\
 	gstvaapiprofile.c			\
@@ -105,6 +106,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapidecoder_objects.h		\
 	gstvaapidecoder_priv.h			\
 	gstvaapidisplay_priv.h			\
+	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapisurface_priv.h			\
 	gstvaapiutils.h				\
