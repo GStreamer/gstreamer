@@ -70,7 +70,7 @@ enum
 #define DEFAULT_PROTOCOL     SHOUT2SEND_PROTOCOL_HTTP
 
 #ifdef SHOUT_FORMAT_WEBM
-#define WEBM_CAPS "; video/webm"
+#define WEBM_CAPS "; video/webm; audio/webm"
 #else
 #define WEBM_CAPS ""
 #endif
