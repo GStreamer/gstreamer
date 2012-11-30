@@ -64,7 +64,8 @@ libgstvideo4linux2_la_LIBADD =   $(GST_PLUGINS_BASE_LIBS) \
 				 $(GST_LIBS) \
 				 $(xv_libs) \
 				 $(LIBV4L2_LIBS) \
-				 $(GUDEV_LIBS)
+				 $(GUDEV_LIBS) \
+				 $(LIBRT)
 
 noinst_HEADERS = \
 	gstv4l2bufferpool.h \

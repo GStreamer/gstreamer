@@ -134,6 +134,14 @@ dnl check for libm, for sin()
 LT_LIB_M
 AC_SUBST(LIBM)
 
+AC_CHECK_FUNCS(clock_gettime, [], [
+  AC_CHECK_LIB(rt, clock_gettime, [
+    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+    LIBRT="-lrt"
+    AC_SUBST([LIBRT])
+  ])
+])
+
 dnl *** checks for header files ***
 
 dnl check if we have ANSI C header files
