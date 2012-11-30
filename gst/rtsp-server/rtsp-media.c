@@ -1280,7 +1280,7 @@ pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
   /* FIXME, element is likely not a payloader, find the payloader here */
   stream = gst_rtsp_media_create_stream (media, element, pad);
 
-  GST_INFO ("pad added %s:%s, stream %s", GST_DEBUG_PAD_NAME (pad), stream);
+  GST_INFO ("pad added %s:%s, stream %p", GST_DEBUG_PAD_NAME (pad), stream);
 
   g_rec_mutex_lock (&priv->state_lock);
   /* we will be adding elements below that will cause ASYNC_DONE to be
