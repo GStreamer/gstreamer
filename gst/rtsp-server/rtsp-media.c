@@ -1267,7 +1267,7 @@ static void
 watch_destroyed (GstRTSPMedia * media)
 {
   GST_DEBUG_OBJECT (media, "source destroyed");
-  gst_object_unref (media);
+  g_object_unref (media);
 }
 
 /* called from streaming threads */
@@ -1377,7 +1377,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   gst_object_unref (bus);
 
   g_source_set_callback (priv->source, (GSourceFunc) bus_message,
-      gst_object_ref (media), (GDestroyNotify) watch_destroyed);
+      g_object_ref (media), (GDestroyNotify) watch_destroyed);
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
   priv->id = g_source_attach (priv->source, klass->context);
