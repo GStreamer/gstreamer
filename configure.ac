@@ -167,6 +167,9 @@ AC_SUBST(GLIB_PREFIX)
 AC_SUBST(GST_PREFIX)
 AC_SUBST(GSTPB_PREFIX)
 
+dnl Needed by plugins that use g_module_*() API
+PKG_CHECK_MODULES(GMODULE_NO_EXPORT, gmodule-no-export-2.0)
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice
