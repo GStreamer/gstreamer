@@ -437,6 +437,31 @@ GST_START_TEST (test_reset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_link_webmmux_webm_sink)
+{
+  static GstStaticPadTemplate webm_sinktemplate =
+      GST_STATIC_PAD_TEMPLATE ("sink",
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS ("video/webm; audio/webm"));
+  GstElement *mux;
+
+  mux = gst_check_setup_element ("webmmux");
+  mysinkpad = setup_sink_pad (mux, &webm_sinktemplate, NULL);
+  fail_unless (mysinkpad != NULL);
+
+  fail_unless (gst_element_set_state (mux,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_element_set_state (mux, GST_STATE_NULL);
+
+  teardown_sink_pad (mux);
+  gst_check_teardown_element (mux);
+}
+
+GST_END_TEST;
+
 static Suite *
 matroskamux_suite (void)
 {
@@ -448,6 +473,7 @@ matroskamux_suite (void)
   tcase_add_test (tc_chain, test_vorbis_header);
   tcase_add_test (tc_chain, test_block_group);
   tcase_add_test (tc_chain, test_reset);
+  tcase_add_test (tc_chain, test_link_webmmux_webm_sink);
 
   return s;
 }

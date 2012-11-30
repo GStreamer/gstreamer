@@ -196,13 +196,11 @@ static GstStaticPadTemplate subtitlesink_templ =
 static GArray *used_uids;
 G_LOCK_DEFINE_STATIC (used_uids);
 
-#define parent_class gst_matroska_mux_parent_class
-G_DEFINE_TYPE_WITH_CODE (GstMatroskaMux, gst_matroska_mux, GST_TYPE_ELEMENT,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL)
-    G_IMPLEMENT_INTERFACE (GST_TYPE_TOC_SETTER, NULL)
-    );
+static gpointer parent_class;   /* NULL */
 
 /* Matroska muxer destructor */
+static void gst_matroska_mux_class_init (GstMatroskaMuxClass * klass);
+static void gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class);
 static void gst_matroska_mux_finalize (GObject * object);
 
 /* Pads collected callback */
@@ -247,6 +245,38 @@ static gboolean flac_streamheader_to_codecdata (const GValue * streamheader,
 static void
 gst_matroska_mux_write_simple_tag (const GstTagList * list, const gchar * tag,
     gpointer data);
+
+/* Cannot use boilerplate macros here because we need the full init function
+ * signature with the additional class argument, so we use the right template
+ * for the sink caps */
+GType
+gst_matroska_mux_get_type (void)
+{
+  static GType object_type;     /* 0 */
+
+  if (object_type == 0) {
+    static const GTypeInfo object_info = {
+      sizeof (GstMatroskaMuxClass),
+      NULL,                     /* base_init */
+      NULL,                     /* base_finalize */
+      (GClassInitFunc) gst_matroska_mux_class_init,
+      NULL,                     /* class_finalize */
+      NULL,                     /* class_data */
+      sizeof (GstMatroskaMux),
+      0,                        /* n_preallocs */
+      (GInstanceInitFunc) gst_matroska_mux_init
+    };
+    const GInterfaceInfo iface_info = { NULL };
+
+    object_type = g_type_register_static (GST_TYPE_ELEMENT,
+        "GstMatroskaMux", &object_info, (GTypeFlags) 0);
+
+    g_type_add_interface_static (object_type, GST_TYPE_TAG_SETTER, &iface_info);
+    g_type_add_interface_static (object_type, GST_TYPE_TOC_SETTER, &iface_info);
+  }
+
+  return object_type;
+}
 
 static void
 gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
@@ -305,6 +335,8 @@ gst_matroska_mux_class_init (GstMatroskaMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_matroska_mux_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_matroska_mux_release_pad);
+
+  parent_class = g_type_class_peek_parent (klass);
 }
 
 /**
@@ -405,20 +437,13 @@ gst_matroskamux_pad_init (GstMatroskamuxPad * pad)
  * End of pad option handler code
  **/
 
-/**
- * gst_matroska_mux_init:
- * @mux: #GstMatroskaMux that should be initialized.
- * @g_class: Class of the muxer.
- *
- * Matroska muxer constructor.
- */
 static void
-gst_matroska_mux_init (GstMatroskaMux * mux)
+gst_matroska_mux_init (GstMatroskaMux * mux, gpointer g_class)
 {
   GstPadTemplate *templ;
 
   templ =
-      gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (mux), "src");
+      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
   mux->srcpad = gst_pad_new_from_template (templ, "src");
 
   gst_pad_set_event_function (mux->srcpad, gst_matroska_mux_handle_src_event);
