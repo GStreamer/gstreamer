@@ -456,6 +456,54 @@ AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound], directsoundsrc, [
   AC_SUBST(HAVE_DIRECTSOUND)
 ])
 
+dnl WASAPI
+translit(dnm, m, l) AM_CONDITIONAL(USE_WASAPI, true)
+AG_GST_CHECK_FEATURE(WASAPI, [WASAPI plug-in], wasapi, [
+  HAVE_WASAPI="no"
+  save_CFLAGS="$CFLAGS"
+  save_LDFLAGS="$LDFLAGS"
+  save_LIBS="$LIBS"
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
+  LIBS="$LIBS -lole32 -lwinmm -lksuser"
+  AC_MSG_CHECKING(for WASAPI LDFLAGS)
+  AC_LINK_IFELSE([
+#include <windows.h>
+#include <stdio.h>
+#include <mmsystem.h>
+#include <mmdeviceapi.h>
+
+int main ()
+{
+    HRESULT hr = S_OK;
+
+    hr = CoInitialize(NULL);
+    if (FAILED(hr)) {
+        printf("CoInitialize failed: hr = 0x%08x", hr);
+        return __LINE__;
+    }
+
+	int result = 0;
+    // result = do_everything(argc, argv);
+    
+    CoUninitialize();
+    return result;
+}
+],
+    [HAVE_WASAPI="yes"],
+    [HAVE_WASAPI="no"])
+  AC_MSG_RESULT($HAVE_WASAPI)
+  CFLAGS=$save_CFLAGS
+  LDFLAGS=$save_LDFLAGS
+  LIBS=$save_LIBS
+
+  if test "x$HAVE_WASAPI" = "xyes";  then
+    WASAPI_LIBS="-lole32 -lwinmm -lksuser"
+    AC_SUBST(WASAPI_LIBS)
+  fi
+  AC_SUBST(HAVE_WASAPI)
+])
+
 dnl Direct3D
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECT3D, true)
 AG_GST_CHECK_FEATURE(DIRECT3D, [Direct3D plug-in], direct3dsink, [
