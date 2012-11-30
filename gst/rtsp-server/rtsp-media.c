@@ -1236,7 +1236,6 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       if (priv->status == GST_RTSP_MEDIA_STATUS_UNPREPARING) {
         GST_DEBUG ("shutting down after EOS");
         finish_unprepare (media);
-        g_object_unref (media);
       }
       break;
     default:
@@ -1523,15 +1522,16 @@ finish_unprepare (GstRTSPMedia * media)
   priv->reused = TRUE;
   priv->status = GST_RTSP_MEDIA_STATUS_UNPREPARED;
 
-  if (priv->source) {
-    g_source_destroy (priv->source);
-    g_source_unref (priv->source);
-    priv->source = NULL;
-  }
-
   /* when the media is not reusable, this will effectively unref the media and
    * recreate it */
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_UNPREPARED], 0, NULL);
+
+  /* the source has the last ref to the media */
+  if (priv->source) {
+    GST_DEBUG ("destroy source");
+    g_source_destroy (priv->source);
+    g_source_unref (priv->source);
+  }
 }
 
 /* called with state-lock */
@@ -1543,7 +1543,6 @@ default_unprepare (GstRTSPMedia * media)
   if (priv->eos_shutdown) {
     GST_DEBUG ("sending EOS for shutdown");
     /* ref so that we don't disappear */
-    g_object_ref (media);
     gst_element_send_event (priv->pipeline, gst_event_new_eos ());
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
