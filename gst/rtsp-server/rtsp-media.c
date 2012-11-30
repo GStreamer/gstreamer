@@ -47,6 +47,7 @@ struct _GstRTSPMediaPrivate
   GPtrArray *streams;
   GList *dynamic;
   GstRTSPMediaStatus status;
+  gint prepare_count;
   gint n_active;
   gboolean adding;
 
@@ -1345,6 +1346,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
   priv = media->priv;
 
   g_rec_mutex_lock (&priv->state_lock);
+  priv->prepare_count++;
+
   if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED)
     goto was_prepared;
 
@@ -1464,17 +1467,20 @@ was_prepared:
 not_unprepared:
   {
     GST_WARNING ("media %p was not unprepared", media);
+    priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 is_reused:
   {
+    priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("can not reuse media %p", media);
     return FALSE;
   }
 no_rtpbin:
   {
+    priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("no rtpbin element");
     g_warning ("failed to create element 'rtpbin', check your installation");
@@ -1576,6 +1582,10 @@ gst_rtsp_media_unprepare (GstRTSPMedia * media)
   if (priv->status == GST_RTSP_MEDIA_STATUS_UNPREPARED)
     goto was_unprepared;
 
+  priv->prepare_count--;
+  if (priv->prepare_count > 0)
+    goto is_busy;
+
   GST_INFO ("unprepare media %p", media);
   priv->target_state = GST_STATE_NULL;
   success = TRUE;
@@ -1597,6 +1607,12 @@ was_unprepared:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("media %p was already unprepared", media);
+    return TRUE;
+  }
+is_busy:
+  {
+    GST_INFO ("media %p still prepared %d times", media, priv->prepare_count);
+    g_rec_mutex_unlock (&priv->state_lock);
     return TRUE;
   }
 }
