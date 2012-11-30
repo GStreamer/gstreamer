@@ -309,6 +309,10 @@ collect_media_stats (GstRTSPMedia * media)
   GstRTSPMediaPrivate *priv = media->priv;
   gint64 position, duration;
 
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
+      priv->status != GST_RTSP_MEDIA_STATUS_PREPARING)
+    return;
+
   priv->range.unit = GST_RTSP_RANGE_NPT;
 
   GST_INFO ("collect media stats");
@@ -1092,9 +1096,7 @@ gst_rtsp_media_set_status (GstRTSPMedia * media, GstRTSPMediaStatus status)
   GstRTSPMediaPrivate *priv = media->priv;
 
   g_mutex_lock (&priv->lock);
-  /* never overwrite the error status */
-  if (priv->status != GST_RTSP_MEDIA_STATUS_ERROR)
-    priv->status = status;
+  priv->status = status;
   GST_DEBUG ("setting new status to %d", status);
   g_cond_broadcast (&priv->cond);
   g_mutex_unlock (&priv->lock);
@@ -1222,7 +1224,8 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
         GST_INFO ("%p: got ASYNC_DONE", media);
         collect_media_stats (media);
 
-        gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+        if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+          gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
       } else {
         GST_INFO ("%p: ignoring ASYNC_DONE", media);
       }
