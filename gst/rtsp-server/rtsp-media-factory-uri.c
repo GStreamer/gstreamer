@@ -94,6 +94,8 @@ gst_rtsp_media_factory_uri_class_init (GstRTSPMediaFactoryURIClass * klass)
   GObjectClass *gobject_class;
   GstRTSPMediaFactoryClass *mediafactory_class;
 
+  g_type_class_add_private (klass, sizeof (GstRTSPMediaFactoryURIPrivate));
+
   gobject_class = G_OBJECT_CLASS (klass);
   mediafactory_class = GST_RTSP_MEDIA_FACTORY_CLASS (klass);
 
