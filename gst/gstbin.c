@@ -1073,7 +1073,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
 
   /* we obviously can't add ourself to ourself */
-  if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
+  if (G_UNLIKELY (element == GST_ELEMENT_CAST (bin)))
     goto adding_itself;
 
   /* get the element name to make sure it is unique in this bin. */
@@ -1180,10 +1180,10 @@ no_state_recalc:
   /* post the messages on the bus of the element so that the bin can handle
    * them */
   if (clock_message)
-    gst_element_post_message (GST_ELEMENT_CAST (element), clock_message);
+    gst_element_post_message (element, clock_message);
 
   if (async_message)
-    gst_element_post_message (GST_ELEMENT_CAST (element), async_message);
+    gst_element_post_message (element, async_message);
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
