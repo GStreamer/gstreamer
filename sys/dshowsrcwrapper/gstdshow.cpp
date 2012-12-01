@@ -405,6 +405,9 @@ gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype)
   if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_YUY2, FORMAT_VideoInfo))
     return GST_VIDEO_FORMAT_YUY2;
 
+  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_UYVY, FORMAT_VideoInfo))
+    return GST_VIDEO_FORMAT_UYVY;
+
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
@@ -428,6 +431,9 @@ gst_dshow_new_video_caps (GstVideoFormat video_format, const gchar * name,
 	  break;
     case GST_VIDEO_FORMAT_YUY2:
       video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("YUY2"));
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      video_caps = gst_caps_from_string (GST_VIDEO_CAPS_YUV ("UYVY"));
       break;
     default:
       break;
