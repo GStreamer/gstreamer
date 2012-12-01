@@ -319,7 +319,6 @@ composition_duration_cb (GstElement * composition,
 
   g_object_get (composition, "duration", &duration, NULL);
 
-
   if (track->priv->duration != duration) {
     GST_DEBUG_OBJECT (track,
         "composition duration : %" GST_TIME_FORMAT " current : %"
@@ -347,12 +346,9 @@ create_element_for_raw_audio_gap (GESTrack * track)
 static GstElement *
 create_element_for_raw_video_gap (GESTrack * track)
 {
-  GstElement *elem;
-
-  elem = gst_element_factory_make ("videotestsrc", NULL);
-  g_object_set (elem, "pattern", 2, NULL);
-
-  return elem;
+  return gst_parse_bin_from_description
+      ("videotestsrc pattern=2 name=src ! capsfilter caps=video/x-raw", TRUE,
+      NULL);
 }
 
 /* Remove @object from @track, but keeps it in the sequence this is needed
