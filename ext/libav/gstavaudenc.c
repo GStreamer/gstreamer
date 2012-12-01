@@ -275,7 +275,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   /* fetch pix_fmt and so on */
   gst_ffmpeg_audioinfo_to_context (info, ffmpegaudenc->context);
   if (!ffmpegaudenc->context->time_base.den) {
-    ffmpegaudenc->context->time_base.den = 25;
+    ffmpegaudenc->context->time_base.den = GST_AUDIO_INFO_RATE (info);
     ffmpegaudenc->context->time_base.num = 1;
     ffmpegaudenc->context->ticks_per_frame = 1;
   }
