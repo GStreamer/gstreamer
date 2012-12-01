@@ -56,4 +56,14 @@ gchar * ges_test_file_uri (const gchar *filename);
   assert_equals_int (pact, active);					\
   }
 
+/* copied from gnl */
+#define fail_error_message(msg)			\
+  G_STMT_START {				\
+    GError *error;				\
+    gst_message_parse_error(msg, &error, NULL);				\
+    fail_unless(FALSE, "Error Message from %s : %s",			\
+		GST_OBJECT_NAME (GST_MESSAGE_SRC(msg)), error->message); \
+    g_error_free (error);						\
+  } G_STMT_END;
+
 #endif /* _GES_TEST_UTILS */
