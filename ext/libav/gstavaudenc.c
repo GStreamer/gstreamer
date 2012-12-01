@@ -357,12 +357,15 @@ static GstFlowReturn
 gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     guint8 * audio_in, guint in_size, gint * have_data)
 {
+  GstAudioEncoder *enc;
   AVCodecContext *ctx;
   gint res;
   GstFlowReturn ret;
   GstAudioInfo *info;
   AVPacket pkt;
   AVFrame frame;
+
+  enc = GST_AUDIO_ENCODER (ffmpegaudenc);
 
   ctx = ffmpegaudenc->context;
 
@@ -371,7 +374,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   memset (&pkt, 0, sizeof (pkt));
   memset (&frame, 0, sizeof (frame));
 
-  info = gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (ffmpegaudenc));
+  info = gst_audio_encoder_get_audio_info (enc);
   frame.data[0] = audio_in;
   frame.linesize[0] = in_size;
   frame.nb_samples = in_size / info->bpf;
@@ -385,15 +388,20 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   if (*have_data) {
     GstBuffer *outbuf;
+    AVCodec *codec;
 
     GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt.size);
 
     outbuf =
         gst_buffer_new_wrapped_full (0, pkt.data, pkt.size, 0, pkt.size,
         pkt.data, av_free);
-    ret =
-        gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (ffmpegaudenc),
-        outbuf, 1);
+
+    codec = ffmpegaudenc->context->codec;
+    if ((codec->capabilities & CODEC_CAP_VARIABLE_FRAME_SIZE)) {
+      ret = gst_audio_encoder_finish_frame (enc, outbuf, -1);
+    } else {
+      ret = gst_audio_encoder_finish_frame (enc, outbuf, frame.nb_samples);
+    }
   } else {
     GST_LOG_OBJECT (ffmpegaudenc, "no output produced");
     ret = GST_FLOW_OK;
