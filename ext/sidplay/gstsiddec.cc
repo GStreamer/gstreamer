@@ -204,6 +204,8 @@ gst_siddec_class_init (GstSidDecClass * klass)
       gst_static_pad_template_get (&src_templ));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_templ));
+
+  GST_DEBUG_CATEGORY_INIT (gst_siddec_debug, "siddec", 0, "C64 sid song player");
 }
 
 static void
