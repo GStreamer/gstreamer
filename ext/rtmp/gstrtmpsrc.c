@@ -503,11 +503,6 @@ gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
     return FALSE;
   }
 
-  if (!src->seekable) {
-    GST_LOG_OBJECT (src, "Not a seekable stream");
-    return FALSE;
-  }
-
   if (!src->rtmp) {
     GST_LOG_OBJECT (src, "Not connected yet");
     return FALSE;
@@ -518,6 +513,11 @@ gst_rtmp_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   /* Initial seek */
   if (src->cur_offset == 0 && segment->start == 0)
     return TRUE;
+
+  if (!src->seekable) {
+    GST_LOG_OBJECT (src, "Not a seekable stream");
+    return FALSE;
+  }
 
   src->last_timestamp = GST_CLOCK_TIME_NONE;
   if (!RTMP_SendSeek (src->rtmp, segment->start / GST_MSECOND)) {
@@ -553,7 +553,6 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
 
   src->cur_offset = 0;
   src->last_timestamp = 0;
-  src->seekable = TRUE;
   src->discont = TRUE;
 
   uri_copy = g_strdup (src->uri);
@@ -567,6 +566,8 @@ gst_rtmp_src_start (GstBaseSrc * basesrc)
     src->rtmp = NULL;
     return FALSE;
   }
+  src->seekable = !(src->rtmp->Link.lFlags & RTMP_LF_LIVE);
+  GST_INFO_OBJECT (src, "seekable %d", src->seekable);
 
   /* open if required */
   if (!RTMP_IsConnected (src->rtmp)) {
