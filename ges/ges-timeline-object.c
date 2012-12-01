@@ -1362,7 +1362,8 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
   }
 
   for (tmp = object->trackobjects; tmp; tmp = g_list_next (tmp)) {
-    if (ges_track_object_is_locked (tmp->data)) {
+    if (ges_track_object_is_locked (tmp->data)
+        && GES_IS_TRACK_SOURCE (tmp->data)) {
       ret &= ges_track_object_edit (tmp->data, layers, mode, edge, position);
       break;
     }
