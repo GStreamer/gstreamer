@@ -381,7 +381,10 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   res = avcodec_encode_audio2 (ctx, &pkt, &frame, have_data);
   if (res < 0) {
-    GST_ERROR_OBJECT (ffmpegaudenc, "Failed to encode buffer: %d", res);
+    char error_str[128] = { 0, };
+
+    av_strerror (res, error_str, sizeof (error_str));
+    GST_ERROR_OBJECT (enc, "Failed to encode buffer: %d - %s", res, error_str);
     return GST_FLOW_OK;
   }
   GST_LOG_OBJECT (ffmpegaudenc, "got output size %d", res);
