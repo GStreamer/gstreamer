@@ -27,6 +27,9 @@
  * file descriptors can be added to multifdsink by emitting the #GstMultiFdSink::add signal. 
  * For each descriptor added, the #GstMultiFdSink::client-added signal will be called.
  *
+ * The multifdsink element needs to be set into READY, PAUSED or PLAYING state
+ * before operations such as adding clients are possible.
+ *
  * As of version 0.10.8, a client can also be added with the #GstMultiFdSink::add-full signal
  * that allows for more control over what and how much data a client 
  * initially receives.

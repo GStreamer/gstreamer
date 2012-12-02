@@ -656,6 +656,12 @@ gst_multi_handle_sink_add_full (GstMultiHandleSink * sink,
   GstMultiHandleSinkClass *mhsinkclass =
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
+  if (!sink->running) {
+    g_warning ("Element %s must be set to READY, PAUSED or PLAYING state "
+        "before clients can be added", GST_OBJECT_NAME (sink));
+    return;
+  }
+
   mhsinkclass->handle_debug (handle, debug);
   GST_DEBUG_OBJECT (sink, "%s adding client, sync_method %d, "
       "min_format %d, min_value %" G_GUINT64_FORMAT

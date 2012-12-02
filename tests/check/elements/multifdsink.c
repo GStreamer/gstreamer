@@ -141,6 +141,19 @@ GST_START_TEST (test_add_client)
 
 GST_END_TEST;
 
+GST_START_TEST (test_add_client_in_null_state)
+{
+  GstElement *sink;
+
+  sink = setup_multifdsink ();
+
+  ASSERT_WARNING (g_signal_emit_by_name (sink, "add", 99));
+
+  cleanup_multifdsink (sink);
+}
+
+GST_END_TEST;
+
 #define fail_unless_read(msg,fd,size,ref) \
 G_STMT_START { \
   char data[size + 1]; \
@@ -800,6 +813,7 @@ multifdsink_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_no_clients);
   tcase_add_test (tc_chain, test_add_client);
+  tcase_add_test (tc_chain, test_add_client_in_null_state);
   tcase_add_test (tc_chain, test_streamheader);
   tcase_add_test (tc_chain, test_change_streamheader);
   tcase_add_test (tc_chain, test_burst_client_bytes);
