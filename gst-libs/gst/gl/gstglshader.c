@@ -33,7 +33,7 @@ enum
   PROP_VERTEX_SRC,
   PROP_FRAGMENT_SRC,
   PROP_COMPILED,
-  PROP_ACTIVE                   //unused
+  PROP_ACTIVE                   /* unused */
 };
 
 struct _GstGLShaderPrivate
@@ -49,12 +49,12 @@ struct _GstGLShaderPrivate
   gboolean active;
 };
 
-G_DEFINE_TYPE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT);
+GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
+#define GST_CAT_DEFAULT gst_gl_shader_debug
 
-#undef G_LOG_DOMAIN
-#define G_LOG_DOMAIN "GstGLShader"
-
-gboolean _gst_gl_shader_debug = FALSE;
+#define DEBUG_INIT \
+  GST_DEBUG_CATEGORY_INIT (gst_gl_shader_debug, "glshader", 0, "shader");
+G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT, DEBUG_INIT);
 
 static void
 gst_gl_shader_finalize (GObject * object)
@@ -67,7 +67,7 @@ gst_gl_shader_finalize (GObject * object)
   shader = GST_GL_SHADER (object);
   priv = shader->priv;
 
-  g_debug ("finalizing shader %ud", priv->program_handle);
+  GST_TRACE ("finalizing shader %u", priv->program_handle);
 
   g_free (priv->vertex_src);
   g_free (priv->fragment_src);
@@ -77,16 +77,16 @@ gst_gl_shader_finalize (GObject * object)
 
   /* delete program */
   if (priv->program_handle) {
-    g_debug ("finalizing program shader %ud", priv->program_handle);
+    GST_TRACE ("finalizing program shader %u", priv->program_handle);
 
     glDeleteObjectARB (priv->program_handle);
     /* err = glGetError (); */
-    /* g_debug ("error: 0x%x", err);  */
+    /* GST_WARNING ("error: 0x%x", err);  */
     /* glGetObjectParameterivARB(priv->program_handle, GL_OBJECT_DELETE_STATUS_ARB, &status); */
-    /* g_debug ("program deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
+    /* GST_INFO ("program deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
   }
 
-  g_debug ("shader deleted %ud", priv->program_handle);
+  GST_DEBUG ("shader deleted %u", priv->program_handle);
 
   priv->fragment_handle = 0;
   priv->vertex_handle = 0;
@@ -136,15 +136,6 @@ gst_gl_shader_get_property (GObject * object,
       break;
   }
 
-}
-
-static void
-gst_gl_shader_log_handler (const gchar * domain, GLogLevelFlags flags,
-    const gchar * message, gpointer user_data)
-{
-  if (_gst_gl_shader_debug) {
-    g_log_default_handler (domain, flags, message, user_data);
-  }
 }
 
 static void
@@ -254,15 +245,9 @@ gst_gl_shader_init (GstGLShader * self)
   g_return_if_fail (priv->program_handle);
 
   priv->compiled = FALSE;
-  priv->active = FALSE;         // unused at the moment
+  priv->active = FALSE;         /* unused at the moment */
 
-  if (g_getenv ("GST_GL_SHADER_DEBUG") != NULL)
-    _gst_gl_shader_debug = TRUE;
-
-  g_log_set_handler ("GstGLShader", G_LOG_LEVEL_DEBUG,
-      gst_gl_shader_log_handler, NULL);
-
-  g_debug ("shader initialized %ud", priv->program_handle);
+  GST_TRACE ("shader initialized %u", priv->program_handle);
 }
 
 GstGLShader *
@@ -326,11 +311,11 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
       priv->compiled = FALSE;
       return priv->compiled;
     } else if (len > 1) {
-      g_debug ("\n%s\n", info_buffer);
+      GST_FIXME ("vertex shader info log:\n%s\n", info_buffer);
     }
     glAttachObjectARB (priv->program_handle, priv->vertex_handle);
 
-    g_debug ("vertex shader attached %ud", priv->vertex_handle);
+    GST_LOG ("vertex shader attached %u", priv->vertex_handle);
   }
 
   if (priv->fragment_src) {
@@ -361,11 +346,11 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
       priv->compiled = FALSE;
       return priv->compiled;
     } else if (len > 1) {
-      g_debug ("\n%s\n", info_buffer);
+      GST_FIXME ("vertex shader info log:\n%s\n", info_buffer);
     }
     glAttachObjectARB (priv->program_handle, priv->fragment_handle);
 
-    g_debug ("fragment shader attached %ud", priv->fragment_handle);
+    GST_LOG ("fragment shader attached %u", priv->fragment_handle);
   }
 
   /* if nothing failed link shaders */
@@ -387,7 +372,7 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     priv->compiled = FALSE;
     return priv->compiled;
   } else if (len > 1) {
-    g_debug ("\n%s\n", info_buffer);
+    GST_FIXME ("shader link log:\n%s\n", info_buffer);
   }
   /* success! */
   priv->compiled = TRUE;
@@ -412,8 +397,8 @@ gst_gl_shader_release (GstGLShader * shader)
   if (!priv->compiled)
     return;
 
-  if (priv->vertex_handle) {    // not needed but nvidia doesn't care to respect the spec
-    g_debug ("finalizing vertex shader %ud", priv->vertex_handle);
+  if (priv->vertex_handle) {    /* not needed but nvidia doesn't care to respect the spec */
+    GST_TRACE ("finalizing vertex shader %u", priv->vertex_handle);
 
 #ifndef OPENGL_ES2
     glDeleteObjectARB (priv->vertex_handle);
@@ -422,13 +407,13 @@ gst_gl_shader_release (GstGLShader * shader)
 #endif
 
     /* err = glGetError (); */
-    /* g_debug ("error: 0x%x", err); */
+    /* GST_WARNING ("error: 0x%x", err); */
     /* glGetObjectParameterivARB(priv->vertex_handle, GL_OBJECT_DELETE_STATUS_ARB, &status); */
-    /* g_debug ("vertex deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
+    /* GST_INFO ("vertex deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
   }
 
   if (priv->fragment_handle) {
-    g_debug ("finalizing fragment shader %ud", priv->fragment_handle);
+    GST_TRACE ("finalizing fragment shader %u", priv->fragment_handle);
 
 #ifndef OPENGL_ES2
     glDeleteObjectARB (priv->fragment_handle);
@@ -437,9 +422,9 @@ gst_gl_shader_release (GstGLShader * shader)
 #endif
 
     /* err = glGetError (); */
-    /* g_debug ("error: 0x%x", err); */
+    /* GST_WARNING ("error: 0x%x", err); */
     /* glGetObjectParameterivARB(priv->fragment_handle, GL_OBJECT_DELETE_STATUS_ARB, &status); */
-    /* g_debug ("fragment deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
+    /* GST_INFO ("fragment deletion status:%s", status == GL_TRUE ? "true" : "false" ); */
   }
 
   if (priv->vertex_handle)
@@ -495,7 +480,7 @@ gst_gl_shader_compile_and_check (GstGLShader * shader,
 
     gst_gl_shader_compile (shader, &error);
     if (error) {
-      g_warning ("%s", error->message);
+      GST_WARNING ("%s", error->message);
       g_error_free (error);
       error = NULL;
       gst_gl_shader_use (NULL);
