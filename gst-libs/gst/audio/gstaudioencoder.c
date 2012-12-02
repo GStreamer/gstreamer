@@ -1094,7 +1094,6 @@ gst_audio_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   /* clip to segment */
-  /* NOTE: slightly painful linking -laudio only for this one ... */
   buffer = gst_audio_buffer_clip (buffer, &enc->input_segment, ctx->info.rate,
       ctx->info.bpf);
   if (G_UNLIKELY (!buffer)) {
@@ -2042,6 +2041,7 @@ gst_audio_encoder_set_frame_samples_min (GstAudioEncoder * enc, gint num)
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
 
   enc->priv->ctx.frame_samples_min = num;
+  GST_LOG_OBJECT (enc, "set to %d", num);
 }
 
 /**
@@ -2075,6 +2075,7 @@ gst_audio_encoder_set_frame_samples_max (GstAudioEncoder * enc, gint num)
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
 
   enc->priv->ctx.frame_samples_max = num;
+  GST_LOG_OBJECT (enc, "set to %d", num);
 }
 
 /**
@@ -2105,6 +2106,7 @@ gst_audio_encoder_set_frame_max (GstAudioEncoder * enc, gint num)
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
 
   enc->priv->ctx.frame_max = num;
+  GST_LOG_OBJECT (enc, "set to %d", num);
 }
 
 /**
@@ -2134,6 +2136,7 @@ gst_audio_encoder_set_lookahead (GstAudioEncoder * enc, gint num)
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
 
   enc->priv->ctx.lookahead = num;
+  GST_LOG_OBJECT (enc, "set to %d", num);
 }
 
 /**
@@ -2168,6 +2171,9 @@ gst_audio_encoder_set_latency (GstAudioEncoder * enc,
   enc->priv->ctx.min_latency = min;
   enc->priv->ctx.max_latency = max;
   GST_OBJECT_UNLOCK (enc);
+
+  GST_LOG_OBJECT (enc, "set to %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 }
 
 /**
@@ -2367,6 +2373,8 @@ gst_audio_encoder_set_tolerance (GstAudioEncoder * enc, GstClockTime tolerance)
   GST_OBJECT_LOCK (enc);
   enc->priv->tolerance = tolerance;
   GST_OBJECT_UNLOCK (enc);
+
+  GST_LOG_OBJECT (enc, "set to %" GST_TIME_FORMAT, GST_TIME_ARGS (tolerance));
 }
 
 /**
