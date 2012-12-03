@@ -58,7 +58,7 @@ struct _GstGLWindowCocoaClass {
 
 GType gst_gl_window_cocoa_get_type     (void);
 
-GstGLWindowCocoa * gst_gl_window_cocoa_new          (GstGLRendererAPI render_api,
+GstGLWindowCocoa * gst_gl_window_cocoa_new          (GstGLAPI gl_api,
                                                      guintptr external_gl_context);
 
 G_END_DECLS

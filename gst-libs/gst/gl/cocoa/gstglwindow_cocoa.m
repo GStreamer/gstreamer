@@ -123,6 +123,7 @@ void gst_gl_window_cocoa_quit (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data);
 void gst_gl_window_cocoa_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
+GstGLAPI gst_gl_window_cocoa_get_gl_api (GstGLWindow * window);
 
 struct _GstGLWindowCocoaPrivate
 {
@@ -177,6 +178,8 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_quit);
   window_class->send_message =
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_send_message);
+  window_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_get_gl_api);
 
 #ifndef GNUSTEP
   NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
@@ -194,7 +197,7 @@ gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 
 /* Must be called in the gl thread */
 GstGLWindowCocoa *
-gst_gl_window_cocoa_new (GstGLRendererAPI render_api, guintptr external_gl_context)
+gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowCocoa *window = g_object_new (GST_GL_TYPE_WINDOW_COCOA, NULL);
   GstGLWindowCocoaPrivate *priv = window->priv;
@@ -446,6 +449,11 @@ gst_gl_window_cocoa_send_message (GstGLWindow * window, GstGLWindowCB callback,
   }
 }
 
+GstGLAPI
+gst_gl_window_cocoa_get_gl_api (GstGLWindow * window)
+{
+  return GST_GL_API_OPENGL;
+}
 
 /* =============================================================*/
 /*                                                              */

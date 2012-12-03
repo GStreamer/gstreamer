@@ -27,7 +27,7 @@
 
 #include "gstglwindow_x11_egl.h"
 
-const gchar *EGLErrorString ();
+const gchar *X11EGLErrorString ();
 
 #define GST_CAT_DEFAULT gst_gl_window_x11_egl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -44,14 +44,16 @@ static void gst_gl_window_x11_egl_swap_buffers (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_egl_activate (GstGLWindowX11 * window_x11,
     gboolean activate);
 static gboolean gst_gl_window_x11_egl_create_context (GstGLWindowX11 *
-    window_x11, GstGLRendererAPI render_api, guintptr external_gl_context);
+    window_x11, GstGLAPI gl_api, guintptr external_gl_context);
 static void gst_gl_window_x11_egl_destroy_context (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_egl_choose_format (GstGLWindowX11 *
     window_x11);
+GstGLAPI gst_gl_window_x11_egl_get_gl_api (GstGLWindow * window);
 
 static void
 gst_gl_window_x11_egl_class_init (GstGLWindowX11EGLClass * klass)
 {
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
   GstGLWindowX11Class *window_x11_class = (GstGLWindowX11Class *) klass;
 
   window_x11_class->get_gl_context =
@@ -66,6 +68,9 @@ gst_gl_window_x11_egl_class_init (GstGLWindowX11EGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_egl_choose_format);
   window_x11_class->swap_buffers =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_egl_swap_buffers);
+
+  window_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_egl_get_gl_api);
 }
 
 static void
@@ -75,12 +80,11 @@ gst_gl_window_x11_egl_init (GstGLWindowX11EGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11EGL *
-gst_gl_window_x11_egl_new (GstGLRendererAPI render_api,
-    guintptr external_gl_context)
+gst_gl_window_x11_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowX11EGL *window = g_object_new (GST_GL_TYPE_WINDOW_X11_EGL, NULL);
 
-  gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), render_api,
+  gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), gl_api,
       external_gl_context);
 
   return window;
@@ -100,7 +104,7 @@ gst_gl_window_x11_egl_choose_format (GstGLWindowX11 * window_x11)
 
 static gboolean
 gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
-    GstGLRendererAPI render_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowX11EGL *window_egl;
 
@@ -130,7 +134,7 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
     g_debug ("egl initialized: %d.%d\n", majorVersion, minorVersion);
   else {
     g_debug ("failed to initialize egl %ld, %s\n",
-        (gulong) window_egl->egl_display, EGLErrorString ());
+        (gulong) window_egl->egl_display, X11EGLErrorString ());
     goto failure;
   }
 
@@ -139,7 +143,7 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
     g_debug ("config set: %ld, %ld\n", (gulong) config, (gulong) numConfigs);
   else {
     g_debug ("failed to set config %ld, %s\n", (gulong) window_egl->egl_display,
-        EGLErrorString ());
+        X11EGLErrorString ());
     goto failure;
   }
 
@@ -151,7 +155,7 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
   else {
     g_debug ("failed to create surface %ld, %ld, %ld, %s\n",
         (gulong) window_egl->egl_display, (gulong) window_egl->egl_surface,
-        (gulong) window_egl->egl_display, EGLErrorString ());
+        (gulong) window_egl->egl_display, X11EGLErrorString ());
     goto failure;
   }
 
@@ -166,7 +170,7 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
   else {
     g_debug ("failed to create glcontext %ld, %ld, %s\n",
         (gulong) window_egl->egl_context, (gulong) window_egl->egl_display,
-        EGLErrorString ());
+        X11EGLErrorString ());
     goto failure;
   }
 
@@ -222,8 +226,14 @@ gst_gl_window_x11_egl_swap_buffers (GstGLWindowX11 * window_x11)
   eglSwapBuffers (window_egl->egl_display, window_egl->egl_surface);
 }
 
+GstGLAPI
+gst_gl_window_x11_egl_get_gl_api (GstGLWindow * window)
+{
+  return GST_GL_API_GLES2;
+}
+
 const gchar *
-EGLErrorString ()
+X11EGLErrorString ()
 {
   EGLint nErr = eglGetError ();
   switch (nErr) {

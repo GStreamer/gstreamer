@@ -51,7 +51,7 @@ enum
 
 struct _GstGLWindowWin32Private
 {
-  GstGLRendererAPI render_api;
+  GstGLAPI gl_api;
   guintptr external_gl_context;
   gboolean activate;
   gboolean activate_result;
@@ -138,8 +138,7 @@ gst_gl_window_win32_init (GstGLWindowWin32 * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32 *
-gst_gl_window_win32_new (GstGLRendererAPI render_api,
-    guintptr external_gl_context)
+gst_gl_window_win32_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowWin32 *window = NULL;
   const gchar *user_choice;
@@ -149,13 +148,13 @@ gst_gl_window_win32_new (GstGLRendererAPI render_api,
 #if HAVE_WGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "wgl")))
     window =
-        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (render_api,
+        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (gl_api,
             external_gl_context));
 #endif
 #if HAVE_EGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
     window =
-        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_egl_new (render_api,
+        GST_GL_WINDOW_WIN32 (gst_gl_window_win32_egl_new (gl_api,
             external_gl_context));
 #endif
   if (!window) {
@@ -164,7 +163,7 @@ gst_gl_window_win32_new (GstGLRendererAPI render_api,
     return NULL;
   }
 
-  window->priv->render_api = render_api;
+  window->priv->gl_api = gl_api;
   window->priv->external_gl_context = external_gl_context;
 
   return window;
@@ -427,7 +426,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       window_class->choose_format (window_win32);
 
-      window_class->create_context (window_win32, priv->render_api,
+      window_class->create_context (window_win32, priv->gl_api,
           priv->external_gl_context);
 
 /*      priv->gl_context = wglCreateContext (priv->device);

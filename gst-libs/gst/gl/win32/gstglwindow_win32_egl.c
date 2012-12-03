@@ -36,11 +36,12 @@ static gboolean gst_gl_window_win32_wgl_choose_format (GstGLWindowWin32 *
 static gboolean gst_gl_window_win32_wgl_activate (GstGLWindowWin32 *
     window_win32, gboolean activate);
 static gboolean gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 *
-    window_win32, GstGLRendererAPI render_api, guintptr external_gl_context);
+    window_win32, GstGLAPI gl_api, guintptr external_gl_context);
 static void gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 *
     window_win32);
+GstGLAPI gst_gl_window_win32_egl_get_gl_api (GstGLWindow * window);
 
-const gchar *EGLErrorString ();
+const gchar *WinEGLErrorString ();
 
 #define GST_CAT_DEFAULT gst_gl_window_win32_egl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -54,20 +55,24 @@ G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32EGL, gst_gl_window_win32_egl,
 static void
 gst_gl_window_win32_egl_class_init (GstGLWindowWin32EGLClass * klass)
 {
-  GstGLWindowWin32Class *window_class = (GstGLWindowWin32 *) klass;
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
+  GstGLWindowWin32Class *window_win32_class = (GstGLWindowWin32 *) klass;
 
   window_win32_class->get_gl_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_get_gl_context);
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_get_gl_context);
   window_win32_class->choose_format =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_choose_format);
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_choose_format);
   window_win32_class->activate =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_activate);
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_activate);
   window_win32_class->create_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_create_context);
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_create_context);
   window_win32_class->destroy_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_destroy_context);
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_destroy_context);
   window_win32_class->swap_buffers =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_swap_buffers);
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_swap_buffers);
+
+  window_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_egl_get_gl_api);
 }
 
 static void
@@ -77,8 +82,7 @@ gst_gl_window_win32_egl_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32EGL *
-gst_gl_window_win32_egl_new (GstGLRendererAPI render_api,
-    guintptr external_gl_context)
+gst_gl_window_win32_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowWin32EGL *window =
       g_object_new (GST_GL_TYPE_WINDOW_WIN32_EGL, NULL);
@@ -115,7 +119,7 @@ gst_gl_window_win32_egl_activate (GstGLWindowWin32 * window_win32,
 
 static gboolean
 gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
-    GstGLRendererAPI render_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowWin32EGL *window_egl;
   EGLint majorVersion;
@@ -142,7 +146,7 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
   if (priv->display != EGL_NO_DISPLAY)
     GST_DEBUG ("display retrieved: %d\n", window_egl->display);
   else {
-    GST_DEBUG ("failed to retrieve display %s\n", EGLErrorString ());
+    GST_DEBUG ("failed to retrieve display %s\n", WinEGLErrorString ());
     goto failure;
   }
 
@@ -150,7 +154,7 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
     GST_DEBUG ("egl initialized: %d.%d\n", majorVersion, minorVersion);
   else {
     GST_DEBUG ("failed to initialize egl %d, %s\n", priv->display,
-        EGLErrorString ());
+        WinEGLErrorString ());
     goto failure;
   }
 
@@ -158,7 +162,7 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
     GST_DEBUG ("configs retrieved: %d\n", numConfigs);
   else {
     GST_DEBUG ("failed to retrieve configs %d, %s\n", window_egl->display,
-        EGLErrorString ());
+        WinEGLErrorString ());
     goto failure;
   }
 
@@ -166,7 +170,7 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
     GST_DEBUG ("config set: %d, %d\n", config, numConfigs);
   else {
     GST_DEBUG ("failed to set config %d, %s\n", window_egl->display,
-        EGLErrorString ());
+        WinEGLErrorString ());
     goto failure;
   }
 
@@ -177,7 +181,7 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
     GST_DEBUG ("surface created: %d\n", window_egl->surface);
   else {
     GST_DEBUG ("failed to create surface %d, %d, %s\n", window_egl->display,
-        window_egl->surface, EGLErrorString ());
+        window_egl->surface, WinEGLErrorString ());
     goto failure;
   }
 
@@ -191,7 +195,7 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
     GST_DEBUG
         ("failed to create glcontext %lud, extenal: %lud, %s\n",
         (gulong) window_egl->egl_context, (gulong) external_gl_context,
-        EGLErrorString ());
+        WinEGLErrorString ());
     goto failure;
   }
 
@@ -211,27 +215,33 @@ gst_gl_window_win32_egl_destroy_context (GstGLWindowWin32 * window_win32)
   if (window_egl->egl_context) {
     if (!eglDestroyContext (window_egl->display, window_egl->egl_context))
       GST_DEBUG ("failed to destroy context %d, %s\n", window_egl->egl_context,
-          EGLErrorString ());
+          WinEGLErrorString ());
     window_egl->egl_context = NULL;
   }
 
   if (window_egl->surface) {
     if (!eglDestroySurface (window_egl->display, window_egl->surface))
       GST_DEBUG ("failed to destroy surface %d, %s\n", window_egl->surface,
-          EGLErrorString ());
+          WinEGLErrorString ());
     window_egl->surface = NULL;
   }
 
   if (window_egl->display) {
     if (!eglTerminate (window_egl->display))
       GST_DEBUG ("failed to terminate display %d, %s\n", window_egl->display,
-          EGLErrorString ());
+          WinEGLErrorString ());
     window_egl->display = NULL;
   }
 }
 
+GstGLAPI
+gst_gl_window_win32_egl_get_gl_api (GstGLWindow * window)
+{
+  return GST_GL_API_GLES2;
+}
+
 const gchar *
-EGLErrorString ()
+WinEGLErrorString ()
 {
   EGLint nErr = eglGetError ();
   switch (nErr) {

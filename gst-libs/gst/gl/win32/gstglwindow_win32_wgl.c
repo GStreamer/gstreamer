@@ -47,13 +47,15 @@ static gboolean gst_gl_window_win32_wgl_choose_format (GstGLWindowWin32 *
 static gboolean gst_gl_window_win32_wgl_activate (GstGLWindowWin32 *
     window_win32, gboolean activate);
 static gboolean gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 *
-    window_win32, GstGLRendererAPI render_api, guintptr external_gl_context);
+    window_win32, GstGLAPI gl_api, guintptr external_gl_context);
 static void gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 *
     window_win32);
+GstGLAPI gst_gl_window_win32_wgl_get_gl_api (GstGLWindow * window);
 
 static void
 gst_gl_window_win32_wgl_class_init (GstGLWindowWin32WGLClass * klass)
 {
+  GstGLWindowClass *window_class;
   GstGLWindowWin32Class *window_win32_class = (GstGLWindowWin32Class *) klass;
 
   window_win32_class->get_gl_context =
@@ -68,6 +70,9 @@ gst_gl_window_win32_wgl_class_init (GstGLWindowWin32WGLClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_destroy_context);
   window_win32_class->swap_buffers =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_swap_buffers);
+
+  window_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_wgl_get_gl_api);
 }
 
 static void
@@ -77,8 +82,7 @@ gst_gl_window_win32_wgl_init (GstGLWindowWin32WGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32WGL *
-gst_gl_window_win32_wgl_new (GstGLRendererAPI render_api,
-    guintptr external_gl_context)
+gst_gl_window_win32_wgl_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowWin32WGL *window =
       g_object_new (GST_GL_TYPE_WINDOW_WIN32_WGL, NULL);
@@ -90,7 +94,7 @@ gst_gl_window_win32_wgl_new (GstGLRendererAPI render_api,
 
 static gboolean
 gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 * window_win32,
-    GstGLRendererAPI render_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowWin32WGL *window_wgl;
 
@@ -197,4 +201,10 @@ gst_gl_window_win32_wgl_activate (GstGLWindowWin32 * window_win32,
   }
 
   return result;
+}
+
+GstGLAPI
+gst_gl_window_win32_wgl_get_gl_api (GstGLWindow * window)
+{
+  return GST_GL_API_OPENGL;
 }

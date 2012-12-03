@@ -58,7 +58,7 @@ struct _GstGLWindowX11EGLClass {
 
 GType gst_gl_window_x11_egl_get_type     (void);
 
-GstGLWindowX11EGL * gst_gl_window_x11_egl_new  (GstGLRendererAPI render_api,
+GstGLWindowX11EGL * gst_gl_window_x11_egl_new  (GstGLAPI gl_api,
                                                 guintptr external_gl_context);
 
 G_END_DECLS
