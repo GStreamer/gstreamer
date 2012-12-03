@@ -98,7 +98,7 @@ gst_vaapi_video_buffer_destroy_surface(GstVaapiVideoBuffer *buffer)
 {
     GstVaapiVideoBufferPrivate * const priv = buffer->priv;
 
-    g_clear_object(&priv->proxy);
+    gst_vaapi_surface_proxy_replace(&priv->proxy, NULL);
 
     if (priv->surface) {
         if (priv->surface_pool)
@@ -353,7 +353,7 @@ gst_vaapi_video_buffer_typed_new_with_surface_proxy(
 {
     GstVaapiVideoBuffer *buffer;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+    g_return_val_if_fail(proxy != NULL, NULL);
 
     buffer = _gst_vaapi_video_buffer_typed_new(type);
     if (buffer)
@@ -570,7 +570,7 @@ gst_vaapi_video_buffer_set_surface_proxy(
     GstVaapiSurface *surface;
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_BUFFER(buffer));
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+    g_return_if_fail(proxy != NULL);
 
     gst_vaapi_video_buffer_destroy_surface(buffer);
 
@@ -579,7 +579,7 @@ gst_vaapi_video_buffer_set_surface_proxy(
         if (!surface)
             return;
         set_surface(buffer, surface);
-        buffer->priv->proxy = g_object_ref(proxy);
+        buffer->priv->proxy = gst_vaapi_surface_proxy_ref(proxy);
     }
 }
 

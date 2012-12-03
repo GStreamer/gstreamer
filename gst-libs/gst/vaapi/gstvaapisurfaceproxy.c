@@ -28,18 +28,21 @@
 #include "sysdeps.h"
 #include "gstvaapisurfaceproxy.h"
 #include "gstvaapiobject_priv.h"
+#include "gstvaapiminiobject.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-G_DEFINE_TYPE(GstVaapiSurfaceProxy, gst_vaapi_surface_proxy, G_TYPE_OBJECT)
+#define GST_VAAPI_SURFACE_PROXY(obj) \
+    ((GstVaapiSurfaceProxy *)(obj))
 
-#define GST_VAAPI_SURFACE_PROXY_GET_PRIVATE(obj)                \
-    (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
-                                 GST_VAAPI_TYPE_SURFACE_PROXY,	\
-                                 GstVaapiSurfaceProxyPrivate))
+#define GST_VAAPI_IS_SURFACE_PROXY(obj) \
+    (GST_VAAPI_SURFACE_PROXY(obj) != NULL)
 
-struct _GstVaapiSurfaceProxyPrivate {
+struct _GstVaapiSurfaceProxy {
+    /*< private >*/
+    GstVaapiMiniObject  parent_instance;
+
     GstVaapiContext    *context;
     GstVaapiSurface    *surface;
     GstClockTime        timestamp;
@@ -48,175 +51,31 @@ struct _GstVaapiSurfaceProxyPrivate {
     guint               tff             : 1;
 };
 
-enum {
-    PROP_0,
-
-    PROP_CONTEXT,
-    PROP_SURFACE,
-    PROP_TIMESTAMP,
-    PROP_DURATION,
-    PROP_INTERLACED,
-    PROP_TFF
-};
-
 static void
-gst_vaapi_surface_proxy_finalize(GObject *object)
+gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
-    GstVaapiSurfaceProxy * const proxy = GST_VAAPI_SURFACE_PROXY(object);
-
     gst_vaapi_surface_proxy_set_surface(proxy, NULL);
     gst_vaapi_surface_proxy_set_context(proxy, NULL);
-
-    G_OBJECT_CLASS(gst_vaapi_surface_proxy_parent_class)->finalize(object);
-}
-
-static void
-gst_vaapi_surface_proxy_set_property(
-    GObject      *object,
-    guint         prop_id,
-    const GValue *value,
-    GParamSpec   *pspec
-)
-{
-    GstVaapiSurfaceProxy * const proxy = GST_VAAPI_SURFACE_PROXY(object);
-
-    switch (prop_id) {
-    case PROP_CONTEXT:
-        gst_vaapi_surface_proxy_set_context(proxy, g_value_get_pointer(value));
-        break;
-    case PROP_SURFACE:
-        gst_vaapi_surface_proxy_set_surface(proxy, g_value_get_pointer(value));
-        break;
-    case PROP_TIMESTAMP:
-        gst_vaapi_surface_proxy_set_timestamp(proxy, g_value_get_uint64(value));
-        break;
-    case PROP_DURATION:
-        gst_vaapi_surface_proxy_set_duration(proxy, g_value_get_uint64(value));
-        break;
-    case PROP_INTERLACED:
-        gst_vaapi_surface_proxy_set_interlaced(proxy, g_value_get_boolean(value));
-        break;
-    case PROP_TFF:
-        gst_vaapi_surface_proxy_set_tff(proxy, g_value_get_boolean(value));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_surface_proxy_get_property(
-    GObject    *object,
-    guint       prop_id,
-    GValue     *value,
-    GParamSpec *pspec
-)
-{
-    GstVaapiSurfaceProxy * const proxy = GST_VAAPI_SURFACE_PROXY(object);
-
-    switch (prop_id) {
-    case PROP_CONTEXT:
-        g_value_set_pointer(value, gst_vaapi_surface_proxy_get_context(proxy));
-        break;
-    case PROP_SURFACE:
-        g_value_set_pointer(value, gst_vaapi_surface_proxy_get_surface(proxy));
-        break;
-    case PROP_TIMESTAMP:
-        g_value_set_uint64(value, gst_vaapi_surface_proxy_get_timestamp(proxy));
-        break;
-    case PROP_DURATION:
-        g_value_set_uint64(value, gst_vaapi_surface_proxy_get_duration(proxy));
-        break;
-    case PROP_INTERLACED:
-        g_value_set_boolean(value, gst_vaapi_surface_proxy_get_interlaced(proxy));
-        break;
-    case PROP_TFF:
-        g_value_set_boolean(value, gst_vaapi_surface_proxy_get_tff(proxy));
-        break;
-    default:
-        G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-        break;
-    }
-}
-
-static void
-gst_vaapi_surface_proxy_class_init(GstVaapiSurfaceProxyClass *klass)
-{
-    GObjectClass * const object_class = G_OBJECT_CLASS(klass);
-
-    g_type_class_add_private(klass, sizeof(GstVaapiSurfaceProxyPrivate));
-
-    object_class->finalize     = gst_vaapi_surface_proxy_finalize;
-    object_class->set_property = gst_vaapi_surface_proxy_set_property;
-    object_class->get_property = gst_vaapi_surface_proxy_get_property;
-
-    g_object_class_install_property
-        (object_class,
-         PROP_CONTEXT,
-         g_param_spec_pointer("context",
-                              "Context",
-                              "The context stored in the proxy",
-                              G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_SURFACE,
-         g_param_spec_pointer("surface",
-                              "Surface",
-                              "The surface stored in the proxy",
-                              G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_TIMESTAMP,
-         g_param_spec_uint64("timestamp",
-                             "Timestamp",
-                             "The presentation time of the surface",
-                             0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-                             G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_DURATION,
-         g_param_spec_uint64("duration",
-                             "Duration",
-                             "The amount of time the surface is to be presented",
-                             0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-                             G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_INTERLACED,
-         g_param_spec_boolean("interlaced",
-                              "Interlaced",
-                              "Flag indicating whether surface is interlaced",
-                              FALSE,
-                              G_PARAM_READWRITE));
-
-    g_object_class_install_property
-        (object_class,
-         PROP_TFF,
-         g_param_spec_boolean("tff",
-                              "Top-Field-First",
-                              "Flag indicating for interlaced surfaces whether Top Field is First",
-                              FALSE,
-                              G_PARAM_READWRITE));
 }
 
 static void
 gst_vaapi_surface_proxy_init(GstVaapiSurfaceProxy *proxy)
 { 
-    GstVaapiSurfaceProxyPrivate *priv;
+    proxy->timestamp = GST_CLOCK_TIME_NONE;
+    proxy->duration  = GST_CLOCK_TIME_NONE;
 
-    priv                = GST_VAAPI_SURFACE_PROXY_GET_PRIVATE(proxy);
-    proxy->priv         = priv;
-    priv->context       = NULL;
-    priv->surface       = NULL;
-    priv->timestamp     = GST_CLOCK_TIME_NONE;
-    priv->duration      = GST_CLOCK_TIME_NONE;
-    priv->is_interlaced = FALSE;
-    priv->tff           = FALSE;
+    proxy->is_interlaced = FALSE;
+    proxy->tff = FALSE;
+}
+
+static inline const GstVaapiMiniObjectClass *
+gst_vaapi_surface_proxy_class(void)
+{
+    static const GstVaapiMiniObjectClass GstVaapiSurfaceProxyClass = {
+        sizeof(GstVaapiSurfaceProxy),
+        (GDestroyNotify)gst_vaapi_surface_proxy_finalize
+    };
+    return &GstVaapiSurfaceProxyClass;
 }
 
 /**
@@ -232,13 +91,111 @@ gst_vaapi_surface_proxy_init(GstVaapiSurfaceProxy *proxy)
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface)
 {
+    GstVaapiMiniObject *object;
+    GstVaapiSurfaceProxy *proxy;
+
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), NULL);
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
 
-    return g_object_new(GST_VAAPI_TYPE_SURFACE_PROXY,
-                        "context",  context,
-                        "surface",  surface,
-                        NULL);
+    object = gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
+    if (!object)
+        return NULL;
+
+    proxy = GST_VAAPI_SURFACE_PROXY(object);
+    gst_vaapi_surface_proxy_init(proxy);
+    gst_vaapi_surface_proxy_set_context(proxy, context);
+    gst_vaapi_surface_proxy_set_surface(proxy, surface);
+    return proxy;
+}
+
+/**
+ * gst_vaapi_surface_proxy_ref:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Atomically increases the reference count of the given @proxy by one.
+ *
+ * Returns: The same @proxy argument
+ */
+GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_ref(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+
+    return GST_VAAPI_SURFACE_PROXY(gst_vaapi_mini_object_ref(
+                                       GST_VAAPI_MINI_OBJECT(proxy)));
+}
+
+/**
+ * gst_vaapi_surface_proxy_unref:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Atomically decreases the reference count of the @proxy by one. If
+ * the reference count reaches zero, the object will be free'd.
+ */
+void
+gst_vaapi_surface_proxy_unref(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(proxy));
+}
+
+/**
+ * gst_vaapi_surface_proxy_replace:
+ * @old_proxy_ptr: a pointer to a #GstVaapiSurfaceProxy
+ * @new_proxy: a #GstVaapiSurfaceProxy
+ *
+ * Atomically replaces the proxy object held in @old_proxy_ptr with
+ * @new_proxy. This means that @old_proxy_ptr shall reference a valid
+ * object. However, @new_proxy can be NULL.
+ */
+void
+gst_vaapi_surface_proxy_replace(GstVaapiSurfaceProxy **old_proxy_ptr,
+    GstVaapiSurfaceProxy *new_proxy)
+{
+    g_return_if_fail(old_proxy_ptr != NULL);
+
+    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)old_proxy_ptr,
+        GST_VAAPI_MINI_OBJECT(new_proxy));
+}
+
+/**
+ * gst_vaapi_surface_proxy_get_user_data:
+ * @proxy: a #GstVaapiSurfaceProxy
+ *
+ * Gets user-provided data set on the object via a previous call to
+ * gst_vaapi_surface_proxy_set_user_data().
+ *
+ * Returns: (transfer none): The previously set user_data
+ */
+gpointer
+gst_vaapi_surface_proxy_get_user_data(GstVaapiSurfaceProxy *proxy)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+
+    return gst_vaapi_mini_object_get_user_data(GST_VAAPI_MINI_OBJECT(proxy));
+}
+
+/**
+ * gst_vaapi_surface_proxy_set_user_data:
+ * @proxy: a #GstVaapiSurfaceProxy
+ * @user_data: user-provided data
+ * @destroy_notify: (closure user_data): a #GDestroyNotify
+ *
+ * Sets @user_data on the object and the #GDestroyNotify that will be
+ * called when the data is freed.
+ *
+ * If some @user_data was previously set, then the former @destroy_notify
+ * function will be called before the @user_data is replaced.
+ */
+void
+gst_vaapi_surface_proxy_set_user_data(GstVaapiSurfaceProxy *proxy,
+    gpointer user_data, GDestroyNotify destroy_notify)
+{
+    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
+
+    gst_vaapi_mini_object_set_user_data(GST_VAAPI_MINI_OBJECT(proxy),
+        user_data, destroy_notify);
 }
 
 /**
@@ -254,7 +211,7 @@ gst_vaapi_surface_proxy_get_context(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
 
-    return proxy->priv->context;
+    return proxy->context;
 }
 
 /**
@@ -272,16 +229,12 @@ gst_vaapi_surface_proxy_set_context(
     GstVaapiContext      *context
 )
 {
-    GstVaapiSurfaceProxyPrivate *priv;
-
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
-    priv = proxy->priv;
-
-    g_clear_object(&priv->context);
+    g_clear_object(&proxy->context);
 
     if (context)
-        priv->context = g_object_ref(context);
+        proxy->context = g_object_ref(context);
 }
 
 /**
@@ -297,7 +250,7 @@ gst_vaapi_surface_proxy_get_surface(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
 
-    return proxy->priv->surface;
+    return proxy->surface;
 }
 
 /**
@@ -312,9 +265,9 @@ GstVaapiID
 gst_vaapi_surface_proxy_get_surface_id(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), GST_VAAPI_ID_NONE);
-    g_return_val_if_fail(proxy->priv->surface != NULL, GST_VAAPI_ID_NONE);
+    g_return_val_if_fail(proxy->surface != NULL, GST_VAAPI_ID_NONE);
 
-    return GST_VAAPI_OBJECT_ID(proxy->priv->surface);
+    return GST_VAAPI_OBJECT_ID(proxy->surface);
 }
 
 /**
@@ -332,21 +285,17 @@ gst_vaapi_surface_proxy_set_surface(
     GstVaapiSurface      *surface
 )
 {
-    GstVaapiSurfaceProxyPrivate *priv;
-
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
-    priv = proxy->priv;
-
-    if (priv->surface) {
-        if (priv->context)
-            gst_vaapi_context_put_surface(priv->context, priv->surface);
-        g_object_unref(priv->surface);
-        priv->surface = NULL;
+    if (proxy->surface) {
+        if (proxy->context)
+            gst_vaapi_context_put_surface(proxy->context, proxy->surface);
+        g_object_unref(proxy->surface);
+        proxy->surface = NULL;
     }
 
     if (surface)
-        priv->surface = g_object_ref(surface);
+        proxy->surface = g_object_ref(surface);
 }
 
 /**
@@ -361,9 +310,10 @@ gst_vaapi_surface_proxy_set_surface(
 GstClockTime
 gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy)
 {
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), GST_CLOCK_TIME_NONE);
+    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy),
+                         GST_CLOCK_TIME_NONE);
 
-    return proxy->priv->timestamp;
+    return proxy->timestamp;
 }
 
 /**
@@ -381,7 +331,7 @@ gst_vaapi_surface_proxy_set_timestamp(
 {
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
-    proxy->priv->timestamp = timestamp;
+    proxy->timestamp = timestamp;
 }
 
 /**
@@ -399,7 +349,7 @@ gst_vaapi_surface_proxy_get_duration(GstVaapiSurfaceProxy *proxy)
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy),
                          GST_CLOCK_TIME_NONE);
 
-    return proxy->priv->duration;
+    return proxy->duration;
 }
 
 /**
@@ -417,7 +367,7 @@ gst_vaapi_surface_proxy_set_duration(
 {
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
-    proxy->priv->duration = duration;
+    proxy->duration = duration;
 }
 
 /**
@@ -434,7 +384,7 @@ gst_vaapi_surface_proxy_get_interlaced(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), FALSE);
 
-    return proxy->priv->is_interlaced;
+    return proxy->is_interlaced;
 }
 
 /**
@@ -450,7 +400,7 @@ gst_vaapi_surface_proxy_set_interlaced(GstVaapiSurfaceProxy *proxy, gboolean b)
 {
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
-    proxy->priv->is_interlaced = b;
+    proxy->is_interlaced = b;
 }
 
 /**
@@ -466,7 +416,7 @@ gst_vaapi_surface_proxy_get_tff(GstVaapiSurfaceProxy *proxy)
 {
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), FALSE);
 
-    return proxy->priv->is_interlaced && proxy->priv->tff;
+    return proxy->is_interlaced && proxy->tff;
 }
 
 /**
@@ -481,5 +431,5 @@ gst_vaapi_surface_proxy_set_tff(GstVaapiSurfaceProxy *proxy, gboolean tff)
 {
     g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
 
-    proxy->priv->tff = tff;
+    proxy->tff = tff;
 }

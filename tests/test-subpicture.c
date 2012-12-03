@@ -219,7 +219,7 @@ main(int argc, char *argv[])
     pause();
 
     gst_buffer_unref(buffer);
-    g_object_unref(proxy);
+    gst_vaapi_surface_proxy_unref(proxy);
     g_object_unref(decoder);
     g_object_unref(window);
     g_object_unref(display);

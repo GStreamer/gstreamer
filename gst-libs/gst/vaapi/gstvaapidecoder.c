@@ -229,7 +229,8 @@ gst_vaapi_decoder_finalize(GObject *object)
     }
 
     if (priv->surfaces) {
-        clear_queue(priv->surfaces, (GDestroyNotify)g_object_unref);
+        clear_queue(priv->surfaces, (GDestroyNotify)
+            gst_vaapi_surface_proxy_unref);
         g_queue_free(priv->surfaces);
         priv->surfaces = NULL;
     }

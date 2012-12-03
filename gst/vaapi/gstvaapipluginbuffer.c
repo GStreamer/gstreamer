@@ -122,7 +122,7 @@ gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
     GstVaapiDisplay *display;
     GstVaapiSurface *surface;
 
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), NULL);
+    g_return_val_if_fail(proxy != NULL, NULL);
 
     surface = gst_vaapi_surface_proxy_get_surface(proxy);
     if (!surface)

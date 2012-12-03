@@ -23,35 +23,12 @@
 #ifndef GST_VAAPI_SURFACE_PROXY_H
 #define GST_VAAPI_SURFACE_PROXY_H
 
-#include <glib-object.h>
 #include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_TYPE_SURFACE_PROXY \
-    (gst_vaapi_surface_proxy_get_type())
-
-#define GST_VAAPI_SURFACE_PROXY(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),                          \
-                                GST_VAAPI_TYPE_SURFACE_PROXY,   \
-                                GstVaapiSurfaceProxy))
-
-#define GST_VAAPI_SURFACE_PROXY_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST((klass),                           \
-                             GST_VAAPI_TYPE_SURFACE_PROXY,      \
-                             GstVaapiSurfaceProxyClass))
-
-#define GST_VAAPI_IS_SURFACE_PROXY(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_VAAPI_TYPE_SURFACE_PROXY))
-
-#define GST_VAAPI_IS_SURFACE_PROXY_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_VAAPI_TYPE_SURFACE_PROXY))
-
-#define GST_VAAPI_SURFACE_PROXY_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS((obj),                           \
-                               GST_VAAPI_TYPE_SURFACE_PROXY,    \
-                               GstVaapiSurfaceProxyClass))
+typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 
 /**
  * GST_VAAPI_SURFACE_PROXY_SURFACE:
@@ -100,37 +77,25 @@ G_BEGIN_DECLS
 #define GST_VAAPI_SURFACE_PROXY_TFF(surface) \
     gst_vaapi_surface_proxy_get_tff(surface)
 
-typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
-typedef struct _GstVaapiSurfaceProxyPrivate     GstVaapiSurfaceProxyPrivate;
-typedef struct _GstVaapiSurfaceProxyClass       GstVaapiSurfaceProxyClass;
-
-/**
- * GstVaapiSurfaceProxy:
- *
- * A wrapper around a VA surface and context.
- */
-struct _GstVaapiSurfaceProxy {
-    /*< private >*/
-    GObject parent_instance;
-
-    GstVaapiSurfaceProxyPrivate *priv;
-};
-
-/**
- * GstVaapiSurfaceProxyClass:
- *
- * A wrapper around a VA surface and context.
- */
-struct _GstVaapiSurfaceProxyClass {
-    /*< private >*/
-    GObjectClass parent_class;
-};
-
-GType
-gst_vaapi_surface_proxy_get_type(void) G_GNUC_CONST;
-
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface);
+
+GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_ref(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_unref(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_replace(GstVaapiSurfaceProxy **old_proxy_ptr,
+    GstVaapiSurfaceProxy *new_proxy);
+
+gpointer
+gst_vaapi_surface_proxy_get_user_data(GstVaapiSurfaceProxy *proxy);
+
+void
+gst_vaapi_surface_proxy_set_user_data(GstVaapiSurfaceProxy *proxy,
+    gpointer user_data, GDestroyNotify destroy_notify);
 
 GstVaapiContext *
 gst_vaapi_surface_proxy_get_context(GstVaapiSurfaceProxy *proxy);

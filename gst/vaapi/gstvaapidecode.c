@@ -171,7 +171,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
 }
 
 static void
-gst_vaapidecode_release(GstVaapiDecode *decode, GObject *dead_object)
+gst_vaapidecode_release(GstVaapiDecode *decode)
 {
     g_mutex_lock(&decode->decoder_mutex);
     g_cond_signal(&decode->decoder_ready);
@@ -216,11 +216,8 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
             break;
         }
 
-        g_object_weak_ref(
-            G_OBJECT(proxy),
-            (GWeakNotify)gst_vaapidecode_release,
-            decode
-        );
+        gst_vaapi_surface_proxy_set_user_data(proxy,
+            decode, (GDestroyNotify)gst_vaapidecode_release);
 
         buffer = gst_vaapi_video_buffer_new(decode->display);
         if (!buffer)
@@ -247,7 +244,7 @@ gst_vaapidecode_step(GstVaapiDecode *decode)
         if (ret != GST_FLOW_OK)
             goto error_commit_buffer;
 
-        g_object_unref(proxy);
+        gst_vaapi_surface_proxy_unref(proxy);
     }
     return GST_FLOW_OK;
 
@@ -281,13 +278,13 @@ error_create_buffer:
         GST_DEBUG("video sink failed to create video buffer for proxy'ed "
                   "surface %" GST_VAAPI_ID_FORMAT,
                   GST_VAAPI_ID_ARGS(surface_id));
-        g_object_unref(proxy);
+        gst_vaapi_surface_proxy_unref(proxy);
         return GST_FLOW_UNEXPECTED;
     }
 error_commit_buffer:
     {
         GST_DEBUG("video sink rejected the video buffer (error %d)", ret);
-        g_object_unref(proxy);
+        gst_vaapi_surface_proxy_unref(proxy);
         return GST_FLOW_UNEXPECTED;
     }
 }
@@ -366,7 +363,7 @@ gst_vaapidecode_destroy(GstVaapiDecode *decode)
         decode->decoder_caps = NULL;
     }
 
-    gst_vaapidecode_release(decode, NULL);
+    gst_vaapidecode_release(decode);
 }
 
 static gboolean
