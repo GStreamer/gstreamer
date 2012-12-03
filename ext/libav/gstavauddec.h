@@ -38,6 +38,9 @@ struct _GstFFMpegAudDec
   /* prevent reopening the decoder on GST_EVENT_CAPS when caps are same as last time. */
   GstCaps *last_caps;
 
+  /* Stores current buffers to push as GstAudioDecoder wants 1:1 mapping for input/output buffers */
+  GstAdapter *adapter;
+
   /* current output format */
   GstAudioInfo info;
   GstAudioChannelPosition ffmpeg_layout[64];
