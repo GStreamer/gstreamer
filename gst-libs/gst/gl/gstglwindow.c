@@ -56,7 +56,7 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
 }
 
 GstGLWindow *
-gst_gl_window_new (GstGLRendererAPI render_api, guintptr external_gl_context)
+gst_gl_window_new (GstGLAPI api, guintptr external_gl_context)
 {
   GstGLWindow *window = NULL;
   const gchar *user_choice;
@@ -73,25 +73,20 @@ gst_gl_window_new (GstGLRendererAPI render_api, guintptr external_gl_context)
 
 #ifdef HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_x11_new (render_api, external_gl_context));
+    window = GST_GL_WINDOW (gst_gl_window_x11_new (api, external_gl_context));
 #endif
 #ifdef HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_win32_new (render_api,
-            external_gl_context));
+    window = GST_GL_WINDOW (gst_gl_window_win32_new (api, external_gl_context));
 #endif
 #ifdef HAVE_WINDOW_COCOA
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
-    window =
-        GST_GL_WINDOW (gst_gl_window_cocoa_new (render_api,
-            external_gl_context));
+    window = GST_GL_WINDOW (gst_gl_window_cocoa_new (api, external_gl_context));
 #endif
 #ifdef HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     window =
-        GST_GL_WINDOW (gst_gl_window_wayland_egl_new (render_api,
+        GST_GL_WINDOW (gst_gl_window_wayland_egl_new (api,
             external_gl_context));
 #endif
   if (!window) {
@@ -285,4 +280,23 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
   window->close_data = data;
 
   GST_GL_WINDOW_UNLOCK (window);
+}
+
+GstGLAPI
+gst_gl_window_get_gl_api (GstGLWindow * window)
+{
+  GstGLAPI ret;
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), GST_GL_API_NONE);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_val_if_fail (window_class->get_gl_api != NULL, GST_GL_API_NONE);
+
+  GST_GL_WINDOW_LOCK (window);
+
+  ret = window_class->get_gl_api (window);
+
+  GST_GL_WINDOW_UNLOCK (window);
+
+  return ret;
 }

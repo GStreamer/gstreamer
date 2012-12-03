@@ -52,7 +52,8 @@ static void gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
 static void gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL *
     window_egl);
 static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL
-    * window_egl, GstGLRendererAPI render_api, guintptr external_gl_context);
+    * window_egl, GstGLAPI gl_api, guintptr external_gl_context);
+GstGLAPI gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window);
 
 static void gst_gl_window_wayland_egl_finalize (GObject * object);
 
@@ -271,6 +272,8 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_quit);
   window_class->send_message =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_send_message);
+  window_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_gl_api);
 
   object_class->finalize = gst_gl_window_wayland_egl_finalize;
 }
@@ -282,8 +285,7 @@ gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWaylandEGL *
-gst_gl_window_wayland_egl_new (GstGLRendererAPI render_api,
-    guintptr external_gl_context)
+gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowWaylandEGL *window;
 
@@ -313,7 +315,7 @@ gst_gl_window_wayland_egl_new (GstGLRendererAPI render_api,
 
   g_source_attach (window->wl_source, window->main_context);
 
-  gst_gl_window_wayland_egl_create_context (window, render_api,
+  gst_gl_window_wayland_egl_create_context (window, gl_api,
       external_gl_context);
 
   return window;
@@ -346,7 +348,7 @@ gst_gl_window_wayland_egl_finalize (GObject * object)
 
 static gboolean
 gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
-    GstGLRendererAPI render_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context)
 {
   EGLint config_attrib[] = {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -467,6 +469,12 @@ static guintptr
 gst_gl_window_wayland_egl_get_gl_context (GstGLWindow * window)
 {
   return (guintptr) GST_GL_WINDOW_WAYLAND_EGL (window)->egl_context;
+}
+
+GstGLAPI
+gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window)
+{
+  return GST_GL_API_GLES2;
 }
 
 static void

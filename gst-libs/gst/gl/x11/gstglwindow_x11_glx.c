@@ -44,14 +44,16 @@ static void gst_gl_window_x11_glx_swap_buffers (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_glx_activate (GstGLWindowX11 * window_x11,
     gboolean activate);
 static gboolean gst_gl_window_x11_glx_create_context (GstGLWindowX11 *
-    window_x11, GstGLRendererAPI render_api, guintptr external_gl_context);
+    window_x11, GstGLAPI gl_api, guintptr external_gl_context);
 static void gst_gl_window_x11_glx_destroy_context (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_glx_choose_format (GstGLWindowX11 *
     window_x11);
+GstGLAPI gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window);
 
 static void
 gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
 {
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
   GstGLWindowX11Class *window_x11_class = (GstGLWindowX11Class *) klass;
 
   window_x11_class->get_gl_context =
@@ -66,6 +68,9 @@ gst_gl_window_x11_glx_class_init (GstGLWindowX11GLXClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_choose_format);
   window_x11_class->swap_buffers =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_swap_buffers);
+
+  window_class->get_gl_api =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_glx_get_gl_api);
 }
 
 static void
@@ -75,12 +80,11 @@ gst_gl_window_x11_glx_init (GstGLWindowX11GLX * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11GLX *
-gst_gl_window_x11_glx_new (GstGLRendererAPI render_api,
-    guintptr external_gl_context)
+gst_gl_window_x11_glx_new (GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowX11GLX *window = g_object_new (GST_GL_TYPE_WINDOW_X11_GLX, NULL);
 
-  gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), render_api,
+  gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), gl_api,
       external_gl_context);
 
   return window;
@@ -88,7 +92,7 @@ gst_gl_window_x11_glx_new (GstGLRendererAPI render_api,
 
 static gboolean
 gst_gl_window_x11_glx_create_context (GstGLWindowX11 * window_x11,
-    GstGLRendererAPI render_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context)
 {
   GstGLWindowX11GLX *window_glx;
 
@@ -181,4 +185,10 @@ gst_gl_window_x11_glx_activate (GstGLWindowX11 * window_x11, gboolean activate)
   }
 
   return result;
+}
+
+GstGLAPI
+gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window)
+{
+  return GST_GL_API_OPENGL;
 }

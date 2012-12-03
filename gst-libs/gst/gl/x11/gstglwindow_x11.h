@@ -81,7 +81,7 @@ struct _GstGLWindowX11Class {
   GstGLWindowClass parent_class;
 
   gboolean (*choose_format)    (GstGLWindowX11 *window);
-  gboolean (*create_context)   (GstGLWindowX11 *window, GstGLRendererAPI render_api,
+  gboolean (*create_context)   (GstGLWindowX11 *window, GstGLAPI gl_api,
                                 guintptr external_gl_context);
   void     (*swap_buffers)     (GstGLWindowX11 *window);
   gboolean (*activate)         (GstGLWindowX11 *window, gboolean activate);
@@ -94,10 +94,10 @@ struct _GstGLWindowX11Class {
 
 GType gst_gl_window_x11_get_type     (void);
 
-GstGLWindowX11 * gst_gl_window_x11_new          (GstGLRendererAPI render_api,
+GstGLWindowX11 * gst_gl_window_x11_new          (GstGLAPI gl_api,
                                                  guintptr external_gl_context);
 gboolean         gst_gl_window_x11_open_device  (GstGLWindowX11 *window_x11,
-                                                 GstGLRendererAPI render_api,
+                                                 GstGLAPI gl_api,
                                                  guintptr external_gl_context);
 
 G_END_DECLS
