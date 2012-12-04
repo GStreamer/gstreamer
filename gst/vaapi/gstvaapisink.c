@@ -854,32 +854,31 @@ gst_vaapisink_put_surface(
 }
 
 static GstFlowReturn
-gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
+gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstVideoOverlayComposition *composition;
     GstVaapiVideoBuffer *vbuffer;
     GstVaapiSurface *surface;
+    GstBuffer *buffer;
     guint flags;
     gboolean success;
-    GstVideoOverlayComposition * const composition =
-        gst_video_buffer_get_overlay_composition(buffer);
 
-    if (!sink->use_video_raw)
-        buffer = gst_buffer_ref(buffer);
-    else {
-        GstBuffer * const src_buffer = buffer;
-        if (GST_VAAPI_IS_VIDEO_BUFFER(buffer))
-            buffer = gst_buffer_ref(src_buffer);
-        else if (GST_VAAPI_IS_VIDEO_BUFFER(buffer->parent))
-            buffer = gst_buffer_ref(src_buffer->parent);
-        else {
-            buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
-            if (!buffer)
-                return GST_FLOW_UNEXPECTED;
-        }
-        if (!gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer))
-            goto error;
-    }
+    if (GST_VAAPI_IS_VIDEO_BUFFER(src_buffer))
+        buffer = gst_buffer_ref(src_buffer);
+    else if (GST_VAAPI_IS_VIDEO_BUFFER(src_buffer->parent))
+        buffer = gst_buffer_ref(src_buffer->parent);
+    else if (sink->use_video_raw)
+        buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
+    else
+        buffer = NULL;
+    if (!buffer)
+        return GST_FLOW_UNEXPECTED;
+
+    if (sink->use_video_raw && !gst_vaapi_uploader_process(sink->uploader,
+            src_buffer, buffer))
+        goto error;
+
     vbuffer = GST_VAAPI_VIDEO_BUFFER(buffer);
     g_return_val_if_fail(vbuffer != NULL, GST_FLOW_UNEXPECTED);
 
@@ -902,6 +901,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer)
 
     flags = gst_vaapi_video_buffer_get_render_flags(vbuffer);
 
+    composition = gst_video_buffer_get_overlay_composition(src_buffer);
     if (!gst_vaapi_surface_set_subpictures_from_composition(surface,
              composition, TRUE))
         GST_WARNING("could not update subtitles");
