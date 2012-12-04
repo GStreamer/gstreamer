@@ -122,9 +122,7 @@ gst_vaapi_decoder_notify_caps(GObject *obj, GParamSpec *pspec, void *user_data)
 static inline gboolean
 gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
 {
-    if (decode->sinkpad_caps)
-        gst_caps_unref(decode->sinkpad_caps);
-    decode->sinkpad_caps = gst_caps_ref(caps);
+    gst_caps_replace(&decode->sinkpad_caps, caps);
     return TRUE;
 }
 
@@ -351,16 +349,8 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
-    if (decode->decoder) {
-        g_object_unref(decode->decoder);
-        decode->decoder = NULL;
-    }
-
-    if (decode->decoder_caps) {
-        gst_caps_unref(decode->decoder_caps);
-        decode->decoder_caps = NULL;
-    }
-
+    g_clear_object(&decode->decoder);
+    gst_caps_replace(&decode->decoder_caps, NULL);
     gst_vaapidecode_release(decode);
 }
 
@@ -422,22 +412,11 @@ gst_vaapidecode_finalize(GObject *object)
 
     gst_vaapidecode_destroy(decode);
 
-    if (decode->sinkpad_caps) {
-        gst_caps_unref(decode->sinkpad_caps);
-        decode->sinkpad_caps = NULL;
-    }
-
-    if (decode->srcpad_caps) {
-        gst_caps_unref(decode->srcpad_caps);
-        decode->srcpad_caps = NULL;
-    }
+    gst_caps_replace(&decode->sinkpad_caps, NULL);
+    gst_caps_replace(&decode->srcpad_caps,  NULL);
+    gst_caps_replace(&decode->allowed_caps, NULL);
 
     g_clear_object(&decode->display);
-
-    if (decode->allowed_caps) {
-        gst_caps_unref(decode->allowed_caps);
-        decode->allowed_caps = NULL;
-    }
 
     g_cond_clear(&decode->decoder_ready);
     g_mutex_clear(&decode->decoder_mutex);
