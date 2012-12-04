@@ -25,6 +25,7 @@
 #include <errno.h>
 
 #include <libavformat/avformat.h>
+#include <libavformat/url.h>
 
 #include <gst/gst.h>
 
@@ -57,7 +58,7 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   h->flags &= ~GST_FFMPEG_URL_STREAMHEADER;
 
   /* we don't support R/W together */
-  if (flags != URL_RDONLY && flags != URL_WRONLY) {
+  if ((flags & AVIO_FLAG_WRITE) && (flags & AVIO_FLAG_READ)) {
     GST_WARNING ("Only read-only or write-only are supported");
     return -EINVAL;
   }
@@ -70,13 +71,11 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   /* make sure we're a pad and that we're of the right type */
   g_return_val_if_fail (GST_IS_PAD (pad), -EINVAL);
 
-  switch (flags) {
-    case URL_RDONLY:
-      g_return_val_if_fail (GST_PAD_IS_SINK (pad), -EINVAL);
-      break;
-    case URL_WRONLY:
-      g_return_val_if_fail (GST_PAD_IS_SRC (pad), -EINVAL);
-      break;
+  if ((flags & AVIO_FLAG_READ)) {
+    g_return_val_if_fail (GST_PAD_IS_SINK (pad), -EINVAL);
+  }
+  if ((flags & AVIO_FLAG_WRITE)) {
+    g_return_val_if_fail (GST_PAD_IS_SRC (pad), -EINVAL);
   }
 
   info->eos = FALSE;
@@ -98,7 +97,7 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
   GstFlowReturn ret;
   int total = 0;
 
-  g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR (EIO));
+  g_return_val_if_fail ((h->flags & AVIO_FLAG_READ), AVERROR (EIO));
   info = (GstProtocolInfo *) h->priv_data;
 
   GST_DEBUG ("Pulling %d bytes at position %" G_GUINT64_FORMAT, size,
@@ -159,7 +158,7 @@ gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
   GST_DEBUG ("Writing %d bytes", size);
   info = (GstProtocolInfo *) h->priv_data;
 
-  g_return_val_if_fail (h->flags != URL_RDONLY, -EIO);
+  g_return_val_if_fail ((h->flags & AVIO_FLAG_WRITE), -EIO);
 
   /* create buffer and push data further */
   outbuf = gst_buffer_new_and_alloc (size);
@@ -185,73 +184,64 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
   info = (GstProtocolInfo *) h->priv_data;
 
   /* TODO : if we are push-based, we need to return sensible info */
+  if ((h->flags & AVIO_FLAG_READ)) {
+    /* sinkpad */
+    switch (whence) {
+      case SEEK_SET:
+        newpos = (guint64) pos;
+        break;
+      case SEEK_CUR:
+        newpos = info->offset + pos;
+        break;
+      case SEEK_END:
+      case AVSEEK_SIZE:
+        /* ffmpeg wants to know the current end position in bytes ! */
+      {
+        gint64 duration;
 
-  switch (h->flags) {
-    case URL_RDONLY:
-    {
-      /* sinkpad */
-      switch (whence) {
-        case SEEK_SET:
-          newpos = (guint64) pos;
-          break;
-        case SEEK_CUR:
-          newpos = info->offset + pos;
-          break;
-        case SEEK_END:
-        case AVSEEK_SIZE:
-          /* ffmpeg wants to know the current end position in bytes ! */
-        {
-          gint64 duration;
+        GST_DEBUG ("Seek end");
 
-          GST_DEBUG ("Seek end");
-
-          if (gst_pad_is_linked (info->pad))
-            if (gst_pad_query_duration (GST_PAD_PEER (info->pad),
-                    GST_FORMAT_BYTES, &duration))
-              newpos = ((guint64) duration) + pos;
-        }
-          break;
-        default:
-          g_assert (0);
-          break;
+        if (gst_pad_is_linked (info->pad))
+          if (gst_pad_query_duration (GST_PAD_PEER (info->pad),
+                  GST_FORMAT_BYTES, &duration))
+            newpos = ((guint64) duration) + pos;
       }
-      /* FIXME : implement case for push-based behaviour */
-      if (whence != AVSEEK_SIZE)
-        info->offset = newpos;
+        break;
+      default:
+        g_assert (0);
+        break;
     }
-      break;
-    case URL_WRONLY:
-    {
-      GstSegment segment;
+    /* FIXME : implement case for push-based behaviour */
+    if (whence != AVSEEK_SIZE)
+      info->offset = newpos;
+  }
 
-      oldpos = info->offset;
+  if ((h->flags & AVIO_FLAG_WRITE)) {
+    GstSegment segment;
 
-      /* srcpad */
-      switch (whence) {
-        case SEEK_SET:
-        {
-          info->offset = (guint64) pos;
-          break;
-        }
-        case SEEK_CUR:
-          info->offset += pos;
-          break;
-        default:
-          break;
+    oldpos = info->offset;
+
+    /* srcpad */
+    switch (whence) {
+      case SEEK_SET:
+      {
+        info->offset = (guint64) pos;
+        break;
       }
-      newpos = info->offset;
-
-      if (newpos != oldpos) {
-        gst_segment_init (&segment, GST_FORMAT_BYTES);
-        segment.start = newpos;
-        segment.time = newpos;
-        gst_pad_push_event (info->pad, gst_event_new_segment (&segment));
-      }
-      break;
+      case SEEK_CUR:
+        info->offset += pos;
+        break;
+      default:
+        break;
     }
-    default:
-      g_assert (0);
-      break;
+    newpos = info->offset;
+
+    if (newpos != oldpos) {
+      gst_segment_init (&segment, GST_FORMAT_BYTES);
+      segment.start = newpos;
+      segment.time = newpos;
+      gst_pad_push_event (info->pad, gst_event_new_segment (&segment));
+    }
   }
 
   GST_DEBUG ("Now at offset %" G_GUINT64_FORMAT " (returning %" G_GUINT64_FORMAT
@@ -270,15 +260,9 @@ gst_ffmpegdata_close (URLContext * h)
 
   GST_LOG ("Closing file");
 
-  switch (h->flags) {
-    case URL_WRONLY:
-    {
-      /* send EOS - that closes down the stream */
-      gst_pad_push_event (info->pad, gst_event_new_eos ());
-      break;
-    }
-    default:
-      break;
+  if ((h->flags & AVIO_FLAG_WRITE)) {
+    /* send EOS - that closes down the stream */
+    gst_pad_push_event (info->pad, gst_event_new_eos ());
   }
 
   /* clean up data */
@@ -292,6 +276,7 @@ gst_ffmpegdata_close (URLContext * h)
 URLProtocol gstreamer_protocol = {
   /*.name = */ "gstreamer",
   /*.url_open = */ gst_ffmpegdata_open,
+  /*.url_open2 = */ NULL,
   /*.url_read = */ gst_ffmpegdata_read,
   /*.url_write = */ gst_ffmpegdata_write,
   /*.url_seek = */ gst_ffmpegdata_seek,
@@ -310,7 +295,7 @@ gst_ffmpeg_pipe_open (URLContext * h, const char *filename, int flags)
   GST_LOG ("Opening %s", filename);
 
   /* we don't support W together */
-  if (flags != URL_RDONLY) {
+  if ((flags & AVIO_FLAG_WRITE)) {
     GST_WARNING ("Only read-only is supported");
     return -EINVAL;
   }
@@ -379,6 +364,7 @@ gst_ffmpeg_pipe_close (URLContext * h)
 URLProtocol gstpipe_protocol = {
   "gstpipe",
   gst_ffmpeg_pipe_open,
+  NULL,
   gst_ffmpeg_pipe_read,
   NULL,
   NULL,

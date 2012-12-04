@@ -26,6 +26,7 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavformat/url.h>
 
 #include <gst/gst.h>
 
