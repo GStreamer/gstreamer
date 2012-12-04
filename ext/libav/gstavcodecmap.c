@@ -1747,6 +1747,8 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
 GstAudioFormat
 gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt)
 {
+  sample_fmt = av_get_packed_sample_fmt (sample_fmt);
+
   switch (sample_fmt) {
     case AV_SAMPLE_FMT_S16:
       return GST_AUDIO_FORMAT_S16;

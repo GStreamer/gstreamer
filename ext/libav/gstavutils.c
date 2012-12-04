@@ -46,16 +46,21 @@ av_smp_format_depth (enum AVSampleFormat smp_fmt)
   gint depth = -1;
   switch (smp_fmt) {
     case AV_SAMPLE_FMT_U8:
+    case AV_SAMPLE_FMT_U8P:
       depth = 1;
       break;
     case AV_SAMPLE_FMT_S16:
+    case AV_SAMPLE_FMT_S16P:
       depth = 2;
       break;
     case AV_SAMPLE_FMT_S32:
+    case AV_SAMPLE_FMT_S32P:
     case AV_SAMPLE_FMT_FLT:
+    case AV_SAMPLE_FMT_FLTP:
       depth = 4;
       break;
     case AV_SAMPLE_FMT_DBL:
+    case AV_SAMPLE_FMT_DBLP:
       depth = 8;
       break;
     default:
