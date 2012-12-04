@@ -1138,8 +1138,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
     location = g_strdup_printf ("gstpipe://%p", &demux->ffpipe);
   GST_DEBUG_OBJECT (demux, "about to call av_open_input_file %s", location);
 
-  res = av_open_input_file (&demux->context, location,
-      oclass->in_plugin, 0, NULL);
+  res = avformat_open_input (&demux->context, location,
+      oclass->in_plugin, NULL);
 
   g_free (location);
   GST_DEBUG_OBJECT (demux, "av_open_input returned %d", res);

@@ -26,6 +26,8 @@
 #include <sys/sysctl.h>
 #endif
 
+#include <libavutil/mem.h>
+
 G_CONST_RETURN gchar *
 gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
 {

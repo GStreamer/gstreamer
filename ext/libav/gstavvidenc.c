@@ -220,7 +220,7 @@ static void
 gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
 {
   /* ffmpeg objects */
-  ffmpegenc->context = avcodec_alloc_context ();
+  ffmpegenc->context = avcodec_alloc_context3 (NULL);
   ffmpegenc->picture = avcodec_alloc_frame ();
   ffmpegenc->opened = FALSE;
 
@@ -236,7 +236,7 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
   ffmpegenc->lmax = 31;
   ffmpegenc->max_key_interval = 0;
 
-  gst_ffmpeg_cfg_set_defaults3 (ffmpegenc, NULL);
+  gst_ffmpeg_cfg_set_defaults (ffmpegenc);
 }
 
 static void
@@ -328,7 +328,7 @@ gst_ffmpegvidenc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 
     /* need to start with a fresh codec_context each time around, since
      * codec_close may have released stuff causing the next pass to segfault */
-    ctx = avcodec_alloc_context ();
+    ctx = avcodec_alloc_context3 (NULL);
     if (!ctx) {
       GST_DEBUG_OBJECT (ffmpegenc, "no context");
       break;
@@ -981,7 +981,7 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     }
 
     /* only video encoders */
-    if (!in_plugin->encode || in_plugin->type != AVMEDIA_TYPE_VIDEO)
+    if (!in_plugin->encode2 || in_plugin->type != AVMEDIA_TYPE_VIDEO)
       goto next;
 
     /* FIXME : We should have a method to know cheaply whether we have a mapping

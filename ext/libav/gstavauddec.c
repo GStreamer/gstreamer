@@ -132,7 +132,7 @@ static void
 gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
 {
   /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context ();
+  ffmpegdec->context = avcodec_alloc_context3 (NULL);
   ffmpegdec->opened = FALSE;
 
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (ffmpegdec), TRUE);
@@ -317,7 +317,7 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
-  ffmpegdec->context->error_recognition = 1;
+  ffmpegdec->context->err_recognition = 1;
 
   ffmpegdec->context->opaque = ffmpegdec;
   ffmpegdec->context->get_buffer = gst_ffmpegauddec_get_buffer;

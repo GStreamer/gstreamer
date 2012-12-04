@@ -391,7 +391,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   if (*have_data) {
     GstBuffer *outbuf;
-    AVCodec *codec;
+    const AVCodec *codec;
 
     GST_LOG_OBJECT (ffmpegaudenc, "pushing size %d", pkt.size);
 
@@ -589,7 +589,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
     }
 
     /* only encoders */
-    if (!in_plugin->encode) {
+    if (!in_plugin->encode2) {
       goto next;
     }
 

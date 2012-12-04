@@ -241,7 +241,7 @@ static void
 gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
 {
   /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context ();
+  ffmpegdec->context = avcodec_alloc_context3 (NULL);
   ffmpegdec->picture = avcodec_alloc_frame ();
   ffmpegdec->opened = FALSE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
@@ -394,7 +394,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
-  ffmpegdec->context->error_recognition = 1;
+  ffmpegdec->context->err_recognition = 1;
 
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;

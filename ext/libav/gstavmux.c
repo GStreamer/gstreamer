@@ -57,7 +57,6 @@ struct _GstFFMpegMux
   /*< private > */
   /* event_function is the collectpads default eventfunction */
   GstPadEventFunction event_function;
-  int preload;
   int max_delay;
 };
 
@@ -295,8 +294,8 @@ gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_PRELOAD,
       g_param_spec_int ("preload", "preload",
-          "Set the initial demux-decode delay (in microseconds)", 0, G_MAXINT,
-          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Set the initial demux-decode delay (in microseconds) (DEPRECATED)",
+          0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAXDELAY,
       g_param_spec_int ("maxdelay", "maxdelay",
@@ -333,7 +332,6 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
 
   ffmpegmux->videopads = 0;
   ffmpegmux->audiopads = 0;
-  ffmpegmux->preload = 0;
   ffmpegmux->max_delay = 0;
 }
 
@@ -347,7 +345,6 @@ gst_ffmpegmux_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_PRELOAD:
-      src->preload = g_value_get_int (value);
       break;
     case PROP_MAXDELAY:
       src->max_delay = g_value_get_int (value);
@@ -368,7 +365,6 @@ gst_ffmpegmux_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_PRELOAD:
-      g_value_set_int (value, src->preload);
       break;
     case PROP_MAXDELAY:
       g_value_set_int (value, src->max_delay);
@@ -439,10 +435,10 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   gst_element_add_pad (element, pad);
 
   /* AVStream needs to be created */
-  st = av_new_stream (ffmpegmux->context, collect_pad->padnum);
+  st = avformat_new_stream (ffmpegmux->context, NULL);
+  st->id = collect_pad->padnum;
   st->codec->codec_type = type;
   st->codec->codec_id = CODEC_ID_NONE;  /* this is a check afterwards */
-  st->stream_copy = 1;          /* we're not the actual encoder */
   st->codec->bit_rate = bitrate;
   st->codec->frame_size = framesize;
   /* we fill in codec during capsnego */
@@ -474,7 +470,6 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
   collect_pad = (GstFFMpegMuxPad *) gst_pad_get_element_private (pad);
 
   st = ffmpegmux->context->streams[collect_pad->padnum];
-  ffmpegmux->context->preload = ffmpegmux->preload;
   ffmpegmux->context->max_delay = ffmpegmux->max_delay;
 
   /* for the format-specific guesses, we'll go to
@@ -548,7 +543,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
 
   /* open "file" (gstreamer protocol to next element) */
   if (!ffmpegmux->opened) {
-    int open_flags = URL_WRONLY;
+    int open_flags = AVIO_FLAG_WRITE;
 
     /* we do need all streams to have started capsnego,
      * or things will go horribly wrong */
@@ -642,16 +637,10 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       open_flags |= GST_FFMPEG_URL_STREAMHEADER;
     }
 
-    if (url_fopen (&ffmpegmux->context->pb,
+    if (avio_open (&ffmpegmux->context->pb,
             ffmpegmux->context->filename, open_flags) < 0) {
       GST_ELEMENT_ERROR (ffmpegmux, LIBRARY, TOO_LAZY, (NULL),
           ("Failed to open stream context in avmux"));
-      return GST_FLOW_ERROR;
-    }
-
-    if (av_set_parameters (ffmpegmux->context, NULL) < 0) {
-      GST_ELEMENT_ERROR (ffmpegmux, LIBRARY, INIT, (NULL),
-          ("Failed to initialize muxer"));
       return GST_FLOW_ERROR;
     }
 
@@ -666,7 +655,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     ffmpegmux->opened = TRUE;
 
     /* flush the header so it will be used as streamheader */
-    put_flush_packet (ffmpegmux->context->pb);
+    avio_flush (ffmpegmux->context->pb);
   }
 
   /* take the one with earliest timestamp,
@@ -773,8 +762,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     /* close down */
     av_write_trailer (ffmpegmux->context);
     ffmpegmux->opened = FALSE;
-    put_flush_packet (ffmpegmux->context->pb);
-    url_fclose (ffmpegmux->context->pb);
+    avio_flush (ffmpegmux->context->pb);
+    avio_close (ffmpegmux->context->pb);
     gst_pad_push_event (ffmpegmux->srcpad, gst_event_new_eos ());
     return GST_FLOW_EOS;
   }
@@ -812,7 +801,7 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
       gst_tag_setter_reset_tags (GST_TAG_SETTER (ffmpegmux));
       if (ffmpegmux->opened) {
         ffmpegmux->opened = FALSE;
-        url_fclose (ffmpegmux->context->pb);
+        avio_close (ffmpegmux->context->pb);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
