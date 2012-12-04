@@ -265,26 +265,6 @@ fallback:
   }
 }
 
-static void
-gst_ffmpegauddec_release_buffer (AVCodecContext * context, AVFrame * frame)
-{
-  GstFFMpegAudDec *ffmpegdec;
-  BufferInfo *buffer_info;
-
-  ffmpegdec = (GstFFMpegAudDec *) context->opaque;
-  buffer_info = frame->opaque;
-  /* check if it was our buffer */
-  if (frame->type != FF_BUFFER_TYPE_USER) {
-    GST_DEBUG_OBJECT (ffmpegdec, "default release buffer");
-    avcodec_default_release_buffer (context, frame);
-  } else if (buffer_info) {
-    gst_buffer_unmap (buffer_info->buffer, &buffer_info->map);
-    gst_buffer_unref (buffer_info->buffer);
-    g_slice_free (BufferInfo, buffer_info);
-  }
-  frame->opaque = NULL;
-}
-
 static gboolean
 gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 {
@@ -328,7 +308,7 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   ffmpegdec->context->opaque = ffmpegdec;
   ffmpegdec->context->get_buffer = gst_ffmpegauddec_get_buffer;
   ffmpegdec->context->reget_buffer = NULL;
-  ffmpegdec->context->release_buffer = gst_ffmpegauddec_release_buffer;
+  ffmpegdec->context->release_buffer = NULL;
 
   /* open codec - we don't select an output pix_fmt yet,
    * simply because we don't know! We only get it
@@ -466,7 +446,10 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
     GST_DEBUG_OBJECT (ffmpegdec, "Creating output buffer");
     if (buffer_info) {
-      *outbuf = gst_buffer_ref (buffer_info->buffer);
+      *outbuf = buffer_info->buffer;
+      gst_buffer_unmap (buffer_info->buffer, &buffer_info->map);
+      g_slice_free (BufferInfo, buffer_info);
+      frame.opaque = NULL;
     } else if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)) {
       gint i, j;
       gint nsamples, channels;
@@ -536,7 +519,6 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
           (ffmpegdec), frame.linesize[0]);
       gst_buffer_fill (*outbuf, 0, frame.data[0], frame.linesize[0]);
     }
-    ffmpegdec->context->release_buffer (ffmpegdec->context, &frame);
 
     GST_DEBUG_OBJECT (ffmpegdec, "Buffer created. Size: %d", have_data);
 
