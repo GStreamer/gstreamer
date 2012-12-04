@@ -482,7 +482,7 @@ static int
 gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
 {
   GstVideoCodecFrame *frame;
-  GstFFMpegVidDecVideoFrame *dframe;
+  GstFFMpegVidDecVideoFrame *dframe = NULL;
   GstFFMpegVidDec *ffmpegdec;
   gint c;
   GstVideoInfo *info;
@@ -580,6 +580,10 @@ invalid_frame:
   }
 fallback:
   {
+    if (dframe)
+      gst_ffmpegviddec_video_frame_free (dframe);
+    picture->opaque = NULL;
+
     return avcodec_default_get_buffer (context, picture);
   }
 duplicate_frame:
@@ -666,7 +670,8 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
   /* we remove the opaque data now */
   picture->opaque = NULL;
 
-  gst_ffmpegviddec_video_frame_free (frame);
+  if (frame)
+    gst_ffmpegviddec_video_frame_free (frame);
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
