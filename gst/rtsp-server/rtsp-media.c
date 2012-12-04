@@ -89,6 +89,7 @@ enum
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
+  PROP_ELEMENT,
   PROP_LAST
 };
 
@@ -157,6 +158,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_param_spec_uint ("buffer-size", "Buffer Size",
           "The kernel UDP buffer size to use", 0, G_MAXUINT,
           DEFAULT_BUFFER_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_ELEMENT,
+      g_param_spec_object ("element", "The Element",
+          "The GstBin to use for streaming the media", GST_TYPE_ELEMENT,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
   gst_rtsp_media_signals[SIGNAL_NEW_STREAM] =
       g_signal_new ("new-stream", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -244,6 +250,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
   GstRTSPMedia *media = GST_RTSP_MEDIA (object);
 
   switch (propid) {
+    case PROP_ELEMENT:
+      g_value_set_object (value, media->priv->element);
+      break;
     case PROP_SHARED:
       g_value_set_boolean (value, gst_rtsp_media_is_shared (media));
       break;
@@ -271,6 +280,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
   GstRTSPMedia *media = GST_RTSP_MEDIA (object);
 
   switch (propid) {
+    case PROP_ELEMENT:
+      media->priv->element = g_value_get_object (value);
+      break;
     case PROP_SHARED:
       gst_rtsp_media_set_shared (media, g_value_get_boolean (value));
       break;
@@ -382,8 +394,7 @@ gst_rtsp_media_new (GstElement * element)
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
 
-  result = g_object_new (GST_TYPE_RTSP_MEDIA, NULL);
-  result->priv->element = element;
+  result = g_object_new (GST_TYPE_RTSP_MEDIA, "element", element, NULL);
 
   return result;
 }
