@@ -36,44 +36,6 @@
 #include <gst/audio/audio.h>
 #include <gst/pbutils/codec-utils.h>
 
-/*
- * Read a palette from a caps.
- */
-
-static void
-gst_ffmpeg_get_palette (const GstCaps * caps, AVCodecContext * context)
-{
-  GstStructure *str = gst_caps_get_structure (caps, 0);
-  const GValue *palette_v;
-  GstBuffer *palette;
-
-  /* do we have a palette? */
-  if ((palette_v = gst_structure_get_value (str, "palette_data")) && context) {
-    palette = gst_value_get_buffer (palette_v);
-    GST_DEBUG ("got palette data %p", palette);
-    if (gst_buffer_get_size (palette) >= AVPALETTE_SIZE) {
-      if (context->palctrl)
-        av_free (context->palctrl);
-      context->palctrl = av_malloc (sizeof (AVPaletteControl));
-      context->palctrl->palette_changed = 1;
-      gst_buffer_extract (palette, 0, context->palctrl->palette,
-          AVPALETTE_SIZE);
-      GST_DEBUG ("extracted palette data");
-    }
-  }
-}
-
-static void
-gst_ffmpeg_set_palette (GstCaps * caps, AVCodecContext * context)
-{
-  if (context->palctrl) {
-    GstBuffer *palette = gst_buffer_new_and_alloc (AVPALETTE_SIZE);
-
-    gst_buffer_fill (palette, 0, context->palctrl->palette, AVPALETTE_SIZE);
-    gst_caps_set_simple (caps, "palette_data", GST_TYPE_BUFFER, palette, NULL);
-  }
-}
-
 /* IMPORTANT: Keep this sorted by the ffmpeg channel masks */
 static const struct
 {
@@ -1743,11 +1705,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       gst_buffer_unref (data);
     }
 
-    /* palette */
-    if (context) {
-      gst_ffmpeg_set_palette (caps, context);
-    }
-
     GST_LOG ("caps for codec_id=%d: %" GST_PTR_FORMAT, codec_id, caps);
 
   } else {
@@ -2038,8 +1995,6 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
         1. * context->sample_aspect_ratio.den /
         context->sample_aspect_ratio.num);
   }
-
-  gst_ffmpeg_get_palette (caps, context);
 
   if (!raw)
     return;

@@ -284,11 +284,6 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
-  if (ffmpegdec->context->palctrl) {
-    av_free (ffmpegdec->context->palctrl);
-    ffmpegdec->context->palctrl = NULL;
-  }
-
   if (ffmpegdec->context->extradata) {
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
@@ -1061,15 +1056,6 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* now decode the frame */
   gst_avpacket_init (&packet, data, size);
-
-  if (ffmpegdec->context->palctrl) {
-    guint8 *pal;
-
-    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
-        AVPALETTE_SIZE);
-    memcpy (pal, ffmpegdec->context->palctrl->palette, AVPALETTE_SIZE);
-    GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
-  }
 
   len = avcodec_decode_video2 (ffmpegdec->context,
       ffmpegdec->picture, &have_data, &packet);

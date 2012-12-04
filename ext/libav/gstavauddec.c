@@ -166,11 +166,6 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
-  if (ffmpegdec->context->palctrl) {
-    av_free (ffmpegdec->context->palctrl);
-    ffmpegdec->context->palctrl = NULL;
-  }
-
   if (ffmpegdec->context->extradata) {
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
