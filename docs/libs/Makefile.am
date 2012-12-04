@@ -94,7 +94,7 @@ extra_files =
 GTKDOC_CFLAGS = -I$(top_srcdir) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 GTKDOC_LIBS = $(SCANOBJ_DEPS) $(GST_PLUGINS_BASE_LIBS) \
-	$(GST_BASE_LIBS) $(GST_LIBS)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(GCOV_LIBS)
 
 GTKDOC_CC=$(LIBTOOL) --tag=CC --mode=compile $(CC)
 GTKDOC_LD=$(LIBTOOL) --tag=CC --mode=link $(CC)
