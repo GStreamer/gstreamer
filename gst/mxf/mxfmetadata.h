@@ -194,6 +194,16 @@ typedef struct _MXFMetadataSourceClip MXFMetadataSourceClip;
 typedef MXFMetadataClass MXFMetadataSourceClipClass;
 GType mxf_metadata_source_clip_get_type (void);
 
+#define MXF_TYPE_METADATA_FILLER \
+  (mxf_metadata_filler_get_type())
+#define MXF_METADATA_FILLER(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),MXF_TYPE_METADATA_FILLER, MXFMetadataFiller))
+#define MXF_IS_METADATA_FILLER(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),MXF_TYPE_METADATA_FILLER))
+typedef struct _MXFMetadataFiller MXFMetadataFiller;
+typedef MXFMetadataClass MXFMetadataFillerClass;
+GType mxf_metadata_filler_get_type (void);
+
 #define MXF_TYPE_METADATA_TIMECODE_COMPONENT \
   (mxf_metadata_timecode_component_get_type())
 #define MXF_METADATA_TIMECODE_COMPONENT(obj) \
@@ -580,6 +590,10 @@ struct _MXFMetadataSourceClip {
   MXFMetadataSourcePackage *source_package;
 
   guint32 source_track_id;
+};
+
+struct _MXFMetadataFiller {
+  MXFMetadataStructuralComponent parent;
 };
 
 struct _MXFMetadataDMSourceClip {

@@ -434,6 +434,7 @@ mxf_metadata_init_types (void)
   _add_metadata_type (MXF_TYPE_METADATA_STATIC_TRACK);
   _add_metadata_type (MXF_TYPE_METADATA_SEQUENCE);
   _add_metadata_type (MXF_TYPE_METADATA_SOURCE_CLIP);
+  _add_metadata_type (MXF_TYPE_METADATA_FILLER);
   _add_metadata_type (MXF_TYPE_METADATA_TIMECODE_COMPONENT);
   _add_metadata_type (MXF_TYPE_METADATA_DM_SEGMENT);
   _add_metadata_type (MXF_TYPE_METADATA_DM_SOURCE_CLIP);
@@ -3479,6 +3480,26 @@ mxf_metadata_source_clip_class_init (MXFMetadataSourceClipClass * klass)
   metadata_base_class->to_structure = mxf_metadata_source_clip_to_structure;
   metadata_base_class->write_tags = mxf_metadata_source_clip_write_tags;
   metadata_class->type = 0x0111;
+}
+
+
+G_DEFINE_TYPE (MXFMetadataFiller, mxf_metadata_filler,
+    MXF_TYPE_METADATA_STRUCTURAL_COMPONENT);
+
+static void
+mxf_metadata_filler_init (MXFMetadataFiller * self)
+{
+
+}
+
+static void
+mxf_metadata_filler_class_init (MXFMetadataFillerClass * klass)
+{
+  MXFMetadataBaseClass *metadata_base_class = (MXFMetadataBaseClass *) klass;
+  MXFMetadataClass *metadata_class = (MXFMetadataClass *) klass;
+
+  metadata_base_class->name_quark = MXF_QUARK (FILLER);
+  metadata_class->type = 0x0109;
 }
 
 G_DEFINE_TYPE (MXFMetadataDMSourceClip, mxf_metadata_dm_source_clip,

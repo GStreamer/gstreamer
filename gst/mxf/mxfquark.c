@@ -192,6 +192,7 @@ static const gchar *_quark_strings[] = {
   "b-picture-count",
   "bitrate",
   "profile-and-level",
+  "filler",
 };
 
 GQuark _mxf_quark_table[MXF_QUARK_MAX];
