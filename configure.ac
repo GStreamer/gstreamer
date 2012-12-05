@@ -295,11 +295,15 @@ GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^([_]*gst_plug
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl Check for the GStreamer plugins directory
+AC_ARG_VAR([GST_PLUGIN_PATH], [installation path for gstreamer-vaapi plugin elements])
 AC_MSG_CHECKING([for GStreamer plugins directory])
-GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
-if test -z "$GST_PLUGINS_DIR"; then
-    echo "FAIL FAIL FAIL"
-    GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_MAJORMINOR"
+if test -d "$GST_PLUGIN_PATH"; then
+    GST_PLUGINS_DIR="$GST_PLUGIN_PATH"
+else
+    GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_MAJORMINOR --variable pluginsdir`
+    if test -z "$GST_PLUGINS_DIR"; then
+        GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_MAJORMINOR"
+    fi
 fi
 AC_MSG_RESULT([$GST_PLUGINS_DIR])
 plugindir="$GST_PLUGINS_DIR"
