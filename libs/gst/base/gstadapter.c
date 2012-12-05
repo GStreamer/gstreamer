@@ -420,7 +420,7 @@ gst_adapter_try_to_merge_up (GstAdapter * adapter, gsize size)
  * of its chain function, the buffer will have an invalid data pointer after
  * your element flushes the bytes. In that case you should use
  * gst_adapter_take(), which returns a freshly-allocated buffer that you can set
- * as #GstBuffer malloc_data or the potentially more performant
+ * as #GstBuffer memory or the potentially more performant
  * gst_adapter_take_buffer().
  *
  * Returns #NULL if @size bytes are not available.
