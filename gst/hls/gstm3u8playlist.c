@@ -82,7 +82,8 @@ gst_m3u8_entry_render (GstM3U8Entry * entry, guint version)
   if (TRUE)
     return g_strdup_printf ("%s" M3U8_INT_INF_TAG,
         entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
-        (gint) (entry->duration / GST_SECOND), entry->title, entry->url);
+        (gint) ((entry->duration + 500 * GST_MSECOND) / GST_SECOND),
+        entry->title, entry->url);
 
   return g_strdup_printf ("%s" M3U8_FLOAT_INF_TAG,
       entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
@@ -161,7 +162,7 @@ gst_m3u8_playlist_target_duration (GstM3U8Playlist * playlist)
       target_duration = entry->duration;
   }
 
-  return (guint) (target_duration / GST_SECOND);
+  return (guint) ((target_duration + 500 * GST_MSECOND) / GST_SECOND);
 }
 
 static void
