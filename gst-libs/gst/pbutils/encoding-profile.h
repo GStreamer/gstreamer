@@ -126,11 +126,14 @@ GstCaps *       gst_encoding_profile_get_format         (GstEncodingProfile *pro
 void            gst_encoding_profile_set_format         (GstEncodingProfile *profile,
                                                          GstCaps *format);
 const gchar *   gst_encoding_profile_get_preset         (GstEncodingProfile *profile);
+const gchar *   gst_encoding_profile_get_preset_name    (GstEncodingProfile *profile);
 void            gst_encoding_profile_set_preset         (GstEncodingProfile *profile,
                                                          const gchar *preset);
 guint           gst_encoding_profile_get_presence       (GstEncodingProfile *profile);
 void            gst_encoding_profile_set_presence       (GstEncodingProfile *profile,
                                                          guint presence);
+void            gst_encoding_profile_set_preset_name    (GstEncodingProfile * profile,
+                                                         const gchar * preset_name);
 GstCaps *       gst_encoding_profile_get_restriction    (GstEncodingProfile *profile);
 void            gst_encoding_profile_set_restriction    (GstEncodingProfile *profile,
                                                          GstCaps *restriction);

@@ -102,7 +102,7 @@
  *   gchar *category = (gchar *) tmpc->data;
  *
  *   ... and we can list all targets within that category ...
- *   
+ *
  *   targets = gst_encoding_target_list_all (category);
  *
  *   ... and show a list to our users ...
@@ -138,6 +138,7 @@ struct _GstEncodingProfile
   gchar *description;
   GstCaps *format;
   gchar *preset;
+  gchar *preset_name;
   guint presence;
   GstCaps *restriction;
 };
@@ -260,12 +261,26 @@ gst_encoding_profile_get_format (GstEncodingProfile * profile)
  * gst_encoding_profile_get_preset:
  * @profile: a #GstEncodingProfile
  *
- * Returns: the name of the #GstPreset to be used in the profile.
+ * Returns: the name of the #GstElement that implements #GstPreset to
+ * be used in the profile.
  */
 const gchar *
 gst_encoding_profile_get_preset (GstEncodingProfile * profile)
 {
   return profile->preset;
+}
+
+/**
+ * gst_encoding_profile_get_preset_name:
+ * @profile: a #GstEncodingProfile
+ *
+ * Returns: the name of the #GstPreset to be used in the profile.
+ * This is the name that has been set when saving the preset.
+ */
+const gchar *
+gst_encoding_profile_get_preset_name (GstEncodingProfile * profile)
+{
+  return profile->preset_name;
 }
 
 /**
@@ -351,7 +366,8 @@ gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
  * @profile: a #GstEncodingProfile
  * @preset: the element preset to use
  *
- * Sets the preset to use for the profile.
+ * Sets the name of the #GstElement that implements the #GstPreset interface
+ * to use for the profile.
  */
 void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
@@ -360,6 +376,23 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
   if (profile->preset)
     g_free (profile->preset);
   profile->preset = g_strdup (preset);
+}
+
+/**
+ * gst_encoding_profile_get_preset_name:
+ * @profile: a #GstEncodingProfile
+ * @preset_name: The name of the preset to use in this @profile.
+ *
+ * Sets the name of the #GstPreset to be used in the profile.
+ * This is the name that has been set when saving the preset.
+ */
+void
+gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,
+    const gchar * preset_name)
+{
+  if (profile->preset_name)
+    g_free (profile->preset_name);
+  profile->preset_name = g_strdup (preset_name);
 }
 
 /**
@@ -651,7 +684,7 @@ gst_encoding_container_profile_contains_profile (GstEncodingContainerProfile *
  * @profile: (transfer full): the #GstEncodingProfile to add.
  *
  * Add a #GstEncodingProfile to the list of profiles handled by @container.
- * 
+ *
  * No copy of @profile will be made, if you wish to use it elsewhere after this
  * method you should increment its reference count.
  *
@@ -697,6 +730,7 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
   if (restriction)
     prof->restriction = gst_caps_ref (restriction);
   prof->presence = presence;
+  prof->preset_name = NULL;
 
   return prof;
 }
