@@ -240,8 +240,11 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
 static void
 gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
 {
+  GstFFMpegVidDecClass *klass =
+      (GstFFMpegVidDecClass *) G_OBJECT_GET_CLASS (ffmpegdec);
+
   /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context3 (NULL);
+  ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegdec->picture = avcodec_alloc_frame ();
   ffmpegdec->opened = FALSE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
@@ -366,7 +369,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     gst_ffmpegviddec_close (ffmpegdec);
 
     /* and reset the defaults that were set when a context is created */
-    avcodec_get_context_defaults3 (ffmpegdec->context, NULL);
+    avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin);
   }
 
   /* set buffer functions */

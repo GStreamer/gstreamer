@@ -131,8 +131,11 @@ gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass)
 static void
 gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
 {
+  GstFFMpegAudDecClass *klass =
+      (GstFFMpegAudDecClass *) G_OBJECT_GET_CLASS (ffmpegdec);
+
   /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context3 (NULL);
+  ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegdec->opened = FALSE;
 
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (ffmpegdec), TRUE);
@@ -294,7 +297,7 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     gst_ffmpegauddec_close (ffmpegdec);
 
     /* and reset the defaults that were set when a context is created */
-    avcodec_get_context_defaults3 (ffmpegdec->context, NULL);
+    avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin);
   }
 
   /* get size and so */

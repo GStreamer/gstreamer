@@ -219,8 +219,11 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
 static void
 gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
 {
+  GstFFMpegVidEncClass *klass =
+      (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
+
   /* ffmpeg objects */
-  ffmpegenc->context = avcodec_alloc_context3 (NULL);
+  ffmpegenc->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegenc->picture = avcodec_alloc_frame ();
   ffmpegenc->opened = FALSE;
 
@@ -398,7 +401,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
 
   /* set defaults */
-  avcodec_get_context_defaults3 (ffmpegenc->context, NULL);
+  avcodec_get_context_defaults3 (ffmpegenc->context, oclass->in_plugin);
 
   /* if we set it in _getcaps we should set it also in _link */
   ffmpegenc->context->strict_std_compliance = -1;
