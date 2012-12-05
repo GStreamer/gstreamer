@@ -166,6 +166,12 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   return GST_FLOW_OK;
 }
 
+static MXFEssenceWrapping
+mxf_d10_get_track_wrapping (const MXFMetadataTimelineTrack * track)
+{
+  return MXF_ESSENCE_WRAPPING_FRAME_WRAPPING;
+}
+
 static GstCaps *
 mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
@@ -257,6 +263,7 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
 static const MXFEssenceElementHandler mxf_d10_essence_element_handler = {
   mxf_is_d10_essence_track,
+  mxf_d10_get_track_wrapping,
   mxf_d10_create_caps
 };
 

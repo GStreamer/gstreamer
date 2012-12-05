@@ -1124,6 +1124,45 @@ mxf_is_aes_bwf_essence_track (const MXFMetadataTimelineTrack * track)
   return FALSE;
 }
 
+static MXFEssenceWrapping
+mxf_aes_bwf_get_track_wrapping (const MXFMetadataTimelineTrack * track)
+{
+  guint i;
+
+  g_return_val_if_fail (track != NULL, MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING);
+
+  if (track->parent.descriptor == NULL) {
+    GST_ERROR ("No descriptor found for this track");
+    return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+  }
+
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
+      continue;
+    if (!MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i]))
+      continue;
+
+    switch (track->parent.descriptor[i]->essence_container.u[14]) {
+      case 0x01:
+      case 0x03:
+        return MXF_ESSENCE_WRAPPING_FRAME_WRAPPING;
+        break;
+      case 0x02:
+      case 0x04:
+        return MXF_ESSENCE_WRAPPING_CLIP_WRAPPING;
+        break;
+      case 0x08:
+      case 0x09:
+      default:
+        return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+        break;
+    }
+  }
+
+  return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+}
+
 static GstFlowReturn
 mxf_bwf_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     GstCaps * caps,
@@ -1409,6 +1448,7 @@ mxf_aes_bwf_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
 static const MXFEssenceElementHandler mxf_aes_bwf_essence_handler = {
   mxf_is_aes_bwf_essence_track,
+  mxf_aes_bwf_get_track_wrapping,
   mxf_aes_bwf_create_caps
 };
 

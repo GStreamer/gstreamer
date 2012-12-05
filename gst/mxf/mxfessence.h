@@ -26,10 +26,17 @@
 #include "mxftypes.h"
 #include "mxfmetadata.h"
 
+typedef enum {
+  MXF_ESSENCE_WRAPPING_FRAME_WRAPPING,
+  MXF_ESSENCE_WRAPPING_CLIP_WRAPPING,
+  MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING
+} MXFEssenceWrapping;
+
 typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, gpointer mapping_data, GstBuffer **outbuf);
 
 typedef struct {
   gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);
+  MXFEssenceWrapping (*get_track_wrapping) (const MXFMetadataTimelineTrack *track);
   GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
 } MXFEssenceElementHandler;
 

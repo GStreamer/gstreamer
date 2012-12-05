@@ -782,6 +782,44 @@ mxf_mpeg_es_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
   return caps;
 }
 
+static MXFEssenceWrapping
+mxf_mpeg_get_track_wrapping (const MXFMetadataTimelineTrack * track)
+{
+  guint i;
+
+  g_return_val_if_fail (track != NULL, MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING);
+
+  if (track->parent.descriptor == NULL) {
+    GST_ERROR ("No descriptor found for this track");
+    return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+  }
+
+  for (i = 0; i < track->parent.n_descriptor; i++) {
+    if (!track->parent.descriptor[i])
+      continue;
+
+    if (!MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i])
+        && !MXF_IS_METADATA_GENERIC_SOUND_ESSENCE_DESCRIPTOR (track->
+            parent.descriptor[i]))
+      continue;
+
+    switch (track->parent.descriptor[i]->essence_container.u[15]) {
+      case 0x01:
+        return MXF_ESSENCE_WRAPPING_FRAME_WRAPPING;
+        break;
+      case 0x02:
+        return MXF_ESSENCE_WRAPPING_CLIP_WRAPPING;
+        break;
+      default:
+        return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+        break;
+    }
+  }
+
+  return MXF_ESSENCE_WRAPPING_CUSTOM_WRAPPING;
+}
+
 static GstCaps *
 mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     MXFEssenceElementHandleFunc * handler, gpointer * mapping_data)
@@ -882,6 +920,7 @@ mxf_mpeg_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
 
 static const MXFEssenceElementHandler mxf_mpeg_essence_element_handler = {
   mxf_is_mpeg_essence_track,
+  mxf_mpeg_get_track_wrapping,
   mxf_mpeg_create_caps
 };
 
