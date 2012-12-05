@@ -29,7 +29,7 @@
  * given pad can handle. They are also stored in the #GstRegistry along with
  * a description of the #GstElement.
  *
- * Caps are exposed on the element pads using the gst_pad_get_caps() pad
+ * Caps are exposed on the element pads using the gst_pad_query_caps() pad
  * function. This function describes the possible types that the pad can
  * handle or produce at runtime.
  *
