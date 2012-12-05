@@ -775,7 +775,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
     gchar *plugin_name;
 
     /* only decoders */
-    if (!in_plugin->decode || in_plugin->type != AVMEDIA_TYPE_AUDIO) {
+    if (!av_codec_is_decoder (in_plugin)
+        || in_plugin->type != AVMEDIA_TYPE_AUDIO) {
       goto next;
     }
 

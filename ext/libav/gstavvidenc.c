@@ -981,7 +981,8 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     }
 
     /* only video encoders */
-    if (!in_plugin->encode2 || in_plugin->type != AVMEDIA_TYPE_VIDEO)
+    if (!av_codec_is_encoder (in_plugin)
+        || in_plugin->type != AVMEDIA_TYPE_VIDEO)
       goto next;
 
     /* FIXME : We should have a method to know cheaply whether we have a mapping

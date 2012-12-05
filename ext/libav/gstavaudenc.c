@@ -589,7 +589,7 @@ gst_ffmpegaudenc_register (GstPlugin * plugin)
     }
 
     /* only encoders */
-    if (!in_plugin->encode2) {
+    if (!av_codec_is_encoder (in_plugin)) {
       goto next;
     }
 
