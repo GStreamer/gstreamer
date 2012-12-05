@@ -490,7 +490,7 @@ mxf_metadata_new (guint16 type, MXFPrimerPack * primer, guint64 offset,
   }
 
 
-  GST_DEBUG ("Metadata type 0x%06x is handled by type %s", type,
+  GST_DEBUG ("Metadata type 0x%04x is handled by type %s", type,
       g_type_name (t));
 
   ret = (MXFMetadata *) g_type_create_instance (t);
@@ -650,11 +650,15 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, GHashTable * metadata)
   MXFMetadataPreface *self = MXF_METADATA_PREFACE (m);
   MXFMetadataBase *current = NULL;
   guint i;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (!mxf_uuid_is_zero (&self->primary_package_uid)) {
     current = g_hash_table_lookup (metadata, &self->primary_package_uid);
     if (!current || !MXF_IS_METADATA_GENERIC_PACKAGE (current)) {
-      GST_ERROR ("Primary package not found");
+      GST_ERROR ("Primary package %s not found",
+          mxf_uuid_to_string (&self->primary_package_uid, str));
     } else {
       if (mxf_metadata_base_resolve (current, metadata)) {
         self->primary_package = MXF_METADATA_GENERIC_PACKAGE (current);
@@ -665,13 +669,15 @@ mxf_metadata_preface_resolve (MXFMetadataBase * m, GHashTable * metadata)
 
   current = g_hash_table_lookup (metadata, &self->content_storage_uid);
   if (!current || !MXF_IS_METADATA_CONTENT_STORAGE (current)) {
-    GST_ERROR ("Content storage not found");
+    GST_ERROR ("Content storage %s not found",
+        mxf_uuid_to_string (&self->content_storage_uid, str));
     return FALSE;
   } else {
     if (mxf_metadata_base_resolve (current, metadata)) {
       self->content_storage = MXF_METADATA_CONTENT_STORAGE (current);
     } else {
-      GST_ERROR ("Couldn't resolve content storage");
+      GST_ERROR ("Couldn't resolve content storage %s",
+          mxf_uuid_to_string (&self->content_storage_uid, str));
       return FALSE;
     }
   }
@@ -1344,6 +1350,9 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
   guint i;
   gboolean have_package = FALSE;
   gboolean have_ecd = FALSE;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (self->packages)
     memset (self->packages, 0, sizeof (gpointer) * self->n_packages);
@@ -1357,10 +1366,12 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
         self->packages[i] = MXF_METADATA_GENERIC_PACKAGE (current);
         have_package = TRUE;
       } else {
-        GST_ERROR ("Couldn't resolve package");
+        GST_ERROR ("Couldn't resolve package %s",
+            mxf_uuid_to_string (&self->packages_uids[i], str));
       }
     } else {
-      GST_ERROR ("Package not found");
+      GST_ERROR ("Package %s not found",
+          mxf_uuid_to_string (&self->packages_uids[i], str));
     }
   }
 
@@ -1380,10 +1391,12 @@ mxf_metadata_content_storage_resolve (MXFMetadataBase * m,
             MXF_METADATA_ESSENCE_CONTAINER_DATA (current);
         have_ecd = TRUE;
       } else {
-        GST_ERROR ("Couldn't resolve essence container data");
+        GST_ERROR ("Couldn't resolve essence container data %s",
+            mxf_uuid_to_string (&self->essence_container_data_uids[i], str));
       }
     } else {
-      GST_ERROR ("Essence container data not found");
+      GST_ERROR ("Essence container data %s not found",
+          mxf_uuid_to_string (&self->essence_container_data_uids[i], str));
     }
   }
 
@@ -1609,6 +1622,9 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
       MXF_METADATA_ESSENCE_CONTAINER_DATA (m);
   MXFMetadataBase *current = NULL;
   GHashTableIter iter;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[96];
+#endif
 
   g_hash_table_iter_init (&iter, metadata);
 
@@ -1620,6 +1636,9 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
               &self->linked_package_uid)) {
         if (mxf_metadata_base_resolve (current, metadata)) {
           self->linked_package = package;
+        } else {
+          GST_ERROR ("Couldn't resolve linked package %s",
+              mxf_umid_to_string (&self->linked_package_uid, str));
         }
         break;
       }
@@ -1627,7 +1646,8 @@ mxf_metadata_essence_container_data_resolve (MXFMetadataBase * m,
   }
 
   if (!self->linked_package) {
-    GST_ERROR ("Couldn't resolve a package");
+    GST_ERROR ("Couldn't resolve or find linked package %s",
+        mxf_umid_to_string (&self->linked_package_uid, str));
     return FALSE;
   }
 
@@ -1826,6 +1846,9 @@ mxf_metadata_generic_package_resolve (MXFMetadataBase * m,
   MXFMetadataBase *current = NULL;
   guint i;
   gboolean have_track = FALSE;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (self->tracks)
     memset (self->tracks, 0, sizeof (gpointer) * self->n_tracks);
@@ -1848,10 +1871,12 @@ mxf_metadata_generic_package_resolve (MXFMetadataBase * m,
         else if ((track->type & 0xf0) == 0x40)
           self->n_other_tracks++;
       } else {
-        GST_ERROR ("Track couldn't be resolved");
+        GST_ERROR ("Track %s couldn't be resolved",
+            mxf_uuid_to_string (&self->tracks_uids[i], str));
       }
     } else {
-      GST_ERROR ("Track not found");
+      GST_ERROR ("Track %s not found",
+          mxf_uuid_to_string (&self->tracks_uids[i], str));
     }
   }
 
@@ -2175,6 +2200,9 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
   guint i;
   gboolean ret;
   MXFMetadataFileDescriptor *d;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (mxf_uuid_is_zero (&self->descriptor_uid))
     return
@@ -2183,12 +2211,14 @@ mxf_metadata_source_package_resolve (MXFMetadataBase * m, GHashTable * metadata)
 
   current = g_hash_table_lookup (metadata, &self->descriptor_uid);
   if (!current) {
-    GST_ERROR ("Descriptor not found");
+    GST_ERROR ("Descriptor %s not found",
+        mxf_uuid_to_string (&self->descriptor_uid, str));
     return FALSE;
   }
 
   if (!mxf_metadata_base_resolve (MXF_METADATA_BASE (current), metadata)) {
-    GST_ERROR ("Couldn't resolve descriptor");
+    GST_ERROR ("Couldn't resolve descriptor %s",
+        mxf_uuid_to_string (&self->descriptor_uid, str));
     return FALSE;
   }
 
@@ -2396,17 +2426,22 @@ mxf_metadata_track_resolve (MXFMetadataBase * m, GHashTable * metadata)
   MXFMetadataTrack *self = MXF_METADATA_TRACK (m);
   MXFMetadataBase *current = NULL;
   guint i;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   current = g_hash_table_lookup (metadata, &self->sequence_uid);
   if (current && MXF_IS_METADATA_SEQUENCE (current)) {
     if (mxf_metadata_base_resolve (current, metadata)) {
       self->sequence = MXF_METADATA_SEQUENCE (current);
     } else {
-      GST_ERROR ("Couldn't resolve sequence");
+      GST_ERROR ("Couldn't resolve sequence %s",
+          mxf_uuid_to_string (&self->sequence_uid, str));
       return FALSE;
     }
   } else {
-    GST_ERROR ("Couldn't find sequence");
+    GST_ERROR ("Couldn't find sequence %s",
+        mxf_uuid_to_string (&self->sequence_uid, str));
     return FALSE;
   }
 
@@ -2885,6 +2920,9 @@ mxf_metadata_sequence_resolve (MXFMetadataBase * m, GHashTable * metadata)
   MXFMetadataSequence *self = MXF_METADATA_SEQUENCE (m);
   MXFMetadataBase *current = NULL;
   guint i;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (self->structural_components)
     memset (self->structural_components, 0,
@@ -2901,11 +2939,13 @@ mxf_metadata_sequence_resolve (MXFMetadataBase * m, GHashTable * metadata)
         self->structural_components[i] =
             MXF_METADATA_STRUCTURAL_COMPONENT (current);
       } else {
-        GST_ERROR ("Couldn't resolve structural component");
+        GST_ERROR ("Couldn't resolve structural component %s",
+            mxf_uuid_to_string (&self->structural_components_uids[i], str));
         return FALSE;
       }
     } else {
-      GST_ERROR ("Structural component not found");
+      GST_ERROR ("Structural component %s not found",
+          mxf_uuid_to_string (&self->structural_components_uids[i], str));
       return FALSE;
     }
   }
@@ -3337,6 +3377,9 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
   MXFMetadataSourceClip *self = MXF_METADATA_SOURCE_CLIP (m);
   MXFMetadataBase *current = NULL;
   GHashTableIter iter;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[96];
+#endif
 
   g_hash_table_iter_init (&iter, metadata);
 
@@ -3349,6 +3392,11 @@ mxf_metadata_source_clip_resolve (MXFMetadataBase * m, GHashTable * metadata)
         break;
       }
     }
+  }
+
+  if (!self->source_package) {
+    GST_ERROR ("Couldn't find source package %s",
+        mxf_umid_to_string (&self->source_package_id, str));
   }
 
   return
@@ -3692,17 +3740,22 @@ mxf_metadata_dm_segment_resolve (MXFMetadataBase * m, GHashTable * metadata)
 {
   MXFMetadataDMSegment *self = MXF_METADATA_DM_SEGMENT (m);
   MXFMetadataBase *current = NULL;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   current = g_hash_table_lookup (metadata, &self->dm_framework_uid);
   if (current && MXF_IS_DESCRIPTIVE_METADATA_FRAMEWORK (current)) {
     if (mxf_metadata_base_resolve (current, metadata)) {
       self->dm_framework = MXF_DESCRIPTIVE_METADATA_FRAMEWORK (current);
     } else {
-      GST_ERROR ("Couldn't resolve DM framework");
+      GST_ERROR ("Couldn't resolve DM framework %s",
+          mxf_uuid_to_string (&self->dm_framework_uid, str));
       return FALSE;
     }
   } else {
-    GST_ERROR ("Couldn't find DM framework");
+    GST_ERROR ("Couldn't find DM framework %s",
+        mxf_uuid_to_string (&self->dm_framework_uid, str));
     return FALSE;
   }
 
@@ -3916,6 +3969,9 @@ mxf_metadata_generic_descriptor_resolve (MXFMetadataBase * m,
   MXFMetadataBase *current = NULL;
   guint i;
   gboolean have_locator = FALSE;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (self->locators)
     memset (self->locators, 0, sizeof (gpointer) * self->n_locators);
@@ -3928,10 +3984,12 @@ mxf_metadata_generic_descriptor_resolve (MXFMetadataBase * m,
         self->locators[i] = MXF_METADATA_LOCATOR (current);
         have_locator = TRUE;
       } else {
-        GST_ERROR ("Couldn't resolve locator");
+        GST_ERROR ("Couldn't resolve locator %s",
+            mxf_uuid_to_string (&self->locators_uids[i], str));
       }
     } else {
-      GST_ERROR ("Locator not found");
+      GST_ERROR ("Locator %s not found",
+          mxf_uuid_to_string (&self->locators_uids[i], str));
     }
   }
 
@@ -6035,6 +6093,9 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
   MXFMetadataMultipleDescriptor *self = MXF_METADATA_MULTIPLE_DESCRIPTOR (m);
   MXFMetadataBase *current = NULL;
   guint i, have_subdescriptors = 0;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar str[48];
+#endif
 
   if (self->sub_descriptors)
     memset (self->sub_descriptors, 0,
@@ -6049,11 +6110,13 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
         self->sub_descriptors[i] = MXF_METADATA_GENERIC_DESCRIPTOR (current);
         have_subdescriptors++;
       } else {
-        GST_ERROR ("Couldn't resolve descriptor");
+        GST_ERROR ("Couldn't resolve descriptor %s",
+            mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));
         return FALSE;
       }
     } else {
-      GST_ERROR ("Descriptor not found");
+      GST_ERROR ("Descriptor %s not found",
+          mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));
       return FALSE;
     }
   }
