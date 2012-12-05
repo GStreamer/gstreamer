@@ -199,7 +199,7 @@ GST_START_TEST (test_encodebin_sink_pads_static)
 
 GST_END_TEST;
 
-GST_START_TEST (test_encodebin_sink_pads_preset_static)
+GST_START_TEST (test_encodebin_preset)
 {
   GstElement *ebin;
   guint64 max_delay = 0;
@@ -218,12 +218,10 @@ GST_START_TEST (test_encodebin_sink_pads_preset_static)
   g_object_set (oggmuxpreset, "max-delay", 12, "name", "testingoggmux", NULL);
 
   /* Give a name someone should never use outside of that test */
-  gst_preset_save_preset (oggmuxpreset,
-      "test_encodebin_sink_pads_preset_static");
+  gst_preset_save_preset (oggmuxpreset, "test_encodebin_preset");
 
   gst_encoding_profile_set_preset (prof, "oggmux");
-  gst_encoding_profile_set_preset_name (prof,
-      "test_encodebin_sink_pads_preset_static");
+  gst_encoding_profile_set_preset_name (prof, "test_encodebin_preset");
 
   g_object_set (ebin, "profile", prof, NULL);
 
@@ -241,8 +239,7 @@ GST_START_TEST (test_encodebin_sink_pads_preset_static)
   fail_unless_equals_uint64 (max_delay, 12);
 
   gst_element_set_state (ebin, GST_STATE_NULL);
-  gst_preset_delete_preset (oggmuxpreset,
-      "test_encodebin_sink_pads_preset_static");
+  gst_preset_delete_preset (oggmuxpreset, "test_encodebin_preset");
 
   gst_object_unref (ebin);
 };
@@ -934,7 +931,7 @@ encodebin_suite (void)
   tcase_add_test (tc_chain, test_encodebin_states);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_static);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_nopreset_static);
-  tcase_add_test (tc_chain, test_encodebin_sink_pads_preset_static);
+  tcase_add_test (tc_chain, test_encodebin_preset);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_dynamic);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_multiple_static);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_multiple_dynamic);
