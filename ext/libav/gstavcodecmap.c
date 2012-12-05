@@ -1747,19 +1747,25 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
 GstAudioFormat
 gst_ffmpeg_smpfmt_to_audioformat (enum AVSampleFormat sample_fmt)
 {
-  sample_fmt = av_get_packed_sample_fmt (sample_fmt);
-
   switch (sample_fmt) {
+    case AV_SAMPLE_FMT_U8:
+    case AV_SAMPLE_FMT_U8P:
+      return GST_AUDIO_FORMAT_U8;
+      break;
     case AV_SAMPLE_FMT_S16:
+    case AV_SAMPLE_FMT_S16P:
       return GST_AUDIO_FORMAT_S16;
       break;
     case AV_SAMPLE_FMT_S32:
+    case AV_SAMPLE_FMT_S32P:
       return GST_AUDIO_FORMAT_S32;
       break;
     case AV_SAMPLE_FMT_FLT:
+    case AV_SAMPLE_FMT_FLTP:
       return GST_AUDIO_FORMAT_F32;
       break;
     case AV_SAMPLE_FMT_DBL:
+    case AV_SAMPLE_FMT_DBLP:
       return GST_AUDIO_FORMAT_F64;
       break;
     default:
@@ -2201,25 +2207,105 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
 void
 gst_ffmpeg_audioinfo_to_context (GstAudioInfo * info, AVCodecContext * context)
 {
+  const AVCodec *codec;
+  const enum AVSampleFormat *smpl_fmts;
+  enum AVSampleFormat smpl_fmt = -1;
+
   context->channels = info->channels;
   context->sample_rate = info->rate;
 
+  codec = context->codec;
+
+  smpl_fmts = codec->sample_fmts;
+
   switch (info->finfo->format) {
     case GST_AUDIO_FORMAT_F32:
-      context->sample_fmt = AV_SAMPLE_FMT_FLT;
+      if (smpl_fmts) {
+        while (*smpl_fmts != -1) {
+          if (*smpl_fmts == AV_SAMPLE_FMT_FLT) {
+            smpl_fmt = *smpl_fmts;
+            break;
+          } else if (*smpl_fmts == AV_SAMPLE_FMT_FLTP) {
+            smpl_fmt = *smpl_fmts;
+          }
+
+          smpl_fmts++;
+        }
+      } else {
+        smpl_fmt = AV_SAMPLE_FMT_FLT;
+      }
       break;
     case GST_AUDIO_FORMAT_F64:
-      context->sample_fmt = AV_SAMPLE_FMT_DBL;
+      if (smpl_fmts) {
+        while (*smpl_fmts != -1) {
+          if (*smpl_fmts == AV_SAMPLE_FMT_DBL) {
+            smpl_fmt = *smpl_fmts;
+            break;
+          } else if (*smpl_fmts == AV_SAMPLE_FMT_DBLP) {
+            smpl_fmt = *smpl_fmts;
+          }
+
+          smpl_fmts++;
+        }
+      } else {
+        smpl_fmt = AV_SAMPLE_FMT_DBL;
+      }
       break;
     case GST_AUDIO_FORMAT_S32:
-      context->sample_fmt = AV_SAMPLE_FMT_S32;
+      if (smpl_fmts) {
+        while (*smpl_fmts != -1) {
+          if (*smpl_fmts == AV_SAMPLE_FMT_S32) {
+            smpl_fmt = *smpl_fmts;
+            break;
+          } else if (*smpl_fmts == AV_SAMPLE_FMT_S32P) {
+            smpl_fmt = *smpl_fmts;
+          }
+
+          smpl_fmts++;
+        }
+      } else {
+        smpl_fmt = AV_SAMPLE_FMT_S32;
+      }
       break;
     case GST_AUDIO_FORMAT_S16:
-      context->sample_fmt = AV_SAMPLE_FMT_S16;
+      if (smpl_fmts) {
+        while (*smpl_fmts != -1) {
+          if (*smpl_fmts == AV_SAMPLE_FMT_S16) {
+            smpl_fmt = *smpl_fmts;
+            break;
+          } else if (*smpl_fmts == AV_SAMPLE_FMT_S16P) {
+            smpl_fmt = *smpl_fmts;
+          }
+
+          smpl_fmts++;
+        }
+      } else {
+        smpl_fmt = AV_SAMPLE_FMT_S16;
+      }
+      break;
+    case GST_AUDIO_FORMAT_U8:
+      if (smpl_fmts) {
+        while (*smpl_fmts != -1) {
+          if (*smpl_fmts == AV_SAMPLE_FMT_U8) {
+            smpl_fmt = *smpl_fmts;
+            break;
+          } else if (*smpl_fmts == AV_SAMPLE_FMT_U8P) {
+            smpl_fmt = *smpl_fmts;
+          }
+
+          smpl_fmts++;
+        }
+      } else {
+        smpl_fmt = AV_SAMPLE_FMT_U8;
+      }
       break;
     default:
       break;
   }
+
+  g_assert (smpl_fmt != -1);
+
+  context->sample_fmt = smpl_fmt;
 }
 
 /* Convert a GstCaps and a FFMPEG codec Type to a
