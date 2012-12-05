@@ -294,14 +294,26 @@ gboolean
 ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
     timeline, const gchar * uri, gboolean overwrite, GError ** error)
 {
+  GError *lerr = NULL;
+  gboolean ret = FALSE;
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
 
+  GST_DEBUG_OBJECT (formatter, "Saving %" GST_PTR_FORMAT " to %s",
+      timeline, uri);
   if (klass->save_to_uri)
-    return klass->save_to_uri (formatter, timeline, uri, overwrite, error);
+    ret = klass->save_to_uri (formatter, timeline, uri, overwrite, &lerr);
+  else
+    GST_ERROR_OBJECT (formatter, "save_to_uri not implemented!");
 
-  GST_ERROR ("not implemented!");
+  if (lerr) {
+    GST_WARNING_OBJECT (formatter, "%" GST_PTR_FORMAT
+        " not saved to %s error: %s", timeline, uri, lerr->message);
+    g_propagate_error (error, lerr);
+  } else
+    GST_INFO_OBJECT (formatter, "%" GST_PTR_FORMAT
+        " saved to %s", timeline, uri);
 
-  return FALSE;
+  return ret;
 }
 
 /**
