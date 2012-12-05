@@ -199,6 +199,56 @@ GST_START_TEST (test_encodebin_sink_pads_static)
 
 GST_END_TEST;
 
+GST_START_TEST (test_encodebin_sink_pads_preset_static)
+{
+  GstElement *ebin;
+  guint64 max_delay = 0;
+  GstPreset *oggmuxpreset;
+  GstEncodingProfile *prof;
+
+  /* Create an encodebin with a bogus preset and check it fails switching states */
+
+  ebin = gst_element_factory_make ("encodebin", NULL);
+  oggmuxpreset = GST_PRESET (gst_element_factory_make ("oggmux", NULL));
+
+  /* streamprofile that has a forced presence of 1 */
+  prof = create_ogg_vorbis_profile (1, NULL);
+  /* We also set the name as the load_preset call will reset the element name to
+   * what is described in the preset... which might not be very smart tbh */
+  g_object_set (oggmuxpreset, "max-delay", 12, "name", "testingoggmux", NULL);
+
+  /* Give a name someone should never use outside of that test */
+  gst_preset_save_preset (oggmuxpreset,
+      "test_encodebin_sink_pads_preset_static");
+
+  gst_encoding_profile_set_preset (prof, "oggmux");
+  gst_encoding_profile_set_preset_name (prof,
+      "test_encodebin_sink_pads_preset_static");
+
+  g_object_set (ebin, "profile", prof, NULL);
+
+  gst_encoding_profile_unref (prof);
+
+  /* It will go to READY... */
+  fail_unless_equals_int (gst_element_set_state (ebin, GST_STATE_READY),
+      GST_STATE_CHANGE_SUCCESS);
+  /* ... and to PAUSED */
+  fail_unless (gst_element_set_state (ebin, GST_STATE_PAUSED) !=
+      GST_STATE_CHANGE_FAILURE);
+
+  gst_child_proxy_get (GST_CHILD_PROXY (ebin), "testingoggmux::max-delay",
+      &max_delay, NULL);
+  fail_unless_equals_uint64 (max_delay, 12);
+
+  gst_element_set_state (ebin, GST_STATE_NULL);
+  gst_preset_delete_preset (oggmuxpreset,
+      "test_encodebin_sink_pads_preset_static");
+
+  gst_object_unref (ebin);
+};
+
+GST_END_TEST;
+
 GST_START_TEST (test_encodebin_sink_pads_nopreset_static)
 {
   GstElement *ebin;
@@ -884,6 +934,7 @@ encodebin_suite (void)
   tcase_add_test (tc_chain, test_encodebin_states);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_static);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_nopreset_static);
+  tcase_add_test (tc_chain, test_encodebin_sink_pads_preset_static);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_dynamic);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_multiple_static);
   tcase_add_test (tc_chain, test_encodebin_sink_pads_multiple_dynamic);

@@ -817,18 +817,31 @@ beach:
 
 static GstElement *
 _create_element_and_set_preset (GstElementFactory * factory,
-    const gchar * preset, const gchar * name)
+    const gchar * preset, const gchar * name, const gchar * preset_name)
 {
   GstElement *res = NULL;
 
-  GST_DEBUG ("Creating element from factory %s", GST_OBJECT_NAME (factory));
+  GST_DEBUG ("Creating element from factory %s (preset factory name: %s"
+      " preset name: %s)", GST_OBJECT_NAME (factory), preset, preset_name);
+
   res = gst_element_factory_create (factory, name);
-  if (preset && GST_IS_PRESET (res) &&
-      !gst_preset_load_preset (GST_PRESET (res), preset)) {
-    GST_WARNING ("Couldn't set preset [%s] on element [%s]",
-        preset, GST_OBJECT_NAME (factory));
-    gst_object_unref (res);
-    res = NULL;
+  if (preset) {
+    if (g_strcmp0 (gst_object_get_name (GST_OBJECT (factory)), preset) == 0) {
+      if (preset_name) {
+        if (!gst_preset_load_preset (GST_PRESET (res), preset_name)) {
+          GST_WARNING ("Couldn't set preset [%s] on element [%s]",
+              preset, GST_OBJECT_NAME (factory));
+          gst_object_unref (res);
+          res = NULL;
+        }
+      } else {
+        GST_DEBUG ("Using a preset with no preset name, making use of the"
+            " proper element without setting any property");
+      }
+    } else {
+      gst_object_unref (res);
+      res = NULL;
+    }
   }
 
   return res;
@@ -842,10 +855,11 @@ _get_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   GstElement *encoder = NULL;
   GstElementFactory *encoderfact = NULL;
   GstCaps *format;
-  const gchar *preset;
+  const gchar *preset, *preset_name;
 
   format = gst_encoding_profile_get_format (sprof);
   preset = gst_encoding_profile_get_preset (sprof);
+  preset_name = gst_encoding_profile_get_preset_name (sprof);
 
   GST_DEBUG ("Getting list of encoders for format %" GST_PTR_FORMAT, format);
 
@@ -867,7 +881,8 @@ _get_encoder (GstEncodeBin * ebin, GstEncodingProfile * sprof)
 
   for (tmp = encoders; tmp; tmp = tmp->next) {
     encoderfact = (GstElementFactory *) tmp->data;
-    if ((encoder = _create_element_and_set_preset (encoderfact, preset, NULL)))
+    if ((encoder = _create_element_and_set_preset (encoderfact, preset,
+                NULL, preset_name)))
       break;
   }
 
@@ -1524,10 +1539,11 @@ _get_formatter (GstEncodeBin * ebin, GstEncodingProfile * sprof)
   GstElement *formatter = NULL;
   GstElementFactory *formatterfact = NULL;
   GstCaps *format;
-  const gchar *preset;
+  const gchar *preset, *preset_name;
 
   format = gst_encoding_profile_get_format (sprof);
   preset = gst_encoding_profile_get_preset (sprof);
+  preset_name = gst_encoding_profile_get_preset_name (sprof);
 
   GST_DEBUG ("Getting list of formatters for format %" GST_PTR_FORMAT, format);
 
@@ -1546,7 +1562,8 @@ _get_formatter (GstEncodeBin * ebin, GstEncodingProfile * sprof)
         GST_OBJECT_NAME (formatterfact));
 
     if ((formatter =
-            _create_element_and_set_preset (formatterfact, preset, NULL)))
+            _create_element_and_set_preset (formatterfact, preset,
+                NULL, preset_name)))
       break;
   }
 
@@ -1591,10 +1608,11 @@ _get_muxer (GstEncodeBin * ebin)
   GstElementFactory *muxerfact = NULL;
   const GList *tmp;
   GstCaps *format;
-  const gchar *preset;
+  const gchar *preset, *preset_name;
 
   format = gst_encoding_profile_get_format (ebin->profile);
   preset = gst_encoding_profile_get_preset (ebin->profile);
+  preset_name = gst_encoding_profile_get_preset_name (ebin->profile);
 
   GST_DEBUG ("Getting list of muxers for format %" GST_PTR_FORMAT, format);
 
@@ -1645,7 +1663,8 @@ _get_muxer (GstEncodeBin * ebin)
     /* Only use a muxer than can use all streams and than can accept the
      * preset (which may be present or not) */
     if (cansinkstreams && (muxer =
-            _create_element_and_set_preset (muxerfact, preset, "muxer")))
+            _create_element_and_set_preset (muxerfact, preset, "muxer",
+                preset_name)))
       break;
   }
 
@@ -1940,12 +1959,12 @@ gst_encode_bin_setup_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
 
   g_return_val_if_fail (ebin->profile == NULL, FALSE);
 
-  GST_DEBUG ("Setting up profile %s (type:%s)",
+  GST_DEBUG ("Setting up profile %p:%s (type:%s)", profile,
       gst_encoding_profile_get_name (profile),
       gst_encoding_profile_get_type_nick (profile));
 
   ebin->profile = profile;
-  gst_mini_object_ref ((GstMiniObject *) ebin->profile);
+  gst_object_ref (ebin->profile);
 
   /* Create elements */
   res = create_elements_and_pads (ebin);
@@ -1960,7 +1979,7 @@ gst_encode_bin_set_profile (GstEncodeBin * ebin, GstEncodingProfile * profile)
 {
   g_return_val_if_fail (GST_IS_ENCODING_PROFILE (profile), FALSE);
 
-  GST_DEBUG_OBJECT (ebin, "profile : %s",
+  GST_DEBUG_OBJECT (ebin, "profile (%p) : %s", profile,
       gst_encoding_profile_get_name (profile));
 
   if (G_UNLIKELY (ebin->active)) {

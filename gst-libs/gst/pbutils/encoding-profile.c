@@ -741,7 +741,7 @@ common_creation (GType objtype, GstCaps * format, const gchar * preset,
  * @description: (allow-none): The description of the container profile,
  *     can be %NULL
  * @format: The format to use for this profile
- * @preset: (allow-none): The preset to use for this profile
+ * @preset: (allow-none): The preset to use for this profile.
  *
  * Creates a new #GstEncodingContainerProfile.
  *
