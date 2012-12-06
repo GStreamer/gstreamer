@@ -44,8 +44,9 @@ typedef struct _GstBufferPoolClass GstBufferPoolClass;
  * GstBufferPoolAcquireFlags:
  * @GST_BUFFER_POOL_ACQUIRE_FLAG_NONE: no flags
  * @GST_BUFFER_POOL_ACQUIRE_FLAG_KEY_UNIT: buffer is keyframe
- * @GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT: don't wait for buffer. This makes the
- * acquire_buffer method return GST_FLOW_EOS.
+ * @GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT: when the bufferpool is empty, acquire_buffer
+ * will by default block until a buffer is released into the pool again. Setting
+ * this flag makes acquire_buffer return #GST_FLOW_EOS instead of blocking.
  * @GST_BUFFER_POOL_ACQUIRE_FLAG_DISCONT: buffer is discont
  * @GST_BUFFER_POOL_ACQUIRE_FLAG_LAST: last flag, subclasses can use private flags
  *    starting from this value.
