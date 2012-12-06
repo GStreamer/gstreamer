@@ -328,7 +328,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
 static void set_horizontal_swap (GstGLDisplay * display, gpointer data)
 {
 #if HAVE_OPENGL
-  if (USING_OPENGL (display)) {
+  if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
     const double mirrormatrix[16] = {
     -1.0, 0.0, 0.0, 0.0,
           0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
