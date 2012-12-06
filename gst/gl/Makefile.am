@@ -5,7 +5,7 @@ AM_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 AM_LIBS = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS)
 
 # full opengl required
-if USE_GL
+if USE_OPENGL
 OPENGL_SOURCES =  \
 	gstglfiltershader.c \
 	gstglfiltershader.h \

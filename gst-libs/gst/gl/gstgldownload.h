@@ -24,8 +24,8 @@
 #include <gst/video/video.h>
 #include <gst/gstmemory.h>
 
-#include "gstglshader.h"
 #include "gstgldisplay.h"
+#include "gstglshader.h"
 
 G_BEGIN_DECLS
 
@@ -43,6 +43,7 @@ GType gst_gl_download_get_type (void);
 
 typedef struct _GstGLDownload GstGLDownload;
 typedef struct _GstGLDownloadClass GstGLDownloadClass;
+typedef struct _GstGLDownloadPrivate GstGLDownloadPrivate;
 
 /**
  * GstGLDownload
@@ -74,10 +75,10 @@ struct _GstGLDownload
   GLuint           in_texture;
   GLuint           out_texture[GST_VIDEO_MAX_PLANES];
   GstGLShader     *shader;
-#ifdef OPENGL_ES2
   GLint            shader_attr_position_loc;
   GLint            shader_attr_texture_loc;
-#endif
+
+  GstGLDownloadPrivate *priv;
 
   gpointer _reserved[GST_PADDING];
 };
@@ -97,12 +98,12 @@ struct _GstGLDownloadClass
  *
  * The currently supported formats that can be downloaded
  */
-#ifndef OPENGL_ES2
+#if !HAVE_GLES2
 # define GST_GL_DOWNLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
                                  "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
-#else /* OPENGL_ES2 */
+#else /* HAVE_GLES2 */
 # define GST_GL_DOWNLOAD_FORMATS "{ RGB, RGBx, RGBA, I420, YV12, YUY2, UYVY, AYUV }"
-#endif /* !OPENGL_ES2 */
+#endif /* !HAVE_GLES2 */
 
 /**
  * GST_GL_DOWNLOAD_VIDEO_CAPS:

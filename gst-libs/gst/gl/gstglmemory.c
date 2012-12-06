@@ -40,6 +40,12 @@
  * Data is uploaded or downloaded from the GPU as is necessary.
  */
 
+#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
+#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
+#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
+#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
+#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
+
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFUALT GST_CAT_GL_MEMORY
 
@@ -220,22 +226,29 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   glGenRenderbuffersEXT (1, &rboId);
   glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, rboId);
 
-#ifndef OPENGL_ES2
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width,
-      height);
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
-      width, height);
-#else
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
-      width, height);
+#if HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, width,
+        height);
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+        width, height);
+  }
+#endif
+#if HAVE_GLES2
+  if (USING_GLES2 (display)) {
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+        width, height);
+  }
 #endif
   /* attach the renderbuffer to depth attachment point */
   glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
       GL_RENDERBUFFER_EXT, rboId);
 
-#ifndef OPENGL_ES2
-  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
-      GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rboId);
+#if HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT,
+        GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, rboId);
+  }
 #endif
 
   glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
@@ -264,7 +277,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
         GST_CAT_ERROR (GST_CAT_GL_MEMORY,
             "GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS");
         break;
-#ifndef OPENGL_ES2
+#if HAVE_OPENGL
       case GL_FRAMEBUFFER_UNDEFINED:
         GST_CAT_ERROR (GST_CAT_GL_MEMORY, "GL_FRAMEBUFFER_UNDEFINED");
         break;

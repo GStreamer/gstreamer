@@ -97,7 +97,7 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
         GL_CLAMP_TO_EDGE);
     glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
         GL_CLAMP_TO_EDGE);
-    differencematte->shader[i] = gst_gl_shader_new ();
+    differencematte->shader[i] = gst_gl_shader_new (filter->display);
   }
 
   if (!gst_gl_shader_compile_and_check (differencematte->shader[0],

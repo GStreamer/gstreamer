@@ -21,10 +21,20 @@
 #ifndef __GST_GL_EFFECTS_SOURCES_H__
 #define __GST_GL_EFFECTS_SOURCES_H__
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 extern const gchar *vertex_shader_source;
 extern const gchar *identity_fragment_source;
-extern const gchar *mirror_fragment_source;
-extern const gchar *squeeze_fragment_source;
+#if HAVE_OPENGL
+extern const gchar *mirror_fragment_source_opengl;
+extern const gchar *squeeze_fragment_source_opengl;
+#endif
+#if HAVE_GLES2
+extern const gchar *mirror_fragment_source_gles2;
+extern const gchar *squeeze_fragment_source_gles2;
+#endif
 extern const gchar *stretch_fragment_source;
 extern const gchar *tunnel_fragment_source;
 extern const gchar *fisheye_fragment_source;

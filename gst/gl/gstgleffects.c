@@ -97,7 +97,7 @@ gst_gl_effects_effect_get_type (void)
     {GST_GL_EFFECT_IDENTITY, "Do nothing Effect", "identity"},
     {GST_GL_EFFECT_MIRROR, "Mirror Effect", "mirror"},
     {GST_GL_EFFECT_SQUEEZE, "Squeeze Effect", "squeeze"},
-#ifndef OPENGL_ES2
+#if HAVE_OPENGL
     {GST_GL_EFFECT_STRETCH, "Stretch Effect", "stretch"},
     {GST_GL_EFFECT_FISHEYE, "FishEye Effect", "fisheye"},
     {GST_GL_EFFECT_TWIRL, "Twirl Effect", "twirl"},
@@ -136,7 +136,7 @@ gst_gl_effects_set_effect (GstGLEffects * effects, gint effect_type)
     case GST_GL_EFFECT_SQUEEZE:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_squeeze;
       break;
-#ifndef OPENGL_ES2
+#if HAVE_OPENGL
     case GST_GL_EFFECT_STRETCH:
       effects->effect = (GstGLEffectProcessFunc) gst_gl_effects_stretch;
       break;
@@ -270,83 +270,84 @@ void
 gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     guint height)
 {
-#ifndef OPENGL_ES2
-  glActiveTexture (GL_TEXTURE0);
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+#if HAVE_OPENGL
+  if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
+      GST_GL_API_OPENGL) {
+    glActiveTexture (GL_TEXTURE0);
+    glEnable (GL_TEXTURE_RECTANGLE_ARB);
+    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
 
-  glBegin (GL_QUADS);
+    glBegin (GL_QUADS);
 
-  glTexCoord2f (0.0, 0.0);
-  glVertex2f (-1.0, -1.0);
-  glTexCoord2f ((gfloat) width, 0.0);
-  glVertex2f (1.0, -1.0);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
-  glVertex2f (1.0, 1.0);
-  glTexCoord2f (0.0, (gfloat) height);
-  glVertex2f (-1.0, 1.0);
+    glTexCoord2f (0.0, 0.0);
+    glVertex2f (-1.0, -1.0);
+    glTexCoord2f ((gfloat) width, 0.0);
+    glVertex2f (1.0, -1.0);
+    glTexCoord2f ((gfloat) width, (gfloat) height);
+    glVertex2f (1.0, 1.0);
+    glTexCoord2f (0.0, (gfloat) height);
+    glVertex2f (-1.0, 1.0);
 
-  glEnd ();
-#else
+    glEnd ();
+  }
+#endif
+#if HAVE_GLES2
+  if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
+      GST_GL_API_GLES2)
+    ) {
+    const GLfloat vVertices[] = {
+    -1.0f, -1.0f, 0.0f,
+          0.0f, 0.0f,
+          1.0, -1.0f, 0.0f,
+          1.0f, 0.0f,
+          1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f};
 
-  const GLfloat vVertices[] = { -1.0f, -1.0f, 0.0f,
-    0.0f, 0.0f,
-    1.0, -1.0f, 0.0f,
-    1.0f, 0.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f
-  };
+    GLushort indices[] = {
+    0, 1, 2, 0, 2, 3};
 
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+    /* glClear (GL_COLOR_BUFFER_BIT); */
 
-  //glClear (GL_COLOR_BUFFER_BIT);
+    /* Load the vertex position */
+    glVertexAttribPointer (effects->draw_attr_position_loc, 3, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), vVertices);
 
-  //Load the vertex position
-  glVertexAttribPointer (effects->draw_attr_position_loc, 3, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+    /* Load the texture coordinate */
+    glVertexAttribPointer (effects->draw_attr_texture_loc, 2, GL_FLOAT,
+        GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-  //Load the texture coordinate
-  glVertexAttribPointer (effects->draw_attr_texture_loc, 2, GL_FLOAT,
-      GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+    glEnableVertexAttribArray (effects->draw_attr_position_loc);
+    glEnableVertexAttribArray (effects->draw_attr_texture_loc);
 
-  glEnableVertexAttribArray (effects->draw_attr_position_loc);
-  glEnableVertexAttribArray (effects->draw_attr_texture_loc);
-
-  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+    }
 #endif
 
   glUseProgramObjectARB (0);
 }
 
-static void
-set_horizontal_swap (GstGLDisplay * display, gpointer data)
+static void set_horizontal_swap (GstGLDisplay * display, gpointer data)
 {
-//  GstGLEffects *effects = GST_GL_EFFECTS (data);
-
-#ifndef OPENGL_ES2
-  const double mirrormatrix[16] = {
+#if HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    const double mirrormatrix[16] = {
     -1.0, 0.0, 0.0, 0.0,
-    0.0, 1.0, 0.0, 0.0,
-    0.0, 0.0, 1.0, 0.0,
-    0.0, 0.0, 0.0, 1.0
-  };
+          0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
 
-  glMatrixMode (GL_MODELVIEW);
-  glLoadMatrixd (mirrormatrix);
+    glMatrixMode (GL_MODELVIEW);
+    glLoadMatrixd (mirrormatrix);
+  }
 #endif
 }
 
-static void
-gst_gl_effects_init (GstGLEffects * effects)
+static void gst_gl_effects_init (GstGLEffects * effects)
 {
   effects->effect = gst_gl_effects_identity;
   effects->horizontal_swap = FALSE;
 }
 
 static void
-gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
+    gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
+    gpointer data)
 {
   GstGLShader *shader = (GstGLShader *) value;
   GstGLFilter *filter = (GstGLFilter *) data;
@@ -357,26 +358,23 @@ gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
   value = NULL;
 }
 
-static void
-gst_gl_effects_reset_resources (GstGLFilter * filter)
+static void gst_gl_effects_reset_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
 
-//  g_message ("reset resources");
-
-  //release shaders in the gl thread
+  /* release shaders in the gl thread */
   g_hash_table_foreach (effects->shaderstable, gst_gl_effects_ghash_func_clean,
       filter);
 
-  //clean the htable without calling values destructors
-  //because shaders have been released in the glthread
-  //through the foreach func
+  /* clean the htable without calling values destructors
+   * because shaders have been released in the glthread
+   * through the foreach func */
   g_hash_table_unref (effects->shaderstable);
   effects->shaderstable = NULL;
 }
 
 static void
-gst_gl_effects_set_property (GObject * object, guint prop_id,
+    gst_gl_effects_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (object);
@@ -385,17 +383,15 @@ gst_gl_effects_set_property (GObject * object, guint prop_id,
     case PROP_EFFECT:
       gst_gl_effects_set_effect (effects, g_value_get_enum (value));
       break;
-    case PROP_HSWAP:
-      effects->horizontal_swap = g_value_get_boolean (value);
+      case PROP_HSWAP:effects->horizontal_swap = g_value_get_boolean (value);
       break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      default:G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-gst_gl_effects_get_property (GObject * object, guint prop_id,
+    gst_gl_effects_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (object);
@@ -413,15 +409,13 @@ gst_gl_effects_get_property (GObject * object, guint prop_id,
   }
 }
 
-static void
-gst_gl_effects_init_resources (GstGLFilter * filter)
+static void gst_gl_effects_init_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
   gint i;
-//  g_message ("init resources");
-//  g_message ("init hashtable");
+
   effects->shaderstable = g_hash_table_new (g_str_hash, g_str_equal);
-//  g_message ("zero textures and curves");
+
   for (i = 0; i < NEEDED_TEXTURES; i++) {
     effects->midtexture[i] = 0;
   }
@@ -430,16 +424,15 @@ gst_gl_effects_init_resources (GstGLFilter * filter)
   }
 }
 
-static gboolean
-gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
+static gboolean gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 {
-  //check that your hardware supports shader
-  //if not the pipeline correctly shut down
+  /* check that your hardware supports shader
+   * if not the pipeline correctly shut down */
   return gst_gl_display_gen_shader (filter->display, 0, 0, NULL);
 }
 
 static gboolean
-gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
+    gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);

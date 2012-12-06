@@ -25,8 +25,6 @@
 
 #include "gltestsrc.h"
 
-
-
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
@@ -85,135 +83,148 @@ gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
 void
 gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
+#if HAVE_OPENGL
   int i;
 
-  glClearColor (0.0, 0.0, 0.0, 1.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (gst_gl_display_get_gl_api_unlocked (v->display) & GST_GL_API_OPENGL) {
 
-  glDisable (GL_CULL_FACE);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+    glClearColor (0.0, 0.0, 0.0, 1.0);
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+    glDisable (GL_CULL_FACE);
+    glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
-  for (i = 0; i < 7; i++) {
-    glColor4f (vts_colors[i].R * (1 / 255.0f), vts_colors[i].G * (1 / 255.0f),
-        vts_colors[i].B * (1 / 255.0f), 1.0f);
-    glBegin (GL_QUADS);
-    glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0 * (2.0f / 3.0f), 0);
-    glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f),
-        -1.0f + 2.0f * (2.0f / 3.0f), 0);
-    glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f), -1.0f, 0);
-    glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f, 0);
-    glEnd ();
-  }
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity ();
 
-  for (i = 0; i < 7; i++) {
-    int k;
-
-    if (i & 1) {
-      k = 7;
-    } else {
-      k = 6 - i;
+    for (i = 0; i < 7; i++) {
+      glColor4f (vts_colors[i].R * (1 / 255.0f), vts_colors[i].G * (1 / 255.0f),
+          vts_colors[i].B * (1 / 255.0f), 1.0f);
+      glBegin (GL_QUADS);
+      glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0 * (2.0f / 3.0f), 0);
+      glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f),
+          -1.0f + 2.0f * (2.0f / 3.0f), 0);
+      glVertex3f (-1.0f + (i + 1.0f) * (2.0f / 7.0f), -1.0f, 0);
+      glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f, 0);
+      glEnd ();
     }
 
-    glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
-        vts_colors[k].B * (1 / 255.0f), 1.0f);
-    glBegin (GL_QUADS);
-    glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f),
-        0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f),
-        0);
-    glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f), 0);
-    glEnd ();
-  }
+    for (i = 0; i < 7; i++) {
+      int k;
 
-  for (i = 0; i < 3; i++) {
-    int k;
+      if (i & 1) {
+        k = 7;
+      } else {
+        k = 6 - i;
+      }
 
-    if (i == 0) {
-      k = 8;
-    } else if (i == 1) {
-      k = 0;
-    } else {
-      k = 9;
+      glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
+          vts_colors[k].B * (1 / 255.0f), 1.0f);
+      glBegin (GL_QUADS);
+      glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
+      glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (3.0f / 4.0f),
+          0);
+      glVertex3f (-1.0f + (i + 1) * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f),
+          0);
+      glVertex3f (-1.0f + i * (2.0f / 7.0f), -1.0f + 2.0f * (2.0f / 3.0f), 0);
+      glEnd ();
     }
 
-    glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
-        vts_colors[k].B * (1 / 255.0f), 1.0f);
-    glBegin (GL_QUADS);
-    glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
-    glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f),
-        0);
-    glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
-    glEnd ();
-  }
+    for (i = 0; i < 3; i++) {
+      int k;
 
-  for (i = 0; i < 3; i++) {
-    int k;
+      if (i == 0) {
+        k = 8;
+      } else if (i == 1) {
+        k = 0;
+      } else {
+        k = 9;
+      }
 
-    if (i == 0) {
-      k = COLOR_SUPER_BLACK;
-    } else if (i == 1) {
-      k = COLOR_BLACK;
-    } else {
-      k = COLOR_DARK_GREY;
+      glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
+          vts_colors[k].B * (1 / 255.0f), 1.0f);
+      glBegin (GL_QUADS);
+      glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
+      glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * 1, 0);
+      glVertex3f (-1.0f + (i + 1) * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f),
+          0);
+      glVertex3f (-1.0f + i * (2.0f / 6.0f), -1.0f + 2.0f * (3.0f / 4.0f), 0);
+      glEnd ();
     }
 
-    glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
-        vts_colors[k].B * (1 / 255.0f), 1.0f);
+    for (i = 0; i < 3; i++) {
+      int k;
+
+      if (i == 0) {
+        k = COLOR_SUPER_BLACK;
+      } else if (i == 1) {
+        k = COLOR_BLACK;
+      } else {
+        k = COLOR_DARK_GREY;
+      }
+
+      glColor4f (vts_colors[k].R * (1 / 255.0f), vts_colors[k].G * (1 / 255.0f),
+          vts_colors[k].B * (1 / 255.0f), 1.0f);
+      glBegin (GL_QUADS);
+      glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)), -1.0 + 2.0f * 1,
+          0);
+      glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)),
+          -1.0f + 2.0f * 1, 0);
+      glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)),
+          -1.0f + 2.0f * (3.0f / 4.0f), 0);
+      glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)),
+          -1.0f + 2.0f * (3.0f / 4.0f), 0);
+      glEnd ();
+    }
+
+    glColor4f (1.0, 1.0, 1.0, 1.0);
     glBegin (GL_QUADS);
-    glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)), -1.0 + 2.0f * 1, 0);
-    glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)),
-        -1.0f + 2.0f * 1, 0);
-    glVertex3f (-1.0f + 2.0f * (0.5f + (i + 1) * (1.0f / 12.0f)),
-        -1.0f + 2.0f * (3.0f / 4.0f), 0);
-    glVertex3f (-1.0f + 2.0f * (0.5f + i * (1.0f / 12.0f)),
-        -1.0f + 2.0f * (3.0f / 4.0f), 0);
+    glVertex3f (-1.0 + 2.0 * (0.75), -1.0 + 2.0 * 1, 0);
+    glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * 1, 0);
+    glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * (3.0 / 4.0), 0);
+    glVertex3f (-1.0 + 2.0 * (0.75), -1.0 + 2.0 * (3.0 / 4.0), 0);
     glEnd ();
   }
-
-  glColor4f (1.0, 1.0, 1.0, 1.0);
-  glBegin (GL_QUADS);
-  glVertex3f (-1.0 + 2.0 * (0.75), -1.0 + 2.0 * 1, 0);
-  glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * 1, 0);
-  glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * (3.0 / 4.0), 0);
-  glVertex3f (-1.0 + 2.0 * (0.75), -1.0 + 2.0 * (3.0 / 4.0), 0);
-  glEnd ();
-
+#endif
 }
 
 void
 gst_gl_test_src_snow (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
-  glClearColor (0.0, 0.0, 0.0, 1.0);
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#if HAVE_OPENGL
+  if (gst_gl_display_get_gl_api_unlocked (v->display) & GST_GL_API_OPENGL) {
+    glClearColor (0.0, 0.0, 0.0, 1.0);
+    glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity ();
 
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
+    glMatrixMode (GL_MODELVIEW);
+    glLoadIdentity ();
 
-  /* FIXME snow requires a fragment shader.  Please write. */
-  glColor4f (0.5, 0.5, 0.5, 1.0);
-  glBegin (GL_QUADS);
-  glVertex3f (-1.0 + 2.0 * (0.0), -1.0 + 2.0 * 1, 0);
-  glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * 1, 0);
-  glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * (0.0), 0);
-  glVertex3f (-1.0 + 2.0 * (0.0), -1.0 + 2.0 * (0.0), 0);
-  glEnd ();
+    /* FIXME snow requires a fragment shader.  Please write. */
+    glColor4f (0.5, 0.5, 0.5, 1.0);
+    glBegin (GL_QUADS);
+    glVertex3f (-1.0 + 2.0 * (0.0), -1.0 + 2.0 * 1, 0);
+    glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * 1, 0);
+    glVertex3f (-1.0 + 2.0 * (1.0), -1.0 + 2.0 * (0.0), 0);
+    glVertex3f (-1.0 + 2.0 * (0.0), -1.0 + 2.0 * (0.0), 0);
+    glEnd ();
+  }
+#endif
 }
 
 static void
 gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
     int h, const struct vts_color_struct *color)
 {
-  glClearColor (color->R * (1 / 255.0f), color->G * (1 / 255.0f),
-      color->B * (1 / 255.0f), 1.0f);
-  glClear (GL_COLOR_BUFFER_BIT);
+#if HAVE_OPENGL
+  if (gst_gl_display_get_gl_api_unlocked (v->display) & GST_GL_API_OPENGL) {
+    glClearColor (color->R * (1 / 255.0f), color->G * (1 / 255.0f),
+        color->B * (1 / 255.0f), 1.0f);
+    glClear (GL_COLOR_BUFFER_BIT);
+  }
+#endif
 }
 
 void

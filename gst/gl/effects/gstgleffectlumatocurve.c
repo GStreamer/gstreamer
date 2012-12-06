@@ -31,7 +31,7 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
   shader = g_hash_table_lookup (effects->shaderstable, "lumamap0");
 
   if (!shader) {
-    shader = gst_gl_shader_new ();
+    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
     g_hash_table_insert (effects->shaderstable, "lumamap0", shader);
   }
 

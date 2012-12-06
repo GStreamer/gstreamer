@@ -51,7 +51,7 @@
 GType gst_gl_filter_cube_get_type (void);
 GType gst_gl_effects_get_type (void);
 
-#ifndef OPENGL_ES2
+#if HAVE_OPENGL
 #include "gstgltestsrc.h"
 #include "gstglfilterlaplacian.h"
 #include "gstglfilterglass.h"
@@ -72,21 +72,21 @@ GType gst_gl_filter_laplacian_get_type (void);
 GType gst_gl_filter_glass_get_type (void);
 GType gst_gl_mosaic_get_type (void);
 
-#ifdef HAVE_PNG
+#if HAVE_PNG
 #include "gstgldifferencematte.h"
 #include "gstglbumper.h"
 
 GType gst_gl_differencematte_get_type (void);
 GType gst_gl_bumper_get_type (void);
 
-#ifdef HAVE_JPEG
+#if HAVE_JPEG
 #include "gstgloverlay.h"
 
 GType gst_gl_overlay_get_type (void);
 
-#endif
-#endif
-#endif
+#endif /* HAVE_JPEG */
+#endif /* HAVE_PNG */
+#endif /* HAVE_OPENGL */
 
 #define GST_CAT_DEFAULT gst_gl_gstgl_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -111,7 +111,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_effects_get_type ())) {
     return FALSE;
   }
-#ifndef OPENGL_ES2
+#if HAVE_OPENGL
   if (!gst_element_register (plugin, "gltestsrc",
           GST_RANK_NONE, GST_TYPE_GL_TEST_SRC)) {
     return FALSE;
@@ -166,7 +166,7 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
     return FALSE;
   }
-#ifdef HAVE_PNG
+#if HAVE_PNG
   if (!gst_element_register (plugin, "gldifferencematte",
           GST_RANK_NONE, gst_gl_differencematte_get_type ())) {
     return FALSE;
@@ -176,14 +176,14 @@ plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, gst_gl_bumper_get_type ())) {
     return FALSE;
   }
-#ifdef HAVE_JPEG
+#if HAVE_JPEG
   if (!gst_element_register (plugin, "gloverlay",
           GST_RANK_NONE, gst_gl_overlay_get_type ())) {
     return FALSE;
   }
-#endif
-#endif
-#endif
+#endif /* HAVE_JPEG */
+#endif /* HAVE_PNG */
+#endif /* HAVE_OPENGL */
 
   return TRUE;
 }

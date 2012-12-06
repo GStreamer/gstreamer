@@ -39,16 +39,14 @@ struct _GstGLFilterCube
 {
     GstGLFilter filter;
 
-#ifdef OPENGL_ES2
     GstGLShader *shader;
-#endif
 
-    //background color
+    /* background color */
     gfloat red;
     gfloat green;
     gfloat blue;
 
-    //perspective
+    /* perspective */
     gdouble fovy;
     gdouble aspect;
     gdouble znear;

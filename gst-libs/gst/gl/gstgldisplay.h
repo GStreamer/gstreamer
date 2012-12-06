@@ -25,8 +25,11 @@
 
 #include <gst/video/video.h>
 
+typedef struct _GstGLUpload GstGLUpload;
+typedef struct _GstGLDownload GstGLDownload;
+typedef struct _GstGLShader GstGLShader;
+
 #include "gstglwindow.h"
-#include "gstglrenderer.h"
 #include "gstglshader.h"
 #include "gstglupload.h"
 #include "gstgldownload.h"
@@ -34,18 +37,19 @@
 G_BEGIN_DECLS
 
 GType gst_gl_display_get_type (void);
-#define GST_TYPE_GL_DISPLAY (gst_gl_display_get_type())
-#define GST_GL_DISPLAY(obj)	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_DISPLAY,GstGLDisplay))
+#define GST_GL_TYPE_DISPLAY (gst_gl_display_get_type())
+#define GST_GL_DISPLAY(obj)	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_GL_TYPE_DISPLAY,GstGLDisplay))
 #define GST_GL_DISPLAY_CLASS(klass)	\
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_DISPLAY,GstGLDisplayClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_GL_TYPE_DISPLAY,GstGLDisplayClass))
 #define GST_IS_GL_DISPLAY(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_GL_TYPE_DISPLAY))
 #define GST_IS_GL_DISPLAY_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_DISPLAY))
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_GL_TYPE_DISPLAY))
 #define GST_GL_DISPLAY_CAST(obj) ((GstGLDisplay*)(obj))
 
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
+typedef struct _GstGLDisplayPrivate GstGLDisplayPrivate;
 
 /**
  * GstGLDisplayConversion:
@@ -139,6 +143,9 @@ struct _GstGLDisplay
   GstGLWindow   *gl_window;
   gboolean       isAlive;
 
+  /* gl API we are using */
+  GstGLAPI       gl_api;
+
   /* conditions */
   GCond         *cond_create_context;
   GCond         *cond_destroy_context;
@@ -152,10 +159,10 @@ struct _GstGLDisplay
   GLuint         redisplay_texture_width;
   GLuint         redisplay_texture_height;
   gboolean       keep_aspect_ratio;
-#ifdef OPENGL_ES2
+#if HAVE_GLES2
   GstGLShader   *redisplay_shader;
-  gchar         *redisplay_vertex_shader_str;
-  gchar         *redisplay_fragment_shader_str;
+  gchar         *redisplay_vertex_shader_str_gles2;
+  gchar         *redisplay_fragment_shader_str_gles2;
   GLint          redisplay_attr_position_loc;
   GLint          redisplay_attr_texture_loc;
 #endif
@@ -214,6 +221,8 @@ struct _GstGLDisplay
   GstGLShader   *del_shader;
 
   gchar *error_message;
+
+  GstGLDisplayPrivate *priv;
 };
 
 
@@ -277,6 +286,8 @@ void gst_gl_display_check_framebuffer_status (void);
 
 void gst_gl_display_lock (GstGLDisplay * display);
 void gst_gl_display_unlock (GstGLDisplay * display);
+GstGLAPI gst_gl_display_get_gl_api (GstGLDisplay * display);
+GstGLAPI gst_gl_display_get_gl_api_unlocked (GstGLDisplay * display);
 
 G_END_DECLS
 

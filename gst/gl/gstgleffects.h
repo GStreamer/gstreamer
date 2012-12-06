@@ -71,7 +71,7 @@ struct _GstGLEffects
 
   gboolean horizontal_swap; /* switch left to right */
 
-#ifdef OPENGL_ES2
+#if HAVE_GLES2
   GLint draw_attr_position_loc;
   GLint draw_attr_texture_loc;
 #endif

@@ -43,6 +43,7 @@ GType gst_gl_upload_get_type (void);
 
 typedef struct _GstGLUpload GstGLUpload;
 typedef struct _GstGLUploadClass GstGLUploadClass;
+typedef struct _GstGLUploadPrivate GstGLUploadPrivate;
 
 /**
  * GstGLUpload
@@ -76,12 +77,12 @@ struct _GstGLUpload
   guint            in_width;
   guint            in_height;
   GstGLShader     *shader;
-#ifdef OPENGL_ES2
   GLint            shader_attr_position_loc;
   GLint            shader_attr_texture_loc;
-#endif
 
   /* <private> */
+  GstGLUploadPrivate *priv;
+
   gpointer _reserved[GST_PADDING];
 };
 
@@ -100,12 +101,12 @@ struct _GstGLUploadClass
  *
  * The currently supported formats that can be uploaded
  */
-#ifndef OPENGL_ES2
-# define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
+#if !HAVE_GLES2
+#define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
                                "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
-#else /* OPENGL_ES2 */
+#else /* HAVE_GLES2 */
 # define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, I420, YV12, YUY2, UYVY, AYUV }"
-#endif
+#endif /* !HAVE_GLES2 */
 
 /**
  * GST_GL_UPLOAD_VIDEO_CAPS:

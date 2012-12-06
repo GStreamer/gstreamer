@@ -34,7 +34,7 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
   shader = g_hash_table_lookup (effects->shaderstable, "glow0");
 
   if (!shader) {
-    shader = gst_gl_shader_new ();
+    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
     g_hash_table_insert (effects->shaderstable, "glow0", shader);
   }
 
@@ -71,7 +71,7 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   shader = g_hash_table_lookup (effects->shaderstable, "glow1");
 
   if (!shader) {
-    shader = gst_gl_shader_new ();
+    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
     g_hash_table_insert (effects->shaderstable, "glow1", shader);
   }
 
@@ -115,7 +115,7 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   shader = g_hash_table_lookup (effects->shaderstable, "glow2");
 
   if (!shader) {
-    shader = gst_gl_shader_new ();
+    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
     g_hash_table_insert (effects->shaderstable, "glow2", shader);
   }
 
@@ -154,7 +154,7 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   shader = g_hash_table_lookup (effects->shaderstable, "glow3");
 
   if (!shader) {
-    shader = gst_gl_shader_new ();
+    shader = gst_gl_shader_new (GST_GL_FILTER (effects)->display);
     g_hash_table_insert (effects->shaderstable, "glow3", shader);
   }
 

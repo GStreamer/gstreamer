@@ -21,17 +21,16 @@
 #ifndef __GST_GL_SHADER_H__
 #define __GST_GL_SHADER_H__
 
-/* OpenGL 2.0 for Embedded Systems */
-#ifdef OPENGL_ES2
-#include <GLES2/gl2.h>
-#include "gstgles2.h"
-/* OpenGL for usual systems */
-#else
-#include <GL/glew.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
 #endif
+
+#include "gstgldisplay.h"
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
+
+typedef struct _GstGLDisplay GstGLDisplay;
 
 #define GST_GL_TYPE_SHADER         (gst_gl_shader_get_type())
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_SHADER, GstGLShader))
@@ -60,6 +59,9 @@ typedef struct _GstGLShaderClass   GstGLShaderClass;
 struct _GstGLShader {
   /*< private >*/
   GObject parent;
+
+  GstGLDisplay *display;
+
   GstGLShaderPrivate *priv;
 };
 
@@ -73,68 +75,51 @@ struct _GstGLShaderClass {
 GQuark gst_gl_shader_error_quark (void);
 GType gst_gl_shader_get_type (void);
 
-GstGLShader * gst_gl_shader_new (void);
+GstGLShader * gst_gl_shader_new (GstGLDisplay *display);
 
-void gst_gl_shader_set_vertex_source   (GstGLShader *shader,
-					const gchar *src);
-void gst_gl_shader_set_fragment_source (GstGLShader *shader,
-					const gchar *src);
-const gchar * gst_gl_shader_get_vertex_source (GstGLShader *shader);
+void          gst_gl_shader_set_vertex_source   (GstGLShader *shader, const gchar *src);
+void          gst_gl_shader_set_fragment_source (GstGLShader *shader, const gchar *src);
+const gchar * gst_gl_shader_get_vertex_source   (GstGLShader *shader);
 const gchar * gst_gl_shader_get_fragment_source (GstGLShader *shader);
 
-void gst_gl_shader_set_active (GstGLShader *shader,
-			       gboolean active);
-
-gboolean gst_gl_shader_is_compiled (GstGLShader *shader);
-
-gboolean gst_gl_shader_compile (GstGLShader *shader, GError **error);
+void     gst_gl_shader_set_active        (GstGLShader *shader, gboolean active);
+gboolean gst_gl_shader_is_compiled       (GstGLShader *shader);
+gboolean gst_gl_shader_compile           (GstGLShader *shader, GError **error);
 gboolean gst_gl_shader_compile_and_check (GstGLShader *shader, const gchar *source, GstGLShaderSourceType type);
+
 void gst_gl_shader_release (GstGLShader *shader);
-void gst_gl_shader_use (GstGLShader *shader);
+void gst_gl_shader_use     (GstGLShader *shader);
 
-void gst_gl_shader_set_uniform_1i (GstGLShader *shader, const gchar *name, gint value);
-void gst_gl_shader_set_uniform_1iv (GstGLShader *shader, const gchar *name, guint count, gint * value);
-void gst_gl_shader_set_uniform_1f (GstGLShader *shader, const gchar *name, gfloat value);
-void gst_gl_shader_set_uniform_1fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
-void gst_gl_shader_set_uniform_2i (GstGLShader *shader, const gchar *name, gint v0, gint v1);
-void gst_gl_shader_set_uniform_2iv (GstGLShader *shader, const gchar *name, guint count, gint * value);
-void gst_gl_shader_set_uniform_2f (GstGLShader *shader, const gchar *name, gfloat v0, gfloat v1);
-void gst_gl_shader_set_uniform_2fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
-void gst_gl_shader_set_uniform_3i (GstGLShader *shader, const gchar *name, gint v0, gint v1, gint v2);
-void gst_gl_shader_set_uniform_3iv (GstGLShader *shader, const gchar *name, guint count, gint * value);
-void gst_gl_shader_set_uniform_3f (GstGLShader *shader, const gchar *name, gfloat v0, gfloat v1, gfloat v2);
-void gst_gl_shader_set_uniform_3fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
-void gst_gl_shader_set_uniform_4i (GstGLShader *shader, const gchar *name, gint v0, gint v1, gint v2, gint v3);
-void gst_gl_shader_set_uniform_4iv (GstGLShader *shader, const gchar *name, guint count, gint * value);
-void gst_gl_shader_set_uniform_4f (GstGLShader *shader, const gchar *name, gfloat v0, gfloat v1, gfloat v2, gfloat v3);
-void gst_gl_shader_set_uniform_4fv (GstGLShader *shader, const gchar *name, guint count, gfloat * value);
-void gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-#ifndef OPENGL_ES2
-void gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-void gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-#endif
-void gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-#ifndef OPENGL_ES2
-void gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-void gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-#endif
-void gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-#ifndef OPENGL_ES2
-void gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
-void gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader, const gchar * name,
-  GLsizei count, GLboolean transpose, const GLfloat* value);
+void gst_gl_shader_set_uniform_1i           (GstGLShader *shader, const gchar *name, gint value);
+void gst_gl_shader_set_uniform_1iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
+void gst_gl_shader_set_uniform_1f           (GstGLShader *shader, const gchar *name, gfloat value);
+void gst_gl_shader_set_uniform_1fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+void gst_gl_shader_set_uniform_2i           (GstGLShader *shader, const gchar *name, gint v0,     gint v1);
+void gst_gl_shader_set_uniform_2iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
+void gst_gl_shader_set_uniform_2f           (GstGLShader *shader, const gchar *name, gfloat v0,   gfloat v1);
+void gst_gl_shader_set_uniform_2fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+void gst_gl_shader_set_uniform_3i           (GstGLShader *shader, const gchar *name, gint v0,     gint v1,       gint v2);
+void gst_gl_shader_set_uniform_3iv          (GstGLShader *shader, const gchar *name, guint count, gint * value);
+void gst_gl_shader_set_uniform_3f           (GstGLShader *shader, const gchar *name, gfloat v0,   gfloat v1,     gfloat v2);
+void gst_gl_shader_set_uniform_3fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+void gst_gl_shader_set_uniform_4i           (GstGLShader *shader, const gchar *name, gint v0,     gint v1,       gint v2,   gint v3);
+void gst_gl_shader_set_uniform_4iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
+void gst_gl_shader_set_uniform_4f           (GstGLShader *shader, const gchar *name, gfloat v0,   gfloat v1,     gfloat v2, gfloat v3);
+void gst_gl_shader_set_uniform_4fv          (GstGLShader *shader, const gchar *name, guint count, gfloat *value);
+void gst_gl_shader_set_uniform_matrix_2fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_3fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_4fv   (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+#if HAVE_OPENGL
+void gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
+void gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader *shader, const gchar *name, gint count, gboolean transpose, const gfloat* value);
 #endif
 
-GLint gst_gl_shader_get_attribute_location (GstGLShader *shader, const gchar *name);
-void gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index, const gchar * name);
+gint gst_gl_shader_get_attribute_location  (GstGLShader *shader, const gchar *name);
+void gst_gl_shader_bind_attribute_location (GstGLShader * shader, guint index, const gchar * name);
 
 G_END_DECLS
 

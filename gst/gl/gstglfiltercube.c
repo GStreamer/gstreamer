@@ -44,6 +44,7 @@
 #include "config.h"
 #endif
 
+#include <gst/gl/gstglapi.h>
 #include "gstglfiltercube.h"
 
 #define GST_CAT_DEFAULT gst_gl_filter_cube_debug
@@ -74,17 +75,21 @@ static void gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_gl_filter_cube_set_caps (GstGLFilter * filter,
     GstCaps * incaps, GstCaps * outcaps);
-#ifdef OPENGL_ES2
+#if HAVE_GLES2
 static void gst_gl_filter_cube_reset (GstGLFilter * filter);
 static gboolean gst_gl_filter_cube_init_shader (GstGLFilter * filter);
+static void _callback_gles2 (gint width, gint height, guint texture,
+    gpointer stuff);
+#endif
+#if HAVE_OPENGL
+static void _callback_opengl (gint width, gint height, guint texture,
+    gpointer stuff);
 #endif
 static gboolean gst_gl_filter_cube_filter_texture (GstGLFilter * filter,
     guint in_tex, guint out_tex);
-static void gst_gl_filter_cube_callback (gint width, gint height, guint texture,
-    gpointer stuff);
 
-#ifdef OPENGL_ES2
-//vertex source
+#if HAVE_GLES2
+/* vertex source */
 static const gchar *cube_v_src =
     "attribute vec4 a_position;                                   \n"
     "attribute vec2 a_texCoord;                                   \n"
@@ -116,7 +121,7 @@ static const gchar *cube_v_src =
     "   v_texCoord = a_texCoord;                                  \n"
     "}                                                            \n";
 
-//fragment source
+/* fragment source */
 static const gchar *cube_f_src =
     "precision mediump float;                            \n"
     "varying vec2 v_texCoord;                            \n"
@@ -139,7 +144,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
   gobject_class->set_property = gst_gl_filter_cube_set_property;
   gobject_class->get_property = gst_gl_filter_cube_get_property;
 
-#ifdef OPENGL_ES2
+#if HAVE_GLES2
   GST_GL_FILTER_CLASS (klass)->onInitFBO = gst_gl_filter_cube_init_shader;
   GST_GL_FILTER_CLASS (klass)->onReset = gst_gl_filter_cube_reset;
 #endif
@@ -186,9 +191,7 @@ gst_gl_filter_cube_class_init (GstGLFilterCubeClass * klass)
 static void
 gst_gl_filter_cube_init (GstGLFilterCube * filter)
 {
-#ifdef OPENGL_ES
   filter->shader = NULL;
-#endif
   filter->fovy = 45;
   filter->aspect = 0;
   filter->znear = 0.1;
@@ -233,8 +236,6 @@ static void
 gst_gl_filter_cube_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  //GstGLFilterCube* filter = GST_GL_FILTER_CUBE (object);
-
   switch (prop_id) {
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -255,14 +256,15 @@ gst_gl_filter_cube_set_caps (GstGLFilter * filter, GstCaps * incaps,
   return TRUE;
 }
 
-#ifdef OPENGL_ES2
+#if HAVE_GLES2
 static void
 gst_gl_filter_cube_reset (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
-  //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, cube_filter->shader);
+  /* blocking call, wait the opengl thread has destroyed the shader */
+  if (cube_filter->shader)
+    gst_gl_display_del_shader (filter->display, cube_filter->shader);
 }
 
 static gboolean
@@ -270,9 +272,12 @@ gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
-  //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_display_gen_shader (filter->display, cube_v_src, cube_f_src,
-      &cube_filter->shader);
+  if (gst_gl_display_get_gl_api (filter->display) & GST_GL_API_GLES2) {
+    /* blocking call, wait the opengl thread has compiled the shader */
+    return gst_gl_display_gen_shader (filter->display, cube_v_src, cube_f_src,
+        &cube_filter->shader);
+  }
+  return TRUE;
 }
 #endif
 
@@ -281,13 +286,27 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
+  GLCB cb = NULL;
+  GstGLAPI api;
 
-  //blocking call, use a FBO
+  api =
+      gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (cube_filter)->display);
+
+#if HAVE_OPENGL
+  if (api & GST_GL_API_OPENGL)
+    cb = _callback_opengl;
+#endif
+#if HAVE_GLES2
+  if (api & GST_GL_API_GLES2)
+    cb = _callback_gles2;
+#endif
+
+  /* blocking call, use a FBO */
   gst_gl_display_use_fbo (filter->display,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, out_tex,
-      gst_gl_filter_cube_callback,
+      cb,
       GST_VIDEO_INFO_WIDTH (&filter->in_info),
       GST_VIDEO_INFO_HEIGHT (&filter->in_info),
       in_tex, cube_filter->fovy, cube_filter->aspect,
@@ -297,10 +316,10 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   return TRUE;
 }
 
-//opengl scene, params: input texture (not the output filter->texture)
+/* opengl scene, params: input texture (not the output filter->texture) */
+#if HAVE_OPENGL
 static void
-gst_gl_filter_cube_callback (gint width, gint height, guint texture,
-    gpointer stuff)
+_callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
 
@@ -308,7 +327,6 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
-#ifndef OPENGL_ES2
   glEnable (GL_DEPTH_TEST);
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
@@ -319,9 +337,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
       GL_CLAMP_TO_EDGE);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
       GL_CLAMP_TO_EDGE);
-#ifndef OPENGL_ES2
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-#endif
 
   glClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -336,7 +352,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glRotatef (zrot, 0.0f, 0.0f, 1.0f);
 
   glBegin (GL_QUADS);
-  // Front Face
+  /* Front Face */
   glTexCoord2f ((gfloat) width, 0.0f);
   glVertex3f (-1.0f, -1.0f, 1.0f);
   glTexCoord2f (0.0f, 0.0f);
@@ -345,7 +361,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glVertex3f (1.0f, 1.0f, 1.0f);
   glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex3f (-1.0f, 1.0f, 1.0f);
-  // Back Face
+  /* Back Face */
   glTexCoord2f (0.0f, 0.0f);
   glVertex3f (-1.0f, -1.0f, -1.0f);
   glTexCoord2f (0.0f, (gfloat) height);
@@ -354,7 +370,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glVertex3f (1.0f, 1.0f, -1.0f);
   glTexCoord2f ((gfloat) width, 0.0f);
   glVertex3f (1.0f, -1.0f, -1.0f);
-  // Top Face
+  /* Top Face */
   glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex3f (-1.0f, 1.0f, -1.0f);
   glTexCoord2f ((gfloat) width, 0.0f);
@@ -363,7 +379,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glVertex3f (1.0f, 1.0f, 1.0f);
   glTexCoord2f (0.0f, (gfloat) height);
   glVertex3f (1.0f, 1.0f, -1.0f);
-  // Bottom Face
+  /* Bottom Face */
   glTexCoord2f ((gfloat) width, 0.0f);
   glVertex3f (-1.0f, -1.0f, -1.0f);
   glTexCoord2f (0.0f, 0.0f);
@@ -372,7 +388,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glVertex3f (1.0f, -1.0f, 1.0f);
   glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex3f (-1.0f, -1.0f, 1.0f);
-  // Right face
+  /* Right face */
   glTexCoord2f (0.0f, 0.0f);
   glVertex3f (1.0f, -1.0f, -1.0f);
   glTexCoord2f (0.0f, (gfloat) height);
@@ -381,7 +397,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glVertex3f (1.0f, 1.0f, 1.0f);
   glTexCoord2f ((gfloat) width, 0.0f);
   glVertex3f (1.0f, -1.0f, 1.0f);
-  // Left Face
+  /* Left Face */
   glTexCoord2f ((gfloat) width, 0.0f);
   glVertex3f (-1.0f, -1.0f, -1.0f);
   glTexCoord2f (0.0f, 0.0f);
@@ -391,10 +407,28 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   glTexCoord2f ((gfloat) width, (gfloat) height);
   glVertex3f (-1.0f, 1.0f, -1.0f);
   glEnd ();
-#else
+
+  glDisable (GL_DEPTH_TEST);
+
+  xrot += 0.3f;
+  yrot += 0.2f;
+  zrot += 0.4f;
+}
+#endif
+
+#if HAVE_GLES2
+static void
+_callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
+{
+  GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
+
+  static GLfloat xrot = 0;
+  static GLfloat yrot = 0;
+  static GLfloat zrot = 0;
+
   const GLfloat v_vertices[] = {
 
-    //front face
+    /* front face */
     1.0f, 1.0f, -1.0f,
     1.0f, 0.0f,
     1.0f, -1.0f, -1.0f,
@@ -403,7 +437,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     0.0f, 1.0f,
     -1.0f, 1.0f, -1.0f,
     0.0f, 0.0f,
-    //back face
+    /* back face */
     1.0f, 1.0f, 1.0f,
     1.0f, 0.0f,
     -1.0f, 1.0f, 1.0f,
@@ -412,7 +446,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     0.0f, 1.0f,
     1.0f, -1.0f, 1.0f,
     1.0f, 1.0f,
-    //right face
+    /* right face */
     1.0f, 1.0f, 1.0f,
     1.0f, 0.0f,
     1.0f, -1.0f, 1.0f,
@@ -421,7 +455,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     0.0f, 1.0f,
     1.0f, 1.0f, -1.0f,
     1.0f, 1.0f,
-    //left face
+    /* left face */
     -1.0f, 1.0f, 1.0f,
     1.0f, 0.0f,
     -1.0f, 1.0f, -1.0f,
@@ -430,7 +464,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     0.0f, 1.0f,
     -1.0f, -1.0f, 1.0f,
     0.0f, 0.0f,
-    //top face
+    /* top face */
     1.0f, -1.0f, 1.0f,
     1.0f, 0.0f,
     -1.0f, -1.0f, 1.0f,
@@ -439,7 +473,7 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
     0.0f, 1.0f,
     1.0f, -1.0f, -1.0f,
     1.0f, 1.0f,
-    //bottom face
+    /* bottom face */
     1.0f, 1.0f, 1.0f,
     1.0f, 0.0f,
     1.0f, 1.0f, -1.0f,
@@ -487,11 +521,11 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (cube_filter->shader, "a_texCoord");
 
-  //Load the vertex position
+  /* Load the vertex position */
   glVertexAttribPointer (attr_position_loc, 3, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), v_vertices);
 
-  //Load the texture coordinate
+  /* Load the texture coordinate */
   glVertexAttribPointer (attr_texture_loc, 2, GL_FLOAT,
       GL_FALSE, 5 * sizeof (GLfloat), &v_vertices[3]);
 
@@ -511,7 +545,6 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
 
   glDisableVertexAttribArray (attr_position_loc);
   glDisableVertexAttribArray (attr_texture_loc);
-#endif
 
   glDisable (GL_DEPTH_TEST);
 
@@ -519,3 +552,4 @@ gst_gl_filter_cube_callback (gint width, gint height, guint texture,
   yrot += 0.2f;
   zrot += 0.4f;
 }
+#endif
