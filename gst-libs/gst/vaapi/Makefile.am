@@ -49,6 +49,7 @@ libgstvaapi_source_c =				\
 	gstvaapidecoder_mpeg2.c			\
 	gstvaapidecoder_mpeg4.c			\
 	gstvaapidecoder_objects.c		\
+	gstvaapidecoder_unit.c			\
 	gstvaapidecoder_vc1.c			\
 	gstvaapidisplay.c			\
 	gstvaapidisplaycache.c			\
@@ -105,6 +106,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapidecoder_dpb.h			\
 	gstvaapidecoder_objects.h		\
 	gstvaapidecoder_priv.h			\
+	gstvaapidecoder_unit.h			\
 	gstvaapidisplay_priv.h			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\
