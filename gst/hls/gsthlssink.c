@@ -293,13 +293,20 @@ gst_hls_sink_handle_message (GstBin * bin, GstMessage * message)
        */
       sink->waiting_fku = FALSE;
       schedule_next_key_unit (sink);
+
+      /* multifilesink is an internal implementation detail. If applications
+       * need a notification, we should probably do our own message */
+      GST_DEBUG_OBJECT (bin, "dropping message %" GST_PTR_FORMAT, message);
+      gst_message_unref (message);
+      message = NULL;
       break;
     }
     default:
       break;
   }
 
-  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+  if (message)
+    GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 static GstStateChangeReturn
