@@ -55,7 +55,8 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
     gstglshadervariables.h \
 	gstglshader.h \
 	gstgldownload.h \
-	gstglupload.h
+	gstglupload.h \
+	gstglapi.h
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	$(GL_CFLAGS) \

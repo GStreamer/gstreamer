@@ -1075,7 +1075,7 @@ gst_gl_filter_render_to_target (GstGLFilter * filter, gboolean resize,
       in_width, 0, in_height, GST_GL_DISPLAY_PROJECTION_ORTHO2D, data);
 }
 
-#ifndef OPENGL_ES2
+#if HAVE_OPENGL
 static void
 _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
 {
@@ -1116,6 +1116,9 @@ void
 gst_gl_filter_render_to_target_with_shader (GstGLFilter * filter,
     gboolean resize, GLuint input, GLuint target, GstGLShader * shader)
 {
+  g_return_if_fail (gst_gl_display_get_gl_api (filter->display) &
+      GST_GL_API_OPENGL);
+
   filter->default_shader = shader;
   gst_gl_filter_render_to_target (filter, resize, input, target,
       _draw_with_shader_cb, filter);
@@ -1153,4 +1156,4 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
 
   glEnd ();
 }
-#endif
+#endif /* HAVE_OPENGL */

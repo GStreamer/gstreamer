@@ -43,8 +43,13 @@
  * calling thread.
  */
 
+#define USING_OPENGL(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL3)
+#define USING_GLES(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES)
+#define USING_GLES2(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES2)
+#define USING_GLES3(display) (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_GLES3)
+
 static void _do_upload (GstGLDisplay * display, GstGLUpload * upload);
-static void _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload);
 static void _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload);
 static void _do_upload_make (GstGLDisplay * display, GstGLUpload * upload);
 static void _init_upload (GstGLDisplay * display, GstGLUpload * upload);
@@ -54,99 +59,163 @@ static gboolean gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
 static gboolean gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload *
     upload, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
+#if HAVE_OPENGL
+static void _do_upload_draw_opengl (GstGLDisplay * display,
+    GstGLUpload * upload);
+#endif
+#if HAVE_GLES2
+static void _do_upload_draw_gles2 (GstGLDisplay * display,
+    GstGLUpload * upload);
+#endif
+
+/* *INDENT-OFF* */
+
+#if HAVE_OPENGL
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static gchar *text_shader_YUY2_UYVY =
-#ifndef OPENGL_ES2
+static gchar *text_shader_YUY2_UYVY_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex, UVtex;\n"
-#else
-    "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n" "uniform sampler2D Ytex, UVtex;\n"
-#endif
-    "void main(void) {\n" "  float fx, fy, y, u, v, r, g, b;\n"
-#ifndef OPENGL_ES2
+    "void main(void) {\n"
+    "  float fx, fy, y, u, v, r, g, b;\n"
     "  fx = gl_TexCoord[0].x;\n"
     "  fy = gl_TexCoord[0].y;\n"
     "  y = texture2DRect(Ytex,vec2(fx,fy)).%c;\n"
     "  u = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
     "  v = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-#else
-    "  fx = v_texCoord.x;\n"
-    "  fy = v_texCoord.y;\n"
-    "  y = texture2D(Ytex,vec2(fx,fy)).%c;\n"
-    "  u = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  v = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
-#endif
     "  y=1.164*(y-0.0627);\n"
     "  u=u-0.5;\n"
     "  v=v-0.5;\n"
     "  r = y+1.5958*v;\n"
     "  g = y-0.39173*u-0.81290*v;\n"
-    "  b = y+2.017*u;\n" "  gl_FragColor = vec4(r, g, b, 1.0);\n" "}\n";
+    "  b = y+2.017*u;\n"
+    "  gl_FragColor = vec4(r, g, b, 1.0);\n"
+    "}\n";
 
 /* ATI: "*0.5", ""
    normal: "", "*0.5" */
-static gchar *text_shader_I420_YV12 =
-#ifndef OPENGL_ES2
+static gchar *text_shader_I420_YV12_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex,Utex,Vtex;\n"
-#else
-    "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n" "uniform sampler2D Ytex,Utex,Vtex;\n"
-#endif
-    "void main(void) {\n" "  float r,g,b,y,u,v;\n"
-#ifndef OPENGL_ES2
+    "void main(void) {\n"
+    "  float r,g,b,y,u,v;\n"
     "  vec2 nxy = gl_TexCoord[0].xy;\n"
     "  y=texture2DRect(Ytex,nxy%s).r;\n"
-    "  u=texture2DRect(Utex,nxy%s).r;\n" "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
-#else
-    "  vec2 nxy = v_texCoord.xy;\n"
-    "  y=texture2D(Ytex,nxy).r;\n"
-    "  u=texture2D(Utex,nxy).r;\n" "  v=texture2D(Vtex,nxy).r;\n"
-#endif
+    "  u=texture2DRect(Utex,nxy%s).r;\n"
+    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
     "  y=1.1643*(y-0.0625);\n"
     "  u=u-0.5;\n"
     "  v=v-0.5;\n"
     "  r=y+1.5958*v;\n"
     "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n" "  gl_FragColor=vec4(r,g,b,1.0);\n" "}\n";
+    "  b=y+2.017*u;\n"
+    "  gl_FragColor=vec4(r,g,b,1.0);\n"
+    "}\n";
 
-static gchar *text_shader_AYUV =
-#ifndef OPENGL_ES2
+static gchar *text_shader_AYUV_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
-#else
-    "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n" "uniform sampler2D tex;\n"
-#endif
-    "void main(void) {\n" "  float r,g,b,y,u,v;\n"
-#ifndef OPENGL_ES2
+    "void main(void) {\n"
+    "  float r,g,b,y,u,v;\n"
     "  vec2 nxy=gl_TexCoord[0].xy;\n"
     "  y=texture2DRect(tex,nxy).r;\n"
-    "  u=texture2DRect(tex,nxy).g;\n" "  v=texture2DRect(tex,nxy).b;\n"
-#else
-    "  vec2 nxy = v_texCoord.xy;\n"
-    "  y=texture2D(tex,nxy).g;\n"
-    "  u=texture2D(tex,nxy).b;\n" "  v=texture2D(tex,nxy).a;\n"
-#endif
+    "  u=texture2DRect(tex,nxy).g;\n"
+    "  v=texture2DRect(tex,nxy).b;\n"
     "  y=1.1643*(y-0.0625);\n"
     "  u=u-0.5;\n"
     "  v=v-0.5;\n"
     "  r=y+1.5958*v;\n"
     "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n" "  gl_FragColor=vec4(r,g,b,1.0);\n" "}\n";
+    "  b=y+2.017*u;\n"
+    "  gl_FragColor=vec4(r,g,b,1.0);\n"
+    "}\n";
 
-#ifdef OPENGL_ES2
-static gchar *text_vertex_shader =
+#define text_vertex_shader_opengl NULL
+#endif
+
+#ifdef HAVE_GLES2
+/* YUY2:r,g,a
+   UYVY:a,b,r */
+static gchar *text_shader_YUY2_UYVY_gles2 =
+    "precision mediump float;\n"
+    "varying vec2 v_texCoord;\n"
+    "uniform sampler2D Ytex, UVtex;\n"
+    "void main(void) {\n"
+    "  float fx, fy, y, u, v, r, g, b;\n"
+    "  fx = v_texCoord.x;\n"
+    "  fy = v_texCoord.y;\n"
+    "  y = texture2D(Ytex,vec2(fx,fy)).%c;\n"
+    "  u = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
+    "  v = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
+    "  y=1.164*(y-0.0627);\n"
+    "  u=u-0.5;\n"
+    "  v=v-0.5;\n"
+    "  r = y+1.5958*v;\n"
+    "  g = y-0.39173*u-0.81290*v;\n"
+    "  b = y+2.017*u;\n"
+    "  gl_FragColor = vec4(r, g, b, 1.0);\n"
+    "}\n";
+
+static gchar *text_shader_I420_YV12_gles2 =
+    "precision mediump float;\n"
+    "varying vec2 v_texCoord;\n"
+    "uniform sampler2D Ytex,Utex,Vtex;\n"
+    "void main(void) {\n"
+    "  float r,g,b,y,u,v;\n"
+    "  vec2 nxy = v_texCoord.xy;\n"
+    "  y=texture2D(Ytex,nxy).r;\n"
+    "  u=texture2D(Utex,nxy).r;\n"
+    "  v=texture2D(Vtex,nxy).r;\n"
+    "  y=1.1643*(y-0.0625);\n"
+    "  u=u-0.5;\n"
+    "  v=v-0.5;\n"
+    "  r=y+1.5958*v;\n"
+    "  g=y-0.39173*u-0.81290*v;\n"
+    "  b=y+2.017*u;\n"
+    "  gl_FragColor=vec4(r,g,b,1.0);\n"
+    "}\n";
+
+static gchar *text_shader_AYUV_gles2 =
+    "precision mediump float;\n"
+    "varying vec2 v_texCoord;\n"
+    "uniform sampler2D tex;\n"
+    "void main(void) {\n"
+    "  float r,g,b,y,u,v;\n"
+    "  vec2 nxy = v_texCoord.xy;\n"
+    "  y=texture2D(tex,nxy).g;\n"
+    "  u=texture2D(tex,nxy).b;\n"
+    "  v=texture2D(tex,nxy).a;\n"
+    "  y=1.1643*(y-0.0625);\n"
+    "  u=u-0.5;\n"
+    "  v=v-0.5;\n"
+    "  r=y+1.5958*v;\n"
+    "  g=y-0.39173*u-0.81290*v;\n"
+    "  b=y+2.017*u;\n"
+    "  gl_FragColor=vec4(r,g,b,1.0);\n"
+    "}\n";
+
+static gchar *text_vertex_shader_gles2 =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texCoord;   \n"
     "varying vec2 v_texCoord;     \n"
     "void main()                  \n"
     "{                            \n"
     "   gl_Position = a_position; \n"
-    "   v_texCoord = a_texCoord;  \n" "}                            \n";
+    "   v_texCoord = a_texCoord;  \n"
+    "}                            \n";
 #endif
+
+/* *INDENT-ON* */
+
+struct _GstGLUploadPrivate
+{
+  const gchar *YUY2_UYVY;
+  const gchar *I420_YV12;
+  const gchar *AYUV;
+  const gchar *vert_shader;
+
+  void (*draw) (GstGLDisplay * display, GstGLUpload * download);
+};
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
 #define GST_CAT_DEFAULT gst_gl_upload_debug
@@ -163,12 +232,16 @@ static void gst_gl_upload_finalize (GObject * object);
 static void
 gst_gl_upload_class_init (GstGLUploadClass * klass)
 {
+  g_type_class_add_private (klass, sizeof (GstGLUploadPrivate));
+
   G_OBJECT_CLASS (klass)->finalize = gst_gl_upload_finalize;
 }
 
 static void
 gst_gl_upload_init (GstGLUpload * upload)
 {
+  upload->priv = GST_GL_UPLOAD_GET_PRIVATE (upload);
+
   upload->display = NULL;
 
   g_mutex_init (&upload->lock);
@@ -178,10 +251,8 @@ gst_gl_upload_init (GstGLUpload * upload)
   upload->out_texture = 0;
   upload->shader = NULL;
 
-#ifdef OPENGL_ES2
   upload->shader_attr_position_loc = 0;
   upload->shader_attr_texture_loc = 0;
-#endif
 
   gst_video_info_init (&upload->info);
 }
@@ -196,12 +267,33 @@ GstGLUpload *
 gst_gl_upload_new (GstGLDisplay * display)
 {
   GstGLUpload *upload;
+  GstGLUploadPrivate *priv;
 
   upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
 
   upload->display = g_object_ref (display);
+  priv = upload->priv;
 
   g_mutex_init (&upload->lock);
+
+#if HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
+    priv->I420_YV12 = text_shader_I420_YV12_opengl;
+    priv->AYUV = text_shader_AYUV_opengl;
+    priv->vert_shader = text_vertex_shader_opengl;
+    priv->draw = _do_upload_draw_opengl;
+  }
+#endif
+#if HAVE_GLES2
+  if (USING_GLES2 (display)) {
+    priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
+    priv->I420_YV12 = text_shader_I420_YV12_gles2;
+    priv->AYUV = text_shader_AYUV_gles2;
+    priv->vert_shader = text_vertex_shader_gles2;
+    priv->draw = _do_upload_draw_gles2;
+  }
+#endif
 
   return upload;
 }
@@ -547,7 +639,7 @@ gst_gl_display_find_upload_unlocked (GstGLDisplay * display,
     GstVideoFormat v_format, guint in_width, guint in_height,
     guint out_width, guint out_height)
 {
-  GstGLUpload *ret;
+  GstGLUpload *ret = NULL;
   GSList *walk;
 
   walk = display->uploads;
@@ -606,6 +698,34 @@ gst_gl_display_find_upload (GstGLDisplay * display, GstVideoFormat v_format,
   return ret;
 }
 
+static gboolean
+_create_shader (GstGLDisplay * display, const gchar * vertex_src,
+    const gchar * fragment_src, GstGLShader ** out_shader)
+{
+  GstGLShader *shader;
+  GError *error;
+
+  g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
+
+  shader = gst_gl_shader_new (display);
+
+  if (vertex_src)
+    gst_gl_shader_set_vertex_source (shader, vertex_src);
+  if (fragment_src)
+    gst_gl_shader_set_fragment_source (shader, fragment_src);
+
+  if (!gst_gl_shader_compile (shader, &error)) {
+    gst_gl_display_set_error (display, "%s", error->message);
+    g_error_free (error);
+    gst_gl_shader_use (NULL);
+    g_object_unref (G_OBJECT (shader));
+    return FALSE;
+  }
+
+  *out_shader = shader;
+  return TRUE;
+}
+
 /* Called in the gl thread */
 void
 _init_upload (GstGLDisplay * display, GstGLUpload * upload)
@@ -647,10 +767,6 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
       /* shouldn't we require ARB_shading_language_100? --Filippo */
       if (GLEW_ARB_fragment_shader) {
 
-#ifdef OPENGL_ES2
-        GError *error = NULL;
-#endif
-
         GST_INFO ("Context, ARB_fragment_shader supported: yes");
 
         display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_GLSL;
@@ -661,173 +777,100 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
           case GST_VIDEO_FORMAT_YUY2:
           {
             gchar text_shader_YUY2[2048];
-            sprintf (text_shader_YUY2, text_shader_YUY2_UYVY, 'r', 'g', 'a');
+            sprintf (text_shader_YUY2, upload->priv->YUY2_UYVY, 'r', 'g', 'a');
 
-            upload->shader = gst_gl_shader_new ();
-#ifndef OPENGL_ES2
-            if (!gst_gl_shader_compile_and_check (upload->shader,
-                    text_shader_YUY2, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              gst_gl_display_set_error (display,
-                  "Failed to initialize shader for uploading YUY2");
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
+            if (_create_shader (display, upload->priv->vert_shader,
+                    text_shader_YUY2, &upload->shader)) {
+              if (USING_GLES2 (display)) {
+                upload->shader_attr_position_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_position");
+                upload->shader_attr_texture_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_texCoord");
+              }
             }
-#else
-            gst_gl_shader_set_vertex_source (upload->shader,
-                text_vertex_shader);
-            gst_gl_shader_set_fragment_source (upload->shader,
-                text_shader_YUY2);
-
-            gst_gl_shader_compile (upload->shader, &error);
-            if (error) {
-              gst_gl_display_set_error (display, "%s", error->message);
-              g_error_free (error);
-              error = NULL;
-              gst_gl_shader_use (NULL);
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
-            } else {
-              upload->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_position");
-              upload->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_texCoord");
-            }
-#endif
           }
             break;
           case GST_VIDEO_FORMAT_UYVY:
           {
             gchar text_shader_UYVY[2048];
-            sprintf (text_shader_UYVY,
-#ifndef OPENGL_ES2
-                text_shader_YUY2_UYVY, 'a', 'b', 'r');
-#else
-                text_shader_YUY2_UYVY, 'a', 'r', 'b');
-#endif
-
-            upload->shader = gst_gl_shader_new ();
-
-#ifndef OPENGL_ES2
-            if (!gst_gl_shader_compile_and_check (upload->shader,
-                    text_shader_UYVY, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              gst_gl_display_set_error (display,
-                  "Failed to initialize shader for uploading UYVY");
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
-            }
-#else
-            gst_gl_shader_set_vertex_source (upload->shader,
-                text_vertex_shader);
-            gst_gl_shader_set_fragment_source (upload->shader,
-                text_shader_UYVY);
-
-            gst_gl_shader_compile (upload->shader, &error);
-            if (error) {
-              gst_gl_display_set_error (display, "%s", error->message);
-              g_error_free (error);
-              error = NULL;
-              gst_gl_shader_use (NULL);
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
-            } else {
-              upload->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_position");
-              upload->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_texCoord");
+#if HAVE_OPENGL
+            if (USING_GLES2 (display)) {
+              sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
+                  'a', 'b', 'r');
             }
 #endif
+#if HAVE_GLES2
+            if (USING_GLES2 (display)) {
+              sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
+                  'a', 'r', 'b');
+            }
+#endif
+
+            if (_create_shader (display, upload->priv->vert_shader,
+                    text_shader_UYVY, &upload->shader)) {
+              if (USING_GLES2 (display)) {
+                upload->shader_attr_position_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_position");
+                upload->shader_attr_texture_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_texCoord");
+              }
+            }
           }
             break;
           case GST_VIDEO_FORMAT_I420:
           case GST_VIDEO_FORMAT_YV12:
           {
-#ifndef OPENGL_ES2
-            gchar text_shader[2048];
-            if ((g_ascii_strncasecmp ("ATI", (gchar *) glGetString (GL_VENDOR),
-                        3) == 0)
-                && (g_ascii_strncasecmp ("ATI Mobility Radeon HD",
-                        (gchar *) glGetString (GL_RENDERER), 22) != 0)
-                && (g_ascii_strncasecmp ("ATI Radeon HD",
-                        (gchar *) glGetString (GL_RENDERER), 13) != 0))
-              sprintf (text_shader, text_shader_I420_YV12, "*0.5", "");
-            else
-              sprintf (text_shader, text_shader_I420_YV12, "", "*0.5");
-#endif
-
-            upload->shader = gst_gl_shader_new ();
-
-#ifndef OPENGL_ES2
-            if (!gst_gl_shader_compile_and_check
-                (upload->shader, text_shader, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              gst_gl_display_set_error (display,
-                  "Failed to initialize shader for uploading I420 or YV12");
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
-            }
-#else
-            gst_gl_shader_set_vertex_source (upload->shader,
-                text_vertex_shader);
-            gst_gl_shader_set_fragment_source (upload->shader,
-                text_shader_I420_YV12);
-
-            gst_gl_shader_compile (upload->shader, &error);
-            if (error) {
-              gst_gl_display_set_error (display, "%s", error->message);
-              g_error_free (error);
-              error = NULL;
-              gst_gl_shader_use (NULL);
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
-            } else {
-              upload->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_position");
-              upload->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_texCoord");
+            gchar text_shader_I420_YV12[2048];
+#if HAVE_OPENGL
+            if (USING_OPENGL (display)) {
+              if ((g_ascii_strncasecmp ("ATI",
+                          (gchar *) glGetString (GL_VENDOR), 3) == 0)
+                  && (g_ascii_strncasecmp ("ATI Mobility Radeon HD",
+                          (gchar *) glGetString (GL_RENDERER), 22) != 0)
+                  && (g_ascii_strncasecmp ("ATI Radeon HD",
+                          (gchar *) glGetString (GL_RENDERER), 13) != 0))
+                sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "*0.5",
+                    "");
+              else
+                sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "",
+                    "*0.5");
             }
 #endif
+#if HAVE_GLES2
+            if (USING_GLES2 (display))
+              g_strlcpy (text_shader_I420_YV12, upload->priv->I420_YV12, 2048);
+#endif
+
+            if (_create_shader (display, upload->priv->vert_shader,
+                    text_shader_I420_YV12, &upload->shader)) {
+              if (USING_GLES2 (display)) {
+                upload->shader_attr_position_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_position");
+                upload->shader_attr_texture_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_texCoord");
+              }
+            }
           }
             break;
           case GST_VIDEO_FORMAT_AYUV:
           {
-            upload->shader = gst_gl_shader_new ();
-
-#ifndef OPENGL_ES2
-            if (!gst_gl_shader_compile_and_check (upload->shader,
-                    text_shader_AYUV, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-              gst_gl_display_set_error (display,
-                  "Failed to initialize shader for uploading AYUV");
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
+            if (_create_shader (display, upload->priv->vert_shader,
+                    upload->priv->AYUV, &upload->shader)) {
+              if (USING_GLES2 (display)) {
+                upload->shader_attr_position_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_position");
+                upload->shader_attr_texture_loc =
+                    gst_gl_shader_get_attribute_location
+                    (upload->shader, "a_texCoord");
+              }
             }
-#else
-            gst_gl_shader_set_vertex_source (upload->shader,
-                text_vertex_shader);
-            gst_gl_shader_set_fragment_source (upload->shader,
-                text_shader_AYUV);
-
-            gst_gl_shader_compile (upload->shader, &error);
-            if (error) {
-              gst_gl_display_set_error (display, "%s", error->message);
-              g_error_free (error);
-              error = NULL;
-              gst_gl_shader_use (NULL);
-              g_object_unref (G_OBJECT (upload->shader));
-              upload->shader = NULL;
-            } else {
-              upload->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_position");
-              upload->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location
-                  (upload->shader, "a_texCoord");
-            }
-#endif
           }
             break;
           default:
@@ -916,14 +959,19 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   /* setup the render buffer for depth */
   glGenRenderbuffersEXT (1, &upload->depth_buffer);
   glBindRenderbufferEXT (GL_RENDERBUFFER_EXT, upload->depth_buffer);
-#ifndef OPENGL_ES2
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-      out_width, out_height);
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
-      out_width, out_height);
-#else
-  glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
-      out_width, out_height);
+#if HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
+        out_width, out_height);
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH24_STENCIL8_EXT,
+        out_width, out_height);
+  }
+#endif
+#if HAVE_GLES2
+  if (USING_GLES2 (display)) {
+    glRenderbufferStorageEXT (GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT16,
+        out_width, out_height);
+  }
 #endif
 
   /* a fake texture is attached to the upload FBO (cannot init without it) */
@@ -946,9 +994,11 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
       GL_RENDERBUFFER_EXT, upload->depth_buffer);
 
-#ifndef OPENGL_ES2
-  glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
-      GL_RENDERBUFFER_EXT, upload->depth_buffer);
+#if HAVE_OPENGL
+  if (USING_OPENGL (display)) {
+    glFramebufferRenderbufferEXT (GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT,
+        GL_RENDERBUFFER_EXT, upload->depth_buffer);
+  }
 #endif
 
   gst_gl_display_check_framebuffer_status ();
@@ -995,7 +1045,7 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       if (in_width != out_width || in_height != out_height)
-        _do_upload_draw (display, upload);
+        upload->priv->draw (display, upload);
       /* color space conversion is not needed */
       break;
     case GST_VIDEO_FORMAT_YUY2:
@@ -1007,7 +1057,7 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
       switch (display->colorspace_conversion) {
         case GST_GL_DISPLAY_CONVERSION_GLSL:
           /* color space conversion is needed */
-          _do_upload_draw (display, upload);
+          upload->priv->draw (display, upload);
           break;
         case GST_GL_DISPLAY_CONVERSION_MATRIX:
           /* color space conversion is needed */
@@ -1015,7 +1065,7 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
           break;
         case GST_GL_DISPLAY_CONVERSION_MESA:
           if (in_width != out_width || in_height != out_height)
-            _do_upload_draw (display, upload);
+            upload->priv->draw (display, upload);
           /* color space conversion is not needed */
           break;
         default:
@@ -1329,31 +1379,14 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
 }
 
-
+#if HAVE_OPENGL
 /* called by _do_upload (in the gl thread) */
-void
-_do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
+static void
+_do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstVideoFormat v_format;
   guint out_width, out_height;
-
-#ifndef OPENGL_ES2
   guint in_width, in_height;
-#else
-  GLint viewport_dim[4];
-
-  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
-    1.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f,
-    0.0f, .0f,
-    -1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,
-    1.0f, 1.0f
-  };
-
-  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
-#endif
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
@@ -1362,12 +1395,10 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, upload->fbo);
 
   /* setup a texture to render to */
-#ifndef OPENGL_ES2
   in_width = upload->in_width;
   in_height = upload->in_height;
 
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-#endif
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
 
   /* attach the texture to the FBO to renderer to */
@@ -1377,7 +1408,6 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   if (GLEW_ARB_fragment_shader)
     gst_gl_shader_use (NULL);
 
-#ifndef OPENGL_ES2
   glPushAttrib (GL_VIEWPORT_BIT);
 
   glMatrixMode (GL_PROJECTION);
@@ -1388,15 +1418,10 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   glMatrixMode (GL_MODELVIEW);
   glPushMatrix ();
   glLoadIdentity ();
-#else /* OPENGL_ES2 */
-  glGetIntegerv (GL_VIEWPORT, viewport_dim);
-#endif
 
   glViewport (0, 0, out_width, out_height);
 
-#ifndef OPENGL_ES2
   glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-#endif
 
   glClearColor (0.0, 0.0, 0.0, 0.0);
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1413,22 +1438,10 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     {
-#ifndef OPENGL_ES2
       glMatrixMode (GL_PROJECTION);
       glLoadIdentity ();
-#else
-      glVertexAttribPointer (upload->shader_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
 
-      glEnableVertexAttribArray (upload->shader_attr_position_loc);
-      glEnableVertexAttribArray (upload->shader_attr_texture_loc);
-#endif
-
-#ifndef OPENGL_ES2
       glEnable (GL_TEXTURE_RECTANGLE_ARB);
-#endif
       glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
           GL_LINEAR);
@@ -1438,9 +1451,7 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
           GL_CLAMP_TO_EDGE);
       glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
           GL_CLAMP_TO_EDGE);
-#ifndef OPENGL_ES2
       glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-#endif
     }
       break;
 
@@ -1453,18 +1464,8 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
         {
           gst_gl_shader_use (upload->shader);
 
-#ifndef OPENGL_ES2
           glMatrixMode (GL_PROJECTION);
           glLoadIdentity ();
-#else
-          glVertexAttribPointer (upload->shader_attr_position_loc, 3,
-              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-          glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
-              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-          glEnableVertexAttribArray (upload->shader_attr_position_loc);
-          glEnableVertexAttribArray (upload->shader_attr_texture_loc);
-#endif
 
           glActiveTextureARB (GL_TEXTURE1_ARB);
           gst_gl_shader_set_uniform_1i (upload->shader, "UVtex", 1);
@@ -1494,11 +1495,9 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
         case GST_GL_DISPLAY_CONVERSION_MESA:
         {
 
-#ifndef OPENGL_ES2
           glMatrixMode (GL_PROJECTION);
           glLoadIdentity ();
           glEnable (GL_TEXTURE_RECTANGLE_ARB);
-#endif
           glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
           glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
               GL_LINEAR);
@@ -1508,9 +1507,7 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
               GL_CLAMP_TO_EDGE);
           glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
               GL_CLAMP_TO_EDGE);
-#ifndef OPENGL_ES2
           glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-#endif
         }
           break;
         default:
@@ -1527,18 +1524,8 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
     {
       gst_gl_shader_use (upload->shader);
 
-#ifndef OPENGL_ES2
       glMatrixMode (GL_PROJECTION);
       glLoadIdentity ();
-#else
-      glVertexAttribPointer (upload->shader_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      glEnableVertexAttribArray (upload->shader_attr_position_loc);
-      glEnableVertexAttribArray (upload->shader_attr_texture_loc);
-#endif
 
       glActiveTextureARB (GL_TEXTURE1_ARB);
       gst_gl_shader_set_uniform_1i (upload->shader, "Utex", 1);
@@ -1582,18 +1569,8 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
     {
       gst_gl_shader_use (upload->shader);
 
-#ifndef OPENGL_ES2
       glMatrixMode (GL_PROJECTION);
       glLoadIdentity ();
-#else
-      glVertexAttribPointer (upload->shader_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      glEnableVertexAttribArray (upload->shader_attr_position_loc);
-      glEnableVertexAttribArray (upload->shader_attr_texture_loc);
-#endif
 
       glActiveTextureARB (GL_TEXTURE0_ARB);
       gst_gl_shader_set_uniform_1i (upload->shader, "tex", 0);
@@ -1617,7 +1594,6 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
 
   }                             /* end switch display->currentVideo_format */
 
-#ifndef OPENGL_ES2
   glBegin (GL_QUADS);
   glTexCoord2i (in_width, 0);
   glVertex2f (1.0f, -1.0f);
@@ -1630,15 +1606,11 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   glEnd ();
 
   glDrawBuffer (GL_NONE);
-#else /* OPENGL_ES2 */
-  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-#endif
 
   /* we are done with the shader */
   if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
     glUseProgramObjectARB (0);
 
-#ifndef OPENGL_ES2
   glDisable (GL_TEXTURE_RECTANGLE_ARB);
 
   glMatrixMode (GL_PROJECTION);
@@ -1646,12 +1618,250 @@ _do_upload_draw (GstGLDisplay * display, GstGLUpload * upload)
   glMatrixMode (GL_MODELVIEW);
   glPopMatrix ();
   glPopAttrib ();
-#else
-  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
-      viewport_dim[3]);
-#endif
 
   gst_gl_display_check_framebuffer_status ();
 
   glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
 }
+#endif
+
+#if HAVE_GLES2
+static void
+_do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
+{
+  GstVideoFormat v_format;
+  guint out_width, out_height;
+
+  GLint viewport_dim[4];
+
+  const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
+    1.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f,
+    0.0f, .0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,
+    1.0f, 1.0f
+  };
+
+  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, upload->fbo);
+
+  /* setup a texture to render to */
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
+
+  /* attach the texture to the FBO to renderer to */
+  glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT,
+      GL_TEXTURE_RECTANGLE_ARB, upload->out_texture, 0);
+
+  if (GLEW_ARB_fragment_shader)
+    gst_gl_shader_use (NULL);
+
+  glGetIntegerv (GL_VIEWPORT, viewport_dim);
+
+  glViewport (0, 0, out_width, out_height);
+
+  glClearColor (0.0, 0.0, 0.0, 0.0);
+  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  switch (v_format) {
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    {
+      glVertexAttribPointer (upload->shader_attr_position_loc, 3,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+      glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+      glEnableVertexAttribArray (upload->shader_attr_position_loc);
+      glEnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+          GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+          GL_CLAMP_TO_EDGE);
+    }
+      break;
+
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    {
+      switch (display->colorspace_conversion) {
+        case GST_GL_DISPLAY_CONVERSION_GLSL:
+        case GST_GL_DISPLAY_CONVERSION_MATRIX:
+        {
+          gst_gl_shader_use (upload->shader);
+
+          glVertexAttribPointer (upload->shader_attr_position_loc, 3,
+              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+          glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
+              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+          glEnableVertexAttribArray (upload->shader_attr_position_loc);
+          glEnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+          glActiveTextureARB (GL_TEXTURE1_ARB);
+          gst_gl_shader_set_uniform_1i (upload->shader, "UVtex", 1);
+          glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+              GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+              GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+              GL_CLAMP_TO_EDGE);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+              GL_CLAMP_TO_EDGE);
+
+          glActiveTextureARB (GL_TEXTURE0_ARB);
+          gst_gl_shader_set_uniform_1i (upload->shader, "Ytex", 0);
+          glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+              GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+              GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+              GL_CLAMP_TO_EDGE);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+              GL_CLAMP_TO_EDGE);
+        }
+          break;
+        case GST_GL_DISPLAY_CONVERSION_MESA:
+        {
+
+          glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+              GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+              GL_LINEAR);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+              GL_CLAMP_TO_EDGE);
+          glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+              GL_CLAMP_TO_EDGE);
+        }
+          break;
+        default:
+          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
+              display->colorspace_conversion);
+          g_assert_not_reached ();
+          break;
+      }
+    }
+      break;
+
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    {
+      gst_gl_shader_use (upload->shader);
+
+      glVertexAttribPointer (upload->shader_attr_position_loc, 3,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+      glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+      glEnableVertexAttribArray (upload->shader_attr_position_loc);
+      glEnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+      glActiveTextureARB (GL_TEXTURE1_ARB);
+      gst_gl_shader_set_uniform_1i (upload->shader, "Utex", 1);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+          GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+          GL_CLAMP_TO_EDGE);
+
+      glActiveTextureARB (GL_TEXTURE2_ARB);
+      gst_gl_shader_set_uniform_1i (upload->shader, "Vtex", 2);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+          GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+          GL_CLAMP_TO_EDGE);
+
+      glActiveTextureARB (GL_TEXTURE0_ARB);
+      gst_gl_shader_set_uniform_1i (upload->shader, "Ytex", 0);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+          GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+          GL_CLAMP_TO_EDGE);
+    }
+      break;
+
+    case GST_VIDEO_FORMAT_AYUV:
+    {
+      gst_gl_shader_use (upload->shader);
+
+      glVertexAttribPointer (upload->shader_attr_position_loc, 3,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+      glVertexAttribPointer (upload->shader_attr_texture_loc, 2,
+          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+      glEnableVertexAttribArray (upload->shader_attr_position_loc);
+      glEnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+      glActiveTextureARB (GL_TEXTURE0_ARB);
+      gst_gl_shader_set_uniform_1i (upload->shader, "tex", 0);
+      glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+          GL_LINEAR);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+          GL_CLAMP_TO_EDGE);
+      glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+          GL_CLAMP_TO_EDGE);
+    }
+      break;
+
+    default:
+      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+          v_format);
+      g_assert_not_reached ();
+      break;
+
+  }                             /* end switch display->currentVideo_format */
+
+  glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+
+  /* we are done with the shader */
+  if (display->colorspace_conversion == GST_GL_DISPLAY_CONVERSION_GLSL)
+    glUseProgramObjectARB (0);
+
+  glViewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
+
+  gst_gl_display_check_framebuffer_status ();
+
+  glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+}
+#endif
