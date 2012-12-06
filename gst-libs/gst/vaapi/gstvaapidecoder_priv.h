@@ -25,11 +25,23 @@
 
 #include <glib.h>
 #include <gst/vaapi/gstvaapidecoder.h>
+#include <gst/vaapi/gstvaapidecoder_frame.h>
 #include <gst/vaapi/gstvaapicontext.h>
 
 G_BEGIN_DECLS
 
 #define GST_VAAPI_DECODER_CAST(decoder) ((GstVaapiDecoder *)(decoder))
+
+/**
+ * GST_VAAPI_PARSER_STATE:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that evaluates to the #GstVaapiParserState of @decoder.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_PARSER_STATE
+#define GST_VAAPI_PARSER_STATE(decoder) \
+    (&GST_VAAPI_DECODER_CAST(decoder)->priv->parser_state)
 
 /**
  * GST_VAAPI_DECODER_DISPLAY:
@@ -77,6 +89,18 @@ G_BEGIN_DECLS
     GST_VAAPI_DECODER_CAST(decoder)->priv->codec_data
 
 /**
+ * GST_VAAPI_DECODER_CODEC_FRAME:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that evaluates to the #GstVideoCodecFrame holding decoder
+ * units for the current frame.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DECODER_CODEC_FRAME
+#define GST_VAAPI_DECODER_CODEC_FRAME(decoder) \
+    GST_VAAPI_PARSER_STATE(decoder)->current_frame
+
+/**
  * GST_VAAPI_DECODER_WIDTH:
  * @decoder: a #GstVaapiDecoder
  *
@@ -109,6 +133,16 @@ G_BEGIN_DECLS
                                  GST_VAAPI_TYPE_DECODER,        \
                                  GstVaapiDecoderPrivate))
 
+typedef struct _GstVaapiParserState GstVaapiParserState;
+struct _GstVaapiParserState {
+    GstVideoCodecFrame  *current_frame;
+    GstAdapter          *current_adapter;
+    GstAdapter          *input_adapter;
+    gint                 input_offset2;
+    GstAdapter          *output_adapter;
+    GstVaapiDecoderUnit *pending_unit;
+};
+
 struct _GstVaapiDecoderPrivate {
     GstVaapiDisplay    *display;
     VADisplay           va_display;
@@ -125,6 +159,7 @@ struct _GstVaapiDecoderPrivate {
     guint               par_d;
     GQueue             *buffers;
     GQueue             *surfaces;
+    GstVaapiParserState parser_state;
     guint               is_interlaced   : 1;
 };
 

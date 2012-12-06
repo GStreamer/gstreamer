@@ -24,8 +24,10 @@
 #define GST_VAAPI_DECODER_H
 
 #include <gst/gstbuffer.h>
+#include <gst/base/gstadapter.h>
 #include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurfaceproxy.h>
+#include <gst/video/gstvideoutils.h>
 
 G_BEGIN_DECLS
 
@@ -56,6 +58,7 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiDecoder                 GstVaapiDecoder;
 typedef struct _GstVaapiDecoderPrivate          GstVaapiDecoderPrivate;
 typedef struct _GstVaapiDecoderClass            GstVaapiDecoderClass;
+        struct _GstVaapiDecoderUnit;
 
 /**
  * GstVaapiDecoderStatus:
@@ -110,7 +113,11 @@ struct _GstVaapiDecoderClass {
     /*< private >*/
     GObjectClass parent_class;
 
-    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder, GstBuffer *buffer);
+    GstVaapiDecoderStatus (*parse)(GstVaapiDecoder *decoder,
+        GstAdapter *adapter, gboolean at_eos,
+        struct _GstVaapiDecoderUnit **unit_ptr);
+    GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder,
+        struct _GstVaapiDecoderUnit *unit);
 };
 
 GType
