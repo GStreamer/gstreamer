@@ -21,6 +21,7 @@
 #ifndef __GST_GL_WINDOW_WIN32_H__
 #define __GST_GL_WINDOW_WIN32_H__
 
+#include "gstglapi.h"
 #include "gstglwindow.h"
 
 #undef UNICODE

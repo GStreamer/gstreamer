@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 
+#include "gstglapi.h"
 #include "gstglwindow.h"
 
 G_BEGIN_DECLS

@@ -21,11 +21,8 @@
 #ifndef __GST_GL_WINDOW_WIN32_WGL_H__
 #define __GST_GL_WINDOW_WIN32_WGL_H__
 
+#include "gstglapi.h"
 #include "gstglwindow_win32.h"
-
-#undef UNICODE
-#include <windows.h>
-#define UNICODE
 
 G_BEGIN_DECLS
 

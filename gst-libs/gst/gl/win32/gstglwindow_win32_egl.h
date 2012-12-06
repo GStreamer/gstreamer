@@ -21,10 +21,9 @@
 #ifndef __GST_GL_WINDOW_WIN32_EGL_H__
 #define __GST_GL_WINDOW_WIN32_EGL_H__
 
-#include <EGL/egl.h>
-
 #include <gst/gst.h>
 
+#include "gstglapi.h"
 #include "gstglwindow_win32.h"
 
 G_BEGIN_DECLS
