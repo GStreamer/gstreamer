@@ -84,6 +84,47 @@ typedef enum
   GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;
 
+#define GST_GL_EXT_BEGIN(name, min_gl, maj_gl, in_gles, ext_suf, ext_name)
+#define GST_GL_EXT_FUNCTION(ret, name, args) \
+  ret (*name) args;
+#define GST_GL_EXT_END()
+
+#if HAVE_OPENGL
+typedef struct _GstGLFuncs
+{
+#include "glprototypes/opengl.h"
+  gpointer padding1[GST_PADDING_LARGE];
+#include "glprototypes/gles1opengl.h"
+  gpointer padding2[GST_PADDING_LARGE];
+#include "glprototypes/gles2opengl.h"
+  gpointer padding3[GST_PADDING_LARGE*2];
+#include "glprototypes/gles1gles2opengl.h"
+  gpointer padding4[GST_PADDING_LARGE*4];
+} GstGLFuncs;
+
+const GstGLFuncs *gst_gl_get_opengl_vtable (void);
+#endif
+
+#if GST_GL_GLES2
+typedef struct _GstGLES2Funcs
+{
+#include "glprototypes/gles1gles2.h"
+  gpointer padding1[GST_PADDING_LARGE];
+#include "glprototypes/gles1gles2opengl.h"
+  gpointer padding3[GST_PADDING_LARGE];
+#include "glprototypes/gles2.h"
+  gpointer padding2[GST_PADDING_LARGE*2];
+#include "glprototypes/gles2opengl.h"
+  gpointer padding4[GST_PADDING_LARGE*4];
+} GstGLES2Funcs;
+
+const GstGLES2Funcs *gst_gl_get_gles2_vtable (void);
+#endif
+
+#undef GST_GL_EXT_BEGIN
+#undef GST_GL_EXT_FUNCTION
+#undef GST_GL_EXT_END
+
 G_END_DECLS
 
 #endif /* __GST_GL_API_H__ */
