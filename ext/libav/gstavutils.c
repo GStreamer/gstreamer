@@ -25,6 +25,9 @@
 #ifdef __APPLE__
 #include <sys/sysctl.h>
 #endif
+#ifdef __MINGW32__
+#include <stdlib.h>
+#endif
 
 #include <libavutil/mem.h>
 
