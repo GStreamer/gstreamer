@@ -18,18 +18,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_GL_RENDERER_H__
-#define __GST_GL_RENDERER_H__
+#ifndef __GST_GL_API_H__
+#define __GST_GL_API_H__
 
 /* OpenGL 2.0 for Embedded Systems */
-#ifdef HAVE_GLES2
+#if HAVE_GLES2
 # include <GLES2/gl2.h>
+# include <GLES2/gl2ext.h>
 # if !HAVE_OPENGL
 #  include "gstgles2.h"
 # endif
 #endif
 
-/* OpenGL for usual systems */
+/* OpenGL for desktop systems */
 #if HAVE_OPENGL
 # if __APPLE__
 #  include <GL/glew.h>
@@ -51,6 +52,12 @@
 # define UNICODE
 #endif
 
+#if HAVE_WGL
+# undef UNICODE
+# include <windows.h>
+# define UNICODE
+#endif
+
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
@@ -69,15 +76,14 @@ typedef enum {
 typedef enum
 {
   GST_GL_PLATFORM_UNKNOWN = 0,
-  GST_GL_PLATFORM_EGL,
-  GST_GL_PLATFORM_GLX,
-  GST_GL_PLATFORM_WGL,
-  GST_GL_PLATFORM_CGL,
+  GST_GL_PLATFORM_EGL = (1 << 0),
+  GST_GL_PLATFORM_GLX = (1 << 1),
+  GST_GL_PLATFORM_WGL = (1 << 2),
+  GST_GL_PLATFORM_CGL = (1 << 3),
 
-  GST_GL_PLATFORM_ANY = 254,
-  GST_GL_PLATFORM_LAST = 255
+  GST_GL_PLATFORM_ANY = G_MAXUINT32
 } GstGLPlatform;
 
 G_END_DECLS
 
-#endif /* __GST_GL_WINDOW_H__ */
+#endif /* __GST_GL_API_H__ */

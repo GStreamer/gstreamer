@@ -21,6 +21,7 @@
 #ifndef __GST_GL_WINDOW_X11_GLX_H__
 #define __GST_GL_WINDOW_X11_GLX_H__
 
+#include "gstglapi.h"
 #include "gstglwindow_x11.h"
 
 G_BEGIN_DECLS

@@ -25,6 +25,7 @@
 #include <wayland-egl.h>
 #include <wayland-cursor.h>
 
+#include "gstglapi.h"
 #include "gstglwindow.h"
 
 G_BEGIN_DECLS
