@@ -138,7 +138,7 @@ gst_rtsp_message_get_type (GstRTSPMessage * msg)
  * gst_rtsp_message_new_request:
  * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @method: the request method to use
- * @uri: the uri of the request
+ * @uri: (transfer none): the uri of the request
  *
  * Create a new #GstRTSPMessage with @method and @uri and store the result
  * request message in @msg. Free with gst_rtsp_message_free().
@@ -165,7 +165,7 @@ gst_rtsp_message_new_request (GstRTSPMessage ** msg, GstRTSPMethod method,
  * gst_rtsp_message_init_request:
  * @msg: a #GstRTSPMessage
  * @method: the request method to use
- * @uri: the uri of the request
+ * @uri: (transfer none): the uri of the request
  *
  * Initialize @msg as a request message with @method and @uri. To clear @msg
  * again, use gst_rtsp_message_unset().
@@ -227,8 +227,8 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
  * gst_rtsp_message_new_response:
  * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @code: the status code
- * @reason: the status reason or #NULL
- * @request: the request that triggered the response or #NULL
+ * @reason: (transfer none) (allow-none): the status reason or %NULL
+ * @request: (transfer none) (allow-none): the request that triggered the response or %NULL
  *
  * Create a new response #GstRTSPMessage with @code and @reason and store the
  * result message in @msg. Free with gst_rtsp_message_free().
@@ -259,8 +259,8 @@ gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
  * gst_rtsp_message_init_response:
  * @msg: a #GstRTSPMessage
  * @code: the status code
- * @reason: the status reason or #NULL
- * @request: the request that triggered the response or #NULL
+ * @reason: (transfer none) (allow-none): the status reason or %NULL
+ * @request: (transfer none) (allow-none): the request that triggered the response or %NULL
  *
  * Initialize @msg with @code and @reason.
  *
@@ -528,7 +528,7 @@ gst_rtsp_message_take_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
  * gst_rtsp_message_add_header:
  * @msg: a #GstRTSPMessage
  * @field: a #GstRTSPHeaderField
- * @value: the value of the header
+ * @value: (transfer none): the value of the header
  *
  * Add a header with key @field and @value to @msg. This function takes a copy
  * of @value.
@@ -621,7 +621,7 @@ gst_rtsp_message_get_header (const GstRTSPMessage * msg,
 /**
  * gst_rtsp_message_append_headers:
  * @msg: a #GstRTSPMessage
- * @str: a string
+ * @str: (transfer none): a string
  *
  * Append the currently configured headers in @msg to the #GString @str suitable
  * for transmission.
@@ -651,7 +651,7 @@ gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
 /**
  * gst_rtsp_message_set_body:
  * @msg: a #GstRTSPMessage
- * @data: (array length=size): the data
+ * @data: (array length=size) (transfer none): the data
  * @size: the size of @data
  *
  * Set the body of @msg to a copy of @data.
