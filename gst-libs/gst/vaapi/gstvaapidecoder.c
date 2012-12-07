@@ -106,12 +106,6 @@ reset:
     ps->input_offset2 = -1;
 }
 
-static void
-destroy_buffer(GstBuffer *buffer)
-{
-    gst_buffer_unref(buffer);
-}
-
 static gboolean
 push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
 {
@@ -334,20 +328,6 @@ pop_surface(GstVaapiDecoder *decoder)
     return g_queue_pop_head(priv->surfaces);
 }
 
-static inline void
-set_codec_data(GstVaapiDecoder *decoder, GstBuffer *codec_data)
-{
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    if (priv->codec_data) {
-        gst_buffer_unref(priv->codec_data);
-        priv->codec_data = NULL;
-    }
-
-    if (codec_data)
-        priv->codec_data = gst_buffer_ref(codec_data);
-}
-
 static void
 set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
 {
@@ -388,7 +368,8 @@ set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
 
     v_codec_data = gst_structure_get_value(structure, "codec_data");
     if (v_codec_data)
-        set_codec_data(decoder, gst_value_get_buffer(v_codec_data));
+        gst_buffer_replace(&priv->codec_data,
+            gst_value_get_buffer(v_codec_data));
 }
 
 static void
@@ -404,23 +385,12 @@ gst_vaapi_decoder_finalize(GObject *object)
     GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
     GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
-    set_codec_data(decoder, NULL);
-
+    gst_buffer_replace(&priv->codec_data, NULL);
+    gst_caps_replace(&priv->caps, NULL);
     parser_state_finalize(&priv->parser_state);
-
-    if (priv->caps) {
-        gst_caps_unref(priv->caps);
-        priv->caps = NULL;
-    }
-
-    if (priv->context) {
-        g_object_unref(priv->context);
-        priv->context = NULL;
-        priv->va_context = VA_INVALID_ID;
-    }
  
     if (priv->buffers) {
-        clear_queue(priv->buffers, (GDestroyNotify)destroy_buffer);
+        clear_queue(priv->buffers, (GDestroyNotify)gst_buffer_unref);
         g_queue_free(priv->buffers);
         priv->buffers = NULL;
     }
@@ -432,11 +402,11 @@ gst_vaapi_decoder_finalize(GObject *object)
         priv->surfaces = NULL;
     }
 
-    if (priv->display) {
-        g_object_unref(priv->display);
-        priv->display = NULL;
-        priv->va_display = NULL;
-    }
+    g_clear_object(&priv->context);
+    priv->va_context = VA_INVALID_ID;
+
+    g_clear_object(&priv->display);
+    priv->va_display = NULL;
 
     G_OBJECT_CLASS(gst_vaapi_decoder_parent_class)->finalize(object);
 }
