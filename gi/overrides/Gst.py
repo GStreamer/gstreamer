@@ -175,6 +175,9 @@ __all__.append('Pipeline')
 class Structure(Gst.Structure):
     def __getitem__(self, key):
         return self.get_value(key)
+    def __setitem__(self, key, value):
+        return self.set_value(key, value)
+
 Structure = override(Structure)
 __all__.append('Structure')
 
