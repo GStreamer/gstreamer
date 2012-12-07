@@ -523,10 +523,10 @@ gst_gl_shader_set_uniform_1f (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
+
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
-
   location = glGetUniformLocationARB (priv->program_handle, name);
 
   glUniform1fARB (location, value);
@@ -539,8 +539,8 @@ gst_gl_shader_set_uniform_1fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -555,8 +555,8 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -571,8 +571,8 @@ gst_gl_shader_set_uniform_1iv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -587,8 +587,8 @@ gst_gl_shader_set_uniform_2f (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -603,8 +603,8 @@ gst_gl_shader_set_uniform_2fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -619,8 +619,8 @@ gst_gl_shader_set_uniform_2i (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -635,8 +635,8 @@ gst_gl_shader_set_uniform_2iv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -651,8 +651,8 @@ gst_gl_shader_set_uniform_3f (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -667,8 +667,8 @@ gst_gl_shader_set_uniform_3fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -683,8 +683,8 @@ gst_gl_shader_set_uniform_3i (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -699,8 +699,8 @@ gst_gl_shader_set_uniform_3iv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -715,8 +715,8 @@ gst_gl_shader_set_uniform_4f (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -731,8 +731,8 @@ gst_gl_shader_set_uniform_4fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -747,8 +747,8 @@ gst_gl_shader_set_uniform_4i (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -763,8 +763,8 @@ gst_gl_shader_set_uniform_4iv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -779,8 +779,8 @@ gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -795,8 +795,8 @@ gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -811,8 +811,8 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -828,8 +828,8 @@ gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -844,8 +844,8 @@ gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -860,8 +860,8 @@ gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -876,8 +876,8 @@ gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -892,8 +892,8 @@ gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -908,8 +908,8 @@ gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
   GstGLShaderPrivate *priv;
   GLint location = -1;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   location = glGetUniformLocationARB (priv->program_handle, name);
@@ -923,8 +923,8 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
 {
   GstGLShaderPrivate *priv;
 
+  g_return_val_if_fail (shader != NULL, 0);
   priv = shader->priv;
-
   g_return_val_if_fail (priv->program_handle != 0, 0);
 
   return glGetAttribLocationARB (priv->program_handle, name);
@@ -936,8 +936,8 @@ gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
 {
   GstGLShaderPrivate *priv;
 
+  g_return_if_fail (shader != NULL);
   priv = shader->priv;
-
   g_return_if_fail (priv->program_handle != 0);
 
   glBindAttribLocationARB (priv->program_handle, index, name);
