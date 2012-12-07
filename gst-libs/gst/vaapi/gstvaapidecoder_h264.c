@@ -44,7 +44,6 @@ typedef struct _GstVaapiFrameStore              GstVaapiFrameStore;
 typedef struct _GstVaapiFrameStoreClass         GstVaapiFrameStoreClass;
 typedef struct _GstVaapiDecoderUnitH264         GstVaapiDecoderUnitH264;
 typedef struct _GstVaapiPictureH264             GstVaapiPictureH264;
-typedef struct _GstVaapiSliceH264               GstVaapiSliceH264;
 
 // Used for field_poc[]
 #define TOP_FIELD       0
@@ -135,6 +134,7 @@ enum {
 struct _GstVaapiPictureH264 {
     GstVaapiPicture             base;
     GstH264PPS                 *pps;
+    GstH264SliceHdr            *last_slice_hdr;
     guint                       structure;
     gint32                      field_poc[2];
     gint32                      frame_num;              // Original frame_num from slice_header()
@@ -218,77 +218,6 @@ gst_vaapi_picture_h264_new_field(GstVaapiPictureH264 *picture)
     if (!base_picture)
         return NULL;
     return GST_VAAPI_PICTURE_H264_CAST(base_picture);
-}
-
-static inline GstVaapiSliceH264 *
-gst_vaapi_picture_h264_get_last_slice(GstVaapiPictureH264 *picture)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), NULL);
-
-    if (G_UNLIKELY(picture->base.slices->len < 1))
-        return NULL;
-    return g_ptr_array_index(picture->base.slices,
-        picture->base.slices->len - 1);
-}
-
-/* ------------------------------------------------------------------------- */
-/* --- Slices                                                            --- */
-/* ------------------------------------------------------------------------- */
-
-#define GST_VAAPI_SLICE_H264_CAST(obj) \
-    ((GstVaapiSliceH264 *)(obj))
-
-#define GST_VAAPI_SLICE_H264(obj) \
-    GST_VAAPI_SLICE_H264(obj)
-
-#define GST_VAAPI_IS_SLICE_H264(obj) \
-    (GST_VAAPI_SLICE_H264(obj) != NULL)
-
-struct _GstVaapiSliceH264 {
-    GstVaapiSlice               base;
-    GstH264SliceHdr             slice_hdr;              // parsed slice_header()
-};
-
-GST_VAAPI_CODEC_DEFINE_TYPE(GstVaapiSliceH264, gst_vaapi_slice_h264);
-
-void
-gst_vaapi_slice_h264_destroy(GstVaapiSliceH264 *slice)
-{
-    gst_vaapi_slice_destroy(GST_VAAPI_SLICE(slice));
-}
-
-gboolean
-gst_vaapi_slice_h264_create(
-    GstVaapiSliceH264                        *slice,
-    const GstVaapiCodecObjectConstructorArgs *args
-)
-{
-    if (!gst_vaapi_slice_create(GST_VAAPI_SLICE(slice), args))
-        return FALSE;
-    return TRUE;
-}
-
-static inline GstVaapiSliceH264 *
-gst_vaapi_slice_h264_new(
-    GstVaapiDecoderH264 *decoder,
-    const guint8        *data,
-    guint                data_size
-)
-{
-    GstVaapiCodecObject *object;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
-
-    object = gst_vaapi_codec_object_new(
-        &GstVaapiSliceH264Class,
-        GST_VAAPI_CODEC_BASE(decoder),
-        NULL, sizeof(VASliceParameterBufferH264),
-        data, data_size,
-        0
-    );
-    if (!object)
-        return NULL;
-    return GST_VAAPI_SLICE_H264_CAST(object);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -2372,10 +2301,8 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
         return TRUE;
 
     if (!GST_VAAPI_PICTURE_IS_IDR(picture)) {
-        GstVaapiSliceH264 * const slice =
-            gst_vaapi_picture_h264_get_last_slice(picture);
         GstH264DecRefPicMarking * const dec_ref_pic_marking =
-            &slice->slice_hdr.dec_ref_pic_marking;
+            &picture->last_slice_hdr->dec_ref_pic_marking;
         if (dec_ref_pic_marking->adaptive_ref_pic_marking_mode_flag) {
             if (!exec_ref_pic_marking_adaptive(decoder, picture, dec_ref_pic_marking))
                 return FALSE;
@@ -2627,7 +2554,7 @@ decode_picture(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 }
 
 static inline guint
-get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr, GstH264NalUnit *nalu)
+get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr)
 {
     guint epb_count;
 
@@ -2636,13 +2563,13 @@ get_slice_data_bit_offset(GstH264SliceHdr *slice_hdr, GstH264NalUnit *nalu)
 }
 
 static gboolean
-fill_pred_weight_table(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+fill_pred_weight_table(GstVaapiDecoderH264 *decoder,
+    GstVaapiSlice *slice, GstH264SliceHdr *slice_hdr)
 {
-    GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
+    VASliceParameterBufferH264 * const slice_param = slice->param;
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
     GstH264PredWeightTable * const w = &slice_hdr->pred_weight_table;
-    VASliceParameterBufferH264 * const slice_param = slice->base.param;
     guint num_weight_tables = 0;
     gint i, j;
 
@@ -2702,11 +2629,11 @@ fill_pred_weight_table(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 }
 
 static gboolean
-fill_RefPicList(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
+fill_RefPicList(GstVaapiDecoderH264 *decoder,
+    GstVaapiSlice *slice, GstH264SliceHdr *slice_hdr)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
-    GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
-    VASliceParameterBufferH264 * const slice_param = slice->base.param;
+    VASliceParameterBufferH264 * const slice_param = slice->param;
     guint i, num_ref_lists = 0;
 
     slice_param->num_ref_idx_l0_active_minus1 = 0;
@@ -2744,17 +2671,13 @@ fill_RefPicList(GstVaapiDecoderH264 *decoder, GstVaapiSliceH264 *slice)
 }
 
 static gboolean
-fill_slice(
-    GstVaapiDecoderH264 *decoder,
-    GstVaapiSliceH264   *slice,
-    GstH264NalUnit      *nalu
-)
+fill_slice(GstVaapiDecoderH264 *decoder,
+    GstVaapiSlice *slice, GstH264SliceHdr *slice_hdr)
 {
-    GstH264SliceHdr * const slice_hdr = &slice->slice_hdr;
-    VASliceParameterBufferH264 * const slice_param = slice->base.param;
+    VASliceParameterBufferH264 * const slice_param = slice->param;
 
     /* Fill in VASliceParameterBufferH264 */
-    slice_param->slice_data_bit_offset          = get_slice_data_bit_offset(slice_hdr, nalu);
+    slice_param->slice_data_bit_offset          = get_slice_data_bit_offset(slice_hdr);
     slice_param->first_mb_in_slice              = slice_hdr->first_mb_in_slice;
     slice_param->slice_type                     = slice_hdr->type % 5;
     slice_param->direct_spatial_mv_pred_flag    = slice_hdr->direct_spatial_mv_pred_flag;
@@ -2764,9 +2687,9 @@ fill_slice(
     slice_param->slice_alpha_c0_offset_div2     = slice_hdr->slice_alpha_c0_offset_div2;
     slice_param->slice_beta_offset_div2         = slice_hdr->slice_beta_offset_div2;
 
-    if (!fill_RefPicList(decoder, slice))
+    if (!fill_RefPicList(decoder, slice, slice_hdr))
         return FALSE;
-    if (!fill_pred_weight_table(decoder, slice))
+    if (!fill_pred_weight_table(decoder, slice, slice_hdr))
         return FALSE;
     return TRUE;
 }
@@ -2775,10 +2698,10 @@ static GstVaapiDecoderStatus
 decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 {
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiPictureH264 * const picture = priv->current_picture;
     GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
     GstH264NalUnit * const nalu = &unit->nalu;
-    GstVaapiDecoderStatus status;
-    GstVaapiSliceH264 *slice;
+    GstVaapiSlice *slice;
 
     GST_DEBUG("slice (%u bytes)", nalu->size);
 
@@ -2795,28 +2718,21 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
 
-    slice = gst_vaapi_slice_h264_new(decoder,
+    slice = GST_VAAPI_SLICE_NEW(H264, decoder,
         GST_BUFFER_DATA(unit->base.buffer) + nalu->offset, nalu->size);
     if (!slice) {
         GST_ERROR("failed to allocate slice");
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
 
-    slice->slice_hdr = *slice_hdr;
-    if (!fill_slice(decoder, slice, nalu)) {
-        status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-        goto error;
-    }
-    gst_vaapi_picture_add_slice(
-        GST_VAAPI_PICTURE_CAST(priv->current_picture),
-        GST_VAAPI_SLICE_CAST(slice)
-    );
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
-
-error:
-    if (slice)
+    if (!fill_slice(decoder, slice, slice_hdr)) {
         gst_vaapi_mini_object_unref(GST_VAAPI_MINI_OBJECT(slice));
-    return status;
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    gst_vaapi_picture_add_slice(GST_VAAPI_PICTURE_CAST(picture), slice);
+    picture->last_slice_hdr = slice_hdr;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static inline gint
