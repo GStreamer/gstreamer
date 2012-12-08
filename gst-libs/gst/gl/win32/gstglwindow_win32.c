@@ -53,6 +53,7 @@ struct _GstGLWindowWin32Private
 {
   GstGLAPI gl_api;
   guintptr external_gl_context;
+  GError **error;
   gboolean activate;
   gboolean activate_result;
 };
@@ -138,7 +139,8 @@ gst_gl_window_win32_init (GstGLWindowWin32 * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32 *
-gst_gl_window_win32_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_win32_new (GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error)
 {
   GstGLWindowWin32 *window = NULL;
   const gchar *user_choice;
@@ -149,28 +151,30 @@ gst_gl_window_win32_new (GstGLAPI gl_api, guintptr external_gl_context)
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "wgl")))
     window =
         GST_GL_WINDOW_WIN32 (gst_gl_window_win32_wgl_new (gl_api,
-            external_gl_context));
+            external_gl_context, error));
 #endif
 #if HAVE_EGL
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl")))
     window =
         GST_GL_WINDOW_WIN32 (gst_gl_window_win32_egl_new (gl_api,
-            external_gl_context));
+            external_gl_context, error));
 #endif
   if (!window) {
-    GST_WARNING ("Failed to create x11 window, user_choice:%s",
+    GST_WARNING ("Failed to create win32 window, user_choice:%s",
         user_choice ? user_choice : "NULL");
     return NULL;
   }
 
   window->priv->gl_api = gl_api;
   window->priv->external_gl_context = external_gl_context;
+  window->priv->error = error;
 
   return window;
 }
 
 gboolean
-gst_gl_window_win32_open_device (GstGLWindowWin32 * window_win32)
+gst_gl_window_win32_open_device (GstGLWindowWin32 * window_win32,
+    GError ** error)
 {
   HINSTANCE hinstance = GetModuleHandle (NULL);
 
@@ -261,7 +265,7 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 
   window_win32 = GST_GL_WINDOW_WIN32 (window);
 
-  //retrieve parent if previously set
+  /* retrieve parent if previously set */
   parent_id = GetProp (window_win32->internal_win_id, "gl_window_parent_id");
 
   if (window_win32->visible) {
@@ -299,7 +303,7 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
         WS_CHILD | WS_MAXIMIZE);
     SetParent (window_win32->internal_win_id, (HWND) id);
 
-    //take changes into account: SWP_FRAMECHANGED
+    /* take changes into account: SWP_FRAMECHANGED */
     GetClientRect ((HWND) id, &rect);
     SetWindowPos (window_win32->internal_win_id, HWND_TOP, rect.left, rect.top,
         rect.right, rect.bottom,
@@ -308,7 +312,7 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
     MoveWindow (window_win32->internal_win_id, rect.left, rect.top, rect.right,
         rect.bottom, FALSE);
   } else {
-    //no parent so the internal window needs borders and system menu
+    /* no parent so the internal window needs borders and system menu */
     SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
   }
@@ -427,7 +431,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       window_class->choose_format (window_win32);
 
       window_class->create_context (window_win32, priv->gl_api,
-          priv->external_gl_context);
+          priv->external_gl_context, priv->error);
 
 /*      priv->gl_context = wglCreateContext (priv->device);
       if (priv->gl_context)

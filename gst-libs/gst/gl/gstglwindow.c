@@ -43,6 +43,12 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 #define gst_gl_window_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 
+GQuark
+gst_gl_window_error_quark (void)
+{
+  return g_quark_from_static_string ("gst-gl-window-error-quark");
+}
+
 static void
 gst_gl_window_init (GstGLWindow * window)
 {
@@ -56,11 +62,13 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
 }
 
 GstGLWindow *
-gst_gl_window_new (GstGLAPI api, guintptr external_gl_context)
+gst_gl_window_new (GstGLAPI api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindow *window = NULL;
   const gchar *user_choice;
   static volatile gsize _init = 0;
+
+  g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0,
@@ -73,25 +81,39 @@ gst_gl_window_new (GstGLAPI api, guintptr external_gl_context)
 
 #ifdef HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    window = GST_GL_WINDOW (gst_gl_window_x11_new (api, external_gl_context));
+    window =
+        GST_GL_WINDOW (gst_gl_window_x11_new (api, external_gl_context, error));
 #endif
 #ifdef HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
-    window = GST_GL_WINDOW (gst_gl_window_win32_new (api, external_gl_context));
+    window =
+        GST_GL_WINDOW (gst_gl_window_win32_new (api, external_gl_context,
+            error));
 #endif
 #ifdef HAVE_WINDOW_COCOA
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
-    window = GST_GL_WINDOW (gst_gl_window_cocoa_new (api, external_gl_context));
+    window =
+        GST_GL_WINDOW (gst_gl_window_cocoa_new (api, external_gl_context,
+            error));
 #endif
 #ifdef HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     window =
         GST_GL_WINDOW (gst_gl_window_wayland_egl_new (api,
-            external_gl_context));
+            external_gl_context, error));
 #endif
   if (!window) {
-    GST_WARNING ("could not create a window, user choice:%s", user_choice);
-    /* FIXME: set and return a GError */
+    if (error && !*error) {
+      if (user_choice) {
+        g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+            "Could not create %s window", user_choice);
+      } else {
+        /* subclass did not set an error yet returned a NULL window */
+        g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+            "Could not create %s window, Unknown Error",
+            user_choice ? user_choice : "");
+      }
+    }
     return NULL;
   }
 

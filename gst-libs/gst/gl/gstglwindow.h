@@ -51,6 +51,14 @@ G_BEGIN_DECLS
 
 #define GST_GL_WINDOW_ERROR (gst_gl_window_error_quark ())
 
+typedef enum
+{
+  GST_GL_WINDOW_ERROR_FAILED,
+  GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+  GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+  GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+} GstGLWindowError;
+
 typedef void (*GstGLWindowCB) (gpointer data);
 typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
 
@@ -106,7 +114,7 @@ struct _GstGLWindowClass {
 GQuark gst_gl_window_error_quark (void);
 GType gst_gl_window_get_type     (void);
 
-GstGLWindow * gst_gl_window_new  (GstGLAPI gl_api, guintptr external_gl_context);
+GstGLWindow * gst_gl_window_new  (GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 
 void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data);

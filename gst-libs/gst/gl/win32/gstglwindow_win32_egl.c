@@ -36,21 +36,19 @@ static gboolean gst_gl_window_win32_wgl_choose_format (GstGLWindowWin32 *
 static gboolean gst_gl_window_win32_wgl_activate (GstGLWindowWin32 *
     window_win32, gboolean activate);
 static gboolean gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 *
-    window_win32, GstGLAPI gl_api, guintptr external_gl_context);
+    window_win32, GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error);
 static void gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 *
     window_win32);
 GstGLAPI gst_gl_window_win32_egl_get_gl_api (GstGLWindow * window);
 
 const gchar *WinEGLErrorString ();
 
-#define GST_CAT_DEFAULT gst_gl_window_win32_egl_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+#define GST_CAT_DEFAULT gst_gl_window_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_win32_wgl_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32EGL, gst_gl_window_win32_egl,
-    GST_GL_TYPE_WINDOW, DEBUG_INIT);
+G_DEFINE_TYPE (GstGLWindowWin32EGL, gst_gl_window_win32_egl,
+    GST_GL_TYPE_WINDOW);
 
 static void
 gst_gl_window_win32_egl_class_init (GstGLWindowWin32EGLClass * klass)
@@ -82,12 +80,13 @@ gst_gl_window_win32_egl_init (GstGLWindow * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32EGL *
-gst_gl_window_win32_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_win32_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error)
 {
   GstGLWindowWin32EGL *window =
       g_object_new (GST_GL_TYPE_WINDOW_WIN32_EGL, NULL);
 
-  gst_gl_window_win32_open_device (GST_GL_WINDOW_WIN32 (window));
+  gst_gl_window_win32_open_device (GST_GL_WINDOW_WIN32 (window), error);
 
   return window;
 }
@@ -95,7 +94,8 @@ gst_gl_window_win32_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
 guintptr
 gst_gl_window_win32_egl_get_gl_context (GstGLWindowWin32 * window_win32)
 {
-return (guintptr) GST_GL_WINDOW_WIN32_EGL (window_win32)->wgl_context}
+  return (guintptr) GST_GL_WINDOW_WIN32_EGL (window_win32)->wgl_context;
+}
 
 static gboolean
 gst_gl_window_win32_egl_activate (GstGLWindowWin32 * window_win32,
@@ -119,7 +119,7 @@ gst_gl_window_win32_egl_activate (GstGLWindowWin32 * window_win32,
 
 static gboolean
 gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
-    GstGLAPI gl_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowWin32EGL *window_egl;
   EGLint majorVersion;
@@ -144,33 +144,36 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
 
   window_egl->display = eglGetDisplay (window_win32->device);
   if (priv->display != EGL_NO_DISPLAY)
-    GST_DEBUG ("display retrieved: %d\n", window_egl->display);
+    GST_DEBUG ("display retrieved: %d", window_egl->display);
   else {
-    GST_DEBUG ("failed to retrieve display %s\n", WinEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "failed to retrieve display: %s", WinEGLErrorString ());
     goto failure;
   }
 
   if (eglInitialize (priv->display, &majorVersion, &minorVersion))
-    GST_DEBUG ("egl initialized: %d.%d\n", majorVersion, minorVersion);
+    GST_DEBUG ("egl initialized: %d.%d", majorVersion, minorVersion);
   else {
-    GST_DEBUG ("failed to initialize egl %d, %s\n", priv->display,
-        WinEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "failed to initialize egl: %s", WinEGLErrorString ());
     goto failure;
   }
 
   if (eglGetConfigs (window_egl->display, NULL, 0, &numConfigs))
-    GST_DEBUG ("configs retrieved: %d\n", numConfigs);
+    GST_DEBUG ("configs retrieved: %d", numConfigs);
   else {
-    GST_DEBUG ("failed to retrieve configs %d, %s\n", window_egl->display,
-        WinEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "failed to retrieve configs %s", WinEGLErrorString ());
     goto failure;
   }
 
   if (eglChooseConfig (priv->display, attribList, &config, 1, &numConfigs))
-    GST_DEBUG ("config set: %d, %d\n", config, numConfigs);
+    GST_DEBUG ("config set: %d, %d", config, numConfigs);
   else {
-    GST_DEBUG ("failed to set config %d, %s\n", window_egl->display,
-        WinEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "failed to set config %s", WinEGLErrorString ());
     goto failure;
   }
 
@@ -178,10 +181,10 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
       eglCreateWindowSurface (window_egl->display, config,
       (EGLNativeWindowType) WindowFromDC (window_win32->device), NULL);
   if (priv->surface != EGL_NO_SURFACE)
-    GST_DEBUG ("surface created: %d\n", window_egl->surface);
+    GST_DEBUG ("surface created: %d", window_egl->surface);
   else {
-    GST_DEBUG ("failed to create surface %d, %d, %s\n", window_egl->display,
-        window_egl->surface, WinEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "failed to create surface %s", WinEGLErrorString ());
     goto failure;
   }
 
@@ -189,13 +192,12 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
       eglCreateContext (window_egl->display, config, external_gl_context,
       contextAttribs);
   if (window_egl->egl_context != EGL_NO_CONTEXT)
-    GST_DEBUG ("gl context created: %lud, external: %lud\n",
+    GST_DEBUG ("gl context created: %lud, external: %lud",
         (gulong) window_egl->egl_context, (gulong) external_gl_context);
   else {
-    GST_DEBUG
-        ("failed to create glcontext %lud, extenal: %lud, %s\n",
-        (gulong) window_egl->egl_context, (gulong) external_gl_context,
-        WinEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "failed to create glcontext with external: %lud, %s",
+        (gulong) external_gl_context, WinEGLErrorString ());
     goto failure;
   }
 

@@ -29,14 +29,11 @@
 
 #include "gstglwindow_x11_glx.h"
 
-#define GST_CAT_DEFAULT gst_gl_window_x11_glx_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+#define GST_CAT_DEFAULT gst_gl_window_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_x11_glx_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowX11GLX, gst_gl_window_x11_glx,
-    GST_GL_TYPE_WINDOW_X11, DEBUG_INIT);
+G_DEFINE_TYPE (GstGLWindowX11GLX, gst_gl_window_x11_glx,
+    GST_GL_TYPE_WINDOW_X11);
 
 static guintptr gst_gl_window_x11_glx_get_gl_context (GstGLWindowX11 *
     window_x11);
@@ -44,10 +41,10 @@ static void gst_gl_window_x11_glx_swap_buffers (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_glx_activate (GstGLWindowX11 * window_x11,
     gboolean activate);
 static gboolean gst_gl_window_x11_glx_create_context (GstGLWindowX11 *
-    window_x11, GstGLAPI gl_api, guintptr external_gl_context);
+    window_x11, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 static void gst_gl_window_x11_glx_destroy_context (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_glx_choose_format (GstGLWindowX11 *
-    window_x11);
+    window_x11, GError ** error);
 GstGLAPI gst_gl_window_x11_glx_get_gl_api (GstGLWindow * window);
 
 static void
@@ -80,19 +77,20 @@ gst_gl_window_x11_glx_init (GstGLWindowX11GLX * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11GLX *
-gst_gl_window_x11_glx_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_x11_glx_new (GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error)
 {
   GstGLWindowX11GLX *window = g_object_new (GST_GL_TYPE_WINDOW_X11_GLX, NULL);
 
   gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), gl_api,
-      external_gl_context);
+      external_gl_context, error);
 
   return window;
 }
 
 static gboolean
 gst_gl_window_x11_glx_create_context (GstGLWindowX11 * window_x11,
-    GstGLAPI gl_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowX11GLX *window_glx;
 
@@ -103,7 +101,8 @@ gst_gl_window_x11_glx_create_context (GstGLWindowX11 * window_x11,
       (GLXContext) external_gl_context, TRUE);
 
   if (!window_glx->glx_context) {
-    GST_WARNING ("failed to create opengl context (glXCreateContext failed)");
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "Failed to create opengl context (glXCreateContext failed)");
     goto failure;
   }
 
@@ -128,7 +127,8 @@ gst_gl_window_x11_glx_destroy_context (GstGLWindowX11 * window_x11)
 }
 
 static gboolean
-gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11)
+gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11,
+    GError ** error)
 {
   gint error_base;
   gint event_base;
@@ -142,7 +142,8 @@ gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11)
   };
 
   if (!glXQueryExtension (window_x11->device, &error_base, &event_base)) {
-    GST_WARNING ("No GLX extension");
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE, "No GLX extension");
     goto failure;
   }
 
@@ -150,7 +151,8 @@ gst_gl_window_x11_glx_choose_format (GstGLWindowX11 * window_x11)
       window_x11->screen_num, attrib);
 
   if (!window_x11->visual_info) {
-    GST_WARNING ("glx visual is null (bad attributes)");
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "Bad attributes in glXChooseVisual");
     goto failure;
   }
 

@@ -23,7 +23,6 @@
 
 #include <gst/gst.h>
 
-#include "gstglapi.h"
 #include "gstglwindow.h"
 
 G_BEGIN_DECLS
@@ -60,7 +59,8 @@ struct _GstGLWindowCocoaClass {
 GType gst_gl_window_cocoa_get_type     (void);
 
 GstGLWindowCocoa * gst_gl_window_cocoa_new          (GstGLAPI gl_api,
-                                                     guintptr external_gl_context);
+                                                     guintptr external_gl_context,
+                                                     GError ** error);
 
 G_END_DECLS
 

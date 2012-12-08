@@ -21,8 +21,9 @@
 #ifndef __GST_GL_WINDOW_X11_GLX_H__
 #define __GST_GL_WINDOW_X11_GLX_H__
 
-#include "gstglapi.h"
 #include "gstglwindow_x11.h"
+
+#include <GL/glx.h>
 
 G_BEGIN_DECLS
 
@@ -56,7 +57,8 @@ struct _GstGLWindowX11GLXClass {
 GType gst_gl_window_x11_glx_get_type     (void);
 
 GstGLWindowX11GLX * gst_gl_window_x11_glx_new  (GstGLAPI gl_api,
-                                                guintptr external_gl_context);
+                                                guintptr external_gl_context,
+                                                GError ** error);
 
 G_END_DECLS
 

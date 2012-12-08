@@ -29,14 +29,11 @@
 
 #include "gstglwindow_win32_wgl.h"
 
-#define GST_CAT_DEFAULT gst_gl_window_win32_wgl_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+#define GST_CAT_DEFAULT gst_gl_window_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_win32_wgl_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowWin32WGL, gst_gl_window_win32_wgl,
-    GST_GL_TYPE_WINDOW_WIN32, DEBUG_INIT);
+G_DEFINE_TYPE (GstGLWindowWin32WGL, gst_gl_window_win32_wgl,
+    GST_GL_TYPE_WINDOW_WIN32);
 
 static guintptr gst_gl_window_win32_wgl_get_gl_context (GstGLWindowWin32 *
     window_win32);
@@ -47,7 +44,8 @@ static gboolean gst_gl_window_win32_wgl_choose_format (GstGLWindowWin32 *
 static gboolean gst_gl_window_win32_wgl_activate (GstGLWindowWin32 *
     window_win32, gboolean activate);
 static gboolean gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 *
-    window_win32, GstGLAPI gl_api, guintptr external_gl_context);
+    window_win32, GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error);
 static void gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 *
     window_win32);
 GstGLAPI gst_gl_window_win32_wgl_get_gl_api (GstGLWindow * window);
@@ -55,7 +53,7 @@ GstGLAPI gst_gl_window_win32_wgl_get_gl_api (GstGLWindow * window);
 static void
 gst_gl_window_win32_wgl_class_init (GstGLWindowWin32WGLClass * klass)
 {
-  GstGLWindowClass *window_class;
+  GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
   GstGLWindowWin32Class *window_win32_class = (GstGLWindowWin32Class *) klass;
 
   window_win32_class->get_gl_context =
@@ -82,19 +80,20 @@ gst_gl_window_win32_wgl_init (GstGLWindowWin32WGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWin32WGL *
-gst_gl_window_win32_wgl_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_win32_wgl_new (GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error)
 {
   GstGLWindowWin32WGL *window =
       g_object_new (GST_GL_TYPE_WINDOW_WIN32_WGL, NULL);
 
-  gst_gl_window_win32_open_device (GST_GL_WINDOW_WIN32 (window));
+  gst_gl_window_win32_open_device (GST_GL_WINDOW_WIN32 (window), error);
 
   return window;
 }
 
 static gboolean
 gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 * window_win32,
-    GstGLAPI gl_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowWin32WGL *window_wgl;
 
@@ -102,10 +101,11 @@ gst_gl_window_win32_wgl_create_context (GstGLWindowWin32 * window_win32,
 
   window_wgl->wgl_context = wglCreateContext (window_win32->device);
   if (window_wgl->wgl_context)
-    GST_DEBUG ("gl context created: %" G_GUINTPTR_FORMAT "\n",
+    GST_DEBUG ("gl context created: %" G_GUINTPTR_FORMAT,
         (guintptr) window_wgl->wgl_context);
   else {
-    GST_DEBUG ("failed to create glcontext:%lud\n", GetLastError ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "failed to create glcontext:%lu", GetLastError ());
     goto failure;
   }
   g_assert (window_wgl->wgl_context);
@@ -125,8 +125,8 @@ gst_gl_window_win32_wgl_destroy_context (GstGLWindowWin32 * window_win32)
 
   window_wgl = GST_GL_WINDOW_WIN32_WGL (window_win32);
 
-  wglDeleteContext (window_wgl->wgl_context);
-
+  if (window_wgl->wgl_context)
+    wglDeleteContext (window_wgl->wgl_context);
   window_wgl->wgl_context = 0;
 }
 

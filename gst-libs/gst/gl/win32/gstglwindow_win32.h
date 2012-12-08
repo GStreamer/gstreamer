@@ -21,7 +21,6 @@
 #ifndef __GST_GL_WINDOW_WIN32_H__
 #define __GST_GL_WINDOW_WIN32_H__
 
-#include "gstglapi.h"
 #include "gstglwindow.h"
 
 #undef UNICODE
@@ -61,8 +60,8 @@ struct _GstGLWindowWin32Class {
   GstGLWindowClass parent_class;
 
   gboolean (*choose_format)     (GstGLWindowWin32 *window);
-  gboolean (*create_context)    (GstGLWindowWin32 *window, GstGLRendererAPI render_api,
-                                 guintptr external_gl_context);
+  gboolean (*create_context)    (GstGLWindowWin32 *window, GstGLAPI gl_api,
+                                 guintptr external_gl_context, GError ** error);
   gboolean (*share_context)     (GstGLWindowWin32 *window, guintptr external_gl_context);
   void     (*swap_buffers)      (GstGLWindowWin32 *window);
   gboolean (*activate)          (GstGLWindowWin32 *window, gboolean activate);
@@ -76,8 +75,8 @@ struct _GstGLWindowWin32Class {
 GType gst_gl_window_win32_get_type     (void);
 
 GstGLWindowWin32 * gst_gl_window_win32_new          (GstGLAPI gl_api,
-                                                     guintptr external_gl_context);
-gboolean         gst_gl_window_win32_open_device  (GstGLWindowWin32 *window_win32);
+                                                     guintptr external_gl_context, GError ** error);
+gboolean         gst_gl_window_win32_open_device  (GstGLWindowWin32 *window_win32, GError ** error);
 
 G_END_DECLS
 

@@ -21,7 +21,6 @@
 #ifndef __GST_GL_WINDOW_WIN32_WGL_H__
 #define __GST_GL_WINDOW_WIN32_WGL_H__
 
-#include "gstglapi.h"
 #include "gstglwindow_win32.h"
 
 G_BEGIN_DECLS
@@ -57,7 +56,7 @@ struct _GstGLWindowWin32WGLClass {
 GType gst_gl_window_win32_wgl_get_type     (void);
 
 GstGLWindowWin32WGL * gst_gl_window_win32_wgl_new  (GstGLAPI gl_api,
-                                                    guintptr external_gl_context);
+                                                    guintptr external_gl_context, GError ** error);
 
 G_END_DECLS
 
