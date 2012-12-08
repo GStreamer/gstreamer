@@ -124,50 +124,6 @@ static const GstGLFeatureData cogl_feature_ext_functions_data_gles2[] = {
 #undef GST_GL_EXT_FUNCTION
 #undef GST_GL_EXT_END
 
-#define GST_GL_EXT_BEGIN(name, min_gl_major, min_gl_minor, gles_availability, \
-                       namespaces, extension_names)
-#define GST_GL_EXT_FUNCTION(ret, name, args) \
-  NULL,
-#define GST_GL_EXT_END()
-
-#if HAVE_OPENGL
-static GstGLFuncs gst_gl = {
-#include "glprototypes/opengl.h"
-  {NULL,},
-#include "glprototypes/gles1opengl.h"
-  {NULL,},
-#include "glprototypes/gles2opengl.h"
-  {NULL,},
-#include "glprototypes/gles1gles2opengl.h"
-  {NULL,},
-};
-
-const GstGLFuncs *
-gst_gl_get_opengl_vtable (void)
-{
-  return &gst_gl;
-}
-#endif
-
-#if HAVE_GLES2
-static GstGLES2Funcs gst_gles2 = {
-#include "glprototypes/gles1gles2.h"
-  {NULL,},
-#include "glprototypes/gles1gles2opengl.h"
-  {NULL,},
-#include "glprototypes/gles2.h"
-  {NULL,},
-#include "glprototypes/gles2opengl.h"
-  {NULL,},
-};
-
-const GstGLES2Funcs *
-gst_gl_get_gles2_vtable (void)
-{
-  return &gst_gles2;
-}
-#endif
-
 gboolean
 _gst_gl_feature_check (GstGLDisplay * display,
     const char *driver_prefix,

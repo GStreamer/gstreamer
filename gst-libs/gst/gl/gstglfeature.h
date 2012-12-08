@@ -51,7 +51,7 @@ struct _GstGLFeatureData
      without needing an extension. Set to 255,255 if it's only
      provided in an extension */
   int min_gl_major, min_gl_minor;
-  /* Flags specifying which versions of GLES the feature is available
+  /* Flags specifying which versions of GL the feature is available
      in core in */
   GstGLApi gl_availability;
   /* \0 separated list of namespaces to try. Eg "EXT\0ARB\0" */

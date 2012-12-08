@@ -444,18 +444,40 @@ _create_context_opengl (GstGLDisplay * display, gint * gl_major, gint * gl_minor
 }
 #endif
 
+GstGLAPI
+_compiled_api (void)
+{
+  GstGLAPI ret = GST_GL_API_NONE;
+
+#if HAVE_OPENGL
+  ret |= GST_GL_API_OPENGL;
+#endif
+#if HAVE_GLES2
+  ret |= GST_GL_API_GLES2;
+#endif
+
+  return ret;
+}
+
 gpointer
 gst_gl_display_thread_create_context (GstGLDisplay * display)
 {
   gint gl_major = 0, gl_minor = 0;
   gboolean ret = FALSE;
+  GError *error = NULL;
+  GstGLAPI compiled_api;
+  gchar *api_string;
+  gchar *compiled_api_s;
 
   gst_gl_display_lock (display);
-  display->gl_window =
-      gst_gl_window_new (GST_GL_API_ANY, display->external_gl_context);
 
-  if (!display->gl_window) {
-    gst_gl_display_set_error (display, "Failed to create gl window");
+  compiled_api = _compiled_api ();
+
+  display->gl_window =
+      gst_gl_window_new (compiled_api, display->external_gl_context, &error);
+
+  if (!display->gl_window || error) {
+    gst_gl_display_set_error (display, error ? error->message : "Failed to create gl window");
     g_cond_signal (display->cond_create_context);
     gst_gl_display_unlock (display);
     return NULL;
@@ -464,8 +486,21 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   GST_INFO ("gl window created");
 
   display->gl_api = gst_gl_window_get_gl_api (display->gl_window);
-
   g_assert (display->gl_api != GST_GL_API_NONE && display->gl_api != GST_GL_API_ANY);
+
+  api_string = gst_gl_api_string (display->gl_api);
+  GST_INFO ("available GL APIs: %s", api_string);
+
+  compiled_api_s = gst_gl_api_string (compiled_api);
+  GST_INFO ("compiled api support: %s", compiled_api_s);
+
+  if ((compiled_api & display->gl_api) == GST_GL_API_NONE)
+    gst_gl_display_set_error (display, "failed to create_context, window "
+        "could not provide correct api. compiled api supports:%s, window "
+        "supports:%s", compiled_api_s, api_string);
+
+  g_free (api_string);
+  g_free (compiled_api_s);
 
   /* gl api specific code */
 #if HAVE_OPENGL
@@ -474,11 +509,11 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 #endif
 #if HAVE_GLES2
   if (!ret && USING_GLES2(display))
-   ret =  _create_context_gles2 (display, &gl_major, &gl_minor);
+    ret = _create_context_gles2 (display, &gl_major, &gl_minor);
 #endif
 
   if (!ret || !gl_major)
-    gst_gl_display_set_error (display, "failed to create context");
+    gst_gl_display_set_error (display, "failed to create context, unknown reason");
 
   /* setup callbacks */
   gst_gl_window_set_resize_callback (display->gl_window,
