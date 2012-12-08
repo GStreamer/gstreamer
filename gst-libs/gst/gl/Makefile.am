@@ -13,7 +13,8 @@ libgstgl_@GST_API_VERSION@_la_SOURCES = \
         gstglshadervariables.c \
         gstgldownload.c \
         gstglupload.c \
-        gstglwindow.c
+        gstglwindow.c \
+        gstglapi.c
 
 libgstgl_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \

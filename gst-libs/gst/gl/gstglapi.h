@@ -109,6 +109,8 @@ const GstGLES2Funcs *gst_gl_get_gles2_vtable (void);
 #undef GST_GL_EXT_FUNCTION
 #undef GST_GL_EXT_END
 
+gchar * gst_gl_api_string (GstGLAPI api);
+
 G_END_DECLS
 
 #endif /* __GST_GL_API_H__ */
