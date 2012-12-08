@@ -29,14 +29,11 @@
 
 const gchar *X11EGLErrorString ();
 
-#define GST_CAT_DEFAULT gst_gl_window_x11_egl_debug
-GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
+#define GST_CAT_DEFAULT gst_gl_window_debug
 
-#define DEBUG_INIT \
-  GST_DEBUG_CATEGORY_GET (GST_CAT_DEFAULT, "glwindow");
 #define gst_gl_window_x11_egl_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstGLWindowX11EGL, gst_gl_window_x11_egl,
-    GST_GL_TYPE_WINDOW_X11, DEBUG_INIT);
+G_DEFINE_TYPE (GstGLWindowX11EGL, gst_gl_window_x11_egl,
+    GST_GL_TYPE_WINDOW_X11);
 
 static guintptr gst_gl_window_x11_egl_get_gl_context (GstGLWindowX11 *
     window_x11);
@@ -44,10 +41,10 @@ static void gst_gl_window_x11_egl_swap_buffers (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_egl_activate (GstGLWindowX11 * window_x11,
     gboolean activate);
 static gboolean gst_gl_window_x11_egl_create_context (GstGLWindowX11 *
-    window_x11, GstGLAPI gl_api, guintptr external_gl_context);
+    window_x11, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 static void gst_gl_window_x11_egl_destroy_context (GstGLWindowX11 * window_x11);
 static gboolean gst_gl_window_x11_egl_choose_format (GstGLWindowX11 *
-    window_x11);
+    window_x11, GError ** error);
 GstGLAPI gst_gl_window_x11_egl_get_gl_api (GstGLWindow * window);
 
 static void
@@ -80,18 +77,20 @@ gst_gl_window_x11_egl_init (GstGLWindowX11EGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11EGL *
-gst_gl_window_x11_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_x11_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error)
 {
   GstGLWindowX11EGL *window = g_object_new (GST_GL_TYPE_WINDOW_X11_EGL, NULL);
 
   gst_gl_window_x11_open_device (GST_GL_WINDOW_X11 (window), gl_api,
-      external_gl_context);
+      external_gl_context, error);
 
   return window;
 }
 
 static gboolean
-gst_gl_window_x11_egl_choose_format (GstGLWindowX11 * window_x11)
+gst_gl_window_x11_egl_choose_format (GstGLWindowX11 * window_x11,
+    GError ** error)
 {
   gint ret;
 
@@ -99,12 +98,18 @@ gst_gl_window_x11_egl_choose_format (GstGLWindowX11 * window_x11)
   ret = XMatchVisualInfo (window_x11->device, window_x11->screen_num,
       window_x11->depth, TrueColor, window_x11->visual_info);
 
-  return ret != 0;
+  if (ret == 0) {
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "Failed to match XVisualInfo");
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static gboolean
 gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
-    GstGLAPI gl_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowX11EGL *window_egl;
 
@@ -131,19 +136,20 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
       eglGetDisplay ((EGLNativeDisplayType) window_x11->device);
 
   if (eglInitialize (window_egl->egl_display, &majorVersion, &minorVersion))
-    g_debug ("egl initialized: %d.%d\n", majorVersion, minorVersion);
+    GST_INFO ("egl initialized, version: %d.%d", majorVersion, minorVersion);
   else {
-    g_debug ("failed to initialize egl %ld, %s\n",
-        (gulong) window_egl->egl_display, X11EGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Failed to initialize egl: %s", X11EGLErrorString ());
     goto failure;
   }
 
   if (eglChooseConfig (window_egl->egl_display, config_attrib, &config, 1,
           &numConfigs))
-    g_debug ("config set: %ld, %ld\n", (gulong) config, (gulong) numConfigs);
+    GST_INFO ("config set: %ld, %ld", (gulong) config, (gulong) numConfigs);
   else {
-    g_debug ("failed to set config %ld, %s\n", (gulong) window_egl->egl_display,
-        X11EGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "Failed to set window configuration: %s", X11EGLErrorString ());
     goto failure;
   }
 
@@ -151,26 +157,24 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
       eglCreateWindowSurface (window_egl->egl_display, config,
       (EGLNativeWindowType) window_x11->internal_win_id, NULL);
   if (window_egl->egl_surface != EGL_NO_SURFACE)
-    g_debug ("surface created: %ld\n", (gulong) window_egl->egl_surface);
+    GST_INFO ("surface created");
   else {
-    g_debug ("failed to create surface %ld, %ld, %ld, %s\n",
-        (gulong) window_egl->egl_display, (gulong) window_egl->egl_surface,
-        (gulong) window_egl->egl_display, X11EGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+        "Failed to create window surface: %s", X11EGLErrorString ());
     goto failure;
   }
 
-  g_debug ("about to create gl context\n");
+  GST_DEBUG ("about to create gl context\n");
 
   window_egl->egl_context =
       eglCreateContext (window_egl->egl_display, config,
       (EGLContext) external_gl_context, context_attrib);
 
   if (window_egl->egl_context != EGL_NO_CONTEXT)
-    g_debug ("gl context created: %ld\n", (gulong) window_egl->egl_context);
+    GST_INFO ("gl context created: %ld", (gulong) window_egl->egl_context);
   else {
-    g_debug ("failed to create glcontext %ld, %ld, %s\n",
-        (gulong) window_egl->egl_context, (gulong) window_egl->egl_display,
-        X11EGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "Failed to create a OpenGL context: %s", X11EGLErrorString ());
     goto failure;
   }
 

@@ -197,7 +197,7 @@ gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 
 /* Must be called in the gl thread */
 GstGLWindowCocoa *
-gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_cocoa_new (GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowCocoa *window = g_object_new (GST_GL_TYPE_WINDOW_COCOA, NULL);
   GstGLWindowCocoaPrivate *priv = window->priv;

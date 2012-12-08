@@ -25,7 +25,8 @@
 #include <wayland-egl.h>
 #include <wayland-cursor.h>
 
-#include "gstglapi.h"
+#include <EGL/egl.h>
+
 #include "gstglwindow.h"
 
 G_BEGIN_DECLS
@@ -99,7 +100,8 @@ struct _GstGLWindowWaylandEGLClass {
 GType gst_gl_window_wayland_egl_get_type     (void);
 
 GstGLWindowWaylandEGL * gst_gl_window_wayland_egl_new  (GstGLAPI gl_api,
-                                                        guintptr external_gl_context);
+                                                        guintptr external_gl_context,
+                                                        GError ** error);
 
 G_END_DECLS
 

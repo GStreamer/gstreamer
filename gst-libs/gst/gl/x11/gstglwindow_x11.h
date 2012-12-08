@@ -81,9 +81,9 @@ struct _GstGLWindowX11Class {
   /*< private >*/
   GstGLWindowClass parent_class;
 
-  gboolean (*choose_format)    (GstGLWindowX11 *window);
+  gboolean (*choose_format)    (GstGLWindowX11 *window, GError ** error);
   gboolean (*create_context)   (GstGLWindowX11 *window, GstGLAPI gl_api,
-                                guintptr external_gl_context);
+                                guintptr external_gl_context, GError ** error);
   void     (*swap_buffers)     (GstGLWindowX11 *window);
   gboolean (*activate)         (GstGLWindowX11 *window, gboolean activate);
   void     (*destroy_context)  (GstGLWindowX11 *window);
@@ -96,10 +96,12 @@ struct _GstGLWindowX11Class {
 GType gst_gl_window_x11_get_type     (void);
 
 GstGLWindowX11 * gst_gl_window_x11_new          (GstGLAPI gl_api,
-                                                 guintptr external_gl_context);
+                                                 guintptr external_gl_context,
+                                                 GError ** error);
 gboolean         gst_gl_window_x11_open_device  (GstGLWindowX11 *window_x11,
                                                  GstGLAPI gl_api,
-                                                 guintptr external_gl_context);
+                                                 guintptr external_gl_context,
+                                                 GError ** error);
 
 G_END_DECLS
 

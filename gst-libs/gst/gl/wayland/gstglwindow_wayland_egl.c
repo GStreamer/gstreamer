@@ -52,7 +52,8 @@ static void gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
 static void gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL *
     window_egl);
 static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL
-    * window_egl, GstGLAPI gl_api, guintptr external_gl_context);
+    * window_egl, GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error);
 GstGLAPI gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window);
 
 static void gst_gl_window_wayland_egl_finalize (GObject * object);
@@ -285,7 +286,8 @@ gst_gl_window_wayland_egl_init (GstGLWindowWaylandEGL * window)
 
 /* Must be called in the gl thread */
 GstGLWindowWaylandEGL *
-gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
+gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context,
+    GError ** error)
 {
   GstGLWindowWaylandEGL *window;
 
@@ -296,7 +298,12 @@ gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
   gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 
   window->display.display = wl_display_connect (NULL);
-  g_assert (window->display.display);
+  if (!window->display.display) {
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Failed to connect to Wayland display server");
+    goto error;
+  }
 
   window->display.registry = wl_display_get_registry (window->display.display);
   wl_registry_add_listener (window->display.registry, &registry_listener,
@@ -316,9 +323,16 @@ gst_gl_window_wayland_egl_new (GstGLAPI gl_api, guintptr external_gl_context)
   g_source_attach (window->wl_source, window->main_context);
 
   gst_gl_window_wayland_egl_create_context (window, gl_api,
-      external_gl_context);
+      external_gl_context, error);
 
   return window;
+
+error:
+  {
+    if (window)
+      g_object_unref (window);
+    return NULL;
+  }
 }
 
 static void
@@ -330,7 +344,9 @@ gst_gl_window_wayland_egl_finalize (GObject * object)
 
   gst_gl_window_wayland_egl_destroy_context (window_egl);
 
-  wl_surface_destroy (window_egl->display.cursor_surface);
+  if (window_egl->display.cursor_surface)
+    wl_surface_destroy (window_egl->display.cursor_surface);
+
   if (window_egl->display.cursor_theme)
     wl_cursor_theme_destroy (window_egl->display.cursor_theme);
 
@@ -340,15 +356,17 @@ gst_gl_window_wayland_egl_finalize (GObject * object)
   if (window_egl->display.compositor)
     wl_compositor_destroy (window_egl->display.compositor);
 
-  wl_display_flush (window_egl->display.display);
-  wl_display_disconnect (window_egl->display.display);
+  if (window_egl->display.display) {
+    wl_display_flush (window_egl->display.display);
+    wl_display_disconnect (window_egl->display.display);
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
 gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
-    GstGLAPI gl_api, guintptr external_gl_context)
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   EGLint config_attrib[] = {
     EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -376,13 +394,15 @@ gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
   if (eglInitialize (window_egl->egl_display, &majorVersion, &minorVersion))
     GST_DEBUG ("egl initialized: %d.%d", majorVersion, minorVersion);
   else {
-    GST_DEBUG ("failed to initialize egl %ld, %s",
-        (gulong) window_egl->egl_display, WlEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR,
+        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
+        "Failed to initialize egl: %s", WlEGLErrorString ());
     goto failure;
   }
 
   if (!eglBindAPI (EGL_OPENGL_ES_API)) {
-    GST_WARNING ("failed to bind OpenGL|ES API");
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+        "Failed to bind OpenGL|ES API: %s", WlEGLErrorString ());
     goto failure;
   }
 
@@ -391,8 +411,8 @@ gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
     GST_DEBUG ("config set: %ld, %ld", (gulong) window_egl->egl_config,
         (gulong) numConfigs);
   else {
-    GST_DEBUG ("failed to set config %ld, %s", (gulong) window_egl->egl_display,
-        WlEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+        "Failed to set window configuration: %s", WlEGLErrorString ());
     goto failure;
   }
 
@@ -405,9 +425,8 @@ gst_gl_window_wayland_egl_create_context (GstGLWindowWaylandEGL * window_egl,
   if (window_egl->egl_context != EGL_NO_CONTEXT)
     GST_DEBUG ("gl context created: %ld", (gulong) window_egl->egl_context);
   else {
-    GST_DEBUG ("failed to create glcontext %ld, %ld, %s",
-        (gulong) window_egl->egl_context, (gulong) window_egl->egl_display,
-        WlEGLErrorString ());
+    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+        "Failed to create a OpenGL context: %s", WlEGLErrorString ());
     goto failure;
   }
 

@@ -23,7 +23,8 @@
 
 #include <gst/gst.h>
 
-#include "gstglapi.h"
+#include <EGL/egl.h>
+
 #include "gstglwindow_win32.h"
 
 G_BEGIN_DECLS
@@ -62,7 +63,7 @@ struct _GstGLWindowWin32EGLClass {
 GType gst_gl_window_win32_egl_get_type     (void);
 
 GstGLWindowWin32EGL * gst_gl_window_win32_egl_new  (GstGLAPI gl_api,
-                                                    guintptr external_gl_context);
+                                                    guintptr external_gl_context, GError ** error);
 
 G_END_DECLS
 

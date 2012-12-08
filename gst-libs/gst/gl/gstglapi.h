@@ -42,22 +42,6 @@
 # endif
 #endif
 
-#if HAVE_GLX
-# include <GL/glx.h>
-#endif
-
-#if HAVE_EGL
-# undef UNICODE
-# include <EGL/egl.h>
-# define UNICODE
-#endif
-
-#if HAVE_WGL
-# undef UNICODE
-# include <windows.h>
-# define UNICODE
-#endif
-
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
