@@ -481,7 +481,7 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)
       GST_WARNING ("plugin \"%s\" has incompatible version, not loading",
-          plugin->filename);
+          GST_STR_NULL (plugin->filename));
     return NULL;
   }
 
@@ -489,14 +489,14 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
       !desc->package || !desc->origin) {
     if (GST_CAT_DEFAULT)
       GST_WARNING ("plugin \"%s\" has incorrect GstPluginDesc, not loading",
-          plugin->filename);
+          GST_STR_NULL (plugin->filename));
     return NULL;
   }
 
   if (!gst_plugin_check_license (desc->license)) {
     if (GST_CAT_DEFAULT)
       GST_WARNING ("plugin \"%s\" has invalid license \"%s\", not loading",
-          plugin->filename, desc->license);
+          GST_STR_NULL (plugin->filename), desc->license);
     return NULL;
   }
 
@@ -514,13 +514,15 @@ gst_plugin_register_func (GstPlugin * plugin, const GstPluginDesc * desc,
   if (user_data) {
     if (!(((GstPluginInitFullFunc) (desc->plugin_init)) (plugin, user_data))) {
       if (GST_CAT_DEFAULT)
-        GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
+        GST_WARNING ("plugin \"%s\" failed to initialise",
+            GST_STR_NULL (plugin->filename));
       return NULL;
     }
   } else {
     if (!((desc->plugin_init) (plugin))) {
       if (GST_CAT_DEFAULT)
-        GST_WARNING ("plugin \"%s\" failed to initialise", plugin->filename);
+        GST_WARNING ("plugin \"%s\" failed to initialise",
+            GST_STR_NULL (plugin->filename));
       return NULL;
     }
   }
