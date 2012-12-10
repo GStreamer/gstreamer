@@ -837,7 +837,8 @@ gst_osx_video_sink_get_type (void)
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   GST_INFO_OBJECT (osxvideosink, "resizing");
-  [osxwindow->gstview setVideoSize:osxwindow->width :osxwindow->height];
+  NSSize size = {osxwindow->width, osxwindow->height};
+  [osxwindow->win setContentSize:size];
   GST_INFO_OBJECT (osxvideosink, "done");
 
   [pool release];
