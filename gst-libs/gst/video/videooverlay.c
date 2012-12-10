@@ -141,7 +141,7 @@
  * <title>GstVideoOverlay and Gtk+</title>
  * <para>
  * |[
- * #include &lt;gst/video/xoverlay.h&gt;
+ * #include &lt;gst/video/videooverlay.h&gt;
  * #include &lt;gtk/gtk.h&gt;
  * #ifdef GDK_WINDOWING_X11
  * #include &lt;gdk/gdkx.h&gt;  // for GDK_WINDOW_XID
@@ -160,11 +160,11 @@
  *    return GST_BUS_PASS;
  *
  *  if (video_window_handle != 0) {
- *    GstXOverlay *xoverlay;
+ *    GstVideoOverlay *overlay;
  *
  *    // GST_MESSAGE_SRC (message) will be the video sink element
- *    xoverlay = GST_X_OVERLAY (GST_MESSAGE_SRC (message));
- *    gst_x_overlay_set_window_handle (xoverlay, video_window_handle);
+ *    overlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
+ *    gst_video_overlay_set_window_handle (overlay, video_window_handle);
  *  } else {
  *    g_warning ("Should have obtained video_window_handle by now!");
  *  }
@@ -339,7 +339,7 @@ gst_video_overlay_get_type (void)
  * @handle: a handle referencing the window.
  *
  * This will call the video overlay's set_window_handle method. You
- * should use this method to tell to a XOverlay to display video output to a
+ * should use this method to tell to an overlay to display video output to a
  * specific window (e.g. an XWindow on X11). Passing 0 as the  @handle will
  * tell the overlay to stop using that window and create an internal one.
  */
@@ -441,7 +441,7 @@ gst_video_overlay_expose (GstVideoOverlay * overlay)
  * events are forwarded upstream as navigation events. In some window system,
  * events are not propagated in the window hierarchy if a client is listening
  * for them. This method allows you to disable events handling completely
- * from the XOverlay.
+ * from the #GstVideoOverlay.
  */
 void
 gst_video_overlay_handle_events (GstVideoOverlay * overlay,

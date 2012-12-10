@@ -119,7 +119,7 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (window), "delete-event",
       G_CALLBACK (window_closed), (gpointer) pipeline);
   gtk_window_set_default_size (GTK_WINDOW (window), 320, 240);
-  gtk_window_set_title (GTK_WINDOW (window), "GstXOverlay Gtk+ demo");
+  gtk_window_set_title (GTK_WINDOW (window), "GstVideoOverlay Gtk+ demo");
 
   video_window = gtk_drawing_area_new ();
   gtk_widget_set_double_buffered (video_window, FALSE);

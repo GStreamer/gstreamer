@@ -2115,7 +2115,7 @@ realize_cb (GtkWidget * widget, PlaybackApp * app)
   /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
    * as well */
   if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+    g_error ("Couldn't create native window needed for GstVideoOverlay!");
 
 #if defined (GDK_WINDOWING_WIN32)
   app->embed_xid = GDK_WINDOW_HWND (window);

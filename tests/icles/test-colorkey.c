@@ -99,7 +99,7 @@ realize_cb (GtkWidget * widget, gpointer data)
   /* This is here just for pedagogical purposes, GDK_WINDOW_XID will call it
    * as well */
   if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
+    g_error ("Couldn't create native window needed for GstVideoOverlay!");
 
   embed_xid = GDK_WINDOW_XID (window);
   g_print ("Window realize: video window XID = %lu\n", embed_xid);

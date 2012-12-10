@@ -140,7 +140,7 @@ struct _GstXContext
  * @width: the width in pixels of Window @win
  * @height: the height in pixels of Window @win
  * @internal: used to remember if Window @win was created internally or passed
- * through the #GstXOverlay interface
+ * through the #GstVideoOverlay interface
  * @gc: the Graphical Context of Window @win
  *
  * Structure used to store informations about a Window.
@@ -182,7 +182,7 @@ struct _GstXvImageFormat
  * @x_lock: used to protect X calls as we are not using the XLib in threaded
  * mode
  * @flow_lock: used to protect data flow routines from external calls such as
- * events from @event_thread or methods from the #GstXOverlay interface
+ * events from @event_thread or methods from the #GstVideoOverlay interface
  * @par: used to override calculated pixel aspect ratio from @xcontext
  * @pool_lock: used to protect the buffer pool
  * @image_pool: a list of #GstXvImageBuffer that could be reused at next buffer
