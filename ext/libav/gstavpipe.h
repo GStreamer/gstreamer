@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 } G_STMT_END
 
 #define GST_FFMPEG_PIPE_MUTEX_UNLOCK(m) G_STMT_START {                    \
-  GST_LOG_OBJECT (&m, "unlocking tlock from thread %p", g_thread_self ()); \
+  GST_LOG_OBJECT (m, "unlocking tlock from thread %p", g_thread_self ()); \
   g_mutex_unlock (&m->tlock);                                              \
 } G_STMT_END
 
