@@ -3749,6 +3749,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstAudioResample::sinc-filter-auto-threshold</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sinc filter auto mode threshold</NICK>
+<BLURB>Memory usage threshold to use if sinc filter mode is AUTO, given in bytes.</BLURB>
+<DEFAULT>1048576</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioResample::sinc-filter-mode</NAME>
+<TYPE>SpeexResamplerSincFilterMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sinc filter table mode</NICK>
+<BLURB>What sinc filter table mode to use.</BLURB>
+<DEFAULT>Use full table if table size below threshold</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAdder::caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>

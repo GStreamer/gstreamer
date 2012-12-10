@@ -79,6 +79,27 @@
       </pads>
     </element>
     <element>
+      <name>streamsynchronizer</name>
+      <longname>Stream Synchronizer</longname>
+      <class>Generic</class>
+      <description>Synchronizes a group of streams to have equal durations and starting points</description>
+      <author>Sebastian Dröge &lt;sebastian.droege@collabora.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src_%u</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>subtitleoverlay</name>
       <longname>Subtitle Overlay</longname>
       <class>Video/Overlay/Subtitle</class>

@@ -1,48 +1,25 @@
 GSocket GInitable
-GTypeModule GTypePlugin
-GstAlsaMixerElement GstImplementsInterface GstMixer GstPropertyProbe
-GstAlsaMixerElement GstMixer
-GstAlsaSink GstPropertyProbe
-GstAlsaSrc GstImplementsInterface GstMixer GstPropertyProbe
-GstAlsaSrc GstMixer
 GstAppSink GstURIHandler
 GstAppSrc GstURIHandler
 GstAudioCdSrc GstURIHandler
 GstAudioEncoder GstPreset
 GstBin GstChildProxy
 GstCdParanoiaSrc GstURIHandler
-GstCddaBaseSrc GstURIHandler
 GstDecodeBin GstChildProxy
-GstDecodeBin2 GstChildProxy
 GstEncodeBin GstChildProxy
 GstGioSink GstURIHandler
 GstGioSrc GstURIHandler
-GstGnomeVFSSink GstURIHandler
-GstGnomeVFSSrc GstURIHandler
 GstOggMux GstPreset
 GstPipeline GstChildProxy
-GstPlayBaseBin GstChildProxy
-GstPlayBin GstChildProxy
-GstPlayBin GstChildProxy GstStreamVolume
 GstPlayBin GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
-GstPlayBin2 GstChildProxy GstStreamVolume
-GstPlaySink GstChildProxy
 GstPlaySink GstChildProxy GstStreamVolume GstVideoOverlay GstNavigation GstColorBalance
 GstSubtitleOverlay GstChildProxy
 GstTheoraEnc GstPreset
 GstURIDecodeBin GstChildProxy
-GstV4lElement GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
-GstV4lSrc GstImplementsInterface GstTuner GstXOverlay GstColorBalance GstPropertyProbe
 GstVideoEncoder GstPreset
-GstVolume GstImplementsInterface GstMixer GstStreamVolume
-GstVolume GstMixer GstStreamVolume
 GstVolume GstStreamVolume
 GstVorbisEnc GstPreset GstTagSetter
-GstVorbisEnc GstTagSetter GstPreset
 GstVorbisTag GstTagSetter
-GstXImageSink GstImplementsInterface GstNavigation GstXOverlay
 GstXImageSink GstNavigation GstVideoOverlay
-GstXvImageSink GstImplementsInterface GstNavigation GstXOverlay GstColorBalance GstPropertyProbe
 GstXvImageSink GstNavigation GstVideoOverlay GstColorBalance
 PangoCairoFcFontMap PangoCairoFontMap
-PangoModule GTypePlugin
