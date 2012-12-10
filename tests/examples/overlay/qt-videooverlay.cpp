@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 
   QWidget window;
   window.resize(320, 240);
-  window.setWindowTitle("GstXOverlay Qt demo");
+  window.setWindowTitle("GstVideoOverlay Qt demo");
   window.show();
   
   WId xwinid = window.winId();

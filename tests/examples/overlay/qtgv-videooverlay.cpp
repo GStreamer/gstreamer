@@ -113,7 +113,7 @@ int main( int argc, char **argv )
 
     QGraphicsView view( &scene );
     view.resize(320, 240);
-    view.setWindowTitle("GstXOverlay Qt GraphicsView demo");
+    view.setWindowTitle("GstVideoOverlay Qt GraphicsView demo");
     view.show();
 
     gst_init (&argc, &argv);

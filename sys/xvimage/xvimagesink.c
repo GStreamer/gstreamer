@@ -25,9 +25,10 @@
  * using the XVideo extension. Rendering to a remote display is theoretically
  * possible but i doubt that the XVideo extension is actually available when
  * connecting to a remote display. This element can receive a Window ID from the
- * application through the XOverlay interface and will then render video frames
- * in this drawable. If no Window ID was provided by the application, the
- * element will create its own internal window and render into it.
+ * application through the #GstVideoOverlay interface and will then render
+ * video frames in this drawable. If no Window ID was provided by the
+ * application, the element will create its own internal window and render
+ * into it.
  *
  * <refsect2>
  * <title>Scaling</title>
