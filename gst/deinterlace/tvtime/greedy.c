@@ -70,71 +70,67 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodGreedyLClass;
 
 static inline void
 deinterlace_greedy_interpolate_scanline_orc (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
   if (scanlines->m1 == NULL || scanlines->mp == NULL) {
-    deinterlace_line_linear (out, scanlines->t0, scanlines->b0,
-        self->parent.row_stride[0]);
+    deinterlace_line_linear (out, scanlines->t0, scanlines->b0, size);
   } else {
     deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
-        scanlines->mp ? scanlines->mp : scanlines->m1,
-        max_comb, self->parent.row_stride[0]);
+        scanlines->mp ? scanlines->mp : scanlines->m1, max_comb, size);
   }
 }
 
 static inline void
 deinterlace_greedy_interpolate_scanline_orc_planar_u (GstDeinterlaceSimpleMethod
-    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint
+    size)
 {
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
   if (scanlines->m1 == NULL || scanlines->mp == NULL) {
-    deinterlace_line_linear (out, scanlines->t0, scanlines->b0,
-        self->parent.row_stride[1]);
+    deinterlace_line_linear (out, scanlines->t0, scanlines->b0, size);
   } else {
     deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
-        scanlines->mp ? scanlines->mp : scanlines->m1,
-        max_comb, self->parent.row_stride[1]);
+        scanlines->mp ? scanlines->mp : scanlines->m1, max_comb, size);
   }
 }
 
 static inline void
 deinterlace_greedy_interpolate_scanline_orc_planar_v (GstDeinterlaceSimpleMethod
-    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint
+    size)
 {
   guint max_comb = GST_DEINTERLACE_METHOD_GREEDY_L (self)->max_comb;
 
   if (scanlines->m1 == NULL || scanlines->mp == NULL) {
-    deinterlace_line_linear (out, scanlines->t0, scanlines->b0,
-        self->parent.row_stride[2]);
+    deinterlace_line_linear (out, scanlines->t0, scanlines->b0, size);
   } else {
     deinterlace_line_greedy (out, scanlines->m1, scanlines->t0, scanlines->b0,
-        scanlines->mp ? scanlines->mp : scanlines->m1,
-        max_comb, self->parent.row_stride[2]);
+        scanlines->mp ? scanlines->mp : scanlines->m1, max_comb, size);
   }
 }
 
 static void
 deinterlace_greedy_copy_scanline (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
 deinterlace_greedy_copy_scanline_planar_u (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
 deinterlace_greedy_copy_scanline_planar_v (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m0, size);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodGreedyL, gst_deinterlace_method_greedy_l,

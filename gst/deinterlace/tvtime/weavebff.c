@@ -46,74 +46,74 @@ typedef GstDeinterlaceSimpleMethodClass GstDeinterlaceMethodWeaveBFFClass;
 
 static void
 deinterlace_scanline_weave_packed (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   if (scanlines->m1 == NULL) {
-    memcpy (out, scanlines->b0, self->parent.row_stride[0]);
+    memcpy (out, scanlines->b0, size);
   } else {
-    memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+    memcpy (out, scanlines->m1, size);
   }
 }
 
 static void
 deinterlace_scanline_weave_planar_y (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   if (scanlines->m1 == NULL) {
-    memcpy (out, scanlines->b0, self->parent.row_stride[0]);
+    memcpy (out, scanlines->b0, size);
   } else {
-    memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+    memcpy (out, scanlines->m1, size);
   }
 }
 
 static void
 deinterlace_scanline_weave_planar_u (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   if (scanlines->m1 == NULL) {
-    memcpy (out, scanlines->b0, self->parent.row_stride[1]);
+    memcpy (out, scanlines->b0, size);
   } else {
-    memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+    memcpy (out, scanlines->m1, size);
   }
 }
 
 static void
 deinterlace_scanline_weave_planar_v (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   if (scanlines->m1 == NULL) {
-    memcpy (out, scanlines->b0, self->parent.row_stride[2]);
+    memcpy (out, scanlines->b0, size);
   } else {
-    memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+    memcpy (out, scanlines->m1, size);
   }
 }
 
 static void
 copy_scanline_packed (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
 copy_scanline_planar_y (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
 copy_scanline_planar_u (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
 copy_scanline_planar_v (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m0, size);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodWeaveBFF, gst_deinterlace_method_weave_bff,

@@ -106,7 +106,6 @@ static void
 gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
     GstVideoInfo * vinfo)
 {
-  gint i;
   GstDeinterlaceMethodClass *klass = GST_DEINTERLACE_METHOD_GET_CLASS (self);
 
   self->vinfo = vinfo;
@@ -115,14 +114,6 @@ gst_deinterlace_method_setup_impl (GstDeinterlaceMethod * self,
 
   if (GST_VIDEO_INFO_FORMAT (self->vinfo) == GST_VIDEO_FORMAT_UNKNOWN)
     return;
-
-  for (i = 0; i < 4; i++) {
-    self->width[i] = GST_VIDEO_INFO_COMP_WIDTH (vinfo, i);
-    self->height[i] = GST_VIDEO_INFO_COMP_HEIGHT (vinfo, i);
-    self->offset[i] = GST_VIDEO_INFO_COMP_OFFSET (vinfo, i);
-    self->row_stride[i] = GST_VIDEO_INFO_COMP_STRIDE (vinfo, i);
-    self->pixel_stride[i] = GST_VIDEO_INFO_COMP_PSTRIDE (vinfo, i);
-  }
 
   switch (GST_VIDEO_INFO_FORMAT (self->vinfo)) {
     case GST_VIDEO_FORMAT_YUY2:
@@ -300,16 +291,17 @@ gst_deinterlace_simple_method_supported (GstDeinterlaceMethodClass * mklass,
 static void
     gst_deinterlace_simple_method_interpolate_scanline_packed
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint stride)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, stride);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_packed (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines,
+    guint stride)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, stride);
 }
 
 static void
@@ -320,43 +312,43 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
   GstDeinterlaceScanlineData scanlines;
-  guint8 *dest;
-  const guint8 *field0, *field1, *field2, *fieldp;
-  guint cur_field_flags = history[cur_field_idx].flags;
+  guint cur_field_flags;
   gint i;
-  gint frame_height = GST_VIDEO_INFO_HEIGHT (self->parent.vinfo);
-  gint stride = self->parent.row_stride[0];
+  gint frame_height, frame_width;
+  GstVideoFrame *framep, *frame0, *frame1, *frame2;
 
   g_assert (self->interpolate_scanline_packed != NULL);
   g_assert (self->copy_scanline_packed != NULL);
 
-  if (cur_field_idx > 0) {
-    fieldp = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, 0);
-  } else {
-    fieldp = NULL;
-  }
+  frame_height = GST_VIDEO_FRAME_HEIGHT (outframe);
+  frame_width = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, 0);
 
-  dest = GST_VIDEO_FRAME_COMP_DATA (outframe, 0);
+  frame0 = history[cur_field_idx].frame;
+  frame_width = MIN (frame_width, GST_VIDEO_FRAME_PLANE_STRIDE (frame0, 0));
+  cur_field_flags = history[cur_field_idx].flags;
 
-  field0 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx].frame, 0);
+  framep = (cur_field_idx > 0 ? history[cur_field_idx - 1].frame : NULL);
+  if (framep)
+    frame_width = MIN (frame_width, GST_VIDEO_FRAME_PLANE_STRIDE (framep, 0));
 
   g_assert (dm_class->fields_required <= 4);
 
-  if (cur_field_idx + 1 < history_count) {
-    field1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx + 1].frame, 0);
-  } else {
-    field1 = NULL;
-  }
+  frame1 =
+      (cur_field_idx + 1 <
+      history_count ? history[cur_field_idx + 1].frame : NULL);
+  if (frame1)
+    frame_width = MIN (frame_width, GST_VIDEO_FRAME_PLANE_STRIDE (frame1, 0));
 
-  if (cur_field_idx + 2 < history_count) {
-    field2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx + 2].frame, 0);
-  } else {
-    field2 = NULL;
-  }
+  frame2 =
+      (cur_field_idx + 2 <
+      history_count ? history[cur_field_idx + 2].frame : NULL);
+  if (frame2)
+    frame_width = MIN (frame_width, GST_VIDEO_FRAME_PLANE_STRIDE (frame2, 0));
 
 #define CLAMP_LOW(i) (((i)<0) ? (i+2) : (i))
 #define CLAMP_HI(i) (((i)>=(frame_height)) ? (i-2) : (i))
-#define LINE(x,i) ((x) + CLAMP_HI(CLAMP_LOW(i)) * (stride))
+#define LINE(x,i) (((guint8*)GST_VIDEO_FRAME_PLANE_DATA((x),0)) + CLAMP_HI(CLAMP_LOW(i)) * \
+    GST_VIDEO_FRAME_PLANE_STRIDE((x),0))
 #define LINE2(x,i) ((x) ? LINE(x,i) : NULL)
 
   for (i = 0; i < frame_height; i++) {
@@ -365,102 +357,117 @@ gst_deinterlace_simple_method_deinterlace_frame_packed (GstDeinterlaceMethod *
 
     if (!((i & 1) ^ scanlines.bottom_field)) {
       /* copying */
-      scanlines.tp = LINE2 (fieldp, i - 1);
-      scanlines.bp = LINE2 (fieldp, i + 1);
+      scanlines.tp = LINE2 (framep, i - 1);
+      scanlines.bp = LINE2 (framep, i + 1);
 
-      scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m0 = LINE2 (field0, i);
-      scanlines.bb0 = LINE2 (field0, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.tt0 = LINE2 (frame0, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m0 = LINE2 (frame0, i);
+      scanlines.bb0 = LINE2 (frame0, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t1 = LINE2 (field1, i - 1);
-      scanlines.b1 = LINE2 (field1, i + 1);
+      scanlines.t1 = LINE2 (frame1, i - 1);
+      scanlines.b1 = LINE2 (frame1, i + 1);
 
-      scanlines.tt2 = LINE2 (field2, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m2 = LINE2 (field2, i);
-      scanlines.bb2 = LINE2 (field2, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.tt2 = LINE2 (frame2, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m2 = LINE2 (frame2, i);
+      scanlines.bb2 = LINE2 (frame2, (i + 2 < frame_height ? i + 2 : i));
 
-      self->copy_scanline_packed (self, LINE (dest, i), &scanlines);
+      self->copy_scanline_packed (self, LINE (outframe, i), &scanlines,
+          frame_width);
     } else {
       /* interpolating */
-      scanlines.ttp = LINE2 (fieldp, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.mp = LINE2 (fieldp, i);
-      scanlines.bbp = LINE2 (fieldp, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.ttp = LINE2 (framep, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.mp = LINE2 (framep, i);
+      scanlines.bbp = LINE2 (framep, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t0 = LINE2 (field0, i - 1);
-      scanlines.b0 = LINE2 (field0, i + 1);
+      scanlines.t0 = LINE2 (frame0, i - 1);
+      scanlines.b0 = LINE2 (frame0, i + 1);
 
-      scanlines.tt1 = LINE2 (field1, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m1 = LINE2 (field1, i);
-      scanlines.bb1 = LINE2 (field1, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.tt1 = LINE2 (frame1, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m1 = LINE2 (frame1, i);
+      scanlines.bb1 = LINE2 (frame1, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t2 = LINE2 (field2, i - 1);
-      scanlines.b2 = LINE2 (field2, i + 1);
+      scanlines.t2 = LINE2 (frame2, i - 1);
+      scanlines.b2 = LINE2 (frame2, i + 1);
 
-      self->interpolate_scanline_packed (self, LINE (dest, i), &scanlines);
+      self->interpolate_scanline_packed (self, LINE (outframe, i), &scanlines,
+          frame_width);
     }
+#undef LINE
+#undef LINE2
   }
 }
 
 static void
     gst_deinterlace_simple_method_interpolate_scanline_planar_y
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m1, size);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_planar_y (GstDeinterlaceSimpleMethod
-    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint
+    size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[0]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
     gst_deinterlace_simple_method_interpolate_scanline_planar_u
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m1, size);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_planar_u (GstDeinterlaceSimpleMethod
-    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint
+    size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[1]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
     gst_deinterlace_simple_method_interpolate_scanline_planar_v
     (GstDeinterlaceSimpleMethod * self, guint8 * out,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
-  memcpy (out, scanlines->m1, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m1, size);
 }
 
 static void
 gst_deinterlace_simple_method_copy_scanline_planar_v (GstDeinterlaceSimpleMethod
-    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    * self, guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint
+    size)
 {
-  memcpy (out, scanlines->m0, self->parent.row_stride[2]);
+  memcpy (out, scanlines->m0, size);
 }
 
 static void
     gst_deinterlace_simple_method_deinterlace_frame_planar_plane
-    (GstDeinterlaceSimpleMethod * self, guint8 * dest, const guint8 * field0,
-    const guint8 * field1, const guint8 * field2, const guint8 * fieldp,
-    guint cur_field_flags,
-    gint plane, GstDeinterlaceSimpleMethodFunction copy_scanline,
+    (GstDeinterlaceSimpleMethod * self, GstVideoFrame * dest,
+    const GstVideoFrame * frame0, const GstVideoFrame * frame1,
+    const GstVideoFrame * frame2, const GstVideoFrame * framep,
+    guint cur_field_flags, gint plane,
+    GstDeinterlaceSimpleMethodFunction copy_scanline,
     GstDeinterlaceSimpleMethodFunction interpolate_scanline)
 {
   GstDeinterlaceScanlineData scanlines;
   gint i;
-  gint frame_height = self->parent.height[plane];
-  gint stride = self->parent.row_stride[plane];
+  gint frame_height, frame_width;
+
+  frame_height = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+  frame_width = GST_VIDEO_FRAME_COMP_WIDTH (dest, plane) *
+      GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
 
   g_assert (interpolate_scanline != NULL);
   g_assert (copy_scanline != NULL);
+
+#define LINE(x,i) (((guint8*)GST_VIDEO_FRAME_PLANE_DATA((x),plane)) + CLAMP_HI(CLAMP_LOW(i)) * \
+    GST_VIDEO_FRAME_PLANE_STRIDE((x),plane))
+#define LINE2(x,i) ((x) ? LINE(x,i) : NULL)
 
   for (i = 0; i < frame_height; i++) {
     memset (&scanlines, 0, sizeof (scanlines));
@@ -468,39 +475,41 @@ static void
 
     if (!((i & 1) ^ scanlines.bottom_field)) {
       /* copying */
-      scanlines.tp = LINE2 (fieldp, i - 1);
-      scanlines.bp = LINE2 (fieldp, i + 1);
+      scanlines.tp = LINE2 (framep, i - 1);
+      scanlines.bp = LINE2 (framep, i + 1);
 
-      scanlines.tt0 = LINE2 (field0, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m0 = LINE2 (field0, i);
-      scanlines.bb0 = LINE2 (field0, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.tt0 = LINE2 (frame0, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m0 = LINE2 (frame0, i);
+      scanlines.bb0 = LINE2 (frame0, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t1 = LINE2 (field1, i - 1);
-      scanlines.b1 = LINE2 (field1, i + 1);
+      scanlines.t1 = LINE2 (frame1, i - 1);
+      scanlines.b1 = LINE2 (frame1, i + 1);
 
-      scanlines.tt2 = LINE2 (field2, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m2 = LINE2 (field2, i);
-      scanlines.bb2 = LINE2 (field2, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.tt2 = LINE2 (frame2, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m2 = LINE2 (frame2, i);
+      scanlines.bb2 = LINE2 (frame2, (i + 2 < frame_height ? i + 2 : i));
 
-      copy_scanline (self, LINE (dest, i), &scanlines);
+      copy_scanline (self, LINE (dest, i), &scanlines, frame_width);
     } else {
       /* interpolating */
-      scanlines.ttp = LINE2 (fieldp, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.mp = LINE2 (fieldp, i);
-      scanlines.bbp = LINE2 (fieldp, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.ttp = LINE2 (framep, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.mp = LINE2 (framep, i);
+      scanlines.bbp = LINE2 (framep, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t0 = LINE2 (field0, i - 1);
-      scanlines.b0 = LINE2 (field0, i + 1);
+      scanlines.t0 = LINE2 (frame0, i - 1);
+      scanlines.b0 = LINE2 (frame0, i + 1);
 
-      scanlines.tt1 = LINE2 (field1, (i - 2 >= 0) ? i - 2 : i);
-      scanlines.m1 = LINE2 (field1, i);
-      scanlines.bb1 = LINE2 (field1, (i + 2 < frame_height ? i + 2 : i));
+      scanlines.tt1 = LINE2 (frame1, (i - 2 >= 0) ? i - 2 : i);
+      scanlines.m1 = LINE2 (frame1, i);
+      scanlines.bb1 = LINE2 (frame1, (i + 2 < frame_height ? i + 2 : i));
 
-      scanlines.t2 = LINE2 (field2, i - 1);
-      scanlines.b2 = LINE2 (field2, i + 1);
+      scanlines.t2 = LINE2 (frame2, i - 1);
+      scanlines.b2 = LINE2 (frame2, i + 1);
 
-      interpolate_scanline (self, LINE (dest, i), &scanlines);
+      interpolate_scanline (self, LINE (dest, i), &scanlines, frame_width);
     }
+#undef LINE
+#undef LINE2
   }
 }
 
@@ -511,8 +520,7 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
-  guint8 *out;
-  const guint8 *field0, *field1, *field2, *fieldp;
+  const GstVideoFrame *frame0, *frame1, *frame2, *framep;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i;
   GstDeinterlaceSimpleMethodFunction copy_scanline;
@@ -529,30 +537,22 @@ gst_deinterlace_simple_method_deinterlace_frame_planar (GstDeinterlaceMethod *
     copy_scanline = self->copy_scanline_planar[i];
     interpolate_scanline = self->interpolate_scanline_planar[i];
 
-    out = GST_VIDEO_FRAME_PLANE_DATA (outframe, i);
+    framep = (cur_field_idx > 0 ? history[cur_field_idx - 1].frame : NULL);
 
-    fieldp = NULL;
-    if (cur_field_idx > 0) {
-      fieldp = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 1].frame, i);
-    }
-
-    field0 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx].frame, i);
+    frame0 = history[cur_field_idx].frame;
 
     g_assert (dm_class->fields_required <= 4);
 
-    field1 = NULL;
-    if (cur_field_idx + 1 < history_count) {
-      field1 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx + 1].frame, i);
-    }
+    frame1 =
+        (cur_field_idx + 1 <
+        history_count ? history[cur_field_idx + 1].frame : NULL);
+    frame2 =
+        (cur_field_idx + 2 <
+        history_count ? history[cur_field_idx + 2].frame : NULL);
 
-    field2 = NULL;
-    if (cur_field_idx + 2 < history_count) {
-      field2 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx + 2].frame, i);
-    }
-
-    gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
-        field0, field1, field2, fieldp, cur_field_flags, i, copy_scanline,
-        interpolate_scanline);
+    gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self,
+        outframe, frame0, frame1, frame2, framep, cur_field_flags, i,
+        copy_scanline, interpolate_scanline);
   }
 }
 
@@ -563,8 +563,7 @@ gst_deinterlace_simple_method_deinterlace_frame_nv12 (GstDeinterlaceMethod *
 {
   GstDeinterlaceSimpleMethod *self = GST_DEINTERLACE_SIMPLE_METHOD (method);
   GstDeinterlaceMethodClass *dm_class = GST_DEINTERLACE_METHOD_GET_CLASS (self);
-  guint8 *out;
-  const guint8 *field0, *field1, *field2, *fieldp;
+  const GstVideoFrame *frame0, *frame1, *frame2, *framep;
   guint cur_field_flags = history[cur_field_idx].flags;
   gint i;
 
@@ -572,29 +571,21 @@ gst_deinterlace_simple_method_deinterlace_frame_nv12 (GstDeinterlaceMethod *
   g_assert (self->copy_scanline_packed != NULL);
 
   for (i = 0; i < 2; i++) {
-    out = GST_VIDEO_FRAME_PLANE_DATA (outframe, i);
+    framep = (cur_field_idx > 0 ? history[cur_field_idx - 1].frame : NULL);
 
-    fieldp = NULL;
-    if (cur_field_idx > 0) {
-      fieldp = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 1].frame, i);
-    }
-
-    field0 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx].frame, i);
+    frame0 = history[cur_field_idx].frame;
 
     g_assert (dm_class->fields_required <= 4);
 
-    field1 = NULL;
-    if (cur_field_idx + 1 < history_count) {
-      field1 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx + 1].frame, i);
-    }
+    frame1 =
+        (cur_field_idx + 1 <
+        history_count ? history[cur_field_idx + 1].frame : NULL);
+    frame2 =
+        (cur_field_idx + 2 <
+        history_count ? history[cur_field_idx + 2].frame : NULL);
 
-    field2 = NULL;
-    if (cur_field_idx + 2 < history_count) {
-      field2 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx + 2].frame, i);
-    }
-
-    gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self, out,
-        field0, field1, field2, fieldp, cur_field_flags, i,
+    gst_deinterlace_simple_method_deinterlace_frame_planar_plane (self,
+        outframe, frame0, frame1, frame2, framep, cur_field_flags, i,
         self->copy_scanline_packed, self->interpolate_scanline_packed);
   }
 }

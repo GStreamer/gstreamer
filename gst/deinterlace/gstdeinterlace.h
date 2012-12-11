@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideopool.h>
-#include <gst/video/gstvideofilter.h>
+#include <gst/video/gstvideometa.h>
 
 #include "gstdeinterlacemethod.h"
 

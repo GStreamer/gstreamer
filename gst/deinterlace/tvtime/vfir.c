@@ -77,56 +77,52 @@ deinterlace_c (guint8 * dst, const guint8 * lum_m4, const guint8 * lum_m3,
 
 static void
 deinterlace_line_packed_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   const guint8 *lum_m4 = scanlines->tt1;
   const guint8 *lum_m3 = scanlines->t0;
   const guint8 *lum_m2 = scanlines->m1;
   const guint8 *lum_m1 = scanlines->b0;
   const guint8 *lum = scanlines->bb1;
-  gint size = self->parent.row_stride[0];
 
   deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }
 
 static void
 deinterlace_line_planar_y_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   const guint8 *lum_m4 = scanlines->tt1;
   const guint8 *lum_m3 = scanlines->t0;
   const guint8 *lum_m2 = scanlines->m1;
   const guint8 *lum_m1 = scanlines->b0;
   const guint8 *lum = scanlines->bb1;
-  gint size = self->parent.row_stride[0];
 
   deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }
 
 static void
 deinterlace_line_planar_u_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   const guint8 *lum_m4 = scanlines->tt1;
   const guint8 *lum_m3 = scanlines->t0;
   const guint8 *lum_m2 = scanlines->m1;
   const guint8 *lum_m1 = scanlines->b0;
   const guint8 *lum = scanlines->bb1;
-  gint size = self->parent.row_stride[1];
 
   deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }
 
 static void
 deinterlace_line_planar_v_c (GstDeinterlaceSimpleMethod * self, guint8 * dst,
-    const GstDeinterlaceScanlineData * scanlines)
+    const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   const guint8 *lum_m4 = scanlines->tt1;
   const guint8 *lum_m3 = scanlines->t0;
   const guint8 *lum_m2 = scanlines->m1;
   const guint8 *lum_m1 = scanlines->b0;
   const guint8 *lum = scanlines->bb1;
-  gint size = self->parent.row_stride[2];
 
   deinterlace_c (dst, lum_m4, lum_m3, lum_m2, lum_m1, lum, size);
 }

@@ -2367,6 +2367,7 @@ gst_deinterlace_do_bufferpool (GstDeinterlace * self, GstCaps * outcaps)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_set_config (pool, config);
 
   /* now store */
@@ -2591,6 +2592,33 @@ gst_deinterlace_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
+gst_deinterlace_propose_allocation (GstDeinterlace * self, GstQuery * query)
+{
+  GstBufferPool *pool;
+  GstCaps *caps;
+  GstVideoInfo info;
+  guint size;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (caps == NULL)
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&info, caps))
+    return FALSE;
+
+  size = GST_VIDEO_INFO_SIZE (&info);
+
+  pool = gst_video_buffer_pool_new ();
+
+  gst_query_add_allocation_pool (query, pool, size, 0, 0);
+  gst_object_unref (pool);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return TRUE;
+}
+
+static gboolean
 gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstDeinterlace *self = GST_DEINTERLACE (parent);
@@ -2614,7 +2642,7 @@ gst_deinterlace_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       if (self->passthrough)
         res = gst_pad_peer_query (self->srcpad, query);
       else
-        res = gst_pad_query_default (pad, parent, query);
+        res = gst_deinterlace_propose_allocation (self, query);
       break;
     default:
       res = gst_pad_query_default (pad, parent, query);

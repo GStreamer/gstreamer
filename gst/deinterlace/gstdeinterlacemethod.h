@@ -68,12 +68,6 @@ struct _GstDeinterlaceMethod {
   GstObject parent;
 
   GstVideoInfo *vinfo;
-  // FIXME - the stuff below can use vinfo and macros
-  gint width[4];
-  gint height[4];
-  gint offset[4];
-  gint row_stride[4];
-  gint pixel_stride[4];
 
   GstDeinterlaceMethodDeinterlaceFunction deinterlace_frame;
 };
@@ -166,7 +160,7 @@ struct _GstDeinterlaceScanlineData {
  * All other values are NULL.
  */
 
-typedef void (*GstDeinterlaceSimpleMethodFunction) (GstDeinterlaceSimpleMethod *self, guint8 *out, const GstDeinterlaceScanlineData *scanlines);
+typedef void (*GstDeinterlaceSimpleMethodFunction) (GstDeinterlaceSimpleMethod *self, guint8 *out, const GstDeinterlaceScanlineData *scanlines, guint size);
 
 struct _GstDeinterlaceSimpleMethod {
   GstDeinterlaceMethod parent;

@@ -65,34 +65,34 @@ deinterlace_scanline_linear_blend_c (GstDeinterlaceSimpleMethod * self,
 
 static void
 deinterlace_scanline_linear_blend_packed_c (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
-      scanlines->m1, self->parent.row_stride[0]);
+      scanlines->m1, size);
 }
 
 static void
 deinterlace_scanline_linear_blend_planar_y_c (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
-      scanlines->m1, self->parent.row_stride[0]);
+      scanlines->m1, size);
 }
 
 static void
 deinterlace_scanline_linear_blend_planar_u_c (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
-      scanlines->m1, self->parent.row_stride[1]);
+      scanlines->m1, size);
 }
 
 static void
 deinterlace_scanline_linear_blend_planar_v_c (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   deinterlace_scanline_linear_blend_c (self, out, scanlines->t0, scanlines->b0,
-      scanlines->m1, self->parent.row_stride[2]);
+      scanlines->m1, size);
 }
 
 static inline void
@@ -109,34 +109,37 @@ deinterlace_scanline_linear_blend2_c (GstDeinterlaceSimpleMethod * self,
 
 static void
 deinterlace_scanline_linear_blend2_packed_c (GstDeinterlaceSimpleMethod * self,
-    guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    guint8 * out, const GstDeinterlaceScanlineData * scanlines, guint size)
 {
   deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
-      scanlines->b1, self->parent.row_stride[0]);
+      scanlines->b1, size);
 }
 
 static void
 deinterlace_scanline_linear_blend2_planar_y_c (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines,
+    guint size)
 {
   deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
-      scanlines->b1, self->parent.row_stride[0]);
+      scanlines->b1, size);
 }
 
 static void
 deinterlace_scanline_linear_blend2_planar_u_c (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines,
+    guint size)
 {
   deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
-      scanlines->b1, self->parent.row_stride[1]);
+      scanlines->b1, size);
 }
 
 static void
 deinterlace_scanline_linear_blend2_planar_v_c (GstDeinterlaceSimpleMethod *
-    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines)
+    self, guint8 * out, const GstDeinterlaceScanlineData * scanlines,
+    guint size)
 {
   deinterlace_scanline_linear_blend2_c (self, out, scanlines->m0, scanlines->t1,
-      scanlines->b1, self->parent.row_stride[2]);
+      scanlines->b1, size);
 }
 
 G_DEFINE_TYPE (GstDeinterlaceMethodLinearBlend,
