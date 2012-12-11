@@ -127,7 +127,6 @@ gst_ffmpegaudenc_base_init (GstFFMpegAudEncClass * klass)
   klass->in_plugin = in_plugin;
   klass->srctempl = srctempl;
   klass->sinktempl = sinktempl;
-  klass->sinkcaps = NULL;
 
   return;
 }

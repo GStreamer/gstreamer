@@ -78,7 +78,6 @@ struct _GstFFMpegVidEncClass
 
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;
-  GstCaps *sinkcaps;
 };
 
 #define GST_TYPE_FFMPEGVIDENC \

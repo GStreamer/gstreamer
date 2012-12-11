@@ -59,7 +59,6 @@ struct _GstFFMpegAudEncClass
 
   AVCodec *in_plugin;
   GstPadTemplate *srctempl, *sinktempl;
-  GstCaps *sinkcaps;
 };
 
 #define GST_TYPE_FFMPEGAUDENC \
