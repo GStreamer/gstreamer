@@ -165,7 +165,7 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
 
-  if (ffmpegdec->context->priv_data)
+  if (ffmpegdec->opened)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
