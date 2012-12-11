@@ -4,7 +4,7 @@ libgstd3dvideosink_la_SOURCES = d3dvideosink.c directx/directx_d3d.c directx/dx.
 	directx/directx9/dx9.c directx/directx9/dx9_d3d.c \
 	directx/directx10/dx10.c directx/directx10/dx10_d3d.c \
 	directx/directx11/dx11.c directx/directx11/dx11_d3d.c
-libgstd3dvideosink_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_CFLAGS) $(DIRECTX_CFLAGS)
+libgstd3dvideosink_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(DIRECTX_CFLAGS)
 libgstd3dvideosink_la_LIBADD = $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-$(GST_API_VERSION) \
 	$(DIRECT3D_LIBS)
