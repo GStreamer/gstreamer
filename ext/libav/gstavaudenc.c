@@ -283,6 +283,15 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     ffmpegaudenc->context->ticks_per_frame = 1;
   }
 
+  if (ffmpegaudenc->context->channel_layout) {
+    gst_ffmpeg_channel_layout_to_gst (ffmpegaudenc->context->channel_layout,
+        ffmpegaudenc->context->channels, ffmpegaudenc->ffmpeg_layout);
+    ffmpegaudenc->needs_reorder =
+        (memcmp (ffmpegaudenc->ffmpeg_layout, info->position,
+            sizeof (GstAudioChannelPosition) *
+            ffmpegaudenc->context->channels) != 0);
+  }
+
   /* open codec */
   if (gst_ffmpeg_avcodec_open (ffmpegaudenc->context, oclass->in_plugin) < 0) {
     if (ffmpegaudenc->context->priv_data)
@@ -539,6 +548,15 @@ gst_ffmpegaudenc_handle_frame (GstAudioEncoder * encoder, GstBuffer * inbuf)
       "Received time %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
       ", size %" G_GSIZE_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)), gst_buffer_get_size (inbuf));
+
+  /* Reorder channels to the GStreamer channel order */
+  if (ffmpegaudenc->needs_reorder) {
+    GstAudioInfo *info = gst_audio_encoder_get_audio_info (encoder);
+
+    inbuf = gst_buffer_make_writable (inbuf);
+    gst_audio_buffer_reorder_channels (inbuf, info->finfo->format,
+        info->channels, info->position, ffmpegaudenc->ffmpeg_layout);
+  }
 
   gst_buffer_map (inbuf, &map, GST_MAP_READ);
   in_data = map.data;

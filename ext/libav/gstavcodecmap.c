@@ -66,6 +66,32 @@ static const struct
   AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
 };
 
+static guint64
+gst_ffmpeg_channel_positions_to_layout (GstAudioChannelPosition * pos,
+    gint channels)
+{
+  gint i, j;
+  guint64 ret = 0;
+  gint channels_found = 0;
+
+  if (!pos)
+    return 0;
+
+  for (i = 0; i < channels; i++) {
+    for (j = 0; j < G_N_ELEMENTS (_ff_to_gst_layout); j++) {
+      if (_ff_to_gst_layout[j].gst == pos[i]) {
+        ret |= _ff_to_gst_layout[i].ff;
+        channels_found++;
+        break;
+      }
+    }
+  }
+
+  if (channels_found != channels)
+    return 0;
+  return ret;
+}
+
 gboolean
 gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     GstAudioChannelPosition * pos)
@@ -2325,6 +2351,8 @@ gst_ffmpeg_audioinfo_to_context (GstAudioInfo * info, AVCodecContext * context)
 
   context->channels = info->channels;
   context->sample_rate = info->rate;
+  context->channel_layout =
+      gst_ffmpeg_channel_positions_to_layout (info->position, info->channels);
 
   codec = context->codec;
 

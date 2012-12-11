@@ -46,6 +46,9 @@ struct _GstFFMpegAudEnc
   /* other settings are copied over straight,
    * include a context here, rather than copy-and-past it from avcodec.h */
   AVCodecContext config;
+
+  GstAudioChannelPosition ffmpeg_layout[64];
+  gboolean needs_reorder;
 };
 
 typedef struct _GstFFMpegAudEncClass GstFFMpegAudEncClass;
