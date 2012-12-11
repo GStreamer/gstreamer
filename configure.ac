@@ -584,17 +584,12 @@ AG_GST_CHECK_FEATURE(DIRECT3D9, [Direct3D9], winscreencap, [
   LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ld3d9 -lgdi32"
   AC_MSG_CHECKING(for Direct3D9 LDFLAGS)
-  AC_LINK_IFELSE([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #include <windows.h>
 #include <d3d9.h>
-
-int main ()
-{
+]], [[
   Direct3DCreate9(D3D_SDK_VERSION);
-
-  return 0;
-}
-],
+]])],
     [HAVE_DIRECT3D9="yes"],
     [HAVE_DIRECT3D9="no"])
   AC_MSG_RESULT($HAVE_DIRECT3D9)
