@@ -588,6 +588,7 @@ fallback:
 duplicate_frame:
   {
     GST_WARNING_OBJECT (ffmpegdec, "already alloc'ed output buffer for frame");
+    gst_video_codec_frame_unref (frame);
     return -1;
   }
 no_frame:
