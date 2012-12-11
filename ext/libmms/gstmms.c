@@ -305,7 +305,7 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   guint8 *data;
   guint blocksize;
   gint result;
-  mms_off_t offset;
+  goffset offset;
 
   *buf = NULL;
 
@@ -339,7 +339,7 @@ gst_mms_create (GstPushSrc * psrc, GstBuffer ** buf)
   *buf = gst_buffer_new_wrapped (data, result);
   GST_BUFFER_OFFSET (*buf) = offset;
 
-  GST_LOG_OBJECT (mmssrc, "Returning buffer with offset %" G_GINT64_FORMAT
+  GST_LOG_OBJECT (mmssrc, "Returning buffer with offset %" G_GOFFSET_FORMAT
       " and size %u", offset, result);
 
   return GST_FLOW_OK;
