@@ -67,11 +67,10 @@ static const struct
 };
 
 gboolean
-gst_ffmpeg_channel_layout_to_gst (AVCodecContext * context,
+gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     GstAudioChannelPosition * pos)
 {
-  guint nchannels = 0, channels = context->channels;
-  guint64 channel_layout = context->channel_layout;
+  guint nchannels = 0;
   gboolean none_layout = FALSE;
 
   if (channel_layout == 0) {
@@ -279,6 +278,20 @@ gst_ff_vid_caps_new (AVCodecContext * context, enum CodecID codec_id,
   return caps;
 }
 
+static gint
+get_nbits_set (guint64 n)
+{
+  gint i, x;
+
+  x = 0;
+  for (i = 0; i < 64; i++) {
+    if ((n & (G_GUINT64_CONSTANT (1) << i)))
+      x++;
+  }
+
+  return x;
+}
+
 /* same for audio - now with channels/sample rate
  */
 static GstCaps *
@@ -287,7 +300,6 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
     const char *fieldname, ...)
 {
   GstCaps *caps = NULL;
-  GstStructure *structure = NULL;
   gint i;
   va_list var_args;
 
@@ -299,7 +311,8 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
 
-    if (gst_ffmpeg_channel_layout_to_gst (context, pos)) {
+    if (gst_ffmpeg_channel_layout_to_gst (context->channel_layout,
+            context->channels, pos)) {
       guint64 mask;
 
       if (gst_audio_channel_positions_to_mask (pos, context->channels, FALSE,
@@ -387,10 +400,6 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         break;
     }
 
-    /* TODO: handle context->channel_layouts here to set
-     * the list of channel layouts supported by the encoder.
-     * Unfortunately no encoder uses this yet....
-     */
     /* regardless of encode/decode, open up channels if applicable */
     /* Until decoders/encoders expose the maximum number of channels
      * they support, we whitelist them here. */
@@ -403,15 +412,40 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         break;
     }
 
-    if (maxchannels == 1)
-      caps = gst_caps_new_simple (mimetype,
-          "channels", G_TYPE_INT, maxchannels, NULL);
-    else
-      caps = gst_caps_new_simple (mimetype,
-          "channels", GST_TYPE_INT_RANGE, 1, maxchannels, NULL);
+    if (codec && codec->channel_layouts) {
+      const uint64_t *layouts = codec->channel_layouts;
+      GstAudioChannelPosition pos[64];
+
+      caps = gst_caps_new_empty ();
+      while (*layouts) {
+        gint nbits_set = get_nbits_set (*layouts);
+
+        if (gst_ffmpeg_channel_layout_to_gst (*layouts, nbits_set, pos)) {
+          guint64 mask;
+
+          if (gst_audio_channel_positions_to_mask (pos, nbits_set, FALSE,
+                  &mask)) {
+            GstCaps *tmp =
+                gst_caps_new_simple (mimetype, "channel-mask", GST_TYPE_BITMASK,
+                mask,
+                "channels", G_TYPE_INT, nbits_set, NULL);
+
+            gst_caps_append (caps, tmp);
+          }
+        }
+        layouts++;
+      }
+    } else {
+      if (maxchannels == 1)
+        caps = gst_caps_new_simple (mimetype,
+            "channels", G_TYPE_INT, maxchannels, NULL);
+      else
+        caps = gst_caps_new_simple (mimetype,
+            "channels", GST_TYPE_INT_RANGE, 1, maxchannels, NULL);
+    }
+
     if (n_rates) {
       GValue list = { 0, };
-      GstStructure *structure;
 
       g_value_init (&list, GST_TYPE_LIST);
       for (i = 0; i < n_rates; i++) {
@@ -422,8 +456,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         gst_value_list_append_value (&list, &v);
         g_value_unset (&v);
       }
-      structure = gst_caps_get_structure (caps, 0);
-      gst_structure_set_value (structure, "rate", &list);
+      gst_caps_set_value (caps, "rate", &list);
       g_value_unset (&list);
     } else if (codec && codec->supported_samplerates
         && codec->supported_samplerates[0]) {
@@ -455,12 +488,9 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
     caps = gst_caps_new_empty_simple (mimetype);
   }
 
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    va_start (var_args, fieldname);
-    structure = gst_caps_get_structure (caps, i);
-    gst_structure_set_valist (structure, fieldname, var_args);
-    va_end (var_args);
-  }
+  va_start (var_args, fieldname);
+  gst_caps_set_simple_valist (caps, fieldname, var_args);
+  va_end (var_args);
 
   return caps;
 }
@@ -1922,7 +1952,6 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
   } else {
     caps = gst_ff_aud_caps_new (context, codec, codec_id, TRUE, "audio/x-raw",
         "layout", G_TYPE_STRING, "interleaved", NULL);
-
     gst_ffmpeg_audio_set_sample_fmts (caps, codec ? codec->sample_fmts : NULL);
   }
 

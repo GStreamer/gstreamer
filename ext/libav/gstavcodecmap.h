@@ -137,7 +137,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
 
 
 gboolean
-gst_ffmpeg_channel_layout_to_gst (AVCodecContext * context,
+gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     GstAudioChannelPosition * pos);
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */

@@ -360,7 +360,8 @@ gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec, gboolean force)
       ffmpegdec->info.finfo->depth,
       ffmpegdec->context->sample_rate, ffmpegdec->context->channels, depth);
 
-  gst_ffmpeg_channel_layout_to_gst (ffmpegdec->context, pos);
+  gst_ffmpeg_channel_layout_to_gst (ffmpegdec->context->channel_layout,
+      ffmpegdec->context->channels, pos);
   memcpy (ffmpegdec->ffmpeg_layout, pos,
       sizeof (GstAudioChannelPosition) * ffmpegdec->context->channels);
 
