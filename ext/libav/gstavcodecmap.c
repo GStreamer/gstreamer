@@ -172,7 +172,6 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
     enum CodecID codec_id, gboolean encode, const char *mimetype,
     const char *fieldname, ...)
 {
-  GstStructure *structure = NULL;
   GstCaps *caps = NULL;
   va_list var_args;
   gint i;
@@ -284,7 +283,37 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
         break;
       }
       default:
+      {
+        if (codec && codec->supported_framerates
+            && codec->supported_framerates[0].num != 0
+            && codec->supported_framerates[0].den != 0) {
+          GValue va = { 0, };
+          GValue v = { 0, };
+          const AVRational *rates = codec->supported_framerates;
+
+          if (rates[1].num == 0 && rates[1].den == 0) {
+            caps =
+                gst_caps_new_simple (mimetype, "framerate", GST_TYPE_FRACTION,
+                rates[0].num, rates[0].den, NULL);
+          } else {
+            g_value_init (&va, GST_TYPE_LIST);
+            g_value_init (&v, GST_TYPE_FRACTION);
+
+            while (rates->num != 0 && rates->den != 0) {
+              gst_value_set_fraction (&v, rates->num, rates->den);
+              gst_value_list_append_value (&va, &v);
+              rates++;
+            }
+
+            caps = gst_caps_new_simple (mimetype, NULL, NULL, NULL);
+            gst_caps_set_value (caps, "framerate", &va);
+            g_value_unset (&va);
+            g_value_unset (&v);
+          }
+        }
+
         break;
+      }
     }
   }
 
@@ -295,12 +324,9 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
     caps = gst_caps_new_simple (mimetype, NULL, NULL, NULL);
   }
 
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    va_start (var_args, fieldname);
-    structure = gst_caps_get_structure (caps, i);
-    gst_structure_set_valist (structure, fieldname, var_args);
-    va_end (var_args);
-  }
+  va_start (var_args, fieldname);
+  gst_caps_set_simple_valist (caps, fieldname, var_args);
+  va_end (var_args);
 
   return caps;
 }
