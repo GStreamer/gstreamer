@@ -576,23 +576,30 @@ AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
 dnl Direct3D9
 AM_CONDITIONAL(USE_DIRECT3D9, true)
 AG_GST_CHECK_FEATURE(DIRECT3D9, [Direct3D9], winscreencap, [
-  HAVE_DIRECT3D="no"
-
+  HAVE_DIRECT3D9="no"
+  save_CFLAGS="$CFLAGS"
+  save_LDFLAGS="$LDFLAGS"
   save_LIBS="$LIBS"
-
+  CFLAGS="$CFLAGS $DIRECTX_CFLAGS"
+  LDFLAGS="$LDFLAGS $DIRECTX_LDFLAGS"
   LIBS="$LIBS -ld3d9 -lgdi32"
   AC_MSG_CHECKING(for Direct3D9 LDFLAGS)
-
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+  AC_LINK_IFELSE([
 #include <windows.h>
 #include <d3d9.h>
-]], [[
+
+int main ()
+{
   Direct3DCreate9(D3D_SDK_VERSION);
-]])],
+
+  return 0;
+}
+],
     [HAVE_DIRECT3D9="yes"],
     [HAVE_DIRECT3D9="no"])
   AC_MSG_RESULT($HAVE_DIRECT3D9)
-
+  CFLAGS=$save_CFLAGS
+  LDFLAGS=$save_LDFLAGS
   LIBS=$save_LIBS
 
   if test "x$HAVE_DIRECT3D9" = "xyes";  then
