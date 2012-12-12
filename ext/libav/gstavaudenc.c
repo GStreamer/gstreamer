@@ -385,6 +385,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   memset (&pkt, 0, sizeof (pkt));
   memset (&frame, 0, sizeof (frame));
+  avcodec_get_frame_defaults (&frame);
 
   info = gst_audio_encoder_get_audio_info (enc);
   planar = av_sample_fmt_is_planar (ffmpegaudenc->context->sample_fmt);
