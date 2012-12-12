@@ -94,7 +94,7 @@ gst_ffmpegauddec_base_init (GstFFMpegAudDecClass * klass)
       in_plugin->id, FALSE, in_plugin);
   if (!srccaps) {
     GST_DEBUG ("Couldn't get source caps for decoder '%s'", in_plugin->name);
-    srccaps = gst_caps_from_string ("unknown/unknown");
+    srccaps = gst_caps_from_string ("audio/x-raw");
   }
 
   /* pad templates */

@@ -173,7 +173,12 @@ gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
     GST_DEBUG ("Couldn't get sink caps for decoder '%s'", in_plugin->name);
     sinkcaps = gst_caps_new_empty_simple ("unknown/unknown");
   }
-  srccaps = gst_caps_new_empty_simple ("video/x-raw");
+  srccaps = gst_ffmpeg_codectype_to_video_caps (NULL,
+      in_plugin->id, FALSE, in_plugin);
+  if (!srccaps) {
+    GST_DEBUG ("Couldn't get source caps for decoder '%s'", in_plugin->name);
+    srccaps = gst_caps_from_string ("video/x-raw");
+  }
 
   /* pad templates */
   sinktempl = gst_pad_template_new ("sink", GST_PAD_SINK,

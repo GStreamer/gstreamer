@@ -2022,15 +2022,6 @@ gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
     return;
   }
 
-  /* Only a single format */
-  if (fmts[1] == -1) {
-    format = gst_ffmpeg_smpfmt_to_audioformat (fmts[0]);
-    if (format != GST_AUDIO_FORMAT_UNKNOWN)
-      gst_caps_set_simple (caps, "format", G_TYPE_STRING,
-          gst_audio_format_to_string (format), NULL);
-    return;
-  }
-
   g_value_init (&va, GST_TYPE_LIST);
   g_value_init (&v, G_TYPE_STRING);
   while (*fmts != -1) {
@@ -2041,8 +2032,12 @@ gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
     }
     fmts++;
   }
-  if (gst_value_list_get_size (&va) > 0)
+  if (gst_value_list_get_size (&va) == 1) {
+    /* The single value is still in v */
+    gst_caps_set_value (caps, "format", &v);
+  } else if (gst_value_list_get_size (&va) > 1) {
     gst_caps_set_value (caps, "format", &va);
+  }
   g_value_unset (&v);
   g_value_unset (&va);
 }
@@ -2099,14 +2094,6 @@ gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
   }
 
   /* Only a single format */
-  if (fmts[1] == -1) {
-    format = gst_ffmpeg_pixfmt_to_videoformat (fmts[0]);
-    if (format != GST_VIDEO_FORMAT_UNKNOWN)
-      gst_caps_set_simple (caps, "format", G_TYPE_STRING,
-          gst_video_format_to_string (format), NULL);
-    return;
-  }
-
   g_value_init (&va, GST_TYPE_LIST);
   g_value_init (&v, G_TYPE_STRING);
   while (*fmts != -1) {
@@ -2117,8 +2104,12 @@ gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
     }
     fmts++;
   }
-  if (gst_value_list_get_size (&va) > 0)
+  if (gst_value_list_get_size (&va) == 1) {
+    /* The single value is still in v */
+    gst_caps_set_value (caps, "format", &v);
+  } else if (gst_value_list_get_size (&va) > 1) {
     gst_caps_set_value (caps, "format", &va);
+  }
   g_value_unset (&v);
   g_value_unset (&va);
 }
