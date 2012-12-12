@@ -22,7 +22,7 @@
 #define __GST_OMX_VIDEO_ENC_H__
 
 #include <gst/gst.h>
-#include <gst/video/gstvideoencoder.h>
+#include <gst/video/video.h>
 
 #include "gstomx.h"
 
