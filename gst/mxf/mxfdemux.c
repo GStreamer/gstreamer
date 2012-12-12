@@ -2063,8 +2063,8 @@ gst_mxf_demux_pull_klv_packet (GstMXFDemux * demux, guint64 offset, MXFUL * key,
     goto beach;
   }
 
-  GST_DEBUG_OBJECT (demux, "KLV packet with key %s has length %u",
-      mxf_ul_to_string (key, str), length);
+  GST_DEBUG_OBJECT (demux, "KLV packet with key %s has length "
+      "%" G_GUINT64_FORMAT, mxf_ul_to_string (key, str), length);
 
   /* Pull the complete KLV packet */
   if ((ret = gst_mxf_demux_pull_range (demux, offset + data_offset, length,
@@ -3049,8 +3049,8 @@ gst_mxf_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
       break;
     }
 
-    GST_DEBUG_OBJECT (demux, "KLV packet with key %s has length %u",
-        mxf_ul_to_string (&key, str), length);
+    GST_DEBUG_OBJECT (demux, "KLV packet with key %s has length "
+        "%" G_GUINT64_FORMAT, mxf_ul_to_string (&key, str), length);
 
     if (gst_adapter_available (demux->adapter) < offset + length)
       break;
