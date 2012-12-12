@@ -582,28 +582,28 @@ gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf)
 /**
  * gst_vaapi_decoder_get_surface:
  * @decoder: a #GstVaapiDecoder
- * @pstatus: return location for the decoder status, or %NULL
+ * @out_proxy_ptr: the next decoded surface as a #GstVaapiSurfaceProxy
  *
  * Flushes encoded buffers to the decoder and returns a decoded
  * surface, if any.
  *
- * Return value: a #GstVaapiSurfaceProxy holding the decoded surface,
- *   or %NULL if none is available (e.g. an error). Caller owns the
- *   returned object. g_object_unref() after usage.
+ * On successful return, *@out_proxy_ptr contains the decoded surface
+ * as a #GstVaapiSurfaceProxy. The caller owns this object, so
+ * gst_vaapi_surface_proxy_unref() shall be called after usage.
+ *
+ * Return value: a #GstVaapiDecoderStatus
  */
-GstVaapiSurfaceProxy *
-gst_vaapi_decoder_get_surface(
-    GstVaapiDecoder       *decoder,
-    GstVaapiDecoderStatus *pstatus
-)
+GstVaapiDecoderStatus
+gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
+    GstVaapiSurfaceProxy **out_proxy_ptr)
 {
     GstVaapiSurfaceProxy *proxy;
     GstVaapiDecoderStatus status;
 
-    if (pstatus)
-        *pstatus = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(out_proxy_ptr != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
     proxy = pop_surface(decoder);
     if (!proxy) {
@@ -615,10 +615,11 @@ gst_vaapi_decoder_get_surface(
 
     if (proxy)
         status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+    else if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
+        status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    if (pstatus)
-        *pstatus = status;
-    return proxy;
+    *out_proxy_ptr = proxy;
+    return status;
 }
 
 void

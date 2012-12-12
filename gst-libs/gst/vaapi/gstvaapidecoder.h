@@ -137,11 +137,9 @@ gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder);
 gboolean
 gst_vaapi_decoder_put_buffer(GstVaapiDecoder *decoder, GstBuffer *buf);
 
-GstVaapiSurfaceProxy *
-gst_vaapi_decoder_get_surface(
-    GstVaapiDecoder       *decoder,
-    GstVaapiDecoderStatus *pstatus
-);
+GstVaapiDecoderStatus
+gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
+    GstVaapiSurfaceProxy **out_proxy_ptr);
 
 GstVaapiDecoderStatus
 gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,

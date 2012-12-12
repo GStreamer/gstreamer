@@ -157,8 +157,8 @@ main(int argc, char *argv[])
     if (!gst_vaapi_decoder_put_buffer(decoder, NULL))
         g_error("could not send EOS to the decoder");
 
-    proxy = gst_vaapi_decoder_get_surface(decoder, &status);
-    if (!proxy)
+    status = gst_vaapi_decoder_get_surface(decoder, &proxy);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         g_error("could not get decoded surface (decoder status %d)", status);
 
     surface = gst_vaapi_surface_proxy_get_surface(proxy);
