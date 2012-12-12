@@ -2916,6 +2916,11 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
       /* QCELP is always mono, no matter what the caps say */
       context->channels = 1;
       break;
+    case CODEC_ID_ADPCM_G726:
+      if (context->sample_rate && context->bit_rate)
+        context->bits_per_coded_sample =
+            context->bit_rate / context->sample_rate;
+      break;
     default:
       break;
   }
