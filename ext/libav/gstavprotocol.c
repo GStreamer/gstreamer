@@ -25,7 +25,6 @@
 #include <errno.h>
 
 #include <libavformat/avformat.h>
-#include <libavformat/url.h>
 
 #include <gst/gst.h>
 
@@ -44,61 +43,14 @@ struct _GstProtocolInfo
 };
 
 static int
-gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
-{
-  GstProtocolInfo *info;
-  GstPad *pad;
-
-  GST_LOG ("Opening %s", filename);
-
-  info = g_new0 (GstProtocolInfo, 1);
-
-  info->set_streamheader = flags & GST_FFMPEG_URL_STREAMHEADER;
-  flags &= ~GST_FFMPEG_URL_STREAMHEADER;
-  h->flags &= ~GST_FFMPEG_URL_STREAMHEADER;
-
-  /* we don't support R/W together */
-  if ((flags & AVIO_FLAG_WRITE) && (flags & AVIO_FLAG_READ)) {
-    GST_WARNING ("Only read-only or write-only are supported");
-    return -EINVAL;
-  }
-
-  if (sscanf (&filename[12], "%p", &pad) != 1) {
-    GST_WARNING ("could not decode pad from %s", filename);
-    return -EIO;
-  }
-
-  /* make sure we're a pad and that we're of the right type */
-  g_return_val_if_fail (GST_IS_PAD (pad), -EINVAL);
-
-  if ((flags & AVIO_FLAG_READ)) {
-    g_return_val_if_fail (GST_PAD_IS_SINK (pad), -EINVAL);
-  }
-  if ((flags & AVIO_FLAG_WRITE)) {
-    g_return_val_if_fail (GST_PAD_IS_SRC (pad), -EINVAL);
-  }
-
-  info->eos = FALSE;
-  info->pad = pad;
-  info->offset = 0;
-
-  h->priv_data = (void *) info;
-  h->is_streamed = FALSE;
-  h->max_packet_size = 0;
-
-  return 0;
-}
-
-static int
-gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
+gst_ffmpegdata_peek (void *priv_data, unsigned char *buf, int size)
 {
   GstProtocolInfo *info;
   GstBuffer *inbuf = NULL;
   GstFlowReturn ret;
   int total = 0;
 
-  g_return_val_if_fail ((h->flags & AVIO_FLAG_READ), AVERROR (EIO));
-  info = (GstProtocolInfo *) h->priv_data;
+  info = (GstProtocolInfo *) priv_data;
 
   GST_DEBUG ("Pulling %d bytes at position %" G_GUINT64_FORMAT, size,
       info->offset);
@@ -130,17 +82,17 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
 }
 
 static int
-gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
+gst_ffmpegdata_read (void *priv_data, unsigned char *buf, int size)
 {
   gint res;
   GstProtocolInfo *info;
 
-  info = (GstProtocolInfo *) h->priv_data;
+  info = (GstProtocolInfo *) priv_data;
 
   GST_DEBUG ("Reading %d bytes of data at position %" G_GUINT64_FORMAT, size,
       info->offset);
 
-  res = gst_ffmpegdata_peek (h, buf, size);
+  res = gst_ffmpegdata_peek (priv_data, buf, size);
   if (res >= 0)
     info->offset += res;
 
@@ -150,15 +102,13 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 }
 
 static int
-gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
+gst_ffmpegdata_write (void *priv_data, uint8_t * buf, int size)
 {
   GstProtocolInfo *info;
   GstBuffer *outbuf;
 
   GST_DEBUG ("Writing %d bytes", size);
-  info = (GstProtocolInfo *) h->priv_data;
-
-  g_return_val_if_fail ((h->flags & AVIO_FLAG_WRITE), -EIO);
+  info = (GstProtocolInfo *) priv_data;
 
   /* create buffer and push data further */
   outbuf = gst_buffer_new_and_alloc (size);
@@ -173,7 +123,7 @@ gst_ffmpegdata_write (URLContext * h, const unsigned char *buf, int size)
 }
 
 static int64_t
-gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
+gst_ffmpegdata_seek (void *priv_data, int64_t pos, int whence)
 {
   GstProtocolInfo *info;
   guint64 newpos = 0, oldpos;
@@ -181,10 +131,11 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
   GST_DEBUG ("Seeking to %" G_GINT64_FORMAT ", whence=%d",
       (gint64) pos, whence);
 
-  info = (GstProtocolInfo *) h->priv_data;
+  info = (GstProtocolInfo *) priv_data;
 
   /* TODO : if we are push-based, we need to return sensible info */
-  if ((h->flags & AVIO_FLAG_READ)) {
+
+  if (GST_PAD_IS_SINK (info->pad)) {
     /* sinkpad */
     switch (whence) {
       case SEEK_SET:
@@ -214,9 +165,7 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
     /* FIXME : implement case for push-based behaviour */
     if (whence != AVSEEK_SIZE)
       info->offset = newpos;
-  }
-
-  if ((h->flags & AVIO_FLAG_WRITE)) {
+  } else if (GST_PAD_IS_SRC (info->pad)) {
     GstSegment segment;
 
     oldpos = info->offset;
@@ -242,6 +191,8 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
       segment.time = newpos;
       gst_pad_push_event (info->pad, gst_event_new_segment (&segment));
     }
+  } else {
+    g_assert_not_reached ();
   }
 
   GST_DEBUG ("Now at offset %" G_GUINT64_FORMAT " (returning %" G_GUINT64_FORMAT
@@ -249,79 +200,90 @@ gst_ffmpegdata_seek (URLContext * h, int64_t pos, int whence)
   return newpos;
 }
 
-static int
-gst_ffmpegdata_close (URLContext * h)
+int
+gst_ffmpegdata_close (AVIOContext * h)
 {
   GstProtocolInfo *info;
 
-  info = (GstProtocolInfo *) h->priv_data;
+  info = (GstProtocolInfo *) h->opaque;
   if (info == NULL)
     return 0;
 
   GST_LOG ("Closing file");
 
-  if ((h->flags & AVIO_FLAG_WRITE)) {
+  if (GST_PAD_IS_SRC (info->pad)) {
     /* send EOS - that closes down the stream */
     gst_pad_push_event (info->pad, gst_event_new_eos ());
   }
 
   /* clean up data */
   g_free (info);
-  h->priv_data = NULL;
+  h->opaque = NULL;
+
+  av_freep (&h->buffer);
+  av_free (h);
 
   return 0;
 }
 
+int
+gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context)
+{
+  GstProtocolInfo *info;
+  static const int buffer_size = 4096;
+  unsigned char *buffer = NULL;
 
-URLProtocol gstreamer_protocol = {
-  /*.name = */ "gstreamer",
-  /*.url_open = */ gst_ffmpegdata_open,
-  /*.url_open2 = */ NULL,
-  /*.url_read = */ gst_ffmpegdata_read,
-  /*.url_write = */ gst_ffmpegdata_write,
-  /*.url_seek = */ gst_ffmpegdata_seek,
-  /*.url_close = */ gst_ffmpegdata_close,
-};
+  info = g_new0 (GstProtocolInfo, 1);
 
+  info->set_streamheader = flags & GST_FFMPEG_URL_STREAMHEADER;
+  flags &= ~GST_FFMPEG_URL_STREAMHEADER;
+
+  /* we don't support R/W together */
+  if ((flags & AVIO_FLAG_WRITE) && (flags & AVIO_FLAG_READ)) {
+    GST_WARNING ("Only read-only or write-only are supported");
+    return -EINVAL;
+  }
+
+  /* make sure we're a pad and that we're of the right type */
+  g_return_val_if_fail (GST_IS_PAD (pad), -EINVAL);
+
+  if ((flags & AVIO_FLAG_READ))
+    g_return_val_if_fail (GST_PAD_IS_SINK (pad), -EINVAL);
+  if ((flags & AVIO_FLAG_WRITE))
+    g_return_val_if_fail (GST_PAD_IS_SRC (pad), -EINVAL);
+
+  info->eos = FALSE;
+  info->pad = pad;
+  info->offset = 0;
+
+  buffer = av_malloc (buffer_size);
+  if (buffer == NULL) {
+    GST_WARNING ("Failed to allocate buffer");
+    return -ENOMEM;
+  }
+
+  *context =
+      avio_alloc_context (buffer, buffer_size, flags, (void *) info,
+      gst_ffmpegdata_read, gst_ffmpegdata_write, gst_ffmpegdata_seek);
+  (*context)->seekable = AVIO_SEEKABLE_NORMAL;
+  if (!(flags & AVIO_FLAG_WRITE)) {
+    (*context)->buf_ptr = (*context)->buf_end;
+    (*context)->write_flag = 0;
+  }
+
+  return 0;
+}
 
 /* specialized protocol for cross-thread pushing,
  * based on ffmpeg's pipe protocol */
 
 static int
-gst_ffmpeg_pipe_open (URLContext * h, const char *filename, int flags)
-{
-  GstFFMpegPipe *ffpipe;
-
-  GST_LOG ("Opening %s", filename);
-
-  /* we don't support W together */
-  if ((flags & AVIO_FLAG_WRITE)) {
-    GST_WARNING ("Only read-only is supported");
-    return -EINVAL;
-  }
-
-  if (sscanf (&filename[10], "%p", &ffpipe) != 1) {
-    GST_WARNING ("could not decode pipe info from %s", filename);
-    return -EIO;
-  }
-
-  /* sanity check */
-  g_return_val_if_fail (GST_IS_ADAPTER (ffpipe->adapter), -EINVAL);
-
-  h->priv_data = (void *) ffpipe;
-  h->is_streamed = TRUE;
-  h->max_packet_size = 0;
-
-  return 0;
-}
-
-static int
-gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
+gst_ffmpeg_pipe_read (void *priv_data, uint8_t * buf, int size)
 {
   GstFFMpegPipe *ffpipe;
   guint available;
 
-  ffpipe = (GstFFMpegPipe *) h->priv_data;
+  ffpipe = (GstFFMpegPipe *) priv_data;
 
   GST_LOG ("requested size %d", size);
 
@@ -351,22 +313,38 @@ gst_ffmpeg_pipe_read (URLContext * h, unsigned char *buf, int size)
   return size;
 }
 
-static int
-gst_ffmpeg_pipe_close (URLContext * h)
+int
+gst_ffmpeg_pipe_close (AVIOContext * h)
 {
   GST_LOG ("Closing pipe");
 
-  h->priv_data = NULL;
+  h->opaque = NULL;
+  av_freep (&h->buffer);
+  av_free (h);
 
   return 0;
 }
 
-URLProtocol gstpipe_protocol = {
-  "gstpipe",
-  gst_ffmpeg_pipe_open,
-  NULL,
-  gst_ffmpeg_pipe_read,
-  NULL,
-  NULL,
-  gst_ffmpeg_pipe_close,
-};
+int
+gst_ffmpeg_pipe_open (GstFFMpegPipe * ffpipe, int flags, AVIOContext ** context)
+{
+  static const int buffer_size = 4096;
+  unsigned char *buffer = NULL;
+
+  /* sanity check */
+  g_return_val_if_fail (GST_IS_ADAPTER (ffpipe->adapter), -EINVAL);
+
+  buffer = av_malloc (buffer_size);
+  if (buffer == NULL) {
+    GST_WARNING ("Failed to allocate buffer");
+    return -ENOMEM;
+  }
+
+  *context =
+      avio_alloc_context (buffer, buffer_size, 0, (void *) ffpipe,
+      gst_ffmpeg_pipe_read, NULL, NULL);
+  (*context)->seekable = 0;
+  (*context)->buf_ptr = (*context)->buf_end;
+
+  return 0;
+}

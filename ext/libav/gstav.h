@@ -26,7 +26,6 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavformat/url.h>
 
 #include <gst/gst.h>
 
@@ -56,10 +55,13 @@ int gst_ffmpeg_avcodec_open (AVCodecContext *avctx, AVCodec *codec);
 int gst_ffmpeg_avcodec_close (AVCodecContext *avctx);
 int gst_ffmpeg_av_find_stream_info(AVFormatContext *ic);
 
-G_END_DECLS
+int gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context);
+int gst_ffmpegdata_close (AVIOContext * h);
+typedef struct _GstFFMpegPipe GstFFMpegPipe;
+int gst_ffmpeg_pipe_open (GstFFMpegPipe *ffpipe, int flags, AVIOContext ** context);
+int gst_ffmpeg_pipe_close (AVIOContext * h);
 
-extern URLProtocol gstreamer_protocol;
-extern URLProtocol gstpipe_protocol;
+G_END_DECLS
 
 /* use GST_FFMPEG URL_STREAMHEADER with URL_WRONLY if the first
  * buffer should be used as streamheader property on the pad's caps. */

@@ -30,7 +30,6 @@
 
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-#include <libavformat/url.h>
 
 #include "gstav.h"
 #include "gstavutils.h"
@@ -149,9 +148,6 @@ plugin_init (GstPlugin * plugin)
   gst_ffmpegcsp_register (plugin);
   gst_ffmpegaudioresample_register (plugin);
 #endif
-
-  ffurl_register_protocol (&gstreamer_protocol, sizeof (URLProtocol));
-  ffurl_register_protocol (&gstpipe_protocol, sizeof (URLProtocol));
 
   /* Now we can return the pointer to the newly created Plugin object. */
   return TRUE;

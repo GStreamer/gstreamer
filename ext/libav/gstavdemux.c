@@ -332,8 +332,11 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
   demux->audiopads = 0;
 
   /* close demuxer context from ffmpeg */
-  av_close_input_file (demux->context);
-  demux->context = NULL;
+  if (demux->seekable)
+    gst_ffmpegdata_close (demux->context->pb);
+  else
+    gst_ffmpeg_pipe_close (demux->context->pb);
+  avformat_close_input (&demux->context);
 
   GST_OBJECT_LOCK (demux);
   demux->opened = FALSE;
@@ -1115,9 +1118,9 @@ gst_ffmpegdemux_read_tags (GstFFMpegDemux * demux)
 static gboolean
 gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 {
+  AVIOContext *iocontext = NULL;
   GstFFMpegDemuxClass *oclass =
       (GstFFMpegDemuxClass *) G_OBJECT_GET_CLASS (demux);
-  gchar *location;
   gint res, n_streams, i;
 #if 0
   /* Re-enable once converted to new AVMetaData API
@@ -1133,15 +1136,14 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 
   /* open via our input protocol hack */
   if (demux->seekable)
-    location = g_strdup_printf ("gstreamer://%p", demux->sinkpad);
+    res = gst_ffmpegdata_open (demux->sinkpad, AVIO_FLAG_READ, &iocontext);
   else
-    location = g_strdup_printf ("gstpipe://%p", &demux->ffpipe);
-  GST_DEBUG_OBJECT (demux, "about to call av_open_input_file %s", location);
+    res = gst_ffmpeg_pipe_open (&demux->ffpipe, AVIO_FLAG_READ, &iocontext);
 
-  res = avformat_open_input (&demux->context, location,
-      oclass->in_plugin, NULL);
+  demux->context = avformat_alloc_context ();
+  demux->context->pb = iocontext;
+  res = avformat_open_input (&demux->context, NULL, oclass->in_plugin, NULL);
 
-  g_free (location);
   GST_DEBUG_OBJECT (demux, "av_open_input returned %d", res);
   if (res < 0)
     goto open_failed;
