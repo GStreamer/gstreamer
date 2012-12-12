@@ -396,12 +396,16 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
     nsamples = frame.nb_samples = in_size / info->bpf;
     channels = info->channels;
 
-    frame.data[0] = g_malloc (in_size);
-    frame.linesize[0] = in_size / channels;
-    for (i = 1; i < channels; i++) {
-      frame.data[i] = frame.data[i - 1] + frame.linesize[0];
-      frame.linesize[i] = frame.linesize[0];
+    if (info->channels > AV_NUM_DATA_POINTERS) {
+      frame.extended_data = g_new (uint8_t *, info->channels);
+    } else {
+      frame.extended_data = frame.data;
     }
+
+    frame.extended_data[0] = g_malloc (in_size);
+    frame.linesize[0] = in_size / channels;
+    for (i = 1; i < channels; i++)
+      frame.extended_data[i] = frame.extended_data[i - 1] + frame.linesize[0];
 
     switch (info->finfo->width) {
       case 8:{
@@ -409,7 +413,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
         for (i = 0; i < nsamples; i++) {
           for (j = 0; j < channels; j++) {
-            ((guint8 *) frame.data[j])[i] = idata[j];
+            ((guint8 *) frame.extended_data[j])[i] = idata[j];
           }
           idata += channels;
         }
@@ -420,7 +424,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
         for (i = 0; i < nsamples; i++) {
           for (j = 0; j < channels; j++) {
-            ((guint16 *) frame.data[j])[i] = idata[j];
+            ((guint16 *) frame.extended_data[j])[i] = idata[j];
           }
           idata += channels;
         }
@@ -431,7 +435,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
         for (i = 0; i < nsamples; i++) {
           for (j = 0; j < channels; j++) {
-            ((guint32 *) frame.data[j])[i] = idata[j];
+            ((guint32 *) frame.extended_data[j])[i] = idata[j];
           }
           idata += channels;
         }
@@ -443,7 +447,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
         for (i = 0; i < nsamples; i++) {
           for (j = 0; j < channels; j++) {
-            ((guint64 *) frame.data[j])[i] = idata[j];
+            ((guint64 *) frame.extended_data[j])[i] = idata[j];
           }
           idata += channels;
         }
@@ -457,6 +461,7 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
 
   } else {
     frame.data[0] = audio_in;
+    frame.extended_data = frame.data;
     frame.linesize[0] = in_size;
     frame.nb_samples = in_size / info->bpf;
   }
@@ -464,6 +469,8 @@ gst_ffmpegaudenc_encode_audio (GstFFMpegAudEnc * ffmpegaudenc,
   res = avcodec_encode_audio2 (ctx, &pkt, &frame, have_data);
   if (planar && info->channels > 1)
     g_free (frame.data[0]);
+  if (frame.extended_data != frame.data)
+    g_free (frame.extended_data);
 
   if (res < 0) {
     char error_str[128] = { 0, };
