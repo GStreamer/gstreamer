@@ -271,7 +271,7 @@ gst_deinterleave_set_pads_caps (GstDeinterleave * self, GstCaps * caps)
     GstAudioInfo info;
     gst_audio_info_from_caps (&info, caps);
     if (self->keep_positions)
-      GST_AUDIO_INFO_POSITION (&info, i) =
+      GST_AUDIO_INFO_POSITION (&info, 0) =
           GST_AUDIO_INFO_POSITION (&self->audio_info, i);
 
     srccaps = gst_audio_info_to_caps (&info);
