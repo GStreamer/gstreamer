@@ -28,6 +28,7 @@ libgstcheck_@GST_API_VERSION@includedir =		\
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/check
 
 libgstcheck_@GST_API_VERSION@include_HEADERS =	\
+	check.h					\
 	gstbufferstraw.h			\
 	gstcheck.h				\
 	gstconsistencychecker.h			\
@@ -139,7 +140,7 @@ GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VE
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \
 		-I$(top_builddir)/libs \
-		--c-include "gst/check/gstcheck.h" \
+		--c-include "gst/check/check.h" \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
 		--library=libgstcheck-@GST_API_VERSION@.la \

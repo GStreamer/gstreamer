@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 GStreamer developers
  *
- * gstbase.h: single include header for gst-base library
+ * net.h: single include header for gst-net library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,21 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_BASE_H__
-#define __GST_BASE_H__
+#ifndef __GST_NET__H__
+#define __GST_NET__H__
 
-#include <gst/base/gstadapter.h>
-#include <gst/base/gstbaseparse.h>
-#include <gst/base/gstbasesink.h>
-#include <gst/base/gstbasesrc.h>
-#include <gst/base/gstbasetransform.h>
-#include <gst/base/gstbitreader.h>
-#include <gst/base/gstbytereader.h>
-#include <gst/base/gstbytewriter.h>
-#include <gst/base/gstcollectpads.h>
-#include <gst/base/gstdataqueue.h>
-#include <gst/base/gstpushsrc.h>
-#include <gst/base/gstqueuearray.h>
-#include <gst/base/gsttypefindhelper.h>
+#include <gst/net/gstnet.h>
+#include <gst/net/gstnetaddressmeta.h>
+#include <gst/net/gstnetclientclock.h>
+#include <gst/net/gstnettimepacket.h>
+#include <gst/net/gstnettimeprovider.h>
 
-#endif /* __GST_BASE_H__ */
+#endif /* __GST_NET__H__ */

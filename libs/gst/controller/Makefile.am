@@ -2,8 +2,8 @@ lib_LTLIBRARIES = libgstcontroller-@GST_API_VERSION@.la
 
 libgstcontroller_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/controller
 libgstcontroller_@GST_API_VERSION@_include_HEADERS = \
+	controller.h \
 	gstargbcontrolbinding.h \
-	gstcontroller.h \
 	gstdirectcontrolbinding.h \
 	gsttimedvaluecontrolsource.h \
 	gstinterpolationcontrolsource.h \
@@ -58,7 +58,7 @@ GstController-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcontroller-@
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \
 		-I$(top_builddir)/libs \
-		--c-include "gst/controller/gstcontroller.h" \
+		--c-include "gst/controller/controller.h" \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
 		--library=libgstcontroller-@GST_API_VERSION@.la \

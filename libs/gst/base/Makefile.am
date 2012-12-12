@@ -25,8 +25,8 @@ libgstbase_@GST_API_VERSION@includedir =		\
 	$(includedir)/gstreamer-@GST_API_VERSION@/gst/base
 
 libgstbase_@GST_API_VERSION@include_HEADERS =	\
+	base.h			\
 	gstadapter.h		\
-	gstbase.h		\
 	gstbaseparse.h		\
 	gstbasesink.h		\
 	gstbasesrc.h		\
@@ -84,7 +84,7 @@ GstBase-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstbase-@GST_API_VERS
 		-I$(top_srcdir)/libs \
 		-I$(top_builddir) \
 		-I$(top_builddir)/libs \
-		--c-include "gst/base/gstbase.h" \
+		--c-include "gst/base/base.h" \
 		--add-include-path=$(top_builddir)/gst \
 		--library-path=$(top_builddir)/gst \
 		--library=libgstbase-@GST_API_VERSION@.la \
