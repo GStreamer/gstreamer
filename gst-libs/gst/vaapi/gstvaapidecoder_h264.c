@@ -2982,13 +2982,14 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(base_decoder);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderUnitH264 *unit;
     GstVaapiDecoderStatus status;
     GstH264ParserResult result;
     guchar *buf;
     guint i, size, buf_size, nalu_size, flags;
     guint32 start_code;
-    gint ofs;
+    gint ofs, ofs2;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
@@ -3015,22 +3016,33 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     else {
         if (size < 4)
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
         ofs = scan_for_start_code(adapter, 0, size, NULL);
         if (ofs < 0)
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-        gst_adapter_flush(adapter, ofs);
-        size -= ofs;
 
-        ofs = G_UNLIKELY(size < 8) ? -1 :
-            scan_for_start_code(adapter, 4, size - 4, NULL);
+        if (ofs > 0) {
+            gst_adapter_flush(adapter, ofs);
+            size -= ofs;
+        }
+
+        ofs2 = ps->input_offset2 - ofs - 4;
+        if (ofs2 < 4)
+            ofs2 = 4;
+
+        ofs = G_UNLIKELY(size < ofs2 + 4) ? -1 :
+            scan_for_start_code(adapter, ofs2, size - ofs2, NULL);
         if (ofs < 0) {
             // Assume the whole NAL unit is present if end-of-stream
-            if (!at_eos)
+            if (!at_eos) {
+                ps->input_offset2 = size;
                 return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+            }
             ofs = size;
         }
         buf_size = ofs;
     }
+    ps->input_offset2 = 0;
 
     buf = (guchar *)gst_adapter_peek(adapter, buf_size);
     if (!buf)
