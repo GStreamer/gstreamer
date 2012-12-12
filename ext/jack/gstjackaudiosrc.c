@@ -82,6 +82,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gst/audio/audio.h>
+
 #include "gstjackaudiosrc.h"
 #include "gstjackringbuffer.h"
 #include "gstjackutil.h"

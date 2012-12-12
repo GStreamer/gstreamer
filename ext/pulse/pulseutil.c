@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <gst/audio/audio.h>
+
 #include "pulseutil.h"
 
 #ifdef HAVE_UNISTD_H

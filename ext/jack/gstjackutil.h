@@ -23,7 +23,7 @@
 #define _GST_JACK_UTIL_H_
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudioringbuffer.h>
+#include <gst/audio/audio.h>
 
 void
 gst_jack_set_layout (GstAudioRingBuffer * buffer, GstAudioRingBufferSpec *spec);

@@ -29,6 +29,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudiosink.h>
 
 #include <pulse/pulseaudio.h>

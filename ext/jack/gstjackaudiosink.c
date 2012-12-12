@@ -62,6 +62,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gst/audio/audio.h>
 
 #include "gstjackaudiosink.h"
 #include "gstjackringbuffer.h"

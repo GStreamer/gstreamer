@@ -29,10 +29,11 @@
 #endif
 #include <string.h>
 #include <gst/gst.h>
-#include "gstpngenc.h"
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include <zlib.h>
+
+#include "gstpngenc.h"
 
 GST_DEBUG_CATEGORY_STATIC (pngenc_debug);
 #define GST_CAT_DEFAULT pngenc_debug

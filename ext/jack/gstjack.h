@@ -22,6 +22,8 @@
 #ifndef _GST_JACK_H_
 #define _GST_JACK_H_
 
+#include <jack/jack.h>
+#include <gst/audio/audio.h>
 
 /**
  * GstJackConnect:

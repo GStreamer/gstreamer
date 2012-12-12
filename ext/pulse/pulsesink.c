@@ -52,9 +52,8 @@
 
 #include <gst/base/gstbasesink.h>
 #include <gst/gsttaglist.h>
-#include <gst/audio/streamvolume.h>
+#include <gst/audio/audio.h>
 #include <gst/gst-i18n-plugin.h>
-#include <gst/audio/gstaudioiec61937.h>
 
 #include <gst/pbutils/pbutils.h>        /* only used for GST_PLUGINS_BASE_VERSION_* */
 

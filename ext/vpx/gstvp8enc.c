@@ -60,12 +60,11 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include <gst/tag/tag.h>
+#include <gst/video/video.h>
 #include <string.h>
 
 #include "gstvp8utils.h"
 #include "gstvp8enc.h"
-
-#include <gst/video/gstvideometa.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_vp8enc_debug);
 #define GST_CAT_DEFAULT gst_vp8enc_debug

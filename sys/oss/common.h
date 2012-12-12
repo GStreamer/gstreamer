@@ -18,6 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#include <gst/audio/audio.h>
+
 #define SET_PARAM(_oss, _name, _val, _detail)   \
 G_STMT_START {                                  \
   int _tmp = _val;                              \

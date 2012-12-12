@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstjack.h"
 #include "gstjackaudiosrc.h"
 #include "gstjackaudiosink.h"
 

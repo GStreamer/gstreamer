@@ -29,6 +29,8 @@
 #include "config.h"
 #endif
 
+#include <gst/audio/audio.h>
+
 #include "pulseprobe.h"
 #include "pulseutil.h"
 

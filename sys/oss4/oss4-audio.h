@@ -21,7 +21,7 @@
 #define GST_OSS4_AUDIO_H_
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudioringbuffer.h>
+#include <gst/audio/audio.h>
 
 /* This is the minimum version we require */
 #define GST_MIN_OSS4_VERSION  0x040003

@@ -59,8 +59,8 @@
 # endif /* HAVE_OSS_INCLUDE_IN_ROOT */
 #endif /* HAVE_OSS_INCLUDE_IN_SYS */
 
-#include "gstosssrc.h"
 #include "common.h"
+#include "gstosssrc.h"
 
 #include <gst/gst-i18n-plugin.h>
 
