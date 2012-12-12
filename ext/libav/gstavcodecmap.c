@@ -850,8 +850,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_RAWVIDEO:
       caps =
-          gst_ffmpeg_codectype_to_caps (AVMEDIA_TYPE_VIDEO, context, codec_id,
-          encode);
+          gst_ffmpeg_codectype_to_video_caps (context, codec_id, encode, NULL);
       break;
 
     case CODEC_ID_MSMPEG4V1:
@@ -1914,7 +1913,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
  * See below for usefullness
  */
 
-GstCaps *
+static GstCaps *
 gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context,
     enum CodecID codec_id)
 {
@@ -2131,36 +2130,6 @@ gst_ffmpeg_codectype_to_video_caps (AVCodecContext * context,
         NULL);
     gst_ffmpeg_video_set_pix_fmts (caps, codec ? codec->pix_fmts : NULL);
   }
-  return caps;
-}
-
-/* Convert a FFMPEG codec Type and optional AVCodecContext
- * to a GstCaps. If the context is ommitted, no fixed values
- * for video/audio size will be included in the GstCaps
- *
- * AVMediaType is primarily meant for uncompressed data GstCaps!
- */
-
-GstCaps *
-gst_ffmpeg_codectype_to_caps (enum AVMediaType codec_type,
-    AVCodecContext * context, enum CodecID codec_id, gboolean encode)
-{
-  GstCaps *caps;
-
-  switch (codec_type) {
-    case AVMEDIA_TYPE_VIDEO:
-      caps =
-          gst_ffmpeg_codectype_to_video_caps (context, codec_id, encode, NULL);
-      break;
-    case AVMEDIA_TYPE_AUDIO:
-      caps =
-          gst_ffmpeg_codectype_to_audio_caps (context, codec_id, encode, NULL);
-      break;
-    default:
-      caps = NULL;
-      break;
-  }
-
   return caps;
 }
 
