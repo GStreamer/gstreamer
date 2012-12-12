@@ -105,18 +105,20 @@ G_DEFINE_TYPE_WITH_CODE(
                           gst_video_context_interface_init))
 
 static gboolean
-gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps);
+gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
+    GstVideoCodecState *ref_state);
 
 static void
 gst_vaapi_decoder_notify_caps(GObject *obj, GParamSpec *pspec, void *user_data)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(user_data);
-    GstCaps *caps;
+    GstVideoCodecState *codec_state;
 
     g_assert(decode->decoder == GST_VAAPI_DECODER(obj));
 
-    caps = gst_vaapi_decoder_get_caps(decode->decoder);
-    gst_vaapidecode_update_src_caps(decode, caps);
+    codec_state = gst_vaapi_decoder_get_codec_state(decode->decoder);
+    gst_vaapidecode_update_src_caps(decode, codec_state);
+    gst_video_codec_state_unref(codec_state);
 }
 
 static inline gboolean
@@ -127,25 +129,20 @@ gst_vaapidecode_update_sink_caps(GstVaapiDecode *decode, GstCaps *caps)
 }
 
 static gboolean
-gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
+gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
+    GstVideoCodecState *ref_state)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
-    GstVideoCodecState *state, *ref_state;
-    GstVideoInfo info;
-
-    if (!gst_video_info_from_caps(&info, caps))
-        return FALSE;
-
-    ref_state = g_slice_new0(GstVideoCodecState);
-    ref_state->ref_count = 1;
-    ref_state->info = info;
+    GstVideoCodecState *state;
+    GstVideoInfo *vi;
 
     state = gst_video_decoder_set_output_state(vdec,
-        GST_VIDEO_INFO_FORMAT(&info), info.width, info.height, ref_state);
-    gst_video_codec_state_unref(ref_state);
+        GST_VIDEO_INFO_FORMAT(&ref_state->info),
+        ref_state->info.width, ref_state->info.height, ref_state);
     if (!state)
         return FALSE;
 
+    vi = &state->info;
     gst_video_codec_state_unref(state);
 
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
@@ -157,13 +154,13 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode, GstCaps *caps)
     gst_caps_set_simple(state->caps,
         "type", G_TYPE_STRING, "vaapi",
         "opengl", G_TYPE_BOOLEAN, USE_GLX,
-        "width", G_TYPE_INT, info.width,
-        "height", G_TYPE_INT, info.height,
-        "framerate", GST_TYPE_FRACTION, info.fps_n, info.fps_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, info.par_n, info.par_d,
+        "width", G_TYPE_INT, vi->width,
+        "height", G_TYPE_INT, vi->height,
+        "framerate", GST_TYPE_FRACTION, vi->fps_n, vi->fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, vi->par_n, vi->par_d,
         NULL);
 
-    if (GST_VIDEO_INFO_IS_INTERLACED(&info))
+    if (GST_VIDEO_INFO_IS_INTERLACED(vi))
         gst_caps_set_simple(state->caps, "interlaced", G_TYPE_BOOLEAN,
             TRUE, NULL);
 
@@ -448,11 +445,10 @@ static gboolean
 gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
-    GstCaps * const caps = state->caps;
 
-    if (!gst_vaapidecode_update_sink_caps(decode, caps))
+    if (!gst_vaapidecode_update_sink_caps(decode, state->caps))
         return FALSE;
-    if (!gst_vaapidecode_update_src_caps(decode, caps))
+    if (!gst_vaapidecode_update_src_caps(decode, state))
         return FALSE;
     if (!gst_vaapidecode_reset(decode, decode->sinkpad_caps))
         return FALSE;
