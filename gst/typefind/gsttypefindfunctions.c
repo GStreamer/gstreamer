@@ -1040,7 +1040,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         count = aac_type_find_scan_loas_frames (tf, &c, 20);
 
       if (count >= 3 && count > best_count) {
-        gst_caps_unref (best_caps);
+        gst_caps_replace (&best_caps, NULL);
         best_caps = gst_caps_new_simple ("audio/mpeg",
             "framed", G_TYPE_BOOLEAN, FALSE,
             "mpegversion", G_TYPE_INT, 4,
