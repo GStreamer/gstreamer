@@ -28,6 +28,8 @@
 #include <libavformat/avformat.h>
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
+#include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_EXTERN (ffmpeg_debug);
 #define GST_CAT_DEFAULT ffmpeg_debug
