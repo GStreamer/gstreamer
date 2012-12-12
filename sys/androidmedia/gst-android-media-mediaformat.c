@@ -154,8 +154,6 @@ gst_am_mediaformat_create_audio_format (const gchar * mime,
   jstring mime_str;
   jobject object = NULL;
 
-  g_return_val_if_fail (mime != NULL, NULL);
-
   mime_str = (*env)->NewStringUTF (env, mime);
   if (mime_str == NULL)
     goto done;
@@ -190,8 +188,6 @@ gst_am_mediaformat_create_video_format (const gchar * mime,
   jstring mime_str;
   jobject object = NULL;
 
-  g_return_val_if_fail (mime != NULL, NULL);
-
   mime_str = (*env)->NewStringUTF (env, mime);
   if (mime_str == NULL)
     goto done;
@@ -222,8 +218,6 @@ gst_am_mediaformat_free (GstAmMediaFormat * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  g_return_if_fail (self != NULL);
-
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAmMediaFormat, self);
 }
@@ -235,8 +229,6 @@ gst_am_mediaformat_to_string (GstAmMediaFormat * self)
   jstring v_str = NULL;
   const gchar *v = NULL;
   gchar *ret = NULL;
-
-  g_return_val_if_fail (self != NULL, FALSE);
 
   v_str = AMMF_CALL (return NULL, Object, toString);
   if (v_str) {
@@ -265,9 +257,6 @@ gst_am_mediaformat_contains_key (GstAmMediaFormat * self, const gchar * key)
   gboolean ret = FALSE;
   jstring key_str = NULL;
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
@@ -288,10 +277,6 @@ gst_am_mediaformat_get_float (GstAmMediaFormat * self, const gchar * key,
   JNIEnv *env = gst_dvm_get_env ();
   jstring key_str = NULL;
   gboolean ret = FALSE;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
 
@@ -317,9 +302,6 @@ gst_am_mediaformat_set_float (GstAmMediaFormat * self, const gchar * key,
   jstring key_str = NULL;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
@@ -341,10 +323,6 @@ gst_am_mediaformat_get_int (GstAmMediaFormat * self, const gchar * key,
   JNIEnv *env = gst_dvm_get_env ();
   jstring key_str = NULL;
   gboolean ret = FALSE;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
 
@@ -371,9 +349,6 @@ gst_am_mediaformat_set_int (GstAmMediaFormat * self, const gchar * key,
   jstring key_str = NULL;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
@@ -396,10 +371,6 @@ gst_am_mediaformat_get_long (GstAmMediaFormat * self, const gchar * key,
   jstring key_str = NULL;
   gboolean ret = FALSE;
   jlong long_value;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
 
@@ -428,9 +399,6 @@ gst_am_mediaformat_set_long (GstAmMediaFormat * self, const gchar * key,
   gboolean ret = FALSE;
   jlong long_value = value;
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
@@ -454,10 +422,6 @@ gst_am_mediaformat_get_string (GstAmMediaFormat * self, const gchar * key,
   jstring key_str = NULL;
   jstring v_str = NULL;
   const gchar *v = NULL;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
 
@@ -498,10 +462,6 @@ gst_am_mediaformat_set_string (GstAmMediaFormat * self, const gchar * key,
   jstring v_str = NULL;
   gboolean ret = FALSE;
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)
     goto done;
@@ -531,10 +491,6 @@ gst_am_mediaformat_get_buffer (GstAmMediaFormat * self, const gchar * key,
   jobject v = NULL;
   guint8 *data;
   gsize size;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
 
   *value = 0;
 
@@ -573,11 +529,6 @@ gst_am_mediaformat_set_buffer (GstAmMediaFormat * self, const gchar * key,
   jstring key_str = NULL;
   jobject v = NULL;
   gboolean ret = FALSE;
-
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (key != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
-
 
   key_str = (*env)->NewStringUTF (env, key);
   if (!key_str)

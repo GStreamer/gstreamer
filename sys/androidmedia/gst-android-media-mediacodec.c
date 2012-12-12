@@ -147,9 +147,6 @@ gst_am_mediacodec_configure (GstAmMediaCodec * self, GstAmMediaFormat * format,
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (format != NULL, FALSE);
-
   AMMC_CALL (return FALSE, Void, configure, format->object, NULL, NULL, flags);
 
   return TRUE;
@@ -162,8 +159,6 @@ gst_am_mediacodec_create_by_codec_name (const gchar * name)
   GstAmMediaCodec *codec = NULL;
   jobject object = NULL;
   jstring name_str;
-
-  g_return_val_if_fail (name != NULL, NULL);
 
   name_str = (*env)->NewStringUTF (env, name);
   if (name_str == NULL)
@@ -197,8 +192,6 @@ gst_am_mediacodec_get_output_format (GstAmMediaCodec * self)
   GstAmMediaFormat *format = NULL;
   jobject object = NULL;
 
-  g_return_val_if_fail (self != NULL, NULL);
-
   object = AMMC_CALL (return NULL, Object, getOutputFormat);
   if (object) {
     format = g_slice_new0 (GstAmMediaFormat);
@@ -220,8 +213,6 @@ gst_am_mediacodec_start (GstAmMediaCodec * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  g_return_val_if_fail (self != NULL, FALSE);
-
   AMMC_CALL (return FALSE, Void, start);
 
   return TRUE;
@@ -231,8 +222,6 @@ gboolean
 gst_am_mediacodec_stop (GstAmMediaCodec * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
-
-  g_return_val_if_fail (self != NULL, FALSE);
 
   AMMC_CALL (return FALSE, Void, stop);
 
@@ -244,8 +233,6 @@ gst_am_mediacodec_flush (GstAmMediaCodec * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  g_return_val_if_fail (self != NULL, FALSE);
-
   AMMC_CALL (return FALSE, Void, flush);
 
   return TRUE;
@@ -255,8 +242,6 @@ void
 gst_am_mediacodec_release (GstAmMediaCodec * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
-
-  g_return_if_fail (self != NULL);
 
   AMMC_CALL (, Void, release);
 
@@ -269,8 +254,6 @@ gst_am_mediacodec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jsize i;
-
-  g_return_if_fail (buffers != NULL);
 
   for (i = 0; i < n_buffers; i++) {
     if (buffers[i].object)
@@ -287,9 +270,6 @@ gst_am_mediacodec_get_output_buffers (GstAmMediaCodec * self, gsize * n_buffers)
   jsize n_output_buffers;
   GstAmcBuffer *ret = NULL;
   jsize i;
-
-  g_return_val_if_fail (self != NULL, NULL);
-  g_return_val_if_fail (n_buffers != NULL, NULL);
 
   *n_buffers = 0;
   output_buffers = AMMC_CALL (goto done, Object, getOutputBuffers);
@@ -356,9 +336,6 @@ gst_am_mediacodec_get_input_buffers (GstAmMediaCodec * self, gsize * n_buffers)
   GstAmcBuffer *ret = NULL;
   jsize i;
 
-  g_return_val_if_fail (self != NULL, NULL);
-  g_return_val_if_fail (n_buffers != NULL, NULL);
-
   *n_buffers = 0;
 
   input_buffers = AMMC_CALL (goto done, Object, getOutputBuffers);
@@ -423,8 +400,6 @@ gst_am_mediacodec_dequeue_input_buffer (GstAmMediaCodec * self,
   JNIEnv *env = gst_dvm_get_env ();
   gint ret = G_MININT;
 
-  g_return_val_if_fail (self != NULL, G_MININT);
-
   ret = AMMC_CALL (return G_MININT, Int, dequeueInputBuffer, timeoutUs);
 
   return ret;
@@ -433,8 +408,6 @@ gst_am_mediacodec_dequeue_input_buffer (GstAmMediaCodec * self,
 static gboolean
 _fill_buffer_info (JNIEnv * env, jobject buffer_info, GstAmmcBufferInfo * info)
 {
-  g_return_val_if_fail (buffer_info != NULL, FALSE);
-
   info->flags = (*env)->GetIntField (env, buffer_info,
       android_media_mediacodec_bufferinfo.flags);
   if ((*env)->ExceptionCheck (env)) {
@@ -478,8 +451,6 @@ gst_am_mediacodec_dequeue_output_buffer (GstAmMediaCodec * self,
   gint ret = G_MININT;
   jobject info_o = NULL;
 
-  g_return_val_if_fail (self != NULL, G_MININT);
-
   info_o = (*env)->NewObject (env, android_media_mediacodec_bufferinfo.klass,
       android_media_mediacodec_bufferinfo.constructor);
   if (!info_o) {
@@ -511,9 +482,6 @@ gst_am_mediacodec_queue_input_buffer (GstAmMediaCodec * self, gint index,
 {
   JNIEnv *env = gst_dvm_get_env ();
 
-  g_return_val_if_fail (self != NULL, FALSE);
-  g_return_val_if_fail (info != NULL, FALSE);
-
   AMMC_CALL (return FALSE, Void, queueInputBuffer, index, info->offset,
       info->size, info->presentation_time_us, info->flags);
 
@@ -524,8 +492,6 @@ gboolean
 gst_am_mediacodec_release_output_buffer (GstAmMediaCodec * self, gint index)
 {
   JNIEnv *env = gst_dvm_get_env ();
-
-  g_return_val_if_fail (self != NULL, FALSE);
 
   AMMC_CALL (return FALSE, Void, releaseOutputBuffer, index, JNI_FALSE);
 
