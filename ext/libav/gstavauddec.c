@@ -252,6 +252,7 @@ gst_ffmpegauddec_get_buffer (AVCodecContext * context, AVFrame * frame)
   gst_buffer_map (buffer_info->buffer, &buffer_info->map, GST_MAP_WRITE);
   frame->opaque = buffer_info;
   frame->data[0] = buffer_info->map.data;
+  frame->extended_data = frame->data;
   frame->linesize[0] = buffer_info->map.size;
   frame->type = FF_BUFFER_TYPE_USER;
 
@@ -454,7 +455,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       gst_buffer_unmap (buffer_info->buffer, &buffer_info->map);
       g_slice_free (BufferInfo, buffer_info);
       frame.opaque = NULL;
-    } else if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)) {
+    } else if (av_sample_fmt_is_planar (ffmpegdec->context->sample_fmt)
+        && ffmpegdec->info.channels > 1) {
       gint i, j;
       gint nsamples, channels;
       GstMapInfo minfo;
@@ -466,6 +468,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
           (ffmpegdec), frame.linesize[0] * channels);
 
       gst_buffer_map (*outbuf, &minfo, GST_MAP_WRITE);
+
       nsamples = frame.nb_samples;
       switch (ffmpegdec->info.finfo->width) {
         case 8:{
@@ -473,7 +476,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint8 *) frame.data[j])[i];
+              odata[j] = ((const guint8 *) frame.extended_data[j])[i];
             }
             odata += channels;
           }
@@ -484,7 +487,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint16 *) frame.data[j])[i];
+              odata[j] = ((const guint16 *) frame.extended_data[j])[i];
             }
             odata += channels;
           }
@@ -495,7 +498,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint32 *) frame.data[j])[i];
+              odata[j] = ((const guint32 *) frame.extended_data[j])[i];
             }
             odata += channels;
           }
@@ -506,7 +509,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
           for (i = 0; i < nsamples; i++) {
             for (j = 0; j < channels; j++) {
-              odata[j] = ((const guint64 *) frame.data[j])[i];
+              odata[j] = ((const guint64 *) frame.extended_data[j])[i];
             }
             odata += channels;
           }
