@@ -48,6 +48,7 @@
 #define __GST_DIRECTSOUNDSRC_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudiosrc.h>
 
 #include <windows.h>
