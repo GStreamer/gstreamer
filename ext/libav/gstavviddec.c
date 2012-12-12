@@ -287,6 +287,8 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
+  gst_buffer_replace (&ffmpegdec->palette, NULL);
+
   if (ffmpegdec->context->extradata) {
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
@@ -333,6 +335,25 @@ could_not_open:
     return FALSE;
   }
 }
+
+static void
+gst_ffmpegviddec_get_palette (GstFFMpegVidDec * ffmpegdec,
+    GstVideoCodecState * state)
+{
+  GstStructure *str = gst_caps_get_structure (state->caps, 0);
+  const GValue *palette_v;
+  GstBuffer *palette;
+
+  /* do we have a palette? */
+  if ((palette_v = gst_structure_get_value (str, "palette_data"))) {
+    palette = gst_value_get_buffer (palette_v);
+    GST_DEBUG ("got palette data %p", palette);
+    if (gst_buffer_get_size (palette) >= AVPALETTE_SIZE) {
+      gst_buffer_replace (&ffmpegdec->palette, palette);
+    }
+  }
+}
+
 
 static gboolean
 gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
@@ -388,6 +409,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 
   GST_LOG_OBJECT (ffmpegdec, "size after %dx%d", ffmpegdec->context->width,
       ffmpegdec->context->height);
+
+  gst_ffmpegviddec_get_palette (ffmpegdec, state);
 
   if (!ffmpegdec->context->time_base.den || !ffmpegdec->context->time_base.num) {
     GST_DEBUG_OBJECT (ffmpegdec, "forcing 25/1 framerate");
@@ -1061,6 +1084,15 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* now decode the frame */
   gst_avpacket_init (&packet, data, size);
 
+  if (ffmpegdec->palette) {
+    guint8 *pal;
+
+    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
+        AVPALETTE_SIZE);
+    gst_buffer_extract (ffmpegdec->palette, 0, pal, AVPALETTE_SIZE);
+    GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
+  }
+
   len = avcodec_decode_video2 (ffmpegdec->context,
       ffmpegdec->picture, &have_data, &packet);
 
@@ -1456,8 +1488,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->context->
-        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->
+        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;

@@ -49,6 +49,7 @@ struct _GstFFMpegVidDec
   gint ctx_time_d;
   gint ctx_time_n;
   gint ctx_interlaced;
+  GstBuffer *palette;
 
   guint8 *padded;
   guint padded_size;
