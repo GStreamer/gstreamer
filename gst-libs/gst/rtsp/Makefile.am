@@ -1,6 +1,7 @@
 libgstrtspincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtsp
 
 libgstrtspinclude_HEADERS = \
+			    rtsp.h \
 			    gstrtsp.h \
 			    gstrtsptransport.h \
 			    gstrtspurl.h \
@@ -62,7 +63,7 @@ GstRtsp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtsp-@GST_API_VERS
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/rtsp/gstrtsp.h" \
+		--c-include "gst/rtsp/rtsp.h" \
 		-I$(top_builddir)/gst-libs \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=$(builddir)/../sdp \

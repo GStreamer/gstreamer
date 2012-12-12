@@ -296,6 +296,7 @@
 #include "gstvideodecoder.h"
 #include "gstvideoutils.h"
 
+#include <gst/video/video.h>
 #include <gst/video/video-event.h>
 #include <gst/video/gstvideopool.h>
 #include <gst/video/gstvideometa.h>

@@ -38,6 +38,7 @@
 
 #include <string.h>
 
+#include <gst/audio/audio.h>
 #include "gstaudiobasesrc.h"
 
 #include "gst/gst-i18n-plugin.h"

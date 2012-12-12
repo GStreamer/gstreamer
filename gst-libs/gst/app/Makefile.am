@@ -23,7 +23,7 @@ libgstapp_@GST_API_VERSION@_la_LIBTOOLFLAGS = --tag=disable-static
 
 libgstapp_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/app
 libgstapp_@GST_API_VERSION@include_HEADERS = \
-	gstapp.h \
+	app.h \
 	gstappsrc.h \
 	gstappsink.h
 
@@ -45,7 +45,7 @@ GstApp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstapp-@GST_API_VERSIO
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/app/gstapp.h" \
+		--c-include "gst/app/app.h" \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \

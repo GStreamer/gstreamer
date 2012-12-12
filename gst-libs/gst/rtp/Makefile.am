@@ -1,7 +1,7 @@
 libgstrtpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/rtp
 
 libgstrtpinclude_HEADERS = \
-			   gstrtp.h \
+			   rtp.h \
 			   gstrtpbuffer.h \
 			   gstrtcpbuffer.h \
 			   gstrtppayloads.h \
@@ -37,7 +37,7 @@ GstRtp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtp-@GST_API_VERSIO
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/rtp/gstrtp.h" \
+		--c-include "gst/rtp/rtp.h" \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \

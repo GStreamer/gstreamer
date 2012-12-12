@@ -7,7 +7,7 @@ libgstriff_@GST_API_VERSION@_la_SOURCES = \
 
 libgstriff_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/riff
 libgstriff_@GST_API_VERSION@include_HEADERS = \
-	gstriff.h \
+	riff.h \
 	riff-ids.h \
 	riff-media.h \
 	riff-read.h
@@ -33,7 +33,7 @@ GstRiff-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstriff-@GST_API_VERS
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/riff/gstriff.h" \
+		--c-include "gst/riff/riff.h" \
 		--add-include-path=$(builddir)/../tag \
 		--add-include-path=$(builddir)/../audio \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \

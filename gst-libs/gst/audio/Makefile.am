@@ -49,7 +49,6 @@ libgstaudio_@GST_API_VERSION@include_HEADERS = \
 	audio-format.h \
 	audio-channels.h \
 	audio-info.h \
-	gstaudio.h \
 	gstaudioringbuffer.h \
 	gstaudioclock.h \
 	gstaudiofilter.h \
@@ -93,7 +92,7 @@ GstAudio-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstaudio-@GST_API_VE
 		--strip-prefix=Gst \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
-		--c-include "gst/audio/gstaudio.h" \
+		--c-include "gst/audio/audio.h" \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
 		--add-include-path="$(top_builddir)/gst-libs/gst/tag/" \

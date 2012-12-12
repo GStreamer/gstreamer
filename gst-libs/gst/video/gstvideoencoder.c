@@ -115,6 +115,7 @@
  *   and if it exceeds the recorded one, save it and emit a GST_MESSAGE_LATENCY
  */
 
+#include <gst/video/video.h>
 #include "gstvideoencoder.h"
 #include "gstvideoutils.h"
 

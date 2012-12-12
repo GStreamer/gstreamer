@@ -26,6 +26,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <gst/video/video.h>
 #include "video-frame.h"
 #include "gstvideometa.h"
 

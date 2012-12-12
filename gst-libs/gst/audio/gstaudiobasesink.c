@@ -34,6 +34,7 @@
 
 #include <string.h>
 
+#include <gst/audio/audio.h>
 #include "gstaudiobasesink.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_base_sink_debug);

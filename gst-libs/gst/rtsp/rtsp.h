@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 GStreamer developers
  *
- * gsttag.h: single include header for gst-tag library
+ * gstrtsp.h: single include header for gst-rtsp library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,12 +19,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_TAG_GST_TAG_H__
-#define __GST_TAG_GST_TAG_H__
+#ifndef __GST_RTSP__H__
+#define __GST_RTSP__H__
 
-#include <gst/tag/tag.h>
-#include <gst/tag/gsttagdemux.h>
-#include <gst/tag/gsttagmux.h>
-#include <gst/tag/xmpwriter.h>
+#include <gst/rtsp/gstrtsp.h>
+#include <gst/rtsp/gstrtspconnection.h>
+#include <gst/rtsp/gstrtspdefs.h>
+#include <gst/rtsp/gstrtsp-enumtypes.h>
+#include <gst/rtsp/gstrtspextension.h>
+#include <gst/rtsp/gstrtspmessage.h>
+#include <gst/rtsp/gstrtsprange.h>
+#include <gst/rtsp/gstrtsptransport.h>
+#include <gst/rtsp/gstrtspurl.h>
 
-#endif /* __GST_TAG_GST_TAG_H__ */
+#endif /* __GST_RTSP__H__ */

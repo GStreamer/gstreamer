@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include <gst/video/video.h>
 #include "gstvideoutils.h"
 
 #include <string.h>

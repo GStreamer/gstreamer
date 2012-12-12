@@ -1,6 +1,7 @@
 libgstsdpincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/sdp
 
-libgstsdpinclude_HEADERS = gstsdp.h            \
+libgstsdpinclude_HEADERS = sdp.h \
+			   gstsdp.h \
 			   gstsdpmessage.h
 
 lib_LTLIBRARIES = libgstsdp-@GST_API_VERSION@.la
@@ -24,7 +25,7 @@ GstSdp-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstsdp-@GST_API_VERSIO
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/sdp/gstsdp.h" \
+		--c-include "gst/sdp/sdp.h" \
 		-I$(top_srcdir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--library=libgstsdp-@GST_API_VERSION@.la \

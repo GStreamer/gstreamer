@@ -33,6 +33,8 @@
 #endif
 
 #include <string.h>
+
+#include <gst/audio/audio.h>
 #include "gstaudioiec61937.h"
 
 #define IEC61937_HEADER_SIZE      8

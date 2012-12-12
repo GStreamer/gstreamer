@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2012 GStreamer developers
  *
- * gstpbutils.h: single include header for gst-pbutils library
+ * gstsdp.h: single include header for gst-sdp library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,18 +19,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_PB_UTILS_GST_PB_UTILS_H__
-#define __GST_PB_UTILS_GST_PB_UTILS_H__
+#ifndef __GST_SDP__H__
+#define __GST_SDP__H__
 
-#include <gst/pbutils/codec-utils.h>
-#include <gst/pbutils/descriptions.h>
-#include <gst/pbutils/encoding-profile.h>
-#include <gst/pbutils/encoding-target.h>
-#include <gst/pbutils/gstdiscoverer.h>
-#include <gst/pbutils/gstpluginsbaseversion.h>
-#include <gst/pbutils/install-plugins.h>
-#include <gst/pbutils/missing-plugins.h>
-#include <gst/pbutils/pbutils-enumtypes.h>
-#include <gst/pbutils/pbutils.h>
+#include <gst/sdp/gstsdp.h>
+#include <gst/sdp/gstsdpmessage.h>
 
-#endif /* __GST_PB_UTILS_GST_PB_UTILS_H__ */
+#endif /* __GST_SDP__H__ */

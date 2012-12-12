@@ -41,6 +41,7 @@
 
 #include <string.h>
 
+#include <gst/audio/audio.h>
 #include "gstaudioringbuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_ring_buffer_debug);

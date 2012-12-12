@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) <2007> Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) 2012 GStreamer developers
+ *
+ * gstfft.h: single include header for gst-fft library
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,37 +19,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <glib.h>
-#include <math.h>
+#ifndef __GST_FFT__H__
+#define __GST_FFT__H__
 
-#ifndef __GST_FFT_H__
-#define __GST_FFT_H__
+#include <gst/fft/gstfft.h>
+#include <gst/fft/gstffts16.h>
+#include <gst/fft/gstffts32.h>
+#include <gst/fft/gstfftf32.h>
+#include <gst/fft/gstfftf64.h>
 
-G_BEGIN_DECLS
-
-/**
- * GstFFTWindow:
- * @GST_FFT_WINDOW_RECTANGULAR: Rectangular window
- * @GST_FFT_WINDOW_HAMMING: Hamming window
- * @GST_FFT_WINDOW_HANN: Hann (sometimes also called Hanning) window
- * @GST_FFT_WINDOW_BARTLETT: Bartlett window
- * @GST_FFT_WINDOW_BLACKMAN: Blackman window
- *
- * The various window functions available.
- */
-typedef enum
-{
-  GST_FFT_WINDOW_RECTANGULAR,
-  GST_FFT_WINDOW_HAMMING,
-  GST_FFT_WINDOW_HANN,
-  GST_FFT_WINDOW_BARTLETT,
-  GST_FFT_WINDOW_BLACKMAN
-} GstFFTWindow;
-
-/* Functions */
-
-gint gst_fft_next_fast_length (gint n) G_GNUC_CONST;
-
-G_END_DECLS
-
-#endif /* __GST_FFT_H__ */
+#endif /* __GST_FFT__H__ */

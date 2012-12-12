@@ -8,8 +8,7 @@ headers_pbutils = \
 	encoding-target.h	\
 	install-plugins.h \
 	missing-plugins.h \
-	gstdiscoverer.h \
-	gstpbutils.h
+	gstdiscoverer.h
 
 # variables used for enum/marshal generation
 glib_enum_headers = $(headers_pbutils)
@@ -77,7 +76,7 @@ GstPbutils-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstpbutils-@GST_AP
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/pbutils/gstpbutils.h" \
+		--c-include "gst/pbutils/pbutils.h" \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \

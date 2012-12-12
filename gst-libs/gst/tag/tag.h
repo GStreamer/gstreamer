@@ -23,6 +23,9 @@
 #define __GST_TAG_TAG_H__
 
 #include <gst/gst.h>
+#include <gst/tag/gsttagdemux.h>
+#include <gst/tag/gsttagmux.h>
+#include <gst/tag/xmpwriter.h>
 
 G_BEGIN_DECLS
 

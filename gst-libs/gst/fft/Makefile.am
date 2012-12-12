@@ -3,6 +3,7 @@ lib_LTLIBRARIES = libgstfft-@GST_API_VERSION@.la
 libgstfft_@GST_API_VERSION@_includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/fft
 
 libgstfft_@GST_API_VERSION@_include_HEADERS = \
+	fft.h \
 	gstfft.h \
 	gstffts16.h \
 	gstffts32.h \
@@ -57,7 +58,7 @@ GstFft-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstfft-@GST_API_VERSIO
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/fft/gstfft.h" \
+		--c-include "gst/fft/fft.h" \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \

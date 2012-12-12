@@ -69,6 +69,7 @@
 
 #include <string.h>
 
+#include <gst/audio/audio.h>
 #include "gstaudiosrc.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_src_debug);

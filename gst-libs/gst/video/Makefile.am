@@ -52,7 +52,6 @@ libgstvideo_@GST_API_VERSION@include_HEADERS = \
 	video-color.h         	\
 	video-info.h         	\
 	video-frame.h         	\
-	gstvideo.h		\
 	gstvideosink.h 		\
 	gstvideofilter.h	\
 	gstvideometa.h		\
@@ -89,7 +88,7 @@ GstVideo-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstvideo-@GST_API_VE
 		--nsversion=@GST_API_VERSION@ \
 		--strip-prefix=Gst \
 		--warn-all \
-		--c-include "gst/video/gstvideo.h" \
+		--c-include "gst/video/video.h" \
 		-I$(top_srcdir)/gst-libs \
 		-I$(top_builddir)/gst-libs \
 		--add-include-path=`PKG_CONFIG_PATH="$(GST_PKG_CONFIG_PATH)" $(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \

@@ -55,6 +55,4 @@ typedef enum {
   GST_SDP_EINVAL = -1
 } GstSDPResult;
 
-#include <gst/sdp/gstsdpmessage.h>
-
 #endif /* __GST_SDP_H__ */
