@@ -307,14 +307,15 @@ static inline void
 push_surface(GstVaapiDecoder *decoder, GstVaapiSurfaceProxy *proxy)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoInfo * const vi = &priv->codec_state->info;
     GstClockTime duration;
 
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(proxy)));
 
-    if (priv->fps_n && priv->fps_d) {
+    if (vi->fps_n && vi->fps_d) {
         /* Actual field duration is computed in vaapipostproc */
-        duration = gst_util_uint64_scale(GST_SECOND, priv->fps_d, priv->fps_n);
+        duration = gst_util_uint64_scale(GST_SECOND, vi->fps_d, vi->fps_n);
         gst_vaapi_surface_proxy_set_duration(proxy, duration);
     }
     g_queue_push_tail(priv->surfaces, proxy);
@@ -329,47 +330,37 @@ pop_surface(GstVaapiDecoder *decoder)
 }
 
 static void
-set_caps(GstVaapiDecoder *decoder, GstCaps *caps)
+set_caps(GstVaapiDecoder *decoder, const GstCaps *caps)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoCodecState * const codec_state = priv->codec_state;
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
     GstVaapiProfile profile;
     const GValue *v_codec_data;
-    gint v1, v2;
-    gboolean b;
 
     profile = gst_vaapi_profile_from_caps(caps);
     if (!profile)
         return;
 
-    priv->caps = gst_caps_copy(caps);
-
     priv->codec = gst_vaapi_profile_get_codec(profile);
     if (!priv->codec)
         return;
 
-    if (gst_structure_get_int(structure, "width", &v1))
-        priv->width = v1;
-    if (gst_structure_get_int(structure, "height", &v2))
-        priv->height = v2;
+    if (!gst_video_info_from_caps(&codec_state->info, caps))
+        return;
 
-    if (gst_structure_get_fraction(structure, "framerate", &v1, &v2)) {
-        priv->fps_n = v1;
-        priv->fps_d = v2;
-    }
-
-    if (gst_structure_get_fraction(structure, "pixel-aspect-ratio", &v1, &v2)) {
-        priv->par_n = v1;
-        priv->par_d = v2;
-    }
-
-    if (gst_structure_get_boolean(structure, "interlaced", &b))
-        priv->is_interlaced = b;
+    codec_state->caps = gst_caps_copy(caps);
 
     v_codec_data = gst_structure_get_value(structure, "codec_data");
     if (v_codec_data)
-        gst_buffer_replace(&priv->codec_data,
+        gst_buffer_replace(&codec_state->codec_data,
             gst_value_get_buffer(v_codec_data));
+}
+
+static inline GstCaps *
+get_caps(GstVaapiDecoder *decoder)
+{
+    return GST_VAAPI_DECODER_CODEC_STATE(decoder)->caps;
 }
 
 static void
@@ -385,8 +376,9 @@ gst_vaapi_decoder_finalize(GObject *object)
     GstVaapiDecoder * const        decoder = GST_VAAPI_DECODER(object);
     GstVaapiDecoderPrivate * const priv    = decoder->priv;
 
-    gst_buffer_replace(&priv->codec_data, NULL);
-    gst_caps_replace(&priv->caps, NULL);
+    gst_video_codec_state_unref(priv->codec_state);
+    priv->codec_state = NULL;
+
     parser_state_finalize(&priv->parser_state);
  
     if (priv->buffers) {
@@ -447,14 +439,15 @@ gst_vaapi_decoder_get_property(
     GParamSpec *pspec
 )
 {
-    GstVaapiDecoderPrivate * const priv = GST_VAAPI_DECODER(object)->priv;
+    GstVaapiDecoder * const decoder = GST_VAAPI_DECODER_CAST(object);
+    GstVaapiDecoderPrivate * const priv = decoder->priv;
 
     switch (prop_id) {
     case PROP_DISPLAY:
         g_value_set_object(value, priv->display);
         break;
     case PROP_CAPS:
-        gst_value_set_caps(value, priv->caps);
+        gst_value_set_caps(value, get_caps(decoder));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -498,26 +491,23 @@ static void
 gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
 {
     GstVaapiDecoderPrivate *priv = GST_VAAPI_DECODER_GET_PRIVATE(decoder);
+    GstVideoCodecState *codec_state;
 
     parser_state_init(&priv->parser_state);
+
+    codec_state = g_slice_new0(GstVideoCodecState);
+    codec_state->ref_count = 1;
+    gst_video_info_init(&codec_state->info);
 
     decoder->priv               = priv;
     priv->display               = NULL;
     priv->va_display            = NULL;
     priv->context               = NULL;
     priv->va_context            = VA_INVALID_ID;
-    priv->caps                  = NULL;
     priv->codec                 = 0;
-    priv->codec_data            = NULL;
-    priv->width                 = 0;
-    priv->height                = 0;
-    priv->fps_n                 = 0;
-    priv->fps_d                 = 0;
-    priv->par_n                 = 0;
-    priv->par_d                 = 0;
+    priv->codec_state           = codec_state;
     priv->buffers               = g_queue_new();
     priv->surfaces              = g_queue_new();
-    priv->is_interlaced         = FALSE;
 }
 
 /**
@@ -537,6 +527,24 @@ gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
 }
 
 /**
+ * gst_vaapi_decoder_get_codec_state:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Retrieves the @decoder codec state. The caller owns an extra reference
+ * to the #GstVideoCodecState, so gst_video_codec_state_unref() shall be
+ * called after usage.
+ *
+ * Return value: the #GstVideoCodecState object for @decoder
+ */
+GstVideoCodecState *
+gst_vaapi_decoder_get_codec_state(GstVaapiDecoder *decoder)
+{
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
+
+    return gst_video_codec_state_ref(decoder->priv->codec_state);
+}
+
+/**
  * gst_vaapi_decoder_get_caps:
  * @decoder: a #GstVaapiDecoder
  *
@@ -548,7 +556,7 @@ gst_vaapi_decoder_get_codec(GstVaapiDecoder *decoder)
 GstCaps *
 gst_vaapi_decoder_get_caps(GstVaapiDecoder *decoder)
 {
-    return decoder->priv->caps;
+    return get_caps(decoder);
 }
 
 /**
@@ -629,20 +637,22 @@ gst_vaapi_decoder_set_picture_size(
     guint               height
 )
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
     gboolean size_changed = FALSE;
 
-    if (priv->width != width) {
+    if (codec_state->info.width != width) {
         GST_DEBUG("picture width changed to %d", width);
-        priv->width = width;
-        gst_caps_set_simple(priv->caps, "width", G_TYPE_INT, width, NULL);
+        codec_state->info.width = width;
+        gst_caps_set_simple(codec_state->caps,
+            "width", G_TYPE_INT, width, NULL);
         size_changed = TRUE;
     }
 
-    if (priv->height != height) {
+    if (codec_state->info.height != height) {
         GST_DEBUG("picture height changed to %d", height);
-        priv->height = height;
-        gst_caps_set_simple(priv->caps, "height", G_TYPE_INT, height, NULL);
+        codec_state->info.height = height;
+        gst_caps_set_simple(codec_state->caps,
+            "height", G_TYPE_INT, height, NULL);
         size_changed = TRUE;
     }
 
@@ -657,20 +667,17 @@ gst_vaapi_decoder_set_framerate(
     guint               fps_d
 )
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
 
     if (!fps_n || !fps_d)
         return;
 
-    if (priv->fps_n != fps_n || priv->fps_d != fps_d) {
+    if (codec_state->info.fps_n != fps_n || codec_state->info.fps_d != fps_d) {
         GST_DEBUG("framerate changed to %u/%u", fps_n, fps_d);
-        priv->fps_n = fps_n;
-        priv->fps_d = fps_d;
-        gst_caps_set_simple(
-            priv->caps,
-            "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-            NULL
-        );
+        codec_state->info.fps_n = fps_n;
+        codec_state->info.fps_d = fps_d;
+        gst_caps_set_simple(codec_state->caps,
+            "framerate", GST_TYPE_FRACTION, fps_n, fps_d, NULL);
         g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
     }
 }
@@ -682,20 +689,44 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
     guint               par_d
 )
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
 
     if (!par_n || !par_d)
         return;
 
-    if (priv->par_n != par_n || priv->par_d != par_d) {
+    if (codec_state->info.par_n != par_n || codec_state->info.par_d != par_d) {
         GST_DEBUG("pixel-aspect-ratio changed to %u/%u", par_n, par_d);
-        priv->par_n = par_n;
-        priv->par_d = par_d;
-        gst_caps_set_simple(
-            priv->caps,
-            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
-            NULL
-        );
+        codec_state->info.par_n = par_n;
+        codec_state->info.par_d = par_d;
+        gst_caps_set_simple(codec_state->caps,
+            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL);
+        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
+    }
+}
+
+static const gchar *
+gst_interlace_mode_to_string(GstVideoInterlaceMode mode)
+{
+    switch (mode) {
+    case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:  return "progressive";
+    case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:  return "interleaved";
+    case GST_VIDEO_INTERLACE_MODE_MIXED:        return "mixed";
+    }
+    return "<unknown>";
+}
+
+void
+gst_vaapi_decoder_set_interlace_mode(GstVaapiDecoder *decoder,
+    GstVideoInterlaceMode mode)
+{
+    GstVideoCodecState * const codec_state = decoder->priv->codec_state;
+
+    if (codec_state->info.interlace_mode != mode) {
+        GST_DEBUG("interlace mode changed to %s",
+                  gst_interlace_mode_to_string(mode));
+        codec_state->info.interlace_mode = mode;
+        gst_caps_set_simple(codec_state->caps, "interlaced",
+            G_TYPE_BOOLEAN, mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE, NULL);
         g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
     }
 }
@@ -703,18 +734,10 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
 void
 gst_vaapi_decoder_set_interlaced(GstVaapiDecoder *decoder, gboolean interlaced)
 {
-    GstVaapiDecoderPrivate * const priv = decoder->priv;
-
-    if (priv->is_interlaced != interlaced) {
-        GST_DEBUG("interlaced changed to %s", interlaced ? "true" : "false");
-        priv->is_interlaced = interlaced;
-        gst_caps_set_simple(
-            priv->caps,
-            "interlaced", G_TYPE_BOOLEAN, interlaced,
-            NULL
-        );
-        g_object_notify_by_pspec(G_OBJECT(decoder), g_properties[PROP_CAPS]);
-    }
+    gst_vaapi_decoder_set_interlace_mode(decoder,
+        (interlaced ?
+         GST_VIDEO_INTERLACE_MODE_INTERLEAVED :
+         GST_VIDEO_INTERLACE_MODE_PROGRESSIVE));
 }
 
 gboolean

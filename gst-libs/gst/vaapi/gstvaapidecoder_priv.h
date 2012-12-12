@@ -77,6 +77,18 @@ G_BEGIN_DECLS
     GST_VAAPI_DECODER_CAST(decoder)->priv->codec
 
 /**
+ * GST_VAAPI_DECODER_CODEC_STATE:
+ * @decoder: a #GstVaapiDecoder
+ *
+ * Macro that evaluates to the #GstVideoCodecState holding codec state
+ * for @decoder.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_DECODER_CODEC_STATE
+#define GST_VAAPI_DECODER_CODEC_STATE(decoder) \
+    GST_VAAPI_DECODER_CAST(decoder)->priv->codec_state
+
+/**
  * GST_VAAPI_DECODER_CODEC_DATA:
  * @decoder: a #GstVaapiDecoder
  *
@@ -86,7 +98,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_CODEC_DATA
 #define GST_VAAPI_DECODER_CODEC_DATA(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->codec_data
+    GST_VAAPI_DECODER_CODEC_STATE(decoder)->codec_data
 
 /**
  * GST_VAAPI_DECODER_CODEC_FRAME:
@@ -109,7 +121,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_WIDTH
 #define GST_VAAPI_DECODER_WIDTH(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->width
+    GST_VAAPI_DECODER_CODEC_STATE(decoder)->info.width
 
 /**
  * GST_VAAPI_DECODER_HEIGHT:
@@ -120,7 +132,7 @@ G_BEGIN_DECLS
  */
 #undef  GST_VAAPI_DECODER_HEIGHT
 #define GST_VAAPI_DECODER_HEIGHT(decoder) \
-    GST_VAAPI_DECODER_CAST(decoder)->priv->height
+    GST_VAAPI_DECODER_CODEC_STATE(decoder)->info.height
 
 /* End-of-Stream buffer */
 #define GST_BUFFER_FLAG_EOS (GST_BUFFER_FLAG_LAST + 0)
@@ -148,19 +160,11 @@ struct _GstVaapiDecoderPrivate {
     VADisplay           va_display;
     GstVaapiContext    *context;
     VAContextID         va_context;
-    GstCaps            *caps;
     GstVaapiCodec       codec;
-    GstBuffer          *codec_data;
-    guint               width;
-    guint               height;
-    guint               fps_n;
-    guint               fps_d;
-    guint               par_n;
-    guint               par_d;
+    GstVideoCodecState *codec_state;
     GQueue             *buffers;
     GQueue             *surfaces;
     GstVaapiParserState parser_state;
-    guint               is_interlaced   : 1;
 };
 
 G_GNUC_INTERNAL
@@ -186,6 +190,11 @@ gst_vaapi_decoder_set_pixel_aspect_ratio(
     guint               par_n,
     guint               par_d
 );
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_decoder_set_interlace_mode(GstVaapiDecoder *decoder,
+    GstVideoInterlaceMode mode);
 
 G_GNUC_INTERNAL
 void

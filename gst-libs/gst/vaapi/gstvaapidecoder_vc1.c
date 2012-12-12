@@ -1133,15 +1133,15 @@ decode_codec_data(GstVaapiDecoderVC1 *decoder, GstBuffer *buffer)
     if (!buf || buf_size == 0)
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
 
-    caps      = GST_VAAPI_DECODER_CAST(decoder)->priv->caps;
-    structure = gst_caps_get_structure(caps, 0);
-
-    if (!gst_structure_get_int(structure, "width", &width) ||
-        !gst_structure_get_int(structure, "height", &height)) {
+    width = GST_VAAPI_DECODER_WIDTH(decoder);
+    height = GST_VAAPI_DECODER_HEIGHT(decoder);
+    if (!width || !height) {
         GST_DEBUG("failed to parse size from codec-data");
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
 
+    caps = GST_VAAPI_DECODER_CODEC_STATE(decoder)->caps;
+    structure = gst_caps_get_structure(caps, 0);
     if (!gst_structure_get_fourcc(structure, "format", &format)) {
         GST_DEBUG("failed to parse profile from codec-data");
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CODEC;

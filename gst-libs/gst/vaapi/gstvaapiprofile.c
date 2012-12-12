@@ -210,7 +210,7 @@ gst_vaapi_profile_from_codec_data(GstVaapiCodec codec, GstBuffer *buffer)
  * Return value: the #GstVaapiProfile describing the @caps
  */
 GstVaapiProfile
-gst_vaapi_profile_from_caps(GstCaps *caps)
+gst_vaapi_profile_from_caps(const GstCaps *caps)
 {
     const GstVaapiProfileMap *m;
     GstCaps *caps_test;
