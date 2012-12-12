@@ -58,14 +58,14 @@
 #include "config.h"
 #endif
 
-#include "gsttheoraenc.h"
-
 #include <string.h>
 #include <stdlib.h>             /* free */
 
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
+
+#include "gsttheoraenc.h"
 
 #define GST_CAT_DEFAULT theoraenc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

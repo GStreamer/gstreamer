@@ -23,7 +23,7 @@
 #ifndef __GST_ALSASRC_H__
 #define __GST_ALSASRC_H__
 
-#include <gst/audio/gstaudiosrc.h>
+#include <gst/audio/audio.h>
 #include "gstalsa.h"
 
 G_BEGIN_DECLS
