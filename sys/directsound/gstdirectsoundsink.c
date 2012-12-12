@@ -53,7 +53,6 @@
 #endif
 
 #include <gst/base/gstbasesink.h>
-#include <gst/audio/streamvolume.h>
 #include "gstdirectsoundsink.h"
 #include <gst/audio/gstaudioiec61937.h>
 

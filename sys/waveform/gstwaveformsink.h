@@ -23,6 +23,7 @@
 #define __GST_WAVEFORMSINK_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <gst/audio/gstaudiosink.h>
 
 #include <windows.h>
