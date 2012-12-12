@@ -434,6 +434,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
 
   gst_avpacket_init (&packet, data, size);
   memset (&frame, 0, sizeof (frame));
+  avcodec_get_frame_defaults (&frame);
   len = avcodec_decode_audio4 (ffmpegdec->context, &frame, &have_data, &packet);
 
   GST_DEBUG_OBJECT (ffmpegdec,
