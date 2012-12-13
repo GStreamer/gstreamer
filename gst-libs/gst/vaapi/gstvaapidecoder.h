@@ -118,6 +118,9 @@ struct _GstVaapiDecoderClass {
         struct _GstVaapiDecoderUnit **unit_ptr);
     GstVaapiDecoderStatus (*decode)(GstVaapiDecoder *decoder,
         struct _GstVaapiDecoderUnit *unit);
+    GstVaapiDecoderStatus (*start_frame)(GstVaapiDecoder *decoder,
+        struct _GstVaapiDecoderUnit *unit);
+    GstVaapiDecoderStatus (*end_frame)(GstVaapiDecoder *decoder);
 };
 
 GType

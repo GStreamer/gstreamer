@@ -210,18 +210,35 @@ do_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *base_frame)
 {
     GstVaapiDecoderClass * const klass = GST_VAAPI_DECODER_GET_CLASS(decoder);
     GstVaapiParserState * const ps = &decoder->priv->parser_state;
-    GstVaapiDecoderFrame *frame;
+    GstVaapiDecoderFrame * const frame = base_frame->user_data;
     GstVaapiDecoderStatus status;
     GSList *l;
 
     ps->current_frame = base_frame;
 
-    frame = base_frame->user_data;
+    if (klass->start_frame) {
+        for (l = frame->units; l != NULL; l = l->next) {
+            GstVaapiDecoderUnit * const unit = l->data;
+            if (GST_VAAPI_DECODER_UNIT_IS_SLICE(unit)) {
+                status = klass->start_frame(decoder, unit);
+                if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+                    return status;
+                break;
+            }
+        }
+    }
+
     for (l = frame->units; l != NULL; l = l->next) {
         GstVaapiDecoderUnit * const unit = l->data;
         if (GST_VAAPI_DECODER_UNIT_IS_SKIPPED(unit))
             continue;
         status = klass->decode(decoder, unit);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
+    }
+
+    if (klass->end_frame) {
+        status = klass->end_frame(decoder);
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             return status;
     }
