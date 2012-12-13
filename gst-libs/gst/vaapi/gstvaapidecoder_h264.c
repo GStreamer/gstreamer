@@ -86,15 +86,6 @@ gst_vaapi_decoder_unit_h264_new(guint size)
 /* --- H.264 Pictures                                                    --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_PICTURE_H264_CAST(obj) \
-    ((GstVaapiPictureH264 *)(obj))
-
-#define GST_VAAPI_PICTURE_H264(obj) \
-    GST_VAAPI_PICTURE_H264_CAST(obj)
-
-#define GST_VAAPI_IS_PICTURE_H264(obj) \
-    (GST_VAAPI_PICTURE_H264(obj) != NULL)
-
 /*
  * Extended picture flags:
  *
@@ -173,20 +164,12 @@ gst_vaapi_picture_h264_create(
 static inline GstVaapiPictureH264 *
 gst_vaapi_picture_h264_new(GstVaapiDecoderH264 *decoder)
 {
-    GstVaapiCodecObject *object;
-
-    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder), NULL);
-
-    object = gst_vaapi_codec_object_new(
+    return (GstVaapiPictureH264 *)gst_vaapi_codec_object_new(
         &GstVaapiPictureH264Class,
         GST_VAAPI_CODEC_BASE(decoder),
         NULL, sizeof(VAPictureParameterBufferH264),
         NULL, 0,
-        0
-    );
-    if (!object)
-        return NULL;
-    return GST_VAAPI_PICTURE_H264_CAST(object);
+        0);
 }
 
 static inline void
@@ -196,8 +179,8 @@ gst_vaapi_picture_h264_set_reference(
     gboolean             other_field
 )
 {
-    g_return_if_fail(GST_VAAPI_IS_PICTURE_H264(picture));
-
+    if (!picture)
+        return;
     GST_VAAPI_PICTURE_FLAG_UNSET(picture, GST_VAAPI_PICTURE_FLAGS_REFERENCE);
     GST_VAAPI_PICTURE_FLAG_SET(picture, reference_flags);
 
@@ -210,28 +193,14 @@ gst_vaapi_picture_h264_set_reference(
 static inline GstVaapiPictureH264 *
 gst_vaapi_picture_h264_new_field(GstVaapiPictureH264 *picture)
 {
-    GstVaapiPicture *base_picture;
+    g_return_val_if_fail(picture, NULL);
 
-    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), NULL);
-
-    base_picture = gst_vaapi_picture_new_field(&picture->base);
-    if (!base_picture)
-        return NULL;
-    return GST_VAAPI_PICTURE_H264_CAST(base_picture);
+    return (GstVaapiPictureH264 *)gst_vaapi_picture_new_field(&picture->base);
 }
 
 /* ------------------------------------------------------------------------- */
 /* --- Frame Buffers (DPB)                                               --- */
 /* ------------------------------------------------------------------------- */
-
-#define GST_VAAPI_FRAME_STORE_CAST(obj) \
-    ((GstVaapiFrameStore *)(obj))
-
-#define GST_VAAPI_FRAME_STORE(obj) \
-    GST_VAAPI_FRAME_STORE_CAST(obj)
-
-#define GST_VAAPI_IS_FRAME_STORE(obj) \
-    (GST_VAAPI_MINI_OBJECT(obj) != NULL)
 
 struct _GstVaapiFrameStore {
     /*< private >*/
@@ -263,8 +232,6 @@ gst_vaapi_frame_store_new(GstVaapiPictureH264 *picture)
         gst_vaapi_frame_store_finalize
     };
 
-    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), NULL);
-
     fs = (GstVaapiFrameStore *)
         gst_vaapi_mini_object_new(&GstVaapiFrameStoreClass);
     if (!fs)
@@ -283,10 +250,9 @@ gst_vaapi_frame_store_add(GstVaapiFrameStore *fs, GstVaapiPictureH264 *picture)
 {
     guint field;
 
-    g_return_val_if_fail(GST_VAAPI_IS_FRAME_STORE(fs), FALSE);
     g_return_val_if_fail(fs->num_buffers == 1, FALSE);
-    g_return_val_if_fail(GST_VAAPI_IS_PICTURE_H264(picture), FALSE);
     g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FRAME(picture), FALSE);
+    g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture), FALSE);
 
     gst_vaapi_picture_replace(&fs->buffers[fs->num_buffers++], picture);
     if (picture->output_flag) {
@@ -369,6 +335,9 @@ G_DEFINE_TYPE(GstVaapiDecoderH264,
               gst_vaapi_decoder_h264,
               GST_VAAPI_TYPE_DECODER)
 
+#define GST_VAAPI_DECODER_H264_CAST(decoder) \
+    ((GstVaapiDecoderH264 *)(decoder))
+
 #define GST_VAAPI_DECODER_H264_GET_PRIVATE(obj)                 \
     (G_TYPE_INSTANCE_GET_PRIVATE((obj),                         \
                                  GST_VAAPI_TYPE_DECODER_H264,   \
@@ -408,7 +377,7 @@ struct _GstVaapiDecoderH264Private {
     gboolean                    prev_pic_structure;     // previous picture structure
     guint                       is_constructed          : 1;
     guint                       is_opened               : 1;
-    guint                       is_avc                  : 1;
+    guint                       is_avcC                 : 1;
     guint                       got_sps                 : 1;
     guint                       got_pps                 : 1;
     guint                       has_context             : 1;
@@ -631,12 +600,8 @@ dpb_add(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 
     // Check if picture is the second field and the first field is still in DPB
     fs = priv->prev_frame;
-    if (fs && !gst_vaapi_frame_store_has_frame(fs)) {
-        g_return_val_if_fail(fs->num_buffers == 1, FALSE);
-        g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FRAME(picture), FALSE);
-        g_return_val_if_fail(!GST_VAAPI_PICTURE_IS_FIRST_FIELD(picture), FALSE);
+    if (fs && !gst_vaapi_frame_store_has_frame(fs))
         return gst_vaapi_frame_store_add(fs, picture);
-    }
 
     // Create new frame store, and split fields if necessary
     fs = gst_vaapi_frame_store_new(picture);
@@ -2831,7 +2796,7 @@ decode_codec_data(GstVaapiDecoderH264 *decoder, GstBuffer *buffer)
         ofs = unit.nalu.offset + unit.nalu.size;
     }
 
-    priv->is_avc = TRUE;
+    priv->is_avcC = TRUE;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -2864,7 +2829,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     GstAdapter *adapter, gboolean at_eos, GstVaapiDecoderUnit **unit_ptr)
 {
-    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(base_decoder);
+    GstVaapiDecoderH264 * const decoder =
+        GST_VAAPI_DECODER_H264_CAST(base_decoder);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderUnitH264 *unit;
@@ -2881,7 +2847,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
 
     size = gst_adapter_available(adapter);
 
-    if (priv->is_avc) {
+    if (priv->is_avcC) {
         if (size < priv->nal_length_size)
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
@@ -2936,7 +2902,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     if (!unit)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
 
-    if (priv->is_avc)
+    if (priv->is_avcC)
         result = gst_h264_parser_identify_nalu_avc(priv->parser,
             buf, 0, buf_size, priv->nal_length_size, &unit->nalu);
     else
@@ -3013,7 +2979,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *unit)
 {
-    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(base_decoder);
+    GstVaapiDecoderH264 * const decoder =
+        GST_VAAPI_DECODER_H264_CAST(base_decoder);
     GstVaapiDecoderStatus status;
 
     status = ensure_decoder(decoder);
@@ -3026,7 +2993,8 @@ static GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_start_frame(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderUnit *base_unit)
 {
-    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(base_decoder);
+    GstVaapiDecoderH264 * const decoder =
+        GST_VAAPI_DECODER_H264_CAST(base_decoder);
     GstVaapiDecoderUnitH264 * const unit = (GstVaapiDecoderUnitH264 *)base_unit;
 
     return decode_picture(decoder, unit);
@@ -3035,7 +3003,8 @@ gst_vaapi_decoder_h264_start_frame(GstVaapiDecoder *base_decoder,
 static GstVaapiDecoderStatus
 gst_vaapi_decoder_h264_end_frame(GstVaapiDecoder *base_decoder)
 {
-    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(base_decoder);
+    GstVaapiDecoderH264 * const decoder =
+        GST_VAAPI_DECODER_H264_CAST(base_decoder);
 
     return decode_current_picture(decoder);
 }
@@ -3043,7 +3012,7 @@ gst_vaapi_decoder_h264_end_frame(GstVaapiDecoder *base_decoder)
 static void
 gst_vaapi_decoder_h264_finalize(GObject *object)
 {
-    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(object);
+    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264_CAST(object);
 
     gst_vaapi_decoder_h264_destroy(decoder);
 
@@ -3053,7 +3022,7 @@ gst_vaapi_decoder_h264_finalize(GObject *object)
 static void
 gst_vaapi_decoder_h264_constructed(GObject *object)
 {
-    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264(object);
+    GstVaapiDecoderH264 * const decoder = GST_VAAPI_DECODER_H264_CAST(object);
     GstVaapiDecoderH264Private * const priv = decoder->priv;
     GObjectClass *parent_class;
 
@@ -3088,40 +3057,11 @@ gst_vaapi_decoder_h264_init(GstVaapiDecoderH264 *decoder)
 
     priv                        = GST_VAAPI_DECODER_H264_GET_PRIVATE(decoder);
     decoder->priv               = priv;
-    priv->parser                = NULL;
-    priv->current_picture       = NULL;
-    priv->dpb_count             = 0;
-    priv->dpb_size              = 0;
     priv->profile               = GST_VAAPI_PROFILE_UNKNOWN;
     priv->entrypoint            = GST_VAAPI_ENTRYPOINT_VLD;
     priv->chroma_type           = GST_VAAPI_CHROMA_TYPE_YUV420;
-    priv->short_ref_count       = 0;
-    priv->long_ref_count        = 0;
-    priv->RefPicList0_count     = 0;
-    priv->RefPicList1_count     = 0;
-    priv->nal_length_size       = 0;
-    priv->field_poc[0]          = 0;
-    priv->field_poc[1]          = 0;
-    priv->poc_msb               = 0;
-    priv->poc_lsb               = 0;
-    priv->prev_poc_msb          = 0;
-    priv->prev_poc_lsb          = 0;
-    priv->frame_num_offset      = 0;
-    priv->frame_num             = 0;
-    priv->prev_frame_num        = 0;
-    priv->prev_pic_has_mmco5    = FALSE;
     priv->prev_pic_structure    = GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    priv->is_constructed        = FALSE;
-    priv->is_opened             = FALSE;
-    priv->is_avc                = FALSE;
-    priv->has_context           = FALSE;
     priv->progressive_sequence  = TRUE;
-
-    memset(priv->dpb, 0, sizeof(priv->dpb));
-    memset(priv->short_ref, 0, sizeof(priv->short_ref));
-    memset(priv->long_ref, 0, sizeof(priv->long_ref));
-    memset(priv->RefPicList0, 0, sizeof(priv->RefPicList0));
-    memset(priv->RefPicList1, 0, sizeof(priv->RefPicList1));
 }
 
 /**
