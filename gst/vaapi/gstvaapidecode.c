@@ -186,6 +186,7 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     GstFlowReturn ret;
     gint64 end_time;
 
+    /* Decode current frame */
     for (;;) {
         end_time = decode->render_time_base;
         if (!end_time)
@@ -193,7 +194,7 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         end_time += GST_TIME_AS_USECONDS(decode->last_buffer_time);
         end_time += G_TIME_SPAN_SECOND;
 
-        status = gst_vaapi_decoder_decode(decode->decoder, frame, &proxy);
+        status = gst_vaapi_decoder_decode(decode->decoder, frame);
         if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
             gboolean was_signalled;
             g_mutex_lock(&decode->decoder_mutex);
@@ -209,12 +210,16 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         }
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             goto error_decode;
+        break;
+    }
 
-        /* Current frame was decoded but no surface was output */
-        if (!proxy)
-            break;
+    /* Output all decoded frames */
+    for (;;) {
+        status = gst_vaapi_decoder_get_frame(decode->decoder, &out_frame);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return GST_FLOW_OK;
 
-        out_frame = gst_vaapi_surface_proxy_get_user_data(proxy);
+        proxy = gst_video_codec_frame_get_user_data(out_frame);
 
         gst_vaapi_surface_proxy_set_user_data(proxy,
             decode, (GDestroyNotify)gst_vaapidecode_release);
@@ -223,22 +228,13 @@ gst_vaapidecode_handle_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
         if (!out_frame->output_buffer)
             goto error_create_buffer;
 
-        out_frame->pts      = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
-        out_frame->duration = GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
-
-        if (GST_VAAPI_SURFACE_PROXY_TFF(proxy))
-            GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
-                GST_VIDEO_CODEC_FRAME_FLAG_TFF);
-
         gst_vaapi_video_buffer_set_surface_proxy(
             GST_VAAPI_VIDEO_BUFFER(out_frame->output_buffer), proxy);
-        gst_vaapi_surface_proxy_unref(proxy);
 
         ret = gst_video_decoder_finish_frame(vdec, out_frame);
         if (ret != GST_FLOW_OK)
             goto error_commit_buffer;
-        break;
-    }
+    };
     return GST_FLOW_OK;
 
     /* ERRORS */
