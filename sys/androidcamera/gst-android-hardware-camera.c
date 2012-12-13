@@ -294,11 +294,14 @@ gst_ah_camera_on_auto_focus (JNIEnv * env, jclass klass, jboolean success,
 }
 
 static JNINativeMethod native_methods[] = {
-  {"gst_ah_camera_on_preview_frame", "([BLandroid/hardware/Camera;JJ)V",
+  {(gchar *) "gst_ah_camera_on_preview_frame",
+        (gchar *) "([BLandroid/hardware/Camera;JJ)V",
       (void *) gst_ah_camera_on_preview_frame},
-  {"gst_ah_camera_on_error", "(ILandroid/hardware/Camera;JJ)V",
+  {(gchar *) "gst_ah_camera_on_error",
+        (gchar *) "(ILandroid/hardware/Camera;JJ)V",
       (void *) gst_ah_camera_on_error},
-  {"gst_ah_camera_on_auto_focus", "(ZLandroid/hardware/Camera;JJ)V",
+  {(gchar *) "gst_ah_camera_on_auto_focus",
+        (gchar *) "(ZLandroid/hardware/Camera;JJ)V",
       (void *) gst_ah_camera_on_auto_focus}
 };
 
@@ -2898,7 +2901,7 @@ gst_ahc_parameters_get_supported_preview_fps_range (GstAHCParameters * self)
         jintArray range = java_util_iterator_next (env, iterator);
 
         if (range) {
-          jint *fps = malloc (sizeof (jint) * 2);
+          jint *fps = g_new (jint, 2);
 
           (*env)->GetIntArrayRegion (env, range, 0, 2, fps);
           ret = g_list_append (ret, fps);
