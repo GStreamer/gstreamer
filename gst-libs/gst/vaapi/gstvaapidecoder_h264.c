@@ -448,6 +448,7 @@ G_DEFINE_TYPE(GstVaapiDecoderH264,
 struct _GstVaapiDecoderH264Private {
     GstH264NalParser           *parser;
     GstVaapiPictureH264        *current_picture;
+    GstVaapiDecoderUnitH264    *prev_slice_unit;
     GstVaapiFrameStore         *prev_frame;
     GstVaapiFrameStore         *dpb[16];
     guint                       dpb_count;
@@ -796,6 +797,7 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
     GstVaapiDecoderH264Private * const priv = decoder->priv;
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    gst_vaapi_decoder_unit_replace(&priv->prev_slice_unit, NULL);
 
     dpb_clear(decoder);
 
@@ -2510,25 +2512,17 @@ fill_picture(GstVaapiDecoderH264 *decoder,
 
 /* Detection of the first VCL NAL unit of a primary coded picture (7.4.1.2.4) */
 static gboolean
-is_new_picture(
-    GstVaapiDecoderH264 *decoder,
-    GstH264NalUnit      *nalu,
-    GstH264SliceHdr     *slice_hdr
-)
+is_new_picture(GstVaapiDecoderUnitH264 *unit,
+    GstVaapiDecoderUnitH264 *prev_unit)
 {
-    GstVaapiDecoderH264Private * const priv = decoder->priv;
+    GstH264SliceHdr * const slice_hdr = &unit->data.slice_hdr;
     GstH264PPS * const pps = slice_hdr->pps;
     GstH264SPS * const sps = pps->sequence;
-    GstVaapiSliceH264 *slice;
     GstH264SliceHdr *prev_slice_hdr;
 
-    if (!priv->current_picture)
+    if (!prev_unit)
         return TRUE;
-
-    slice = gst_vaapi_picture_h264_get_last_slice(priv->current_picture);
-    if (!slice)
-        return FALSE;
-    prev_slice_hdr = &slice->slice_hdr;
+    prev_slice_hdr = &prev_unit->data.slice_hdr;
 
 #define CHECK_EXPR(expr, field_name) do {              \
         if (!(expr)) {                                 \
@@ -2554,8 +2548,8 @@ is_new_picture(
         CHECK_VALUE(slice_hdr, prev_slice_hdr, bottom_field_flag);
 
     /* nal_ref_idc differs in value with one of the nal_ref_idc values is 0 */
-    CHECK_EXPR(((GST_VAAPI_PICTURE_IS_REFERENCE(priv->current_picture) ^
-                 (nalu->ref_idc != 0)) == 0), "nal_ref_idc");
+    CHECK_EXPR((unit->nalu.ref_idc != 0) ==
+               (prev_unit->nalu.ref_idc != 0), "nal_ref_idc");
 
     /* POC type is 0 for both and either pic_order_cnt_lsb differs in
        value or delta_pic_order_cnt_bottom differs in value */
@@ -2573,11 +2567,10 @@ is_new_picture(
     }
 
     /* IdrPicFlag differs in value */
-    CHECK_EXPR(((GST_VAAPI_PICTURE_IS_IDR(priv->current_picture) ^
-                 (nalu->type == GST_H264_NAL_SLICE_IDR)) == 0), "IdrPicFlag");
+    CHECK_VALUE(&unit->nalu, &prev_unit->nalu, idr_pic_flag);
 
     /* IdrPicFlag is equal to 1 for both and idr_pic_id differs in value */
-    if (GST_VAAPI_PICTURE_IS_IDR(priv->current_picture))
+    if (unit->nalu.idr_pic_flag)
         CHECK_VALUE(slice_hdr, prev_slice_hdr, idr_pic_id);
 
 #undef CHECK_EXPR
@@ -2789,8 +2782,10 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnitH264 *unit)
 
     GST_DEBUG("slice (%u bytes)", nalu->size);
 
-    if (!priv->got_sps || !priv->got_pps)
+    if (!priv->got_sps || !priv->got_pps) {
+        GST_ERROR("not initialized yet");
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    }
 
     unit->base.buffer = gst_buffer_create_sub(
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer,
@@ -3082,12 +3077,9 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
     case GST_H264_NAL_SLICE_IDR:
     case GST_H264_NAL_SLICE:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
-        /* XXX: assume we got a new frame if first_mb_in_slice is set
-           to zero, thus ignoring Arbitrary Slice Order (ASO) feature
-           from Baseline profile */
-        if (unit->nalu.offset + 2 <= unit->nalu.size &&
-            (unit->nalu.data[unit->nalu.offset + 1] & 0x80))
+        if (is_new_picture(unit, priv->prev_slice_unit))
             flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
+        gst_vaapi_decoder_unit_replace(&priv->prev_slice_unit, unit);
         break;
     default:
         if (unit->nalu.type >= 14 && unit->nalu.type <= 18)
