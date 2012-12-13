@@ -630,6 +630,51 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
     return status;
 }
 
+/**
+ * gst_vaapi_decoder_get_frame:
+ * @decoder: a #GstVaapiDecoder
+ * @out_frame_ptr: the next decoded frame as a #GstVideoCodecFrame
+ *
+ * Returns the next frame available in the list of decoded frames.
+ * @GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA is returned if there is no
+ * decoded frame pending in the queue.
+ *
+ * The actual surface is available as a #GstVaapiSurfaceProxy attached
+ * to the user-data anchor of the output frame. Ownership of the proxy
+ * is transferred to the frame.
+ *
+ * Return value: a #GstVaapiDecoderStatus
+ */
+GstVaapiDecoderStatus
+gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame **out_frame_ptr)
+{
+    GstVaapiSurfaceProxy *proxy;
+    GstVideoCodecFrame *out_frame;
+
+    g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+    g_return_val_if_fail(out_frame_ptr != NULL,
+        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
+
+    proxy = pop_surface(decoder);
+    if (!proxy || !(out_frame = gst_vaapi_surface_proxy_get_user_data(proxy)))
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+
+    gst_video_codec_frame_set_user_data(out_frame,
+        proxy, (GDestroyNotify)gst_vaapi_mini_object_unref);
+
+    out_frame->pts      = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
+    out_frame->duration = GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
+
+    if (GST_VAAPI_SURFACE_PROXY_TFF(proxy))
+        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
+            GST_VIDEO_CODEC_FRAME_FLAG_TFF);
+
+    *out_frame_ptr = out_frame;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
 void
 gst_vaapi_decoder_set_picture_size(
     GstVaapiDecoder    *decoder,
@@ -803,28 +848,19 @@ gst_vaapi_decoder_parse(GstVaapiDecoder *decoder,
 }
 
 GstVaapiDecoderStatus
-gst_vaapi_decoder_decode(GstVaapiDecoder *decoder,
-    GstVideoCodecFrame *base_frame, GstVaapiSurfaceProxy **out_proxy_ptr)
+gst_vaapi_decoder_decode(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstVaapiDecoderStatus status;
 
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(base_frame != NULL,
+    g_return_val_if_fail(frame != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(base_frame->user_data != NULL,
-        GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
-    g_return_val_if_fail(out_proxy_ptr != NULL,
+    g_return_val_if_fail(frame->user_data != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
     status = gst_vaapi_decoder_check_status(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
-
-    status = do_decode(decoder, base_frame);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
-
-    *out_proxy_ptr = pop_surface(decoder);
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+    return do_decode(decoder, frame);
 }
