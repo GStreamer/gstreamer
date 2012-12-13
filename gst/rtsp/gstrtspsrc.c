@@ -4147,6 +4147,10 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
 
   GST_OBJECT_LOCK (src);
   old = src->pending_cmd;
+  if (old == CMD_RECONNECT) {
+    GST_DEBUG_OBJECT (src, "ignore, we were reconnecting");
+    cmd = CMD_RECONNECT;
+  }
   if (old != CMD_WAIT) {
     src->pending_cmd = CMD_WAIT;
     GST_OBJECT_UNLOCK (src);
@@ -6561,7 +6565,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
 
   GST_OBJECT_LOCK (src);
   cmd = src->pending_cmd;
-  if (cmd == CMD_PLAY || cmd == CMD_LOOP)
+  if (cmd == CMD_RECONNECT || CMD_PLAY || cmd == CMD_LOOP)
     src->pending_cmd = CMD_LOOP;
   else
     src->pending_cmd = CMD_WAIT;
