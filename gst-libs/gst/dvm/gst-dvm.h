@@ -71,6 +71,14 @@
     return FALSE;                                                       \
   }
 
+#define GST_DVM_GET_STATIC_FIELD(k, field, signature)                   \
+  k.field = (*env)->GetStaticFieldID (env, k.klass, #field, signature); \
+  if (!k.field) {                                                       \
+    (*env)->ExceptionClear (env);                                       \
+    GST_ERROR ("Failed to get static field %s for %s", #field, #k);     \
+    return FALSE;                                                       \
+  }
+
 #define GST_DVM_GET_FIELD(k, field, signature)                          \
   k.field = (*env)->GetFieldID (env, k.klass, #field, signature);       \
   if (!k.field) {                                                       \
@@ -114,7 +122,23 @@
     error_statement;                                                    \
   }
 
+#define GST_DVM_FIELD(error_statement, obj, type, k, field)             \
+  (*env)->Get##type##Field (env, obj, k.field);                         \
+  if ((*env)->ExceptionCheck (env)) {                                   \
+    GST_ERROR ("Failed to get Java field");                             \
+    (*env)->ExceptionDescribe (env);                                    \
+    (*env)->ExceptionClear (env);                                       \
+    error_statement;                                                    \
+  }
 
+#define GST_DVM_STATIC_FIELD(error_statement, type, k, field)           \
+  (*env)->Get##type##Field (env, k.klass, k.field);                     \
+  if ((*env)->ExceptionCheck (env)) {                                   \
+    GST_ERROR ("Failed to get Java static field");                      \
+    (*env)->ExceptionDescribe (env);                                    \
+    (*env)->ExceptionClear (env);                                       \
+    error_statement;                                                    \
+  }
 
 JNIEnv *gst_dvm_get_env (void);
 gboolean gst_dvm_init (void);
