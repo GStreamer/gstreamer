@@ -3265,7 +3265,7 @@ seek_failed:
   {
     GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
     GST_ERROR_OBJECT (basesrc, "Failed to perform initial seek");
-    gst_base_src_set_flushing (basesrc, TRUE, FALSE, NULL);
+    gst_base_src_stop (basesrc);
     if (event)
       gst_event_unref (event);
     ret = GST_FLOW_ERROR;
@@ -3274,7 +3274,7 @@ seek_failed:
 no_get_range:
   {
     GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
-    gst_base_src_set_flushing (basesrc, TRUE, FALSE, NULL);
+    gst_base_src_stop (basesrc);
     GST_ERROR_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
     ret = GST_FLOW_ERROR;
     goto error;
