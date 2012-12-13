@@ -261,7 +261,7 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     GstFlowReturn ret;
     GstBuffer *outbuf = NULL;
     guint outbuf_flags, flags;
-    gboolean interlaced, tff;
+    gboolean tff;
 
     if (GST_VAAPI_IS_VIDEO_BUFFER(buf))
         vbuf = GST_VAAPI_VIDEO_BUFFER(buf);
@@ -283,8 +283,7 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     timestamp  = GST_BUFFER_TIMESTAMP(buf);
     proxy      = gst_vaapi_video_buffer_get_surface_proxy(vbuf);
-    interlaced = gst_vaapi_surface_proxy_get_interlaced(proxy);
-    tff        = gst_vaapi_surface_proxy_get_tff(proxy);
+    tff        = GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_TFF);
 
     flags &= ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
                GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
@@ -296,7 +295,7 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     vbuf = GST_VAAPI_VIDEO_BUFFER(outbuf);
     outbuf_flags = flags;
-    outbuf_flags |= interlaced ? (
+    outbuf_flags |= postproc->deinterlace ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) :
@@ -317,7 +316,7 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     vbuf = GST_VAAPI_VIDEO_BUFFER(outbuf);
     outbuf_flags = flags;
-    outbuf_flags |= interlaced ? (
+    outbuf_flags |= postproc->deinterlace ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD) :
