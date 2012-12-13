@@ -39,44 +39,6 @@ typedef struct _GstVaapiSurfaceProxy            GstVaapiSurfaceProxy;
 #define GST_VAAPI_SURFACE_PROXY_SURFACE(surface) \
     gst_vaapi_surface_proxy_get_surface(surface)
 
-/**
- * GST_VAAPI_SURFACE_PROXY_TIMESTAMP:
- * @surface: a #GstVaapiSurfaceProxy
- *
- * Macro that evaluates to the @surface timestamp, or
- * %GST_CLOCK_TIME_NONE if none was set.
- */
-#define GST_VAAPI_SURFACE_PROXY_TIMESTAMP(surface) \
-    gst_vaapi_surface_proxy_get_timestamp(surface)
-
-/**
- * GST_VAAPI_SURFACE_PROXY_DURATION:
- * @surface: a #GstVaapiSurfaceProxy
- *
- * Macro that evaluates to the amount of time the @surface should be
- * displayed, or %GST_CLOCK_TIME_NONE if none was set.
- */
-#define GST_VAAPI_SURFACE_PROXY_DURATION(surface) \
-    gst_vaapi_surface_proxy_get_duration(surface)
-
-/**
- * GST_VAAPI_SURFACE_PROXY_INTERLACED:
- * @surface: a #GstVaapiSurfaceProxy
- *
- * Macro that evaluates to %TRUE if the @surface is interlaced.
- */
-#define GST_VAAPI_SURFACE_PROXY_INTERLACED(surface) \
-    gst_vaapi_surface_proxy_get_interlaced(surface)
-
-/**
- * GST_VAAPI_SURFACE_PROXY_TFF:
- * @surface: a #GstVaapiSurfaceProxy
- *
- * Macro that evaluates to the tff flag of the @surface
- */
-#define GST_VAAPI_SURFACE_PROXY_TFF(surface) \
-    gst_vaapi_surface_proxy_get_tff(surface)
-
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface);
 
@@ -117,36 +79,6 @@ gst_vaapi_surface_proxy_set_surface(
     GstVaapiSurfaceProxy *proxy,
     GstVaapiSurface      *surface
 );
-
-GstClockTime
-gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_timestamp(
-    GstVaapiSurfaceProxy *proxy,
-    GstClockTime          timestamp
-);
-
-GstClockTime
-gst_vaapi_surface_proxy_get_duration(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_duration(
-    GstVaapiSurfaceProxy *proxy,
-    GstClockTime          duration
-);
-
-gboolean
-gst_vaapi_surface_proxy_get_interlaced(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_interlaced(GstVaapiSurfaceProxy *proxy, gboolean b);
-
-gboolean
-gst_vaapi_surface_proxy_get_tff(GstVaapiSurfaceProxy *proxy);
-
-void
-gst_vaapi_surface_proxy_set_tff(GstVaapiSurfaceProxy *proxy, gboolean tff);
 
 G_END_DECLS
 

@@ -45,10 +45,6 @@ struct _GstVaapiSurfaceProxy {
 
     GstVaapiContext    *context;
     GstVaapiSurface    *surface;
-    GstClockTime        timestamp;
-    GstClockTime        duration;
-    guint               is_interlaced   : 1;
-    guint               tff             : 1;
 };
 
 static void
@@ -56,16 +52,6 @@ gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
     gst_vaapi_surface_proxy_set_surface(proxy, NULL);
     gst_vaapi_surface_proxy_set_context(proxy, NULL);
-}
-
-static void
-gst_vaapi_surface_proxy_init(GstVaapiSurfaceProxy *proxy)
-{ 
-    proxy->timestamp = GST_CLOCK_TIME_NONE;
-    proxy->duration  = GST_CLOCK_TIME_NONE;
-
-    proxy->is_interlaced = FALSE;
-    proxy->tff = FALSE;
 }
 
 static inline const GstVaapiMiniObjectClass *
@@ -102,7 +88,6 @@ gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface)
         return NULL;
 
     proxy = GST_VAAPI_SURFACE_PROXY(object);
-    gst_vaapi_surface_proxy_init(proxy);
     gst_vaapi_surface_proxy_set_context(proxy, context);
     gst_vaapi_surface_proxy_set_surface(proxy, surface);
     return proxy;
@@ -296,140 +281,4 @@ gst_vaapi_surface_proxy_set_surface(
 
     if (surface)
         proxy->surface = g_object_ref(surface);
-}
-
-/**
- * gst_vaapi_surface_proxy_get_timestamp:
- * @proxy: a #GstVaapiSurfaceProxy
- *
- * Returns the presentation timestamp of the #GstVaapiSurface held by @proxy.
- *
- * Return value: the presentation timestamp of the surface, or
- *   %GST_CLOCK_TIME_NONE is none was set
- */
-GstClockTime
-gst_vaapi_surface_proxy_get_timestamp(GstVaapiSurfaceProxy *proxy)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy),
-                         GST_CLOCK_TIME_NONE);
-
-    return proxy->timestamp;
-}
-
-/**
- * gst_vaapi_surface_proxy_set_timestamp:
- * @proxy: a #GstVaapiSurfaceProxy
- * @timestamp: the new presentation timestamp as a #GstClockTime
- *
- * Sets the presentation timestamp of the @proxy surface to @timestamp.
- */
-void
-gst_vaapi_surface_proxy_set_timestamp(
-    GstVaapiSurfaceProxy *proxy,
-    GstClockTime          timestamp
-)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    proxy->timestamp = timestamp;
-}
-
-/**
- * gst_vaapi_surface_proxy_get_duration:
- * @proxy: a #GstVaapiSurfaceProxy
- *
- * Returns the presentation duration of the #GstVaapiSurface held by @proxy.
- *
- * Return value: the presentation duration of the surface, or
- *   %GST_CLOCK_TIME_NONE is none was set
- */
-GstClockTime
-gst_vaapi_surface_proxy_get_duration(GstVaapiSurfaceProxy *proxy)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy),
-                         GST_CLOCK_TIME_NONE);
-
-    return proxy->duration;
-}
-
-/**
- * gst_vaapi_surface_proxy_set_duration:
- * @proxy: a #GstVaapiSurfaceProxy
- * @duration: the presentation duration of this surface as a #GstClockTime
- *
- * Sets the presentation duration of the @proxy surface to @duration.
- */
-void
-gst_vaapi_surface_proxy_set_duration(
-    GstVaapiSurfaceProxy *proxy,
-    GstClockTime          duration
-)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    proxy->duration = duration;
-}
-
-/**
- * gst_vaapi_surface_proxy_get_interlaced:
- * @proxy: a #GstVaapiSurfaceProxy
- *
- * Returns whether the @proxy holds an interlaced #GstVaapiSurface or not.
- *
- * Return value: %TRUE if the underlying surface is interlaced, %FALSE
- *     otherwise.
- */
-gboolean
-gst_vaapi_surface_proxy_get_interlaced(GstVaapiSurfaceProxy *proxy)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), FALSE);
-
-    return proxy->is_interlaced;
-}
-
-/**
- * gst_vaapi_surface_proxy_set_interlaced:
- * @proxy: a #GstVaapiSurfaceProxy
- * @b: a boolean value
- *
- * Sets whether the underlying #GstVaapiSurface for @proxy is interlaced
- * or not.
- */
-void
-gst_vaapi_surface_proxy_set_interlaced(GstVaapiSurfaceProxy *proxy, gboolean b)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    proxy->is_interlaced = b;
-}
-
-/**
- * gst_vaapi_surface_proxy_get_tff:
- * @proxy: a #GstVaapiSurfaceProxy
- *
- * Returns the TFF flag of the #GstVaapiSurface held by @proxy.
- *
- * Return value: the TFF flag of the surface
- */
-gboolean
-gst_vaapi_surface_proxy_get_tff(GstVaapiSurfaceProxy *proxy)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy), FALSE);
-
-    return proxy->is_interlaced && proxy->tff;
-}
-
-/**
- * gst_vaapi_surface_proxy_set_tff:
- * @proxy: a #GstVaapiSurfaceProxy
- * @tff: the new value of the TFF flag
- *
- * Sets the TFF flag of the @proxy surface to @tff.
- */
-void
-gst_vaapi_surface_proxy_set_tff(GstVaapiSurfaceProxy *proxy, gboolean tff)
-{
-    g_return_if_fail(GST_VAAPI_IS_SURFACE_PROXY(proxy));
-
-    proxy->tff = tff;
 }

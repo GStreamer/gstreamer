@@ -330,16 +330,6 @@ gst_vaapi_picture_output(GstVaapiPicture *picture)
         GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
             GST_VIDEO_CODEC_FRAME_FLAG_TFF);
 
-    /* XXX: to be removed later */
-    if (GST_CLOCK_TIME_IS_VALID(out_frame->pts))
-        gst_vaapi_surface_proxy_set_timestamp(proxy, out_frame->pts);
-    if (GST_CLOCK_TIME_IS_VALID(out_frame->duration))
-        gst_vaapi_surface_proxy_set_duration(proxy, out_frame->duration);
-    if (GST_VAAPI_PICTURE_IS_INTERLACED(picture))
-        gst_vaapi_surface_proxy_set_interlaced(proxy, TRUE);
-    if (GST_VAAPI_PICTURE_IS_TFF(picture))
-        gst_vaapi_surface_proxy_set_tff(proxy, TRUE);
-
     gst_vaapi_decoder_push_frame(GET_DECODER(picture), out_frame);
 
     GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);
