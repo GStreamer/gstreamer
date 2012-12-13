@@ -2,10 +2,10 @@ lib_LTLIBRARIES = libgstdvm-@GST_MAJORMINOR@.la
 libgstdvmincludedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/dvm
 
 libgstdvminclude_HEADERS = \
-	gst-dvm.h
+	gstdvm.h
 
 libgstdvm_@GST_MAJORMINOR@_la_SOURCES = \
-	gst-dvm.c
+	gstdvm.c
 
 libgstdvm_@GST_MAJORMINOR@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \

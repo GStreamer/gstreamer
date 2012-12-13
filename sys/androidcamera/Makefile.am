@@ -18,6 +18,7 @@ noinst_HEADERS = \
 	gst-android-graphics-imageformat.h
 
 libgstandroidcamera_la_CFLAGS = \
+	$(GST_PLUGINS_BAD_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
@@ -25,7 +26,8 @@ libgstandroidcamera_la_CFLAGS = \
 libgstandroidcamera_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS)
+	$(GST_LIBS) \
+	$(top_builddir)/gst-libs/gst/dvm/libgstdvm-@GST_MAJORMINOR@.la
 libgstandroidcamera_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstandroidcamera_la_LIBTOOLFLAGS = --tag=disable-static
 

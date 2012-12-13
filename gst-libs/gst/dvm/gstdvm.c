@@ -24,7 +24,7 @@
 #include "config.h"
 #endif
 
-#include "gst-dvm.h"
+#include "gstdvm.h"
 
 #include <pthread.h>
 

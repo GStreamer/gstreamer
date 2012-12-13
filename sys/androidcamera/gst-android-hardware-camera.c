@@ -23,7 +23,7 @@
 #include "config.h"
 #endif
 
-#include <gst/dvm/gst-dvm.h>
+#include <gst/dvm/gstdvm.h>
 
 #include "gstahccallback.h"
 #include "gst-android-hardware-camera.h"
