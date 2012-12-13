@@ -77,19 +77,18 @@ gst_vaapi_surface_proxy_class(void)
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new(GstVaapiContext *context, GstVaapiSurface *surface)
 {
-    GstVaapiMiniObject *object;
     GstVaapiSurfaceProxy *proxy;
 
     g_return_val_if_fail(GST_VAAPI_IS_CONTEXT(context), NULL);
     g_return_val_if_fail(GST_VAAPI_IS_SURFACE(surface), NULL);
 
-    object = gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
-    if (!object)
+    proxy = (GstVaapiSurfaceProxy *)
+        gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
+    if (!proxy)
         return NULL;
 
-    proxy = GST_VAAPI_SURFACE_PROXY(object);
-    gst_vaapi_surface_proxy_set_context(proxy, context);
-    gst_vaapi_surface_proxy_set_surface(proxy, surface);
+    proxy->context = g_object_ref(context);
+    proxy->surface = g_object_ref(surface);
     return proxy;
 }
 
