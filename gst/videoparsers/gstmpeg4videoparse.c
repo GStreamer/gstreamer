@@ -621,6 +621,10 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
         mp4vparse->vol.par_height, NULL);
   }
 
+  if (mp4vparse->vol.sprite_enable != GST_MPEG4_SPRITE_UNUSED)
+    gst_caps_set_simple (caps, "sprite-warping-points", G_TYPE_INT,
+        mp4vparse->vol.no_of_sprite_warping_points, NULL);
+
   gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (mp4vparse), caps);
   gst_caps_unref (caps);
 
