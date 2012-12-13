@@ -133,7 +133,8 @@ typedef struct
   GstElement *queue;
   GstElement *conv;
   GstElement *resample;
-  GstPad *blockpad;             /* srcpad of resample, used for switching the vis */
+  GstPad *blockpad;             /* srcpad of queue, used for blocking the vis */
+  GstPad *vispeerpad;           /* srcpad of resample, used for unlinking the vis */
   GstPad *vissinkpad;           /* visualisation sinkpad, */
   GstElement *vis;
   GstPad *vissrcpad;            /* visualisation srcpad, */
@@ -911,7 +912,7 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, GstPadProbeInfo * info,
     goto done;
 
   /* unlink the old plugin and unghost the pad */
-  gst_pad_unlink (chain->blockpad, chain->vissinkpad);
+  gst_pad_unlink (chain->vispeerpad, chain->vissinkpad);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->srcpad), NULL);
 
   /* set the old plugin to NULL and remove */
@@ -928,7 +929,7 @@ gst_play_sink_vis_blocked (GstPad * tee_pad, GstPadProbeInfo * info,
   chain->vissrcpad = gst_element_get_static_pad (chain->vis, "src");
 
   /* link pads */
-  gst_pad_link_full (chain->blockpad, chain->vissinkpad,
+  gst_pad_link_full (chain->vispeerpad, chain->vissinkpad,
       GST_PAD_LINK_CHECK_NOTHING);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->srcpad),
       chain->vissrcpad);
@@ -2846,8 +2847,12 @@ gen_vis_chain (GstPlaySink * playsink)
   gst_bin_add (bin, chain->resample);
 
   /* this pad will be used for blocking the dataflow and switching the vis
+   * plugin, we block right after the queue, this makes it possible for the
+   * resample and convert to convert to a format supported by the new vis
    * plugin */
-  chain->blockpad = gst_element_get_static_pad (chain->resample, "src");
+  chain->blockpad = gst_element_get_static_pad (chain->queue, "src");
+  /* this is the pad where the vis is linked to */
+  chain->vispeerpad = gst_element_get_static_pad (chain->resample, "src");
 
   if (playsink->visualisation) {
     GST_DEBUG_OBJECT (playsink, "trying configure vis");
