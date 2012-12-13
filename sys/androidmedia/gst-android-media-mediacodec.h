@@ -29,18 +29,18 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstAmcBuffer GstAmcBuffer;
-typedef struct _GstAmmcBufferInfo GstAmmcBufferInfo;
+typedef struct _GstAmMediaCodecBuffer GstAmMediaCodecBuffer;
+typedef struct _GstAmMediaCodecBufferInfo GstAmMediaCodecBufferInfo;
 typedef struct _GstAmMediaCodec GstAmMediaCodec;
 
-struct _GstAmcBuffer {
+struct _GstAmMediaCodecBuffer {
   guint8 *data;
   gsize size;
   /*< private >*/
   jobject object; /* global reference */
 };
 
-struct _GstAmmcBufferInfo {
+struct _GstAmMediaCodecBufferInfo {
   gint flags;
   gint offset;
   gint64 presentation_time_us;
@@ -72,21 +72,23 @@ GstAmMediaCodec * gst_am_mediacodec_create_by_codec_name (const gchar *name);
 GstAmMediaCodec * gst_am_mediacodec_create_decoder_by_type (const gchar *type);
 GstAmMediaCodec * gst_am_mediacodec_create_encoder_by_type (const gchar *type);
 
+void gst_am_mediacodec_free (GstAmMediaCodec * self);
+
 gint gst_am_mediacodec_dequeue_input_buffer (GstAmMediaCodec * self,
     gint64 timeoutUs);
 gint gst_am_mediacodec_dequeue_output_buffer (GstAmMediaCodec * self,
-    GstAmmcBufferInfo *info, gint64 timeoutUs);
+    GstAmMediaCodecBufferInfo *info, gint64 timeoutUs);
 gboolean gst_am_mediacodec_flush (GstAmMediaCodec * self);
 
-GstAmcBuffer * gst_am_mediacodec_get_input_buffers (GstAmMediaCodec * self,
+GstAmMediaCodecBuffer * gst_am_mediacodec_get_input_buffers (GstAmMediaCodec * self,
     gsize * n_buffers);
-GstAmcBuffer * gst_am_mediacodec_get_output_buffers (GstAmMediaCodec * self,
+GstAmMediaCodecBuffer * gst_am_mediacodec_get_output_buffers (GstAmMediaCodec * self,
     gsize * n_buffers);
-void gst_am_mediacodec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers);
+void gst_am_mediacodec_free_buffers (GstAmMediaCodecBuffer * buffers, gsize n_buffers);
 GstAmMediaFormat * gst_am_mediacodec_get_output_format (GstAmMediaCodec * self);
 
 gboolean gst_am_mediacodec_queue_input_buffer (GstAmMediaCodec * self,
-    gint index, const GstAmmcBufferInfo *info);
+    gint index, const GstAmMediaCodecBufferInfo *info);
 void gst_am_mediacodec_release (GstAmMediaCodec * self);
 gboolean gst_am_mediacodec_release_output_buffer (GstAmMediaCodec * self,
     gint index);

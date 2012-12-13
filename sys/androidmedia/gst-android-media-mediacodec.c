@@ -275,18 +275,25 @@ gst_am_mediacodec_flush (GstAmMediaCodec * self)
 }
 
 void
-gst_am_mediacodec_release (GstAmMediaCodec * self)
+gst_am_mediacodec_free (GstAmMediaCodec * self)
 {
   JNIEnv *env = gst_dvm_get_env ();
-
-  AMMC_CALL (, Void, release);
 
   (*env)->DeleteGlobalRef (env, self->object);
   g_slice_free (GstAmMediaCodec, self);
 }
 
 void
-gst_am_mediacodec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
+gst_am_mediacodec_release (GstAmMediaCodec * self)
+{
+  JNIEnv *env = gst_dvm_get_env ();
+
+  AMMC_CALL (, Void, release);
+}
+
+void
+gst_am_mediacodec_free_buffers (GstAmMediaCodecBuffer * buffers,
+    gsize n_buffers)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jsize i;
@@ -298,13 +305,13 @@ gst_am_mediacodec_free_buffers (GstAmcBuffer * buffers, gsize n_buffers)
   g_free (buffers);
 }
 
-GstAmcBuffer *
+GstAmMediaCodecBuffer *
 gst_am_mediacodec_get_output_buffers (GstAmMediaCodec * self, gsize * n_buffers)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject output_buffers = NULL;
   jsize n_output_buffers;
-  GstAmcBuffer *ret = NULL;
+  GstAmMediaCodecBuffer *ret = NULL;
   jsize i;
 
   *n_buffers = 0;
@@ -320,7 +327,7 @@ gst_am_mediacodec_get_output_buffers (GstAmMediaCodec * self, gsize * n_buffers)
   }
 
   *n_buffers = n_output_buffers;
-  ret = g_new0 (GstAmcBuffer, n_output_buffers);
+  ret = g_new0 (GstAmMediaCodecBuffer, n_output_buffers);
 
   for (i = 0; i < n_output_buffers; i++) {
     jobject buffer = NULL;
@@ -363,13 +370,13 @@ error:
   goto done;
 }
 
-GstAmcBuffer *
+GstAmMediaCodecBuffer *
 gst_am_mediacodec_get_input_buffers (GstAmMediaCodec * self, gsize * n_buffers)
 {
   JNIEnv *env = gst_dvm_get_env ();
   jobject input_buffers = NULL;
   jsize n_input_buffers;
-  GstAmcBuffer *ret = NULL;
+  GstAmMediaCodecBuffer *ret = NULL;
   jsize i;
 
   *n_buffers = 0;
@@ -386,7 +393,7 @@ gst_am_mediacodec_get_input_buffers (GstAmMediaCodec * self, gsize * n_buffers)
   }
 
   *n_buffers = n_input_buffers;
-  ret = g_new0 (GstAmcBuffer, n_input_buffers);
+  ret = g_new0 (GstAmMediaCodecBuffer, n_input_buffers);
 
   for (i = 0; i < n_input_buffers; i++) {
     jobject buffer = NULL;
@@ -446,7 +453,8 @@ gst_am_mediacodec_dequeue_input_buffer (GstAmMediaCodec * self,
       android_media_mediacodec_bufferinfo, field);
 
 static gboolean
-_fill_buffer_info (JNIEnv * env, jobject buffer_info, GstAmmcBufferInfo * info)
+_fill_buffer_info (JNIEnv * env, jobject buffer_info,
+    GstAmMediaCodecBufferInfo * info)
 {
   info->flags = AMMCBI_FIELD (return FALSE, Int, flags);
   info->offset = AMMCBI_FIELD (return FALSE, Int, offset);
@@ -459,7 +467,7 @@ _fill_buffer_info (JNIEnv * env, jobject buffer_info, GstAmmcBufferInfo * info)
 
 gint
 gst_am_mediacodec_dequeue_output_buffer (GstAmMediaCodec * self,
-    GstAmmcBufferInfo * info, gint64 timeoutUs)
+    GstAmMediaCodecBufferInfo * info, gint64 timeoutUs)
 {
   JNIEnv *env = gst_dvm_get_env ();
   gint ret = G_MININT;
@@ -492,7 +500,7 @@ error:
 
 gboolean
 gst_am_mediacodec_queue_input_buffer (GstAmMediaCodec * self, gint index,
-    const GstAmmcBufferInfo * info)
+    const GstAmMediaCodecBufferInfo * info)
 {
   JNIEnv *env = gst_dvm_get_env ();
 
