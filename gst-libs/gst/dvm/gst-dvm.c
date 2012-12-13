@@ -157,3 +157,9 @@ create_failed:
     return FALSE;
   }
 }
+
+gboolean
+gst_dvm_is_own_vm (void)
+{
+  return started_java_vm;
+}

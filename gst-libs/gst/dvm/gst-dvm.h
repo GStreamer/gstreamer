@@ -142,5 +142,6 @@
 
 JNIEnv *gst_dvm_get_env (void);
 gboolean gst_dvm_init (void);
+gboolean gst_dvm_is_own_vm (void);
 
 #endif /* __GST_DVM_H__ */
