@@ -46,14 +46,16 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
         "width = (int)[ 0, max ], "
         "height = (int)[ 0, max ], "
         "framerate = (fraction)[ 0, max ] ,"
-        "parsed = (boolean) true, " "systemstream = (boolean) false")
+        "parsed = (boolean) true, " "systemstream = (boolean) false; "
+        "video/x-divx, " "divxversion = (int) [ 4, 5 ]")
     );
 
 static GstStaticPadTemplate sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
-        "mpegversion = (int) 4, " "systemstream = (boolean) false")
+        "mpegversion = (int) 4, " "systemstream = (boolean) false; "
+        "video/x-divx, " "divxversion = (int) [ 4, 5 ]")
     );
 
 /* Properties */
@@ -570,11 +572,11 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
     s = gst_caps_get_structure (caps, 0);
   } else {
     caps = gst_caps_new_simple ("video/mpeg",
-        "mpegversion", G_TYPE_INT, 4, NULL);
+        "mpegversion", G_TYPE_INT, 4,
+        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
   }
 
-  gst_caps_set_simple (caps, "systemstream", G_TYPE_BOOLEAN, FALSE,
-      "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+  gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (mp4vparse->profile && mp4vparse->level) {
     gst_caps_set_simple (caps, "profile", G_TYPE_STRING, mp4vparse->profile,
