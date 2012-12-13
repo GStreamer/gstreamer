@@ -304,29 +304,32 @@ decode_step(GstVaapiDecoder *decoder)
 }
 
 static inline void
-push_surface(GstVaapiDecoder *decoder, GstVaapiSurfaceProxy *proxy)
+push_frame(GstVaapiDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
-    GstVideoInfo * const vi = &priv->codec_state->info;
-    GstClockTime duration;
 
     GST_DEBUG("queue decoded surface %" GST_VAAPI_ID_FORMAT,
-              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(proxy)));
+              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(
+                                    frame->user_data)));
 
-    if (vi->fps_n && vi->fps_d) {
-        /* Actual field duration is computed in vaapipostproc */
-        duration = gst_util_uint64_scale(GST_SECOND, vi->fps_d, vi->fps_n);
-        gst_vaapi_surface_proxy_set_duration(proxy, duration);
-    }
-    g_queue_push_tail(priv->surfaces, proxy);
+    g_queue_push_tail(priv->frames, frame);
 }
 
-static inline GstVaapiSurfaceProxy *
-pop_surface(GstVaapiDecoder *decoder)
+static inline GstVideoCodecFrame *
+pop_frame(GstVaapiDecoder *decoder)
 {
     GstVaapiDecoderPrivate * const priv = decoder->priv;
+    GstVideoCodecFrame *frame;
 
-    return g_queue_pop_head(priv->surfaces);
+    frame = g_queue_pop_head(priv->frames);
+    if (!frame)
+        return NULL;
+
+    GST_DEBUG("dequeue decoded surface %" GST_VAAPI_ID_FORMAT,
+              GST_VAAPI_ID_ARGS(gst_vaapi_surface_proxy_get_surface_id(
+                                    frame->user_data)));
+
+    return frame;
 }
 
 static void
@@ -387,11 +390,11 @@ gst_vaapi_decoder_finalize(GObject *object)
         priv->buffers = NULL;
     }
 
-    if (priv->surfaces) {
-        clear_queue(priv->surfaces, (GDestroyNotify)
-            gst_vaapi_surface_proxy_unref);
-        g_queue_free(priv->surfaces);
-        priv->surfaces = NULL;
+    if (priv->frames) {
+        clear_queue(priv->frames, (GDestroyNotify)
+            gst_video_codec_frame_unref);
+        g_queue_free(priv->frames);
+        priv->frames = NULL;
     }
 
     g_clear_object(&priv->context);
@@ -507,7 +510,7 @@ gst_vaapi_decoder_init(GstVaapiDecoder *decoder)
     priv->codec                 = 0;
     priv->codec_state           = codec_state;
     priv->buffers               = g_queue_new();
-    priv->surfaces              = g_queue_new();
+    priv->frames                = g_queue_new();
 }
 
 /**
@@ -605,7 +608,7 @@ GstVaapiDecoderStatus
 gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
     GstVaapiSurfaceProxy **out_proxy_ptr)
 {
-    GstVaapiSurfaceProxy *proxy;
+    GstVideoCodecFrame *frame;
     GstVaapiDecoderStatus status;
 
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
@@ -613,20 +616,24 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
     g_return_val_if_fail(out_proxy_ptr != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    proxy = pop_surface(decoder);
-    if (!proxy) {
+    frame = pop_frame(decoder);
+    if (!frame) {
         do {
             status = decode_step(decoder);
         } while (status == GST_VAAPI_DECODER_STATUS_SUCCESS);
-        proxy = pop_surface(decoder);
+        frame = pop_frame(decoder);
     }
 
-    if (proxy)
+    if (frame) {
+        *out_proxy_ptr = gst_vaapi_surface_proxy_ref(frame->user_data);
+        gst_video_codec_frame_unref(frame);
         status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-    else if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
-        status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-
-    *out_proxy_ptr = proxy;
+    }
+    else {
+        *out_proxy_ptr = NULL;
+        if (status == GST_VAAPI_DECODER_STATUS_SUCCESS)
+            status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    }
     return status;
 }
 
@@ -635,9 +642,11 @@ gst_vaapi_decoder_get_surface(GstVaapiDecoder *decoder,
  * @decoder: a #GstVaapiDecoder
  * @out_frame_ptr: the next decoded frame as a #GstVideoCodecFrame
  *
- * Returns the next frame available in the list of decoded frames.
- * @GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA is returned if there is no
- * decoded frame pending in the queue.
+ * On successful return, *@out_frame_ptr contains the next decoded
+ * frame available as a #GstVideoCodecFrame. The caller owns this
+ * object, so gst_video_codec_frame_unref() shall be called after
+ * usage. Otherwise, @GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA is
+ * returned if no decoded frame is available.
  *
  * The actual surface is available as a #GstVaapiSurfaceProxy attached
  * to the user-data anchor of the output frame. Ownership of the proxy
@@ -649,7 +658,6 @@ GstVaapiDecoderStatus
 gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
     GstVideoCodecFrame **out_frame_ptr)
 {
-    GstVaapiSurfaceProxy *proxy;
     GstVideoCodecFrame *out_frame;
 
     g_return_val_if_fail(GST_VAAPI_IS_DECODER(decoder),
@@ -657,19 +665,9 @@ gst_vaapi_decoder_get_frame(GstVaapiDecoder *decoder,
     g_return_val_if_fail(out_frame_ptr != NULL,
         GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER);
 
-    proxy = pop_surface(decoder);
-    if (!proxy || !(out_frame = gst_vaapi_surface_proxy_get_user_data(proxy)))
+    out_frame = pop_frame(decoder);
+    if (!out_frame)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-
-    gst_video_codec_frame_set_user_data(out_frame,
-        proxy, (GDestroyNotify)gst_vaapi_mini_object_unref);
-
-    out_frame->pts      = GST_VAAPI_SURFACE_PROXY_TIMESTAMP(proxy);
-    out_frame->duration = GST_VAAPI_SURFACE_PROXY_DURATION(proxy);
-
-    if (GST_VAAPI_SURFACE_PROXY_TFF(proxy))
-        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
-            GST_VIDEO_CODEC_FRAME_FLAG_TFF);
 
     *out_frame_ptr = out_frame;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -809,12 +807,10 @@ gst_vaapi_decoder_ensure_context(
 }
 
 void
-gst_vaapi_decoder_push_surface_proxy(
-    GstVaapiDecoder      *decoder,
-    GstVaapiSurfaceProxy *proxy
-)
+gst_vaapi_decoder_push_frame(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame *frame)
 {
-    push_surface(decoder, proxy);
+    push_frame(decoder, frame);
 }
 
 GstVaapiDecoderStatus

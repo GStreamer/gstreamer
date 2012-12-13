@@ -84,6 +84,11 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
 
     vaapi_destroy_buffer(GET_VA_DISPLAY(picture), &picture->param_id);
     picture->param = NULL;
+
+    if (picture->frame) {
+        gst_video_codec_frame_unref(picture->frame);
+        picture->frame = NULL;
+    }
 }
 
 gboolean
@@ -164,9 +169,8 @@ gst_vaapi_picture_create(
     if (!picture->slices)
         return FALSE;
 
-    gst_vaapi_mini_object_set_user_data(
-        GST_VAAPI_MINI_OBJECT(picture->proxy),
-        GST_VAAPI_DECODER_CODEC_FRAME(GET_DECODER(picture)), NULL);
+    picture->frame = gst_video_codec_frame_ref(
+        GST_VAAPI_DECODER_CODEC_FRAME(GET_DECODER(picture)));
     return TRUE;
 }
 
@@ -304,21 +308,40 @@ gboolean
 gst_vaapi_picture_output(GstVaapiPicture *picture)
 {
     GstVaapiSurfaceProxy *proxy;
+    GstVideoCodecFrame *out_frame;
 
     g_return_val_if_fail(GST_VAAPI_IS_PICTURE(picture), FALSE);
 
     if (!picture->proxy)
         return FALSE;
 
-    if (!GST_VAAPI_PICTURE_IS_SKIPPED(picture)) {
-        proxy = gst_vaapi_surface_proxy_ref(picture->proxy);
-        gst_vaapi_surface_proxy_set_timestamp(proxy, picture->pts);
-        if (GST_VAAPI_PICTURE_IS_INTERLACED(picture))
-            gst_vaapi_surface_proxy_set_interlaced(proxy, TRUE);
-        if (GST_VAAPI_PICTURE_IS_TFF(picture))
-            gst_vaapi_surface_proxy_set_tff(proxy, TRUE);
-        gst_vaapi_decoder_push_surface_proxy(GET_DECODER(picture), proxy);
-    }
+    out_frame = gst_video_codec_frame_ref(picture->frame);
+
+    proxy = gst_vaapi_surface_proxy_ref(picture->proxy);
+    gst_video_codec_frame_set_user_data(out_frame,
+        proxy, (GDestroyNotify)gst_vaapi_mini_object_unref);
+
+    if (!GST_CLOCK_TIME_IS_VALID(out_frame->pts))
+        out_frame->pts = picture->pts;
+    if (GST_VAAPI_PICTURE_IS_SKIPPED(picture))
+        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
+            GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+    if (GST_VAAPI_PICTURE_IS_TFF(picture))
+        GST_VIDEO_CODEC_FRAME_FLAG_SET(out_frame,
+            GST_VIDEO_CODEC_FRAME_FLAG_TFF);
+
+    /* XXX: to be removed later */
+    if (GST_CLOCK_TIME_IS_VALID(out_frame->pts))
+        gst_vaapi_surface_proxy_set_timestamp(proxy, out_frame->pts);
+    if (GST_CLOCK_TIME_IS_VALID(out_frame->duration))
+        gst_vaapi_surface_proxy_set_duration(proxy, out_frame->duration);
+    if (GST_VAAPI_PICTURE_IS_INTERLACED(picture))
+        gst_vaapi_surface_proxy_set_interlaced(proxy, TRUE);
+    if (GST_VAAPI_PICTURE_IS_TFF(picture))
+        gst_vaapi_surface_proxy_set_tff(proxy, TRUE);
+
+    gst_vaapi_decoder_push_frame(GET_DECODER(picture), out_frame);
+
     GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);
     return TRUE;
 }

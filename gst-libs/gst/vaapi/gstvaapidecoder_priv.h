@@ -163,7 +163,7 @@ struct _GstVaapiDecoderPrivate {
     GstVaapiCodec       codec;
     GstVideoCodecState *codec_state;
     GQueue             *buffers;
-    GQueue             *surfaces;
+    GQueue             *frames;
     GstVaapiParserState parser_state;
 };
 
@@ -209,10 +209,8 @@ gst_vaapi_decoder_ensure_context(
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_decoder_push_surface_proxy(
-    GstVaapiDecoder      *decoder,
-    GstVaapiSurfaceProxy *proxy
-);
+gst_vaapi_decoder_push_frame(GstVaapiDecoder *decoder,
+    GstVideoCodecFrame *frame);
 
 G_GNUC_INTERNAL
 GstVaapiDecoderStatus

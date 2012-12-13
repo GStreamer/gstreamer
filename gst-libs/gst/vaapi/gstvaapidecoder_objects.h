@@ -114,6 +114,7 @@ enum {
 struct _GstVaapiPicture {
     /*< private >*/
     GstVaapiCodecObject         parent_instance;
+    GstVideoCodecFrame         *frame;
     GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
     VABufferID                  param_id;
