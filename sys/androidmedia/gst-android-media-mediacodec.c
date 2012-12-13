@@ -56,10 +56,14 @@ static struct
   jmethodID releaseOutputBuffer;
   jmethodID start;
   jmethodID stop;
-} android_media_mediacodec = {
-0};
-
-
+  jint BUFFER_FLAG_SYNC_FRAME;
+  jint BUFFER_FLAG_CODEC_CONFIG;
+  jint BUFFER_FLAG_END_OF_STREAM;
+  jint CONFIGURE_FLAG_ENCODE;
+  jint INFO_TRY_AGAIN_LATER;
+  jint INFO_OUTPUT_FORMAT_CHANGED;
+  jint INFO_OUTPUT_BUFFERS_CHANGED;
+} android_media_mediacodec;
 
 static gboolean
 _init_classes (void)
@@ -92,6 +96,38 @@ _init_classes (void)
   GST_DVM_GET_METHOD (android_media_mediacodec, releaseOutputBuffer, "(IZ)V");
   GST_DVM_GET_METHOD (android_media_mediacodec, start, "()V");
   GST_DVM_GET_METHOD (android_media_mediacodec, stop, "()V");
+
+
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, BUFFER_FLAG_SYNC_FRAME, Int,
+      "I");
+  MediaCodec_BUFFER_FLAG_SYNC_FRAME =
+      android_media_mediacodec.BUFFER_FLAG_SYNC_FRAME;
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, BUFFER_FLAG_CODEC_CONFIG, Int,
+      "I");
+  MediaCodec_BUFFER_FLAG_CODEC_CONFIG =
+      android_media_mediacodec.BUFFER_FLAG_CODEC_CONFIG;
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, BUFFER_FLAG_END_OF_STREAM,
+      Int, "I");
+  MediaCodec_BUFFER_FLAG_END_OF_STREAM =
+      android_media_mediacodec.BUFFER_FLAG_END_OF_STREAM;
+
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, CONFIGURE_FLAG_ENCODE, Int,
+      "I");
+  MediaCodec_CONFIGURE_FLAG_ENCODE =
+      android_media_mediacodec.CONFIGURE_FLAG_ENCODE;
+
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, INFO_TRY_AGAIN_LATER, Int,
+      "I");
+  MediaCodec_INFO_TRY_AGAIN_LATER =
+      android_media_mediacodec.INFO_TRY_AGAIN_LATER;
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, INFO_OUTPUT_FORMAT_CHANGED,
+      Int, "I");
+  MediaCodec_INFO_OUTPUT_FORMAT_CHANGED =
+      android_media_mediacodec.INFO_OUTPUT_FORMAT_CHANGED;
+  GST_DVM_GET_CONSTANT (android_media_mediacodec, INFO_OUTPUT_BUFFERS_CHANGED,
+      Int, "I");
+  MediaCodec_INFO_OUTPUT_BUFFERS_CHANGED =
+      android_media_mediacodec.INFO_OUTPUT_BUFFERS_CHANGED;
 
   /* android.media.MediaCodec.BufferInfo */
   GST_DVM_GET_CLASS (android_media_mediacodec_bufferinfo,
@@ -405,40 +441,18 @@ gst_am_mediacodec_dequeue_input_buffer (GstAmMediaCodec * self,
   return ret;
 }
 
+#define AMMCBI_FIELD(error_statement, type, field)                       \
+  GST_DVM_FIELD (error_statement, buffer_info, type,                     \
+      android_media_mediacodec_bufferinfo, field);
+
 static gboolean
 _fill_buffer_info (JNIEnv * env, jobject buffer_info, GstAmmcBufferInfo * info)
 {
-  info->flags = (*env)->GetIntField (env, buffer_info,
-      android_media_mediacodec_bufferinfo.flags);
-  if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
-    return FALSE;
-  }
-
-  info->offset = (*env)->GetIntField (env, buffer_info,
-      android_media_mediacodec_bufferinfo.offset);
-  if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
-    return FALSE;
-  }
-
-  info->presentation_time_us = (*env)->GetLongField (env, buffer_info,
-      android_media_mediacodec_bufferinfo.presentationTimeUs);
-  if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
-    return FALSE;
-  }
-
-  info->size = (*env)->GetIntField (env, buffer_info,
-      android_media_mediacodec_bufferinfo.size);
-  if ((*env)->ExceptionCheck (env)) {
-    (*env)->ExceptionClear (env);
-    GST_ERROR ("Failed to get buffer info field");
-    return FALSE;
-  }
+  info->flags = AMMCBI_FIELD (return FALSE, Int, flags);
+  info->offset = AMMCBI_FIELD (return FALSE, Int, offset);
+  info->presentation_time_us =
+      AMMCBI_FIELD (return FALSE, Long, presentationTimeUs);
+  info->size = AMMCBI_FIELD (return FALSE, Int, size);
 
   return TRUE;
 }

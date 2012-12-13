@@ -25,14 +25,14 @@
 #include <gst/gst.h>
 #include <jni.h>
 
+G_BEGIN_DECLS
+
 typedef struct _GstAmMediaFormat GstAmMediaFormat;
 
 struct _GstAmMediaFormat {
   /*< private >*/
   jobject object; /* global reference */
 };
-
-G_BEGIN_DECLS
 
 gboolean gst_android_media_mediaformat_init (void);
 void gst_android_media_mediaformat_deinit (void);
