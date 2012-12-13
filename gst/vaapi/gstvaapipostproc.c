@@ -255,13 +255,20 @@ gst_vaapipostproc_stop(GstVaapiPostproc *postproc)
 static GstFlowReturn
 gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 {
-    GstVaapiVideoBuffer *vbuf = GST_VAAPI_VIDEO_BUFFER(buf);
+    GstVaapiVideoBuffer *vbuf;
     GstVaapiSurfaceProxy *proxy;
     GstClockTime timestamp;
     GstFlowReturn ret;
     GstBuffer *outbuf = NULL;
     guint outbuf_flags, flags;
     gboolean interlaced, tff;
+
+    if (GST_VAAPI_IS_VIDEO_BUFFER(buf))
+        vbuf = GST_VAAPI_VIDEO_BUFFER(buf);
+    else if (GST_VAAPI_IS_VIDEO_BUFFER(buf->parent))
+        vbuf = GST_VAAPI_VIDEO_BUFFER(buf->parent);
+    else
+        goto error_invalid_buffer;
 
     flags = gst_vaapi_video_buffer_get_render_flags(vbuf);
 
@@ -328,6 +335,12 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
     return GST_FLOW_OK;
 
     /* ERRORS */
+error_invalid_buffer:
+    {
+        GST_ERROR("failed to receive a valid video buffer");
+        gst_buffer_unref(buf);
+        return GST_FLOW_UNEXPECTED;
+    }
 error_create_buffer:
     {
         GST_ERROR("failed to create output buffer");
