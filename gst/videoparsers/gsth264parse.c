@@ -1196,12 +1196,24 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
     if (G_UNLIKELY (modified)) {
       gint fps_num = h264parse->fps_num;
       gint fps_den = h264parse->fps_den;
+      gint width, height;
       GstClockTime latency;
 
       caps = gst_caps_copy (sink_caps);
-      /* sps should give this */
-      gst_caps_set_simple (caps, "width", G_TYPE_INT, sps->width,
-          "height", G_TYPE_INT, sps->height, NULL);
+
+      /* sps should give this but upstream overrides */
+      if (s && gst_structure_has_field (s, "width"))
+        gst_structure_get_int (s, "width", &width);
+      else
+        width = sps->width;
+
+      if (s && gst_structure_has_field (s, "height"))
+        gst_structure_get_int (s, "height", &height);
+      else
+        height = sps->height;
+
+      gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
+          "height", G_TYPE_INT, height, NULL);
 
       /* upstream overrides */
       if (s && gst_structure_has_field (s, "framerate"))
