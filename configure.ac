@@ -476,6 +476,8 @@ AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
 #ifdef __sun /* Solaris */
 #include <sys/types.h>
 #include <sys/videodev2.h>
+#elif __FreeBSD__
+#include <linux/videodev2.h>
 #else /* Linux */
 #include <linux/types.h>
 #define _LINUX_TIME_H
@@ -517,6 +519,8 @@ return 0;
 #ifdef __sun /* Solaris */
 #include <sys/types.h>
 #include <sys/videodev2.h>
+#elif __FreeBSD__
+#include <linux/videodev2.h>
 #else /* Linux */
 #include <linux/types.h>
 #define _LINUX_TIME_H

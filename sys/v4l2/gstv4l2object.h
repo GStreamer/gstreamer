@@ -38,13 +38,15 @@
  */
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#ifndef __sun
+#ifdef __sun
+#include <sys/videodev2.h>
+#elif defined(__FreeBSD__)
+#include <linux/videodev2.h>
+#else /* linux */
 #include <linux/types.h>
 #define _LINUX_TIME_H
 #define __user
 #include <linux/videodev2.h>
-#else
-#include <sys/videodev2.h>
 #endif
 
 #include <gst/gst.h>
