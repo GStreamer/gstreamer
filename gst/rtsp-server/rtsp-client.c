@@ -2463,6 +2463,10 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
       g_object_ref (client), (GDestroyNotify) client_watch_notify);
   gst_rtsp_client_set_send_func (client, do_send_message, NULL, NULL);
 
+  /* FIXME make this configurable. We don't want to do this yet because it will
+   * be superceeded by a cache object later */
+  gst_rtsp_watch_set_send_backlog (priv->watch, 0, 100);
+
   GST_INFO ("attaching to context %p", context);
   res = gst_rtsp_watch_attach (priv->watch, context);
   gst_rtsp_watch_unref (priv->watch);
