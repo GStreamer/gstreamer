@@ -22,7 +22,8 @@ PREFACE
 
 CHANGES
 
-* GST_BOILERPLATE is gone, use G_DEFINE_TYPE instead.
+* GST_BOILERPLATE is gone, use G_DEFINE_TYPE instead (note that the variable
+  that used to be called parent_class is then called gst_foo_bar_parent_class)
 
 * various methods take a gsize instead of a guint when talking about memory
   sizes.
