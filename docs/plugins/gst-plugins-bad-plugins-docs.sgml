@@ -75,7 +75,6 @@
     <xi:include href="xml/element-rtpdtmfsrc.xml" />
     <xi:include href="xml/element-rtpdtmfmux.xml" />
     <xi:include href="xml/element-rtpmux.xml" />
-    <xi:include href="xml/element-scaletempo.xml" />
     <xi:include href="xml/element-shmsink.xml" />
     <xi:include href="xml/element-shmsrc.xml" />
     <xi:include href="xml/element-sdpdemux.xml" />
@@ -137,7 +136,6 @@
     <xi:include href="xml/plugin-rawparse.xml" />
     <xi:include href="xml/plugin-rtmp.xml" />
     <xi:include href="xml/plugin-rtpmux.xml" />
-    <xi:include href="xml/plugin-scaletempo.xml" />
     <xi:include href="xml/plugin-sdp.xml" />
     <xi:include href="xml/plugin-shm.xml" />
     <xi:include href="xml/plugin-soundtouch.xml" />

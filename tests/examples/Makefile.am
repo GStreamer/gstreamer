@@ -5,7 +5,7 @@ UVCH264_DIR=
 endif
 
 if HAVE_GTK
-GTK_EXAMPLES=mxf scaletempo camerabin2 $(UVCH264_DIR)
+GTK_EXAMPLES=mxf camerabin2 $(UVCH264_DIR)
 else
 GTK_EXAMPLES=
 endif
@@ -19,6 +19,6 @@ endif
 OPENCV_EXAMPLES=opencv
 
 SUBDIRS= $(DIRECTFB_DIR) $(GTK_EXAMPLES) $(OPENCV_EXAMPLES)
-DIST_SUBDIRS= camerabin2 directfb mxf scaletempo opencv uvch264
+DIST_SUBDIRS= camerabin2 directfb mxf opencv uvch264
 
 include $(top_srcdir)/common/parallel-subdirs.mak

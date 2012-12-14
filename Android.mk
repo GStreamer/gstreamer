@@ -32,7 +32,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/tta/Android.mk \
 	gst/videosignal/Android.mk \
 	gst/coloreffects/Android.mk \
-	gst/scaletempo/Android.mk \
 	gst/jpegformat/Android.mk \
 	gst/freeze/Android.mk \
 	gst/geometrictransform/Android.mk \
@@ -125,7 +124,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/tta/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/videosignal/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/coloreffects/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/scaletempo/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/jpegformat/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/freeze/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/geometrictransform/Android.mk

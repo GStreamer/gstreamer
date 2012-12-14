@@ -1239,20 +1239,6 @@ gst_rtp_mux_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-scaletempo</FILE>
-<TITLE>scaletempo</TITLE>
-GstScaletempo
-<SUBSECTION Standard>
-GstScaletempoClass
-GST_IS_SCALETEMPO
-GST_IS_SCALETEMPO_CLASS
-GST_SCALETEMPO
-GST_SCALETEMPO_CLASS
-GST_TYPE_SCALETEMPO
-gst_scaletempo_get_type
-</SECTION>
-
-<SECTION>
 <FILE>element-sdlaudiosink</FILE>
 <TITLE>sdlaudiosink</TITLE>
 GstSDLAudioSink

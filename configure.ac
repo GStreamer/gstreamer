@@ -378,7 +378,6 @@ AG_GST_CHECK_PLUGIN(rawparse)
 AG_GST_CHECK_PLUGIN(real)
 AG_GST_CHECK_PLUGIN(removesilence)
 AG_GST_CHECK_PLUGIN(rtpmux)
-AG_GST_CHECK_PLUGIN(scaletempo)
 AG_GST_CHECK_PLUGIN(sdi)
 AG_GST_CHECK_PLUGIN(sdp)
 AG_GST_CHECK_PLUGIN(segmentclip)
@@ -2122,7 +2121,6 @@ gst/rawparse/Makefile
 gst/real/Makefile
 gst/removesilence/Makefile
 gst/rtpmux/Makefile
-gst/scaletempo/Makefile
 gst/sdi/Makefile
 gst/sdp/Makefile
 gst/segmentclip/Makefile
@@ -2182,7 +2180,6 @@ tests/examples/Makefile
 tests/examples/camerabin2/Makefile
 tests/examples/directfb/Makefile
 tests/examples/mxf/Makefile
-tests/examples/scaletempo/Makefile
 tests/examples/opencv/Makefile
 tests/examples/uvch264/Makefile
 tests/icles/Makefile

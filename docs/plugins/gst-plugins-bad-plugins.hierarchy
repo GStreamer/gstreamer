@@ -85,7 +85,6 @@ GObject
           GstDtmfDetect
           GstRGB2Bayer
           GstRemoveSilence
-          GstScaletempo
           GstVideoFilter
             GstBurn
             GstChromaHold

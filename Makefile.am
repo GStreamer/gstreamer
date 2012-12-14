@@ -55,6 +55,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/mpeg4videoparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/qtmux/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/rtpvp8/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/scaletempo/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/selector/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/shapewipe/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/valve/.libs/*.{so,dll,DLL,dylib} \
@@ -70,6 +71,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/check/elements/valve \
 	$(top_builddir)/tests/check/pipelines/metadata \
 	$(top_builddir)/tests/examples/jack/jack_client \
+	$(top_builddir)/tests/examples/scaletempo/scaletempo-demo \
 	$(top_builddir)/tests/examples/switch/switcher \
 	$(top_builddir)/tests/icles/output-selector-test \
 	$(top_builddir)/tests/icles/test-oss4 \
@@ -84,10 +86,12 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/mpeg4videoparse \
 	$(top_srcdir)/gst/qtmux \
 	$(top_srcdir)/gst/rtpvp8 \
+	$(top_srcdir)/gst/scaletempo \
 	$(top_srcdir)/gst/selector \
 	$(top_srcdir)/gst/shapewipe \
 	$(top_srcdir)/gst/valve \
 	$(top_srcdir)/gst-libs/gst/baseparse \
+	$(top_srcdir)/tests/examples/scaletempo \
 	$(top_srcdir)/tests/examples/shapewipe \
 	$(top_srcdir)/tests/examples/switch \
 	$(top_srcdir)/tests/examples/jack \

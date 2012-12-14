@@ -250,7 +250,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstaccurip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfieldanalysis.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
-%{_libdir}/gstreamer-%{majorminor}/libgstscaletempo.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
 %{_libdir}/libgstbasecamerabinsrc-1.0.so.0.2.0
 
