@@ -67,6 +67,9 @@
 #include <gst/gst.h>
 #include <gobject/gvaluecollector.h>
 
+GST_DEBUG_CATEGORY_STATIC (gst_structure_debug);
+#define GST_CAT_DEFAULT gst_structure_debug
+
 typedef struct _GstStructureField GstStructureField;
 
 struct _GstStructureField
@@ -125,6 +128,9 @@ _priv_gst_structure_initialize (void)
 
   g_value_register_transform_func (_gst_structure_type, G_TYPE_STRING,
       gst_structure_transform_to_string);
+
+  GST_DEBUG_CATEGORY_INIT (gst_structure_debug, "structure", 0,
+      "GstStructure debug");
 }
 
 static GstStructure *

@@ -33,6 +33,9 @@
 
 #include "gstsample.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_sample_debug);
+#define GST_CAT_DEFAULT gst_sample_debug
+
 struct _GstSample
 {
   GstMiniObject mini_object;
@@ -51,6 +54,8 @@ void
 _priv_gst_sample_initialize (void)
 {
   _gst_sample_type = gst_sample_get_type ();
+
+  GST_DEBUG_CATEGORY_INIT (gst_sample_debug, "sample", 0, "GstSample debug");
 }
 
 static GstSample *
