@@ -37,9 +37,9 @@
 GST_DEBUG_CATEGORY (autovideoconvert_debug);
 #define GST_CAT_DEFAULT (autovideoconvert_debug)
 
-GStaticMutex factories_mutex = G_STATIC_MUTEX_INIT;
-guint32 factories_cookie = 0;   /* Cookie from last time when factories was updated */
-GList *factories = NULL;        /* factories we can use for selecting elements */
+static GMutex factories_mutex;
+static guint32 factories_cookie = 0;    /* Cookie from last time when factories was updated */
+static GList *factories = NULL; /* factories we can use for selecting elements */
 
 /* element factory information */
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -105,7 +105,7 @@ gst_auto_video_convert_update_factory_list (GstAutoVideoConvert *
     autovideoconvert)
 {
   /* use a static mutex to protect factories list and factories cookie */
-  g_static_mutex_lock (&factories_mutex);
+  g_mutex_lock (&factories_mutex);
 
   /* test if a factories list already exist or not */
   if (!factories) {
@@ -127,7 +127,7 @@ gst_auto_video_convert_update_factory_list (GstAutoVideoConvert *
     }
   }
 
-  g_static_mutex_unlock (&factories_mutex);
+  g_mutex_unlock (&factories_mutex);
 }
 
 G_DEFINE_TYPE (GstAutoVideoConvert, gst_auto_video_convert, GST_TYPE_BIN);
