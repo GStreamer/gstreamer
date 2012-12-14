@@ -253,7 +253,7 @@
 <TYPE>gint</TYPE>
 <RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Start Index</NICK>
+<NICK>Stop Index</NICK>
 <BLURB>Stop value of index.  The special value -1 means no stop.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
@@ -896,6 +896,16 @@
 <NICK>Number of probations</NICK>
 <BLURB>Consecutive packet sequence numbers to accept the source.</BLURB>
 <DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::udp-reconnect</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Reconnect to the server</NICK>
+<BLURB>Reconnect to the server if RTSP connection is closed when doing UDP.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -3261,40 +3271,40 @@
 <ARG>
 <NAME>GstVideoCrop::bottom</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bottom</NICK>
-<BLURB>Pixels to crop at bottom.</BLURB>
+<BLURB>Pixels to crop at bottom (-1 to auto-crop).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstVideoCrop::left</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Left</NICK>
-<BLURB>Pixels to crop at left.</BLURB>
+<BLURB>Pixels to crop at left (-1 to auto-crop).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstVideoCrop::right</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Right</NICK>
-<BLURB>Pixels to crop at right.</BLURB>
+<BLURB>Pixels to crop at right (-1 to auto-crop).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstVideoCrop::top</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Top</NICK>
-<BLURB>Pixels to crop at top.</BLURB>
+<BLURB>Pixels to crop at top (-1 to auto-crop).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -23396,5 +23406,45 @@
 <NICK>Lum Only</NICK>
 <BLURB>Only apply filter on luminance.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::overlap</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Overlap Length</NICK>
+<BLURB>Percentage of stride to overlap.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::rate</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-2.14748e+09,2.14748e+09]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Playback Rate</NICK>
+<BLURB>Current playback rate.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::search</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 500</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Search Length</NICK>
+<BLURB>Length in milliseconds to search for best overlap position.</BLURB>
+<DEFAULT>14</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstScaletempo::stride</NAME>
+<TYPE>guint</TYPE>
+<RANGE>[1,5000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stride Length</NICK>
+<BLURB>Length in milliseconds to output each stride.</BLURB>
+<DEFAULT>30</DEFAULT>
 </ARG>
 

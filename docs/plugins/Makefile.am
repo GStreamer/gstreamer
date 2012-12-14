@@ -98,6 +98,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/audiofx/audiowsincband.h \
 	$(top_srcdir)/gst/audiofx/audiowsinclimit.h \
 	$(top_srcdir)/gst/audiofx/audiofirfilter.h \
+	$(top_srcdir)/gst/audiofx/gstscaletempo.h \
 	$(top_srcdir)/gst/audioparsers/gstaacparse.h \
 	$(top_srcdir)/gst/audioparsers/gstac3parse.h \
 	$(top_srcdir)/gst/audioparsers/gstamrparse.h \

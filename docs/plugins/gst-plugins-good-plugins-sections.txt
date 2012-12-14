@@ -2269,6 +2269,20 @@ gst_rippletv_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-scaletempo</FILE>
+<TITLE>scaletempo</TITLE>
+GstScaletempo
+<SUBSECTION Standard>
+GstScaletempoClass
+GST_IS_SCALETEMPO
+GST_IS_SCALETEMPO_CLASS
+GST_SCALETEMPO
+GST_SCALETEMPO_CLASS
+GST_TYPE_SCALETEMPO
+gst_scaletempo_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-shagadelictv</FILE>
 <TITLE>shagadelictv</TITLE>
 GstShagadelicTV

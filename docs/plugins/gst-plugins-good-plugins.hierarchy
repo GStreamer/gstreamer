@@ -103,6 +103,7 @@ GObject
           GstProgressReport
           GstRgAnalysis
           GstRgLimiter
+          GstScaletempo
           GstTagInject
           GstVideoFilter
             GstAgingTV
@@ -203,6 +204,7 @@ GObject
           GstRtpSPEEXDepay
           GstRtpSV3VDepay
           GstRtpTheoraDepay
+          GstRtpVP8Depay
           GstRtpVRawDepay
           GstRtpVorbisDepay
           GstRtpXQTDepay
@@ -237,6 +239,7 @@ GObject
           GstRtpMPAPay
           GstRtpSPEEXPay
           GstRtpTheoraPay
+          GstRtpVP8Pay
           GstRtpVRawPay
           GstRtpVorbisPay
         GstRTPDec
