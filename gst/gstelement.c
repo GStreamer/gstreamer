@@ -271,8 +271,8 @@ gst_element_base_class_init (gpointer g_class)
   element_class->elementfactory =
       g_type_get_qdata (G_TYPE_FROM_CLASS (element_class),
       __gst_elementclass_factory);
-  GST_DEBUG ("type %s : factory %p", G_OBJECT_CLASS_NAME (element_class),
-      element_class->elementfactory);
+  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS, "type %s : factory %p",
+      G_OBJECT_CLASS_NAME (element_class), element_class->elementfactory);
 }
 
 static void
