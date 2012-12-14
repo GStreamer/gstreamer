@@ -248,7 +248,7 @@ The general flow of executing the seek with FLUSH is as follows:
 
  4) send a FLUSH_STOP event to all peer elements to allow streaming again.
 
- 5) create a NEWSEGMENT event to signal the new buffer timestamp base time.
+ 5) create a SEGMENT event to signal the new buffer timestamp base time.
     This event must be queued to be sent by the streaming thread.
 
  6) start stopped tasks and unlock the STREAM_LOCK, dataflow will continue

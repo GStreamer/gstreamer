@@ -178,8 +178,8 @@ sink overview
       PREROLL_UNLOCK
       STREAM_UNLOCK
       break
-    NEWSEGMENT:
-      # the newsegment must be used to clip incoming
+    SEGMENT:
+      # the segment must be used to clip incoming
       # buffers. Then then go into the queue as non-prerollable
       # items used for syncing the buffers
       STREAM_LOCK
