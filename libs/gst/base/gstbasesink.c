@@ -84,7 +84,7 @@
  * element receives EOS in PAUSED, preroll completes, the event is queued and an
  * EOS message is posted when going to PLAYING.
  *
- * #GstBaseSink will internally use the #GST_EVENT_NEWSEGMENT events to schedule
+ * #GstBaseSink will internally use the #GST_EVENT_SEGMENT events to schedule
  * synchronisation and clipping of buffers. Buffers that fall completely outside
  * of the current segment are dropped. Buffers that fall partially in the
  * segment are rendered (and prerolled). Subclasses should do any subbuffer

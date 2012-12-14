@@ -327,7 +327,7 @@ gst_identity_sink_event (GstBaseTransform * trans, GstEvent * event)
     }
   }
 
-  /* Reset previous timestamp, duration and offsets on NEWSEGMENT
+  /* Reset previous timestamp, duration and offsets on SEGMENT
    * to prevent false warnings when checking for perfect streams */
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     identity->prev_timestamp = identity->prev_duration = GST_CLOCK_TIME_NONE;

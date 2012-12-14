@@ -454,7 +454,7 @@ gst_output_selector_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     osel->latest_buffer = gst_buffer_ref (buf);
   }
 
-  /* Keep track of last stop and use it in NEWSEGMENT start after 
+  /* Keep track of last stop and use it in SEGMENT start after
      switching to a new src pad */
   position = GST_BUFFER_TIMESTAMP (buf);
   if (GST_CLOCK_TIME_IS_VALID (position)) {

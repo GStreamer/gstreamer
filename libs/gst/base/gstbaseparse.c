@@ -35,7 +35,7 @@
  *   <listitem><para>handles state changes</para></listitem>
  *   <listitem><para>can operate in pull mode or push mode</para></listitem>
  *   <listitem><para>handles seeking in both modes</para></listitem>
- *   <listitem><para>handles events (NEWSEGMENT/EOS/FLUSH)</para></listitem>
+ *   <listitem><para>handles events (SEGMENT/EOS/FLUSH)</para></listitem>
  *   <listitem><para>
  *        handles queries (POSITION/DURATION/SEEKING/FORMAT/CONVERT)
  *   </para></listitem>
@@ -2036,7 +2036,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     gst_base_parse_check_media (parse);
   }
 
-  /* Push pending events, including NEWSEGMENT events */
+  /* Push pending events, including SEGMENT events */
   if (G_UNLIKELY (parse->priv->pending_events)) {
     GList *r = g_list_reverse (parse->priv->pending_events);
     GList *l;
@@ -2070,7 +2070,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         GST_DEBUG_OBJECT (parse,
             "Gap of %" G_GINT64_FORMAT " ns detected in stream " "(%"
             GST_TIME_FORMAT " -> %" GST_TIME_FORMAT "). "
-            "Sending updated NEWSEGMENT events", diff,
+            "Sending updated SEGMENT events", diff,
             GST_TIME_ARGS (parse->segment.position),
             GST_TIME_ARGS (last_start));
 
@@ -3041,7 +3041,7 @@ pause:
       push_eos = TRUE;
     }
     if (push_eos) {
-      /* Push pending events, including NEWSEGMENT events */
+      /* Push pending events, including SEGMENT events */
       if (G_UNLIKELY (parse->priv->pending_events)) {
         GList *r = g_list_reverse (parse->priv->pending_events);
         GList *l;
