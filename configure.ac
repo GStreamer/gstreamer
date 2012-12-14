@@ -1283,6 +1283,18 @@ AG_GST_CHECK_FEATURE(JASPER, [jasper], jasperdec jasperenc, [
   AC_SUBST(JASPER_LIBS)
 ])
 
+dnl *** OpenJPEG ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
+AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
+  HAVE_OPENJPEG="no"
+  PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
+    HAVE_OPENJPEG="yes",
+    AG_GST_CHECK_LIBHEADER(OPENJPEG, openjpeg, opj_version, , openjpeg.h, OPENJPEG_LIBS="-lopenjpeg")
+  )
+  AC_SUBST(OPENJPEG_CFLAGS)
+  AC_SUBST(OPENJPEG_LIBS)
+])
+
 dnl *** kate ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
 AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
@@ -2086,6 +2098,7 @@ AM_CONDITIONAL(USE_FLITE, false)
 AM_CONDITIONAL(USE_FLUIDSYNTH, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_JASPER, false)
+AM_CONDITIONAL(USE_OPENJPEG, false)
 AM_CONDITIONAL(USE_KATE, false)
 AM_CONDITIONAL(USE_TIGER, false)
 AM_CONDITIONAL(USE_LADSPA, false)
@@ -2367,6 +2380,7 @@ ext/neon/Makefile
 ext/ofa/Makefile
 ext/openal/Makefile
 ext/opencv/Makefile
+ext/openjpeg/Makefile
 ext/opus/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile
