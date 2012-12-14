@@ -30,14 +30,12 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "openjpegdec", GST_RANK_MARGINAL,
+  if (!gst_element_register (plugin, "openjpegdec", GST_RANK_PRIMARY,
           GST_TYPE_OPENJPEG_DEC))
     return FALSE;
-#if 0
-  if (!gst_element_register (plugin, "openjpegenc", GST_RANK_MARGINAL,
+  if (!gst_element_register (plugin, "openjpegenc", GST_RANK_PRIMARY,
           GST_TYPE_OPENJPEG_ENC))
     return FALSE;
-#endif
 
   return TRUE;
 }
