@@ -187,6 +187,11 @@ void               gst_rtsp_watch_unref              (GstRTSPWatch *watch);
 guint              gst_rtsp_watch_attach             (GstRTSPWatch *watch,
                                                       GMainContext *context);
 
+void               gst_rtsp_watch_set_send_backlog  (GstRTSPWatch *watch,
+                                                     gsize bytes, guint messages);
+void               gst_rtsp_watch_get_send_backlog  (GstRTSPWatch *watch,
+                                                     gsize *bytes, guint *messages);
+
 GstRTSPResult      gst_rtsp_watch_write_data         (GstRTSPWatch *watch,
                                                       const guint8 *data,
                                                       guint size, guint *id);
