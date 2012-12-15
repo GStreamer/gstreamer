@@ -187,10 +187,13 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
 {
   GstOpenJPEGDec *self = GST_OPENJPEG_DEC (decoder);
   GstStructure *s;
+  const gchar *color_space;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
   s = gst_caps_get_structure (state->caps, 0);
+
+  self->color_space = CLRSPC_UNKNOWN;
 
   if (gst_structure_has_name (s, "image/jp2")) {
     self->codec_format = CODEC_JP2;
@@ -204,6 +207,14 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
   } else {
     g_return_val_if_reached (FALSE);
   }
+
+  color_space = gst_structure_get_string (s, "colorspace");
+  if (g_str_equal (color_space, "sRGB"))
+    self->color_space = CLRSPC_SRGB;
+  else if (g_str_equal (color_space, "GRAY"))
+    self->color_space = CLRSPC_GRAY;
+  else if (g_str_equal (color_space, "sYUV"))
+    self->color_space = CLRSPC_SYCC;
 
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
@@ -540,6 +551,9 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
 {
   GstVideoFormat format;
   gint width, height;
+
+  if (image->color_space == CLRSPC_UNKNOWN)
+    image->color_space = self->color_space;
 
   switch (image->color_space) {
     case CLRSPC_SRGB:
