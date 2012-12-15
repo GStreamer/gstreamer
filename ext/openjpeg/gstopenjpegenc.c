@@ -354,6 +354,7 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (encoder);
   GstCaps *allowed_caps, *caps;
   GstStructure *s;
+  const gchar *colorspace;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -419,7 +420,17 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       g_assert_not_reached ();
   }
 
-  caps = gst_caps_new_empty_simple (gst_structure_get_name (s));
+  if ((state->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_YUV))
+    colorspace = "sYUV";
+  else if ((state->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB))
+    colorspace = "sRGB";
+  else if ((state->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_GRAY))
+    colorspace = "GRAY";
+  else
+    g_return_val_if_reached (FALSE);
+
+  caps = gst_caps_new_simple (gst_structure_get_name (s),
+      "colorspace", G_TYPE_STRING, colorspace, NULL);
   gst_caps_unref (allowed_caps);
 
   if (self->output_state)
