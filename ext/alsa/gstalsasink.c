@@ -955,7 +955,7 @@ gst_alsasink_close (GstAudioSink * asink)
 static gint
 xrun_recovery (GstAlsaSink * alsa, snd_pcm_t * handle, gint err)
 {
-  GST_DEBUG_OBJECT (alsa, "xrun recovery %d", err);
+  GST_DEBUG_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (err));
 
   if (err == -EPIPE) {          /* under-run */
     err = snd_pcm_prepare (handle);
@@ -1019,6 +1019,8 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
       GST_DEBUG_OBJECT (asink, "Write error: %s", snd_strerror (err));
       if (err == -EAGAIN) {
         continue;
+      } else if (err == -ENODEV) {
+        goto device_disappeared;
       } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
         goto write_error;
       }
@@ -1036,6 +1038,13 @@ write_error:
   {
     GST_ALSA_SINK_UNLOCK (asink);
     return length;              /* skip one period */
+  }
+device_disappeared:
+  {
+    GST_ELEMENT_ERROR (asink, RESOURCE, WRITE,
+        (_("Error outputting to audio device. "
+                "The device has been disconnected.")), (NULL));
+    goto write_error;
   }
 }
 

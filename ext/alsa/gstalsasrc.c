@@ -805,7 +805,7 @@ gst_alsasrc_close (GstAudioSrc * asrc)
 static gint
 xrun_recovery (GstAlsaSrc * alsa, snd_pcm_t * handle, gint err)
 {
-  GST_DEBUG_OBJECT (alsa, "xrun recovery %d", err);
+  GST_DEBUG_OBJECT (alsa, "xrun recovery %d: %s", err, g_strerror (err));
 
   if (err == -EPIPE) {          /* under-run */
     err = snd_pcm_prepare (handle);
@@ -907,6 +907,8 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length,
       if (err == -EAGAIN) {
         GST_DEBUG_OBJECT (asrc, "Read error: %s", snd_strerror (err));
         continue;
+      } else if (err == -ENODEV) {
+        goto device_disappeared;
       } else if (xrun_recovery (alsa, alsa->handle, err) < 0) {
         goto read_error;
       }
@@ -928,6 +930,13 @@ read_error:
   {
     GST_ALSA_SRC_UNLOCK (asrc);
     return length;              /* skip one period */
+  }
+device_disappeared:
+  {
+    GST_ELEMENT_ERROR (asrc, RESOURCE, READ,
+        (_("Error recording from audio device. "
+                "The device has been disconnected.")), (NULL));
+    goto read_error;
   }
 }
 
