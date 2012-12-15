@@ -25,11 +25,13 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_SCALETEMPO            (gst_scaletempo_get_type())
 #define GST_SCALETEMPO(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_SCALETEMPO, GstScaletempo))
 #define GST_SCALETEMPO_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),  GST_TYPE_SCALETEMPO, GstScaletempoClass))
 #define GST_IS_SCALETEMPO(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_SCALETEMPO))
 #define GST_IS_SCALETEMPO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),  GST_TYPE_SCALETEMPO))
+
 typedef struct _GstScaletempo GstScaletempo;
 typedef struct _GstScaletempoClass GstScaletempoClass;
 typedef struct _GstScaletempoPrivate GstScaletempoPrivate;
@@ -38,7 +40,51 @@ struct _GstScaletempo
 {
   GstBaseTransform element;
 
-  GstScaletempoPrivate *priv;
+  gdouble scale;
+
+  /* parameters */
+  guint ms_stride;
+  gdouble percent_overlap;
+  guint ms_search;
+
+  /* caps */
+  gboolean use_int;
+  guint samples_per_frame;      /* AKA number of channels */
+  guint bytes_per_sample;
+  guint bytes_per_frame;
+  guint sample_rate;
+
+  /* stride */
+  gdouble frames_stride_scaled;
+  gdouble frames_stride_error;
+  guint bytes_stride;
+  gdouble bytes_stride_scaled;
+  guint bytes_queue_max;
+  guint bytes_queued;
+  guint bytes_to_slide;
+  gint8 *buf_queue;
+
+  /* overlap */
+  guint samples_overlap;
+  guint samples_standing;
+  guint bytes_overlap;
+  guint bytes_standing;
+  gpointer buf_overlap;
+  gpointer table_blend;
+  void (*output_overlap) (GstScaletempo * scaletempo, gpointer out_buf, guint bytes_off);
+
+  /* best overlap */
+  guint frames_search;
+  gpointer buf_pre_corr;
+  gpointer table_window;
+  guint (*best_overlap_offset) (GstScaletempo * scaletempo);
+
+  /* gstreamer */
+  gint64 segment_start;
+  GstClockTime latency;
+
+  /* threads */
+  gboolean reinit_buffers;
 };
 
 struct _GstScaletempoClass
