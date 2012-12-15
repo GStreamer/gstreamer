@@ -261,8 +261,8 @@ gst_encoding_profile_get_format (GstEncodingProfile * profile)
  * gst_encoding_profile_get_preset:
  * @profile: a #GstEncodingProfile
  *
- * Returns: the name of the #GstElement that implements #GstPreset to
- * be used in the profile.
+ * Returns: the name of the #GstPreset to be used in the profile.
+ * This is the name that has been set when saving the preset.
  */
 const gchar *
 gst_encoding_profile_get_preset (GstEncodingProfile * profile)
@@ -274,8 +274,7 @@ gst_encoding_profile_get_preset (GstEncodingProfile * profile)
  * gst_encoding_profile_get_preset_name:
  * @profile: a #GstEncodingProfile
  *
- * Returns: the name of the #GstPreset to be used in the profile.
- * This is the name that has been set when saving the preset.
+ * Returns: the name of the #GstPreset factory to be used in the profile.
  */
 const gchar *
 gst_encoding_profile_get_preset_name (GstEncodingProfile * profile)
@@ -368,6 +367,7 @@ gst_encoding_profile_set_format (GstEncodingProfile * profile, GstCaps * format)
  *
  * Sets the name of the #GstElement that implements the #GstPreset interface
  * to use for the profile.
+ * This is the name that has been set when saving the preset.
  */
 void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
@@ -383,8 +383,7 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
  * @profile: a #GstEncodingProfile
  * @preset_name: The name of the preset to use in this @profile.
  *
- * Sets the name of the #GstPreset to be used in the profile.
- * This is the name that has been set when saving the preset.
+ * Sets the name of the #GstPreset's factory to be used in the profile.
  */
 void
 gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,

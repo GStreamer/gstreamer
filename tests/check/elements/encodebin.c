@@ -220,8 +220,8 @@ GST_START_TEST (test_encodebin_preset)
   /* Give a name someone should never use outside of that test */
   gst_preset_save_preset (oggmuxpreset, "test_encodebin_preset");
 
-  gst_encoding_profile_set_preset (prof, "oggmux");
-  gst_encoding_profile_set_preset_name (prof, "test_encodebin_preset");
+  gst_encoding_profile_set_preset (prof, "test_encodebin_preset");
+  gst_encoding_profile_set_preset_name (prof, "oggmux");
 
   g_object_set (ebin, "profile", prof, NULL);
 
