@@ -70,7 +70,17 @@ static GstStaticPadTemplate gst_openjpeg_enc_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-j2c; image/x-jpc; image/jp2")
+    GST_STATIC_CAPS ("image/x-j2c, "
+        "width = (int) [1, MAX], "
+        "height = (int) [1, MAX], "
+        "num-components = (int) [1, 4], "
+        "colorspace = (string) { sRGB, sYUV, GRAY }; "
+        "image/x-jpc, "
+        "width = (int) [1, MAX], "
+        "height = (int) [1, MAX], "
+        "num-components = (int) [1, 4], "
+        "colorspace = (string) { sRGB, sYUV, GRAY }; "
+        "image/jp2, " "width = (int) [1, MAX], " "height = (int) [1, MAX]")
     );
 
 #define parent_class gst_openjpeg_enc_parent_class
