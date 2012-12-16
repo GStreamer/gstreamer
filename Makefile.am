@@ -54,6 +54,7 @@ CRUFT_FILES = \
 	$(top_builddir)/gst/imagefreeze/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/mpeg4videoparse/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/qtmux/.libs/*.{so,dll,DLL,dylib} \
+	$(top_builddir)/gst/rtpmux/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/rtpvp8/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/scaletempo/.libs/*.{so,dll,DLL,dylib} \
 	$(top_builddir)/gst/selector/.libs/*.{so,dll,DLL,dylib} \
@@ -67,6 +68,7 @@ CRUFT_FILES = \
 	$(top_builddir)/tests/check/elements/capssetter \
 	$(top_builddir)/tests/check/elements/imagefreeze \
 	$(top_builddir)/tests/check/elements/qtmux \
+	$(top_builddir)/tests/check/elements/rtpmux \
 	$(top_builddir)/tests/check/elements/selector \
 	$(top_builddir)/tests/check/elements/valve \
 	$(top_builddir)/tests/check/pipelines/metadata \
@@ -85,6 +87,7 @@ CRUFT_DIRS = \
 	$(top_srcdir)/gst/invtelecine \
 	$(top_srcdir)/gst/mpeg4videoparse \
 	$(top_srcdir)/gst/qtmux \
+	$(top_srcdir)/gst/rtpmux \
 	$(top_srcdir)/gst/rtpvp8 \
 	$(top_srcdir)/gst/scaletempo \
 	$(top_srcdir)/gst/selector \
