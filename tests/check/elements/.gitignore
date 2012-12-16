@@ -47,6 +47,7 @@ rtp-payloading
 rtpbin
 rtpbin_buffer_list
 rtpjitterbuffer
+rtpmux
 shapewipe
 souphttpsrc
 spectrum

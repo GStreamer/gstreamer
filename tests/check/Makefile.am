@@ -142,6 +142,7 @@ check_PROGRAMS = \
 	elements/rtpbin \
 	elements/rtpbin_buffer_list \
 	elements/rtpjitterbuffer \
+	elements/rtpmux \
 	elements/shapewipe \
 	elements/spectrum \
 	elements/udpsink \
@@ -284,6 +285,9 @@ elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
              -lgstrtp-@GST_API_VERSION@ \
              $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)
 elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
+
+elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
 elements_souphttpsrc_CFLAGS = $(SOUP_CFLAGS) $(AM_CFLAGS)
 elements_souphttpsrc_LDADD = $(SOUP_LIBS) $(LDADD)

@@ -16,7 +16,9 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 
 libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      gstrtpbin.c \
+			      gstrtpdtmfmux.c \
 			      gstrtpjitterbuffer.c \
+			      gstrtpmux.c \
 			      gstrtpptdemux.c \
 			      gstrtpssrcdemux.c \
 			      rtpjitterbuffer.c      \
@@ -29,7 +31,9 @@ nodist_libgstrtpmanager_la_SOURCES = \
       $(built_sources)
 
 noinst_HEADERS = gstrtpbin.h \
+		 gstrtpdtmfmux.h \
 		 gstrtpjitterbuffer.h \
+		 gstrtpmux.h \
                  gstrtpptdemux.h \
                  gstrtpssrcdemux.h \
                  rtpjitterbuffer.h \
