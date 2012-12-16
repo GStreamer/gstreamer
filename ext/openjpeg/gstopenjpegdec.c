@@ -121,6 +121,7 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
 
   gst_video_decoder_set_packetized (decoder, TRUE);
   opj_set_default_decoder_parameters (&self->params);
+  self->params.cp_limit_decoding = NO_LIMITATION;
 }
 
 static void
@@ -215,6 +216,9 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
     self->color_space = CLRSPC_GRAY;
   else if (g_str_equal (color_space, "sYUV"))
     self->color_space = CLRSPC_SYCC;
+
+  self->ncomps = 0;
+  gst_structure_get_int (s, "num-components", &self->ncomps);
 
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
@@ -552,7 +556,7 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
   GstVideoFormat format;
   gint width, height;
 
-  if (image->color_space == CLRSPC_UNKNOWN)
+  if (image->color_space == CLRSPC_UNKNOWN || image->color_space == 0)
     image->color_space = self->color_space;
 
   switch (image->color_space) {
@@ -740,6 +744,7 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
   opj_cio_t *io;
   opj_image_t *image;
   GstVideoFrame vframe;
+  opj_dparameters_t params;
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
@@ -757,7 +762,10 @@ gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
 
   opj_set_event_mgr ((opj_common_ptr) dec, NULL, NULL);
 
-  opj_setup_decoder (dec, &self->params);
+  params = self->params;
+  if (self->ncomps)
+    params.jpwl_exp_comps = self->ncomps;
+  opj_setup_decoder (dec, &params);
 
   if (!gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ))
     goto map_read_error;

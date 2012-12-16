@@ -355,6 +355,7 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   GstCaps *allowed_caps, *caps;
   GstStructure *s;
   const gchar *colorspace;
+  gint ncomps;
 
   GST_DEBUG_OBJECT (self, "Setting format: %" GST_PTR_FORMAT, state->caps);
 
@@ -381,15 +382,19 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   switch (state->info.finfo->format) {
     case GST_VIDEO_FORMAT_ARGB64:
       self->fill_image = fill_image_packed16_4;
+      ncomps = 4;
       break;
     case GST_VIDEO_FORMAT_ARGB:
       self->fill_image = fill_image_packed8_4;
+      ncomps = 4;
       break;
     case GST_VIDEO_FORMAT_xRGB:
       self->fill_image = fill_image_packed8_3;
+      ncomps = 3;
       break;
     case GST_VIDEO_FORMAT_AYUV64:
       self->fill_image = fill_image_packed16_4;
+      ncomps = 4;
       break;
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_10BE:
@@ -398,9 +403,11 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_10BE:
       self->fill_image = fill_image_planar16_3;
+      ncomps = 3;
       break;
     case GST_VIDEO_FORMAT_AYUV:
       self->fill_image = fill_image_packed8_3;
+      ncomps = 3;
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:
@@ -408,13 +415,16 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_YUV9:
       self->fill_image = fill_image_planar8_3;
+      ncomps = 3;
       break;
     case GST_VIDEO_FORMAT_GRAY8:
       self->fill_image = fill_image_planar8_1;
+      ncomps = 1;
       break;
     case GST_VIDEO_FORMAT_GRAY16_LE:
     case GST_VIDEO_FORMAT_GRAY16_BE:
       self->fill_image = fill_image_planar16_1;
+      ncomps = 1;
       break;
     default:
       g_assert_not_reached ();
@@ -430,7 +440,8 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     g_return_val_if_reached (FALSE);
 
   caps = gst_caps_new_simple (gst_structure_get_name (s),
-      "colorspace", G_TYPE_STRING, colorspace, NULL);
+      "colorspace", G_TYPE_STRING, colorspace,
+      "num-components", G_TYPE_INT, ncomps, NULL);
   gst_caps_unref (allowed_caps);
 
   if (self->output_state)
