@@ -3218,7 +3218,9 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   gint64 relative_timestamp64;
   guint64 block_duration;
   gboolean is_video_keyframe = FALSE;
+  gboolean is_video_invisible = FALSE;
   GstMatroskamuxPad *pad;
+  gint flags = 0;
 
   /* write data */
   pad = GST_MATROSKAMUX_PAD_CAST (collect_pad->collect.pad);
@@ -3254,11 +3256,19 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   /* set the timestamp for outgoing buffers */
   ebml->timestamp = GST_BUFFER_TIMESTAMP (buf);
 
-  if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO &&
-      !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
-    GST_LOG_OBJECT (mux, "have video keyframe, ts=%" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
-    is_video_keyframe = TRUE;
+  if (collect_pad->track->type == GST_MATROSKA_TRACK_TYPE_VIDEO) {
+    if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT)) {
+      GST_LOG_OBJECT (mux, "have video keyframe, ts=%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      is_video_keyframe = TRUE;
+    } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY) &&
+        !strcmp (collect_pad->track->codec_id,
+            GST_MATROSKA_CODEC_ID_VIDEO_VP8)) {
+      GST_LOG_OBJECT (mux,
+          "have VP8 video invisible frame, " "ts=%" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      is_video_invisible = TRUE;
+    }
   }
 
   if (mux->cluster) {
@@ -3373,9 +3383,13 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   }
   relative_timestamp = gst_util_uint64_scale (relative_timestamp64, 1,
       mux->time_scale);
+
+  if (is_video_invisible)
+    flags |= 0x08;
+
   if (mux->doctype_version > 1 && !write_duration) {
-    int flags =
-        GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ? 0 : 0x80;
+    if (is_video_keyframe)
+      flags |= 0x80;
 
     hdr =
         gst_matroska_mux_create_buffer_header (collect_pad->track,
@@ -3395,7 +3409,7 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
     blockgroup = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_BLOCKGROUP);
     hdr =
         gst_matroska_mux_create_buffer_header (collect_pad->track,
-        relative_timestamp, 0);
+        relative_timestamp, flags);
     if (write_duration)
       gst_ebml_write_uint (ebml, GST_MATROSKA_ID_BLOCKDURATION, block_duration);
     gst_ebml_write_buffer_header (ebml, GST_MATROSKA_ID_BLOCK,
