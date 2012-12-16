@@ -61,7 +61,10 @@ static GstStaticPadTemplate gst_openjpeg_dec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/x-j2c; image/x-jpc; image/jp2")
+    GST_STATIC_CAPS ("image/x-j2c, "
+        "colorspace = (string) { sRGB, sYUV, GRAY }; "
+        "image/x-jpc, "
+        "colorspace = (string) { sRGB, sYUV, GRAY }; " "image/jp2")
     );
 
 static GstStaticPadTemplate gst_openjpeg_dec_src_template =
