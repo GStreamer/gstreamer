@@ -452,7 +452,8 @@ hls_type_find (GstTypeFind * tf, gpointer unused)
 
     /* Search for # comment lines */
     if (c.data[0] == '#' && (memcmp (c.data, "#EXT-X-TARGETDURATION", 21) == 0
-            || memcmp (c.data, "#EXT-X-STREAM-INF", 17) == 0)) {
+            || memcmp (c.data, "#EXT-X-STREAM-INF", 17) == 0
+            || memcmp (c.data, "#EXT-X-MEDIA", 12) == 0)) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, HLS_CAPS);
       return;
     }
