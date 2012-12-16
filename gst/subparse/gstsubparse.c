@@ -1740,7 +1740,6 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
    * otherwise convert as always */
   if (!g_utf8_validate (str, 128, &end) && (end - str) < 120) {
     gchar *converted_str;
-    GError *err = NULL;
     gsize tmp;
     const gchar *enc;
 
@@ -1752,7 +1751,7 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
         enc = "ISO-8859-15";
       }
     }
-    converted_str = gst_convert_to_utf8 (str, 128, enc, &tmp, &err);
+    converted_str = gst_convert_to_utf8 (str, 128, enc, &tmp, NULL);
     if (converted_str != NULL) {
       g_free (str);
       str = converted_str;
