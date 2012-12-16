@@ -208,8 +208,6 @@ GObject
           GstRtpAsfPay
           GstRtpOPUSPay
           GstRtpVP8Pay
-        GstRTPMux
-          GstRTPDTMFMux
         GstRawParse
           GstAudioParse
           GstVideoParse

@@ -224,7 +224,6 @@ check_PROGRAMS = \
 	elements/id3mux \
 	pipelines/mxf \
 	$(check_mimic) \
-	elements/rtpmux \
 	libs/mpegvideoparser \
 	libs/h264parser \
 	$(check_uvch264) \
@@ -348,9 +347,6 @@ elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
 elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
-
-elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
-elements_rtpmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)
 
 elements_assrender_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_assrender_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSION) -lgstapp-$(GST_API_VERSION) $(GST_BASE_LIBS) $(LDADD)

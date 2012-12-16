@@ -56,7 +56,6 @@ GST_PLUGINS_BAD_BUILT_SOURCES := \
 	gst/sdi/Android.mk \
 	gst/festival/Android.mk \
 	gst/y4m/Android.mk \
-	gst/rtpmux/Android.mk \
 	gst/pcapparse/Android.mk \
 	gst/nuvdemux/Android.mk \
 	gst/colorspace/Android.mk \
@@ -148,7 +147,6 @@ CONFIGURE_TARGETS += gst-plugins-bad-configure
 -include $(GST_PLUGINS_BAD_TOP)/gst/sdi/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/festival/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/y4m/Android.mk
--include $(GST_PLUGINS_BAD_TOP)/gst/rtpmux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/pcapparse/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/nuvdemux/Android.mk
 -include $(GST_PLUGINS_BAD_TOP)/gst/colorspace/Android.mk

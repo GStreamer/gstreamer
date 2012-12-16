@@ -1188,21 +1188,6 @@ gst_rtp_dtmf_depay_plugin_init
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpdtmfmux</FILE>
-<TITLE>rtpdtmfmux</TITLE>
-GstRTPDTMFMux
-<SUBSECTION Standard>
-GST_IS_RTP_DTMF_MUX
-GST_IS_RTP_DTMF_MUX_CLASS
-GST_TYPE_RTP_DTMF_MUX
-GstRTPDTMFMuxClass
-GST_RTP_DTMF_MUX
-GST_RTP_DTMF_MUX_CLASS
-gst_rtp_dtmf_mux_get_type
-gst_rtp_dtmf_mux_plugin_init
-</SECTION>
-
-<SECTION>
 <FILE>element-rtpdtmfsrc</FILE>
 <TITLE>rtpdtmfsrc</TITLE>
 GstRTPDTMFSrc
@@ -1220,22 +1205,6 @@ gst_rtp_dtmf_src_plugin_init
 GstRTPDTMFPayload
 GstRTPDTMFSrcEvent
 GstRTPDTMFEventType
-</SECTION>
-
-<SECTION>
-<FILE>element-rtpmux</FILE>
-<TITLE>rtpmux</TITLE>
-GstRTPMux
-<SUBSECTION Standard>
-GST_IS_RTP_MUX
-GST_IS_RTP_MUX_CLASS
-GST_RTP_MUX
-GST_RTP_MUX_CLASS
-GST_RTP_MUX_GET_CLASS
-GST_TYPE_RTP_MUX
-GstRTPMuxClass
-gst_rtp_mux_get_type
-gst_rtp_mux_plugin_init
 </SECTION>
 
 <SECTION>
