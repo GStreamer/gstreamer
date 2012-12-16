@@ -30,7 +30,7 @@
  * @see_also: rtpdtmfsrc, dtmfsrc, rtpmux
  *
  * The RTP "DTMF" Muxer muxes multiple RTP streams into a valid RTP
- * stream. It does exactly what it's parent (#rtpmux) does, except
+ * stream. It does exactly what its parent (#rtpmux) does, except
  * that it prevent buffers coming over a regular sink_%%u pad from going through
  * for the duration of buffers that came in a priority_sink_%%u pad.
  *

@@ -171,6 +171,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtpmanager/gstrtpptdemux.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpmux.h \
+	$(top_srcdir)/gst/rtpmanager/gstrtpdtmfmux.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/shapewipe/gstshapewipe.h \

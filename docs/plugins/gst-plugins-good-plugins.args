@@ -23448,3 +23448,43 @@
 <DEFAULT>30</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstRTPMux::seqnum</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Sequence number</NICK>
+<BLURB>The RTP sequence number of the last processed packet.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPMux::seqnum-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sequence number Offset</NICK>
+<BLURB>Offset to add to all outgoing seqnum (-1 = random).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPMux::ssrc</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SSRC</NICK>
+<BLURB>The SSRC of the packets (-1 == random).</BLURB>
+<DEFAULT>4294967295</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPMux::timestamp-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Timestamp Offset</NICK>
+<BLURB>Offset to add to all outgoing timestamps (-1 = random).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+

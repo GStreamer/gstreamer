@@ -55,6 +55,33 @@
       </pads>
     </element>
     <element>
+      <name>rtpdtmfmux</name>
+      <longname>RTP muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>mixes RTP DTMF streams into other RTP streams</description>
+      <author>Zeeshan Ali &lt;first.last@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>priority_sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
       <name>rtpjitterbuffer</name>
       <longname>RTP packet jitter-buffer</longname>
       <class>Filter/Network/RTP</class>
@@ -72,6 +99,27 @@
           <direction>sink</direction>
           <presence>request</presence>
           <details>application/x-rtcp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpmux</name>
+      <longname>RTP muxer</longname>
+      <class>Codec/Muxer</class>
+      <description>multiplex N rtp streams into one</description>
+      <author>Zeeshan Ali &lt;first.last@nokia.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink_%u</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>application/x-rtp</details>
         </caps>
         <caps>
           <name>src</name>

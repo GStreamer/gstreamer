@@ -243,6 +243,8 @@ GObject
           GstRtpVRawPay
           GstRtpVorbisPay
         GstRTPDec
+        GstRTPMux
+          GstRTPDTMFMux
         GstRndBufferSize
         GstRtpJitterBuffer
         GstRtpPtDemux
