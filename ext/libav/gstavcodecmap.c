@@ -159,6 +159,52 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
   return TRUE;
 }
 
+static void
+gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
+{
+  GValue va = { 0, };
+  GValue v = { 0, };
+  GstVideoFormat format;
+
+  if (!fmts || fmts[0] == -1) {
+    gint i;
+
+    g_value_init (&va, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_STRING);
+    for (i = 0; i <= PIX_FMT_NB; i++) {
+      format = gst_ffmpeg_pixfmt_to_videoformat (i);
+      if (format == GST_VIDEO_FORMAT_UNKNOWN)
+        continue;
+      g_value_set_string (&v, gst_video_format_to_string (format));
+      gst_value_list_append_value (&va, &v);
+    }
+    gst_caps_set_value (caps, "format", &va);
+    g_value_unset (&v);
+    g_value_unset (&va);
+    return;
+  }
+
+  /* Only a single format */
+  g_value_init (&va, GST_TYPE_LIST);
+  g_value_init (&v, G_TYPE_STRING);
+  while (*fmts != -1) {
+    format = gst_ffmpeg_pixfmt_to_videoformat (*fmts);
+    if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+      g_value_set_string (&v, gst_video_format_to_string (format));
+      gst_value_list_append_value (&va, &v);
+    }
+    fmts++;
+  }
+  if (gst_value_list_get_size (&va) == 1) {
+    /* The single value is still in v */
+    gst_caps_set_value (caps, "format", &v);
+  } else if (gst_value_list_get_size (&va) > 1) {
+    gst_caps_set_value (caps, "format", &va);
+  }
+  g_value_unset (&v);
+  g_value_unset (&va);
+}
+
 /* this macro makes a caps width fixed or unfixed width/height
  * properties depending on whether we've got a context.
  *
@@ -241,32 +287,58 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
       {
         static struct
         {
-          guint32 csp;
+          const gchar *csp;
           gint width, height;
           gint par_n, par_d;
           gint framerate_n, framerate_d;
         } profiles[] = {
           {
-          GST_MAKE_FOURCC ('Y', '4', '1', 'B'), 720, 480, 10, 11, 30000, 1001}, {
-          GST_MAKE_FOURCC ('Y', '4', '1', 'B'), 720, 480, 40, 33, 30000, 1001}, {
-          GST_MAKE_FOURCC ('I', '4', '2', '0'), 720, 576, 59, 54, 25, 1}, {
-          GST_MAKE_FOURCC ('I', '4', '2', '0'), 720, 576, 118, 81, 25, 1}, {
-          GST_MAKE_FOURCC ('Y', '4', '1', 'B'), 720, 576, 59, 54, 25, 1}, {
-          GST_MAKE_FOURCC ('Y', '4', '1', 'B'), 720, 576, 118, 81, 25, 1}
-        };
+          "Y41B", 720, 480, 8, 9, 30000, 1001}, {
+          "Y41B", 720, 480, 32, 27, 30000, 1001}, {
+          "Y42B", 720, 480, 8, 9, 30000, 1001}, {
+          "Y42B", 720, 480, 32, 27, 30000, 1001}, {
+          "I420", 720, 576, 16, 15, 25, 1}, {
+          "I420", 720, 576, 64, 45, 25, 1}, {
+          "Y41B", 720, 576, 16, 15, 25, 1}, {
+          "Y41B", 720, 576, 64, 45, 25, 1}, {
+          "Y42B", 720, 576, 16, 15, 25, 1}, {
+          "Y42B", 720, 576, 64, 45, 25, 1}, {
+          "Y42B", 1280, 1080, 1, 1, 30000, 1001}, {
+          "Y42B", 1280, 1080, 3, 2, 30000, 1001}, {
+          "Y42B", 1440, 1080, 1, 1, 25, 1}, {
+          "Y42B", 1440, 1080, 4, 3, 25, 1}, {
+          "Y42B", 960, 720, 1, 1, 60000, 1001}, {
+          "Y42B", 960, 720, 4, 3, 60000, 1001}, {
+          "Y42B", 960, 720, 1, 1, 50, 1}, {
+        "Y42B", 960, 720, 4, 3, 50, 1},};
         GstCaps *temp;
         gint n_sizes = G_N_ELEMENTS (profiles);
 
-        caps = gst_caps_new_empty ();
-        for (i = 0; i < n_sizes; i++) {
-          temp = gst_caps_new_simple (mimetype,
-              "width", G_TYPE_INT, profiles[i].width,
-              "height", G_TYPE_INT, profiles[i].height,
-              "framerate", GST_TYPE_FRACTION, profiles[i].framerate_n,
-              profiles[i].framerate_d, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-              profiles[i].par_n, profiles[i].par_d, NULL);
+        if (strcmp (mimetype, "video/x-raw") == 0) {
+          caps = gst_caps_new_empty ();
+          for (i = 0; i < n_sizes; i++) {
+            temp = gst_caps_new_simple (mimetype,
+                "format", G_TYPE_STRING, profiles[i].csp,
+                "width", G_TYPE_INT, profiles[i].width,
+                "height", G_TYPE_INT, profiles[i].height,
+                "framerate", GST_TYPE_FRACTION, profiles[i].framerate_n,
+                profiles[i].framerate_d, "pixel-aspect-ratio",
+                GST_TYPE_FRACTION, profiles[i].par_n, profiles[i].par_d, NULL);
 
-          gst_caps_append (caps, temp);
+            gst_caps_append (caps, temp);
+          }
+        } else {
+          caps = gst_caps_new_empty ();
+          for (i = 0; i < n_sizes; i++) {
+            temp = gst_caps_new_simple (mimetype,
+                "width", G_TYPE_INT, profiles[i].width,
+                "height", G_TYPE_INT, profiles[i].height,
+                "framerate", GST_TYPE_FRACTION, profiles[i].framerate_n,
+                profiles[i].framerate_d, "pixel-aspect-ratio",
+                GST_TYPE_FRACTION, profiles[i].par_n, profiles[i].par_d, NULL);
+
+            gst_caps_append (caps, temp);
+          }
         }
         break;
       }
@@ -310,7 +382,12 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
             g_value_unset (&va);
             g_value_unset (&v);
           }
+
+        } else {
+          caps = gst_caps_new_empty_simple (mimetype);
         }
+
+        gst_ffmpeg_video_set_pix_fmts (caps, codec ? codec->pix_fmts : NULL);
 
         break;
       }
@@ -321,7 +398,7 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
    * default unfixed setting */
   if (!caps) {
     GST_DEBUG ("Creating default caps");
-    caps = gst_caps_new_simple (mimetype, NULL, NULL, NULL);
+    caps = gst_caps_new_empty_simple (mimetype);
   }
 
   va_start (var_args, fieldname);
@@ -343,6 +420,52 @@ get_nbits_set (guint64 n)
   }
 
   return x;
+}
+
+static void
+gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
+    const enum AVSampleFormat *fmts)
+{
+  GValue va = { 0, };
+  GValue v = { 0, };
+  GstAudioFormat format;
+
+  if (!fmts || fmts[0] == -1) {
+    gint i;
+
+    g_value_init (&va, GST_TYPE_LIST);
+    g_value_init (&v, G_TYPE_STRING);
+    for (i = 0; i <= AV_SAMPLE_FMT_DBL; i++) {
+      format = gst_ffmpeg_smpfmt_to_audioformat (i);
+      if (format == GST_AUDIO_FORMAT_UNKNOWN)
+        continue;
+      g_value_set_string (&v, gst_audio_format_to_string (format));
+      gst_value_list_append_value (&va, &v);
+    }
+    gst_caps_set_value (caps, "format", &va);
+    g_value_unset (&v);
+    g_value_unset (&va);
+    return;
+  }
+
+  g_value_init (&va, GST_TYPE_LIST);
+  g_value_init (&v, G_TYPE_STRING);
+  while (*fmts != -1) {
+    format = gst_ffmpeg_smpfmt_to_audioformat (*fmts);
+    if (format != GST_AUDIO_FORMAT_UNKNOWN) {
+      g_value_set_string (&v, gst_audio_format_to_string (format));
+      gst_value_list_append_value (&va, &v);
+    }
+    fmts++;
+  }
+  if (gst_value_list_get_size (&va) == 1) {
+    /* The single value is still in v */
+    gst_caps_set_value (caps, "format", &v);
+  } else if (gst_value_list_get_size (&va) > 1) {
+    gst_caps_set_value (caps, "format", &va);
+  }
+  g_value_unset (&v);
+  g_value_unset (&va);
 }
 
 /* same for audio - now with channels/sample rate
@@ -540,6 +663,8 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
   } else {
     caps = gst_caps_new_empty_simple (mimetype);
   }
+
+  gst_ffmpeg_audio_set_sample_fmts (caps, codec ? codec->sample_fmts : NULL);
 
   va_start (var_args, fieldname);
   gst_caps_set_simple_valist (caps, fieldname, var_args);
@@ -1995,52 +2120,6 @@ gst_ffmpeg_smpfmt_to_caps (enum AVSampleFormat sample_fmt,
   return caps;
 }
 
-static void
-gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
-    const enum AVSampleFormat *fmts)
-{
-  GValue va = { 0, };
-  GValue v = { 0, };
-  GstAudioFormat format;
-
-  if (!fmts || fmts[0] == -1) {
-    gint i;
-
-    g_value_init (&va, GST_TYPE_LIST);
-    g_value_init (&v, G_TYPE_STRING);
-    for (i = 0; i <= AV_SAMPLE_FMT_DBL; i++) {
-      format = gst_ffmpeg_smpfmt_to_audioformat (i);
-      if (format == GST_AUDIO_FORMAT_UNKNOWN)
-        continue;
-      g_value_set_string (&v, gst_audio_format_to_string (format));
-      gst_value_list_append_value (&va, &v);
-    }
-    gst_caps_set_value (caps, "format", &va);
-    g_value_unset (&v);
-    g_value_unset (&va);
-    return;
-  }
-
-  g_value_init (&va, GST_TYPE_LIST);
-  g_value_init (&v, G_TYPE_STRING);
-  while (*fmts != -1) {
-    format = gst_ffmpeg_smpfmt_to_audioformat (*fmts);
-    if (format != GST_AUDIO_FORMAT_UNKNOWN) {
-      g_value_set_string (&v, gst_audio_format_to_string (format));
-      gst_value_list_append_value (&va, &v);
-    }
-    fmts++;
-  }
-  if (gst_value_list_get_size (&va) == 1) {
-    /* The single value is still in v */
-    gst_caps_set_value (caps, "format", &v);
-  } else if (gst_value_list_get_size (&va) > 1) {
-    gst_caps_set_value (caps, "format", &va);
-  }
-  g_value_unset (&v);
-  g_value_unset (&va);
-}
-
 GstCaps *
 gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
     enum CodecID codec_id, gboolean encode, AVCodec * codec)
@@ -2061,56 +2140,9 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
   } else {
     caps = gst_ff_aud_caps_new (context, codec, codec_id, encode, "audio/x-raw",
         "layout", G_TYPE_STRING, "interleaved", NULL);
-    gst_ffmpeg_audio_set_sample_fmts (caps, codec ? codec->sample_fmts : NULL);
   }
 
   return caps;
-}
-
-static void
-gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
-{
-  GValue va = { 0, };
-  GValue v = { 0, };
-  GstVideoFormat format;
-
-  if (!fmts || fmts[0] == -1) {
-    gint i;
-
-    g_value_init (&va, GST_TYPE_LIST);
-    g_value_init (&v, G_TYPE_STRING);
-    for (i = 0; i <= PIX_FMT_NB; i++) {
-      format = gst_ffmpeg_pixfmt_to_videoformat (i);
-      if (format == GST_VIDEO_FORMAT_UNKNOWN)
-        continue;
-      g_value_set_string (&v, gst_video_format_to_string (format));
-      gst_value_list_append_value (&va, &v);
-    }
-    gst_caps_set_value (caps, "format", &va);
-    g_value_unset (&v);
-    g_value_unset (&va);
-    return;
-  }
-
-  /* Only a single format */
-  g_value_init (&va, GST_TYPE_LIST);
-  g_value_init (&v, G_TYPE_STRING);
-  while (*fmts != -1) {
-    format = gst_ffmpeg_pixfmt_to_videoformat (*fmts);
-    if (format != GST_VIDEO_FORMAT_UNKNOWN) {
-      g_value_set_string (&v, gst_video_format_to_string (format));
-      gst_value_list_append_value (&va, &v);
-    }
-    fmts++;
-  }
-  if (gst_value_list_get_size (&va) == 1) {
-    /* The single value is still in v */
-    gst_caps_set_value (caps, "format", &v);
-  } else if (gst_value_list_get_size (&va) > 1) {
-    gst_caps_set_value (caps, "format", &va);
-  }
-  g_value_unset (&v);
-  g_value_unset (&va);
 }
 
 GstCaps *
@@ -2128,7 +2160,6 @@ gst_ffmpeg_codectype_to_video_caps (AVCodecContext * context,
     caps =
         gst_ff_vid_caps_new (context, codec, codec_id, encode, "video/x-raw",
         NULL);
-    gst_ffmpeg_video_set_pix_fmts (caps, codec ? codec->pix_fmts : NULL);
   }
   return caps;
 }
