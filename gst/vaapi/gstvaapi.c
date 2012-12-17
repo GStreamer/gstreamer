@@ -21,12 +21,8 @@
  *  Boston, MA 02110-1301 USA
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
+#include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
-
 #include "gstvaapidownload.h"
 #include "gstvaapiupload.h"
 #include "gstvaapidecode.h"

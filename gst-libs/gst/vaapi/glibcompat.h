@@ -25,6 +25,13 @@
 #include <glib.h>
 #include <glib-object.h>
 
+#define G_COMPAT_DEFINE(new_api, new_args, old_api, old_args)   \
+static inline void                                              \
+new_api new_args                                                \
+{                                                               \
+    old_api old_args;                                           \
+}
+
 #if !GLIB_CHECK_VERSION(2,27,2)
 static inline void
 g_list_free_full(GList *list, GDestroyNotify free_func)
@@ -52,31 +59,39 @@ g_clear_object_inline(volatile GObject **object_ptr)
 #define g_clear_object(obj) g_clear_object_inline((volatile GObject **)(obj))
 #endif
 
-#if GLIB_CHECK_VERSION(2,31,2)
-#define GStaticMutex                    GMutex
-#undef  g_static_mutex_init
-#define g_static_mutex_init(mutex)      g_mutex_init(mutex)
-#undef  g_static_mutex_free
-#define g_static_mutex_free(mutex)      g_mutex_clear(mutex)
-#undef  g_static_mutex_lock
-#define g_static_mutex_lock(mutex)      g_mutex_lock(mutex)
-#undef  g_static_mutex_unlock
-#define g_static_mutex_unlock(mutex)    g_mutex_unlock(mutex)
-
-#define GStaticRecMutex                 GRecMutex
-#undef  g_static_rec_mutex_init
-#define g_static_rec_mutex_init(mutex)  g_rec_mutex_init(mutex)
-#undef  g_static_rec_mutex_free
-#define g_static_rec_mutex_free(mutex)  g_rec_mutex_clear(mutex)
-#undef  g_static_rec_mutex_lock
-#define g_static_rec_mutex_lock(mutex)  g_rec_mutex_lock(mutex)
-#undef  g_static_rec_mutex_unlock
-#define g_static_rec_mutex_unlock(m)    g_rec_mutex_unlock(m)
-#endif
-
 #if !GLIB_CHECK_VERSION(2,31,2)
+typedef GStaticMutex GCompatMutex;
+G_COMPAT_DEFINE(g_compat_mutex_init, (GCompatMutex *mutex),
+                g_static_mutex_init, (mutex))
+G_COMPAT_DEFINE(g_compat_mutex_clear, (GCompatMutex *mutex),
+                g_static_mutex_free, (mutex))
+G_COMPAT_DEFINE(g_compat_mutex_lock, (GCompatMutex *mutex),
+                g_static_mutex_lock, (mutex))
+G_COMPAT_DEFINE(g_compat_mutex_unlock, (GCompatMutex *mutex),
+                g_static_mutex_unlock, (mutex))
+
+typedef GStaticRecMutex GCompatRecMutex;
+G_COMPAT_DEFINE(g_compat_rec_mutex_init, (GCompatRecMutex *mutex),
+                g_static_rec_mutex_init, (mutex))
+G_COMPAT_DEFINE(g_compat_rec_mutex_clear, (GCompatRecMutex *mutex),
+                g_static_rec_mutex_free, (mutex))
+G_COMPAT_DEFINE(g_compat_rec_mutex_lock, (GCompatRecMutex *mutex),
+                g_static_rec_mutex_lock, (mutex))
+G_COMPAT_DEFINE(g_compat_rec_mutex_unlock, (GCompatRecMutex *mutex),
+                g_static_rec_mutex_unlock, (mutex))
+
+typedef GCond *GCompatCond;
+G_COMPAT_DEFINE(g_compat_cond_init, (GCompatCond *cond),
+                *cond = g_cond_new, ())
+G_COMPAT_DEFINE(g_compat_cond_clear, (GCompatCond *cond),
+                if (*cond) g_cond_free, (*cond))
+G_COMPAT_DEFINE(g_compat_cond_signal, (GCompatCond *cond),
+                g_cond_signal, (*cond))
+G_COMPAT_DEFINE(g_compat_cond_broadcast, (GCompatCond *cond),
+                g_cond_broadcast, (*cond))
+
 static inline gboolean
-g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time)
+g_cond_wait_until(GCompatCond *cond, GStaticMutex *mutex, gint64 end_time)
 {
     gint64 diff_time;
     GTimeVal timeout;
@@ -84,8 +99,38 @@ g_cond_wait_until(GCond *cond, GMutex *mutex, gint64 end_time)
     diff_time = end_time - g_get_monotonic_time();
     g_get_current_time(&timeout);
     g_time_val_add(&timeout, diff_time > 0 ? diff_time : 0);
-    return g_cond_timed_wait(cond, mutex, &timeout);
+    return g_cond_timed_wait(*cond, g_static_mutex_get_mutex(mutex), &timeout);
 }
+
+#define GMutex                          GCompatMutex
+#undef  g_mutex_init
+#define g_mutex_init(mutex)             g_compat_mutex_init(mutex)
+#undef  g_mutex_clear
+#define g_mutex_clear(mutex)            g_compat_mutex_clear(mutex)
+#undef  g_mutex_lock
+#define g_mutex_lock(mutex)             g_compat_mutex_lock(mutex)
+#undef  g_mutex_unlock
+#define g_mutex_unlock(mutex)           g_compat_mutex_unlock(mutex)
+
+#define GRecMutex                       GCompatRecMutex
+#undef  g_rec_mutex_init
+#define g_rec_mutex_init(mutex)         g_compat_rec_mutex_init(mutex)
+#undef  g_rec_mutex_clear
+#define g_rec_mutex_clear(mutex)        g_compat_rec_mutex_clear(mutex)
+#undef  g_rec_mutex_lock
+#define g_rec_mutex_lock(mutex)         g_compat_rec_mutex_lock(mutex)
+#undef  g_rec_mutex_unlock
+#define g_rec_mutex_unlock(mutex)       g_compat_rec_mutex_unlock(mutex)
+
+#define GCond                           GCompatCond
+#undef  g_cond_init
+#define g_cond_init(cond)               g_compat_cond_init(cond)
+#undef  g_cond_clear
+#define g_cond_clear(cond)              g_compat_cond_clear(cond)
+#undef  g_cond_signal
+#define g_cond_signal(cond)             g_compat_cond_signal(cond)
 #endif
+
+#undef G_COMPAT_DEFINE
 
 #endif /* GLIB_COMPAT_H */
