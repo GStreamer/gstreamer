@@ -741,16 +741,13 @@ gl_init_vtable(void)
 GLVTable *
 gl_get_vtable(void)
 {
-    static GStaticMutex mutex          = G_STATIC_MUTEX_INIT;
-    static gboolean     gl_vtable_init = TRUE;
+    static gsize        gl_vtable_init = FALSE;
     static GLVTable    *gl_vtable      = NULL;
 
-    g_static_mutex_lock(&mutex);
-    if (gl_vtable_init) {
-        gl_vtable_init = FALSE;
-        gl_vtable      = gl_init_vtable();
+    if (g_once_init_enter(&gl_vtable_init)) {
+        gl_vtable = gl_init_vtable();
+        g_once_init_leave(&gl_vtable_init, TRUE);
     }
-    g_static_mutex_unlock(&mutex);
     return gl_vtable;
 }
 

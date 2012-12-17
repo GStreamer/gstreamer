@@ -33,7 +33,7 @@ struct _CacheEntry {
 };
 
 struct _GstVaapiDisplayCache {
-    GStaticMutex        mutex;
+    GMutex              mutex;
     GList              *list;
 };
 
@@ -86,14 +86,14 @@ error:
 #define CACHE_LOOKUP(cache, res, prop, comp_func, comp_data, user_data) do { \
         GList *l;                                                       \
                                                                         \
-        g_static_mutex_lock(&(cache)->mutex);                           \
+        g_mutex_lock(&(cache)->mutex);                                  \
         for (l = (cache)->list; l != NULL; l = l->next) {               \
             GstVaapiDisplayInfo * const info =                          \
                 &((CacheEntry *)l->data)->info;                         \
             if (comp_func(info->prop, comp_data, user_data))            \
                 break;                                                  \
         }                                                               \
-        g_static_mutex_unlock(&(cache)->mutex);                         \
+        g_mutex_unlock(&(cache)->mutex);                                \
         res = l;                                                        \
     } while (0)
 
@@ -146,7 +146,7 @@ gst_vaapi_display_cache_new(void)
     if (!cache)
         return NULL;
 
-    g_static_mutex_init(&cache->mutex);
+    g_mutex_init(&cache->mutex);
     return cache;
 }
 
@@ -170,7 +170,7 @@ gst_vaapi_display_cache_free(GstVaapiDisplayCache *cache)
         g_list_free(cache->list);
         cache->list = NULL;
     }
-    g_static_mutex_free(&cache->mutex);
+    g_mutex_clear(&cache->mutex);
     g_slice_free(GstVaapiDisplayCache, cache);
 }
 
@@ -189,9 +189,9 @@ gst_vaapi_display_cache_get_size(GstVaapiDisplayCache *cache)
 
     g_return_val_if_fail(cache != NULL, 0);
 
-    g_static_mutex_lock(&cache->mutex);
+    g_mutex_lock(&cache->mutex);
     size = g_list_length(cache->list);
-    g_static_mutex_unlock(&cache->mutex);
+    g_mutex_unlock(&cache->mutex);
     return size;
 }
 
@@ -220,9 +220,9 @@ gst_vaapi_display_cache_add(
     if (!entry)
         return FALSE;
 
-    g_static_mutex_lock(&cache->mutex);
+    g_mutex_lock(&cache->mutex);
     cache->list = g_list_prepend(cache->list, entry);
-    g_static_mutex_unlock(&cache->mutex);
+    g_mutex_unlock(&cache->mutex);
     return TRUE;
 }
 
@@ -246,9 +246,9 @@ gst_vaapi_display_cache_remove(
         return;
 
     cache_entry_free(m->data);
-    g_static_mutex_lock(&cache->mutex);
+    g_mutex_lock(&cache->mutex);
     cache->list = g_list_delete_link(cache->list, m);
-    g_static_mutex_unlock(&cache->mutex);
+    g_mutex_unlock(&cache->mutex);
 }
 
 /**

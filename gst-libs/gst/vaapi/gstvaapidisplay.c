@@ -725,7 +725,7 @@ gst_vaapi_display_lock_default(GstVaapiDisplay *display)
 
     if (priv->parent)
         priv = priv->parent->priv;
-    g_static_rec_mutex_lock(&priv->mutex);
+    g_rec_mutex_lock(&priv->mutex);
 }
 
 static void
@@ -735,7 +735,7 @@ gst_vaapi_display_unlock_default(GstVaapiDisplay *display)
 
     if (priv->parent)
         priv = priv->parent->priv;
-    g_static_rec_mutex_unlock(&priv->mutex);
+    g_rec_mutex_unlock(&priv->mutex);
 }
 
 static void
@@ -745,7 +745,7 @@ gst_vaapi_display_finalize(GObject *object)
 
     gst_vaapi_display_destroy(display);
 
-    g_static_rec_mutex_free(&display->priv->mutex);
+    g_rec_mutex_clear(&display->priv->mutex);
 
     G_OBJECT_CLASS(gst_vaapi_display_parent_class)->finalize(object);
 }
@@ -998,7 +998,7 @@ gst_vaapi_display_init(GstVaapiDisplay *display)
     priv->properties            = NULL;
     priv->create_display        = TRUE;
 
-    g_static_rec_mutex_init(&priv->mutex);
+    g_rec_mutex_init(&priv->mutex);
 }
 
 /**

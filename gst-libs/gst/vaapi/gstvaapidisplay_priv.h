@@ -73,7 +73,7 @@ G_BEGIN_DECLS
  */
 struct _GstVaapiDisplayPrivate {
     GstVaapiDisplay    *parent;
-    GStaticRecMutex     mutex;
+    GRecMutex           mutex;
     GstVaapiDisplayType display_type;
     VADisplay           display;
     guint               width;
