@@ -936,7 +936,8 @@ device_disappeared:
     GST_ELEMENT_ERROR (asrc, RESOURCE, READ,
         (_("Error recording from audio device. "
                 "The device has been disconnected.")), (NULL));
-    goto read_error;
+    GST_ALSA_SRC_UNLOCK (asrc);
+    return (guint) - 1;
   }
 }
 
