@@ -150,10 +150,11 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   const GValue *val;
   GstStructure *s;
   const guchar bom_utf8[] = { 0xEF, 0xBB, 0xBF };
+  const gchar *end;
   GstBuffer *priv;
   GstMapInfo map;
   gchar *ptr;
-  gsize left;
+  gsize left, bad_offset;
   gboolean ret;
 
   s = gst_caps_get_structure (caps, 0);
@@ -172,7 +173,10 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
 
   gst_buffer_ref (priv);
 
-  gst_buffer_map (priv, &map, GST_MAP_READ);
+  if (!gst_buffer_map (priv, &map, GST_MAP_READ))
+    return FALSE;
+
+  GST_MEMDUMP_OBJECT (parse, "init section", map.data, map.size);
 
   ptr = (gchar *) map.data;
   left = map.size;
@@ -186,8 +190,13 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
   if (!strstr (ptr, "[Script Info]"))
     goto invalid_init;
 
-  if (!g_utf8_validate (ptr, left, NULL))
-    goto invalid_utf8;
+  if (!g_utf8_validate (ptr, left, &end)) {
+    bad_offset = (gsize) (end - ptr);
+    GST_WARNING_OBJECT (parse, "Init section is not valid UTF-8. Problem at "
+        "byte offset %" G_GSIZE_FORMAT, bad_offset);
+    /* continue with valid UTF-8 data */
+    left = bad_offset;
+  }
 
   /* FIXME: parse initial section */
   parse->ini = g_strndup (ptr, left);
@@ -208,13 +217,6 @@ gst_ssa_parse_setcaps (GstPad * sinkpad, GstCaps * caps)
 invalid_init:
   {
     GST_WARNING_OBJECT (parse, "Invalid Init section - no Script Info header");
-    gst_buffer_unmap (priv, &map);
-    gst_buffer_unref (priv);
-    return FALSE;
-  }
-invalid_utf8:
-  {
-    GST_WARNING_OBJECT (parse, "Init section is not valid UTF-8");
     gst_buffer_unmap (priv, &map);
     gst_buffer_unref (priv);
     return FALSE;
