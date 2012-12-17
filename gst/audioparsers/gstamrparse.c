@@ -370,7 +370,7 @@ gst_amr_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
 
 
   templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse));
-  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), filter);
 
   if (peercaps) {
     guint i, n;
