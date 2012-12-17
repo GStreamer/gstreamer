@@ -2205,6 +2205,7 @@ gst_mpdparser_build_URL_from_template (const gchar *url_template,
   static gchar default_format[] = "%01d";
   gchar **tokens, *token, *ret, *format;
   gint i, num_tokens;
+  gboolean last_token_par = TRUE; /* last token was a parameter */
 
   g_return_val_if_fail (url_template != NULL, NULL);
   tokens = g_strsplit_set (url_template, "$", -1);
@@ -2221,29 +2222,36 @@ gst_mpdparser_build_URL_from_template (const gchar *url_template,
     if (!g_strcmp0 (token, "RepresentationID")) {
       tokens[i] = g_strdup_printf ("%s", id);
       g_free (token);
+      last_token_par = TRUE;
     } else if (!strncmp (token, "Number", 6)) {
       if (strlen (token) > 6) {
         format = token + 6; /* format tag */
       }
       tokens[i] = g_strdup_printf (format, number);
       g_free (token);
+      last_token_par = TRUE;
     } else if (!strncmp (token, "Bandwidth", 9)) {
       if (strlen (token) > 9) {
         format = token + 9; /* format tag */
       }
       tokens[i] = g_strdup_printf (format, bandwidth);
       g_free (token);
+      last_token_par = TRUE;
     } else if (!strncmp (token, "Time", 4)) {
       if (strlen (token) > 4) {
         format = token + 4; /* format tag */
       }
       tokens[i] = g_strdup_printf (format, time);
       g_free (token);
+      last_token_par = TRUE;
     } else if (!g_strcmp0 (token, "")) {
-      if (i > 0) {
+      if (!last_token_par) {
         tokens[i] = g_strdup_printf ("%s", "$");
         g_free (token);
+        last_token_par = TRUE;
       }
+    } else {
+      last_token_par = FALSE;
     }
   }
 
