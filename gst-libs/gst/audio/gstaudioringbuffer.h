@@ -57,13 +57,17 @@ typedef void (*GstAudioRingBufferCallback) (GstAudioRingBuffer *rbuf, guint8* da
  * @GST_AUDIO_RING_BUFFER_STATE_STOPPED: The ringbuffer is stopped
  * @GST_AUDIO_RING_BUFFER_STATE_PAUSED: The ringbuffer is paused
  * @GST_AUDIO_RING_BUFFER_STATE_STARTED: The ringbuffer is started
+ * @GST_AUDIO_RING_BUFFER_STATE_ERROR: The ringbuffer has encountered an
+ *     error after it has been started, e.g. because the device was
+ *     disconnected (Since 1.2)
  *
  * The state of the ringbuffer.
  */
 typedef enum {
   GST_AUDIO_RING_BUFFER_STATE_STOPPED,
   GST_AUDIO_RING_BUFFER_STATE_PAUSED,
-  GST_AUDIO_RING_BUFFER_STATE_STARTED
+  GST_AUDIO_RING_BUFFER_STATE_STARTED,
+  GST_AUDIO_RING_BUFFER_STATE_ERROR
 } GstAudioRingBufferState;
 
 /**
