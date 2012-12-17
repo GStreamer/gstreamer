@@ -59,6 +59,12 @@ struct _GESTimelineLayerPrivate
   gboolean auto_transition;
 };
 
+typedef struct
+{
+  GESTimelineObject *object;
+  GESTimelineLayer *layer;
+} NewAssetUData;
+
 enum
 {
   PROP_0,
@@ -695,6 +701,26 @@ start_calculating_transitions (GESTimelineLayer * layer)
   /* FIXME calculate all the transitions at that time */
 }
 
+static void
+new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
+{
+  GError *error = NULL;
+
+  GESAsset *asset = ges_asset_request_finish (res, &error);
+
+  GST_DEBUG_OBJECT (udata->layer, "%" GST_PTR_FORMAT " Asset loaded, "
+      "setting its asset", udata->object);
+
+  if (error) {
+    GST_ERROR ("Asset could not be created for uri");
+  } else {
+    ges_timeline_layer_add_object (udata->layer, udata->object);
+  }
+
+  g_object_unref (asset);
+  g_slice_free (NewAssetUData, udata);
+}
+
 /* Public methods */
 /**
  * ges_timeline_layer_remove_object:
@@ -713,7 +739,7 @@ gboolean
 ges_timeline_layer_remove_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
-  GESTimelineLayer *tl_obj_layer;
+  GESTimelineLayer *current_layer;
   GList *trackobjects, *tmp;
 
   g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
@@ -721,16 +747,16 @@ ges_timeline_layer_remove_object (GESTimelineLayer * layer,
 
   GST_DEBUG ("layer:%p, object:%p", layer, object);
 
-  tl_obj_layer = ges_timeline_object_get_layer (object);
-  if (G_UNLIKELY (tl_obj_layer != layer)) {
+  current_layer = ges_timeline_object_get_layer (object);
+  if (G_UNLIKELY (current_layer != layer)) {
     GST_WARNING ("TimelineObject doesn't belong to this layer");
 
-    if (tl_obj_layer != NULL)
-      g_object_unref (tl_obj_layer);
+    if (current_layer != NULL)
+      g_object_unref (current_layer);
 
     return FALSE;
   }
-  g_object_unref (tl_obj_layer);
+  g_object_unref (current_layer);
 
   if (layer->priv->auto_transition && GES_IS_TIMELINE_SOURCE (object)) {
     trackobjects = ges_timeline_object_get_track_objects (object);
@@ -912,24 +938,60 @@ gboolean
 ges_timeline_layer_add_object (GESTimelineLayer * layer,
     GESTimelineObject * object)
 {
-  GESTimelineLayer *tl_obj_layer;
+  GESAsset *asset;
+  GESTimelineLayer *current_layer;
   guint32 maxprio, minprio, prio;
 
-  GST_DEBUG ("layer:%p, object:%p", layer, object);
+  GESTimelineLayerPrivate *priv;
 
-  tl_obj_layer = ges_timeline_object_get_layer (object);
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
 
-  if (G_UNLIKELY (tl_obj_layer)) {
+  GST_DEBUG_OBJECT (layer, "adding object:%p", object);
+
+  priv = layer->priv;
+  current_layer = ges_timeline_object_get_layer (object);
+
+  if (G_UNLIKELY (current_layer)) {
     GST_WARNING ("TimelineObject %p already belongs to another layer", object);
-    g_object_unref (tl_obj_layer);
+    g_object_unref (current_layer);
+
     return FALSE;
   }
+
+  asset = ges_extractable_get_asset (GES_EXTRACTABLE (object));
+  if (asset == NULL) {
+    gchar *id;
+    NewAssetUData *mudata = g_slice_new (NewAssetUData);
+
+    mudata->object = object;
+    mudata->layer = layer;
+
+    GST_DEBUG_OBJECT (layer, "%" GST_PTR_FORMAT " as no reference to any "
+        "assets creating a asset... trying sync", object);
+
+    id = ges_extractable_get_id (GES_EXTRACTABLE (object));
+    asset = ges_asset_request (G_OBJECT_TYPE (object), id, NULL);
+    if (asset == NULL) {
+      ges_asset_request_async (G_OBJECT_TYPE (object),
+          id, NULL, (GAsyncReadyCallback) new_asset_cb, mudata);
+      g_free (id);
+
+      GST_LOG_OBJECT (layer, "Object added async");
+      return TRUE;
+    }
+    g_free (id);
+
+    ges_extractable_set_asset (GES_EXTRACTABLE (object), asset);
+
+    g_slice_free (NewAssetUData, mudata);
+  }
+
 
   g_object_ref_sink (object);
 
   /* Take a reference to the object and store it stored by start/priority */
-  layer->priv->objects_start =
-      g_list_insert_sorted (layer->priv->objects_start, object,
+  priv->objects_start = g_list_insert_sorted (priv->objects_start, object,
       (GCompareFunc) objects_start_compare);
 
   /* Inform the object it's now in this layer */
@@ -943,21 +1005,71 @@ ges_timeline_layer_add_object (GESTimelineLayer * layer,
   maxprio = layer->max_gnl_priority;
   minprio = layer->min_gnl_priority;
   prio = GES_TIMELINE_OBJECT_PRIORITY (object);
+
   if (minprio + prio > (maxprio)) {
-    GST_WARNING ("%p is out of the layer %p space, setting its priority to "
-        "setting its priority %d to failthe maximum priority of the layer %d",
-        object, layer, prio, maxprio - minprio);
+    GST_WARNING_OBJECT (layer,
+        "%p is out of the layer space, setting its priority to "
+        "%d, setting it to the maximum priority of the layer: %d", object, prio,
+        maxprio - minprio);
     ges_timeline_object_set_priority (object, LAYER_HEIGHT - 1);
   }
+
   /* If the object has an acceptable priority, we just let it with its current
    * priority */
-
   ges_timeline_layer_resync_priorities (layer);
 
   /* emit 'object-added' */
   g_signal_emit (layer, ges_timeline_layer_signals[OBJECT_ADDED], 0, object);
 
   return TRUE;
+}
+
+/**
+ * ges_timeline_layer_add_asset:
+ * @layer: a #GESTimelineLayer
+ * @asset: The asset to add to
+ * @start: The start value to set on the new #GESTimelineObject
+ * @inpoint: The inpoint value to set on the new #GESTimelineObject
+ * @duration: The duration value to set on the new #GESTimelineObject
+ * @rate: The rate value to set on the new #GESTimelineObject
+ * @track_types: The #GESTrackType to set on the the new #GESTimelineObject
+ *
+ * Creates TimelineObject from asset, adds it to layer and
+ * returns a reference to it.
+ *
+ * Returns: (transfer floating): Created #GESTimelineObject
+*/
+GESTimelineObject *
+ges_timeline_layer_add_asset (GESTimelineLayer * layer,
+    GESAsset * asset, GstClockTime start, GstClockTime inpoint,
+    GstClockTime duration, gdouble rate, GESTrackType track_types)
+{
+  GESTimelineObject *tlobj;
+
+  g_return_val_if_fail (GES_IS_TIMELINE_LAYER (layer), NULL);
+  g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
+  g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
+          (asset), GES_TYPE_TIMELINE_OBJECT), NULL);
+
+
+  GST_DEBUG_OBJECT (layer, "Adding asset: %s", ges_asset_get_id (asset));
+  tlobj = GES_TIMELINE_OBJECT (ges_asset_extract (asset, NULL));
+  ges_timeline_object_set_start (tlobj, start);
+  ges_timeline_object_set_inpoint (tlobj, inpoint);
+  if (track_types != GES_TRACK_TYPE_UNKNOWN)
+    ges_timeline_object_set_supported_formats (tlobj, track_types);
+
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    ges_timeline_object_set_duration (tlobj, duration);
+  }
+
+  if (!ges_timeline_layer_add_object (layer, tlobj)) {
+    gst_object_unref (tlobj);
+
+    return NULL;
+  }
+
+  return tlobj;
 }
 
 /**
