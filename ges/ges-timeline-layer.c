@@ -40,7 +40,13 @@ static void
 timeline_object_height_changed_cb (GESTimelineObject * obj,
     GESTrackEffect * tr_eff, GESTimelineObject * second_obj);
 
-G_DEFINE_TYPE (GESTimelineLayer, ges_timeline_layer, G_TYPE_INITIALLY_UNOWNED);
+static void ges_meta_container_interface_init
+    (GESMetaContainerInterface * iface);
+
+G_DEFINE_TYPE_WITH_CODE (GESTimelineLayer, ges_timeline_layer,
+    G_TYPE_INITIALLY_UNOWNED,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_META_CONTAINER,
+        ges_meta_container_interface_init));
 
 struct _GESTimelineLayerPrivate
 {
@@ -121,6 +127,12 @@ ges_timeline_layer_dispose (GObject * object)
         (GESTimelineObject *) priv->objects_start->data);
 
   G_OBJECT_CLASS (ges_timeline_layer_parent_class)->dispose (object);
+}
+
+static void
+ges_meta_container_interface_init (GESMetaContainerInterface * iface)
+{
+
 }
 
 static void
