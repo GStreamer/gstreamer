@@ -605,7 +605,7 @@ fill_frame_planar16_3_generic (GstVideoFrame * frame, opj_image_t * image)
   guint16 *data_out, *tmp;
   const gint *data_in[3];
   gint dstride;
-  gint dx[3], dy[3];
+  gint dx[3], dy[3], shift[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
@@ -624,14 +624,18 @@ fill_frame_planar16_3_generic (GstVideoFrame * frame, opj_image_t * image)
   dy[1] = image->comps[1].dy;
   dy[2] = image->comps[2].dy;
 
+  shift[0] = 16 - image->comps[0].prec;
+  shift[1] = 16 - image->comps[1].prec;
+  shift[2] = 16 - image->comps[2].prec;
+
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
       tmp[0] = 0xff;
-      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
-      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
-      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]] << shift[0];
+      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]] << shift[1];
+      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]] << shift[2];
       tmp += 4;
     }
     data_out += dstride;
@@ -645,7 +649,7 @@ fill_frame_planar16_4_generic (GstVideoFrame * frame, opj_image_t * image)
   guint16 *data_out, *tmp;
   const gint *data_in[4];
   gint dstride;
-  gint dx[4], dy[4];
+  gint dx[4], dy[4], shift[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
@@ -667,14 +671,19 @@ fill_frame_planar16_4_generic (GstVideoFrame * frame, opj_image_t * image)
   dy[2] = image->comps[2].dy;
   dy[3] = image->comps[3].dy;
 
+  shift[0] = 16 - image->comps[0].prec;
+  shift[1] = 16 - image->comps[1].prec;
+  shift[2] = 16 - image->comps[2].prec;
+  shift[3] = 16 - image->comps[3].prec;
+
   for (y = 0; y < h; y++) {
     tmp = data_out;
 
     for (x = 0; x < w; x++) {
-      tmp[0] = data_in[3][((y / dy[3]) * w + x) / dx[3]];
-      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
-      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
-      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp[0] = data_in[3][((y / dy[3]) * w + x) / dx[3]] << shift[3];
+      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]] << shift[0];
+      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]] << shift[1];
+      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]] << shift[2];
       tmp += 4;
     }
     data_out += dstride;
