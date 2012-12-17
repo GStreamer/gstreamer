@@ -649,6 +649,18 @@ fill_frame_planar16_4_generic (GstVideoFrame * frame, opj_image_t * image)
   }
 }
 
+static gint
+get_highest_prec (opj_image_t * image)
+{
+  gint i;
+  gint ret = 0;
+
+  for (i = 0; i < image->numcomps; i++)
+    ret = MAX (image->comps[i].prec, ret);
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
 {
@@ -661,15 +673,18 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
   switch (image->color_space) {
     case CLRSPC_SRGB:
       if (image->numcomps == 4) {
-        if (image->comps[3].dx != 1 && image->comps[3].dy != 1) {
+        if (image->comps[0].dx != 1 || image->comps[0].dy != 1 ||
+            image->comps[1].dx != 1 || image->comps[1].dy != 1 ||
+            image->comps[2].dx != 1 || image->comps[2].dy != 1 ||
+            image->comps[3].dx != 1 || image->comps[3].dy != 1) {
           GST_ERROR_OBJECT (self, "Sub-sampling for RGB not supported");
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (image->comps[3].prec == 8) {
+        if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_packed8_4;
           format = GST_VIDEO_FORMAT_ARGB;
-        } else if (image->comps[3].prec <= 16) {
+        } else if (get_highest_prec (image) <= 16) {
           self->fill_frame = fill_frame_packed16_4;
           format = GST_VIDEO_FORMAT_ARGB64;
         } else {
@@ -677,19 +692,22 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else if (image->numcomps == 3) {
-        if (image->comps[2].dx != 1 && image->comps[2].dy != 1) {
+        if (image->comps[0].dx != 1 || image->comps[0].dy != 1 ||
+            image->comps[1].dx != 1 || image->comps[1].dy != 1 ||
+            image->comps[2].dx != 1 || image->comps[2].dy != 1) {
           GST_ERROR_OBJECT (self, "Sub-sampling for RGB not supported");
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (image->comps[2].prec == 8) {
+        if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_packed8_3;
           format = GST_VIDEO_FORMAT_ARGB;
-        } else if (image->comps[2].prec <= 16) {
+        } else if (get_highest_prec (image) <= 16) {
           self->fill_frame = fill_frame_packed16_3;
           format = GST_VIDEO_FORMAT_ARGB64;
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d", image->comps[3].prec);
+          GST_ERROR_OBJECT (self, "Unsupported depth %d",
+              get_highest_prec (image));
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else {
@@ -705,10 +723,10 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
 
-        if (image->comps[0].prec == 8) {
+        if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_planar8_1;
           format = GST_VIDEO_FORMAT_GRAY8;
-        } else if (image->comps[0].prec <= 16) {
+        } else if (get_highest_prec (image) <= 16) {
           self->fill_frame = fill_frame_planar16_1;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
           format = GST_VIDEO_FORMAT_GRAY16_LE;
@@ -716,7 +734,8 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           format = GST_VIDEO_FORMAT_GRAY16_BE;
 #endif
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d", image->comps[0].prec);
+          GST_ERROR_OBJECT (self, "Unsupported depth %d",
+              get_highest_prec (image));
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else {
@@ -726,6 +745,12 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
       }
       break;
     case CLRSPC_SYCC:
+      if (image->numcomps != 3 && image->numcomps != 4) {
+        GST_ERROR_OBJECT (self, "Unsupported number of YUV components: %d",
+            image->numcomps);
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
+
       if (image->comps[0].dx != 1 || image->comps[0].dy != 1) {
         GST_ERROR_OBJECT (self, "Sub-sampling of luma plane not supported");
         return GST_FLOW_NOT_NEGOTIATED;
@@ -739,7 +764,12 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
       }
 
       if (image->numcomps == 4) {
-        if (image->comps[3].prec == 8) {
+        if (image->comps[3].dx != 1 || image->comps[3].dy != 1) {
+          GST_ERROR_OBJECT (self, "Sub-sampling of alpha plane not supported");
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+
+        if (get_highest_prec (image) == 8) {
           self->fill_frame = fill_frame_planar8_4_generic;
           format = GST_VIDEO_FORMAT_AYUV;
         } else if (image->comps[3].prec <= 16) {
@@ -750,7 +780,7 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else if (image->numcomps == 3) {
-        if (image->comps[2].prec == 8) {
+        if (get_highest_prec (image) == 8) {
           if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
             self->fill_frame = fill_frame_planar8_3;
             format = GST_VIDEO_FORMAT_Y444;
@@ -770,7 +800,7 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
             self->fill_frame = fill_frame_planar8_3_generic;
             format = GST_VIDEO_FORMAT_AYUV;
           }
-        } else if (image->comps[2].prec <= 16) {
+        } else if (get_highest_prec (image) <= 16) {
           if (image->comps[1].dx == 1 && image->comps[1].dy == 1) {
             self->fill_frame = fill_frame_planar16_3;
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -797,7 +827,8 @@ gst_openjpeg_dec_negotiate (GstOpenJPEGDec * self, opj_image_t * image)
             format = GST_VIDEO_FORMAT_AYUV64;
           }
         } else {
-          GST_ERROR_OBJECT (self, "Unsupported depth %d", image->comps[0].prec);
+          GST_ERROR_OBJECT (self, "Unsupported depth %d",
+              get_highest_prec (image));
           return GST_FLOW_NOT_NEGOTIATED;
         }
       } else {
