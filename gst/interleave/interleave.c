@@ -219,7 +219,7 @@ static gboolean gst_interleave_sink_event (GstCollectPads * pads,
     GstCollectData * data, GstEvent * event, gpointer user_data);
 
 static gboolean gst_interleave_sink_setcaps (GstInterleave * self,
-    GstPad * pad, const GstCaps * caps);
+    GstPad * pad, const GstCaps * caps, const GstAudioInfo * info);
 
 static GstCaps *gst_interleave_sink_getcaps (GstPad * pad, GstObject * parent,
     GstCaps * filter);
@@ -547,6 +547,9 @@ gst_interleave_release_pad (GstElement * element, GstPad * pad)
 
   g_atomic_int_add (&self->channels, -1);
 
+  if (gst_pad_has_current_caps (pad))
+    g_atomic_int_add (&self->configured_sinkpads_counter, -1);
+
   position = GST_INTERLEAVE_PAD_CAST (pad)->channel;
   g_value_array_remove (self->input_channel_positions, position);
 
@@ -734,11 +737,10 @@ gst_interleave_set_process_function (GstInterleave * self)
 
 static gboolean
 gst_interleave_sink_setcaps (GstInterleave * self, GstPad * pad,
-    const GstCaps * caps)
+    const GstCaps * caps, const GstAudioInfo * info)
 {
   g_return_val_if_fail (GST_IS_INTERLEAVE_PAD (pad), FALSE);
 
-  /* First caps that are set on a sink pad are used as output caps */
   /* TODO: handle caps changes */
   if (self->sinkcaps && !gst_caps_is_subset (caps, self->sinkcaps)) {
     goto cannot_change_caps;
@@ -746,25 +748,11 @@ gst_interleave_sink_setcaps (GstInterleave * self, GstPad * pad,
     GstCaps *srccaps;
     GstStructure *s;
     gboolean res;
-    GstAudioInfo info;
-    GValue *val;
-    guint channel;
 
-    if (!gst_audio_info_from_caps (&info, caps))
-      goto invalid_caps;
-
-    self->width = GST_AUDIO_INFO_WIDTH (&info);
-    self->rate = GST_AUDIO_INFO_RATE (&info);
-
+    self->width = GST_AUDIO_INFO_WIDTH (info);
+    self->rate = GST_AUDIO_INFO_RATE (info);
 
     gst_interleave_set_process_function (self);
-    channel = GST_INTERLEAVE_PAD_CAST (pad)->channel;
-
-    if (self->channel_positions_from_input
-        && GST_AUDIO_INFO_CHANNELS (&info) == 1) {
-      val = g_value_array_get_nth (self->input_channel_positions, channel);
-      g_value_set_enum (val, GST_AUDIO_INFO_POSITION (&info, 0));
-    }
 
     srccaps = gst_caps_copy (caps);
     s = gst_caps_get_structure (srccaps, 0);
@@ -808,11 +796,6 @@ src_did_not_accept:
     GST_WARNING_OBJECT (self, "src did not accept setcaps()");
     return FALSE;
   }
-invalid_caps:
-  {
-    GST_WARNING_OBJECT (self, "invalid sink caps");
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -841,11 +824,37 @@ gst_interleave_sink_event (GstCollectPads * pads, GstCollectData * data,
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
+      GstAudioInfo info;
+      GValue *val;
+      guint channel;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_interleave_sink_setcaps (self, data->pad, caps);
-      gst_event_unref (event);
-      event = NULL;
+
+      if (!gst_audio_info_from_caps (&info, caps)) {
+        GST_WARNING_OBJECT (self, "invalid sink caps");
+        gst_event_unref (event);
+        event = NULL;
+        ret = FALSE;
+        break;
+      }
+
+      if (self->channel_positions_from_input
+          && GST_AUDIO_INFO_CHANNELS (&info) == 1) {
+        channel = GST_INTERLEAVE_PAD_CAST (data->pad)->channel;
+        val = g_value_array_get_nth (self->input_channel_positions, channel);
+        g_value_set_enum (val, GST_AUDIO_INFO_POSITION (&info, 0));
+      }
+
+      if (!gst_pad_has_current_caps (data->pad))
+        g_atomic_int_add (&self->configured_sinkpads_counter, 1);
+
+      /* Last caps that are set on a sink pad are used as output caps */
+      if (g_atomic_int_get (&self->configured_sinkpads_counter) ==
+          self->channels) {
+        ret = gst_interleave_sink_setcaps (self, data->pad, caps, &info);
+        gst_event_unref (event);
+        event = NULL;
+      }
       break;
     }
     case GST_EVENT_TAG:

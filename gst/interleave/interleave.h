@@ -61,6 +61,7 @@ struct _GstInterleave
   gboolean channel_positions_from_input;
 
   GstCaps *sinkcaps;
+  gint configured_sinkpads_counter;
 
   GstClockTime timestamp;
   guint64 offset;
