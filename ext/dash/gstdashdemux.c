@@ -205,6 +205,7 @@ static void gst_dash_demux_stop (GstDashDemux * demux);
 static void gst_dash_demux_pause_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
+static gboolean gst_dash_demux_setup_all_streams (GstDashDemux *demux);
 static gboolean gst_dash_demux_select_representations (GstDashDemux * demux,
     guint64 current_bitrate);
 static gboolean gst_dash_demux_get_next_fragment_set (GstDashDemux * demux);
@@ -481,11 +482,12 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       GstSeekFlags flags;
       GstSeekType start_type, stop_type;
       gint64 start, stop;
-      GList *walk;
+      GList *list;
       GstClockTime current_pos, target_pos;
-      gint current_sequence;
+      guint current_sequence, current_period;
       GstActiveStream *stream;
       GstMediaSegment *chunk;
+      GstStreamPeriod *period;
       guint nb_active_stream;
       guint stream_idx;
 
@@ -506,23 +508,46 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_ARGS (stop));
 
       GST_MPD_CLIENT_LOCK (demux->client);
-      stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
 
-      /* FIXME: support seeking across periods */
-      current_pos = 0;
+      /* select the requested Period in the Media Presentation */
       target_pos = (GstClockTime) start;
-      for (walk = stream->segments; walk; walk = walk->next) {
-        chunk = walk->data;
+      current_period = 0;
+      for (list = g_list_first (demux->client->periods); list; list = g_list_next (list)) {
+        period = list->data;
+        current_pos = period->start;
+        current_period = period->number;
+        if (current_pos <= target_pos
+            && target_pos < current_pos + period->duration) {
+          break;
+        }
+      }
+      if (list == NULL) {
+        GST_WARNING_OBJECT (demux, "Could not find seeked Period");
+        return FALSE;
+      }
+      if (current_period != demux->client->period_idx) {
+        GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
+        /* FIXME: we should'nt fiddle with client internals like that */
+        demux->client->period_idx = current_period;
+        /* setup video, audio and subtitle streams */
+        if (!gst_dash_demux_setup_all_streams (demux))
+          return FALSE;
+      }
+
+      stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
+      current_pos = 0;
+      for (list = g_list_first (stream->segments); list; list = g_list_next (list)) {
+        chunk = list->data;
+        current_pos = chunk->start_time;
         current_sequence = chunk->number;
         if (current_pos <= target_pos
             && target_pos < current_pos + chunk->duration) {
           break;
         }
-        current_pos += chunk->duration;
       }
       GST_MPD_CLIENT_UNLOCK (demux->client);
 
-      if (walk == NULL) {
+      if (list == NULL) {
         GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
         return FALSE;
       }
@@ -553,16 +578,13 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
 
       GST_MPD_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "Seeking to sequence %d", current_sequence);
-      /* FIXME: support seeking across periods */
-      stream_idx = 0;
       /* Update the current sequence on all streams */
-      while (stream_idx < nb_active_stream) {
+      for (stream_idx = 0; stream_idx < nb_active_stream; stream_idx++) {
         stream =
             gst_mpdparser_get_active_stream_by_index (demux->client,
             stream_idx);
         /* FIXME: we should'nt fiddle with stream internals like that */
         stream->segment_idx = current_sequence;
-        stream_idx++;
       }
       /* Calculate offset in the next fragment */
       demux->position = gst_mpd_client_get_current_position (demux->client);
