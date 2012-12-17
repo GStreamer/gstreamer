@@ -2015,14 +2015,14 @@ gst_matroska_read_common_parse_metadata_id_simple_tag (GstMatroskaReadCommon *
 
   DEBUG_ELEMENT_STOP (common, ebml, "SimpleTag", ret);
 
-  if (parent && tag && value) {
+  if (parent && tag && value && *value != '\0') {
     /* Don't bother mapping children tags - parent will do that */
     gchar *key_val;
     /* TODO: read LANGUAGE sub-tag, and use "key[lc]=val" form */
     key_val = g_strdup_printf ("%s=%s", name_with_parent, value);
     gst_tag_list_add (*p_taglist, GST_TAG_MERGE_APPEND,
         GST_TAG_EXTENDED_COMMENT, key_val, NULL);
-  } else if (tag && value) {
+  } else if (tag && value && *value != '\0') {
     gboolean matched = FALSE;
     guint i;
 
