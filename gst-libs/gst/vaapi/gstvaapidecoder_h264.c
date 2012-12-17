@@ -515,6 +515,9 @@ struct _GstVaapiDecoderH264Private {
     /* Last decoded PPS. May not be the last activated one. Just here because
        it may not fit stack memory allocation in decode_pps() */
     GstH264PPS                  last_pps;
+    /* Temporary slice header. Just here because it may not fit stack
+       memory allocation in decode_slice() */
+    GstH264SliceHdr             temp_slice_hdr;
     GstVaapiPictureH264        *current_picture;
     GstVaapiFrameStore         *prev_frame;
     GstVaapiFrameStore         *dpb[16];
@@ -2863,8 +2866,24 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     GstVaapiSliceH264 *slice = NULL;
     GstH264SliceHdr *slice_hdr;
     GstH264ParserResult result;
+    gboolean is_first_slice = !priv->has_context;
 
     GST_DEBUG("slice (%u bytes)", nalu->size);
+
+    if (is_first_slice) {
+        slice_hdr = &priv->temp_slice_hdr;
+        memset(slice_hdr, 0, sizeof(*slice_hdr));
+        result = gst_h264_parser_parse_slice_hdr(priv->parser, nalu,
+            slice_hdr, TRUE, TRUE);
+        if (result != GST_H264_PARSER_OK) {
+            status = get_status(result);
+            goto error;
+        }
+
+        status = ensure_context(decoder, slice_hdr->pps->sequence);
+        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+            return status;
+    }
 
     slice = gst_vaapi_slice_h264_new(
         decoder,
@@ -2877,11 +2896,16 @@ decode_slice(GstVaapiDecoderH264 *decoder, GstH264NalUnit *nalu)
     }
 
     slice_hdr = &slice->slice_hdr;
-    memset(slice_hdr, 0, sizeof(*slice_hdr));
-    result = gst_h264_parser_parse_slice_hdr(priv->parser, nalu, slice_hdr, TRUE, TRUE);
-    if (result != GST_H264_PARSER_OK) {
-        status = get_status(result);
-        goto error;
+    if (is_first_slice)
+        memcpy(slice_hdr, &priv->temp_slice_hdr, sizeof(*slice_hdr));
+    else {
+        memset(slice_hdr, 0, sizeof(*slice_hdr));
+        result = gst_h264_parser_parse_slice_hdr(priv->parser, nalu,
+            slice_hdr, TRUE, TRUE);
+        if (result != GST_H264_PARSER_OK) {
+            status = get_status(result);
+            goto error;
+        }
     }
 
     if (is_new_picture(decoder, nalu, slice_hdr)) {
