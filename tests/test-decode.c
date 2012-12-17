@@ -27,9 +27,11 @@
 #include <gst/vaapi/gstvaapidecoder_h264.h>
 #include <gst/vaapi/gstvaapidecoder_jpeg.h>
 #include <gst/vaapi/gstvaapidecoder_mpeg2.h>
+#include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 #include <gst/vaapi/gstvaapidecoder_vc1.h>
 #include "test-jpeg.h"
 #include "test-mpeg2.h"
+#include "test-mpeg4.h"
 #include "test-h264.h"
 #include "test-vc1.h"
 #include "output.h"
@@ -49,6 +51,7 @@ static const CodecDefs g_codec_defs[] = {
 #define INIT_FUNCS(CODEC) { #CODEC, CODEC##_get_video_info }
     INIT_FUNCS(jpeg),
     INIT_FUNCS(mpeg2),
+    INIT_FUNCS(mpeg4),
     INIT_FUNCS(h264),
     INIT_FUNCS(vc1),
 #undef INIT_FUNCS
@@ -149,6 +152,9 @@ main(int argc, char *argv[])
 #endif
     case GST_VAAPI_CODEC_MPEG2:
         decoder = gst_vaapi_decoder_mpeg2_new(display, decoder_caps);
+        break;
+    case GST_VAAPI_CODEC_MPEG4:
+        decoder = gst_vaapi_decoder_mpeg4_new(display, decoder_caps);
         break;
     case GST_VAAPI_CODEC_VC1:
         decoder = gst_vaapi_decoder_vc1_new(display, decoder_caps);
