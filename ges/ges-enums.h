@@ -52,6 +52,21 @@ typedef enum {
   GES_TRACK_TYPE_CUSTOM  = 1 << 4,
 } GESTrackType;
 
+#define GES_META_FLAG_TYPE (ges_meta_flag_get_type ())
+GType ges_meta_flag_get_type (void);
+
+/**
+ * GESMetaFlag:
+ * @GES_META_READABLE: The metadata is readable
+ * @GES_META_WRITABLE: The metadata is writable
+ * @GES_META_READ_WRITE: The metadata is readable and writable
+ */
+typedef enum {
+  GES_META_READABLE  = 1 << 0,
+  GES_META_WRITABLE = 1 << 1,
+  GES_META_READ_WRITE = GES_META_READABLE | GES_META_WRITABLE
+} GESMetaFlag;
+
 /**
  * GESVideoStandardTransitionType:
  * @GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE: Transition type has not been set,

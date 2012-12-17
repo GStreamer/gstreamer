@@ -4,428 +4,672 @@
 #include "ges-meta-container.h"
 
 /**
-* SECTION: ges-metadata-container
-* @short_description: An interface for storing metadata
+* SECTION: ges-meta-container
+* @short_description: An interface for storing meta
 *
-* Interface that allows reading and writing metadata
+* Interface that allows reading and writing meta
 */
 
-static GQuark ges_taglist_key;
+static GQuark ges_meta_key;
 
-typedef struct
+G_DEFINE_INTERFACE_WITH_CODE (GESMetaContainer, ges_meta_container,
+    G_TYPE_OBJECT, ges_meta_key =
+    g_quark_from_static_string ("ges-meta-container-data"););
+
+enum
 {
-  GstTagMergeMode mode;
-  GstTagList *list;
-  GMutex lock;
-} GESMetadata;
+  NOTIFY_SIGNAL,
+  LAST_SIGNAL
+};
 
-#define GES_METADATA_LOCK(data) g_mutex_lock(&data->lock)
-#define GES_METADATA_UNLOCK(data) g_mutex_unlock(&data->lock)
+static guint _signals[LAST_SIGNAL] = { 0 };
 
-G_DEFINE_INTERFACE_WITH_CODE (GESMetadataContainer, ges_meta_container,
-    G_TYPE_OBJECT, ges_taglist_key =
-    g_quark_from_static_string ("ges-metadata-container-data"););
+typedef struct RegisteredMeta
+{
+  GType item_type;
+  GESMetaFlag flags;
+} RegisteredMeta;
+
+typedef struct ContainerData
+{
+  GstStructure *structure;
+  GHashTable *static_items;
+} ContainerData;
 
 static void
-ges_meta_container_default_init (GESMetadataContainerInterface * iface)
+ges_meta_container_default_init (GESMetaContainerInterface * iface)
 {
 
+  /**
+   * GESMetaContainer::notify:
+   * @container: a #GESMetaContainer
+   * @prop: the key of the value that changed
+   * @value: the #GValue containing the new value
+   *
+   * The notify signal is used to be notify of changes of values
+   * of some metadatas
+   */
+  _signals[NOTIFY_SIGNAL] =
+      g_signal_new ("notify-meta", G_TYPE_FROM_INTERFACE (iface),
+      G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
+      G_SIGNAL_NO_HOOKS, 0, NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_VALUE);
 }
 
 static void
-ges_metadata_free (gpointer p)
+_free_meta_container_data (ContainerData * data)
 {
-  GESMetadata *data = (GESMetadata *) p;
+  gst_structure_free (data->structure);
+  g_hash_table_unref (data->static_items);
 
-  if (data->list)
-    gst_tag_list_unref (data->list);
-
-  g_mutex_clear (&data->lock);
-
-  g_slice_free (GESMetadata, data);
+  g_slice_free (ContainerData, data);
 }
 
-static GESMetadata *
-ges_meta_container_get_data (GESMetadataContainer * container)
+static void
+_free_static_item (RegisteredMeta * item)
 {
-  GESMetadata *data;
+  g_slice_free (RegisteredMeta, item);
+}
 
-  data = g_object_get_qdata (G_OBJECT (container), ges_taglist_key);
-  if (!data) {
-    /* make sure no other thread is creating a GstTagData at the same time */
-    static GMutex create_mutex; /* no initialisation required */
-    g_mutex_lock (&create_mutex);
-
-    data = g_object_get_qdata (G_OBJECT (container), ges_taglist_key);
-    if (!data) {
-      data = g_slice_new (GESMetadata);
-      g_mutex_init (&data->lock);
-      data->list = gst_tag_list_new_empty ();
-      data->mode = GST_TAG_MERGE_KEEP;
-      g_object_set_qdata_full (G_OBJECT (container), ges_taglist_key, data,
-          ges_metadata_free);
-    }
-
-    g_mutex_unlock (&create_mutex);
-  }
+static ContainerData *
+_create_container_data (GESMetaContainer * container)
+{
+  ContainerData *data = g_slice_new (ContainerData);
+  data->structure = gst_structure_new_empty ("metadatas");
+  data->static_items = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, (GDestroyNotify) (GDestroyNotify) _free_static_item);
+  g_object_set_qdata_full (G_OBJECT (container), ges_meta_key, data,
+      (GDestroyNotify) _free_meta_container_data);
 
   return data;
 }
 
+static GstStructure *
+_meta_container_get_structure (GESMetaContainer * container)
+{
+  ContainerData *data;
+
+  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
+  if (!data)
+    data = _create_container_data (container);
+
+  return data->structure;
+}
+
 typedef struct
 {
-  GESMetadataForeachFunc func;
-  const GESMetadataContainer *container;
+  GESMetaForeachFunc func;
+  const GESMetaContainer *container;
   gpointer data;
 } MetadataForeachData;
 
 static void
-tag_list_foreach (const GstTagList * taglist, const gchar * tag,
+structure_foreach_wrapper (GQuark field_id, const GValue * value,
     gpointer user_data)
 {
   MetadataForeachData *data = (MetadataForeachData *) user_data;
 
-  GValue value = { 0, };
+  data->func (data->container, g_quark_to_string (field_id), value, data->data);
+}
 
-  if (!gst_tag_list_copy_value (&value, taglist, tag))
-    return;
+static gboolean
+_append_foreach (GQuark field_id, const GValue * value, GESMetaContainer * self)
+{
+  ges_meta_container_set_meta (self, g_quark_to_string (field_id), value);
 
-  data->func (data->container, tag, &value, data->data);
+  return TRUE;
 }
 
 /**
- * ges_metadata_container_foreach:
+ * ges_meta_container_foreach:
  * @container: container to iterate over
- * @func: (scope call): function to be called for each tag
+ * @func: (scope call): function to be called for each metadata
  * @user_data: (closure): user specified data
  *
- * Calls the given function for each tag inside the metadata container. Note
- * that if there is no tag, the function won't be called at all.
+ * Calls the given function for each metadata inside the meta container. Note
+ * that if there is no metadata, the function won't be called at all.
  */
 void
-ges_metadata_container_foreach (GESMetadataContainer * container,
-    GESMetadataForeachFunc func, gpointer user_data)
+ges_meta_container_foreach (GESMetaContainer * container,
+    GESMetaForeachFunc func, gpointer user_data)
 {
-  GESMetadata *data;
+  GstStructure *structure;
   MetadataForeachData foreach_data;
 
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
+  g_return_if_fail (GES_IS_META_CONTAINER (container));
   g_return_if_fail (func != NULL);
 
-  data = ges_meta_container_get_data (container);
+  structure = _meta_container_get_structure (container);
 
   foreach_data.func = func;
   foreach_data.container = container;
   foreach_data.data = user_data;
 
-  gst_tag_list_foreach (data->list, (GstTagForeachFunc) tag_list_foreach,
-      &foreach_data);
+  gst_structure_foreach (structure,
+      (GstStructureForeachFunc) structure_foreach_wrapper, &foreach_data);
+}
+
+/* _can_write_value should have been checked before calling */
+static gboolean
+_register_meta (GESMetaContainer * container, GESMetaFlag flags,
+    const gchar * meta_item, GType type)
+{
+  ContainerData *data;
+  RegisteredMeta *static_item;
+
+  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
+  if (!data)
+    data = _create_container_data (container);
+  else if (g_hash_table_lookup (data->static_items, meta_item)) {
+    GST_WARNING_OBJECT (container, "Static meta %s already registered",
+        meta_item);
+
+    return FALSE;
+  }
+
+  static_item = g_slice_new0 (RegisteredMeta);
+  static_item->item_type = type;
+  static_item->flags = flags;
+  g_hash_table_insert (data->static_items, g_strdup (meta_item), static_item);
+
+  return TRUE;
+}
+
+static gboolean
+_set_value (GESMetaContainer * container, const gchar * meta_item,
+    const GValue * value)
+{
+  GstStructure *structure;
+  gchar *val = gst_value_serialize (value);
+
+  if (val == NULL) {
+    GST_WARNING_OBJECT (container, "Could not set value on item: %s",
+        meta_item);
+
+    g_free (val);
+    return FALSE;
+  }
+
+  structure = _meta_container_get_structure (container);
+
+  GST_DEBUG_OBJECT (container, "Setting meta_item %s value: %s::%s",
+      meta_item, G_VALUE_TYPE_NAME (value), val);
+
+  gst_structure_set_value (structure, meta_item, value);
+  g_signal_emit (container, _signals[NOTIFY_SIGNAL], 0, meta_item, value);
+
+  g_free (val);
+  return TRUE;
+}
+
+static gboolean
+_can_write_value (GESMetaContainer * container, const gchar * item_name,
+    GType type)
+{
+  ContainerData *data;
+  RegisteredMeta *static_item = NULL;
+
+  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
+  if (!data) {
+    data = _create_container_data (container);
+    return TRUE;
+  }
+
+  static_item = g_hash_table_lookup (data->static_items, item_name);
+
+  if (static_item == NULL)
+    return TRUE;
+
+  if ((static_item->flags & GES_META_WRITABLE) == FALSE) {
+    GST_WARNING_OBJECT (container, "Can not write %s", item_name);
+    return FALSE;
+  }
+
+  if (static_item->item_type != type) {
+    GST_WARNING_OBJECT (container, "Can not set value of type %s on %s "
+        "its type is: %s", g_type_name (static_item->item_type), item_name,
+        g_type_name (type));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+#define CREATE_SETTER(name, value_ctype, value_gtype,  setter_name)     \
+gboolean                                                                \
+ges_meta_container_set_ ## name (GESMetaContainer *container,      \
+                           const gchar *meta_item, value_ctype value)   \
+{                                                                       \
+  GValue gval = { 0 };                                                  \
+                                                                        \
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);      \
+  g_return_val_if_fail (meta_item != NULL, FALSE);                      \
+                                                                        \
+  if (_can_write_value (container, meta_item, value_gtype) == FALSE)    \
+    return FALSE;                                                       \
+                                                                        \
+  g_value_init (&gval, value_gtype);                                    \
+  g_value_set_ ##setter_name (&gval, value);                            \
+                                                                        \
+  return _set_value (container, meta_item, &gval);                      \
 }
 
 /**
  * ges_meta_container_set_boolean:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
- * @value: Value to set
- * Sets the value of a given metadata item
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_boolean (GESMetadataContainer * container,
-    const gchar * metadata_item, gboolean value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_BOOLEAN);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+CREATE_SETTER (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
 
 /**
  * ges_meta_container_set_int:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_int (GESMetadataContainer * container,
-    const gchar * metadata_item, gint value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_INT);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+    CREATE_SETTER (int, gint, G_TYPE_INT, int)
 
 /**
  * ges_meta_container_set_uint:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_uint (GESMetadataContainer * container,
-    const gchar * metadata_item, guint value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_UINT);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+    CREATE_SETTER (uint, guint, G_TYPE_UINT, uint)
 
 /**
  * ges_meta_container_set_int64:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_int64 (GESMetadataContainer * container,
-    const gchar * metadata_item, gint64 value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_INT64);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+    CREATE_SETTER (int64, gint64, G_TYPE_INT64, int64)
 
 /**
  * ges_meta_container_set_uint64:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_uint64 (GESMetadataContainer * container,
-    const gchar * metadata_item, guint64 value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_UINT64);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+    CREATE_SETTER (uint64, guint64, G_TYPE_UINT64, uint64)
 
 /**
  * ges_meta_container_set_float:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_float (GESMetadataContainer * container,
-    const gchar * metadata_item, gfloat value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_FLOAT);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+    CREATE_SETTER (float, float, G_TYPE_FLOAT, float)
 
 /**
  * ges_meta_container_set_double:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_double (GESMetadataContainer * container,
-    const gchar * metadata_item, gdouble value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_DOUBLE);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+CREATE_SETTER (double, double, G_TYPE_DOUBLE, double)
 
 /**
  * ges_meta_container_set_date:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
+ *
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
  */
-void
-ges_meta_container_set_date (GESMetadataContainer * container,
-    const gchar * metadata_item, const GDate * value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_DATE);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
+CREATE_SETTER (date, const GDate *, G_TYPE_DATE, boxed)
 
 /**
  * ges_meta_container_set_date_time:
  * @container: Target container
- * @metadata_item: Name of the metadata item to set
+ * @meta_item: Name of the meta item to set
  * @value: Value to set
- * Sets the value of a given metadata item
- */
-void
-ges_meta_container_set_date_time (GESMetadataContainer * container,
-    const gchar * metadata_item, const GstDateTime * value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, GST_TYPE_DATE_TIME);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
-
-/**
- * ges_meta_container_set_string:
- * @container: Target container
- * @metadata_item: Name of the metadata item to set
- * @value: Value to set
- * Sets the value of a given metadata item
- */
-void
-ges_meta_container_set_string (GESMetadataContainer * container,
-    const gchar * metadata_item, const gchar * value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_STRING);
-  gst_tag_list_add (data->list, data->mode, metadata_item, value, NULL);
-  GES_METADATA_UNLOCK (data);
-}
-
-/**
- * ges_meta_container_set_value:
- * @container: Target container
- * @metadata_item: Name of the metadata item to set
- * @value: Value to set
- * Sets the value of a given metadata item
- */
-void
-ges_meta_container_set_meta (GESMetadataContainer * container,
-    const gchar * metadata_item, const GValue * value)
-{
-  GESMetadata *data;
-
-  g_return_if_fail (GES_IS_METADATA_CONTAINER (container));
-  g_return_if_fail (metadata_item != NULL);
-
-  data = ges_meta_container_get_data (container);
-
-  GES_METADATA_LOCK (data);
-  ges_metadata_register (metadata_item, G_TYPE_STRING);
-  gst_tag_list_add_value (data->list, data->mode, metadata_item, value);
-  GES_METADATA_UNLOCK (data);
-}
-
-/**
- * ges_metadata_container_to_string:
- * @container: a #GESMetadataContainer
  *
- * Serializes a metadata container to a string.
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
+ */
+CREATE_SETTER (date_time, const GstDateTime *, GST_TYPE_DATE_TIME, boxed)
+
+/**
+* ges_meta_container_set_string:
+* @container: Target container
+* @meta_item: Name of the meta item to set
+* @value: Value to set
+*
+* Sets the value of a given meta item
+*
+* Return: %TRUE if the meta could be added, %FALSE otherwize
+*/
+CREATE_SETTER (string, const gchar *, G_TYPE_STRING, string)
+
+/**
+ * ges_meta_container_set_meta:
+ * @container: Target container
+ * @meta_item: Name of the meta item to set
+ * @value: Value to set
+ * Sets the value of a given meta item
+ *
+ * Return: %TRUE if the meta could be added, %FALSE otherwize
+ */
+  gboolean
+ges_meta_container_set_meta (GESMetaContainer * container,
+    const gchar * meta_item, const GValue * value)
+{
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  if (_can_write_value (container, meta_item, G_VALUE_TYPE (value)) == FALSE)
+    return FALSE;
+
+  _set_value (container, meta_item, value);
+
+  return TRUE;
+}
+
+/**
+ * ges_meta_container_metas_to_string:
+ * @container: a #GESMetaContainer
+ *
+ * Serializes a meta container to a string.
  *
  * Returns: a newly-allocated string, or NULL in case of an error. The
  *    string must be freed with g_free() when no longer needed.
  */
 gchar *
-ges_metadata_container_to_string (GESMetadataContainer * container)
+ges_meta_container_metas_to_string (GESMetaContainer * container)
 {
-  GESMetadata *data;
+  GstStructure *structure;
 
-  g_return_val_if_fail (GES_IS_METADATA_CONTAINER (container), NULL);
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), NULL);
 
-  data = ges_meta_container_get_data (container);
+  structure = _meta_container_get_structure (container);
 
-  return gst_tag_list_to_string (data->list);
+  return gst_structure_to_string (structure);
 }
 
 /**
- * ges_metadata_container_new_from_string:
- * @str: a string created with ges_metadata_container_to_string()
+ * ges_meta_container_add_metas_from_string:
+ * @str: a string created with ges_meta_container_metas_to_string()
  *
- * Deserializes a metadata container.
+ * Deserializes a meta container.
  *
- * Returns: (transfer full): a new #GESMetadataContainer, or NULL in case of an
+ * Returns: (transfer full): a new #GESMetaContainer, or NULL in case of an
  * error.
  */
-GESMetadataContainer *
-ges_metadata_container_new_from_string (const gchar * str)
+gboolean
+ges_meta_container_add_metas_from_string (GESMetaContainer * container,
+    const gchar * str)
 {
-  return NULL;
+  GstStructure *n_structure;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+
+  n_structure = gst_structure_from_string (str, NULL);
+  if (n_structure == NULL) {
+    GST_WARNING_OBJECT (container, "Could not add metas: %s", str);
+    return FALSE;
+  }
+
+  gst_structure_foreach (n_structure, (GstStructureForeachFunc) _append_foreach,
+      container);
+
+  return TRUE;
 }
 
-void
-ges_metadata_register (const gchar * name, GType type)
+#define CREATE_REGISTER_STATIC(name, value_ctype, value_gtype, setter_name) \
+gboolean                                                                      \
+ges_meta_container_register_meta_ ## name (GESMetaContainer *container,\
+    GESMetaFlag flags, const gchar *meta_item, value_ctype value)             \
+{                                                                             \
+  GValue gval = { 0 };                                                        \
+                                                                              \
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);            \
+  g_return_val_if_fail (meta_item != NULL, FALSE);                            \
+                                                                              \
+  if (!_register_meta (container, flags, meta_item, value_gtype))       \
+    return FALSE;                                                             \
+                                                                              \
+  g_value_init (&gval, value_gtype);                                          \
+  g_value_set_ ##setter_name (&gval, value);                                  \
+                                                                              \
+  return _set_value (container, meta_item, &gval);                            \
+}
+
+/**
+ * register_meta_:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+CREATE_REGISTER_STATIC (boolean, gboolean, G_TYPE_BOOLEAN, boolean)
+
+/**
+ * ges_meta_container_register_meta_int:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+    CREATE_REGISTER_STATIC (int, gint, G_TYPE_INT, int)
+
+/**
+ * ges_meta_container_register_meta_uint:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+    CREATE_REGISTER_STATIC (uint, guint, G_TYPE_UINT, uint)
+
+/**
+ * ges_meta_container_register_meta_int64:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+    CREATE_REGISTER_STATIC (int64, gint64, G_TYPE_INT64, int64)
+
+/**
+ * ges_meta_container_register_meta_uint64:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+    CREATE_REGISTER_STATIC (uint64, guint64, G_TYPE_UINT64, uint64)
+
+/**
+ * ges_meta_container_register_meta_float:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+*/
+    CREATE_REGISTER_STATIC (float, float, G_TYPE_FLOAT, float)
+
+/**
+ * ges_meta_container_register_meta_double:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+CREATE_REGISTER_STATIC (double, double, G_TYPE_DOUBLE, double)
+
+/**
+ * ges_meta_container_register_meta_date:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+CREATE_REGISTER_STATIC (date, const GDate *, G_TYPE_DATE, boxed)
+
+/**
+ * ges_meta_container_register_meta_date_time:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+CREATE_REGISTER_STATIC (date_time, const GstDateTime *, GST_TYPE_DATE_TIME,
+    boxed)
+
+/**
+ * ges_meta_container_register_meta_string:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: (allow-none): Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the meta could be register, %FALSE otherwize
+ */
+CREATE_REGISTER_STATIC (string, const gchar *, G_TYPE_STRING, string)
+
+/**
+ * ges_meta_container_register_meta:
+ * @container: Target container
+ * @flags: The #GESMetaFlag to be used
+ * @meta_item: Name of the meta item to set
+ * @value: Value to set
+ *
+ * Sets a static meta on @container. This method lets you define static
+ * metadatas, which means that the type of the registered will be the only
+ * type accepted for this meta on that particular @container.
+ *
+ * Return: %TRUE if the static meta could be added, %FALSE otherwize
+ */
+  gboolean
+ges_meta_container_register_meta (GESMetaContainer * container,
+    GESMetaFlag flags, const gchar * meta_item, const GValue * value)
 {
-  gst_tag_register (name, GST_TAG_FLAG_META, type, name, name, NULL);
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  if (!_register_meta (container, flags, meta_item, G_VALUE_TYPE (value)))
+    return FALSE;
+
+  return _set_value (container, meta_item, value);
+}
+
+gboolean
+ges_meta_container_check_meta_registered (GESMetaContainer * container,
+    const gchar * meta_item, GESMetaFlag * flags, GType * type)
+{
+  ContainerData *data;
+  RegisteredMeta *static_item;
+
+  data = g_object_get_qdata (G_OBJECT (container), ges_meta_key);
+  if (!data)
+    return FALSE;
+
+  static_item = g_hash_table_lookup (data->static_items, meta_item);
+  if (static_item == NULL) {
+    GST_WARNING_OBJECT (container, "Static meta %s already registered",
+        meta_item);
+
+    return FALSE;
+  }
+
+  if (type)
+    *type = static_item->item_type;
+
+  if (flags)
+    *flags = static_item->flags;
+
+  return TRUE;
 }
 
 /* Copied from gsttaglist.c */
@@ -433,83 +677,146 @@ ges_metadata_register (const gchar * name, GType type)
 
 #define CREATE_GETTER(name,type)                                         \
 gboolean                                                                 \
-ges_meta_container_get_ ## name (GESMetadataContainer *container,    \
-                           const gchar *metadata_item, type value)       \
+ges_meta_container_get_ ## name (GESMetaContainer *container,    \
+                           const gchar *meta_item, type value)       \
 {                                                                        \
-  GESMetadata *data;                                                     \
+  GstStructure *structure;                                                     \
                                                                          \
-  g_return_val_if_fail (GES_IS_METADATA_CONTAINER (container), FALSE);   \
-  g_return_val_if_fail (metadata_item != NULL, FALSE);                   \
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);   \
+  g_return_val_if_fail (meta_item != NULL, FALSE);                   \
   g_return_val_if_fail (value != NULL, FALSE);                           \
                                                                          \
-  data = ges_meta_container_get_data (container);                    \
+  structure = _meta_container_get_structure (container);                    \
                                                                          \
-  return gst_tag_list_get_ ## name (data->list, metadata_item, value);   \
+  return gst_structure_get_ ## name (structure, meta_item, value);   \
 }
 
 /**
  * ges_meta_container_get_boolean:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (boolean, gboolean *);
 /**
  * ges_meta_container_get_int:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (int, gint *);
 /**
  * ges_meta_container_get_uint:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (uint, guint *);
 /**
- * ges_meta_container_get_int64:
- * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
- * can not be found.
- */
-CREATE_GETTER (int64, gint64 *);
-/**
- * ges_meta_container_get_uint64:
- * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
- * can not be found.
- */
-CREATE_GETTER (uint64, guint64 *);
-/**
- * ges_meta_container_get_float:
- * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
- * can not be found.
- */
-CREATE_GETTER (float, gfloat *);
-/**
  * ges_meta_container_get_double:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (double, gdouble *);
+
+/**
+ * ges_meta_container_get_int64:
+ * @container: Target container
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns %FALSE if @meta_item
+ * can not be found.
+ */
+gboolean
+ges_meta_container_get_int64 (GESMetaContainer * container,
+    const gchar * meta_item, gint64 * dest)
+{
+  GstStructure *structure;
+  const GValue *value;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
+
+  structure = _meta_container_get_structure (container);
+
+  value = gst_structure_get_value (structure, meta_item);
+  if (!value || G_VALUE_TYPE (value) != G_TYPE_INT64)
+    return FALSE;
+
+  *dest = g_value_get_int64 (value);
+
+  return TRUE;
+}
+
+/**
+ * ges_meta_container_get_uint64:
+ * @container: Target container
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
+ * can not be found.
+ */
+gboolean
+ges_meta_container_get_uint64 (GESMetaContainer * container,
+    const gchar * meta_item, guint64 * dest)
+{
+  GstStructure *structure;
+  const GValue *value;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
+
+  structure = _meta_container_get_structure (container);
+
+  value = gst_structure_get_value (structure, meta_item);
+  if (!value || G_VALUE_TYPE (value) != G_TYPE_UINT64)
+    return FALSE;
+
+  *dest = g_value_get_uint64 (value);
+
+  return TRUE;
+}
+
+/**
+ * ges_meta_container_get_float:
+ * @container: Target container
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns FALSE if @meta_item
+ * can not be found.
+ */
+gboolean
+ges_meta_container_get_float (GESMetaContainer * container,
+    const gchar * meta_item, gfloat * dest)
+{
+  GstStructure *structure;
+  const GValue *value;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+  g_return_val_if_fail (dest != NULL, FALSE);
+
+  structure = _meta_container_get_structure (container);
+
+  value = gst_structure_get_value (structure, meta_item);
+  if (!value || G_VALUE_TYPE (value) != G_TYPE_FLOAT)
+    return FALSE;
+
+  *dest = g_value_get_float (value);
+
+  return TRUE;
+}
 
 static inline gchar *
 _gst_strdup0 (const gchar * s)
@@ -523,48 +830,52 @@ _gst_strdup0 (const gchar * s)
 /**
  * ges_meta_container_get_string:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
-CREATE_GETTER (string, gchar **);
+const gchar *
+ges_meta_container_get_string (GESMetaContainer * container,
+    const gchar * meta_item)
+{
+  GstStructure *structure;
+
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (meta_item != NULL, FALSE);
+
+  structure = _meta_container_get_structure (container);
+
+  return gst_structure_get_string (structure, meta_item);
+}
 
 /**
  * ges_meta_container_get_meta:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @value: (out) (transfer full): Destination to which value of metadata item will be copied
  *
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  *
  * Returns: %TRUE if the vale could be optained %FALSE otherwize
  */
-gboolean
-ges_meta_container_get_meta (GESMetadataContainer * container,
-    const gchar * tag, GValue * value)
+const GValue *
+ges_meta_container_get_meta (GESMetaContainer * container, const gchar * key)
 {
-  GESMetadata *data;
+  GstStructure *structure;
 
-  g_return_val_if_fail (GES_IS_METADATA_CONTAINER (container), FALSE);
-  g_return_val_if_fail (tag != NULL, FALSE);
-  g_return_val_if_fail (value != NULL, FALSE);
+  g_return_val_if_fail (GES_IS_META_CONTAINER (container), FALSE);
+  g_return_val_if_fail (key != NULL, FALSE);
 
-  data = ges_meta_container_get_data (container);
+  structure = _meta_container_get_structure (container);
 
-  if (!gst_tag_list_copy_value (value, data->list, tag))
-    return FALSE;
-
-  return (value != NULL);
+  return gst_structure_get_value (structure, key);
 }
 
 /**
  * ges_meta_container_get_date:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (date, GDate **);
@@ -572,9 +883,9 @@ CREATE_GETTER (date, GDate **);
 /**
  * ges_meta_container_get_date_time:
  * @container: Target container
- * @metadata_item: Name of the metadata item to get
- * @dest: (out): Destination to which value of metadata item will be copied
- * Gets the value of a given metadata item, returns NULL if @metadata_item
+ * @meta_item: Name of the meta item to get
+ * @dest: (out): Destination to which value of meta item will be copied
+ * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.
  */
 CREATE_GETTER (date_time, GstDateTime **);

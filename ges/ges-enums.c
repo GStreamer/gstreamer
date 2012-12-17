@@ -618,3 +618,26 @@ ges_video_test_pattern_get_type (void)
 
   return theType;
 }
+
+static void
+register_ges_meta_flag (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_ENUM (GES_META_READABLE), "GES_META_READABLE", "readable"},
+    {C_ENUM (GES_META_WRITABLE), "GES_META_WRITABLE", "writable"},
+    {C_ENUM (GES_META_READ_WRITE), "GES_META_READ_WRITE", "readwrite"},
+    {0, NULL, NULL}
+  };
+
+  *id = g_flags_register_static ("GESMetaFlag", values);
+}
+
+GType
+ges_meta_flag_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_ges_meta_flag, &id);
+  return id;
+}
