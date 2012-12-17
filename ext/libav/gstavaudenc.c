@@ -221,8 +221,7 @@ gst_ffmpegaudenc_getcaps (GstAudioEncoder * encoder, GstCaps * filter)
   /* audio needs no special care */
   caps = gst_audio_encoder_proxy_getcaps (encoder, NULL, filter);
 
-  GST_DEBUG_OBJECT (ffmpegaudenc,
-      "audio caps, return template %" GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (ffmpegaudenc, "audio caps, return %" GST_PTR_FORMAT, caps);
 
   return caps;
 }

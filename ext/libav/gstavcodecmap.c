@@ -387,8 +387,6 @@ gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
           caps = gst_caps_new_empty_simple (mimetype);
         }
 
-        gst_ffmpeg_video_set_pix_fmts (caps, codec ? codec->pix_fmts : NULL);
-
         break;
       }
     }
@@ -663,8 +661,6 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
   } else {
     caps = gst_caps_new_empty_simple (mimetype);
   }
-
-  gst_ffmpeg_audio_set_sample_fmts (caps, codec ? codec->sample_fmts : NULL);
 
   va_start (var_args, fieldname);
   gst_caps_set_simple_valist (caps, fieldname, var_args);
@@ -2120,6 +2116,22 @@ gst_ffmpeg_smpfmt_to_caps (enum AVSampleFormat sample_fmt,
   return caps;
 }
 
+static gboolean
+caps_has_field (GstCaps * caps, const gchar * field)
+{
+  guint i, n;
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    if (gst_structure_has_field (s, field))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 GstCaps *
 gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
     enum CodecID codec_id, gboolean encode, AVCodec * codec)
@@ -2140,6 +2152,9 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
   } else {
     caps = gst_ff_aud_caps_new (context, codec, codec_id, encode, "audio/x-raw",
         "layout", G_TYPE_STRING, "interleaved", NULL);
+    if (!caps_has_field (caps, "format"))
+      gst_ffmpeg_audio_set_sample_fmts (caps,
+          codec ? codec->sample_fmts : NULL);
   }
 
   return caps;
@@ -2160,6 +2175,8 @@ gst_ffmpeg_codectype_to_video_caps (AVCodecContext * context,
     caps =
         gst_ff_vid_caps_new (context, codec, codec_id, encode, "video/x-raw",
         NULL);
+    if (!caps_has_field (caps, "format"))
+      gst_ffmpeg_video_set_pix_fmts (caps, codec ? codec->pix_fmts : NULL);
   }
   return caps;
 }
