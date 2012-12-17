@@ -249,23 +249,36 @@ static void
 fill_frame_packed8_4 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint8 *data;
-  gint sindex;
+  guint8 *data_out, *tmp;
+  const gint *data_in[4];
+  gint dstride;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  sindex = 0;
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
+  data_in[3] = image->comps[3].data;
 
   for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++, sindex++) {
-      data[x * 4 + 0] = image->comps[3].data[sindex];
-      data[x * 4 + 1] = image->comps[0].data[sindex];
-      data[x * 4 + 2] = image->comps[1].data[sindex];
-      data[x * 4 + 3] = image->comps[2].data[sindex];
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      tmp[0] = *data_in[3];
+      tmp[1] = *data_in[0];
+      tmp[2] = *data_in[1];
+      tmp[3] = *data_in[2];
+
+      tmp += 4;
+      data_in[0]++;
+      data_in[1]++;
+      data_in[2]++;
+      data_in[3]++;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+    data_out += dstride;
   }
 }
 
@@ -273,26 +286,42 @@ static void
 fill_frame_packed16_4 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint16 *data;
-  gint sindex;
-  gint shift;
+  guint16 *data_out, *tmp;
+  const gint *data_in[4];
+  gint dstride;
+  gint shift[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  shift = 16 - image->comps[0].prec;
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
+  data_in[3] = image->comps[3].data;
 
-  sindex = 0;
+  shift[0] = 16 - image->comps[0].prec;
+  shift[1] = 16 - image->comps[1].prec;
+  shift[2] = 16 - image->comps[2].prec;
+  shift[3] = 16 - image->comps[3].prec;
 
   for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++, sindex++) {
-      data[x * 4 + 0] = image->comps[3].data[sindex] << shift;
-      data[x * 4 + 1] = image->comps[0].data[sindex] << shift;
-      data[x * 4 + 2] = image->comps[1].data[sindex] << shift;
-      data[x * 4 + 3] = image->comps[2].data[sindex] << shift;
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      tmp[0] = *data_in[3] << shift[3];
+      tmp[1] = *data_in[0] << shift[0];
+      tmp[2] = *data_in[1] << shift[1];
+      tmp[3] = *data_in[2] << shift[2];
+
+      tmp += 4;
+      data_in[0]++;
+      data_in[1]++;
+      data_in[2]++;
+      data_in[3]++;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+    data_out += dstride;
   }
 }
 
@@ -300,22 +329,33 @@ static void
 fill_frame_packed8_3 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint8 *data;
-  gint sindex;
+  guint8 *data_out, *tmp;
+  const gint *data_in[3];
+  gint dstride;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  sindex = 0;
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
 
   for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++, sindex++) {
-      data[x * 4 + 1] = image->comps[0].data[sindex];
-      data[x * 4 + 2] = image->comps[1].data[sindex];
-      data[x * 4 + 3] = image->comps[2].data[sindex];
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      tmp[1] = *data_in[0];
+      tmp[2] = *data_in[1];
+      tmp[3] = *data_in[2];
+
+      tmp += 4;
+      data_in[0]++;
+      data_in[1]++;
+      data_in[2]++;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+    data_out += dstride;
   }
 }
 
@@ -323,26 +363,38 @@ static void
 fill_frame_packed16_3 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint16 *data;
-  gint sindex;
-  gint shift;
+  guint16 *data_out, *tmp;
+  const gint *data_in[3];
+  gint dstride;
+  gint shift[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  shift = 16 - image->comps[0].prec;
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
 
-  sindex = 0;
+  shift[0] = 16 - image->comps[0].prec;
+  shift[1] = 16 - image->comps[1].prec;
+  shift[2] = 16 - image->comps[2].prec;
 
   for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++, sindex++) {
-      data[x * 4 + 0] = 0xffff;
-      data[x * 4 + 1] = image->comps[0].data[sindex] << shift;
-      data[x * 4 + 2] = image->comps[1].data[sindex] << shift;
-      data[x * 4 + 3] = image->comps[2].data[sindex] << shift;
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      tmp[1] = *data_in[0] << shift[0];
+      tmp[2] = *data_in[1] << shift[1];
+      tmp[3] = *data_in[2] << shift[2];
+
+      tmp += 4;
+      data_in[0]++;
+      data_in[1]++;
+      data_in[2]++;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+    data_out += dstride;
   }
 }
 
@@ -350,20 +402,27 @@ static void
 fill_frame_planar8_1 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint8 *data;
-  gint sindex;
+  guint8 *data_out, *tmp;
+  const gint *data_in;
+  gint dstride;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
 
-  sindex = 0;
+  data_in = image->comps[0].data;
 
   for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++, sindex++) {
-      data[x] = image->comps[0].data[sindex];
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      *tmp = *data_in;
+
+      tmp++;
+      data_in++;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+    data_out += dstride;
   }
 }
 
@@ -371,23 +430,30 @@ static void
 fill_frame_planar16_1 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint16 *data;
-  gint sindex;
+  guint16 *data_out, *tmp;
+  const gint *data_in;
+  gint dstride;
   gint shift;
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+
+  data_in = image->comps[0].data;
 
   shift = 16 - image->comps[0].prec;
 
-  sindex = 0;
-
   for (y = 0; y < h; y++) {
-    for (x = 0; x < w; x++, sindex++) {
-      data[x] = image->comps[0].data[sindex] << shift;
+    tmp = data_out;
+
+    for (x = 0; x < w; x++) {
+      *tmp = *data_in << shift;
+
+      tmp++;
+      data_in++;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+    data_out += dstride;
   }
 }
 
@@ -395,20 +461,56 @@ static void
 fill_frame_planar8_3 (GstVideoFrame * frame, opj_image_t * image)
 {
   gint c, x, y, w, h;
-  guint8 *data;
-  gint sindex;
+  guint8 *data_out, *tmp;
+  const gint *data_in;
+  gint dstride;
 
-  for (c = 0; c < image->numcomps; c++) {
+  for (c = 0; c < 3; c++) {
     w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
     h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, c);
-    data = GST_VIDEO_FRAME_COMP_DATA (frame, c);
+    dstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, c);
+    data_out = GST_VIDEO_FRAME_COMP_DATA (frame, c);
+    data_in = image->comps[c].data;
 
-    sindex = 0;
     for (y = 0; y < h; y++) {
-      for (x = 0; x < w; x++, sindex++) {
-        data[x] = image->comps[c].data[sindex];
+      tmp = data_out;
+
+      for (x = 0; x < w; x++) {
+        *tmp = *data_in;
+        tmp++;
+        data_in++;
       }
-      data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, c);
+      data_out += dstride;
+    }
+  }
+}
+
+static void
+fill_frame_planar16_3 (GstVideoFrame * frame, opj_image_t * image)
+{
+  gint c, x, y, w, h;
+  guint16 *data_out, *tmp;
+  const gint *data_in;
+  gint dstride;
+  gint shift;
+
+  for (c = 0; c < 3; c++) {
+    w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
+    h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, c);
+    dstride = GST_VIDEO_FRAME_COMP_STRIDE (frame, c) / 2;
+    data_out = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c);
+    data_in = image->comps[c].data;
+    shift = 16 - image->comps[c].prec;
+
+    for (y = 0; y < h; y++) {
+      tmp = data_out;
+
+      for (x = 0; x < w; x++) {
+        *tmp = *data_in << shift;
+        tmp++;
+        data_in++;
+      }
+      data_out += dstride;
     }
   }
 }
@@ -417,26 +519,39 @@ static void
 fill_frame_planar8_3_generic (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint8 *data;
+  guint8 *data_out, *tmp;
+  const gint *data_in[3];
+  gint dstride;
+  gint dx[3], dy[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
+
+  dx[0] = image->comps[0].dx;
+  dx[1] = image->comps[1].dx;
+  dx[2] = image->comps[2].dx;
+
+  dy[0] = image->comps[0].dy;
+  dy[1] = image->comps[1].dy;
+  dy[2] = image->comps[2].dy;
 
   for (y = 0; y < h; y++) {
+    tmp = data_out;
+
     for (x = 0; x < w; x++) {
-      data[x * 4 + 0] = 0xff;
-      data[x * 4 + 1] =
-          image->comps[0].data[(y / image->comps[0].dy) * (w /
-              image->comps[0].dx) + x / image->comps[0].dx];
-      data[x * 4 + 2] =
-          image->comps[1].data[(y / image->comps[1].dy) * (w /
-              image->comps[1].dx) + x / image->comps[1].dx];
-      data[x * 4 + 3] =
-          image->comps[2].data[(y / image->comps[2].dy) * (w /
-              image->comps[2].dx) + x / image->comps[2].dx];
+      tmp[0] = 0xff;
+      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
+      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
+      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp += 4;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+    data_out += dstride;
   }
 }
 
@@ -444,28 +559,42 @@ static void
 fill_frame_planar8_4_generic (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint8 *data;
+  guint8 *data_out, *tmp;
+  const gint *data_in[4];
+  gint dstride;
+  gint dx[4], dy[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
+  data_in[3] = image->comps[3].data;
+
+  dx[0] = image->comps[0].dx;
+  dx[1] = image->comps[1].dx;
+  dx[2] = image->comps[2].dx;
+  dx[3] = image->comps[3].dx;
+
+  dy[0] = image->comps[0].dy;
+  dy[1] = image->comps[1].dy;
+  dy[2] = image->comps[2].dy;
+  dy[3] = image->comps[3].dy;
 
   for (y = 0; y < h; y++) {
+    tmp = data_out;
+
     for (x = 0; x < w; x++) {
-      data[x * 4 + 0] =
-          image->comps[3].data[(y / image->comps[3].dy) * (w /
-              image->comps[3].dx) + x / image->comps[3].dx];
-      data[x * 4 + 1] =
-          image->comps[0].data[(y / image->comps[0].dy) * (w /
-              image->comps[0].dx) + x / image->comps[0].dx];
-      data[x * 4 + 2] =
-          image->comps[1].data[(y / image->comps[1].dy) * (w /
-              image->comps[1].dx) + x / image->comps[1].dx];
-      data[x * 4 + 3] =
-          image->comps[2].data[(y / image->comps[2].dy) * (w /
-              image->comps[2].dx) + x / image->comps[2].dx];
+      tmp[0] = data_in[3][((y / dy[3]) * w + x) / dx[3]];
+      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
+      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
+      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp += 4;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+    data_out += dstride;
   }
 }
 
@@ -473,29 +602,39 @@ static void
 fill_frame_planar16_3_generic (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint16 *data;
-  gint shift;
+  guint16 *data_out, *tmp;
+  const gint *data_in[3];
+  gint dstride;
+  gint dx[3], dy[3];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  shift = 16 - image->comps[0].prec;
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
+
+  dx[0] = image->comps[0].dx;
+  dx[1] = image->comps[1].dx;
+  dx[2] = image->comps[2].dx;
+
+  dy[0] = image->comps[0].dy;
+  dy[1] = image->comps[1].dy;
+  dy[2] = image->comps[2].dy;
 
   for (y = 0; y < h; y++) {
+    tmp = data_out;
+
     for (x = 0; x < w; x++) {
-      data[x * 4 + 0] = 0xffff;
-      data[x * 4 + 1] =
-          image->comps[0].data[(y / image->comps[0].dy) * (w /
-              image->comps[0].dx) + x / image->comps[0].dx] << shift;
-      data[x * 4 + 2] =
-          image->comps[1].data[(y / image->comps[1].dy) * (w /
-              image->comps[1].dx) + x / image->comps[1].dx] << shift;
-      data[x * 4 + 3] =
-          image->comps[2].data[(y / image->comps[2].dy) * (w /
-              image->comps[2].dx) + x / image->comps[2].dx] << shift;
+      tmp[0] = 0xff;
+      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
+      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
+      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp += 4;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
+    data_out += dstride;
   }
 }
 
@@ -503,53 +642,42 @@ static void
 fill_frame_planar16_4_generic (GstVideoFrame * frame, opj_image_t * image)
 {
   gint x, y, w, h;
-  guint16 *data;
-  gint shift;
+  guint16 *data_out, *tmp;
+  const gint *data_in[4];
+  gint dstride;
+  gint dx[4], dy[4];
 
   w = GST_VIDEO_FRAME_WIDTH (frame);
   h = GST_VIDEO_FRAME_HEIGHT (frame);
-  data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  data_out = (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  dstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
 
-  shift = 16 - image->comps[0].prec;
+  data_in[0] = image->comps[0].data;
+  data_in[1] = image->comps[1].data;
+  data_in[2] = image->comps[2].data;
+  data_in[3] = image->comps[3].data;
+
+  dx[0] = image->comps[0].dx;
+  dx[1] = image->comps[1].dx;
+  dx[2] = image->comps[2].dx;
+  dx[3] = image->comps[3].dx;
+
+  dy[0] = image->comps[0].dy;
+  dy[1] = image->comps[1].dy;
+  dy[2] = image->comps[2].dy;
+  dy[3] = image->comps[3].dy;
 
   for (y = 0; y < h; y++) {
+    tmp = data_out;
+
     for (x = 0; x < w; x++) {
-      data[x * 4 + 0] =
-          image->comps[3].data[(y / image->comps[3].dy) * (w /
-              image->comps[3].dx) + x / image->comps[3].dx] << shift;
-      data[x * 4 + 1] =
-          image->comps[0].data[(y / image->comps[0].dy) * (w /
-              image->comps[0].dx) + x / image->comps[0].dx] << shift;
-      data[x * 4 + 2] =
-          image->comps[1].data[(y / image->comps[1].dy) * (w /
-              image->comps[1].dx) + x / image->comps[1].dx] << shift;
-      data[x * 4 + 3] =
-          image->comps[2].data[(y / image->comps[2].dy) * (w /
-              image->comps[2].dx) + x / image->comps[2].dx] << shift;
+      tmp[0] = data_in[3][((y / dy[3]) * w + x) / dx[3]];
+      tmp[1] = data_in[0][((y / dy[0]) * w + x) / dx[0]];
+      tmp[2] = data_in[1][((y / dy[1]) * w + x) / dx[1]];
+      tmp[3] = data_in[2][((y / dy[2]) * w + x) / dx[2]];
+      tmp += 4;
     }
-    data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
-  }
-}
-
-static void
-fill_frame_planar16_3 (GstVideoFrame * frame, opj_image_t * image)
-{
-  gint c, x, y, w, h;
-  guint16 *data;
-  gint sindex;
-
-  for (c = 0; c < image->numcomps; c++) {
-    w = GST_VIDEO_FRAME_COMP_WIDTH (frame, c);
-    h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, c);
-    data = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, c);
-
-    sindex = 0;
-    for (y = 0; y < h; y++) {
-      for (x = 0; x < w; x++, sindex++) {
-        data[x] = image->comps[c].data[sindex];
-      }
-      data += GST_VIDEO_FRAME_PLANE_STRIDE (frame, c) / 2;
-    }
+    data_out += dstride;
   }
 }
 
