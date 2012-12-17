@@ -1115,6 +1115,7 @@ gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
+    res = gst_caps_make_writable (res);
 
     /* Append the template caps because we still want to accept
      * caps without any fields in the case upstream does not
