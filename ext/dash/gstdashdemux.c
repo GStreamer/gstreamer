@@ -1502,15 +1502,18 @@ static GstCaps *
 gst_dash_demux_get_video_input_caps (GstDashDemux * demux,
     GstActiveStream * stream)
 {
-  guint width, height;
+  guint width = 0, height = 0;
   const gchar *mimeType = NULL;
   GstCaps *caps = NULL;
 
   if (stream == NULL)
     return NULL;
 
-  width = gst_mpd_client_get_video_stream_width (stream);
-  height = gst_mpd_client_get_video_stream_height (stream);
+  /* if bitstreamSwitching is true we dont need to swich pads on resolution change */
+  if (!gst_mpd_client_get_bitstream_switching_flag (stream)) {
+    width = gst_mpd_client_get_video_stream_width (stream);
+    height = gst_mpd_client_get_video_stream_height (stream);
+  }
   mimeType = gst_mpd_client_get_stream_mimeType (stream);
   if (mimeType == NULL)
     return NULL;
@@ -1528,15 +1531,18 @@ static GstCaps *
 gst_dash_demux_get_audio_input_caps (GstDashDemux * demux,
     GstActiveStream * stream)
 {
-  guint rate, channels;
+  guint rate = 0, channels = 0;
   const gchar *mimeType;
   GstCaps *caps = NULL;
 
   if (stream == NULL)
     return NULL;
 
-  channels = gst_mpd_client_get_audio_stream_num_channels (stream);
-  rate = gst_mpd_client_get_audio_stream_rate (stream);
+  /* if bitstreamSwitching is true we dont need to swich pads on rate/channels change */
+  if (!gst_mpd_client_get_bitstream_switching_flag (stream)) {
+    channels = gst_mpd_client_get_audio_stream_num_channels (stream);
+    rate = gst_mpd_client_get_audio_stream_rate (stream);
+  }
   mimeType = gst_mpd_client_get_stream_mimeType (stream);
   if (mimeType == NULL)
     return NULL;

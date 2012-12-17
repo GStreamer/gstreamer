@@ -3196,6 +3196,14 @@ const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream)
   return gst_mpdparser_mimetype_to_caps (mimeType);
 }
 
+const gboolean gst_mpd_client_get_bitstream_switching_flag (GstActiveStream * stream)
+{
+  if (stream == NULL || stream->cur_adapt_set == NULL)
+    return FALSE;
+
+  return stream->cur_adapt_set->bitstreamSwitching;
+}
+
 guint gst_mpd_client_get_video_stream_width (GstActiveStream * stream)
 {
   guint width;
