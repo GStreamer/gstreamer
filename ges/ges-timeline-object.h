@@ -156,11 +156,13 @@ typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject * object,
  * The #GESTimelineObject base class.
  */
 struct _GESTimelineObject {
-  /*< private >*/
   GInitiallyUnowned parent;
 
-  GESTimelineObjectPrivate *priv;
-  
+  /*< readonly >*/
+  /* A list of TrackObject controlled by this TimelineObject sorted by
+   * priority */
+  GList *trackobjects;
+
   /* We don't add those properties to the priv struct for optimization purposes
    * start, inpoint, duration and fullduration are in nanoseconds */
   guint64 start;    /* position (in time) of the object in the layer */
@@ -170,6 +172,9 @@ struct _GESTimelineObject {
   guint32 height;       /* the span of priorities this object needs */
 
   guint64 fullduration; /* Full usable duration of the object (-1: no duration) */
+
+  /*< private >*/
+  GESTimelineObjectPrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING_LARGE];
