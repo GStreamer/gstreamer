@@ -821,8 +821,6 @@ GESFormatterPrivate
 <TITLE>GESPitiviFormatter</TITLE>
 GESPitiviFormatter
 ges_pitivi_formatter_new
-ges_pitivi_formatter_set_sources
-ges_pitivi_formatter_get_sources
 <SUBSECTION Standard>
 GESPitiviFormatterClass
 GESPitiviFormatterPrivate

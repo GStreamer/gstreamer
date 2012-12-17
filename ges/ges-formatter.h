@@ -56,14 +56,15 @@ struct _GESFormatter {
   GESFormatterPrivate *priv;
 
   /*< protected >*/
+  GESProject *project;
   GESTimeline *timeline;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-typedef gboolean (*GESFormatterCanLoadURIMethod) (const gchar * uri, GError **error);
-typedef gboolean (*GESFormatterCanSaveURIMethod) (const gchar * uri, GError **error);
+typedef gboolean (*GESFormatterCanLoadURIMethod) (GESFormatterClass *class, const gchar * uri, GError **error);
+typedef gboolean (*GESFormatterCanSaveURIMethod) (GESFormatterClass *class, const gchar * uri, GError **error);
 
 /**
  * GESFormatterLoadFromURIMethod:
@@ -88,6 +89,7 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  * @formatter: a #GESFormatter
  * @timeline: a #GESTimeline
  * @uri: the URI to save to
+ * @overwrite: Whether the file should be overwritten in case it exists
  *
  * Virtual method for saving a timeline to a uri.
  *
@@ -97,8 +99,8 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  * else FALSE.
  */
 typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
-               GESTimeline *timeline,
-               const gchar * uri, GError **error);
+               GESTimeline *timeline, const gchar * uri, gboolean overwrite,
+               GError **error);
 
 /**
  * GESFormatterClass:
@@ -121,10 +123,14 @@ struct _GESFormatterClass {
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
 
-  /*< private >*/
-  /* FIXME : formatter name */
-  /* FIXME : formatter description */
-  /* FIXME : format name/mime-type */
+  /* < private > */
+  const gchar *name;
+  const gchar *description;
+  const gchar *extension;
+  const gchar *mimetype;
+  gdouble version;
+  GstRank rank;
+
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
@@ -132,7 +138,14 @@ struct _GESFormatterClass {
 
 GType ges_formatter_get_type (void);
 
-/* Main Formatter methods */
+void ges_formatter_class_register_metas (GESFormatterClass * class,
+                                         const gchar *name,
+                                         const gchar *description,
+                                         const gchar *extension,
+                                         const gchar *mimetype,
+                                         gdouble version,
+                                         GstRank rank);
+
 gboolean ges_formatter_can_load_uri     (const gchar * uri, GError **error);
 gboolean ges_formatter_can_save_uri     (const gchar * uri, GError **error);
 
@@ -144,6 +157,9 @@ gboolean ges_formatter_load_from_uri    (GESFormatter * formatter,
 gboolean ges_formatter_save_to_uri      (GESFormatter * formatter,
                                          GESTimeline *timeline,
                                          const gchar *uri,
+                                         gboolean overwrite,
                                          GError **error);
+
+GESAsset *ges_formatter_get_default    (void);
 
 #endif /* _GES_FORMATTER */

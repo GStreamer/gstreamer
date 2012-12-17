@@ -36,15 +36,15 @@
 #include <unistd.h>
 #define GetCurrentDir getcwd
 
+/* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
+#define VERSION "0.2"
+#define DOUBLE_VERSION 0.2
+
 G_DEFINE_TYPE (GESPitiviFormatter, ges_pitivi_formatter, GES_TYPE_FORMATTER);
 
 #undef GST_CAT_DEFAULT
 GST_DEBUG_CATEGORY_STATIC (ges_pitivi_formatter_debug);
 #define GST_CAT_DEFAULT ges_pitivi_formatter_debug
-
-/* The PiTiVi etree formatter is 0.1 we set GES one to 0.2 */
-#define VERSION "0.2"
-
 
 typedef struct SrcMapping
 {
@@ -110,7 +110,8 @@ list_table_destroyer (gpointer key, gpointer value, void *unused)
 }
 
 static gboolean
-pitivi_can_load_uri (const gchar * uri, GError ** error)
+pitivi_can_load_uri (GESFormatterClass * class, const gchar * uri,
+    GError ** error)
 {
   xmlDocPtr doc;
   gboolean ret = TRUE;
@@ -431,7 +432,8 @@ save_timeline_objects (xmlTextWriterPtr writer, GList * list)
 
 static gboolean
 save_pitivi_timeline_to_uri (GESFormatter * formatter,
-    GESTimeline * timeline, const gchar * uri, GError ** error)
+    GESTimeline * timeline, const gchar * uri, gboolean overwrite,
+    GError ** error)
 {
   xmlTextWriterPtr writer;
   GList *list = NULL, *layers = NULL;
@@ -741,9 +743,9 @@ track_object_added_cb (GESTimelineObject * object,
     g_hash_table_steal (props_table, "current-formatter");
 
     priv->sources_to_load = g_list_remove (priv->sources_to_load, object);
-    if (!priv->sources_to_load)
-      /* ges_formatter_emit_loaded (GES_FORMATTER (formatter)); */
-      GST_FIXME ("This should be reimplemented");
+    if (!priv->sources_to_load && GES_FORMATTER (formatter)->project)
+      ges_project_set_loaded (GES_FORMATTER (formatter)->project,
+          GES_FORMATTER (formatter));
   }
 
   if (lockedstr && !g_strcmp0 (lockedstr, "(bool)False"))
@@ -1036,9 +1038,10 @@ load_pitivi_file_from_uri (GESFormatter * self,
   /* If there are no timeline objects to load we should emit
    * 'project-loaded' signal.
    */
-  if (!g_hash_table_size (priv->timeline_objects_table)) {
-    /*ges_formatter_emit_loaded (self); */
-    GST_FIXME ("This should be reimplemented");
+  if (!g_hash_table_size (priv->timeline_objects_table) &&
+      GES_FORMATTER (self)->project) {
+    ges_project_set_loaded (GES_FORMATTER (self)->project,
+        GES_FORMATTER (self));
   } else {
     if (!make_timeline_objects (self)) {
       GST_ERROR ("Couldn't deserialise the project properly");
@@ -1096,6 +1099,10 @@ ges_pitivi_formatter_class_init (GESPitiviFormatterClass * klass)
   formatter_klass->save_to_uri = save_pitivi_timeline_to_uri;
   formatter_klass->load_from_uri = load_pitivi_file_from_uri;
   object_class->finalize = ges_pitivi_formatter_finalize;
+
+  ges_formatter_class_register_metas (formatter_klass, "pitivi",
+      "The PiTiVi file format", "xptv", "text/x-xptv",
+      DOUBLE_VERSION, GST_RANK_MARGINAL);
 }
 
 static void
@@ -1137,62 +1144,4 @@ GESPitiviFormatter *
 ges_pitivi_formatter_new (void)
 {
   return g_object_new (GES_TYPE_PITIVI_FORMATTER, NULL);
-}
-
-/* API */
-
-/**
- * ges_pitivi_formatter_set_sources:
- * @formatter: The #GESPitiviFormatter to set sources on
- * @infos: (transfer none) (element-type GstDiscovererInfo):
- *        The #GstDiscovererInfo infos to add as sources.
- *
- * Add @infos as the formatter sources so we can save sources that are
- * not in the timeline when saving.
- *
- * Returns: %TRUE if everything wen fine, %FALSE otherwise
- */
-gboolean
-ges_pitivi_formatter_set_sources (GESPitiviFormatter * formatter, GList * infos)
-{
-  GList *tmp;
-  gchar *strid;
-  GESPitiviFormatterPrivate *priv = formatter->priv;
-
-  g_hash_table_remove_all (priv->saving_source_table);
-  priv->nb_sources = 1;
-
-  for (tmp = infos; tmp; tmp = g_list_next (tmp)) {
-    GstDiscovererInfo *info = GST_DISCOVERER_INFO (tmp->data);
-    gchar *uri = g_strdup (gst_discoverer_info_get_uri (info));
-
-    strid = g_strdup_printf ("%i", priv->nb_sources);
-
-    g_hash_table_insert (priv->saving_source_table, uri, strid);
-    priv->nb_sources++;
-  }
-
-  return TRUE;
-}
-
-/**
- * ges_pitivi_formatter_get_sources:
- * @formatter: The #GESPitiviFormatter to get sources from
- *
- * Returns: (transfer full) (element-type utf8): %TRUE if everything went
- * fine, %FALSE otherwise
- */
-GList *
-ges_pitivi_formatter_get_sources (GESPitiviFormatter * formatter)
-{
-  GList *sources = NULL;
-  GHashTableIter iter;
-  gpointer key, value;
-
-  g_hash_table_iter_init (&iter, formatter->priv->source_uris);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    sources = g_list_prepend (sources, g_strdup (value));
-  }
-
-  return sources;
 }

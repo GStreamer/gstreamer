@@ -22,25 +22,6 @@
  * SECTION:ges-formatter
  * @short_description: Timeline saving and loading.
  *
- * The #GESFormatter is the object responsible for loading and/or saving the contents
- * of a #GESTimeline to/from various formats.
- *
- * In order to save a #GESTimeline, you can either let GES pick a default formatter by
- * using ges_timeline_save_to_uri(), or pick your own formatter and use
- * ges_formatter_save_to_uri().
- *
- * To load a #GESTimeline, you might want to be able to track the progress of the loading,
- * in which case you should create an empty #GESTimeline, connect to the relevant signals
- * and call ges_formatter_load_from_uri().
- *
- * If you do not care about tracking the loading progress, you can use the convenience
- * ges_timeline_new_from_uri() method.
- *
- * Support for saving or loading new formats can be added by creating a subclass of
- * #GESFormatter and implement the various vmethods of #GESFormatterClass.
- *
- * Note that subclasses should call ges_formatter_project_loaded when they are done
- * loading a project.
  **/
 
 #include <gst/gst.h>
@@ -51,6 +32,7 @@
 #include "ges-internal.h"
 #include "ges.h"
 
+/* TODO Add a GCancellable somewhere in the API */
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESFormatter, ges_formatter,
@@ -63,50 +45,22 @@ struct _GESFormatterPrivate
 };
 
 static void ges_formatter_dispose (GObject * object);
-static gboolean load_from_uri (GESFormatter * formatter, GESTimeline *
-    timeline, const gchar * uri, GError ** error);
-static gboolean save_to_uri (GESFormatter * formatter, GESTimeline *
-    timeline, const gchar * uri, GError ** error);
-static gboolean default_can_load_uri (const gchar * uri, GError ** error);
-static gboolean default_can_save_uri (const gchar * uri, GError ** error);
-
-enum
-{
-  LAST_SIGNAL
-};
-
-/* Utils */
-static GESFormatterClass *
-ges_formatter_find_for_uri (const gchar * uri)
-{
-  GType *formatters;
-  guint n_formatters, i;
-  GESFormatterClass *class, *ret = NULL;
-
-  formatters = g_type_children (GES_TYPE_FORMATTER, &n_formatters);
-  for (i = 0; i < n_formatters; i++) {
-    class = g_type_class_ref (formatters[i]);
-
-    if (class->can_load_uri (uri, NULL)) {
-      ret = class;
-      break;
-    }
-    g_type_class_unref (class);
-  }
-
-  g_free (formatters);
-
-  return ret;
-}
+static gboolean default_can_load_uri (GESFormatterClass * class,
+    const gchar * uri, GError ** error);
+static gboolean default_can_save_uri (GESFormatterClass * class,
+    const gchar * uri, GError ** error);
 
 /* GESExtractable implementation */
 static gchar *
 extractable_check_id (GType type, const gchar * id)
 {
-  if (gst_uri_is_valid (id))
+  GESFormatterClass *class;
+
+  if (id)
     return g_strdup (id);
 
-  return NULL;
+  class = g_type_class_peek (type);
+  return g_strdup (class->name);
 }
 
 static gchar *
@@ -120,19 +74,27 @@ extractable_get_id (GESExtractable * self)
   return g_strdup (ges_asset_get_id (asset));
 }
 
-static GType
-extractable_get_real_extractable_type (GType type, const gchar * id)
+static gboolean
+_register_metas (GESExtractableInterface * iface, GObjectClass * class,
+    GESAsset * asset)
 {
-  GType real_type = G_TYPE_NONE;
-  GESFormatterClass *class;
+  GESFormatterClass *fclass = GES_FORMATTER_CLASS (class);
+  GESMetaContainer *container = GES_META_CONTAINER (asset);
 
-  class = ges_formatter_find_for_uri (id);
-  if (class) {
-    real_type = G_OBJECT_CLASS_TYPE (class);
-    g_type_class_unref (class);
-  }
+  ges_meta_container_register_meta_string (container, GES_META_READABLE,
+      GES_META_FORMATTER_NAME, fclass->name);
+  ges_meta_container_register_meta_string (container, GES_META_READABLE,
+      GES_META_DESCRIPTION, fclass->description);
+  ges_meta_container_register_meta_string (container, GES_META_READABLE,
+      GES_META_FORMATTER_MIMETYPE, fclass->mimetype);
+  ges_meta_container_register_meta_string (container, GES_META_READABLE,
+      GES_META_FORMATTER_EXTENSION, fclass->extension);
+  ges_meta_container_register_meta_double (container, GES_META_READABLE,
+      GES_META_FORMATTER_VERSION, fclass->version);
+  ges_meta_container_register_meta_uint (container, GES_META_READABLE,
+      GES_META_FORMATTER_RANK, fclass->rank);
 
-  return real_type;
+  return TRUE;
 }
 
 static void
@@ -140,7 +102,8 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_id = extractable_get_id;
-  iface->get_real_extractable_type = extractable_get_real_extractable_type;
+  iface->asset_type = GES_TYPE_ASSET;
+  iface->register_metas = _register_metas;
 }
 
 static void
@@ -154,33 +117,48 @@ ges_formatter_class_init (GESFormatterClass * klass)
 
   klass->can_load_uri = default_can_load_uri;
   klass->can_save_uri = default_can_save_uri;
-  klass->load_from_uri = load_from_uri;
-  klass->save_to_uri = save_to_uri;
+  klass->load_from_uri = NULL;
+  klass->save_to_uri = NULL;
+
+  /* We set dummy  metas */
+  klass->name = "base-formatter";
+  klass->extension = "noextension";
+  klass->description = "Formatter base class, you should give"
+      " a name to your formatter";
+  klass->mimetype = "No mimetype";
+  klass->version = 0.0;
+  klass->rank = GST_RANK_NONE;
 }
 
 static void
 ges_formatter_init (GESFormatter * object)
 {
+  object->priv = G_TYPE_INSTANCE_GET_PRIVATE (object,
+      GES_TYPE_FORMATTER, GESFormatterPrivate);
+  object->project = NULL;
 }
 
 static void
 ges_formatter_dispose (GObject * object)
 {
-
-
+  ges_formatter_set_project (GES_FORMATTER (object), NULL);
 }
 
 static gboolean
-default_can_load_uri (const gchar * uri, GError ** error)
+default_can_load_uri (GESFormatterClass * class, const gchar * uri,
+    GError ** error)
 {
-  GST_ERROR ("No 'can_load_uri' vmethod implementation");
+  GST_DEBUG ("%s: no 'can_load_uri' vmethod implementation",
+      g_type_name (G_OBJECT_CLASS_TYPE (class)));
   return FALSE;
 }
 
 static gboolean
-default_can_save_uri (const gchar * uri, GError ** error)
+default_can_save_uri (GESFormatterClass * class,
+    const gchar * uri, GError ** error)
 {
-  GST_ERROR ("No 'can_save_uri' vmethod implementation");
+  GST_DEBUG ("%s: no 'can_save_uri' vmethod implementation",
+      g_type_name (G_OBJECT_CLASS_TYPE (class)));
   return FALSE;
 }
 
@@ -199,6 +177,10 @@ default_can_save_uri (const gchar * uri, GError ** error)
 gboolean
 ges_formatter_can_load_uri (const gchar * uri, GError ** error)
 {
+  gboolean ret = FALSE;
+  GList *formatter_assets, *tmp;
+  GESFormatterClass *class = NULL;
+
   if (!(gst_uri_is_valid (uri))) {
     GST_ERROR ("Invalid uri!");
     return FALSE;
@@ -211,10 +193,21 @@ ges_formatter_can_load_uri (const gchar * uri, GError ** error)
     return FALSE;
   }
 
-  /* FIXME Reimplement */
-  GST_FIXME ("This should be reimplemented");
+  formatter_assets = ges_list_assets (GES_TYPE_FORMATTER);
+  for (tmp = formatter_assets; tmp; tmp = tmp->next) {
+    GESAsset *asset = GES_ASSET (tmp->data);
 
-  return FALSE;
+    class = g_type_class_ref (ges_asset_get_extractable_type (asset));
+    if (class->can_load_uri (class, uri, error)) {
+      g_type_class_unref (class);
+      ret = TRUE;
+      break;
+    }
+    g_type_class_unref (class);
+  }
+
+  g_list_free (formatter_assets);
+  return ret;
 }
 
 /**
@@ -283,19 +276,12 @@ ges_formatter_load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
   return ret;
 }
 
-static gboolean
-load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
-    const gchar * uri, GError ** error)
-{
-  GST_FIXME ("This should be reimplemented");
-  return FALSE;
-}
-
 /**
  * ges_formatter_save_to_uri:
  * @formatter: a #GESFormatter
  * @timeline: a #GESTimeline
  * @uri: a #gchar * pointing to a URI
+ * @overwrite: %TRUE to overwrite file if it exists
  * @error: A #GError that will be set in case of error
  *
  * Save data from timeline to the given URI.
@@ -306,22 +292,133 @@ load_from_uri (GESFormatter * formatter, GESTimeline * timeline,
 
 gboolean
 ges_formatter_save_to_uri (GESFormatter * formatter, GESTimeline *
-    timeline, const gchar * uri, GError ** error)
+    timeline, const gchar * uri, gboolean overwrite, GError ** error)
 {
   GESFormatterClass *klass = GES_FORMATTER_GET_CLASS (formatter);
 
   if (klass->save_to_uri)
-    return klass->save_to_uri (formatter, timeline, uri, error);
+    return klass->save_to_uri (formatter, timeline, uri, overwrite, error);
 
   GST_ERROR ("not implemented!");
 
   return FALSE;
 }
 
-static gboolean
-save_to_uri (GESFormatter * formatter, GESTimeline * timeline,
-    const gchar * uri, GError ** error)
+/**
+ * ges_formatter_get_default:
+ *
+ * Get the default #GESAsset to use as formatter. It will return
+ * the asset for the #GESFormatter that has the highest @rank
+ *
+ * Returns: (transfer none): The #GESAsset for the formatter with highest @rank
+ */
+GESAsset *
+ges_formatter_get_default (void)
 {
-  GST_FIXME ("This should be reimplemented");
-  return FALSE;
+  GList *assets, *tmp;
+  GESAsset *ret = NULL;
+  GstRank tmprank, rank = GST_RANK_NONE;
+
+  assets = ges_list_assets (GES_TYPE_FORMATTER);
+  for (tmp = assets; tmp; tmp = tmp->next) {
+    tmprank = GST_RANK_NONE;
+    ges_meta_container_get_uint (GES_META_CONTAINER (tmp->data),
+        GES_META_FORMATTER_RANK, &tmprank);
+
+    if (tmprank > rank) {
+      rank = tmprank;
+      ret = GES_ASSET (tmp->data);
+    }
+  }
+  g_list_free (assets);
+
+  return ret;
+}
+
+void
+ges_formatter_class_register_metas (GESFormatterClass * class,
+    const gchar * name, const gchar * description, const gchar * extension,
+    const gchar * mimetype, gdouble version, GstRank rank)
+{
+  class->name = name;
+  class->description = description;
+  class->extension = extension;
+  class->mimetype = mimetype;
+  class->version = version;
+  class->rank = rank;
+}
+
+/* Main Formatter methods */
+
+/*< protected >*/
+void
+ges_formatter_set_project (GESFormatter * formatter, GESProject * project)
+{
+  formatter->project = project;
+}
+
+GESProject *
+ges_formatter_get_project (GESFormatter * formatter)
+{
+  return formatter->project;
+}
+
+static void
+_list_formatters (GType * formatters, guint n_formatters)
+{
+  GType *tmptypes, type;
+  guint tmp_n_types, i;
+
+  for (i = 0; i < n_formatters; i++) {
+    type = formatters[i];
+    tmptypes = g_type_children (type, &tmp_n_types);
+    if (tmp_n_types) {
+      /* Recurse as g_type_children does not */
+      _list_formatters (tmptypes, tmp_n_types);
+      g_free (tmptypes);
+    }
+
+    if (G_TYPE_IS_ABSTRACT (type)) {
+      GST_DEBUG ("%s is abstract, not using", g_type_name (type));
+    } else {
+      gst_object_unref (ges_asset_request (type, NULL, NULL));
+    }
+  }
+}
+
+void
+_init_formatter_assets (void)
+{
+  GType *formatters;
+  guint n_formatters;
+
+  formatters = g_type_children (GES_TYPE_FORMATTER, &n_formatters);
+  _list_formatters (formatters, n_formatters);
+  g_free (formatters);
+}
+
+GESAsset *
+_find_formatter_asset_for_uri (const gchar * uri)
+{
+  GESFormatterClass *class = NULL;
+  GList *formatter_assets, *tmp;
+  GESAsset *asset = NULL;
+
+  formatter_assets = ges_list_assets (GES_TYPE_FORMATTER);
+  for (tmp = formatter_assets; tmp; tmp = tmp->next) {
+    asset = GES_ASSET (tmp->data);
+    class = g_type_class_ref (ges_asset_get_extractable_type (asset));
+    if (class->can_load_uri (class, uri, NULL)) {
+      g_type_class_unref (class);
+      asset = gst_object_ref (asset);
+      break;
+    }
+
+    asset = NULL;
+    g_type_class_unref (class);
+  }
+
+  g_list_free (formatter_assets);
+
+  return asset;
 }

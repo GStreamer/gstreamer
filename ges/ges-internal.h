@@ -103,12 +103,20 @@ ges_extractable_get_real_extractable_type_for_id (GType type, const gchar * id);
 
 gboolean ges_extractable_register_metas          (GType extractable_type, GESAsset *asset);
 
-#if 0
+/* GESFormatter internal methods */
+void
+ges_formatter_set_project                        (GESFormatter *formatter,
+                                                  GESProject *project);
+GESProject *
+ges_formatter_get_project                        (GESFormatter *formatter);
+GESAsset * _find_formatter_asset_for_uri         (const gchar *uri);
+
 /* GESProject internal methods */
 gboolean ges_project_set_loaded                  (GESProject * project,
                                                   GESFormatter *formatter);
 gchar * ges_project_try_updating_id              (GESProject *self,
                                                   GESAsset *asset,
                                                   GError *error);
+
+void _init_formatter_assets                      (void);
 #endif
-#endif /* __GES_INTERNAL_H__ */

@@ -50,6 +50,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-asset.c \
 	ges-asset-file-source.c \
 	ges-extractable.c \
+	ges-project.c \
 	ges-utils.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
@@ -97,6 +98,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-asset.h \
 	ges-asset-file-source.h \
 	ges-extractable.h \
+	ges-project.h \
 	ges-utils.h
 
 noinst_HEADERS = \
