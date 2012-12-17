@@ -475,7 +475,7 @@ gboolean gst_mpd_client_get_next_header (GstMpdClient *client, const gchar **uri
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 
 /* Period selection */
-gboolean gst_mpd_client_get_next_period (GstMpdClient *client);
+gboolean gst_mpd_client_get_period_by_index (GstMpdClient *client, guint period_idx);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);

@@ -527,10 +527,9 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       }
       if (current_period != demux->client->period_idx) {
         GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
-        /* FIXME: we should'nt fiddle with client internals like that */
-        demux->client->period_idx = current_period;
-        /* setup video, audio and subtitle streams */
-        if (!gst_dash_demux_setup_all_streams (demux))
+        /* setup video, audio and subtitle streams, starting from the new Period */
+        if (!gst_mpd_client_get_period_by_index (demux->client, current_period) ||
+            !gst_dash_demux_setup_all_streams (demux))
           return FALSE;
       }
 
@@ -707,11 +706,12 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
             ("Incompatible manifest file."), (NULL));
         return FALSE;
       }
-      /* start from first Period */
-      demux->client->period_idx = 0;
-      /* setup video, audio and subtitle streams */
-      if (!gst_dash_demux_setup_all_streams (demux))
+
+      /* setup video, audio and subtitle streams, starting from first Period */
+      if (!gst_mpd_client_get_period_by_index (demux->client, 0) ||
+          !gst_dash_demux_setup_all_streams (demux))
         return FALSE;
+
       /* Send duration message */
       if (!gst_mpd_client_is_live (demux->client)) {
         GstClockTime duration =
@@ -1196,9 +1196,9 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
     while (!gst_dash_demux_get_next_fragment_set (demux)) {
       if (demux->end_of_period) {
         GST_INFO_OBJECT (demux, "Reached the end of the Period");
-        /* load the next Period in the Media Presentation */
-        if (!gst_mpd_client_get_next_period (demux->client)
-            || !gst_dash_demux_setup_all_streams (demux)) {
+        /* setup video, audio and subtitle streams, starting from the next Period */
+        if (!gst_mpd_client_get_period_by_index (demux->client, demux->client->period_idx + 1) ||
+            !gst_dash_demux_setup_all_streams (demux)) {
           GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
           demux->end_of_manifest = TRUE;
           if (GST_STATE (demux) != GST_STATE_PLAYING) {

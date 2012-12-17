@@ -3054,18 +3054,18 @@ gst_mpd_client_get_media_presentation_duration (GstMpdClient * client)
 }
 
 gboolean
-gst_mpd_client_get_next_period (GstMpdClient *client)
+gst_mpd_client_get_period_by_index (GstMpdClient *client, guint period_idx)
 {
   GstStreamPeriod *next_stream_period;
 
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->periods != NULL, FALSE);
 
-  next_stream_period = g_list_nth_data (client->periods, client->period_idx + 1);
+  next_stream_period = g_list_nth_data (client->periods, period_idx);
   if (next_stream_period == NULL)
     return FALSE;
 
-  client->period_idx++;
+  client->period_idx = period_idx;
 
   return TRUE;
 }
