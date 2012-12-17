@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY (mpeg4v_parse_debug);
 #define GST_CAT_DEFAULT mpeg4v_parse_debug
 
 static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
+    GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
         "mpegversion = (int) 4, "
@@ -51,7 +51,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
     );
 
 static GstStaticPadTemplate sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
+    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/mpeg, "
         "mpegversion = (int) 4, " "systemstream = (boolean) false; "
@@ -852,7 +852,7 @@ gst_mpeg4vparse_get_caps (GstBaseParse * parse, GstCaps * filter)
   GstCaps *res;
 
   templ = gst_pad_get_pad_template_caps (GST_BASE_PARSE_SINK_PAD (parse));
-  peercaps = gst_pad_get_allowed_caps (GST_BASE_PARSE_SRC_PAD (parse));
+  peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), filter);
 
   if (peercaps) {
     guint i, n;
