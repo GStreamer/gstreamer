@@ -712,8 +712,28 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
       "setting its asset", udata->object);
 
   if (error) {
+    GESProject *project = udata->layer->timeline ?
+        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
+            (udata->layer->timeline))) : NULL;
+    if (project) {
+      gchar *possible_id;
+
+      possible_id = ges_project_try_updating_id (project, source, error);
+      if (possible_id) {
+        ges_asset_request_async (ges_asset_get_extractable_type (source),
+            possible_id, NULL, (GAsyncReadyCallback) new_asset_cb, udata);
+        g_free (possible_id);
+        return;
+      }
+    }
     GST_ERROR ("Asset could not be created for uri");
   } else {
+    GESProject *project = udata->layer->timeline ?
+        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE
+            (udata->layer->timeline))) : NULL;
+    ges_extractable_set_asset (GES_EXTRACTABLE (udata->object), asset);
+
+    ges_project_add_asset (project, asset);
     ges_timeline_layer_add_object (udata->layer, udata->object);
   }
 
