@@ -90,6 +90,9 @@ struct _GstDashDemux
   GMutex *download_timed_lock;
   GTimeVal next_download;       /* Time of the next download */
 
+  /* Manifest update */
+  GstClockTime last_manifest_update;
+
   /* Position in the stream */
   GstClockTime position;
   GstClockTime position_shift;

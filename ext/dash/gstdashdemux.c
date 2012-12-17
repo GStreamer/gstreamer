@@ -213,6 +213,7 @@ static gboolean gst_dash_demux_get_next_fragment_set (GstDashDemux * demux);
 static void gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose);
 static GstClockTime gst_dash_demux_get_buffering_time (GstDashDemux * demux);
 static float gst_dash_demux_get_buffering_ratio (GstDashDemux * demux);
+static GstBuffer * gst_dash_demux_merge_buffer_list (GstFragment * fragment);
 
 static void
 _do_init (GType type)
@@ -1092,6 +1093,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
 
   gst_dash_demux_clear_queue (demux);
 
+  demux->last_manifest_update = GST_CLOCK_TIME_NONE;
   demux->position = 0;
   demux->position_shift = 0;
   demux->need_segment = TRUE;
@@ -1131,6 +1133,34 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
     return buffering_time / demux->min_buffering_time;
 }
 
+static GstBuffer *
+gst_dash_demux_merge_buffer_list (GstFragment *fragment)
+{
+  GstBufferList *list;
+  GstBufferListIterator *it;
+  GstBuffer *buffer, *ret = NULL;
+  GstAdapter *adapter;
+  gsize size;
+
+  adapter = gst_adapter_new ();
+  list = gst_fragment_get_buffer_list (fragment);
+  it = gst_buffer_list_iterate (list);
+  while (gst_buffer_list_iterator_next_group (it)) {
+    while ((buffer = gst_buffer_list_iterator_next (it)) != NULL) {
+      gst_adapter_push (adapter, gst_buffer_ref (buffer));
+    }
+  }
+  gst_buffer_list_iterator_free (it);
+  gst_buffer_list_unref (list);
+  size = gst_adapter_available (adapter);
+  if (size > 0)
+    ret = gst_adapter_take_buffer (adapter, size);
+  GST_DEBUG ("Extracted a buffer of size %d from the fragment", size);
+  g_object_unref (adapter);
+
+  return ret;
+}
+
 /* gst_dash_demux_download_loop:
  * 
  * Loop for the "download' task that fetches fragments based on the 
@@ -1162,11 +1192,71 @@ gst_dash_demux_get_buffering_ratio (GstDashDemux * demux)
 void
 gst_dash_demux_download_loop (GstDashDemux * demux)
 {
+  GstClock *clock = gst_element_get_clock (GST_ELEMENT (demux));
+  gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
+
   /* Wait until the next scheduled download */
   if (g_cond_timed_wait (GST_TASK_GET_COND (demux->download_task),
           demux->download_timed_lock, &demux->next_download)) {
     goto quit;
   }
+
+  if (clock && gst_mpd_client_is_live (demux->client) && demux->client->mpd_uri != NULL && update_period != -1) {
+    GstFragment *download;
+    GstBuffer * buffer;
+    GstClockTime duration, now = gst_clock_get_time (clock);
+
+    /* init reference time for manifest file updates */
+    if (!GST_CLOCK_TIME_IS_VALID (demux->last_manifest_update))
+      demux->last_manifest_update = now;
+
+    /* update the manifest file */
+    if (now >= demux->last_manifest_update + update_period * GST_MSECOND) {
+      GST_DEBUG_OBJECT (demux, "Updating manifest file from URL %s", demux->client->mpd_uri);
+      download = gst_uri_downloader_fetch_uri (demux->downloader, demux->client->mpd_uri);
+      if (download == NULL) {
+        GST_WARNING_OBJECT (demux, "Failed to update the manifest file from URL %s", demux->client->mpd_uri);
+      } else {
+        buffer = gst_dash_demux_merge_buffer_list (download);
+        g_object_unref (download);
+        /* parse the manifest file */
+        if (buffer == NULL) {
+          GST_WARNING_OBJECT (demux, "Error validating the manifest.");
+        } else if (!gst_mpd_parse (demux->client, (gchar *) GST_BUFFER_DATA (buffer),
+                GST_BUFFER_SIZE (buffer))) {
+          /* In most cases, this will happen if we set a wrong url in the
+            * source element and we have received the 404 HTML response instead of
+            * the manifest */
+          GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
+          gst_buffer_unref (buffer);
+        } else {
+          gst_buffer_unref (buffer);
+          /* setup video, audio and subtitle streams, starting from first Period */
+          if (!gst_mpd_client_setup_media_presentation (demux->client) ||
+              !gst_mpd_client_set_period_index (demux->client, gst_mpd_client_get_period_index (demux->client)) ||
+              !gst_dash_demux_setup_all_streams (demux)) {
+            GST_DEBUG_OBJECT (demux, "Error setting up the updated manifest file");
+            goto end_of_manifest;
+          }
+          /* Send an updated duration message */
+          duration = gst_mpd_client_get_media_presentation_duration (demux->client);
+
+          if (duration != GST_CLOCK_TIME_NONE) {
+            GST_DEBUG_OBJECT (demux, "Sending duration message : %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (duration));
+            gst_element_post_message (GST_ELEMENT (demux),
+                gst_message_new_duration (GST_OBJECT (demux),
+                    GST_FORMAT_TIME, duration));
+          } else {
+            GST_DEBUG_OBJECT (demux, "mediaPresentationDuration unknown, can not send the duration message");
+          }
+          demux->last_manifest_update += update_period * GST_MSECOND;
+          GST_DEBUG_OBJECT (demux, "Manifest file successfully updated");
+        }
+      }
+    }
+  }
+
 
   /* Target buffering time MUST at least exceeds mimimum buffering time 
    * by the duration of a fragment, but SHOULD NOT exceed maximum

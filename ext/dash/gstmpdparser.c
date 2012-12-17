@@ -2422,6 +2422,7 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
 
     GST_DEBUG ("MPD file fully buffered, start parsing...");
 
+    GST_MPD_CLIENT_LOCK (client);
     /* parse the complete MPD file into a tree (using the libxml2 default parser API) */
 
     /* this initialize the library and check potential ABI mismatches
@@ -2434,6 +2435,7 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
     doc = xmlReadMemory (data, size, "noname.xml", NULL, 0);
     if (doc == NULL) {
       GST_ERROR ("failed to parse the MPD file");
+      GST_MPD_CLIENT_UNLOCK (client);
       return FALSE;
     } else {
       /* get the root element node */
@@ -2453,6 +2455,7 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
       /* dump XML library memory for debugging */
       xmlMemoryDump ();
     }
+    GST_MPD_CLIENT_UNLOCK (client);
 
     return TRUE;
   }
