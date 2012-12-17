@@ -219,7 +219,7 @@ fill_image_packed16_4 (opj_image_t * image, GstVideoFrame * frame)
       *data_out[1] = tmp[2];
       *data_out[2] = tmp[3];
 
-      tmp++;
+      tmp += 4;
       data_out[0]++;
       data_out[1]++;
       data_out[2]++;
@@ -256,7 +256,7 @@ fill_image_packed8_4 (opj_image_t * image, GstVideoFrame * frame)
       *data_out[1] = tmp[2];
       *data_out[2] = tmp[3];
 
-      tmp++;
+      tmp += 4;
       data_out[0]++;
       data_out[1]++;
       data_out[2]++;
@@ -291,7 +291,7 @@ fill_image_packed8_3 (opj_image_t * image, GstVideoFrame * frame)
       *data_out[1] = tmp[2];
       *data_out[2] = tmp[3];
 
-      tmp++;
+      tmp += 4;
       data_out[0]++;
       data_out[1]++;
       data_out[2]++;
