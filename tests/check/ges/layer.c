@@ -314,6 +314,335 @@ GST_START_TEST (test_layer_automatic_transition)
 
 GST_END_TEST;
 
+GST_START_TEST (test_layer_meta_string)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  const gchar *result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_string (GES_META_CONTAINER (layer),
+      "ges-test", "blub");
+
+  fail_unless ((result = ges_meta_container_get_string (GES_META_CONTAINER
+              (layer), "ges-test")) != NULL);
+
+  assert_equals_string (result, "blub");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_boolean)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  gboolean result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_boolean (GES_META_CONTAINER (layer), "ges-test", TRUE);
+
+  fail_unless (ges_meta_container_get_boolean (GES_META_CONTAINER
+          (layer), "ges-test", &result));
+
+  fail_unless (result);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_int)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  gint result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_int (GES_META_CONTAINER (layer), "ges-test", 1234);
+
+  fail_unless (ges_meta_container_get_int (GES_META_CONTAINER (layer),
+          "ges-test", &result));
+
+  assert_equals_int (result, 1234);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_uint)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  guint result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_uint (GES_META_CONTAINER (layer), "ges-test", 42);
+
+  fail_unless (ges_meta_container_get_uint (GES_META_CONTAINER
+          (layer), "ges-test", &result));
+
+  assert_equals_int (result, 42);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_int64)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  gint64 result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_int64 (GES_META_CONTAINER (layer), "ges-test", 1234);
+
+  fail_unless (ges_meta_container_get_int64 (GES_META_CONTAINER (layer),
+          "ges-test", &result));
+
+  assert_equals_int64 (result, 1234);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_uint64)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  guint64 result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_uint64 (GES_META_CONTAINER (layer), "ges-test", 42);
+
+  fail_unless (ges_meta_container_get_uint64 (GES_META_CONTAINER
+          (layer), "ges-test", &result));
+
+  assert_equals_uint64 (result, 42);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_float)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  gfloat result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  fail_unless (ges_meta_container_set_float (GES_META_CONTAINER (layer),
+          "ges-test", 23.456));
+
+  fail_unless (ges_meta_container_get_float (GES_META_CONTAINER (layer),
+          "ges-test", &result));
+
+  assert_equals_int64 (result, 23.456);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_double)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  gdouble result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_double (GES_META_CONTAINER (layer),
+      "ges-test", 23.456);
+
+  fail_unless (ges_meta_container_get_double (GES_META_CONTAINER
+          (layer), "ges-test", &result));
+  fail_unless (result == 23.456);
+
+  //TODO CHECK
+  assert_equals_float (result, 23.456);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_date)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GDate *input;
+  GDate *result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  input = g_date_new_dmy (1, 1, 2012);
+
+  ges_meta_container_set_date (GES_META_CONTAINER (layer), "ges-test", input);
+
+  fail_unless (ges_meta_container_get_date (GES_META_CONTAINER
+          (layer), "ges-test", &result));
+
+  fail_unless (g_date_compare (result, input) == 0);
+
+  g_date_free (input);
+  g_date_free (result);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_date_time)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GstDateTime *input;
+  GstDateTime *result = NULL;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  input = gst_date_time_new_from_unix_epoch_local_time (123456789);
+
+  fail_unless (ges_meta_container_set_date_time (GES_META_CONTAINER
+          (layer), "ges-test", input));
+
+  fail_unless (ges_meta_container_get_date_time (GES_META_CONTAINER
+          (layer), "ges-test", &result));
+
+  fail_unless (result != NULL);
+  fail_unless (gst_date_time_get_day (input) == gst_date_time_get_day (result));
+  fail_unless (gst_date_time_get_hour (input) ==
+      gst_date_time_get_hour (result));
+
+  gst_date_time_unref (input);
+  gst_date_time_unref (result);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_layer_meta_value)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  GValue data = G_VALUE_INIT;
+  const GValue *result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  g_value_init (&data, G_TYPE_STRING);
+  g_value_set_string (&data, "Hello world!");
+
+  ges_meta_container_set_meta (GES_META_CONTAINER (layer),
+      "ges-test-value", &data);
+
+  result =
+      ges_meta_container_get_meta (GES_META_CONTAINER (layer),
+      "ges-test-value");
+  assert_equals_string (g_value_get_string (result), "Hello world!");
+
+  g_value_unset (&data);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_layer_meta_register)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+  const gchar *result;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  fail_unless (ges_meta_container_register_meta_string (GES_META_CONTAINER
+          (layer), GES_META_READABLE, "ges-test-value", "Hello world!"));
+
+  result = ges_meta_container_get_string (GES_META_CONTAINER (layer),
+      "ges-test-value");
+  assert_equals_string (result, "Hello world!");
+
+  fail_if (ges_meta_container_set_int (GES_META_CONTAINER (layer),
+          "ges-test-value", 123456));
+
+  result = ges_meta_container_get_string (GES_META_CONTAINER (layer),
+      "ges-test-value");
+  assert_equals_string (result, "Hello world!");
+}
+
+GST_END_TEST;
+
+static void
+test_foreach (const GESMetaContainer * container, const gchar * key,
+    GValue * value, gpointer user_data)
+{
+  fail_unless ((0 == g_strcmp0 (key, "some-string")) ||
+      (0 == g_strcmp0 (key, "some-int")));
+}
+
+GST_START_TEST (test_layer_meta_foreach)
+{
+  GESTimeline *timeline;
+  GESTimelineLayer *layer;
+
+  ges_init ();
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_layer_new ();
+  ges_timeline_add_layer (timeline, layer);
+
+  ges_meta_container_set_string (GES_META_CONTAINER (layer),
+      "some-string", "some-content");
+
+  ges_meta_container_set_int (GES_META_CONTAINER (layer), "some-int", 123456);
+
+  ges_meta_container_foreach (GES_META_CONTAINER (layer),
+      (GESMetaForeachFunc) test_foreach, NULL);
+}
+
+GST_END_TEST;
 
 static Suite *
 ges_suite (void)
@@ -326,6 +655,19 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_layer_properties);
   tcase_add_test (tc_chain, test_layer_priorities);
   tcase_add_test (tc_chain, test_layer_automatic_transition);
+  tcase_add_test (tc_chain, test_layer_meta_string);
+  tcase_add_test (tc_chain, test_layer_meta_boolean);
+  tcase_add_test (tc_chain, test_layer_meta_int);
+  tcase_add_test (tc_chain, test_layer_meta_uint);
+  tcase_add_test (tc_chain, test_layer_meta_int64);
+  tcase_add_test (tc_chain, test_layer_meta_uint64);
+  tcase_add_test (tc_chain, test_layer_meta_float);
+  tcase_add_test (tc_chain, test_layer_meta_double);
+  tcase_add_test (tc_chain, test_layer_meta_date);
+  tcase_add_test (tc_chain, test_layer_meta_date_time);
+  tcase_add_test (tc_chain, test_layer_meta_value);
+  tcase_add_test (tc_chain, test_layer_meta_register);
+  tcase_add_test (tc_chain, test_layer_meta_foreach);
 
   return s;
 }
