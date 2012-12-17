@@ -220,6 +220,7 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_@GST_MAJORMINOR@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
+	-export-symbols-regex "^gst_.*vaapi.*"	\
 	$(NULL)
 
 libgstvaapi_drm_@GST_MAJORMINOR@_la_SOURCES =	\
