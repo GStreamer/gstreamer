@@ -28,16 +28,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_openjpeg_dec_debug);
 #define GST_CAT_DEFAULT gst_openjpeg_dec_debug
 
-enum
-{
-  PROP_0,
-};
-
-static void gst_openjpeg_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_openjpeg_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-
 static gboolean gst_openjpeg_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
@@ -82,16 +72,11 @@ G_DEFINE_TYPE (GstOpenJPEGDec, gst_openjpeg_dec, GST_TYPE_VIDEO_DECODER);
 static void
 gst_openjpeg_dec_class_init (GstOpenJPEGDecClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstVideoDecoderClass *video_decoder_class;
 
-  gobject_class = (GObjectClass *) klass;
   element_class = (GstElementClass *) klass;
   video_decoder_class = (GstVideoDecoderClass *) klass;
-
-  gobject_class->set_property = gst_openjpeg_dec_set_property;
-  gobject_class->get_property = gst_openjpeg_dec_get_property;
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_openjpeg_dec_src_template));
@@ -125,32 +110,6 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
   gst_video_decoder_set_packetized (decoder, TRUE);
   opj_set_default_decoder_parameters (&self->params);
   self->params.cp_limit_decoding = NO_LIMITATION;
-}
-
-static void
-gst_openjpeg_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  /* GstOpenJPEGDec *self = GST_OPENJPEG_DEC (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_openjpeg_dec_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  /* GstOpenJPEGDec *self = GST_OPENJPEG_DEC (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static gboolean
