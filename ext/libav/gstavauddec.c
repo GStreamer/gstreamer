@@ -54,8 +54,6 @@ static gboolean gst_ffmpegauddec_negotiate (GstFFMpegAudDec * ffmpegdec,
     gboolean force);
 
 static void gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec);
-static GstFlowReturn
-gst_ffmpegauddec_push_output_buffer (GstFFMpegAudDec * ffmpegdec);
 
 #define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("avdec-params")
 
@@ -140,8 +138,6 @@ gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
   ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegdec->opened = FALSE;
 
-  ffmpegdec->adapter = gst_adapter_new ();
-
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (ffmpegdec), TRUE);
   gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (ffmpegdec), TRUE);
 }
@@ -154,9 +150,6 @@ gst_ffmpegauddec_finalize (GObject * object)
   if (ffmpegdec->context != NULL)
     av_free (ffmpegdec->context);
   ffmpegdec->context = NULL;
-
-  gst_object_unref (ffmpegdec->adapter);
-  ffmpegdec->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -171,7 +164,7 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
   GST_LOG_OBJECT (ffmpegdec, "closing libav codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
-  gst_adapter_clear (ffmpegdec->adapter);
+  gst_buffer_replace (&ffmpegdec->outbuf, NULL);
 
   if (ffmpegdec->opened)
     gst_ffmpeg_avcodec_close (ffmpegdec->context);
@@ -611,7 +604,10 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec,
   if (outbuf) {
     GST_LOG_OBJECT (ffmpegdec, "Decoded data, now storing buffer %p", outbuf);
 
-    gst_adapter_push (ffmpegdec->adapter, outbuf);
+    if (ffmpegdec->outbuf)
+      ffmpegdec->outbuf = gst_buffer_append (ffmpegdec->outbuf, outbuf);
+    else
+      ffmpegdec->outbuf = outbuf;
   } else {
     GST_DEBUG_OBJECT (ffmpegdec, "We didn't get a decoded buffer");
   }
@@ -648,7 +644,11 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec)
         break;
     } while (try++ < 10);
   }
-  gst_ffmpegauddec_push_output_buffer (ffmpegdec);
+
+  if (ffmpegdec->outbuf)
+    gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
+        ffmpegdec->outbuf, 1);
+  ffmpegdec->outbuf = NULL;
 }
 
 static void
@@ -746,7 +746,11 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   gst_buffer_unmap (inbuf, &map);
   gst_buffer_unref (inbuf);
 
-  gst_ffmpegauddec_push_output_buffer (ffmpegdec);
+  if (ffmpegdec->outbuf)
+    ret =
+        gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec),
+        ffmpegdec->outbuf, 1);
+  ffmpegdec->outbuf = NULL;
 
   if (bsize > 0) {
     GST_DEBUG_OBJECT (ffmpegdec, "Dropping %d bytes of data", bsize);
@@ -763,21 +767,6 @@ not_negotiated:
             oclass->in_plugin->name));
     return GST_FLOW_NOT_NEGOTIATED;
   }
-}
-
-static GstFlowReturn
-gst_ffmpegauddec_push_output_buffer (GstFFMpegAudDec * ffmpegdec)
-{
-  GstBuffer *outbuf;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (gst_adapter_available (ffmpegdec->adapter) > 0) {
-    outbuf = gst_adapter_take_buffer (ffmpegdec->adapter,
-        gst_adapter_available (ffmpegdec->adapter));
-    ret = gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (ffmpegdec), outbuf,
-        1);
-  }
-  return ret;
 }
 
 gboolean

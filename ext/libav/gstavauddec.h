@@ -39,7 +39,7 @@ struct _GstFFMpegAudDec
   GstCaps *last_caps;
 
   /* Stores current buffers to push as GstAudioDecoder wants 1:1 mapping for input/output buffers */
-  GstAdapter *adapter;
+  GstBuffer *outbuf;
 
   /* current output format */
   GstAudioInfo info;
