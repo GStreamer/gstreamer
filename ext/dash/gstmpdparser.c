@@ -70,7 +70,7 @@ static void gst_mpdparser_parse_period_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_program_info_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_metrics_range_node (GList ** list, xmlNode * a_node);
 static void gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node);
-static void gst_mpdparser_parse_root_node (GstMpdClient * client, xmlNode *a_node);
+static void gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node);
 
 /* Helper functions */
 static gint convert_to_millisecs (gint decimals, gint pos);
@@ -84,6 +84,7 @@ static gchar *gst_mpdparser_build_URL_from_template (const gchar *url_template, 
 static gboolean gst_mpd_client_add_media_segment (GstActiveStream *stream, GstSegmentURLNode *url_node, guint number, guint start, GstClockTime start_time, GstClockTime duration);
 static const gchar *gst_mpdparser_mimetype_to_caps (const gchar * mimeType);
 static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client);
+static void gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx);
 
 /* Adaptation Set */
 static GstAdaptationSetNode *gst_mpdparser_get_first_adapt_set_with_mimeType (GList *AdaptationSets, const gchar *mimeType);
@@ -1487,13 +1488,13 @@ gst_mpdparser_parse_metrics_node (GList ** list, xmlNode * a_node)
 }
 
 static void
-gst_mpdparser_parse_root_node (GstMpdClient * client, xmlNode *a_node)
+gst_mpdparser_parse_root_node (GstMPDNode ** pointer, xmlNode * a_node)
 {
   xmlNode *cur_node;
   GstMPDNode *new_mpd;
 
-  gst_mpdparser_free_mpd_node (client->mpd_node);
-  client->mpd_node = new_mpd = g_slice_new0 (GstMPDNode);
+  gst_mpdparser_free_mpd_node (*pointer);
+  *pointer = new_mpd = g_slice_new0 (GstMPDNode);
   if (new_mpd == NULL) {
     GST_WARNING ("Allocation of MPD node failed!");
     return;
@@ -2258,7 +2259,7 @@ gst_mpdparser_get_stream_period (GstMpdClient * client)
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (client->periods != NULL, NULL);
 
-  return g_list_nth_data (client->periods, gst_mpd_client_get_period_index (client));
+  return g_list_nth_data (client->periods, client->period_idx);
 }
 
 /* select a stream and extract the baseURL (if present) */
@@ -2446,7 +2447,7 @@ gst_mpd_parse (GstMpdClient * client, const gchar * data, gint size)
         GST_ERROR ("can not find the root element MPD, failed to parse the MPD file");
       } else {
         /* now we can parse the MPD root node and all children nodes, recursively */
-        gst_mpdparser_parse_root_node (client, root_element);
+        gst_mpdparser_parse_root_node (&client->mpd_node, root_element);
       }
       /* free the document */
       xmlFreeDoc (doc);
@@ -2726,6 +2727,7 @@ gst_mpd_client_setup_media_presentation (GstMpdClient *client)
   g_return_val_if_fail (client->mpd_node != NULL, FALSE);
 
   GST_DEBUG ("Building the list of Periods in the Media Presentation");
+  GST_MPD_CLIENT_LOCK (client);
   /* clean the old period list, if any */
   if (client->periods) {
     g_list_foreach (client->periods,
@@ -2786,18 +2788,22 @@ gst_mpd_client_setup_media_presentation (GstMpdClient *client)
         GST_TIME_FORMAT, idx, GST_TIME_ARGS (start), GST_TIME_ARGS (duration));
   }
 
+  GST_MPD_CLIENT_UNLOCK (client);
   GST_DEBUG ("Found a total of %d valid Periods in the Media Presentation", idx);
   return ret;
 
 early:
+  GST_MPD_CLIENT_UNLOCK (client);
   GST_WARNING ("Found an Early Available Period, skipping the rest of the Media Presentation");
   return ret;
 
 syntax_error:
+  GST_MPD_CLIENT_UNLOCK (client);
   GST_WARNING ("Cannot get the duration of the Period %d, skipping the rest of the Media Presentation", idx);
   return ret;
 
 no_mem:
+  GST_MPD_CLIENT_UNLOCK (client);
   GST_WARNING ("Allocation of GstStreamPeriod struct failed!");
   return FALSE;
 }
@@ -2882,9 +2888,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
 
   stream->baseURL_idx = 0;
   stream->mimeType = mimeType;
-  stream->representation_idx = 0;
   stream->cur_adapt_set = adapt_set;
-  gst_mpd_client_set_segment_index (stream, 0);
 
   /* retrive representation list */
   if (stream->cur_adapt_set != NULL)
@@ -3062,34 +3066,65 @@ gboolean
 gst_mpd_client_set_period_index (GstMpdClient *client, guint period_idx)
 {
   GstStreamPeriod *next_stream_period;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (client != NULL, FALSE);
   g_return_val_if_fail (client->periods != NULL, FALSE);
 
+  GST_MPD_CLIENT_LOCK (client);
   next_stream_period = g_list_nth_data (client->periods, period_idx);
-  if (next_stream_period == NULL)
-    return FALSE;
+  if (next_stream_period != NULL) {
+    client->period_idx = period_idx;
+    ret = TRUE;
+  }
+  GST_MPD_CLIENT_UNLOCK (client);
 
-  client->period_idx = period_idx;
-
-  return TRUE;
+  return ret;
 }
 
 guint
 gst_mpd_client_get_period_index (GstMpdClient *client)
 {
-  return client->period_idx;
+  guint period_idx;
+
+  g_return_val_if_fail (client != NULL, 0);
+  GST_MPD_CLIENT_LOCK (client);
+  period_idx = client->period_idx;
+  GST_MPD_CLIENT_UNLOCK (client);
+
+  return period_idx;
 }
 
 void
+gst_mpd_client_set_segment_index_for_all_streams (GstMpdClient *client, guint segment_idx)
+{
+  GList *list;
+
+  g_return_if_fail (client != NULL);
+  g_return_if_fail (client->active_streams != NULL);
+
+  /* FIXME: support multiple streams with different segment duration */
+  for (list = g_list_first (client->active_streams); list; list = g_list_next (list)) {
+    GstActiveStream *stream = (GstActiveStream *) list->data;
+    if (stream) {
+      stream->segment_idx = segment_idx;
+    }
+  }
+}
+
+static void
 gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx)
 {
+  g_return_if_fail (stream != NULL);
+
   stream->segment_idx = segment_idx;
 }
 
 guint
 gst_mpd_client_get_segment_index (GstActiveStream * stream)
 {
+  g_return_val_if_fail (stream != NULL, 0);
+
   return stream->segment_idx;
 }
 
@@ -3103,8 +3138,8 @@ gst_mpd_client_is_live (GstMpdClient * client)
 }
 
 guint
-gst_mpdparser_get_nb_active_stream (GstMpdClient *client){
-
+gst_mpdparser_get_nb_active_stream (GstMpdClient *client)
+{
   g_return_val_if_fail (client != NULL, 0);
 
   return g_list_length (client->active_streams);

@@ -508,7 +508,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           GST_TIME_FORMAT, rate, start_type, GST_TIME_ARGS (start),
           GST_TIME_ARGS (stop));
 
-      GST_MPD_CLIENT_LOCK (demux->client);
+      //GST_MPD_CLIENT_LOCK (demux->client);
 
       /* select the requested Period in the Media Presentation */
       target_pos = (GstClockTime) start;
@@ -545,7 +545,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
           break;
         }
       }
-      GST_MPD_CLIENT_UNLOCK (demux->client);
+      //GST_MPD_CLIENT_UNLOCK (demux->client);
 
       if (list == NULL) {
         GST_WARNING_OBJECT (demux, "Could not find seeked fragment");
@@ -576,21 +576,15 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
       /* FIXME: allow seeking in the buffering queue */
       gst_dash_demux_clear_queue (demux);
 
-      GST_MPD_CLIENT_LOCK (demux->client);
+      //GST_MPD_CLIENT_LOCK (demux->client);
       GST_DEBUG_OBJECT (demux, "Seeking to sequence %d", current_sequence);
       /* Update the current sequence on all streams */
-      for (stream_idx = 0; stream_idx < nb_active_stream; stream_idx++) {
-        stream =
-            gst_mpdparser_get_active_stream_by_index (demux->client,
-            stream_idx);
-        gst_mpd_client_set_segment_index (stream, current_sequence);
-      }
+      gst_mpd_client_set_segment_index_for_all_streams (demux->client, current_sequence);
       /* Calculate offset in the next fragment */
       demux->position = gst_mpd_client_get_current_position (demux->client);
       demux->position_shift = start - demux->position;
       demux->need_segment = TRUE;
-      GST_MPD_CLIENT_UNLOCK (demux->client);
-
+      //GST_MPD_CLIENT_UNLOCK (demux->client);
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
@@ -624,6 +618,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
   guint i, nb_audio;
   gchar *lang;
 
+  GST_MPD_CLIENT_LOCK (demux->client);
   /* clean old active stream list, if any */
   gst_active_streams_free (demux->client);
 
@@ -649,6 +644,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
               GST_STREAM_APPLICATION, lang))
         GST_INFO_OBJECT (demux, "No application adaptation set found");
   }
+  GST_MPD_CLIENT_UNLOCK (demux->client);
 
   return TRUE;
 }
@@ -711,6 +707,9 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       if (!gst_mpd_client_set_period_index (demux->client, 0) ||
           !gst_dash_demux_setup_all_streams (demux))
         return FALSE;
+
+      /* start playing from the first segment */
+      gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
 
       /* Send duration message */
       if (!gst_mpd_client_is_live (demux->client)) {
@@ -1230,7 +1229,12 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
           GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
           gst_buffer_unref (buffer);
         } else {
+          GstActiveStream *stream;
+          guint segment_index;
+
           gst_buffer_unref (buffer);
+          stream = gst_mpdparser_get_active_stream_by_index (demux->client, 0);
+          segment_index = gst_mpd_client_get_segment_index (stream);
           /* setup video, audio and subtitle streams, starting from first Period */
           if (!gst_mpd_client_setup_media_presentation (demux->client) ||
               !gst_mpd_client_set_period_index (demux->client, gst_mpd_client_get_period_index (demux->client)) ||
@@ -1238,6 +1242,10 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
             GST_DEBUG_OBJECT (demux, "Error setting up the updated manifest file");
             goto end_of_manifest;
           }
+          /* continue playing from the the next segment */
+          /* FIXME: support multiple streams with different segment duration */
+          gst_mpd_client_set_segment_index_for_all_streams (demux->client, segment_index);
+
           /* Send an updated duration message */
           duration = gst_mpd_client_get_media_presentation_duration (demux->client);
 
@@ -1298,6 +1306,8 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
           gst_task_start (demux->stream_task);
           goto end_of_manifest;
         }
+        /* start playing from the first segment of the new period */
+        gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
         demux->end_of_period = FALSE;
       } else if (!demux->cancelled) {
         demux->client->update_failed_count++;
