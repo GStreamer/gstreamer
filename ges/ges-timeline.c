@@ -59,6 +59,19 @@ GST_DEBUG_CATEGORY_STATIC (ges_timeline_debug);
 #define GES_TIMELINE_PENDINGOBJS_UNLOCK(timeline) \
   (g_mutex_unlock(GES_TIMELINE_PENDINGOBJS_GET_LOCK (timeline)))
 
+typedef struct TrackObjIters
+{
+  GSequenceIter *iter_start;
+  GSequenceIter *iter_end;
+  GSequenceIter *iter_obj;
+} TrackObjIters;
+
+static void
+_destroy_obj_iters (TrackObjIters * iters)
+{
+  g_slice_free (TrackObjIters, iters);
+}
+
 /*  The move context is used for the timeline editing modes functions in order to
  *  + Ripple / Roll /  Slide / Move / Trim
  *
@@ -124,6 +137,7 @@ struct _GESTimelinePrivate
   GHashTable *by_start;         /* {TrackSource: start} */
   GHashTable *by_end;           /* {TrackSource: end} */
   GHashTable *by_object;        /* {timecode: TrackSource} */
+  GHashTable *obj_iters;        /* {TrackSource: TrackObjIters} */
   GSequence *starts_ends;       /* Sorted list of starts/ends */
   /* We keep 1 reference to our trackobject here */
   GSequence *tracksources;      /* TrackSource-s sorted by start/priorities */
@@ -267,6 +281,7 @@ ges_timeline_dispose (GObject * object)
   g_hash_table_unref (priv->by_start);
   g_hash_table_unref (priv->by_end);
   g_hash_table_unref (priv->by_object);
+  g_hash_table_unref (priv->obj_iters);
   g_sequence_free (priv->starts_ends);
   g_sequence_free (priv->tracksources);
   g_list_free (priv->movecontext.moving_tckobjs);
@@ -470,6 +485,8 @@ ges_timeline_init (GESTimeline * self)
   priv->by_start = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->by_end = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->by_object = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->obj_iters = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
+      (GDestroyNotify) _destroy_obj_iters);
   priv->starts_ends = g_sequence_new (g_free);
   priv->tracksources = g_sequence_new (g_object_unref);
 
@@ -571,114 +588,32 @@ custom_find_track (TrackPrivate * tr_priv, GESTrack * track)
   return -1;
 }
 
-/* Look for the pointer passed as @value */
-static GSequenceIter *
-lookup_pointer_uint (GSequence * seq, guint64 * value)
-{
-  GSequenceIter *iter, *tmpiter;
-  guint64 *found, *tmpval;
-
-  iter = g_sequence_lookup (seq, value,
-      (GCompareDataFunc) compare_uint64, NULL);
-
-  found = g_sequence_get (iter);
-
-  /* We have the same pointer so we are all fine */
-  if (found == value)
-    return iter;
-
-  if (!g_sequence_iter_is_end (iter)) {
-    /* Looking frontward for the good pointer */
-    tmpiter = iter;
-    while ((tmpiter = g_sequence_iter_next (tmpiter))) {
-      if (g_sequence_iter_is_end (tmpiter))
-        break;
-
-      tmpval = g_sequence_get (tmpiter);
-      if (tmpval == value)
-        return tmpiter;
-      else if (*tmpval != *value)
-        break;
-    }
-  }
-
-  if (!g_sequence_iter_is_begin (iter)) {
-    /* Looking backward for the good pointer */
-    tmpiter = iter;
-    while ((tmpiter = g_sequence_iter_prev (tmpiter))) {
-      tmpval = g_sequence_get (tmpiter);
-      if (tmpval == value)
-        return tmpiter;
-      else if (*tmpval != *value || g_sequence_iter_is_begin (tmpiter))
-        break;
-    }
-  }
-
-  GST_ERROR ("Missing timecode %p %" GST_TIME_FORMAT
-      " this should never happen", value, GST_TIME_ARGS (*value));
-
-  return NULL;
-}
-
 static inline void
 sort_starts_ends_end (GESTimeline * timeline, GESTrackObject * obj)
 {
-  GSequenceIter *iter;
-
   GESTimelinePrivate *priv = timeline->priv;
   guint64 *end = g_hash_table_lookup (priv->by_end, obj);
+  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, obj);
 
-  iter = lookup_pointer_uint (priv->starts_ends, end);
   *end = obj->start + obj->duration;
 
-  g_sequence_sort_changed (iter, (GCompareDataFunc) compare_uint64, NULL);
+  g_sequence_sort_changed (iters->iter_end, (GCompareDataFunc) compare_uint64,
+      NULL);
   timeline_update_duration (timeline);
 }
 
 static inline void
 sort_starts_ends_start (GESTimeline * timeline, GESTrackObject * obj)
 {
-  GSequenceIter *iter;
-
   GESTimelinePrivate *priv = timeline->priv;
   guint64 *start = g_hash_table_lookup (priv->by_start, obj);
+  TrackObjIters *iters = g_hash_table_lookup (priv->obj_iters, obj);
 
-  iter = lookup_pointer_uint (priv->starts_ends, start);
   *start = obj->start;
 
-  g_sequence_sort_changed (iter, (GCompareDataFunc) compare_uint64, NULL);
+  g_sequence_sort_changed (iters->iter_start,
+      (GCompareDataFunc) compare_uint64, NULL);
   timeline_update_duration (timeline);
-}
-
-static inline void
-resort_all_starts_ends (GESTimeline * timeline)
-{
-  GSequenceIter *iter;
-  GESTrackObject *tckobj;
-  guint64 *start, *end;
-
-  GESTimelinePrivate *priv = timeline->priv;
-
-  for (iter = g_sequence_get_begin_iter (priv->tracksources);
-      !g_sequence_iter_is_end (iter); iter = g_sequence_iter_next (iter)) {
-    tckobj = GES_TRACK_OBJECT (g_sequence_get (iter));
-
-    start = g_hash_table_lookup (priv->by_start, tckobj);
-    end = g_hash_table_lookup (priv->by_end, tckobj);
-
-    *start = tckobj->start;
-    *end = tckobj->start + tckobj->duration;
-  }
-
-  g_sequence_sort (priv->starts_ends, (GCompareDataFunc) compare_uint64, NULL);
-  timeline_update_duration (timeline);
-}
-
-static inline void
-sort_all (GESTimeline * timeline)
-{
-  sort_track_objects (timeline);
-  resort_all_starts_ends (timeline);
 }
 
 /* Timeline edition functions */
@@ -708,31 +643,28 @@ stop_tracking_for_snapping (GESTimeline * timeline, GESTrackObject * tckobj)
 {
   guint64 *start, *end;
   GESTimelinePrivate *priv = timeline->priv;
-  GSequenceIter *iter_start, *iter_end, *tckobj_iter;
+  TrackObjIters *iters;
 
 
   start = g_hash_table_lookup (priv->by_start, tckobj);
   end = g_hash_table_lookup (priv->by_end, tckobj);
-
-  iter_start = lookup_pointer_uint (priv->starts_ends, start);
-  iter_end = lookup_pointer_uint (priv->starts_ends, end);
-  tckobj_iter = g_sequence_lookup (timeline->priv->tracksources, tckobj,
-      (GCompareDataFunc) objects_start_compare, NULL);
+  iters = g_hash_table_lookup (priv->obj_iters, tckobj);
 
   g_hash_table_remove (priv->by_start, tckobj);
   g_hash_table_remove (priv->by_end, tckobj);
   g_hash_table_remove (priv->by_object, end);
   g_hash_table_remove (priv->by_object, start);
-
-  g_sequence_remove (iter_start);
-  g_sequence_remove (iter_end);
-  g_sequence_remove (tckobj_iter);
+  g_sequence_remove (iters->iter_start);
+  g_sequence_remove (iters->iter_end);
+  g_sequence_remove (iters->iter_obj);
+  g_hash_table_remove (priv->obj_iters, tckobj);
   timeline_update_duration (timeline);
 }
 
 static void
 start_tracking_track_obj (GESTimeline * timeline, GESTrackObject * tckobj)
 {
+  TrackObjIters *iters;
   guint64 *pstart, *pend;
   GESTimelinePrivate *priv = timeline->priv;
 
@@ -741,17 +673,20 @@ start_tracking_track_obj (GESTimeline * timeline, GESTrackObject * tckobj)
   *pstart = tckobj->start;
   *pend = *pstart + tckobj->duration;
 
-  g_sequence_insert_sorted (priv->starts_ends, pstart,
+  iters = g_slice_new (TrackObjIters);
+  iters->iter_start = g_sequence_insert_sorted (priv->starts_ends, pstart,
       (GCompareDataFunc) compare_uint64, NULL);
-  g_sequence_insert_sorted (priv->starts_ends, pend,
+  iters->iter_end = g_sequence_insert_sorted (priv->starts_ends, pend,
       (GCompareDataFunc) compare_uint64, NULL);
-  g_sequence_insert_sorted (priv->tracksources, g_object_ref (tckobj),
+  iters->iter_obj =
+      g_sequence_insert_sorted (priv->tracksources, g_object_ref (tckobj),
       (GCompareDataFunc) objects_start_compare, NULL);
 
   g_hash_table_insert (priv->by_start, tckobj, pstart);
   g_hash_table_insert (priv->by_object, pstart, tckobj);
   g_hash_table_insert (priv->by_end, tckobj, pend);
   g_hash_table_insert (priv->by_object, pend, tckobj);
+  g_hash_table_insert (priv->obj_iters, tckobj, iters);
 
   timeline->priv->movecontext.needs_move_ctx = TRUE;
 
@@ -927,15 +862,15 @@ static gboolean
 ges_move_context_set_objects (GESTimeline * timeline, GESTrackObject * obj,
     GESEdge edge)
 {
-  GSequenceIter *iter, *tckobj_iter;
-  guint64 start, end, tmpend;
+  TrackObjIters *iters;
   GESTrackObject *tmptckobj;
+  guint64 start, end, tmpend;
+  GSequenceIter *iter, *tckobj_iter;
 
   MoveContext *mv_ctx = &timeline->priv->movecontext;
 
-  tckobj_iter = g_sequence_lookup (timeline->priv->tracksources, obj,
-      (GCompareDataFunc) objects_start_compare, NULL);
-
+  iters = g_hash_table_lookup (timeline->priv->obj_iters, obj);
+  tckobj_iter = iters->iter_obj;
   switch (edge) {
     case GES_EDGE_START:
       /* set it properly int the context of "trimming" */
@@ -997,6 +932,8 @@ static gboolean
 ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackObject * obj,
     GESEditMode mode, GESEdge edge, GList * layers)
 {
+  /* A TrackObject that could initiate movement for other object */
+  GESTrackObject *editor_tckobj = NULL;
   MoveContext *mv_ctx = &timeline->priv->movecontext;
   GESTimelineObject *tlobj = ges_track_object_get_timeline_object (obj);
 
@@ -1019,17 +956,35 @@ ges_timeline_set_moving_context (GESTimeline * timeline, GESTrackObject * obj,
   mv_ctx->obj = tlobj;
   mv_ctx->needs_move_ctx = FALSE;
 
-  switch (mode) {
-    case GES_EDIT_MODE_RIPPLE:
-    case GES_EDIT_MODE_ROLL:
-      if (!(ges_move_context_set_objects (timeline, obj, edge)))
-        return FALSE;
-    default:
-      break;
+  /* We try to find a TrackSource inside the TimelineObject so we can set the
+   * moving context Else we just move the selected one only */
+  if (GES_IS_TRACK_SOURCE (obj) == FALSE) {
+    GList *tmp;
+
+    for (tmp = tlobj->trackobjects; tmp; tmp = tmp->next) {
+      if (GES_IS_TRACK_SOURCE (tmp->data)) {
+        editor_tckobj = tmp->data;
+        break;
+      }
+    }
+  } else {
+    editor_tckobj = obj;
   }
 
-  /* And we add the main object to the moving_tlobjs set */
-  add_moving_timeline_object (&timeline->priv->movecontext, obj);
+  if (editor_tckobj) {
+    switch (mode) {
+      case GES_EDIT_MODE_RIPPLE:
+      case GES_EDIT_MODE_ROLL:
+        if (!(ges_move_context_set_objects (timeline, editor_tckobj, edge)))
+          return FALSE;
+      default:
+        break;
+    }
+    add_moving_timeline_object (&timeline->priv->movecontext, editor_tckobj);
+  } else {
+    /* We add the main object to the moving_tlobjs set */
+    add_moving_timeline_object (&timeline->priv->movecontext, obj);
+  }
 
 
   return TRUE;
