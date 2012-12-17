@@ -268,10 +268,7 @@ gst_ffmpegviddec_finalize (GObject * object)
     ffmpegdec->context = NULL;
   }
 
-  if (ffmpegdec->picture != NULL) {
-    av_free (ffmpegdec->picture);
-    ffmpegdec->picture = NULL;
-  }
+  avcodec_free_frame (&ffmpegdec->picture);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -281,9 +278,6 @@ gst_ffmpegviddec_finalize (GObject * object)
 static void
 gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
 {
-  if (!ffmpegdec->opened)
-    return;
-
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
@@ -393,9 +387,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     gst_ffmpegviddec_drain (ffmpegdec);
     GST_OBJECT_LOCK (ffmpegdec);
     gst_ffmpegviddec_close (ffmpegdec);
-
-    /* and reset the defaults that were set when a context is created */
-    avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin);
   }
 
   /* set buffer functions */

@@ -158,16 +158,12 @@ gst_ffmpegauddec_finalize (GObject * object)
 static void
 gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
 {
-  if (!ffmpegdec->opened)
-    return;
-
   GST_LOG_OBJECT (ffmpegdec, "closing libav codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
   gst_buffer_replace (&ffmpegdec->outbuf, NULL);
 
-  if (ffmpegdec->opened)
-    gst_ffmpeg_avcodec_close (ffmpegdec->context);
+  gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
   if (ffmpegdec->context->extradata) {
@@ -297,9 +293,6 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     gst_ffmpegauddec_drain (ffmpegdec);
     GST_OBJECT_LOCK (ffmpegdec);
     gst_ffmpegauddec_close (ffmpegdec);
-
-    /* and reset the defaults that were set when a context is created */
-    avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin);
   }
 
   /* get size and so */

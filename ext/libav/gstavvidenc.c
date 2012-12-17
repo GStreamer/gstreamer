@@ -253,15 +253,9 @@ gst_ffmpegvidenc_finalize (GObject * object)
 
   gst_ffmpeg_cfg_finalize (ffmpegenc);
 
-  /* close old session */
-  if (ffmpegenc->opened) {
-    gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    ffmpegenc->opened = FALSE;
-  }
-
   /* clean up remaining allocated data */
   av_free (ffmpegenc->context);
-  av_free (ffmpegenc->picture);
+  avcodec_free_frame (&ffmpegenc->picture);
 
   g_free (ffmpegenc->filename);
 
@@ -299,9 +293,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
   }
-
-  /* set defaults */
-  avcodec_get_context_defaults3 (ffmpegenc->context, oclass->in_plugin);
 
   /* if we set it in _getcaps we should set it also in _link */
   ffmpegenc->context->strict_std_compliance = -1;
@@ -808,10 +799,9 @@ gst_ffmpegvidenc_stop (GstVideoEncoder * encoder)
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
 
   gst_ffmpegvidenc_flush_buffers (ffmpegenc, FALSE);
-  if (ffmpegenc->opened) {
-    gst_ffmpeg_avcodec_close (ffmpegenc->context);
-    ffmpegenc->opened = FALSE;
-  }
+  gst_ffmpeg_avcodec_close (ffmpegenc->context);
+  ffmpegenc->opened = FALSE;
+
   if (ffmpegenc->file) {
     fclose (ffmpegenc->file);
     ffmpegenc->file = NULL;

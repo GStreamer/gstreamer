@@ -336,7 +336,11 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
     gst_ffmpegdata_close (demux->context->pb);
   else
     gst_ffmpeg_pipe_close (demux->context->pb);
+  demux->context->pb = NULL;
   avformat_close_input (&demux->context);
+  if (demux->context)
+    avformat_free_context (demux->context);
+  demux->context = NULL;
 
   GST_OBJECT_LOCK (demux);
   demux->opened = FALSE;

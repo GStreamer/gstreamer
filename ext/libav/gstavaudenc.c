@@ -192,10 +192,8 @@ gst_ffmpegaudenc_stop (GstAudioEncoder * encoder)
   GstFFMpegAudEnc *ffmpegaudenc = (GstFFMpegAudEnc *) encoder;
 
   /* close old session */
-  if (ffmpegaudenc->opened) {
-    gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
-    ffmpegaudenc->opened = FALSE;
-  }
+  gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
+  ffmpegaudenc->opened = FALSE;
 
   return TRUE;
 }
@@ -242,9 +240,6 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     gst_ffmpeg_avcodec_close (ffmpegaudenc->context);
     ffmpegaudenc->opened = FALSE;
   }
-
-  /* set defaults */
-  avcodec_get_context_defaults3 (ffmpegaudenc->context, oclass->in_plugin);
 
   /* if we set it in _getcaps we should set it also in _link */
   ffmpegaudenc->context->strict_std_compliance = -1;

@@ -324,7 +324,7 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
   gst_collect_pads_set_function (ffmpegmux->collect,
       (GstCollectPadsFunction) gst_ffmpegmux_collected, ffmpegmux);
 
-  ffmpegmux->context = g_new0 (AVFormatContext, 1);
+  ffmpegmux->context = avformat_alloc_context ();
   ffmpegmux->context->oformat = oclass->in_plugin;
   ffmpegmux->context->nb_streams = 0;
   ffmpegmux->opened = FALSE;
@@ -382,7 +382,9 @@ gst_ffmpegmux_finalize (GObject * object)
 {
   GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) object;
 
-  g_free (ffmpegmux->context);
+  avformat_free_context (ffmpegmux->context);
+  ffmpegmux->context = NULL;
+
   gst_object_unref (ffmpegmux->collect);
 
   if (G_OBJECT_CLASS (parent_class)->finalize)
