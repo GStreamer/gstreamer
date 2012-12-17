@@ -2258,7 +2258,7 @@ gst_mpdparser_get_stream_period (GstMpdClient * client)
   g_return_val_if_fail (client != NULL, NULL);
   g_return_val_if_fail (client->periods != NULL, NULL);
 
-  return g_list_nth_data (client->periods, client->period_idx);
+  return g_list_nth_data (client->periods, gst_mpd_client_get_period_index (client));
 }
 
 /* select a stream and extract the baseURL (if present) */
@@ -2880,8 +2880,8 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
   stream->baseURL_idx = 0;
   stream->mimeType = mimeType;
   stream->representation_idx = 0;
-  stream->segment_idx = 0;
   stream->cur_adapt_set = adapt_set;
+  gst_mpd_client_set_segment_index (stream, 0);
 
   /* retrive representation list */
   if (stream->cur_adapt_set != NULL)
@@ -2925,6 +2925,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   GstActiveStream *stream = NULL;
   GstMediaSegment *currentChunk;
   gchar *mediaURL = NULL;
+  guint segment_idx;
 
   /* select stream */
   g_return_val_if_fail (client != NULL, FALSE);
@@ -2935,9 +2936,10 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   g_return_val_if_fail (discontinuity != NULL, FALSE);
 
   GST_MPD_CLIENT_LOCK (client);
-  GST_DEBUG ("Looking for fragment sequence chunk %d", stream->segment_idx);
+  segment_idx = gst_mpd_client_get_segment_index (stream);
+  GST_DEBUG ("Looking for fragment sequence chunk %d", segment_idx);
 
-  currentChunk = gst_mpdparser_get_chunk_by_index (client, indexStream, stream->segment_idx);
+  currentChunk = gst_mpdparser_get_chunk_by_index (client, indexStream, segment_idx);
   if (currentChunk == NULL) {
     GST_MPD_CLIENT_UNLOCK (client);
     return FALSE;
@@ -2952,7 +2954,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
 
   *timestamp = currentChunk->start_time;
   *duration = currentChunk->duration;
-  *discontinuity = stream->segment_idx != currentChunk->number;
+  *discontinuity = segment_idx != currentChunk->number;
   if (mediaURL == NULL) {
     /* single segment with URL encoded in the baseURL syntax element */
     *uri = g_strdup (gst_mpdparser_get_baseURL (client));
@@ -2962,7 +2964,7 @@ gst_mpd_client_get_next_fragment (GstMpdClient * client,
   } else {
     *uri = mediaURL;
   }
-  stream->segment_idx += 1;
+  gst_mpd_client_set_segment_index (stream, segment_idx + 1);
   GST_MPD_CLIENT_UNLOCK (client);
 
   GST_DEBUG ("Loading chunk with URL %s", *uri);
@@ -3014,7 +3016,7 @@ gst_mpd_client_get_current_position (GstMpdClient * client)
   stream = g_list_nth_data (client->active_streams, client->stream_idx);
   g_return_val_if_fail (stream != NULL, GST_CLOCK_TIME_NONE);
 
-  media_segment = g_list_nth_data (stream->segments, stream->segment_idx);
+  media_segment = g_list_nth_data (stream->segments, gst_mpd_client_get_segment_index (stream));
   g_return_val_if_fail (media_segment != NULL, GST_CLOCK_TIME_NONE);
 
   return media_segment->start_time;
@@ -3029,7 +3031,7 @@ gst_mpd_client_get_next_fragment_duration (GstMpdClient * client)
   stream = g_list_nth_data (client->active_streams, client->stream_idx);
   g_return_val_if_fail (stream != NULL, 0);
 
-  media_segment = g_list_nth_data (stream->segments, stream->segment_idx);
+  media_segment = g_list_nth_data (stream->segments, gst_mpd_client_get_segment_index (stream));
 
   return media_segment == NULL ? 0 : media_segment->duration;
 }
@@ -3054,7 +3056,7 @@ gst_mpd_client_get_media_presentation_duration (GstMpdClient * client)
 }
 
 gboolean
-gst_mpd_client_get_period_by_index (GstMpdClient *client, guint period_idx)
+gst_mpd_client_set_period_index (GstMpdClient *client, guint period_idx)
 {
   GstStreamPeriod *next_stream_period;
 
@@ -3068,6 +3070,24 @@ gst_mpd_client_get_period_by_index (GstMpdClient *client, guint period_idx)
   client->period_idx = period_idx;
 
   return TRUE;
+}
+
+guint
+gst_mpd_client_get_period_index (GstMpdClient *client)
+{
+  return client->period_idx;
+}
+
+void
+gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx)
+{
+  stream->segment_idx = segment_idx;
+}
+
+guint
+gst_mpd_client_get_segment_index (GstActiveStream * stream)
+{
+  return stream->segment_idx;
 }
 
 gboolean

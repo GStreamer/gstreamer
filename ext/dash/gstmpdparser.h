@@ -475,7 +475,8 @@ gboolean gst_mpd_client_get_next_header (GstMpdClient *client, const gchar **uri
 gboolean gst_mpd_client_is_live (GstMpdClient * client);
 
 /* Period selection */
-gboolean gst_mpd_client_get_period_by_index (GstMpdClient *client, guint period_idx);
+gboolean gst_mpd_client_set_period_index (GstMpdClient *client, guint period_idx);
+guint gst_mpd_client_get_period_index (GstMpdClient *client);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);
@@ -490,6 +491,10 @@ GstActiveStream *gst_mpdparser_get_active_stream_by_index (GstMpdClient *client,
 
 /* AdaptationSet */
 guint gst_mpdparser_get_nb_adaptationSet (GstMpdClient *client);
+
+/* Segment */
+void gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_idx);
+guint gst_mpd_client_get_segment_index (GstActiveStream * stream);
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);

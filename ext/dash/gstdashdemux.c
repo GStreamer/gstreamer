@@ -525,10 +525,10 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         GST_WARNING_OBJECT (demux, "Could not find seeked Period");
         return FALSE;
       }
-      if (current_period != demux->client->period_idx) {
+      if (current_period != gst_mpd_client_get_period_index (demux->client)) {
         GST_DEBUG_OBJECT (demux, "Seeking to Period %d", current_period);
         /* setup video, audio and subtitle streams, starting from the new Period */
-        if (!gst_mpd_client_get_period_by_index (demux->client, current_period) ||
+        if (!gst_mpd_client_set_period_index (demux->client, current_period) ||
             !gst_dash_demux_setup_all_streams (demux))
           return FALSE;
       }
@@ -582,8 +582,7 @@ gst_dash_demux_src_event (GstPad * pad, GstEvent * event)
         stream =
             gst_mpdparser_get_active_stream_by_index (demux->client,
             stream_idx);
-        /* FIXME: we should'nt fiddle with stream internals like that */
-        stream->segment_idx = current_sequence;
+        gst_mpd_client_set_segment_index (stream, current_sequence);
       }
       /* Calculate offset in the next fragment */
       demux->position = gst_mpd_client_get_current_position (demux->client);
@@ -708,7 +707,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstEvent * event)
       }
 
       /* setup video, audio and subtitle streams, starting from first Period */
-      if (!gst_mpd_client_get_period_by_index (demux->client, 0) ||
+      if (!gst_mpd_client_set_period_index (demux->client, 0) ||
           !gst_dash_demux_setup_all_streams (demux))
         return FALSE;
 
@@ -1197,7 +1196,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       if (demux->end_of_period) {
         GST_INFO_OBJECT (demux, "Reached the end of the Period");
         /* setup video, audio and subtitle streams, starting from the next Period */
-        if (!gst_mpd_client_get_period_by_index (demux->client, demux->client->period_idx + 1) ||
+        if (!gst_mpd_client_set_period_index (demux->client, gst_mpd_client_get_period_index (demux->client) + 1) ||
             !gst_dash_demux_setup_all_streams (demux)) {
           GST_INFO_OBJECT (demux, "Reached the end of the manifest file");
           demux->end_of_manifest = TRUE;
@@ -1568,8 +1567,8 @@ gst_dash_demux_get_next_fragment_set (GstDashDemux * demux)
         gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
     if (stream == NULL)
       return FALSE;
-    /* FIXME: we should'nt fiddle with stream internals like that */
-    download->index = stream->segment_idx - 1;
+
+    download->index = gst_mpd_client_get_segment_index (stream) - 1;
 
     GstCaps *caps = gst_dash_demux_get_input_caps (demux, stream);
 
