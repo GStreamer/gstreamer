@@ -80,7 +80,7 @@ gst_ffmpeg_channel_positions_to_layout (GstAudioChannelPosition * pos,
   for (i = 0; i < channels; i++) {
     for (j = 0; j < G_N_ELEMENTS (_ff_to_gst_layout); j++) {
       if (_ff_to_gst_layout[j].gst == pos[i]) {
-        ret |= _ff_to_gst_layout[i].ff;
+        ret |= _ff_to_gst_layout[j].ff;
         channels_found++;
         break;
       }
