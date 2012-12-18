@@ -45,7 +45,7 @@
  *
  *   sequence-layer-raw-frame: Sequence layer in first buffer, then only frame
  *       BDUs without startcodes. Only for simple/main profile.
- *   
+ *
  *   sequence-layer-frame-layer: As specified in SMPTE 421M Annex L, sequence-layer
  *       first, then BDUs inside frame-layer
  *
@@ -60,7 +60,7 @@
  *
  *
  * If no stream-format is given in the caps we do the following:
- *   
+ *
  *   0) If header-format=asf we assume stream-format=asf
  *   1) If first buffer starts with sequence header startcode
  *      we assume stream-format=bdu (or bdu-frame, doesn't matter
@@ -903,8 +903,8 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     g_assert (size >= 4);
     memset (&bdu, 0, sizeof (bdu));
     GST_DEBUG_OBJECT (vc1parse,
-        "Handling buffer of size %u at offset %" G_GUINT64_FORMAT, size,
-        GST_BUFFER_OFFSET (buffer));
+        "Handling buffer of size %" G_GSIZE_FORMAT " at offset %"
+        G_GUINT64_FORMAT, size, GST_BUFFER_OFFSET (buffer));
     /* XXX: when a buffer contains multiple BDUs, does the first one start with
      * a startcode?
      */
@@ -1188,7 +1188,8 @@ gst_vc1_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
   gst_buffer_unmap (buffer, &minfo);
   memset (&minfo, 0, sizeof (minfo));
-  GST_DEBUG_OBJECT (vc1parse, "Finishing frame of size %d", framesize);
+  GST_DEBUG_OBJECT (vc1parse, "Finishing frame of size %" G_GSIZE_FORMAT,
+      framesize);
   ret = gst_base_parse_finish_frame (parse, frame, framesize);
 
 done:
