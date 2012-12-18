@@ -386,7 +386,7 @@ add_id3v2frame_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
         GstMapInfo map;
 
         gst_buffer_map (buf, &map, GST_MAP_READ);
-        GST_DEBUG ("Injecting ID3v2.%u frame %u/%u of length %u and type %"
+        GST_DEBUG ("Injecting ID3v2.%u frame %u/%u of length %" G_GSIZE_FORMAT " and type %"
             GST_PTR_FORMAT, version, i, num_tags, map.size, s);
 
         frame = factory->createFrame (ByteVector ((const char *) map.data,
@@ -437,7 +437,7 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 
         gst_buffer_map (image, &map, GST_MAP_READ);
 
-        GST_DEBUG ("Attaching picture of %u bytes and mime type %s",
+        GST_DEBUG ("Attaching picture of %" G_GSIZE_FORMAT " bytes and mime type %s",
             map.size, mime_type);
 
         id3v2tag->addFrame (frame);
@@ -603,7 +603,7 @@ add_relative_volume_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
     frame->setIdentification ("album");
     GST_DEBUG ("adding album relative-volume frame");
   }
-  
+
   /* find the value for the paired tag (gain, if this is peak, and
    * vice versa).  if both tags exist, only write the frame when
    * we're processing the peak tag.
