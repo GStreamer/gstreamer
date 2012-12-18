@@ -422,6 +422,7 @@ ges_meta_container_metas_to_string (GESMetaContainer * container)
 /**
  * ges_meta_container_add_metas_from_string:
  * @str: a string created with ges_meta_container_metas_to_string()
+ * @container: Target container
  *
  * Deserializes a meta container.
  *
@@ -851,6 +852,7 @@ ges_meta_container_get_string (GESMetaContainer * container,
 /**
  * ges_meta_container_get_meta:
  * @container: Target container
+ * @key: Get the key name of the meta to retrieve
  *
  * Gets the value of a given meta item, returns NULL if @meta_item
  * can not be found.

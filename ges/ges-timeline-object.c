@@ -1447,7 +1447,6 @@ ges_timeline_object_edit (GESTimelineObject * object, GList * layers,
  * ges_timeline_object_split:
  * @object: the #GESTimelineObject to split
  * @position: a #GstClockTime representing the position at which to split
- * @object
  *
  * The function modifies @object, and creates another #GESTimelineObject so
  * we have two clips at the end, splitted at the time specified by @position.
@@ -1962,8 +1961,7 @@ ges_timeline_object_trim_start (GESTimelineObject * object, guint64 start)
  */
 
 gboolean
-ges_timeline_object_add_asset (GESTimelineObject * object,
-    GESAsset * asset)
+ges_timeline_object_add_asset (GESTimelineObject * object, GESAsset * asset)
 {
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
   g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);

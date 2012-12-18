@@ -288,6 +288,9 @@ GType ges_text_halign_get_type (void);
  * @GES_VIDEO_TEST_PATTERN_CIRCULAR: Circular pattern
  * @GES_VIDEO_TEST_PATTERN_SOLID: Solid color
  * @GES_VIDEO_TEST_PATTERN_BLINK: Alternate between black and white
+ * @GES_VIDEO_TEST_ZONE_PLATE: Zone plate
+ * @GES_VIDEO_TEST_GAMUT: Gamut checkers
+ * @GES_VIDEO_TEST_CHROMA_ZONE_PLATE: Chroma zone plate
  * @GES_VIDEO_TEST_PATTERN_SMPTE75: SMPTE test pattern (75% color bars)
  *
  * The test pattern to produce

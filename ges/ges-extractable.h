@@ -50,7 +50,6 @@ typedef gchar* (*GESExtractableCheckId) (GType type, const gchar *id,
 
 /**
  * GESExtractable:
- * @get_asset: A #GESExtractableGetAsset function
  */
 struct _GESExtractableInterface
 {

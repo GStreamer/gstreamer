@@ -11,6 +11,9 @@ GES_VERSION_MINOR
 GES_VERSION_NANO
 <SUBSECTION Standard>
 GES_PADDING
+GES_ERROR_DOMAIN
+GES_PADDING_LARGE
+GESAssetLoadingReturn
 </SECTION>
 
 <SECTION>
@@ -275,7 +278,6 @@ ges_timeline_enable_update
 ges_timeline_is_updating
 <SUBSECTION usage>
 ges_timeline_get_tracks
-ges_timeline_get_layer
 ges_timeline_get_layers
 ges_timeline_get_track_for_pad
 ges_timeline_get_duration
@@ -299,7 +301,7 @@ GES_TYPE_TIMELINE
 GESTimelineLayer
 GESTimelineLayerClass
 ges_timeline_layer_add_object
-ges_timeline_layer_add_material
+ges_timeline_layer_add_asset
 ges_timeline_layer_new
 ges_timeline_layer_remove_object
 ges_timeline_layer_set_priority
@@ -309,6 +311,10 @@ ges_timeline_layer_get_timeline
 ges_timeline_layer_get_auto_transition
 ges_timeline_layer_set_auto_transition
 ges_timeline_layer_is_empty
+
+GES_TIMELINE_GET_LAYERS
+GES_TIMELINE_GET_TRACKS
+
 <SUBSECTION Standard>
 GESTimelineLayerPrivate
 ges_timeline_layer_set_timeline
@@ -431,14 +437,12 @@ GES_TYPE_TIMELINE_SOURCE
 GESTimelineFileSource
 ges_timeline_filesource_new
 ges_timeline_filesource_get_max_duration
-ges_timeline_filesource_get_supported_formats
 ges_timeline_filesource_get_uri
 ges_timeline_filesource_is_image
 ges_timeline_filesource_is_muted
 ges_timeline_filesource_set_is_image
 ges_timeline_filesource_set_max_duration
 ges_timeline_filesource_set_mute
-ges_timeline_filesource_set_supported_formats
 <SUBSECTION Standard>
 GESTimelineFileSourceClass
 GESTimelineFileSourcePrivate
@@ -793,19 +797,20 @@ GES_TYPE_TRACK_TEXT_OVERLAY
 <TITLE>GESFormatter</TITLE>
 GESFormatter
 GESFormatterClass
+
 GESFormatterLoadFromURIMethod
 GESFormatterSaveToURIMethod
-GESFormatterSourceMovedMethod
-GESFormatterLoadedMethod
-ges_default_formatter_new
+GESFormatterCanLoadURIMethod
+GESFormatterCanSaveURIMethod
+
+ges_formatter_class_register_metas
+
 ges_formatter_load_from_uri
 ges_formatter_save_to_uri
 ges_formatter_can_load_uri
 ges_formatter_can_save_uri
-GESFormatterCanLoadURIMethod
-GESFormatterCanSaveURIMethod
-<SUBSECTION>
-ges_formatter_emit_loaded
+ges_formatter_get_default
+
 <SUBSECTION Standard>
 GES_FORMATTER
 GES_FORMATTER_CLASS
@@ -886,7 +891,6 @@ ges_meta_container_get_int64
 ges_meta_container_get_string
 ges_meta_container_get_uint
 ges_meta_container_get_uint64
-ges_meta_container_set_meta
 ges_meta_container_set_boolean
 ges_meta_container_set_date
 ges_meta_container_set_date_time
@@ -912,6 +916,7 @@ ges_meta_container_register_meta
 ges_meta_container_metas_to_string
 ges_meta_container_add_metas_from_string
 ges_meta_container_get_type
+ges_meta_container_check_meta_registered
 
 GES_META_FORMATTER_NAME
 GES_META_FORMATTER_MIMETYPE
@@ -919,6 +924,8 @@ GES_META_FORMATTER_EXTENSION
 GES_META_FORMATTER_VERSION
 GES_META_FORMATTER_RANK
 GES_META_DESCRIPTION
+
+GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS
 
 <SUBSECTION Standard>
 GESMetaContainerInterface
@@ -994,6 +1001,7 @@ GES_ASSET_FILESOURCE_GET_CLASS
 <FILE>ges-project</FILE>
 <TITLE>GESProject</TITLE>
 GESProject
+ges_project_load
 ges_project_add_asset
 ges_project_remove_asset
 ges_project_list_assets
@@ -1005,7 +1013,6 @@ ges_project_get_uri
 ges_project_new
 ges_project_add_encoding_profile
 ges_project_list_encoding_profiles
-GESProjectFindNewUriFunction
 <SUBSECTION Standard>
 GESProjectPrivate
 GES_PROJECT

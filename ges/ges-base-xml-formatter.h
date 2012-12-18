@@ -30,18 +30,27 @@ G_BEGIN_DECLS
 #define GES_IS_BASE_XML_FORMATTER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_BASE_XML_FORMATTER))
 #define GES_IS_BASE_XML_FORMATTER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_BASE_XML_FORMATTER))
 #define GES_BASE_XML_FORMATTER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_BASE_XML_FORMATTER, GESBaseXmlFormatterClass))
-typedef struct _GESBaseXmlFormatterPrivate GESBaseXmlFormatterPrivate;
 
-typedef struct
+typedef struct _GESBaseXmlFormatterPrivate GESBaseXmlFormatterPrivate;
+typedef struct _GESBaseXmlFormatter GESBaseXmlFormatter;
+typedef struct _GESBaseXmlFormatterClass GESBaseXmlFormatterClass;
+
+/**
+ * GESBaseXmlFormatter:
+ */
+struct _GESBaseXmlFormatter
 {
   GESFormatter parent;
 
   /* <private> */
   GESBaseXmlFormatterPrivate *priv;
 
-} GESBaseXmlFormatter;
+};
 
-typedef struct
+/**
+ * GESBaseXmlFormatterClass:
+ */
+struct _GESBaseXmlFormatterClass
 {
   GESFormatterClass parent;
 
@@ -50,7 +59,7 @@ typedef struct
 
   GString * (*save) (GESFormatter *formatter, GESTimeline *timeline, GError **error);
 
-} GESBaseXmlFormatterClass;
+};
 
 GType ges_base_xml_formatter_get_type    (void);
 

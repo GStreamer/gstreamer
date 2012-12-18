@@ -134,9 +134,6 @@ typedef struct _GESTrackTextOverlayClass
 typedef struct _GESFormatter GESFormatter;
 typedef struct _GESFormatterClass GESFormatterClass;
 
-typedef struct _GESKeyfileFormatter GESKeyfileFormatter;
-typedef struct _GESKeyfileFormatterClass GESKeyfileFormatterClass;
-
 typedef struct _GESPitiviFormatter GESPitiviFormatter;
 typedef struct _GESPitiviFormatterClass GESPitiviFormatterClass;
 

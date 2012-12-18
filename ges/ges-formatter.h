@@ -71,6 +71,7 @@ typedef gboolean (*GESFormatterCanSaveURIMethod) (GESFormatterClass *class, cons
  * @formatter: a #GESFormatter
  * @timeline: a #GESTimeline
  * @uri: the URI to load from
+ * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Virtual method for loading a timeline from a given URI.
  *
@@ -90,6 +91,7 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  * @timeline: a #GESTimeline
  * @uri: the URI to save to
  * @overwrite: Whether the file should be overwritten in case it exists
+ * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Virtual method for saving a timeline to a uri.
  *
@@ -109,8 +111,6 @@ typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
  * @can_save_uri: Whether the URI can be saved
  * @load_from_uri: class method to deserialize data from a URI
  * @save_to_uri: class method to serialize data to a URI
- * @update_source_uri: virtual method to specify that a source has moved, and thus its URI
- * must be set to its new location (specified by the user)
  *
  * GES Formatter class. Override the vmethods to implement the formatter functionnality.
  */

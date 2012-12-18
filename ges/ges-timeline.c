@@ -1645,6 +1645,7 @@ ges_timeline_new (void)
 /**
  * ges_timeline_new_from_uri:
  * @uri: the URI to load from
+ * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Creates a timeline from the given URI.
  *
@@ -1667,6 +1668,7 @@ ges_timeline_new_from_uri (const gchar * uri, GError ** error)
  * ges_timeline_load_from_uri:
  * @timeline: an empty #GESTimeline into which to load the formatter
  * @uri: The URI to load from
+ * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Loads the contents of URI into the given timeline.
  *
