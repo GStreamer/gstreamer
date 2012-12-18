@@ -632,11 +632,11 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 
   if (wid->correction || wid->passthrough) {
     /* push the buffer and forward errors */
-    GST_DEBUG_OBJECT (enc, "pushing buffer with %d bytes",
+    GST_DEBUG_OBJECT (enc, "pushing buffer with %" G_GSIZE_FORMAT " bytes",
         gst_buffer_get_size (buffer));
     *flow = gst_pad_push (pad, buffer);
   } else {
-    GST_DEBUG_OBJECT (enc, "handing frame of %d bytes",
+    GST_DEBUG_OBJECT (enc, "handing frame of %" G_GSIZE_FORMAT " bytes",
         gst_buffer_get_size (buffer));
     *flow = gst_audio_encoder_finish_frame (GST_AUDIO_ENCODER (enc), buffer,
         samples);
