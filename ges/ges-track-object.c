@@ -1440,7 +1440,7 @@ ges_track_object_get_child_property (GESTrackObject * object,
  * ges_track_object_get_child_property_by_pspec:
  * @object: a #GESTrackObject
  * @pspec: The #GParamSpec that specifies the property you want to get
- * @value: return location for the value
+ * @value: (out): return location for the value
  *
  * Gets a property of a child of @object.
  *
