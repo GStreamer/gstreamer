@@ -28,7 +28,7 @@
  * |[
  * gst-launch -v audiotestsrc ! queue ! interaudiosink
  * ]|
- * 
+ *
  * The interaudiosink element cannot be used effectively with gst-launch,
  * as it requires a second pipeline in the application to receive the
  * audio.
@@ -229,7 +229,7 @@ gst_inter_audio_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   GstInterAudioSink *interaudiosink = GST_INTER_AUDIO_SINK (sink);
   int n;
 
-  GST_DEBUG ("render %d", gst_buffer_get_size (buffer));
+  GST_DEBUG ("render %" G_GSIZE_FORMAT, gst_buffer_get_size (buffer));
 
   g_mutex_lock (interaudiosink->surface->mutex);
   n = gst_adapter_available (interaudiosink->surface->audio_adapter) / 4;
