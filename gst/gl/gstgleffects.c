@@ -293,17 +293,16 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
 #endif
 #if HAVE_GLES2
   if (gst_gl_display_get_gl_api_unlocked (GST_GL_FILTER (effects)->display) &
-      GST_GL_API_GLES2)
-    ) {
+      GST_GL_API_GLES2) {
     const GLfloat vVertices[] = {
-    -1.0f, -1.0f, 0.0f,
-          0.0f, 0.0f,
-          1.0, -1.0f, 0.0f,
-          1.0f, 0.0f,
-          1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+      -1.0f, -1.0f, 0.0f,
+      0.0f, 0.0f,
+      1.0, -1.0f, 0.0f,
+      1.0f, 0.0f,
+      1.0f, 1.0f, 0.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f
+    };
 
-    GLushort indices[] = {
-    0, 1, 2, 0, 2, 3};
+    GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
     /* glClear (GL_COLOR_BUFFER_BIT); */
 
@@ -319,19 +318,21 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     glEnableVertexAttribArray (effects->draw_attr_texture_loc);
 
     glDrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
-    }
+  }
 #endif
 
   glUseProgramObjectARB (0);
 }
 
-static void set_horizontal_swap (GstGLDisplay * display, gpointer data)
+static void
+set_horizontal_swap (GstGLDisplay * display, gpointer data)
 {
 #if HAVE_OPENGL
   if (gst_gl_display_get_gl_api_unlocked (display) & GST_GL_API_OPENGL) {
     const double mirrormatrix[16] = {
-    -1.0, 0.0, 0.0, 0.0,
-          0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+      -1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
+    };
 
     glMatrixMode (GL_MODELVIEW);
     glLoadMatrixd (mirrormatrix);
@@ -339,15 +340,15 @@ static void set_horizontal_swap (GstGLDisplay * display, gpointer data)
 #endif
 }
 
-static void gst_gl_effects_init (GstGLEffects * effects)
+static void
+gst_gl_effects_init (GstGLEffects * effects)
 {
   effects->effect = gst_gl_effects_identity;
   effects->horizontal_swap = FALSE;
 }
 
 static void
-    gst_gl_effects_ghash_func_clean (gpointer key, gpointer value,
-    gpointer data)
+gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
 {
   GstGLShader *shader = (GstGLShader *) value;
   GstGLFilter *filter = (GstGLFilter *) data;
@@ -358,7 +359,8 @@ static void
   value = NULL;
 }
 
-static void gst_gl_effects_reset_resources (GstGLFilter * filter)
+static void
+gst_gl_effects_reset_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
 
@@ -374,7 +376,7 @@ static void gst_gl_effects_reset_resources (GstGLFilter * filter)
 }
 
 static void
-    gst_gl_effects_set_property (GObject * object, guint prop_id,
+gst_gl_effects_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (object);
@@ -383,15 +385,17 @@ static void
     case PROP_EFFECT:
       gst_gl_effects_set_effect (effects, g_value_get_enum (value));
       break;
-      case PROP_HSWAP:effects->horizontal_swap = g_value_get_boolean (value);
+    case PROP_HSWAP:
+      effects->horizontal_swap = g_value_get_boolean (value);
       break;
-      default:G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
 static void
-    gst_gl_effects_get_property (GObject * object, guint prop_id,
+gst_gl_effects_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (object);
@@ -409,7 +413,8 @@ static void
   }
 }
 
-static void gst_gl_effects_init_resources (GstGLFilter * filter)
+static void
+gst_gl_effects_init_resources (GstGLFilter * filter)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
   gint i;
@@ -424,7 +429,8 @@ static void gst_gl_effects_init_resources (GstGLFilter * filter)
   }
 }
 
-static gboolean gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
+static gboolean
+gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 {
   /* check that your hardware supports shader
    * if not the pipeline correctly shut down */
@@ -432,7 +438,7 @@ static gboolean gst_gl_effects_on_init_gl_context (GstGLFilter * filter)
 }
 
 static gboolean
-    gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
+gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
     guint out_tex)
 {
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
