@@ -1,9 +1,147 @@
-=== release 1.0.3 ===
+=== release 1.0.4 ===
 
-2012-11-21  Tim-Philipp Müller <tim@centricular.net>
+2012-12-18  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.3
+	  releasing 1.0.4
+
+2012-12-14 11:09:30 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstsample.c:
+	* gst/gststructure.c:
+	  add debug category
+	  Adding a debug category is nicer than logging to the default category
+
+2012-12-14 15:22:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-element-sink.txt:
+	* docs/design/part-events.txt:
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* plugins/elements/gstidentity.c:
+	* plugins/elements/gstoutputselector.c:
+	  NEWSEGMENT -> SEGMENT
+
+2012-12-14 11:08:57 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstelement.c:
+	  element: improve debug
+
+2012-12-13 14:48:35 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: call _stop when start failed
+	  When we failed to complete the start, call stop again. This makes sure that all
+	  successfull calls to _start are paired with a _stop.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=687845
+
+2012-12-11 16:46:01 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: improve debug
+	  Add pts and dts in debug log
+
+2012-11-26 00:51:38 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	  docs: clean up sections file for pad probe defines that moved into enum
+
+2012-12-10 11:55:42 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstplugin.c:
+	  plugin: protect against NULL filename in debug
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=689948
+
+2012-12-06 09:48:08 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstbufferpool.h:
+	  bufferpool: clarify docs
+
+2012-12-05 14:56:48 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstcaps.c:
+	  caps: fix docs
+
+2012-12-05 14:24:14 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: fix 0.10 docs to make more sense in 1.0
+
+2012-12-05 14:03:27 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstadapter.c:
+	  adapter: fix docs for 1.0
+	  Add parent to chain function signature and use it.
+
+2012-11-30 10:41:51 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstmessage.c:
+	  message: add reset-time type string
+
+2012-11-28 18:08:52 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* docs/random/porting-to-1.0.txt:
+	  docs: add link to python porting doc and app dev manual to porting-to-1.0.txt
+
+2012-11-26 18:16:52 -0500  Luis de Bethencourt <luis@debethencourt.com>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: add gst-editing-services to PKG_CONFIG_PATH
+
+2012-11-25 23:26:47 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/manual/appendix-integration.xml:
+	* docs/manual/basics-init.xml:
+	* gst/gst.c:
+	  docs: remove all mention of g_thread_init()
+	  It's been deprecated since GLib 2.32 and isn't needed any
+	  longer.
+
+2012-11-23 21:09:45 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/gstevent.c:
+	  event: fix annotation for gst_event_parse_stream_start
+
+2012-11-23 13:36:09 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstpad.h:
+	  pad: document more pad probe values
+
+2012-11-23 12:47:25 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstpad.h:
+	  pad: don't use parenthesis for ORed pad probe flag enums
+	  glib-mkenum doesn't like them for some reason.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688804
+
+2012-11-23 10:58:25 +0100  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstpad.h:
+	  pad: Put all of the probe types in the enum so they work with bindings
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688804
+
+2012-11-21 12:52:51 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Back to development (bug-fixing)
+
+=== release 1.0.3 ===
+
+2012-11-21 09:31:07 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.0.3
 
 2012-11-20 16:19:52 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
 

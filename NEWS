@@ -1,4 +1,17 @@
-This is GStreamer 1.0.3
+This is GStreamer 1.0.4
+
+Changes since 1.0.3:
+
+      * basesrc: fix potential leaks when re-activating in a different mode
+      * bindings: make all pad probe types work with bindings
+      * bindings: fix gst_event_parse_stream_start() annotation, fixing crash
+      * documentation improvements
+
+Bugs fixed since 1.0.3:
+
+      * 687845 : filesrc: leaks file descriptor if activation in pull mode fails
+      * 688804 : Getting error trying to add a pad_probe
+      * 688934 : Gst.Event.parse_stream_start seems to not function correctly
 
 Changes since 1.0.2:
 

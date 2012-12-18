@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.0.3
+Release notes for GStreamer 1.0.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,18 +42,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * bufferpool: fix deadlock
-      * baseparse: forward stream-start event in push mode, fixing issues with streamsynchronizer
-      * basesink: reset START_TIME when needed, fixing position reporting after seeking beyond end
+      * basesrc: fix potential leaks when re-activating in a different mode
+      * bindings: make all pad probe types work with bindings
+      * bindings: fix gst_event_parse_stream_start() annotation, fixing crash
+      * documentation improvements
 
 Bugs fixed in this release
      
-      * 666053 : baseparse: prevent excessively high memory usage with large streams
-      * 687896 : bufferpool: deadlock in GstBufferPool
-      * 688477 : inputselector: fix clock leak in wait_running_time
-      * 688511 : Windows compilers without pthreads still have testrtpool.c being built in tests
-      * 688655 : baseparse: stream-start events not sent in push mode
-      * 685870 : Regression with position when seeking beyond the media duration
+      * 687845 : filesrc: leaks file descriptor if activation in pull mode fails
+      * 688804 : Getting error trying to add a pad_probe
+      * 688934 : Gst.Event.parse_stream_start seems to not function correctly
 
 ==== Download ====
 
@@ -90,10 +88,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Jan Schmidt
-      * Matthew Waters
+      * Alessandro Decina
+      * Luis de Bethencourt
+      * Olivier Crête
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
  
