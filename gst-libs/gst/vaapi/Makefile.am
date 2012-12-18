@@ -226,6 +226,7 @@ libgstvaapi_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_@GST_MAJORMINOR@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
+	$(GST_VAAPI_LT_LDFLAGS)			\
 	-export-symbols-regex "^gst_.*vaapi.*"	\
 	$(NULL)
 
@@ -261,6 +262,7 @@ libgstvaapi_drm_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_drm_@GST_MAJORMINOR@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
+	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_SOURCES =	\
@@ -295,6 +297,7 @@ libgstvaapi_x11_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_x11_@GST_MAJORMINOR@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
+	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_glx_@GST_MAJORMINOR@_la_SOURCES =	\
@@ -330,6 +333,7 @@ libgstvaapi_glx_@GST_MAJORMINOR@_la_LIBADD =	\
 
 libgstvaapi_glx_@GST_MAJORMINOR@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
+	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 libgstvaapi_wayland_@GST_MAJORMINOR@_la_SOURCES = \
@@ -362,6 +366,7 @@ libgstvaapi_wayland_@GST_MAJORMINOR@_la_LIBADD = \
 
 libgstvaapi_wayland_@GST_MAJORMINOR@_la_LDFLAGS = \
 	$(GST_ALL_LDFLAGS)			\
+	$(GST_VAAPI_LT_LDFLAGS)			\
 	$(NULL)
 
 # Extra clean files so that maintainer-clean removes *everything*
