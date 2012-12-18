@@ -139,7 +139,7 @@ gst_opus_parse_handle_frame (GstBaseParse * base,
 {
   GstOpusParse *parse;
   guint8 *data;
-  gint size;
+  gsize size;
   guint32 packet_size;
   int ret = FALSE;
   const unsigned char *frames[48];
@@ -214,8 +214,8 @@ gst_opus_parse_handle_frame (GstBaseParse * base,
     size = payload_offset;
   }
 
-  GST_DEBUG_OBJECT (parse, "Got Opus packet at offset %d, %d bytes", *skip,
-      size);
+  GST_DEBUG_OBJECT (parse,
+      "Got Opus packet at offset %d, %" G_GSIZE_FORMAT " bytes", *skip, size);
   ret = TRUE;
 
 beach:
