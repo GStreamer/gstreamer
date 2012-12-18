@@ -211,6 +211,33 @@ if test "$ac_cv_have_gst_video_overlay_composition" != "yes"; then
     AC_MSG_ERROR([GstVideoOverlayComposition is not available])
 fi
 
+dnl ... GstVideoDecoder (gstreamer-video)
+AC_CACHE_CHECK([for GstVideoDecoder],
+    ac_cv_have_gst_video_decoder, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_VIDEO_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_VIDEO_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <gst/video/gstvideodecoder.h>]],
+            [[GstVideoCodecFrame *f;
+              GstVideoDecoder vdec;
+              f = g_slice_new0(GstVideoCodecFrame);
+              f->ref_count = 1;
+              gst_video_decoder_have_frame(&vdec);
+              gst_video_decoder_finish_frame(&vdec, f);
+              gst_video_codec_frame_unref(f);]])],
+        [ac_cv_have_gst_video_decoder="yes"],
+        [ac_cv_have_gst_video_decoder="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+if test "$ac_cv_have_gst_video_decoder" != "yes"; then
+    AC_MSG_ERROR([GstVideoDecoder is not available])
+fi
+
 dnl GStreamer -bad plugins
 PKG_CHECK_MODULES([GST_BASEVIDEO],
     [gstreamer-basevideo-$GST_MAJORMINOR >= gst_plugins_bad_version])
