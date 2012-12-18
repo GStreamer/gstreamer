@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2011-04-17 00:50+0100\n"
+"POT-Creation-Date: 2012-12-18 01:24+0000\n"
 "PO-Revision-Date: 2012-04-16 02:06+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -14,67 +14,58 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 
-#: ext/resindvd/resindvdsrc.c:364
 msgid "Could not read title information for DVD."
 msgstr "Ne mogu čitati informacije o naslovu DVD-a."
 
-#: ext/resindvd/resindvdsrc.c:370
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Nisam uspio otvoriti DVD uređaj „%s”."
 
-#: ext/resindvd/resindvdsrc.c:376
 msgid "Failed to set PGC based seeking."
 msgstr "Nisam uspio postaviti pretragu temeljenu na PGC-u."
 
-#: ext/resindvd/resindvdsrc.c:1140
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Ne mogu čitati DVD. To je možda zato što je DVD šifriran, a biblioteka dešifriranja DVD-a nije instalirana."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Ne mogu čitati DVD. To je možda zato što je DVD šifriran, a biblioteka "
+"dešifriranja DVD-a nije instalirana."
 
-#: ext/resindvd/resindvdsrc.c:1145 ext/resindvd/resindvdsrc.c:1153
 msgid "Could not read DVD."
 msgstr "Ne mogu čitati DVD."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:341
 msgid "No file name specified for writing."
 msgstr "Nije navedena datoteka za pisanje."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:347
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Ne mogu otvoriti datoteku „%s” za pisanje."
 
-#: ext/sndfile/gstsfsink.c:439 gst/nuvdemux/gstnuvdemux.c:736
 msgid "Internal data stream error."
 msgstr "Greška unutarnjeg niza podataka."
 
-#: ext/sndfile/gstsfsink.c:493 ext/sndfile/gstsfsink.c:501
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Ne mogu pisati u datoteku „%s”."
 
-#: gst/aiff/aiffparse.c:1276
 msgid "Internal data flow error."
 msgstr "Greška unutarnjeg toka podataka."
 
-#: sys/dvb/gstdvbsrc.c:728 sys/dvb/gstdvbsrc.c:821
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Uređaj „%s” ne postoji."
 
-#: sys/dvb/gstdvbsrc.c:732
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Ne mogu otvoriti uređaj sučelja „%s”."
 
-#: sys/dvb/gstdvbsrc.c:744
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Ne mogu dobiti postavke uređaja sučelja „%s”."
 
-#: sys/dvb/gstdvbsrc.c:825
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."

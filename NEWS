@@ -1,4 +1,20 @@
-This is GStreamer Bad Plugins 1.0.3
+This is GStreamer Bad Plugins 1.0.4
+
+Changes since 1.0.3:
+
+      * mpeg4videoparse: also parse divx 4/5
+      * mpeg4videoparse: export number of sprite warping points in caps (decoders might have no or only limited GMC support)
+      * mpegtsmux: propagate flow returns upstream; don't crash when reused
+      * rtmpsrc: disable seeking if the configured url specifies live=true
+      * build fixes for OS/X (shm) and Windows (d3dvideosink)
+
+Bugs fixed since 1.0.3:
+
+      * 688870 : mpegtsmux: does not propagate flow status
+      * 689107 : mpegtsmux: crashes when re-used
+      * 689183 : [shm] Modifications to get shm to compile on OSX
+      * 690031 : d3dvideosink makefile missing GST_PLUGINS_BASE_CFLAGS and GMODULE_NO_EXPORT_LIBS
+      * 690149 : [mpeg4videoparse] support divx and add GMC info in caps
 
 Changes since 1.0.2:
 

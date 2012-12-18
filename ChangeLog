@@ -1,9 +1,270 @@
-=== release 1.0.3 ===
+=== release 1.0.4 ===
 
-2012-11-21  Tim-Philipp Müller <tim@centricular.net>
+2012-12-18  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.3
+	  releasing 1.0.4
+
+2012-12-18 19:00:19 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/el.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/ky.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/sv.po:
+	* po/vi.po:
+	  po: update translations
+
+2012-12-18 16:56:28 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/opus/gstopusdec.c:
+	* ext/opus/gstopusenc.c:
+	* ext/opus/gstopusparse.c:
+	  opus: use appropriate printf format for gsize
+
+2012-12-18 16:40:59 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst/jpegformat/gstjifmux.c:
+	  jpeg: use appropriate printf format for gsize
+
+2012-12-18 16:20:08 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst/inter/gstinteraudiosink.c:
+	  inter: use appropriate printf format for gsize
+
+2012-12-13 11:47:57 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	  mpeg4videoparse: export number of sprite warping points in caps
+	  This allows filtering out videos for hardware decoders that do not
+	  support GMC at all or only support a limited number of sprite warping
+	  points (usually 1).
+
+2012-12-13 11:43:09 +0100  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	  mpeg4videoparse: handle divx caps
+	  DivX 4/5 are MPEG4 part 2 videos, so they can be parsed by this plugin.
+
+2012-12-11 20:58:42 +0000  Michael Esemplare <michael.esemplare@gmail.com>
+
+	* sys/d3dvideosink/Makefile.am:
+	  d3dvideosink: fix compiler flags
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690031
+
+2012-12-01 17:05:38 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* ext/rtmp/gstrtmpsrc.c:
+	  rtmpsrc: disable seeking if the configured url specifies live=true
+	  Disable seeking when live=true is set in the location URL (eg:
+	  "rtmp://example.net/stream live=true")
+
+2012-11-26 19:21:03 +0000  Krzysztof Konopko <krzysztof.konopko@youview.com>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* tests/check/elements/mpegtsmux.c:
+	  mpegtsmux: crashes when trying to re-use the element
+	  A crash occured after pushing buffers and changing mpegtsmux state to
+	  NULL/READ and then back to PLAYING/PAUSED.
+	  The crash was caused by holding a dangling pointer in the MpegTsMux
+	  program table.
+	  Additionally stream headers were leaked when resetting the element:
+	  mux->streamheader set to NULL in mpegtsmux_reset() before it's released
+	  later in the same function.
+	  Added a unit test: test_multiple_state_change
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689107
+
+2012-11-22 10:57:25 +0000  Krzysztof Konopko <krzysztof.konopko@youview.com>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* tests/check/elements/mpegtsmux.c:
+	  mpegtsmux: propagate flow returns
+	  And add a unit test. Backported from git master.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688870
+
+2012-11-28 13:10:47 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	* sys/shm/Makefile.am:
+	  shm: Fix configure check and clean up Makefile
+
+2012-11-27 15:34:19 -0500  Emmanuel Durand <emmanueldurand@gmail.com>
+
+	* configure.ac:
+	* sys/shm/Makefile.am:
+	* sys/shm/shmpipe.c:
+	  shm: Fix compilation of shm on OSX
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689183
+
+2012-11-21 13:12:10 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.3 ===
+
+2012-11-21 10:39:08 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.0.3
 
 2012-11-20 12:05:17 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
 

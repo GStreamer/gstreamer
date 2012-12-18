@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.0.3
+Release notes for GStreamer Bad Plugins 1.0.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,20 +62,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * mpegtsmux: fix DTS/PTS confusion
-      * tsdemux, tsparse: seeking fixes
-      * tsdemux, tsparse: fix timestamping with push-based input
-      * h264parse: fix PPS insertion
-      * mpg123audiodec: fix leaks from not chaining up in the finalize function
+      * mpeg4videoparse: also parse divx 4/5
+      * mpeg4videoparse: export number of sprite warping points in caps (decoders might have no or only limited GMC support)
+      * mpegtsmux: propagate flow returns upstream; don't crash when reused
+      * rtmpsrc: disable seeking if the configured url specifies live=true
+      * build fixes for OS/X (shm) and Windows (d3dvideosink)
 
 Bugs fixed in this release
      
-      * 686871 : A number of errors in directsoundsrc
-      * 687178 : tsdemux produces buffers without timestamps when activated in push mode
-      * 687806 : mpegtsmux: Fix PTS being incorrectly created
-      * 688091 : tsdemux: multiple seeking-related fixes
-      * 688626 : codecparsers: vc1: fix PTYPE for interlaced frames
-      * 688510 : d3dvideosink: " DECLARE_INTERFACE_IID_ " redefined compiler warning
+      * 688870 : mpegtsmux: does not propagate flow status
+      * 689107 : mpegtsmux: crashes when re-used
+      * 689183 : [shm] Modifications to get shm to compile on OSX
+      * 690031 : d3dvideosink makefile missing GST_PLUGINS_BASE_CFLAGS and GMODULE_NO_EXPORT_LIBS
+      * 690149 : [mpeg4videoparse] support divx and add GMC info in caps
 
 ==== Download ====
 
@@ -112,15 +111,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andoni Morales Alastruey
-      * Edward Hervey
-      * Gwenole Beauchesne
-      * Jan Schmidt
-      * Josep Torra
-      * Kevin Thornberry
+      * Alessandro Decina
+      * Arnaud Vrac
+      * Emmanuel Durand
+      * Krzysztof Konopko
+      * Michael Esemplare
       * Sebastian Dröge
-      * Sebastian Pölsterl
-      * Thibault Saunier
+      * Thijs Vermeir
       * Tim-Philipp Müller
-      * Руслан Ижбулатов
  

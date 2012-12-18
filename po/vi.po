@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-11-21 00:33+0000\n"
+"POT-Creation-Date: 2012-12-18 01:24+0000\n"
 "PO-Revision-Date: 2012-12-02 08:03+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -21,65 +21,55 @@ msgstr ""
 "X-Generator: LocFactoryEditor 1.8\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
-#: ext/resindvd/resindvdsrc.c:359
 msgid "Could not read title information for DVD."
 msgstr "Không thể đọc thông tin tựa đề của đĩa DVD."
 
-#: ext/resindvd/resindvdsrc.c:365
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Gặp lỗi khi mở thiết bị đĩa DVD “%s”."
 
-#: ext/resindvd/resindvdsrc.c:371
 msgid "Failed to set PGC based seeking."
 msgstr "Không đặt được chức năng di chuyển vị trí đọc dựa vào PGC."
 
-#: ext/resindvd/resindvdsrc.c:1156
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Không thể đọc DVD. Nguyên nhân có thể là DVD đã bị mã hõa mà thư viện giải mã DVD lại chưa được cài đặt."
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Không thể đọc DVD. Nguyên nhân có thể là DVD đã bị mã hõa mà thư viện giải "
+"mã DVD lại chưa được cài đặt."
 
-#: ext/resindvd/resindvdsrc.c:1161 ext/resindvd/resindvdsrc.c:1170
 msgid "Could not read DVD."
 msgstr "Không thể đọc DVD."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:346
 msgid "No file name specified for writing."
 msgstr "Chưa chỉ định tên tập tin để ghi vào."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:352
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Không thể mở tập tin “%s” để ghi."
 
-#: ext/sndfile/gstsfsink.c:439 gst/nuvdemux/gstnuvdemux.c:737
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: ext/sndfile/gstsfsink.c:493 ext/sndfile/gstsfsink.c:501
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Không thể ghi vào tập tin “%s”."
 
-#: gst/aiff/aiffparse.c:1326
 msgid "Internal data flow error."
 msgstr "Lỗi tràn luồng dữ liệu nội bộ."
 
-#: sys/dvb/gstdvbsrc.c:758 sys/dvb/gstdvbsrc.c:855
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Thiết bị “%s” không tồn tại."
 
-#: sys/dvb/gstdvbsrc.c:762
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Không thể mở thiết bị giao diện “%s”."
 
-#: sys/dvb/gstdvbsrc.c:776
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Không thể lấy các cài đặt từ thiết bị giao diện “%s”."
 
-#: sys/dvb/gstdvbsrc.c:859
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin “%s” để đọc."
@@ -87,8 +77,12 @@ msgstr "Không thể mở tập tin “%s” để đọc."
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để quản lý điều khiển máy hoà tiếng. Phiên "
+#~ "bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
 
 #~ msgid "Volume"
 #~ msgstr "Âm"
@@ -393,17 +387,29 @@ msgstr "Không thể mở tập tin “%s” để đọc."
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Could not open audio device for playback. Device is being used by another application."
-#~ msgstr "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng dụng khác sử dụng."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để phát lại. Thiết bị này đang được ứng "
+#~ "dụng khác sử dụng."
 
-#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
-#~ msgstr "Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết bị này."
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết "
+#~ "bị này."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
-#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh Mở này không được yếu tố này hỗ trợ."
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Không thể mở thiết bị âm thanh để phát lại. Phiên bản Hệ thống Âm thanh "
+#~ "Mở này không được yếu tố này hỗ trợ."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Thiết bị âm thanh này không hỗ trợ chức năng phát lại."

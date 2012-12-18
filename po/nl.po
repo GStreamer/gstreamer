@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-11-21 00:33+0000\n"
+"POT-Creation-Date: 2012-12-18 01:24+0000\n"
 "PO-Revision-Date: 2012-11-30 00:10+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -19,65 +19,55 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/resindvd/resindvdsrc.c:359
 msgid "Could not read title information for DVD."
 msgstr "Kan de titelinformatie voor de DVD niet lezen."
 
-#: ext/resindvd/resindvdsrc.c:365
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Kan het DVD-apparaat '%s' niet openen."
 
-#: ext/resindvd/resindvdsrc.c:371
 msgid "Failed to set PGC based seeking."
 msgstr "Het instellen van het zoeken op basis van PGC is mislukt."
 
-#: ext/resindvd/resindvdsrc.c:1156
-msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Kon de dvd niet lezen. Dit kan zo zijn omdat de dvd versleuteld is en een bibliotheek voor ontcijferen niet is geïnstalleerd"
+msgid ""
+"Could not read DVD. This may be because the DVD is encrypted and a DVD "
+"decryption library is not installed."
+msgstr ""
+"Kon de dvd niet lezen. Dit kan zo zijn omdat de dvd versleuteld is en een "
+"bibliotheek voor ontcijferen niet is geïnstalleerd"
 
-#: ext/resindvd/resindvdsrc.c:1161 ext/resindvd/resindvdsrc.c:1170
 msgid "Could not read DVD."
 msgstr "Kon de dvd niet lezen."
 
-#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:346
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
 
-#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:352
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Kan bestand \"%s\" niet openen voor uitvoer."
 
-#: ext/sndfile/gstsfsink.c:439 gst/nuvdemux/gstnuvdemux.c:737
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
 
-#: ext/sndfile/gstsfsink.c:493 ext/sndfile/gstsfsink.c:501
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Kan niet in bestand \"%s\" schrijven."
 
-#: gst/aiff/aiffparse.c:1326
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
 
-#: sys/dvb/gstdvbsrc.c:758 sys/dvb/gstdvbsrc.c:855
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Apparaat \"%s\" bestaat niet."
 
-#: sys/dvb/gstdvbsrc.c:762
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Kan het frontend-apparaat \"%s\" niet openen."
 
-#: sys/dvb/gstdvbsrc.c:776
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 
-#: sys/dvb/gstdvbsrc.c:859
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
@@ -88,8 +78,12 @@ msgstr "Kan bestand \"%s\" niet openen om te lezen."
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Kan het audio-apparaat niet openen voor de mixerbesturing."
 
-#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Kan het audio-apparaat niet openen voor de mixerbesturing. Deze versie van het Open Soundsysteem wordt niet ondersteund door dit element."
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor de mixerbesturing. Deze versie "
+#~ "van het Open Soundsysteem wordt niet ondersteund door dit element."
 
 #~ msgid "Volume"
 #~ msgstr "Volume"
@@ -394,17 +388,29 @@ msgstr "Kan bestand \"%s\" niet openen om te lezen."
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid "Could not open audio device for playback. Device is being used by another application."
-#~ msgstr "Kan het audio-apparaat niet openen voor afspelen. Apparaat is in gebruik bij een andere applicatie."
+#~ msgid ""
+#~ "Could not open audio device for playback. Device is being used by another "
+#~ "application."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor afspelen. Apparaat is in gebruik "
+#~ "bij een andere applicatie."
 
-#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
-#~ msgstr "Kan het audio-apparaat niet openen voor afspelen. U hebt geen toestemming om het apparaat te openen."
+#~ msgid ""
+#~ "Could not open audio device for playback. You don't have permission to "
+#~ "open the device."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor afspelen. U hebt geen toestemming "
+#~ "om het apparaat te openen."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Kan het audio-apparaat niet openen voor afspelen."
 
-#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
-#~ msgstr "Kan het audio-apparaat niet openen voor afspelen. Deze versie van het Open Soundsysteem wordt niet ondersteund door dit element."
+#~ msgid ""
+#~ "Could not open audio device for playback. This version of the Open Sound "
+#~ "System is not supported by this element."
+#~ msgstr ""
+#~ "Kan het audio-apparaat niet openen voor afspelen. Deze versie van het "
+#~ "Open Soundsysteem wordt niet ondersteund door dit element."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Afspelen wordt door dit audio-apparaat niet ondersteund."
