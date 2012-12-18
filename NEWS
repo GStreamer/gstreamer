@@ -4,11 +4,19 @@ Copyright (C) 2011-2012 Intel Corporation
 Copyright (C) 2011 Collabora
 
 Version 0.5.0 - DD.Dec.2012
-* Require glib >= 2.31.2
+* Use GstVideoDecoder API for vaapidecode (+Sreerenj Balachandran)
 * Add support for raw YUV buffers in vaapisink (+Halley Zhao)
 * Fix memory leak in GstVaapiVideoBuffer for images and surfaces (Feng Yuan)
 
-Version 0.4.1 - 20.Nov.2012
+Version 0.4.2 - 18.Dec.2012
+* Fix H.264 decoding on Cedar Trail platforms
+* Fix MPEG-4 decoding at end-of-stream (Feng Yuan)
+* Fix MPEG-4 decoding when a buffer contains multiple packets (Feng Yuan)
+* Fix memory leak in GstVaapiVideoBuffer for images and surfaces (Feng Yuan)
+* Fix symbols collision between built-in codecparsers/ and system library
+* Use GST_PLUGIN_PATH, if set, to install plugin elements (Halley Zhao)
+
+Version 0.4.1 - 27.Nov.2012
 * Add support for H.264 interlaced streams
 * Add support for Wayland 1.0 protocol (Robert Bradford)
 * Add upstream bitstream parsers library (codecparsers)
