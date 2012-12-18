@@ -347,7 +347,8 @@ gst_gdk_pixbuf_dec_flush (GstGdkPixbufDec * filter)
 
   gst_video_frame_unmap (&frame);
 
-  GST_DEBUG ("pushing... %d bytes", gst_buffer_get_size (outbuf));
+  GST_DEBUG ("pushing... %" G_GSIZE_FORMAT " bytes",
+      gst_buffer_get_size (outbuf));
   ret = gst_pad_push (filter->srcpad, outbuf);
 
   if (ret != GST_FLOW_OK)
