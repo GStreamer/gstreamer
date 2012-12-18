@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.3
+Release notes for GStreamer Ugly Plugins 1.0.4
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -58,14 +58,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * cdio: try to handle CD-TEXT in non-UTF8 encodings
-      * xingmux, siddec, dvdlpcmdec and dvdsubdec fixes
+      * siddec: initialize debug category
 
-Bugs fixed in this release
-     
-      * 686931 : siddec does not reset total_bytes when state is set to stopped
-      * 687192 : dvdsubdec: allocates buffer 4 times the size needed
-      * 687927 : xingmux: doesn't compute the right number of frames
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -102,10 +98,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andreas Frisch
-      * Gautier Portet
-      * Michael Smith
-      * Sebastian Dröge
       * Tim-Philipp Müller
       * Wim Taymans
  

@@ -1,9 +1,81 @@
-=== release 1.0.3 ===
+=== release 1.0.4 ===
 
-2012-11-21  Tim-Philipp Müller <tim@centricular.net>
+2012-12-18  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.3
+	  releasing 1.0.4
+
+2012-12-18 18:56:48 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/da.po:
+	* po/de.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/sl.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: update translations
+
+2012-12-01 13:26:26 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/sidplay/gstsiddec.cc:
+	  siddec: init debug category
+
+2012-11-21 12:58:29 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* win32/common/config.h:
+	  Back to development (bug fixing)
+
+=== release 1.0.3 ===
+
+2012-11-21 10:22:16 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.0.3
 
 2012-11-16 13:32:00 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

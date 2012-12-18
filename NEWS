@@ -1,4 +1,8 @@
-This is GStreamer Ugly Plugins 1.0.3
+This is GStreamer Ugly Plugins 1.0.4
+
+Changes since 1.0.3:
+
+      * siddec: initialize debug category
 
 Changes since 1.0.2:
 
