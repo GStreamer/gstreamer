@@ -390,7 +390,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
   }
 
   if (buffer) {
-    GST_DEBUG_OBJECT (dec, "Received buffer of size %u",
+    GST_DEBUG_OBJECT (dec, "Received buffer of size %" G_GSIZE_FORMAT,
         gst_buffer_get_size (buffer));
   } else {
     GST_DEBUG_OBJECT (dec, "Received missing buffer");
@@ -414,7 +414,7 @@ opus_dec_chain_parse_data (GstOpusDec * dec, GstBuffer * buffer)
     gst_buffer_map (buf, &map, GST_MAP_READ);
     data = map.data;
     size = map.size;
-    GST_DEBUG_OBJECT (dec, "Using buffer of size %u", size);
+    GST_DEBUG_OBJECT (dec, "Using buffer of size %" G_GSIZE_FORMAT, size);
   } else {
     /* concealment data, pass NULL as the bits parameters */
     GST_DEBUG_OBJECT (dec, "Using NULL buffer");
