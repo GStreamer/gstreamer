@@ -1,180 +1,178 @@
-# Norwegian bokmaal translation of gst-utils.
+# Translation of gst-plugins-good to Croatian.
 # This file is put in the public domain.
-#
-# Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012.
+# Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2012-12-18 00:33+0000\n"
-"PO-Revision-Date: 2012-07-28 19:27+0100\n"
-"Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
-"Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
+"PO-Revision-Date: 2012-04-16 03:04+0200\n"
+"Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
+"Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Norwegian Bokmal\n"
-"X-Poedit-Country: NORWAY\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "«%s» av «%s»"
+msgstr "„%s” („%s”)"
 
 msgid "Failed to decode JPEG image"
-msgstr "Klarte ikke å dekode JPEG-bilde"
+msgstr "Nisam uspio dekodirati JPEG sliku"
 
 msgid "Could not connect to server"
-msgstr "Kunne ikke koble til tjener."
+msgstr "Ne mogu se spojiti na poslužitelj"
 
 msgid "Server does not support seeking."
-msgstr "Tjener støtter ikke søking."
+msgstr "Poslužitelj ne podržava traženje"
 
 msgid "Could not resolve server name."
-msgstr "Kunne ikke slå opp navn på tjener."
+msgstr "Rezolucija imena poslužitelja nije moguća."
 
 msgid "Could not establish connection to server."
-msgstr "Kunne ikke etablere tilkobling til tjener."
+msgstr "Ne mogu ostvariti vezu prema poslužitelju."
 
 msgid "Secure connection setup failed."
-msgstr "Oppsett av sikker tilkobling feilet."
+msgstr "Postavljanje sigurne veze nije uspjelo."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr "Et nettverk feil oppstod, eller tjeneren lukket uventet tilkoblingen."
+msgstr ""
+"Dogodila se greška mreže, ili je poslužitelj neočekivano zatvorio vezu."
 
 msgid "Server sent bad data."
-msgstr "Tjener sendte ugyldige data."
+msgstr "Poslužitelj je poslao neispravne podatke."
 
 msgid "No URL set."
-msgstr "Ingen URL satt."
+msgstr "Nije postavljen URL."
 
 msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
+msgstr "Greška unutarnjeg niza podataka."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Ingen eller ugyldig inndatalyd, AVI-strømmen vil bli skadet."
+msgstr "AVI niz nema ili ima neispravan ulazni zvuk, zbog čega je oštećen."
 
 msgid "This file contains no playable streams."
-msgstr "Filen inneholder ingen spillbare strømmer."
+msgstr "Datoteka ne sadrži nizove koji se mogu reproducirati."
 
 msgid "This file is invalid and cannot be played."
-msgstr "Filen er ugyldig og kan ikke spilles."
+msgstr "Datoteka je neispravna i ne može se reproducirati."
 
 msgid "This file is corrupt and cannot be played."
-msgstr "Filen er skadet og kan ikke spilles."
+msgstr "Datoteka je oštećena i ne može se reproducirati."
 
 msgid "Invalid atom size."
-msgstr "Ugyldig atomstørrelse."
+msgstr "Neispravna veličina elementa."
 
 msgid "This file is incomplete and cannot be played."
-msgstr "Filen er ufullstendig og kan ikke spilles."
+msgstr "Ova datoteka je nepotpuna i ne može se reproducirati."
 
 msgid "The video in this file might not play correctly."
-msgstr "Videoen i denne filen spilles kanskje ikke av korrekt."
+msgstr "Videozapis u ovoj datoteci se možda neće ispravno reproducirati."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr "Filen inneholder for mange strømmer. Spiller bare første %d"
+msgstr "Ova datoteka sadrži previše nizova. Reproduciram samo prvih %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-"Ingen støttet strøm ble funnet. Du må kanskje installere en GStreamer RTSP "
-"utvidelsesprogramtillegg for Real mediestrømmer."
+"Nisu pronađeni podržani nizovi. Morate instalirati GStreamer RTSP priključak "
+"proširenja za Real medijske nizove."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Ingen støttet strøm ble funnet. Du må kanskje tillate flere "
-"transportprotokoller eller den kan mangle den rette GStreamer RTSP-"
-"utvidelsestillegget."
+"Nisu pronađeni podržani nizovi. Morate dozvoliti više protokola prijenosa "
+"ili vam možda nedostaje odgovarajući GStreamer RTSP priključak proširenja."
 
 msgid "Internal data flow error."
-msgstr "Intern dataflytfeil."
+msgstr "Greška unutarnjeg toka podataka."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Kunne ikke åpne lydenheten for avspilling. Enheten brukes av et annet "
-"program."
+"Ne mogu otvoriti zvučni uređaj za reprodukciju. Uređaj trenutno koristi "
+"drugi program."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
-"Kunne ikke åpne lydenheten for avspilling. Du har ikke tillatelse til å åpne "
-"enheten."
+"Ne mogu otvoriti zvučni uređaj za reprodukciju. Nemate dozvole za otvaranje "
+"uređaja."
 
 msgid "Could not open audio device for playback."
-msgstr "Kunne ikke åpne lydenhet for avspilling."
+msgstr "Ne mogu otvoriti zvučni uređaj za reprodukciju."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
-"Kunne ikke åpne lydenheten for opptak. Du har ikke tillatelse til å åpne "
-"enheten."
+"Ne mogu otvoriti zvučni uređaj za snimanje. Nemate dozvole za otvaranje "
+"uređaja."
 
 msgid "Could not open audio device for recording."
-msgstr "Kunne ikke åpne lydenhet for opptak."
+msgstr "Ne mogu otvoriti zvučni uređaj za snimanje."
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Kunne ikke åpne lydenheten for avspilling. Denne versjonen av «Open Sound "
-"System» støttes ikke av dette elementet."
+"Ne mogu otvoriti zvučni uređaj za reprodukciju. Ovaj element ne podržava ovu "
+"inačicu Open Sound System sustava."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Avspilling støttes ikke av denne lydenheten."
+msgstr "Ovaj zvučni uređaj ne podržava reprodukciju."
 
 msgid "Audio playback error."
-msgstr "Lydavspillingsfeil"
+msgstr "Greška reprodukcije zvuka."
 
 msgid "Recording is not supported by this audio device."
-msgstr "Opptak støttes ikke av denne lydenheten."
+msgstr "Ovaj zvučni uređaj ne podržava snimanje."
 
 msgid "Error recording from audio device."
-msgstr "Feil ved opptak fra lydenheten."
+msgstr "Greška snimanja sa zvučnog uređaja."
 
 msgid "Volume"
-msgstr "Volum"
+msgstr "Glasnoća"
 
 msgid "Gain"
-msgstr "Styrke"
+msgstr "Pojačanje"
 
 msgid "Monitor"
-msgstr "Monitor"
+msgstr "Nadzor"
 
 msgid "Built-in Speaker"
-msgstr "Innebygget høyttaler"
+msgstr "Ugrađeni zvučnik"
 
 msgid "Headphone"
-msgstr "Hodetelefon"
+msgstr "Slušalica"
 
 msgid "Line Out"
-msgstr "Linje ut"
+msgstr "Linijski izlaz"
 
 msgid "SPDIF Out"
-msgstr "SPDIF ut"
+msgstr "SPDIF izlaz"
 
 msgid "AUX 1 Out"
-msgstr "AUX 1 ut"
+msgstr "AUX 1 izlaz"
 
 msgid "AUX 2 Out"
-msgstr "AUX 2 ut"
+msgstr "AUX 2 izlaz"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Feil ved lesing av% d bytes fra enheten '% s»."
+msgstr "Greška čitanja %d bajtova s uređaja „%s”."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
@@ -182,19 +180,19 @@ msgstr ""
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Kunne ikke tilordne buffere fra enheten «%s»."
+msgstr "Ne mogu mapirati međuspremnike iz uređaja „%s”"
 
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Driveren av enheten «%s» støtter ikke kjente opptaksmetoder."
+msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snimanja."
 
 #, fuzzy, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Driveren av enheten «%s» støtter ikke kjente opptaksmetoder."
+msgstr "Upravljački program uređaja „%s” ne podržava poznate metode snimanja."
 
 #, fuzzy, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Enhet «%s» er ikke en utgangsenhet."
+msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -202,160 +200,160 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Uređaj „%s” nije uređaj za snimanje."
 
 #, fuzzy, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Uređaj „%s” nije uređaj za snimanje."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Kunne ikke få parametere på enheten «%s»."
+msgstr "Nisam uspio dobiti parametre uređaja „%s”"
 
 #, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Videoinndataenheten aksepterte ikke ny bildefrekvensinnstilling."
+msgstr "Ulazni video uređaj nije prihvatio nove postavke broja okvira."
 
 msgid "Video device could not create buffer pool."
 msgstr ""
 
 #, fuzzy, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Kunne ikke hente innstillingen av mottakeren %d på enheten «%s»."
+msgstr "Nisam uspio dobiti postavke birača %d uređaja „%s”."
 
 #, fuzzy, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Feil ved lesing av% d bytes fra enheten '% s»."
+msgstr "Greška čitanja %d bajtova s uređaja „%s”."
 
 #, fuzzy, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Enhet «%s» er ikke en utgangsenhet."
+msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #, fuzzy, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Klarte ikke å sette inngang %d på enhet %s."
+msgstr "Nisam uspio postaviti ulaz %d na uređaj %s."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Klarte ikke å sette inngang %d på enhet %s."
+msgstr "Nisam uspio postaviti ulaz %d na uređaj %s."
 
 #, fuzzy, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Klarte ikke å innhente signalstyrken for enheten «%s»."
+msgstr "Nisam uspio dobiti snagu signala za uređaj „%s”."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Feil ved henting av evner for enheten «%s»: Det er ikke en v4l2 driver. "
-"Sjekk om det er en v4l1 driver."
+"Greška dobivanja mogućnosti uređaja „%s”: To nije v4l2 upravljački program. "
+"Provjerite je li v4l1 upravljački program."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Feil ved attributtspørring av inndata %d på enhet %s"
+msgstr "Nisam uspio ispitati svojstva ulaza %d uređaja %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Kunne ikke hente innstillingen av mottakeren %d på enheten «%s»."
+msgstr "Nisam uspio dobiti postavke birača %d uređaja „%s”."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Feil ved norm-spørring på enhet %s."
+msgstr "Nisam uspio ispitati norm na uređaju „%s”."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Kunne ikke å få inn kontrollattributter på enhet «%s»."
+msgstr "Nisam uspio dobiti svojstva upravljanja na uređaju „%s”."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Kan ikke identifisere enhet «%s»."
+msgstr "Ne mogu identificirati uređaj „%s”."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Dette er ikke en enhet «%s»."
+msgstr "Ovo nije uređaj „%s”."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
+msgstr "Ne mogu otvoriti uređaj „%s” za čitanje i pisanje."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Uređaj „%s” nije uređaj za snimanje."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Enhet «%s» er ikke en utgangsenhet."
+msgstr "Uređaj „%s” nije izlazni uređaj."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Kunne ikke sette normen for enhet «%s»."
+msgstr "Nisam uspio postaviti norm za uređaj „%s”."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Klarte ikke å få gjeldende mottakerfrekvens for enheten «%s»."
+msgstr "Nisam uspio dobiti trenutnu frekvenciju birača za uređaj „%s”."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Klarte ikke å sette gjeldende mottakerfrekvens for enheten «%s» til %lu Hz."
+"Nisam uspio postaviti trenutnu frekvenciju birača za uređaj „%s” na %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Klarte ikke å innhente signalstyrken for enheten «%s»."
+msgstr "Nisam uspio dobiti snagu signala za uređaj „%s”."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Kunne ikke hente verdi for kontroll %d på enheten «%s»."
+msgstr "Nisam uspio dobiti vrijednost za kontrolu %d na uređaju „%s”."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Klarte ikke å sette verdi %d for kontroll %d på enheten «%s»."
+msgstr "Nisam uspio postaviti vrijednost %d za kontrolu %d na uređaju „%s”."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Kunne ikke hente gjeldende inndata på enheten «%s». Kanskje det er en "
-"radioenhet"
+"Nisam uspio dobiti trenutni ulaz na uređaju „%s”. Možda je to radio uređaj"
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
-msgstr "Kunne ikke hente utdata fra enheten «%s». Kanskje det er en radioenhet"
+msgstr ""
+"Nisam uspio dobiti trenutni izlaz na uređaju „%s”. Možda je to radio uređaj"
 
 #, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Klarte ikke å sette utgang %d på enhet %s."
+msgstr "Nisam uspio postaviti izlaz %d na uređaj %s."
 
 msgid "Changing resolution at runtime is not yet supported."
-msgstr "Endring av oppløsning under kjøring støttes ikke enda."
+msgstr "Promjena rezolucije pri izvođenju još nije podržana."
 
 msgid "Cannot operate without a clock"
-msgstr "Kan ikke operere uten en klokke"
+msgstr "Ne mogu raditi bez takta"
 
 #~ msgid "Could not establish connection to sound server"
-#~ msgstr "Kunne ikke etablere tilkobling til lydtjener"
+#~ msgstr "Ne mogu ostvariti vezu prema poslužitelju zvuka"
 
 #~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Klarte ikke å etterspørre lydtjenerens evner"
+#~ msgstr "Nisam uspio ispitati mogućnosti poslužitelja zvuka"
 
 #~ msgid "Bass"
-#~ msgstr "Bass"
+#~ msgstr "Niski"
 
 #~ msgid "Treble"
-#~ msgstr "Diskant"
+#~ msgstr "Visoki"
 
 #~ msgid "Synth"
-#~ msgstr "Synth"
+#~ msgstr "Sintetizator"
 
 #~ msgid "PCM"
 #~ msgstr "PCM"
 
 #~ msgid "Speaker"
-#~ msgstr "Høyttaler"
+#~ msgstr "Zvučnik"
 
 #~ msgid "Line-in"
-#~ msgstr "Linje inn"
+#~ msgstr "Ulazna linija"
 
 #~ msgid "Microphone"
 #~ msgstr "Mikrofon"
@@ -370,37 +368,37 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgstr "PCM-2"
 
 #~ msgid "Record"
-#~ msgstr "Opptak"
+#~ msgstr "Snimanje"
 
 #~ msgid "In-gain"
-#~ msgstr "Innstyrke"
+#~ msgstr "Ulazno pojačanje"
 
 #~ msgid "Out-gain"
-#~ msgstr "Utstyrke"
+#~ msgstr "Izlazno pojačanje"
 
 #~ msgid "Line-1"
-#~ msgstr "Linje 1"
+#~ msgstr "Linija 1"
 
 #~ msgid "Line-2"
-#~ msgstr "Linje 2"
+#~ msgstr "Linija 2"
 
 #~ msgid "Line-3"
-#~ msgstr "Linje 3"
+#~ msgstr "Linija 3"
 
 #~ msgid "Digital-1"
-#~ msgstr "Digital 1"
+#~ msgstr "Digitalni 1"
 
 #~ msgid "Digital-2"
-#~ msgstr "Digital 2"
+#~ msgstr "Digitalni 2"
 
 #~ msgid "Digital-3"
-#~ msgstr "Digital 3"
+#~ msgstr "Digitalni 3"
 
 #~ msgid "Phone-in"
-#~ msgstr "Telefon inn"
+#~ msgstr "Telefonski ulaz"
 
 #~ msgid "Phone-out"
-#~ msgstr "Telefon ut"
+#~ msgstr "Telefonski izlaz"
 
 #~ msgid "Video"
 #~ msgstr "Video"
@@ -409,29 +407,29 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgstr "Radio"
 
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Kunne ikke åpne lydenheten for mikserkontrollhåndtering."
+#~ msgstr "Ne mogu otvoriti zvučni uređaj za upravljanje mikserom."
 
 #~ msgid ""
 #~ "Could not open audio device for mixer control handling. This version of "
 #~ "the Open Sound System is not supported by this element."
 #~ msgstr ""
-#~ "Kunne ikke åpne lydenheten for mikserkontrollhåndtering. Denne versjonen "
-#~ "av «Open Sound System» støttes ikke av dette elementet."
+#~ "Ne mogu otvoriti zvučni uređaj za upravljanje mikserom. Ovaj element ne "
+#~ "podržava ovu inačicu Open Sound System sustava."
 
 #~ msgid "Master"
-#~ msgstr "Hovedvolum"
+#~ msgstr "Glavni"
 
 #~ msgid "Front"
-#~ msgstr "Front"
+#~ msgstr "Prednji"
 
 #~ msgid "Rear"
-#~ msgstr "Bak"
+#~ msgstr "Stražnji"
 
 #~ msgid "Headphones"
-#~ msgstr "Hodetelefoner"
+#~ msgstr "Slušalice"
 
 #~ msgid "Center"
-#~ msgstr "Senter"
+#~ msgstr "Srednji"
 
 #~ msgid "LFE"
 #~ msgstr "LFE"
@@ -440,109 +438,109 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgstr "Surround"
 
 #~ msgid "Side"
-#~ msgstr "Side"
+#~ msgstr "Bočni"
 
 #~ msgid "AUX Out"
-#~ msgstr "AUX ut"
+#~ msgstr "AUX izlaz"
 
 #~ msgid "3D Depth"
-#~ msgstr "3D dybde"
+#~ msgstr "3D dubina"
 
 #~ msgid "3D Center"
-#~ msgstr "3D senter"
+#~ msgstr "3D središte"
 
 #~ msgid "3D Enhance"
-#~ msgstr "3D-forbedring"
+#~ msgstr "3D dopuna"
 
 #~ msgid "Telephone"
 #~ msgstr "Telefon"
 
 #~ msgid "Line In"
-#~ msgstr "Linje inn"
+#~ msgstr "Linijski ulaz"
 
 #~ msgid "Internal CD"
-#~ msgstr "Intern CD"
+#~ msgstr "Interni CD"
 
 #~ msgid "Video In"
-#~ msgstr "Video inn"
+#~ msgstr "Video ulaz"
 
 #~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 inn"
+#~ msgstr "AUX 1 ulaz"
 
 #~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 inn"
+#~ msgstr "AUX 2 ulaz"
 
 #~ msgid "AUX In"
-#~ msgstr "AUX inn"
+#~ msgstr "AUX ulaz"
 
 #~ msgid "Record Gain"
-#~ msgstr "Innspillingsstyrke"
+#~ msgstr "Pojačanje snimanja"
 
 #~ msgid "Output Gain"
-#~ msgstr "Utdatastyrke"
+#~ msgstr "Pojačanje izlaza"
 
 #~ msgid "Microphone Boost"
-#~ msgstr "Mikrofonforsterkning"
+#~ msgstr "Pojačanje mikrofona"
 
 #~ msgid "Loopback"
-#~ msgstr "Loopback"
+#~ msgstr "Povratna petlja"
 
 #~ msgid "Diagnostic"
-#~ msgstr "Diagnose"
+#~ msgstr "Dijagnostika"
 
 #~ msgid "Bass Boost"
-#~ msgstr "BassBoost"
+#~ msgstr "Pojačanje niskih"
 
 #~ msgid "Playback Ports"
-#~ msgstr "Avspillingsporter:"
+#~ msgstr "Portovi reprodukcije"
 
 #~ msgid "Input"
-#~ msgstr "Inngang"
+#~ msgstr "Ulaz"
 
 #~ msgid "Record Source"
-#~ msgstr "Opptakskilde"
+#~ msgstr "Izvor snimanja"
 
 #~ msgid "Monitor Source"
-#~ msgstr "Monitorkilde"
+#~ msgstr "Izvor nadziranja"
 
 #~ msgid "Keyboard Beep"
-#~ msgstr "Tastaturpip"
+#~ msgstr "Tipkovnički zvuk"
 
 #~ msgid "Simulate Stereo"
-#~ msgstr "Simulert stereo"
+#~ msgstr "Simuliraj stereo"
 
 #~ msgid "Stereo"
 #~ msgstr "Stereo"
 
 #~ msgid "Surround Sound"
-#~ msgstr "Surroundlyd"
+#~ msgstr "Surround zvuk"
 
 #~ msgid "Microphone Gain"
-#~ msgstr "Mikrofonstyrke"
+#~ msgstr "Pojačanje mikrofona"
 
 #~ msgid "Speaker Source"
-#~ msgstr "Høyttalerkilde"
+#~ msgstr "Izvor zvučnika"
 
 #~ msgid "Microphone Source"
-#~ msgstr "Mikrofonkilde"
+#~ msgstr "Izvor mikrofona"
 
 #~ msgid "Jack"
-#~ msgstr "Jack"
+#~ msgstr "Priključak"
 
 #~ msgid "Center / LFE"
-#~ msgstr "Senter / LFE"
+#~ msgstr "Srednji / LFE"
 
 #~ msgid "Stereo Mix"
-#~ msgstr "Stereomiks"
+#~ msgstr "Stereo mikser"
 
 #~ msgid "Mono Mix"
-#~ msgstr "Monomiks"
+#~ msgstr "Mono mikser"
 
 #~ msgid "Input Mix"
-#~ msgstr "Inndatamiks"
+#~ msgstr "Ulazni mikser"
 
 #~ msgid "SPDIF In"
-#~ msgstr "SPDIF Inn"
+#~ msgstr "SPDIF ulaz"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Mikrofon 1"
@@ -551,10 +549,10 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgstr "Mikrofon 2"
 
 #~ msgid "Digital Out"
-#~ msgstr "Digital ut"
+#~ msgstr "Digitalni izlaz"
 
 #~ msgid "Digital In"
-#~ msgstr "Digital inn"
+#~ msgstr "Digitalni ulaz"
 
 #~ msgid "HDMI"
 #~ msgstr "HDMI"
@@ -563,145 +561,142 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgstr "Modem"
 
 #~ msgid "Handset"
-#~ msgstr "Håndsett"
+#~ msgstr "Slušalice s mikrofonom"
 
 #~ msgid "Other"
-#~ msgstr "Annet"
+#~ msgstr "Ostalo"
 
 #~ msgid "None"
-#~ msgstr "Ingen"
+#~ msgstr "Nijedan"
 
 #~ msgid "On"
-#~ msgstr "På"
+#~ msgstr "Uključen"
 
 #~ msgid "Off"
-#~ msgstr "Av"
+#~ msgstr "Isključen"
 
 #~ msgid "Mute"
-#~ msgstr "Demp"
+#~ msgstr "Utišan"
 
 #~ msgid "Fast"
-#~ msgstr "Rask"
+#~ msgstr "Brzo"
 
 #~ msgid "Very Low"
-#~ msgstr "Meget lav"
+#~ msgstr "Vrlo niska"
 
 #~ msgid "Low"
-#~ msgstr "Lav"
+#~ msgstr "Niska"
 
 #~ msgid "Medium"
-#~ msgstr "Middels"
+#~ msgstr "Srednja"
 
 #~ msgid "High"
-#~ msgstr "Høy"
+#~ msgstr "Visoka"
 
 #~ msgid "Very High"
-#~ msgstr "Meget høy"
+#~ msgstr "Vrlo visoka"
 
 #~ msgid "Production"
-#~ msgstr "Produksjon"
+#~ msgstr "Produkcijska"
 
 #~ msgid "Front Panel Microphone"
-#~ msgstr "Fronpanelmikrofon"
+#~ msgstr "Mikrofon na prednjoj ploči"
 
 #~ msgid "Front Panel Line In"
-#~ msgstr "Frontpanel innlinje"
+#~ msgstr "Linijski ulaz na prednjoj ploči"
 
 #~ msgid "Front Panel Headphones"
-#~ msgstr "Frontpanelhodetelefoner"
+#~ msgstr "Slušalice na prednjoj ploči"
 
 #~ msgid "Front Panel Line Out"
-#~ msgstr "Frontpanel utlinje"
+#~ msgstr "Linijski izlaz na prednjoj ploči"
 
 #~ msgid "Green Connector"
-#~ msgstr "Grønn kontakt"
+#~ msgstr "Zelena priključnica"
 
 #~ msgid "Pink Connector"
-#~ msgstr "Rosa kontakt"
+#~ msgstr "Ružičasta priključnica"
 
 #~ msgid "Blue Connector"
-#~ msgstr "Blå kontakt"
+#~ msgstr "Plava priključnica"
 
 #~ msgid "White Connector"
-#~ msgstr "Hvit kontakt"
+#~ msgstr "Bijela priključnica"
 
 #~ msgid "Black Connector"
-#~ msgstr "Sort kontakt"
+#~ msgstr "Crna priključnica"
 
 #~ msgid "Gray Connector"
-#~ msgstr "Grå kontakt"
+#~ msgstr "Siva priključnica"
 
 #~ msgid "Orange Connector"
-#~ msgstr "Oransje kontakt"
+#~ msgstr "Narančasta priključnica"
 
 #~ msgid "Red Connector"
-#~ msgstr "Rød kontakt"
+#~ msgstr "Crvena priključnica"
 
 #~ msgid "Yellow Connector"
-#~ msgstr "Gul kontakt"
+#~ msgstr "Žuta priključnica"
 
 #~ msgid "Green Front Panel Connector"
-#~ msgstr "Grønn frontpanelkontakt"
+#~ msgstr "Zelena priključnica na prednjoj ploči"
 
 #~ msgid "Pink Front Panel Connector"
-#~ msgstr "Rosa frontpanelkontakt"
+#~ msgstr "Ružičasta priključnica na prednjoj ploči"
 
 #~ msgid "Blue Front Panel Connector"
-#~ msgstr "Blå frontpanelkontakt"
+#~ msgstr "Plava priključnica na prednjoj ploči"
 
 #~ msgid "White Front Panel Connector"
-#~ msgstr "Hvit frontpanelkontakt"
+#~ msgstr "Bijela priključnica na prednjoj ploči"
 
 #~ msgid "Black Front Panel Connector"
-#~ msgstr "Sort frontpanelkontakt"
+#~ msgstr "Crna priključnica na prednjoj ploči"
 
 #~ msgid "Gray Front Panel Connector"
-#~ msgstr "Grå frontpanelkontakt"
+#~ msgstr "Siva priključnica na prednjoj ploči"
 
 #~ msgid "Orange Front Panel Connector"
-#~ msgstr "Oransje frontpanelkontakt"
+#~ msgstr "Narančasta priključnica na prednjoj ploči"
 
 #~ msgid "Red Front Panel Connector"
-#~ msgstr "Rød frontpanelkontakt"
+#~ msgstr "Crvena priključnica na prednjoj ploči"
 
 #~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Gul frontpanelkontakt"
+#~ msgstr "Žuta priključnica na prednjoj ploči"
 
 #~ msgid "Spread Output"
-#~ msgstr "Spredningsutgang"
+#~ msgstr "Rašireni izlaz"
 
 #~ msgid "Downmix"
-#~ msgstr "Nedmiks"
+#~ msgstr "Smanjenje broja kanala"
 
 #~ msgid "Virtual Mixer Input"
-#~ msgstr "Virtuell mikserinngang"
+#~ msgstr "Ulaz virtualnog miksera"
 
 #~ msgid "Virtual Mixer Output"
-#~ msgstr "Virtuell mikserutgang"
+#~ msgstr "Izlaz virtualnog miksera"
 
 #~ msgid "Virtual Mixer Channels"
-#~ msgstr "Virtuelle mikserkanaler"
+#~ msgstr "Kanali virtualnog miksera"
 
 #~ msgid "%s %d Function"
-#~ msgstr "%s %d Funksjon"
+#~ msgstr "%s %d funkcija"
 
 #~ msgid "%s Function"
-#~ msgstr "%s Funksjon"
+#~ msgstr "%s funkcija"
 
 #~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Fikk uventet rammestørrelsen %u istedenfor %u."
+#~ msgstr "Dobivena neočekivana veličina okvira %u umjesto %u."
 
 #~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Feil ved lesing av %d byte på enheten «%s»."
+#~ msgstr "Greška čitanja %d bajtova na uređaju „%s”."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Kunne ikke legge i kø buffere i enheten «%s»."
+#~ msgstr "Nisam uspio dodati u red međuspremnike u uređaj „%s”."
 
 #~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Mislyktes i å få videobilder fra enhet «%s»."
+#~ msgstr "Nisam uspio pokušavajući dobiti video okvire iz uređaja „%s”."
 
 #~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Mislyktes etter %d forsøk. Enhet %s. Systemfeil: %s"
-
-#~ msgid "Describes the selected input element."
-#~ msgstr "Beskriver valgt inndataelement."
+#~ msgstr "Nisam uspio nakon %d pokušaja. uređaj %s. greška sustava: %s"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 01:45+0100\n"
+"POT-Creation-Date: 2012-12-18 00:33+0000\n"
 "PO-Revision-Date: 2011-01-08 00:03+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -329,14 +329,11 @@ msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Beklenmeyen bir çerçevece boyutu %u bunun yerine %u görüntülendi."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Ses sunucusuyla bağlantı kurulumayor"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Ses sunucusu olanakları sorgulanamadı"
 
 #~ msgid "Bass"
 #~ msgstr "Bas"
@@ -687,17 +684,20 @@ msgstr "Saat olmadan çalışamaz"
 #~ msgid "%s Function"
 #~ msgstr "%s İşlev"
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Ses sunucusuyla bağlantı kurulumayor"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Ses sunucusu olanakları sorgulanamadı"
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Beklenmeyen bir çerçevece boyutu %u bunun yerine %u görüntülendi."
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "%d baytı şu aygıtta '%s' okumada hata."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "
