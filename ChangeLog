@@ -1,9 +1,43 @@
-=== release 1.0.3 ===
+=== release 1.0.4 ===
 
-2012-11-21  Tim-Philipp Müller <tim@centricular.net>
+2012-12-18  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.3
+	  releasing 1.0.4
+
+2012-12-12 17:01:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodec: set bits_per_coded_sample for G726
+	  Use the bitrate and the samplerate to set the bits_per_coded_sample for G726
+	  because the decoder needs this.
+
+2012-12-10 14:54:03 +0100  Rasmus Rohde <rohde@duff.dk>
+
+	* ext/libav/gstavpipe.h:
+	  Fix incorrect use of object in log statement. We are given a pointer to the object and should not try to take the address of it.
+
+2012-11-21 13:05:54 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Back to development (bug fixing)
+
+=== release 1.0.3 ===
+
+2012-11-21 11:13:07 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.3
+
+2012-11-21 11:10:49 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/ext/Makefile.am:
+	  Revert "Revert "ffmpeg: Fix make dist""
+	  This reverts commit 2aab13b9aed1ff7e9a17be07b3184ebd0869afe0.
 
 2012-11-19 14:10:23 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

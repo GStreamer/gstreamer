@@ -1,4 +1,12 @@
-This is GStreamer Libav Plugins 1.0.3
+This is GStreamer Libav Plugins 1.0.4
+
+Changes since 1.0.3:
+
+      * G.726 decoder fixes
+
+Bugs fixed since 1.0.3:
+
+      * 689975 : Incorrect use of object in log statement
 
 Changes since 1.0.2:
 

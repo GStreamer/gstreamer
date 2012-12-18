@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.0.3
+Release notes for GStreamer libav Plugins 1.0.4
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -38,10 +38,11 @@ contains a set of less supported plugins that haven't passed the
 
 Features of this release
     
-      * avcodecmap: Y41B is YUV411P, not YUV410P
+      * G.726 decoder fixes
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+
+      * 689975 : Incorrect use of object in log statement
 
 ==== Download ====
 
@@ -78,6 +79,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
+      * Rasmus Rohde
       * Tim-Philipp Müller
+      * Wim Taymans
  
