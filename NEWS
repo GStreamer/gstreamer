@@ -1,4 +1,22 @@
-This is GStreamer Good Plugins 1.0.3
+This is GStreamer Good Plugins 1.0.4
+
+Changes since 1.0.3:
+
+      * deinterleave: properly set srcpad channel position
+      * osxvideosink: Fix resizing the Cocoa window on receiving new caps
+      * rtspsrc fixes
+      * shout2send: also accept audio/webm in addition to video/webm
+      * videobox: fix border filling for planar YUV formats
+      * webmmux: fix linking to shout2send
+      * v4l2: fix build on FreeBSD
+
+Bugs fixed since 1.0.3:
+
+      * 684312 : rtspsrc: mutex blocks going to NULL state
+      * 684991 : videobox: sometimes incorrectly crops producing visual artifacts, and green instead of black border
+      * 687469 : mulawdec: integer overrun with large chunks of data
+      * 689732 : osxvideosink can't resize Cocoa window on receiving caps
+      * 689336 : webmmux: can't link webmux to shout2send
 
 Changes since 1.0.2:
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.0.3
+Release notes for GStreamer Good Plugins 1.0.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -57,21 +57,21 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * rtspsrc: numerous improvements
-      * build fix for gst-plugins-base installed in non-default prefix
-      * multifilesink: post messages in max-size mode as well
-      * vp8dec: improve robustness on decoding errors, e.g. for videocalls over RTP
+      * deinterleave: properly set srcpad channel position
+      * osxvideosink: Fix resizing the Cocoa window on receiving new caps
+      * rtspsrc fixes
+      * shout2send: also accept audio/webm in addition to video/webm
+      * videobox: fix border filling for planar YUV formats
+      * webmmux: fix linking to shout2send
+      * v4l2: fix build on FreeBSD
 
 Bugs fixed in this release
      
-      * 639420 : RTSP setup, add client_ports
-      * 686837 : imagefreeze: improve caps negotiation
-      * 686985 : [pulsesrc] Assertion 'm' failed at pulse/thread-mainloop.c:166, function pa_threaded_mainloop_lock(). Aborting.
-      * 687013 : auparse,level,videocrop,y4m,caca: Fix missing GST_PLUGINS_BASE_LIBS dependency in Makefile.am
-      * 687154 : examples: error in level plugin example code
-      * 687330 : videobox, videomixer: height obtained using _WIDTH macros
-      * 687464 : speexdec: Don't unmap or finish_frame an invalid GstBuffer
-      * 688382 : rtspsrc doesn't work with the interleaved protocols
+      * 684312 : rtspsrc: mutex blocks going to NULL state
+      * 684991 : videobox: sometimes incorrectly crops producing visual artifacts, and green instead of black border
+      * 687469 : mulawdec: integer overrun with large chunks of data
+      * 689732 : osxvideosink can't resize Cocoa window on receiving caps
+      * 689336 : webmmux: can't link webmux to shout2send
 
 ==== Download ====
 
@@ -108,12 +108,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Antoine Tremblay
-      * Debarshi Ray
-      * Douglas Bagnall
-      * Marc Leeman
-      * Sebastian Dröge
-      * Thiago Santos
+      * Aleix Conchillo Flaque
+      * Alexey Chernov
+      * Koop Mast
+      * Philippe Normand
+      * Roland Krikava
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Wim Taymans
  
