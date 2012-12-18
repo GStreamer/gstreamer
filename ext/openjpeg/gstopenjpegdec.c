@@ -171,13 +171,14 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
     g_return_val_if_reached (FALSE);
   }
 
-  color_space = gst_structure_get_string (s, "colorspace");
-  if (g_str_equal (color_space, "sRGB"))
-    self->color_space = CLRSPC_SRGB;
-  else if (g_str_equal (color_space, "GRAY"))
-    self->color_space = CLRSPC_GRAY;
-  else if (g_str_equal (color_space, "sYUV"))
-    self->color_space = CLRSPC_SYCC;
+  if ((color_space = gst_structure_get_string (s, "colorspace"))) {
+    if (g_str_equal (color_space, "sRGB"))
+      self->color_space = CLRSPC_SRGB;
+    else if (g_str_equal (color_space, "GRAY"))
+      self->color_space = CLRSPC_GRAY;
+    else if (g_str_equal (color_space, "sYUV"))
+      self->color_space = CLRSPC_SYCC;
+  }
 
   self->ncomps = 0;
   gst_structure_get_int (s, "num-components", &self->ncomps);
