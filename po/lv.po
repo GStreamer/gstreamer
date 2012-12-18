@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-06-07 16:21+0200\n"
+"POT-Creation-Date: 2011-04-17 00:50+0100\n"
 "PO-Revision-Date: 2011-09-02 12:04-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -17,58 +17,67 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: Latvian\n"
 "X-Poedit-Country: LATVIA\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
-"2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : 2);\n"
 
+#: ext/resindvd/resindvdsrc.c:364
 msgid "Could not read title information for DVD."
 msgstr "Nevarēja nolasīt virsrakstu informāciju no DVD."
 
+#: ext/resindvd/resindvdsrc.c:370
 #, c-format
 msgid "Failed to open DVD device '%s'."
 msgstr "Neizdevās atvērt DVD ierīci '%s'."
 
+#: ext/resindvd/resindvdsrc.c:376
 msgid "Failed to set PGC based seeking."
 msgstr "Neizdevās uzstādīt PCG balstīto meklēšanu."
 
-msgid ""
-"Could not read DVD. This may be because the DVD is encrypted and a DVD "
-"decryption library is not installed."
-msgstr ""
-"Nevarēja nolasīt DVD. Iespējams, ka DVD ir šifrēts un DVD atšifrēšanas "
-"bibliotēka nav instalēta."
+#: ext/resindvd/resindvdsrc.c:1140
+msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
+msgstr "Nevarēja nolasīt DVD. Iespējams, ka DVD ir šifrēts un DVD atšifrēšanas bibliotēka nav instalēta."
 
+#: ext/resindvd/resindvdsrc.c:1145 ext/resindvd/resindvdsrc.c:1153
 msgid "Could not read DVD."
 msgstr "Nevar nolasīt  DVD."
 
+#: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:341
 msgid "No file name specified for writing."
 msgstr "Ierakstīšanai nav norādīts neviens faila nosaukums."
 
+#: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:347
 #, c-format
 msgid "Could not open file \"%s\" for writing."
 msgstr "Nav iespējams atvērt failu \"%s\" ierakstīšanai."
 
+#: ext/sndfile/gstsfsink.c:439 gst/nuvdemux/gstnuvdemux.c:736
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
 
+#: ext/sndfile/gstsfsink.c:493 ext/sndfile/gstsfsink.c:501
 #, c-format
 msgid "Could not write to file \"%s\"."
 msgstr "Nevarēja ierakstīt failā \"%s\"."
 
+#: gst/aiff/aiffparse.c:1276
 msgid "Internal data flow error."
 msgstr "Iekšējā datu plūsmas kļūda."
 
+#: sys/dvb/gstdvbsrc.c:728 sys/dvb/gstdvbsrc.c:821
 #, c-format
 msgid "Device \"%s\" does not exist."
 msgstr "Ierīce \"%s\" neeksistē."
 
+#: sys/dvb/gstdvbsrc.c:732
 #, c-format
 msgid "Could not open frontend device \"%s\"."
 msgstr "Nav iespējams atvērt priekšējo ierīci \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:744
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "Nav iespējams iegūt uzstādījumus no priekšējās ierīces  \"%s\"."
 
+#: sys/dvb/gstdvbsrc.c:825
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
@@ -79,12 +88,8 @@ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
 #~ msgid "Could not open audio device for mixer control handling."
 #~ msgstr "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai."
 
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai. Šis "
-#~ "elements neatbalsta šo Open Sound System versiju."
+#~ msgid "Could not open audio device for mixer control handling. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai. Šis elements neatbalsta šo Open Sound System versiju."
 
 #~ msgid "Volume"
 #~ msgstr "Skaļums"
@@ -389,29 +394,17 @@ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
 
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto "
-#~ "cita programma."
+#~ msgid "Could not open audio device for playback. Device is being used by another application."
+#~ msgstr "Nav iespējams atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita programma."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās "
-#~ "atļaujas, lai atvērtu ierīci."
+#~ msgid "Could not open audio device for playback. You don't have permission to open the device."
+#~ msgstr "Nav iespējams atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās atļaujas, lai atvērtu ierīci."
 
 #~ msgid "Could not open audio device for playback."
 #~ msgstr "Nav iespējams atvērt audio ierīci atskaņošanai."
 
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci atskaņošanai. Šis elements neatbalsta "
-#~ "šo Open Sound System versiju."
+#~ msgid "Could not open audio device for playback. This version of the Open Sound System is not supported by this element."
+#~ msgstr "Nav iespējams atvērt audio ierīci atskaņošanai. Šis elements neatbalsta šo Open Sound System versiju."
 
 #~ msgid "Playback is not supported by this audio device."
 #~ msgstr "Šī audio ierīce neatbalsta atskaņošanu."

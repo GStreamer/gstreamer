@@ -1,83 +1,80 @@
-# Norwegian bokmaal translation of gst-utils.
+# Translation of gst-plugins-bad to Croatian.
 # This file is put in the public domain.
-#
-# Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
-# Johnny A. Solbu <johnny@solbu.net>, 2012.
+# Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2011-04-17 00:50+0100\n"
-"PO-Revision-Date: 2012-07-28 07:10+0100\n"
-"Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
-"Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
+"PO-Revision-Date: 2012-04-16 02:06+0200\n"
+"Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
+"Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Poedit-Language: Norwegian Bokmal\n"
-"X-Poedit-Country: NORWAY\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 
 #: ext/resindvd/resindvdsrc.c:364
 msgid "Could not read title information for DVD."
-msgstr "Kunne ikke lese tittelinformasjonen til DVD-en."
+msgstr "Ne mogu čitati informacije o naslovu DVD-a."
 
 #: ext/resindvd/resindvdsrc.c:370
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Kunne ikke åpne DVD-enheten «%s»."
+msgstr "Nisam uspio otvoriti DVD uređaj „%s”."
 
 #: ext/resindvd/resindvdsrc.c:376
 msgid "Failed to set PGC based seeking."
-msgstr "Kunne ikke sette PGC-basert søking."
+msgstr "Nisam uspio postaviti pretragu temeljenu na PGC-u."
 
 #: ext/resindvd/resindvdsrc.c:1140
 msgid "Could not read DVD. This may be because the DVD is encrypted and a DVD decryption library is not installed."
-msgstr "Kunne ikke lese DVD-en. Dette kan være fordi DVD-en er kryptert DVD-dekrypteringsbiblioteket ikke er installert."
+msgstr "Ne mogu čitati DVD. To je možda zato što je DVD šifriran, a biblioteka dešifriranja DVD-a nije instalirana."
 
 #: ext/resindvd/resindvdsrc.c:1145 ext/resindvd/resindvdsrc.c:1153
 msgid "Could not read DVD."
-msgstr "Kunne ikke lese DVD-en."
+msgstr "Ne mogu čitati DVD."
 
 #: ext/sndfile/gstsfsink.c:277 ext/sndfile/gstsfsrc.c:341
 msgid "No file name specified for writing."
-msgstr "Ingen filnavn oppgitt for skriving."
+msgstr "Nije navedena datoteka za pisanje."
 
 #: ext/sndfile/gstsfsink.c:290 ext/sndfile/gstsfsrc.c:347
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Kunne ikke åpne filen «%s» for skriving."
+msgstr "Ne mogu otvoriti datoteku „%s” za pisanje."
 
 #: ext/sndfile/gstsfsink.c:439 gst/nuvdemux/gstnuvdemux.c:736
 msgid "Internal data stream error."
-msgstr "Intern feil i datastrøm."
+msgstr "Greška unutarnjeg niza podataka."
 
 #: ext/sndfile/gstsfsink.c:493 ext/sndfile/gstsfsink.c:501
 #, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Kunne ikke skrive til fil «%s»."
+msgstr "Ne mogu pisati u datoteku „%s”."
 
 #: gst/aiff/aiffparse.c:1276
 msgid "Internal data flow error."
-msgstr "Intern feil i datastrøm."
+msgstr "Greška unutarnjeg toka podataka."
 
 #: sys/dvb/gstdvbsrc.c:728 sys/dvb/gstdvbsrc.c:821
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Enhet «%s» eksisterer ikke."
+msgstr "Uređaj „%s” ne postoji."
 
 #: sys/dvb/gstdvbsrc.c:732
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Kunne ikke åpne frontenhet «%s»."
+msgstr "Ne mogu otvoriti uređaj sučelja „%s”."
 
 #: sys/dvb/gstdvbsrc.c:744
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Kunne ikke hente innstillinger fra frontenhet «%s»."
+msgstr "Ne mogu dobiti postavke uređaja sučelja „%s”."
 
 #: sys/dvb/gstdvbsrc.c:825
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kunne ikke åpne filen «%s» for lesing."
+msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
