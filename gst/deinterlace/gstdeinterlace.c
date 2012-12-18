@@ -502,7 +502,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
 
   /**
    * GstDeinterlace:mode
-   * 
+   *
    * This selects whether the deinterlacing methods should
    * always be applied or if they should only be applied
    * on content that has the "interlaced" flag on the caps.
@@ -518,7 +518,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
 
   /**
    * GstDeinterlace:method
-   * 
+   *
    * Selects the different deinterlacing algorithms that can be used.
    * These provide different quality and CPU usage.
    *
@@ -1029,7 +1029,7 @@ gst_deinterlace_pop_history (GstDeinterlace * self)
   }
 
   GST_DEBUG_OBJECT (self, "Returning frame: %p %" GST_TIME_FORMAT
-      " with duration %" GST_TIME_FORMAT " and size %u", frame,
+      " with duration %" GST_TIME_FORMAT " and size %" G_GSIZE_FORMAT, frame,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (frame->buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (frame->buffer)),
       GST_VIDEO_FRAME_SIZE (frame));
@@ -1121,8 +1121,9 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   GST_DEBUG_OBJECT (self,
       "Pushing new frame as %d fields to the history (count before %d): ptr %p at %"
       GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT
-      ", size %u, state %s, interlacing mode %s", fields_to_push,
-      self->history_count, frame, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+      ", size %" G_GSIZE_FORMAT ", state %s, interlacing mode %s",
+      fields_to_push, self->history_count, frame,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
       gst_buffer_get_size (buffer),
       STATE_TO_STRING (buf_state), MODE_TO_STRING (interlacing_mode));
