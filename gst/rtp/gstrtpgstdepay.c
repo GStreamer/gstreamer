@@ -217,7 +217,7 @@ read_caps (GstRtpGSTDepay * rtpgstdepay, GstBuffer * buf, guint * skip)
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT (rtpgstdepay, "buffer size %u", map.size);
+  GST_DEBUG_OBJECT (rtpgstdepay, "buffer size %" G_GSIZE_FORMAT, map.size);
 
   if (!read_length (rtpgstdepay, map.data, map.size, &length, &offset))
     goto too_small;
@@ -254,7 +254,7 @@ read_event (GstRtpGSTDepay * rtpgstdepay, guint type,
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT (rtpgstdepay, "buffer size %u", map.size);
+  GST_DEBUG_OBJECT (rtpgstdepay, "buffer size %" G_GSIZE_FORMAT, map.size);
 
   if (!read_length (rtpgstdepay, map.data, map.size, &length, &offset))
     goto too_small;
