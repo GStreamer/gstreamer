@@ -21,10 +21,6 @@
 #ifndef __GST_GL_SHADER_H__
 #define __GST_GL_SHADER_H__
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "gstgldisplay.h"
 #include <gst/gst.h>
 
