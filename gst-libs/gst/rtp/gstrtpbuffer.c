@@ -106,7 +106,6 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
 
   g_return_if_fail (csrc_count <= 15);
   g_return_if_fail (GST_IS_BUFFER (buffer));
-  g_return_if_fail (pad_len <= 255);
   g_return_if_fail (gst_buffer_is_writable (buffer));
 
   gst_buffer_remove_all_memory (buffer);
