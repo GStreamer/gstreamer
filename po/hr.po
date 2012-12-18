@@ -1,1009 +1,1008 @@
-# Indonesian translations for gstreamer package.
+# Translation of gstreamer to Croatian.
 # This file is put in the public domain.
-# Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2012.
+# Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
 "POT-Creation-Date: 2012-12-18 00:21+0000\n"
-"PO-Revision-Date: 2012-01-28 11:44+0700\n"
-"Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
-"Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
-"Language: id\n"
+"PO-Revision-Date: 2012-05-25 16:47+0200\n"
+"Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
+"Language-Team: Croatian <lokalizacija@linux.hr>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 
 msgid "Print the GStreamer version"
-msgstr "Cetak versi GStreamer"
+msgstr "Ispiši inačicu GStreamera"
 
 msgid "Make all warnings fatal"
-msgstr "Buat semua peringatan fatal"
+msgstr "Učini sva upozorenja fatalnim"
 
 msgid "Print available debug categories and exit"
-msgstr "Cetak kategori awakutu yang tersedia lalu keluar"
+msgstr "Ispiši dostupne kategorije debugiranja i izađi"
 
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
-"Level awakutu standar dari 1 (hanya galat) ke 5 (apapun) atau 0 untuk tak "
-"ada keluaran"
+"Zadana razina debugiranja od 1 (samo greške) do 5 (sve) ili 0 bez ispisa"
 
 msgid "LEVEL"
-msgstr "LEVEL"
+msgstr "RAZINA"
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Senarai dipisahkan koma dari category_name:level dipasangkan untuk mengatur "
-"level spesifik untuk kategori individual. Misalnya: GST_AUTOPLUG:5,"
-"GST_ELEMENT_*:3"
+"Popis zarezom odvojenih parova category_name:level za postavljanje posebnih "
+"razina za pojedine kategorije. Primjer: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
-msgstr "SENARAI"
+msgstr "POPIS"
 
 msgid "Disable colored debugging output"
-msgstr "Nonaktifkan keluaran awakutu berwarna"
+msgstr "Onemogući obojani ispis debugiranja"
 
 msgid "Disable debugging"
-msgstr "Nonaktifkan awakutu"
+msgstr "Onemogući debugiranje"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr "Mengaktifkan plugin verbose ketika memuat diagnosis"
+msgstr "Omogući opširnu dijagnozu učitavanja priključaka"
 
 msgid "Colon-separated paths containing plugins"
-msgstr "Alamat dipisahkan tanda titik dua berisi plugin"
+msgstr "Dvotočkom odvojene putanje koje sadržavaju priključke"
 
 msgid "PATHS"
-msgstr "ALAMAT"
+msgstr "PUTANJE"
 
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
-"Senarai plugin dipisahkan oleh koma untuk pramuat sebagai tambahan dari "
-"senarai yang disimpan di lingkungan variabel GST_PLUGIN_PATH"
+"Zarezima odvojen popis priključaka koji će se učitati uz popis spremljen u "
+"varijablu okoline GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
-msgstr "PLUGIN"
+msgstr "PRIKLJUČCI"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Nonaktifkan penjebak galat segmentasi selama memuat plugin"
+msgstr "Onemogući hvatanje segmentacijskih grešaka pri učitavanju priključaka"
 
 msgid "Disable updating the registry"
-msgstr "Nonaktifkan pemutakhiran registry"
+msgstr "Onemogući ažuriranje registra"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr "Nonaktifkan memaksa penolong proses ketika memindai registry"
+msgstr "Onemogući stvaranje pomoćnog procesa pri pretraživanju registra"
 
 msgid "GStreamer Options"
-msgstr "Opsi GStreamer"
+msgstr "GStreamer opcije"
 
 msgid "Show GStreamer Options"
-msgstr "Tampilkan Opsi GStreamer"
+msgstr "Prikaži GStreamer opcije"
 
 msgid "Unknown option"
-msgstr "Opsi tak diketahui"
+msgstr "Nepoznata opcija"
 
 msgid "GStreamer encountered a general core library error."
-msgstr "GStreamer menghadapi galat umum pustaka inti."
+msgstr "GStreamer je naišao na opću grešku osnovne biblioteke."
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
-"Pengembang GStreamer terlalu malas untuk menulis kode galat untuk galat ini."
+msgstr "Razvijatelji GStreamera su bili prelijeni da pridruže kod ovoj grešci."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr "Galat GStreamer internal: kode belum diimplementasikan."
+msgstr "Interna GStreamer greška: kod nije implementiran."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
-"Galat GStreamer: gagal mengubah kondisi dan beberapa elemen gagal untuk "
-"mengirim pesan galat yang benar dengan alasan bagi kegagalan."
+"GStreamer greška: nije uspjela promjena stanja i neki element nije uspio "
+"poslati ispravnu poruku greške s razlogom neuspjeha."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr "Galat GStreamer internal: masalah landasan."
+msgstr "Interna GStreamer greška: problem podloge."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr "Galat GStreamer internal: masalah benang."
+msgstr "Interna GStreamer greška: problem dretve."
 
 #, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Galat GStreamer internal: masalah negosiasi."
+msgstr "Interna GStreamer greška: problem pregovaranja."
 
 msgid "Internal GStreamer error: event problem."
-msgstr "Galat GStreamer internal: masalah event."
+msgstr "Interna GStreamer greška: problem događaja."
 
 msgid "Internal GStreamer error: seek problem."
-msgstr "Galat GStreamer internal: masalah pencarian."
+msgstr "Interna GStreamer greška: problem traženja."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr "Galat GStreamer internal: masalah huruf."
+msgstr "Interna GStreamer greška: problem mogućnosti."
 
 msgid "Internal GStreamer error: tag problem."
-msgstr "Galat GStreamer internal: masalah tag."
+msgstr "Interna GStreamer greška: problem oznake."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "Instalasi GStreamer anda kehilangan plug-in."
+msgstr "Vašoj GStreamer instalaciji nedostaje priključak."
 
 #, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Galat GStreamer internal: masalah jam."
+msgstr "Interna GStreamer greška: problem takta."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
-msgstr ""
-"Aplikasi ini mencoba untuk menggunakan fungsionalitas GStreamer yang telah "
-"dinonaktifkan."
+msgstr "Ovaj program pokušava koristiti onemogućenu GStreamer mogućnost."
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr "GStreamer menghadapi galat umum pustaka pendukung."
+msgstr "GStreamer je naišao na opću grešku pomoćne biblioteke."
 
 msgid "Could not initialize supporting library."
-msgstr "Tak dapat menginisialisasi pustaka pendukung."
+msgstr "Ne mogu inicijalizirati pomoćnu biblioteku."
 
 msgid "Could not close supporting library."
-msgstr "Tak dapat menutup pustaka pendukung."
+msgstr "Ne mogu zatvoriti pomoćnu biblioteku."
 
 msgid "Could not configure supporting library."
-msgstr "Tak dapat mengatur pustaka pendukung."
+msgstr "Ne mogu konfigurirati pomoćnu biblioteku."
 
 msgid "Encoding error."
-msgstr "Galat penyandian."
+msgstr "Greška kodiranja."
 
 msgid "GStreamer encountered a general resource error."
-msgstr "GStreamer menghadapi galat umum sumber daya."
+msgstr "GStreamer je naišao na opću grešku resursa."
 
 msgid "Resource not found."
-msgstr "Sumber daya tak ditemukan."
+msgstr "Resurs nije pronađen."
 
 msgid "Resource busy or not available."
-msgstr "Sumber daya sibuk atau tak tersedia."
+msgstr "Resurs je zauzet ili nedostupan."
 
 msgid "Could not open resource for reading."
-msgstr "Tak dapat membuka sumber daya untuk dibaca."
+msgstr "Ne mogu otvoriti resurs za čitanje."
 
 msgid "Could not open resource for writing."
-msgstr "Tak dapat membuka sumber daya untuk ditulis."
+msgstr "Ne mogu otvoriti resurs za pisanje."
 
 msgid "Could not open resource for reading and writing."
-msgstr "Tak dapat membuka sumber daya untuk dibaca dan ditulis."
+msgstr "Ne mogu otvoriti resurs za čitanje i pisanje."
 
 msgid "Could not close resource."
-msgstr "Tak dapat menutup sumber daya."
+msgstr "Ne mogu zatvoriti resurs."
 
 msgid "Could not read from resource."
-msgstr "Tak dapat membaca dari sumber daya."
+msgstr "Ne mogu čitati iz resursa."
 
 msgid "Could not write to resource."
-msgstr "Tak dapat menulis ke sumber daya."
+msgstr "Ne mogu pisati u resurs."
 
 msgid "Could not perform seek on resource."
-msgstr "Tak dapat melakukan pencarian di sumber daya."
+msgstr "Ne mogu izvršiti traženje na resursu."
 
 msgid "Could not synchronize on resource."
-msgstr "Tak dapat sinkronisasi di sumber daya."
+msgstr "Ne mogu sinkronizirati na resursu."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Tak bisa mendapatkan/mengatur pengaturan dari/di sumber daya."
+msgstr "Ne mogu dohvatiti/postaviti postavke resursa."
 
 msgid "No space left on the resource."
-msgstr "Tak ada ruang tersisa di sumber daya."
+msgstr "Nema više prostora na resursu."
 
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer menghadapai galat arus umum."
+msgstr "GStreamer je naišao na opću grešku toka podataka."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
-"Elemen tidak mengimplementasikan penanganan untuk arus ini. Silakan laporkan "
-"kutu."
+"Element ne implementira upravljanje ovim tokom podataka. Molim prijavite "
+"grešku."
 
 msgid "Could not determine type of stream."
-msgstr "Tak dapat menentukan tipe arus."
+msgstr "Ne mogu odrediti vrstu toka podataka."
 
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
-"Arus berasal dari tipe yang berbeda dari yang ditangani oleh elemen ini."
+"Tok podataka je različite vrste od onoga kojim može upravljati ovaj element."
 
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Tidak ada codec saat ini yang dapat menangani tipe arus."
+msgstr "Nije prisutan kodek koji može upravljati ovom vrstom toka podataka."
 
 msgid "Could not decode stream."
-msgstr "Tak dapat mengawasandi arus."
+msgstr "Ne mogu dekodirati tok podataka."
 
 msgid "Could not encode stream."
-msgstr "Tak dapat menyandi arus."
+msgstr "Ne mogu kodirati tok podataka."
 
 msgid "Could not demultiplex stream."
-msgstr "Tak dapat menyatukan arus."
+msgstr "Ne mogu demultipleksirati tok podataka."
 
 msgid "Could not multiplex stream."
-msgstr "Tak dapat memperbanyak arus."
+msgstr "Ne mogu multipleksirati tok podataka."
 
 msgid "The stream is in the wrong format."
-msgstr "Arus berada dalam format yang salah."
+msgstr "Tok podataka je u krivom obliku."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr "Arus terenkripsi dan dekripsi tidak didukung."
+msgstr "Tok podataka je šifriran i dešifriranje nije podržano."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
-"Arus terenkripsi dan tak dapat didekripsi karena tidak ada kunci yang "
-"disediakan."
+"Tok podataka je šifriran i ne može se dešifrirati jer nije naveden "
+"odgovarajući ključ."
 
 #, c-format
 msgid "No error message for domain %s."
-msgstr "Tak ada pesan galat untuk domain %s."
+msgstr "Nema poruke o grešci za domenu %s."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "Tak ada pesan galat standar untuk domain %s dan kode %d."
+msgstr "Nema standardne poruke o grešci za domenu %s i kod %d."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr "Jam terpilih tak dapat digunakan dalam baris pipa."
+msgstr "Odabrani takt se ne može koristiti u cjevovodu."
 
 msgid "title"
-msgstr "judul"
+msgstr "naslov"
 
 msgid "commonly used title"
-msgstr "judul yang umum digunakan"
+msgstr "uobičajeno korišteni naslov"
 
 msgid "title sortname"
-msgstr "nama singkat judul"
+msgstr "naslov (razvrstavanje)"
 
 msgid "commonly used title for sorting purposes"
-msgstr "judul yang umum digunakan untuk kepentingan pengurutan"
+msgstr "uobičajeno korišteni naslov (koristi se za razvrstavanje)"
 
 msgid "artist"
-msgstr "artis"
+msgstr "izvođač"
 
 msgid "person(s) responsible for the recording"
-msgstr "orang yang bertanggungjawab terhadap rekaman"
+msgstr "osoba odgovorna za snimku"
 
 msgid "artist sortname"
-msgstr "nama singkat artis"
+msgstr "izvođač (razvrstavanje)"
 
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr ""
-"orang yang bertanggungjawab terhadap rekaman untuk kepentingan pengurutan"
+msgstr "osoba odgovorna za snimku (koristi se za razvrstavanje)"
 
 msgid "album"
 msgstr "album"
 
 msgid "album containing this data"
-msgstr "album yang berisi data ini"
+msgstr "album koji sadrži ove podatke"
 
 msgid "album sortname"
-msgstr "nama singkat album"
+msgstr "album (razvrstavanje)"
 
 msgid "album containing this data for sorting purposes"
-msgstr "album yang berisi data ini untuk kepentingan pengurutan"
+msgstr "album koji sadrži ove podatke (koristi se za razvrstavanje)"
 
 msgid "album artist"
-msgstr "album artis"
+msgstr "izvođač albuma"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "Artis untuk semua album, seperti yang seharusnya ditampilkan"
+msgstr "Izvođač cijelog albuma (koristi se za prikaz)"
 
 msgid "album artist sortname"
-msgstr "album artis nama urut"
+msgstr "izvođač albuma (razvrstavanje)"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr "Artis untuk semua album, seperti yang seharusnya diurutkan"
+msgstr "Izvođač cijelog albuma (koristi se za razvrstavanje)"
 
 msgid "date"
-msgstr "tanggal"
+msgstr "datum"
 
 msgid "date the data was created (as a GDate structure)"
-msgstr "tanggal data dibuat (menurut struktur GDate)"
+msgstr "datum stvaranja podataka (u obliku GDate strukture)"
 
 msgid "datetime"
-msgstr "tanggalwaktu"
+msgstr "datumvrijeme"
 
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "tanggal dan waktu data dibuat (menurut struktur GDateTime)"
+msgstr "datum i vrijeme stvaranja podataka (u obliku GstDateTime strukture)"
 
 msgid "genre"
-msgstr "genre"
+msgstr "žanr"
 
 msgid "genre this data belongs to"
-msgstr "genre asal data ini"
+msgstr "žanr kojem pripadaju podaci"
 
 msgid "comment"
 msgstr "komentar"
 
 msgid "free text commenting the data"
-msgstr "teks bebas untuk mengomentari data"
+msgstr "slobodan tekst koji opisuje podatke"
 
 msgid "extended comment"
-msgstr "komentar diperpanjang"
+msgstr "prošireni komentar"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"teks bebas untuk mengomentari data dalam bentuk kunci=nilai atau kunci[en]"
+"slobodan tekst koji opisuje podatke u obliku ključ=vrijednost ili ključ[en]"
 "=komentar"
 
 msgid "track number"
-msgstr "nomor jalur"
+msgstr "broj pjesme"
 
 msgid "track number inside a collection"
-msgstr "nomor jalur di dalam koleksi"
+msgstr "broj pjesme u kolekciji"
 
 msgid "track count"
-msgstr "hitungan jalur"
+msgstr "broj pjesama"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "hitungan jalur di dalam koleksi asal jalur ini"
+msgstr "broj pjesama u kolekciji kojoj pripada ova pjesma"
 
 msgid "disc number"
-msgstr "nomor cakram"
+msgstr "broj diska"
 
 msgid "disc number inside a collection"
-msgstr "nomor cakram di dalam koleksi"
+msgstr "broj diska u kolekciji"
 
 msgid "disc count"
-msgstr "hitungan cakram"
+msgstr "broj diskova"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "hitungan cakram di dalam koleksi asal cakram ini"
+msgstr "broj diskova u kolekciji kojoj pripada ovaj disk"
 
 msgid "location"
-msgstr "lokasi"
+msgstr "mjesto"
 
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
-"Asal media dalam bentuk URI (lokasi, dimana berkas asal atau arus "
-"ditempatkan)"
+"Podrijetlo medija kao URI (mjesto, gdje se nalazi izvor datoteke ili toka "
+"podataka)"
 
 msgid "homepage"
-msgstr "laman"
+msgstr "početna stranica"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr "Laman untuk media ini (misalnya laman artis atau film)"
+msgstr ""
+"Početna stranica ovog medija (npr. početna stranica izvođača ili filma)"
 
 msgid "description"
-msgstr "keterangan"
+msgstr "opis"
 
 msgid "short text describing the content of the data"
-msgstr "teks pendek yang menerangkan isi data"
+msgstr "kratak tekst koji opisuje sadržaj podataka"
 
 msgid "version"
-msgstr "versi"
+msgstr "inačica"
 
 msgid "version of this data"
-msgstr "versi data ini"
+msgstr "inačica ovih podataka"
 
 msgid "ISRC"
 msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
-"International Standard Recording Code - lihat http://www.ifpi.org/isrc/"
+"International Standard Recording Code - pogledajte http://www.ifpi.org/isrc/"
 
 msgid "organization"
-msgstr "organisasi"
+msgstr "organizacija"
 
 msgid "copyright"
-msgstr "hak cipta"
+msgstr "copyright"
 
 msgid "copyright notice of the data"
-msgstr "keterangan hak cipta data"
+msgstr "napomena o autorskim pravima podataka"
 
 msgid "copyright uri"
-msgstr "uri hak cipta"
+msgstr "copyright uri"
 
 msgid "URI to the copyright notice of the data"
-msgstr "URI ke keterangan hak cipta data"
+msgstr "URI za napomenu o autorskim pravima podataka"
 
 msgid "encoded by"
-msgstr "disandikan oleh"
+msgstr "kodirao"
 
 msgid "name of the encoding person or organization"
-msgstr "nama penyandian orang atau organisasi"
+msgstr "ime osobe ili organizacije koja je kodirala"
 
 msgid "contact"
-msgstr "kontak"
+msgstr "kontakt"
 
 msgid "contact information"
-msgstr "informasi kontak"
+msgstr "informacije o kontaktu"
 
 msgid "license"
-msgstr "lisensi"
+msgstr "licenca"
 
 msgid "license of data"
-msgstr "lisensi data"
+msgstr "licenca podataka"
 
 msgid "license uri"
-msgstr "uri lisensi"
+msgstr "uri licence"
 
 msgid "URI to the license of the data"
-msgstr "URI ke lisensi data"
+msgstr "URI za licencu podataka"
 
 msgid "performer"
-msgstr "penampil"
+msgstr "izvođač"
 
 msgid "person(s) performing"
-msgstr "orang yang tampil"
+msgstr "osoba koja izvodi"
 
 msgid "composer"
-msgstr "penyusun"
+msgstr "skladatelj"
 
 msgid "person(s) who composed the recording"
-msgstr "orang yang menyusun perekaman"
+msgstr "osoba koja je skladala snimku"
 
 msgid "duration"
-msgstr "durasi"
+msgstr "trajanje"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr "panjang dalam unit waktu GStreamer (nanodetik)"
+msgstr "duljina u GStreamer vremenskim jedinicama (nanosekunde)"
 
 msgid "codec"
-msgstr "codec"
+msgstr "kodek"
 
 msgid "codec the data is stored in"
-msgstr "codec data tersimpan"
+msgstr "kodek u kojem su spremljeni podaci"
 
 msgid "video codec"
-msgstr "codec video"
+msgstr "video kodek"
 
 msgid "codec the video data is stored in"
-msgstr "codec data video tersimpan"
+msgstr "kodek u kojem su spremljeni video podaci"
 
 msgid "audio codec"
-msgstr "codec audio"
+msgstr "audio kodek"
 
 msgid "codec the audio data is stored in"
-msgstr "codec data audio tersimpan"
+msgstr "kodek u kojem su spremljeni audio podaci"
 
 msgid "subtitle codec"
-msgstr "codec subjudul"
+msgstr "kodek titlova"
 
 msgid "codec the subtitle data is stored in"
-msgstr "codec data subjudul tersimpan di"
+msgstr "kodek u kojem su spremljeni podaci o titlovima"
 
 msgid "container format"
-msgstr "format pembatasan"
+msgstr "oblik spremnika"
 
 msgid "container format the data is stored in"
-msgstr "format pembatasan data tersimpan"
+msgstr "oblik spremnika u kojem su spremljeni podaci"
 
 msgid "bitrate"
-msgstr "bitrasi"
+msgstr "brzina"
 
 msgid "exact or average bitrate in bits/s"
-msgstr "bitrasi tepat atau rata-rata dalam bita/detik"
+msgstr "točna ili prosječna brzina u bitovima po sekundi"
 
 msgid "nominal bitrate"
-msgstr "bitrasi normal"
+msgstr "nazivna brzina"
 
 msgid "nominal bitrate in bits/s"
-msgstr "bitrasi nominal dalam bita/detik"
+msgstr "nazivna brzina u bitovima po sekundi"
 
 msgid "minimum bitrate"
-msgstr "bitrasi minimum"
+msgstr "najmanja brzina"
 
 msgid "minimum bitrate in bits/s"
-msgstr "bitrasi minimum dalam bita/detik"
+msgstr "najmanja brzina u bitovima po sekundi"
 
 msgid "maximum bitrate"
-msgstr "bitrasi maksimum"
+msgstr "najveća brzina"
 
 msgid "maximum bitrate in bits/s"
-msgstr "bitrasi maksimum dalam bita/detik"
+msgstr "najveća brzina u bitovima po sekundi"
 
 msgid "encoder"
-msgstr "penyandi"
+msgstr "koder"
 
 msgid "encoder used to encode this stream"
-msgstr "penyandi yang digunakan untuk menyandi arus ini"
+msgstr "koder korišten za kodiranje ovog toka podataka"
 
 msgid "encoder version"
-msgstr "versi penyandi"
+msgstr "inačica kodera"
 
 msgid "version of the encoder used to encode this stream"
-msgstr "versi penyandi yang digunakan untuk menyandi arus ini"
+msgstr "inačica kodera korištenog za kodiranje ovog toka podataka"
 
 msgid "serial"
-msgstr "seri"
+msgstr "serijski broj"
 
 msgid "serial number of track"
-msgstr "nomor seri jalur"
+msgstr "serijski broj pjesme"
 
 msgid "replaygain track gain"
-msgstr "peraihan jalur peraihan putar ulang"
+msgstr "pojačanje reprodukcije pjesme"
 
 msgid "track gain in db"
-msgstr "peraihan jalur dalam db"
+msgstr "pojačanje pjesme u decibelima"
 
 msgid "replaygain track peak"
-msgstr "puncak peraihan putar ulang jalur"
+msgstr "vršno pojačanje reprodukcije pjesme"
 
 msgid "peak of the track"
-msgstr "puncak jalur"
+msgstr "najveća vrijednost pojačanja pjesme"
 
 msgid "replaygain album gain"
-msgstr "peraihan album peraihan putar ulang"
+msgstr "pojačanje reprodukcije albuma"
 
 msgid "album gain in db"
-msgstr "peraihan album dalam db"
+msgstr "pojačanje albuma u decibelima"
 
 msgid "replaygain album peak"
-msgstr "puncak peraihan putar ulang album"
+msgstr "vršno pojačanje reprodukcije albuma"
 
 msgid "peak of the album"
-msgstr "puncak album"
+msgstr "najveća vrijednost pojačanja albuma"
 
 msgid "replaygain reference level"
-msgstr "level referensi peraihan putar ulang"
+msgstr "referentna razina pojačanja reprodukcije"
 
 msgid "reference level of track and album gain values"
-msgstr "level referensi nilai peraihan jalur dan album"
+msgstr "referentna razina vrijednosti pojačanja pjesme i albuma"
 
 msgid "language code"
-msgstr "kode bahasa"
+msgstr "jezični kod"
 
 #, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "kode bahasa arus ini, mengubahnya ke ISO-639-1"
+msgstr "jezični kod za ovaj tok podataka, kompatibilan s ISO-639-1"
 
 #, fuzzy
 msgid "language name"
-msgstr "kode bahasa"
+msgstr "jezični kod"
 
 msgid "freeform name of the language this stream is in"
 msgstr ""
 
 msgid "image"
-msgstr "gambar"
+msgstr "slika"
 
 msgid "image related to this stream"
-msgstr "gambar yang berhubungan dengan arus ini"
+msgstr "slika povezana s ovim tokom podataka"
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr "gambar pratayang"
+msgstr "pregledna slika"
 
 msgid "preview image related to this stream"
-msgstr "gambar pratayang yang berhubungan dengan arus ini"
+msgstr "pregledna slika povezana s ovim tokom podataka"
 
 msgid "attachment"
-msgstr "lampiran"
+msgstr "prilog"
 
 msgid "file attached to this stream"
-msgstr "berkas yang dilampirkan dalam arus ini"
+msgstr "datoteka priložena ovom toku podataka"
 
 msgid "beats per minute"
-msgstr "denyut per menit"
+msgstr "otkucaja u minuti"
 
 msgid "number of beats per minute in audio"
-msgstr "jumlah denyut per menit dalam audio"
+msgstr "broj otkucaja u minuti zvučnog zapisa"
 
 msgid "keywords"
-msgstr "kata kunci"
+msgstr "ključne riječi"
 
 msgid "comma separated keywords describing the content"
-msgstr "kata kunci yang dipisahkan koma menerangkan isi data"
+msgstr "zarezima odvojene ključne riječi koje opisuju sadržaj"
 
 msgid "geo location name"
-msgstr "nama lokasi geografis"
+msgstr "geolokacijsko ime"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
-msgstr ""
-"lokasi deskriptif dapat dibaca manusia dimana media telah direkam atau "
-"dihasilkan"
+msgstr "ljudima čitljivo opisno mjesto gdje medij snimljen ili produciran"
 
 msgid "geo location latitude"
-msgstr "lintang lokasi geografis"
+msgstr "geolokacijska zemljopisna širina"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
-"lokasi lintang geografis tempat media direkam atau dihasilkan dalam derajat "
-"menurut WGS84 (nol pada khatulistiwa, nilai negatif untuk lintang selatan)"
+"zemljopisna širina mjesta gdje je medij snimljen ili produciran, u "
+"stupnjevima prema WGS84 (nula na ekvatoru, negativne vrijednosti za južnu "
+"polutku)"
 
 msgid "geo location longitude"
-msgstr "bujur lokasi geografis"
+msgstr "geolokacijska zemljopisna dužina"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
-"lokasi bujur geografis tempat media direkam atau dihasilkan dalam derajat "
-"menurut WGS84 (nol pada meridian utama di Greenwich/UK, nilai negatif untuk "
-"bujur timur)"
+"zemljopisna dužina mjesta gdje je medij snimljen ili produciran, u "
+"stupnjevima prema WGS84 (nula na nultom meridijanu Greenwich/UK, negativne "
+"vrijednosti za zapadne dužine)"
 
 msgid "geo location elevation"
-msgstr "ketinggian lokasi geografis"
+msgstr "geolokacijska visina"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
-"ketinggian geografis tempat media direkam atau dihasilkan dalam meter "
-"menurut WGS84 (nol adalah permukaan laut rata-rata)"
+"nadmorska visina mjesta gdje je medij snimljen ili produciran, u metrima "
+"prema WGS84 (nula je prosječna razina mora)"
 
 msgid "geo location country"
-msgstr "negara lokasi geografis"
+msgstr "geolokacijska država"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"negara (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
+msgstr "država (englesko ime) gdje je medij snimljen ili produciran"
 
 msgid "geo location city"
-msgstr "kota lokasi geografis"
+msgstr "geolokacijski grad"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr "kota (dalam bahasa Inggris) tempat media telah direkam atau dihasilkan"
+msgstr "grad (englesko ime) gdje je medij snimljen ili produciran"
 
 msgid "geo location sublocation"
-msgstr "sublokasi lokasi geografis"
+msgstr "geolokacijska podlokacija"
 
 #, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
-"lokasi di dalam kota tempat media dihasilkan atau dibuat (misalnya "
-"lingkungan)"
+"mjesto u gradu gdje je medij snimljen ili produciran (npr. gradska četvrt)"
 
 msgid "geo location horizontal error"
-msgstr "galat horizontal lokasi geografis"
+msgstr "geolokacijska vodoravna greška"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr "galat yang diharapkan dari pengukuran posisi horizontal (dalam meter)"
+msgstr "očekivana greška mjere vodoravnog položaja (u metrima)"
 
 msgid "geo location movement speed"
-msgstr "kecepatan gerak lokasi geografis"
+msgstr "geolokacijska brzina pomicanja"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
-msgstr ""
-"kecepatan gerak divais penangkap ketika melakukan penangkapan dalam m/d"
+msgstr "brzina pomicanja uređaja za snimanje pri snimanju, u m/s"
 
 msgid "geo location movement direction"
-msgstr "arah gerak lokasi geografis"
+msgstr "geolokacijski smjer pomicanja"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
 "media. It is represented as degrees in floating point representation, 0 "
 "means the geographic north, and increases clockwise"
 msgstr ""
-"mengindikasikan arah gerak divais yang melakukan penangkapan media. Arah "
-"direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 "
-"berarti utara geografis, dan meningkat searah jarum jam"
+"označava smjer pomicanja uređaja koji snima medij. Prikazan je u stupnjevima "
+"u prikazu s decimalnim zarezom, 0 označava zemljopisni sjever i povećava se "
+"u smjeru kazaljke na satu"
 
 msgid "geo location capture direction"
-msgstr "arah penangkapan lokasi geografis"
+msgstr "geolokacijski smjer snimanja"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
 "It is represented as degrees in floating point  representation, 0 means the "
 "geographic north, and increases clockwise"
 msgstr ""
-"mengindikasikan arah divais menunjuk ketika menangkap media. Arah "
-"direpresentasikan sebagai derajat dalam representasi titik mengambang, 0 "
-"berarti utara geografis, dan meningkat searah jarum jam"
+"označava usmjerenje uređaja koji snima medij. Prikazan je u stupnjevima u "
+"prikazu s decimalnim zarezom, 0 označava zemljopisni sjever i povećava se u "
+"smjeru kazaljke na satu"
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr "tampilkan nama"
+msgstr "ime emisije"
 
 msgid "Name of the tv/podcast/series show the media is from"
-msgstr "Nama dari acara tv/podcast/serial media berasal"
+msgstr "Ime serije ili tv/podcast emisije iz koje je medij"
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr "tampilkan nama singkat"
+msgstr "ime emisije (razvrstavanje)"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
-"Nama dari acara tv/podcast/serial media berasal, untuk tujuan pengurutan"
+"Ime serije ili tv/podcast emisije iz koje je medij (koristi se za "
+"razvrstavanje)"
 
 msgid "episode number"
-msgstr "jumlah episode"
+msgstr "broj epizode"
 
 msgid "The episode number in the season the media is part of"
-msgstr "Jumlah episode dalam semusim tempat media menjadi bagiannya"
+msgstr "Broj epizode u sezoni iz koje je medij"
 
 msgid "season number"
-msgstr "jumlah musim"
+msgstr "broj sezone"
 
 msgid "The season number of the show the media is part of"
-msgstr "Jumlah musim dari acara tempat media menjadi bagiannya"
+msgstr "Broj sezone emisije iz koje je medij"
 
 msgid "lyrics"
-msgstr "lirik"
+msgstr "tekstovi"
 
 msgid "The lyrics of the media, commonly used for songs"
-msgstr "Lirik dari media, umumnya digunakan untuk lagu"
+msgstr "Tekstovi medija, najčešće korišteno u pjesmama"
 
 msgid "composer sortname"
-msgstr "nama singkat komposer"
+msgstr "skladatelj (razvrstavanje)"
 
 msgid "person(s) who composed the recording, for sorting purposes"
-msgstr "orang yang mengomposisi rekaman, untuk kepentingan pengurutan"
+msgstr "osoba koja je skladala snimku (koristi se za razvrstavanje)"
 
 msgid "grouping"
-msgstr "pengelompokkan"
+msgstr "grupiranje"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
-"Grup terkait media yang meliputi banyak jalur, seperti bagian yang berbeda "
-"dari sebuah konser. Ini adalah level yang lebih tinggi dari jalur, tapi "
-"lebih rendah dari album"
+"Grupira povezane medije koji se protežu kroz više pjesama, kao npr. "
+"različiti stavci koncerta. To je viša razina od pjesme, ali niža od albuma"
 
 msgid "user rating"
-msgstr "peringkat pengguna"
+msgstr "korisnička ocjena"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
-"Peringkat diatribusi oleh pengguna. Makin tinggi peringkat, makin suka "
-"pengguna terhadap media ini"
+"Ocjena koju je dodijelio korisnik. Što je veća, korisniku se više sviđa medij"
 
 msgid "device manufacturer"
-msgstr "manufaktur divais"
+msgstr "proizvođač uređaja"
 
 msgid "Manufacturer of the device used to create this media"
-msgstr "Manufaktur divais yang digunakan untuk menangkap media"
+msgstr "Proizvođač uređaja kojim je napravljen medij"
 
 msgid "device model"
-msgstr "model divais"
+msgstr "model uređaja"
 
 msgid "Model of the device used to create this media"
-msgstr "Model divais yang digunakan untuk membuat media ini"
+msgstr "Model uređaja korišten za izradu medija"
 
 msgid "application name"
-msgstr "nama aplikasi"
+msgstr "ime programa"
 
 msgid "Application used to create the media"
-msgstr "Aplikasi yang digunakan untuk membuat media"
+msgstr "Program korišten za izradu medija"
 
 msgid "application data"
-msgstr "data aplikasi"
+msgstr "programski podaci"
 
 msgid "Arbitrary application data to be serialized into the media"
-msgstr "Data aplikasi wajib yang akan diurutkan dalam media"
+msgstr "Proizvoljni programski podaci uključeni u medij"
 
 msgid "image orientation"
-msgstr "orientasi gambar"
+msgstr "orijentacija slike"
 
 msgid "How the image should be rotated or flipped before display"
-msgstr "Bagaimana gambar harus diputar atau dibalik sebelum ditampilkan"
+msgstr "Kako se slika treba okrenuti ili zrcaliti prije prikaza"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "GALAT: dari elemen %s: %s\n"
+msgstr "GREŠKA: iz elementa %s: %s\n"
 
 #, c-format
 msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
-"Info awakutu tambahan:\n"
+"Dodatne informacije za debugiranje:\n"
 "%s\n"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "menentukan kotak sampah kosong \"%s\", tak diizinkan"
+msgstr ""
 
 #, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "tak ada tempat sampah \"%s\", dilewati"
+msgstr ""
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "tak ada properti \"%s\" di elemen \"%s\""
+msgstr "nema svojstva „%s” u elementu „%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
+msgstr "ne mogu postaviti svojstvo „%s” u elementu „%s” u „%s”"
 
 #, c-format
 msgid "could not link %s to %s"
-msgstr "tak dapat menautkan %s ke %s"
+msgstr "ne mogu povezati %s na %s"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "tak ada elemen \"%s\""
+msgstr "nema elementa „%s”"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "tak dapat menguraikan huruf \"%s\""
+msgstr "ne mogu analizirati mogućnost „%s”"
 
 msgid "link without source element"
-msgstr "taut tanpa elemen sumber"
+msgstr "veza bez izvornog elementa"
 
 msgid "link without sink element"
-msgstr "taut tanpa elemen buang"
+msgstr "veza bez prijamnog elementa"
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "tak ada elemen sumber untuk URI \"%s\""
+msgstr "nema izvornog elementa za URI „%s”"
 
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "tak ada elemen ke taut URI \"%s\""
+msgstr "nema elementa na koji će se povezati URI „%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
-msgstr "tak ada elemen buang untuk URI \"%s\""
+msgstr "nema prijamnog elementa za URI „%s”"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
-msgstr "tak dapat menautkan elemen buang untuk URI \"%s\""
+msgstr "ne mogu povezati prijamni element za URI „%s”"
 
 msgid "empty pipeline not allowed"
-msgstr "baris pipa kosong tak diizinkan"
+msgstr "prazan cjevovod nije dozvoljen"
 
 msgid "Internal clock error."
-msgstr "Galat jam internal."
+msgstr "Greška unutrašnjeg takta."
 
 msgid "Internal data flow error."
-msgstr "Galat aliran data internal."
+msgstr "Greška unutrašnjeg toka podataka."
 
 msgid "A lot of buffers are being dropped."
-msgstr "Banyak penyangga yang didrop."
+msgstr "Mnogo međuspremnika je ispušteno."
 
 msgid "Internal data flow problem."
-msgstr "Masalah aliran data internal."
+msgstr "Problem unutrašnjeg toka podataka."
 
 msgid "Internal data stream error."
-msgstr "Galat arus data internal."
+msgstr "Greška unutrašnjeg toka podataka."
 
 msgid "Filter caps"
-msgstr "Filter huruf"
+msgstr "Filtriraj mogućnosti"
 
 msgid ""
 "Restrict the possible allowed capabilities (NULL means ANY). Setting this "
 "property takes a reference to the supplied GstCaps object."
 msgstr ""
-"Larang kemampuan yang mungkin diizinkan (KOSONG berarti APAPUN). Pengaturan "
-"properti ini bersumber pada objek GstCaps yang disediakan."
+"Ograniči dozvoljene mogućnosti (NULL znači ANY). Postavljanje ovog svojstva "
+"prosljeđuje referencu navedenom GstCaps objektu."
 
 msgid "No file name specified for writing."
-msgstr "Tak ada nama berkas yang ditentukan untuk ditulis."
+msgstr "Nije navedena datoteka za pisanje."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Tak dapat membuka berkas \"%s\" untuk ditulis."
+msgstr "Ne mogu otvoriti datoteku „%s” za pisanje."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Galat menulis berkas \"%s\"."
+msgstr "Greška zatvaranja datoteke „%s”."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Galat ketika mencari di berkas \"%s\"."
+msgstr "Greška pri traženju u datoteci „%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Galat ketika menulis ke berkas \"%s\"."
+msgstr "Greška pri pisanju u datoteku „%s”."
 
 msgid "No file name specified for reading."
-msgstr "Tak ada nama yang ditentukan untuk dibaca."
+msgstr "Nije navedena datoteka za čitanje."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Tak dapat membuka berkas \"%s\" untuk dibaca."
+msgstr "Ne mogu otvoriti datoteku „%s” za čitanje."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Tak bisa mendapatkan info di \"%s\"."
+msgstr "Ne mogu dobiti podatke o „%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" adalah direktori."
+msgstr "„%s” je direktorij."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Berkas \"%s\" adalah soket."
+msgstr "Datoteka „%s” je utičnica."
 
 msgid "Failed after iterations as requested."
-msgstr "Gagal setelah pengulangan seperti yang diminta."
+msgstr "Neuspjeh nakon iteracija kao što je traženo."
 
 msgid "No Temp directory specified."
-msgstr "Tak ada direktori Temp yang ditentukan."
+msgstr "Nije naveden privremeni direktorij."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Tak bisa membuat berkas temp \"%s\"."
+msgstr "Ne mogu napraviti privremenu datoteku „%s”."
 
 msgid "Error while writing to download file."
-msgstr "Galat ketika menulis ke berkas unduhan."
+msgstr "Greška pri pisanju u preuzetu datoteku."
 
 msgid "caps"
-msgstr "huruf"
+msgstr "mogućnosti"
 
 msgid "detected capabilities in stream"
-msgstr "mendeteksi kemampuan dalam arus"
+msgstr "otkrivene mogućnosti u nizu podataka"
 
 msgid "minimum"
-msgstr "minimum"
+msgstr "najmanje"
 
 msgid "force caps"
-msgstr "paksa huruf"
+msgstr "prisili mogućnosti"
 
 msgid "force caps without doing a typefind"
-msgstr "paksa huruf tanpa melakukan pencarian tipe"
+msgstr "prisiljava mogućnosti bez traženja vrste"
 
 msgid "Stream contains no data."
-msgstr "Arus tidak berisi data."
+msgstr "Tok podataka ne sadrži podatke."
 
 msgid "Implemented Interfaces:\n"
-msgstr "Antarmuka Terimplementasi:\n"
+msgstr "Implementirana sučelja:\n"
 
 msgid "readable"
-msgstr "dapat dibaca"
+msgstr "čitljivo"
 
 msgid "writable"
-msgstr "dapat ditulis"
+msgstr "zapisivo"
 
 msgid "controllable"
-msgstr "dapat dikendalikan"
+msgstr "upravljivo"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr "dapat diubah dalam kondisi NULL, READY, PAUSED atau PLAYING"
+msgstr "promjenjivo u stanja NULL, READY, PAUSED ili PLAYING"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr "hanya dapat diubah dalam kondisi NULL, READY, atau PAUSED"
+msgstr "promjenjivo samo u stanja NULL, READY ili PAUSED"
 
 msgid "changeable only in NULL or READY state"
-msgstr "hanya dapat diubah dalam kondisi NULL atau READY"
+msgstr "promjenjivo samo u stanja NULL ili READY"
 
 msgid "Blacklisted files:"
-msgstr "Berkas yang dilarang:"
+msgstr "Zabranjene datoteke:"
 
 msgid "Total count: "
-msgstr "Jumlah total: "
+msgstr "Ukupan broj: "
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] "%d berkas terlarang"
+msgstr[0] "%d zabranjena datoteka"
+msgstr[1] "%d zabranjene datoteke"
+msgstr[2] "%d zabranjenih datoteka"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] "%d plugin"
+msgstr[0] "%d priključak"
+msgstr[1] "%d priključka"
+msgstr[2] "%d priključaka"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] "%d entri terlarang"
+msgstr[0] "%d stavka popisa zabrana"
+msgstr[1] "%d stavke popisa zabrana"
+msgstr[2] "%d stavki popisa zabrana"
 
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] "%d fitur"
+msgstr[0] "%d značajka"
+msgstr[1] "%d značajke"
+msgstr[2] "%d značajki"
 
 msgid "Print all elements"
-msgstr "Cetak semua elemen"
+msgstr "Ispiši sve elemente"
 
 msgid "Print list of blacklisted files"
-msgstr "Cetak senarai dari berkas yang dilarang"
+msgstr "Ispiši popis zabranjenih datoteka"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -1011,13 +1010,13 @@ msgid ""
 "                                       Useful in connection with external "
 "automatic plugin installation mechanisms"
 msgstr ""
-"Cetak senarai dapat dibaca mesin dari fitur plugin yang ditentukan atau "
-"semua plugin yang disediakan.\n"
-"                                       Berguna dalam koneksi dengan plugin "
-"otomatis eksternal dalam mekanisme instalasi"
+"Ispiši strojno čitljiv popis značajki navedenog priključka ili svih "
+"priključaka.\n"
+"                                Korisno pri povezivanju s vanjskim "
+"mehanizmima automatske instalacije priključaka"
 
 msgid "List the plugin contents"
-msgstr "Tampilkan isi plugin"
+msgstr "Ispiši sadržaj priključka"
 
 msgid "Check if the specified element or plugin exists"
 msgstr ""
@@ -1028,260 +1027,235 @@ msgid ""
 msgstr ""
 
 msgid "Print supported URI schemes, with the elements that implement them"
-msgstr ""
-"Cetak skema URI yang didukung, dengan elemen yang mengimplementasikannya"
+msgstr "Ispiši podržane URI sheme, s elementima koji ih implementiraju"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Tak dapat membuat berkas plugin: %s\n"
+msgstr "Ne mogu učitati datoteku priključka: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Tak ada elemen atau plugin '%s'\n"
+msgstr "Nema takvog elementa ili priključka „%s”\n"
 
 msgid "Index statistics"
-msgstr "Statistik indeks"
+msgstr "Statistike indeksa"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Mendapat pesan #%u dari elemen \"%s\" (%s): "
+msgstr "Dobio poruku #%u iz elementa „%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Mendapat pesan #%u dari bantalan \"%s:%s\" (%s): "
+msgstr "Dobio poruku #%u iz podloge „%s:%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Mendapat pesan #%u dari objek \"%s\" (%s): "
+msgstr "Dobio poruku #%u iz objekta „%s” (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
-msgstr "Mendapat Pesan #%u (%s): "
+msgstr "Dobio poruku #%u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Mendapat EOS dari elemen \"%s\".\n"
+msgstr "Dobio EOS iz elementa „%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+msgstr "PRONAĐENA OZNAKA: pronašao element „%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh bantalan \"%s:%s\".\n"
+msgstr "PRONAĐENA OZNAKA: pronašla podloga „%s:%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
+msgstr "PRONAĐENA OZNAKA: pronašao objekt „%s”.\n"
 
 msgid "FOUND TAG\n"
-msgstr "MENEMUKAN TAG\n"
+msgstr "PRONAĐENA OZNAKA\n"
 
 #, fuzzy, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh elemen \"%s\".\n"
+msgstr "PRONAĐENA OZNAKA: pronašao element „%s”.\n"
 
 #, fuzzy, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "MENEMUKAN TAG      : ditemukan oleh objek \"%s\".\n"
+msgstr "PRONAĐENA OZNAKA: pronašao objekt „%s”.\n"
 
 #, fuzzy
 msgid "FOUND TOC\n"
-msgstr "MENEMUKAN TAG\n"
+msgstr "PRONAĐENA OZNAKA\n"
 
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
-"INFO:\n"
+"INFORMACIJE:\n"
 "%s\n"
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "PERINGATAN: dari elemen %s: %s\n"
+msgstr "UPOZORENJE: iz elementa %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Pragulung, menunggu hingga penyangga selesai...\n"
+msgstr ""
 
 msgid "buffering..."
-msgstr "menyangga..."
+msgstr "spremam u međuspremnik..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Selesai menyangga, mengatur baris pipa ke MEMUTAR ...\n"
+msgstr "Gotovo spremanje u međuspremnik, postavljam cjevovod u PLAYING ...\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "Menyangga, mengatur baris pipa ke JEDA ...\n"
+msgstr "Spremam u međuspremnik, postavljam cjevovod u PAUSED ...\n"
 
 msgid "Redistribute latency...\n"
-msgstr "Mendistribusikan ulang latency...\n"
+msgstr "Preraspodjeljujem kašnjenje...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr "Mengatur tingkat ke %s seperti diminta oleh %s...\n"
+msgstr "Postavljam stanje u %s kao što traži %s...\n"
 
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr "Interupsi: Menghentikan baris pipa ...\n"
+msgstr "Prekid: Zaustavljam cjevovod ...\n"
 
 #, fuzzy, c-format
 msgid "Missing element: %s\n"
-msgstr "tak ada elemen \"%s\""
+msgstr "nema elementa „%s”"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Tag keluaran (juga dikenal sebagai metadata)"
+msgstr "Izlazne oznake (poznate i kao metapodaci)"
 
 msgid "Output TOC (chapters and editions)"
 msgstr ""
 
 msgid "Output status information and property notifications"
-msgstr "Informasi status keluaran dan pemberitahuan properti"
+msgstr "Informacije o izlaznom stanju i obavijesti o svojstvima"
 
 msgid "Do not print any progress information"
-msgstr "Jangan cetak informasi proses"
+msgstr "Ne ispisuj informacije o napretku"
 
 msgid "Output messages"
-msgstr "Pesan keluaran"
+msgstr "Izlazne poruke"
 
 msgid "Do not output status information of TYPE"
-msgstr "Jangan keluarkan informasi status dari TIPE"
+msgstr "Ne ispisuj informacije navedene VRSTE o izlaznom stanju"
 
 msgid "TYPE1,TYPE2,..."
-msgstr "TIPE1, TIPE2,..."
+msgstr "VRSTA1,VRSTA2,..."
 
 msgid "Do not install a fault handler"
-msgstr "Jangan instal penanganan galat"
+msgstr "Nemoj instalirati rukovatelj grešaka"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr "Paksa EOS pada sumber sebelum mematikan pemipaan"
+msgstr "Prisili EOS na izvorima prije zatvaranja cjevovoda"
 
 msgid "Gather and print index statistics"
-msgstr "Kumpulkan dan cetak statistik indeks"
+msgstr "Skupi i ispiši statistike indeksa"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "GALAT: baris pipa tak dapat dibangun: %s.\n"
+msgstr "GREŠKA: ne mogu napraviti cjevovod: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "GALAT: baris pipa tak dapat dibangun.\n"
+msgstr "GREŠKA: ne mogu napraviti cjevovod.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "PERINGATAN: baris pipa berisi galat: %s\n"
+msgstr "UPOZORENJE: cjevovod sklon greškama: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "GALAT: elemen 'baris pipa' tak ditemukan.\n"
+msgstr "GREŠKA: cjevovodni („pipeline”) element nije pronađen.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Mengatur baris pipa ke JEDA ...\n"
+msgstr "Postavljam cjevovod u PAUSED ...\n"
 
 msgid "ERROR: Pipeline doesn't want to pause.\n"
-msgstr "GALAT: Baris pipa tak ingin dijedakan.\n"
+msgstr "GREŠKA: Cjevovod ne želi pauzirati.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Baris pipa telah hidup dan tak membutuhkan PRAGULUNG ...\n"
+msgstr "Cjevovod je živ i ne traži PREROLL ...\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "Baris pipa PRAGULUNG ...\n"
+msgstr ""
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "GALAT: baris pipa tak ingin dipragulung.\n"
+msgstr ""
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "Baris pipa telah PRAGULUNG ...\n"
+msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Mengatur baris pipa ke PUTAR ...\n"
+msgstr "Postavljam cjevovod u PLAYING ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr "GALAT: baris pipa tidak ingin diputar.\n"
+msgstr "GREŠKA: cjevovod ne želi reproducirati.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
+msgstr "EOS pri zatvaranju omogućen -- Prisiljavam EOS na cjevovodu\n"
 
 #, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS pada matikan diaktifkan -- Paksa EOS pada pemipaan\n"
+msgstr "EOS pri zatvaranju omogućen -- Prisiljavam EOS na cjevovodu\n"
 
 msgid "Waiting for EOS...\n"
-msgstr "Menunggu untuk EOS...\n"
+msgstr "Čekam EOS...\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr "EOS diterima - menghentikan baris pipa...\n"
+msgstr "EOS primljen - zaustavljam cjevovod...\n"
 
 #, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interupsi: Menghentikan baris pipa ...\n"
+msgstr "Prekid: Zaustavljam cjevovod ...\n"
 
 msgid "An error happened while waiting for EOS\n"
-msgstr "Galat terjadi ketika menunggu EOS\n"
+msgstr "Dogodila se greška pri čekanju EOS-a\n"
 
 msgid "Execution ended after %"
-msgstr "Eksekusi berakhir setelah %"
+msgstr "Izvršavanje završilo nakon %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "Mengatur baris pipa ke SIAP ...\n"
+msgstr "Postavljam cjevovod u READY ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Mengatur baris pipa ke KOSONG ...\n"
+msgstr "Postavljam cjevovod u NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr "Membebaskan baris pipa ...\n"
+msgstr "Oslobađam cjevovod ...\n"
 
 #~ msgid "maximum"
-#~ msgstr "maksimum"
+#~ msgstr "najviše"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
-#~ "Penggunaan: gst-xmllaunch <berkas.xml> [ elemen.properti=nilai ... ]\n"
+#~ "Uporaba: gst-xmllaunch <datoteka.xml> [ element."
+#~ "svojstvo=vrijednost ... ]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "GALAT: penguraian berkas xml '%s' gagal.\n"
+#~ msgstr "GREŠKA: analiza xml datoteke „%s” nije uspjela.\n"
 
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "GALAT: tak ada elemen baris pipa level atas di berkas '%s'.\n"
+#~ msgstr "GREŠKA: ne postoji vršni element cjevovoda u datoteci „%s”.\n"
 
 #~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr ""
-#~ "PERINGATAN: hanya satu elemen level atas yang didukung pada saat ini.\n"
+#~ msgstr "UPOZORENJE: trenutno je podržan samo jedan vršni element.\n"
 
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "GALAT: tak dapat menguraikan argumen baris perintah %d: %s.\n"
+#~ msgstr "GREŠKA: ne mogu analizirati argument naredbenog retka %d: %s.\n"
 
 #~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "GALAT: elemen yang dinamakan '%s' tak ditemukan.\n"
+#~ msgstr "UPOZORENJE: element „%s” nije pronađen.\n"
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Simpan perwakilan xml baris pipa ke BERKAS lalu keluar"
+#~ msgstr "Spremi xml prikaz cjevovoda u DATOTEKU i izađi"
 
 #~ msgid "FILE"
-#~ msgstr "BERKAS"
+#~ msgstr "DATOTEKA"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Jangan instal penanganan sinyal untuk SIGUSR1 dan SIGUSR2"
+#~ msgstr "Nemoj instalirati rukovatelj signala za SIGUSR1 i SIGUSR2"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Galat menulis tembolok registry ke %s: %s"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Galat memindai ulang registry %s: %s"
-
-#~ msgid "Error re-scanning registry %s"
-#~ msgstr "Galat memindai ulang registry %s"
-
-#~ msgid "Internal GStreamer error: state change failed."
-#~ msgstr "Galat GStreamer internal: mengubah kondisi gagal."
-
-#~ msgid "Error while writing to file descriptor \"%d\"."
-#~ msgstr "Galat ketika menulis ke penjelas berkas \"%d\"."
-
-#~ msgid "File descriptor \"%d\" is not valid."
-#~ msgstr "Penjelas berkas \"%d\" tidak sah."
-
-#~ msgid "FREEING pipeline ...\n"
-#~ msgstr "MEMBEBASKAN baris pipa...\n"
-
-#~ msgid "original location of file as a URI"
-#~ msgstr "lokasi asli berkas dalam bentuk URI"
+#~ msgstr "Ispiši alloc praćenje (ako je omogućeno pri kompajliranju)"
