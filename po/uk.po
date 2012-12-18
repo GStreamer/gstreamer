@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
-"PO-Revision-Date: 2011-04-27 17:49+0300\n"
+"POT-Creation-Date: 2012-12-18 00:25+0000\n"
+"PO-Revision-Date: 2012-11-28 20:16+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Lokalize 1.1\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не вдалося відкрити пристрій відтворення у режимі моно."
@@ -39,6 +39,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Не вдалося відкрити пристрій для відтворення."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Не вдалося відкрити пристрій запису у режимі моно."
 
@@ -58,6 +61,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Не вдалося відкрити пристрій для запису."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Не вдалося відкрити пристрій компакт-дисків для читання."
@@ -329,10 +335,10 @@ msgstr ""
 "на дюйм"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "Блок ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "необроблений блок теґу id3v2"
 
 msgid "ID3 tag"
 msgstr "Мітка ID3"
@@ -368,19 +374,16 @@ msgid "Run-length encoding"
 msgstr "Кодування Run-length"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Субтитри"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Формат субтитрів TMPlayer"
+msgstr "Формат субтитрів MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Формат субтитрів Sami"
+msgstr "Формат субтитрів DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Формат субтитрів Kate"
+msgstr "Формат субтитрів QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Формат субтитрів Sami"
@@ -391,33 +394,30 @@ msgstr "Формат субтитрів TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Формат субтитрів Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Нестиснений YUV"
+msgstr "Нестиснене відео"
 
-#, fuzzy
 msgid "Uncompressed gray"
 msgstr "Нестиснене сіре зображення"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Нестиснений YUV"
+msgstr "Нестиснене %s, YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Нестиснений пакетний %d-бітовий %s"
+msgstr "Нестиснене %s%d-бітове %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 версії %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Нестиснений YUV"
+msgstr "Нестиснені звукові дані"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Необроблений %d-бітовий PCM-звук"
+msgstr "Необроблені %d-бітові звукові дані %s"
 
 msgid "Audio CD source"
 msgstr "Джерело аудіо-CD"
@@ -530,48 +530,6 @@ msgstr "Модуль або елемент невідомого типу"
 #~ msgid "Capture"
 #~ msgstr "Запис"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "У з'єднанні з %s:%d відмовлено."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Нестиснений планарний YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Нестиснений планарний YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Нестиснений пакетний YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Нестиснений пакетний YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Нестиснений пакетний YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Нестиснений пакетний YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Нестиснений пакетний YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Нестиснений планарний YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Нестиснений планарний YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Нестиснений чорно-білий Y-проекція"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Необроблений PCM-звук"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Необроблений %d-бітовий звук (дані з плаваючою комою)"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Необроблений звук (дані з плаваючою комою)"
-
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr ""
 #~ "Не вдалося відкрити файл віртуальної файлової системи «%s» для запису: %s."
@@ -621,6 +579,54 @@ msgstr "Модуль або елемент невідомого типу"
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Відсутні елементи autoaudiosink та alsasink."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Помилка при надсиланні заголовку gdp даних до \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Помилка при надсиланні даних gdp до «%s:%d»."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "У з'єднанні з %s:%d відмовлено."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Нестиснений планарний YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Нестиснений планарний YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Нестиснений пакетний YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Нестиснений пакетний YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Нестиснений пакетний YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Нестиснений пакетний YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Нестиснений пакетний YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Нестиснений планарний YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Нестиснений планарний YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Нестиснений чорно-білий Y-проекція"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Необроблений PCM-звук"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Необроблений %d-бітовий звук (дані з плаваючою комою)"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Необроблений звук (дані з плаваючою комою)"
+
 #~ msgid "No device specified."
 #~ msgstr "Пристрій не вказано."
 
@@ -632,12 +638,6 @@ msgstr "Модуль або елемент невідомого типу"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Не вдалося відкрити пристрій «%s» для читання чи запису."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Помилка при надсиланні заголовку gdp даних до \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Помилка при надсиланні даних gdp до «%s:%d»."
 
 #~ msgid "No file name specified."
 #~ msgstr "Не вказано назву файлу."

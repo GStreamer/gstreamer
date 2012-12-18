@@ -1,15 +1,17 @@
-# Slovenian translation for gst-plugins-base.
-# Copyright (C) 2005 - 2011 Free Software Foundation, Inc.
+# Slovenian translation of gst-plugins-base.
+# Copyright (C) 2005 - 2012 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
+#
 # Matej Urbančič <matej.urban@gmail.com>, 2010.
 # Klemen Košir <klemen.kosir@gmx.com>, 2011.
+# Martin Srebotnjak  <miles@filmsi.net>, 2011.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2012-09-14 00:45+0100\n"
-"PO-Revision-Date: 2011-04-26 15:56+0100\n"
+"POT-Creation-Date: 2012-12-18 00:25+0000\n"
+"PO-Revision-Date: 2012-03-01 14:03+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -42,6 +44,9 @@ msgstr ""
 msgid "Could not open audio device for playback."
 msgstr "Zvočne naprave ni mogoče odpreti za predvajanje."
 
+msgid "Error outputting to audio device. The device has been disconnected."
+msgstr ""
+
 msgid "Could not open device for recording in mono mode."
 msgstr "Naprave ni mogoče odpreti za snemanje v mono načinu."
 
@@ -60,6 +65,9 @@ msgstr ""
 
 msgid "Could not open audio device for recording."
 msgstr "Zvočne naprave ni mogoče odpreti za snemanje."
+
+msgid "Error recording from audio device. The device has been disconnected."
+msgstr ""
 
 msgid "Could not open CD device for reading."
 msgstr "Naprave CD ni mogoče odpreti za branje."
@@ -319,10 +327,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Gostota navpičnih slikovnih točk (v ppi)"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "Polje ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "nerazčlenjeno polje oznake id3v2"
 
 msgid "ID3 tag"
 msgstr "Oznaka ID3"
@@ -520,48 +528,6 @@ msgstr "Vstavek ali predmet neznane vrste"
 #~ msgid "Capture"
 #~ msgstr "Zajemanje"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Povezava s %s:%d zavrnjena."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Nestisnjen ploskovni YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Nestisnjen ploskovni YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Nestisnjen pakiran YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Nestisnjen pakiran YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Nestisnjen pakiran YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Nestisnjen pakiran YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Nestisnjen pakiran YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Nestisnjen ploskovni YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Nestisnjen ploskovni YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Nestisnjena črno-bela slika Y-ravnine"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Surovi zvok PCM"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Surovi %d-bitni zvok, določen s plavajočo vejico"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Surovi zvok, določen s plavajočo vejico"
-
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "VFS datoteke \"%s\" ni mogoče odpreti za pisanje: %s"
 
@@ -611,6 +577,54 @@ msgstr "Vstavek ali predmet neznane vrste"
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Predmeta autovideosink in alsasink manjkata."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Napaka med pošiljanjem podatkov glave GDP na \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Napaka med pošiljanjem podatkov vsebine GDP na \"%s:%d\"."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Povezava s %s:%d zavrnjena."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Nestisnjen ploskovni YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Nestisnjen ploskovni YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Nestisnjen pakiran YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Nestisnjen pakiran YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Nestisnjen pakiran YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Nestisnjen pakiran YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Nestisnjen pakiran YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Nestisnjen ploskovni YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Nestisnjen ploskovni YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Nestisnjena črno-bela slika Y-ravnine"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Surovi zvok PCM"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Surovi %d-bitni zvok, določen s plavajočo vejico"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Surovi zvok, določen s plavajočo vejico"
+
 #~ msgid "No device specified."
 #~ msgstr "Ni navedene naprave."
 
@@ -622,37 +636,3 @@ msgstr "Vstavek ali predmet neznane vrste"
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Naprave \"%s\" ni mogoče odpreti za branje in pisanje."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Napaka med pošiljanjem podatkov glave GDP na \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Napaka med pošiljanjem podatkov vsebine GDP na \"%s:%d\"."
-
-#, fuzzy
-#~ msgid "No Temp directory specified."
-#~ msgstr "Ni določenega izvornega pogona"
-
-#, fuzzy
-#~ msgid "Could not create temp file \"%s\"."
-#~ msgstr "Ni mogoče ustvariti datoteke predpomnilnika"
-
-#, fuzzy
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Ni mogoče odpreti CD naprave za branje."
-
-#, fuzzy
-#~ msgid "Internal data flow error."
-#~ msgstr "Notranja napaka pretoka podatkov."
-
-#, fuzzy
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Elementa filesrc ni mogoče ustvariti"
-
-#, fuzzy
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Elementa filesrc ni mogoče ustvariti"
-
-#, fuzzy
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Elementa filesrc ni mogoče ustvariti"
