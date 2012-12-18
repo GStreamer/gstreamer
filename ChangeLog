@@ -1,9 +1,203 @@
-=== release 1.0.3 ===
+=== release 1.0.4 ===
 
-2012-11-21  Tim-Philipp Müller <tim@centricular.net>
+2012-12-18  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.3
+	  releasing 1.0.4
+
+2012-12-18 15:34:42 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* ext/vorbis/gstvorbisdec.c:
+	  vorbis: fix unused variable
+
+2012-12-18 15:31:52 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst-libs/gst/video/gstvideometa.c:
+	  video: use appropriate printf format for gsize
+
+2012-12-18 15:27:48 +0100  Thijs Vermeir <thijsvermeir@gmail.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  rtp: fix compiler warning
+	  comparison is always true due to limited range of data type
+
+2012-12-17 00:59:57 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/subparse/gstssaparse.c:
+	  ssaparse: ignore invalid UTF-8 in init section
+	  The codec data blob we get from matroskademux with the SSA/ASS
+	  init section is supposed to be valid UTF-8. If it's not, just
+	  continue with the bits that are valid UTF-8 instead of erroring
+	  out. We don't actually parse the init section yet anyway..
+	  https://bugzilla.gnome.org/show_bug.cgi?id=607630
+
+2012-12-16 12:34:14 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/subparse/gstsubparse.c:
+	  subparse: fix GError leak
+
+2012-12-15 19:36:56 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c:
+	  alsa: post error message when audio device disappears
+	  Don't loop forever if an USB audio device gets disconnected
+	  while in use. Post an error message instead. This is not
+	  enough yet though, we still need to make the base class
+	  and/or the ring buffer bail out.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690197
+
+2012-12-12 15:31:20 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefindfunctions: aac: don't try to unref NULL caps
+
+2012-12-13 11:31:28 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: fix vis switch with format change
+	  Block the pad before the resample and convertor elements to give them a chance
+	  to negotiate new caps with the newly switched vis plugin.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=679976
+
+2012-12-10 13:35:37 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/video/videooverlay.c:
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c:
+	* sys/xvimage/xvimagesink.h:
+	* tests/examples/overlay/gtk-videooverlay.c:
+	* tests/examples/overlay/qt-videooverlay.cpp:
+	* tests/examples/overlay/qtgv-videooverlay.cpp:
+	* tests/examples/playback/playback-test.c:
+	* tests/examples/seek/jsseek.c:
+	* tests/icles/test-colorkey.c:
+	  docs: fix up some more GstXOverlay -> GstVideoOverlay
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689740
+
+2012-12-10 11:49:46 +0000  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: Only keep track of timestamps if the subclass is parsing data
+	  Otherwise we just pass through the timestamps directly and don't
+	  need to waste additional memory for them.
+	  Fixes bug #689814.
+
+2012-12-08 00:21:17 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst-libs/gst/rtsp/gstrtspmessage.c:
+	  rtspmessage: Add several missing g-i annotations
+	  https://bugzilla.gnome.org/show_bug.cgi?id=689873
+	  Conflicts:
+	  gst-libs/gst/rtsp/gstrtspmessage.c
+
+2012-11-26 18:41:07 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: don't send gap events with huge bogus durations when advancing EOS streams
+	  When the input buffers for a stream don't have a duration set,
+	  timestamp_end might still be GST_CLOCK_TIME_NONE. When advancing
+	  EOSed streams via GAP events (with other streams not yet EOS), we
+	  would then use the invalid timestamp_end to calculate the duration
+	  of the gap. This in turn would make baseaudiosink abort, because it
+	  would try to allocate memory for a trizillion samples.
+	  So if buffers don't have a duration set, assume a duration of
+	  one second for stream catch-up purposes, just so we can still
+	  continue to catch up in those cases. And make sure that
+	  timestamp_end is valid before doing calculations with it.
+	  http://bugzilla.gnome.org/show_bug.cgi?id=678530
+
+2012-11-25 18:07:04 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/playback/gststreamsynchronizer.c:
+	  streamsynchronizer: reduce debug log spam a bit
+	  Log locking/unlocking with TRACE debug level.
+
+2012-11-21 23:17:22 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  audio: remove bogus Since marker from docs
+	  It was causing perl warnings in gtk-doc code.
+
+2012-11-21 21:53:13 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  app: fix g-i annotation for gst_app_src_push_buffer()
+	  It takes ownership of the buffer.
+
+2012-11-21 12:56:13 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Back to development (bug-fixing)
+
+=== release 1.0.3 ===
+
+2012-11-21 09:56:12 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.3
 
 2012-11-20 12:21:08 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

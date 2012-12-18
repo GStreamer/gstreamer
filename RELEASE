@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.0.3
+Release notes for GStreamer Base Plugins 1.0.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,33 +60,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * typefind: detect isml ftyp as iso-fragmented video/quicktime
-      * typefinding improvements fixing playback of some wavpack files
-      * textoverlay rendering fixes
-      * gobject-introspection annotation fixes
+      * playbin: fix occasional not-negotiated errors when switching visualisations
+      * ssaparse: ignore invalid UTF-8 in SSA/ASS subtitles init sections in matroska files
+      * streamsynchronizer: better timestamp and gap handling at EOS, fixing potential OOM in baseaudiosink
+      * bindings: fix annotation for gst_app_src_push_buffer(), fixing crash
+      * bindings: add several missing annotations for GstRtspMessage API
 
 Bugs fixed in this release
      
-      * 686276 : rtsp: http tunneling does not work
-      * 687030 : ogg: crash checking header of empty ogg packet
-      * 687055 : exiftag: fix use after free and memory leak
-      * 687057 : vorbistag: fix memory leak
-      * 687421 : GstRTSPConnection: a number of methods not annotated correctly
-      * 687459 : textoverlay:forward allocation queries instead of discarding
-      * 687473 : rtspconnection: remove extra 'return'
-      * 687620 : GstRTSPMessage: fix GI annotations
-      * 687666 : textoverlay: aborts when shading is enabled but not supported for the current video format
-      * 687674 : typefinding: some WavPack files are mis-detected as AAC and fail to play
-      * 687991 : videodecoder: add getter for QoS proportion
-      * 687994 : rtsp: missing g-i annotation for gst_rtsp_message_set_body
-      * 688151 : pbutils missing description for Opus codec
-      * 686841 : pango: fix shadow text color
-
-API changes in this release
-     
- - API additions:
-    
-      * gst_video_decoder_get_qos_proportion()
+      * 679976 : playbin: switching visualisations results in not-negotiated flow erros
+      * 689814 : Memory allocated by GstVideoDecoder base class is not freed
+      * 689873 : gstrtspmessage: Several functions are missing introspection annotations...
 
 ==== Download ====
 
@@ -123,16 +107,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Jihyun Cho
-      * Jonathan Liu
-      * Miguel Angel Cabrera Moya
-      * Ognyan Tonchev
-      * Rasmus Rohde
       * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Thiago Santos
+      * Sebastian Rasmussen
+      * Thijs Vermeir
       * Tim-Philipp Müller
       * Wim Taymans
  

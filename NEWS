@@ -1,4 +1,18 @@
-This is GStreamer Base Plugins 1.0.3
+This is GStreamer Base Plugins 1.0.4
+
+Changes since 1.0.3:
+
+      * playbin: fix occasional not-negotiated errors when switching visualisations
+      * ssaparse: ignore invalid UTF-8 in SSA/ASS subtitles init sections in matroska files
+      * streamsynchronizer: better timestamp and gap handling at EOS, fixing potential OOM in baseaudiosink
+      * bindings: fix annotation for gst_app_src_push_buffer(), fixing crash
+      * bindings: add several missing annotations for GstRtspMessage API
+
+Bugs fixed since 1.0.3:
+
+      * 679976 : playbin: switching visualisations results in not-negotiated flow erros
+      * 689814 : Memory allocated by GstVideoDecoder base class is not freed
+      * 689873 : gstrtspmessage: Several functions are missing introspection annotations...
 
 Changes since 1.0.2:
 
