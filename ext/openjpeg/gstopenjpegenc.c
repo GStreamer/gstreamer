@@ -28,10 +28,50 @@
 GST_DEBUG_CATEGORY_STATIC (gst_openjpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_openjpeg_enc_debug
 
+#define GST_OPENJPEG_ENC_TYPE_PROGRESSION_ORDER (gst_openjpeg_enc_progression_order_get_type())
+static GType
+gst_openjpeg_enc_progression_order_get_type (void)
+{
+  static const GEnumValue values[] = {
+    {LRCP, "LRCP", "lrcp"},
+    {RLCP, "RLCP", "rlcp"},
+    {RPCL, "RPCL", "rpcl"},
+    {PCRL, "PCRL", "pcrl"},
+    {CPRL, "CPRL", "crpl"},
+    {0, NULL, NULL}
+  };
+  static volatile GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_enum_register_static ("GstOpenJPEGEncProgressionOrder", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
+}
+
 enum
 {
   PROP_0,
+  PROP_NUM_LAYERS,
+  PROP_NUM_RESOLUTIONS,
+  PROP_PROGRESSION_ORDER,
+  PROP_TILE_OFFSET_X,
+  PROP_TILE_OFFSET_Y,
+  PROP_TILE_WIDTH,
+  PROP_TILE_HEIGHT
 };
+
+#define DEFAULT_NUM_LAYERS 1
+#define DEFAULT_NUM_RESOLUTIONS 6
+#define DEFAULT_PROGRESSION_ORDER LRCP
+#define DEFAULT_TILE_OFFSET_X 0
+#define DEFAULT_TILE_OFFSET_Y 0
+#define DEFAULT_TILE_WIDTH 0
+#define DEFAULT_TILE_HEIGHT 0
 
 static void gst_openjpeg_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -100,6 +140,42 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
   gobject_class->set_property = gst_openjpeg_enc_set_property;
   gobject_class->get_property = gst_openjpeg_enc_get_property;
 
+  g_object_class_install_property (gobject_class, PROP_NUM_LAYERS,
+      g_param_spec_int ("num-layers", "Number of layers",
+          "Number of layers", 1, 10, DEFAULT_NUM_LAYERS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_RESOLUTIONS,
+      g_param_spec_int ("num-resolutions", "Number of resolutions",
+          "Number of resolutions", 1, 10, DEFAULT_NUM_RESOLUTIONS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_PROGRESSION_ORDER,
+      g_param_spec_enum ("progression-order", "Progression Order",
+          "Progression order", GST_OPENJPEG_ENC_TYPE_PROGRESSION_ORDER,
+          DEFAULT_PROGRESSION_ORDER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_OFFSET_X,
+      g_param_spec_int ("tile-offset-x", "Tile Offset X",
+          "Tile Offset X", G_MININT, G_MAXINT, DEFAULT_TILE_OFFSET_X,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_OFFSET_Y,
+      g_param_spec_int ("tile-offset-y", "Tile Offset Y",
+          "Tile Offset Y", G_MININT, G_MAXINT, DEFAULT_TILE_OFFSET_Y,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_WIDTH,
+      g_param_spec_int ("tile-width", "Tile Width",
+          "Tile Width", 0, G_MAXINT, DEFAULT_TILE_WIDTH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_HEIGHT,
+      g_param_spec_int ("tile-height", "Tile Height",
+          "Tile Height", 0, G_MAXINT, DEFAULT_TILE_HEIGHT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_openjpeg_enc_src_template));
   gst_element_class_add_pad_template (element_class,
@@ -129,18 +205,65 @@ gst_openjpeg_enc_init (GstOpenJPEGEnc * self)
 {
   opj_set_default_encoder_parameters (&self->params);
 
-  /* TODO: Add properties for these */
   self->params.cp_fixed_quality = 1;
-  self->params.tcp_numlayers = 1;
+  self->params.cp_disto_alloc = 0;
+  self->params.cp_fixed_alloc = 0;
+
+  /*
+   * TODO: Add properties / caps fields for these
+   *
+   * self->params.csty;
+   * self->params.tcp_rates;
+   * self->params.tcp_distoratio;
+   * self->params.mode;
+   * self->params.irreversible;
+   * self->params.cp_cinema;
+   * self->params.cp_rsiz;
+   */
+
+  self->params.tcp_numlayers = DEFAULT_NUM_LAYERS;
+  self->params.numresolution = DEFAULT_NUM_RESOLUTIONS;
+  self->params.prog_order = DEFAULT_PROGRESSION_ORDER;
+  self->params.cp_tx0 = DEFAULT_TILE_OFFSET_X;
+  self->params.cp_ty0 = DEFAULT_TILE_OFFSET_Y;
+  self->params.cp_tdx = DEFAULT_TILE_WIDTH;
+  self->params.cp_tdy = DEFAULT_TILE_HEIGHT;
+  self->params.tile_size_on = (self->params.cp_tdx != 0
+      && self->params.cp_tdy != 0);
 }
 
 static void
 gst_openjpeg_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  /* GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (object); */
+  GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (object);
 
   switch (prop_id) {
+    case PROP_NUM_LAYERS:
+      self->params.tcp_numlayers = g_value_get_int (value);
+      break;
+    case PROP_NUM_RESOLUTIONS:
+      self->params.numresolution = g_value_get_int (value);
+      break;
+    case PROP_PROGRESSION_ORDER:
+      self->params.prog_order = g_value_get_enum (value);
+      break;
+    case PROP_TILE_OFFSET_X:
+      self->params.cp_tx0 = g_value_get_int (value);
+      break;
+    case PROP_TILE_OFFSET_Y:
+      self->params.cp_ty0 = g_value_get_int (value);
+      break;
+    case PROP_TILE_WIDTH:
+      self->params.cp_tdx = g_value_get_int (value);
+      self->params.tile_size_on = (self->params.cp_tdx != 0
+          && self->params.cp_tdy != 0);
+      break;
+    case PROP_TILE_HEIGHT:
+      self->params.cp_tdy = g_value_get_int (value);
+      self->params.tile_size_on = (self->params.cp_tdx != 0
+          && self->params.cp_tdy != 0);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -151,9 +274,30 @@ static void
 gst_openjpeg_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  /* GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (object); */
+  GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (object);
 
   switch (prop_id) {
+    case PROP_NUM_LAYERS:
+      g_value_set_int (value, self->params.tcp_numlayers);
+      break;
+    case PROP_NUM_RESOLUTIONS:
+      g_value_set_int (value, self->params.numresolution);
+      break;
+    case PROP_PROGRESSION_ORDER:
+      g_value_set_enum (value, self->params.prog_order);
+      break;
+    case PROP_TILE_OFFSET_X:
+      g_value_set_int (value, self->params.cp_tx0);
+      break;
+    case PROP_TILE_OFFSET_Y:
+      g_value_set_int (value, self->params.cp_ty0);
+      break;
+    case PROP_TILE_WIDTH:
+      g_value_set_int (value, self->params.cp_tdx);
+      break;
+    case PROP_TILE_HEIGHT:
+      g_value_set_int (value, self->params.cp_tdy);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
