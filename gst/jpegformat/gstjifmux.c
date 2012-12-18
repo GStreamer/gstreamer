@@ -281,7 +281,7 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
   gst_buffer_map (buf, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
 
-  GST_LOG_OBJECT (self, "Received buffer of size: %u", map.size);
+  GST_LOG_OBJECT (self, "Received buffer of size: %" G_GSIZE_FORMAT, map.size);
 
   if (!gst_byte_reader_peek_uint8 (&reader, &marker))
     goto error;
@@ -356,7 +356,7 @@ gst_jif_mux_parse_image (GstJifMux * self, GstBuffer * buf)
       goto error;
   }
   GST_INFO_OBJECT (self, "done parsing at 0x%x / 0x%x",
-      gst_byte_reader_get_pos (&reader), map.size);
+      gst_byte_reader_get_pos (&reader), (guint) map.size);
 
 done:
   self->priv->markers = g_list_reverse (self->priv->markers);
@@ -661,7 +661,7 @@ gst_jif_mux_recombine_image (GstJifMux * self, GstBuffer ** new_buf,
     /* 0xff <marker> */
     size += 2;
   }
-  GST_INFO_OBJECT (self, "old size: %u, new size: %u",
+  GST_INFO_OBJECT (self, "old size: %" G_GSIZE_FORMAT ", new size: %u",
       gst_buffer_get_size (old_buf), size);
 
   /* allocate new buffer */
