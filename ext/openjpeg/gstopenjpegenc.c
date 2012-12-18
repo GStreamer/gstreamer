@@ -714,6 +714,33 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame)
   return image;
 }
 
+static void
+gst_openjpeg_dec_opj_error (const char *msg, void *userdata)
+{
+  GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (userdata);
+  gchar *trimmed = g_strchomp (g_strdup (msg));
+  GST_TRACE_OBJECT (self, "openjpeg error: %s", trimmed);
+  g_free (trimmed);
+}
+
+static void
+gst_openjpeg_dec_opj_warning (const char *msg, void *userdata)
+{
+  GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (userdata);
+  gchar *trimmed = g_strchomp (g_strdup (msg));
+  GST_TRACE_OBJECT (self, "openjpeg warning: %s", trimmed);
+  g_free (trimmed);
+}
+
+static void
+gst_openjpeg_dec_opj_info (const char *msg, void *userdata)
+{
+  GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (userdata);
+  gchar *trimmed = g_strchomp (g_strdup (msg));
+  GST_TRACE_OBJECT (self, "openjpeg info: %s", trimmed);
+  g_free (trimmed);
+}
+
 static GstFlowReturn
 gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -722,6 +749,7 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   GstFlowReturn ret = GST_FLOW_OK;
   GstMapInfo map;
   opj_cinfo_t *enc;
+  opj_event_mgr_t callbacks;
   opj_cio_t *io;
   opj_image_t *image;
   GstVideoFrame vframe;
@@ -733,7 +761,15 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   if (!enc)
     goto initialization_error;
 
-  opj_set_event_mgr ((opj_common_ptr) enc, NULL, NULL);
+  if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
+          GST_LEVEL_TRACE)) {
+    callbacks.error_handler = gst_openjpeg_dec_opj_error;
+    callbacks.warning_handler = gst_openjpeg_dec_opj_warning;
+    callbacks.info_handler = gst_openjpeg_dec_opj_info;
+    opj_set_event_mgr ((opj_common_ptr) enc, &callbacks, self);
+  } else {
+    opj_set_event_mgr ((opj_common_ptr) enc, NULL, NULL);
+  }
 
   if (!gst_video_frame_map (&vframe, &self->input_state->info,
           frame->input_buffer, GST_MAP_READ))
