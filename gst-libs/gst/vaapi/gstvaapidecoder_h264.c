@@ -74,11 +74,11 @@ gst_vaapi_decoder_unit_h264_new(guint size)
     };
 
     unit = (GstVaapiDecoderUnitH264 *)
-        gst_vaapi_mini_object_new0(&GstVaapiDecoderUnitH264Class);
+        gst_vaapi_mini_object_new(&GstVaapiDecoderUnitH264Class);
     if (!unit)
         return NULL;
 
-    unit->base.size = size;
+    gst_vaapi_decoder_unit_init(&unit->base, size);
     return unit;
 }
 
