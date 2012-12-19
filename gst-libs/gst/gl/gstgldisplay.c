@@ -402,7 +402,7 @@ _create_context_opengl (GstGLDisplay * display, gint * gl_major, gint * gl_minor
     GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
         glGetString (GL_SHADING_LANGUAGE_VERSION));
   else
-    GST_INFO ("Your driver does not support GLSL (OpenGL Shading Language)");
+    GST_WARNING ("Your driver does not support GLSL (OpenGL Shading Language)");
 
   if (glGetString (GL_VENDOR))
     GST_INFO ("GL_VENDOR: %s", glGetString (GL_VENDOR));
@@ -478,9 +478,7 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
 
   if (!display->gl_window || error) {
     gst_gl_display_set_error (display, error ? error->message : "Failed to create gl window");
-    g_cond_signal (display->cond_create_context);
-    gst_gl_display_unlock (display);
-    return NULL;
+    goto failure;
   }
 
   GST_INFO ("gl window created");
@@ -494,10 +492,12 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   compiled_api_s = gst_gl_api_string (compiled_api);
   GST_INFO ("compiled api support: %s", compiled_api_s);
 
-  if ((compiled_api & display->gl_api) == GST_GL_API_NONE)
+  if ((compiled_api & display->gl_api) == GST_GL_API_NONE) {
     gst_gl_display_set_error (display, "failed to create_context, window "
         "could not provide correct api. compiled api supports:%s, window "
         "supports:%s", compiled_api_s, api_string);
+    goto failure;
+  }
 
   g_free (api_string);
   g_free (compiled_api_s);
@@ -512,8 +512,10 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
     ret = _create_context_gles2 (display, &gl_major, &gl_minor);
 #endif
 
-  if (!ret || !gl_major)
+  if (!ret || !gl_major) {
     gst_gl_display_set_error (display, "failed to create context, unknown reason");
+    goto failure;
+  }
 
   /* setup callbacks */
   gst_gl_window_set_resize_callback (display->gl_window,
@@ -544,6 +546,18 @@ gst_gl_display_thread_create_context (GstGLDisplay * display)
   gst_gl_display_unlock (display);
 
   return NULL;
+
+failure:
+  {
+    if (display->gl_window) {
+      g_object_unref (display->gl_window);
+      display->gl_window = NULL;
+    }
+
+    g_cond_signal (display->cond_create_context);
+    gst_gl_display_unlock (display);
+    return NULL;
+  }
 }
 
 
