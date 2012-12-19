@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <cdio/cdio.h>
 #include <cdio/cdtext.h>
-#include <cdio/version.h>
 
 #if LIBCDIO_VERSION_NUM <= 83
   #define CDTEXT_FIELD_PERFORMER CDTEXT_PERFORMER
