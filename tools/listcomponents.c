@@ -72,7 +72,7 @@ main (gint argc, gchar ** argv)
   }
 
   /* Hack for the Broadcom OpenMAX IL implementation */
-  if (g_str_has_prefix (filename, "vc/lib/libopenmaxil.so")) {
+  if (g_str_has_suffix (filename, "vc/lib/libopenmaxil.so")) {
     gchar *bcm_host_filename;
     gchar *bcm_host_path;
     GModule *bcm_host_module;
