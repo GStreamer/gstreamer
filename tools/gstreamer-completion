@@ -1,13 +1,163 @@
-#
+# Bash tab-completion for GStreamer.                      -*- shell-script -*-
 # Put this in /etc/bash_completion.d/
-#
+
+_gst_version=1.0
+
+_gst_inspect() {
+    local cur prev words cword split
+    _init_completion -n : -s || return
+    _gst_common_options || return
+
+    COMPREPLY=( $(compgen \
+        -W "$(_parse_help gst-inspect-$_gst_version --help-all) \
+            $(_gst_plugins) $(_gst_elements)" \
+        -- "$cur") )
+    [[ $COMPREPLY == *= ]] && compopt -o nospace 2>/dev/null
+} &&
+complete -F _gst_inspect gst-inspect-$_gst_version
 
 _gst_launch() {
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-    COMPREPLY=( $(compgen -W "$(_gst_elements)" -- "$cur") )
+    local cur cword prev words
+    _init_completion -n : || return
+
+    local curtype option element property
+    _gst_launch_parse
+    _gst_common_options || return
+
+    COMPREPLY=( $(_gst_launch_compgen) )
+    [[ $COMPREPLY == *= ]] && compopt -o nospace 2>/dev/null
 } &&
-complete -F _gst_launch -o default gst-launch-1.0
+complete -o default -F _gst_launch gst-launch-$_gst_version
+
+_gst_common_options() {
+    if [[ -v curtype && -v option ]]; then  # Called from _gst_launch
+        [[ $curtype == optionval ]] || return 0
+    else  # Called from _gst_inspect
+        local option="$prev"
+    fi
+
+    case "$option" in
+        --gst-debug-level)
+                COMPREPLY=( $(compgen -W "0 1 2 3 4 5" -- "$cur") );;
+        --gst-debug) # TODO: comma-separated list of category_name:level pairs.
+                ;;
+        --gst-plugin-path) # TODO: support multiple (colon-separated) paths.
+                COMPREPLY=( $(compgen -d -- "$cur") );;
+        --gst-plugin-load) # TODO: comma-separated list of plugins (files?).
+                ;;
+        *) return 0;;
+    esac
+    return 1  # No need to attempt further completions.
+}
+
+_gst_launch_compgen() {
+    case $curtype in
+        option|option-or-element)
+            compgen \
+                -W "$(_parse_help gst-launch-$_gst_version --help-all)" \
+                -- "$cur"
+            ;;&  # test next pattern too.
+        element|option-or-element)
+            compgen -W "$(_gst_elements)" -- "$cur" ;;
+        optionval)
+            case "$option" in
+                -o|--output) compgen -f -- "$cur" ;;
+                --exclude) ;; # TODO: comma-separated list of status information types.
+            esac ;;
+        \!)
+            compgen -W '!' -- "$cur" ;;
+        property)
+            compgen -W "$(_gst_properties $element) ! " -- "$cur" ;;
+        propertyval)
+            compgen -W "$(_gst_property_values $element $property)" -- "$cur" ;;
+    esac
+}
+
+_gst_plugins() {
+    gst-inspect-$_gst_version 2>/dev/null |
+    grep -v 'Total count' |
+    awk -F': +' '{print $1}' |
+    uniq
+}
 
 _gst_elements() {
-    gst-inspect-1.0 | grep -v 'Total count' | awk -F': +' '{print $2}'
+    gst-inspect-$_gst_version 2>/dev/null |
+    grep -v 'Total count' |
+    awk -F': +' '{print $2}'
+}
+
+_gst_properties() {
+    local element="$1"
+    gst-inspect-$_gst_version "$element" 2>/dev/null |
+    sed -n '/^Element Properties:$/,$ p' |
+    awk '/^  [a-z]/ { print $1 "=" }'
+}
+
+_gst_property_values() {
+    local element=$1 property=$2
+    gst-inspect-$_gst_version $element 2>/dev/null |
+    awk "
+        /^Element Properties:\$/        { inproperties = 1; next; }
+        inproperties && /^  $property / { inproperty = 1; next; }
+        inproperty && /^ *Boolean/      { printf \"true\nfalse\n\"; exit; }
+        inproperty && /^ *Enum/         { inenum = 1; next; }
+        inenum && /^ *\([0-9]+\): /     { print \$2; next; }
+        inproperty && /^  [a-z]/        { exit; }"
+}
+
+# Walks over $words, sets $curtype to the string:
+#
+#   'option' if $cur is an option or flag like "-a" or "--abc".
+#   'optionval' if $cur is the value of an option
+#               (which will be set in $option).
+#   'element' if $cur is a GStreamer element name.
+#   '!' if $cur is '!'.
+#   'property' if $cur is the name of a property of a GStreamer element
+#               (which will be set in $element).
+#   'propertyval' if $cur is the value of an element's property
+#               (which will be set in $element and $property, respectively).
+#
+# ($cur is the word currently being completed.)
+#
+# Before calling this function make sure that $curtype, $option, $element and
+# $property are local, and that $cur, $cword and $words have been initialised
+# by calling _init_completion.
+#
+# See test cases in tests/misc/test-gstreamer-completion.sh in the
+# gstreamer source repository.
+#
+_gst_launch_parse() {
+    local i next state
+    curtype= i=1 state=start
+    while [[ $i -le $cword ]]; do
+        next="${words[i]}"
+        # Note that COMP_WORDBREAKS by default includes "=" and ":".
+        case "$state,$next" in
+            start,-*) curtype=option option="$next" state=option;;
+            start,) curtype=option-or-element;;
+            start,*) curtype=element element="$next" state=element;;
+            option,=) curtype=optionval state=option=;;
+            option,*) _gst_takes_arg "$option" &&
+                            curtype=optionval state=start ||
+                        # re-evaluate without incrementing i:
+                        { curtype= state=start; continue; }
+                      ;;
+            option=,*) curtype=optionval state=start;;
+            element,\!) curtype='!' state='!';;
+            \!,*) curtype=element element="$next" state=element;;
+            element,*) curtype=property property="$next" state=property;;
+            property,=) curtype=propertyval state=property=;;
+            property=,*) curtype=propertyval state=element;;
+        esac
+        i=$((i + 1))
+    done
+    [[ "$cur" == "=" ]] && cur=""
+}
+
+_gst_takes_arg() {
+    case "$1" in
+        -o|--output|--gst-debug-level|--gst-debug) true;;
+        --gst-plugin-path|--gst-plugin-load|--exclude) true;;
+        *) false;;
+    esac
 }
