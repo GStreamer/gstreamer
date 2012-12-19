@@ -1028,7 +1028,7 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
         if (g_strstr_len (prop_val, -1, "(GEnum)")) {
           gchar **val = g_strsplit (prop_val, ")", 2);
 
-          ges_track_object_set_child_property (GES_TRACK_OBJECT (effect),
+          ges_track_object_set_child_properties (GES_TRACK_OBJECT (effect),
               (gchar *) tmp_key->data, atoi (val[1]), NULL);
           g_strfreev (val);
 

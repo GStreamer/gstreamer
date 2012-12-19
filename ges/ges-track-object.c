@@ -1153,6 +1153,9 @@ ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
 
   priv = object->priv;
 
+  if (!priv->properties_hashtable)
+    goto prop_hash_not_set;
+
   classename = NULL;
   res = FALSE;
 
@@ -1181,6 +1184,12 @@ ges_track_object_lookup_child (GESTrackObject * object, const gchar * prop_name,
   g_strfreev (names);
 
   return res;
+
+prop_hash_not_set:
+  {
+    GST_WARNING_OBJECT (object, "The child properties haven't been set yet");
+    return FALSE;
+  }
 }
 
 /**
@@ -1299,7 +1308,7 @@ cant_copy:
 }
 
 /**
- * ges_track_object_set_child_property:
+ * ges_track_object_set_child_properties:
  * @object: The #GESTrackObject parent object
  * @first_property_name: The name of the first property to set
  * @...: value for the first property, followed optionally by more
@@ -1313,7 +1322,7 @@ cant_copy:
  * Since: 0.10.2
  */
 void
-ges_track_object_set_child_property (GESTrackObject * object,
+ges_track_object_set_child_properties (GESTrackObject * object,
     const gchar * first_property_name, ...)
 {
   va_list var_args;
@@ -1412,7 +1421,7 @@ ges_track_object_list_children_properties (GESTrackObject * object,
 }
 
 /**
- * ges_track_object_get_child_property:
+ * ges_track_object_get_child_properties:
  * @object: The origin #GESTrackObject
  * @first_property_name: The name of the first property to get
  * @...: return location for the first property, followed optionally by more
@@ -1423,7 +1432,7 @@ ges_track_object_list_children_properties (GESTrackObject * object,
  * Since: 0.10.2
  */
 void
-ges_track_object_get_child_property (GESTrackObject * object,
+ges_track_object_get_child_properties (GESTrackObject * object,
     const gchar * first_property_name, ...)
 {
   va_list var_args;
@@ -1477,6 +1486,96 @@ prop_hash_not_set:
   {
     GST_ERROR ("The child properties haven't been set on %p", object);
     return;
+  }
+}
+
+/**
+ * ges_track_object_set_child_property:
+ * @object: The origin #GESTrackObject
+ * @property_name: The name of the property
+ * @value: the value
+ *
+ * Sets a property of a GstElement contained in @object.
+ *
+ * Note that #ges_track_object_set_child_property is really
+ * intended for language bindings, #ges_track_object_set_child_properties
+ * is much more convenient for C programming.
+ *
+ * Returns: %TRUE if the property was set, %FALSE otherwize
+ */
+gboolean
+ges_track_object_set_child_property (GESTrackObject * object,
+    const gchar * property_name, GValue * value)
+{
+  GParamSpec *pspec;
+  GstElement *element;
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
+  if (!ges_track_object_lookup_child (object, property_name, &element, &pspec))
+    goto not_found;
+
+  g_object_set_property (G_OBJECT (element), pspec->name, value);
+
+  g_object_unref (element);
+  g_param_spec_unref (pspec);
+
+  return TRUE;
+
+not_found:
+  {
+    GST_WARNING_OBJECT (object, "The %s property doesn't exist", property_name);
+
+    return FALSE;
+  }
+}
+
+/**
+* ges_track_object_get_child_property:
+* @object: The origin #GESTrackObject
+* @property_name: The name of the property
+* @value: (out): return location for the property value, it will
+* be initialized if it is initialized with 0
+*
+* In general, a copy is made of the property contents and
+* the caller is responsible for freeing the memory by calling
+* g_value_unset().
+*
+* Gets a property of a GstElement contained in @object.
+*
+* Note that #ges_track_object_get_child_property is really
+* intended for language bindings, #ges_track_object_get_child_properties
+* is much more convenient for C programming.
+*
+* Returns: %TRUE if the property was found, %FALSE otherwize
+*/
+gboolean
+ges_track_object_get_child_property (GESTrackObject * object,
+    const gchar * property_name, GValue * value)
+{
+  GParamSpec *pspec;
+  GstElement *element;
+
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), FALSE);
+
+  if (!ges_track_object_lookup_child (object, property_name, &element, &pspec))
+    goto not_found;
+
+  if (G_VALUE_TYPE (value) == G_TYPE_INVALID)
+    g_value_init (value, pspec->value_type);
+
+  g_object_get_property (G_OBJECT (element), pspec->name, value);
+
+  g_object_unref (element);
+  g_param_spec_unref (pspec);
+
+  return TRUE;
+
+not_found:
+  {
+    GST_WARNING_OBJECT (object, "The %s property doesn't exist", property_name);
+
+    return FALSE;
   }
 }
 

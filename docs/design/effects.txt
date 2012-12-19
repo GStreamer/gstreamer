@@ -164,8 +164,8 @@ C. Keyframes
       * Gets a property of a GstElement contained in @object.
       */
       void ges_track_object_get_child_property (GESTrackObject *object,
-                                              const gchar *property_name,
-                                              gpointer value);
+                                                const gchar *property_name,
+                                                GValue * value);
             => DONE
 
       /**

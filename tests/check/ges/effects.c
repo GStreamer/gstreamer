@@ -356,9 +356,9 @@ GST_START_TEST (test_track_effect_set_properties)
           (tl_effect), tck_effect));
   fail_unless (ges_track_add_object (track_video, tck_effect));
 
-  ges_track_object_set_child_property (tck_effect,
+  ges_track_object_set_child_properties (tck_effect,
       "GstAgingTV::scratch-lines", 17, "color-aging", FALSE, NULL);
-  ges_track_object_get_child_property (tck_effect,
+  ges_track_object_get_child_properties (tck_effect,
       "GstAgingTV::scratch-lines", &scratch_line,
       "color-aging", &color_aging, NULL);
   fail_unless (scratch_line == 17);
@@ -417,7 +417,7 @@ GST_START_TEST (test_tl_obj_signals)
   GESTrack *track_video;
   GESTimelineParseLaunchEffect *tl_effect;
   GESTrackParseLaunchEffect *tck_effect;
-  guint val;
+  GValue val = { 0, };
 
   ges_init ();
 
@@ -446,11 +446,14 @@ GST_START_TEST (test_tl_obj_signals)
   g_signal_connect (tck_effect, "deep-notify", (GCallback) deep_prop_changed_cb,
       tck_effect);
 
-  ges_track_object_set_child_property (GES_TRACK_OBJECT (tck_effect),
+  ges_track_object_set_child_properties (GES_TRACK_OBJECT (tck_effect),
       "GstAgingTV::scratch-lines", 17, NULL);
+
+  g_value_init (&val, G_TYPE_UINT);
   ges_track_object_get_child_property (GES_TRACK_OBJECT (tck_effect),
-      "GstAgingTV::scratch-lines", &val, NULL);
-  fail_unless (val == 17);
+      "GstAgingTV::scratch-lines", &val);
+  fail_unless (G_VALUE_HOLDS_UINT (&val));
+  g_value_unset (&val);
 
   ges_timeline_layer_remove_object (layer, (GESTimelineObject *) tl_effect);
 

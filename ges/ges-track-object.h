@@ -208,7 +208,7 @@ ges_track_object_get_child_property_valist   (GESTrackObject * object,
                                               const gchar * first_property_name,
                                               va_list var_args);
 
-void ges_track_object_get_child_property     (GESTrackObject *object,
+void ges_track_object_get_child_properties   (GESTrackObject *object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
@@ -222,12 +222,20 @@ ges_track_object_set_child_property_by_pspec (GESTrackObject * object,
                                               GParamSpec * pspec,
                                               GValue * value);
 
-void ges_track_object_set_child_property     (GESTrackObject * object,
+void ges_track_object_set_child_properties   (GESTrackObject * object,
                                               const gchar * first_property_name,
                                               ...) G_GNUC_NULL_TERMINATED;
 
 GESTrackObject * ges_track_object_copy       (GESTrackObject * object,
                                               gboolean deep);
+
+gboolean ges_track_object_set_child_property (GESTrackObject *object,
+                                              const gchar *property_name,
+                                              GValue * value);
+
+gboolean ges_track_object_get_child_property (GESTrackObject *object,
+                                              const gchar *property_name,
+                                              GValue * value);
 
 gboolean
 ges_track_object_edit                        (GESTrackObject * object,
