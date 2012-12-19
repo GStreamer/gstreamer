@@ -62,6 +62,7 @@ G_BEGIN_DECLS
   (st)->nVersion.s.nVersionMajor = OMX_VERSION_MAJOR; \
   (st)->nVersion.s.nVersionMinor = OMX_VERSION_MINOR; \
   (st)->nVersion.s.nRevision = OMX_VERSION_REVISION; \
+  (st)->nVersion.s.nStep = OMX_VERSION_STEP; \
 } G_STMT_END
 
 /* Different hacks that are required to work around
