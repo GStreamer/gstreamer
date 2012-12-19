@@ -59,9 +59,9 @@ G_BEGIN_DECLS
 #define GST_OMX_INIT_STRUCT(st) G_STMT_START { \
   memset ((st), 0, sizeof (*(st))); \
   (st)->nSize = sizeof (*(st)); \
-  (st)->nVersion.s.nVersionMajor = 1; \
-  (st)->nVersion.s.nVersionMinor = 1; \
-  (st)->nVersion.s.nRevision = 2; \
+  (st)->nVersion.s.nVersionMajor = OMX_VERSION_MAJOR; \
+  (st)->nVersion.s.nVersionMinor = OMX_VERSION_MINOR; \
+  (st)->nVersion.s.nRevision = OMX_VERSION_REVISION; \
 } G_STMT_END
 
 /* Different hacks that are required to work around
