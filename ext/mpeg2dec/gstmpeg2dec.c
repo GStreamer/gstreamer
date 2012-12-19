@@ -325,8 +325,8 @@ gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec, GstVideoCodecFrame * in_frame,
   dinfo = &dec->decoded_info;
 
   GST_CAT_LOG_OBJECT (GST_CAT_PERFORMANCE, dec,
-      "Copying input buffer %ux%u (%u) to output buffer "
-      "%ux%u (%u)", dinfo->width, dinfo->height,
+      "Copying input buffer %ux%u (%" G_GSIZE_FORMAT ") to output buffer "
+      "%ux%u (%" G_GSIZE_FORMAT ")", dinfo->width, dinfo->height,
       dinfo->size, info->width, info->height, info->size);
 
   ret =
@@ -533,7 +533,7 @@ gst_mpeg2dec_alloc_buffer (GstMpeg2dec * mpeg2dec, GstVideoCodecFrame * frame,
   GST_DEBUG_OBJECT (mpeg2dec, "set_buf: %p %p %p, frame %i",
       buf[0], buf[1], buf[2], frame->system_frame_number);
 
-  /* Note: We use a non-null 'id' value to make the distinction 
+  /* Note: We use a non-null 'id' value to make the distinction
    * between the dummy buffers (which have an id of NULL) and the
    * ones we did */
   mpeg2_set_buf (mpeg2dec->decoder, buf,
