@@ -167,6 +167,16 @@ AC_ARG_ENABLE(Bsymbolic,
                            enable_Bsymbolic=no)
                LDFLAGS="${SAVED_LDFLAGS}"])
 
+
+AC_ARG_WITH([omx-struct-packing],
+        AS_HELP_STRING([--with-omx-struct-packing],[Force OpenMAX struct packing, (default is none)]),
+        [ac_cv_omx_struct_packing="$withval"], [ac_cv_omx_struct_packing="none"])
+
+if test x"$ac_cv_omx_struct_packing" != x"none"; then
+  AC_MSG_NOTICE([Using $ac_cv_omx_struct_packing as OpenMAX struct packing])
+  AC_DEFINE_UNQUOTED(GST_OMX_STRUCT_PACKING, $ac_cv_omx_struct_packing, [The struct packing used for OpenMAX structures])
+fi
+
 dnl *** set variables based on configure arguments ***
 
 dnl set license and copyright notice

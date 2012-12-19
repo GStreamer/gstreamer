@@ -27,8 +27,30 @@
 #include <gst/video/video.h>
 #include <string.h>
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#ifdef GST_OMX_STRUCT_PACKING
+# if GST_OMX_STRUCT_PACKING == 1
+#  pragma pack(1)
+# elif GST_OMX_STRUCT_PACKING == 2
+#  pragma pack(2)
+# elif GST_OMX_STRUCT_PACKING == 4
+#  pragma pack(4)
+# elif GST_OMX_STRUCT_PACKING == 8
+#  pragma pack(8)
+# else
+#  error "Unsupported struct packing value"
+# endif
+#endif
+
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+
+#ifdef GST_OMX_STRUCT_PACKING
+#pragma pack()
+#endif
 
 #include "gstomxrecmutex.h"
 
