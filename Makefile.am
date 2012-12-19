@@ -1,4 +1,4 @@
-SUBDIRS = common omx
+SUBDIRS = common omx config
 
 ACLOCAL_AMFLAGS = -I m4
 
