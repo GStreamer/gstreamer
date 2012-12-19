@@ -1235,7 +1235,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
-    gst_buffer_extract (codec_data, offset,
+    gst_buffer_extract (frame->input_buffer, offset,
         buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
         buf->omx_buf->nFilledLen);
 
