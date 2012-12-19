@@ -453,6 +453,8 @@ failure:
 static void
 gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL * window_egl)
 {
+  gst_gl_window_wayland_egl_activate (GST_GL_WINDOW (window_egl), FALSE);
+
   destroy_surface (window_egl);
 
   if (window_egl->egl_context)
