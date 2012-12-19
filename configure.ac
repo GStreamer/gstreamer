@@ -281,6 +281,7 @@ Makefile
 omx/Makefile
 common/Makefile
 common/m4/Makefile
+tools/Makefile
 config/Makefile
 )
 
