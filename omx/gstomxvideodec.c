@@ -824,6 +824,12 @@ gst_omx_video_dec_stop (GstVideoDecoder * decoder)
   return TRUE;
 }
 
+typedef struct
+{
+  GstVideoFormat format;
+  OMX_COLOR_FORMATTYPE type;
+} VideoNegotiationMap;
+
 static gboolean
 gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
 {
@@ -833,6 +839,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   OMX_VIDEO_PARAM_PORTFORMATTYPE param;
   OMX_ERRORTYPE err;
   GstCaps *comp_supported_caps;
+  GList *negotiation_map = NULL, *l;
   GstCaps *intersection;
   GstVideoFormat format;
   gint old_index;
@@ -852,6 +859,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   old_index = -1;
   comp_supported_caps = gst_caps_new_empty ();
   do {
+    VideoNegotiationMap *m;
+
     err =
         gst_omx_component_get_parameter (self->component,
         OMX_IndexParamVideoPortFormat, &param);
@@ -866,11 +875,19 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     if (err == OMX_ErrorNone) {
       switch (param.eColorFormat) {
         case OMX_COLOR_FormatYUV420Planar:
+          m = g_slice_new0 (VideoNegotiationMap);
+          m->format = GST_VIDEO_FORMAT_I420;
+          m->type = param.eColorFormat;
+          negotiation_map = g_list_append (negotiation_map, m);
           gst_caps_append_structure (comp_supported_caps,
               gst_structure_new ("video/x-raw",
                   "format", G_TYPE_STRING, "I420", NULL));
           break;
         case OMX_COLOR_FormatYUV420SemiPlanar:
+          m = g_slice_new0 (VideoNegotiationMap);
+          m->format = GST_VIDEO_FORMAT_NV12;
+          m->type = param.eColorFormat;
+          negotiation_map = g_list_append (negotiation_map, m);
           gst_caps_append_structure (comp_supported_caps,
               gst_structure_new ("video/x-raw",
                   "format", G_TYPE_STRING, "NV12", NULL));
@@ -911,18 +928,17 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     return FALSE;
   }
 
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420:
-      param.eColorFormat = OMX_COLOR_FormatYUV420Planar;
+  for (l = negotiation_map; l; l = l->next) {
+    VideoNegotiationMap *m = l->data;
+
+    if (m->format == format) {
+      param.eColorFormat = m->type;
       break;
-    case GST_VIDEO_FORMAT_NV12:
-      param.eColorFormat = OMX_COLOR_FormatYUV420SemiPlanar;
-      break;
-    default:
-      GST_ERROR_OBJECT (self, "Unknown color format: %u", format);
-      return FALSE;
-      break;
+    }
   }
+
+  /* We must find something here */
+  g_assert (l != NULL);
 
   /* Reset framerate, we only care about the color format here */
   param.xFramerate = 0;
