@@ -250,7 +250,7 @@ gst_jpegenc_term_destination (j_compress_ptr cinfo)
 
   GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (jpegenc->current_frame);
 
-  gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (jpegenc),
+  jpegenc->res = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (jpegenc),
       jpegenc->current_frame);
   jpegenc->current_frame = NULL;
 }
@@ -463,6 +463,7 @@ gst_jpegenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
         i) * stride[i];
   }
 
+  jpegenc->res = GST_FLOW_OK;
   jpegenc->output_mem = gst_allocator_alloc (NULL, jpegenc->bufsize, &params);
   gst_memory_map (jpegenc->output_mem, &jpegenc->output_map, GST_MAP_READWRITE);
 
@@ -520,7 +521,7 @@ gst_jpegenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   jpeg_finish_compress (&jpegenc->cinfo);
   GST_LOG_OBJECT (jpegenc, "compressing done");
 
-  return GST_FLOW_OK;
+  return jpegenc->res;
 
 invalid_frame:
   {
