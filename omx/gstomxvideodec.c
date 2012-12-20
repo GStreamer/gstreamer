@@ -895,7 +895,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     if (old_index == param.nIndex)
       break;
 
-    if (err == OMX_ErrorNone) {
+    if (err == OMX_ErrorNone || err == OMX_ErrorNoMore) {
       switch (param.eColorFormat) {
         case OMX_COLOR_FormatYUV420Planar:
         case OMX_COLOR_FormatYUV420PackedPlanar:
