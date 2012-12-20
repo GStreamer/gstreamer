@@ -1033,8 +1033,9 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   gst_buffer_replace (&self->codec_data, state->codec_data);
   self->input_state = gst_video_codec_state_ref (state);
 
-  if (!gst_omx_video_dec_negotiate (self))
-    return FALSE;
+  if (!gst_omx_video_dec_negotiate (self)) {
+    GST_LOG_OBJECT (self, "Negotiation failed, will get output format later");
+  }
 
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->in_port, TRUE) != OMX_ErrorNone)
