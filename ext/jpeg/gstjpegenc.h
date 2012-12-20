@@ -56,6 +56,7 @@ struct _GstJpegEnc
   GstVideoCodecState *input_state;
   GstVideoFrame current_vframe;
   GstVideoCodecFrame *current_frame;
+  GstFlowReturn res;
 
   guint channels;
 
