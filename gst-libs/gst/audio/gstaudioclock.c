@@ -137,7 +137,8 @@ gst_audio_clock_new (const gchar * name, GstAudioClockGetTimeFunc func,
     gpointer user_data, GDestroyNotify destroy_notify)
 {
   GstAudioClock *aclock =
-      GST_AUDIO_CLOCK (g_object_new (GST_TYPE_AUDIO_CLOCK, "name", name, NULL));
+      GST_AUDIO_CLOCK (g_object_new (GST_TYPE_AUDIO_CLOCK, "name", name,
+          "clock-type", GST_CLOCK_TYPE_OTHER, NULL));
 
   aclock->func = func;
   aclock->user_data = user_data;
