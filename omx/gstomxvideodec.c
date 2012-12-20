@@ -790,9 +790,6 @@ gst_omx_video_dec_start (GstVideoDecoder * decoder)
   self->last_upstream_ts = 0;
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
-  ret =
-      gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_video_dec_loop, self, NULL);
 
   return ret;
 }

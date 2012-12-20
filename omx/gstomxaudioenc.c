@@ -502,9 +502,6 @@ gst_omx_audio_enc_start (GstAudioEncoder * encoder)
   self->last_upstream_ts = 0;
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
-  ret =
-      gst_pad_start_task (GST_AUDIO_ENCODER_SRC_PAD (self),
-      (GstTaskFunction) gst_omx_audio_enc_loop, self, NULL);
 
   return ret;
 }
