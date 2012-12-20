@@ -410,6 +410,8 @@ typedef enum {
 
 GType ges_edge_get_type (void);
 
+
+const gchar * ges_track_type_name (GESTrackType type);
 G_END_DECLS
 
 #endif /* __GES_ENUMS_H__ */

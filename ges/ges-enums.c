@@ -30,19 +30,33 @@
 #include "ges-timeline-standard-transition.h"
 
 #define C_ENUM(v) ((guint) v)
+
+static const GFlagsValue track_types_values[] = {
+  {C_ENUM (GES_TRACK_TYPE_UNKNOWN), "GES_TRACK_TYPE_UNKNOWN", "unknown"},
+  {C_ENUM (GES_TRACK_TYPE_AUDIO), "GES_TRACK_TYPE_AUDIO", "audio"},
+  {C_ENUM (GES_TRACK_TYPE_VIDEO), "GES_TRACK_TYPE_VIDEO", "video"},
+  {C_ENUM (GES_TRACK_TYPE_TEXT), "GES_TRACK_TYPE_TEXT", "text"},
+  {C_ENUM (GES_TRACK_TYPE_CUSTOM), "GES_TRACK_TYPE_CUSTOM", "custom"},
+  {0, NULL, NULL}
+};
+
 static void
 register_ges_track_type_select_result (GType * id)
 {
-  static const GFlagsValue values[] = {
-    {C_ENUM (GES_TRACK_TYPE_UNKNOWN), "GES_TRACK_TYPE_UNKNOWN", "unknown"},
-    {C_ENUM (GES_TRACK_TYPE_AUDIO), "GES_TRACK_TYPE_AUDIO", "audio"},
-    {C_ENUM (GES_TRACK_TYPE_VIDEO), "GES_TRACK_TYPE_VIDEO", "video"},
-    {C_ENUM (GES_TRACK_TYPE_TEXT), "GES_TRACK_TYPE_TEXT", "text"},
-    {C_ENUM (GES_TRACK_TYPE_CUSTOM), "GES_TRACK_TYPE_CUSTOM", "custom"},
-    {0, NULL, NULL}
-  };
+  *id = g_flags_register_static ("GESTrackType", track_types_values);
+}
 
-  *id = g_flags_register_static ("GESTrackType", values);
+const gchar *
+ges_track_type_name (GESTrackType type)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (track_types_values); i++) {
+    if (type == track_types_values[i].value)
+      return track_types_values[i].value_nick;
+  }
+
+  return "Unknown (mixed?) ";
 }
 
 GType
