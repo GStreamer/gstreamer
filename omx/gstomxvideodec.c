@@ -833,24 +833,13 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   OMX_VIDEO_PARAM_PORTFORMATTYPE param;
   OMX_ERRORTYPE err;
   GstCaps *comp_supported_caps;
-  GstCaps *templ_caps;
-  GstCaps *peer_caps, *intersection;
+  GstCaps *intersection;
   GstVideoFormat format;
   gint old_index;
   GstStructure *s;
   const gchar *format_str;
 
-  templ_caps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD
-          (self)));
-  peer_caps =
-      gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (self), templ_caps);
-  if (peer_caps) {
-    intersection = peer_caps;
-    gst_caps_unref (templ_caps);
-  } else {
-    intersection = templ_caps;
-  }
+  intersection = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = port->index;
@@ -901,6 +890,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
     intersection = tmp;
   }
 
+  gst_caps_unref (comp_supported_caps);
+
   if (gst_caps_is_empty (intersection)) {
     gst_caps_unref (intersection);
     GST_ERROR_OBJECT (self, "Empty caps");
@@ -908,6 +899,7 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   }
 
   intersection = gst_caps_truncate (intersection);
+  intersection = gst_caps_fixate (intersection);
 
   s = gst_caps_get_structure (intersection, 0);
   format_str = gst_structure_get_string (s, "format");
