@@ -29,6 +29,7 @@ gst_omx_rec_mutex_init (GstOMXRecMutex * mutex)
 {
   g_mutex_init (&mutex->lock);
   g_mutex_init (&mutex->recursion_lock);
+  g_cond_init (&mutex->recursion_wait_cond);
   g_atomic_int_set (&mutex->recursion_allowed, FALSE);
   g_atomic_int_set (&mutex->recursion_pending, FALSE);
 }
@@ -58,6 +59,10 @@ gst_omx_rec_mutex_lock_for_recursion (GstOMXRecMutex * mutex)
   gboolean exchanged;
 
   g_mutex_lock (&mutex->recursion_lock);
+
+  while (g_atomic_int_get (&mutex->recursion_allowed))
+    g_cond_wait (&mutex->recursion_wait_cond, &mutex->recursion_lock);
+
   g_mutex_lock (&mutex->lock);
   exchanged =
       g_atomic_int_compare_and_exchange (&mutex->recursion_pending, FALSE,
@@ -75,6 +80,7 @@ gst_omx_rec_mutex_unlock_for_recursion (GstOMXRecMutex * mutex)
       FALSE);
   g_assert (exchanged);
   g_mutex_unlock (&mutex->lock);
+  g_cond_broadcast (&mutex->recursion_wait_cond);
   g_mutex_unlock (&mutex->recursion_lock);
 }
 
