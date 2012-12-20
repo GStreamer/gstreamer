@@ -230,7 +230,8 @@ _gst_mss_stream_video_caps_from_fourcc (gchar * fourcc)
     return NULL;
 
   if (strcmp (fourcc, "H264") == 0) {
-    return gst_caps_new_simple ("video/x-h264", NULL);
+    return gst_caps_new_simple ("video/x-h264", "stream-format", G_TYPE_STRING,
+        "avc", NULL);
   }
   return NULL;
 }
@@ -246,6 +247,93 @@ _gst_mss_stream_audio_caps_from_fourcc (gchar * fourcc)
         NULL);
   }
   return NULL;
+}
+
+/* copied and adapted from h264parse */
+static GstBuffer *
+_make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
+{
+  GstBuffer *buf;
+  gint sps_size = 0, pps_size = 0, num_sps = 0, num_pps = 0;
+  guint8 profile_idc = 0, profile_comp = 0, level_idc = 0;
+  guint8 *data;
+  gint nl;
+
+  sps_size += GST_BUFFER_SIZE (sps) + 2;
+  profile_idc = GST_BUFFER_DATA (sps)[1];
+  profile_comp = GST_BUFFER_DATA (sps)[2];
+  level_idc = GST_BUFFER_DATA (sps)[3];
+  num_sps = 1;
+
+  pps_size += GST_BUFFER_SIZE (pps) + 2;
+  num_pps = 1;
+
+  buf = gst_buffer_new_and_alloc (5 + 1 + sps_size + 1 + pps_size);
+  data = GST_BUFFER_DATA (buf);
+  nl = 4;
+
+  data[0] = 1;                  /* AVC Decoder Configuration Record ver. 1 */
+  data[1] = profile_idc;        /* profile_idc                             */
+  data[2] = profile_comp;       /* profile_compability                     */
+  data[3] = level_idc;          /* level_idc                               */
+  data[4] = 0xfc | (nl - 1);    /* nal_length_size_minus1                  */
+  data[5] = 0xe0 | num_sps;     /* number of SPSs */
+
+  data += 6;
+  GST_WRITE_UINT16_BE (data, GST_BUFFER_SIZE (sps));
+  memcpy (data + 2, GST_BUFFER_DATA (sps), GST_BUFFER_SIZE (sps));
+  data += 2 + GST_BUFFER_SIZE (sps);
+
+  data[0] = num_pps;
+  data++;
+  GST_WRITE_UINT16_BE (data, GST_BUFFER_SIZE (pps));
+  memcpy (data + 2, GST_BUFFER_DATA (pps), GST_BUFFER_SIZE (pps));
+  data += 2 + GST_BUFFER_SIZE (pps);
+
+  return buf;
+}
+
+static GstBuffer *
+_gst_mss_stream_create_h264_codec_data (const gchar * codecdatastr)
+{
+  GValue sps_value = { 0, };
+  GValue pps_value = { 0, };
+  GstBuffer *sps;
+  GstBuffer *pps;
+  GstBuffer *buffer;
+  gchar *sps_str;
+  gchar *pps_str;
+
+  /* search for the sps start */
+  if (g_str_has_prefix (codecdatastr, "00000001")) {
+    sps_str = (gchar *) codecdatastr + 8;
+  } else {
+    return NULL;                /* invalid mss codec data */
+  }
+
+  /* search for the pps start */
+  pps_str = g_strstr_len (sps_str, -1, "00000001");
+  if (!pps_str) {
+    return NULL;                /* invalid mss codec data */
+  }
+
+  g_value_init (&sps_value, GST_TYPE_BUFFER);
+  pps_str[0] = '\0';
+  gst_value_deserialize (&sps_value, sps_str);
+  pps_str[0] = '0';
+
+  g_value_init (&pps_value, GST_TYPE_BUFFER);
+  pps_str = pps_str + 8;
+  gst_value_deserialize (&pps_value, pps_str);
+
+  sps = gst_value_get_buffer (&sps_value);
+  pps = gst_value_get_buffer (&pps_value);
+
+  buffer = _make_h264_codec_data (sps, pps);
+  g_value_reset (&sps_value);
+  g_value_reset (&pps_value);
+
+  return buffer;
 }
 
 static GstCaps *
@@ -274,7 +362,15 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
   if (codec_data) {
     GValue *value = g_new0 (GValue, 1);
     g_value_init (value, GST_TYPE_BUFFER);
-    gst_value_deserialize (value, (gchar *) codec_data);
+
+    if (strcmp (fourcc, "H264") == 0) {
+      GstBuffer *buf = _gst_mss_stream_create_h264_codec_data (codec_data);
+
+      gst_value_take_buffer (value, buf);
+    } else {
+      gst_value_deserialize (value, (gchar *) codec_data);
+    }
+
     gst_structure_take_value (structure, "codec_data", value);
   }
 
