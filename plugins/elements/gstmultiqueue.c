@@ -1804,16 +1804,31 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   GstMultiQueue *mq = sq->mqueue;
   GList *tmp;
   GstDataQueueSize size;
-  gboolean filled = FALSE;
+  gboolean filled = TRUE;
 
   gst_data_queue_get_level (sq->queue, &size);
 
-  GST_LOG_OBJECT (mq, "Single Queue %d is full", sq->id);
+  GST_LOG_OBJECT (mq,
+      "Single Queue %d: EOS %d, visible %u/%u, bytes %u/%u, time %"
+      G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT, sq->id, sq->is_eos, size.visible,
+      sq->max_size.visible, size.bytes, sq->max_size.bytes, sq->cur_time,
+      sq->max_size.time);
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+
+  /* check if we reached the hard time/bytes limits */
+  if (sq->is_eos || IS_FILLED (sq, bytes, size.bytes) ||
+      IS_FILLED (sq, time, sq->cur_time)) {
+    goto done;
+  }
+
+  /* if hard limits are not reached then we allow one more buffer in the full
+   * queue, but only if any of the other singelqueues are empty */
   for (tmp = mq->queues; tmp; tmp = g_list_next (tmp)) {
     GstSingleQueue *oq = (GstSingleQueue *) tmp->data;
-    GstDataQueueSize ssize;
+
+    if (oq == sq)
+      continue;
 
     GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
 
@@ -1822,43 +1837,22 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       if (IS_FILLED (sq, visible, size.visible)) {
         sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
-            "Another queue is empty, bumping single queue %d max visible to %d",
-            sq->id, sq->max_size.visible);
+            "Queue %d is empty, bumping single queue %d max visible to %d",
+            oq->id, sq->id, sq->max_size.visible);
+        filled = FALSE;
+        break;
       }
     }
-    /* check if we reached the hard time/bytes limits */
-    gst_data_queue_get_level (oq->queue, &ssize);
-
-    GST_DEBUG_OBJECT (mq,
-        "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
-        G_GUINT64_FORMAT, oq->id, ssize.visible, oq->max_size.visible,
-        ssize.bytes, oq->max_size.bytes, oq->cur_time, oq->max_size.time);
-
-    /* if this queue is filled completely we must signal overrun.
-     * FIXME, this seems wrong in many ways
-     *  - we're comparing the filled level of this queue against the
-     *    values of the other one
-     *  - we should only do this after we found no empty queues, ie, move
-     *    this check outside of the loop
-     *  - the debug statement talks about a different queue than the one
-     *    we are checking here.
-     */
-    if (sq->is_eos || IS_FILLED (sq, bytes, ssize.bytes) ||
-        IS_FILLED (sq, time, sq->cur_time)) {
-      GST_LOG_OBJECT (mq, "Queue %d is filled EOS %d", sq->id, sq->is_eos);
-      filled = TRUE;
-    }
   }
-  /* no queues were empty */
+
+done:
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
   /* Overrun is always forwarded, since this is blocking the upstream element */
   if (filled) {
-    GST_DEBUG_OBJECT (mq, "A queue is filled, signalling overrun");
+    GST_DEBUG_OBJECT (mq, "Queue %d is filled, signalling overrun", sq->id);
     g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
   }
-
-  return;
 }
 
 static void
