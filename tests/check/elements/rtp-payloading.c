@@ -783,6 +783,34 @@ GST_START_TEST (rtp_jpeg)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (rtp_jpeg_width_greater_than_2040)
+{
+  rtp_pipeline_test (rtp_jpeg_frame_data, rtp_jpeg_frame_data_size,
+      rtp_jpeg_frame_count, "video/x-jpeg,height=2048,width=480", "rtpjpegpay",
+      "rtpjpegdepay", 0, 0, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_jpeg_height_greater_than_2040)
+{
+  rtp_pipeline_test (rtp_jpeg_frame_data, rtp_jpeg_frame_data_size,
+      rtp_jpeg_frame_count, "video/x-jpeg,height=640,width=2048", "rtpjpegpay",
+      "rtpjpegdepay", 0, 0, FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_jpeg_width_and_height_greater_than_2040)
+{
+  rtp_pipeline_test (rtp_jpeg_frame_data, rtp_jpeg_frame_data_size,
+      rtp_jpeg_frame_count, "video/x-jpeg,height=2048,width=2048", "rtpjpegpay",
+      "rtpjpegdepay", 0, 0, FALSE);
+}
+
+GST_END_TEST;
+
 static const guint8 rtp_jpeg_list_frame_data[] =
     { /* SOF */ 0xFF, 0xC0, 0x00, 0x11, 0x08, 0x00, 0x08, 0x00, 0x08,
   0x03, 0x00, 0x21, 0x08, 0x01, 0x11, 0x08, 0x02, 0x11, 0x08,
@@ -812,6 +840,34 @@ GST_START_TEST (rtp_jpeg_list)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (rtp_jpeg_list_width_greater_than_2040)
+{
+  rtp_pipeline_test (rtp_jpeg_list_frame_data, rtp_jpeg_list_frame_data_size,
+      rtp_jpeg_list_frame_count, "video/x-jpeg,height=2048,width=480",
+      "rtpjpegpay", "rtpjpegdepay", rtp_jpeg_list_bytes_sent, 0, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_jpeg_list_height_greater_than_2040)
+{
+  rtp_pipeline_test (rtp_jpeg_list_frame_data, rtp_jpeg_list_frame_data_size,
+      rtp_jpeg_list_frame_count, "video/x-jpeg,height=640,width=2048",
+      "rtpjpegpay", "rtpjpegdepay", rtp_jpeg_list_bytes_sent, 0, TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_jpeg_list_width_and_height_greater_than_2040)
+{
+  rtp_pipeline_test (rtp_jpeg_list_frame_data, rtp_jpeg_list_frame_data_size,
+      rtp_jpeg_list_frame_count, "video/x-jpeg,height=2048,width=2048",
+      "rtpjpegpay", "rtpjpegdepay", rtp_jpeg_list_bytes_sent, 0, TRUE);
+}
+
+GST_END_TEST;
+
 static const guint8 rtp_g729_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -867,7 +923,13 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_theora);
   tcase_add_test (tc_chain, rtp_vorbis);
   tcase_add_test (tc_chain, rtp_jpeg);
+  tcase_add_test (tc_chain, rtp_jpeg_width_greater_than_2040);
+  tcase_add_test (tc_chain, rtp_jpeg_height_greater_than_2040);
+  tcase_add_test (tc_chain, rtp_jpeg_width_and_height_greater_than_2040);
   tcase_add_test (tc_chain, rtp_jpeg_list);
+  tcase_add_test (tc_chain, rtp_jpeg_list_width_greater_than_2040);
+  tcase_add_test (tc_chain, rtp_jpeg_list_height_greater_than_2040);
+  tcase_add_test (tc_chain, rtp_jpeg_list_width_and_height_greater_than_2040);
   tcase_add_test (tc_chain, rtp_g729);
   return s;
 }
