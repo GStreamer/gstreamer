@@ -1192,7 +1192,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
   GstOMXVideoDecClass *klass;
   GstOMXBuffer *buf;
   GstBuffer *codec_data = NULL;
-  guint offset = 0;
+  guint offset = 0, size;
   GstClockTime timestamp, duration, timestamp_offset = 0;
 
   self = GST_OMX_VIDEO_DEC (decoder);
@@ -1226,7 +1226,8 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
   }
 
-  while (offset < gst_buffer_get_size (frame->input_buffer)) {
+  size = gst_buffer_get_size (frame->input_buffer);
+  while (offset < size) {
     /* Make sure to release the base class stream lock, otherwise
      * _loop() can't call _finish_frame() and we might block forever
      * because no input buffers are released */
@@ -1292,6 +1293,8 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
+    buf->omx_buf->nFilledLen =
+        MIN (size - offset, buf->omx_buf->nAllocLen - buf->omx_buf->nOffset);
     gst_buffer_extract (frame->input_buffer, offset,
         buf->omx_buf->pBuffer + buf->omx_buf->nOffset,
         buf->omx_buf->nFilledLen);
@@ -1299,9 +1302,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     /* Interpolate timestamps if we're passing the buffer
      * in multiple chunks */
     if (offset != 0 && duration != GST_CLOCK_TIME_NONE) {
-      timestamp_offset =
-          gst_util_uint64_scale (offset, duration,
-          gst_buffer_get_size (frame->input_buffer));
+      timestamp_offset = gst_util_uint64_scale (offset, duration, size);
     }
 
     if (timestamp != GST_CLOCK_TIME_NONE) {
@@ -1312,8 +1313,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
     if (duration != GST_CLOCK_TIME_NONE) {
       buf->omx_buf->nTickCount =
-          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration,
-          gst_buffer_get_size (frame->input_buffer));
+          gst_util_uint64_scale (buf->omx_buf->nFilledLen, duration, size);
       self->last_upstream_ts += duration;
     }
 
