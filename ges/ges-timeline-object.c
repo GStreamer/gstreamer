@@ -1,6 +1,8 @@
 /* GStreamer Editing Services
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2009 Nokia Corporation
+ *               2012 Collabora Ltd.
+ *                 Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -39,9 +41,8 @@ gboolean
 ges_timeline_object_fill_track_object_func (GESTimelineObject * object,
     GESTrackObject * trackobj, GstElement * gnlobj);
 
-gboolean
-ges_timeline_object_create_track_objects_func (GESTimelineObject
-    * object, GESTrack * track);
+GList *ges_timeline_object_create_track_objects_func (GESTimelineObject
+    * object, GESTrackType type);
 
 void default_set_max_duration (GESTimelineObject * object, guint64 maxduration);
 
@@ -244,6 +245,7 @@ ges_timeline_object_class_init (GESTimelineObjectClass * klass)
   object_class->set_property = ges_timeline_object_set_property;
   klass->create_track_objects = ges_timeline_object_create_track_objects_func;
   klass->set_max_duration = default_set_max_duration;
+  klass->create_track_object = NULL;
   klass->track_object_added = NULL;
   klass->track_object_released = NULL;
 
@@ -453,30 +455,28 @@ ges_meta_container_interface_init (GESMetaContainerInterface * iface)
 /**
  * ges_timeline_object_create_track_object:
  * @object: The origin #GESTimelineObject
- * @track: The #GESTrack to create a #GESTrackObject for.
+ * @type: The #GESTrackType to create a #GESTrackObject for.
  *
- * Creates a #GESTrackObject for the provided @track. The timeline object
+ * Creates a #GESTrackObject for the provided @type. The timeline object
  * keep a reference to the newly created trackobject, you therefore need to
  * call @ges_timeline_object_release_track_object when you are done with it.
  *
  * Returns: (transfer none): A #GESTrackObject. Returns NULL if the #GESTrackObject could not
  * be created.
  */
-
 GESTrackObject *
 ges_timeline_object_create_track_object (GESTimelineObject * object,
-    GESTrack * track)
+    GESTrackType type)
 {
   GESTimelineObjectClass *class;
   GESTrackObject *res;
 
   g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
-  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
 
-  if (!(track->type & object->priv->supportedformats)) {
-    GST_DEBUG ("We don't support this track format (supported: %i caps %"
-        GST_PTR_FORMAT ")", object->priv->supportedformats,
-        ges_track_get_caps (track));
+  GST_DEBUG_OBJECT (object, "Creating track object for %s",
+      ges_track_type_name (type));
+  if (!(type & object->priv->supportedformats)) {
+    GST_DEBUG_OBJECT (object, "We don't support this track type %i", type);
     return NULL;
   }
 
@@ -487,7 +487,7 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
     return NULL;
   }
 
-  res = class->create_track_object (object, track);
+  res = class->create_track_object (object, type);
   return res;
 
 }
@@ -495,34 +495,34 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
 /**
  * ges_timeline_object_create_track_objects:
  * @object: The origin #GESTimelineObject
- * @track: The #GESTrack to create each #GESTrackObject for.
+ * @type: The #GESTrackType to create each #GESTrackObject for.
  *
- * Creates all #GESTrackObjects supported by this object and adds them to the
- * provided track. The track is responsible for calling
- * #ges_timeline_release_track_object on these objects when it is finished
- * with them.
+ * Creates all #GESTrackObjects supported by this object provided track.
+ * The track is responsible for calling #ges_timeline_release_track_object
+ * on these objects when it is finished with them.
  *
- * Returns: %TRUE if each track object was created successfully, or %FALSE if an
- * error occured.
+ * Returns: (element-type GESTrackObject) (transfer-full): A #GList of
+ * newly created #GESTrackObject-s
  */
 
-gboolean
+GList *
 ges_timeline_object_create_track_objects (GESTimelineObject * object,
-    GESTrack * track)
+    GESTrackType type)
 {
   GESTimelineObjectClass *klass;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), FALSE);
-  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE_OBJECT (object), NULL);
 
   klass = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   if (!(klass->create_track_objects)) {
     GST_WARNING ("no GESTimelineObject::create_track_objects implentation");
-    return FALSE;
+    return NULL;
   }
 
-  return klass->create_track_objects (object, track);
+  GST_DEBUG_OBJECT (object, "Creating TrackObjects for type: %s",
+      ges_track_type_name (type));
+  return klass->create_track_objects (object, type);
 }
 
 /* Default implementation of default_set_max_duration */
@@ -537,22 +537,21 @@ default_set_max_duration (GESTimelineObject * object, guint64 maxduration)
 /*
  * default implementation of GESTimelineObjectClass::create_track_objects
  */
-gboolean
+GList *
 ges_timeline_object_create_track_objects_func (GESTimelineObject * object,
-    GESTrack * track)
+    GESTrackType type)
 {
   GESTrackObject *result;
 
-  result = ges_timeline_object_create_track_object (object, track);
+  GST_DEBUG_OBJECT (object, "Creating trackobject for track: %s",
+      ges_track_type_name (type));
+  result = ges_timeline_object_create_track_object (object, type);
   if (!result) {
     GST_DEBUG ("Did not create track object");
-    return FALSE;
+    return NULL;
   }
 
-  if (ges_timeline_object_add_track_object (object, result) == FALSE)
-    return FALSE;
-
-  return ges_track_add_object (track, result);
+  return g_list_append (NULL, result);
 }
 
 /**

@@ -57,7 +57,7 @@ GST_START_TEST (test_test_source_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track);
+  trackobject = ges_timeline_object_create_track_object (object, track->type);
   ges_timeline_object_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
@@ -137,6 +137,8 @@ GST_START_TEST (test_test_source_in_layer)
   trobj =
       ges_timeline_object_find_track_object (GES_TIMELINE_OBJECT (source), v,
       GES_TYPE_TRACK_VIDEO_TEST_SOURCE);
+
+  g_assert (GES_IS_TRACK_VIDEO_TEST_SOURCE (trobj));
 
   ptrn = (ges_track_video_test_source_get_pattern ((GESTrackVideoTestSource *)
           trobj));
@@ -257,8 +259,9 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object), 0);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 5);
 
-  trackobject = ges_timeline_object_create_track_object (object, track);
+  trackobject = ges_timeline_object_create_track_object (object, track->type);
   ges_timeline_object_add_track_object (object, trackobject);
+
   fail_unless (ges_track_add_object (track, trackobject));
   fail_unless (trackobject != NULL);
   gnlsrc = ges_track_object_get_gnlobject (trackobject);
@@ -278,7 +281,7 @@ GST_START_TEST (test_gap_filling_basic)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_START (object1), 15);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object1), 5);
 
-  trackobject1 = ges_timeline_object_create_track_object (object1, track);
+  trackobject1 = ges_timeline_object_create_track_object (object1, track->type);
   ges_timeline_object_add_track_object (object1, trackobject1);
   fail_unless (ges_track_add_object (track, trackobject1));
   fail_unless (trackobject1 != NULL);
@@ -305,7 +308,7 @@ GST_START_TEST (test_gap_filling_basic)
       object2 = GES_TIMELINE_OBJECT (ges_timeline_test_source_new ());
   fail_unless (object2 != NULL);
   g_object_set (object2, "start", (guint64) 35, "duration", (guint64) 5, NULL);
-  trackobject2 = ges_timeline_object_create_track_object (object2, track);
+  trackobject2 = ges_timeline_object_create_track_object (object2, track->type);
   ges_timeline_object_add_track_object (object2, trackobject2);
   fail_unless (ges_track_add_object (track, trackobject2));
   fail_unless (trackobject2 != NULL);

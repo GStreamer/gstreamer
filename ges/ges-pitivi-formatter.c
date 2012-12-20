@@ -905,6 +905,8 @@ make_source (GESFormatter * self, GList * reflist, GHashTable * source_table)
 
       effect = ges_track_parse_launch_effect_new ((gchar *)
           g_hash_table_lookup (props_table, (gchar *) "effect_name"));
+      ges_track_object_set_track_type (GES_TRACK_OBJECT (effect),
+          (video ? GES_TRACK_TYPE_VIDEO : GES_TRACK_TYPE_AUDIO));
       effect_table =
           g_hash_table_lookup (props_table, (gchar *) "effect_props");
 

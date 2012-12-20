@@ -876,5 +876,6 @@ ges_track_video_transition_get_transition_type (GESTrackVideoTransition * trans)
 GESTrackVideoTransition *
 ges_track_video_transition_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_VIDEO_TRANSITION, NULL);
+  return g_object_new (GES_TYPE_TRACK_VIDEO_TRANSITION, "track-type",
+      GES_TRACK_TYPE_VIDEO, NULL);
 }

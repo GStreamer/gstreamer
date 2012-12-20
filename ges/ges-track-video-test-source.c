@@ -116,5 +116,6 @@ ges_track_video_test_source_get_pattern (GESTrackVideoTestSource * source)
 GESTrackVideoTestSource *
 ges_track_video_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_VIDEO_TEST_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_VIDEO_TEST_SOURCE, "track-type",
+      GES_TRACK_TYPE_VIDEO, NULL);
 }

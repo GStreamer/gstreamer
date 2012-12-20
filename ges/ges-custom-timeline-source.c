@@ -136,9 +136,9 @@ ges_custom_timeline_source_fill_track_object (GESTimelineObject * object,
 
 static GESTrackObject *
 ges_custom_timeline_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
+    GESTrackType type)
 {
-  return g_object_new (GES_TYPE_TRACK_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_SOURCE, "track-type", type, NULL);
 }
 
 static void

@@ -272,5 +272,6 @@ ges_track_audio_transition_duration_changed (GESTrackObject * object,
 GESTrackAudioTransition *
 ges_track_audio_transition_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_AUDIO_TRANSITION, NULL);
+  return g_object_new (GES_TYPE_TRACK_AUDIO_TRANSITION, "track-type",
+      GES_TRACK_TYPE_AUDIO, NULL);
 }

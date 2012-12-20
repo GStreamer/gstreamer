@@ -91,19 +91,19 @@ GST_START_TEST (test_basic_timeline_edition)
   g_object_set (obj2, "start", (guint64) 50, "duration", (guint64) 60,
       "in-point", (guint64) 0, NULL);
 
-  tckobj = ges_timeline_object_create_track_object (obj, track);
+  tckobj = ges_timeline_object_create_track_object (obj, track->type);
   fail_unless (tckobj != NULL);
   fail_unless (ges_timeline_object_add_track_object (obj, tckobj));
   fail_unless (ges_track_add_object (track, tckobj));
   assert_equals_uint64 (ges_track_object_get_duration (tckobj), 10);
 
-  tckobj1 = ges_timeline_object_create_track_object (obj1, track);
+  tckobj1 = ges_timeline_object_create_track_object (obj1, track->type);
   fail_unless (tckobj1 != NULL);
   fail_unless (ges_timeline_object_add_track_object (obj1, tckobj1));
   fail_unless (ges_track_add_object (track, tckobj1));
   assert_equals_uint64 (ges_track_object_get_duration (tckobj1), 10);
 
-  tckobj2 = ges_timeline_object_create_track_object (obj2, track);
+  tckobj2 = ges_timeline_object_create_track_object (obj2, track->type);
   fail_unless (ges_timeline_object_add_track_object (obj2, tckobj2));
   fail_unless (tckobj2 != NULL);
   fail_unless (ges_track_add_object (track, tckobj2));

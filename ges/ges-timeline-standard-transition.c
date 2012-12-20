@@ -57,7 +57,7 @@ enum
 };
 
 static GESTrackObject *ges_tl_transition_create_track_object (GESTimelineObject
-    * self, GESTrack * track);
+    * self, GESTrackType type);
 static void
 ges_timeline_standard_transition_track_object_added (GESTimelineObject * obj,
     GESTrackObject * tckobj);
@@ -309,7 +309,7 @@ ges_timeline_standard_transition_track_object_added (GESTimelineObject * obj,
 
 static GESTrackObject *
 ges_tl_transition_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
+    GESTrackType type)
 {
   GESTimelineStandardTransition *transition =
       (GESTimelineStandardTransition *) obj;
@@ -319,7 +319,7 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
   GST_DEBUG ("Creating a GESTrackTransition");
 
   supportedformats = ges_timeline_object_get_supported_formats (obj);
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
+  if (type == GES_TRACK_TYPE_VIDEO) {
     if (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         supportedformats & GES_TRACK_TYPE_VIDEO) {
       GESTrackVideoTransition *trans;
@@ -333,7 +333,7 @@ ges_tl_transition_create_track_object (GESTimelineObject * obj,
           " supportedformats");
     }
 
-  } else if (track->type == GES_TRACK_TYPE_AUDIO) {
+  } else if (type == GES_TRACK_TYPE_AUDIO) {
 
     if (supportedformats == GES_TRACK_TYPE_UNKNOWN ||
         supportedformats & GES_TRACK_TYPE_AUDIO)

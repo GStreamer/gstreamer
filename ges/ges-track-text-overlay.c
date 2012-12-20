@@ -442,5 +442,6 @@ ges_track_text_overlay_get_ypos (GESTrackTextOverlay * self)
 GESTrackTextOverlay *
 ges_track_text_overlay_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_TEXT_OVERLAY, NULL);
+  return g_object_new (GES_TYPE_TRACK_TEXT_OVERLAY, "track-type",
+      GES_TRACK_TYPE_VIDEO, NULL);
 }

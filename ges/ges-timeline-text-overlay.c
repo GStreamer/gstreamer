@@ -65,7 +65,7 @@ enum
 
 static GESTrackObject
     * ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
-    GESTrack * track);
+    GESTrackType type);
 
 static void
 ges_timeline_text_overlay_get_property (GObject * object, guint property_id,
@@ -603,7 +603,7 @@ ges_timeline_text_overlay_get_ypos (GESTimelineTextOverlay * self)
 
 static GESTrackObject *
 ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
+    GESTrackType type)
 {
 
   GESTimelineTextOverlayPrivate *priv = GES_TIMELINE_TEXT_OVERLAY (obj)->priv;
@@ -611,7 +611,7 @@ ges_timeline_text_overlay_create_track_object (GESTimelineObject * obj,
 
   GST_DEBUG ("Creating a GESTrackOverlay");
 
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
+  if (type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_text_overlay_new ();
     GST_DEBUG ("Setting text property");
     ges_track_text_overlay_set_text ((GESTrackTextOverlay *) res, priv->text);

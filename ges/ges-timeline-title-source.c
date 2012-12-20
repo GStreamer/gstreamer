@@ -71,7 +71,7 @@ enum
 
 static GESTrackObject
     * ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track);
+    GESTrackType type);
 
 static void
 ges_timeline_title_source_track_object_added (GESTimelineObject * obj,
@@ -704,7 +704,7 @@ ges_timeline_title_source_track_object_added (GESTimelineObject * obj,
 
 static GESTrackObject *
 ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
+    GESTrackType type)
 {
 
   GESTimelineTitleSourcePrivate *priv = GES_TIMELINE_TITLE_SOURCE (obj)->priv;
@@ -712,7 +712,7 @@ ges_timeline_title_source_create_track_object (GESTimelineObject * obj,
 
   GST_DEBUG_OBJECT (obj, "a GESTrackTitleSource");
 
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
+  if (type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_title_source_new ();
     GST_DEBUG_OBJECT (obj, "text property");
     ges_track_title_source_set_text ((GESTrackTitleSource *) res, priv->text);

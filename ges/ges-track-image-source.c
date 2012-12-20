@@ -188,5 +188,6 @@ ges_track_image_source_init (GESTrackImageSource * self)
 GESTrackImageSource *
 ges_track_image_source_new (gchar * uri)
 {
-  return g_object_new (GES_TYPE_TRACK_IMAGE_SOURCE, "uri", uri, NULL);
+  return g_object_new (GES_TYPE_TRACK_IMAGE_SOURCE, "uri", uri, "track-type",
+      GES_TRACK_TYPE_VIDEO, NULL);
 }

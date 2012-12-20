@@ -55,7 +55,7 @@ enum
 static void ges_timeline_parse_launch_effect_finalize (GObject * object);
 static GESTrackObject
     * ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
-    GESTrack * track);
+    GESTrackType type);
 
 static void
 ges_timeline_parse_launch_effect_finalize (GObject * object)
@@ -166,28 +166,22 @@ ges_timeline_parse_launch_effect_init (GESTimelineParseLaunchEffect * self)
 
 static GESTrackObject *
 ges_tl_parse_launch_effect_create_track_obj (GESTimelineObject * self,
-    GESTrack * track)
+    GESTrackType type)
 {
+  const gchar *bin_description = NULL;
   GESTimelineParseLaunchEffect *effect =
       GES_TIMELINE_PARSE_LAUNCH_EFFECT (self);
 
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
-    if (effect->priv->video_bin_description != NULL) {
-      GST_DEBUG ("Creating a GESTrackEffect for the video track");
-      return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new
-          (effect->priv->video_bin_description));
-    }
-    GST_DEBUG ("Can't create the track Object, the"
-        "video_bin_description is not set");
+  if (type == GES_TRACK_TYPE_VIDEO) {
+    bin_description = effect->priv->video_bin_description;
+  } else if (type == GES_TRACK_TYPE_AUDIO) {
+    bin_description = effect->priv->audio_bin_description;
   }
-  if (track->type == GES_TRACK_TYPE_AUDIO) {
-    if (effect->priv->audio_bin_description != NULL) {
-      GST_DEBUG ("Creating a GESTrackEffect for the audio track");
-      return GES_TRACK_OBJECT (ges_track_parse_launch_effect_new
-          (effect->priv->audio_bin_description));
-    }
-    GST_DEBUG ("Can't create the track Object, the"
-        "audio_bin_description is not set");
+
+  if (bin_description) {
+    /* FIXME Work with a GESAsset here! */
+    return g_object_new (GES_TYPE_TRACK_PARSE_LAUNCH_EFFECT, "bin-description",
+        bin_description, "track-type", type, NULL);
   }
 
   GST_WARNING ("Effect doesn't handle this track type");

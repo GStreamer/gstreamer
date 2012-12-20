@@ -134,7 +134,7 @@ GST_START_TEST (test_filesource_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track);
+  trackobject = ges_timeline_object_create_track_object (object, track->type);
   ges_timeline_object_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
@@ -199,7 +199,7 @@ GST_START_TEST (test_filesource_images)
   g_object_set (G_OBJECT (tfs), "is-image", TRUE, NULL);
 
   /* the returned track object should be an image source */
-  trobj = ges_timeline_object_create_track_object (tlobj, v);
+  trobj = ges_timeline_object_create_track_object (tlobj, v->type);
   ges_timeline_object_add_track_object (tlobj, trobj);
   fail_unless (GES_IS_TRACK_IMAGE_SOURCE (trobj));
 
@@ -211,7 +211,7 @@ GST_START_TEST (test_filesource_images)
   ges_timeline_object_release_track_object (tlobj, trobj);
 
   /* the timeline object should not create any TrackObject in the audio track */
-  trobj = ges_timeline_object_create_track_object (tlobj, a);
+  trobj = ges_timeline_object_create_track_object (tlobj, a->type);
   fail_unless (trobj == NULL);
 
   g_object_unref (a);

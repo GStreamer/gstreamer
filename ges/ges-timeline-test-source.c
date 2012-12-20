@@ -59,7 +59,7 @@ enum
 
 static GESTrackObject
     * ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track);
+    GESTrackType type);
 
 static void
 ges_timeline_test_source_get_property (GObject * object, guint property_id,
@@ -353,20 +353,19 @@ ges_timeline_test_source_get_volume (GESTimelineTestSource * self)
 
 static GESTrackObject *
 ges_timeline_test_source_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
+    GESTrackType type)
 {
   GESTimelineTestSourcePrivate *priv = GES_TIMELINE_TEST_SOURCE (obj)->priv;
   GESTrackObject *res = NULL;
 
-  GST_DEBUG ("Creating a GESTrackTestSource");
+  GST_DEBUG ("Creating a GESTrackTestSource for type: %s",
+      ges_track_type_name (type));
 
-  if (track->type == GES_TRACK_TYPE_VIDEO) {
+  if (type == GES_TRACK_TYPE_VIDEO) {
     res = (GESTrackObject *) ges_track_video_test_source_new ();
     ges_track_video_test_source_set_pattern (
         (GESTrackVideoTestSource *) res, priv->vpattern);
-  }
-
-  else if (track->type == GES_TRACK_TYPE_AUDIO) {
+  } else if (type == GES_TRACK_TYPE_AUDIO) {
     res = (GESTrackObject *) ges_track_audio_test_source_new ();
 
     if (priv->mute)

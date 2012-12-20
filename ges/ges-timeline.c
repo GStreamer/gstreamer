@@ -2,6 +2,8 @@
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2009 Nokia Corporation
  *               2012 Thibault Saunier <tsaunier@gnome.org>
+ *               2012 Collabora Ltd.
+ *                 Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -44,6 +46,8 @@
 
 typedef struct _MoveContext MoveContext;
 
+static GPtrArray *select_tracks_for_object_default (GESTimeline * timeline,
+    GESTimelineObject * tl_obj, GESTrackObject * tr_obj, gpointer user_data);
 static inline void init_movecontext (MoveContext * mv_ctx);
 static void ges_extractable_interface_init (GESExtractableInterface * iface);
 static void ges_meta_container_interface_init
@@ -171,6 +175,7 @@ enum
   LAYER_REMOVED,
   SNAPING_STARTED,
   SNAPING_ENDED,
+  SELECT_TRACKS_FOR_OBJECT,
   LAST_SIGNAL
 };
 
@@ -321,6 +326,20 @@ ges_timeline_finalize (GObject * object)
   G_OBJECT_CLASS (ges_timeline_parent_class)->finalize (object);
 }
 
+/* we collect the first result */
+static gboolean
+_gst_array_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gpointer array;
+
+  array = g_value_get_boxed (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boxed (return_accu, array);
+
+  return FALSE;
+}
+
 static void
 ges_timeline_class_init (GESTimelineClass * klass)
 {
@@ -467,6 +486,21 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 3, GES_TYPE_TRACK_OBJECT, GES_TYPE_TRACK_OBJECT,
       G_TYPE_UINT64);
+
+  /**
+   * GESTimeline::select-tracks-for-object:
+   * @timeline: the #GESTimeline
+   * @timeline-object: The #GESTimelineObject on which @track-object will land
+   * @track-object: The #GESTrackObject for which to choose the tracks it should land into
+   *
+   * Returns: (transfer full) (element-type GESTrack): a #GPtrArray of #GESTrack-s where that object should be added
+   *
+   * Since: 0.10.XX
+   */
+  ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT] =
+      g_signal_new ("select-tracks-for-object", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, _gst_array_accumulator, NULL, NULL,
+      G_TYPE_PTR_ARRAY, 2, GES_TYPE_TIMELINE_OBJECT, GES_TYPE_TRACK_OBJECT);
 }
 
 static void
@@ -495,6 +529,9 @@ ges_timeline_init (GESTimeline * self)
       (GDestroyNotify) _destroy_obj_iters);
   priv->starts_ends = g_sequence_new (g_free);
   priv->tracksources = g_sequence_new (g_object_unref);
+
+  g_signal_connect_after (self, "select-tracks-for-object",
+      G_CALLBACK (select_tracks_for_object_default), NULL);
 }
 
 /* Private methods */
@@ -1415,23 +1452,114 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
 }
 
 static void
-add_object_to_track (GESTimelineObject * object, GESTrack * track)
+add_object_to_track (GESTimelineObject * object, GESTrackObject * track_object,
+    GESTrack * track)
 {
-  if (!ges_timeline_object_create_track_objects (object, track)) {
-    if ((track->type & ges_timeline_object_get_supported_formats (object))) {
-      GST_WARNING ("Error creating track objects");
-    }
+  if (!ges_timeline_object_add_track_object (object, track_object)) {
+    GST_WARNING_OBJECT (object,
+        "Failed to add track object to timeline object");
+    gst_object_unref (track_object);
+    return;
+  }
+
+  if (!ges_track_add_object (track, track_object)) {
+    GST_WARNING_OBJECT (object, "Failed to add track object to track");
+    ges_timeline_object_release_track_object (object, track_object);
+    gst_object_unref (track_object);
+    return;
   }
 }
 
-static void
-add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
+static GPtrArray *
+select_tracks_for_object_default (GESTimeline * timeline,
+    GESTimelineObject * tl_obj, GESTrackObject * tr_object, gpointer user_data)
 {
+  GPtrArray *result;
   GList *tmp;
 
-  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    GST_LOG_OBJECT (timeline, "Trying with track %" GST_PTR_FORMAT, tmp->data);
-    add_object_to_track (object, GES_TRACK (tmp->data));
+  result = g_ptr_array_new ();
+
+  for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
+    GESTrack *track = GES_TRACK (tmp->data);
+
+    if ((track->type & ges_track_object_get_track_type (tr_object))) {
+      gst_object_ref (track);
+      g_ptr_array_add (result, track);
+    }
+  }
+
+  return result;
+}
+
+static void
+add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object,
+    GESTrack * track)
+{
+  gint i;
+  GPtrArray *tracks = NULL;
+  GESTrackType types, visited_type = 1;
+  GList *tmp, *l, *track_objects;
+
+  GST_DEBUG_OBJECT (timeline, "Creating %" GST_PTR_FORMAT
+      " trackobjects and adding them to our tracks", object);
+
+  types = ges_timeline_object_get_supported_formats (object);
+  if (track) {
+    if ((types & track->type) == 0)
+      return;
+    types = track->type;
+  }
+
+  for (i = 0, tmp = timeline->tracks; tmp; tmp = tmp->next, i++) {
+    GESTrack *track = GES_TRACK (tmp->data);
+
+    if (((track->type & types) == 0 || (track->type & visited_type)))
+      continue;
+
+    track_objects = ges_timeline_object_create_track_objects (object,
+        track->type);
+    for (l = track_objects; l; l = l->next) {
+      GESTrack *tmp_track;
+      GESTrackObject *track_object = l->data;
+
+      GST_DEBUG_OBJECT (timeline, "Got trackobject: %" GST_PTR_FORMAT
+          "Asking to which track it should be added", track_object);
+
+      g_signal_emit (G_OBJECT (timeline),
+          ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT], 0, object,
+          track_object, &tracks);
+
+      if (!tracks || tracks->len == 0) {
+        GST_DEBUG_OBJECT (timeline, "Got no Track to add %p into", object);
+        goto next_track_object;
+      }
+
+      for (i = 0; i < tracks->len; i++) {
+        GESTrackObject *track_object_copy;
+
+        tmp_track = g_ptr_array_index (tracks, i);
+        if (track && tmp_track != track) {
+          GST_LOG_OBJECT (timeline,
+              "Not adding %" GST_PTR_FORMAT " to any track", track_object);
+          continue;
+        }
+
+        track_object_copy = ges_track_object_copy (track_object, TRUE);
+
+        GST_LOG_OBJECT (timeline, "Trying to add %p to track %p",
+            track_object_copy, tmp_track);
+        add_object_to_track (object, track_object_copy, tmp_track);
+
+        gst_object_unref (tmp_track);
+      }
+
+    next_track_object:
+      if (tracks) {
+        g_ptr_array_unref (tracks);
+        tracks = NULL;
+      }
+      gst_object_unref (track_object);
+    }
   }
 }
 
@@ -1447,7 +1575,7 @@ layer_object_added_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   }
 
   GST_DEBUG ("New TimelineObject %p added to layer %p", object, layer);
-  add_object_to_tracks (timeline, object);
+  add_object_to_tracks (timeline, object, NULL);
   GST_DEBUG ("Done");
 }
 
@@ -1480,7 +1608,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
   for (tmp = trackobjects; tmp; tmp = tmp->next) {
     GESTrackObject *trobj = (GESTrackObject *) tmp->data;
 
-    GST_DEBUG ("Trying to remove TrackObject %p", trobj);
+    GST_DEBUG_OBJECT (timeline, "Trying to remove TrackObject %p", trobj);
     if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks,
                 ges_track_object_get_track (trobj),
                 (GCompareFunc) custom_find_track))) {
@@ -1939,9 +2067,10 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
     objects = ges_timeline_layer_get_objects (tmp->data);
 
     for (obj = objects; obj; obj = obj->next) {
-      add_object_to_track (obj->data, track);
-      g_object_unref (obj->data);
-      obj->data = NULL;
+      GESTimelineObject *object = obj->data;
+
+      add_object_to_tracks (timeline, object, track);
+      g_object_unref (object);
     }
     g_list_free (objects);
   }

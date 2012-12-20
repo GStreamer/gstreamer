@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
 typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
+typedef struct _GESTimelineObjectClassPrivate GESTimelineObjectClassPrivate;
 
 /**
  * GESFillTrackObjectFunc:
@@ -58,7 +59,7 @@ typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject *object,
 /**
  * GESCreateTrackObjectFunc:
  * @object: a #GESTimelineObject
- * @track: a #GESTrack
+ * @type: a #GESTrackType
  *
  * Creates the 'primary' track object for this @object.
  *
@@ -78,14 +79,13 @@ typedef gboolean (*GESFillTrackObjectFunc) (GESTimelineObject *object,
  * Returns: the #GESTrackObject to be used, or %NULL if it can't provide one
  * for the given @track.
  */
-typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESTimelineObject *
-                                                     object,
-                                                     GESTrack *track);
+typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESTimelineObject * object,
+                                                     GESTrackType type);
 
 /**
  * GESCreateTrackObjectsFunc:
  * @object: a #GESTimelineObject
- * @track: a #GESTrack
+ * @type: a #GESTrackType
  *
  * Create all track objects this object handles for this type of track.
  *
@@ -94,12 +94,12 @@ typedef GESTrackObject *(*GESCreateTrackObjectFunc) (GESTimelineObject *
  *
  * For each object created, the subclass must call
  * ges_timeline_object_add_track_object() with the newly created object
- * and provided @track.
+ * and provided @type.
  *
  * Returns: %TRUE on success %FALSE on failure.
  */
-typedef gboolean (*GESCreateTrackObjectsFunc) (GESTimelineObject *object,
-                                               GESTrack *track);
+
+typedef GList * (*GESCreateTrackObjectsFunc) (GESTimelineObject * object, GESTrackType type);
 
 /**
  * GES_TIMELINE_OBJECT_START:
@@ -241,15 +241,14 @@ void ges_timeline_object_set_layer            (GESTimelineObject *object,
 /* TrackObject handling */
 GList* ges_timeline_object_get_track_objects            (GESTimelineObject *object);
 GESTrackType ges_timeline_object_get_supported_formats  (GESTimelineObject *object);
-GESTrackObject *ges_timeline_object_create_track_object (GESTimelineObject *object, GESTrack          *track);
-gboolean ges_timeline_object_create_track_objects       (GESTimelineObject *object, GESTrack          *track);
+GESTrackObject *ges_timeline_object_create_track_object (GESTimelineObject *object, GESTrackType type);
+GList * ges_timeline_object_create_track_objects        (GESTimelineObject *object, GESTrackType type);
 gboolean ges_timeline_object_release_track_object       (GESTimelineObject *object, GESTrackObject    *trackobject);
 void ges_timeline_object_set_supported_formats          (GESTimelineObject *object, GESTrackType       supportedformats);
 gboolean ges_timeline_object_add_asset               (GESTimelineObject *object, GESAsset       *asset);
 gboolean ges_timeline_object_add_track_object           (GESTimelineObject *object, GESTrackObject    *trobj);
 gboolean ges_timeline_object_fill_track_object          (GESTimelineObject *object, GESTrackObject    *trackobj, GstElement *gnlobj);
 GESTrackObject *ges_timeline_object_find_track_object   (GESTimelineObject *object, GESTrack          *track,    GType      type);
-
 
 /* Layer */
 GESTimelineLayer *ges_timeline_object_get_layer   (GESTimelineObject *object);

@@ -49,7 +49,7 @@ GST_START_TEST (test_transition_basic)
   /* Make sure track object is created and vtype is set */
   trackobject =
       ges_timeline_object_create_track_object (GES_TIMELINE_OBJECT (tr2),
-      track);
+      track->type);
   ges_timeline_object_add_track_object (GES_TIMELINE_OBJECT (tr2), trackobject);
 
   fail_unless (trackobject != NULL);
@@ -89,7 +89,7 @@ GST_START_TEST (test_transition_properties)
   assert_equals_uint64 (GES_TIMELINE_OBJECT_DURATION (object), 51);
   assert_equals_uint64 (GES_TIMELINE_OBJECT_INPOINT (object), 12);
 
-  trackobject = ges_timeline_object_create_track_object (object, track);
+  trackobject = ges_timeline_object_create_track_object (object, track->type);
   ges_timeline_object_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));
@@ -142,7 +142,7 @@ GST_START_TEST (test_transition_properties)
   g_object_set (object, "vtype", 1, NULL);
 
   GST_DEBUG ("creating track object");
-  trackobject = ges_timeline_object_create_track_object (object, track);
+  trackobject = ges_timeline_object_create_track_object (object, track->type);
   ges_timeline_object_add_track_object (object, trackobject);
   fail_unless (trackobject != NULL);
   fail_unless (ges_track_object_set_track (trackobject, track));

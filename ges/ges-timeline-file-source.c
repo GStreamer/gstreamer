@@ -64,7 +64,7 @@ enum
 
 static GESTrackObject
     * ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
-    GESTrack * track);
+    GESTrackType type);
 void
 ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri);
 
@@ -401,31 +401,33 @@ ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
 
 static GESTrackObject *
 ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
-    GESTrack * track)
+    GESTrackType type)
 {
   GESTimelineFileSourcePrivate *priv = GES_TIMELINE_FILE_SOURCE (obj)->priv;
   GESTrackObject *res;
 
   if (priv->is_image) {
-    if (track->type != GES_TRACK_TYPE_VIDEO) {
+    if (type != GES_TRACK_TYPE_VIDEO) {
       GST_DEBUG ("Object is still image, not adding any audio source");
       return NULL;
     } else {
       GST_DEBUG ("Creating a GESTrackImageSource");
       res = (GESTrackObject *) ges_track_image_source_new (priv->uri);
     }
-  }
 
-  else {
+  } else {
     GST_DEBUG ("Creating a GESTrackFileSource");
 
     /* FIXME : Implement properly ! */
     res = (GESTrackObject *) ges_track_filesource_new (priv->uri);
 
     /* If mute and track is audio, deactivate the track object */
-    if (track->type == GES_TRACK_TYPE_AUDIO && priv->mute)
+    if (type == GES_TRACK_TYPE_AUDIO && priv->mute)
       ges_track_object_set_active (res, FALSE);
   }
+
+  if (res)
+    ges_track_object_set_track_type (res, type);
 
   return res;
 }

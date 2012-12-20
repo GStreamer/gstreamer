@@ -186,5 +186,6 @@ ges_track_audio_test_source_get_volume (GESTrackAudioTestSource * self)
 GESTrackAudioTestSource *
 ges_track_audio_test_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_AUDIO_TEST_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_AUDIO_TEST_SOURCE, "track-type",
+      GES_TRACK_TYPE_AUDIO, NULL);
 }

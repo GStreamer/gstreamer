@@ -472,5 +472,6 @@ ges_track_title_source_get_ypos (GESTrackTitleSource * source)
 GESTrackTitleSource *
 ges_track_title_source_new (void)
 {
-  return g_object_new (GES_TYPE_TRACK_TITLE_SOURCE, NULL);
+  return g_object_new (GES_TYPE_TRACK_TITLE_SOURCE, "track-type",
+      GES_TRACK_TYPE_VIDEO, NULL);
 }

@@ -152,6 +152,10 @@ gboolean ges_track_object_set_track           (GESTrackObject * object,
               GESTrack * track);
 GESTrack* ges_track_object_get_track          (GESTrackObject * object);
 
+GESTrackType ges_track_object_get_track_type  (GESTrackObject * object);
+void ges_track_object_set_track_type          (GESTrackObject * object,
+                                               GESTrackType     type);
+
 void ges_track_object_set_timeline_object     (GESTrackObject * object,
                                                GESTimelineObject * tlobject);
 GESTimelineObject *

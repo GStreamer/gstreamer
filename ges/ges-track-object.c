@@ -50,6 +50,8 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GESTrackObject, ges_track_object,
 
 struct _GESTrackObjectPrivate
 {
+  GESTrackType track_type;
+
   /* These fields are only used before the gnlobject is available */
   guint64 pending_start;
   guint64 pending_inpoint;
@@ -86,6 +88,7 @@ enum
   PROP_ACTIVE,
   PROP_LOCKED,
   PROP_MAX_DURATION,
+  PROP_TRACK_TYPE,
   PROP_LAST
 };
 
@@ -165,6 +168,9 @@ ges_track_object_get_property (GObject * object, guint property_id,
     case PROP_MAX_DURATION:
       g_value_set_uint64 (value, tobj->priv->maxduration);
       break;
+    case PROP_TRACK_TYPE:
+      g_value_set_flags (value, tobj->priv->track_type);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -197,6 +203,9 @@ ges_track_object_set_property (GObject * object, guint property_id,
       break;
     case PROP_MAX_DURATION:
       ges_track_object_set_max_duration (tobj, g_value_get_uint64 (value));
+      break;
+    case PROP_TRACK_TYPE:
+      tobj->priv->track_type = g_value_get_flags (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -336,10 +345,20 @@ ges_track_object_class_init (GESTrackObjectClass * klass)
    *
    * Since: 0.10.XX
    */
-  g_object_class_install_property (object_class, PROP_MAX_DURATION,
+  properties[PROP_MAX_DURATION] =
       g_param_spec_uint64 ("max-duration", "Maximum duration",
-          "The maximum duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+      "The maximum duration of the object", 0, G_MAXUINT64, G_MAXUINT64,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+
+  g_object_class_install_property (object_class, PROP_MAX_DURATION,
+      properties[PROP_MAX_DURATION]);
+
+  properties[PROP_TRACK_TYPE] = g_param_spec_flags ("track-type", "Track Type",
+      "The track type of the object", GES_TYPE_TRACK_TYPE,
+      GES_TRACK_TYPE_UNKNOWN, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+  g_object_class_install_property (object_class, PROP_TRACK_TYPE,
+      properties[PROP_TRACK_TYPE]);
+
 
   /**
    * GESTrackObject::deep-notify:
@@ -562,6 +581,25 @@ ges_track_object_set_active (GESTrackObject * object, gboolean active)
   } else
     object->priv->pending_active = active;
   return TRUE;
+}
+
+void
+ges_track_object_set_track_type (GESTrackObject * object, GESTrackType type)
+{
+  g_return_if_fail (GES_IS_TRACK_OBJECT (object));
+
+  if (object->priv->track_type != type) {
+    object->priv->track_type = type;
+    g_object_notify_by_pspec (G_OBJECT (object), properties[PROP_TRACK_TYPE]);
+  }
+}
+
+GESTrackType
+ges_track_object_get_track_type (GESTrackObject * object)
+{
+  g_return_val_if_fail (GES_IS_TRACK_OBJECT (object), GES_TRACK_TYPE_UNKNOWN);
+
+  return object->priv->track_type;
 }
 
 /* Callbacks from the GNonLin object */
