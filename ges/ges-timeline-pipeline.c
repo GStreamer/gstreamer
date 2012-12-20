@@ -374,8 +374,8 @@ ges_timeline_pipeline_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->
-          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->priv->
+          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_timeline_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -383,7 +383,6 @@ ges_timeline_pipeline_change_state (GstElement * element,
         goto done;
       }
       /* Set caps on all tracks according to profile if present */
-      /* FIXME : Add a new SMART_RENDER mode to avoid decoding */
       break;
     default:
       break;
@@ -865,6 +864,23 @@ ges_timeline_pipeline_set_mode (GESTimelinePipeline * pipeline,
   if ((pipeline->priv->mode &
           (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER)) &&
       !(mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))) {
+    GList *tmp;
+    GstCaps *caps;
+
+    for (tmp = pipeline->priv->timeline->tracks; tmp; tmp = tmp->next) {
+      GESTrackType type = GES_TRACK (tmp->data)->type;
+
+      if (type == GES_TRACK_TYPE_AUDIO)
+        caps = gst_caps_new_empty_simple ("audio/x-raw");
+      else if (type == GES_TRACK_TYPE_VIDEO)
+        caps = gst_caps_new_empty_simple ("video/x-raw");
+      else
+        continue;
+
+      ges_track_set_caps (GES_TRACK (tmp->data), caps);
+      gst_caps_unref (caps);
+    }
+
     /* Disable render bin */
     GST_DEBUG ("Disabling rendering bin");
     g_object_ref (pipeline->priv->encodebin);
