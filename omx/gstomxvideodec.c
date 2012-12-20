@@ -552,9 +552,13 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
     switch (port_def.format.video.eColorFormat) {
       case OMX_COLOR_FormatYUV420Planar:
       case OMX_COLOR_FormatYUV420PackedPlanar:
+        GST_DEBUG_OBJECT (self, "Output is I420 (%d)",
+            port_def.format.video.eColorFormat);
         format = GST_VIDEO_FORMAT_I420;
         break;
       case OMX_COLOR_FormatYUV420SemiPlanar:
+        GST_DEBUG_OBJECT (self, "Output is NV12 (%d)",
+            port_def.format.video.eColorFormat);
         format = GST_VIDEO_FORMAT_NV12;
         break;
       default:
@@ -566,6 +570,11 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
         goto caps_failed;
         break;
     }
+
+    GST_DEBUG_OBJECT (self,
+        "Setting output state: format %s, width %d, height %d",
+        gst_video_format_to_string (format), port_def.format.video.nFrameWidth,
+        port_def.format.video.nFrameHeight);
 
     state = gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
         format, port_def.format.video.nFrameWidth,
@@ -658,6 +667,8 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       flow_ret =
           gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
     }
+
+    GST_DEBUG_OBJECT (self, "Read frame from component");
 
     if (is_eos || flow_ret == GST_FLOW_EOS) {
       g_mutex_lock (&self->drain_lock);
@@ -853,7 +864,12 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   GstStructure *s;
   const gchar *format_str;
 
+  GST_DEBUG_OBJECT (self, "Trying to negotiate a video format with downstream");
+
   intersection = gst_pad_get_allowed_caps (GST_VIDEO_DECODER_SRC_PAD (self));
+
+  GST_DEBUG_OBJECT (self, "Allowed downstream caps: %" GST_PTR_FORMAT,
+      intersection);
 
   GST_OMX_INIT_STRUCT (&param);
   param.nPortIndex = port->index;
@@ -890,6 +906,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
           gst_caps_append_structure (comp_supported_caps,
               gst_structure_new ("video/x-raw",
                   "format", G_TYPE_STRING, "I420", NULL));
+          GST_DEBUG_OBJECT (self, "Component supports I420 (%d) at index %d",
+              param.eColorFormat, param.nIndex);
           break;
         case OMX_COLOR_FormatYUV420SemiPlanar:
           m = g_slice_new0 (VideoNegotiationMap);
@@ -899,6 +917,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
           gst_caps_append_structure (comp_supported_caps,
               gst_structure_new ("video/x-raw",
                   "format", G_TYPE_STRING, "NV12", NULL));
+          GST_DEBUG_OBJECT (self, "Component supports NV12 (%d) at index %d",
+              param.eColorFormat, param.nIndex);
           break;
         default:
           break;
@@ -948,6 +968,9 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
       break;
     }
   }
+
+  GST_DEBUG_OBJECT (self, "Negotiating color format %s (%d)", format_str,
+      param.eColorFormat);
 
   /* We must find something here */
   g_assert (l != NULL);
@@ -1016,6 +1039,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   if (needs_disable && is_format_change) {
+    GST_DEBUG_OBJECT (self, "Need to disable and drain decoder");
+
     gst_omx_video_dec_drain (self, FALSE);
 
     if (klass->cdata.hacks & GST_OMX_HACK_NO_COMPONENT_RECONFIGURE) {
@@ -1039,6 +1064,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
     if (self->input_state)
       gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
+
+    GST_DEBUG_OBJECT (self, "Decoder drained and disabled");
   }
 
   port_def.format.video.nFrameWidth = info->width;
@@ -1048,8 +1075,12 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   else
     port_def.format.video.xFramerate = (info->fps_n << 16) / (info->fps_d);
 
+  GST_DEBUG_OBJECT (self, "Setting inport port definition");
+
   if (!gst_omx_port_update_port_definition (self->in_port, &port_def))
     return FALSE;
+
+  GST_DEBUG_OBJECT (self, "Setting outport port definition");
   if (!gst_omx_port_update_port_definition (self->out_port, NULL))
     return FALSE;
 
@@ -1066,6 +1097,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   if (!gst_omx_video_dec_negotiate (self)) {
     GST_LOG_OBJECT (self, "Negotiation failed, will get output format later");
   }
+
+  GST_DEBUG_OBJECT (self, "Enabling component");
 
   if (needs_disable) {
     if (gst_omx_port_set_enabled (self->in_port, TRUE) != OMX_ErrorNone)
@@ -1108,6 +1141,8 @@ gst_omx_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   /* Start the srcpad loop again */
+  GST_DEBUG_OBJECT (self, "Starting task again");
+
   self->downstream_flow_ret = GST_FLOW_OK;
   gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
       (GstTaskFunction) gst_omx_video_dec_loop, decoder, NULL);
@@ -1233,6 +1268,8 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
 
     if (self->codec_data) {
+      GST_DEBUG_OBJECT (self, "Passing codec data to the component");
+
       codec_data = self->codec_data;
 
       if (buf->omx_buf->nAllocLen - buf->omx_buf->nOffset <
@@ -1255,6 +1292,7 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     }
 
     /* Now handle the frame */
+    GST_DEBUG_OBJECT (self, "Passing frame offset %d to the component", offset);
 
     /* Copy the buffer content in chunks of size as requested
      * by the port */
@@ -1304,6 +1342,8 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
     self->started = TRUE;
     gst_omx_port_release_buffer (self->in_port, buf);
   }
+
+  GST_DEBUG_OBJECT (self, "Passed frame to component");
 
   return self->downstream_flow_ret;
 
