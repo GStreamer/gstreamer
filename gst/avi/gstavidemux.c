@@ -57,7 +57,7 @@
 
 #define DIV_ROUND_UP(s,v) (((s) + ((v)-1)) / (v))
 
-#define GST_AVI_KEYFRAME 1
+#define GST_AVI_KEYFRAME (1 << 0)
 #define ENTRY_IS_KEYFRAME(e) ((e)->flags == GST_AVI_KEYFRAME)
 #define ENTRY_SET_KEYFRAME(e) ((e)->flags = GST_AVI_KEYFRAME)
 #define ENTRY_UNSET_KEYFRAME(e) ((e)->flags = 0)
