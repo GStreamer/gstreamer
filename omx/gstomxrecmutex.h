@@ -91,7 +91,7 @@ struct _GstOMXRecMutex {
    * the recursion_lock instead of the master lock.
    * This variable is protected by both locks.
    */
-  volatile gboolean recursion_allowed;
+  volatile gint recursion_allowed;
 };
 
 void            gst_omx_rec_mutex_init (GstOMXRecMutex * mutex);

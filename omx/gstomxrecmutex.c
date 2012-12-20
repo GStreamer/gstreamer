@@ -29,7 +29,7 @@ gst_omx_rec_mutex_init (GstOMXRecMutex * mutex)
 {
   g_mutex_init (&mutex->lock);
   g_mutex_init (&mutex->recursion_lock);
-  mutex->recursion_allowed = FALSE;
+  g_atomic_int_set (&mutex->recursion_allowed, FALSE);
 }
 
 void
@@ -55,9 +55,13 @@ gst_omx_rec_mutex_unlock (GstOMXRecMutex * mutex)
 void
 gst_omx_rec_mutex_begin_recursion (GstOMXRecMutex * mutex)
 {
+  gboolean exchanged;
+
   g_mutex_lock (&mutex->recursion_lock);
-  g_assert (mutex->recursion_allowed == FALSE);
-  mutex->recursion_allowed = TRUE;
+  exchanged =
+      g_atomic_int_compare_and_exchange (&mutex->recursion_allowed, FALSE,
+      TRUE);
+  g_assert (exchanged);
   g_mutex_unlock (&mutex->recursion_lock);
 }
 
@@ -65,9 +69,13 @@ gst_omx_rec_mutex_begin_recursion (GstOMXRecMutex * mutex)
 void
 gst_omx_rec_mutex_end_recursion (GstOMXRecMutex * mutex)
 {
+  gboolean exchanged;
+
   g_mutex_lock (&mutex->recursion_lock);
-  g_assert (mutex->recursion_allowed == TRUE);
-  mutex->recursion_allowed = FALSE;
+  exchanged =
+      g_atomic_int_compare_and_exchange (&mutex->recursion_allowed, TRUE,
+      FALSE);
+  g_assert (exchanged);
   g_mutex_unlock (&mutex->recursion_lock);
 }
 
@@ -75,7 +83,7 @@ void
 gst_omx_rec_mutex_recursive_lock (GstOMXRecMutex * mutex)
 {
   g_mutex_lock (&mutex->recursion_lock);
-  if (!mutex->recursion_allowed) {
+  if (!g_atomic_int_get (&mutex->recursion_allowed)) {
     /* no recursion allowed, lock the proper mutex */
     g_mutex_unlock (&mutex->recursion_lock);
     g_mutex_lock (&mutex->lock);
@@ -89,7 +97,7 @@ gst_omx_rec_mutex_recursive_unlock (GstOMXRecMutex * mutex)
    * we hold at least one of the two locks and
    * either lock protects it from being changed.
    */
-  if (mutex->recursion_allowed) {
+  if (g_atomic_int_get (&mutex->recursion_allowed)) {
     g_mutex_unlock (&mutex->recursion_lock);
   } else {
     g_mutex_unlock (&mutex->lock);
