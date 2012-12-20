@@ -2587,7 +2587,9 @@ gst_avi_demux_stream_for_id (GstAviDemux * avi, guint32 id)
   /* get the stream for this entry */
   stream_nr = CHUNKID_TO_STREAMNR (id);
   if (G_UNLIKELY (stream_nr >= avi->num_streams)) {
-    GST_WARNING_OBJECT (avi, "invalid stream nr %d", stream_nr);
+    GST_WARNING_OBJECT (avi,
+        "invalid stream nr %d (0x%08x, %" GST_FOURCC_FORMAT ")", stream_nr, id,
+        GST_FOURCC_ARGS (id));
     return NULL;
   }
   stream = &avi->stream[stream_nr];
