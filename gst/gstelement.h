@@ -679,7 +679,10 @@ struct _GstElementClass
   gboolean              (*post_message)         (GstElement *element, GstMessage *message);
 
   /*< private >*/
+  /* Hide this as zero-sized arrays confuse some compilers */
+#if 0
   gpointer _gst_reserved[GST_PADDING-4];
+#endif
 };
 
 /* element class pad templates */
