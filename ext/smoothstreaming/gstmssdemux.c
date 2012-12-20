@@ -344,9 +344,13 @@ static void
 gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
 {
   GstCaps *caps;
+  GstCaps *media_caps;
   GstPad *pad = stream->pad;
 
-  caps = gst_mss_stream_get_caps (stream->manifest_stream);
+  media_caps = gst_mss_stream_get_caps (stream->manifest_stream);
+  caps = gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
+      "mss-fragmented", "media-caps", GST_TYPE_CAPS, media_caps, NULL);
+  gst_caps_unref (media_caps);
 
   if (caps) {
     gst_pad_set_caps (pad, caps);
