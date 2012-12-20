@@ -836,6 +836,9 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
   if (percent)
     *percent = perc;
 
+  GST_DEBUG_OBJECT (queue, "buffering %d, percent %d", queue->is_buffering,
+      perc);
+
   return post;
 }
 
@@ -891,15 +894,12 @@ update_buffering (GstQueue2 * queue)
     get_buffering_stats (queue, percent, &mode, &avg_in, &avg_out,
         &buffering_left);
 
-    GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
     message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
         (gint) percent);
     gst_message_set_buffering_stats (message, mode,
         avg_in, avg_out, buffering_left);
 
     gst_element_post_message (GST_ELEMENT_CAST (queue), message);
-  } else {
-    GST_DEBUG_OBJECT (queue, "filled %d percent", (gint) percent);
   }
 }
 
@@ -2711,24 +2711,30 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_BUFFERING:
     {
-      GstFormat format;
+      gint percent;
+      gboolean is_buffering;
+      GstBufferingMode mode;
+      gint avg_in, avg_out;
+      gint64 buffering_left;
 
       GST_DEBUG_OBJECT (queue, "query buffering");
 
-      /* FIXME - is this condition correct? what should ring buffer do? */
-      if (QUEUE_IS_USING_QUEUE (queue)) {
-        /* no temp file, just forward to the peer */
-        if (!gst_pad_peer_query (queue->sinkpad, query))
-          goto peer_failed;
-        GST_DEBUG_OBJECT (queue, "buffering forwarded to peer");
-      } else {
+      get_buffering_percent (queue, &is_buffering, &percent);
+      gst_query_set_buffering_percent (query, is_buffering, percent);
+
+      get_buffering_stats (queue, percent, &mode, &avg_in, &avg_out,
+          &buffering_left);
+      gst_query_set_buffering_stats (query, mode, avg_in, avg_out,
+          buffering_left);
+
+      if (!QUEUE_IS_USING_QUEUE (queue)) {
+        /* add ranges for download and ringbuffer buffering */
+        GstFormat format;
         gint64 start, stop, range_start, range_stop;
         guint64 writing_pos;
-        gint percent;
-        gint64 estimated_total, buffering_left;
+        gint64 estimated_total;
         gint64 duration;
-        gboolean peer_res, is_buffering, is_eos;
-        gdouble byte_in_rate, byte_out_rate;
+        gboolean peer_res, is_eos;
         GstQueue2Range *queued_ranges;
 
         /* we need a current download region */
@@ -2736,11 +2742,7 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           return FALSE;
 
         writing_pos = queue->current->writing_pos;
-        byte_in_rate = queue->byte_in_rate;
-        byte_out_rate = queue->byte_out_rate;
-        is_buffering = queue->is_buffering;
         is_eos = queue->is_eos;
-        percent = queue->buffering_percent;
 
         if (is_eos) {
           /* we're EOS, we know the duration in bytes now */
@@ -2756,27 +2758,13 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
             ", writing %" G_GINT64_FORMAT, percent, duration, writing_pos);
 
         /* calculate remaining and total download time */
-        if (peer_res && byte_in_rate > 0.0)
-          estimated_total = ((duration - writing_pos) * 1000) / byte_in_rate;
+        if (peer_res && avg_in > 0.0)
+          estimated_total = ((duration - writing_pos) * 1000) / avg_in;
         else
           estimated_total = -1;
 
-        /* calculate estimated remaining buffer time */
-        buffering_left = (percent == 100 ? 0 : -1);
-
-        if (queue->use_rate_estimate) {
-          guint64 max, cur;
-
-          max = queue->max_level.rate_time;
-          cur = queue->cur_level.rate_time;
-
-          if (percent != 100 && max > cur)
-            buffering_left = (max - cur) / 1000000;
-        }
-
-        GST_DEBUG_OBJECT (queue, "estimated-total %" G_GINT64_FORMAT
-            ", buffering-left %" G_GINT64_FORMAT, estimated_total,
-            buffering_left);
+        GST_DEBUG_OBJECT (queue, "estimated-total %" G_GINT64_FORMAT,
+            estimated_total);
 
         gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
 
@@ -2839,9 +2827,6 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
           gst_query_add_buffering_range (query, range_start, range_stop);
         }
 
-        gst_query_set_buffering_percent (query, is_buffering, percent);
-        gst_query_set_buffering_stats (query, GST_BUFFERING_DOWNLOAD,
-            byte_in_rate, byte_out_rate, buffering_left);
         gst_query_set_buffering_range (query, format, start, stop,
             estimated_total);
       }
