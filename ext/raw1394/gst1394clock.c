@@ -97,7 +97,8 @@ Gst1394Clock *
 gst_1394_clock_new (const gchar * name)
 {
   Gst1394Clock *_1394clock =
-      GST_1394_CLOCK (g_object_new (GST_TYPE_1394_CLOCK, "name", name, NULL));
+      GST_1394_CLOCK (g_object_new (GST_TYPE_1394_CLOCK, "name", name,
+          "clock-type", GST_CLOCK_TYPE_OTHER, NULL));
 
   return _1394clock;
 }
