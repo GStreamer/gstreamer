@@ -97,7 +97,6 @@ struct _GstOMXRecMutex {
    * will be allowed soon
    */
   volatile gint recursion_pending;
-  GCond recursion_wait_cond;
 };
 
 void            gst_omx_rec_mutex_init (GstOMXRecMutex * mutex);
