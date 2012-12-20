@@ -815,7 +815,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   ptr = info.data;
   first = TRUE;
   do {
-    GstClockTime tmp_ts;
+    GstClockTime tmp_ts = GST_CLOCK_TIME_NONE;
 
     read =
         gst_audio_ring_buffer_read (ringbuffer, sample, ptr, samples, &tmp_ts);
