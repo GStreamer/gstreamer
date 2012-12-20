@@ -495,7 +495,6 @@ static gboolean
 gst_omx_audio_enc_start (GstAudioEncoder * encoder)
 {
   GstOMXAudioEnc *self;
-  gboolean ret;
 
   self = GST_OMX_AUDIO_ENC (encoder);
 
@@ -503,7 +502,7 @@ gst_omx_audio_enc_start (GstAudioEncoder * encoder)
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean

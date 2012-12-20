@@ -876,7 +876,6 @@ static gboolean
 gst_omx_video_enc_start (GstVideoEncoder * encoder)
 {
   GstOMXVideoEnc *self;
-  gboolean ret;
 
   self = GST_OMX_VIDEO_ENC (encoder);
 
@@ -884,7 +883,7 @@ gst_omx_video_enc_start (GstVideoEncoder * encoder)
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean

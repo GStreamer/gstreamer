@@ -783,7 +783,6 @@ static gboolean
 gst_omx_video_dec_start (GstVideoDecoder * decoder)
 {
   GstOMXVideoDec *self;
-  gboolean ret;
 
   self = GST_OMX_VIDEO_DEC (decoder);
 
@@ -791,7 +790,7 @@ gst_omx_video_dec_start (GstVideoDecoder * decoder)
   self->eos = FALSE;
   self->downstream_flow_ret = GST_FLOW_OK;
 
-  return ret;
+  return TRUE;
 }
 
 static gboolean
