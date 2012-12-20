@@ -831,6 +831,12 @@ typedef struct
   OMX_COLOR_FORMATTYPE type;
 } VideoNegotiationMap;
 
+static void
+video_negotiation_map_free (VideoNegotiationMap * m)
+{
+  g_slice_free (VideoNegotiationMap, m);
+}
+
 static gboolean
 gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
 {
@@ -914,6 +920,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
   if (gst_caps_is_empty (intersection)) {
     gst_caps_unref (intersection);
     GST_ERROR_OBJECT (self, "Empty caps");
+    g_list_free_full (negotiation_map,
+        (GDestroyNotify) video_negotiation_map_free);
     return FALSE;
   }
 
@@ -927,6 +935,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
           gst_video_format_from_string (format_str)) ==
       GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Invalid caps: %" GST_PTR_FORMAT, intersection);
+    g_list_free_full (negotiation_map,
+        (GDestroyNotify) video_negotiation_map_free);
     return FALSE;
   }
 
@@ -941,6 +951,8 @@ gst_omx_video_dec_negotiate (GstOMXVideoDec * self)
 
   /* We must find something here */
   g_assert (l != NULL);
+  g_list_free_full (negotiation_map,
+      (GDestroyNotify) video_negotiation_map_free);
 
   /* Reset framerate, we only care about the color format here */
   param.xFramerate = 0;
