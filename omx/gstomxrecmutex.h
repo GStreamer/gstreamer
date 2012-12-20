@@ -92,6 +92,12 @@ struct _GstOMXRecMutex {
    * This variable is protected by both locks.
    */
   volatile gint recursion_allowed;
+
+  /* Indicates whether lock is locked and recursion
+   * will be allowed soon
+   */
+  volatile gint recursion_pending;
+  GCond recursion_wait_cond;
 };
 
 void            gst_omx_rec_mutex_init (GstOMXRecMutex * mutex);
@@ -99,6 +105,9 @@ void            gst_omx_rec_mutex_clear (GstOMXRecMutex * mutex);
 
 void            gst_omx_rec_mutex_lock (GstOMXRecMutex * mutex);
 void            gst_omx_rec_mutex_unlock (GstOMXRecMutex * mutex);
+
+void            gst_omx_rec_mutex_lock_for_recursion (GstOMXRecMutex * mutex);
+void            gst_omx_rec_mutex_unlock_for_recursion (GstOMXRecMutex * mutex);
 
 void            gst_omx_rec_mutex_begin_recursion (GstOMXRecMutex * mutex);
 void            gst_omx_rec_mutex_end_recursion (GstOMXRecMutex * mutex);

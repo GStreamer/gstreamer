@@ -51,6 +51,31 @@ gst_omx_rec_mutex_unlock (GstOMXRecMutex * mutex)
   g_mutex_unlock (&mutex->lock);
 }
 
+void
+gst_omx_rec_mutex_lock_for_recursion (GstOMXRecMutex * mutex)
+{
+  gboolean exchanged;
+
+  g_mutex_lock (&mutex->lock);
+  exchanged =
+      g_atomic_int_compare_and_exchange (&mutex->recursion_pending, FALSE,
+      TRUE);
+  g_assert (exchanged);
+}
+
+void
+gst_omx_rec_mutex_unlock_for_recursion (GstOMXRecMutex * mutex)
+{
+  gboolean exchanged;
+
+  exchanged =
+      g_atomic_int_compare_and_exchange (&mutex->recursion_pending, TRUE,
+      FALSE);
+  g_assert (exchanged);
+  g_cond_broadcast (&mutex->recursion_wait_cond);
+  g_mutex_unlock (&mutex->lock);
+}
+
 /* must be called with mutex->lock taken */
 void
 gst_omx_rec_mutex_begin_recursion (GstOMXRecMutex * mutex)
@@ -62,6 +87,11 @@ gst_omx_rec_mutex_begin_recursion (GstOMXRecMutex * mutex)
       g_atomic_int_compare_and_exchange (&mutex->recursion_allowed, FALSE,
       TRUE);
   g_assert (exchanged);
+  exchanged =
+      g_atomic_int_compare_and_exchange (&mutex->recursion_pending, TRUE,
+      FALSE);
+  g_assert (exchanged);
+  g_cond_broadcast (&mutex->recursion_wait_cond);
   g_mutex_unlock (&mutex->recursion_lock);
 }
 
@@ -76,6 +106,10 @@ gst_omx_rec_mutex_end_recursion (GstOMXRecMutex * mutex)
       g_atomic_int_compare_and_exchange (&mutex->recursion_allowed, TRUE,
       FALSE);
   g_assert (exchanged);
+  exchanged =
+      g_atomic_int_compare_and_exchange (&mutex->recursion_pending, FALSE,
+      TRUE);
+  g_assert (exchanged);
   g_mutex_unlock (&mutex->recursion_lock);
 }
 
@@ -84,9 +118,15 @@ gst_omx_rec_mutex_recursive_lock (GstOMXRecMutex * mutex)
 {
   g_mutex_lock (&mutex->recursion_lock);
   if (!g_atomic_int_get (&mutex->recursion_allowed)) {
-    /* no recursion allowed, lock the proper mutex */
-    g_mutex_unlock (&mutex->recursion_lock);
-    g_mutex_lock (&mutex->lock);
+    /* If recursion is pending wait until it happened */
+    while (g_atomic_int_get (&mutex->recursion_pending))
+      g_cond_wait (&mutex->recursion_wait_cond, &mutex->recursion_lock);
+
+    if (!g_atomic_int_get (&mutex->recursion_allowed)) {
+      /* no recursion allowed, lock the proper mutex */
+      g_mutex_lock (&mutex->lock);
+      g_mutex_unlock (&mutex->recursion_lock);
+    }
   }
 }
 

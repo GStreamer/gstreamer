@@ -538,7 +538,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
 
   g_return_val_if_fail (comp != NULL, OMX_ErrorUndefined);
 
-  gst_omx_rec_mutex_lock (&comp->state_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&comp->state_lock);
   old_state = comp->state;
   GST_DEBUG_OBJECT (comp->parent, "Setting state from %d to %d", old_state,
       state);
@@ -570,7 +570,7 @@ gst_omx_component_set_state (GstOMXComponent * comp, OMX_STATETYPE state)
   /* No need to check if anything has changed here */
 
 done:
-  gst_omx_rec_mutex_unlock (&comp->state_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&comp->state_lock);
 
   if (err != OMX_ErrorNone) {
     GST_ERROR_OBJECT (comp->parent,
@@ -1076,7 +1076,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
   GST_DEBUG_OBJECT (comp->parent, "Releasing buffer %p (%p) to port %u",
       buf, buf->omx_buf->pBuffer, port->index);
 
-  gst_omx_rec_mutex_lock (&port->port_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&port->port_lock);
 
   if (port->port_def.eDir == OMX_DirInput) {
     /* Reset all flags, some implementations don't
@@ -1120,7 +1120,7 @@ gst_omx_port_release_buffer (GstOMXPort * port, GstOMXBuffer * buf)
       buf, port->index, gst_omx_error_to_string (err), err);
 
 done:
-  gst_omx_rec_mutex_unlock (&port->port_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&port->port_lock);
 
   return err;
 }
@@ -1137,7 +1137,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
   GST_DEBUG_OBJECT (comp->parent, "Setting port %d to %sflushing",
       port->index, (flush ? "" : "not "));
 
-  gst_omx_rec_mutex_lock (&port->port_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&port->port_lock);
   if (! !flush == ! !port->flushing) {
     GST_DEBUG_OBJECT (comp->parent, "Port %u was %sflushing already",
         port->index, (flush ? "" : "not "));
@@ -1275,7 +1275,7 @@ gst_omx_port_set_flushing (GstOMXPort * port, gboolean flush)
 done:
   GST_DEBUG_OBJECT (comp->parent, "Set port %u to %sflushing: %s (0x%08x)",
       port->index, (flush ? "" : "not "), gst_omx_error_to_string (err), err);
-  gst_omx_rec_mutex_unlock (&port->port_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&port->port_lock);
 
   return err;
 
@@ -1421,9 +1421,9 @@ gst_omx_port_allocate_buffers (GstOMXPort * port)
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
-  gst_omx_rec_mutex_lock (&port->port_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&port->port_lock);
   err = gst_omx_port_allocate_buffers_unlocked (port);
-  gst_omx_rec_mutex_unlock (&port->port_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&port->port_lock);
 
   return err;
 }
@@ -1515,9 +1515,9 @@ gst_omx_port_deallocate_buffers (GstOMXPort * port)
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
-  gst_omx_rec_mutex_lock (&port->port_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&port->port_lock);
   err = gst_omx_port_deallocate_buffers_unlocked (port);
-  gst_omx_rec_mutex_unlock (&port->port_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&port->port_lock);
 
   return err;
 }
@@ -1721,9 +1721,9 @@ gst_omx_port_set_enabled (GstOMXPort * port, gboolean enabled)
 
   g_return_val_if_fail (port != NULL, OMX_ErrorUndefined);
 
-  gst_omx_rec_mutex_lock (&port->port_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&port->port_lock);
   err = gst_omx_port_set_enabled_unlocked (port, enabled);
-  gst_omx_rec_mutex_unlock (&port->port_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&port->port_lock);
 
   return err;
 }
@@ -1762,7 +1762,7 @@ gst_omx_port_reconfigure (GstOMXPort * port)
 
   GST_DEBUG_OBJECT (comp->parent, "Reconfiguring port %u", port->index);
 
-  gst_omx_rec_mutex_lock (&port->port_lock);
+  gst_omx_rec_mutex_lock_for_recursion (&port->port_lock);
 
   if (!port->settings_changed)
     goto done;
@@ -1809,7 +1809,8 @@ done:
   GST_DEBUG_OBJECT (comp->parent, "Reconfigured port %u: %s (0x%08x)",
       port->index, gst_omx_error_to_string (err), err);
 
-  gst_omx_rec_mutex_unlock (&port->port_lock);
+  gst_omx_rec_mutex_unlock_for_recursion (&port->port_lock);
+
   return err;
 }
 
