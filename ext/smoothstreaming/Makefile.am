@@ -2,8 +2,10 @@
 plugin_LTLIBRARIES = libgstsmoothstreaming.la
 
 libgstsmoothstreaming_la_CFLAGS = $(GST_PLUGINS_BAD_CFLAGS) \
-    $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
+    $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) \
+    -DGST_USE_UNSTABLE_API
 libgstsmoothstreaming_la_LIBADD = \
+    $(top_builddir)/gst-libs/gst/codecparsers/libgstcodecparsers-$(GST_MAJORMINOR).la \
     $(top_builddir)/gst-libs/gst/uridownloader/libgsturidownloader-$(GST_MAJORMINOR).la \
     $(GST_PLUGINS_BASE_LIBS) \
     -lgsttag-@GST_MAJORMINOR@ \

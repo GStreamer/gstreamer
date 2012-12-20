@@ -25,6 +25,9 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+/* for parsing h264 codec data */
+#include <gst/codecparsers/gsth264parser.h>
+
 #include "gstmssmanifest.h"
 
 #define MSS_NODE_STREAM_FRAGMENT      "c"
@@ -293,8 +296,8 @@ _make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
   return buf;
 }
 
-static GstBuffer *
-_gst_mss_stream_create_h264_codec_data (const gchar * codecdatastr)
+static void
+_gst_mss_stream_add_h264_codec_data (GstCaps * caps, const gchar * codecdatastr)
 {
   GValue sps_value = { 0, };
   GValue pps_value = { 0, };
@@ -303,18 +306,21 @@ _gst_mss_stream_create_h264_codec_data (const gchar * codecdatastr)
   GstBuffer *buffer;
   gchar *sps_str;
   gchar *pps_str;
+  GstH264NalUnit nalu;
+  GstH264SPS sps_struct;
+  GstH264ParserResult parseres;
 
   /* search for the sps start */
   if (g_str_has_prefix (codecdatastr, "00000001")) {
     sps_str = (gchar *) codecdatastr + 8;
   } else {
-    return NULL;                /* invalid mss codec data */
+    return;                     /* invalid mss codec data */
   }
 
   /* search for the pps start */
   pps_str = g_strstr_len (sps_str, -1, "00000001");
   if (!pps_str) {
-    return NULL;                /* invalid mss codec data */
+    return;                     /* invalid mss codec data */
   }
 
   g_value_init (&sps_value, GST_TYPE_BUFFER);
@@ -329,11 +335,26 @@ _gst_mss_stream_create_h264_codec_data (const gchar * codecdatastr)
   sps = gst_value_get_buffer (&sps_value);
   pps = gst_value_get_buffer (&pps_value);
 
+  nalu.ref_idc = (GST_BUFFER_DATA (sps)[0] & 0x60) >> 5;
+  nalu.type = GST_H264_NAL_SPS;
+  nalu.size = GST_BUFFER_SIZE (sps);
+  nalu.data = GST_BUFFER_DATA (sps);
+  nalu.offset = 0;
+  nalu.sc_offset = 0;
+  nalu.valid = TRUE;
+
+  parseres = gst_h264_parse_sps (&nalu, &sps_struct, TRUE);
+  if (parseres == GST_H264_PARSER_OK) {
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
+        sps_struct.fps_num, sps_struct.fps_den, NULL);
+  }
+
   buffer = _make_h264_codec_data (sps, pps);
   g_value_reset (&sps_value);
   g_value_reset (&pps_value);
 
-  return buffer;
+  gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buffer, NULL);
+  gst_buffer_unref (buffer);
 }
 
 static GstCaps *
@@ -360,18 +381,14 @@ _gst_mss_stream_video_caps_from_qualitylevel_xml (xmlNodePtr node)
         NULL);
 
   if (codec_data) {
-    GValue *value = g_new0 (GValue, 1);
-    g_value_init (value, GST_TYPE_BUFFER);
-
     if (strcmp (fourcc, "H264") == 0) {
-      GstBuffer *buf = _gst_mss_stream_create_h264_codec_data (codec_data);
-
-      gst_value_take_buffer (value, buf);
+      _gst_mss_stream_add_h264_codec_data (caps, codec_data);
     } else {
+      GValue *value = g_new0 (GValue, 1);
+      g_value_init (value, GST_TYPE_BUFFER);
       gst_value_deserialize (value, (gchar *) codec_data);
+      gst_structure_take_value (structure, "codec_data", value);
     }
-
-    gst_structure_take_value (structure, "codec_data", value);
   }
 
 end:
