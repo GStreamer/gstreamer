@@ -765,102 +765,142 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
   update_time_level (queue);
 }
 
-static void
-update_buffering (GstQueue2 * queue)
+static gboolean
+get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
+    gint * percent)
 {
-  gint64 percent;
   gboolean post = FALSE;
+  gint perc;
 
-  if (queue->high_percent <= 0)
-    return;
-
+  if (queue->high_percent <= 0) {
+    if (percent)
+      *percent = 100;
+    if (is_buffering)
+      *is_buffering = FALSE;
+    return FALSE;
+  }
 #define GET_PERCENT(format,alt_max) ((queue->max_level.format) > 0 ? (queue->cur_level.format) * 100 / ((alt_max) > 0 ? MIN ((alt_max), (queue->max_level.format)) : (queue->max_level.format)) : 0)
 
   if (queue->is_eos) {
     /* on EOS we are always 100% full, we set the var here so that it we can
      * reuse the logic below to stop buffering */
-    percent = 100;
+    perc = 100;
     GST_LOG_OBJECT (queue, "we are EOS");
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
     if (!QUEUE_IS_USING_RING_BUFFER (queue)) {
-      percent = GET_PERCENT (bytes, 0);
+      perc = GET_PERCENT (bytes, 0);
     } else {
       guint64 rb_size = queue->ring_buffer_max_size;
-      percent = GET_PERCENT (bytes, rb_size);
+      perc = GET_PERCENT (bytes, rb_size);
     }
-    percent = MAX (percent, GET_PERCENT (time, 0));
-    percent = MAX (percent, GET_PERCENT (buffers, 0));
+    perc = MAX (perc, GET_PERCENT (time, 0));
+    perc = MAX (perc, GET_PERCENT (buffers, 0));
 
     /* also apply the rate estimate when we need to */
     if (queue->use_rate_estimate)
-      percent = MAX (percent, GET_PERCENT (rate_time, 0));
+      perc = MAX (perc, GET_PERCENT (rate_time, 0));
   }
+#undef GET_PERCENT
 
   if (queue->is_buffering) {
     post = TRUE;
     /* if we were buffering see if we reached the high watermark */
-    if (percent >= queue->high_percent)
+    if (perc >= queue->high_percent)
       queue->is_buffering = FALSE;
   } else {
     /* we were not buffering, check if we need to start buffering if we drop
      * below the low threshold */
-    if (percent < queue->low_percent) {
+    if (perc < queue->low_percent) {
       queue->is_buffering = TRUE;
       queue->buffering_iteration++;
       post = TRUE;
     }
   }
+
+  if (is_buffering)
+    *is_buffering = queue->is_buffering;
+
+  /* scale to high percent so that it becomes the 100% mark */
+  perc = perc * 100 / queue->high_percent;
+  /* clip */
+  if (perc > 100)
+    perc = 100;
+
+  if (post) {
+    if (perc == queue->buffering_percent)
+      post = FALSE;
+    else
+      queue->buffering_percent = perc;
+  }
+  if (percent)
+    *percent = perc;
+
+  return post;
+}
+
+static void
+get_buffering_stats (GstQueue2 * queue, gint percent, GstBufferingMode * mode,
+    gint * avg_in, gint * avg_out, gint64 * buffering_left)
+{
+  if (mode) {
+    if (!QUEUE_IS_USING_QUEUE (queue)) {
+      if (QUEUE_IS_USING_RING_BUFFER (queue))
+        *mode = GST_BUFFERING_TIMESHIFT;
+      else
+        *mode = GST_BUFFERING_DOWNLOAD;
+    } else {
+      *mode = GST_BUFFERING_STREAM;
+    }
+  }
+
+  if (avg_in)
+    *avg_in = queue->byte_in_rate;
+  if (avg_out)
+    *avg_out = queue->byte_out_rate;
+
+  if (buffering_left) {
+    *buffering_left = (percent == 100 ? 0 : -1);
+
+    if (queue->use_rate_estimate) {
+      guint64 max, cur;
+
+      max = queue->max_level.rate_time;
+      cur = queue->cur_level.rate_time;
+
+      if (percent != 100 && max > cur)
+        *buffering_left = (max - cur) / 1000000;
+    }
+  }
+}
+
+static void
+update_buffering (GstQueue2 * queue)
+{
+  gint percent;
+  gboolean post = FALSE;
+
+  post = get_buffering_percent (queue, NULL, &percent);
+
   if (post) {
     GstMessage *message;
+    GstBufferingMode mode;
+    gint avg_in, avg_out;
+    gint64 buffering_left;
 
-    /* scale to high percent so that it becomes the 100% mark */
-    percent = percent * 100 / queue->high_percent;
-    /* clip */
-    if (percent > 100)
-      percent = 100;
+    get_buffering_stats (queue, percent, &mode, &avg_in, &avg_out,
+        &buffering_left);
 
+    GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
+    message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
+        (gint) percent);
+    gst_message_set_buffering_stats (message, mode,
+        avg_in, avg_out, buffering_left);
 
-    if (percent != queue->buffering_percent) {
-      GstBufferingMode mode;
-      gint64 buffering_left;
-
-      buffering_left = (percent == 100 ? 0 : -1);
-
-      queue->buffering_percent = percent;
-
-      if (!QUEUE_IS_USING_QUEUE (queue)) {
-        if (QUEUE_IS_USING_RING_BUFFER (queue))
-          mode = GST_BUFFERING_TIMESHIFT;
-        else
-          mode = GST_BUFFERING_DOWNLOAD;
-      } else {
-        mode = GST_BUFFERING_STREAM;
-      }
-
-      if (queue->use_rate_estimate) {
-        guint64 max, cur;
-
-        max = queue->max_level.rate_time;
-        cur = queue->cur_level.rate_time;
-
-        if (percent != 100 && max > cur)
-          buffering_left = (max - cur) / 1000000;
-      }
-
-      GST_DEBUG_OBJECT (queue, "buffering %d percent", (gint) percent);
-      message = gst_message_new_buffering (GST_OBJECT_CAST (queue),
-          (gint) percent);
-      gst_message_set_buffering_stats (message, mode,
-          queue->byte_in_rate, queue->byte_out_rate, buffering_left);
-
-      gst_element_post_message (GST_ELEMENT_CAST (queue), message);
-    }
+    gst_element_post_message (GST_ELEMENT_CAST (queue), message);
   } else {
     GST_DEBUG_OBJECT (queue, "filled %d percent", (gint) percent);
   }
-
-#undef GET_PERCENT
 }
 
 static void
