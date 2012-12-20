@@ -44,6 +44,7 @@ GSList * gst_mss_manifest_get_streams (GstMssManifest * manifest);
 
 GstMssStreamType gst_mss_stream_get_type (GstMssStream *stream);
 GstCaps * gst_mss_stream_get_caps (GstMssStream * stream);
+guint64 gst_mss_stream_get_timescale (GstMssStream * stream);
 GstFlowReturn gst_mss_stream_get_fragment_url (GstMssStream * stream, gchar ** url);
 GstFlowReturn gst_mss_stream_advance_fragment (GstMssStream * stream);
 

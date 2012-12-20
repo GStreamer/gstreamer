@@ -30,6 +30,8 @@
 
 #include "gstmssmanifest.h"
 
+#define DEFAULT_TIMESCALE             10000000
+
 #define MSS_NODE_STREAM_FRAGMENT      "c"
 #define MSS_NODE_STREAM_QUALITY       "QualityLevel"
 
@@ -37,6 +39,7 @@
 #define MSS_PROP_DURATION             "d"
 #define MSS_PROP_NUMBER               "n"
 #define MSS_PROP_TIME                 "t"
+#define MSS_PROP_TIMESCALE            "TimeScale"
 #define MSS_PROP_URL                  "Url"
 
 /* TODO check if atoi is successful? */
@@ -439,18 +442,40 @@ end:
   return caps;
 }
 
+guint64
+gst_mss_stream_get_timescale (GstMssStream * stream)
+{
+  gchar *timescale;
+  guint64 ts = DEFAULT_TIMESCALE;
+
+  timescale =
+      (gchar *) xmlGetProp (stream->xmlnode, (xmlChar *) MSS_PROP_TIMESCALE);
+  if (!timescale) {
+    timescale =
+        (gchar *) xmlGetProp (stream->xmlnode->parent,
+        (xmlChar *) MSS_PROP_TIMESCALE);
+  }
+
+  if (timescale) {
+    ts = strtoull (timescale, NULL, 10);
+    g_free (timescale);
+  }
+  return ts;
+}
+
 GstCaps *
 gst_mss_stream_get_caps (GstMssStream * stream)
 {
   GstMssStreamType streamtype = gst_mss_stream_get_type (stream);
   xmlNodePtr qualitylevel = stream->current_quality->data;
+  GstCaps *caps = NULL;
 
   if (streamtype == MSS_STREAM_TYPE_VIDEO)
-    return _gst_mss_stream_video_caps_from_qualitylevel_xml (qualitylevel);
+    caps = _gst_mss_stream_video_caps_from_qualitylevel_xml (qualitylevel);
   else if (streamtype == MSS_STREAM_TYPE_AUDIO)
-    return _gst_mss_stream_audio_caps_from_qualitylevel_xml (qualitylevel);
+    caps = _gst_mss_stream_audio_caps_from_qualitylevel_xml (qualitylevel);
 
-  return NULL;
+  return caps;
 }
 
 GstFlowReturn
