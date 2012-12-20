@@ -1,6 +1,7 @@
 /* GStreamer Editing Services
  * Copyright (C) 2009 Edward Hervey <edward.hervey@collabora.co.uk>
  *               2009 Nokia Corporation
+ *               2012 Thibault Saunier <tsaunier@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -136,6 +137,8 @@ struct _GESTimelinePrivate
   /* We keep 1 reference to our trackobject here */
   GSequence *tracksources;      /* TrackSource-s sorted by start/priorities */
 
+  GList *priv_tracks;
+
   MoveContext movecontext;
 };
 
@@ -229,7 +232,7 @@ ges_timeline_enable_update_internal (GESTimeline * timeline, gboolean enabled)
   GST_DEBUG_OBJECT (timeline, "%s updates", enabled ? "Enabling" : "Disabling");
 
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_enable_update (((TrackPrivate *) tmp->data)->track, enabled))
+    if (!ges_track_enable_update (GES_TRACK (tmp->data), enabled))
       res = FALSE;
   }
 
@@ -297,8 +300,7 @@ ges_timeline_dispose (GObject * object)
    */
 
   while (tl->tracks) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tl->tracks->data;
-    ges_timeline_remove_track (GES_TIMELINE (object), tr_priv->track);
+    ges_timeline_remove_track (GES_TIMELINE (object), tl->tracks->data);
   }
 
   g_hash_table_unref (priv->by_start);
@@ -485,6 +487,7 @@ ges_timeline_init (GESTimeline * self)
   init_movecontext (&self->priv->movecontext);
   priv->movecontext.ignore_needs_ctx = FALSE;
 
+  priv->priv_tracks = NULL;
   priv->by_start = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->by_end = g_hash_table_new (g_direct_hash, g_direct_equal);
   priv->by_object = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -1427,11 +1430,8 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object)
   GList *tmp;
 
   for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-    GESTrack *track = tr_priv->track;
-
-    GST_LOG ("Trying with track %p", track);
-    add_object_to_track (object, track);
+    GST_LOG_OBJECT (timeline, "Trying with track %" GST_PTR_FORMAT, tmp->data);
+    add_object_to_track (object, GES_TRACK (tmp->data));
   }
 }
 
@@ -1481,7 +1481,7 @@ layer_object_removed_cb (GESTimelineLayer * layer, GESTimelineObject * object,
     GESTrackObject *trobj = (GESTrackObject *) tmp->data;
 
     GST_DEBUG ("Trying to remove TrackObject %p", trobj);
-    if (G_LIKELY (g_list_find_custom (timeline->tracks,
+    if (G_LIKELY (g_list_find_custom (timeline->priv->priv_tracks,
                 ges_track_object_get_track (trobj),
                 (GCompareFunc) custom_find_track))) {
       GST_DEBUG ("Belongs to one of the tracks we control");
@@ -1581,7 +1581,7 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
   tr_priv->pad = pad;
 
   no_more = TRUE;
-  for (tmp = tr_priv->timeline->tracks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = tr_priv->timeline->priv->priv_tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
 
     if (!tr_priv->pad) {
@@ -1892,8 +1892,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
   /* make sure we don't already control it */
-  if (G_UNLIKELY (g_list_find_custom (timeline->tracks, (gconstpointer) track,
-              (GCompareFunc) custom_find_track))) {
+  if (G_UNLIKELY (g_list_find (timeline->tracks, (gconstpointer) track))) {
     GST_WARNING ("Track is already controlled by this timeline");
     return FALSE;
   }
@@ -1910,7 +1909,9 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   tr_priv->track = track;
 
   /* Add the track to the list of tracks we track */
-  timeline->tracks = g_list_append (timeline->tracks, tr_priv);
+  timeline->priv->priv_tracks = g_list_append (timeline->priv->priv_tracks,
+      tr_priv);
+  timeline->tracks = g_list_append (timeline->tracks, track);
 
   /* Listen to pad-added/-removed */
   g_signal_connect (track, "pad-added", (GCallback) pad_added_cb, tr_priv);
@@ -1970,18 +1971,23 @@ ges_timeline_remove_track (GESTimeline * timeline, GESTrack * track)
 {
   GList *tmp;
   TrackPrivate *tr_priv;
+  GESTimelinePrivate *priv;
+
+  g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
 
   GST_DEBUG ("timeline:%p, track:%p", timeline, track);
 
-  if (G_UNLIKELY (!(tmp =
-              g_list_find_custom (timeline->tracks, (gconstpointer) track,
-                  (GCompareFunc) custom_find_track)))) {
+  priv = timeline->priv;
+  if (G_UNLIKELY (!(tmp = g_list_find_custom (priv->priv_tracks,
+                  track, (GCompareFunc) custom_find_track)))) {
     GST_WARNING ("Track doesn't belong to this timeline");
     return FALSE;
   }
 
   tr_priv = tmp->data;
-  timeline->tracks = g_list_remove (timeline->tracks, tr_priv);
+  priv->priv_tracks = g_list_remove (priv->priv_tracks, tr_priv);
+  timeline->tracks = g_list_remove (timeline->tracks, track);
 
   ges_track_set_timeline (track, NULL);
 
@@ -2037,7 +2043,7 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 {
   GList *tmp;
 
-  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = timeline->priv->priv_tracks; tmp; tmp = g_list_next (tmp)) {
     TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
     if (pad == tr_priv->ghostpad)
       return tr_priv->track;
@@ -2058,14 +2064,9 @@ ges_timeline_get_track_for_pad (GESTimeline * timeline, GstPad * pad)
 GList *
 ges_timeline_get_tracks (GESTimeline * timeline)
 {
-  GList *tmp, *res = NULL;
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), NULL);
 
-  for (tmp = timeline->tracks; tmp; tmp = g_list_next (tmp)) {
-    TrackPrivate *tr_priv = (TrackPrivate *) tmp->data;
-    res = g_list_append (res, g_object_ref (tr_priv->track));
-  }
-
-  return res;
+  return g_list_copy_deep (timeline->tracks, (GCopyFunc) gst_object_ref, NULL);
 }
 
 /**
@@ -2107,7 +2108,7 @@ ges_timeline_is_updating (GESTimeline * timeline)
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
 
   for (tmp = timeline->tracks; tmp; tmp = tmp->next) {
-    if (!ges_track_is_updating (((TrackPrivate *) tmp->data)->track))
+    if (!ges_track_is_updating (GES_TRACK (tmp->data)))
       return FALSE;
   }
 
