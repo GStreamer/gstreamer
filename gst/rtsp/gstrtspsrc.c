@@ -4155,6 +4155,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
     src->pending_cmd = CMD_WAIT;
     GST_OBJECT_UNLOCK (src);
     /* cancel previous request */
+    GST_DEBUG_OBJECT (src, "cancel previous request");
     gst_rtspsrc_loop_cancel_cmd (src, old);
     GST_OBJECT_LOCK (src);
   }
