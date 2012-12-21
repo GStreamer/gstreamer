@@ -31,6 +31,7 @@
 #include "ges-timeline-source.h"
 #include "ges-track-filesource.h"
 #include "ges-asset-file-source.h"
+#include "ges-asset-track-object.h"
 #include "ges-extractable.h"
 #include "ges-track-image-source.h"
 #include "ges-track-audio-test-source.h"
@@ -420,9 +421,9 @@ ges_timeline_filesource_create_track_objects (GESTimelineObject * obj,
       ges_asset_filesource_get_stream_assets (GES_ASSET_FILESOURCE
       (obj->asset));
   for (tmp = stream_assets; tmp; tmp = tmp->next) {
-    GESAssetTrackFileSource *asset = GES_ASSET_TRACK_FILESOURCE (tmp->data);
+    GESAssetTrackObject *asset = GES_ASSET_TRACK_OBJECT (tmp->data);
 
-    if (ges_asset_track_filesource_get_track_type (asset) == type)
+    if (ges_asset_track_object_get_track_type (asset) == type)
       res = g_list_prepend (res, ges_asset_extract (GES_ASSET (asset), NULL));
   }
 

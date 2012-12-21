@@ -30,6 +30,7 @@
 #include <gst/pbutils/pbutils.h>
 #include "ges.h"
 #include "ges-internal.h"
+#include "ges-asset-track-object.h"
 
 static GHashTable *parent_newparent_table = NULL;
 static void
@@ -246,7 +247,8 @@ _create_track_file_source_asset (GESAssetFileSource * asset,
   priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
   priv_tckasset->sinfo = g_object_ref (sinfo);
   priv_tckasset->parent_asset = asset;
-  priv_tckasset->type = type;
+  ges_asset_track_object_set_track_type (GES_ASSET_TRACK_OBJECT
+      (tck_filesource_asset), type);
 
   priv->asset_trackfilesources = g_list_append (priv->asset_trackfilesources,
       gst_object_ref (tck_filesource_asset));
@@ -470,7 +472,7 @@ ges_asset_filesource_get_stream_assets (GESAssetFileSource * self)
  */
 
 G_DEFINE_TYPE (GESAssetTrackFileSource, ges_asset_track_filesource,
-    GES_TYPE_ASSET);
+    GES_TYPE_ASSET_TRACK_OBJECT);
 
 static GESExtractable *
 _extract (GESAsset * asset, GError ** error)
@@ -534,24 +536,6 @@ ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
   g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
 
   return asset->priv->uri;
-}
-
-/**
- * ges_asset_track_filesource_get_track_type:
- * @self: A #GESAssetFileSource
- *
- * Get the GESAssetTrackType the #GESTrackObject extracted from @self
- * should get into
- *
- * Returns: a #GESTrackType
- */
-const GESTrackType
-ges_asset_track_filesource_get_track_type (GESAssetTrackFileSource * asset)
-{
-  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset),
-      GES_TRACK_TYPE_UNKNOWN);
-
-  return asset->priv->type;
 }
 
 /**

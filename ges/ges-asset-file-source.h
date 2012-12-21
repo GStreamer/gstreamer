@@ -26,6 +26,7 @@
 #include <ges/ges-types.h>
 #include <ges/ges-asset.h>
 #include <ges/ges-asset-timeline-object.h>
+#include <ges/ges-asset-track-object.h>
 
 G_BEGIN_DECLS
 #define GES_TYPE_ASSET_FILESOURCE ges_asset_filesource_get_type()
@@ -94,7 +95,7 @@ GType ges_asset_track_filesource_get_type (void);
 
 struct _GESAssetTrackFileSource
 {
-  GESAsset parent;
+  GESAssetTrackObject parent;
 
   /* <private> */
   GESAssetTrackFileSourcePrivate *priv;
@@ -105,13 +106,12 @@ struct _GESAssetTrackFileSource
 
 struct _GESAssetTrackFileSourceClass
 {
-  GESAssetClass parent_class;
+  GESAssetTrackObjectClass parent_class;
 
   gpointer _ges_reserved[GES_PADDING];
 };
 GstDiscovererStreamInfo * ges_asset_track_filesource_get_stream_info     (GESAssetTrackFileSource *asset);
 const gchar * ges_asset_track_filesource_get_stream_uri                  (GESAssetTrackFileSource *asset);
-const GESTrackType ges_asset_track_filesource_get_track_type             (GESAssetTrackFileSource *asset);
 const GESAssetFileSource *ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *asset);
 
 G_END_DECLS

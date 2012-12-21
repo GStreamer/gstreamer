@@ -21,7 +21,7 @@
 /**
  * SECTION:ges-track-filesource
  * @short_description: outputs a single media stream from a given file
- * 
+ *
  * Outputs a single media stream from a given file. The stream chosen depends on
  * the type of the track which contains the object.
  */
@@ -39,10 +39,24 @@ ges_extractable_check_id (GType type, const gchar * id, GError ** error)
 }
 
 static void
+extractable_set_asset (GESExtractable * self, GESAsset * asset)
+{
+  /* FIXME That should go into #GESTrackObject, but
+   * some work is needed to make sure it works properly */
+
+  if (ges_track_object_get_track_type (GES_TRACK_OBJECT (self)) ==
+      GES_TRACK_TYPE_UNKNOWN) {
+    ges_track_object_set_track_type (GES_TRACK_OBJECT (self),
+        ges_asset_track_object_get_track_type (GES_ASSET_TRACK_OBJECT (asset)));
+  }
+}
+
+static void
 ges_extractable_interface_init (GESExtractableInterface * iface)
 {
   iface->asset_type = GES_TYPE_ASSET_TRACK_FILESOURCE;
   iface->check_id = ges_extractable_check_id;
+  iface->set_asset = extractable_set_asset;
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESTrackFileSource, ges_track_filesource,

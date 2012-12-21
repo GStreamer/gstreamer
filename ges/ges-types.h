@@ -146,6 +146,9 @@ typedef struct _GESAssetTimelineObjectClass GESAssetTimelineObjectClass;
 typedef struct _GESAssetFileSource GESAssetFileSource;
 typedef struct _GESAssetFileSourceClass GESAssetFileSourceClass;
 
+typedef struct _GESAssetTrackObject GESAssetTrackObject;
+typedef struct _GESAssetTrackObjectClass GESAssetTrackObjectClass;
+
 typedef struct _GESAssetTrackFileSource GESAssetTrackFileSource;
 typedef struct _GESAssetTrackFileSourceClass GESAssetTrackFileSourceClass;
 

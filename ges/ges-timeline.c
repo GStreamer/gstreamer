@@ -1530,7 +1530,10 @@ add_object_to_tracks (GESTimeline * timeline, GESTimelineObject * object,
           track_object, &tracks);
 
       if (!tracks || tracks->len == 0) {
-        GST_DEBUG_OBJECT (timeline, "Got no Track to add %p into", object);
+        GST_DEBUG_OBJECT (timeline, "Got no Track to add %p (type %s)",
+            track_object,
+            ges_track_type_name (ges_track_object_get_track_type
+                (track_object)));
         goto next_track_object;
       }
 

@@ -992,6 +992,23 @@ GES_ASSET_TIMELINE_OBJECT_GET_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>ges-asset-track-object</FILE>
+<TITLE>GESAssetTrackObject</TITLE>
+GESAssetObject
+ges_asset_track_object_get_type
+ges_asset_track_object_get_track_type
+ges_asset_track_object_set_track_type
+<SUBSECTION Standard>
+GESAssetTrackObjectPrivate
+GES_ASSET_TRACK_OBJECT
+GES_TYPE_ASSET_TRACK_OBJECT
+GES_ASSET_TRACK_OBJECT_CLASS
+GES_IS_ASSET_TRACK_OBJECT
+GES_IS_ASSET_TRACK_OBJECT_CLASS
+GES_ASSET_TRACK_OBJECT_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>ges-asset-file-source</FILE>
 <TITLE>GESAssetFileSource</TITLE>
 GESAssetFileSource
