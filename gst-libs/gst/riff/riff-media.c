@@ -1655,6 +1655,12 @@ gst_riff_create_audio_caps (guint16 codec_id,
             *codec_name = g_strdup ("Mu-law audio");
         } else if (subformat_guid[0] == 0x00000092) {
           GST_DEBUG ("FIXME: handle DOLBY AC3 SPDIF format");
+        } else if (subformat_guid[0] == 0x00002000) {
+          GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE AC-3 audio");
+          channels_max = 6;
+          caps = gst_caps_new_empty_simple ("audio/x-ac3");
+          if (codec_name)
+            *codec_name = g_strdup ("AC-3 audio");
         }
       } else if (subformat_guid[0] == 0x6ba47966 &&
           subformat_guid[1] == 0x41783f83 &&
