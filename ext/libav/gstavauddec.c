@@ -679,8 +679,8 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   GST_LOG_OBJECT (ffmpegdec,
-      "Received new data of size %u, offset:%" G_GUINT64_FORMAT ", ts:%"
-      GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
+      "Received new data of size %" G_GSIZE_FORMAT ", offset:%" G_GUINT64_FORMAT
+      ", ts:%" GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
       gst_buffer_get_size (inbuf), GST_BUFFER_OFFSET (inbuf),
       GST_TIME_ARGS (GST_BUFFER_PTS (inbuf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)));
