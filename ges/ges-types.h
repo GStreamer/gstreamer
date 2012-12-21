@@ -140,6 +140,9 @@ typedef struct _GESPitiviFormatterClass GESPitiviFormatterClass;
 typedef struct _GESAsset GESAsset;
 typedef struct _GESAssetClass GESAssetClass;
 
+typedef struct _GESAssetTimelineObject GESAssetTimelineObject;
+typedef struct _GESAssetTimelineObjectClass GESAssetTimelineObjectClass;
+
 typedef struct _GESAssetFileSource GESAssetFileSource;
 typedef struct _GESAssetFileSourceClass GESAssetFileSourceClass;
 

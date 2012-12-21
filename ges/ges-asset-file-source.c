@@ -40,7 +40,7 @@ initable_iface_init (GInitableIface * initable_iface)
 }
 
 G_DEFINE_TYPE_WITH_CODE (GESAssetFileSource, ges_asset_filesource,
-    GES_TYPE_ASSET,
+    GES_TYPE_ASSET_TIMELINE_OBJECT,
     G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init));
 
 /* TODO: We should monitor files here, and add some way of reporting changes
@@ -124,26 +124,6 @@ _start_loading (GESAsset * asset, GError ** error)
   return GES_ASSET_LOADING_ERROR;
 }
 
-
-static GESExtractable *
-ges_asset_filesource_extract (GESAsset * self, GError ** error)
-{
-  const gchar *uri = ges_asset_get_id (self);
-  GESTrackType supportedformats;
-
-  GESTimelineFileSource *tfs = ges_timeline_filesource_new ((gchar *) uri);
-
-  GST_DEBUG_OBJECT (self, "Extracting filesource with uri %s", uri);
-
-  ges_meta_container_get_uint (GES_META_CONTAINER (self),
-      GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS, &supportedformats);
-
-  ges_timeline_object_set_supported_formats (GES_TIMELINE_OBJECT (tfs),
-      supportedformats);
-
-  return GES_EXTRACTABLE (tfs);
-}
-
 static gboolean
 _request_id_update (GESAsset * self, gchar ** proposed_new_id, GError * error)
 {
@@ -204,7 +184,6 @@ ges_asset_filesource_class_init (GESAssetFileSourceClass * klass)
   GES_ASSET_CLASS (klass)->request_id_update = _request_id_update;
   GES_ASSET_CLASS (klass)->inform_proxy = _asset_proxied;
 
-  GES_ASSET_CLASS (klass)->extract = ges_asset_filesource_extract;
 
   /**
    * GESAssetFileSource:duration:
@@ -310,8 +289,8 @@ ges_asset_filesource_set_info (GESAssetFileSource * self,
         gst_discoverer_stream_info_get_stream_id (sinf));
     _create_track_file_source_asset (self, sinf, type);
   }
-  ges_meta_container_set_uint (GES_META_CONTAINER (self),
-      GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS, supportedformats);
+  ges_asset_timeline_object_set_supported_formats (GES_ASSET_TIMELINE_OBJECT
+      (self), supportedformats);
 
   if (stream_list)
     gst_discoverer_stream_info_list_free (stream_list);
@@ -383,28 +362,6 @@ ges_asset_filesource_get_duration (GESAssetFileSource * self)
   g_return_val_if_fail (GES_IS_ASSET_FILESOURCE (self), GST_CLOCK_TIME_NONE);
 
   return self->priv->duration;
-}
-
-/**
- * ges_asset_filesource_get_supported_types:
- * @self: a #GESAssetFileSource
- *
- * Gets track types the file as
- *
- * Returns: The track types on which @self will create TrackObject when added to
- * a layer
- */
-GESTrackType
-ges_asset_filesource_get_supported_types (GESAssetFileSource * self)
-{
-  GESTrackType supportedformats;
-
-  g_return_val_if_fail (GES_IS_ASSET_FILESOURCE (self), GES_TRACK_TYPE_UNKNOWN);
-
-  ges_meta_container_get_uint (GES_META_CONTAINER (self),
-      GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS, &supportedformats);
-
-  return supportedformats;
 }
 
 /**

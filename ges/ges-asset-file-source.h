@@ -25,6 +25,7 @@
 #include <gio/gio.h>
 #include <ges/ges-types.h>
 #include <ges/ges-asset.h>
+#include <ges/ges-asset-timeline-object.h>
 
 G_BEGIN_DECLS
 #define GES_TYPE_ASSET_FILESOURCE ges_asset_filesource_get_type()
@@ -45,7 +46,7 @@ GType ges_asset_filesource_get_type (void);
 
 struct _GESAssetFileSource
 {
-  GESAsset parent;
+  GESAssetTimelineObject parent;
 
   /* <private> */
   GESAssetFileSourcePrivate *priv;
@@ -56,7 +57,7 @@ struct _GESAssetFileSource
 
 struct _GESAssetFileSourceClass
 {
-  GESAssetClass parent_class;
+  GESAssetTimelineObjectClass parent_class;
 
   /* <private> */
   GstDiscoverer *discoverer;
@@ -66,7 +67,6 @@ struct _GESAssetFileSourceClass
 
 GstDiscovererInfo *ges_asset_filesource_get_info      (const GESAssetFileSource * self);
 GstClockTime ges_asset_filesource_get_duration        (GESAssetFileSource *self);
-GESTrackType ges_asset_filesource_get_supported_types (GESAssetFileSource *self);
 gboolean ges_asset_filesource_is_image                (GESAssetFileSource *self);
 void ges_asset_filesource_new                         (const gchar *uri,
                                                        GCancellable *cancellable,

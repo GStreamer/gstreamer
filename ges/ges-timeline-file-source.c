@@ -211,6 +211,8 @@ extractable_get_parameters_from_id (const gchar * id, guint * n_params)
   g_value_init (&params[0].value, G_TYPE_STRING);
   g_value_set_string (&params[0].value, id);
 
+  *n_params = 1;
+
   return params;
 }
 
@@ -238,8 +240,10 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
 
   if (ges_timeline_object_get_supported_formats (tlobj) ==
       GES_TRACK_TYPE_UNKNOWN) {
+
     ges_timeline_object_set_supported_formats (tlobj,
-        ges_asset_filesource_get_supported_types (filesource_asset));
+        ges_asset_timeline_object_get_supported_formats
+        (GES_ASSET_TIMELINE_OBJECT (filesource_asset)));
   }
 
   ges_timeline_filesource_set_uri (tfs, g_strdup (ges_asset_get_id (asset)));

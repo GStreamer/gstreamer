@@ -925,7 +925,6 @@ GES_META_FORMATTER_VERSION
 GES_META_FORMATTER_RANK
 GES_META_DESCRIPTION
 
-GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS
 
 <SUBSECTION Standard>
 GESMetaContainerInterface
@@ -977,12 +976,27 @@ ges_asset_get_type
 </SECTION>
 
 <SECTION>
+<FILE>ges-asset-timeline-object</FILE>
+<TITLE>GESAssetTimelineObject</TITLE>
+GESAssetTimelineObject
+ges_asset_timeline_object_get_type
+ges_asset_timeline_object_set_supported_formats
+ges_asset_timeline_object_get_supported_formats
+<SUBSECTION Standard>
+GESAssetTimelineObjectPrivate
+GES_ASSET_TIMELINE_OBJECT
+GES_ASSET_TIMELINE_OBJECT_CLASS
+GES_IS_ASSET_TIMELINE_OBJECT
+GES_IS_ASSET_TIMELINE_OBJECT_CLASS
+GES_ASSET_TIMELINE_OBJECT_GET_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>ges-asset-file-source</FILE>
 <TITLE>GESAssetFileSource</TITLE>
 GESAssetFileSource
 ges_asset_filesource_get_type
 ges_asset_filesource_get_duration
-ges_asset_filesource_get_supported_types
 ges_asset_filesource_is_image
 ges_asset_filesource_get_info
 ges_asset_filesource_new

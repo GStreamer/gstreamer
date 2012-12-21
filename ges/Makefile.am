@@ -49,6 +49,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-pitivi-formatter.c			\
 	ges-asset.c \
 	ges-asset-file-source.c \
+	ges-asset-timeline-object.c \
 	ges-extractable.c \
 	ges-project.c \
 	ges-base-xml-formatter.c \
@@ -99,6 +100,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-pitivi-formatter.h			\
 	ges-asset.h \
 	ges-asset-file-source.h \
+	ges-asset-timeline-object.h \
 	ges-extractable.h \
 	ges-project.h \
 	ges-base-xml-formatter.h \

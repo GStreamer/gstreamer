@@ -46,6 +46,7 @@
 #include <ges/ges-timeline-file-source.h>
 #include <ges/ges-screenshot.h>
 #include <ges/ges-asset.h>
+#include <ges/ges-asset-timeline-object.h>
 #include <ges/ges-asset-file-source.h>
 #include <ges/ges-project.h>
 #include <ges/ges-extractable.h>

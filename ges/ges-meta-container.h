@@ -84,13 +84,6 @@ G_BEGIN_DECLS
  */
 #define GES_META_FORMATTER_RANK                       "rank"
 
-/**
- * GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS:
- *
- * The GESTrackType on which a GESTimelineObject can create GESTrackObjects
- */
-#define GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS    "supported-formats"
-
 typedef struct _GESMetaContainer          GESMetaContainer;
 typedef struct _GESMetaContainerInterface GESMetaContainerInterface;
 
