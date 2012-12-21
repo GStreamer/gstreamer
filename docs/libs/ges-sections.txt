@@ -55,6 +55,7 @@ GES_TYPE_EDGE
 ges_edge_get_type
 GES_TYPE_EDIT_MODE
 ges_edit_mode_get_type
+ges_track_type_name
 </SECTION>
 
 <SECTION>
@@ -985,6 +986,7 @@ ges_asset_timeline_object_get_supported_formats
 <SUBSECTION Standard>
 GESAssetTimelineObjectPrivate
 GES_ASSET_TIMELINE_OBJECT
+GES_TYPE_ASSET_TIMELINE_OBJECT
 GES_ASSET_TIMELINE_OBJECT_CLASS
 GES_IS_ASSET_TIMELINE_OBJECT
 GES_IS_ASSET_TIMELINE_OBJECT_CLASS
@@ -994,7 +996,7 @@ GES_ASSET_TIMELINE_OBJECT_GET_CLASS
 <SECTION>
 <FILE>ges-asset-track-object</FILE>
 <TITLE>GESAssetTrackObject</TITLE>
-GESAssetObject
+GESAssetTrackObject
 ges_asset_track_object_get_type
 ges_asset_track_object_get_track_type
 ges_asset_track_object_set_track_type
@@ -1034,8 +1036,9 @@ GES_ASSET_FILESOURCE_GET_CLASS
 <TITLE>GESAssetTrackFileSource</TITLE>
 GESAssetTrackFileSource
 ges_asset_track_filesource_get_type
-ges_asset_track_filesource_get_track_type
 ges_asset_track_filesource_get_filesource_asset
+ges_asset_track_filesource_get_stream_info
+ges_asset_track_filesource_get_stream_uri
 <SUBSECTION Standard>
 GESAssetTrackFileSourcePrivate
 GES_ASSET_TRACK_FILESOURCE

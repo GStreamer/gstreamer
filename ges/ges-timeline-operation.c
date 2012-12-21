@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-timeline-operation
- * @short_description: Base Class for operations in a #GESTimelineLayer
+ * @short_description: Base Class for operations in a GESTimelineLayer
  *
  * Operations are any kind of object that both outputs AND consumes data.
  */

@@ -21,7 +21,7 @@
 
 /**
  * SECTION:ges-timeline-layer
- * @short_description: Non-overlapping sequence of #GESTimelineObject
+ * @short_description: Non-overlapping sequence of GESTimelineObject
  *
  * Responsible for the ordering of the various contained TimelineObject(s). A
  * timeline layer has a "priority" property, which is used to manage the

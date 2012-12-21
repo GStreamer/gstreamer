@@ -19,7 +19,7 @@
 
 /**
  * SECTION: ges-timeline-effect
- * @short_description: An effect in a #GESTimelineLayer
+ * @short_description: An effect in a GESTimelineLayer
  *
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.

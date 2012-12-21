@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-simple-timeline-layer
- * @short_description: High-level #GESTimelineLayer
+ * @short_description: High-level GESTimelineLayer
  *
  * #GESSimpleTimelineLayer allows using #GESTimelineObject(s) with a list-like
  * API. Clients can add any type of GESTimelineObject to a

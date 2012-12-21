@@ -20,7 +20,7 @@
  */
 /**
  * SECTION: ges-extractable
- * @short_description: An interface letting an object be extracted from a #GESAsset
+ * @short_description: An interface letting an object be extracted from a GESAsset
  *
  * FIXME: Long description needed
  */

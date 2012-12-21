@@ -36,7 +36,6 @@ G_BEGIN_DECLS
 #define GES_TIMELINE_OBJECT_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_OBJECT, GESTimelineObjectClass))
 
 typedef struct _GESTimelineObjectPrivate GESTimelineObjectPrivate;
-typedef struct _GESTimelineObjectClassPrivate GESTimelineObjectClassPrivate;
 
 /**
  * GESFillTrackObjectFunc:

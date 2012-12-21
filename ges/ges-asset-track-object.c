@@ -1,5 +1,4 @@
-/**
- * Gstreamer
+/* Gstreamer Editing Services
  *
  * Copyright (C) <2012> Thibault Saunier <thibault.saunier@collabora.com>
  *
@@ -112,7 +111,7 @@ ges_asset_track_object_init (GESAssetTrackObject * self)
 
 /**
  * ges_asset_track_object_set_track_type:
- * @self: A #GESAssetObject
+ * @asset: A #GESAssetObject
  * @type: A #GESTrackType
  *
  * Set the #GESAssetTrackType the #GESTrackObject extracted from @self
@@ -129,7 +128,7 @@ ges_asset_track_object_set_track_type (GESAssetTrackObject * asset,
 
 /**
  * ges_asset_track_object_get_track_type:
- * @self: A #GESAssetObject
+ * @asset: A #GESAssetObject
  *
  * Get the GESAssetTrackType the #GESTrackObject extracted from @self
  * should get into

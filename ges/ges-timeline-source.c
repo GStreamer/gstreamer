@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-timeline-source
- * @short_description: Base Class for sources of a #GESTimelineLayer
+ * @short_description: Base Class for sources of a GESTimelineLayer
  */
 
 #include "ges-internal.h"

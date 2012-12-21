@@ -20,7 +20,7 @@
  */
 /**
  * SECTION: ges-asset-file-source
- * @short_description: A #GESAsset subclass specialized in #GESTimelineFileSource extraction
+ * @short_description: A GESAsset subclass specialized in GESTimelineFileSource extraction
  *
  * The #GESAssetFileSource is a special #GESAsset that lets you handle
  * the media file to use inside the GStreamer Editing Services. It has APIs that
@@ -449,7 +449,7 @@ ges_asset_filesource_set_timeout (GESAssetFileSourceClass * class,
  *
  * Get the GESAssetTrackFileSource @self containes
  *
- * Returns: (transfer-none) (element-type GESAssetTrackFileSource): a
+ * Returns: (transfer none) (element-type GESAssetTrackFileSource): a
  * #GList of #GESAssetTrackFileSource
  */
 const GList *
@@ -465,7 +465,7 @@ ges_asset_filesource_get_stream_assets (GESAssetFileSource * self)
  *****************************************************************/
 /**
  * SECTION: ges-asset-track-file-source
- * @short_description: A #GESAsset subclass specialized in #GESTrackFileSource extraction
+ * @short_description: A GESAsset subclass specialized in GESTrackFileSource extraction
  *
  * NOTE: You should never request such a #GESAsset as they will be created automatically
  * by #GESAssetFileSource-s.
@@ -522,6 +522,14 @@ ges_asset_track_filesource_init (GESAssetTrackFileSource * self)
 
 }
 
+/**
+ * ges_asset_track_filesource_get_stream_info:
+ * @asset: A #GESAssetFileSource
+ *
+ * Get the #GstDiscovererStreamInfo user by @asset
+ *
+ * Returns: (transfer none): a #GESAssetFileSource
+ */
 GstDiscovererStreamInfo *
 ges_asset_track_filesource_get_stream_info (GESAssetTrackFileSource * asset)
 {
@@ -540,7 +548,7 @@ ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
 
 /**
  * ges_asset_track_filesource_get_filesource_asset:
- * @self: A #GESAssetFileSource
+ * @asset: A #GESAssetFileSource
  *
  * Get the #GESAssetFileSource @self is contained in
  *

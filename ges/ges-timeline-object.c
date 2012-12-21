@@ -22,7 +22,7 @@
 
 /**
  * SECTION:ges-timeline-object
- * @short_description: Base Class for objects in a #GESTimelineLayer
+ * @short_description: Base Class for objects in a GESTimelineLayer
  *
  * A #GESTimelineObject is a 'natural' object which controls one or more
  * #GESTrackObject(s) in one or more #GESTrack(s).
@@ -476,7 +476,7 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
  *
  * Creates all #GESTrackObjects supported by this object for the track type.
  *
- * Returns: (element-type GESTrackObject) (transfer-full): A #GList of
+ * Returns: (element-type GESTrackObject) (transfer full): A #GList of
  * newly created #GESTrackObject-s
  */
 

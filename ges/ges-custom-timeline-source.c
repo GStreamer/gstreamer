@@ -20,7 +20,7 @@
 
 /**
  * SECTION:ges-custom-timeline-source
- * @short_description: Convenience #GESTimelineSource
+ * @short_description: Convenience GESTimelineSource
  *
  * #GESCustomTimelineSource allows creating #GESTimelineSource(s) without the
  * need to subclass.

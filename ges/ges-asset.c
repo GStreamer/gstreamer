@@ -20,7 +20,7 @@
  */
 /**
  * SECTION: ges-asset
- * @short_description: #GESAssets represent usable ressources inside the GStreamer Editing Services
+ * @short_description: Represents usable ressources inside the GStreamer Editing Services
  *
  * The Assets in the GStreamer Editing Services represent the ressources
  * that can be used. You can create assets for any type that implements the #GESExtractable

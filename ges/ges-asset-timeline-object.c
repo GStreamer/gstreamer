@@ -1,5 +1,4 @@
-/**
- * Gstreamer Editing Services
+/* Gstreamer Editing Services
  *
  * Copyright (C) <2011> Thibault Saunier <thibault.saunier@collabora.com>
  *
@@ -20,7 +19,7 @@
  */
 /**
  * SECTION: ges-asset-timeline-object
- * @short_description: A #GESAsset subclass specialized in #GESTimelineObject extraction
+ * @short_description: A GESAsset subclass specialized in GESTimelineObject extraction
  *
  * The #GESAssetFileSource is a special #GESAsset specilized in #GESTimelineObject.
  * it is mostly used to get information about the #GESTrackType-s the objects extracted

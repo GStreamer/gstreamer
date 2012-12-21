@@ -19,7 +19,7 @@
  */
 /**
  * SECTION: ges-project
- * @short_description: A #GESAsset that is used to manage projects
+ * @short_description: A GESAsset that is used to manage projects
  *
  * The #GESProject is used to control a set of #GESAsset and is a
  * #GESAsset with #GES_TYPE_TIMELINE as @extractable_type itself. That
