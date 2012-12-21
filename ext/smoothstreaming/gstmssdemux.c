@@ -301,7 +301,10 @@ gst_mss_demux_create_streams (GstMssDemux * mssdemux)
 
   if (streams == NULL) {
     GST_INFO_OBJECT (mssdemux, "No streams found in the manifest");
-    /* TODO  post eos? */
+    GST_ELEMENT_ERROR (mssdemux, STREAM, DEMUX,
+        (_("This file contains no playable streams.")),
+        ("no streams found at the Manifest"));
+    return;
   }
 
   for (iter = streams; iter; iter = g_slist_next (iter)) {
@@ -434,7 +437,7 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
       break;
   }
   if (!path) {
-    /* TODO */
+    goto no_url_error;
   }
   GST_DEBUG_OBJECT (mssdemux, "Got url path '%s' for stream %p", path, stream);
 
@@ -448,7 +451,7 @@ gst_mss_demux_stream_loop (GstMssDemuxStream * stream)
   buffer = gst_buffer_make_metadata_writable (buffer);
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (stream->pad));
 
-  ret = gst_pad_push (stream->pad, buffer);     /* TODO check return */
+  ret = gst_pad_push (stream->pad, buffer);
   switch (ret) {
     case GST_FLOW_UNEXPECTED:
       goto eos;                 /* EOS ? */
@@ -470,6 +473,14 @@ eos:
     GST_DEBUG_OBJECT (mssdemux, "Pushing EOS on pad %s:%s",
         GST_DEBUG_PAD_NAME (stream->pad));
     gst_pad_push_event (stream->pad, eos);
+    gst_task_stop (stream->stream_task);
+    return;
+  }
+no_url_error:
+  {
+    GST_ELEMENT_ERROR (mssdemux, STREAM, DEMUX,
+        (_("Failed to get fragment URL.")),
+        ("An error happened when getting fragment URL"));
     gst_task_stop (stream->stream_task);
     return;
   }
