@@ -59,9 +59,6 @@ int gst_ffmpeg_av_find_stream_info(AVFormatContext *ic);
 
 int gst_ffmpegdata_open (GstPad * pad, int flags, AVIOContext ** context);
 int gst_ffmpegdata_close (AVIOContext * h);
-typedef struct _GstFFMpegPipe GstFFMpegPipe;
-int gst_ffmpeg_pipe_open (GstFFMpegPipe *ffpipe, int flags, AVIOContext ** context);
-int gst_ffmpeg_pipe_close (AVIOContext * h);
 
 G_END_DECLS
 
