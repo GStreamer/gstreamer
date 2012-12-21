@@ -52,3 +52,5 @@ log
 /tests/examples/materials
 
 /tools/ges-launch-1.0
+/tests/check/ges/project
+/tests/examples/assets
