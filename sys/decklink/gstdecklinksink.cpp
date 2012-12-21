@@ -1271,7 +1271,6 @@ gst_decklink_sink_class_list_devices (GstElementClass * klass)
   GValueArray *array;
   GValue value = {
   0};
-  GList *item;
   int i;
 
   array = g_value_array_new (n_devices);
@@ -1279,8 +1278,6 @@ gst_decklink_sink_class_list_devices (GstElementClass * klass)
   for (i = 0; i < n_devices; i++) {
     g_value_set_int (&value, i);
     g_value_array_append (array, &value);
-
-    item = item->next;
   }
   g_value_unset (&value);
 
