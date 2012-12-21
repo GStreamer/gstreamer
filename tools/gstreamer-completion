@@ -7,6 +7,7 @@ _gst_inspect() {
     local cur cword prev words
     _gst_init_completion
     [[ "$cur" == "=" ]] && cur=
+    [[ "$cur" =~ -.*=*$ ]] && prev="${cur%%=*}" cur="${cur#*=}"
 
     _gst_common_options || return
 
@@ -137,6 +138,7 @@ _gst_launch_parse() {
         next="${words[i]}"
         # Note that COMP_WORDBREAKS by default includes "=" and ":".
         case "$state,$next" in
+            start,-*=*) curtype=optionval option="${next%%=*}" state=start;;
             start,-*) curtype=option option="$next" state=option;;
             start,) curtype=option-or-element;;
             start,*) curtype=element element="$next" state=element;;
@@ -149,13 +151,17 @@ _gst_launch_parse() {
             option=,*) curtype=optionval state=start;;
             element,\!) curtype='!' state='!';;
             \!,*) curtype=element element="$next" state=element;;
+            element,*=)
+                curtype=propertyval property="${next%=}" state=property=;;
+            element,*=*)
+                curtype=propertyval property="${next%%=*}" state=element;;
             element,*) curtype=property property="$next" state=property;;
             property,=) curtype=propertyval state=property=;;
             property=,*) curtype=propertyval state=element;;
         esac
         i=$((i + 1))
     done
-    [[ "$cur" == "=" ]] && cur=""
+    cur="${cur#*=}"
 }
 
 _gst_takes_arg() {

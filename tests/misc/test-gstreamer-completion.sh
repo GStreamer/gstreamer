@@ -39,9 +39,12 @@ test_gst_inspect_completion --ver -- --version
 test_gst_inspect_completion --gst-debug-le -- --gst-debug-level
 test_gst_inspect_completion --gst-debug-level '' -- 0 1 2 3 4 5
 test_gst_inspect_completion --gst-debug-level = -- 0 1 2 3 4 5
+test_gst_inspect_completion --gst-debug-level= -- 0 1 2 3 4 5
+test_gst_inspect_completion --gst-debug-level=4 -- 4
 test_gst_inspect_completion coreel -- coreelements
 test_gst_inspect_completion fake -- fakesrc fakesink
 test_gst_inspect_completion --version --gst-debug-level = 2 fake -- fakesrc fakesink
+test_gst_inspect_completion --gst-debug-level=2 fake -- fakesrc fakesink
 
 
 test_gst_launch_completion() {
@@ -66,13 +69,27 @@ test_gst_launch_completion --mes -- --messages
 test_gst_launch_completion --gst-debug-le -- --gst-debug-level
 test_gst_launch_completion --gst-debug-level '' -- 0 1 2 3 4 5
 test_gst_launch_completion --gst-debug-level = -- 0 1 2 3 4 5
+test_gst_launch_completion --gst-debug-level= -- 0 1 2 3 4 5
+test_gst_launch_completion --gst-debug-level=4 -- 4
 test_gst_launch_completion fak -- fakesrc fakesink
 test_gst_launch_completion --messages fak -- fakesrc fakesink
 test_gst_launch_completion --messages --eos-on-shutdown fak -- fakesrc
+test_gst_launch_completion --gst-debug-level = 4 fak -- fakesrc
+test_gst_launch_completion --gst-debug-level=4 fak -- fakesrc
 test_gst_launch_completion fakesrc '' -- name= is-live= format= !
 test_gst_launch_completion fakesrc is-live -- is-live=
 test_gst_launch_completion fakesrc is-live = -- true false
 test_gst_launch_completion fakesrc format = -- bytes time buffers percent
+test_gst_launch_completion fakesrc format= -- bytes time buffers percent
+test_gst_launch_completion fakesrc format=by -- bytes
+test_gst_launch_completion fakesrc format= '' -- bytes time buffers percent
+test_gst_launch_completion fakesrc format= by -- bytes
+test_gst_launch_completion fakesrc is-live = true '' -- name= format= !
+test_gst_launch_completion fakesrc is-live = true for -- format=
+test_gst_launch_completion fakesrc is-live=true '' -- name= format= !
+test_gst_launch_completion fakesrc is-live=true for -- format=
+test_gst_launch_completion fakesrc is-live = true format = -- bytes time
+test_gst_launch_completion fakesrc is-live=true format= -- bytes time
 
 
 test_gst_launch_parse() {
@@ -109,12 +126,16 @@ test_gst_launch_parse --mes -- option '' '' ''
 test_gst_launch_parse --messages -- option '' '' ''
 test_gst_launch_parse --gst-debug-level '' -- optionval --gst-debug-level '' ''
 test_gst_launch_parse --gst-debug-level = -- optionval --gst-debug-level '' ''
+test_gst_launch_parse --gst-debug-level= -- optionval --gst-debug-level '' ''
+test_gst_launch_parse --gst-debug-level=5 -- optionval --gst-debug-level '' ''
 test_gst_launch_parse fak -- element '' '' ''
 test_gst_launch_parse --messages fak -- element '' '' ''
 test_gst_launch_parse --gst-debug-level = 5 fak -- element '' '' ''
 test_gst_launch_parse fakesrc '' -- property '' fakesrc ''
 test_gst_launch_parse fakesrc is-l -- property '' fakesrc ''
 test_gst_launch_parse fakesrc is-live = -- propertyval '' fakesrc is-live
+test_gst_launch_parse fakesrc is-live= -- propertyval '' fakesrc is-live
+test_gst_launch_parse fakesrc is-live=b -- propertyval '' fakesrc is-live
 test_gst_launch_parse fakesrc is-live = true form -- property '' 'fakesrc' ''
 test_gst_launch_parse fakesrc is-live = true ! -- ! '' '' ''
 test_gst_launch_parse fakesrc is-live = true ! fakesi -- element '' '' ''
