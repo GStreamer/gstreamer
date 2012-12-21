@@ -1,9 +1,4 @@
-#!/usr/bin/env bash
-
-bashcomp=$(pkg-config --variable=prefix bash-completion
-                    )/share/bash-completion/bash_completion
-[ -f $bashcomp ] && . $bashcomp ||
-{ [ -f /etc/bash_completion ] && . /etc/bash_completion; }
+#!/bin/bash
 
 . $(dirname "$0")/../../tools/gstreamer-completion
 ret=0
@@ -16,8 +11,7 @@ test_gst_inspect_completion() {
     COMP_CWORD=$(( ${#COMP_WORDS[*]} - 1 ))
     COMP_LINE="${COMP_WORDS[*]}"
     COMP_POINT=${#COMP_LINE}
-
-    while [[ -n "$1" ]]; do expected+=("$1"); shift; done
+    expected=(); while [[ -n "$1" ]]; do expected+=("$1"); shift; done
 
     printf "test_gst_inspect_completion: '${COMP_WORDS[*]}'... "
     _gst_inspect
@@ -40,10 +34,11 @@ _assert_expected() {
 }
 
 # test_gst_inspect_completion <command line to complete> -- <expected completions>
-test_gst_inspect_completion '' -- --version --gst-debug-level= coreelements fakesrc
+test_gst_inspect_completion '' -- --version --gst-debug-level coreelements fakesrc
 test_gst_inspect_completion --ver -- --version
-test_gst_inspect_completion --gst-debug-le -- --gst-debug-level=
-test_gst_inspect_completion --gst-debug-level= -- 0 1 2 3 4 5
+test_gst_inspect_completion --gst-debug-le -- --gst-debug-level
+test_gst_inspect_completion --gst-debug-level '' -- 0 1 2 3 4 5
+test_gst_inspect_completion --gst-debug-level = -- 0 1 2 3 4 5
 test_gst_inspect_completion coreel -- coreelements
 test_gst_inspect_completion fake -- fakesrc fakesink
 test_gst_inspect_completion --version --gst-debug-level = 2 fake -- fakesrc fakesink
@@ -56,7 +51,7 @@ test_gst_launch_completion() {
     COMP_CWORD=$(( ${#COMP_WORDS[*]} - 1 ))
     COMP_LINE="${COMP_WORDS[*]}"
     COMP_POINT=${#COMP_LINE}
-    while [[ -n "$1" ]]; do expected+=("$1"); shift; done
+    expected=(); while [[ -n "$1" ]]; do expected+=("$1"); shift; done
 
     printf "test_gst_launch_completion: '${COMP_WORDS[*]}'... "
     _gst_launch
@@ -66,10 +61,10 @@ test_gst_launch_completion() {
 }
 
 # test_gst_launch_completion <command line to complete> -- <expected completions>
-test_gst_launch_completion '' -- --eos-on-shutdown --gst-debug-level= fakesrc fakesink
+test_gst_launch_completion '' -- --eos-on-shutdown --gst-debug-level fakesrc fakesink
 test_gst_launch_completion --mes -- --messages
-test_gst_launch_completion --gst-debug-le -- --gst-debug-level=
-test_gst_launch_completion --gst-debug-level -- --gst-debug-level=
+test_gst_launch_completion --gst-debug-le -- --gst-debug-level
+test_gst_launch_completion --gst-debug-level '' -- 0 1 2 3 4 5
 test_gst_launch_completion --gst-debug-level = -- 0 1 2 3 4 5
 test_gst_launch_completion fak -- fakesrc fakesink
 test_gst_launch_completion --messages fak -- fakesrc fakesink
@@ -85,6 +80,7 @@ test_gst_launch_parse() {
     words=(gst-launch)
     while [[ "$1" != -- ]]; do words+=("$1"); shift; done; shift
     cword=$(( ${#words[*]} - 1 ))
+    cur="${words[cword]}"
     local xcurtype="$1" xoption="$2" xelement="$3" xproperty="$4"
 
     printf "test_gst_launch_parse: '${words[*]}'... "
@@ -111,6 +107,7 @@ _assert() {
 test_gst_launch_parse '' -- option-or-element '' '' ''
 test_gst_launch_parse --mes -- option '' '' ''
 test_gst_launch_parse --messages -- option '' '' ''
+test_gst_launch_parse --gst-debug-level '' -- optionval --gst-debug-level '' ''
 test_gst_launch_parse --gst-debug-level = -- optionval --gst-debug-level '' ''
 test_gst_launch_parse fak -- element '' '' ''
 test_gst_launch_parse --messages fak -- element '' '' ''
