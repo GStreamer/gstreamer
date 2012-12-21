@@ -84,7 +84,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420, YV12, YUY2, UYVY, RGB, ARGB, xRGB, RGB16, ABGR, xBGR, GRAY8 }, "
+        "format = (string) { I420, YV12, NV12, YUY2, UYVY, BGR, BGRA, BGRx }, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
@@ -425,32 +425,26 @@ gst_d3dvideosink_get_device_caps (GstBaseSink * basesink, D3DDISPLAYMODE d3ddm)
         case GST_VIDEO_FORMAT_I420:
           d3dfourcc = (D3DFORMAT) MAKEFOURCC ('Y', 'V', '1', '2');
           break;
-        case GST_VIDEO_FORMAT_RGB:
+        case GST_VIDEO_FORMAT_BGR:
           d3dfourcc = D3DFMT_R8G8B8;
           break;
-        case GST_VIDEO_FORMAT_ARGB:
+        case GST_VIDEO_FORMAT_BGRA:
           d3dfourcc = D3DFMT_A8R8G8B8;
           break;
-        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_BGRx:
           d3dfourcc = D3DFMT_X8R8G8B8;
           break;
         case GST_VIDEO_FORMAT_RGB16:
           d3dfourcc = D3DFMT_R5G6B5;
-          break;
-        case GST_VIDEO_FORMAT_ABGR:
-          d3dfourcc = D3DFMT_A8B8G8R8;
-          break;
-        case GST_VIDEO_FORMAT_xBGR:
-          d3dfourcc = D3DFMT_X8B8G8R8;
-          break;
-        case GST_VIDEO_FORMAT_GRAY8:
-          d3dfourcc = D3DFMT_L8;
           break;
         case GST_VIDEO_FORMAT_UYVY:
           d3dfourcc = D3DFMT_UYVY;
           break;
         case GST_VIDEO_FORMAT_YUY2:
           d3dfourcc = D3DFMT_YUY2;
+          break;
+        case GST_VIDEO_FORMAT_NV12:
+          d3dfourcc = (D3DFORMAT) MAKEFOURCC ('N', 'V', '1', '2');
           break;
         default:
           break;
