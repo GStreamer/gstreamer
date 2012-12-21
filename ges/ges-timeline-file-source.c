@@ -62,11 +62,13 @@ enum
 };
 
 
+static GList *ges_timeline_filesource_create_track_objects (GESTimelineObject *
+    obj, GESTrackType type);
 static GESTrackObject
     * ges_timeline_filesource_create_track_object (GESTimelineObject * obj,
     GESTrackType type);
-void
-ges_timeline_filesource_set_uri (GESTimelineFileSource * self, gchar * uri);
+void ges_timeline_filesource_set_uri (GESTimelineFileSource * self,
+    gchar * uri);
 
 static void
 filesource_set_max_duration (GESTimelineObject * object, guint64 maxduration);
@@ -182,6 +184,8 @@ ges_timeline_filesource_class_init (GESTimelineFileSourceClass * klass)
           GES_TYPE_TRACK_TYPE, GES_TRACK_TYPE_UNKNOWN,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  timobj_class->create_track_objects =
+      ges_timeline_filesource_create_track_objects;
   timobj_class->create_track_object =
       ges_timeline_filesource_create_track_object;
   timobj_class->set_max_duration = filesource_set_max_duration;
@@ -397,6 +401,28 @@ const gchar *
 ges_timeline_filesource_get_uri (GESTimelineFileSource * self)
 {
   return self->priv->uri;
+}
+
+static GList *
+ges_timeline_filesource_create_track_objects (GESTimelineObject * obj,
+    GESTrackType type)
+{
+  GList *res = NULL;
+  const GList *tmp, *stream_assets;
+
+  g_return_val_if_fail (obj->asset, NULL);
+
+  stream_assets =
+      ges_asset_filesource_get_stream_assets (GES_ASSET_FILESOURCE
+      (obj->asset));
+  for (tmp = stream_assets; tmp; tmp = tmp->next) {
+    GESAssetTrackFileSource *asset = GES_ASSET_TRACK_FILESOURCE (tmp->data);
+
+    if (ges_asset_track_filesource_get_track_type (asset) == type)
+      res = g_list_prepend (res, ges_asset_extract (GES_ASSET (asset), NULL));
+  }
+
+  return res;
 }
 
 static GESTrackObject *

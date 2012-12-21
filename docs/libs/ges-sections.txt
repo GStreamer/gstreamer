@@ -987,6 +987,7 @@ ges_asset_filesource_is_image
 ges_asset_filesource_get_info
 ges_asset_filesource_new
 ges_asset_filesource_set_timeout
+ges_asset_filesource_get_stream_assets
 <SUBSECTION Standard>
 GESAssetFileSourcePrivate
 GES_ASSET_FILESOURCE
@@ -995,6 +996,23 @@ GES_ASSET_FILESOURCE_CLASS
 GES_IS_ASSET_FILESOURCE
 GES_IS_ASSET_FILESOURCE_CLASS
 GES_ASSET_FILESOURCE_GET_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>ges-asset-track-file-source</FILE>
+<TITLE>GESAssetTrackFileSource</TITLE>
+GESAssetTrackFileSource
+ges_asset_track_filesource_get_type
+ges_asset_track_filesource_get_track_type
+ges_asset_track_filesource_get_filesource_asset
+<SUBSECTION Standard>
+GESAssetTrackFileSourcePrivate
+GES_ASSET_TRACK_FILESOURCE
+GES_TYPE_ASSET_TRACK_FILESOURCE
+GES_ASSET_TRACK_FILESOURCE_CLASS
+GES_IS_ASSET_TRACK_FILESOURCE
+GES_IS_ASSET_TRACK_FILESOURCE_CLASS
+GES_ASSET_TRACK_FILESOURCE_GET_CLASS
 </SECTION>
 
 <SECTION>

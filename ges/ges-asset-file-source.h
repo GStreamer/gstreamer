@@ -74,6 +74,45 @@ void ges_asset_filesource_new                         (const gchar *uri,
                                                        gpointer user_data);
 void ges_asset_filesource_set_timeout                 (GESAssetFileSourceClass *class,
                                                        GstClockTime timeout);
+const GList * ges_asset_filesource_get_stream_assets  (GESAssetFileSource *self);
+
+#define GES_TYPE_ASSET_TRACK_FILESOURCE ges_asset_track_filesource_get_type()
+#define GES_ASSET_TRACK_FILESOURCE(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSource))
+#define GES_ASSET_TRACK_FILESOURCE_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSourceClass))
+#define GES_IS_ASSET_TRACK_FILESOURCE(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE))
+#define GES_IS_ASSET_TRACK_FILESOURCE_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_ASSET_TRACK_FILESOURCE))
+#define GES_ASSET_TRACK_FILESOURCE_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSourceClass))
+
+typedef struct _GESAssetTrackFileSourcePrivate GESAssetTrackFileSourcePrivate;
+
+GType ges_asset_track_filesource_get_type (void);
+
+struct _GESAssetTrackFileSource
+{
+  GESAsset parent;
+
+  /* <private> */
+  GESAssetTrackFileSourcePrivate *priv;
+
+  /* Padding for API extension */
+  gpointer __ges_reserved[GES_PADDING];
+};
+
+struct _GESAssetTrackFileSourceClass
+{
+  GESAssetClass parent_class;
+
+  gpointer _ges_reserved[GES_PADDING];
+};
+GstDiscovererStreamInfo * ges_asset_track_filesource_get_stream_info     (GESAssetTrackFileSource *asset);
+const gchar * ges_asset_track_filesource_get_stream_uri                  (GESAssetTrackFileSource *asset);
+const GESTrackType ges_asset_track_filesource_get_track_type             (GESAssetTrackFileSource *asset);
+const GESAssetFileSource *ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *asset);
 
 G_END_DECLS
 #endif /* _GES_ASSET_FILESOURCE */

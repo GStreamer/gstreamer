@@ -483,7 +483,8 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
   class = GES_TIMELINE_OBJECT_GET_CLASS (object);
 
   if (G_UNLIKELY (class->create_track_object == NULL)) {
-    GST_ERROR ("No 'create_track_object' implementation available");
+    GST_ERROR ("No 'create_track_object' implementation available fo type %s",
+        G_OBJECT_TYPE_NAME (object));
     return NULL;
   }
 
@@ -497,9 +498,7 @@ ges_timeline_object_create_track_object (GESTimelineObject * object,
  * @object: The origin #GESTimelineObject
  * @type: The #GESTrackType to create each #GESTrackObject for.
  *
- * Creates all #GESTrackObjects supported by this object provided track.
- * The track is responsible for calling #ges_timeline_release_track_object
- * on these objects when it is finished with them.
+ * Creates all #GESTrackObjects supported by this object for the track type.
  *
  * Returns: (element-type GESTrackObject) (transfer-full): A #GList of
  * newly created #GESTrackObject-s

@@ -165,6 +165,7 @@ struct _GESTimelineObject
 
   guint64 fullduration;         /* Full usable duration of the object (-1: no duration) */
 
+  /*< protected >*/
   GESAsset *asset;
 
   /*< private >*/

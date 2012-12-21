@@ -20,9 +20,9 @@
  */
 /**
  * SECTION: ges-asset-file-source
- * @short_description: A #GESAsset subclass speciliazed in #GESTimelineFileSource extraction
+ * @short_description: A #GESAsset subclass specialized in #GESTimelineFileSource extraction
  *
- * The #GESAssetFileSource is a special #GESAssetFileSource that lets you handle
+ * The #GESAssetFileSource is a special #GESAsset that lets you handle
  * the media file to use inside the GStreamer Editing Services. It has APIs that
  * let you get information about the medias. Also, the tags found in the media file are
  * set as Metadatas of the Asser.
@@ -62,6 +62,17 @@ struct _GESAssetFileSourcePrivate
   GstDiscovererInfo *info;
   GstClockTime duration;
   gboolean is_image;
+
+  GList *asset_trackfilesources;
+};
+
+struct _GESAssetTrackFileSourcePrivate
+{
+  GstDiscovererStreamInfo *sinfo;
+  GESAssetFileSource *parent_asset;
+
+  const gchar *uri;
+  GESTrackType type;
 };
 
 
@@ -233,6 +244,36 @@ ges_asset_filesource_init (GESAssetFileSource * self)
 }
 
 static void
+_create_track_file_source_asset (GESAssetFileSource * asset,
+    GstDiscovererStreamInfo * sinfo, GESTrackType type)
+{
+  GESAsset *tck_filesource_asset;
+  GESAssetTrackFileSourcePrivate *priv_tckasset;
+  GESAssetFileSourcePrivate *priv = asset->priv;
+  gchar *stream_id =
+      g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
+
+  if (stream_id == NULL) {
+    GST_WARNING ("No stream ID found, using the pointer instead");
+
+    stream_id = g_strdup_printf ("%i", GPOINTER_TO_INT (sinfo));
+  }
+
+  tck_filesource_asset = ges_asset_request (GES_TYPE_TRACK_FILESOURCE,
+      stream_id, NULL);
+  g_free (stream_id);
+
+  priv_tckasset = GES_ASSET_TRACK_FILESOURCE (tck_filesource_asset)->priv;
+  priv_tckasset->uri = ges_asset_get_id (GES_ASSET (asset));
+  priv_tckasset->sinfo = g_object_ref (sinfo);
+  priv_tckasset->parent_asset = asset;
+  priv_tckasset->type = type;
+
+  priv->asset_trackfilesources = g_list_append (priv->asset_trackfilesources,
+      gst_object_ref (tck_filesource_asset));
+}
+
+static void
 ges_asset_filesource_set_info (GESAssetFileSource * self,
     GstDiscovererInfo * info)
 {
@@ -244,6 +285,7 @@ ges_asset_filesource_set_info (GESAssetFileSource * self,
   /* Extract infos from the GstDiscovererInfo */
   stream_list = gst_discoverer_info_get_stream_list (info);
   for (tmp = stream_list; tmp; tmp = tmp->next) {
+    GESTrackType type = GES_TRACK_TYPE_UNKNOWN;
     GstDiscovererStreamInfo *sinf = (GstDiscovererStreamInfo *) tmp->data;
 
     if (GST_IS_DISCOVERER_AUDIO_INFO (sinf)) {
@@ -252,17 +294,21 @@ ges_asset_filesource_set_info (GESAssetFileSource * self,
       else
         supportedformats |= GES_TRACK_TYPE_AUDIO;
 
+      type = GES_TRACK_TYPE_AUDIO;
     } else if (GST_IS_DISCOVERER_VIDEO_INFO (sinf)) {
       if (supportedformats == GES_TRACK_TYPE_UNKNOWN)
         supportedformats = GES_TRACK_TYPE_VIDEO;
       else
         supportedformats |= GES_TRACK_TYPE_VIDEO;
       if (gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
-              sinf)) {
+              sinf))
         priv->is_image = TRUE;
-      }
-    } else
-      supportedformats = GES_TRACK_TYPE_UNKNOWN;
+      type = GES_TRACK_TYPE_VIDEO;
+    }
+
+    GST_DEBUG_OBJECT (self, "Creating AsserTrackFileSource for stream: %s",
+        gst_discoverer_stream_info_get_stream_id (sinf));
+    _create_track_file_source_asset (self, sinf, type);
   }
   ges_meta_container_set_uint (GES_META_CONTAINER (self),
       GES_META_TIMELINE_OBJECT_SUPPORTED_FORMATS, supportedformats);
@@ -436,4 +482,134 @@ ges_asset_filesource_set_timeout (GESAssetFileSourceClass * class,
   g_return_if_fail (GES_IS_ASSET_FILESOURCE_CLASS (class));
 
   g_object_set (class->discoverer, "timeout", timeout, NULL);
+}
+
+/**
+ * ges_asset_filesource_get_stream_assets:
+ * @self: A #GESAssetFileSource
+ *
+ * Get the GESAssetTrackFileSource @self containes
+ *
+ * Returns: (transfer-none) (element-type GESAssetTrackFileSource): a
+ * #GList of #GESAssetTrackFileSource
+ */
+const GList *
+ges_asset_filesource_get_stream_assets (GESAssetFileSource * self)
+{
+  g_return_val_if_fail (GES_IS_ASSET_FILESOURCE (self), FALSE);
+
+  return self->priv->asset_trackfilesources;
+}
+
+/*****************************************************************
+ *            GESAssetTrackFileSource implementation             *
+ *****************************************************************/
+/**
+ * SECTION: ges-asset-track-file-source
+ * @short_description: A #GESAsset subclass specialized in #GESTrackFileSource extraction
+ *
+ * NOTE: You should never request such a #GESAsset as they will be created automatically
+ * by #GESAssetFileSource-s.
+ */
+
+G_DEFINE_TYPE (GESAssetTrackFileSource, ges_asset_track_filesource,
+    GES_TYPE_ASSET);
+
+static GESExtractable *
+_extract (GESAsset * asset, GError ** error)
+{
+  GESTrackObject *tckobj;
+  GESAssetTrackFileSourcePrivate *priv =
+      GES_ASSET_TRACK_FILESOURCE (asset)->priv;
+
+  if (GST_IS_DISCOVERER_STREAM_INFO (priv->sinfo) == FALSE) {
+    GST_WARNING_OBJECT (asset, "Can not extract as no strean info set");
+
+    return NULL;
+  }
+
+  if (priv->uri == NULL) {
+    GST_WARNING_OBJECT (asset, "Can not extract as no uri set");
+
+    return NULL;
+  }
+
+  tckobj = GES_TRACK_OBJECT (ges_track_filesource_new (g_strdup (priv->uri)));
+  ges_track_object_set_track_type (tckobj, priv->type);
+
+  return GES_EXTRACTABLE (tckobj);
+}
+
+static void
+ges_asset_track_filesource_class_init (GESAssetTrackFileSourceClass * klass)
+{
+  g_type_class_add_private (klass, sizeof (GESAssetTrackFileSourcePrivate));
+
+  GES_ASSET_CLASS (klass)->extract = _extract;
+}
+
+static void
+ges_asset_track_filesource_init (GESAssetTrackFileSource * self)
+{
+  GESAssetTrackFileSourcePrivate *priv;
+
+  priv = self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
+      GES_TYPE_ASSET_TRACK_FILESOURCE, GESAssetTrackFileSourcePrivate);
+
+  priv->sinfo = NULL;
+  priv->parent_asset = NULL;
+  priv->uri = NULL;
+  priv->type = GES_TRACK_TYPE_UNKNOWN;
+
+}
+
+GstDiscovererStreamInfo *
+ges_asset_track_filesource_get_stream_info (GESAssetTrackFileSource * asset)
+{
+  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
+
+  return asset->priv->sinfo;
+}
+
+const gchar *
+ges_asset_track_filesource_get_stream_uri (GESAssetTrackFileSource * asset)
+{
+  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
+
+  return asset->priv->uri;
+}
+
+/**
+ * ges_asset_track_filesource_get_track_type:
+ * @self: A #GESAssetFileSource
+ *
+ * Get the GESAssetTrackType the #GESTrackObject extracted from @self
+ * should get into
+ *
+ * Returns: a #GESTrackType
+ */
+const GESTrackType
+ges_asset_track_filesource_get_track_type (GESAssetTrackFileSource * asset)
+{
+  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset),
+      GES_TRACK_TYPE_UNKNOWN);
+
+  return asset->priv->type;
+}
+
+/**
+ * ges_asset_track_filesource_get_filesource_asset:
+ * @self: A #GESAssetFileSource
+ *
+ * Get the #GESAssetFileSource @self is contained in
+ *
+ * Returns: a #GESAssetFileSource
+ */
+const GESAssetFileSource *
+ges_asset_track_filesource_get_filesource_asset (GESAssetTrackFileSource *
+    asset)
+{
+  g_return_val_if_fail (GES_IS_ASSET_TRACK_FILESOURCE (asset), NULL);
+
+  return asset->priv->parent_asset;
 }

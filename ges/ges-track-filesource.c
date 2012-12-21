@@ -29,8 +29,26 @@
 #include "ges-internal.h"
 #include "ges-track-object.h"
 #include "ges-track-filesource.h"
+#include "ges-asset-file-source.h"
+#include "ges-extractable.h"
 
-G_DEFINE_TYPE (GESTrackFileSource, ges_track_filesource, GES_TYPE_TRACK_SOURCE);
+static gchar *
+ges_extractable_check_id (GType type, const gchar * id, GError ** error)
+{
+  return g_strdup (id);
+}
+
+static void
+ges_extractable_interface_init (GESExtractableInterface * iface)
+{
+  iface->asset_type = GES_TYPE_ASSET_TRACK_FILESOURCE;
+  iface->check_id = ges_extractable_check_id;
+}
+
+G_DEFINE_TYPE_WITH_CODE (GESTrackFileSource, ges_track_filesource,
+    GES_TYPE_TRACK_SOURCE,
+    G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
+        ges_extractable_interface_init));
 
 struct _GESTrackFileSourcePrivate
 {
