@@ -84,7 +84,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420, YV12, YUY2, UYVY, BGRx, BGRA, NV12 }, "
+        "format = (string) { I420, YV12, YUY2, UYVY, RGB, ARGB, xRGB, RGB16, ABGR, xBGR, GRAY8 }, "
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ]")
     );
