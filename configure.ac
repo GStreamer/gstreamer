@@ -234,9 +234,8 @@ AC_CACHE_CHECK([for GstVideoDecoder],
     CPPFLAGS="$saved_CPPFLAGS"
     LIBS="$saved_LIBS"
 ])
-if test "$ac_cv_have_gst_video_decoder" != "yes"; then
-    AC_MSG_ERROR([GstVideoDecoder is not available])
-fi
+AM_CONDITIONAL([USE_LOCAL_GST_VIDEO_DECODER],
+    [test "$ac_cv_have_gst_video_decoder" != "yes"])
 
 dnl GStreamer -bad plugins
 PKG_CHECK_MODULES([GST_BASEVIDEO],
@@ -597,6 +596,7 @@ debian.upstream/libgstvaapi-x11.install.in
     gst-libs/gst/Makefile
     gst-libs/gst/codecparsers/Makefile
     gst-libs/gst/vaapi/Makefile
+    gst-libs/gst/video/Makefile
     gst/Makefile
     gst/vaapi/Makefile
     pkgconfig/Makefile
