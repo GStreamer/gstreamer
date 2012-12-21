@@ -338,6 +338,26 @@ else
       ;;
   esac
 
+  if test x"$AR" != x; then
+    emblibav_configure_args="$emblibav_configure_args --ar=\\\"\\\$AR\\\""
+  fi
+
+  if test x"$AS" != x; then
+    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$AS\\\""
+  fi
+
+  if test x"$CC" != x; then
+    emblibav_configure_args="$emblibav_configure_args --cc=\\\"\\\$CC\\\""
+  fi
+
+  if test x"$LD" != x; then
+    emblibav_configure_args="$emblibav_configure_args --ld=\\\"\\\$CC\\\""
+  fi
+
+  if test x"$NM" != x; then
+    emblibav_configure_args="$emblibav_configure_args --nm=\\\"\\\$NM\\\""
+  fi
+
   dnl checks for extra enable/disable flags
   LIBAV_OPTS="(cd $srcdir/gst-libs/ext/libav && ./configure --help)"
   # Let's check if we can disable the building of the libav binary
