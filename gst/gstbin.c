@@ -1126,7 +1126,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->children = g_list_prepend (bin->children, element);
   bin->numchildren++;
   bin->children_cookie++;
-  bin->priv->structure_cookie++;
+  if (!GST_BIN_IS_NO_RESYNC (bin))
+    bin->priv->structure_cookie++;
 
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
@@ -1372,7 +1373,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
    * so that others can detect a change in the children list. */
   bin->numchildren--;
   bin->children_cookie++;
-  bin->priv->structure_cookie++;
+  if (!GST_BIN_IS_NO_RESYNC (bin))
+    bin->priv->structure_cookie++;
 
   if (is_sink && !othersink) {
     /* we're not a sink anymore */
@@ -3553,7 +3555,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
          * need to resync by updating the structure_cookie. */
         bin_remove_messages (bin, GST_MESSAGE_SRC (message),
             GST_MESSAGE_STRUCTURE_CHANGE);
-        bin->priv->structure_cookie++;
+        if (!GST_BIN_IS_NO_RESYNC (bin))
+          bin->priv->structure_cookie++;
       }
       GST_OBJECT_UNLOCK (bin);
 
