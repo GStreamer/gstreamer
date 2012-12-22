@@ -685,7 +685,7 @@ d3d_get_render_coordinates (GstD3DVideoSink * sink, gint in_x, gint in_y,
     goto end;
 
   /* Convert window coordinates to source frame pixel coordinates */
-  if (sink->keep_aspect_ratio) {
+  if (sink->force_aspect_ratio) {
     GstVideoRectangle tmp = { 0, 0, 0, 0 }
     , dst = {
     0, 0, 0, 0};
@@ -1557,7 +1557,7 @@ d3d_stretch_and_copy (GstD3DVideoSink * sink, LPDIRECT3DSURFACE9 back_buffer)
 
   render_rect = sink->d3d.render_rect;
 
-  if (sink->keep_aspect_ratio) {
+  if (sink->force_aspect_ratio) {
     gint window_width;
     gint window_height;
     GstVideoRectangle src;

@@ -29,14 +29,14 @@
 enum
 {
   PROP_0,
-  PROP_KEEP_ASPECT_RATIO,
+  PROP_FORCE_ASPECT_RATIO,
   PROP_CREATE_RENDER_WINDOW,
   PROP_STREAM_STOP_ON_CLOSE,
   PROP_ENABLE_NAVIGATION_EVENTS,
   PROP_LAST
 };
 
-#define DEFAULT_KEEP_ASPECT_RATIO        FALSE
+#define DEFAULT_FORCE_ASPECT_RATIO       TRUE
 #define DEFAULT_CREATE_RENDER_WINDOW     TRUE
 #define DEFAULT_STREAM_STOP_ON_CLOSE     TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS TRUE
@@ -123,10 +123,10 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
 
   /* Add properties */
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_KEEP_ASPECT_RATIO, g_param_spec_boolean ("force-aspect-ratio",
+      PROP_FORCE_ASPECT_RATIO, g_param_spec_boolean ("force-aspect-ratio",
           "Force aspect ratio",
           "When enabled, scaling will respect original aspect ratio",
-          DEFAULT_KEEP_ASPECT_RATIO, (GParamFlags) G_PARAM_READWRITE));
+          DEFAULT_FORCE_ASPECT_RATIO, (GParamFlags) G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_CREATE_RENDER_WINDOW, g_param_spec_boolean ("create-render-window",
           "Create render window",
@@ -173,7 +173,7 @@ gst_d3dvideosink_init (GstD3DVideoSink * sink)
   gst_value_set_fraction (&sink->par, 1, 1);
 
   /* Init Properties */
-  sink->keep_aspect_ratio = DEFAULT_KEEP_ASPECT_RATIO;
+  sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   sink->create_internal_window = DEFAULT_CREATE_RENDER_WINDOW;
   sink->stream_stop_on_close = DEFAULT_STREAM_STOP_ON_CLOSE;
   sink->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
@@ -205,8 +205,8 @@ gst_d3dvideosink_set_property (GObject * object, guint prop_id,
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (object);
 
   switch (prop_id) {
-    case PROP_KEEP_ASPECT_RATIO:
-      sink->keep_aspect_ratio = g_value_get_boolean (value);
+    case PROP_FORCE_ASPECT_RATIO:
+      sink->force_aspect_ratio = g_value_get_boolean (value);
       break;
     case PROP_CREATE_RENDER_WINDOW:
       sink->create_internal_window = g_value_get_boolean (value);
@@ -230,8 +230,8 @@ gst_d3dvideosink_get_property (GObject * object, guint prop_id, GValue * value,
   GstD3DVideoSink *sink = GST_D3DVIDEOSINK (object);
 
   switch (prop_id) {
-    case PROP_KEEP_ASPECT_RATIO:
-      g_value_set_boolean (value, sink->keep_aspect_ratio);
+    case PROP_FORCE_ASPECT_RATIO:
+      g_value_set_boolean (value, sink->force_aspect_ratio);
       break;
     case PROP_CREATE_RENDER_WINDOW:
       g_value_set_boolean (value, sink->create_internal_window);
