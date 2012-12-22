@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2010 David Hoyt <dhoyt@hoytsoft.org>
+ * Copyright (C) 2012 Roland Krikava <info@bluedigits.com>
+ * Copyright (C) 2010-2011 David Hoyt <dhoyt@hoytsoft.org>
+ * Copyright (C) 2010 Andoni Morales <ylatuya@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -13,12 +15,11 @@
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
  */
-
-#ifndef __D3DVIDEOSINK_H__
-#define __D3DVIDEOSINK_H__
+#ifndef _GSTD3DVIDEOSINK_H_
+#define _GSTD3DVIDEOSINK_H_
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -26,33 +27,10 @@
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
 
-#include <windows.h>
-#if defined(__MINGW32__)
-# ifndef _OBJC_NO_COM_
-#  if defined(__cplusplus) && !defined(CINTERFACE)
-#   if defined(__GNUC__) &&  __GNUC__ < 3 && !defined(NOCOMATTRIBUTE)
-#    define DECLARE_INTERFACE_IID_(i,b,d) _COM_interface __attribute__((com_interface)) i : public b
-#   else
-#    define DECLARE_INTERFACE_IID_(i,b,d) _COM_interface i : public b
-#   endif
-#  elif !defined(DECLARE_INTERFACE_IID_)
-#   define DECLARE_INTERFACE_IID_(i,b,d) DECLARE_INTERFACE(i)
-#  endif
-# endif
-# if !defined(__MSABI_LONG)
-#  define __MSABI_LONG(x)  x ## l
-# endif
-#endif
-#include <d3d9.h>
-#include <d3dx9tex.h>
-
-#include "directx/directx.h"
-
-#ifdef _MSC_VER
-#pragma warning( disable : 4090 4024)
-#endif
+#include "d3dhelpers.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_D3DVIDEOSINK                     (gst_d3dvideosink_get_type())
 #define GST_D3DVIDEOSINK(obj)                     (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3DVIDEOSINK,GstD3DVideoSink))
 #define GST_D3DVIDEOSINK_CLASS(klass)             (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3DVIDEOSINK,GstD3DVideoSinkClass))
@@ -63,61 +41,76 @@ G_BEGIN_DECLS
 typedef struct _GstD3DVideoSink GstD3DVideoSink;
 typedef struct _GstD3DVideoSinkClass GstD3DVideoSinkClass;
 
-#define GST_D3DVIDEOSINK_D3D_DEVICE_LOCK(sink) g_mutex_lock (&GST_D3DVIDEOSINK (sink)->d3d_device_lock)
-#define GST_D3DVIDEOSINK_D3D_DEVICE_TRYLOCK(sink) g_mutex_trylock (&GST_D3DVIDEOSINK (sink)->d3d_device_lock)
-#define GST_D3DVIDEOSINK_D3D_DEVICE_UNLOCK(sink) g_mutex_unlock (&GST_D3DVIDEOSINK (sink)->d3d_device_lock)
+typedef struct _GstVideoFormatDetails {
+  guint32 r_mask;
+  guint32 g_mask;
+  guint32 b_mask;
+  guint32 a_mask;
+  guint32 r_mask16;
+  guint32 g_mask16;
+  guint32 b_mask16;
+  guint32 a_mask16;
+  guint   r_shift;
+  guint   g_shift;
+  guint   b_shift;
+  guint   a_shift;
+  guint   r_bits;
+  guint   g_bits;
+  guint   b_bits;
+  guint   a_bits;
+  gint    bpp;
+  gint    depth;
+  gint    endianness;
+  gint    pixel_width;
+} GstVideoFormatDetails;
 
 struct _GstD3DVideoSink
 {
-  GstVideoSink sink;
+  GstVideoSink       sink;
+  GstD3DData         d3d;
 
-  /* source rectangle */
+  GstCaps *          supported_caps;
 
-  GstVideoFormat format;
-  GstVideoInfo info;
+  GValue             par;
+  GstVideoFormat     format;
+  GstVideoInfo       info;
+  GstVideoFormatDetails fmt_details;
+  gint               width;
+  gint               height;
 
-  gboolean enable_navigation_events;
- 
-  gboolean keep_aspect_ratio;
-  GValue *par; 
+  GstVideoRectangle  render_rect;
 
-  /* If the window is closed, we set this and error out */
-  gboolean window_closed;
+  GStaticRecMutex    lock;
 
-  /* The video window set through GstXOverlay */
-  HWND window_handle;
-  
-  /* If we created the window, it needs to be closed in ::stop() */
-  gboolean is_new_window;
-
-  /* If we create our own window, we run it from another thread */
-  GThread *window_thread;
-  HANDLE window_created_signal;
-
-  /* If we use an app-supplied window, we need to hook its WNDPROC */
-  WNDPROC prevWndProc;
-  gboolean is_hooked;
-
-  GMutex d3d_device_lock;
-  LPDIRECT3DSURFACE9 d3d_offscreen_surface;
-  LPDIRECT3DDEVICE9 d3ddev;
-  D3DPRESENT_PARAMETERS d3dpp;
-
-  D3DFORMAT d3dformat;
-  D3DFORMAT d3dfourcc;
-  D3DTEXTUREFILTERTYPE d3dfiltertype;
+  /* Properties */
+  gboolean           keep_aspect_ratio;
+  gboolean           create_internal_window;
+  gboolean           stream_stop_on_close;
+  gboolean           enable_navigation_events;
 };
 
 struct _GstD3DVideoSinkClass
 {
   GstVideoSinkClass parent_class;
-
-  gboolean is_directx_supported;
-  gint directx_version;
-  DirectXAPI *directx_api;
+  GstD3DDataClass   d3d;
+  GStaticRecMutex   lock;
 };
 
-GType gst_d3dvideosink_get_type (void);
+#if 1
+# define LOCK_SINK(sink)          g_static_rec_mutex_lock(&sink->lock);
+# define UNLOCK_SINK(sink)        g_static_rec_mutex_unlock(&sink->lock);
+# define LOCK_CLASS(obj, class)   g_static_rec_mutex_lock(&class->lock);
+# define UNLOCK_CLASS(obj, class) g_static_rec_mutex_unlock(&class->lock);
+#else
+# define LOCK_SINK(sink)          GST_LOG_OBJECT(sink, "SINK   LOCK"); g_static_rec_mutex_lock(&sink->lock); GST_LOG_OBJECT(sink, "SINK LOCKED");
+# define UNLOCK_SINK(sink)        g_static_rec_mutex_unlock(&sink->lock); GST_LOG_OBJECT(sink, "SINK UNLOCKED");
+# define LOCK_CLASS(obj, class)   GST_LOG_OBJECT(obj, "CLASS   LOCK"); g_static_rec_mutex_lock(&class->lock); GST_LOG_OBJECT(obj, "CLASS LOCKED");
+# define UNLOCK_CLASS(obj, class) g_static_rec_mutex_unlock(&class->lock); GST_LOG_OBJECT(obj, "CLASS UNLOCKED");
+#endif
+
+GType    gst_d3dvideosink_get_type (void);
 
 G_END_DECLS
-#endif /* __D3DVIDEOSINK_H__ */
+
+
+#endif /* _GSTD3DVIDEOSINK_H_ */
