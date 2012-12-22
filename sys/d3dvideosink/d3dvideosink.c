@@ -412,6 +412,8 @@ static gboolean
 gst_d3dvideosink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return TRUE;
 }
 
 /** PUBLIC FUNCTIONS **/
