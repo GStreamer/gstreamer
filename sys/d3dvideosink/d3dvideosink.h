@@ -83,7 +83,7 @@ struct _GstD3DVideoSink
   GStaticRecMutex    lock;
 
   /* Properties */
-  gboolean           keep_aspect_ratio;
+  gboolean           force_aspect_ratio;
   gboolean           create_internal_window;
   gboolean           stream_stop_on_close;
   gboolean           enable_navigation_events;
