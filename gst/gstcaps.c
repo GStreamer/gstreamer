@@ -1350,8 +1350,7 @@ gst_caps_structure_subtract_field (GQuark field_id, const GValue * value,
     return FALSE;
   } else {
     structure = gst_structure_copy (e->subtract_from);
-    gst_structure_id_set_value (structure, field_id, &subtraction);
-    g_value_unset (&subtraction);
+    gst_structure_id_take_value (structure, field_id, &subtraction);
     e->put_into = g_slist_prepend (e->put_into, structure);
     return TRUE;
   }
@@ -1488,9 +1487,7 @@ gst_caps_normalize_foreach (GQuark field_id, const GValue * value, gpointer ptr)
     }
 
     gst_value_init_and_copy (&val, gst_value_list_get_value (value, 0));
-    gst_structure_id_set_value (nf->structure, field_id, &val);
-    g_value_unset (&val);
-
+    gst_structure_id_take_value (nf->structure, field_id, &val);
     return FALSE;
   }
   return TRUE;
@@ -1611,11 +1608,12 @@ gst_caps_structure_simplify (GstStructure ** result,
      * but at most one field: field.name */
     if (G_IS_VALUE (&field.value)) {
       if (gst_structure_n_fields (simplify) == gst_structure_n_fields (compare)) {
-        gst_structure_id_set_value (compare, field.name, &field.value);
+        gst_structure_id_take_value (compare, field.name, &field.value);
         *result = NULL;
         ret = TRUE;
+      } else {
+        g_value_unset (&field.value);
       }
-      g_value_unset (&field.value);
     } else if (gst_structure_n_fields (simplify) <=
         gst_structure_n_fields (compare)) {
       /* compare is just more specific, will be optimized away later */

@@ -2687,8 +2687,7 @@ default_fixate (GQuark field_id, const GValue * value, gpointer data)
   GValue v = { 0 };
 
   if (gst_value_fixate (&v, value)) {
-    gst_structure_id_set_value (s, field_id, &v);
-    g_value_unset (&v);
+    gst_structure_id_take_value (s, field_id, &v);
   }
   return TRUE;
 }
@@ -3023,8 +3022,7 @@ gst_structure_intersect_field1 (GQuark id, const GValue * val1, gpointer data)
   } else {
     GValue dest_value = { 0 };
     if (gst_value_intersect (&dest_value, val1, val2)) {
-      gst_structure_id_set_value (idata->dest, id, &dest_value);
-      g_value_unset (&dest_value);
+      gst_structure_id_take_value (idata->dest, id, &dest_value);
     } else {
       return FALSE;
     }
